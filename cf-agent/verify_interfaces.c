@@ -34,12 +34,16 @@
 #include <files_interfaces.h>
 #include <pipes.h>
 #include <item_lib.h>
+#include <expand.h>
 
 #define CF_DEBIAN_IFCONF "/etc/network/interfaces"
 #define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
 #define CF_DEBIAN_VLAN_COMMAND "/sbin/vconfig"
 #define CF_DEBIAN_IP_COMM "/sbin/ip"
 #define CF_DEBIAN_BRCTL "/usr/sbin/brctl"
+#define CF_DEBIAN_IFQUERY "/usr/sbin/ifquery"
+#define CF_DEBIAN_IFUP "/usr/sbin/ifup"
+#define CF_DEBIAN_ETHTOOL "/usr/bin/ethtool"
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
@@ -47,7 +51,7 @@ static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalCo
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetVlanInfo(Item **list, const Promise *pp, const char *interface);
-static int GetInterfaceInformation(LinkState **list, const Promise *pp);
+static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rlist *filter);
 static void DeleteInterfaceInfo(LinkState *interfaces);
 static int GetBridgeInfo(Bridges **list, const Promise *pp);
 static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
@@ -62,8 +66,7 @@ static Rlist *IPV4Addresses(LinkState *ifs, char *interface);
 static Rlist *IPV6Addresses(LinkState *ifs, char *interface);
 static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promise *pp);
 static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
-static bool CheckExistingInterfacePromise(char *promiser, LinkState *ifs);
-static bool CheckImplicitInterfacePromise(char *promiser, LinkState *ifs);
+static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg);
 
 /****************************************************************************/
 
@@ -168,6 +171,21 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         return false;
     }
 
+    if (a.interface.autoneg && (a.interface.speed || a.interface.duplex))
+    {
+        Log(LOG_LEVEL_ERR, "Interface '%s' cannot promise speed/duplex and auto-negotiation at same time", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    if ((a.interface.speed || a.interface.duplex) && !(a.interface.speed && a.interface.duplex))
+    {
+        Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+
     return true;
 }
 
@@ -194,9 +212,20 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     LinkState *netinterfaces = NULL;
+    Rlist *filter = NULL;
     char cmd[CF_BUFSIZE];
 
-    if (!GetInterfaceInformation(&netinterfaces, pp))
+    if (a->havebond)
+    {
+        filter = a->interface.bond_interfaces;
+    }
+
+    if (a->havebridge)
+    {
+        filter = a->interface.bridge_interfaces;
+    }
+
+    if (!GetInterfaceInformation(&netinterfaces, pp, filter))
     {
         Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
         return;
@@ -206,6 +235,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
     {
         // delete it, if it makes sense
         printf("NOT IMPLEMENTED YET\n");
+        DeleteInterfaceInfo(netinterfaces);
         return;
     }
 
@@ -218,6 +248,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
             *result = PROMISE_RESULT_FAIL;
         }
 
+        DeleteInterfaceInfo(netinterfaces);
         return;
     }
 
@@ -495,16 +526,70 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
 /****************************************************************************/
 
 static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
-{
-    /* DO ADD OPTIONS Link State
-       ip link show
-       Shows the state of all network interfaces on the system.
 
-       ip link set dev ppp0 mtu 1400
-       Change the MTU the ppp0 device.
-    */
+{ LinkState *lsp;
+    char comm[CF_BUFSIZE];
 
-// if (a->interface.mtu != ifs-->)
+    for (lsp = ifs; lsp != NULL; lsp=lsp->next)
+    {
+        if (strcmp(lsp->name, promiser) == 0)
+        {
+            break;
+        }
+    }
+
+    if (lsp != NULL)
+    {
+        if (a->interface.mtu != 0 && a->interface.mtu != lsp->mtu)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s link set dev %s mtu %d", CF_DEBIAN_IP_COMM, promiser, lsp->mtu);
+            if ((ExecCommand(comm, result, pp) == 0))
+            {
+                *result = PROMISE_RESULT_FAIL;
+                Log(LOG_LEVEL_ERR, "Unable to set MTU on interface %s", promiser);
+                return;
+            }
+        }
+    }
+
+    if (a->interface.autoneg || a->interface.speed)
+    {
+        int full = -1, speed = -1, autoneg = -1;
+        int fix = false;
+
+        GetInterfaceOptions(pp, &full, &speed, &autoneg);
+
+        if (a->interface.autoneg && !autoneg)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s %s autoneg on", CF_DEBIAN_ETHTOOL, promiser);
+            fix = true;
+        }
+        else
+        {
+            if (full && strcmp(a->interface.duplex, "full") != 0)
+            {
+                fix = true;
+            }
+
+            if (a->interface.speed != speed && a->interface.speed != speed)
+            {
+                fix = true;
+            }
+
+            snprintf(comm, CF_BUFSIZE, "%s %s speed %d duplex %s autoneg off",
+                     CF_DEBIAN_ETHTOOL, promiser, a->interface.speed, a->interface.duplex);
+        }
+
+        if (fix)
+        {
+            if ((ExecCommand(comm, result, pp) != 0))
+            {
+                Log(LOG_LEVEL_INFO, "Unable to set interface options in promise by %s", promiser);
+                *result = PROMISE_RESULT_FAIL;
+            }
+        }
+    }
+
 }
 
 /****************************************************************************/
@@ -513,6 +598,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 {
     Bridges *bridges = NULL;
     Rlist *rp;
+    char comm[CF_BUFSIZE];
 
     if ((strcmp(a->interface.manager, "native") == 0) || (strcmp(a->interface.manager, "nativefirst") == 0))
     {
@@ -534,33 +620,79 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
         return;
     }
 
+    // If the dependencies are not up, we should interrupt and wait for convergence
+    // CFEngine doesn't have to recurse like ifup since you always deal with a complete policy
+    // You need a separate promise for the interfaces to set addresses anyway
+
+    // Warn if there is not a separate promise for the dependencies, but some interfaces names are implicit
+    // due to VLAN etc
+
+
+    Rlist *all_members = RlistCopy(a->interface.bridge_interfaces);
+    LinkState *lsp;
+
+    for (lsp = ifs; lsp != NULL; lsp=lsp->next) // Long list
+    {
+        for (rp = all_members; rp != NULL; rp=rp->next)
+        {
+            if (strcmp(lsp->name, (char *)rp->val.item) == 0)
+            {
+                if (!lsp->up)
+                {
+                    *result = PROMISE_RESULT_FAIL;
+                    Log(LOG_LEVEL_INFO, "Member interface %s exists but is down in bridge promise for %s", (char *)rp->val.item, promiser);
+                    return;
+                }
+
+                // Mark this ok
+                *(char *)(rp->val.item) = '\0';
+            }
+        }
+    }
+
+    bool ok = true;
+
+    for (rp = all_members; rp != NULL; rp=rp->next)
+    {
+        if (*(char *)(rp->val.item) == '\0')
+        {
+            ok = false;
+            Log(LOG_LEVEL_INFO, "Member interface %s missing in bridge promise for %s", (char *)rp->val.item, promiser);
+        }
+    }
+
+    RlistDestroy(all_members);
+
+    if (!ok)
+    {
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
+
+    // Now put the pieces together
+
+    snprintf(comm, CF_BUFSIZE, "%s addbr %s", CF_DEBIAN_BRCTL, promiser);
+
+    if ((ExecCommand(comm, result, pp) == 0))
+    {
+        // Promise ostensibly kept
+        return;
+    }
+
     for (rp = a->interface.bridge_interfaces; rp != NULL; rp = rp->next)
     {
-        // The interfaces have to exist already, with an IP address configured
-        // They might or might not be promised - could be VLANs, virtual etc
+        snprintf(comm, CF_BUFSIZE, "%s addif %s", CF_DEBIAN_BRCTL, (char *)rp->val.item);
 
-        if (CheckExistingInterfacePromise(rp->val.item, ifs) ||
-            CheckImplicitInterfacePromise(rp->val.item, ifs))
+        if ((ExecCommand(comm, result, pp) == 0))
         {
-        }
-        else
-        {
-            *result = PROMISE_RESULT_FAIL;
+            // Promise ostensibly kept
             return;
         }
     }
 
-    // Check umbrella - could try both these commands
-
-    /*   brctl addbr vlan1
-         brctl addif vlan1 eth0
-         brctl addif vlan1 eth1.1
-
-         ip link add name br0 type bridge
-         ip link set dev ${interface name} master ${bridge name}
-         ip link set dev eth0 master br0
-
-         SET OPTIONS
+    /* will be replaced with
+       snprintf(cmd, CF_BUFSIZE, "%s link add name %s type bridge", CF_DEBIAN_IP_COMM, promiser);
+       snprintf(cmd, CF_BUFSIZE, "%s link set dev %s master", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
     */
 
     DeleteBridgeInfo(bridges);
@@ -572,7 +704,7 @@ static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promis
 {
     char comm[CF_BUFSIZE];
 
-    snprintf(comm, CF_BUFSIZE, "ifquery --check %s --with-depends", promiser);
+    snprintf(comm, CF_BUFSIZE, "%s --check %s --with-depends", CF_DEBIAN_IFQUERY, promiser);
 
     if ((ExecCommand(comm, result, pp) == 0))
     {
@@ -580,28 +712,16 @@ static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promis
         return true;
     }
 
-    snprintf(comm, CF_BUFSIZE, "ifup %s --with-depends", promiser);
+    snprintf(comm, CF_BUFSIZE, "%s %s --with-depends", CF_DEBIAN_IFUP, promiser);
 
     if ((ExecCommand(comm, result, pp) == 0))
     {
         return true;
     }
 
-    Log(LOG_LEVEL_INFO, "Bridge interfaces missing", promiser);
+    Log(LOG_LEVEL_INFO, "Bridge interfaces missing in %s", promiser);
     *result = PROMISE_RESULT_FAIL;
     return false;
-}
-
-/****************************************************************************/
-
-static bool CheckExistingInterfacePromise(char *promiser, LinkState *ifs)
-{
-}
-
-/****************************************************************************/
-
-static bool CheckImplicitInterfacePromise(char *promiser, LinkState *ifs)
-{
 }
 
 /****************************************************************************/
@@ -609,45 +729,97 @@ static bool CheckImplicitInterfacePromise(char *promiser, LinkState *ifs)
 static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 
 {
-    if (a->interface.bond_interfaces)
-        printf("BONDING not yet impelemented\n");
+    Rlist *rp;
+    LinkState *lsp;
+    char cmd[CF_BUFSIZE];
+    int got_master = 0, got_children = 0, all_children = 0;
 
-/*
+    for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
+    {
+        all_children++;
+    }
 
-  An interface cannot belong to multiple bonds
-  Slave ports in a bond must all be set to the same speed/duplex etc
-  A bond cannot enslave vlan virt interfaces
+    for (lsp = ifs; lsp != NULL; lsp=lsp->next) // Long list
+    {
+        if (strcmp (lsp->name, promiser) && lsp->is_parent)
+        {
+            got_master++;
+            continue;
+        }
 
-  [root@real-server root]# ip link set dev bond0 addr 00:80:c8:e7:ab:5c
-  [root@real-server root]# ip addr add 192.168.100.33/24 brd + dev bond0
-  [root@real-server root]# ip link set dev bond0 up
-  [root@real-server root]# ifenslave  bond0 eth2 eth3
-  The interface eth2 is up, shutting it down it to enslave it.
-  The interface eth3 is up, shutting it down it to enslave it.
-  [root@real-server root]# ip link show eth2 ; ip link show eth3 ; ip link show bond0
-  4: eth2: <BROADCAST,MULTICAST,SLAVE,UP> mtu 1500 qdisc pfifo_fast master bond0 qlen 100
-  link/ether 00:80:c8:e7:ab:5c brd ff:ff:ff:ff:ff:ff
-  5: eth3: <BROADCAST,MULTICAST,NOARP,SLAVE,DEBUG,AUTOMEDIA,PORTSEL,NOTRAILERS,UP> mtu 1500 qdisc pfifo_fast master bond0 qlen 100
-  link/ether 00:80:c8:e7:ab:5c brd ff:ff:ff:ff:ff:ff
-  58: bond0: <BROADCAST,MULTICAST,MASTER,UP> mtu 1500 qdisc noqueue
-  link/ether 00:80:c8:e7:ab:5c brd ff:ff:ff:ff:ff:ff
+        for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
+        {
+            if (strcmp(lsp->name, (char *)rp->val.item) == 0)
+            {
+                if (lsp->parent && (strcmp(lsp->parent, promiser) == 0))
+                {
+                    got_children++;
+                }
+            }
+        }
+    }
 
-  ip link set eth0 down
-  ip link set eth1 down
-  ip link set dev bond0 up
+    if (strcmp(a->interface.state, "down") == 0 || a->interface.delete)
+    {
+        if (!got_master)
+        {
+            // Good, we're done
+            return;
+        }
+    }
 
-  ip link set down dev bond0
+    if (got_children == all_children)
+    {
+        Log(LOG_LEVEL_VERBOSE, "All children accounted for on aggregate interface %s", promiser);
+        return;
+    }
 
-  ip link add bond0 type bond
-  ip link set eth0 master bond0
+    if (!got_master && got_children)
+    {
+        // If master/slave not set, bring down children in current config
 
-  ip link add bond1 type bond mode 1
-  ip link set dev eth1 master bond1
-  ip link set dev eth2 master bond1
+        for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
+        {
+            snprintf(cmd, CF_BUFSIZE, "%s link set %s down", CF_DEBIAN_IP_COMM, (char *)rp->val.item);
 
-  ip link set dev bond1 type bond active_slave eth1 (slave means subordinate in bond)
+            if ((ExecCommand(cmd, result, pp) != 0))
+            {
+                Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s is busy", (char *)rp->val.item, promiser);
+                *result = PROMISE_RESULT_FAIL;
+            }
 
-*/
+            snprintf(cmd, CF_BUFSIZE, "%s addr flush dev %s ", CF_DEBIAN_IP_COMM, (char *)rp->val.item);
+
+            if ((ExecCommand(cmd, result, pp) != 0))
+            {
+                Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s will not reset", (char *)rp->val.item, promiser);
+                *result = PROMISE_RESULT_FAIL;
+            }
+        }
+    }
+
+    // Add the master / parent
+    snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond mode 1", CF_DEBIAN_IP_COMM, promiser);
+
+    if ((ExecCommand(cmd, result, pp) != 0))
+    {
+        Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s failed", (char *)rp->val.item, promiser);
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
+
+    // Re-add children and subordinates
+
+    for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
+    {
+        snprintf(cmd, CF_BUFSIZE, "%s link set %s master %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
+
+        if ((ExecCommand(cmd, result, pp) != 0))
+        {
+            Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s failed", (char *)rp->val.item, promiser);
+            *result = PROMISE_RESULT_FAIL;
+        }
+    }
 }
 
 /****************************************************************************/
@@ -740,6 +912,8 @@ static Rlist *IPV6Addresses(LinkState *ifs, char *interface)
 }
 
 /****************************************************************************/
+/* EXEC                                                                     */
+/****************************************************************************/
 
 int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
 {
@@ -789,8 +963,8 @@ int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
     return true;
 }
 
-
-
+/****************************************************************************/
+/* INFO                                                                     */
 /****************************************************************************/
 
 static int GetVlanInfo(Item **list, const Promise *pp, const char *interface)
@@ -843,7 +1017,7 @@ static int GetVlanInfo(Item **list, const Promise *pp, const char *interface)
 
 /****************************************************************************/
 
-static int GetInterfaceInformation(LinkState **list, const Promise *pp)
+static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rlist *filter)
 {
     FILE *pfp;
     size_t line_size = CF_BUFSIZE;
@@ -884,6 +1058,16 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
             if (if_name[strlen(if_name)-1] == ':')
             {
                 if_name[strlen(if_name)-1] = '\0';
+            }
+
+            // Only keep interfaces in filter or promiser to avoid unnecessary iteration
+
+            if (filter && (strcmp(if_name, pp->promiser) != 0))
+            {
+                if (!RlistIsInListOfRegex(filter, if_name))
+                {
+                    continue;
+                }
             }
 
             entry = xcalloc(sizeof(LinkState), 1);
@@ -954,6 +1138,75 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
     free(line);
     cf_pclose(pfp);
     return true;
+}
+
+/****************************************************************************/
+
+static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char comm[CF_BUFSIZE];
+    char *sp;
+
+    snprintf(comm, CF_BUFSIZE, "%s %s", CF_DEBIAN_ETHTOOL, pp->promiser);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_ETHTOOL);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        /*Speed: 1000Mb/s
+          Duplex: Full
+          Speed: Unknown!
+          Duplex: Unknown! (255)
+          Auto-negotiation: on
+        */
+
+        if ((sp = strstr(line, "Speed:")))
+        {
+            sscanf(sp, "%d", speed);
+        }
+
+        if ((sp = strstr(line, "Auto-negotiation:")))
+        {
+            char result[CF_SMALLBUF] = { 0 };
+
+            sscanf(sp, "%s", result);
+            if (strcmp(result, "on") == 0)
+            {
+                *autoneg = true;
+            }
+        }
+
+        if ((sp = strstr(line, "Duplex:")))
+        {
+            char result[CF_SMALLBUF] = { 0 };
+
+            sscanf(sp, "%s", result);
+            if (strcmp(result, "full") == 0)
+            {
+                *full = true;
+            }
+        }
+
+    }
+
+    free(line);
+    cf_pclose(pfp);
+    return;
 }
 
 /****************************************************************************/

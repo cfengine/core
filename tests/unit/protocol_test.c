@@ -437,12 +437,26 @@ static void test_command_parser(void)
     assert_int_equal(expected, parsed);
 }
 
+static void test_user_name(void)
+{
+    const char *invalid_user_name = "user\\";
+    const char *invalid_user_name2 = "user//";
+    const char *invalid_user_name3 = "//\\";
+    const char *valid_user_name = "valid_user";
+
+    assert_false(IsUserNameValid(invalid_user_name));
+    assert_false(IsUserNameValid(invalid_user_name2));
+    assert_false(IsUserNameValid(invalid_user_name3));
+    assert_true(IsUserNameValid(valid_user_name));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-          unit_test(test_command_parser)
+          unit_test(test_command_parser),
+          unit_test(test_user_name)
     };
 
     return run_tests(tests);

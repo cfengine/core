@@ -32,18 +32,18 @@ bundle agent test
 
 bundle agent test_dorun(name, dir, tagopt)
 {
-#   vars:
-#       "simulated_validated_ok" string => '
-# {
-#  "timestamp": 2000000000,
-# }
-# ';
+  vars:
+      "simulated_validated_ok" string => '
+{
+ "timestamp": 1234,
+}
+';
 
-#       "simulated_validated_bad" string => '
-# {
-#  "timestamp": 1234,
-# }
-# ';
+      "simulated_validated_bad" string => '
+{
+ "timestamp": 1234,
+}
+';
 
   methods:
   vars:
@@ -79,25 +79,25 @@ bundle agent test_dorun(name, dir, tagopt)
                                    "recreate cf_promises_release_id even if cf_promises_validated is OK");
       "read2" usebundle => test_read("2", $(name), $(dir));
 
-      # "make good validated file"
-      # usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
-      #                                      $(simulated_validated_ok));
+      "make good validated file"
+      usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
+                                           $(simulated_validated_ok));
 
-      # "tag3" usebundle => test_tag("3",
-      #                              $(name),
-      #                              $(tagopt),
-      #                              "don't touch good cf_promises_validated and cf_promises_release_id");
-      # "read3" usebundle => test_read("3", $(name), $(dir));
+      "tag3" usebundle => test_tag("3",
+                                   $(name),
+                                   $(tagopt),
+                                   "rewrite good cf_promises_validated and leave cf_promises_release_id alone");
+      "read3" usebundle => test_read("3", $(name), $(dir));
 
-      # "make bad validated file"
-      # usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
-      #                                      $(simulated_validated_bad));
+      "make bad validated file"
+      usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
+                                           $(simulated_validated_bad));
 
-      # "tag4" usebundle => test_tag("4",
-      #                              $(name),
-      #                              $(tagopt),
-      #                              "overwrite bad cf_promises_validated");
-      # "read4" usebundle => test_read("4", $(name), $(dir));
+      "tag4" usebundle => test_tag("4",
+                                   $(name),
+                                   $(tagopt),
+                                   "overwrite bad cf_promises_validated");
+      "read4" usebundle => test_read("4", $(name), $(dir));
 
   reports:
       "$(this.bundle): $(name) $(dir) '$(tagopt)'";
@@ -197,32 +197,43 @@ bundle agent check
       "correct_release_$(tops)_2" expression => strcmp("$(test_read.r_$(tops)_2[releaseId])",
                                                        $(expected_checksum));
 
-      "correct_timestamp_$(tops)_3" expression => strcmp("$(test_read.v_$(tops)_3[timestamp])",
+      # we expect the bad timestamp
+      "correct_timestamp_inputdir_3" expression => strcmp("$(test_read.v_inputdir_3[timestamp])",
+                                                          "1234");
+      # anything except the bad timestamp is OK
+      "correct_timestamp_masterdir_3" not => strcmp("$(test_read.v_masterdir_3[timestamp])",
+                                                           "1234");
+      "correct_timestamp_testdir_3" not => strcmp("$(test_read.v_testdir_3[timestamp])",
                                                          "1234");
       "correct_release_$(tops)_3" expression => strcmp("$(test_read.r_$(tops)_3[releaseId])",
                                                        $(expected_checksum));
 
+      # we expect the bad timestamp
+      "correct_timestamp_inputdir_4" expression => strcmp("$(test_read.v_inputdir_4[timestamp])",
+                                                          "1234");
       # anything except the bad timestamp is OK
-      "correct_timestamp_$(tops)_4" not => strcmp("$(test_read.v_$(tops)_4[timestamp])",
-                                                  "1234");
+      "correct_timestamp_masterdir_4" not => strcmp("$(test_read.v_masterdir_4[timestamp])",
+                                                           "1234");
+      "correct_timestamp_testdir_4" not => strcmp("$(test_read.v_testdir_4[timestamp])",
+                                                         "1234");
       "correct_release_$(tops)_4" expression => strcmp("$(test_read.r_$(tops)_4[releaseId])",
                                                        $(expected_checksum));
 
       "ok" and => {
                     "tagged_testdir_1", "correct_timestamp_testdir_1", "correct_release_testdir_1",
                     "tagged_testdir_2", "correct_timestamp_testdir_2", "correct_release_testdir_2",
-                    # "tagged_testdir_3", "correct_timestamp_testdir_3", "correct_release_testdir_3",
-                    # "tagged_testdir_4", "correct_timestamp_testdir_4", "correct_release_testdir_4",
+                    "tagged_testdir_3", "correct_timestamp_testdir_3", "correct_release_testdir_3",
+                    "tagged_testdir_4", "correct_timestamp_testdir_4", "correct_release_testdir_4",
 
                     "tagged_masterdir_1", "correct_timestamp_masterdir_1", "correct_release_masterdir_1",
                     "tagged_masterdir_2", "correct_timestamp_masterdir_2", "correct_release_masterdir_2",
-                    # "tagged_masterdir_3", "correct_timestamp_masterdir_3", "correct_release_masterdir_3",
-                    # "tagged_masterdir_4", "correct_timestamp_masterdir_4", "correct_release_masterdir_4",
+                    "tagged_masterdir_3", "correct_timestamp_masterdir_3", "correct_release_masterdir_3",
+                    "tagged_masterdir_4", "correct_timestamp_masterdir_4", "correct_release_masterdir_4",
 
                     "tagged_inputdir_1", "correct_timestamp_inputdir_1", "correct_release_inputdir_1",
                     "tagged_inputdir_2", "correct_timestamp_inputdir_2", "correct_release_inputdir_2",
-                    # "tagged_inputdir_3", "correct_timestamp_inputdir_3", "correct_release_inputdir_3",
-                    # "tagged_inputdir_4", "correct_timestamp_inputdir_4", "correct_release_inputdir_4",
+                    "tagged_inputdir_3", "correct_timestamp_inputdir_3", "correct_release_inputdir_3",
+                    "tagged_inputdir_4", "correct_timestamp_inputdir_4", "correct_release_inputdir_4",
       };
 
   reports:

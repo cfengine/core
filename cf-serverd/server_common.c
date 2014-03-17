@@ -80,6 +80,19 @@ void RefuseAccess(ServerConnectionState *conn, char *errmesg)
         username, ipaddr, errmesg);
 }
 
+bool IsUserNameValid(char *username)
+{
+    /* Add whatever characters are considered invalid in username */
+    const char *invalid_username_characters = "\\/";
+
+    if (strpbrk(username, invalid_username_characters) == NULL)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 int AllowedUser(char *user)
 {
     if (IsItemIn(SV.allowuserlist, user))

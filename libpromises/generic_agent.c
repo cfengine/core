@@ -929,7 +929,7 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
  * @NOTE Updates the config->agent_specific.daemon.last_validated_at timestamp
  *       used by serverd, execd etc daemons when checking for new policies.
  */
-bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config)
+bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
 {
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
 

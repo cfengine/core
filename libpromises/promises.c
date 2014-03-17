@@ -167,7 +167,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 if (args)
                 {
                     Log(LOG_LEVEL_ERR,
-                        "An apparent body '%s' was undeclared or could "
+                        "Apparent body '%s' was undeclared or could "
                         "have incorrect args, but used in a promise near "
                         "line %llu of %s (possible unquoted literal value)",
                         RvalScalarValue(cp->rval), (unsigned long long) pp->offset.line,
@@ -204,16 +204,22 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
             if (cp->references_body)
             {
-                const Bundle *callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "agent");
+                // assume this is a typed bundle (e.g. edit_line)
+                const Bundle *callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), cp->lval);
                 if (!callee)
                 {
-                    callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "common");
+                    // otherwise, assume this is a method-type call
+                    callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "agent");
+                    if (!callee)
+                    {
+                        callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "common");
+                    }
                 }
 
                 if (!callee)
                 {
                     Log(LOG_LEVEL_ERR,
-                        "Apparent body '%s' was undeclared, but "
+                        "Apparent bundle '%s' was undeclared, but "
                         "used in a promise near line %llu of %s "
                         "(possible unquoted literal value)",
                         RvalScalarValue(cp->rval), (unsigned long long)pp->offset.line,

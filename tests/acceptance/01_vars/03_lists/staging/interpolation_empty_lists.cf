@@ -1,0 +1,35 @@
+# ensure interpolated empty lists don't drag in cf_null
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "list" slist => { "item1", "item2", "item3", "item4", "item5" };
+}
+
+bundle agent test
+{
+  vars:
+      "local" slist =>  {  };
+      # should *not* bring in cf_null
+      "splice" slist => { @(init.list), @(local) };
+}
+
+bundle agent check
+{
+  vars:
+      "expected" string => '{ "item1", "item2", "item3", "item4", "item5" }';
+      "joined" string => format("%S", "test.splice");
+
+  methods:
+      "check" usebundle => default_check_strcmp($(expected),
+                                                $(joined),
+                                                "$(this.promise_filename)",
+                                                "no");
+}

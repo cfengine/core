@@ -750,7 +750,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (!CheckStoreKey(conn, newkey))   /* conceals proposition S1 */
     {
-        KeyDestroy(&key);
         return false;
     }
 
@@ -766,7 +765,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     if (counter_challenge == NULL)
     {
         Log(LOG_LEVEL_ERR, "Cannot allocate BIGNUM structure for counter challenge");
-        KeyDestroy(&key);
         return false;
     }
 
@@ -785,7 +783,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Public encryption failed = %s", ERR_reason_error_string(err));
-        KeyDestroy(&key);
         free(out);
         return false;
     }
@@ -817,7 +814,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         BN_free(counter_challenge);
         free(out);
-        KeyDestroy(&key);
         return false;
     }
 
@@ -829,7 +825,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         BN_free(counter_challenge);
         free(out);
-        KeyDestroy(&key);
         Log(LOG_LEVEL_INFO, "Challenge response from client %s was incorrect - ID false?", conn->ipaddr);
         return false;
     }
@@ -844,7 +839,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         BN_free(counter_challenge);
         free(out);
-        KeyDestroy(&key);
         return false;
     }
 
@@ -852,7 +846,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         BN_free(counter_challenge);
         free(out);
-        KeyDestroy(&key);
         Log(LOG_LEVEL_INFO, "Session key length received from %s is too long", conn->ipaddr);
         return false;
     }
@@ -879,7 +872,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
             Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
             BN_free(counter_challenge);
             free(out);
-            KeyDestroy(&key);
             return false;
         }
 

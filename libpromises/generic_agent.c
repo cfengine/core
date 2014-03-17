@@ -74,7 +74,6 @@ static void GetPromisesValidatedFile(char *filename, size_t max_size, const Gene
 static bool WriteReleaseIdFile(const char *filename, const char *dirname);
 static bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
 static bool GeneratePolicyReleaseIDFromGit(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
-static char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname);
 static char* ReadReleaseIdFromReleaseIdFileMasterfiles(const char *maybe_dirname);
 
 static bool MissingInputFile(const char *input_file);
@@ -224,6 +223,16 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
 {
     if (!MissingInputFile(config->input_file))
     {
+        {
+            time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
+            if (config->agent_type == AGENT_TYPE_SERVER ||
+                config->agent_type == AGENT_TYPE_MONITOR ||
+                config->agent_type == AGENT_TYPE_EXECUTOR)
+            {
+                config->agent_specific.daemon.last_validated_at = validated_at;
+            }
+        }
+
         if (IsPolicyPrecheckNeeded(config, force_validation))
         {
             bool policy_check_ok = GenericAgentArePromisesValid(config);
@@ -314,7 +323,7 @@ static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentCon
  * @param filename the filename
  * @return True if successful.
  */
-static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config, const char *filename, const char *checksum)
+static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config, const char *filename)
 {
     if (!MakeParentDirectory(filename, true))
     {
@@ -331,11 +340,6 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
 
     JsonElement *info = JsonObjectCreate(3);
     JsonObjectAppendInteger(info, "timestamp", time(NULL));
-
-    if (NULL != checksum)
-    {
-        JsonObjectAppendString(info, "checksum", checksum);
-    }
 
     Writer *w = FileWriter(fdopen(fd, "w"));
     JsonWrite(w, info, 0);
@@ -407,41 +411,22 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
     {
         Log(LOG_LEVEL_DEBUG, "Tagging directory %s for validation", dirname);
 
-        char tree_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
-        bool have_tree_checksum = GeneratePolicyReleaseIDFromTree(tree_checksum, dirname);
-
-        if (have_tree_checksum)
+        if (GenericAgentIsPolicyReloadNeeded(config))
         {
-            char *validated_checksum_tmp = ReadChecksumFromPolicyValidatedMasterfiles(config, dirname);
-            bool equal =
-                NULL != validated_checksum_tmp
-                && 0 == strncmp(tree_checksum, validated_checksum_tmp, GENERIC_AGENT_CHECKSUM_SIZE);
-            free(validated_checksum_tmp);
+            Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
+            GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
 
-            if (equal)
+            bool wrote_validated = WritePolicyValidatedFile(config, filename);
+
+            if (!wrote_validated)
             {
-                Log(LOG_LEVEL_DEBUG, "The tree checksum of %s was the same as the validated policy checksum", dirname);
-                return true;
+                Log(LOG_LEVEL_VERBOSE, "The promises_validated file %s was NOT updated", filename);
+                return false;
             }
+
+            Log(LOG_LEVEL_DEBUG, "The promises_validated file %s was updated", filename);
+            return true;
         }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "Could not checksum directory %s", dirname);
-        }
-
-        Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
-        GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
-
-        bool wrote_validated = WritePolicyValidatedFile(config, filename, have_tree_checksum ? tree_checksum : NULL);
-
-        if (!wrote_validated)
-        {
-            Log(LOG_LEVEL_VERBOSE, "The promises_validated file %s was NOT updated", filename);
-            return false;
-        }
-
-        Log(LOG_LEVEL_DEBUG, "The promises_validated file %s was updated", filename);
-        return true;
     }
 
     return true;
@@ -849,13 +834,9 @@ static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirn
     {
         snprintf(dirname, max_size, "%s/state", CFWORKDIR);
     }
-    else if (GetAmPolicyHub(GetWorkDir()))
-    {
-        strlcpy(dirname, GetMasterDir(), max_size);
-    }
     else
     {
-        strlcpy(dirname, GetInputDir(), max_size);
+        strlcpy(dirname, GetMasterDir(), max_size);
     }
 
     MapName(dirname);
@@ -951,13 +932,6 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
 bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config)
 {
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
-
-    if (config->agent_type == AGENT_TYPE_SERVER ||
-        config->agent_type == AGENT_TYPE_MONITOR ||
-        config->agent_type == AGENT_TYPE_EXECUTOR)
-    {
-        config->agent_specific.daemon.last_validated_at = validated_at;
-    }
 
     if (validated_at > time(NULL))
     {

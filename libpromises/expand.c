@@ -379,6 +379,10 @@ static void DeMangleVarRefString(char *ref_str, size_t len)
         {
             ref_str[i] = '.';
         }
+        else if (ref_str[i] == '[')
+        {
+            return;
+        }
     }
 }
 

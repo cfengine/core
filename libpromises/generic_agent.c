@@ -230,9 +230,12 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
             if (policy_check_ok && write_validated_file)
             {
                 GenericAgentTagReleaseDirectory(config,
-                                                NULL, // use GetAutotagDir
-                                                write_validated_file, // true
-                                                GetAmPolicyHub(GetWorkDir())); // write release ID?
+                                                // use GetAutotagDir
+                                                NULL,
+                                                // write cf_promises_validated?
+                                                write_validated_file && GetAmPolicyHub(GetWorkDir()),
+                                                // write release ID?
+                                                GetAmPolicyHub(GetWorkDir()));
             }
 
             if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
@@ -402,6 +405,17 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
         free(id);
     }
 
+    GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
+    if (!write_validated && config->agent_type == AGENT_TYPE_AGENT)
+    {
+        struct stat sb;
+        if (stat(filename, &sb) == -1)
+        {
+            Log(LOG_LEVEL_DEBUG, "cf-agent run: %s is missing, forcing its generation", filename);
+            write_validated = true;
+        }
+    }
+
     // now, tag the promises_validated
     if (write_validated)
     {
@@ -430,8 +444,6 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
         }
 
         Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
-        GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
-
         bool wrote_validated = WritePolicyValidatedFile(config, filename, have_tree_checksum ? tree_checksum : NULL);
 
         if (!wrote_validated)

@@ -11,14 +11,14 @@ bundle common prep_runlist
 {
   vars:
       "generated_inputs" string => "$(this.promise_filename).txt";
-      "inputs_pre" slist => readstringlist($(prep_runlist.generated_inputs),
+      "inputs_pre" slist => readstringlist($(generated_inputs),
                                            "\s*#[^\n]*",
                                            "\n",
                                            99999,
                                            9999999);
   reports:
     EXTRA::
-      "$(this.bundle) reading inputs from file $(runlist.generated_inputs)";
+      "$(this.bundle) reading inputs from file $(generated_inputs)";
 }
 
 # ...the usage of the data
@@ -29,7 +29,7 @@ bundle common runlist
 
   reports:
     EXTRA::
-      "$(this.bundle) got inputs '$(runlist.inputs)'";
+      "$(this.bundle) got inputs '$(inputs)'";
 }
 
 bundle agent init

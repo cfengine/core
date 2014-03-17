@@ -25,7 +25,7 @@ bundle agent check
 {
   classes:
       "OK_non_specified_namespace" expression => regcmp(".*OKI DOKI.*", $(test.agent_output));
-      "OK_specified_namespace" expression => regcmp(".*artichokie*", $(test.agent_output));
+      "OK_specified_namespace" expression => regcmp(".*artichokie.*", $(test.agent_output));
 
       "ok" and => {
                     "OK_non_specified_namespace",

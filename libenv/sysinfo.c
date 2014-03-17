@@ -318,8 +318,8 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
     EvalContextClassPutHard(ctx, VUQNAME, "source=agent,derived-from=sys.uqhost");
     EvalContextClassPutHard(ctx, VDOMAIN, "source=agent,derived-from=sys.domain");
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "host", nodename, CF_DATA_TYPE_STRING, "inventory,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uqhost", VUQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "host", nodename, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uqhost", VUQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Host name");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, CF_DATA_TYPE_STRING, "source=agent");
 }

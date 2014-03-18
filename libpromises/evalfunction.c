@@ -426,7 +426,7 @@ static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 #else
 
-static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
 {
     Log(LOG_LEVEL_ERR, "getusers is not implemented");
     return FnFailure();

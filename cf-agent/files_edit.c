@@ -49,6 +49,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
     ec = xcalloc(1, sizeof(EditContext));
 
     ec->filename = filename;
+    ec->new_line_mode = FileNewLineMode(filename);
 
     if (a.haveeditline)
     {
@@ -117,7 +118,7 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
                          "No edit changes to file '%s' need saving", ec->filename);
                 }
             }
-            else if (SaveItemListAsFile(ec->file_start, ec->filename, a))
+            else if (SaveItemListAsFile(ec->file_start, ec->filename, a, ec->new_line_mode))
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                      "Edit file '%s'", ec->filename);
@@ -142,7 +143,7 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
                          "No edit changes to xml file '%s' need saving", ec->filename);
                 }
             }
-            else if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
+            else if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, ec->new_line_mode))
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                      "Edited xml file '%s'", ec->filename);
@@ -247,8 +248,8 @@ bool SaveXmlCallback(const char *dest_filename, void *param)
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a)
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode)
 {
-    return SaveAsFile(&SaveXmlCallback, doc, file, a);
+    return SaveAsFile(&SaveXmlCallback, doc, file, a, new_line_mode);
 }
 #endif

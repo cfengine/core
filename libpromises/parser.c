@@ -117,7 +117,7 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
 
     strncpy(P.filename, path, CF_MAXVARSIZE);
 
-    yyin = safe_fopen(path, "r");
+    yyin = safe_fopen(path, "rt");
     if (yyin == NULL)
     {
         Log(LOG_LEVEL_ERR, "While opening file '%s' for parsing. (fopen: %s)", path, GetErrorStr());

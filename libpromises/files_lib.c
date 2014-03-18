@@ -338,7 +338,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         }
     }
 
-    FILE *fp = safe_fopen(file, "r");
+    FILE *fp = safe_fopen(file, "rt");
     if (!fp)
     {
         Log(LOG_LEVEL_INFO, "Couldn't read file '%s' for editing. (fopen: %s)", file, GetErrorStr());

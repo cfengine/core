@@ -26,6 +26,7 @@
 #define CFENGINE_FILES_LIB_H
 
 #include <cf3.defs.h>
+#include <file_lib.h>
 
 void PurgeItemList(Item **list, char *name);
 bool FileWriteOver(char *filename, char *contents);

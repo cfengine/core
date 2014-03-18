@@ -42,7 +42,6 @@ void SetSearchDevice(struct stat *sb, const Promise *pp);
 PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, const Promise *pp);
 PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *source, int rec, Attributes attr, const Promise *pp);
 PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, Attributes attr, const Promise *pp);
-PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes attr, const Promise *pp);
 
 bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, struct stat sstat, struct stat dstat,
                      Attributes attr, const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn, PromiseResult *result);

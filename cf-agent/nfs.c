@@ -802,7 +802,7 @@ void CleanupNFS(void)
 
     if (FSTAB_EDITS && FSTABLIST && !DONTDO)
     {
-        RawSaveItemList(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS]);
+        RawSaveItemList(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], NewLineMode_Unix);
         DeleteItemList(FSTABLIST);
         FSTABLIST = NULL;
         FSTAB_EDITS = 0;

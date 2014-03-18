@@ -337,7 +337,6 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);
-                PolicyResolve(ctx, policy, config);
             }
         }
     }
@@ -354,7 +353,6 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);
-                PolicyResolve(ctx, policy, config);
             }
         }
     }

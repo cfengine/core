@@ -61,7 +61,7 @@
 /*****************************************************/
 // Uptime calculation settings for GetUptimeMinutes() - Mantis #1134
 // HP-UX: pstat_getproc(2) on init (pid 1)
-#ifdef HPuUX
+#ifdef __hpux
 #define _PSTAT64
 #include <sys/param.h>
 #include <sys/pstat.h>

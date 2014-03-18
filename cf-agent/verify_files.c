@@ -573,6 +573,12 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 goto exit;
             }
 
+            unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+            if (access(pp->promiser, R_OK) == 0)
+            {
+                HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST);
+            }
+
             Writer *ouput_writer = NULL;
             {
                 FILE *output_file = safe_fopen(pp->promiser, "w");
@@ -614,6 +620,23 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
             JsonDestroy(default_template_data);
             WriterClose(template_writer);
             WriterClose(ouput_writer);
+
+            unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+            if (access(pp->promiser, R_OK) == 0)
+            {
+                HashFile(pp->promiser, rendered_output_digest, CF_DEFAULT_DIGEST);
+                if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
+                {
+                    cfPS(ctx, LOG_LEVEL_NOTICE, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
+                         pp->promiser, a.edit_template);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Cannot read rendered mustache template at '%s', in order to compare it to a previously rendered version",
+                    pp->promiser);
+            }
         }
     }
 

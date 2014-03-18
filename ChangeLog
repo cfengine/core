@@ -69,12 +69,18 @@
             - cf_promises_release_id contains the policy release ID which is the GIT HEAD SHA if available or hash of tree
 
         - New promise type "users" for managing local user accounts.
-        - New attribute "allowlegacyconnects" in body server control, which
-          enables serving policy via non-latest cfengine protocol, to the given
-          list of hosts.
-        - New attribute "protocolversion" in body copy_from. Allowed values
-          at the moment: "0" or "undefined", "classic" or "1", "latest" or
-          "2". By leaving it undefined the latest protocol is used.
+        - New attribute "allowlegacyconnects" in body server control,
+          which enables serving policy via non-latest cfengine protocol,
+          to the given list of hosts. If the option is absent, it
+          defaults to allow all hosts. To refuse non-TLS connections
+          just make that list empty.
+        - New attribute "protocol_version" in body copy_from, and body
+          common control, which defines the preferred protocol for
+          outgoing connections.. Allowed values at the moment: "0" or
+          "undefined", "classic" or "1", "latest" or "2". By leaving the
+          copy_from option as undefined the common control option is
+          used, and if both are undefined then classic protocol is used
+          by default.
         - New in 'bundle server access_rules'
             - Attributes "admit_ips", "admit_hostnames", "admit_keys",
               "deny_ips", "deny_hostnames", "deny_keys"

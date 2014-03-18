@@ -4,7 +4,7 @@
 
 body common control
 {
-      bundlesequence => { run };
+      bundlesequence => { run, dmi, etc_nologin };
 }
 
 bundle agent run
@@ -33,4 +33,37 @@ bundle agent run
   reports:
     dim_found::
       "$(this.bundle): value = $(PURPLE_DINOSAUR)";
+}
+
+# inventory DMI decoder, simplified for this test
+bundle agent dmi
+{
+  vars:
+      "dmivars" slist => { "PURPLE_DINOSAUR" };
+    secondpass::
+      "dmi[$(dmivars)]" string => execresult("echo Not A Dinosaur", "useshell");
+
+  classes:
+      "secondpass" expression => "any";
+
+  reports:
+      "$(this.bundle): Obtained qualified '$(dmi.dmi[$(dmivars)])'"; # fails
+      "$(this.bundle): Obtained unqualified '$(dmi[$(dmivars)])'"; # fails
+}
+
+# the System::nologin sketch, simplified for this test
+bundle agent etc_nologin()
+{
+  vars:
+    secondpass::
+      "PURPLE_DINOSAUR" string => "$(sys.workdir)/state", policy => "free";
+
+  classes:
+      "secondpass" expression => "any";
+
+  vars:
+      "etc_nologin" string => "$(PURPLE_DINOSAUR)/etc/nologin";
+
+  files:
+      "$(etc_nologin)" create => "true";
 }

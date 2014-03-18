@@ -224,11 +224,11 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
     if (!MissingInputFile(config->input_file))
     {
         {
-            time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
             if (config->agent_type == AGENT_TYPE_SERVER ||
                 config->agent_type == AGENT_TYPE_MONITOR ||
                 config->agent_type == AGENT_TYPE_EXECUTOR)
             {
+                time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
                 config->agent_specific.daemon.last_validated_at = validated_at;
             }
         }

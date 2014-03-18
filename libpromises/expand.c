@@ -936,37 +936,6 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
     }
 }
 
-static void ResolveCommonClassPromises(EvalContext *ctx, PromiseType *pt)
-{
-    assert(strcmp("classes", pt->name) == 0);
-    assert(strcmp(pt->parent_bundle->type, "common") == 0);
-
-    EvalContextStackPushPromiseTypeFrame(ctx, pt);
-    for (size_t i = 0; i < SeqLength(pt->promises); i++)
-    {
-        Promise *pp = SeqAt(pt->promises, i);
-        ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
-    }
-    EvalContextStackPopFrame(ctx);
-}
-
-static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
-{
-    assert(strcmp("vars", pt->name) == 0);
-
-    EvalContextStackPushPromiseTypeFrame(ctx, pt);
-    for (size_t i = 0; i < SeqLength(pt->promises); i++)
-    {
-        Promise *pp = SeqAt(pt->promises, i);
-        EvalContextStackPushPromiseFrame(ctx, pp, false);
-        EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
-        VerifyVarPromise(ctx, pp, false);
-        EvalContextStackPopFrame(ctx);
-        EvalContextStackPopFrame(ctx);
-    }
-    EvalContextStackPopFrame(ctx);
-}
-
 void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 {
     Log(LOG_LEVEL_DEBUG, "Resolving variables in bundle '%s' '%s'",
@@ -976,21 +945,33 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
     {
         for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
         {
-            PromiseType *sp = SeqAt(bundle->promise_types, j);
-            if (strcmp(sp->name, "classes") == 0)
+            PromiseType *pt = SeqAt(bundle->promise_types, j);
+            if (strcmp(pt->name, "classes") == 0)
             {
-                ResolveCommonClassPromises(ctx, sp);
+                EvalContextStackPushPromiseTypeFrame(ctx, pt);
+                for (size_t i = 0; i < SeqLength(pt->promises); i++)
+                {
+                    Promise *pp = SeqAt(pt->promises, i);
+                    ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
+                }
+                EvalContextStackPopFrame(ctx);
             }
         }
     }
 
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {
-        PromiseType *sp = SeqAt(bundle->promise_types, j);
+        PromiseType *pt = SeqAt(bundle->promise_types, j);
 
-        if (strcmp(sp->name, "vars") == 0)
+        if (strcmp(pt->name, "vars") == 0)
         {
-            ResolveVariablesPromises(ctx, sp);
+            EvalContextStackPushPromiseTypeFrame(ctx, pt);
+            for (size_t i = 0; i < SeqLength(pt->promises); i++)
+            {
+                Promise *pp = SeqAt(pt->promises, i);
+                ExpandPromise(ctx, pp, (PromiseActuator*)VerifyVarPromise, NULL);
+            }
+            EvalContextStackPopFrame(ctx);
         }
     }
 }

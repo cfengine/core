@@ -177,7 +177,7 @@ int SocketConnect(const char *host, const char *port,
 {
     struct addrinfo *response, *ap;
     struct addrinfo *response2, *ap2;
-    int sd, connected = false;
+    int sd = -1, connected = false;
 
     struct addrinfo query = {
         .ai_family = force_ipv4 ? AF_INET : AF_UNSPEC,

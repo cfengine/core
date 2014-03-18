@@ -2990,7 +2990,6 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
         }
         else if (!strcmp(detail, "permstr"))
         {
-        #if !defined(__MINGW32__)
             snprintf(buffer, CF_MAXVARSIZE,
                      "%c%c%c%c%c%c%c%c%c%c",
                      S_ISDIR(statbuf.st_mode) ? 'd' : '-',
@@ -3003,17 +3002,10 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
                      (statbuf.st_mode & S_IROTH) ? 'r' : '-',
                      (statbuf.st_mode & S_IWOTH) ? 'w' : '-',
                      (statbuf.st_mode & S_IXOTH) ? 'x' : '-');
-        #else
-            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
-        #endif
         }
         else if (!strcmp(detail, "permoct"))
         {
-        #if !defined(__MINGW32__)
             snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) (statbuf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)));
-        #else
-            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
-        #endif
         }
         else if (!strcmp(detail, "modeoct"))
         {
@@ -3025,7 +3017,6 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
         }
         else if (!strcmp(detail, "type"))
         {
-        #if !defined(__MINGW32__)
             switch (statbuf.st_mode & S_IFMT)
             {
             case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
@@ -3037,9 +3028,6 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
             case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
             default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
             }
-        #else
-            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
-        #endif
         }
         else if (!strcmp(detail, "dev_minor"))
         {
@@ -3069,6 +3057,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
         {
             snprintf(buffer, CF_MAXVARSIZE, "%s", path);
             ChopLastNode(buffer);
+            MapName(buffer);
         }
         else if (!strcmp(detail, "basename"))
         {

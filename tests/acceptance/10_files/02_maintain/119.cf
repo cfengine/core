@@ -34,7 +34,7 @@ body link_from init_link
 bundle agent test
 {
   meta:
-      "test_skip_needs_work" string => "any";
+      "test_skip_unsupported" string => "windows";
 
   vars:
       "inode" string => filestat("$(G.etc_group)", "ino");

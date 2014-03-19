@@ -13,6 +13,9 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_skip_needs_work" string => "windows";
+
   vars:
       "options" string => ifelse("verbose_mode", " -v ", "");
       "dirs" slist => { $(G.testdir), $(sys.masterdir), $(sys.inputdir) };

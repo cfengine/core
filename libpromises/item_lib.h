@@ -27,6 +27,7 @@
 
 #include <cf3.defs.h>
 #include <writer.h>
+#include <file_lib.h>
 
 struct Item_
 {
@@ -57,7 +58,7 @@ Item *ReturnItemAtIndex(Item *list, int index);
 Item *EndOfList(Item *start);
 void PrependItemList(Item **liststart, const char *itemstring);
 void InsertAfter(Item **filestart, Item *ptr, const char *string);
-bool RawSaveItemList(const Item *liststart, const char *filename);
+bool RawSaveItemList(const Item *liststart, const char *filename, NewLineMode new_line_mode);
 Item *RawLoadItemList(const char *filename);
 Item *SplitStringAsItemList(const char *string, char sep);
 Item *SplitString(const char *string, char sep);

@@ -396,7 +396,7 @@ void MonNetworkGatherData(double *cf_this)
         }
 
         SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "in", in[i]);
-        RawSaveItemList(in[i], vbuff);
+        RawSaveItemList(in[i], vbuff, NewLineMode_Unix);
         DeleteItemList(in[i]);
         Log(LOG_LEVEL_DEBUG, "Saved in netstat data in '%s'", vbuff);
     }
@@ -421,7 +421,7 @@ void MonNetworkGatherData(double *cf_this)
         }
 
         SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "out", out[i]);
-        RawSaveItemList(out[i], vbuff);
+        RawSaveItemList(out[i], vbuff, NewLineMode_Unix);
         Log(LOG_LEVEL_DEBUG, "Saved out netstat data in '%s'", vbuff);
         DeleteItemList(out[i]);
     }

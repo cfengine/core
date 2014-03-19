@@ -143,7 +143,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
 /*********************************************************************/
 
-int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a)
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, NewLineMode new_line_mode)
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
@@ -215,7 +215,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
 
-    if ((*callback)(new, param) == false)
+    if ((*callback)(new, param, new_line_mode) == false)
     {
         goto end;
     }
@@ -287,13 +287,13 @@ end:
 
 /*********************************************************************/
 
-static bool SaveItemListCallback(const char *dest_filename, void *param)
+static bool SaveItemListCallback(const char *dest_filename, void *param, NewLineMode new_line_mode)
 {
     Item *liststart = param, *ip;
     FILE *fp;
 
     //saving list to file
-    if ((fp = safe_fopen(dest_filename, "w")) == NULL)
+    if ((fp = safe_fopen(dest_filename, (new_line_mode == NewLineMode_Native) ? "wt" : "w")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open destination file '%s' for writing. (fopen: %s)",
             dest_filename, GetErrorStr());
@@ -323,9 +323,9 @@ static bool SaveItemListCallback(const char *dest_filename, void *param)
 
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a)
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, NewLineMode new_line_mode)
 {
-    return SaveAsFile(&SaveItemListCallback, liststart, file, a);
+    return SaveAsFile(&SaveItemListCallback, liststart, file, a, new_line_mode);
 }
 
 // Some complex logic here to enable warnings of diffs to be given

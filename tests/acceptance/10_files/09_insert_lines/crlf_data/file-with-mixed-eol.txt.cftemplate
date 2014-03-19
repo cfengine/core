@@ -1,0 +1,9 @@
+alpha
+Inserted line
+beta
+[%CFEngine BEGIN %]
+Inserted block
+Block line 1
+Block line 2
+[%CFEngine END %]
+charlie

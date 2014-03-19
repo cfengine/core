@@ -58,7 +58,7 @@ void MonProcessesGatherData(double *cf_this)
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_users", CFWORKDIR);
     MapName(vbuff);
-    RawSaveItemList(userList, vbuff);
+    RawSaveItemList(userList, vbuff, NewLineMode_Unix);
 
     DeleteItemList(userList);
 

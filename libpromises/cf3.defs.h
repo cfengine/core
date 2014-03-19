@@ -665,17 +665,6 @@ typedef struct
 
 typedef struct Constraint_ Constraint;
 
-typedef struct
-{
-    char *filename;
-    Item *file_start;
-    int num_edits;
-#ifdef HAVE_LIBXML2
-    xmlDocPtr xmldoc;
-#endif
-
-} EditContext;
-
 typedef enum
 {
     INTERVAL_HOURLY,

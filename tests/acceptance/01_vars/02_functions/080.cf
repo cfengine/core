@@ -35,7 +35,7 @@ bundle agent test
       #
       # Always execute this - the return value depends on the OS used, but
       # we always expect registryvalue() to not crash
-      "regval" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Currentversion", "ProgramFiles");
+      "regval" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Currentversion", "ProgramFilesDir");
 }
 
 

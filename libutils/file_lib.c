@@ -46,10 +46,17 @@ bool FileCanOpen(const char *path, const char *modes)
 
 Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
 {
-    int fd = open(filename, O_RDONLY);
+    int fd = safe_open(filename, O_RDONLY);
     if (fd == -1)
         return NULL;
 
+    Writer *w = FileReadFromFd(fd, max_size, truncated);
+    close(fd);
+    return w;
+}
+
+Writer *FileReadFromFd(int fd, size_t max_size, bool *truncated)
+{
     Writer *w = StringWriter();
     for (;;)
     {
@@ -60,7 +67,6 @@ Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
         {
             if (truncated)
                 *truncated = false;
-            close(fd);
             return w;
         }
         if (read_ < 0)
@@ -68,7 +74,6 @@ Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
             if (errno == EINTR)
                 continue;
             WriterClose(w);
-            close(fd);
             return NULL;
         }
         if (read_ + StringWriterLength(w) > max_size)
@@ -76,7 +81,6 @@ Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
             WriterWriteLen(w, buf, max_size - StringWriterLength(w));
             if (truncated)
                 *truncated = true;
-            close(fd);
             return w;
         }
         WriterWriteLen(w, buf, read_);
@@ -156,6 +160,13 @@ int IsDirReal(const char *path)
 
     return (S_ISDIR(s.st_mode) != 0);
 }
+
+#ifndef __MINGW32__
+NewLineMode FileNewLineMode(ARG_UNUSED const char *file)
+{
+    return NewLineMode_Unix;
+}
+#endif // !__MINGW32__
 
 #ifdef TEST_SYMLINK_ATOMICITY
 void test_switch_symlink();

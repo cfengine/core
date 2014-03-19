@@ -426,7 +426,7 @@ static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 #else
 
-static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
 {
     Log(LOG_LEVEL_ERR, "getusers is not implemented");
     return FnFailure();
@@ -2056,7 +2056,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
     const char *split = RlistScalarValue(finalargs->next->next);
     const char *array_lval = RlistScalarValue(finalargs->next->next->next);
 
-    FILE *fin = safe_fopen(filename, "r");
+    FILE *fin = safe_fopen(filename, "rt");
     if (!fin)
     {
         Log(LOG_LEVEL_ERR, "File '%s' could not be read in getfields(). (fopen: %s)", filename, GetErrorStr());
@@ -2140,7 +2140,7 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
     char *regex = RlistScalarValue(finalargs);
     char *filename = RlistScalarValue(finalargs->next);
 
-    if ((fin = safe_fopen(filename, "r")) == NULL)
+    if ((fin = safe_fopen(filename, "rt")) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
         return FnReturn("0");
@@ -4859,7 +4859,7 @@ static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
     const char *arg_regex = RlistScalarValue(finalargs);
     const char *arg_filename = RlistScalarValue(finalargs->next);
 
-    FILE *fin = safe_fopen(arg_filename, "r");
+    FILE *fin = safe_fopen(arg_filename, "rt");
     if (!fin)
     {
         return FnReturnContext(false);
@@ -6088,7 +6088,13 @@ static void *CfReadFile(const char *filename, int maxsize)
     /* 0 means 'read until the end of file' */
     size_t limit = maxsize > 0 ? maxsize : SIZE_MAX;
     bool truncated = false;
-    Writer *w = FileRead(filename, limit, &truncated);
+    Writer *w = NULL;
+    int fd = safe_open(filename, O_RDONLY | O_TEXT);
+    if (fd >= 0)
+    {
+        w = FileReadFromFd(fd, limit, &truncated);
+        close(fd);
+    }
 
     if (!w)
     {

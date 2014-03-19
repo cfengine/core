@@ -562,6 +562,10 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     char vbuff[CF_BUFSIZE];
     char ebuff[CF_EXPANDSIZE];
 
+#ifdef __MINGW32__
+    InitializeWindows();
+#endif
+
     DetermineCfenginePort();
 
     EvalContextClassPutHard(ctx, "any", "source=agent");
@@ -582,12 +586,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         strcpy(CFWORKDIR, workdir);
         MapName(CFWORKDIR);
     }
-
-/* On windows, use 'binary mode' as default for files */
-
-#ifdef __MINGW32__
-    //_fmode = _O_BINARY;
-#endif
 
     OpenLog(LOG_USER);
     SetSyslogFacility(LOG_USER);

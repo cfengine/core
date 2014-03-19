@@ -23,7 +23,9 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "ok" not => regcmp(".*Bad file descriptor.*", "$(test.subout)");
+      "ok_output" not => regcmp(".*Bad file descriptor.*", "$(test.subout)");
+      "ok_no_crash" expression => isvariable("test.subout");
+      "ok" and => { "ok_output", "ok_no_crash" };
 
   reports:
     DEBUG::

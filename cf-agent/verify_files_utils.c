@@ -2128,7 +2128,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         ChopLastNode(basedir);
         if (safe_chdir(basedir))
         {
-            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'", basedir);
+            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
             return false;
         }
         return VerifyFileLeaf(ctx, name, sb, attr, pp, result);

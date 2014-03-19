@@ -158,7 +158,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a,
 Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attributes a, const Promise *pp, PromiseResult *result)
 {
     FILE *fp = NULL;
-    if ((fp = safe_fopen(a.edit_template, "r" )) == NULL)
+    if ((fp = safe_fopen(a.edit_template, "rt" )) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to open template file '%s' to make '%s'", a.edit_template, pp->promiser);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
@@ -1539,7 +1539,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
     Item *loc = NULL;
     int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
 
-    if ((fin = safe_fopen(pp->promiser, "r")) == NULL)
+    if ((fin = safe_fopen(pp->promiser, "rt")) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not read file '%s'. (fopen: %s)", pp->promiser, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);

@@ -1,0 +1,100 @@
+##############################################################################
+# Test that CRLF is handled correctly on Windows.
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "!windows";
+
+  vars:
+      "datadir" string => "$(this.promise_dirname)/crlf_data";
+      "filelist" slist => { "file-with-lf.txt",
+                            "file-with-crlf.txt",
+                            "file-with-mixed-eol.txt"
+                          };
+
+  files:
+      "$(G.testdir)/."
+        create => "yes";
+      "$(G.testdir)/$(filelist)"
+        copy_from => copy_file("$(filelist)");
+}
+
+body copy_from copy_file(file)
+{
+  source => "$(datadir)/$(file)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testdir)/$(init.filelist)"
+        edit_line => insert_line;
+}
+
+bundle edit_line insert_line
+{
+  insert_lines:
+      "Inserted line"
+        select_region => second_line;
+      "Inserted block
+Block line 1
+Block line 2"
+        select_region => third_line;
+}
+
+body select_region second_line
+{
+  select_start => "alpha";
+  select_end   => "beta";
+}
+
+body select_region third_line
+{
+  select_start => "beta";
+  select_end   => "charlie";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "ok_classes" slist => { "diff_ok_file_with_lf_txt",
+                              "diff_ok_file_with_crlf_txt",
+                              "diff_ok_file_with_mixed_eol_txt",
+                              "size_ok_file_with_lf_txt",
+                              "size_ok_file_with_crlf_txt",
+                              "size_ok_file_with_mixed_eol_txt"
+                    };
+      "classes_set" slist => classesmatching("(diff|size)_ok.*");
+  classes:
+      "diff_ok_$(init.filelist)" expression => returnszero(
+          "$(G.diff) $(G.testdir)/$(init.filelist) $(init.datadir)/$(init.filelist).expected >$(G.dev_null) 2>&1",
+          "useshell");
+      "size_ok_$(init.filelist)" expression => strcmp(filestat("$(G.testdir)/$(init.filelist)", "size"),
+                                                      filestat("$(init.datadir)/$(init.filelist).expected", "size"));
+
+      "ok" and => { @(ok_classes) };
+
+  reports:
+    DEBUG.!ok::
+      "Classes expected: $(ok_classes)";
+      "Classes actually set: $(classes_set)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

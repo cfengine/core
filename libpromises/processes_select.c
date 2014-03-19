@@ -810,7 +810,7 @@ int LoadProcessTable(Item **procdata)
 /* Now save the data */
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_procs", CFWORKDIR);
-    RawSaveItemList(*procdata, vbuff);
+    RawSaveItemList(*procdata, vbuff, NewLineMode_Unix);
 
     CopyList(&rootprocs, *procdata);
     CopyList(&otherprocs, *procdata);
@@ -829,11 +829,11 @@ int LoadProcessTable(Item **procdata)
     }
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_rootprocs", CFWORKDIR);
-    RawSaveItemList(rootprocs, vbuff);
+    RawSaveItemList(rootprocs, vbuff, NewLineMode_Unix);
     DeleteItemList(rootprocs);
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_otherprocs", CFWORKDIR);
-    RawSaveItemList(otherprocs, vbuff);
+    RawSaveItemList(otherprocs, vbuff, NewLineMode_Unix);
     DeleteItemList(otherprocs);
 
     free(vbuff);

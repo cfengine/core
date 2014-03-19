@@ -32,6 +32,9 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   vars:
       "examples" slist => { @(init.all_examples) };
       "canon[$(examples)]" string => canonify($(examples));

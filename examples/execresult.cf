@@ -39,18 +39,12 @@ body common control
 }
 
 bundle agent example
-
 {
   vars:
-
       "my_result" string => execresult("/bin/ls /tmp/testhere","noshell");
 
   reports:
-
-    linux::
-
       "/bin/ls /tmp/testhere returned '$(my_result)'";
-
 }
 #+end_src
 ###############################################################################

@@ -2800,7 +2800,8 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Att
 
     if (changed)
     {
-        EvalContextHeapPersistentSave(PromiseGetNamespace(pp), "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+        EvalContextHeapPersistentSave("checksum_alerts", PromiseGetNamespace(pp), CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+        EvalContextClassPutSoft(ctx, "checksum_alerts", CONTEXT_SCOPE_NAMESPACE, "");
         LogHashChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
     }
 

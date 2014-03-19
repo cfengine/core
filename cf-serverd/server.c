@@ -170,8 +170,8 @@ static void PurgeOldConnections(Item **list, time_t now)
 
     if (ThreadLock(cft_count))
     {
-        Item *ip, *next;
-        for (ip = *list; ip != NULL; ip = next)
+        Item *next;
+        for (Item *ip = *list; ip != NULL; ip = next)
         {
             int then = 0;
             sscanf(ip->classes, "%d", &then);

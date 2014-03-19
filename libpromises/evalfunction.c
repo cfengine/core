@@ -120,6 +120,14 @@ static FnCallResult FnReturn(const char *str)
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(str), RVAL_TYPE_SCALAR } };
 }
 
+/*
+ * Return succesful FnCallResult with str as is.
+ */
+static FnCallResult FnReturnNoCopy(char *str)
+{
+    return (FnCallResult) { FNCALL_SUCCESS, { str, RVAL_TYPE_SCALAR } };
+}
+
 static FnCallResult FnReturnBuffer(Buffer *buf)
 {
     return (FnCallResult) { FNCALL_SUCCESS, { BufferClose(buf), RVAL_TYPE_SCALAR } };
@@ -145,6 +153,134 @@ static FnCallResult FnReturnContext(bool result)
 static FnCallResult FnFailure(void)
 {
     return (FnCallResult) { FNCALL_FAILURE };
+}
+
+static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
+{
+    VarRef *ref = VarRefParse(varname);
+    if (!VarRefIsQualified(ref))
+    {
+        if (fp->caller)
+        {
+            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+        }
+        else
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Function '%s'' was not called from a promise; "
+                "the unqualified variable reference %s cannot be qualified automatically.",
+                fp->name,
+                varname);
+            VarRefDestroy(ref);
+            return NULL;
+        }
+    }
+
+    return ref;
+}
+
+static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const VarRef *ref,
+                                      const DataType disallowed_datatypes[], size_t disallowed_count)
+{
+    assert(ref);
+
+    DataType value_type = CF_DATA_TYPE_NONE;
+    const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+    bool want_type = true;
+    
+    for (int di = 0; di < disallowed_count; di++)
+    {
+        if (disallowed_datatypes[di] == value_type)
+        {
+            want_type = false;
+            break;
+        }
+    }
+
+    JsonElement *convert = NULL;
+    if (want_type)
+    {
+        switch (DataTypeToRvalType(value_type))
+        {
+        case RVAL_TYPE_LIST:
+            convert = JsonArrayCreate(RlistLen(value));
+            for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+            {
+                if (rp->val.type == RVAL_TYPE_SCALAR &&
+                    strcmp(RlistScalarValue(value), CF_NULL_VALUE) != 0)
+                {
+                    JsonArrayAppendString(convert, RlistScalarValue(rp));
+                }
+            }
+            break;
+
+        case RVAL_TYPE_CONTAINER:
+            convert = JsonCopy(value);
+            break;
+
+        default:
+            {
+                VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+                convert = JsonObjectCreate(10);
+                Variable *var;
+                while ((var = VariableTableIteratorNext(iter)))
+                {
+                    // TODO: explain array iteration
+                    if (var->ref->num_indices != 1)
+                    {
+                        continue;
+                    }
+
+                    switch (var->rval.type)
+                    {
+                    case RVAL_TYPE_SCALAR:
+                        JsonObjectAppendString(convert, var->ref->indices[0], var->rval.item);
+                        break;
+
+                    case RVAL_TYPE_LIST:
+                    {
+                        JsonElement *array = JsonArrayCreate(10);
+                        for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                        {
+                            if (rp->val.type == RVAL_TYPE_SCALAR &&
+                                strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                            {
+                                JsonArrayAppendString(array, RlistScalarValue(rp));
+                            }
+                        }
+                        JsonObjectAppendArray(convert, var->ref->indices[0], array);
+                    }
+                    break;
+
+                    default:
+                        break;
+                    }
+                }
+
+                VariableTableIteratorDestroy(iter);
+
+                if (JsonLength(convert) < 1)
+                {
+                    char *varname = VarRefToString(ref, true);
+                    Log(LOG_LEVEL_VERBOSE, "%s: argument '%s' does not resolve to a container or a list or a CFEngine array", fp->name, varname);
+                    free(varname);
+                    JsonDestroy(convert);
+                    return NULL;
+                }
+
+                break;
+            } // end of default case
+        } // end of data type switch
+    }
+    else // !wanted_type
+    {
+        char *varname = VarRefToString(ref, true);
+        Log(LOG_LEVEL_DEBUG, "%s: argument '%s' resolved to an undesired data type", fp->name, varname);
+        free(varname);
+    }
+
+    return convert;
 }
 
 static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool return_address, bool return_recent)
@@ -3568,90 +3704,59 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
     const char *name = RlistScalarValue(finalargs);
     const char *sort_type = finalargs->next ? RlistScalarValue(finalargs->next) : NULL;
 
-    int count = 0;
+    size_t count = 0;
     double mean = 0;
     double M2 = 0;
-    Rlist *max = NULL;
-    Rlist *min = NULL;
+    char* min = NULL;
+    char* max = NULL;
     bool variance_mode = strcmp(fp->name, "variance") == 0;
     bool mean_mode = strcmp(fp->name, "mean") == 0;
+    bool max_mode = strcmp(fp->name, "max") == 0;
+    bool min_mode = strcmp(fp->name, "min") == 0;
 
-    DataType type = CF_DATA_TYPE_NONE;
-    VarRef *ref = VarRefParse(name);
-    const void *value = EvalContextVariableGet(ctx, ref, &type);
+    VarRef *ref = ResolveAndQualifyVarName(fp, name);
+    if (!ref)
+    {
+        return FnFailure();
+    }
+
+    JsonElement *json = VarRefValueToJson(ctx, fp, ref, NULL, 0);
     VarRefDestroy(ref);
-    if (!value)
+ 
+    if (!json)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' did not resolve to a variable",
-            fp->name, name);
         return FnFailure();
     }
 
-    Rlist *input_list = NULL;
-    JsonElement *json = NULL;
-
-    switch (DataTypeToRvalType(type))
+    JsonIterator iter = JsonIteratorInit(json);
+    const JsonElement *el = NULL;
+    while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
     {
-    case RVAL_TYPE_LIST:
-        input_list = (Rlist *)value;
-        if (NULL != input_list && NULL == input_list->next
-            && input_list->val.type == RVAL_TYPE_SCALAR
-            && strcmp(RlistScalarValue(input_list), CF_NULL_VALUE) == 0) // TODO: This... bullshit
-        {
-            input_list = NULL;
-        }
-        break;
-    case RVAL_TYPE_CONTAINER:
-        json = (JsonElement *)value;
-        break;
-    default:
-        Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
-            fp->name, name, DataTypeToString(type));
-        return FnFailure();
-    }
+        char *value = JsonPrimitiveToString(el);
 
-    if (NULL != input_list)
-    {
-        bool null_seen = false;
-        for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
+        if (NULL != value)
         {
-            const char *cur = RlistScalarValue(rp);
-            if (strcmp(cur, CF_NULL_VALUE) == 0)
+            if (sort_type)
             {
-                null_seen = true;
-            }
-            else if (sort_type)
-            {
-                if (NULL == min || NULL == max)
+                if (min_mode && (NULL == min || !GenericStringItemLess(sort_type, min, value)))
                 {
-                    min = max = (Rlist*) rp;
+                    free(min);
+                    min = xstrdup(value);
                 }
-                else
-                {
-                    if (!GenericItemLess(sort_type, (void*) min, (void*) rp))
-                    {
-                        min = (Rlist*) rp;
-                    }
 
-                    if (GenericItemLess(sort_type, (void*) max, (void*) rp))
-                    {
-                        max = (Rlist*) rp;
-                    }
+                if (max_mode && (NULL == max || GenericStringItemLess(sort_type, max, value)))
+                {
+                    free(max);
+                    max = xstrdup(value);
                 }
             }
 
             count++;
 
-            // none of the following apply if CF_NULL_VALUE has been seen
-            if (null_seen)
-            {
-                continue;
-            }
-
-            double x;
             if (mean_mode || variance_mode)
             {
-                if (1 != sscanf(cur, "%lf", &x))
+                double x;
+                if (1 != sscanf(value, "%lf", &x))
                 {
                     x = 0; /* treat non-numeric entries as zero */
                 }
@@ -3661,88 +3766,25 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
                 mean += delta/count;
                 M2 += delta * (x - mean);
             }
-        }
 
-
-        if (count == 1 && null_seen)
-        {
-            count = 0;
-        }
-    }
-    else if (NULL != json)
-    {
-        if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
-        {
-            JsonIterator iter = JsonIteratorInit(value);
-            const JsonElement *el = NULL;
-            while ((el = JsonIteratorNextValue(&iter)))
-            {
-                char *value = JsonPrimitiveToString(el);
-
-                if (NULL != value)
-                {
-                    Rlist *temp_list = NULL;
-                    RlistAppendScalar(&temp_list, value);
-                    if (sort_type)
-                    {
-                        if (NULL == min || NULL == max)
-                        {
-                            RlistAppendScalar(&min, value);
-                            RlistAppendScalar(&max, value);
-                        }
-                        else
-                        {
-                            if (!GenericItemLess(sort_type, (void*) min, (void*) temp_list))
-                            {
-                                RlistDestroy(min);
-                                min = NULL;
-                                RlistAppendScalar(&min, value);
-                            }
-
-                            if (GenericItemLess(sort_type, (void*) max, (void*) temp_list))
-                            {
-                                RlistDestroy(max);
-                                max = NULL;
-                                RlistAppendScalar(&max, value);
-                            }
-                        }
-                    }
-
-                    count++;
-
-                    double x;
-                    if (mean_mode || variance_mode)
-                    {
-                        if (1 != sscanf(value, "%lf", &x))
-                        {
-                            x = 0; /* treat non-numeric entries as zero */
-                        }
-
-                        // Welford's algorithm
-                        double delta = x - mean;
-                        mean += delta/count;
-                        M2 += delta * (x - mean);
-                    }
-
-                    RlistDestroy(temp_list);
-                    free(value);
-                }
-            }
+            free(value);
         }
     }
 
-    FnCallResult *ret = NULL;
-    FnCallResult result;
+    JsonDestroy(json);
+
     if (mean_mode)
     {
-        result = count == 0 ? FnFailure() : FnReturnF("%lf", mean);
-        ret = &result;
+        return count == 0 ? FnFailure() : FnReturnF("%lf", mean);
     }
     else if (variance_mode)
     {
         double variance = 0;
 
-        if (count == 0) return FnFailure();
+        if (count == 0)
+        {
+            return FnFailure();
+        }
 
         // if count is 1, variance is 0
 
@@ -3751,32 +3793,18 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
             variance = M2/(count - 1);
         }
 
-        result = FnReturnF("%lf", variance);
-        ret = &result;
+        return FnReturnF("%lf", variance);
     }
-    else if (strcmp(fp->name, "max") == 0)
+    else if (max_mode)
     {
-        result = count == 0 ? FnFailure() : FnReturn(RlistScalarValue(max));
-        ret = &result;
-
+        return NULL == max ? FnFailure() : FnReturnNoCopy(max);
     }
-    else if (strcmp(fp->name, "min") == 0)
+    else if (min_mode)
     {
-        result = count == 0 ? FnFailure() : FnReturn(RlistScalarValue(min));
-        ret = &result;
+        return NULL == min ? FnFailure() : FnReturnNoCopy(min);
     }
 
-    if (ret)
-    {
-        if (NULL != json)
-        {
-            RlistDestroy(max);
-            RlistDestroy(min);
-        }
-
-        return *ret;
-    }
-
+    // else, we don't know this fp->name
     ProgrammingError("Unknown function call %s to FnCallFold", fp->name);
     return FnFailure();
 }

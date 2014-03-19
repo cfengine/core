@@ -1,0 +1,52 @@
+# Test that variables in meta tags are expanded
+# Redmine:4885 (https://cfengine.com/dev/issues/4885)
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "namespaced-bundles.cf.sub1", "namespaced-bundles.cf.sub2" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "variables" slist => { "item1", "item2" };
+      "variable_tag" string => "mytag";
+
+  classes:
+    "$(variables)_class"
+      expression => "any",
+      scope => "namespace",
+      meta => { "$(variable_tag)" };
+
+}
+
+bundle agent test
+{
+  vars:
+    "found_classes"
+      slist => classesmatching(".*", $(init.variable_tag));
+
+    "joined_found_classes"
+      string => join(",", found_classes);
+}
+
+bundle agent check
+{
+  vars:
+    "expected_joined_found_classes" string => "item2_class,item1_class";
+
+  classes:
+      "ok" expression => strcmp($(expected_joined_found_classes), $(test.joined_found_classes));
+
+  reports:
+    DEBUG::
+      "$(this.promise_filename) Expected: $(expected_joined_found_classes)";
+      "$(this.promise_filename) Found: $(test.joined_found_classes)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

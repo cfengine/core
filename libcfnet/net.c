@@ -167,6 +167,7 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
    Tries to connect() to server #host, returns the socket descriptor and the
    IP address that succeeded in #txtaddr.
 
+   @param #connect_timeout how long to wait for connect(), zero blocks forever
    @param #txtaddr If connected successfully return the IP connected in
                    textual representation
    @return Connected socket descriptor or -1 in case of failure.
@@ -308,6 +309,7 @@ int SocketConnect(const char *host, const char *port,
  * Tries to connect for #timeout_ms milliseconds. On success sets the recv()
  * timeout to #timeout_ms as well.
  *
+ * @param #timeout_ms if zero wait forever.
  * @return true on success, false otherwise.
  **/
 static bool TryConnect(int sd, unsigned long timeout_ms,
@@ -343,13 +345,21 @@ static bool TryConnect(int sd, unsigned long timeout_ms,
         FD_ZERO(&myset);
         FD_SET(sd, &myset);
 
-        struct timeval tv = {
-            .tv_sec = timeout_ms / 1000,
-            .tv_usec = (timeout_ms % 1000) * 1000
-        };
         Log(LOG_LEVEL_VERBOSE, "Waiting to connect...");
 
-        ret = select(sd + 1, NULL, &myset, NULL, &tv);
+        struct timeval tv, *tvp;
+        if (timeout_ms > 0)
+        {
+            tv.tv_sec = timeout_ms / 1000;
+            tv.tv_usec = (timeout_ms % 1000) * 1000;
+            tvp = &tv;
+        }
+        else
+        {
+            tvp = NULL;                                /* wait indefinitely */
+        }
+
+        ret = select(sd + 1, NULL, &myset, NULL, tvp);
         if (ret == -1)
         {
             Log(LOG_LEVEL_ERR,
@@ -370,15 +380,13 @@ static bool TryConnect(int sd, unsigned long timeout_ms,
 
         if (errcode != 0)
         {
-            Log(LOG_LEVEL_INFO,
-                "Error connecting to server: %s",
+            Log(LOG_LEVEL_INFO, "Error connecting to server: %s",
                 GetErrorStrFromCode(errcode));
             return false;
         }
     }
 
     /* Connection suceeded, return to blocking mode. */
-
     ret = fcntl(sd, F_SETFL, arg);
     if (ret == -1)
     {
@@ -387,7 +395,11 @@ static bool TryConnect(int sd, unsigned long timeout_ms,
             GetErrorStr());
     }
 
-    SetReceiveTimeout(sd, timeout_ms);
+    if (timeout_ms > 0)
+    {
+        SetReceiveTimeout(sd, timeout_ms);
+    }
+
     return true;
 }
 
@@ -401,9 +413,11 @@ static bool TryConnect(int sd, unsigned long timeout_ms,
 
 /**
  * Set timeout for recv(), in milliseconds.
+ * @param ms must be > 0.
  */
 int SetReceiveTimeout(int fd, unsigned long ms)
 {
+    assert(ms > 0);
 
     Log(LOG_LEVEL_VERBOSE, "Setting socket timeout to %lu milliseconds.", ms);
 

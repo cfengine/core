@@ -202,7 +202,7 @@ Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp)
     attr.networks = GetNetworkConstraints(ctx, pp);
 
     attr.haveroutedto = PromiseGetConstraintAsBoolean(ctx, "routed_to", pp);
-    attr.haveadvertisedby = PromiseGetConstraintAsBoolean(ctx, "advertised_by", pp);
+    attr.haveadvertisedby = PromiseGetConstraintAsBoolean(ctx, "advertised_as", pp);
     attr.havebalance = PromiseGetConstraintAsBoolean(ctx, "balanced_destinations", pp);
 
     return attr;

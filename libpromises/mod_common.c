@@ -405,11 +405,11 @@ const ConstraintSyntax routes_control_constraints[] =  /* enum cfh_control */
     ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF router priority", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,rip,bgp", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_external_metric_type", "1,2", "How to calculate metrics for external routes", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_INTRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_connected_metric", CF_INTRANGE, "Metric for redistributed direct connetions", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_static_metric", CF_INTRANGE, "Metric for redistributed static route", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_rip_metric", CF_INTRANGE, "Metric for redistributed RIP route", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_bgp_metric", CF_INTRANGE, "Metric for redistributed BGP route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_VALRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_connected_metric", CF_VALRANGE, "Metric for redistributed direct connetions", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_static_metric", CF_VALRANGE, "Metric for redistributed static route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_rip_metric", CF_VALRANGE, "Metric for redistributed RIP route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_bgp_metric", CF_VALRANGE, "Metric for redistributed BGP route", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

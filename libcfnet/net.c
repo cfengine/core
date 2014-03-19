@@ -34,7 +34,7 @@
 #include <misc_lib.h>
 
 
-static bool TryConnect(int sd, struct timeval *tvp,
+static bool TryConnect(int sd, unsigned long timeout_ms,
                        const struct sockaddr *sa, socklen_t sa_len);
 
 /*************************************************************************/
@@ -251,10 +251,8 @@ int SocketConnect(const char *host, const char *port,
                 freeaddrinfo(response2);
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Setting connect timeout to %u", connect_timeout);
-            struct timeval tv = { .tv_sec = connect_timeout };
-
-            connected = TryConnect(sd, &tv, ap->ai_addr, ap->ai_addrlen);
+            connected = TryConnect(sd, connect_timeout * 1000,
+                                   ap->ai_addr, ap->ai_addrlen);
             ap = ap->ai_next;
         }
     }
@@ -307,11 +305,12 @@ int SocketConnect(const char *host, const char *port,
 #endif
 
 /**
- * Tries a nonblocking connect and then restores blocking if
- * successful. Returns true on success, false otherwise.
- * NB! Do not use recv() timeout - see note below.
+ * Tries to connect for #timeout_ms milliseconds. On success sets the recv()
+ * timeout to #timeout_ms as well.
+ *
+ * @return true on success, false otherwise.
  **/
-static bool TryConnect(int sd, struct timeval *tvp,
+static bool TryConnect(int sd, unsigned long timeout_ms,
                        const struct sockaddr *sa, socklen_t sa_len)
 {
     assert(sa != NULL);
@@ -344,12 +343,17 @@ static bool TryConnect(int sd, struct timeval *tvp,
         FD_ZERO(&myset);
         FD_SET(sd, &myset);
 
-        /* now wait for connect, but no more than tvp.sec */
-        ret = select(sd + 1, NULL, &myset, NULL, tvp);
+        struct timeval tv = {
+            .tv_sec = timeout_ms / 1000,
+            .tv_usec = (timeout_ms % 1000) * 1000
+        };
+        Log(LOG_LEVEL_VERBOSE, "Waiting to connect...");
+
+        ret = select(sd + 1, NULL, &myset, NULL, &tv);
         if (ret == -1)
         {
             Log(LOG_LEVEL_ERR,
-                "Error waiting for connection timeout (select: %s)",
+                "Error while waiting for connection (select: %s)",
                 GetErrorStr());
             return false;
         }
@@ -367,7 +371,7 @@ static bool TryConnect(int sd, struct timeval *tvp,
         if (errcode != 0)
         {
             Log(LOG_LEVEL_INFO,
-                "Timeout connecting to server (getsockopt: %s)",
+                "Error connecting to server: %s",
                 GetErrorStrFromCode(errcode));
             return false;
         }
@@ -378,17 +382,12 @@ static bool TryConnect(int sd, struct timeval *tvp,
     ret = fcntl(sd, F_SETFL, arg);
     if (ret == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not set socket to blocking mode (fcntl: %s)",
+        Log(LOG_LEVEL_ERR,
+            "Could not set socket back to blocking mode (fcntl: %s)",
             GetErrorStr());
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Setting socket timeout to %ld", tvp->tv_sec);
-    ret = SetReceiveTimeout(sd, tvp);
-    if (ret == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Could not set socket timeout (%s)", GetErrorStr());
-    }
-
+    SetReceiveTimeout(sd, timeout_ms);
     return true;
 }
 
@@ -400,29 +399,33 @@ static bool TryConnect(int sd, struct timeval *tvp,
 
 
 
-#ifdef __linux__
-/*
-  NB: recv() timeout interpretation differs under Windows: setting tv_sec to
-  50 (and tv_usec to 0) results in a timeout of 0.5 seconds on Windows, but
-  50 seconds on Linux.
-*/
-/* TODO more platforms... */
-
-int SetReceiveTimeout(int fd, const struct timeval *tv)
+/**
+ * Set timeout for recv(), in milliseconds.
+ */
+int SetReceiveTimeout(int fd, unsigned long ms)
 {
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)tv, sizeof(struct timeval)))
+
+    Log(LOG_LEVEL_VERBOSE, "Setting socket timeout to %lu milliseconds.", ms);
+
+/* On windows SO_RCVTIMEO is set by a DWORD indicating the timeout in
+ * milliseconds, on UNIX it's a struct timeval. */
+
+#if !defined(__MINGW32__)
+    struct timeval tv = {
+        .tv_sec = ms / 1000,
+        .tv_usec = (ms % 1000) * 1000
+    };
+    int ret = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+#else
+    int ret = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &ms, sizeof(ms));
+#endif
+
+    if (ret != 0)
     {
+        Log(LOG_LEVEL_INFO,
+            "Failed to set socket timeout to %lu milliseconds.", ms);
         return -1;
     }
 
     return 0;
 }
-
-#else
-
-int SetReceiveTimeout(ARG_UNUSED int fd, ARG_UNUSED const struct timeval *tv)
-{
-    return 0;
-}
-
-#endif

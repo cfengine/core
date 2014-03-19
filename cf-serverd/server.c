@@ -354,8 +354,10 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
 
-    struct timeval tv = { .tv_sec = CONNTIMEOUT * 20 };
-    SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info), &tv);
+    /* 20 times the connect() timeout should be enough to avoid MD5
+     * computation timeouts on big files on old slow Solaris 8 machines. */
+    SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info),
+                      CONNTIMEOUT * 20 * 1000);
 
     if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
     {

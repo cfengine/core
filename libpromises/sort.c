@@ -197,7 +197,7 @@ Item *SortItemListTimes(Item *list)
     return Sort(list, &ItemTimeMore, &ItemGetNext, &ItemPutNext, NULL);
 }
 
-/* Rlist* callbacks */
+/* Rlist* and String* callbacks */
 
 static bool RlistCustomItemLess(void *lhs_, void *rhs_, void *ctx)
 {
@@ -208,28 +208,40 @@ static bool RlistCustomItemLess(void *lhs_, void *rhs_, void *ctx)
     return (*cmp)(lhs->val.item, rhs->val.item);
 }
 
+static bool StringCustomItemLess(const char *lhs, const char *rhs, void *ctx)
+{
+    int (*cmp)() = ctx;
+
+    return (*cmp)(lhs, rhs);
+}
+
 static bool RlistItemLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
     return strcmp(((Rlist*)lhs)->val.item, ((Rlist*)rhs)->val.item) < 0;
 }
 
-static bool RlistItemNumberLess(void *lhs, void *rhs, ARG_UNUSED void *ctx, bool int_mode)
+static bool StringItemLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx)
+{
+    return strcmp(lhs, rhs) < 0;
+}
+
+static bool StringItemNumberLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx, bool int_mode)
 {
     char remainder[CF_BUFSIZE];
     double left;
     double right;
 
-    int matched_left = sscanf(RlistScalarValue((Rlist*)lhs), "%lf", &left);
-    int matched_right = sscanf(RlistScalarValue((Rlist*)rhs), "%lf", &right);
+    int matched_left = sscanf(lhs, "%lf", &left);
+    int matched_right = sscanf(rhs, "%lf", &right);
 
     if (!matched_left)
     {
-        matched_left = sscanf(RlistScalarValue((Rlist*)lhs), "%lf%s", &left, remainder);
+        matched_left = sscanf(lhs, "%lf%s", &left, remainder);
     }
 
     if (!matched_right)
     {
-        matched_right = sscanf(RlistScalarValue((Rlist*)rhs), "%lf%s", &right, remainder);
+        matched_right = sscanf(rhs, "%lf%s", &right, remainder);
     }
 
     if (matched_left && matched_right)
@@ -255,7 +267,12 @@ static bool RlistItemNumberLess(void *lhs, void *rhs, ARG_UNUSED void *ctx, bool
     }
 
     // neither item matched
-    return RlistItemLess(lhs, rhs, ctx);
+    return StringItemLess(lhs, rhs, ctx);
+}
+
+static bool RlistItemNumberLess(void *lhs, void *rhs, ARG_UNUSED void *ctx, bool int_mode)
+{
+    return StringItemNumberLess(RlistScalarValue((Rlist*)lhs), RlistScalarValue((Rlist*)rhs), ctx, int_mode);
 }
 
 static bool RlistItemIntLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
@@ -263,16 +280,23 @@ static bool RlistItemIntLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     return RlistItemNumberLess(lhs, rhs, ctx, true);
 }
 
+static bool StringItemIntLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx)
+{
+    return StringItemNumberLess(lhs, rhs, ctx, true);
+}
+
 static bool RlistItemRealLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
     return RlistItemNumberLess(lhs, rhs, ctx, false);
 }
 
-static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+static bool StringItemRealLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx)
 {
-    const char *left_item = RlistScalarValue((Rlist*)lhs);
-    const char *right_item = RlistScalarValue((Rlist*)rhs);
+    return StringItemNumberLess(lhs, rhs, ctx, false);
+}
 
+static bool StringItemIPLess(const char *left_item, const char *right_item, ARG_UNUSED void *ctx)
+{
     Buffer *left_buffer = BufferNewFrom(left_item, strlen(left_item));
     Buffer *right_buffer = BufferNewFrom(right_item, strlen(right_item));
 
@@ -307,7 +331,12 @@ static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     }
 
     // neither item matched
-    return RlistItemLess(lhs, rhs, ctx);
+    return StringItemLess(left_item, right_item, ctx);
+}
+
+static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+{
+    return StringItemIPLess(RlistScalarValue((Rlist*)lhs), RlistScalarValue((Rlist*)rhs), ctx);
 }
 
 static long ParseEtherAddress(const char* input, unsigned char *addr)
@@ -322,12 +351,12 @@ static long ParseEtherAddress(const char* input, unsigned char *addr)
                   &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
 }
 
-static bool RlistItemMACLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+static bool StringItemMACLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx)
 {
     int bytes = 6;
     unsigned char left[bytes], right[bytes];
-    int matched_left = 6 == ParseEtherAddress(RlistScalarValue((Rlist*)lhs), left);
-    int matched_right = 6 == ParseEtherAddress(RlistScalarValue((Rlist*)rhs), right);
+    int matched_left = 6 == ParseEtherAddress(lhs, left);
+    int matched_right = 6 == ParseEtherAddress(rhs, right);
 
     if (matched_left && matched_right)
     {
@@ -346,7 +375,12 @@ static bool RlistItemMACLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     }
 
     // neither item matched
-    return RlistItemLess(lhs, rhs, ctx);
+    return StringItemLess(lhs, rhs, ctx);
+}
+
+static bool RlistItemMACLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+{
+    return StringItemMACLess(RlistScalarValue((Rlist*)lhs), RlistScalarValue((Rlist*)rhs), ctx);
 }
 
 static void *RlistGetNext(void *element)
@@ -401,15 +435,38 @@ bool GenericItemLess(const char *sort_type, void *lhs, void *rhs)
     {
         return RlistItemNumberLess(lhs, rhs, NULL, false);
     }
-    else if (strcmp(sort_type, "IP") == 0 || strcmp(sort_type, "ip") == 0)
+    else if (strcasecmp(sort_type, "IP") == 0)
     {
         return RlistItemIPLess(lhs, rhs, NULL);
     }
-    else if (strcmp(sort_type, "MAC") == 0 || strcmp(sort_type, "mac") == 0)
+    else if (strcasecmp(sort_type, "MAC") == 0)
     {
         return RlistItemMACLess(lhs, rhs, NULL);
     }
 
     // "lex"
     return RlistItemLess(lhs, rhs, NULL);
+}
+
+bool GenericStringItemLess(const char *sort_type, const char *lhs, const char *rhs)
+{
+    if (strcmp(sort_type, "int") == 0)
+    {
+        return StringItemNumberLess(lhs, rhs, NULL, true);
+    }
+    else if (strcmp(sort_type, "real") == 0)
+    {
+        return StringItemNumberLess(lhs, rhs, NULL, false);
+    }
+    else if (strcasecmp(sort_type, "IP") == 0)
+    {
+        return StringItemIPLess(lhs, rhs, NULL);
+    }
+    else if (strcasecmp(sort_type, "MAC") == 0)
+    {
+        return StringItemMACLess(lhs, rhs, NULL);
+    }
+
+    // "lex"
+    return StringItemLess(lhs, rhs, NULL);
 }

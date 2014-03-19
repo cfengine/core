@@ -43,4 +43,6 @@ Rlist *MACSortRListNames(Rlist *list);
 
 bool GenericItemLess(const char *mode, void *lhs, void *rhs);
 
+bool GenericStringItemLess(const char *sort_type, const char *lhs, const char *rhs);
+
 #endif

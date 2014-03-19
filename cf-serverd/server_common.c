@@ -1098,9 +1098,6 @@ void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvb
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
     char filename[CF_BUFSIZE], rfilename[CF_BUFSIZE];
-    int i;
-
-/* TODO - when safe change this proto string to sha2 */
 
     sscanf(recvbuffer, "MD5 %[^\n]", rfilename);
 

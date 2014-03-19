@@ -46,7 +46,7 @@ static const ConstraintSyntax linkservice_constraints[] =
 {
     ConstraintSyntaxNewOption("ospf_service_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "OSPF interface type", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_authentication_digest", CF_ANYSTRING, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("ospf_passive", "Stub area", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ospf_passive_interface", "No service updates over this channel", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -67,7 +67,7 @@ static const ConstraintSyntax interface_constraints[] =
     ConstraintSyntaxNewString("ipv4_broadcast", CF_IPRANGE, "A static IPV4 address for broadcast messages", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("ipv6_addresses", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("link_service", &linkservice_body, "Services configured on the interface", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("link_services", &linkservice_body, "Services configured on the interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("purge_addresses", "Remove existing addresses from interface if not defined here", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
@@ -110,7 +110,7 @@ static const BodySyntax balancing_body = BodySyntaxNew("route_select", balance_c
 static const ConstraintSyntax network_constraints[] =
 {
     ConstraintSyntaxNewBody("routed_to", &route_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("advertised_by", &relay_body, "A body assigning a protocol service", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("advertised_as", &relay_body, "A body assigning a protocol service", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("balanced_destinations", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("route_select", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

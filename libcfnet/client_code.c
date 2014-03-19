@@ -74,30 +74,29 @@ char CFENGINE_PORT_STR[16] = "5308";
 
 void DetermineCfenginePort()
 {
-    struct servent *server;
     assert(sizeof(CFENGINE_PORT_STR) >= PRINTSIZE(CFENGINE_PORT));
     /* ... but we leave more space, as service names can be longer */
 
     errno = 0;
-    if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) != NULL)
+    struct servent *server = getservbyname(CFENGINE_SERVICE, "tcp");
+    if (server != NULL)
     {
         CFENGINE_PORT = ntohs(server->s_port);
         snprintf(CFENGINE_PORT_STR, sizeof(CFENGINE_PORT_STR),
                  "%d", CFENGINE_PORT);
     }
+    else if (errno == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "No registered cfengine service, using default");
+    }
     else
     {
-        if (errno == 0)
-        {
-            Log(LOG_LEVEL_VERBOSE, "No registered cfengine service, using default");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Unable to query services database, using default. (getservbyname: %s)", GetErrorStr());
-        }
+        Log(LOG_LEVEL_VERBOSE,
+            "Unable to query services database, using default. (getservbyname: %s)",
+            GetErrorStr());
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %d", CFENGINE_PORT);
+    Log(LOG_LEVEL_VERBOSE, "Default port for cfengine is %d", CFENGINE_PORT);
 }
 
 /**

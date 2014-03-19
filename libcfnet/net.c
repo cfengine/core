@@ -34,8 +34,13 @@
 #include <misc_lib.h>
 
 
-static bool TryConnect(int sd, unsigned long timeout_ms,
-                       const struct sockaddr *sa, socklen_t sa_len);
+/**
+ * @NOTE this function is non-static because of a separate implementation for
+ *       windows in Enterprise. WARNING make sure you change that one as well
+ *       in case you change this declaration.
+ */
+bool TryConnect(int sd, unsigned long timeout_ms,
+                const struct sockaddr *sa, socklen_t sa_len);
 
 /*************************************************************************/
 
@@ -309,13 +314,20 @@ int SocketConnect(const char *host, const char *port,
  * Tries to connect for #timeout_ms milliseconds. On success sets the recv()
  * timeout to #timeout_ms as well.
  *
- * @param #timeout_ms if zero wait forever.
+ * @param #timeout_ms How long to wait for connect(), if zero wait forever.
  * @return true on success, false otherwise.
  **/
-static bool TryConnect(int sd, unsigned long timeout_ms,
-                       const struct sockaddr *sa, socklen_t sa_len)
+bool TryConnect(int sd, unsigned long timeout_ms,
+                const struct sockaddr *sa, socklen_t sa_len)
 {
     assert(sa != NULL);
+
+    if (sd >= FD_SETSIZE)
+    {
+        Log(LOG_LEVEL_ERR, "Open connections exceed FD_SETSIZE limit of %d",
+            FD_SETSIZE);
+        return false;
+    }
 
     /* set non-blocking socket */
     int arg = fcntl(sd, F_GETFL, NULL);
@@ -336,8 +348,6 @@ static bool TryConnect(int sd, unsigned long timeout_ms,
                 GetErrorStr());
             return false;
         }
-
-        assert(errno == EINPROGRESS);
 
         int errcode;
         socklen_t opt_len = sizeof(errcode);

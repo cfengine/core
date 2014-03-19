@@ -57,8 +57,8 @@ Each input .cf file is scanned for three markers:
 
 #+begin_src prep
 #@ ```
-#@ touch -d '2001-02-03 12:34:56' /tmp/earlier
-#@ touch -d '2002-02-03 12:34:56' /tmp/later
+#@ touch -t '200102031234.56' /tmp/earlier
+#@ touch -t '200202031234.56' /tmp/later
 #@ ```
 #+end_src
 

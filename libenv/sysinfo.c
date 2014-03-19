@@ -44,6 +44,7 @@
 #include <known_dirs.h>
 #include <unix_iface.h>
 #include <files_lib.h>
+#include <printsize.h>
 
 #include <cf-windows-functions.h>
 
@@ -1329,11 +1330,6 @@ static int Linux_Fedora_Version(EvalContext *ctx)
 
 /* The full string read in from fedora-release */
     char relstring[CF_MAXVARSIZE];
-    char classbuf[CF_MAXVARSIZE];
-    char *vendor = "";
-    char *release = NULL;
-    int major = -1;
-    char strmajor[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a fedora system.");
     EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
@@ -1348,6 +1344,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Looking for fedora core linux info...");
 
+    char *vendor = "";
     if (!strncmp(relstring, FEDORA_ID, strlen(FEDORA_ID)))
     {
         vendor = "fedora";
@@ -1361,8 +1358,9 @@ static int Linux_Fedora_Version(EvalContext *ctx)
 /* Now, grok the release.  We assume that all the strings will
  * have the word 'release' before the numerical release.
  */
-
-    release = strstr(relstring, RELEASE_FLAG);
+    int major = -1;
+    char strmajor[PRINTSIZE(major)];
+    char *release = strstr(relstring, RELEASE_FLAG);
 
     if (release == NULL)
     {
@@ -1373,14 +1371,16 @@ static int Linux_Fedora_Version(EvalContext *ctx)
     {
         release += strlen(RELEASE_FLAG);
 
+        strmajor[0] = '\0';
         if (sscanf(release, "%d", &major) != 0)
         {
             sprintf(strmajor, "%d", major);
         }
     }
 
-    if (major != -1 && (strcmp(vendor, "") != 0))
+    if (major != -1 && vendor[0] != '\0')
     {
+        char classbuf[CF_MAXVARSIZE];
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
         EvalContextClassPutHard(ctx,classbuf, "inventory,attribute_name=none,source=agent");
@@ -1431,29 +1431,11 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 
 #define RH_REL_FILENAME "/etc/redhat-release"
 
-/* The full string read in from redhat-release */
-    char relstring[CF_MAXVARSIZE];
-    char classbuf[CF_MAXVARSIZE];
-
-/* Red Hat, Mandrake */
-    char *vendor = "";
-
-/* as (Advanced Server, Enterprise) */
-    char *edition = "";
-
-/* Where the numerical release will be found */
-    char *release = NULL;
-    int i;
-    int major = -1;
-    char strmajor[CF_MAXVARSIZE];
-    int minor = -1;
-    char strminor[CF_MAXVARSIZE];
-
     Log(LOG_LEVEL_VERBOSE, "This appears to be a redhat (or redhat-based) system.");
     EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
 
-/* Grab the first line from the file and then close it. */
-
+    /* Grab the first line from the file and then close it. */
+    char relstring[CF_MAXVARSIZE];
     if (!ReadLine(RH_REL_FILENAME, relstring, sizeof(relstring)))
     {
         return 1;
@@ -1461,7 +1443,9 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Looking for redhat linux info in '%s'", relstring);
 
-/* First, try to grok the vendor and the edition (if any) */
+    /* First, try to grok the vendor and edition (if any) */
+    char *edition = ""; /* as (Advanced Server, Enterprise) */
+    char *vendor = ""; /* Red Hat, Mandrake */
     if (!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
     {
         vendor = "redhat";
@@ -1550,12 +1534,16 @@ static int Linux_Redhat_Version(EvalContext *ctx)
    Scientific Linux don't fall through the cracks.
    */
 
-    for (i = 0; i < strlen(relstring); i++)
+    for (int i = 0; i < strlen(relstring); i++)
     {
         relstring[i] = tolower(relstring[i]);
     }
 
-    release = strstr(relstring, RELEASE_FLAG);
+    /* Where the numerical release will be found */
+    int major = -1, minor = -1;
+    char strmajor[PRINTSIZE(major)], strminor[PRINTSIZE(minor)];
+
+    char *release = strstr(relstring, RELEASE_FLAG);
     if (release == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s", RH_REL_FILENAME);
@@ -1579,6 +1567,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         }
     }
 
+    char classbuf[CF_MAXVARSIZE];
     if (major != -1 && minor != -1 && (strcmp(vendor, "") != 0))
     {
         classbuf[0] = '\0';
@@ -1604,9 +1593,8 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         }
     }
 
-// Now a version without the edition
-
-    if (major != -1 && minor != -1 && (strcmp(vendor, "") != 0))
+    // Now a version without the edition
+    if (major != -1 && minor != -1 && vendor[0] != '\0')
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
@@ -1639,19 +1627,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
 #define SUSE_SLED_ID  "suse linux enterprise desktop"
 #define SUSE_RELEASE_FLAG "linux "
 
-/* The full string read in from SuSE-release */
-    char relstring[CF_MAXVARSIZE];
     char classbuf[CF_MAXVARSIZE];
-    char vbuf[CF_BUFSIZE], strversion[CF_MAXVARSIZE], strpatch[CF_MAXVARSIZE];
-
-/* Where the numerical release will be found */
-    char *release = NULL;
-    int i, version;
-    int major = -1;
-    char strmajor[CF_MAXVARSIZE];
-    int minor = -1;
-    char strminor[CF_MAXVARSIZE];
-    FILE *fp;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a SUSE system.");
     EvalContextClassPutHard(ctx, "SUSE", "inventory,attribute_name=none,source=agent");
@@ -1661,43 +1637,41 @@ static int Linux_Suse_Version(EvalContext *ctx)
      */
     EvalContextClassPutHard(ctx, "SuSE", "inventory,attribute_name=none,source=agent");
 
-/* Grab the first line from the file and then close it. */
+    /* Grab the first line from the SuSE-release file and then close it. */
+    char relstring[CF_MAXVARSIZE];
 
-    fp = ReadFirstLine(SUSE_REL_FILENAME, relstring, sizeof(relstring));
+    FILE *fp = ReadFirstLine(SUSE_REL_FILENAME, relstring, sizeof(relstring));
     if (fp == NULL)
     {
         return 1;
     }
 
+    char vbuf[CF_BUFSIZE], strversion[CF_MAXVARSIZE], strpatch[CF_MAXVARSIZE];
     strversion[0] = '\0';
     strpatch[0] = '\0';
 
-    for(;;)
+    int major = -1, minor = -1;
+    while (fgets(vbuf, sizeof(vbuf), fp) != NULL)
     {
-        if (fgets(vbuf, sizeof(vbuf), fp) == NULL)
-        {
-            if (ferror(fp))
-            {
-                UnexpectedError("Failed to read line from stream");
-                break;
-            }
-            else /* feof */
-            {
-                break;
-            }
-        }
-
         if (strncmp(vbuf, "VERSION", strlen("version")) == 0)
         {
-            strncpy(strversion, vbuf, sizeof(strversion));
-            sscanf(strversion, "VERSION = %d", &major);
+            strlcpy(strversion, vbuf, sizeof(strversion));
+            sscanf(vbuf, "VERSION = %d", &major);
         }
 
         if (strncmp(vbuf, "PATCH", strlen("PATCH")) == 0)
         {
-            strncpy(strpatch, vbuf, sizeof(strpatch));
-            sscanf(strpatch, "PATCHLEVEL = %d", &minor);
+            strlcpy(strpatch, vbuf, sizeof(strpatch));
+            sscanf(vbuf, "PATCHLEVEL = %d", &minor);
         }
+    }
+    if (ferror(fp))
+    {
+        UnexpectedError("Failed to read line from stream");
+    }
+    else
+    {
+        assert(feof(fp));
     }
 
     fclose(fp);
@@ -1710,7 +1684,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
      * SUSE with SUSE 10.0.
      */
 
-    for (i = 0; i < strlen(relstring); i++)
+    for (int i = 0; i < strlen(relstring); i++)
     {
         relstring[i] = tolower(relstring[i]);
     }
@@ -1741,7 +1715,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     }
     else
     {
-        for (version = 9; version < 13; version++)
+        for (int version = 9; version < 13; version++)
         {
             snprintf(vbuf, CF_BUFSIZE, "%s %d ", SUSE_SLES_ID, version);
             Log(LOG_LEVEL_DEBUG, "Checking for SUSE [%s]", vbuf);
@@ -1769,25 +1743,26 @@ static int Linux_Suse_Version(EvalContext *ctx)
      * the string "SuSE Linux" or "SUSE LINUX".
      */
 
-    release = strstr(relstring, SUSE_RELEASE_FLAG);
-
+    char *release = strstr(relstring, SUSE_RELEASE_FLAG);
     if (release == NULL)
     {
         release = strstr(relstring, "opensuse");
+        if (release == NULL)
+        {
+            release = strversion;
+        }
     }
 
     if (release == NULL)
     {
-        release = strversion;
-    }
-
-    if (release == NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s", SUSE_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE,
+            "Could not find a numeric OS release in %s",
+            SUSE_REL_FILENAME);
         return 2;
     }
     else
     {
+        char strmajor[PRINTSIZE(major)], strminor[PRINTSIZE(minor)];
         if (strchr(release, '.'))
         {
             sscanf(release, "%*s %d.%d", &major, &minor);
@@ -2123,15 +2098,11 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
 
 static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *relstring, char *vendor)
 {
-    char *release = NULL;
-    char classbuf[CF_MAXVARSIZE];
-    int major = -1;
-    char strmajor[CF_MAXVARSIZE];
-    int minor = -1;
-    char strminor[CF_MAXVARSIZE];
+    int major = -1, minor = -1;
+    char strmajor[PRINTSIZE(major)], strminor[PRINTSIZE(minor)];
 
 #define RELEASE_FLAG "release "
-    release = strstr(relstring, RELEASE_FLAG);
+    char *release = strstr(relstring, RELEASE_FLAG);
     if (release == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s", filename);
@@ -2153,6 +2124,7 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
 
     if (major != -1 && minor != -1 && strcmp(vendor, ""))
     {
+        char classbuf[CF_MAXVARSIZE];
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
         EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
@@ -2454,9 +2426,7 @@ static void GetCPUInfo(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "!! cpu count not implemented on Windows platform");
     return;
 #else
-    char buf[CF_SMALLBUF] = "1_cpu";
     int count = 0;
-#endif
 
     // http://preview.tinyurl.com/c9l2sh - StackOverflow on cross-platform CPU counting
 #if defined(HAVE_SYSCONF) && defined(_SC_NPROCESSORS_ONLN)
@@ -2487,15 +2457,15 @@ static void GetCPUInfo(EvalContext *ctx)
 // and fall back to GETNUMSPUS if necessary. An 11i v1 build would work
 // normally on 11i v3, because on PA-RISC cores == spus since there's no
 // HT on PA-RISC, and 11i v1 only runs on PA-RISC.
-#ifdef MPC_GETNUMCORES_SYS
-    if ((count = mpctl(MPC_GETNUMCORES_SYS, 0, 0)) == -1) {
-        if (errno == EINVAL) {
-            count = mpctl(MPC_GETNUMSPUS_SYS, 0, 0);
-        }
+# ifdef MPC_GETNUMCORES_SYS
+    count = mpctl(MPC_GETNUMCORES_SYS, 0, 0);
+    if (count == -1 && errno == EINVAL)
+    {
+        count = mpctl(MPC_GETNUMSPUS_SYS, 0, 0);
     }
-#else
+# else
     count = mpctl(MPC_GETNUMSPUS_SYS, 0, 0);	// PA-RISC processor count
-#endif
+# endif
 #endif /* HAVE_SYS_MPCTL_H */
 
     if (count < 1)
@@ -2505,15 +2475,20 @@ static void GetCPUInfo(EvalContext *ctx)
     }
     Log(LOG_LEVEL_VERBOSE, "Found %d processor%s", count, count > 1 ? "s" : "");
 
-    if (count == 1) {
+    char buf[CF_SMALLBUF] = "1_cpu";
+    if (count == 1)
+    {
         EvalContextClassPutHard(ctx, buf, "source=agent,derived-from=sys.cpus");  // "1_cpu" from init - change if buf is ever used above
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", "1", CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=CPU logical cores");
-    } else {
+    }
+    else
+    {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
         EvalContextClassPutHard(ctx, buf, "source=agent,derived-from=sys.cpus");
         snprintf(buf, CF_SMALLBUF, "%d", count);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", buf, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=CPU logical cores");
     }
+#endif /* MINGW || NT */
 }
 
 /******************************************************************/

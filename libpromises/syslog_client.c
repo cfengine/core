@@ -23,6 +23,7 @@
 */
 
 #include <syslog_client.h>
+#include <printsize.h>
 
 #include <cf3.defs.h>
 
@@ -66,18 +67,16 @@ void SetSyslogPort(uint16_t port)
 void RemoteSysLog(int log_priority, const char *log_string)
 {
     time_t now = time(NULL);
-    int sd, pri = log_priority | SYSLOG_FACILITY;
 
-    int err;
-    struct addrinfo query, *response, *ap;
-    char strport[CF_MAXVARSIZE];
+    struct addrinfo query = { 0 }, *response;
+    char strport[PRINTSIZE(unsigned)];
+    sprintf(strport, "%u", (unsigned) SYSLOG_PORT);
 
-    snprintf(strport, CF_MAXVARSIZE, "%u", (unsigned) SYSLOG_PORT);
-    memset(&query, 0, sizeof(query));
     query.ai_family = AF_UNSPEC;
     query.ai_socktype = SOCK_DGRAM;
 
-    if ((err = getaddrinfo(SYSLOG_HOST, strport, &query, &response)) != 0)
+    int err = getaddrinfo(SYSLOG_HOST, strport, &query, &response);
+    if (err != 0)
     {
         Log(LOG_LEVEL_INFO,
             "Unable to find syslog_host or service: (%s/%s) %s",
@@ -85,7 +84,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
         return;
     }
 
-    for (ap = response; ap != NULL; ap = ap->ai_next)
+    for (const struct addrinfo *ap = response; ap != NULL; ap = ap->ai_next)
     {
         /* No DNS lookup, just convert IP address to string. */
         char txtaddr[CF_MAX_IP_LEN] = "";
@@ -96,7 +95,8 @@ void RemoteSysLog(int log_priority, const char *log_string)
             "Connect to syslog '%s' = '%s' on port '%s'",
             SYSLOG_HOST, txtaddr, strport);
 
-        if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)
+        int sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP);
+        if (sd == -1)
         {
             Log(LOG_LEVEL_INFO, "Couldn't open a socket. (socket: %s)", GetErrorStr());
             continue;
@@ -109,7 +109,8 @@ void RemoteSysLog(int log_priority, const char *log_string)
             pid_t pid = getpid();
 
             snprintf(message, sizeof(message), "<%i>%.15s %s %s[%d]: %s",
-                     pri, cf_strtimestamp_local(now, timebuffer) + 4,
+                     log_priority | SYSLOG_FACILITY,
+                     cf_strtimestamp_local(now, timebuffer) + 4,
                      VFQNAME, VPREFIX, pid, log_string);
             err = sendto(sd, message, strlen(message),
                          0, ap->ai_addr, ap->ai_addrlen);

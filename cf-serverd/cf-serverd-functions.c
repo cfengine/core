@@ -44,6 +44,7 @@
 #include <connection_info.h>
 #include <file_lib.h>
 #include <loading.h>
+#include <printsize.h>
 
 #include "server_access.h"
 
@@ -492,8 +493,8 @@ int OpenReceiverChannel(void)
         ptr = BINDINTERFACE;
     }
 
-    char servname[10];
-    snprintf(servname, 10, "%d", CFENGINE_PORT);
+    char servname[PRINTSIZE(CFENGINE_PORT)];
+    sprintf(servname, "%d", CFENGINE_PORT);
 
     /* Resolve listening interface. */
     if (getaddrinfo(ptr, servname, &query, &response) != 0)

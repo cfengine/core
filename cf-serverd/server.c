@@ -45,6 +45,7 @@
 #include <connection_info.h>
 #include <cf-windows-functions.h>
 #include <logging_priv.h>                          /* LoggingPrivSetContext */
+#include <printsize.h>
 
 #include "server_classic.h"                    /* BusyWithClassicConnection */
 
@@ -89,7 +90,6 @@ static void DeleteConn(ServerConnectionState *conn);
 
 void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 {
-    char intime[64];
     time_t now;
 
     Log(LOG_LEVEL_VERBOSE,
@@ -146,7 +146,8 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         ThreadUnlock(cft_count);
     }
 
-    snprintf(intime, 63, "%d", (int) now);
+    char intime[PRINTSIZE(now)];
+    sprintf(intime, "%jd", (intmax_t) now);
 
     if (!ThreadLock(cft_count))
     {

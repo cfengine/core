@@ -29,7 +29,7 @@ body common control
 bundle agent example
 {
   vars:
-      "listfiles" slist => lsdir("/etc", "(p.sswd|shad[oa]w)", "true");
+      "listfiles" slist => lsdir("/etc", "(p.sswd|group)", "true");
       "sorted_listfiles" slist => sort(listfiles, "lex");
   reports:
       "files in list: $(sorted_listfiles)";
@@ -38,7 +38,7 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
+#@ R: files in list: /etc/group
 #@ R: files in list: /etc/passwd
-#@ R: files in list: /etc/shadow
 #@ ```
 #+end_src

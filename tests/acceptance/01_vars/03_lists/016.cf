@@ -24,7 +24,7 @@ bundle agent test
 {
   meta:
       "test_suppress_fail" string => "hpux|windows",
-        meta => { "redmine4745" };
+        meta => { "redmine4745", "redmine4963" };
 
 files:
   "$(G.testfile).actual"

@@ -395,6 +395,24 @@ const ConstraintSyntax file_control_constraints[] =  /* enum cfh_control */
     ConstraintSyntaxNewNull()
 };
 
+const ConstraintSyntax routes_control_constraints[] =  /* enum cfh_control */
+{
+    ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+
+    ConstraintSyntaxNewBool("ospf_stub", "Mark current OSPF area a stub", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Hello heartbeat interval", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF router priority", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,rip,bgp", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_external_metric_type", "1,2", "How to calculate metrics for external routes", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_INTRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_connected_metric", CF_INTRANGE, "Metric for redistributed direct connetions", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_static_metric", CF_INTRANGE, "Metric for redistributed static route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_rip_metric", CF_INTRANGE, "Metric for redistributed RIP route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_redistribute_bgp_metric", CF_INTRANGE, "Metric for redistributed BGP route", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
 const ConstraintSyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 {
     ConstraintSyntaxNewString("aggregation_point", CF_ABSPATHRANGE, "The root directory of the data cache for CMDB aggregation", SYNTAX_STATUS_REMOVED),
@@ -451,6 +469,7 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew("file", file_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew("routes", routes_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
     BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),

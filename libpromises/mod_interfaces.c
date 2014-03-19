@@ -42,17 +42,17 @@ static const ConstraintSyntax linkstate_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax linkstate_body = BodySyntaxNew("link_state", linkstate_constraints, NULL, SYNTAX_STATUS_NORMAL);
-
-/**********************************************************************************************/
-
-static const ConstraintSyntax proxy_constraints[] =
+static const ConstraintSyntax linkservice_constraints[] =
 {
-    ConstraintSyntaxNewString("generate_file", CF_PATHRANGE, "Filename of output", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_service_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "OSPF interface type", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_authentication_digest", CF_ANYSTRING, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ospf_passive", "Stub area", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax proxy_body = BodySyntaxNew("proxy", proxy_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
+static const BodySyntax linkstate_body = BodySyntaxNew("link_state", linkstate_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax linkservice_body = BodySyntaxNew("link_services", linkservice_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 /**********************************************************************************************/
 
@@ -67,25 +67,21 @@ static const ConstraintSyntax interface_constraints[] =
     ConstraintSyntaxNewString("ipv4_broadcast", CF_IPRANGE, "A static IPV4 address for broadcast messages", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("ipv6_addresses", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("proxy", &proxy_body, "For treating a remote device as a peripheral", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("link_service", &linkservice_body, "Services configured on the interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("purge_addresses", "Remove existing addresses from interface if not defined here", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 /**********************************************************************************************/
 
-static const ConstraintSyntax relay_constraints[] =
+static const ConstraintSyntax advertised_as[] =
 {
-    ConstraintSyntaxNewInt("rip_metric", CF_INTRANGE, "RIP route metric", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("rip_timeout", CF_INTRANGE, "RIP timeout on updates", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("rip_split_horizon", "RIP Horizon control", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("rip_passive", "Passive mode", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_stub", "Stub area", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_auth_key", CF_ANYSTRING, "Athentication password", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_auth_digest", CF_ANYSTRING, "Athentication digest", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_area_authentication_digest", CF_ANYSTRING, "Authentication digest", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_substitute_prefix", CF_ANYSTRING, "Replacement prefix during rewriting", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_prefix_range", CF_ANYSTRING, "Search prefix during route rewriting", SYNTAX_STATUS_NORMAL),
+
     ConstraintSyntaxNewNull()
 };
 
@@ -97,8 +93,8 @@ static const ConstraintSyntax route_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax relay_body = BodySyntaxNew("advertised_by", relay_constraints, NULL, SYNTAX_STATUS_NORMAL);
-static const BodySyntax route_body = BodySyntaxNew("routed_to", route_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax relay_body = BodySyntaxNew("advertised_as", advertised_as, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax route_body = BodySyntaxNew("reachable_through", route_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax balance_constraints[] =
 {
@@ -125,8 +121,6 @@ static const ConstraintSyntax network_constraints[] =
 const PromiseTypeSyntax CF_INTERFACES_PROMISE_TYPES[] =
 {
     PromiseTypeSyntaxNew("agent", "interfaces", interface_constraints, NULL, SYNTAX_STATUS_NORMAL),
-    PromiseTypeSyntaxNew("agent", "networks", network_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("agent", "routes", network_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };
-
-

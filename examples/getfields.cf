@@ -38,7 +38,8 @@ bundle agent example
       "root's handle = $(userdata[1])";
       "root's passwd = ... forget it!";
       "root's uid = $(userdata[3])";
-      "root's gid = $(userdata[4])";
+      # uncomment this if you want to see the GID field
+      #"root's gid = $(userdata[4])";
       # uncomment this if you want to see the GECOS field
       #"root's name = $(userdata[5])";
 
@@ -52,6 +53,5 @@ bundle agent example
 #@ R: root's handle = root
 #@ R: root's passwd = ... forget it!
 #@ R: root's uid = 0
-#@ R: root's gid = 0
 #@ ```
 #+end_src

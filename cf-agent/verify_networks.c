@@ -126,6 +126,15 @@ static int NetworkSanityCheck(Attributes a,  const Promise *pp)
 
 /****************************************************************************/
 
+void AssessRoutingServices()
+{
+    // OSPF
+    // RIP
+    // BGP
+}
+
+/****************************************************************************/
+
 void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     FIBState *fib = NULL, *fip;

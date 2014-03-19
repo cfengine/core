@@ -54,8 +54,6 @@ typedef struct
 
 #define CFENGINE_SERVICE "cfengine"
 
-#define RECVTIMEOUT 30 /* seconds */
-
 #define CF_COULD_NOT_CONNECT -2
 
 /* With this lock we ensure we read the list head atomically, but we don't

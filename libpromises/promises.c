@@ -292,9 +292,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
         }
         else
         {
-            Rval returnval = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
-            final = ExpandDanglers(ctx, NULL, "this", returnval, pp);
-            RvalDestroy(returnval);
+            final = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
         }
 
         Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);

@@ -243,46 +243,6 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
     return result;
 }
 
-
-Rval ExpandDanglers(EvalContext *ctx,
-                    const char *ns, const char *scope,
-                    Rval rval, const Promise *pp)
-{
-    assert(ctx);
-    assert(pp);
-
-    switch (rval.type)
-    {
-    case RVAL_TYPE_SCALAR:
-        if (IsCf3VarString(RvalScalarValue(rval)))
-        {
-            return EvaluateFinalRval(ctx, PromiseGetPolicy(pp), ns, scope, rval, false, pp);
-        }
-        else
-        {
-            return RvalCopy(rval);
-        }
-        break;
-
-    case RVAL_TYPE_LIST:
-        {
-            Rlist *result_list = RlistCopy(RvalRlistValue(rval));
-            RlistFlatten(ctx, &result_list);
-            return (Rval) { result_list, RVAL_TYPE_LIST };
-        }
-        break;
-
-    case RVAL_TYPE_CONTAINER:
-    case RVAL_TYPE_FNCALL:
-    case RVAL_TYPE_NOPROMISEE:
-        return RvalCopy(rval);
-    }
-
-    ProgrammingError("Unhandled Rval type");
-}
-
-/*********************************************************************/
-
 void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval,
                           Rlist **scalars, Rlist **lists, Rlist **containers)
 {

@@ -439,10 +439,10 @@ static void test_command_parser(void)
 
 static void test_user_name(void)
 {
-    const char *invalid_user_name = "user\\";
-    const char *invalid_user_name2 = "user//";
-    const char *invalid_user_name3 = "//\\";
-    const char *valid_user_name = "valid_user";
+    char invalid_user_name[] = "user\\";
+    char invalid_user_name2[] = "user//";
+    char invalid_user_name3[] = "//\\";
+    char valid_user_name[] = "valid_user";
 
     assert_false(IsUserNameValid(invalid_user_name));
     assert_false(IsUserNameValid(invalid_user_name2));

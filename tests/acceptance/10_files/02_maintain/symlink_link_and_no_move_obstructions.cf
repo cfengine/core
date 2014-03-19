@@ -1,7 +1,7 @@
 #######################################################
 #
-# Create a file, expect simultaneous link with absolute and move_obstructions
-# to succeed
+# Create an relative link to a file, expect subsequent symlink promise to
+# be unhappy with that (symlink is supposed to be synonymous with absolute)
 #
 #######################################################
 
@@ -18,13 +18,15 @@ bundle agent init
 {
   files:
       "$(G.testfile)"
-      delete => init_delete;
+      create => "true",
+      move_obstructions => "true",
+      link_from => init_link;
 }
 
-body delete init_delete
+body link_from init_link
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+      source => "$(G.etc_group)";
+      link_type => "relative";
 }
 
 #######################################################
@@ -39,15 +41,19 @@ bundle agent test
 
   files:
       "$(G.testfile)"
-      create => "true",
-      move_obstructions => "true",
+      classes => test_if_ok("test_ok"),
       link_from => test_link;
 }
 
 body link_from test_link
 {
       source => "$(G.etc_group)";
-      link_type => "absolute";
+      link_type => "symlink";
+}
+
+body classes test_if_ok(c)
+{
+      repair_failed => { "$(c)" };
 }
 
 #######################################################
@@ -63,9 +69,10 @@ bundle agent check
 
   classes:
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "ok" and => { "okL",
+      "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
+      "ok" and => { "test_ok", "okL", "okT",
                     strcmp("$(test.inode)", "$(result)"),
-                    strcmp("$(link_target)", "$(G.etc_group)")
+                    regcmp("\..*", "$(link_target)")
       };
 
   reports:

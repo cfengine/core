@@ -1,7 +1,7 @@
 #######################################################
 #
-# Create an relative link to a file, expect absolute link promise to want
-# to change it to an absolute link (but fail to)
+# Create a file, expect simultaneous link with absolute and move_obstructions
+# to succeed
 #
 #######################################################
 
@@ -18,15 +18,13 @@ bundle agent init
 {
   files:
       "$(G.testfile)"
-      create => "true",
-      move_obstructions => "true",
-      link_from => init_link;
+      delete => init_delete;
 }
 
-body link_from init_link
+body delete init_delete
 {
-      source => "$(g.target)";
-      link_type => "relative";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
@@ -41,7 +39,8 @@ bundle agent test
 
   files:
       "$(G.testfile)"
-      classes => init_if_failed("test_ok"),
+      create => "true",
+      move_obstructions => "true",
       link_from => test_link;
 }
 
@@ -49,11 +48,6 @@ body link_from test_link
 {
       source => "$(G.etc_group)";
       link_type => "absolute";
-}
-
-body classes init_if_failed(c)
-{
-      repair_failed => { "$(c)" };
 }
 
 #######################################################
@@ -69,10 +63,10 @@ bundle agent check
 
   classes:
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
-      "ok" and => { "test_ok", "okL", "okT",
+      "ok" and => { "okL",
                     strcmp("$(test.inode)", "$(result)"),
-                    regcmp("\..*", "$(link_target)")
+                    # Might be slightly different from link_target because of redundant '../../'.
+                    regcmp("/.*/group", "$(link_target)")
       };
 
   reports:

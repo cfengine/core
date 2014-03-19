@@ -1,7 +1,7 @@
 #######################################################
 #
-# Create an relative link to a file, expect subsequent symlink promise to
-# be unhappy with that (symlink is supposed to be synonymous with absolute)
+# Create an absolute link to a file, expect subsequent symlink promise to
+# be happy with that
 #
 #######################################################
 
@@ -17,16 +17,18 @@ body common control
 bundle agent init
 {
   files:
+      "$(G.testfile).linked_to"
+        create => "true";
       "$(G.testfile)"
-      create => "true",
-      move_obstructions => "true",
-      link_from => init_link;
+        create => "true",
+        move_obstructions => "true",
+        link_from => init_link;
 }
 
 body link_from init_link
 {
-      source => "$(g.target)";
-      link_type => "relative";
+      source => "$(G.testfile).linked_to";
+      link_type => "absolute";
 }
 
 #######################################################
@@ -37,7 +39,7 @@ bundle agent test
       "test_skip_unsupported" string => "windows";
 
   vars:
-      "inode" string => filestat("$(G.etc_group)", "ino");
+      "inode" string => filestat("$(G.testfile).linked_to", "ino");
 
   files:
       "$(G.testfile)"
@@ -47,13 +49,13 @@ bundle agent test
 
 body link_from test_link
 {
-      source => "$(G.etc_group)";
+      source => "$(G.testfile).linked_to";
       link_type => "symlink";
 }
 
 body classes test_if_ok(c)
 {
-      repair_failed => { "$(c)" };
+      promise_kept => { "$(c)" };
 }
 
 #######################################################
@@ -69,17 +71,16 @@ bundle agent check
 
   classes:
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
-      "ok" and => { "test_ok", "okL", "okT",
+      "ok" and => { "test_ok", "okL",
                     strcmp("$(test.inode)", "$(result)"),
-                    regcmp("\..*", "$(link_target)")
+                    strcmp("$(link_target)", "$(G.testfile).linked_to")
       };
 
   reports:
     DEBUG::
       "expected:     '$(test.inode)'";
       "got:          '$(Lresult)' => '$(result)'";
-      "got this too: '$(G.etc_group)' => '$(link_target)'";
+      "got this too: '$(G.testfile).linked_to' => '$(link_target)'";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

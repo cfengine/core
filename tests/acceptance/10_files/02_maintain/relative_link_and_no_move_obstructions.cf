@@ -25,7 +25,7 @@ bundle agent init
 
 body link_from init_link
 {
-      source => "$(g.target)";
+      source => "$(G.etc_group)";
       link_type => "absolute";
 }
 
@@ -71,7 +71,8 @@ bundle agent check
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
       "ok" and => { "test_ok", "okL",
                     strcmp("$(test.inode)", "$(result)"),
-                    strcmp("$(link_target)", "$(G.etc_group)")
+                    # Might be slightly different from link_target because of redundant '../../'.
+                    regcmp("/.*/group", "$(link_target)")
       };
 
   reports:

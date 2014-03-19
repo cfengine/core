@@ -86,7 +86,9 @@ bundle agent check
       "classes_set" slist => classesmatching("test_.*");
 
   classes:
-      "ok" and => { "test_new_repaired",
+      "ok" and => {
+                    "checksum_alerts",
+                    "test_new_repaired",
                     "!test_new_notkept",
                     "!test_same_repaired",
                     "test_same_kept",
@@ -98,6 +100,10 @@ bundle agent check
   reports:
     DEBUG::
       "Set classes: $(classes_set)";
+    !checksum_alerts.DEBUG::
+      "The checksum_alerts class was NOT set as expected.";
+    checksum_alerts.EXTRA::
+      "The checksum_alerts class was set as expected.";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

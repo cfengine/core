@@ -96,7 +96,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s'. (%d minutes)", pp->promiser,
                       a.context.persistent);
-                EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
 
             Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);

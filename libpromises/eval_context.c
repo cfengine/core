@@ -53,6 +53,8 @@ static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
+static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
+
 
 struct EvalContext_
 {
@@ -487,28 +489,28 @@ bool EvalFileResult(const char *file_result, StringSet *leaf_attr)
 
 /*****************************************************************************/
 
-void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, PersistentClassPolicy policy)
+void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned int ttl_minutes, PersistentClassPolicy policy)
 {
     CF_DB *dbp;
     PersistentClassInfo state;
     time_t now = time(NULL);
-    char name[CF_BUFSIZE];
 
     if (!OpenDB(&dbp, dbid_state))
     {
         return;
     }
 
-    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, context);
+    ClassRef ref = IDRefQualify(ctx, name);
+    char *serialized_name = ClassRefToString(ref.ns, ref.name);
     
-    if (ReadDB(dbp, name, &state, sizeof(state)))
+    if (ReadDB(dbp, serialized_name, &state, sizeof(state)))
     {
         if (state.policy == CONTEXT_STATE_POLICY_PRESERVE)
         {
             if (now < state.expires)
             {
-                Log(LOG_LEVEL_VERBOSE, "Persisent state '%s' is already in a preserved state --  %jd minutes to go",
-                      name, (intmax_t)((state.expires - now) / 60));
+                Log(LOG_LEVEL_VERBOSE, "Persisent class '%s' is already in a preserved state --  %jd minutes to go",
+                      serialized_name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
             }
@@ -516,7 +518,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "New persistent state '%s'", name);
+        Log(LOG_LEVEL_VERBOSE, "New persistent class '%s'", serialized_name);
     }
 
     state.expires = now + ttl_minutes * 60;
@@ -524,6 +526,9 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
 
     WriteDB(dbp, name, &state, sizeof(state));
     CloseDB(dbp);
+
+    free(serialized_name);
+    ClassRefDestroy(ref);
 }
 
 /*****************************************************************************/
@@ -1954,10 +1959,10 @@ const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonCo
     return ret;
 }
 
-static ClassRef ResolveCallReference(const EvalContext *ctx, const char *callee_reference)
+static ClassRef IDRefQualify(const EvalContext *ctx, const char *id)
 {
     // HACK: Because call reference names are equivalent to class names, we abuse ClassRef here
-    ClassRef ref = ClassRefParse(callee_reference);
+    ClassRef ref = ClassRefParse(id);
     if (!ClassRefIsQualified(ref))
     {
         const char *ns = EvalContextCurrentNamespace(ctx);
@@ -1977,7 +1982,7 @@ static ClassRef ResolveCallReference(const EvalContext *ctx, const char *callee_
 const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const Policy *policy,
                                                const char *callee_reference, const char *callee_type)
 {
-    ClassRef ref = ResolveCallReference(ctx, callee_reference);
+    ClassRef ref = IDRefQualify(ctx, callee_reference);
 
     const Bundle *bp = NULL;
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -2001,7 +2006,7 @@ const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const P
 const Body *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
                                              const char *callee_reference, const char *callee_type)
 {
-    ClassRef ref = ResolveCallReference(ctx, callee_reference);
+    ClassRef ref = IDRefQualify(ctx, callee_reference);
 
     const Body *bp = NULL;
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
@@ -2128,8 +2133,8 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
             }
 
             Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
-            EvalContextHeapPersistentSave(CanonifyName(RlistScalarValue(rp)), ns, persistence_ttl, policy);
-            EvalContextHeapAddSoft(ctx, classname, ns, "");
+            EvalContextHeapPersistentSave(ctx, classname, persistence_ttl, policy);
+            EvalContextClassPutSoft(ctx, classname, CONTEXT_SCOPE_NAMESPACE, "");
         }
         else
         {

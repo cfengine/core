@@ -115,7 +115,7 @@ void EvalContextDestroy(EvalContext *ctx);
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
 
-void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, PersistentClassPolicy policy);
+void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned int ttl_minutes, PersistentClassPolicy policy);
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 

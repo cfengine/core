@@ -45,6 +45,7 @@
 #include <fncall.h>
 #include <ring_buffer.h>
 #include <logging_priv.h>
+#include <known_dirs.h>
 
 static bool BundleAborted(const EvalContext *ctx);
 static void SetBundleAborted(EvalContext *ctx);
@@ -489,46 +490,75 @@ bool EvalFileResult(const char *file_result, StringSet *leaf_attr)
 
 /*****************************************************************************/
 
-void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned int ttl_minutes, PersistentClassPolicy policy)
+
+void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned int ttl_minutes,
+                                   PersistentClassPolicy policy, const char *tags)
 {
-    CF_DB *dbp;
-    PersistentClassInfo state;
+    assert(tags);
+
     time_t now = time(NULL);
 
+    CF_DB *dbp;
     if (!OpenDB(&dbp, dbid_state))
     {
+        char *db_path = DBIdToPath(GetWorkDir(), dbid_state);
+        Log(LOG_LEVEL_ERR, "While persisting class, unable to open database at '%s' (OpenDB: %s)",
+            db_path, GetErrorStr());
+        free(db_path);
         return;
     }
 
     ClassRef ref = IDRefQualify(ctx, name);
-    char *serialized_name = ClassRefToString(ref.ns, ref.name);
+    char *key = ClassRefToString(ref.ns, ref.name);
+    ClassRefDestroy(ref);
     
-    if (ReadDB(dbp, serialized_name, &state, sizeof(state)))
+    size_t tags_length = strlen(tags) + 1;
+    size_t new_info_size = sizeof(PersistentClassInfo) + tags_length;
+
+    PersistentClassInfo *new_info = xcalloc(1, new_info_size);
+
+    new_info->expires = now + ttl_minutes * 60;
+    new_info->policy = policy;
+    strlcpy(new_info->tags, tags, tags_length);
+
+    // first see if we have an existing record, and if we should bother to update
     {
-        if (state.policy == CONTEXT_STATE_POLICY_PRESERVE)
+        int existing_info_size = ValueSizeDB(dbp, key, strlen(key));
+        if (existing_info_size > 0)
         {
-            if (now < state.expires)
+            PersistentClassInfo *existing_info = xcalloc(existing_info_size, 1);
+            if (ReadDB(dbp, key, existing_info, existing_info_size))
             {
-                Log(LOG_LEVEL_VERBOSE, "Persisent class '%s' is already in a preserved state --  %jd minutes to go",
-                      serialized_name, (intmax_t)((state.expires - now) / 60));
+                if (existing_info->policy == CONTEXT_STATE_POLICY_PRESERVE &&
+                    now < existing_info->expires &&
+                    strcmp(existing_info->tags, new_info->tags) == 0)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Persisent class '%s' is already in a preserved state --  %jd minutes to go",
+                        key, (intmax_t)((existing_info->expires - now) / 60));
+                    CloseDB(dbp);
+                    free(key);
+                    free(new_info);
+                    return;
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "While persisting class '%s', error reading existing value", key);
                 CloseDB(dbp);
+                free(key);
+                free(new_info);
                 return;
             }
         }
     }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "New persistent class '%s'", serialized_name);
-    }
 
-    state.expires = now + ttl_minutes * 60;
-    state.policy = policy;
+    Log(LOG_LEVEL_VERBOSE, "Updating persistent class '%s'", key);
 
-    WriteDB(dbp, name, &state, sizeof(state));
+    WriteDB(dbp, key, new_info, new_info_size);
+
     CloseDB(dbp);
-
-    free(serialized_name);
-    ClassRefDestroy(ref);
+    free(key);
+    free(new_info);
 }
 
 /*****************************************************************************/
@@ -551,56 +581,51 @@ void EvalContextHeapPersistentRemove(const char *context)
 
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 {
-    CF_DB *dbp;
-    CF_DBC *dbcp;
-    int ksize, vsize;
-    char *key;
-    void *value;
     time_t now = time(NULL);
-    PersistentClassInfo q;
 
     Banner("Loading persistent classes");
 
+    CF_DB *dbp;
     if (!OpenDB(&dbp, dbid_state))
     {
         return;
     }
 
-/* Acquire a cursor for the database. */
-
+    CF_DBC *dbcp;
     if (!NewDBCursor(dbp, &dbcp))
     {
         Log(LOG_LEVEL_INFO, "Unable to scan persistence cache");
         return;
     }
 
-    while (NextDB(dbcp, &key, &ksize, &value, &vsize))
-    {
-        memcpy((void *) &q, value, sizeof(PersistentClassInfo));
+    const char *key;
+    int key_size = 0;
+    const PersistentClassInfo *info;
+    int info_size = 0;
 
+    while (NextDB(dbcp, (char **)&key, &key_size, (void **)&info, &info_size))
+    {
         Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
 
-        if (now > q.expires)
+        const char *tags = NULL;
+        if (info_size > sizeof(PersistentClassInfo))
+        {
+            tags = info->tags;
+        }
+
+        if (now > info->expires)
         {
             Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' expired", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes", key, (intmax_t)((info->expires - now) / 60));
             Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
-            if (strchr(key, CF_NS))
-            {
-                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
-                ns[0] = '\0';
-                name[0] = '\0';
-                sscanf(key, "%[^:]:%[^\n]", ns, name);
-                EvalContextHeapAddSoft(ctx, name, ns, "source=persistent");
-            }
-            else
-            {
-                EvalContextHeapAddSoft(ctx, key, NULL, "source=persistent");
-            }
+
+            ClassRef ref = ClassRefParse(key);
+            EvalContextHeapAddSoft(ctx, ref.name, ref.ns, tags);
+            ClassRefDestroy(ref);
         }
     }
 
@@ -2133,7 +2158,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
             }
 
             Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
-            EvalContextHeapPersistentSave(ctx, classname, persistence_ttl, policy);
+            EvalContextHeapPersistentSave(ctx, classname, persistence_ttl, policy, "");
             EvalContextClassPutSoft(ctx, classname, CONTEXT_SCOPE_NAMESPACE, "");
         }
         else

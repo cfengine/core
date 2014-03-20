@@ -36,6 +36,7 @@ check_PROGRAMS = \
 	json_test \
 	csv_parser_test \
 	evalfunction_test \
+	eval_context_test \
 	regex_test \
 	alloc_test \
 	string_writer_test \

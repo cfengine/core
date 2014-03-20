@@ -52,13 +52,15 @@ bundle agent test
 
     !windows::
       "patterns[f]" string => "$(G.testdir)/tu/\\*";
+      "patterns[g]" string => "$(G.testdir)/**";
+      "patterns[h]" string => "$(G.testdir)/**/j";
 
     any::
       "pnames" slist => getindices("patterns");
 
       "found[$(pnames)]" slist => findfiles("$(patterns[$(pnames)])");
       "found_string[$(pnames)]" string => join(",", "found[$(pnames)]");
-    
+
 
   reports:
     DEBUG::
@@ -84,6 +86,8 @@ bundle agent check
 
     !windows::
       "expected[f]" string => "$(G.testdir)/tu/*";
+      "expected[g]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu,$(G.testdir)/d/e,$(G.testdir)/g/h,$(G.testdir)/klm/nop,$(G.testdir)/tu/*,$(G.testdir)/d/e/f,$(G.testdir)/g/h/i,$(G.testdir)/klm/nop/qrs,$(G.testdir)/g/h/i/j";
+      "expected[h]" string => "$(G.testdir)/g/h/i/j";
 
     any::
       "expects" slist => getindices("expected");

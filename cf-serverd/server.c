@@ -81,7 +81,7 @@ char CFRUNCOMMAND[CF_MAXVARSIZE] = { 0 };                       /* GLOBAL_P */
 
 static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
 static void PurgeOldConnections(Item **list, time_t now);
-static void *HandleConnection(ServerConnectionState *conn);
+static void *HandleConnection(void *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info);
 static void DeleteConn(ServerConnectionState *conn);
 
@@ -255,8 +255,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         /* Continue with default thread stack size. */
     }
 
-    ret = pthread_create(&tid, &threadattrs,
-                         (void *(*)(void *)) HandleConnection, conn);
+    ret = pthread_create(&tid, &threadattrs, HandleConnection, conn);
     if (ret != 0)
     {
         errno = ret;
@@ -299,8 +298,9 @@ static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, con
 /* TRIES: counts the number of consecutive connections dropped. */
 static int TRIES = 0;
 
-static void *HandleConnection(ServerConnectionState *conn)
+static void *HandleConnection(void *c)
 {
+    ServerConnectionState *conn = c;
     int ret;
 
     /* Set logging prefix to be the IP address for all of thread's lifetime. */

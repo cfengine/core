@@ -29,8 +29,9 @@ body common control
 bundle agent example
 {
   vars:
-      "listfiles" slist => lsdir("/etc", "(p.sswd|group)", "true");
+      "listfiles" slist => lsdir("/etc", "(p.sswd|gr[ou]+p)", "true");
       "sorted_listfiles" slist => sort(listfiles, "lex");
+
   reports:
       "files in list: $(sorted_listfiles)";
 }

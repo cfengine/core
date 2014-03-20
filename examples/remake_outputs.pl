@@ -33,7 +33,7 @@ Syntax: $0 [-c|--check] [-v|--verbose] [--cfagent=PATH] [--workdir=WORKDIR] FILE
 
 Generate the output section of CFEngine code example.
 
-With -c or --check, the script reports if the output is different but doesn't
+With -c or --check, the script reports if the output is different but does not
 write it.
 
 With -v or --verbose, the script shows the full output of each test.  Use

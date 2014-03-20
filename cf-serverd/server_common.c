@@ -123,18 +123,15 @@ Item *ListPersistentClasses()
         return NULL;
     }
 
-    PersistentClassInfo q;
+    const PersistentClassInfo *value;
     int ksize, vsize;
     char *key;
-    void *value;
     size_t count = 0;
     time_t now = time(NULL);
     Item *persistent_classes = NULL;
-    while (NextDB(dbcp, &key, &ksize, &value, &vsize))
+    while (NextDB(dbcp, &key, &ksize, (void **)&value, &vsize))
     {
-        memcpy(&q, value, sizeof(PersistentClassInfo));
-
-        if (now > q.expires)
+        if (now > value->expires)
         {
             Log(LOG_LEVEL_DEBUG,
                 "Persistent class %s expired, removing from database", key);

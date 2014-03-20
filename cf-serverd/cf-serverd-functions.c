@@ -462,16 +462,18 @@ static int OpenReceiverChannel(void)
     int sd = -1;
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        if ((sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol)) == -1)
+        sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
+        if (sd == -1)
         {
             continue;
         }
 
        #ifdef IPV6_V6ONLY
         /* Properly implemented getaddrinfo(AI_PASSIVE) should return the IPV6
-           loopback address first. Some platforms (Windows) don't listen to
-           both address families when binding to it and need this flag. Some
-           other platforms won't even honour this flag (openbsd). */
+           loopback address first. Some platforms (notably Windows) don't
+           listen to both address families when binding to it and need this
+           flag. Some other platforms won't even honour this flag
+           (openbsd). */
         if (BINDINTERFACE[0] == '\0' && ap->ai_family == AF_INET6)
         {
             int no = 0;
@@ -521,14 +523,11 @@ static int OpenReceiverChannel(void)
             }
             break;
         }
-        else
-        {
-            Log(LOG_LEVEL_INFO,
-                "Could not bind server address. (bind: %s)",
-                GetErrorStr());
-            cf_closesocket(sd);
-            sd = -1;
-        }
+        Log(LOG_LEVEL_INFO,
+            "Could not bind server address. (bind: %s)",
+            GetErrorStr());
+        cf_closesocket(sd);
+        sd = -1;
     }
 
     assert(response != NULL);               /* getaddrinfo() was successful */
@@ -538,9 +537,9 @@ static int OpenReceiverChannel(void)
 
 static int InitServer(size_t queue_size)
 {
-    int sd = -1;
+    int sd = OpenReceiverChannel();
 
-    if ((sd = OpenReceiverChannel()) == -1)
+    if (sd == -1)
     {
         Log(LOG_LEVEL_ERR, "Unable to start server");
         exit(EXIT_FAILURE);

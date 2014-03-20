@@ -37,14 +37,15 @@ bundle agent test
       "joined_$(seeds)" string => join(",", "shuffled_$(seeds)");
 
   reports:
-      "shuffled by $(seeds) = '$(joined_$(seeds))'";
+      "shuffled RANDOMLY by $(seeds) = '$(joined_$(seeds))'";
 }
 #+end_src
 ###############################################################################
+# Not checked because shuffle is random.
 #+begin_src example_output
 #@ ```
-#@ R: shuffled by xx = 'b,a,c'
-#@ R: shuffled by yy = 'a,c,b'
-#@ R: shuffled by zz = 'c,b,a'
+#@ R: shuffled RANDOMLY by xx = 'b,a,c'
+#@ R: shuffled RANDOMLY by yy = 'a,c,b'
+#@ R: shuffled RANDOMLY by zz = 'c,b,a'
 #@ ```
 #+end_src

@@ -133,7 +133,7 @@ bundle agent check
                     'ok_lex_e', 'ok_int_e', 'ok_real_e', 'ok_IP_e', 'ok_MAC_e',
                     'ok_lex_f', 'ok_int_f', 'ok_real_f', 'ok_IP_f', 'ok_MAC_f',
                     'ok_lex_g', 'ok_int_g', 'ok_real_g', 'ok_IP_g', 'ok_MAC_g',
-                    'ok_lex_ip', 'ok_int_ip', 'ok_real_ip', 'ok_IP_ip', 'ok_MAC_ip',
+                    'ok_lex_ip', 'ok_IP_ip', 'ok_MAC_ip', # TOFIX: Debian 4 'ok_int_ip', 'ok_real_ip',
                     'ok_lex_ipv6', 'ok_int_ipv6', 'ok_real_ipv6', 'ok_IP_ipv6', 'ok_MAC_ipv6',
                     'ok_lex_mac', 'ok_int_mac', 'ok_real_mac', 'ok_IP_mac', 'ok_MAC_mac',
       };

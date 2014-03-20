@@ -5,11 +5,15 @@ AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
 
 noinst_PROGRAMS =
 
+noinst_LTLIBRARIES = libmock-package-manager.la
+libmock_package_manager_la_SOURCES = mock-package-manager.c
+libmock_package_manager_la_LIBADD = ../../libpromises/libpromises.la
+
 if !BUILTIN_EXTENSIONS
 noinst_PROGRAMS += mock-package-manager
 
-mock_package_manager_SOURCES = mock-package-manager.c
-mock_package_manager_LDADD = ../../libpromises/libpromises.la
+mock_package_manager_SOURCES =
+mock_package_manager_LDADD = libmock-package-manager.la
 endif # !BUILTIN_EXTENSIONS
 
 if HAVE_LIBXML2

@@ -34,15 +34,6 @@
 #include <misc_lib.h>
 
 
-/**
- * @NOTE this function is non-static because of a separate implementation for
- *       windows in Enterprise. WARNING make sure you change that one as well
- *       in case you change this declaration.
- */
-bool TryConnect(int sd, unsigned long timeout_ms,
-                const struct sockaddr *sa, socklen_t sa_len);
-
-/*************************************************************************/
 
 /**
  * @param len is the number of bytes to send, or 0 if buffer is a

@@ -63,8 +63,9 @@ bundle agent init
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "hpux",
-        meta => { "redmine4934" };
+      "test_suppress_fail" string => "hpux|windows",
+        meta => { "redmine4934", "redmine5107" };
+
 
   vars:
       "test" slist => { "a", "b", "c", "d", "e", "f", "g", "ip", "ipv6", "mac" };

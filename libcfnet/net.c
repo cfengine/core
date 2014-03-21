@@ -34,10 +34,6 @@
 #include <misc_lib.h>
 
 
-static bool TryConnect(int sd, struct timeval *tvp,
-                       const struct sockaddr *sa, socklen_t sa_len);
-
-/*************************************************************************/
 
 /**
  * @param len is the number of bytes to send, or 0 if buffer is a
@@ -167,6 +163,7 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
    Tries to connect() to server #host, returns the socket descriptor and the
    IP address that succeeded in #txtaddr.
 
+   @param #connect_timeout how long to wait for connect(), zero blocks forever
    @param #txtaddr If connected successfully return the IP connected in
                    textual representation
    @return Connected socket descriptor or -1 in case of failure.
@@ -177,7 +174,7 @@ int SocketConnect(const char *host, const char *port,
 {
     struct addrinfo *response, *ap;
     struct addrinfo *response2, *ap2;
-    int sd, connected = false;
+    int sd = -1, connected = false;
 
     struct addrinfo query = {
         .ai_family = force_ipv4 ? AF_INET : AF_UNSPEC,
@@ -251,10 +248,8 @@ int SocketConnect(const char *host, const char *port,
                 freeaddrinfo(response2);
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Setting connect timeout to %u", connect_timeout);
-            struct timeval tv = { .tv_sec = connect_timeout };
-
-            connected = TryConnect(sd, &tv, ap->ai_addr, ap->ai_addrlen);
+            connected = TryConnect(sd, connect_timeout * 1000,
+                                   ap->ai_addr, ap->ai_addrlen);
             ap = ap->ai_next;
         }
     }
@@ -307,14 +302,23 @@ int SocketConnect(const char *host, const char *port,
 #endif
 
 /**
- * Tries a nonblocking connect and then restores blocking if
- * successful. Returns true on success, false otherwise.
- * NB! Do not use recv() timeout - see note below.
+ * Tries to connect for #timeout_ms milliseconds. On success sets the recv()
+ * timeout to #timeout_ms as well.
+ *
+ * @param #timeout_ms How long to wait for connect(), if zero wait forever.
+ * @return true on success, false otherwise.
  **/
-static bool TryConnect(int sd, struct timeval *tvp,
-                       const struct sockaddr *sa, socklen_t sa_len)
+bool TryConnect(int sd, unsigned long timeout_ms,
+                const struct sockaddr *sa, socklen_t sa_len)
 {
     assert(sa != NULL);
+
+    if (sd >= FD_SETSIZE)
+    {
+        Log(LOG_LEVEL_ERR, "Open connections exceed FD_SETSIZE limit of %d",
+            FD_SETSIZE);
+        return false;
+    }
 
     /* set non-blocking socket */
     int arg = fcntl(sd, F_GETFL, NULL);
@@ -336,20 +340,31 @@ static bool TryConnect(int sd, struct timeval *tvp,
             return false;
         }
 
-        assert(errno == EINPROGRESS);
-
         int errcode;
         socklen_t opt_len = sizeof(errcode);
         fd_set myset;
         FD_ZERO(&myset);
         FD_SET(sd, &myset);
 
-        /* now wait for connect, but no more than tvp.sec */
+        Log(LOG_LEVEL_VERBOSE, "Waiting to connect...");
+
+        struct timeval tv, *tvp;
+        if (timeout_ms > 0)
+        {
+            tv.tv_sec = timeout_ms / 1000;
+            tv.tv_usec = (timeout_ms % 1000) * 1000;
+            tvp = &tv;
+        }
+        else
+        {
+            tvp = NULL;                                /* wait indefinitely */
+        }
+
         ret = select(sd + 1, NULL, &myset, NULL, tvp);
         if (ret == -1)
         {
             Log(LOG_LEVEL_ERR,
-                "Error waiting for connection timeout (select: %s)",
+                "Error while waiting for connection (select: %s)",
                 GetErrorStr());
             return false;
         }
@@ -366,27 +381,24 @@ static bool TryConnect(int sd, struct timeval *tvp,
 
         if (errcode != 0)
         {
-            Log(LOG_LEVEL_INFO,
-                "Timeout connecting to server (getsockopt: %s)",
+            Log(LOG_LEVEL_INFO, "Error connecting to server: %s",
                 GetErrorStrFromCode(errcode));
             return false;
         }
     }
 
     /* Connection suceeded, return to blocking mode. */
-
     ret = fcntl(sd, F_SETFL, arg);
     if (ret == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not set socket to blocking mode (fcntl: %s)",
+        Log(LOG_LEVEL_ERR,
+            "Could not set socket back to blocking mode (fcntl: %s)",
             GetErrorStr());
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Setting socket timeout to %ld", tvp->tv_sec);
-    ret = SetReceiveTimeout(sd, tvp);
-    if (ret == -1)
+    if (timeout_ms > 0)
     {
-        Log(LOG_LEVEL_ERR, "Could not set socket timeout (%s)", GetErrorStr());
+        SetReceiveTimeout(sd, timeout_ms);
     }
 
     return true;
@@ -400,29 +412,35 @@ static bool TryConnect(int sd, struct timeval *tvp,
 
 
 
-#ifdef __linux__
-/*
-  NB: recv() timeout interpretation differs under Windows: setting tv_sec to
-  50 (and tv_usec to 0) results in a timeout of 0.5 seconds on Windows, but
-  50 seconds on Linux.
-*/
-/* TODO more platforms... */
-
-int SetReceiveTimeout(int fd, const struct timeval *tv)
+/**
+ * Set timeout for recv(), in milliseconds.
+ * @param ms must be > 0.
+ */
+int SetReceiveTimeout(int fd, unsigned long ms)
 {
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)tv, sizeof(struct timeval)))
+    assert(ms > 0);
+
+    Log(LOG_LEVEL_VERBOSE, "Setting socket timeout to %lu milliseconds.", ms);
+
+/* On windows SO_RCVTIMEO is set by a DWORD indicating the timeout in
+ * milliseconds, on UNIX it's a struct timeval. */
+
+#if !defined(__MINGW32__)
+    struct timeval tv = {
+        .tv_sec = ms / 1000,
+        .tv_usec = (ms % 1000) * 1000
+    };
+    int ret = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+#else
+    int ret = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &ms, sizeof(ms));
+#endif
+
+    if (ret != 0)
     {
+        Log(LOG_LEVEL_INFO,
+            "Failed to set socket timeout to %lu milliseconds.", ms);
         return -1;
     }
 
     return 0;
 }
-
-#else
-
-int SetReceiveTimeout(ARG_UNUSED int fd, ARG_UNUSED const struct timeval *tv)
-{
-    return 0;
-}
-
-#endif

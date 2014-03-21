@@ -1383,6 +1383,8 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
+    case PROTOCOL_COMMAND_AUTH_PLAIN:
+    case PROTOCOL_COMMAND_AUTH_SECURE:
     case PROTOCOL_COMMAND_AUTH:
     case PROTOCOL_COMMAND_CONTEXTS:
     case PROTOCOL_COMMAND_BAD:

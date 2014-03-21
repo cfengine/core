@@ -34,11 +34,18 @@
 int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len, char status);
 int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more);
 
-int SetReceiveTimeout(int sd, const struct timeval *timeout);
-
+int SetReceiveTimeout(int fd, unsigned long ms);
 
 int SocketConnect(const char *host, const char *port,
                   unsigned int connect_timeout, bool force_ipv4,
                   char *txtaddr, size_t txtaddr_size);
+
+/**
+ * @NOTE DO NOT USE THIS FUNCTION. The only reason it is non-static is because
+ *       of a separate implementation for windows in Enterprise.
+ */
+bool TryConnect(int sd, unsigned long timeout_ms,
+                const struct sockaddr *sa, socklen_t sa_len);
+
 
 #endif

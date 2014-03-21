@@ -1,6 +1,6 @@
 if !BUILTIN_EXTENSIONS
  projlib_LTLIBRARIES = libpromises.la
- libpromises_la_LDFLAGS = -version-info 3:5:0 -no-undefined
+ libpromises_la_LDFLAGS = -version-info 3:6:0 -no-undefined
 else
  noinst_LTLIBRARIES = libpromises.la
 endif

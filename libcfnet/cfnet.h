@@ -134,6 +134,7 @@ struct Stat_
 typedef struct
 {
     ConnectionInfo *conn_info;
+    int trust;                  /* true if key being accepted on trust */
     int authenticated;
     char username[CF_SMALLBUF];
     /* Unused for now... */

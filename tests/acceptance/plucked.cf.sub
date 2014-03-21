@@ -1,0 +1,695 @@
+
+body contain in_dir_shell(dir)
+# @brief run command after switching to directory "dir" with full shell
+# @param dir directory to change into
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_dir_shell("/tmp");
+# ```
+{
+      chdir => "$(dir)";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+}
+
+body contain in_shell
+# @brief run command in shell
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_shell;
+# ```
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+}
+
+body contain in_shell_bg
+# @brief deprecated
+# This bundle previously had an invalid background attribute that was caught by
+# parser strictness enhancements. Backgrounding is handeled by the body action
+# background attribute.
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+}
+
+body contain in_shell_and_silent
+# @brief run command in shell and suppress output
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_shell_and_silent,
+#      comment => "Silently run command in shell";
+# ```
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      no_output => "true";
+}
+
+body contain in_dir_shell_and_silent(dir)
+# @brief run command in shell after switching to 'dir' and suppress output
+# @param dir directory to change into
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_dir_shell_and_silent("/tmp"),
+#      comment => "Silently run command in shell";
+# ```
+
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      no_output => "true";
+      chdir => "$(dir)";
+}
+
+body action if_elapsed(x)
+# @brief Evaluate the promise every `x` minutes
+# @param x The time in minutes between promise evaluations
+{
+      ifelapsed => "$(x)";
+      expireafter => "$(x)";
+}
+
+body action if_elapsed_day
+# @brief Evalute the promise once every 24 hours
+{
+      ifelapsed => "1440";    # 60 x 24
+      expireafter => "1400";
+}
+
+body action immediate
+# @brief Evaluate the promise at every `cf-agent` execution.
+{
+      ifelapsed => "0";
+}
+
+body classes if_repaired(x)
+# @brief Define class `x` if the promise has been repaired
+# @param x The name of the class
+{
+      promise_repaired => { "$(x)" };
+}
+
+body classes if_else(yes,no)
+# @brief Define the classes `yes` or `no` depending on promise outcome
+# @param yes The name of the class that should be defined if the promise is kept or repaired
+# @param no The name of the class that should be defined if the promise could not be repaired
+{
+      promise_kept     => { "$(yes)" };
+      promise_repaired => { "$(yes)" };
+      repair_failed    => { "$(no)" };
+      repair_denied    => { "$(no)" };
+      repair_timeout   => { "$(no)" };
+}
+
+body classes if_notkept(x)
+# @brief Define the class `x` if the promise is not kept and cannot be repaired.
+# @param x The name of the class that should be defined
+{
+      repair_failed   => { "$(x)" };
+      repair_denied   => { "$(x)" };
+      repair_timeout  => { "$(x)" };
+}
+
+body classes if_ok(x)
+# @brief Define the class `x` if the promise is kept or could be repaired
+# @param x The name of the class that should be defined
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+}
+
+body classes if_ok_cancel(x)
+# @brief Cancel the class `x` if the promise ks kept or repaired
+# @param x The name of the class that should be cancelled
+{
+      cancel_repaired => { "$(x)" };
+      cancel_kept => { "$(x)" };
+}
+
+body classes classes_generic(x)
+# @brief Define `x` prefixed/suffixed with promise outcome
+# @param x The unique part of the classes to be defined
+{
+      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+}
+
+body classes scoped_classes_generic(scope, x)
+# @brief Define `x` prefixed/suffixed with promise outcome
+# **See also:** `scope`
+#
+# @param scope The scope in which the class should be defined
+# @param x The unique part of the classes to be defined
+{
+      scope => "$(scope)";
+      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+}
+
+body classes always(x)
+# @brief Define class `x` no matter what the outcome of the promise is
+# @param x The name of the class to be defined
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
+}
+
+bundle edit_line insert_lines(lines)
+# @brief Append `lines` if they don't exist in the file
+# @param lines The lines to be appended
+#
+# **See also:** [`insert_lines`][insert_lines] in
+# [`edit_line`][bundle edit_line]
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}
+
+bundle edit_line set_variable_values(v)
+# @brief Sets the RHS of variables in files of the form:
+#
+# ```
+#      LHS=RHS
+# ```
+#
+# Adds a new line if no LHS exists, and replaces RHS values if one does exist.
+# If the line is commented out with #, it gets uncommented first.
+#
+# @param v The fully-qualified name of an associative array containing `v[LHS]="rhs"`
+#
+# **Example:**
+#
+# ```cf3
+#     vars:
+#        "stuff[lhs-1]" string => "rhs1";
+#        "stuff[lhs-2]" string => "rhs2";
+#
+#     files:
+#        "myfile"
+#          edit_line => set_quoted_values(stuff)
+# ```
+#
+# **See also:** `set_quoted_values()`
+{
+  meta:
+      "tags"
+      slist =>
+      {
+        "deprecated=3.6.0",
+        "deprecation-reason=Generic reimplementation",
+        "replaced-by=set_line_based"
+      };
+
+  vars:
+
+      "index" slist => getindices("$(v)");
+
+      # Be careful if the index string contains funny chars
+
+      "cindex[$(index)]" string => canonify("$(index)");
+      "cv"               string => canonify("$(v)");
+
+  field_edits:
+
+      # match a line starting like the key = something
+
+      "\s*$(index)\s*=.*"
+
+      edit_field => col("\s*$(index)\s*=","2","$($(v)[$(index)])","set"),
+      classes => if_ok("$(cv)_$(cindex[$(index)])_in_file"),
+      comment => "Match a line starting like key = something";
+
+  insert_lines:
+
+      "$(index)=$($(v)[$(index)])"
+
+      comment => "Insert a variable definition",
+      ifvarclass => "!$(cv)_$(cindex[$(index)])_in_file";
+}
+
+bundle edit_line set_config_values(v)
+# @brief Sets the RHS of configuration items in the file of the form:
+#
+# ```
+#   LHS RHS
+# ```
+#
+# If the line is commented out with `#`, it gets uncommented first.
+#
+# Adds a new line if none exists.
+#
+# @param v The fully-qualified name of an associative array containing `v[LHS]="rhs"`
+{
+  meta:
+      "tags"
+      slist =>
+      {
+        "deprecated=3.6.0",
+        "deprecation-reason=Generic reimplementation",
+        "replaced-by=set_line_based"
+      };
+
+  vars:
+      "index" slist => getindices("$(v)");
+
+      # Be careful if the index string contains funny chars
+      "cindex[$(index)]" string => canonify("$(index)");
+
+      # Escape the value (had a problem with special characters and regex's)
+      "ev[$(index)]" string => escape("$($(v)[$(index)])");
+
+      # Do we have more than one line commented out?
+      "index_comment_matches_$(cindex[$(index)])" int => countlinesmatching("^\s*#\s*($(index)\s+.*|$(index))$","$(edit.filename)");
+
+
+  classes:
+      # Check to see if this line exists
+      "line_exists_$(cindex[$(index)])" expression => regline("^\s*($(index)\s.*|$(index))$","$(edit.filename)");
+
+      # if there's more than one comment, just add new (don't know who to use)
+      "multiple_comments_$(cindex[$(index)])" expression => isgreaterthan("$(index_comment_matches_$(cindex[$(index)]))","1");
+
+
+  replace_patterns:
+      # If the line is commented out, uncomment and replace with
+      # the correct value
+      "^\s*#\s*($(index)\s+.*|$(index))$"
+             comment => "Uncommented the value $(index)",
+        replace_with => value("$(index) $($(v)[$(index)])"),
+          ifvarclass => "!line_exists_$(cindex[$(index)]).!replace_attempted_$(cindex[$(index)]).!multiple_comments_$(cindex[$(index)])",
+             classes => always("uncommented_$(cindex[$(index)])");
+      
+      # If the line is there with the wrong value, replace with
+      # the correct value
+      "^\s*($(index)\s+(?!$(ev[$(index)])$).*|$(index))$"
+           comment => "Correct the value $(index)",
+      replace_with => value("$(index) $($(v)[$(index)])"),
+           classes => always("replace_attempted_$(cindex[$(index)])");
+
+  insert_lines:
+      # If the line doesn't exist, or there is more than one occurance
+      # of the LHS commented out, insert a new line and try to place it
+      # after the commented LHS (keep new line with old comments)
+      "$(index) $($(v)[$(index)])"
+         comment => "Insert the value, marker exists $(index)",
+        location => after("^\s*#\s*($(index)\s+.*|$(index))$"),
+      ifvarclass => "replace_attempted_$(cindex[$(index)]).multiple_comments_$(cindex[$(index)])";
+
+      # If the line doesn't exist and there are no occurances
+      # of the LHS commented out, insert a new line at the eof
+      "$(index) $($(v)[$(index)])"
+         comment => "Insert the value, marker doesn't exist $(index)",
+      ifvarclass => "replace_attempted_$(cindex[$(index)]).!multiple_comments_$(cindex[$(index)])";
+
+}
+
+bundle edit_line set_line_based(v, sep, bp, kp, cp)
+# @brief Sets the RHS of configuration items in the file of the form:
+#
+# ```
+#   LHS$(sep)RHS
+# ```
+#
+# Example usage for `x=y` lines (e.g. rsyncd.conf):
+#
+# ```cf3
+# "myfile"
+# edit_line => set_line_based("test.config", "=", "\s*=\s*", ".*", "\s*#\s*");
+# ```
+#
+# Example usage for `x y` lines (e.g. sshd_config):
+#
+# ```cf3
+# "myfile"
+# edit_line => set_line_based("test.config", " ", "\s+", ".*", "\s*#\s*");
+# ```
+#
+# If the line is commented out with `$(cp)`, it gets uncommented first.
+#
+# Adds a new line if none exists or if more than one commented-out
+# possible matches exist.
+#
+# Originally `set_config_values` by Ed King.
+#
+# @param v The fully-qualified name of an associative array containing `v[LHS]="rhs"`
+# @param sep The separator to insert, e.g. ` ` for space-separated
+# @param bp The key-value separation regex, e.g. `\s+` for space-separated
+# @param kp The keys to select from v, use `.*` for all
+# @param cp The comment pattern from line-start, e.g. `\s*#\s*`
+{
+  meta:
+      "tags"
+      slist =>
+      {
+        "replaces=set_config_values",
+        "replaces=set_config_values_matching",
+        "replaces=set_variable_values",
+        "replaces=set_quoted_values",
+        "replaces=maintain_key_values",
+      };
+
+  vars:
+      "vkeys" slist => getindices("$(v)");
+      "i" slist => grep($(kp), vkeys);
+
+      # Be careful if the index string contains funny chars
+      "ci[$(i)]" string => canonify("$(i)");
+
+      # Escape the value (had a problem with special characters and regex's)
+      "ev[$(i)]" string => escape("$($(v)[$(i)])");
+
+      # Do we have more than one line commented out?
+      "comment_matches_$(ci[$(i)])"
+      int => countlinesmatching("^$(cp)($(i)$(bp).*|$(i))$",
+                                $(edit.filename));
+
+
+  classes:
+      # Check to see if this line exists
+      "exists_$(ci[$(i)])"
+      expression => regline("^\s*($(i)$(bp).*|$(i))$",
+                            $(edit.filename));
+
+      # if there's more than one comment, just add new (don't know who to use)
+      "multiple_comments_$(ci[$(i)])"
+      expression => isgreaterthan("$(comment_matches_$(ci[$(i)]))",
+                                  "1");
+
+
+  replace_patterns:
+      # If the line is commented out, uncomment and replace with
+      # the correct value
+      "^$(cp)($(i)$(bp).*|$(i))$"
+             comment => "Uncommented the value $(i)",
+        replace_with => value("$(i)$(sep)$($(v)[$(i)])"),
+          ifvarclass => "!exists_$(ci[$(i)]).!replace_attempted_$(ci[$(i)]).!multiple_comments_$(ci[$(i)])",
+             classes => always("uncommented_$(ci[$(i)])");
+
+      # If the line is there with the wrong value, replace with
+      # the correct value
+      "^\s*($(i)$(bp)(?!$(ev[$(i)])$).*|$(i))$"
+           comment => "Correct the value $(i)",
+      replace_with => value("$(i)$(sep)$($(v)[$(i)])"),
+           classes => always("replace_attempted_$(ci[$(i)])");
+
+  insert_lines:
+      # If the line doesn't exist, or there is more than one occurance
+      # of the LHS commented out, insert a new line and try to place it
+      # after the commented LHS (keep new line with old comments)
+      "$(i)$(sep)$($(v)[$(i)])"
+         comment => "Insert the value, marker exists $(i)",
+        location => after("^$(cp)($(i)$(bp).*|$(i))$"),
+      ifvarclass => "replace_attempted_$(ci[$(i)]).multiple_comments_$(ci[$(i)])";
+
+      # If the line doesn't exist and there are no occurances
+      # of the LHS commented out, insert a new line at the eof
+      "$(i)$(sep)$($(v)[$(i)])"
+         comment => "Insert the value, marker doesn't exist $(i)",
+      ifvarclass => "replace_attempted_$(ci[$(i)]).!multiple_comments_$(ci[$(i)])";
+}
+
+bundle edit_line set_config_values_matching(v,pat)
+# @brief Sets the RHS of configuration items in the file of the form
+#
+# ```
+#   LHS RHS
+# ```
+#
+# If the line is commented out with `#`, it gets uncommented first.
+# Adds a new line if none exists.
+#
+# @param v the fully-qualified name of an associative array containing v[LHS]="rhs"
+# @param pat Only elements of `v` that match the regex `pat` are use
+{
+  meta:
+      "tags"
+      slist =>
+      {
+        "deprecated=3.6.0",
+        "deprecation-reason=Generic reimplementation",
+        "replaced-by=set_line_based"
+      };
+
+  vars:
+      "allparams" slist => getindices("$(v)");
+      "index"     slist => grep("$(pat)", "allparams");
+
+      # Be careful if the index string contains funny chars
+      "cindex[$(index)]" string => canonify("$(index)");
+
+  replace_patterns:
+      # If the line is there, maybe commented out, uncomment and replace with
+      # the correct value
+      "^\s*($(index)\s+(?!$($(v)[$(index)])).*|# ?$(index)\s+.*)$"
+      comment => "Correct the value",
+      replace_with => value("$(index) $($(v)[$(index)])"),
+      classes => always("replace_attempted_$(cindex[$(index)])");
+
+  insert_lines:
+      "$(index) $($(v)[$(index)])"
+      ifvarclass => "replace_attempted_$(cindex[$(index)])";
+
+}
+
+body edit_field fstab_options(newval, method)
+# @brief Edit the options field in a fstab format
+# @param newval the new option
+# @param method `field_operation` to apply
+#
+# This body edits the options field in the fstab file format.  The
+# `method` is a `field_operation` which can be `append`, `prepend`,
+# `set`, `delete`, or `alphanum`.  The `newval` option is OS-specific.
+#
+# **Example:**
+#
+# ```cf3
+#   # from the `fstab_options_editor`
+#   field_edits:
+#      "(?!#)\S+\s+$(mount)\s.+"
+#      edit_field => fstab_options($(option), $(method));
+# ```
+{
+      field_separator => "\s+";
+      select_field    => "4";
+      value_separator  => ",";
+      field_value     => "$(newval)";
+      field_operation => "$(method)";
+}
+
+body edit_field quoted_var(newval,method)
+# @brief Edit the quoted value of the matching line
+# @param newval The new value
+# @param method The method by which to edit the field
+{
+      field_separator => "\"";
+      select_field    => "2";
+      value_separator  => " ";
+      field_value     => "$(newval)";
+      field_operation => "$(method)";
+      extend_fields => "false";
+      allow_blank_fields => "true";
+}
+
+body edit_field col(split,col,newval,method)
+# @brief Edit tabluar data with comma-separated sub-values
+# @param split The separator that defines columns
+# @param col The (1-based) index of the value to change
+# @param newval The new value
+# @param method The method by which to edit the field
+{
+      field_separator    => "$(split)";
+      select_field       => "$(col)";
+      value_separator    => ",";
+      field_value        => "$(newval)";
+      field_operation    => "$(method)";
+      extend_fields      => "true";
+      allow_blank_fields => "true";
+}
+
+body edit_field line(split,col,newval,method)
+# @brief Edit tabular data with space-separated sub-values
+# @param split The separator that defines columns
+# @param col The (1-based) index of the value to change
+# @param newval The new value
+# @param method The method by which to edit the field
+{
+      field_separator    => "$(split)";
+      select_field       => "$(col)";
+      value_separator    => " ";
+      field_value        => "$(newval)";
+      field_operation    => "$(method)";
+      extend_fields      => "true";
+      allow_blank_fields => "true";
+}
+
+body replace_with value(x)
+# @brief Replace matching lines
+# @param x The replacement string
+{
+      replace_value => "$(x)";
+      occurrences => "all";
+}
+
+body edit_defaults empty
+# @brief Empty the file before editing
+#
+# No backup is made
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+      #max_file_size => "300000";
+}
+
+body location start
+# @brief Editing occurs before the matched line
+{
+      before_after => "before";
+}
+
+body location after(str)
+# @brief Editing occurs after the line matching `str`
+# @param str Regular expression matching the file line location
+{
+      before_after => "after";
+      select_line_matching => "$(str)";
+}
+
+body location before(str)
+# @brief Editing occurs before the line matching `str`
+# @param str Regular expression matching the file line location
+{
+      before_after => "before";
+      select_line_matching => "$(str)";
+}
+
+body replace_with comment(c)
+# @brief Comment all lines matching the pattern by preprending `c`
+# @param c The prefix that comments out lines
+{
+      replace_value => "$(c) $(match.1)";
+      occurrences => "all";
+}
+
+body replace_with uncomment
+# @brief Uncomment all lines matching the pattern by removing
+# anything outside the matching string
+{
+      replace_value => "$(match.1)";
+      occurrences => "all";
+}
+
+body copy_from local_cp(from)
+# @brief Copy a local file.
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+}
+
+body copy_from backup_local_cp(from)
+# @brief Copy a local file and  keep a backup of old versions.
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+      copy_backup => "timestamp";
+}
+
+body perms m(mode)
+# @brief Set the file mode
+# @param mode The new mode
+{
+      mode   => "$(mode)";
+}
+
+body perms mog(mode,user,group)
+# @brief Set the file's mode, owner and group
+# @param mode The new mode
+# @param user The username of the new owner
+# @param group The group name
+{
+      owners => { "$(user)" };
+      groups => { "$(group)" };
+      mode   => "$(mode)";
+}
+
+body depth_search recurse(d)
+# @brief Search files and direcories recursively, up to the specified depth
+# Directories on different devices are included.
+#
+# @param d The maximum search depth
+{
+      depth => "$(d)";
+      xdev  => "true";
+}
+
+body depth_search recurse_ignore(d,list)
+# @brief Search files and directories recursively,
+# but don't recurse into the specified directories
+#
+# @param d The maximum search depth
+# @param list The list of directories to be excluded
+{
+      depth => "$(d)";
+      exclude_dirs => { @(list) };
+}
+
+body depth_search recurse_with_base(d)
+# @brief Search files and directories recursively up to the specified
+# depth, starting from the base directory and including directories on
+# other devices.
+#
+# @param d The maximum search depth
+{
+      depth => "$(d)";
+      xdev  => "true";
+      include_basedir => "true";
+}
+
+body delete tidy
+# @brief Delete the file and remove empty directories
+# and links to directories
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+body file_select all
+# @brief Select all file system entries
+{
+      leaf_name => { ".*" };
+      file_result => "leaf_name";
+}
+
+body changes all_changes
+# @brief Detect all file changes using sha256
+# and report the diff to CFEngine Enterprise
+{
+      hash           => "sha256";
+      report_changes => "all";
+      report_diffs   => "true";
+      update_hashes  => "yes";
+}

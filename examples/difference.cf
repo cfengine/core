@@ -32,20 +32,32 @@ bundle agent test
       "a" slist => { 1,2,3,"x" };
       "b" slist => { "x" };
 
+      # normal usage
+      "diff_between_a_and_b" slist => difference(a, b);
+      "diff_between_a_and_b_str" string => join(",", diff_between_a_and_b);
+
+      # NOTE: advanced usage!
       "mylist1" slist => { "a", "b" };
       "mylist2" slist => { "a", "b" };
       "$(mylist1)_str" string => join(",", $(mylist1));
 
+      # Here we're going to really call difference(a,a) then difference(a,b) then difference(b,a) then difference(b,b)
+      # We create a new variable for each difference!!!
       "diff_$(mylist1)_$(mylist2)" slist => difference($(mylist1), $(mylist2));
       "diff_$(mylist1)_$(mylist2)_str" string => join(",", "diff_$(mylist1)_$(mylist2)");
 
   reports:
+      # normal usage
+      "The difference between lists a and b is '$(diff_between_a_and_b_str)'";
+
+      # NOTE: advanced usage results!
       "The difference of list '$($(mylist1)_str)' with '$($(mylist2)_str)' is '$(diff_$(mylist1)_$(mylist2)_str)'";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
+#@ R: The difference between lists a and b is '1,2,3'
 #@ R: The difference of list '1,2,3,x' with '1,2,3,x' is ''
 #@ R: The difference of list '1,2,3,x' with 'x' is '1,2,3'
 #@ R: The difference of list 'x' with '1,2,3,x' is ''

@@ -173,7 +173,7 @@ bundle agent test
 
     ok::
       "$(this.promise_filename) Pass";
-    failasdasd::
+    fail|!ok::
       "$(this.promise_filename) FAIL";
 }
 

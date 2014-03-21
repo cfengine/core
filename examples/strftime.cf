@@ -30,11 +30,11 @@ bundle agent example
 {
   vars:
       "time" int => "1234567890";
-      "at_time" string => strftime("localtime", "%F %T", $(time));
-      "then" string => strftime("localtime", "%F %T", 0);
+      "at_time" string => strftime("localtime", "%Y-%m-%d %T", $(time));
+      "then" string => strftime("localtime", "%Y-%m-%d %T", 0);
 
-      "gmt_at_time" string => strftime("gmtime", "%F %T", $(time));
-      "gmt_then" string => strftime("gmtime", "%F %T", 0);
+      "gmt_at_time" string => strftime("gmtime", "%Y-%m-%d %T", $(time));
+      "gmt_then" string => strftime("gmtime", "%Y-%m-%d %T", 0);
 
   reports:
       # this will be different depending on your time zone

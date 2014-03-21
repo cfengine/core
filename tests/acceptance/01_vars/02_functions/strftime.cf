@@ -51,8 +51,9 @@ bundle edit_line init_insert
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "hpux",
-        meta => { "redmine4940" };
+      "test_suppress_fail" string => "hpux|windows",
+        meta => { "redmine4940", "redmine5110" };
+
 
   vars:
       "vals" slist => {

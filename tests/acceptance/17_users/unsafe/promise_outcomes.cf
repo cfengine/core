@@ -14,9 +14,6 @@ body common control
 
 bundle agent init
 {
-  meta:
-      "test_skip_needs_work" string => "windows";
-
   users:
     "absent_keep"
       policy => "absent";
@@ -57,7 +54,7 @@ bundle agent init
 body password init_password
 {
   format => "plaintext";
-  data => "Init0Password";
+  data => "Init0P4SSW0RD";
 }
 
 #######################################################
@@ -180,7 +177,7 @@ bundle agent test
 body password test_password
 {
   format => "plaintext";
-  data => "TestPassword";
+  data => "Test0P4SSW0RD";
 }
 
 body classes set_classes_kept_repaired(x, y)

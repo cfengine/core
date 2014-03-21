@@ -41,6 +41,7 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+/* The deprecated is the easy way to setup threads for OpenSSL. */
 #ifdef OPENSSL_NO_DEPRECATED
 void CRYPTO_set_id_callback(unsigned long (*func)(void));
 #endif
@@ -514,31 +515,60 @@ static pthread_mutex_t *cf_openssl_locks = NULL;
 #ifndef __MINGW32__
 unsigned long ThreadId_callback(void)
 {
-    return (unsigned long)pthread_self();
+    return (unsigned long) pthread_self();
 }
 #endif
 
-static void OpenSSLLock_callback(int mode, int index,
-                                 ARG_UNUSED char *file, ARG_UNUSED int line)
+static void OpenSSLLock_callback(int mode, int index, char *file, int line)
 {
     if (mode & CRYPTO_LOCK)
     {
-        pthread_mutex_lock(&(cf_openssl_locks[index]));
+        int ret = pthread_mutex_lock(&(cf_openssl_locks[index]));
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Locking failure at file %s line %d (pthread_mutex_lock: %d)!",
+                file, line, ret);
+        }
     }
     else
     {
-        pthread_mutex_unlock(&(cf_openssl_locks[index]));
+        int ret = pthread_mutex_unlock(&(cf_openssl_locks[index]));
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Locking failure at file %s line %d (pthread_mutex_unlock: %d)!",
+                file, line, ret);
+        }
     }
 }
 
 static void SetupOpenSSLThreadLocks(void)
 {
-    const int numLocks = CRYPTO_num_locks();
-    cf_openssl_locks = OPENSSL_malloc(numLocks * sizeof(pthread_mutex_t));
+    const int num_locks = CRYPTO_num_locks();
+    cf_openssl_locks = xmalloc(num_locks * sizeof(*cf_openssl_locks));
 
-    for (int i = 0; i < numLocks; i++)
+    for (int i = 0; i < num_locks; i++)
     {
-        pthread_mutex_init(&(cf_openssl_locks[i]),NULL);
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        int ret = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to use error-checking mutexes for openssl,"
+                " falling back to normal ones (pthread_mutexattr_settype: %d)",
+                ret);
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+        }
+        ret = pthread_mutex_init(&cf_openssl_locks[i], &attr);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_CRIT,
+                "Failed to use initialise mutexes for openssl"
+                " (pthread_mutex_init: %d)!", ret);
+        }
+        pthread_mutexattr_destroy(&attr);
     }
 
 #ifndef __MINGW32__
@@ -559,5 +589,6 @@ static void CleanupOpenSSLThreadLocks(void)
     {
         pthread_mutex_destroy(&(cf_openssl_locks[i]));
     }
-    OPENSSL_free(cf_openssl_locks);
+
+    free(cf_openssl_locks);
 }

@@ -63,11 +63,6 @@ bundle agent test
       copy_from => local_cp("$(this.promise_filename).expected");
 }
 
-body copy_from local_cp(from)
-{
-      source      => "$(from)";
-}
-
 bundle edit_line test_insert
 {
   insert_lines:
@@ -91,7 +86,7 @@ bundle edit_line test_insert
 bundle agent check
 {
   methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
 }

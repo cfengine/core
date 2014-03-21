@@ -31,10 +31,10 @@ bundle agent test
   files:
       "$(G.testroot)/destination_file1"
       copy_from => copy_from_port("9881"),        # localhost_deny_one_directory
-      classes => default_cf_sub_if_repaired("repaired1");
+      classes => if_repaired("repaired1");
       "$(G.testroot)/destination_file2"
       copy_from => copy_from_port("9882"),        # localhost_deny_one_directory_with_regex
-      classes => default_cf_sub_if_repaired("repaired2");
+      classes => if_repaired("repaired2");
 }
 
 #######################################################

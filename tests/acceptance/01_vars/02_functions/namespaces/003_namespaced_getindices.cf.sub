@@ -19,6 +19,6 @@ bundle agent test_in_namespace(array_name, array_name2)
 bundle agent check_in_namespace(test)
 {
   methods:
-      "any" usebundle => default:default_check_strcmp("$(b:test_in_namespace.repo_ids3)", "key", "$(test)", "no");
+      "any" usebundle => default:dcs_check_strcmp("$(b:test_in_namespace.repo_ids3)", "key", "$(test)", "no");
 }
 

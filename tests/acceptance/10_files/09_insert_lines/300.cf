@@ -143,21 +143,14 @@ bundle edit_line copy_and_append_lines(file,lines)
 
 }
 
-body edit_defaults empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-      max_file_size => "300000";
-}
-
 #######################################################
 
 bundle agent check
 {
   methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
+                                        "$(G.testfile).expected",
+                                        "$(this.promise_filename)");
 }
 
 ### PROJECT_ID: core

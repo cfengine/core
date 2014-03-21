@@ -70,31 +70,3 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 }
-
-bundle edit_line insert_lines(lines)
-{
-  insert_lines:
-
-      "$(lines)"
-      comment => "Append lines if they don't exist";
-}
-
-body perms m(mode)
-{
-      mode   => "$(mode)";
-}
-
-body edit_defaults empty
-{
-empty_file_before_editing => "true";
-edit_backup => "false";
-#max_file_size => "300000";
-}
-body classes if_ok(x)
-{
-promise_repaired => { "$(x)" };
-promise_kept => { "$(x)" };
-}
-
-
-

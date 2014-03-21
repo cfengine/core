@@ -36,28 +36,6 @@ body delete init_delete
       rmdirs   => "true";
 }
 
-body edit_defaults empty
-# @brief Empty the file before editing
-#
-# No backup is made
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-      #max_file_size => "300000";
-}
-
-bundle edit_line insert_lines(lines)
-# @brief Append `lines` if they don't exist in the file
-# @param lines The lines to be appended
-#
-# **See also:** [`insert_lines`][insert_lines] in
-# [`edit_line`][bundle edit_line]
-{
-  insert_lines:
-
-      "$(lines)"
-      comment => "Append lines if they don't exist";
-}
 #######################################################
 
 bundle agent test

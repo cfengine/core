@@ -39,16 +39,6 @@ bundle agent init
         contain => in_shell;
 }
 
-body perms m(mode)
-{
-      mode => "${mode}";
-}
-
-body contain in_shell
-{
-      useshell => "true"; # canonical "useshell" but this is backwards-compatible
-}
-
 #######################################################
 
 bundle agent test
@@ -60,14 +50,6 @@ bundle agent test
       "${G.testfile}"
         create    => "false",
         edit_line => insert_lines("${init.line_to_add}");
-}
-
-bundle edit_line insert_lines(lines)
-{
-insert_lines:
-
-  "${lines}"
-    comment => "Append lines if they don't exist";
 }
 
 #######################################################
@@ -94,7 +76,7 @@ bundle agent check
 bundle agent fini
 {
   methods:
-      "any" usebundle => default_fini("${G.testfile}");
+      "any" usebundle => dcs_fini("${G.testfile}");
 }
 
 ### PROJECT_ID: core

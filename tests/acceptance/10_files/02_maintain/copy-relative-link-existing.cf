@@ -54,11 +54,6 @@ body contain in_dir(s)
       chdir => "$(s)";
 }
 
-body copy_from local_cp(from)
-{
-      source      => "$(from)";
-}
-
 body classes if_kept(x)
 {
       promise_kept => { "$(x)" };

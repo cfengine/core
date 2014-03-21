@@ -18,15 +18,6 @@ bundle agent test
 {
 }
 
-body classes always(x)
-{
-      promise_repaired => { $(x) };
-      repair_failed => { $(x) };
-      repair_denied => { $(x) };
-      repair_timeout => { $(x) };
-      promise_kept => { $(x) };
-}
-
 bundle agent check
 {
   vars:

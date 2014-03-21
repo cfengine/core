@@ -87,7 +87,7 @@ bundle agent check
 bundle agent fini
 {
   methods:
-      "any" usebundle => default_fini("$(g.repofile)");
+      "any" usebundle => dcs_fini("$(g.repofile)");
 }
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

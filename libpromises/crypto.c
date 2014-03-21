@@ -488,12 +488,28 @@ char *PrivateKeyFile(const char *workdir)
     return keyfile;
 }
 
+LogLevel CryptoGetMissingKeyLogLevel(void)
+{
+    if (getuid() == 0 &&
+        NULL == getenv("FAKEROOTKEY") &&
+        NULL == getenv("CFENGINE_TEST_OVERRIDE_WORKDIR"))
+    {
+        return LOG_LEVEL_ERR;
+    }
+    else
+    {
+        return LOG_LEVEL_VERBOSE;
+    }
+}
+
+
 /*********************************************************************
  * Functions for threadsafe OpenSSL usage                            *
  * Only pthread support - we don't create threads with any other API *
  *********************************************************************/
 
-static pthread_mutex_t *cf_openssl_locks = NULL; /* GLOBAL_T */
+static pthread_mutex_t *cf_openssl_locks = NULL;
+
 
 #ifndef __MINGW32__
 unsigned long ThreadId_callback(void)
@@ -502,7 +518,8 @@ unsigned long ThreadId_callback(void)
 }
 #endif
 
-static void OpenSSLLock_callback(int mode, int index, ARG_UNUSED char *file, ARG_UNUSED int line)
+static void OpenSSLLock_callback(int mode, int index,
+                                 ARG_UNUSED char *file, ARG_UNUSED int line)
 {
     if (mode & CRYPTO_LOCK)
     {
@@ -543,12 +560,4 @@ static void CleanupOpenSSLThreadLocks(void)
         pthread_mutex_destroy(&(cf_openssl_locks[i]));
     }
     OPENSSL_free(cf_openssl_locks);
-}
-
-LogLevel CryptoGetMissingKeyLogLevel(void)
-{
-    return ((getuid() == 0
-             && NULL == getenv("FAKEROOTKEY")
-             && NULL == getenv("CFENGINE_TEST_OVERRIDE_WORKDIR")
-            ) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE);
 }

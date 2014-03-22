@@ -6,45 +6,42 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
-
-bundle agent init
-{
-
-}
-
 
 bundle agent test
 {
-vars:
-  "x" string => concat("a", "b"),
+  vars:
+      "x" string => concat("a", "b"),
       ifvarclass => "!any";
-  !any::
-  "y" string => concat("c", "d");
+    !any::
+      "y" string => concat("c", "d");
 }
-
 
 bundle agent check
 {
-# If the output contains the string, we fail
-classes:
-  "eval_x" expression => strcmp("ab", "$(test.x)");
-  "eval_y" expression => strcmp("cd", "$(test.y)");
+  classes:
+      "eval_x" expression => strcmp("ab", "$(test.x)");
+      "eval_y" expression => strcmp("cd", "$(test.y)");
 
-reports:
-  DEBUG::
-    "x $(test.x)";
-    "y $(test.y)";
-  DEBUG.eval_x::
-    "x evaluated";
-  DEBUG.ok2::
-    "y evaluated";
+  methods:
+      "" usebundle => dcs_passif_expected("", # expected
+                                          "eval_x,eval_y", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
 
-  !(eval_x|eval_y)::
-    "$(this.promise_filename) Pass";
-  (eval_x|eval_y)::
-    "$(this.promise_filename) FAIL";
+  reports:
+    EXTRA::
+      "x $(test.x)";
+      "y $(test.y)";
+    DEBUG.eval_x::
+      "bad: x evaluated";
+    DEBUG.eval_y::
+      "bad: y evaluated";
+    EXTRA.eval_x::
+      "good: x not evaluated";
+    EXTRA.eval_y::
+      "good: y not evaluated";
 }

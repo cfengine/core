@@ -13,14 +13,6 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-  vars:
-      "dummy" string => "dummy";
-}
-
-#######################################################
-
 bundle agent test
 {
   processes:
@@ -39,17 +31,10 @@ body process_select test_plain
 
 bundle agent check
 {
-  vars:
-      "count" string => execresult("$(G.wc) $(test.counter)", "noshell");
-
-  classes:
-      "ok" expression => regcmp("\s*3\s.*", "$(count)");
+  methods:
+      "" usebundle => dcs_pass($(this.promise_filename));
 
   reports:
     DEBUG::
       "Expected to crash - illegal test names";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
 }

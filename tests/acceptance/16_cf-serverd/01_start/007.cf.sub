@@ -57,5 +57,5 @@ bundle agent check
 
   methods:
 
-      "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
+      "any" usebundle => dcs_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
 }

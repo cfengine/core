@@ -22,7 +22,7 @@ bundle agent test
   files:
       "$(G.testdir)/destination_file"
       copy_from => copy_src_file,
-      classes => default_cf_sub_if_repaired("copy_ok");
+      classes => if_repaired("copy_ok");
 }
 
 #########################################################
@@ -57,7 +57,7 @@ bundle agent check
 
   methods:
     copy_ok.empty_ok::
-      "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
+      "any" usebundle => dcs_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
 
   reports:
     !copy_ok|!empty_ok::

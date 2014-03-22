@@ -10,21 +10,21 @@ body common control
 bundle agent init
 {
   methods:
-      "clear ppkeys" usebundle => default_fini("$(sys.workdir)/ppkeys");
+      "clear ppkeys" usebundle => dcs_fini("$(sys.workdir)/ppkeys");
 }
 
 bundle agent test
 {
   commands:
       "$(sys.cf_promises) -f $(this.promise_filename)"
-      classes => default_cf_sub_scoped_generic_classes("validated", "namespace");
+      classes => scoped_classes_generic("namespace", "validated");
 }
 
 bundle agent check
 {
-  reports:
-    validated_ok::
-      "$(this.promise_filename) Pass";
-    validated_not_ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_passif_expected("validated_ok",
+                                          "validated_not_ok", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
 }

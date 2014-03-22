@@ -44,7 +44,7 @@ bundle agent test_setup(file)
   commands:
     have_chattr::
       "$(chattr.chattr)" args => "+i $(file)",
-      classes => default_cf_sub_scoped_generic_classes("chattr", "namespace");
+      classes => scoped_classes_generic("namespace", "chattr");
 }
 
 bundle agent test_edit(file)
@@ -53,7 +53,7 @@ bundle agent test_edit(file)
     have_chattr::
       "$(file)"
       edit_line => test_edit_line(),
-      classes => default_cf_sub_scoped_generic_classes("test", "namespace");
+      classes => scoped_classes_generic("namespace", "test");
 }
 
 bundle agent test_chmod(file)
@@ -62,7 +62,7 @@ bundle agent test_chmod(file)
     have_chattr::
       "$(file)"
       perms => m("755"),
-      classes => default_cf_sub_scoped_generic_classes("chmod", "namespace");
+      classes => scoped_classes_generic("namespace", "chmod");
 }
 
 body perms m(mode)
@@ -75,7 +75,7 @@ bundle agent test_teardown(file)
   commands:
     have_chattr::
       "$(chattr.chattr)" args => "-i $(file)",
-      classes => default_cf_sub_scoped_generic_classes("chattr", "namespace");
+      classes => scoped_classes_generic("namespace", "chattr");
 }
 
 bundle edit_line test_edit_line()
@@ -97,9 +97,9 @@ bundle agent check
       "ok" expression => "!have_chattr|chattr_failed|(test_failed.!test_kept.!test_denied.!test_timeout.!test_repaired.!chmod_failed.!chmod_kept.chmod_denied.!chmod_timeout.!chmod_repaired)";
 
   methods:
-      "report" usebundle => default_cf_sub_report_generic_classes("test");
-      "report" usebundle => default_cf_sub_report_generic_classes("chmod");
-      "report" usebundle => default_cf_sub_report_generic_classes("chattr");
+      "report" usebundle => dcs_report_generic_classes("test");
+      "report" usebundle => dcs_report_generic_classes("chmod");
+      "report" usebundle => dcs_report_generic_classes("chattr");
 
   reports:
     DEBUG.!have_chattr::

@@ -56,15 +56,10 @@ bundle edit_line ensure_lines(list)
       "$(list)";
 }
 
-body edit_defaults empty
-{
-      empty_file_before_editing => "true";
-}
-
 bundle agent check
 {
   methods:
-    "any" usebundle => default_check_diff("$(G.testfile).actual",
+    "any" usebundle => dcs_check_diff("$(G.testfile).actual",
                                           "$(G.testfile).expected",
                                           "$(this.promise_filename)");
 }

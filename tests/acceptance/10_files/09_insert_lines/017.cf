@@ -36,13 +36,6 @@ bundle edit_line insert_dir {
       classes => if_notkept("fail");
 }
 
-body classes if_notkept(x)
-{
-      repair_failed   => { "$(x)" };
-      repair_denied   => { "$(x)" };
-      repair_timeout  => { "$(x)" };
-}
-
 #######################################################
 
 bundle agent check

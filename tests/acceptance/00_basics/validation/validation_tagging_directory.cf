@@ -7,10 +7,6 @@ body common control
       version => "1.0";
 }
 
-bundle agent init
-{
-}
-
 bundle agent test
 {
   meta:
@@ -19,16 +15,19 @@ bundle agent test
   vars:
       "options" string => ifelse("verbose_mode", " -v ", "");
       "dirs" slist => { $(G.testdir), $(sys.masterdir), $(sys.inputdir) };
-      "hubfile" slist => { "$(sys.workdir)/policy_server.dat", "$(sys.workdir)/state/am_policy_hub" };
+      "hubfile" slist => {
+                           "$(sys.workdir)/policy_server.dat",
+                           "$(sys.workdir)/state/am_policy_hub"
+      };
 
   methods:
-      "rm hub" usebundle => default_fini($(hubfile));
+      "rm hub" usebundle => dcs_fini($(hubfile));
 
       "run" usebundle => test_dorun("testdir", $(G.testdir), "$(sys.cf_promises) -T $(G.testdir) $(options)");
       "run" usebundle => test_dorun("inputdir", $(sys.inputdir), "$(sys.cf_agent) -K $(options)");
 
       # make this machine a hub
-      "mk hub" usebundle => default_cf_sub_makefile($(hubfile), "$(sys.host)");
+      "mk hub" usebundle => dcs_makefile($(hubfile), "$(sys.host)");
 
       "run" usebundle => test_dorun("masterdir", $(sys.masterdir), "$(sys.cf_agent) -K $(options)");
 }
@@ -48,25 +47,24 @@ bundle agent test_dorun(name, dir, tagopt)
 }
 ';
 
-  methods:
   vars:
       "masters" slist => { "promises.cf", "x.cf", "y.cf" };
 
   methods:
       "rsync"
-      usebundle => default_cf_sub_copydir("$(this.promise_dirname)/testdir",
+      usebundle => dcs_copydir("$(this.promise_dirname)/testdir",
                                           $(dir));
 
       "master2cf"
-      usebundle => default_cf_sub_copyfile("$(dir)/$(masters).master",
+      usebundle => dcs_copyfile("$(dir)/$(masters).master",
                                            "$(dir)/$(masters)");
 
       "make ignored file 1"
-      usebundle => default_cf_sub_makefile("$(dir)/ignoreme",
+      usebundle => dcs_makefile("$(dir)/ignoreme",
                                            "fnord $(sys.date)");
 
       "make ignored file 2"
-      usebundle => default_cf_sub_makefile("$(dir)/ignoredir/2",
+      usebundle => dcs_makefile("$(dir)/ignoredir/2",
                                            "fnord $(sys.date)");
 
       "tag1" usebundle => test_tag("1",
@@ -75,7 +73,7 @@ bundle agent test_dorun(name, dir, tagopt)
                                    "make new cf_promises_validated and cf_promises_release_id in $(dir)");
       "read1" usebundle => test_read("1", $(name), $(dir));
 
-      "rm r_id" usebundle => default_fini($(test_read.rf));
+      "rm r_id" usebundle => dcs_fini($(test_read.rf));
       "tag2" usebundle => test_tag("2",
                                    $(name),
                                    $(tagopt),
@@ -83,7 +81,7 @@ bundle agent test_dorun(name, dir, tagopt)
       "read2" usebundle => test_read("2", $(name), $(dir));
 
       "make good validated file"
-      usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
+      usebundle => dcs_makefile("$(dir)/cf_promises_validated",
                                            $(simulated_validated_ok));
 
       "tag3" usebundle => test_tag("3",
@@ -93,7 +91,7 @@ bundle agent test_dorun(name, dir, tagopt)
       "read3" usebundle => test_read("3", $(name), $(dir));
 
       "make bad validated file"
-      usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
+      usebundle => dcs_makefile("$(dir)/cf_promises_validated",
                                            $(simulated_validated_bad));
 
       "tag4" usebundle => test_tag("4",
@@ -180,6 +178,11 @@ bundle agent check
       "tops" slist => { "testdir", "masterdir", "inputdir" };
       "tests" slist => { "1", "2", "3", "4" };
 
+      "steps" slist => { "tagged", "correct_timestamp", "correct_release", "correct_checksum" };
+      "e[$(steps)_$(tops)_$(tests)]" string => "1";
+      "expected_classes" slist => getindices(e);
+      "expected_classes_str" string => join(",", expected_classes);
+
   classes:
 
       # exceptions
@@ -240,7 +243,7 @@ bundle agent check
       };
 
   reports:
-    DEBUG::
+    EXTRA::
       "Case $(tops)_$(tests): the timestamp was correct or ignored"
       ifvarclass => "correct_timestamp_$(tops)_$(tests)";
 
@@ -250,11 +253,13 @@ bundle agent check
       "Case $(tops)_$(tests): the release ID was correct ($(expected_checksum)) or ignored"
       ifvarclass => "correct_release_$(tops)_$(tests)";
 
+    DEBUG::
+      "Case $(tops)_$(tests): the timestamp was incorrect, actual $(test_read.v_$(tops)_$(tests)[timestamp])"
+      ifvarclass => "!correct_timestamp_$(tops)_$(tests)";
+
+      "Case $(tops)_$(tests): the checksum was incorrect, expected $(expected_checksum) vs. actual $(test_read.v_$(tops)_$(tests)[checksum])"
+      ifvarclass => "!correct_checksum_$(tops)_$(tests)";
+
       "Case $(tops)_$(tests): the release ID was incorrect, expected $(expected_checksum) vs. actual $(test_read.r_$(tops)_$(tests)[releaseId])"
       ifvarclass => "!correct_release_$(tops)_$(tests)";
-
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
 }

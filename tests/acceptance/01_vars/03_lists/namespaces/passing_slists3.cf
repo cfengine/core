@@ -26,7 +26,7 @@ bundle agent test
 bundle agent check
 {
   methods:
-      "pass" usebundle => default_check_regcmp(".*Failed to chdir into '@.given_watch.'.*",
+      "pass" usebundle => dcs_check_regcmp(".*Failed to chdir into '@.given_watch.'.*",
                                                $(test.output),
                                                $(this.promise_filename),
                                                "true");

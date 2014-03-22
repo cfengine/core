@@ -39,7 +39,7 @@ bundle agent check
 {
   methods:
     "any" usebundle => user_has_description("johndoe", "$(test.desc_string)", "success", "failure"),
-      classes => default_cf_sub_set_class("methods_run");
+      classes => always("methods_run");
 
   classes:
       "ready" expression => "methods_run";

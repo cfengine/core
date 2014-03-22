@@ -8,12 +8,6 @@ body common control
       version => "1.0";
 }
 
-bundle agent init
-{
-  vars:
-      "dummy" string => "dummy";
-}
-
 bundle agent test
 {
   methods:
@@ -39,7 +33,6 @@ bundle agent set_context(doit)
       classes => namespace_class;
 }
 
-
 body classes namespace_class
 {
       scope => "namespace";
@@ -54,9 +47,9 @@ body classes bundle_class
 
 bundle agent check
 {
-  reports:
-    !bundle_context::
-      "$(this.promise_filename) Pass";
-    bundle_context::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_passif_expected("pass_one", # expected
+                                          "bundle_context", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
 }

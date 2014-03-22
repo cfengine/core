@@ -9,29 +9,27 @@ body common control
 
 bundle agent init
 {
-  files:
-      "$(G.testfile).src"
-      create => "yes";
-      "$(G.testfile).dest"
-      create => "yes";
+  methods:
+      "2" usebundle => dcs_emptyfile("$(G.testfile).src");
+      "2" usebundle => dcs_emptyfile("$(G.testfile).dest");
 }
 
 bundle agent test
 {
   files:
       "$(G.testfile).dest"
-      link_from => hard("$(G.testfile).src"),
-      action => log;
+      link_from => test_hard("$(G.testfile).src"),
+      action => test_log;
 }
 
-body action log
+body action test_log
 {
       log_failed => "$(G.testfile).action.log";
       log_kept => "$(G.testfile).action.log";
       log_string => "";
 }
 
-body link_from hard(from)
+body link_from test_hard(from)
 {
       source => "$(from)";
       link_type => "hardlink";
@@ -39,7 +37,6 @@ body link_from hard(from)
 
 bundle agent check
 {
-  reports:
-    cfengine_3::
-      "$(this.promise_filename) Pass";
+  methods:
+      "" usebundle => dcs_pass($(this.promise_filename));
 }

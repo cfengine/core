@@ -14,15 +14,8 @@ body common control
 
 bundle agent init
 {
-  files:
-      "$(G.testfile)"
-      delete => init_delete;
-}
-
-body delete init_delete
-{
-      dirlinks => "delete";
-      rmdirs   => "true";
+  methods:
+      "1" usebundle => dcs_tidy($(G.testfile));
 }
 
 #######################################################

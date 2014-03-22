@@ -26,4 +26,3 @@ bundle agent test
     DEBUG::
       "Running: $(cmd)";
 }
-

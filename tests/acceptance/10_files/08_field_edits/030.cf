@@ -83,7 +83,7 @@ body edit_field test_col
 bundle agent check
 {
   methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
 }

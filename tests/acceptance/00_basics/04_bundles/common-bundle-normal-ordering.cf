@@ -27,7 +27,7 @@ bundle common g_stuff
       # promise type ordering here is critical
   vars:
     trigger::
-      "one"  string  => "Pas"; 
+      "one"  string  => "Pas";
 
     any::
       "two" slist => { "$(one)s" };
@@ -36,4 +36,3 @@ bundle common g_stuff
       "trigger" expression => "any";
 
 }
-

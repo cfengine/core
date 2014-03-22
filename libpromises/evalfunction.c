@@ -3590,8 +3590,6 @@ static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
-    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
-
     if (head)
     {
         long count = 0;
@@ -3618,6 +3616,11 @@ static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *pol
             RlistAppendScalar(&returnlist, RlistScalarValue(rp));
         }
 
+    }
+
+    if (NULL == returnlist)
+    {
+        RlistAppendScalar(&returnlist, CF_NULL_VALUE);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };

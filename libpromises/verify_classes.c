@@ -74,6 +74,24 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         }
         else
         {
+            char *tags = NULL;
+            {
+                Buffer *tag_buffer = BufferNew();
+                BufferAppendString(tag_buffer, "source=promise");
+
+                Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
+                if (promise_meta)
+                {
+                    for (const Rlist *rp = promise_meta; rp; rp = rp->next)
+                    {
+                        BufferAppendChar(tag_buffer, ',');
+                        BufferAppendString(tag_buffer, RlistScalarValue(rp));
+                    }
+                }
+
+                tags = BufferClose(tag_buffer);
+            }
+
             if (/* Persistent classes are always global: */
                 a.context.persistent > 0 ||
                 /* Namespace-scope is global: */
@@ -84,30 +102,23 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                  0 == strcmp(PromiseGetBundle(pp)->type, "common")))
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
-                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_NAMESPACE, "source=promise");
+                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_NAMESPACE, tags);
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
-                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_BUNDLE, "source=promise");
+                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_BUNDLE, tags);
             }
 
             if (a.context.persistent > 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s'. (%d minutes)", pp->promiser,
                       a.context.persistent);
-                EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent,
+                                              CONTEXT_STATE_POLICY_RESET, tags);
             }
 
-            Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
-            if (promise_meta)
-            {
-                StringSet *class_meta = EvalContextClassTags(ctx, PromiseGetNamespace(pp), pp->promiser);
-                for (const Rlist *rp = promise_meta; rp; rp = rp->next)
-                {
-                    StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
-                }
-            }
+            free(tags);
 
             return PROMISE_RESULT_CHANGE;
         }

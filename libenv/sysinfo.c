@@ -874,6 +874,7 @@ static void Get3Environment(EvalContext *ctx)
         }
         else
         {
+            StripTrailingNewline(context, CF_BUFSIZE);
             EvalContextClassPutHard(ctx, context, "monitoring,source=environment");
         }
     }

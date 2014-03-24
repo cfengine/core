@@ -190,9 +190,9 @@ end:
 /* Level                                                             */
 /*********************************************************************/
 
+#ifdef HAVE_LIBXML2
 /***************************************************************************/
 
-#ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 {
     struct stat statbuf;
@@ -232,13 +232,11 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 
     return true;
 }
-#endif
-
 
 /*********************************************************************/
 
-#ifdef HAVE_LIBXML2
-bool SaveXmlCallback(const char *dest_filename, void *param, ARG_UNUSED NewLineMode new_line_mode)
+static bool SaveXmlCallback(const char *dest_filename, void *param,
+                            ARG_UNUSED NewLineMode new_line_mode)
 {
     xmlDocPtr doc = param;
 
@@ -251,13 +249,11 @@ bool SaveXmlCallback(const char *dest_filename, void *param, ARG_UNUSED NewLineM
 
     return true;
 }
-#endif
 
 /*********************************************************************/
 
-#ifdef HAVE_LIBXML2
 bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode)
 {
     return SaveAsFile(&SaveXmlCallback, doc, file, a, new_line_mode);
 }
-#endif
+#endif /* HAVE_LIBXML2 */

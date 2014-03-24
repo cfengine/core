@@ -397,7 +397,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
             }
             else
             {
-                VerifyCommandRetcode(ctx, ret, true, a, pp, result);
+                VerifyCommandRetcode(ctx, ret, a, pp, result);
             }
         }
     }

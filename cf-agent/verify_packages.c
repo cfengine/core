@@ -2584,7 +2584,7 @@ bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdC
     {
         if (REPORT_THIS_PROMISE(pp))
         {
-            retval = VerifyCommandRetcode(ctx, packmanRetval, true, a, pp, result);
+            retval = VerifyCommandRetcode(ctx, packmanRetval, a, pp, result);
         }
     }
 

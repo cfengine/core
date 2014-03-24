@@ -27,7 +27,7 @@
 #include <actuator.h>
 #include <rlist.h>
 
-int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, const Promise *pp, PromiseResult *result)
+int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Promise *pp, PromiseResult *result)
 {
     char retcodeStr[128] = { 0 };
     bool result_retcode = true;
@@ -75,7 +75,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
         }
 
     }
-    else if (fallback)          // default: 0 is success, != 0 is failure
+    else // default: 0 is success, != 0 is failure
     {
         if (retcode == 0)
         {

@@ -1533,7 +1533,7 @@ static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const P
 
         transRetcode = cf_pclose(pop);
 
-        if (VerifyCommandRetcode(ctx, transRetcode, true, attr, pp, result))
+        if (VerifyCommandRetcode(ctx, transRetcode, attr, pp, result))
         {
             Log(LOG_LEVEL_INFO, "Transformer '%s' => '%s' seemed to work ok", file, BufferData(command));
         }

@@ -1,3 +1,4 @@
+### This is an auto-generated file, see Makefile.am and `make pluck` ###
 
 body contain in_dir_shell(dir)
 # @brief run command after switching to directory "dir" with full shell
@@ -634,6 +635,18 @@ body perms mog(mode,user,group)
       owners => { "$(user)" };
       groups => { "$(group)" };
       mode   => "$(mode)";
+}
+
+body perms test_aware_mog(mode, user, group)
+{
+    any::
+      mode   => "$(mode)";
+    not_test::
+      owners => { "$(user)" };
+      groups => { "$(group)" };
+    test::
+      owners => { $(this.promiser_uid) };
+      groups => { $(this.promiser_gid) };
 }
 
 body depth_search recurse(d)

@@ -49,14 +49,6 @@ bundle agent init
                            "tail(9999) = one",
                            "tail(9999) = three",
                            "tail(9999) = two",
-                           'string version of default:test.test_head0 = { --empty-list-- }',
-                           'string version of default:test.test_head1 = { "1" }',
-                           'string version of default:test.test_head9999 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }',
-                           'string version of default:test.test_tail0 = { --empty-list-- }',
-                           'string version of default:test.test_tail1 = { "three" }',
-                           'string version of default:test.test_tail10 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }',
-                           'string version of default:test.test_tail2 = { "two", "three" }',
-                           'string version of default:test.test_tail9999 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }',
       };
 
   files:
@@ -100,17 +92,10 @@ bundle agent test
       "test_tail1" slist => sublist("test", "tail", 1);
       "test_tail0" slist => sublist("test", "tail", 0);
 
-      "strings" slist => variablesmatching("default:test\.test_(head|tail)[0-9]+");
-      "format[$(strings)]" string => format("%S", $(strings));
-
   files:
       "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
-
-  reports:
-    EXTRA::
-      "Found strings: $(strings) = $(format[$(strings)])";
 }
 
 bundle edit_line test_insert
@@ -125,7 +110,6 @@ bundle edit_line test_insert
       "tail(10) = $(test.test_tail10)";
       "tail(2) = $(test.test_tail2)";
       "tail(9999) = $(test.test_tail9999)";
-      "string version of $(test.strings) = $(test.format[$(test.strings)])";
 }
 
 #######################################################

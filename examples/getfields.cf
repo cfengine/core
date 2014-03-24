@@ -34,10 +34,11 @@ bundle agent example
 
   reports:
       "Found $(no) lines matching";
-      "root's homedir = $(userdata[6])";
       "root's handle = $(userdata[1])";
       "root's passwd = ... forget it!";
       "root's uid = $(userdata[3])";
+      # uncomment this if you want to see the HOMEDIR field
+      #"root's homedir = $(userdata[6])";
       # uncomment this if you want to see the GID field
       #"root's gid = $(userdata[4])";
       # uncomment this if you want to see the GECOS field
@@ -49,7 +50,6 @@ bundle agent example
 #+begin_src example_output
 #@ ```
 #@ R: Found 1 lines matching
-#@ R: root's homedir = /root
 #@ R: root's handle = root
 #@ R: root's passwd = ... forget it!
 #@ R: root's uid = 0

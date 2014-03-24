@@ -30,23 +30,16 @@ body common control
 ###########################################################
 
 bundle agent example
-
 {
   classes:
-
-      "gname" expression => groupexists("root");
+      "gname" expression => groupexists("sys");
       "gid"   expression => groupexists("0");
 
   reports:
-
     gname::
-
       "Group exists by name";
-
     gid::
-
       "Group exists by id";
-
 }
 #+end_src
 ###############################################################################

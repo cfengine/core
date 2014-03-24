@@ -1,6 +1,6 @@
 #######################################################
 #
-# Create a file, expect simultaneous link with relative and move_obstructions
+# Create a file, expect simultaneous link with absolute and move_obstructions
 # to succeed
 #
 #######################################################
@@ -32,7 +32,7 @@ body delete init_delete
 bundle agent test
 {
   meta:
-      "test_skip_needs_work" string => "any";
+      "test_skip_unsupported" string => "windows";
 
   vars:
       "inode" string => filestat("$(G.etc_group)", "ino");
@@ -47,7 +47,7 @@ bundle agent test
 body link_from test_link
 {
       source => "$(G.etc_group)";
-      link_type => "relative";
+      link_type => "absolute";
 }
 
 #######################################################
@@ -63,10 +63,10 @@ bundle agent check
 
   classes:
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
-      "ok" and => { "okL", "okT",
+      "ok" and => { "okL",
                     strcmp("$(test.inode)", "$(result)"),
-                    regcmp("\..*", "$(link_target)")
+                    # Might be slightly different from link_target because of redundant '../../'.
+                    regcmp("/.*/group", "$(link_target)")
       };
 
   reports:

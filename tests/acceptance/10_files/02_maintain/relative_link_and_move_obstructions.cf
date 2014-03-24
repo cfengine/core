@@ -1,7 +1,7 @@
 #######################################################
 #
-# Create an relative link to a file, expect absolute link promise to want
-# to change it to an absolute link (but fail to)
+# Create a file, expect simultaneous link with relative and move_obstructions
+# to succeed
 #
 #######################################################
 
@@ -18,15 +18,13 @@ bundle agent init
 {
   files:
       "$(G.testfile)"
-      create => "true",
-      move_obstructions => "true",
-      link_from => init_link;
+      delete => init_delete;
 }
 
-body link_from init_link
+body delete init_delete
 {
-      source => "$(g.target)";
-      link_type => "relative";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
@@ -34,26 +32,22 @@ body link_from init_link
 bundle agent test
 {
   meta:
-      "test_skip_needs_work" string => "any";
+      "test_skip_unsupported" string => "windows";
 
   vars:
       "inode" string => filestat("$(G.etc_group)", "ino");
 
   files:
       "$(G.testfile)"
-      classes => init_if_failed("test_ok"),
+      create => "true",
+      move_obstructions => "true",
       link_from => test_link;
 }
 
 body link_from test_link
 {
       source => "$(G.etc_group)";
-      link_type => "absolute";
-}
-
-body classes init_if_failed(c)
-{
-      repair_failed => { "$(c)" };
+      link_type => "relative";
 }
 
 #######################################################
@@ -70,7 +64,7 @@ bundle agent check
   classes:
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
       "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
-      "ok" and => { "test_ok", "okL", "okT",
+      "ok" and => { "okL", "okT",
                     strcmp("$(test.inode)", "$(result)"),
                     regcmp("\..*", "$(link_target)")
       };

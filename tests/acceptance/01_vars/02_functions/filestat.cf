@@ -70,22 +70,28 @@ bundle agent test
 
 bundle agent check
 {
-  meta:
-      "test_skip_unsupported" string => "windows";
-
   vars:
-      "expected[size]" string => "42";
-      "expected[mode]" string => "33152";
       "expected[type]" string => "regular file";
-      "expected[permoct]" string => "600";
-      "expected[modeoct]" string => "100600";
-      "expected[permstr]" string => "-rw-------";
       "expected[nlink]" string => "1";
       "expected[dirname]" string => dirname($(G.testfile));
-      "expected[basename]" string => lastnode($(G.testfile), "/");
+      "expected[basename]" string => lastnode($(G.testfile), escape("$(const.dirsep)"));
       "expected[linktarget]" string => $(G.testfile);
       "expected[linktarget_shallow]" string => $(G.testfile);
 
+    windows::
+      "expected[size]" string => "47";
+      "expected[mode]" string => "33206"; # 100666
+      "expected[permoct]" string => "666";
+      "expected[modeoct]" string => "100666";
+      "expected[permstr]" string => "-rw-rw-rw-";
+    !windows::
+      "expected[size]" string => "42";
+      "expected[mode]" string => "33152"; # 100600
+      "expected[permoct]" string => "600";
+      "expected[modeoct]" string => "100600";
+      "expected[permstr]" string => "-rw-------";
+
+    any::
       "expects" slist => getindices("expected");
 
       "fields" slist => getindices("test.stat");

@@ -1,7 +1,7 @@
 #######################################################
 #
-# Create an absolute link to a file, expect relative link promise to want
-# to change it to an relative link (but fail to)
+# Create an relative link to a file, expect absolute link promise to want
+# to change it to an absolute link (but fail to)
 #
 #######################################################
 
@@ -25,8 +25,8 @@ bundle agent init
 
 body link_from init_link
 {
-      source => "$(g.target)";
-      link_type => "absolute";
+      source => "$(G.etc_group)";
+      link_type => "relative";
 }
 
 #######################################################
@@ -34,7 +34,7 @@ body link_from init_link
 bundle agent test
 {
   meta:
-      "test_skip_needs_work" string => "any";
+      "test_skip_unsupported" string => "windows";
 
   vars:
       "inode" string => filestat("$(G.etc_group)", "ino");
@@ -48,7 +48,7 @@ bundle agent test
 body link_from test_link
 {
       source => "$(G.etc_group)";
-      link_type => "relative";
+      link_type => "absolute";
 }
 
 body classes init_if_failed(c)
@@ -69,9 +69,10 @@ bundle agent check
 
   classes:
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "ok" and => { "test_ok", "okL",
+      "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
+      "ok" and => { "test_ok", "okL", "okT",
                     strcmp("$(test.inode)", "$(result)"),
-                    strcmp("$(link_target)", "$(G.etc_group)")
+                    regcmp("\..*", "$(link_target)")
       };
 
   reports:

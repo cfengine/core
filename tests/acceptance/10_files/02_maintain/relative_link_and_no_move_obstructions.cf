@@ -1,7 +1,7 @@
 #######################################################
 #
-# Create an absolute link to a file, expect subsequent symlink promise to
-# be happy with that
+# Create an absolute link to a file, expect relative link promise to want
+# to change it to an relative link (but fail to)
 #
 #######################################################
 
@@ -25,7 +25,7 @@ bundle agent init
 
 body link_from init_link
 {
-      source => "$(g.target)";
+      source => "$(G.etc_group)";
       link_type => "absolute";
 }
 
@@ -34,26 +34,26 @@ body link_from init_link
 bundle agent test
 {
   meta:
-      "test_skip_needs_work" string => "any";
+      "test_skip_unsupported" string => "windows";
 
   vars:
       "inode" string => filestat("$(G.etc_group)", "ino");
 
   files:
       "$(G.testfile)"
-      classes => test_if_ok("test_ok"),
+      classes => init_if_failed("test_ok"),
       link_from => test_link;
 }
 
 body link_from test_link
 {
       source => "$(G.etc_group)";
-      link_type => "symlink";
+      link_type => "relative";
 }
 
-body classes test_if_ok(c)
+body classes init_if_failed(c)
 {
-      promise_kept => { "$(c)" };
+      repair_failed => { "$(c)" };
 }
 
 #######################################################
@@ -71,7 +71,8 @@ bundle agent check
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
       "ok" and => { "test_ok", "okL",
                     strcmp("$(test.inode)", "$(result)"),
-                    strcmp("$(link_target)", "$(G.etc_group)")
+                    # Might be slightly different from link_target because of redundant '../../'.
+                    regcmp("/.*/group", "$(link_target)")
       };
 
   reports:

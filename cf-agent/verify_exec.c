@@ -88,7 +88,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
     switch (RepairExec(ctx, a, pp, &result))
     {
     case ACTION_RESULT_OK:
-        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
         break;
 
     case ACTION_RESULT_TIMEOUT:
@@ -101,6 +101,13 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
 
     default:
         ProgrammingError("Unexpected ActionResult value");
+    }
+
+    // explicitly set commands promises that end up changing to KEPT. This is because commands promises
+    // shares code with packages promises (VerifyCommandRetcode), so we enforce this condition here.
+    if (result == PROMISE_RESULT_CHANGE)
+    {
+        result = PROMISE_RESULT_NOOP;
     }
 
     YieldCurrentLock(thislock);

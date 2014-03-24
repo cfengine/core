@@ -26,7 +26,6 @@ bundle agent test
   meta:
     "test_skip_needs_work" string => "windows";
 
-
   vars:
     linux|freebsd|solaris|openbsd|hpux::
       "gid_daemon" int => getgid("daemon");
@@ -74,13 +73,13 @@ bundle agent check
       "ok_sys" expression => "any";
     !darwin::
       "ok_sys" expression => strcmp("$(test.gid_sys)", "$(test.num_sys)");
+    aix::
+      "ok_daemon" expression => "any";
+    !aix::
+      "ok_daemon" expression => strcmp("$(test.gid_daemon)", "$(test.num_daemon)");
 
     any::
-      "ok" and => {
-                    strcmp("$(test.gid_0)", "0"),
-                    strcmp("$(test.gid_daemon)", "$(test.num_daemon)"),
-                    "ok_sys"
-      };
+      "ok" and => { strcmp("$(test.gid_0)", "0"), "ok_sys", "ok_daemon" };
 
   reports:
     DEBUG::

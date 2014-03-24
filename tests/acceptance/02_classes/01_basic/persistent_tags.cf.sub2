@@ -1,0 +1,36 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "tagged" slist => classesmatching("myclass");
+      "unsorted_tags_$(tagged)" slist => getclassmetatags($(tagged));
+      "tags_$(tagged)" slist => sort("unsorted_tags_$(tagged)", "lex");
+      "tagged_str" string => format("%S", tagged);
+      "tags_$(tagged)_str" string => format("%S", "tags_$(tagged)");
+      "expected_classes" string => '{ "myclass" }';
+      "expected_tags" string => '{ "source=persistent", "source=promise", "specialtag" }';
+
+  classes:
+      "ok_class" expression => strcmp($(tagged_str), $(expected_classes));
+      "ok_tags" expression => strcmp($(tags_myclass_str), $(expected_tags));
+      "ok" and => { "ok_class", "ok_tags" };
+
+  reports:
+    !ok_class.DEBUG::
+      "The list of tagged classes '$(tagged_str)' did NOT match the expected '$(expected_classes)'";
+    !ok_tags.DEBUG::
+      "The list of tags '$(tags_myclass_str)' did NOT match the expected '$(expected_tags)'";
+    ok_class.EXTRA::
+      "The list of tagged classes '$(tagged_str)' matched the expected '$(expected_classes)'";
+    ok_tags.EXTRA::
+      "The list of tags '$(tags_myclass_str)' matched the expected '$(expected_tags)'";
+
+    ok::
+      "${this.promise_dirname}/persistent_tags.cf Pass";
+    !ok::
+      "${this.promise_dirname}/persistent_tags.cf FAIL";
+}

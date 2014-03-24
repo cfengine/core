@@ -1,0 +1,12 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle common run
+{
+  classes:
+      "myclass" expression => "any",
+      meta => { "specialtag" },
+      persistence => "120"; # 2 hours.
+}

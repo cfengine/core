@@ -62,7 +62,8 @@ static void test_class_persistence(void)
 
         assert_string_equal("old", cls->name);
         assert_true(cls->tags != NULL);
-        assert_int_equal(0, StringSetSize(cls->tags));
+        assert_int_equal(1, StringSetSize(cls->tags));
+        assert_true(StringSetContains(cls->tags, "source=persistent"));
     }
 
     {
@@ -71,7 +72,8 @@ static void test_class_persistence(void)
 
         assert_string_equal("class1", cls->name);
         assert_true(cls->tags != NULL);
-        assert_int_equal(2, StringSetSize(cls->tags));
+        assert_int_equal(3, StringSetSize(cls->tags));
+        assert_true(StringSetContains(cls->tags, "source=persistent"));
         assert_true(StringSetContains(cls->tags, "a"));
         assert_true(StringSetContains(cls->tags, "b"));
     }
@@ -83,7 +85,8 @@ static void test_class_persistence(void)
         assert_string_equal("ns1", cls->ns);
         assert_string_equal("class2", cls->name);
         assert_true(cls->tags != NULL);
-        assert_int_equal(1, StringSetSize(cls->tags));
+        assert_int_equal(2, StringSetSize(cls->tags));
+        assert_true(StringSetContains(cls->tags, "source=persistent"));
         assert_true(StringSetContains(cls->tags, "x"));
     }
 

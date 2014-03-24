@@ -625,6 +625,12 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
             ClassRef ref = ClassRefParse(key);
             EvalContextHeapAddSoft(ctx, ref.name, ref.ns, tags);
+
+            StringSet *tag_set = EvalContextClassTags(ctx, ref.ns, ref.name);
+            assert(tag_set);
+
+            StringSetAdd(tag_set, xstrdup("source=persistent"));
+
             ClassRefDestroy(ref);
         }
     }

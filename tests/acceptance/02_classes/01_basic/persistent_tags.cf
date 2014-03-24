@@ -1,0 +1,53 @@
+#######################################################
+#
+# Redmine#5017: persistent classes should keep their tags
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "dflags" string => ifelse("EXTRA", "-DDEBUG,EXTRA", "-DDEBUG");
+
+  commands:
+      "$(G.echo)" classes => init_cancel_always;
+}
+
+body classes init_cancel_always
+{
+      cancel_repaired => { "myclass" };
+      cancel_notkept => { "myclass" };
+      cancel_kept => { "myclass" };
+}
+
+bundle agent test
+{
+  commands:
+      "$(sys.cf_agent) -K $(init.dflags) -f $(this.promise_filename).sub"
+        classes => test_always("done_persisting");
+}
+
+body classes test_always(x)
+{
+    promise_repaired => { "$(x)" };
+    promise_kept => { "$(x)" };
+    repair_failed => { "$(x)" };
+    repair_denied => { "$(x)" };
+    repair_timeout => { "$(x)" };
+} 
+
+bundle agent check
+{
+  vars:
+    done_persisting::
+      "subout" string => execresult("$(sys.cf_agent) -K $(init.dflags) -f $(this.promise_filename).sub2", "noshell");
+  reports:
+      "$(subout)";
+}

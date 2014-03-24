@@ -1442,12 +1442,7 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx)
 {
-    if (SeqLength(ctx->stack) == 0)
-    {
-        return NULL;
-    }
-
-    for (size_t i = SeqLength(ctx->stack) - 1; i >= 0; i--)
+    for (int i = SeqLength(ctx->stack) - 1; i >= 0; i--)
     {
         StackFrame *frame = SeqAt(ctx->stack, i);
         switch (frame->type)

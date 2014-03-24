@@ -230,7 +230,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-bool SaveXmlCallback(const char *dest_filename, void *param)
+bool SaveXmlCallback(const char *dest_filename, void *param, ARG_UNUSED NewLineMode new_line_mode)
 {
     xmlDocPtr doc = param;
 
@@ -248,7 +248,7 @@ bool SaveXmlCallback(const char *dest_filename, void *param)
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode)
+bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode)
 {
     return SaveAsFile(&SaveXmlCallback, doc, file, a, new_line_mode);
 }

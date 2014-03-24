@@ -7379,12 +7379,6 @@ static const FnCallArg UNIQUE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
-static const FnCallArg DATATYPE_ARGS[] =
-{
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine data container identifier"},
-    {NULL, CF_DATA_TYPE_NONE, NULL}
-};
-
 static const FnCallArg NTH_ARGS[] =
 {
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine list or data container identifier"},

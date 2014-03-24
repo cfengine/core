@@ -143,7 +143,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
 /*********************************************************************/
 
-int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, NewLineMode new_line_mode)
+bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, NewLineMode new_line_mode)
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
@@ -323,7 +323,7 @@ static bool SaveItemListCallback(const char *dest_filename, void *param, NewLine
 
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, NewLineMode new_line_mode)
+bool SaveItemListAsFile(Item *liststart, const char *file, Attributes a, NewLineMode new_line_mode)
 {
     return SaveAsFile(&SaveItemListCallback, liststart, file, a, new_line_mode);
 }

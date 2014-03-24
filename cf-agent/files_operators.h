@@ -31,8 +31,8 @@
 int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp, PromiseResult *result);
 
 typedef bool (*SaveCallbackFn)(const char *dest_filename, void *param, NewLineMode new_line_mode);
-int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, NewLineMode new_line_mode);
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, NewLineMode new_line_mode);
+bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, NewLineMode new_line_mode);
+bool SaveItemListAsFile(Item *liststart, const char *file, Attributes a, NewLineMode new_line_mode);
 
 int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp, PromiseResult *result);
 

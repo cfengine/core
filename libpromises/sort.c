@@ -208,13 +208,6 @@ static bool RlistCustomItemLess(void *lhs_, void *rhs_, void *ctx)
     return (*cmp)(lhs->val.item, rhs->val.item);
 }
 
-static bool StringCustomItemLess(const char *lhs, const char *rhs, void *ctx)
-{
-    int (*cmp)() = ctx;
-
-    return (*cmp)(lhs, rhs);
-}
-
 static bool RlistItemLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
     return strcmp(((Rlist*)lhs)->val.item, ((Rlist*)rhs)->val.item) < 0;
@@ -280,19 +273,9 @@ static bool RlistItemIntLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     return RlistItemNumberLess(lhs, rhs, ctx, true);
 }
 
-static bool StringItemIntLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx)
-{
-    return StringItemNumberLess(lhs, rhs, ctx, true);
-}
-
 static bool RlistItemRealLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
     return RlistItemNumberLess(lhs, rhs, ctx, false);
-}
-
-static bool StringItemRealLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx)
-{
-    return StringItemNumberLess(lhs, rhs, ctx, false);
 }
 
 static bool StringItemIPLess(const char *left_item, const char *right_item, ARG_UNUSED void *ctx)

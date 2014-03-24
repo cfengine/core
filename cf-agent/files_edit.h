@@ -45,7 +45,7 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
 
 #ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed);
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode);
+bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode);
 #endif
 
 #endif

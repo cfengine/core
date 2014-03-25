@@ -633,7 +633,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 HashFile(pp->promiser, rendered_output_digest, CF_DEFAULT_DIGEST);
                 if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
                 {
-                    cfPS(ctx, LOG_LEVEL_NOTICE, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
                          pp->promiser, a.edit_template);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }

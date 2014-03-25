@@ -27,9 +27,9 @@
 #include <sequence.h>
 #include <string_lib.h>
 #include <file_lib.h>
+#include <printsize.h>
 
 #include <json.h>
-
 
 static const int SPACES_PER_INDENT = 2;
 static const int DEFAULT_CONTAINER_CAPACITY = 64;
@@ -1132,8 +1132,8 @@ JsonElement *JsonStringCreate(const char *value)
 
 JsonElement *JsonIntegerCreate(int value)
 {
-    char *buffer = xcalloc(32, sizeof(char));
-    snprintf(buffer, 32, "%d", value);
+    char *buffer = xmalloc(PRINTSIZE(value));
+    sprintf(buffer, "%d", value);
 
     return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, buffer);
 }

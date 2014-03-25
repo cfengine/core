@@ -46,6 +46,7 @@
 #include <ring_buffer.h>
 #include <logging_priv.h>
 #include <known_dirs.h>
+#include <printsize.h>
 
 static bool BundleAborted(const EvalContext *ctx);
 static void SetBundleAborted(EvalContext *ctx);
@@ -1231,14 +1232,14 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, CF_DATA_TYPE_STRING, "source=promise");
     }
 
-    char v[CF_MAXVARSIZE];
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->uid);
+    char v[PRINTSIZE(int)];
+    sprintf(v, "%d", (int) ctx->uid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, CF_DATA_TYPE_INT, "source=agent");
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->gid);
+    sprintf(v, "%d", (int) ctx->gid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, CF_DATA_TYPE_INT, "source=agent");
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->pid);
+    sprintf(v, "%d", (int) ctx->pid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_pid", v, CF_DATA_TYPE_INT, "source=agent");
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->ppid);
+    sprintf(v, "%d", (int) ctx->ppid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, CF_DATA_TYPE_INT, "source=agent");
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");

@@ -37,6 +37,7 @@
 #include <timeout.h>
 #include <time_classes.h>
 #include <loading.h>
+#include <printsize.h>
 
 #include <cf-windows-functions.h>
 
@@ -421,8 +422,8 @@ static void Apoptosis(void)
 
     if (LoadProcessTable(&PROCESSTABLE))
     {
-        char myuid[32];
-        snprintf(myuid, 32, "%d", (int)getuid());
+        char myuid[PRINTSIZE(unsigned)];
+        sprintf(myuid, "%u", (unsigned)getuid());
 
         Rlist *owners = NULL;
         RlistPrepend(&owners, myuid, RVAL_TYPE_SCALAR);

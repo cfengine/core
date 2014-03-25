@@ -24,19 +24,19 @@
 
 #include <retcode.h>
 
+#include <printsize.h>
 #include <actuator.h>
 #include <rlist.h>
 
 int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Promise *pp, PromiseResult *result)
 {
-    char retcodeStr[128] = { 0 };
     bool result_retcode = true;
-    int matched = false;
 
     if ((a.classes.retcode_kept) || (a.classes.retcode_repaired) || (a.classes.retcode_failed))
     {
-
-        snprintf(retcodeStr, sizeof(retcodeStr), "%d", retcode);
+        int matched = false;
+        char retcodeStr[PRINTSIZE(retcode)];
+        sprintf(retcodeStr, "%d", retcode);
 
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {

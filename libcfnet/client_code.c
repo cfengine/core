@@ -41,9 +41,9 @@
 #include <files_lib.h>                               /* FullWrite,safe_open */
 #include <string_lib.h>                           /* MemSpan,MemSpanInverse */
 #include <misc_lib.h>                                   /* ProgrammingError */
+#include <printsize.h>                                         /* PRINTSIZE */
 
-#include <lastseen.h>                                           /* LastSaw */
-
+#include <lastseen.h>                                            /* LastSaw */
 
 typedef struct
 {
@@ -137,6 +137,8 @@ char CFENGINE_PORT_STR[16] = "5308";
 void DetermineCfenginePort()
 {
     struct servent *server;
+    assert(sizeof(CFENGINE_PORT_STR) >= PRINTSIZE(CFENGINE_PORT));
+    /* ... but we leave more space, as service names can be longer */
 
     errno = 0;
     if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) != NULL)

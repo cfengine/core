@@ -23,7 +23,7 @@ bundle agent test
 bundle agent check
 {
   methods:
-      "pass" usebundle => default_passif("any", $(this.promise_filename));
+      "pass" usebundle => dcs_passif("any", $(this.promise_filename));
 }
 
 bundle agent watch(given_watch)

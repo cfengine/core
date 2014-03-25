@@ -33,7 +33,7 @@ bundle agent sub(sublist)
 bundle agent check
 {
   methods:
-      "check results" usebundle => default_check_strcmp("$(init.expected)", "$(sub.joined)", "$(this.promise_filename)", "no");
+      "check results" usebundle => dcs_check_strcmp("$(init.expected)", "$(sub.joined)", "$(this.promise_filename)", "no");
   reports:
     DEBUG::
       "comparing '$(init.expected)' with '$(sub.joined)'";

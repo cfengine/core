@@ -35,16 +35,6 @@ body action warnonly
       action_policy => "warn";
 }
 
-body classes if_else(yes,no)
-{
-      promise_kept     => { "$(yes)" };
-      promise_repaired => { "$(yes)" };
-      repair_failed    => { "$(no)" };
-      repair_denied    => { "$(no)" };
-      repair_timeout   => { "$(no)" };
-}
-
-
 #######################################################
 
 bundle agent check

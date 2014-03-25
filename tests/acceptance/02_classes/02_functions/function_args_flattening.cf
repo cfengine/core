@@ -54,11 +54,3 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 }
-
-body classes if_ok(x)
-# @brief Define class `x` if the promise has been repaired
-# @param x The name of the class
-{
-      promise_repaired => { "$(x)" };
-      promise_kept => { "$(x)" };
-}

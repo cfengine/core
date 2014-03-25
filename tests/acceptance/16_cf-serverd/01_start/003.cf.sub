@@ -26,7 +26,7 @@ bundle agent test
   files:
 
       "$(G.testdir)/destination_file" copy_from => copy_src_file,
-      classes => default_cf_sub_if_repaired("repaired");
+      classes => if_repaired("repaired");
 
 }
 

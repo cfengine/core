@@ -7,7 +7,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
+      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -34,12 +34,6 @@ bundle agent test
    "$(G.testfile).nosuchfile"
 
          delete => tidy;
-}
-
-body delete tidy
-{
-dirlinks => "delete";
-rmdirs   => "true";
 }
 
 #######################################################

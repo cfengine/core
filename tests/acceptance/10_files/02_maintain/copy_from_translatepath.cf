@@ -41,6 +41,6 @@ bundle agent check
       "Tested pathname: '$(test.path)'";
 
   methods:
-      "check" usebundle => default_check_diff("$(this.promise_filename)",
+      "check" usebundle => dcs_check_diff("$(this.promise_filename)",
                                               "$(G.testfile)", "$(this.promise_filename)");
 }

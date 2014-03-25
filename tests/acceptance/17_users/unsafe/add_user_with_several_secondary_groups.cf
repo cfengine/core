@@ -74,9 +74,9 @@ bundle agent check
 
   methods:
     "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "bin_success", "bin_failure"),
-      classes => default_cf_sub_set_class("bin_methods_run");
+      classes => always("bin_methods_run");
     "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group2)", "sys_success", "sys_failure"),
-      classes => default_cf_sub_set_class("sys_methods_run");
+      classes => always("sys_methods_run");
 
   classes:
     !windows::

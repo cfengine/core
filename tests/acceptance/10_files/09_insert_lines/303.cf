@@ -76,13 +76,13 @@ bundle edit_line example_edit_line
 bundle agent check
 {
   methods:
-      "first" usebundle => default_check_diff("$(G.testfile).actual1qaz",
+      "first" usebundle => dcs_check_diff("$(G.testfile).actual1qaz",
                                               "$(G.testfile).expected1qaz",
                                               "$(this.promise_filename)");
-      "second" usebundle => default_check_diff("$(G.testfile).actual2qaz",
+      "second" usebundle => dcs_check_diff("$(G.testfile).actual2qaz",
                                                "$(G.testfile).expected2qaz",
                                                "$(this.promise_filename)");
-      "third" usebundle => default_check_diff("$(G.testfile).actual3qaz",
+      "third" usebundle => dcs_check_diff("$(G.testfile).actual3qaz",
                                               "$(G.testfile).expected3qaz",
                                               "$(this.promise_filename)");
 }

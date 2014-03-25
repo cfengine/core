@@ -29,8 +29,12 @@ body common control
 bundle agent example
 {
   vars:
-
+    linux|solaris|hpux::
       "gid" int => getgid("root");
+    freebsd|darwin|openbsd::
+      "gid" int => getgid("wheel");
+    aix::
+      "gid" int => getgid("system");
 
   reports:
       "root's gid is $(gid)";

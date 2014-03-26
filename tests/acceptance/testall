@@ -225,7 +225,7 @@ runtest() {
     printf "$TEST "
   fi
 
-  if echo "$TEST" | grep -q -F -e .x.cf ; then
+  if echo "$TEST" | grep -F -e .x.cf > /dev/null; then
     EXPECTED_CRASH=1
   else
     EXPECTED_CRASH=
@@ -234,16 +234,16 @@ runtest() {
   if [ "x$CRASHING_TESTS" = "x0" ] && [ "x$EXPECTED_CRASH" = "x1" ]; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Crashing tests are disabled${COLOR_NORMAL}"
-  elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/staging/'; then
+  elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -e '/staging/' > /dev/null; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Staging tests are disabled${COLOR_NORMAL}"
-  elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep -q -e '/unsafe/'; then
+  elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep -e '/unsafe/' > /dev/null; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Unsafe tests are disabled${COLOR_NORMAL}"
-  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/network/'; then
+  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -e '/network/' > /dev/null; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Network-dependent tests are disabled${COLOR_NORMAL}"
-  elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/11_xml_edits/'; then
+  elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep -e '/11_xml_edits/' > /dev/null; then
     SKIP=1
     SKIPREASON="XML file editing tests are disabled"
   else
@@ -297,14 +297,14 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 " > "$WORKDIR/runtest"
 
     if [ "$GDB" = 1 ]; then
-      if grep -q libtool < "$AGENT"; then
+      if grep libtool < "$AGENT" > /dev/null; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
       printf "gdb --args " >> "$WORKDIR/runtest"
     fi
 
     if [ -n "$USE_VALGRIND" ] && [ x"$EXPECTED_CRASH" = "x" ]; then
-      if grep -q libtool < "$AGENT"; then
+      if grep libtool < "$AGENT" > /dev/null; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
       printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
@@ -340,9 +340,9 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       # Some states are output by dcs.cf.sub, therefore check for both TEST
       # prefix and dcs.cf.sub prefix.
       ESCAPED_TEST="$(echo "($TEST|dcs.cf.sub)" | sed -e 's/\./\\./g')"
-      if egrep -q -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE; then
+      if egrep -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE > /dev/null; then
         # Check for other test case outcomes than fail. Should not happen.
-        if egrep -e "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v -q -e "R: .*$ESCAPED_TEST X?FAIL"; then
+        if egrep -e "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v -e "R: .*$ESCAPED_TEST X?FAIL" > /dev/null; then
           RESULT=FAIL
           RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress nonexistent failure)${COLOR_NORMAL}"
         else
@@ -350,16 +350,16 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
           RESULT=XFAIL
           RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
         fi
-      elif egrep -q -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE; then
+      elif egrep -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE > /dev/null; then
         RESULT=FAIL
         RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"
-      elif egrep -q -e "R: .*$ESCAPED_TEST Pass" $OUTFILE; then
+      elif egrep -e "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null; then
         RESULT=Pass
         RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-      elif egrep -q -e "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE; then
+      elif egrep -e "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
-      elif egrep -q -e "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE; then
+      elif egrep -e "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE > /dev/null; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
       else

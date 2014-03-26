@@ -72,7 +72,7 @@
 // Solaris: kstat() for kernel statistics
 // See http://dsc.sun.com/solaris/articles/kstatc.html
 // BSD also has a kstat.h (albeit in sys), so check SOLARIS just to be paranoid
-#if defined(SOLARIS) && defined(HAVE_KSTAT_H)
+#if defined(__sun) && defined(HAVE_KSTAT_H)
 #include <kstat.h>
 #define BOOT_TIME_WITH_KSTAT
 #endif
@@ -2558,12 +2558,12 @@ int GetUptimeSeconds(time_t now)
 #ifdef CF_SYS_UPTIME_IMPLEMENTED
     if(errno)
     {
-        Log(LOG_LEVEL_ERR, "boot time discovery error: %s", GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE, "boot time discovery error: %s", GetErrorStr());
     }
 
     if(boot_time > now || boot_time <= 0)
     {
-        Log(LOG_LEVEL_DEBUG, "invalid boot time found; trying uptime command");
+        Log(LOG_LEVEL_VERBOSE, "invalid boot time found; trying uptime command");
         boot_time = GetBootTimeFromUptimeCommand(now);
     }
 
@@ -2670,6 +2670,7 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
         Log(LOG_LEVEL_ERR, "uptime PCRE match failed: regexp: '%s', uptime: '%s'", UPTIME_REGEXP, uptime_output);
     }
     pcre_free(rx);
+    Log(LOG_LEVEL_VERBOSE, "Reading boot time from uptime command successful.");
     return(uptime ? (now - uptime) : -1);
 }
 #endif

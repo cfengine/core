@@ -7,6 +7,10 @@ libenv_la_SOURCES = \
 	unix_iface.c unix_iface.h \
         zones.c zones.h
 
+if SOLARIS
+libenv_la_LIBADD = -lkstat
+endif
+
 AM_CPPFLAGS = -I$(top_srcdir)/libutils
 
 # Those dependencies are ought to go away ASAP

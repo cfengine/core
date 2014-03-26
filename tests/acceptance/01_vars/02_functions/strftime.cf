@@ -17,7 +17,7 @@ bundle agent init
 {
   vars:
       # we don't use locale-sensitive formats!
-      "results" slist => { "1973-03-03 09:46:40", "124 1 18 200000000", $(dow) };
+      "results" slist => { "1973-03-03 09:46:40", "124 1 18", $(dow) };
 
     Monday::
       "dow" string => "1";
@@ -58,7 +58,7 @@ bundle agent test
   vars:
       "vals" slist => {
                         strftime('gmtime', '%F %T', 100000000),
-                        strftime('localtime', '%j %w %W %s', 200000000),
+                        strftime('localtime', '%j %w %W', 200000000),
                         strftime('localtime', '%w', now()),
       };
 

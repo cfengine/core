@@ -60,7 +60,7 @@ bundle agent check
   classes:
       # ok is defined if the file still contains ENDMARK, meaning the end of the sample very
       # long line did not get truncated during file editing
-      "ok" expression => returnszero("${G.grep} -q ENDMARK ${G.testfile}", "noshell");
+      "ok" expression => returnszero("${G.grep} ENDMARK ${G.testfile}", "noshell");
 
   reports:
     DEBUG.!ok::

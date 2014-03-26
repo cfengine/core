@@ -6,45 +6,62 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
 {
-
+  methods:
+      "rm" usebundle => dcs_fini("$(G.testfile).z");
+      "rm" usebundle => dcs_fini("$(G.testfile).z2");
 }
 
 
 bundle agent test
 {
-vars:
-  "x" string => concat("a", "b"),
+  classes:
+      "zclass" expression => returnszero("$(G.echo) xyz > $(G.testfile).z",
+                                         "useshell"),
+      ifvarclass => not("any");
+
+    !any::
+      "z2class" expression => returnszero("$(G.echo) xyz > $(G.testfile).z2",
+                                          "useshell");
+
+  vars:
+      "x" string => concat("a", "b"),
       ifvarclass => "!any";
-  !any::
-  "y" string => concat("c", "d");
+
+      "x_not" string => concat("a", "b"),
+      ifvarclass => not("any");
+
+    !any::
+      "y" string => concat("c", "d");
 }
 
 
 bundle agent check
 {
-# If the output contains the string, we fail
-classes:
-  "eval_x" expression => strcmp("ab", "$(test.x)");
-  "eval_y" expression => strcmp("cd", "$(test.y)");
+      # If the output contains the string, we fail
+  classes:
+      "eval_x" expression => strcmp("ab", "$(test.x)");
+      "eval_x_not" expression => strcmp("ab", "$(test.x_not)");
+      "eval_y" expression => strcmp("cd", "$(test.y)");
+      "eval_z" expression => "zclass";
+      "zfile_created" expression => fileexists("$(G.testfile).z");
+      "z2file_created" expression => fileexists("$(G.testfile).z2");
 
-reports:
-  DEBUG::
-    "x $(test.x)";
-    "y $(test.y)";
-  DEBUG.eval_x::
-    "x evaluated";
-  DEBUG.ok2::
-    "y evaluated";
+  methods:
+      "" usebundle => dcs_passif_expected("",
+                                          "eval_x,eval_x_not,eval_y,zclass,zfile_created,z2file_created",
+                                          $(this.promise_filename)),
+      inherit => "true";
 
-  !(eval_x|eval_y)::
-    "$(this.promise_filename) Pass";
-  (eval_x|eval_y)::
-    "$(this.promise_filename) FAIL";
+  reports:
+    DEBUG::
+      "x $(test.x)";
+      "x_not $(test.x_not)";
+      "y $(test.y)";
 }

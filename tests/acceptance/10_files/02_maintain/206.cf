@@ -19,7 +19,7 @@ bundle agent init
 {
   vars:
     any::
-      "mode" int => "01751";
+      "mode" int => "04751";
     linux::
       "owner" string => "sys";
       "group" string => "sys";
@@ -31,7 +31,7 @@ bundle agent init
       "group" string => "undefined-please-fix";
 
     pass2.!windows::
-      "expect[modeoct]" string => "101755";
+      "expect[modeoct]" string => "104755";
       "expect[uid]" string => "0";
       "expect[gid]" string => "0";
 
@@ -89,7 +89,7 @@ bundle agent check
 {
   vars:
     !windows::
-      "expect[modeoct]" string => "101755";
+      "expect[modeoct]" string => "104755";
       "expect[uid]" string => "456";
       "expect[gid]" string => "567";
     any::

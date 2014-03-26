@@ -192,8 +192,17 @@ PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, const Pr
 
                     /* If there were back references there could still be match.x vars to expand */
 
-                    pcopy = ExpandDeRefPromise(ctx, pp);
-                    result = PromiseResultUpdate(result, (*fnptr) (ctx, nextbufferOrig, pcopy));
+                    bool excluded = false;
+                    pcopy = ExpandDeRefPromise(ctx, pp, &excluded);
+                    if (excluded)
+                    {
+                        result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
+                    }
+                    else
+                    {
+                        result = PromiseResultUpdate(result, (*fnptr) (ctx, nextbufferOrig, pcopy));
+                    }
+
                     PromiseDestroy(pcopy);
                 }
             }

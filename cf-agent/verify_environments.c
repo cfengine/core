@@ -122,7 +122,6 @@ void DeleteEnvironmentsContext(void)
 PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
 {
     CfLock thislock;
-    Promise *pexp;
 
     Attributes a = GetEnvironmentsAttributes(ctx, pp);
 
@@ -137,8 +136,18 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
         }
 
         PromiseBanner(pp);
-        pexp = ExpandDeRefPromise(ctx, pp);
-        result = VerifyEnvironments(ctx, a, pp);
+
+        bool excluded = false;
+        Promise *pexp = ExpandDeRefPromise(ctx, pp, &excluded);
+        if (excluded)
+        {
+            result = PROMISE_RESULT_SKIPPED;
+        }
+        else
+        {
+            result = VerifyEnvironments(ctx, a, pp);
+        }
+
         PromiseDestroy(pexp);
     }
 

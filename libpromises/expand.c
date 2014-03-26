@@ -197,41 +197,22 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
         }
 
         const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
-
-        PromiseResult iteration_result = PROMISE_RESULT_NOOP;
-        char *excluding_class_expr = NULL;
-        if (MissingDependencies(ctx, pexp))
+        if (!pexp)
         {
-            iteration_result = PROMISE_RESULT_SKIPPED;
+            // excluded
+            result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
+            continue;
         }
-        else if (VarClassExcluded(ctx, pexp, &excluding_class_expr))
-        {
-            if (LEGACY_OUTPUT)
-            {
-                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as ifvarclass %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
-                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as ifvarclass '%s' is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
-            }
 
-            iteration_result = PROMISE_RESULT_SKIPPED;
-        }
-        else
-        {
-            iteration_result = ActOnPromise(ctx, pexp, param);
-
-            if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
-            {
-                VerifyVarPromise(ctx, pexp, true);
-            }
-        }
+        PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
 
         NotifyDependantPromises(ctx, pexp, iteration_result);
-
         result = PromiseResultUpdate(result, iteration_result);
+
+        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
+        {
+            VerifyVarPromise(ctx, pexp, true);
+        }
 
         EvalContextStackPopFrame(ctx);
     }

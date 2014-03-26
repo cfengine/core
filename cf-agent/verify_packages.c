@@ -1956,18 +1956,19 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             PromiseResult result = PROMISE_RESULT_NOOP;
 
             EvalContextStackPushPromiseFrame(ctx, pp, false);
-            EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
-
-            if (ExecPackageCommand(ctx, command_string, verify, true, a, pp, &result))
+            if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
             {
-                Log(LOG_LEVEL_VERBOSE, "Package schedule execution ok (outcome cannot be promised by cf-agent)");
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Package schedule execution failed");
-            }
+                if (ExecPackageCommand(ctx, command_string, verify, true, a, pp, &result))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Package schedule execution ok (outcome cannot be promised by cf-agent)");
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Package schedule execution failed");
+                }
 
-            EvalContextStackPopFrame(ctx);
+                EvalContextStackPopFrame(ctx);
+            }
             EvalContextStackPopFrame(ctx);
 
             EvalContextLogPromiseIterationOutcome(ctx, pp, result);
@@ -2008,24 +2009,25 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
                     EvalContextStackPushPromiseFrame(ctx, pp, false);
-                    EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
+                    if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+                    {
+                        if (ExecPackageCommand(ctx, command_string, verify, true, a, ppi, &result))
+                        {
+                            Log(LOG_LEVEL_VERBOSE,
+                                "Package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
+                                  pi->name);
+                        }
+                        else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                        {
+                            Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "Package schedule execution failed for '%s'", pi->name);
+                        }
 
-                    if (ExecPackageCommand(ctx, command_string, verify, true, a, ppi, &result))
-                    {
-                        Log(LOG_LEVEL_VERBOSE,
-                            "Package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
-                              pi->name);
+                        EvalContextStackPopFrame(ctx);
                     }
-                    else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
-                    {
-                        Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "Package schedule execution failed for '%s'", pi->name);
-                    }
-
-                    EvalContextStackPopFrame(ctx);
                     EvalContextStackPopFrame(ctx);
 
                     EvalContextLogPromiseIterationOutcome(ctx, ppi, result);
@@ -2068,30 +2070,31 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
                     EvalContextStackPushPromiseFrame(ctx, pp, false);
-                    EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
-
-                    bool ok = ExecPackageCommand(ctx, command_string, verify, true, a, pp, &result);
-
-                    for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
+                    if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
                     {
-                        if (ok)
-                        {
-                            Log(LOG_LEVEL_VERBOSE,
-                                "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
-                                  pi->name);
-                        }
-                        else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
-                        {
-                            Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
-                        }
-                        else
-                        {
-                            Log(LOG_LEVEL_ERR, "Bulk package schedule execution failed somewhere - unknown outcome for '%s'",
-                                  pi->name);
-                        }
-                    }
+                        bool ok = ExecPackageCommand(ctx, command_string, verify, true, a, pp, &result);
 
-                    EvalContextStackPopFrame(ctx);
+                        for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
+                        {
+                            if (ok)
+                            {
+                                Log(LOG_LEVEL_VERBOSE,
+                                    "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
+                                      pi->name);
+                            }
+                            else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                            {
+                                Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                            }
+                            else
+                            {
+                                Log(LOG_LEVEL_ERR, "Bulk package schedule execution failed somewhere - unknown outcome for '%s'",
+                                      pi->name);
+                            }
+                        }
+
+                        EvalContextStackPopFrame(ctx);
+                    }
                     EvalContextStackPopFrame(ctx);
                     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
                 }
@@ -2190,18 +2193,19 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
             PromiseResult result = PROMISE_RESULT_NOOP;
             EvalContextStackPushPromiseFrame(ctx, pp, false);
-            EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
-
-            if (ExecPackageCommand(ctx, command_string, false, true, a, pp, &result))
+            if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
             {
-                Log(LOG_LEVEL_VERBOSE, "Package patching seemed to succeed (outcome cannot be promised by cf-agent)");
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Package patching failed");
-            }
+                if (ExecPackageCommand(ctx, command_string, false, true, a, pp, &result))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Package patching seemed to succeed (outcome cannot be promised by cf-agent)");
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Package patching failed");
+                }
 
-            EvalContextStackPopFrame(ctx);
+                EvalContextStackPopFrame(ctx);
+            }
             EvalContextStackPopFrame(ctx);
             EvalContextLogPromiseIterationOutcome(ctx, pp, result);
         }
@@ -2222,24 +2226,25 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
                     EvalContextStackPushPromiseFrame(ctx, pp, false);
-                    EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
+                    if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+                    {
+                        if (ExecPackageCommand(ctx, command_string, false, true, a, pp, &result))
+                        {
+                            Log(LOG_LEVEL_VERBOSE,
+                                "Package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
+                                  pi->name);
+                        }
+                        else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                        {
+                            Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "Package schedule execution failed for '%s'", pi->name);
+                        }
 
-                    if (ExecPackageCommand(ctx, command_string, false, true, a, pp, &result))
-                    {
-                        Log(LOG_LEVEL_VERBOSE,
-                            "Package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
-                              pi->name);
+                        EvalContextStackPopFrame(ctx);
                     }
-                    else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
-                    {
-                        Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "Package schedule execution failed for '%s'", pi->name);
-                    }
-
-                    EvalContextStackPopFrame(ctx);
                     EvalContextStackPopFrame(ctx);
                     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
 
@@ -2260,30 +2265,31 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
                 PromiseResult result = PROMISE_RESULT_NOOP;
                 EvalContextStackPushPromiseFrame(ctx, pp, false);
-                EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
-
-                bool ok = ExecPackageCommand(ctx, command_string, false, true, a, pp, &result);
-
-                for (const PackageItem *pi = pm->patch_list; pi != NULL; pi = pi->next)
+                if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
                 {
-                    if (ok)
-                    {
-                        Log(LOG_LEVEL_VERBOSE,
-                            "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
-                              pi->name);
-                    }
-                    else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
-                    {
-                        Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "Bulk package schedule execution failed somewhere - unknown outcome for '%s'",
-                              pi->name);
-                    }
-                }
+                    bool ok = ExecPackageCommand(ctx, command_string, false, true, a, pp, &result);
 
-                EvalContextStackPopFrame(ctx);
+                    for (const PackageItem *pi = pm->patch_list; pi != NULL; pi = pi->next)
+                    {
+                        if (ok)
+                        {
+                            Log(LOG_LEVEL_VERBOSE,
+                                "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
+                                  pi->name);
+                        }
+                        else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                        {
+                            Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "Bulk package schedule execution failed somewhere - unknown outcome for '%s'",
+                                  pi->name);
+                        }
+                    }
+
+                    EvalContextStackPopFrame(ctx);
+                }
                 EvalContextStackPopFrame(ctx);
                 EvalContextLogPromiseIterationOutcome(ctx, pp, result);
                 break;

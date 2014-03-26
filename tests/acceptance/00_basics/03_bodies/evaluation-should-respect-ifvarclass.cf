@@ -25,6 +25,10 @@ bundle agent test
       "zclass" expression => returnszero("$(G.echo) xyz > $(G.testfile).z",
                                          "useshell"),
       ifvarclass => not("any");
+      "zclass" expression => returnszero("$(G.echo) xyz > $(G.testfile).z",
+                                         "useshell"),
+      depends_on => { "this_handle_does_not_exist" };
+
 
     !any::
       "z2class" expression => returnszero("$(G.echo) xyz > $(G.testfile).z2",

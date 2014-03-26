@@ -663,7 +663,7 @@ void SetBundleAborted(EvalContext *ctx)
     ctx->bundle_aborted = true;
 }
 
-int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
+bool VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
 {
     Constraint *cp = PromiseGetConstraint(pp, "ifvarclass");
     if (!cp)
@@ -1255,7 +1255,13 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iter
         PromiseIteratorUpdateVariable(ctx, iter_ctx);
     }
 
-    Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner);
+    bool excluded = false;
+    Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner, &excluded);
+    if (excluded)
+    {
+        PromiseDestroy(pexp);
+        return NULL;
+    }
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx, iteration_index));
 

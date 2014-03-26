@@ -248,10 +248,37 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
+static bool EvaluateConstraintIteration(EvalContext *ctx, const Constraint *cp, Rval *rval_out)
+{
+    assert(cp->type == POLICY_ELEMENT_TYPE_PROMISE);
+    const Promise *pp = cp->parent.promise;
+
+    if (!IsDefinedClass(ctx, cp->classes))
+    {
+        return false;
+    }
+
+    if (ExpectedDataType(cp->lval) == CF_DATA_TYPE_BUNDLE)
+    {
+        *rval_out = ExpandBundleReference(ctx, NULL, "this", cp->rval);
+    }
+    else
+    {
+        *rval_out = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
+    }
+
+    return true;
+}
+
+Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
     assert(pp->promiser);
     assert(pp->classes);
+
+    if (excluded)
+    {
+        *excluded = false;
+    }
 
     Promise *pcopy = xcalloc(1, sizeof(Promise));
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
@@ -274,25 +301,80 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
 
-    /* No further type checking should be necessary here, already done
-     * by CheckConstraintTypeMatch */
+    {
+        // look for ifvarclass exclusion, to short-circuit evaluation of other constraints
+        const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
+        if (ifvarclass)
+        {
+            Rval final;
+            if (EvaluateConstraintIteration(ctx, ifvarclass, &final))
+            {
+                Constraint *cp_copy = PromiseAppendConstraint(pcopy, ifvarclass->lval, final, false);
+                cp_copy->offset = ifvarclass->offset;
+
+                char *excluding_class_expr = NULL;
+                if (VarClassExcluded(ctx, pcopy, &excluding_class_expr))
+                {
+                    if (LEGACY_OUTPUT)
+                    {
+                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as ifvarclass %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as ifvarclass '%s' is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                    }
+
+                    if (excluded)
+                    {
+                        *excluded = true;
+                    }
+
+                    return pcopy;
+                }
+            }
+        }
+    }
+
+    {
+        // look for depends_on exclusion, to short-circuit evaluation of other constraints
+        const Constraint *depends_on = PromiseGetConstraint(pp, "depends_on");
+        if (depends_on)
+        {
+            Rval final;
+            if (EvaluateConstraintIteration(ctx, depends_on, &final))
+            {
+                Constraint *cp_copy = PromiseAppendConstraint(pcopy, depends_on->lval, final, false);
+                cp_copy->offset = depends_on->offset;
+
+                if (MissingDependencies(ctx, pcopy))
+                {
+                    if (excluded)
+                    {
+                        *excluded = true;
+                    }
+
+                    return pcopy;
+                }
+            }
+        }
+    }
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-        if (!IsDefinedClass(ctx, cp->classes))
+
+        // special constraints ifvarclass and depends_on are evaluated before the rest of the constraints
+        if (strcmp(cp->lval, "ifvarclass") == 0 || strcmp(cp->lval, "depends_on") == 0)
         {
             continue;
         }
 
         Rval final;
-        if (ExpectedDataType(cp->lval) == CF_DATA_TYPE_BUNDLE)
+        if (!EvaluateConstraintIteration(ctx, cp, &final))
         {
-            final = ExpandBundleReference(ctx, NULL, "this", cp->rval);
-        }
-        else
-        {
-            final = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
+            continue;
         }
 
         Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);

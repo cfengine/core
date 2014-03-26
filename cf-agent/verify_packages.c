@@ -1485,7 +1485,7 @@ static VersionCmpResult PatchMatch(EvalContext *ctx,
             VersionCmpResult res = ComparePackages(ctx, n, v, a, pi, attr, pp, mode, result);
             if (res != VERCMP_NO_MATCH)
             {
-                Log(LOG_LEVEL_VERBOSE, "Package comparison for %s was decisive: %s", pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
+                Log(LOG_LEVEL_VERBOSE, "Patch comparison for %s was decisive: %s", pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
                 return res;
             }
         }

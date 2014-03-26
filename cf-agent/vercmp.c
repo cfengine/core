@@ -145,6 +145,7 @@ VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v
 {
     VersionCmpResult cmp_result;
     const char *cmp_operator = "";
+
     switch (a.packages.package_select)
     {
     case PACKAGE_VERSION_COMPARATOR_EQ:
@@ -191,7 +192,7 @@ VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v
         break;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Checking whether package version %s %s %s: %s", v1, cmp_operator, v2, text_result);
+    Log(LOG_LEVEL_VERBOSE, "Checked whether package version %s %s %s: %s", v1, cmp_operator, v2, text_result);
 
     return cmp_result;
 }

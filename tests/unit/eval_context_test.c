@@ -4,13 +4,18 @@
 
 void tests_setup(void)
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/CFENGINE_eval_context_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/CFENGINE_eval_context_test.XXXXXX";
+    const char *workdir = strchr(env, '=');
+    assert(workdir && workdir[1] == '/');
+    workdir++;
 
-    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, 1);
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
 
     char state_dir[PATH_MAX];
-    snprintf(state_dir, PATH_MAX, "%s/state", CFWORKDIR);
+    snprintf(state_dir, PATH_MAX, "%s/state", workdir);
     mkdir(state_dir, 0766);
 }
 

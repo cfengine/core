@@ -35,6 +35,9 @@ bundle agent test
 {
   meta:
       "test_skip_unsupported" string => "windows";
+      "test_suppress_fail" string => "freebsd",
+        meta => { "redmine5261" };
+
 
   vars:
       "inode" string => filestat("$(G.etc_group)", "ino");

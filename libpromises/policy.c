@@ -2494,9 +2494,8 @@ const char *PromiseGetHandle(const Promise *pp)
     return (const char *)PromiseGetImmediateRvalValue("handle", pp, RVAL_TYPE_SCALAR);
 }
 
-int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp)
+long PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
-    int retval = CF_NOINT;
     const Constraint *cp = PromiseGetConstraint(pp, lval);
     if (cp)
     {
@@ -2508,10 +2507,10 @@ int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Pr
             FatalError(ctx, "Aborted");
         }
 
-        retval = (int) IntFromString((char *) cp->rval.item);
+        return IntFromString((const char *) cp->rval.item);
     }
 
-    return retval;
+    return CF_NOINT;
 }
 
 /*****************************************************************************/

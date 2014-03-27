@@ -1167,9 +1167,27 @@ static char *PolicyErrorToString(const PolicyError *error)
     SourceOffset offset = PolicyElementSourceOffset(error->type, error->subject);
     const char *path = PolicyElementSourceFile(error->type, error->subject);
 
-    return StringFormat("%s:%llu:%llu: error: %s\n",
-                        path, (unsigned long long)offset.line,
-                        (unsigned long long)0, error->message);
+    Writer *msg = StringWriter();
+    WriterWriteF(msg, "%s:%llu:%llu: %s.",
+                 path, (unsigned long long)offset.line,
+                 (unsigned long long)0, error->message);
+
+    switch (error->type)
+    {
+    case POLICY_ELEMENT_TYPE_CONSTRAINT:
+        {
+            const Constraint *cp = error->subject;
+            WriterWrite(msg, " Given attribute value '");
+            RvalWrite(msg, cp->rval);
+            WriterWriteChar(msg, '\'');
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return StringWriterClose(msg);
 }
 
 /*************************************************************************/

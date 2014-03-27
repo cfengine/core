@@ -190,35 +190,33 @@ bool StringSafeEqual(const char *a, const char *b)
 
 char *SearchAndReplace(const char *source, const char *search, const char *replace)
 {
-    const char *source_ptr = source;
-
-    if ((source == NULL) || (search == NULL) || (replace == NULL))
+    if (source == NULL || search == NULL || replace == NULL)
     {
         ProgrammingError("Programming error: NULL argument is passed to SearchAndReplace");
     }
 
-    if (strcmp(search, "") == 0)
+    /* Perverse case: treat empty string as if it's nowhere found (the
+     * alternative is that it's found everywhere, which gets silly).
+     */
+    if (search[0] == '\0')
     {
         return xstrdup(source);
     }
 
     Writer *w = StringWriter();
+    const char *tail = source, *found;
+    const size_t searchlen = strlen(search);
 
-    for (;;)
+    while (NULL != (found = strstr(tail, search)))
     {
-        const char *found_ptr = strstr(source_ptr, search);
-
-        if (found_ptr == NULL)
-        {
-            WriterWrite(w, source_ptr);
-            return StringWriterClose(w);
-        }
-
-        WriterWriteLen(w, source_ptr, found_ptr - source_ptr);
+        WriterWriteLen(w, tail, found - tail);
         WriterWrite(w, replace);
 
-        source_ptr += found_ptr - source_ptr + strlen(search);
+        tail = found + searchlen;
     }
+
+    WriterWrite(w, tail);
+    return StringWriterClose(w);
 }
 
 /*********************************************************************/

@@ -24,6 +24,7 @@
 
 #include <cf3.defs.h>
 
+#include <mutex.h>                                            /* ThreadLock */
 #include <dbm_api.h>
 #include <dbm_priv.h>
 #include <dbm_migration.h>
@@ -115,15 +116,21 @@ static DBHandle *DBHandleGet(int id)
 {
     assert(id >= 0 && id < dbid_max);
 
-    pthread_mutex_lock(&db_handles_lock);
+    ThreadLock(&db_handles_lock);
 
     if (db_handles[id].filename == NULL)
     {
         db_handles[id].filename = DBIdToPath(CFWORKDIR, id);
-        pthread_mutex_init(&db_handles[id].lock, NULL);
+
+        /* Initialize mutexes as error-checking ones. */
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+        pthread_mutex_init(&db_handles[id].lock, &attr);
+        pthread_mutexattr_destroy(&attr);
     }
 
-    pthread_mutex_unlock(&db_handles_lock);
+    ThreadUnlock(&db_handles_lock);
 
     return &db_handles[id];
 }
@@ -139,7 +146,7 @@ static DBHandle *DBHandleGet(int id)
  **/
 void CloseAllDBExit()
 {
-    pthread_mutex_lock(&db_handles_lock);
+    ThreadLock(&db_handles_lock);
 
     for (int i = 0; i < dbid_max; i++)
     {
@@ -147,10 +154,10 @@ void CloseAllDBExit()
         {
             /* Wait until all DB users are served, or a threshold is reached */
             int count = 0;
-            pthread_mutex_lock(&db_handles[i].lock);
+            ThreadLock(&db_handles[i].lock);
             while (db_handles[i].refcount > 0 && count < 1000)
             {
-                pthread_mutex_unlock(&db_handles[i].lock);
+                ThreadUnlock(&db_handles[i].lock);
 
                 struct timespec sleeptime = {
                     .tv_sec = 0,
@@ -159,7 +166,7 @@ void CloseAllDBExit()
                 nanosleep(&sleeptime, NULL);
                 count++;
 
-                pthread_mutex_lock(&db_handles[i].lock);
+                ThreadLock(&db_handles[i].lock);
             }
             /* Keep mutex locked. */
 
@@ -185,7 +192,7 @@ bool OpenDB(DBHandle **dbp, dbid id)
 {
     DBHandle *handle = DBHandleGet(id);
 
-    pthread_mutex_lock(&handle->lock);
+    ThreadLock(&handle->lock);
 
     if (handle->refcount == 0)
     {
@@ -235,14 +242,14 @@ bool OpenDB(DBHandle **dbp, dbid id)
         *dbp = NULL;
     }
 
-    pthread_mutex_unlock(&handle->lock);
+    ThreadUnlock(&handle->lock);
 
     return *dbp != NULL;
 }
 
 void CloseDB(DBHandle *handle)
 {
-    pthread_mutex_lock(&handle->lock);
+    ThreadLock(&handle->lock);
 
     if (handle->refcount < 1)
     {
@@ -253,12 +260,12 @@ void CloseDB(DBHandle *handle)
         DBPrivCloseDB(handle->priv);
     }
 
-    pthread_mutex_unlock(&handle->lock);
+    ThreadUnlock(&handle->lock);
 }
 
 void CloseDBCommit(DBHandle *handle)
 {
-    pthread_mutex_lock(&handle->lock);
+    ThreadLock(&handle->lock);
 
     DBPrivCommit(handle->priv);
     if (handle->refcount < 1)
@@ -270,7 +277,7 @@ void CloseDBCommit(DBHandle *handle)
         DBPrivCloseDB(handle->priv);
     }
 
-    pthread_mutex_unlock(&handle->lock);
+    ThreadUnlock(&handle->lock);
 }
 
 /*****************************************************************************/

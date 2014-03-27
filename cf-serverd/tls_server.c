@@ -158,6 +158,7 @@ bool ServerTLSInitialize()
  * It is performed by peeking into the TLS connection to read the first bytes,
  * and if it's a CAUTH protocol command use the old protocol loop, else use
  * the TLS protocol loop.
+ * This must be the first thing we run on an accepted connection.
  *
  * @return -1 in case of error, 1 otherwise.
  */
@@ -165,7 +166,6 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
 {
     assert(SSLSERVERCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
 
-    /* This must be the first thing we run on an accepted connection. */
     assert(ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_UNDEFINED);
 
     const int peek_size = CF_INBAND_OFFSET + sizeof("CAUTH");
@@ -213,11 +213,11 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
  *          0: no agreement on version was reached
  *         -1: error
  */
-int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
+static int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
 {
     int ret;
     char input[CF_SMALLBUF] = "";
-    /* The only protocol we support inside TLS, for now... */
+    /* The only protocol version we support inside TLS, for now. */
     const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_LATEST;
 
     /* Send "CFE_v%d cf-serverd version". */
@@ -252,7 +252,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
         return -1;
     }
 
-    /* For now we support only one version, so just check they match... */
+    /* For now we support only one version inside TLS. */
     /* TODO value should not be hardcoded but compared to enum ProtocolVersion. */
     if (version_received == SERVER_PROTOCOL_VERSION)
     {
@@ -278,8 +278,8 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
  *         empty if field was not on IDENTITY line.
  * @return -1 in case of error.
  */
-int ServerIdentifyClient(const ConnectionInfo *conn_info,
-                         char *username, size_t username_size)
+static int ServerIdentifyClient(const ConnectionInfo *conn_info,
+                                char *username, size_t username_size)
 {
     char line[1024], word1[1024], word2[1024];
     int line_pos = 0, chars_read = 0;
@@ -479,7 +479,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 Log(LOG_LEVEL_NOTICE,
                     "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
                 Log(LOG_LEVEL_NOTICE,
-                    "Open server's ACL if you really want to start trusting this new key.");
+                    "Add host to \"trustkeysfrom\" if you really want to start trusting this new key.");
                 return -1;
             }
         }

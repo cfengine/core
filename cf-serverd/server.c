@@ -332,8 +332,8 @@ static void *HandleConnection(void *c)
         if (TRIES > MAXTRIES)
         {
             /* This happens when no thread was freed while we had to drop 5
-             * consecutive connections, because none of the existing threads
-             * finished. */
+             * (or maxconnections/3) consecutive connections, because none of
+             * the existing threads finished. */
             Log(LOG_LEVEL_CRIT,
                 "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
             FatalError(conn->ctx, "Terminating");

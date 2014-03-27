@@ -204,6 +204,16 @@ bundle agent dcs_check_diff(file1, file2, test)
                                                  "no");
 }
 
+bundle agent dcs_if_diff(file1, file2, pass_class, fail_class)
+{
+  methods:
+      "any" usebundle => dcs_if_diff_expected($(file1),
+                                              $(file2),
+                                              "no",
+                                              $(pass_class),
+                                              $(fail_class));
+}
+
 bundle agent sorted_check_diff(file1, file2, test)
 {
   methods:
@@ -337,6 +347,20 @@ bundle agent dcs_all_classes_to_string(prefix)
 
 bundle agent dcs_check_diff_expected(file1, file2, test, expected_difference)
 {
+  methods:
+      "any" usebundle => dcs_if_diff_expected($(file1), $(file2), $(expected_difference),
+                                              "dcs_check_diff_expected_pass_class",
+                                              "dcs_check_diff_expected_fail_class");
+
+  reports:
+    dcs_check_diff_expected_pass_class::
+      "$(test) Pass";
+    dcs_check_diff_expected_fail_class::
+      "$(test) FAIL";
+}
+
+bundle agent dcs_if_diff_expected(file1, file2, expected_difference, pass_class, fail_class)
+{
   vars:
     DEBUG.check_ready.!no_difference::
       "file1r" string => readfile("$(file1)", "99999999");
@@ -366,16 +390,20 @@ bundle agent dcs_check_diff_expected(file1, file2, test, expected_difference)
       "expected_difference" expression => strcmp("$(expected_difference)", "yes");
       "check_ready" expression => "any";
 
-  reports:
     check_ready.no_difference.!expected_difference::
-      "$(test) Pass";
+      "$(pass_class)" expression => "any",
+        scope => "namespace";
     check_ready.!no_difference.expected_difference::
-      "$(test) Pass";
+      "$(pass_class)" expression => "any",
+        scope => "namespace";
     check_ready.!no_difference.!expected_difference::
-      "$(test) FAIL";
+      "$(fail_class)" expression => "any",
+        scope => "namespace";
     check_ready.no_difference.expected_difference::
-      "$(test) FAIL";
+      "$(fail_class)" expression => "any",
+        scope => "namespace";
 
+  reports:
     DEBUG.check_ready.!no_difference.!expected_difference::
       "FILES DIFFER BUT SHOULD BE THE SAME";
       "CONTENTS OF $(file1):
@@ -582,6 +610,7 @@ bundle agent dcs_passif(classname, test)
 
     EXTRA::
       "$(this.bundle): passing based on class '$(classname)'" ifvarclass => $(classname);
+    DEBUG::
       "$(this.bundle): failing based on class '$(classname)'" ifvarclass => not($(classname));
 }
 

@@ -405,7 +405,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 if (ret <= 0)
                 {
                     Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and failed");
-                    TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server", ret);
+                    TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server accept", ret);
                     return -1;
                 }
                 Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and succeeded");
@@ -413,7 +413,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
-                TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server", ret);
+                TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server select", ret);
                 return -1;
             }
         }

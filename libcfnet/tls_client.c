@@ -271,7 +271,7 @@ int TLSTry(ConnectionInfo *conn_info)
     int ret = SSL_connect(ssl);
     if (ret <= 0)
     {
-        TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client", ret);
+        TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake client first attempt failed; retrying", ret);
         Log(LOG_LEVEL_VERBOSE, "Checking if the connect operation can be retried");
         /* Retry just in case something was problematic at that point in time */
         fd_set wfds;
@@ -290,7 +290,7 @@ int TLSTry(ConnectionInfo *conn_info)
             {
                 Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and failed");
                 TLSLogError(ssl, LOG_LEVEL_ERR,
-                            "Connection handshake client", ret);
+                            "Connection handshake client connect", ret);
                 return -1;
             }
             Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and succeeded");
@@ -298,7 +298,7 @@ int TLSTry(ConnectionInfo *conn_info)
         else
         {
             Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
-            TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client", ret);
+            TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client select", ret);
             return -1;
         }
     }

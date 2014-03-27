@@ -317,6 +317,7 @@ static int ServerIdentifyClient(const ConnectionInfo *conn_info,
             Log(LOG_LEVEL_VERBOSE, "Setting IDENTITY: %s=%s",
                 word1, word2);
         }
+        /* ... else if (strcmp()) for other acceptable IDENTITY parameters. */
         else
         {
             Log(LOG_LEVEL_VERBOSE, "Received unknown IDENTITY parameter: %s=%s",
@@ -330,12 +331,13 @@ static int ServerIdentifyClient(const ConnectionInfo *conn_info,
     return 1;
 }
 
-int ServerSendWelcome(const ServerConnectionState *conn)
+static int ServerSendWelcome(const ServerConnectionState *conn)
 {
     char s[1024] = "OK WELCOME";
     size_t len = strlen(s);
     int ret;
 
+    /* "OK WELCOME" is the important part. The rest is just extra verbosity. */
     if (conn->username[0] != '\0')
     {
         ret = snprintf(&s[len], sizeof(s) - len, " %s=%s",
@@ -429,6 +431,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
         {
             return -1;
         }
+        ConnectionInfoSetProtocolVersion(conn->conn_info, ret);
 
         /* Receive IDENTITY USER=asdf plain string. */
         ret = ServerIdentifyClient(conn->conn_info, conn->username,

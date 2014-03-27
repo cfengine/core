@@ -40,6 +40,7 @@
 #include <cf-key-functions.h>
 
 int SHOWHOSTS = false; /* GLOBAL_A */
+bool FORCEREMOVAL = false; /* GLOBAL_A */
 bool REMOVEKEYS = false; /* GLOBAL_A */
 bool LICENSE_INSTALL = false; /* GLOBAL_A */
 char LICENSE_SOURCE[MAX_FILENAME] = ""; /* GLOBAL_A */
@@ -69,6 +70,7 @@ static const struct option OPTIONS[] =
     {"output-file", required_argument, 0, 'f'},
     {"show-hosts", no_argument, 0, 's'},
     {"remove-keys", required_argument, 0, 'r'},
+    {"force-removal", no_argument, 0, 'x'},
     {"install-license", required_argument, 0, 'l'},
     {"print-digest", required_argument, 0, 'p'},
     {"trust-key", required_argument, 0, 't'},
@@ -85,6 +87,7 @@ static const char *const HINTS[] =
     "Specify an alternative output file than the default (localhost)",
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",
+    "Force removal of keys (USE AT YOUR OWN RISK)",
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
     "Make cf-serverd/cf-agent trust the specified public key",
@@ -115,7 +118,15 @@ int main(int argc, char *argv[])
 
     if (REMOVEKEYS)
     {
-        return RemoveKeys(remove_keys_host, true);
+        int status = RemoveKeys(remove_keys_host, !FORCEREMOVAL);
+        if (FORCEREMOVAL && (status == 0 || status == 1))
+        {
+            Log (LOG_LEVEL_VERBOSE,
+                "Forced removal of entry '%s' was successful",
+                remove_keys_host);
+            return 0;
+        }
+        return status;
     }
 
     if(LICENSE_INSTALL)
@@ -163,7 +174,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:C::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -193,6 +204,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 's':
             SHOWHOSTS = true;
+            break;
+
+        case 'x':
+            FORCEREMOVAL = true;
             break;
 
         case 'r':

@@ -5211,7 +5211,7 @@ static FnCallResult FnCallNow(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Poli
 
 static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    /* begin fn specific content */
+    /* begin fn-specific content */
 
     char *mode = RlistScalarValue(finalargs);
     char *format_string = RlistScalarValue(finalargs->next);
@@ -5232,13 +5232,32 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         tm = localtime(&when);
     }
 
-    if(tm != NULL)
+    if (tm != NULL)
     {
-        strftime(buffer, sizeof buffer, format_string, tm);
+        char *delenda = NULL;
+        const char* fmt = format_string;
+        /* HP-UX needs to replace "%F" with "%Y-%m-%d".
+         * Solaris needs to replace "%s" with number of seconds since epoch.
+         * TODO: might be better done in a libcompat wrapper.
+         */
+#ifdef __sun
+        char epoch[PRINTSIZE(when)];
+        sprintf(epoch, "%" PRIdMAX, (intmax_t)when);
+        delenda = SearchAndReplace(fmt, "%s", epoch);
+        fmt = delenda;
+#endif
+#ifdef __hpux
+        delenda = SearchAndReplace(fmt, "%F", "%Y-%m-%d");
+        fmt = delenda;
+#endif
+        strftime(buffer, sizeof(buffer), fmt, tm);
+        free(delenda);
     }
     else
     {
-        Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)", when, GetErrorStr());
+        Log(LOG_LEVEL_WARNING,
+            "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)",
+            when, GetErrorStr());
     }
 
     return FnReturn(buffer);

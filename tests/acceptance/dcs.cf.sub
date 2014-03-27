@@ -4,9 +4,16 @@
 # See README for details about writing test cases.
 ########################################################################
 
+body file control
+{
+      # plucked.cf.sub comes from the stdlib with `make pluck`
+      inputs => { "$(G.owndir)$(const.dirsep)plucked.cf.sub" };
+}
+
 bundle common G
 {
   vars:
+      "owndir" string => "$(this.promise_dirname)";
     windows::
       "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
       # Use for redirection, not as a real file.

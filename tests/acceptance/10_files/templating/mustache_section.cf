@@ -1,0 +1,33 @@
+#######################################################
+#
+# Check that we warn about Mustache sections over non-iterables/non-booleans
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  methods:
+      "" usebundle => dcs_fini($(G.testfile));
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_output(".*Mustache sections can only take a boolean or a container.+value, but section 'x' isn't getting one of those.*",
+                                        "",
+                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | grep Mustache",
+                                        $(this.promise_filename));
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

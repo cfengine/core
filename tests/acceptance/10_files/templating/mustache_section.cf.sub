@@ -1,0 +1,14 @@
+body common control
+{
+      inputs => { "../../plucked.cf.sub" };
+      bundlesequence  => { test };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  methods:
+      "m" usebundle => cfe_mustache_makefile_string("$(this.promise_filename).mustache",
+                                                    '{ "x": "y" }',
+                                                    "$(sys.workdir)/state/out.txt");
+}

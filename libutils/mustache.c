@@ -540,7 +540,8 @@ static bool Render(Writer *out, const char *start, const char *input, Seq *hash_
                         continue;
 
                     default:
-                        assert(false);
+                        Log(LOG_LEVEL_WARNING, "Mustache sections can only take a boolean or a container (array or map) value, but section '%s' isn't getting one of those.",
+                            section);
                         return false;
                     }
                     break;

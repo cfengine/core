@@ -706,3 +706,45 @@ body changes all_changes
       report_diffs   => "true";
       update_hashes  => "yes";
 }
+
+bundle agent cfe_mustache_makefile(mustache_file, json_file, target_file)
+# @brief Make a file from a Mustache template and a JSON file
+# @param mustache_file the file with the Mustache template
+# @param json_file a file with JSON data
+# @param target_file the target file to write
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "m" usebundle => cfe_mustache_makefile("x.mustache", "y.json", "z.txt");
+# ```
+{
+  files:
+      "$(target_file)"
+      create => "true",
+      edit_template => $(mustache_file),
+      template_data => readjson($(json_file), "100k"),
+      template_method => "mustache";
+}
+
+bundle agent cfe_mustache_makefile_string(mustache_file, json_string, target_file)
+# @brief Make a file from a Mustache template and a JSON string
+# @param mustache_file the file with the Mustache template
+# @param json_string a string with JSON data
+# @param target_file the target file to write
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "m" usebundle => cfe_mustache_makefile_string("x.mustache", '{ "x": "y" }', "z.txt");
+# ```
+{
+  files:
+      "$(target_file)"
+      create => "true",
+      edit_template => $(mustache_file),
+      template_data => parsejson($(json_string)),
+      template_method => "mustache";
+}

@@ -83,6 +83,17 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
               dbpath, mdb_strerror(rc));
         goto err;
     }
+    if (id == dbid_lastseen)
+    {
+        /* lastseen needs by default 4x more reader locks than other DBs*/
+        rc = mdb_env_set_maxreaders(db->env, 126*4);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not set maxreaders for database %s: %s",
+                  dbpath, mdb_strerror(rc));
+            goto err;
+        }
+    }
     if (id != dbid_locks)
     {
         rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);

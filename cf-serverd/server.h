@@ -146,6 +146,7 @@ AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
 
 extern int ACTIVE_THREADS;
 extern int CFD_MAXPROCESSES;
+extern int LSD_MAXREADERS;
 extern bool DENYBADCLOCKS;
 extern int MAXTRIES;
 extern bool LOGENCRYPT;

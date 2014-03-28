@@ -427,6 +427,15 @@ $(file2h)";
       "Contents of $(file1) and $(file) are the same but should differ.";
 }
 
+bundle agent dcs_sleep(t)
+{
+  commands:
+      "$(G.perl) -e 'sleep $(t)'";
+  reports:
+    EXTRA::
+      "Sleeping $(t) seconds";
+}
+
 #######################################################
 
 # Uses rm -rf instead of selecting and deleting files to avoid side-effects in

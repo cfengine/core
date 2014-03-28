@@ -1,0 +1,137 @@
+#######################################################
+#
+# Test that mustache DTRT when encountering string when expects list. Also
+# check that after mustache template is applied you have a different filestat
+# (indicating you wrote to a different file and moved into place)
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  methods:
+      "empty good" usebundle => dcs_emptyfile("$(G.testfile).good");
+      "empty bad" usebundle => dcs_emptyfile("$(G.testfile).bad");
+
+      "first filestat good" usebundle => init_filestat("good1", "$(G.testfile).good");
+      "first filestat bad" usebundle => init_filestat("bad1", "$(G.testfile).bad");
+
+      "sleep 1" usebundle => dcs_sleep("1");
+
+      "Remove good" usebundle => dcs_fini("$(G.testfile).good");
+      "Remove bad" usebundle => dcs_fini("$(G.testfile).bad");
+
+      "ready good" usebundle => dcs_makefile("$(G.testfile).good", "# Set good");
+      "ready bad" usebundle => dcs_makefile("$(G.testfile).bad", "# Set bad");
+
+      "second filestat good" usebundle => init_filestat("good2", "$(G.testfile).good");
+      "second filestat bad" usebundle => init_filestat("bad2", "$(G.testfile).bad");
+
+      "sleep 1" usebundle => dcs_sleep("1");
+}
+
+bundle agent init_filestat(n, f)
+{
+  vars:
+      "filestat_$(n)" string => format("%s,%s,%s,%s", filestat($(f), "basename"), filestat($(f), "mtime"), filestat($(f), "ctime"), filestat($(f), "ino"));
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "mustache good" usebundle => cfe_mustache_makefile_string($(template),
+                                                                '{"mykeys": ["template expects list of strings"]}',
+                                                                "$(G.testfile).good");
+
+      "mustache bad" usebundle => cfe_mustache_makefile_string($(template),
+                                                                '{"mykeys": "string but template expects list of strings"}',
+                                                                "$(G.testfile).bad");
+
+      "third filestat good" usebundle => init_filestat("good3", "$(G.testfile).good");
+      "third filestat bad" usebundle => init_filestat("bad3", "$(G.testfile).bad");
+
+  vars:
+      "template" string => "$(this.promise_filename).mustache";
+
+      "actual_good" string => readfile("$(G.testfile).good", 4096);
+      "actual_bad" string => readfile("$(G.testfile).bad", 4096);
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected_good" string => "#DO NOT EDIT - MANAGED FILE
+template expects list of strings
+";
+
+      "expected_bad" string => "# Set bad";
+
+      "filestats_good" slist => { "$(init_filestat.filestat_good1)", "$(init_filestat.filestat_good2)", "$(init_filestat.filestat_good3)" };
+      "filestats_bad" slist => { "$(init_filestat.filestat_bad1)", "$(init_filestat.filestat_bad2)", "$(init_filestat.filestat_bad3)" };
+
+      "filestats_good_str" string => format("%S", filestats_good);
+      "filestats_bad_str" string => format("%S", filestats_bad);
+
+      "unique_filestats_good" slist => unique(filestats_good);
+      "unique_filestats_bad" slist => unique(filestats_bad);
+
+      "num_unique_filestats_good" int => length(unique_filestats_good);
+      "num_unique_filestats_bad" int => length(unique_filestats_bad);
+
+  classes:
+      "ok_filestats_good" expression => strcmp("3", "num_unique_filestats_good");
+      "ok_filestats_bad" expression => strcmp("2", "num_unique_filestats_bad");
+
+      "ok_content_good" expression => strcmp($(expected_good), $(test.actual_good));
+      "ok_content_bad" expression => strcmp($(expected_bad), $(test.actual_bad));
+
+
+  methods:
+      "" usebundle => dcs_passif_expected("ok_filestats_good,ok_filestats_bad,ok_content_good,ok_content_bad",
+                                          "",
+                                          $(this.promise_filename)),
+      inherit => "true";
+
+  reports:
+    EXTRA::
+      "OK: As expected good '$(expected_good)'"
+      ifvarclass => "ok_content_good";
+
+      "OK: As expected bad '$(expected_bad)'"
+      ifvarclass => "ok_content_bad";
+
+      "OK: Expected 3 different filestats for $(G.testfile).good template rendering."
+      ifvarclass => "ok_filestats_good";
+
+      "OK: Expected 2 different filestats for $(G.testfile).bad template rendering."
+      ifvarclass => "ok_filestats_bad";
+
+    DEBUG::
+      "FAIL: Expected '$(expected_good)' <> '$(test.actual_good)'"
+      ifvarclass => "!ok_content_good";
+
+      "FAIL: Expected '$(expected_bad)' <> '$(test.actual_bad)'"
+      ifvarclass => "!ok_content_bad";
+
+      "FAIL: good filestats $(filestats_good_str) unique count is $(num_unique_filestats_good)"
+      ifvarclass => "!ok_filestats_good";
+
+      "FAIL: bad filestats $(filestats_bad_str) unique count is $(num_unique_filestats_bad)"
+      ifvarclass => "!ok_filestats_bad";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

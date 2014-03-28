@@ -1,0 +1,55 @@
+#######################################################
+#
+# Redmine#3315: Test dynamic inputs and bundlesequence using maplist
+#
+#######################################################
+
+body common control
+{
+      inputs => {
+                  "../../default.cf.sub",
+                  @(dynamic.inputs),
+      };
+      bundlesequence  => { dynamic, default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent dynamic
+{
+  vars:
+      "todo" slist => bundlesmatching(".*included");
+      "dynamic_input_names" slist => {"$(this.promise_filename).sub"};
+      "inputs" slist => maplist("$(this)", "dynamic_input_names");
+
+  methods:
+      "run" usebundle => $(todo);
+
+  reports:
+    DEBUG::
+      "Found dynamic bundle: $(todo)";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  meta:
+    "test_suppress_fail" string => "windows",
+      meta => { "redmine4730" };
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "class_defined_from_included_bundle";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

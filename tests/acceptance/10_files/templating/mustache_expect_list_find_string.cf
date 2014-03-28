@@ -1,0 +1,137 @@
+#######################################################
+#
+# Test that mustache DTRT when encountering string when expects list. Also
+# check that after mustache template is applied you have a different inode
+# (indicating you wrote to a different file and moved into place) 
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  methods:
+    "Get first inode"
+      usebundle => init_inode1;
+
+    "Remove file"
+      usebundle => dcs_fini($(G.testfile));
+
+    "Get second inode"
+      usebundle => init_inode2;
+}
+
+bundle agent init_inode1
+{
+  vars:
+    init_testfile_ok::
+      "testfile_inode" string => filestat($(G.testfile), "ino");
+
+  files:
+      "$(G.testfile)"
+        create => "true",
+        edit_defaults => empty, 
+        classes => classes_generic("init_testfile"),
+        edit_line => insert_lines("# Ready ");
+}
+
+bundle agent init_inode2
+{
+  vars:
+    init_testfile_ok::
+      "testfile_inode" string => filestat($(G.testfile), "ino");
+
+  files:
+      "$(G.testfile)"
+        create => "true",
+        edit_defaults => empty, 
+        classes => classes_generic("init_testfile"),
+        edit_line => insert_lines("# Set ");
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "template" string => "$(this.promise_filename).mustache";
+      # This generates an error rendering, but the render continues anyway
+      "template_data" string => '{"mykeys": "string but template expects list of strings"}';
+      
+      # This works, and produces no error
+      #"template_data" string => '{"mykeys": ["string but template expects list of strings"]}';
+
+    test_testfile_ok::
+      "testfile_inode" string => filestat($(G.testfile), "ino");
+
+  files:
+      "$(G.testfile)"
+        create => "true",
+        edit_defaults => empty,
+        classes => classes_generic("test_testfile"),
+        edit_template => "$(template)",
+        template_method => "mustache",
+        template_data => parsejson($(template_data));
+
+  reports:
+    DEBUG::
+      "Rendering template file $(template) to $(G.testfile)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected" string => "#DO NOT EDIT - MANAGED FILE
+string but template expects list of strings$(const.n)";
+
+      "actual" string => readfile("$(G.testfile)", 4096);
+
+      "testfile_inode" string => filestat($(G.testfile), "ino");
+
+      "inodes" slist => { "$(check.testfile_inode)", "$(init_inode1.testfile_inode)", "$(init_inode2.testfile_inode)" };
+
+      "unique_inodes" slist => unique("inodes");
+      "num_unique_inodes" int => length(unique_inodes);
+
+
+  classes:
+      "ok_different_inode" expression => strcmp("3", "num_unique_inodes");
+
+      "ok_content" expression => regcmp("$(expected)", "$(actual)");
+
+      "ok" and => { ok_different_inode, ok_content };
+
+  reports:
+    DEBUG::
+      "inode: $(inodes)";
+      "unique inode: $(unique_inodes)";
+      "OK: Expected  '$(expected)' == '$(actual)'"
+      ifvarclass => "ok_content";
+
+      "OK: Expected different inode for $(G.testfile) in init_inode1, init_inode2 and check after template rendering."
+      ifvarclass => "ok_different_inode";
+
+      "FAIL: Expected '$(expected)' <> '$(actual)'"
+      ifvarclass => "!ok_content";
+
+      "FAIL: Expected different inode for $(G.testfile) in init_inode1, init_inode2 and check after template rendering.
+Got init_inode1: $(init_inode1.testfile_inode), init_inode2: $(init_inode2.testfile_inode), check: $(check.testfile_inode)"
+      ifvarclass => "!ok_different_inode";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

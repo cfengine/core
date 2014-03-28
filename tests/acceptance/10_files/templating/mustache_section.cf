@@ -24,8 +24,7 @@ bundle agent init
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_output(".*Mustache sections can only take a boolean or a container.+value, but section 'x' isn't getting one of those.*",
-                                        "",
+      "" usebundle => dcs_passif_output1(".*Mustache sections can only take a boolean or a container.+value, but section 'x' isn't getting one of those.*",
                                         "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | grep Mustache",
                                         $(this.promise_filename));
 }

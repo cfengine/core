@@ -18,6 +18,19 @@ body common control
 
 bundle agent init
 {
+  methods:
+    "Get first inode"
+      usebundle => init_inode1;
+
+    "Remove file"
+      usebundle => dcs_fini($(G.testfile));
+
+    "Get second inode"
+      usebundle => init_inode2;
+}
+
+bundle agent init_inode1
+{
   vars:
     init_testfile_ok::
       "testfile_inode" string => filestat($(G.testfile), "ino");
@@ -25,18 +38,23 @@ bundle agent init
   files:
       "$(G.testfile)"
         create => "true",
-        edit_defaults => test_empty, 
-        classes => test_classes_generic("init_testfile"),
-        edit_line => init_insert_lines("# Some pre-existing content");
-
+        edit_defaults => empty, 
+        classes => classes_generic("init_testfile"),
+        edit_line => insert_lines("# Ready ");
 }
 
-bundle edit_line init_insert_lines(lines)
+bundle agent init_inode2
 {
-  insert_lines:
+  vars:
+    init_testfile_ok::
+      "testfile_inode" string => filestat($(G.testfile), "ino");
 
-      "$(lines)"
-      comment => "Append lines if they don't exist";
+  files:
+      "$(G.testfile)"
+        create => "true",
+        edit_defaults => empty, 
+        classes => classes_generic("init_testfile"),
+        edit_line => insert_lines("# Set ");
 }
 
 #######################################################
@@ -57,8 +75,8 @@ bundle agent test
   files:
       "$(G.testfile)"
         create => "true",
-        edit_defaults => test_empty,
-        classes => test_classes_generic("test_testfile"),
+        edit_defaults => empty,
+        classes => classes_generic("test_testfile"),
         edit_template => "$(template)",
         template_method => "mustache",
         template_data => parsejson($(template_data));
@@ -67,22 +85,6 @@ bundle agent test
     DEBUG::
       "Rendering template file $(template) to $(G.testfile)";
 }
-
-body edit_defaults test_empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
-body classes test_classes_generic(x)
-{
-      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
-}
-
 
 #######################################################
 
@@ -96,8 +98,14 @@ string but template expects list of strings$(const.n)";
 
       "testfile_inode" string => filestat($(G.testfile), "ino");
 
+      "inodes" slist => { "$(check.testfile_inode)", "$(init_inode1.testfile_inode)", "$(init_inode2.testfile_inode)" };
+
+      "unique_inodes" slist => unique("inodes");
+      "num_unique_inodes" int => length(unique_inodes);
+
+
   classes:
-      "ok_different_inode" not => strcmp("$(testfile_inode)", "$(init.testfile_inode)");
+      "ok_different_inode" expression => strcmp("3", "num_unique_inodes");
 
       "ok_content" expression => regcmp("$(expected)", "$(actual)");
 
@@ -105,16 +113,19 @@ string but template expects list of strings$(const.n)";
 
   reports:
     DEBUG::
+      "inode: $(inodes)";
+      "unique inode: $(unique_inodes)";
       "OK: Expected  '$(expected)' == '$(actual)'"
       ifvarclass => "ok_content";
 
-      "OK: Expected different inode for $(G.testfile) in init and check after template rendering. init:$(init.testfile_inode) != check:$(testfile_inode)"
+      "OK: Expected different inode for $(G.testfile) in init_inode1, init_inode2 and check after template rendering."
       ifvarclass => "ok_different_inode";
 
       "FAIL: Expected '$(expected)' <> '$(actual)'"
       ifvarclass => "!ok_content";
 
-      "FAIL: Expected different inode for $(G.testfile) in init and check after template rendering. init:$(init.testfile_inode) == check:$(testfile_inode)"
+      "FAIL: Expected different inode for $(G.testfile) in init_inode1, init_inode2 and check after template rendering.
+Got init_inode1: $(init_inode1.testfile_inode), init_inode2: $(init_inode2.testfile_inode), check: $(check.testfile_inode)"
       ifvarclass => "!ok_different_inode";
 
     ok::

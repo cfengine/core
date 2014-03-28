@@ -5209,6 +5209,98 @@ static FnCallResult FnCallNow(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Poli
 
 /*********************************************************************/
 
+#ifdef __sun /* Lacks %P and */
+#define STRFTIME_s_HACK
+#define STRFTIME_R_HACK
+#endif /* http://www.unix.com/man-page/opensolaris/3c/strftime/ */
+
+#ifdef __hpux /* Unknown gaps, aside from: */
+#define STRFTIME_F_HACK
+#endif
+
+#ifdef _WIN32 /* Has non-standard %z, lacks %[CDeGghklnPrRtTuV] and: */
+#define STRFTIME_F_HACK
+#define STRFTIME_R_HACK
+#define STRFTIME_s_HACK
+#endif /* http://msdn.microsoft.com/en-us/library/fe06s4ak.aspx */
+
+bool PortablyFormatTime(char *buffer, size_t bufsiz,
+                        const char *format,
+#ifndef STRFTIME_s_HACK
+                        ARG_UNUSED
+#endif
+                        time_t when,
+                        const struct tm *tm)
+{
+    /* TODO: might be better done in a libcompat wrapper.
+     *
+     * The following GNU extensions may be worth adding at some point;
+     * see individual platforms for lists of which they lack.
+     *
+     * %C (century)
+     * %D => %m/%d/%y
+     * %e: as %d but s/^0/ /
+     * %G: like %Y but frobbed for ISO week numbers
+     * %g: last two digits of %G
+     * %h => %b
+     * %k: as %H but s/^0/ /
+     * %l: as %I but s/^0/ /
+     * %n => \n
+     * %P: as %p but lower-cased
+     * %r => %I:%M:%S %p
+     * %s: seconds since epoch
+     * %t => \t
+     * %T => %H:%M:%S
+     * %u: dow, {1: Mon, ..., Sun: 7}
+     * %V: ISO week number within year %G
+     *
+     * The "=>" ones can all be done by extending expansion[], below;
+     * the rest would require actually implementing GNU strftime()
+     * properly.
+     */
+
+#ifdef STRFTIME_s_HACK /* %s: seconds since epoch */
+    char epoch[PRINTSIZE(when)];
+    sprintf(epoch, "%" PRIdMAX, (intmax_t)when);
+#endif /* STRFTIME_s_HACK */
+
+    typedef char * SearchReplacePair[2];
+    SearchReplacePair expansion[] =
+        {
+            /* Each pair is { search, replace }. */
+#ifdef STRFTIME_F_HACK
+            { "%F", "%Y-%m-%d" },
+#endif
+#ifdef STRFTIME_R_HACK /* %R => %H:%M:%S */
+            { "%R", "%H:%M:%S" },
+#endif
+#ifdef STRFTIME_s_HACK
+            { "%s", epoch },
+#endif
+
+            /* Order as in GNU strftime's man page. */
+            { NULL, NULL }
+        };
+
+    char *delenda = NULL; /* in need of destruction */
+    /* No-op when no STRFTIME_*_HACK were defined. */
+    for (size_t i = 0; expansion[i][0]; i++)
+    {
+        char *tmp = SearchAndReplace(format, expansion[i][0], expansion[i][1]);
+        free(delenda);
+        format = delenda = tmp;
+    }
+
+    size_t ans = strftime(buffer, bufsiz, format, tm);
+    free(delenda);
+    return ans > 0;
+}
+#undef STRFTIME_F_HACK
+#undef STRFTIME_R_HACK
+#undef STRFTIME_s_HACK
+
+/*********************************************************************/
+
 static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     /* begin fn-specific content */
@@ -5217,9 +5309,6 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     char *format_string = RlistScalarValue(finalargs->next);
     // this will be a problem on 32-bit systems...
     const time_t when = IntFromString(RlistScalarValue(finalargs->next->next));
-
-    char buffer[CF_BUFSIZE];
-    buffer[0] = '\0';
 
     struct tm* tm;
 
@@ -5232,35 +5321,20 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         tm = localtime(&when);
     }
 
-    if (tm != NULL)
-    {
-        char *delenda = NULL;
-        const char* fmt = format_string;
-        /* HP-UX needs to replace "%F" with "%Y-%m-%d".
-         * Solaris needs to replace "%s" with number of seconds since epoch.
-         * TODO: might be better done in a libcompat wrapper.
-         */
-#ifdef __sun
-        char epoch[PRINTSIZE(when)];
-        sprintf(epoch, "%" PRIdMAX, (intmax_t)when);
-        delenda = SearchAndReplace(fmt, "%s", epoch);
-        fmt = delenda;
-#endif
-#ifdef __hpux
-        delenda = SearchAndReplace(fmt, "%F", "%Y-%m-%d");
-        fmt = delenda;
-#endif
-        strftime(buffer, sizeof(buffer), fmt, tm);
-        free(delenda);
-    }
-    else
+    char buffer[CF_BUFSIZE];
+    if (tm == NULL)
     {
         Log(LOG_LEVEL_WARNING,
             "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)",
             when, GetErrorStr());
     }
+    else if (PortablyFormatTime(buffer, sizeof(buffer),
+                                format_string, when, tm))
+    {
+        return FnReturn(buffer);
+    }
 
-    return FnReturn(buffer);
+    return FnFailure();
 }
 
 /*********************************************************************/

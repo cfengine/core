@@ -363,7 +363,14 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             }
             ThreadUnlock(cft_server_children);
         }
-
+        if (LSD_MAXREADERS < CFD_MAXPROCESSES)
+        {
+            int rc = UpdateLastSeenMaxReaders(CFD_MAXPROCESSES);
+            if (rc == 0)
+            {
+                LSD_MAXREADERS = CFD_MAXPROCESSES;
+            }
+        }
         /* Check whether we have established peering with a hub */
         if (CollectCallHasPending())
         {

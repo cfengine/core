@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
 
     ThisAgentInit();
     KeepPromises(ctx, policy, config);
+    UpdateLastSeenMaxReaders(CFD_MAXPROCESSES);
     Summarize();
 
     Log(LOG_LEVEL_NOTICE, "Server is starting...");

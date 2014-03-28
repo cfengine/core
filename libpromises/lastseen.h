@@ -37,6 +37,8 @@ typedef enum
     LAST_SEEN_ROLE_ACCEPT
 } LastSeenRole;
 
+int UpdateLastSeenMaxReaders(int maxreaders);
+
 bool Address2Hostkey(const char *address, char *hostkey);
 
 void LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);

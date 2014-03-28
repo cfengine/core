@@ -5301,7 +5301,10 @@ bool PortablyFormatTime(char *buffer, size_t bufsiz,
 
 /*********************************************************************/
 
-static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
+                                   ARG_UNUSED const Policy *policy,
+                                   const FnCall *fp,
+                                   const Rlist *finalargs)
 {
     /* begin fn-specific content */
 
@@ -5325,8 +5328,8 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     if (tm == NULL)
     {
         Log(LOG_LEVEL_WARNING,
-            "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)",
-            when, GetErrorStr());
+            "Function %s, the given time stamp '%ld' was invalid. (strftime: %s)",
+            fp->name, when, GetErrorStr());
     }
     else if (PortablyFormatTime(buffer, sizeof(buffer),
                                 format_string, when, tm))

@@ -2543,122 +2543,34 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
         }
     }
 
-    Seq *containers = SeqNew(10, NULL);
-    Seq *toremove = SeqNew(10, &JsonDestroy);
+    Seq *containers = SeqNew(10, &JsonDestroy);
 
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
-        VarRef *ref = VarRefParse(RlistScalarValue(arg));
-        if (!VarRefIsQualified(ref))
+        VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(arg));
+        if (!ref)
         {
-            if (fp->caller)
-            {
-                const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
-                VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
-            }
-            else
-            {
-                Log(LOG_LEVEL_WARNING, "Function '%s'' was given an unqualified variable reference, "
-                    "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
-                    fp->name, RlistScalarValue(arg));
-                VarRefDestroy(ref);
-                SeqDestroy(containers);
-                SeqDestroy(toremove);
-                return FnFailure();
-            }
+            SeqDestroy(containers);
+            return FnFailure();
         }
 
-        DataType value_type = CF_DATA_TYPE_NONE;
-        const void *value = EvalContextVariableGet(ctx, ref, &value_type);
-
-        switch (DataTypeToRvalType(value_type))
-        {
-        case RVAL_TYPE_LIST:
-            {
-                JsonElement *convert = JsonArrayCreate(10);
-                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
-                {
-                    if (rp->val.type == RVAL_TYPE_SCALAR &&
-                        strcmp(RlistScalarValue(value), CF_NULL_VALUE) != 0)
-                    {
-                        JsonArrayAppendString(convert, RlistScalarValue(rp));
-                    }
-                }
-                SeqAppend(containers, convert);
-                SeqAppend(toremove, convert);
-            }
-        break;
-
-        case RVAL_TYPE_CONTAINER:
-            SeqAppend(containers, (void *)value);
-            break;
-        default:
-        {
-            VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
-            JsonElement *convert = JsonObjectCreate(10);
-            Variable *var;
-            while ((var = VariableTableIteratorNext(iter)))
-            {
-                if (var->ref->num_indices != 1)
-                {
-                    continue;
-                }
-
-                switch (var->rval.type)
-                {
-                case RVAL_TYPE_SCALAR:
-                    JsonObjectAppendString(convert, var->ref->indices[0], var->rval.item);
-                    break;
-
-                case RVAL_TYPE_LIST:
-                {
-                    JsonElement *array = JsonArrayCreate(10);
-                    for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
-                    {
-                        if (rp->val.type == RVAL_TYPE_SCALAR &&
-                            strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
-                        {
-                            JsonArrayAppendString(array, RlistScalarValue(rp));
-                        }
-                    }
-                    JsonObjectAppendArray(convert, var->ref->indices[0], array);
-                }
-                break;
-
-                default:
-                    break;
-                }
-            }
-
-            VariableTableIteratorDestroy(iter);
-
-            if (JsonLength(convert) < 1)
-            {
-                Log(LOG_LEVEL_VERBOSE, "%s: argument '%s' does not resolve to a container or a list or a CFEngine array", fp->name, RlistScalarValue(arg));
-                SeqDestroy(containers);
-                VarRefDestroy(ref);
-                SeqDestroy(toremove);
-                JsonDestroy(convert);
-                return FnFailure();
-            }
-            else
-            {
-                SeqAppend(containers, convert);
-                SeqAppend(toremove, convert);
-            }
-            break;
-        } // end of default case
-
-        } // end of data type switch
-
+        JsonElement *json = VarRefValueToJson(ctx, fp, ref, NULL, 0);
         VarRefDestroy(ref);
+
+        if (!json)
+        {
+            SeqDestroy(containers);
+            return FnFailure();
+        }
+
+        SeqAppend(containers, json);
+
     } // end of args loop
 
     if (SeqLength(containers) == 1)
     {
         JsonElement *first = JsonCopy(SeqAt(containers, 0));
         SeqDestroy(containers);
-        SeqDestroy(toremove);
         return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { first, RVAL_TYPE_CONTAINER } };
     }
     else
@@ -2676,7 +2588,6 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
         }
 
         SeqDestroy(containers);
-        SeqDestroy(toremove);
         return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
     }
 
@@ -3734,7 +3645,7 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
 
     JsonElement *json = VarRefValueToJson(ctx, fp, ref, NULL, 0);
     VarRefDestroy(ref);
- 
+
     if (!json)
     {
         return FnFailure();

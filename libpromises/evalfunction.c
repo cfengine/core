@@ -7126,7 +7126,7 @@ static const FnCallArg PEERLEADER_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name of host list"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Comment regex pattern"},
-    {CF_VALRANGE, CF_DATA_TYPE_INT, "Peer group size"},
+    {"2,64", CF_DATA_TYPE_INT, "Peer group size"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

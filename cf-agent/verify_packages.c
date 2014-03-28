@@ -511,6 +511,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
         {
             if (!FullTextMatch(ctx, a.packages.package_installed_regex, buf))
             {
+                Log(LOG_LEVEL_VERBOSE, "Package line '%s' did not match the package_installed_regex pattern", buf);
                 continue;
             }
 

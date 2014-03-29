@@ -54,6 +54,7 @@ static void SetBundleAborted(EvalContext *ctx);
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
+static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags);
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
@@ -220,64 +221,6 @@ static const char *GetAgentAbortingContext(const EvalContext *ctx)
         }
     }
     return NULL;
-}
-
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns, const char *tags)
-{
-    char context_copy[CF_MAXVARSIZE];
-    char canonified_context[CF_MAXVARSIZE];
-
-    strcpy(canonified_context, context);
-    if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-    }
-    CanonifyNameInPlace(canonified_context);
-
-    if (ns && strcmp(ns, "default") != 0)
-    {
-        snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
-    }
-    else
-    {
-        strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
-    }
-
-    if (strlen(context_copy) == 0)
-    {
-        return;
-    }
-
-    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
-    {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
-        SetBundleAborted(ctx);
-    }
-
-    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
-    {
-        FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
-    }
-
-    if (EvalContextHeapContainsSoft(ctx, ns, canonified_context))
-    {
-        return;
-    }
-
-    ClassTablePut(ctx->global_classes, ns, canonified_context, true, CONTEXT_SCOPE_NAMESPACE, tags);
-
-    if (!BundleAborted(ctx))
-    {
-        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
-        {
-            if (IsDefinedClass(ctx, ip->name))
-            {
-                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context_copy);
-                SetBundleAborted(ctx);
-                break;
-            }
-        }
-    }
 }
 
 static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, const char *tags)
@@ -625,7 +568,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
             Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
 
             ClassRef ref = ClassRefParse(key);
-            EvalContextHeapAddSoft(ctx, ref.name, ref.ns, tags);
+            EvalContextClassPut(ctx, ref.ns, ref.name, true, CONTEXT_SCOPE_NAMESPACE, tags);
 
             StringSet *tag_set = EvalContextClassTags(ctx, ref.ns, ref.name);
             assert(tag_set);
@@ -2140,7 +2083,8 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
     return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
 }
 
-static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, unsigned int persistence_ttl, PersistentClassPolicy policy, ContextScope context_scope)
+static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int persistence_ttl,
+                          PersistentClassPolicy policy, ContextScope context_scope)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
@@ -2181,7 +2125,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
 
             case CONTEXT_SCOPE_NONE:
             case CONTEXT_SCOPE_NAMESPACE:
-                EvalContextHeapAddSoft(ctx, classname, ns, "");
+                EvalContextClassPutSoft(ctx, classname, CONTEXT_SCOPE_NAMESPACE, "");
                 break;
 
             default:
@@ -2227,7 +2171,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TrackTotalCompliance, ARG_UNUSED Pro
 {
 }
 
-static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
+static void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, DefineClasses dc)
 {
     Rlist *add_classes = NULL;
     Rlist *del_classes = NULL;
@@ -2269,7 +2213,7 @@ static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, con
         ProgrammingError("Unexpected status '%c' has been passed to SetPromiseOutcomeClasses", status);
     }
 
-    AddAllClasses(ctx, PromiseGetNamespace(pp), add_classes, dc.persist, dc.timer, dc.scope);
+    AddAllClasses(ctx, add_classes, dc.persist, dc.timer, dc.scope);
     DeleteAllClasses(ctx, del_classes);
 }
 
@@ -2423,7 +2367,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
         UpdatePromiseCounters(status);
     }
 
-    SetPromiseOutcomeClasses(status, ctx, pp, attr.classes);
+    SetPromiseOutcomeClasses(ctx, status, attr.classes);
     DoSummarizeTransaction(ctx, status, pp, attr.transaction);
 }
 

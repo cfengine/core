@@ -666,6 +666,11 @@ void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *
     {
         AppendItem(&ctx->heap_abort, context, activated_on_context);
     }
+
+    if (GetAgentAbortingContext(ctx))
+    {
+        FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
+    }
 }
 
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context)
@@ -1243,11 +1248,6 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     }
 
     SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
-
-    if (GetAgentAbortingContext(ctx))
-    {
-        FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
-    }
 
     last_frame = LastStackFrame(ctx, 0);
     if (last_frame)

@@ -136,25 +136,40 @@ Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name)
     return RBTreeGet(table->classes, (void *)hash);
 }
 
-static bool ClassRefMatch(const char *ns, const char *name, const char *regex)
-{
-    char *class_expr = ClassRefToString(ns, name);
-    bool matched = StringMatchFull(regex, class_expr);
-    free(class_expr);
-    return matched;
-}
-
 Class *ClassTableMatch(const ClassTable *table, const char *regex)
 {
     ClassTableIterator *it = ClassTableIteratorNew(table, NULL, true, true);
     Class *cls = NULL;
+
+    pcre *pattern = CompileRegex(regex);
+    if (pattern == NULL)
+    {
+        // TODO: perhaps pcre has can give more info on this error?
+        Log(LOG_LEVEL_ERR, "Unable to pcre compile regex '%s'", regex);
+        return false;
+    }
+
     while ((cls = ClassTableIteratorNext(it)))
     {
-        if (ClassRefMatch(cls->ns, cls->name, regex))
+        bool matched;
+        if (cls->ns)
+        {
+            char *class_expr = ClassRefToString(cls->ns, cls->name);
+            matched = StringMatchFullWithPrecompiledRegex(pattern, class_expr);
+            free(class_expr);
+        }
+        else
+        {
+            matched = StringMatchFullWithPrecompiledRegex(pattern, cls->name);
+        }
+
+        if (matched)
         {
             break;
         }
     }
+
+    pcre_free(pattern);
 
     ClassTableIteratorDestroy(it);
     return cls;

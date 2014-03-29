@@ -455,9 +455,24 @@ bool StringMatch(const char *regex, const char *str, int *start, int *end)
 
 bool StringMatchFull(const char *regex, const char *str)
 {
+    pcre *pattern = CompileRegex(regex);
+
+    if (pattern == NULL)
+    {
+        return false;
+    }
+
+    bool ret = StringMatchFullWithPrecompiledRegex(pattern, str);
+
+    pcre_free(pattern);
+    return ret;
+}
+
+bool StringMatchFullWithPrecompiledRegex(pcre *pattern, const char *str)
+{
     int start = 0, end = 0;
 
-    if (StringMatch(regex, str, &start, &end))
+    if (StringMatchWithPrecompiledRegex(pattern, str, &start, &end))
     {
         return (start == 0) && (end == strlen(str));
     }

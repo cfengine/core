@@ -71,6 +71,7 @@ bool StringMatch(const char *regex, const char *str, int *start, int *end);
 bool StringMatchWithPrecompiledRegex(pcre *regex, const char *str, int *start, int *end);
 pcre *CompileRegex(const char *regex);
 bool StringMatchFull(const char *regex, const char *str);
+bool StringMatchFullWithPrecompiledRegex(pcre *regex, const char *str);
 Seq *StringMatchCaptures(const char *regex, const char *str);
 
 bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const char *to);

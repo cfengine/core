@@ -47,6 +47,11 @@ static const ConstraintSyntax linkservice_constraints[] =
     ConstraintSyntaxNewOption("ospf_service_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "OSPF interface type", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_authentication_digest", CF_ANYSTRING, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_passive_interface", "No service updates over this channel", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_area_type", "stub,nssa", "Stub type area", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_area_authentication_digest", CF_ANYSTRING, "Authentication digest", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_substitute_prefix", CF_ANYSTRING, "Replacement prefix during rewriting", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_prefix_range", CF_ANYSTRING, "Search prefix during route rewriting", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -64,7 +69,6 @@ static const ConstraintSyntax interface_constraints[] =
     ConstraintSyntaxNewStringList("tagged_vlans", "", "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("untagged_vlan", CF_IDRANGE, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("ipv4_addresses", CF_IPRANGE, "A static IPV4 address", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ipv4_broadcast", CF_IPRANGE, "A static IPV4 address for broadcast messages", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("ipv6_addresses", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_services", &linkservice_body, "Services configured on the interface", SYNTAX_STATUS_NORMAL),
@@ -76,12 +80,6 @@ static const ConstraintSyntax interface_constraints[] =
 
 static const ConstraintSyntax advertised_as[] =
 {
-    ConstraintSyntaxNewBool("ospf_stub", "Stub area", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_area_authentication_digest", CF_ANYSTRING, "Authentication digest", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_substitute_prefix", CF_ANYSTRING, "Replacement prefix during rewriting", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_prefix_range", CF_ANYSTRING, "Search prefix during route rewriting", SYNTAX_STATUS_NORMAL),
-
     ConstraintSyntaxNewNull()
 };
 

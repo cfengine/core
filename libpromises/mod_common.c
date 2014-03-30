@@ -395,7 +395,7 @@ const ConstraintSyntax file_control_constraints[] =  /* enum cfh_control */
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax routes_control_constraints[] =  /* enum cfh_control */
+const ConstraintSyntax ospf_control_constraints[] =  /* enum cfh_control */
 {
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
@@ -469,7 +469,7 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew("file", file_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew("routes", routes_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew("ospf", ospf_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
     BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),

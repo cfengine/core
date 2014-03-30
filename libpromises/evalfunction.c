@@ -782,6 +782,8 @@ static FnCallResult FnCallConcat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 static FnCallResult FnCallClassMatch(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     const char *regex = RlistScalarValue(finalargs);
+    pcre *rx = CompileRegex(regex);
+
     {
         ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
         Class *cls = NULL;
@@ -790,16 +792,22 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, ARG_UNUSED const Policy *
             char *expr = ClassRefToString(cls->ns, cls->name);
 
             /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
+            if (!strcmp(regex, expr) ||
+                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
             {
                 free(expr);
                 ClassTableIteratorDestroy(iter);
+                if (rx)
+                {
+                    pcre_free(rx);
+                }
                 return FnReturnContext(true);
             }
 
             free(expr);
         }
         ClassTableIteratorDestroy(iter);
+
     }
 
     {
@@ -810,10 +818,15 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, ARG_UNUSED const Policy *
             char *expr = ClassRefToString(cls->ns, cls->name);
 
             /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex,expr) || StringMatchFull(regex, expr))
+            if (!strcmp(regex,expr) ||
+                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
             {
                 free(expr);
                 ClassTableIteratorDestroy(iter);
+                if (rx)
+                {
+                    pcre_free(rx);
+                }
                 return FnReturnContext(true);
             }
 
@@ -822,6 +835,10 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, ARG_UNUSED const Policy *
         ClassTableIteratorDestroy(iter);
     }
 
+    if (rx)
+    {
+        pcre_free(rx);
+    }
     return FnReturnContext(false);
 }
 
@@ -879,6 +896,8 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, ARG_UNUSED cons
 {
     unsigned count = 0;
     const char *regex = RlistScalarValue(finalargs);
+    pcre *rx = CompileRegex(regex);
+
     {
         ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
         Class *cls = NULL;
@@ -887,7 +906,8 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, ARG_UNUSED cons
             char *expr = ClassRefToString(cls->ns, cls->name);
 
             /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
+            if (!strcmp(regex, expr) ||
+                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
             {
                 count++;
             }
@@ -905,7 +925,8 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, ARG_UNUSED cons
             char *expr = ClassRefToString(cls->ns, cls->name);
 
             /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
+            if (!strcmp(regex, expr) ||
+                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
             {
                 count++;
             }
@@ -915,6 +936,10 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, ARG_UNUSED cons
         ClassTableIteratorDestroy(iter);
     }
 
+    if (rx)
+    {
+        pcre_free(rx);
+    }
     return FnReturnF("%u", count);
 }
 
@@ -925,13 +950,16 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
     StringSet *matching = StringSetNew();
 
     const char *regex = RlistScalarValue(args);
+    pcre *rx = CompileRegex(regex);
+
     Class *cls = NULL;
     while ((cls = ClassTableIteratorNext(iter)))
     {
         char *expr = ClassRefToString(cls->ns, cls->name);
 
         /* FIXME: review this strcmp. Moved out from StringMatch */
-        if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
+        if (!strcmp(regex, expr) ||
+            (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
         {
             bool pass = false;
             StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
@@ -973,6 +1001,11 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
         {
             free(expr);
         }
+    }
+
+    if (rx)
+    {
+        pcre_free(rx);
     }
 
     return matching;
@@ -1040,13 +1073,16 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
     StringSet *matching = StringSetNew();
 
     const char *regex = RlistScalarValue(args);
+    pcre *rx = CompileRegex(regex);
+
     Variable *v = NULL;
     while ((v = VariableTableIteratorNext(iter)))
     {
         char *expr = VarRefToString(v->ref, true);
 
         /* FIXME: review this strcmp. Moved out from StringMatch */
-        if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
+        if (!strcmp(regex, expr) ||
+            (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
         {
             StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
             bool pass = false;
@@ -1088,6 +1124,11 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
         {
             free(expr);
         }
+    }
+
+    if (rx)
+    {
+        pcre_free(rx);
     }
 
     return matching;
@@ -1189,20 +1230,21 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
     }
 
     const char *regex = RlistScalarValue(finalargs);
+    pcre *rx = CompileRegex(regex);
+    if (!rx)
+    {
+        return FnFailure();
+    }
+
     const Rlist *tag_args = finalargs->next;
 
     Rlist *matches = NULL;
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bp = SeqAt(policy->bundles, i);
-        if (!bp)
-        {
-            FatalError(ctx, "Function '%s' found null bundle at %llu",
-                       fp->name, (unsigned long long)i);
-        }
 
         char *bundle_name = BundleQualifiedName(bp);
-        if (StringMatchFull(regex, bundle_name))
+        if (StringMatchFullWithPrecompiledRegex(rx, bundle_name))
         {
             VarRef *ref = VarRefParseFromBundle("tags", bp);
             VarRefSetMeta(ref, true);
@@ -1250,6 +1292,8 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
         free(bundle_name);
     }
+
+    pcre_free(rx);
 
     if (!matches)
     {
@@ -1762,7 +1806,6 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
 static FnCallResult FnCallRegList(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     const char *listvar = RlistScalarValue(finalargs);
-    const char *regex = RlistScalarValue(finalargs->next);
 
     if (!IsVarList(listvar))
     {
@@ -1792,6 +1835,12 @@ static FnCallResult FnCallRegList(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
+    pcre *rx = CompileRegex(RlistScalarValue(finalargs->next));
+    if (!rx)
+    {
+        return FnFailure();
+    }
+
     for (const Rlist *rp = value; rp != NULL; rp = rp->next)
     {
         if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
@@ -1799,12 +1848,14 @@ static FnCallResult FnCallRegList(EvalContext *ctx, ARG_UNUSED const Policy *pol
             continue;
         }
 
-        if (StringMatchFull(regex, RlistScalarValue(rp)))
+        if (StringMatchFullWithPrecompiledRegex(rx, RlistScalarValue(rp)))
         {
+            pcre_free(rx);
             return FnReturnContext(true);
         }
     }
 
+    pcre_free(rx);
     return FnReturnContext(false);
 }
 
@@ -1813,7 +1864,11 @@ static FnCallResult FnCallRegList(EvalContext *ctx, ARG_UNUSED const Policy *pol
 static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     char *arrayname = RlistScalarValue(finalargs);
-    char *regex = RlistScalarValue(finalargs->next);
+    pcre *rx = CompileRegex(RlistScalarValue(finalargs->next));
+    if (!rx)
+    {
+        return FnFailure();
+    }
 
     VarRef *ref = VarRefParse(arrayname);
     bool found = false;
@@ -1823,13 +1878,14 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED const Policy *po
     Variable *var = NULL;
     while ((var = VariableTableIteratorNext(iter)))
     {
-        if (StringMatchFull(regex, RvalScalarValue(var->rval)))
+        if (StringMatchFullWithPrecompiledRegex(rx, RvalScalarValue(var->rval)))
         {
             found = true;
             break;
         }
     }
     VariableTableIteratorDestroy(iter);
+    pcre_free(rx);
 
     return FnReturnContext(found);
 }
@@ -2187,7 +2243,12 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
                                     const FnCall *fp,
                                     const Rlist *finalargs)
 {
-    const char *regex = RlistScalarValue(finalargs);
+    pcre *rx = CompileRegex(RlistScalarValue(finalargs));
+    if (!rx)
+    {
+        return FnFailure();
+    }
+
     const char *filename = RlistScalarValue(finalargs->next);
     const char *split = RlistScalarValue(finalargs->next->next);
     const char *array_lval = RlistScalarValue(finalargs->next->next->next);
@@ -2196,6 +2257,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
     if (!fin)
     {
         Log(LOG_LEVEL_ERR, "File '%s' could not be read in getfields(). (fopen: %s)", filename, GetErrorStr());
+        pcre_free(rx);
         return FnFailure();
     }
 
@@ -2206,7 +2268,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
 
     while (CfReadLine(&line, &line_size, fin) != -1)
     {
-        if (!StringMatchFull(regex, line))
+        if (!StringMatchFullWithPrecompiledRegex(rx, line))
         {
             continue;
         }
@@ -2236,6 +2298,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
                         VarRefDestroy(ref);
                         free(line);
                         RlistDestroy(newlist);
+                        pcre_free(rx);
                         return FnFailure();
                     }
                 }
@@ -2252,6 +2315,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
         line_count++;
     }
 
+    pcre_free(rx);
     free(line);
 
     if (!feof(fin))
@@ -2270,25 +2334,30 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
 
 static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    int lcount = 0;
-    FILE *fin;
+    pcre *rx = CompileRegex(RlistScalarValue(finalargs));
+    if (!rx)
+    {
+        return FnFailure();
+    }
 
-    char *regex = RlistScalarValue(finalargs);
     char *filename = RlistScalarValue(finalargs->next);
 
-    if ((fin = safe_fopen(filename, "rt")) == NULL)
+    FILE *fin = safe_fopen(filename, "rt");
+    if (!fin)
     {
         Log(LOG_LEVEL_VERBOSE, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
+        pcre_free(rx);
         return FnReturn("0");
     }
 
+    int lcount = 0;
     {
         size_t line_size = CF_BUFSIZE;
         char *line = xmalloc(line_size);
 
         while (CfReadLine(&line, &line_size, fin) != -1)
         {
-            if (StringMatchFull(regex, line))
+            if (StringMatchFullWithPrecompiledRegex(rx, line))
             {
                 lcount++;
                 Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched '%s'", line);
@@ -2298,6 +2367,8 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
 
         free(line);
     }
+
+    pcre_free(rx);
 
     if (!feof(fin))
     {
@@ -3319,6 +3390,17 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                                    bool invert,
                                    long max)
 {
+    pcre *rx = NULL;
+    if (do_regex)
+    {
+        rx = CompileRegex(regex);
+        if (!rx)
+        {
+            return FnFailure();
+        }
+    }
+
+
     DataType type = CF_DATA_TYPE_NONE;
     VarRef *ref = VarRefParse(name);
     const void *value = EvalContextVariableGet(ctx, ref, &type);
@@ -3327,6 +3409,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     {
         Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' did not resolve to a variable",
             fp->name, name);
+        pcre_free(rx);
         return FnFailure();
     }
 
@@ -3351,6 +3434,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     default:
         Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
             fp->name, name, DataTypeToString(type));
+        pcre_free(rx);
         return FnFailure();
     }
 
@@ -3365,11 +3449,11 @@ static FnCallResult FilterInternal(EvalContext *ctx,
 
             if (do_regex)
             {
-                found = StringMatchFull(regex, RlistScalarValue(rp));
+                found = StringMatchFullWithPrecompiledRegex(rx, RlistScalarValue(rp));
             }
             else
             {
-                found = (0==strcmp(regex, RlistScalarValue(rp)));
+                found = (0 == strcmp(regex, RlistScalarValue(rp)));
             }
 
             if (invert ? !found : found)
@@ -3405,7 +3489,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                     bool found;
                     if (do_regex)
                     {
-                        found = StringMatchFull(regex, val);
+                        found = StringMatchFullWithPrecompiledRegex(rx, val);
                     }
                     else
                     {
@@ -3435,6 +3519,11 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                 }
             }
         }
+    }
+
+    if (rx)
+    {
+        pcre_free(rx);
     }
 
     bool contextmode = 0;
@@ -4807,12 +4896,18 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
 
 static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char *arg_regex = RlistScalarValue(finalargs);
+    pcre *rx = CompileRegex(RlistScalarValue(finalargs));
+    if (!rx)
+    {
+        return FnFailure();
+    }
+
     const char *arg_filename = RlistScalarValue(finalargs->next);
 
     FILE *fin = safe_fopen(arg_filename, "rt");
     if (!fin)
     {
+        pcre_free(rx);
         return FnReturnContext(false);
     }
 
@@ -4821,14 +4916,16 @@ static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
 
     while (CfReadLine(&line, &line_size, fin) != -1)
     {
-        if (StringMatchFull(arg_regex, line))
+        if (StringMatchFullWithPrecompiledRegex(rx, line))
         {
             free(line);
             fclose(fin);
+            pcre_free(rx);
             return FnReturnContext(true);
         }
     }
 
+    pcre_free(rx);
     free(line);
 
     if (!feof(fin))

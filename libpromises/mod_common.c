@@ -388,19 +388,22 @@ const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax file_control_constraints[] =  /* enum cfh_control */
+const ConstraintSyntax file_control_constraints[] =
 {
     ConstraintSyntaxNewString("namespace", CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax ospf_control_constraints[] =  /* enum cfh_control */
+const ConstraintSyntax ospf_control_constraints[] =
 {
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-
+    ConstraintSyntaxNewInt("ospf_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_router_id", CF_ANYSTRING, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_log_file", CF_ANYSTRING, "Log file for OSPF messages, if supported on platform", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_stub", "Mark current OSPF area a stub", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ospf_log_neighbor_changes", "Logging settings for Link State Announcements", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Hello heartbeat interval", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF router priority", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,rip,bgp", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),

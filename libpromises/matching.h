@@ -27,7 +27,6 @@
 
 #include <cf3.defs.h>
 
-pcre *CompileRegExp(const char *regexp);
 int IsRegex(char *str); /* Pure */
 int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex); /* Uses context */
 

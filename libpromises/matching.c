@@ -34,24 +34,6 @@
 #include <rlist.h>
 #include <string_lib.h>
 
-/* Pure */
-pcre *CompileRegExp(const char *regexp)
-{
-    pcre *rx;
-    const char *errorstr;
-    int erroffset;
-
-    rx = pcre_compile(regexp, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
-
-    if (rx == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Regular expression error: pcre_compile() '%s' in expression '%s' (offset: %d)", 
-              errorstr, regexp, erroffset);
-    }
-
-    return rx;
-}
-
 /* Pure, non-thread-safe */
 static char *FirstBackReference(pcre *rx, const char *teststring)
 {
@@ -93,8 +75,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
         return "";
     }
 
-    rx = CompileRegExp(regexp);
-
+    rx = CompileRegex(regexp);
     if (rx == NULL)
     {
         return "";

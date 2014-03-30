@@ -613,4 +613,9 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
+void Log(LogLevel level, const char *fmt, ...)
+{
+    fail();
+}
+
 /* LCOV_EXCL_STOP */

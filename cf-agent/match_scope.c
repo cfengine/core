@@ -91,8 +91,7 @@ int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
         return true;
     }
 
-    rx = CompileRegExp(regexp);
-
+    rx = CompileRegex(regexp);
     if (rx == NULL)
     {
         return false;
@@ -110,7 +109,7 @@ int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 
 bool ValidateRegEx(const char *regex)
 {
-    pcre *rx = CompileRegExp(regex);
+    pcre *rx = CompileRegex(regex);
     bool regex_valid = rx != NULL;
 
     pcre_free(rx);
@@ -119,7 +118,7 @@ bool ValidateRegEx(const char *regex)
 
 int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *start, int *end)
 {
-    pcre *rx = CompileRegExp(regexp);
+    pcre *rx = CompileRegex(regexp);
 
     if (rx == NULL)
     {

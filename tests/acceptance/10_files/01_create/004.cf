@@ -31,7 +31,7 @@ body delete init_delete
 bundle agent test
 {
   vars:
-      "mode" int => "01010";
+      "mode" int => "04010";
 
   files:
       "$(G.testfile)"

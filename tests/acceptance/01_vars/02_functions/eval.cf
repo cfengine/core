@@ -59,7 +59,7 @@ bundle agent init
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "aix|solaris",
+      "test_suppress_fail" string => "aix|sunos_5_10",
         meta => { "redmine5209" };
 
   vars:

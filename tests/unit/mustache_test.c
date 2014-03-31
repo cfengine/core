@@ -31,23 +31,23 @@ size_t TestSpecFile(const char *testfile)
 
         fprintf(stdout, "Testing %s:%s ...", testfile, JsonObjectGetAsString(test_obj, "name"));
 
-        Writer *out = StringWriter();
+        Buffer *out = BufferNew();
 
         const char *templ = JsonObjectGetAsString(test_obj, "template");
         const char *expected = JsonObjectGetAsString(test_obj, "expected");
         const JsonElement *data = JsonObjectGet(test_obj, "data");
 
-        if (!MustacheRender(out, templ, data) || strcmp(expected, StringWriterData(out)) != 0)
+        if (!MustacheRender(out, templ, data) || strcmp(expected, BufferData(out)) != 0)
         {
             num_failures++;
-            fprintf(stdout, "FAIL \n%s\n != \n%s\n", expected, StringWriterData(out));
+            fprintf(stdout, "FAIL \n%s\n != \n%s\n", expected, BufferData(out));
         }
         else
         {
             fprintf(stdout, "OK\n");
         }
 
-        WriterClose(out);
+        BufferDestroy(out);
     }
 
     JsonDestroy(spec);

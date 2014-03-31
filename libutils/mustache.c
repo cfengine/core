@@ -264,36 +264,36 @@ static Mustache NextTag(const char *input,
     return ret;
 }
 
-static void RenderHTMLContent(Writer *out, const char *input, size_t len)
+static void RenderHTMLContent(Buffer *out, const char *input, size_t len)
 {
     for (size_t i = 0; i < len; i++)
     {
         switch (input[i])
         {
         case '&':
-            WriterWrite(out, "&amp;");
+            BufferAppendString(out, "&amp;");
             break;
 
         case '"':
-            WriterWrite(out, "&quot;");
+            BufferAppendString(out, "&quot;");
             break;
 
         case '<':
-            WriterWrite(out, "&lt;");
+            BufferAppendString(out, "&lt;");
             break;
 
         case '>':
-            WriterWrite(out, "&gt;");
+            BufferAppendString(out, "&gt;");
             break;
 
         default:
-            WriterWriteChar(out, input[i]);
+            BufferAppendChar(out, input[i]);
             break;
         }
     }
 }
 
-static void RenderContent(Writer *out, const char *content, size_t len, bool html, bool skip_content)
+static void RenderContent(Buffer *out, const char *content, size_t len, bool html, bool skip_content)
 {
     if (skip_content)
     {
@@ -306,11 +306,11 @@ static void RenderContent(Writer *out, const char *content, size_t len, bool htm
     }
     else
     {
-        WriterWriteLen(out, content, len);
+        BufferAppend(out, content, len);
     }
 }
 
-static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, const bool escaped)
+static bool RenderVariablePrimitive(Buffer *out, const JsonElement *primitive, const bool escaped)
 {
     switch (JsonGetPrimitiveType(primitive))
     {
@@ -321,14 +321,14 @@ static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, c
         }
         else
         {
-            WriterWrite(out, JsonPrimitiveGetAsString(primitive));
+            BufferAppendString(out, JsonPrimitiveGetAsString(primitive));
         }
         return true;
 
     case JSON_PRIMITIVE_TYPE_INTEGER:
         {
             char *str = StringFromLong(JsonPrimitiveGetAsInteger(primitive));
-            WriterWrite(out, str);
+            BufferAppendString(out, str);
             free(str);
         }
         return true;
@@ -336,13 +336,13 @@ static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, c
     case JSON_PRIMITIVE_TYPE_REAL:
         {
             char *str = StringFromDouble(JsonPrimitiveGetAsReal(primitive));
-            WriterWrite(out, str);
+            BufferAppendString(out, str);
             free(str);
         }
         return true;
 
     case JSON_PRIMITIVE_TYPE_BOOL:
-        WriterWrite(out, JsonPrimitiveGetAsBool(primitive) ? "true" : "false");
+        BufferAppendString(out, JsonPrimitiveGetAsBool(primitive) ? "true" : "false");
         return true;
 
     case JSON_PRIMITIVE_TYPE_NULL:
@@ -354,7 +354,7 @@ static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, c
     return false;
 }
 
-static bool RenderVariable(Writer *out,
+static bool RenderVariable(Buffer *out,
                            const char *content, size_t content_len,
                            bool escaped,
                            Seq *hash_stack)
@@ -426,7 +426,7 @@ static bool SetDelimiters(const char *content, size_t content_len,
     return true;
 }
 
-static bool Render(Writer *out, const char *start, const char *input, Seq *hash_stack,
+static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_stack,
                    char *delim_start, size_t *delim_start_len,
                    char *delim_end, size_t *delim_end_len,
                    bool skip_content,
@@ -630,7 +630,7 @@ static bool Render(Writer *out, const char *start, const char *input, Seq *hash_
     assert(false);
 }
 
-bool MustacheRender(Writer *out, const char *input, const JsonElement *hash)
+bool MustacheRender(Buffer *out, const char *input, const JsonElement *hash)
 {
     char delim_start[MUSTACHE_MAX_DELIM_SIZE] = "{{";
     size_t delim_start_len = strlen(delim_start);

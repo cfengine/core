@@ -2,8 +2,8 @@
 #define CFENGINE_MUSTACHE_H
 
 #include <json.h>
-#include <writer.h>
+#include <buffer.h>
 
-bool MustacheRender(Writer *out, const char *input, const JsonElement *hash);
+bool MustacheRender(Buffer *out, const char *input, const JsonElement *hash);
 
 #endif

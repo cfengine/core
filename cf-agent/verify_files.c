@@ -484,18 +484,6 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST);
     }
 
-    Writer *output_writer = NULL;
-    {
-        FILE *output_file = safe_fopen(pp->promiser, (edcontext->new_line_mode == NewLineMode_Native) ? "wt" : "w");
-        if (!output_file)
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Output file '%s' could not be opened for writing", pp->promiser);
-            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-        }
-
-        output_writer = FileWriter(output_file);
-    }
-
     int template_fd = safe_open(a.edit_template, O_RDONLY | O_TEXT);
     Writer *template_writer = NULL;
     if (template_fd >= 0)
@@ -506,7 +494,6 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     if (!template_writer)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a.edit_template);
-        WriterClose(output_writer);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -516,38 +503,54 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         a.template_data = default_template_data = DefaultTemplateData(ctx);
     }
 
-    if (!MustacheRender(output_writer, StringWriterData(template_writer), a.template_data))
+    Buffer *output_buffer = BufferNew();
+    if (MustacheRender(output_buffer, StringWriterData(template_writer), a.template_data))
+    {
+        // commit
+        FILE *output_file = safe_fopen(pp->promiser, (edcontext->new_line_mode == NewLineMode_Native) ? "wt" : "w");
+        if (!output_file)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Output file '%s' could not be opened for writing", pp->promiser);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
+        fwrite(BufferData(output_buffer), sizeof(char), BufferSize(output_buffer), output_file);
+
+        JsonDestroy(default_template_data);
+        WriterClose(template_writer);
+        BufferDestroy(output_buffer);
+
+        fflush(output_file);
+        fclose(output_file);
+
+        unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+        if (access(pp->promiser, R_OK) == 0)
+        {
+            HashFile(pp->promiser, rendered_output_digest, CF_DEFAULT_DIGEST);
+            if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
+                     pp->promiser, a.edit_template);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Cannot read rendered mustache template at '%s', in order to compare it to a previously rendered version",
+                pp->promiser);
+        }
+
+        return result;
+    }
+    else
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         JsonDestroy(default_template_data);
         WriterClose(template_writer);
-        WriterClose(output_writer);
+        BufferDestroy(output_buffer);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
-
-    JsonDestroy(default_template_data);
-    WriterClose(template_writer);
-    WriterClose(output_writer);
-
-    unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    if (access(pp->promiser, R_OK) == 0)
-    {
-        HashFile(pp->promiser, rendered_output_digest, CF_DEFAULT_DIGEST);
-        if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
-        {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
-                 pp->promiser, a.edit_template);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-        }
-    }
-    else
-    {
-        Log(LOG_LEVEL_ERR, "Cannot read rendered mustache template at '%s', in order to compare it to a previously rendered version",
-            pp->promiser);
-    }
-
-    return result;
 }
 
 PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)

@@ -20,7 +20,7 @@ bundle agent init
 {
   vars:
     any::
-      "mode" int => "01751";
+      "mode" int => "04751";
       "owner" string => "786756";
       "group" string => "786756";
 

@@ -582,7 +582,7 @@ TESTS_COUNT=$(echo $TESTS | wc -w)
 START_TIME=$(unix_seconds)
 
 ( echo ======================================================================
-  echo Testsuite started at $(date "+%F %T")
+  echo Testsuite started at $(date "+%Y-%m-%d %T")
   echo ----------------------------------------------------------------------
   echo Total tests: $TESTS_COUNT
   echo

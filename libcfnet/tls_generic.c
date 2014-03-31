@@ -410,7 +410,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
 }
 
 /**
- * @brief Repeat receiving until received buffer ends with '\n'.
+ * @brief Repeat receiving until last byte received is '\n'.
  *
  * @param #buf on return will contain all received lines, and '\0' will be
  *             appended to it.
@@ -441,10 +441,10 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
         }
         got += ret;
     }
-    while ((buf[got-1] != '\n') && (got != buf_size));
+    while ((buf[got-1] != '\n') && (got < buf_size));
     assert(got <= buf_size);
 
-    /* Append terminating '\0', there is room because buf_size is -1. */
+    /* Append '\0', there is room because buf_size has been decremented. */
     buf[got] = '\0';
 
     if ((got == buf_size) && (buf[got-1] != '\n'))

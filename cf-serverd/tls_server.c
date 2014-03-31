@@ -220,11 +220,12 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
  * @TODO More protocol identity. E.g.
  *       IDENTITY USERNAME=xxx HOSTNAME=xxx CUSTOMNAME=xxx
  *
- * @return 1 if IDENTITY command was parsed correctly. Identity fields (only
- *         #username for now) have the respective string values, or they are
- *         empty if field was not on IDENTITY line.  #conn_info->type has been
- *         updated with the negotiated protocol version.
- * @return -1 in case of error.
+ * @retval true if protocol version was successfully negotiated and IDENTITY
+ *         command was parsed correctly. Identity fields (only #username for
+ *         now) have the respective string values, or they are empty if field
+ *         was not on IDENTITY line.  #conn_info->type has been updated with
+ *         the negotiated protocol version.
+ * @retval false in case of error.
  */
 static int ServerIdentificationDialog(ConnectionInfo *conn_info,
                                       char *username, size_t username_size)
@@ -277,7 +278,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
         /* TODO send "BAD ..." ? */
     }
 
-    /* Did we receive 2nd line or we need to receive again? */
+    /* Did we receive 2nd line or do we need to receive again? */
     const char id_line[] = "\nIDENTITY ";
     char *line2 = memmem(input, input_len, id_line, strlen(id_line));
     if (line2 == NULL)
@@ -441,9 +442,9 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 
         /* Send/Receive "CFE_v%d" version string, agree on version, receive
            identity of peer. */
-        ret = ServerIdentificationDialog(conn->conn_info,
-                                         conn->username, sizeof(conn->username));
-        if (ret != 1)
+        bool b = ServerIdentificationDialog(conn->conn_info, conn->username,
+                                            sizeof(conn->username));
+        if (!b)
         {
             return -1;
         }

@@ -161,17 +161,24 @@ void TLSDeInitialize()
 
 
 /**
- * @return > 0: return value is a mutually acceptable version that was negotiated
- *           0: no agreement on version was reached
+ * 1. Receive "CFE_v%d" server hello
+ * 2. Send two lines: one "CFE_v%d" with the protocol version we wish to have,
+ *    and another with id, e.g. "IDENTITY USERNAME=blah".
+ * 3. Receive "OK WELCOME"
+ *
+ * @return > 0: success. #conn_info->type has been updated with the negotiated
+ *              protocol version.
+ *           0: server denial
  *          -1: error
  */
-int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
+int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
+                                  const char *username)
 {
+    char line[1024] = "";
     int ret;
-    char input[CF_SMALLBUF] = "";
 
-    /* Receive CFE_v%d ... */
-    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
+    /* Receive CFE_v%d ... That's the first thing the server sends. */
+    ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
 
     ProtocolVersion wanted_version;
     if (conn_info->type == CF_PROTOCOL_UNDEFINED)
@@ -188,30 +195,17 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     char version_string[128];
     int len = snprintf(version_string, sizeof(version_string),
                        "CFE_v%d %s %s\n",
-                       wanted_version, "cf-agent", VERSION);
+                       wanted_version, "cf-agent", VERSION); /* TODO argv[0] */
 
-    ret = TLSSend(ConnectionInfoSSL(conn_info), version_string, len);
+    ret = TLSSend(conn_info->ssl, version_string, len);
     if (ret != len)
     {
-        Log(LOG_LEVEL_ERR, "Connection was hung up!");
+        Log(LOG_LEVEL_ERR, "Connection was hung up during identification!");
         return -1;
     }
 
-    /* Receive OK */
-    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
-    if (ret > 1 && strncmp(input, "OK", 2) == 0)
-    {
-        return wanted_version;
-    }
-
-    return 0;
-}
-
-int TLSClientSendIdentity(const ConnectionInfo *conn_info, const char *username)
-{
-    char line[1024] = "IDENTITY";
+    strcpy(line, "IDENTITY");
     size_t line_len = strlen(line);
-    int ret;
 
     if (username != NULL)
     {
@@ -229,11 +223,37 @@ int TLSClientSendIdentity(const ConnectionInfo *conn_info, const char *username)
     line[line_len] = '\n';
     line_len++;
 
-    ret = TLSSend(ConnectionInfoSSL(conn_info), line, line_len);
+    ret = TLSSend(conn_info->ssl, line, line_len);
     if (ret == -1)
     {
+        Log(LOG_LEVEL_ERR,
+            "Connection was hung up during identification! (2)");
         return -1;
     }
+
+    /* Server might hang up here, after we sent identification! We
+     * must get the "OK WELCOME" message for everything to be OK. */
+    static const char OK[] = "OK WELCOME";
+    size_t OK_len = sizeof(OK) - 1;
+    ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Connection was hung up during identification! (3)");
+        return -1;
+    }
+
+    if (ret < OK_len || strncmp(line, OK, OK_len) != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Peer did not accept our identity! Responded: %s",
+            line);
+        return 0;
+    }
+
+    /* Before it contained the protocol version we requested from the server,
+     * now we put in the value that was negotiated. */
+    conn_info->type = wanted_version;
 
     return 1;
 }

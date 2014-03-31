@@ -1082,7 +1082,7 @@ int EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
  * int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
  * int TLSSend(SSL *ssl, const char *buffer, int length);
  * int TLSRecv(SSL *ssl, char *buffer, int length);
- * int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size);
+ * int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
  */
 #define ASSERT_INITIALIZED assert_true(correctly_initialized)
 static void test_TLSVerifyCallback(void)
@@ -1270,7 +1270,7 @@ static void test_TLSVerifyPeer(void)
  * This test checks for the three basic operations:
  * - TLSSend
  * - TLSRecv
- * - TLSRecvLine
+ * - TLSRecvLines
  * It is difficult to test each one separatedly, so we test all at once.
  * The test consists on establishing a connection to our child process and then
  * sending and receiving data. We switch between the original functions and the
@@ -1338,16 +1338,14 @@ static void test_TLSBasicIO(void)
      */
     char output_line_buffer[] = "hello\ngoodbye\n";
     int output_line_buffer_length = strlen(output_line_buffer);
-    char output_just_hello[] = "hello";
-    int output_just_hello_length = strlen(output_just_hello);
 
     result = TLSSend(ssl, output_line_buffer, output_line_buffer_length);
     assert_int_equal(result, output_line_buffer_length);
 
-    result = TLSRecvLine(ssl, input_buffer, output_line_buffer_length);
-    /* The reply should be up to the first hello */
-    assert_int_equal(result, output_just_hello_length);
-    assert_string_equal(input_buffer, output_just_hello);
+    result = TLSRecvLines(ssl, input_buffer, sizeof(input_buffer));
+    /* The reply should be both lines, hello and goodbye. */
+    assert_int_equal(result, output_line_buffer_length);
+    assert_string_equal(input_buffer, output_line_buffer);
 
     /*
      * Basic check
@@ -1382,14 +1380,15 @@ static void test_TLSBasicIO(void)
 
     USE_ORIGINAL(SSL_write);
     SSL_READ_RETURN(0);
-    assert_int_equal((ssize_t)-1, TLSRecvLine(ssl, input_buffer, output_buffer_length));
+    assert_int_equal(-1, TLSRecvLines(ssl, input_buffer, sizeof(input_buffer)));
     SSL_READ_RETURN(-1);
-    assert_int_equal((ssize_t)-1, TLSRecvLine(ssl, input_buffer, output_buffer_length));
+    assert_int_equal(-1, TLSRecvLines(ssl, input_buffer, sizeof(input_buffer)));
     SSL_READ_RETURN(5);
-    assert_int_equal((ssize_t)-1, TLSRecvLine(ssl, input_buffer, 10));
+    assert_int_equal(-1, TLSRecvLines(ssl, input_buffer, 10));
     SSL_READ_USE_BUFFER(output_line_buffer);
-    assert_int_equal(5, TLSRecvLine(ssl, input_buffer, output_line_buffer_length));
-    assert_string_equal(output_just_hello, input_buffer);
+    assert_int_equal(output_line_buffer_length,
+                     TLSRecvLines(ssl, input_buffer, sizeof(input_buffer)));
+    assert_string_equal(input_buffer, output_line_buffer);
 
     result = SSL_shutdown(ssl);
     if (ssl)

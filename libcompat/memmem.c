@@ -22,22 +22,36 @@
   included file COSL.txt.
 */
 
-
-#ifndef CFENGINE_TLS_GENERIC_H
-#define CFENGINE_TLS_GENERIC_H
-
-
-#include <cfnet.h>
-
-#include <logging.h>                                            /* LogLevel */
-
-
-int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
-int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
-X509 *TLSGenerateCertFromPrivKey(RSA *privkey);
-void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code);
-int TLSSend(SSL *ssl, const char *buffer, int length);
-int TLSRecv(SSL *ssl, char *buffer, int length);
-int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
-
+#ifdef HAVE_CONFIG_H
+# include <config.h>
 #endif
+
+#include <stddef.h>                                             /* size_t */
+
+void *memmem(const void *haystack, size_t haystacklen,
+             const void *needle, size_t needlelen)
+{
+    const char *start;
+    /* Just to avoid casts. */
+    const char *h = haystack;
+    const char *n = needle;
+
+    for (start = h; start < h + haystacklen; start++)
+    {
+        size_t len = 0;
+        while (len < needlelen &&
+               start + len < h + haystacklen &&
+               start[len] == n[len])
+        {
+            len++;
+        }
+
+        if (len == needlelen)
+        {
+            return (void *) start;
+        }
+    }
+
+    return NULL;
+}
+

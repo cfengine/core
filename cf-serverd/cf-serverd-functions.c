@@ -348,6 +348,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif /* !__MINGW32__ */
 
+    Log(LOG_LEVEL_NOTICE, "Server is starting...");
     WritePID("cf-serverd.pid");
     CollectCallStart(COLLECT_INTERVAL);
 

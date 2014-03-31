@@ -513,6 +513,10 @@ void *memrchr(const void *s, int c, size_t n);
 #if !HAVE_DECL_MEMDUP
 void *memdup(const void *mem, size_t size);
 #endif
+#if !HAVE_DECL_MEMMEM
+void *memmem(const void *haystack, size_t haystacklen,
+             const void *needle, size_t needlelen);
+#endif
 #if !HAVE_DECL_STRERROR
 char *strerror(int err);
 #endif

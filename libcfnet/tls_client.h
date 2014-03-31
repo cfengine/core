@@ -32,8 +32,8 @@
 bool TLSClientInitialize(void);
 void TLSDeInitialize(void);
 
-int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info);
-int TLSClientSendIdentity(const ConnectionInfo *conn_info, const char *username);
+int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
+                                  const char *username);
 
 int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
                const char *ipaddr, const char *username);

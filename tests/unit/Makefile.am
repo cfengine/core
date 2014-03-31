@@ -98,7 +98,8 @@ check_PROGRAMS = \
 	matching_test \
 	ring_buffer_test \
 	strlist_test \
-	addr_lib_test
+	addr_lib_test \
+	libcompat_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -318,6 +319,9 @@ hash_test_SOURCES = hash_test.c ../../libutils/libutils.la
 key_test_SOURCES = key_test.c ../../libutils/libutils.la
 
 strlist_test_SOURCES = strlist_test.c ../../cf-serverd/strlist.c ../../cf-serverd/strlist.h
+
+libcompat_test_CPPFLAGS = -I$(top_srcdir)/libcompat
+libcompat_test_SOURCES = libcompat_test.c
 
 CFUPGRADE=../../cf-upgrade
 cf_upgrade_test_SOURCES = cf_upgrade_test.c $(CFUPGRADE)/alloc-mini.c $(CFUPGRADE)/alloc-mini.h $(CFUPGRADE)/command_line.c \

@@ -57,8 +57,6 @@ int main(int argc, char *argv[])
     KeepPromises(ctx, policy, config);
     Summarize();
 
-    Log(LOG_LEVEL_NOTICE, "Server is starting...");
-
     StartServer(ctx, &policy, config);
 
     Log(LOG_LEVEL_NOTICE, "Cleaning up and exiting...");

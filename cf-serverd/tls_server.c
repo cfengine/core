@@ -109,7 +109,7 @@ bool ServerTLSInitialize()
     if (SSLSERVERCERT == NULL)
     {
         Log(LOG_LEVEL_ERR,
-            "Failed to generate in-memory-certificate from private key");
+            "Failed to generate in-memory certificate from private key");
         goto err2;
     }
 
@@ -158,6 +158,7 @@ bool ServerTLSInitialize()
  * It is performed by peeking into the TLS connection to read the first bytes,
  * and if it's a CAUTH protocol command use the old protocol loop, else use
  * the TLS protocol loop.
+ * This must be the first thing we run on an accepted connection.
  *
  * @return -1 in case of error, 1 otherwise.
  */
@@ -165,7 +166,6 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
 {
     assert(SSLSERVERCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
 
-    /* This must be the first thing we run on an accepted connection. */
     assert(ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_UNDEFINED);
 
     const int peek_size = CF_INBAND_OFFSET + sizeof("CAUTH");
@@ -209,15 +209,30 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
 }
 
 /**
- * @return >0: the version that was negotiated
- *          0: no agreement on version was reached
- *         -1: error
+ * 1. Send "CFE_v%d" server hello.
+ * 2. Receive two lines: One "CFE_v%d" with the protocol version the client
+ *    wishes to have, and one "IDENTITY USERNAME=blah ..." with identification
+ *    information for the client.
+ *
+ * @note For Identification dialog to end successfully, one "OK WELCOME" line
+ *       must be sent right after this function, after identity is verified.
+ *
+ * @TODO More protocol identity. E.g.
+ *       IDENTITY USERNAME=xxx HOSTNAME=xxx CUSTOMNAME=xxx
+ *
+ * @retval true if protocol version was successfully negotiated and IDENTITY
+ *         command was parsed correctly. Identity fields (only #username for
+ *         now) have the respective string values, or they are empty if field
+ *         was not on IDENTITY line.  #conn_info->type has been updated with
+ *         the negotiated protocol version.
+ * @retval false in case of error.
  */
-int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
+static int ServerIdentificationDialog(ConnectionInfo *conn_info,
+                                      char *username, size_t username_size)
 {
     int ret;
-    char input[CF_SMALLBUF] = "";
-    /* The only protocol we support inside TLS, for now... */
+    char input[1024] = "";
+    /* The only protocol version we support inside TLS, for now. */
     const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_LATEST;
 
     /* Send "CFE_v%d cf-serverd version". */
@@ -226,16 +241,16 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
                        "CFE_v%d cf-serverd %s\n",
                        SERVER_PROTOCOL_VERSION, VERSION);
 
-    ret = TLSSend(ConnectionInfoSSL(conn_info), version_string, len);
+    ret = TLSSend(conn_info->ssl, version_string, len);
     if (ret != len)
     {
         Log(LOG_LEVEL_NOTICE, "Connection was hung up!");
         return -1;
     }
 
-    /* Receive CFE_v%d ... */
-    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
-    if (ret <= 0)
+    /* Receive CFE_v%d ... \n IDENTITY USERNAME=... */
+    int input_len = TLSRecvLines(conn_info->ssl, input, sizeof(input));
+    if (input_len <= 0)
     {
         Log(LOG_LEVEL_NOTICE,
             "Client closed connection early! He probably does not trust our key...");
@@ -252,53 +267,50 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
         return -1;
     }
 
-    /* For now we support only one version, so just check they match... */
+    /* For now we support only one version inside TLS. */
     /* TODO value should not be hardcoded but compared to enum ProtocolVersion. */
-    if (version_received == SERVER_PROTOCOL_VERSION)
+    if (version_received != SERVER_PROTOCOL_VERSION)
     {
-        char s[] = "OK\n";
-        TLSSend(ConnectionInfoSSL(conn_info), s, sizeof(s)-1);
+        Log(LOG_LEVEL_NOTICE,
+            "Client advertises disallowed protocol version: %d",
+            version_received);
+        return -1;
+        /* TODO send "BAD ..." ? */
+    }
+
+    /* Did we receive 2nd line or do we need to receive again? */
+    const char id_line[] = "\nIDENTITY ";
+    char *line2 = memmem(input, input_len, id_line, strlen(id_line));
+    if (line2 == NULL)
+    {
+        /* Wait for 2nd line to arrive. */
+        input_len = TLSRecvLines(conn_info->ssl, input, sizeof(input));
+        if (input_len <= 0)
+        {
+            Log(LOG_LEVEL_NOTICE,
+                "Client closed connection during identification dialog!");
+            return -1;
+        }
+        line2 = input;
     }
     else
     {
-        char s[] = "BAD unsupported protocol version\n";
-        TLSSend(ConnectionInfoSSL(conn_info), s, sizeof(s)-1);
-        Log(LOG_LEVEL_NOTICE,
-            "Client advertises unsupported protocol version: %d", version_received);
-        version_received = 0;
+        line2++;                                               /* skip '\n' */
     }
-    return version_received;
-}
 
-/**
- * @brief Return the client's username into the #username variable
- * @TODO More protocol identity: IDENTIFY USERNAME=xxx HOSTNAME=xxx CUSTOMNAME=xxx
- * @return 1 if IDENTITY command was parsed correctly. Identity fields
- *         (only #username for now) have the respective string values, or they are
- *         empty if field was not on IDENTITY line.
- * @return -1 in case of error.
- */
-int ServerIdentifyClient(const ConnectionInfo *conn_info,
-                         char *username, size_t username_size)
-{
-    char line[1024], word1[1024], word2[1024];
-    int line_pos = 0, chars_read = 0;
-    int ret;
+    /***** Parse all IDENTITY fields from line2 *****/
 
-    /* Reset all identity variables, we'll set them later according to fields
+    char word1[1024], word2[1024];
+    int line2_pos = 0, chars_read = 0;
+
+    /* Reset all identity variables, we'll set them according to fields
      * on IDENTITY line. For now only "username" setting exists... */
     username[0] = '\0';
 
-    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), line, sizeof(line));
-    if (ret <= 0)
-    {
-        return -1;
-    }
-
     /* Assert sscanf() is safe to use. */
-    assert(sizeof(word1)>=sizeof(line) && sizeof(word2)>=sizeof(line));
+    assert(sizeof(word1)>=sizeof(input) && sizeof(word2)>=sizeof(input));
 
-    ret = sscanf(line, "IDENTITY %[^=]=%s%n", word1, word2, &chars_read);
+    ret = sscanf(line2, "IDENTITY %[^=]=%s%n", word1, word2, &chars_read);
     while (ret >= 2)
     {
         /* Found USERNAME identity setting */
@@ -317,25 +329,30 @@ int ServerIdentifyClient(const ConnectionInfo *conn_info,
             Log(LOG_LEVEL_VERBOSE, "Setting IDENTITY: %s=%s",
                 word1, word2);
         }
+        /* ... else if (strcmp()) for other acceptable IDENTITY parameters. */
         else
         {
             Log(LOG_LEVEL_VERBOSE, "Received unknown IDENTITY parameter: %s=%s",
                 word1, word2);
         }
 
-        line_pos += chars_read;
-        ret = sscanf(&line[line_pos], " %[^=]=%s%n", word1, word2, &chars_read);
+        line2_pos += chars_read;
+        ret = sscanf(&line2[line2_pos], " %[^=]=%s%n", word1, word2, &chars_read);
     }
+
+    /* Version client and server agreed on. */
+    conn_info->type = version_received;
 
     return 1;
 }
 
-int ServerSendWelcome(const ServerConnectionState *conn)
+static int ServerSendWelcome(const ServerConnectionState *conn)
 {
     char s[1024] = "OK WELCOME";
     size_t len = strlen(s);
     int ret;
 
+    /* "OK WELCOME" is the important part. The rest is just extra verbosity. */
     if (conn->username[0] != '\0')
     {
         ret = snprintf(&s[len], sizeof(s) - len, " %s=%s",
@@ -352,7 +369,7 @@ int ServerSendWelcome(const ServerConnectionState *conn)
     s[len] = '\n';
     len++;
 
-    ret = TLSSend(ConnectionInfoSSL(conn->conn_info), s, len);
+    ret = TLSSend(conn->conn_info->ssl, s, len);
     if (ret == -1)
     {
         return -1;
@@ -423,17 +440,11 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             SSL_get_cipher_version(ssl));
         Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
-        /* Send/Receive "CFE_v%d" version string and agree on version. */
-        ret = ServerNegotiateProtocol(conn->conn_info);
-        if (ret <= 0)
-        {
-            return -1;
-        }
-
-        /* Receive IDENTITY USER=asdf plain string. */
-        ret = ServerIdentifyClient(conn->conn_info, conn->username,
-                                   sizeof(conn->username));
-        if (ret != 1)
+        /* Send/Receive "CFE_v%d" version string, agree on version, receive
+           identity of peer. */
+        bool b = ServerIdentificationDialog(conn->conn_info, conn->username,
+                                            sizeof(conn->username));
+        if (!b)
         {
             return -1;
         }
@@ -479,7 +490,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 Log(LOG_LEVEL_NOTICE,
                     "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
                 Log(LOG_LEVEL_NOTICE,
-                    "Open server's ACL if you really want to start trusting this new key.");
+                    "Add host to \"trustkeysfrom\" if you really want to start trusting this new key.");
                 return -1;
             }
         }

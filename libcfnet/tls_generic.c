@@ -409,28 +409,29 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     return received;
 }
 
-
 /**
- * @brief Receives character until a new line is found.
- * @param ssl SSL information.
- * @param buf Buffer in which to store '\0'-terminated line read.
- * @param buf_size Space available in buf.
- * @return line length (excluding '\0') or -1 in case of error.
+ * @brief Repeat receiving until last byte received is '\n'.
  *
- * @WARNING if the remote peer sends us data right after the newline without
- *          waiting for reply, that data is discarded.
+ * @param #buf on return will contain all received lines, and '\0' will be
+ *             appended to it.
+ * @return Return value is #buf 's length (excluding manually appended '\0')
+ *         or -1 in case of error.
+ *
+ * @note This function is intended for line-oriented communication, this means
+ *       the peer sends us one line (or a bunch of lines) and waits for reply,
+ *       so that '\n' is the last character in the underlying SSL_read().
  */
-ssize_t TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
+int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
 {
-    size_t got = 0;
-    buf[0] = '\0';
-    buf_size -= 1; /* Reserve one byte for terminating '\0' */
+    int ret;
+    int got = 0;
+    buf_size -= 1;               /* Reserve one space for terminating '\0' */
 
-    /* Repeat until we receive end of line or run out of space. */
-    while (got < buf_size)
+    /* Repeat until we receive end of line. */
+    do
     {
-        char *tail = buf + got;
-        int ret = TLSRecv(ssl, tail, buf_size - got);
+        buf[got] = '\0';
+        ret = TLSRecv(ssl, &buf[got], buf_size - got);
         if (ret <= 0)
         {
             Log(LOG_LEVEL_ERR,
@@ -438,18 +439,22 @@ ssize_t TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
                 buf);
             return -1;
         }
-        tail[ret] = '\0'; /* Tell strchr where to stop. */
-        char *nl = strchr(tail, '\n');
-        if (nl)
-        {
-            got = nl - buf;
-            assert(got <= buf_size);
-            *nl = '\0'; /* Truncate line at first '\n' */
-            return (ssize_t) got;
-        }
         got += ret;
     }
+    while ((buf[got-1] != '\n') && (got < buf_size));
+    assert(got <= buf_size);
 
-    Log(LOG_LEVEL_ERR, "No new line found and the buffer is already full");
-    return -1;
+    /* Append '\0', there is room because buf_size has been decremented. */
+    buf[got] = '\0';
+
+    if ((got == buf_size) && (buf[got-1] != '\n'))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Received line too long, hanging up! Length %d, line: %s",
+            got, buf);
+        return -1;
+    }
+
+    Log(LOG_LEVEL_DEBUG, "TLSRecvLines() %d bytes long: %s", got, buf);
+    return got;
 }

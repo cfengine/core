@@ -365,11 +365,19 @@ int main(int argc, char *argv[])
     int c;
 
     char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+    char *tempdir = getenv("TEMP");
+
+    if (!workdir && !tempdir)
+    {
+        fprintf(stderr, "Please set either CFENGINE_TEST_OVERRIDE_WORKDIR or TEMP environment variables\n"
+                "to a valid directory.\n");
+        return 2;
+    }
 
     snprintf(AVAILABLE_PACKAGES_FILE_NAME, 256,
-             "%s/cfengine-mock-package-manager-available", workdir ? workdir : "/tmp");
+             "%s/cfengine-mock-package-manager-available", workdir ? workdir : tempdir);
     snprintf(INSTALLED_PACKAGES_FILE_NAME, 256,
-             "%s/cfengine-mock-package-manager-installed", workdir ? workdir : "/tmp");
+             "%s/cfengine-mock-package-manager-installed", workdir ? workdir : tempdir);
 
     while ((c = getopt_long(argc, argv, "", OPTIONS, &option_index)) != EOF)
     {

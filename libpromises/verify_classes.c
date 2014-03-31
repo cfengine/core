@@ -116,7 +116,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
 
             free(tags);
 
-            return PROMISE_RESULT_CHANGE;
+            return PROMISE_RESULT_NOOP;
         }
     }
 

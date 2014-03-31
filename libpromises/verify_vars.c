@@ -374,8 +374,6 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     BufferDestroy(print);
                 }
             }
-
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
     else

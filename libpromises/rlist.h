@@ -49,6 +49,7 @@ Rval RvalCopy(Rval rval);
 void RvalDestroy(Rval rval);
 JsonElement *RvalToJson(Rval rval);
 void RvalShow(FILE *fp, Rval rval);
+char *RvalToString(Rval rval);
 void RvalWrite(Writer *writer, Rval rval);
 void RvalWriteParts(Writer *writer, const void* item, RvalType type);
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max);

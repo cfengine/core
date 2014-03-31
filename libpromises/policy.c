@@ -1809,26 +1809,19 @@ static void IndentPrint(Writer *writer, int indent_level)
     }
 }
 
-
-static void RvalToString(Writer *writer, Rval rval, bool symbolic_reference)
+static void AttributeToString(Writer *writer, Constraint *attribute, bool symbolic_reference)
 {
-    if (rval.type == RVAL_TYPE_SCALAR && !symbolic_reference)
+    WriterWriteF(writer, "%s => ", attribute->lval);
+    if (attribute->rval.type == RVAL_TYPE_SCALAR && !symbolic_reference)
     {
         WriterWriteChar(writer, '"');
-        RvalWrite(writer, rval);
+        RvalWrite(writer, attribute->rval);
         WriterWriteChar(writer, '"');
     }
     else
     {
-        RvalWrite(writer, rval);
+        RvalWrite(writer, attribute->rval);
     }
-}
-
-
-static void AttributeToString(Writer *writer, Constraint *attribute, bool symbolic_reference)
-{
-    WriterWriteF(writer, "%s => ", attribute->lval);
-    RvalToString(writer, attribute->rval, symbolic_reference);
 }
 
 

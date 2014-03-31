@@ -1,0 +1,13 @@
+body common control
+{
+      bundlesequence => { test };
+}
+
+bundle agent test
+{
+vars:
+
+      "mylist" slist => { "a", "b" };
+
+      "canonified_$(mylist)" slist =>  canonify("$(mylist)");
+}

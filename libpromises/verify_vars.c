@@ -333,7 +333,23 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             }
         }
 
-        if (!EvalContextVariablePut(ctx, ref, rval.item, DataTypeFromString(opts.cp_save->lval), "source=promise"))
+
+        DataType required_datatype = DataTypeFromString(opts.cp_save->lval);
+        if (rval.type != DataTypeToRvalType(required_datatype))
+        {
+            char *ref_str = VarRefToString(ref, true);
+            char *value_str = RvalToString(rval);
+            Log(LOG_LEVEL_ERR, "Variable '%s' expected a variable of type '%s', but was given incompatible value '%s'",
+                ref_str, DataTypeToString(required_datatype), value_str);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            free(ref_str);
+            free(value_str);
+            VarRefDestroy(ref);
+            RvalDestroy(rval);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
+        if (!EvalContextVariablePut(ctx, ref, rval.item, required_datatype, "source=promise"))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Unable to converge %s.%s value (possibly empty or infinite regression)",

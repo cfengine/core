@@ -1109,6 +1109,13 @@ void RvalWrite(Writer *writer, Rval rval)
     RvalWriteParts(writer, rval.item, rval.type);
 }
 
+char *RvalToString(Rval rval)
+{
+    Writer *w = StringWriter();
+    RvalWrite(w, rval);
+    return StringWriterClose(w);
+}
+
 void RvalWriteParts(Writer *writer, const void* item, RvalType type)
 {
     if (item == NULL)

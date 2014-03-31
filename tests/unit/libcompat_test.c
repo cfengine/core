@@ -68,6 +68,30 @@ static void test_memmem()
     needle   = "blah";
     result = memmem(haystack, strlen(haystack), needle, strlen(needle));
     assert_int_equal(result, NULL);
+
+    /* All the right letters, in the right order, not contiguous. */
+    haystack = "bleach";
+    needle   = "blah";
+    result = memmem(haystack, strlen(haystack), needle, strlen(needle));
+    assert_int_equal(result, NULL);
+
+    /* Should not be affected by case. */
+    haystack = "BLAH";
+    needle   = "blah";
+    result = memmem(haystack, strlen(haystack), needle, strlen(needle));
+    assert_int_equal(result, NULL);
+
+    /* Don't jump forward too much on incomplete match. */
+    haystack = "bblblablah";
+    needle   = "blah";
+    result = memmem(haystack, strlen(haystack), needle, strlen(needle));
+    assert_int_equal(result, &haystack[6]);
+
+    /* Don't jump forward too much, part 2. */
+    haystack = "abcabcabcd";
+    needle   = "abcabcd";
+    result = memmem(haystack, strlen(haystack), needle, strlen(needle));
+    assert_int_equal(result, &haystack[3]);
 }
 
 

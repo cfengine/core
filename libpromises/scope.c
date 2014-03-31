@@ -105,9 +105,17 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
     {
         Log(LOG_LEVEL_ERR, "While constructing scope '%s'", bp->name);
         fprintf(stderr, "Formal = ");
-        RlistShow(stderr, bp->args);
+        {
+            Writer *w = FileWriter(stderr);
+            RlistWrite(w, bp->args);
+            FileWriterDetach(w);
+        }
         fprintf(stderr, ", Actual = ");
-        RlistShow(stderr, arguments);
+        {
+            Writer *w = FileWriter(stderr);
+            RlistWrite(w, arguments);
+            FileWriterDetach(w);
+        }
         fprintf(stderr, "\n");
         FatalError(ctx, "Augment scope, formal and actual parameter mismatch is fatal");
     }

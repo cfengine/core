@@ -243,7 +243,12 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
     if (argnum != RlistLen(expargs) && !(fncall_type->options & FNCALL_OPTION_VARARG))
     {
         snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
-        RlistShow(stderr, expargs);
+        {
+            Writer *w = FileWriter(stderr);
+            RlistWrite(w, expargs);
+            FileWriterDetach(w);
+        }
+
         fprintf(stderr, ")\n");
 
         rp = expargs;
@@ -252,7 +257,9 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
             printf("  arg[%d] range %s\t", i, fncall_type->args[i].pattern);
             if (rp != NULL)
             {
-                RvalShow(stdout, rp->val);
+                Writer *w = FileWriter(stdout);
+                RvalWrite(w, rp->val);
+                FileWriterDetach(w);
                 rp = rp->next;
             }
             else

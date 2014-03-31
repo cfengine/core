@@ -1147,20 +1147,6 @@ void RvalWriteParts(Writer *writer, const void* item, RvalType type)
     }
 }
 
-void RlistShow(FILE *fp, const Rlist *list)
-{
-    Writer *w = FileWriter(fp);
-    RlistWrite(w, list);
-    FileWriterDetach(w);
-}
-
-void RvalShow(FILE *fp, Rval rval)
-{
-    Writer *w = FileWriter(fp);
-    RvalWrite(w, rval);
-    FileWriterDetach(w);
-}
-
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
 {
     switch (rval.type)

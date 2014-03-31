@@ -55,8 +55,8 @@ EditContext *NewEditContext(char *filename, Attributes a)
     {
         if (!LoadFileAsItemList(&(ec->file_start), filename, a.edits))
         {
-        free(ec);
-        return NULL;
+            free(ec);
+            return NULL;
         }
     }
 
@@ -112,11 +112,8 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
         {
             if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result))
             {
-                if (ec)
-                {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-                         "No edit changes to file '%s' need saving", ec->filename);
-                }
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                     "No edit changes to file '%s' need saving", ec->filename);
             }
             else if (SaveItemListAsFile(ec->file_start, ec->filename, a, ec->new_line_mode))
             {

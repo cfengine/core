@@ -435,6 +435,121 @@ exit:
 
 /*****************************************************************************/
 
+static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
+                                            const Rlist *bundle_args, Attributes a,
+                                            EditContext *edcontext)
+{
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
+    Policy *tmp_policy = PolicyNew();
+    Bundle *bp = NULL;
+    if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp, &result)))
+    {
+        BannerSubBundle(bp, bundle_args);
+        a.haveeditline = true;
+
+        EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit);
+        BundleResolve(ctx, bp);
+
+        ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
+
+        EvalContextStackPopFrame(ctx);
+
+        if (edcontext->num_edits == 0)
+        {
+            edcontext->num_edits++;
+        }
+    }
+
+    PolicyDestroy(tmp_policy);
+
+    return result;
+}
+
+
+static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, Attributes a,
+                                            EditContext *edcontext)
+{
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
+    if (!FileCanOpen(a.edit_template, "r"))
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Template file '%s' could not be opened for reading", a.edit_template);
+        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
+
+    unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    if (access(pp->promiser, R_OK) == 0)
+    {
+        HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST);
+    }
+
+    Writer *output_writer = NULL;
+    {
+        FILE *output_file = safe_fopen(pp->promiser, (edcontext->new_line_mode == NewLineMode_Native) ? "wt" : "w");
+        if (!output_file)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Output file '%s' could not be opened for writing", pp->promiser);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
+        output_writer = FileWriter(output_file);
+    }
+
+    int template_fd = safe_open(a.edit_template, O_RDONLY | O_TEXT);
+    Writer *template_writer = NULL;
+    if (template_fd >= 0)
+    {
+        template_writer = FileReadFromFd(template_fd, SIZE_MAX, NULL);
+        close(template_fd);
+    }
+    if (!template_writer)
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a.edit_template);
+        WriterClose(output_writer);
+        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
+
+    JsonElement *default_template_data = NULL;
+    if (!a.template_data)
+    {
+        a.template_data = default_template_data = DefaultTemplateData(ctx);
+    }
+
+    if (!MustacheRender(output_writer, StringWriterData(template_writer), a.template_data))
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        JsonDestroy(default_template_data);
+        WriterClose(template_writer);
+        WriterClose(output_writer);
+        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
+
+    JsonDestroy(default_template_data);
+    WriterClose(template_writer);
+    WriterClose(output_writer);
+
+    unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    if (access(pp->promiser, R_OK) == 0)
+    {
+        HashFile(pp->promiser, rendered_output_digest, CF_DEFAULT_DIGEST);
+        if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
+        {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
+                 pp->promiser, a.edit_template);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Cannot read rendered mustache template at '%s', in order to compare it to a previously rendered version",
+            pp->promiser);
+    }
+
+    return result;
+}
+
 PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)
 {
     void *vp;
@@ -542,107 +657,13 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     {
         if (!a.template_method || strcmp("cfengine", a.template_method) == 0)
         {
-            Policy *tmp_policy = PolicyNew();
-            Bundle *bp = NULL;
-            if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp, &result)))
-            {
-                BannerSubBundle(bp, args);
-                a.haveeditline = true;
-
-                EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
-                BundleResolve(ctx, bp);
-
-                ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
-
-                EvalContextStackPopFrame(ctx);
-
-                if (edcontext->num_edits == 0)
-                {
-                    edcontext->num_edits++;
-                }
-            }
-
-            PolicyDestroy(tmp_policy);
+            PromiseResult render_result = RenderTemplateCFEngine(ctx, pp, args, a, edcontext);
+            result = PromiseResultUpdate(result, render_result);
         }
         else if (strcmp("mustache", a.template_method) == 0)
         {
-            if (!FileCanOpen(a.edit_template, "r"))
-            {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Template file '%s' could not be opened for reading", a.edit_template);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                goto exit;
-            }
-
-            unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-            if (access(pp->promiser, R_OK) == 0)
-            {
-                HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST);
-            }
-
-            Writer *output_writer = NULL;
-            {
-                FILE *output_file = safe_fopen(pp->promiser, (edcontext->new_line_mode == NewLineMode_Native) ? "wt" : "w");
-                if (!output_file)
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Output file '%s' could not be opened for writing", pp->promiser);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                    goto exit;
-                }
-
-                output_writer = FileWriter(output_file);
-            }
-
-            int template_fd = safe_open(a.edit_template, O_RDONLY | O_TEXT);
-            Writer *template_writer = NULL;
-            if (template_fd >= 0)
-            {
-                template_writer = FileReadFromFd(template_fd, SIZE_MAX, NULL);
-                close(template_fd);
-            }
-            if (!template_writer)
-            {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a.edit_template);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                WriterClose(output_writer);
-                goto exit;
-            }
-
-            JsonElement *default_template_data = NULL;
-            if (!a.template_data)
-            {
-                a.template_data = default_template_data = DefaultTemplateData(ctx);
-            }
-
-            if (!MustacheRender(output_writer, StringWriterData(template_writer), a.template_data))
-            {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                JsonDestroy(default_template_data);
-                WriterClose(template_writer);
-                WriterClose(output_writer);
-                goto exit;
-            }
-
-            JsonDestroy(default_template_data);
-            WriterClose(template_writer);
-            WriterClose(output_writer);
-
-            unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-            if (access(pp->promiser, R_OK) == 0)
-            {
-                HashFile(pp->promiser, rendered_output_digest, CF_DEFAULT_DIGEST);
-                if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
-                         pp->promiser, a.edit_template);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                }
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Cannot read rendered mustache template at '%s', in order to compare it to a previously rendered version",
-                    pp->promiser);
-            }
+            PromiseResult render_result = RenderTemplateMustache(ctx, pp, a, edcontext);
+            result = PromiseResultUpdate(result, render_result);
         }
     }
 

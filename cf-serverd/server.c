@@ -118,7 +118,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         return;
     }
 
-    if ((now = time((time_t *) NULL)) == -1)
+    if ((now = time(NULL)) == -1)
     {
        now = 0;
     }
@@ -147,7 +147,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
     }
 
     char intime[PRINTSIZE(now)];
-    sprintf(intime, "%jd", (intmax_t) now);
+    snprintf(intime, sizeof(intime), "%jd", (intmax_t) now);
 
     if (!ThreadLock(cft_count))
     {

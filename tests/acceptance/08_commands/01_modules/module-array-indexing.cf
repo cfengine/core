@@ -1,0 +1,49 @@
+#######################################################
+#
+# Zendesk 1312
+# Test command modules with given array indices
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "test_suppress_fail" string => "windows";
+
+  commands:
+      "$(G.cat) $(this.promise_filename).txt" module => "true";
+
+  reports:
+    EXTRA::
+      "Got foo_idx = $(arrays.foo_idx)";
+      "Got foo[$(arrays.foo_idx)] = $(arrays.foo[$(arrays.foo_idx)])";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "foo_$(arrays.foo_idx)" string => "$(arrays.foo[$(arrays.foo_idx)])";
+      "merged_foo" data => mergedata("arrays.foo");
+      "sfoo" string => "foo_a=$(foo_a), foo_b=$(foo_b)";
+      "actual" string => format("foo = %S, foo_idx = %S, sfoo = %s", merged_foo, "arrays.foo_idx", $(sfoo));
+      "expected" string => 'foo = {"a":"a_foo","b":"b_foo"}, foo_idx = { "a", "b" }, sfoo = foo_a=a_foo, foo_b=b_foo';
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(expected),
+                                       $(actual),
+                                       $(this.promise_filename),
+                                       "no");
+
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

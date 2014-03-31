@@ -2,6 +2,7 @@
 
 #include <rlist.h>
 #include <generic_agent.h> // Syntax()
+#include <cf-windows-functions.h>
 
 static char AVAILABLE_PACKAGES_FILE_NAME[PATH_MAX];
 static char INSTALLED_PACKAGES_FILE_NAME[PATH_MAX];
@@ -363,6 +364,10 @@ int main(int argc, char *argv[])
     extern char *optarg;
     int option_index = 0;
     int c;
+
+#ifdef __MINGW32__
+    InitializeWindows();
+#endif
 
     char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
     char *tempdir = getenv("TEMP");

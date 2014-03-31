@@ -1,0 +1,184 @@
+#######################################################
+#
+# Test peers()
+# Ref:Redmine:4848 (https://cfengine.com/dev/issues/4848)
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "hostlist_content" slist => {
+                                    "host0", "host1", "host2",
+                                    "host3", "host4", "host5",
+                                    "host6", "host7", "host8",
+                                    "host9", "host10",
+                                  };
+
+       "expected_test1_num_peers" int => "0";
+       "expected_test2_peers" slist => { cf_null };
+       "expected_test2_num_peers" int => "3";
+       "expected_test2_peers" slist => { "host4", "host5", "host6", "NO" };
+
+  files:
+      "$(G.testfile).test1"
+        create        => "true",
+        edit_defaults => init_empty,
+        edit_line     => insert_lines(@(hostlist_content));
+
+     "$(G.testfile).test1"
+        edit_line => delete_lines_matching($(sys.fqhost)),
+        comment   => "Ensure that our hostname is not in the list, so we can test
+                      that the peers function returns nothing as documented.";
+
+      "$(G.testfile).test2"
+        create => "true",
+        edit_defaults => init_empty,
+        edit_line => insert_lines(@(hostlist_content));
+ 
+      "$(G.testfile).test2"
+        edit_line => insert_lines_location_after($(sys.fqhost), "host5"),
+        comment   => "Ensure that our hostname is in the list, so we can test
+                      that the peers function returns nothing as documented.";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+#######################################################
+
+bundle agent mediff
+{
+  vars:
+    "a" slist => { "host4", "host5", "host6", "hub" };
+    "b" slist => { "host4", "host5", "host6" };
+
+    "diff" slist => difference(a, b);
+
+  reports:
+    "$(diff)";
+
+}
+bundle agent test
+{
+  vars:
+     "expected_test1_num_peers" int => "0";
+
+     "expected_test2_num_peers" int => "3";
+     "expected_test2_peers"
+       slist => { "host4", "host5", "host6", },
+       comment => "host0-3 are in the first group of 4, hub is inserted after
+		   host5, so the next 4 are host4 host5 hub and host6, own
+		   hostname should not be returned in the list, leaving host4
+                   host5, and host6";
+
+
+     "actual_test1_peers"     slist => peers("$(G.testfile).test1", "#.*", 4);
+     "actual_test2_peers"     slist => peers("$(G.testfile).test2", "#.*", 4);
+
+     "actual_test1_num_peers" int => length("actual_test1_peers");
+     "actual_test2_num_peers" int => length("actual_test2_peers");
+
+
+     "diff_actual_expected_test2_peers" slist => difference(expected_test2_peers, actual_test2_peers);
+     "diff_actual_expected_test2_num_peers" int => length("diff_actual_expected_test2_peers");
+
+}
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "test1_not_greater_num_peers_expected" not => isgreaterthan($(test.actual_test1_num_peers), $(test.expected_test1_num_peers));
+    "test1_not_less_num_peers_expected"    not => islessthan($(test.actual_test1_peers), $(test.expected_test1_num_peers));
+    "test1_num_peers_ok" and => { "test1_not_greater_num_peers_expected", "test1_not_less_num_peers_expected" };
+
+    "test2_not_greater_num_peers_expected" not => isgreaterthan($(test.actual_test2_num_peers), $(test.expected_test2_num_peers));
+    "test2_not_less_num_peers_expected"    not => islessthan($(test.actual_test2_peers), $(test.expected_test2_num_peers));
+    "test2_num_peers_ok" and => { "test2_not_greater_num_peers_expected", "test2_not_less_num_peers_expected" };
+
+    "test2_not_greater_diff_num_peers_expected" not => isgreaterthan($(test.diff_actual_expected_test2_num_peers), 0);
+    "test2_not_less_diff_num_peers_expected"    not => islessthan($(test.diff_actual_expected_test2_num_peers), 0);
+    "test2_diff_num_peers_ok" and => { "test2_not_greater_diff_num_peers_expected", "test2_not_less_diff_num_peers_expected" };
+
+    "ok" and => { "test1_num_peers_ok", "test2_num_peers_ok", "test2_diff_num_peers_ok" };
+
+
+  reports:
+    DEBUG::
+      "Test1 num peers: Actual=$(test.actual_test1_num_peers) Expected=$(test.expected_test1_num_peers)";
+      "Test2 num peers: Actual=$(test.actual_test2_num_peers) Expected=$(test.expected_test2_num_peers)";
+
+    !test1_num_peers_ok::
+      "Test 1 - Number of peers found not as expected";
+
+    !test2_num_peers_ok::
+      "Test 2 - Number of peers found not as expected";
+
+    !test2_diff_num_peers_ok::
+      "Test 2 - Found unexpected peer: $(test.diff_actual_expected_test2_peers)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+#######################################################
+
+bundle edit_line insert_lines(lines)
+# @brief Append `lines` if they don't exist in the file
+# @param lines The lines to be appended
+#
+# **See also:** [`insert_lines`][insert_lines] in
+# [`edit_line`][bundle edit_line]
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}
+
+body location after(str)
+# @brief Editing occurs after the line matching `str`
+# @param str Regular expression matching the file line location
+{
+      before_after => "after";
+      select_line_matching => "$(str)";
+}
+
+bundle edit_line insert_lines_location_after(lines, after)
+# @brief Append `lines` if they don't exist in the file
+# @param lines The lines to be appended
+#
+# **See also:** [`insert_lines`][insert_lines] in
+# [`edit_line`][bundle edit_line]
+{
+  insert_lines:
+
+      "$(lines)"
+      location => after($(after)),
+      comment => "Append lines if they don't exist";
+}
+
+bundle edit_line delete_lines_matching(regex)
+# @brief Delete lines matching a regular expression
+# @param regex The regular expression that the lines need to match
+{
+  delete_lines:
+
+      "$(regex)"
+
+      comment => "Delete lines matching regular expressions";
+}

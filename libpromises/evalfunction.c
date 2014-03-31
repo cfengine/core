@@ -59,6 +59,7 @@
 #include <buffer.h>
 #include <files_lib.h>
 #include <connection_info.h>
+#include <printsize.h>
 
 #include <math_eval.h>
 

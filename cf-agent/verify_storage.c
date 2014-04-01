@@ -33,6 +33,7 @@
 #include <files_links.h>
 #include <files_properties.h>
 #include <attributes.h>
+#include <systype.h>
 #include <locks.h>
 #include <nfs.h>
 #include <rlist.h>

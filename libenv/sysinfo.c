@@ -34,6 +34,7 @@
 #include <scope.h>
 #include <item_lib.h>
 #include <matching.h>
+#include <systype.h>
 #include <unix.h>
 #include <string_lib.h>
 #include <misc_lib.h>

@@ -43,15 +43,14 @@ static const ConstraintSyntax linkstate_constraints[] =
 
 static const ConstraintSyntax linkservice_constraints[] =
 {
-    ConstraintSyntaxNewOption("ospf_service_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "OSPF interface type", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_link_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "OSPF interface type", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_authentication_digest", CF_ANYSTRING, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_passive_interface", "No service updates over this channel", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ospf_abr_summarization", "Allow Area Border Router to inject summaries into a stub area via this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_area_type", "stub,nssa", "Stub type area", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_area_authentication_digest", CF_ANYSTRING, "Authentication digest", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_substitute_prefix", CF_ANYSTRING, "Replacement prefix during rewriting", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_prefix_range", CF_ANYSTRING, "Search prefix during route rewriting", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("ospf_link_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "Network type across this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

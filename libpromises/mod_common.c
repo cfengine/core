@@ -397,9 +397,7 @@ const ConstraintSyntax FILE_CONTROL_CONSTRAINTS[] =
 
 const ConstraintSyntax OSPF_CONTROLBODY[] =
 {
-    ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_log_adjacency_changes", "normal,detail,none", "OSPF logging of neighbour changes", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_log_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_router_id", CF_ANYSTRING, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_log_file", CF_ANYSTRING, "Log file for OSPF messages, if supported on platform", SYNTAX_STATUS_NORMAL),

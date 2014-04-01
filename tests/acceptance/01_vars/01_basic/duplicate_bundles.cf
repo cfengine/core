@@ -1,0 +1,38 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  methods:
+      "one" usebundle => gvar( "x", "one" );
+    !FAIL::
+      "two" usebundle => gvar( "y", "two" );
+}
+
+bundle agent gvar ( name, value )
+{
+  vars:
+      "${name}" string => "${value}";
+}
+
+bundle agent check
+{
+  classes:
+      "pass_x" expression => strcmp( "one", "${gvar.x}" );
+      "pass_y" expression => strcmp( "two", "${gvar.y}" );
+
+  methods:
+      "" usebundle => dcs_passif_expected("pass_x,pass_y",
+                                          "",
+                                          $(this.promise_filename)),
+      inherit => "true";
+
+  reports:
+    EXTRA::
+      "gvar.x => ${gvar.x}";
+      "gvar.y => ${gvar.y}";
+}

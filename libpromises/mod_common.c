@@ -411,7 +411,6 @@ const ConstraintSyntax ospf_control_constraints[] =
     ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_VALRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_connected_metric", CF_VALRANGE, "Metric for redistributed direct connetions", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_static_metric", CF_VALRANGE, "Metric for redistributed static route", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_rip_metric", CF_VALRANGE, "Metric for redistributed RIP route", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_bgp_metric", CF_VALRANGE, "Metric for redistributed BGP route", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

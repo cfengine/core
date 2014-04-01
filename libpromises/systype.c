@@ -61,23 +61,23 @@ const char *const VPSCOMM[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
     [PLATFORM_CONTEXT_OPENVZ] = "/bin/vzps",                /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "/bin/ps",                  /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "/bin/ps",                  /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "/bin/ps",                  /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/bin/ps",                  /* solaris */
-    [PLATFORM_CONTEXT_FREEBSD] = "/bin/ps",                  /* freebsd */
+    [PLATFORM_CONTEXT_HP] = "/bin/ps",                      /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/bin/ps",                     /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/bin/ps",                   /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/bin/ps",                 /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/bin/ps",                 /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "/bin/ps",                  /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "/bin/ps",                  /* cray */
-    [PLATFORM_CONTEXT_WINDOWS_NT] = "/bin/ps",                  /* NT - cygnus */
-    [PLATFORM_CONTEXT_SYSTEMV] = "/bin/ps",                  /* unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "/bin/ps",                  /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "/bin/ps",                  /* sco */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/bin/ps",              /* NT - cygnus */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/bin/ps",                 /* unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/bin/ps",                 /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/bin/ps",                   /* sco */
     [PLATFORM_CONTEXT_DARWIN] = "/bin/ps",                  /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "/bin/ps",                  /* qnx  */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "/bin/ps",                  /* dragonfly */
-    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
+    [PLATFORM_CONTEXT_QNX] = "/bin/ps",                     /* qnx  */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/bin/ps",               /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",             /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/bin/ps",                  /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/busybox ps",  /* android */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/busybox ps", /* android */
 };
 
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
@@ -86,46 +86,45 @@ const char *const VPSCOMM[] =
 const char *const VPSOPTS[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
-    [PLATFORM_CONTEXT_OPENVZ] = "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
-    [PLATFORM_CONTEXT_HP] = "-ef",                      /* hpux */
-    [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args", /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* linux */
+    [PLATFORM_CONTEXT_OPENVZ] = "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",/* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
+    [PLATFORM_CONTEXT_HP] = "-ef",                    /* hpux */
+    [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",    /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",     /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",  /* solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "-elyf",                    /* cray */
-    [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",                      /* NT */
-    [PLATFORM_CONTEXT_SYSTEMV] = "-ef",                      /* Unixware */
+    [PLATFORM_CONTEXT_CRAYOS] = "-elyf",              /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",            /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "-ef",               /* Unixware */
     [PLATFORM_CONTEXT_OPENBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,start,time,args",       /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "-ef",                      /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "auxw",                     /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "-elyf",                    /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "auxw",                     /* dragonfly */
-    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
-    [PLATFORM_CONTEXT_VMWARE] = "?",                        /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "",                        /* android */
+    [PLATFORM_CONTEXT_CFSCO] = "-ef",                 /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "auxw",               /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "-elyf",                 /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "auxw",            /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",       /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "?",                  /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                  /* android */
 };
 
 const char *const VFSTAB[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
-    [PLATFORM_CONTEXT_OPENVZ] = "/etc/fstab",               /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "/etc/fstab",               /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "/etc/filesystems",         /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "/etc/fstab",               /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/etc/vfstab",              /* solaris */
-    [PLATFORM_CONTEXT_FREEBSD] = "/etc/fstab",               /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "/etc/fstab",               /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "/etc/fstab",               /* cray */
-    [PLATFORM_CONTEXT_WINDOWS_NT] = "/etc/fstab",               /* NT */
-    [PLATFORM_CONTEXT_SYSTEMV] = "/etc/vfstab",              /* Unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "/etc/fstab",               /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "/etc/default/filesys",     /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "/etc/fstab",               /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "/etc/fstab",               /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/fstab",               /* dragonfly */
-    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
-    [PLATFORM_CONTEXT_VMWARE] = "/etc/fstab",               /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "",                         /* android */
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/fstab",         /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/etc/fstab",             /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/filesystems",      /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/fstab",          /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/vfstab",       /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/fstab",        /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/fstab",         /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/fstab",         /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/etc/fstab",     /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/etc/vfstab",       /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/fstab",        /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/etc/default/filesys",/* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/fstab",         /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/fstab",            /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/fstab",      /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                    /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/etc/fstab",         /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                  /* android */
 };
-

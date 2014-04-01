@@ -33,6 +33,7 @@
 #include <conversion.h>
 #include <match_scope.h>
 #include <string_lib.h>
+#include <systype.h>
 #include <pipes.h>
 #include <nfs.h>
 #include <misc_lib.h>

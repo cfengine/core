@@ -22,7 +22,17 @@
   included file COSL.txt.
 */
 
-#include <cf3.defs.h>
+#include <systype.h>
+
+/* Set in libenv/sysinfo.c::DetectEnvironment (called every time environment
+   reload is performed).
+
+   Utilized all over the place, usually to look up OS-specific command/option to
+   call external utility
+*/
+PlatformContext VSYSTEMHARDCLASS; /* GLOBAL_E?, initialized_later */
+
+/* Configure system name and system-specific details. */
 
 const char *const CLASSTEXT[] =
 {

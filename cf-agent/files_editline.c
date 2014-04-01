@@ -894,7 +894,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
-            if (!allow_multi_lines && MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
+            if (!allow_multi_lines && MatchRegion(ctx, pp->promiser, ip, end_ptr, false))
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
                 return false;

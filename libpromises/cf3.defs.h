@@ -951,6 +951,14 @@ struct LinkState_
     LinkState *next;
 };
 
+typedef struct LinkOSPF_ LinkOSPF;
+
+struct LinkOSPF_
+{
+
+    LinkOSPF *next;
+};
+
 typedef struct Bridges_ Bridges;
 
 struct Bridges_
@@ -1415,12 +1423,6 @@ typedef struct
 
 typedef struct
 {
-    int rip_metric;
-    int rip_timeout;
-    char *nat_pool;
-    bool rip_splithorizon;
-    bool rip_passive;
-    char *relay_policy;
     char *gateway_interface;
     char *gateway_ip;
     bool delete_route;

@@ -398,12 +398,12 @@ const ConstraintSyntax file_control_constraints[] =
 const ConstraintSyntax ospf_control_constraints[] =
 {
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_log_adjacency_changes", "normal,detail,none", "OSPF logging of neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_log_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_router_id", CF_ANYSTRING, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_log_file", CF_ANYSTRING, "Log file for OSPF messages, if supported on platform", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_stub", "Mark current OSPF area a stub", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("ospf_log_neighbor_changes", "Logging settings for Link State Announcements", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Hello heartbeat interval", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF router priority", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,rip,bgp", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),

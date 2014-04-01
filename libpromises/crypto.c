@@ -527,7 +527,7 @@ static void OpenSSLLock_callback(int mode, int index, char *file, int line)
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR,
-                "Locking failure at file %s line %d (pthread_mutex_lock: %d)!",
+                "OpenSSL locking failure at %s:%d! (pthread_mutex_lock: %d)",
                 file, line, ret);
         }
     }
@@ -537,7 +537,7 @@ static void OpenSSLLock_callback(int mode, int index, char *file, int line)
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR,
-                "Locking failure at file %s line %d (pthread_mutex_unlock: %d)!",
+                "OpenSSL locking failure at %s:%d! (pthread_mutex_unlock: %d)",
                 file, line, ret);
         }
     }

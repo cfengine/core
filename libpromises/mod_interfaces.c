@@ -78,11 +78,6 @@ static const ConstraintSyntax interface_constraints[] =
 
 /**********************************************************************************************/
 
-static const ConstraintSyntax advertised_as[] =
-{
-    ConstraintSyntaxNewNull()
-};
-
 static const ConstraintSyntax route_constraints[] =
 {
     ConstraintSyntaxNewString("gateway_ip", CF_ANYSTRING, "IP address on gateway to next hop", SYNTAX_STATUS_NORMAL),
@@ -91,7 +86,6 @@ static const ConstraintSyntax route_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax relay_body = BodySyntaxNew("advertised_as", advertised_as, NULL, SYNTAX_STATUS_NORMAL);
 static const BodySyntax route_body = BodySyntaxNew("reachable_through", route_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax balance_constraints[] =
@@ -108,7 +102,6 @@ static const BodySyntax balancing_body = BodySyntaxNew("route_select", balance_c
 static const ConstraintSyntax network_constraints[] =
 {
     ConstraintSyntaxNewBody("routed_to", &route_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("advertised_as", &relay_body, "A body assigning a protocol service", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("balanced_destinations", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("route_select", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

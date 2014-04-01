@@ -84,7 +84,7 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
           continue;
           }
 
-       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_STUB].lval) == 0)
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_HELLO_INTERVAL].lval) == 0)
           {
           printf("\n");
           Log(LOG_LEVEL_VERBOSE, "Setting maxconnections to %d", CFA_MAXTHREADS);

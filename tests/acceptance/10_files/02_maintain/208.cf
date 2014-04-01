@@ -19,8 +19,11 @@ body common control
 bundle agent init
 {
   vars:
-    any::
+    freebsd|solaris::
+      "mode" int => "04751";
+    !freebsd.!solaris::
       "mode" int => "01751";
+    any::
       "owner" string => "786756";
       "group" string => "786756";
 

@@ -49,7 +49,7 @@ body perms test_perms
 bundle agent check
 {
   vars:
-    !windows::
+    !freebsd.!solaris.!windows::
       "expect[modeoct]" string => "[0-9]+$(test.mode)";
     any::
       "expect[nlink]" string => "1";

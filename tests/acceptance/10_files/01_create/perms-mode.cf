@@ -13,15 +13,12 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-}
-
-#######################################################
-
 bundle agent test
 {
   vars:
+    freebsd|solaris::
+      "modes" slist => { "1", "333", "100", "200", "777" };
+    !freebsd.!solaris::
       "modes" slist => { "1", "333", "100", "200", "777", "1111", "1010", "13400" };
 
   files:
@@ -54,7 +51,17 @@ bundle agent check
   "13400": "$(win_r)",
 }');
 
-    !windows::
+    freebsd|solaris::
+      "expected" data => parsejson('
+{
+  "1": "100001",
+  "333": "100333",
+  "100": "100100",
+  "200": "100200",
+  "777": "100777",
+}');
+
+    !freebsd.!solaris.!windows::
       "expected" data => parsejson('
 {
   "1": "100001",
@@ -71,8 +78,12 @@ bundle agent check
       "actual[$(modes)]" string => filestat("$(G.testdir)/$(modes)", "modeoct");
 
   classes:
-      "ok_$(modes)" expression => strcmp("$(expected[$(modes)])",
-                                         "$(actual[$(modes)])");
+      "ok_$(modes)" expression => strcmp("$(expected[$(modes)])", "$(actual[$(modes)])");
+
+      freebsd|solaris::
+      "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777" };
+
+      !freebsd.!solaris::
       "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777", "ok_1111", "ok_1010", "ok_13400" };
 
   reports:

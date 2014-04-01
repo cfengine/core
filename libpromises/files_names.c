@@ -690,3 +690,11 @@ const char *GetSoftwareCacheFilename(char *buffer)
     MapName(buffer);
     return buffer;
 }
+
+/* Buffer should be at least CF_MAXVARSIZE large */
+const char *GetSoftwarePatchesFilename(char *buffer)
+{
+    snprintf(buffer, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, SOFTWARE_PATCHES_CACHE);
+    MapName(buffer);
+    return buffer;
+}

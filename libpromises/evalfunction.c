@@ -3708,7 +3708,7 @@ static FnCallResult FnCallLength(EvalContext *ctx, ARG_UNUSED const Policy *poli
             }
         }
     case RVAL_TYPE_CONTAINER:
-        return FnReturnF("%llu", (unsigned long long)JsonLength(value));
+        return FnReturnF("%zd", JsonLength(value));
     default:
         Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
             fp->name, name, DataTypeToString(type));

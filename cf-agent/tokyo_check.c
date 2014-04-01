@@ -187,8 +187,8 @@ static int DBMetaPopulateOffsetMap(DBMeta * dbmeta)
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Found %llu buckets with offsets",
-        (unsigned long long) StringMapSize(dbmeta->offset_map));
+    Log(LOG_LEVEL_VERBOSE, "Found %zu buckets with offsets",
+            StringMapSize(dbmeta->offset_map));
     return 0;
 }
 

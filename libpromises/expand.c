@@ -1005,8 +1005,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
 
         if (!EvalContextVariablePut(ctx, ref, returnval.item, ConstraintSyntaxGetDataType(body_syntax, cp->lval), "source=promise"))
         {
-            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %llu",
-                control_body->source_path, (unsigned long long)cp->offset.line);
+            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
         }
 
         VarRefDestroy(ref);

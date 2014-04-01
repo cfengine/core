@@ -42,8 +42,6 @@ static int NetworkSanityCheck(Attributes a,  const Promise *pp);
 static void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetRouteInfo(FIBState **list, const Promise *pp);
 static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp);
-static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 
 /****************************************************************************/
 
@@ -137,7 +135,7 @@ void AssessRoutingServices()
 
 void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
-    FIBState *fib = NULL, *fip;
+    FIBState *fib = NULL;
 
     if (!GetRouteInfo(&fib, pp))
     {
@@ -149,17 +147,6 @@ void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext 
     {
         AssessStaticRoute(promiser, result, ctx, fib, a, pp);
     }
-#ifdef OS_LINUX
-    else if (a->haveadvertisedby)
-    {
-        AssessAdvertiseRoute(promiser, result, ctx, a, pp);
-    }
-
-    else if (a->havebalance)
-    {
-        AssessLoadBalance(promiser, result, ctx, a, pp);
-    }
-#endif
 }
 
 /*************************************************************************/
@@ -262,18 +249,4 @@ static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext
     }
 }
 
-
-/*************************************************************************/
-
-static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
-{
-    printf("Route advertisement not yet implemented\n");
-}
-
-/*************************************************************************/
-
-static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
-{
-    printf("Load balancing not yet implemented\n");
-}
 

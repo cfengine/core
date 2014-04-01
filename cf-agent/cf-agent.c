@@ -78,6 +78,7 @@
 #include <loading.h>
 
 #include <mod_common.h>
+#include <network_services.h>
 
 typedef enum
 {
@@ -159,7 +160,7 @@ static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(const Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
-static int NewTypeContext(TypeSequence type);
+static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
@@ -1243,7 +1244,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
             BannerPromiseType(bp->name, sp->name, pass);
 
-            if (!NewTypeContext(type))
+            if (!NewTypeContext(bp->parent_policy, ctx,type))
             {
                 continue;
             }
@@ -1433,11 +1434,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     }
     else if (strcmp("interfaces", pp->parent_promise_type->name) == 0)
     {
-        //get vlans and bridges for vars/classes
-        //vlan11 vlan11_on_eth1
-        //vlans[eth0]
         result = VerifyInterfacePromise(ctx, pp);
-        // update interfaces for vars/classes
     }
     else if (strcmp("networks", pp->parent_promise_type->name) == 0)
     {
@@ -1511,7 +1508,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(TypeSequence type)
+static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence type)
 {
 // get maxconnections
 
@@ -1541,6 +1538,11 @@ static int NewTypeContext(TypeSequence type)
             SeqClear(GetGlobalMountedFSList());
         }
 #endif /* !__MINGW32__ */
+        break;
+
+    case TYPE_SEQUENCE_INTERFACES:
+
+        InitializeOSPF(policy, ctx);
         break;
 
     default:

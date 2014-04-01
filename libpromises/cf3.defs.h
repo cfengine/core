@@ -366,6 +366,8 @@ typedef enum
 #define CF_RUNC     "runagent"
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
+#define CF_FILEC    "file"
+#define CF_OSPFC    "ospf"
 
 typedef enum
 {
@@ -377,6 +379,8 @@ typedef enum
     AGENT_TYPE_RUNAGENT,
     AGENT_TYPE_KEYGEN,
     AGENT_TYPE_HUB,
+    AGENT_TYPE_FILE,
+    AGENT_TYPE_OSPF,
     AGENT_TYPE_NOAGENT
 } AgentType;
 
@@ -453,6 +457,27 @@ typedef enum
     AGENT_CONTROL_VERBOSE,
     AGENT_CONTROL_NONE
 } AgentControl;
+
+/*************************************************************************/
+
+typedef enum
+{
+    OSPF_CONTROL_HELLO_INTERVAL,
+    OSPF_CONTROL_LOG_ADJACENCY_CHANGES,
+    OSPF_CONTROL_PRIORITY,
+    OSPF_CONTROL_LOG_TIMESTAMP_PRECISION,
+    OSPF_CONTROL_ROUTER_ID,
+    OSPF_CONTROL_LOG_FILE,
+    OSPF_CONTROL_SERVICE_START,
+    OSPF_CONTROL_STUB,
+    OSPF_CONTROL_REDISTRIBUTE,
+    OSPF_CONTROL_EXTERNAL_METRIC_TYPE,
+    OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC,
+    OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC,
+    OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC,
+    OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC,
+    OSPF_CONTROL_NONE
+} OspfControl;
 
 /*************************************************************************/
 

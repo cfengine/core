@@ -7,7 +7,8 @@ body common control
 bundle agent build_linux_limits_conf
 {
   vars:
-      "limits[glob-dash-nofile]" string => "*        -    nofile        30000";
+        "limits[glob-dash-nofile]"    string            =>    "*        -    nofile        30000",        policy => "free";
+        "limits[app-soft-nproc]"    string            =>    "app        soft    nproc        16357",        policy => "free";
       "values" slist => getvalues("limits");
 
   files:

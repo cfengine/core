@@ -13,33 +13,13 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-}
-
-bundle common test
-{
-  classes:
-      "pcre_error_found" expression => returnszero("$(command) 'nothing to repeat' 2>&1", "useshell");
-
-  vars:
-      "command" string => "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | $(G.grep) nofile | $(G.grep)";
-}
-
-#######################################################
-
 bundle agent check
 {
-  classes:
-      "ok" and => { "!pcre_error_found" };
-
-  reports:
-    DEBUG::
-      "Looking for pcre compile 'nothing to repeat' error";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_passif_output("",
+                                        ".*nothing to repeat.*",
+                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | $(G.grep) nofile",
+                                        $(this.promise_filename));
 }
 
 ### PROJECT_ID: core

@@ -202,7 +202,6 @@ Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp)
     attr.networks = GetNetworkConstraints(ctx, pp);
 
     attr.haveroutedto = PromiseGetConstraintAsBoolean(ctx, "routed_to", pp);
-    attr.haveadvertisedby = PromiseGetConstraintAsBoolean(ctx, "advertised_as", pp);
     attr.havebalance = PromiseGetConstraintAsBoolean(ctx, "balanced_destinations", pp);
 
     return attr;
@@ -1733,15 +1732,6 @@ Networks GetNetworkConstraints(const EvalContext *ctx, const Promise *pp)
     n.gateway_ip = PromiseGetConstraintAsRval(pp, "gateway_ip", RVAL_TYPE_SCALAR);
     n.gateway_interface = PromiseGetConstraintAsRval(pp, "gateway_interface", RVAL_TYPE_SCALAR);
     n.delete_route = PromiseGetConstraintAsBoolean(ctx, "delete_route", pp);
-
-    n.rip_metric = PromiseGetConstraintAsInt(ctx, "rip_metric", pp);
-    n.rip_timeout = PromiseGetConstraintAsInt(ctx, "rip_timeout", pp);
-    n.rip_splithorizon = PromiseGetConstraintAsBoolean(ctx, "rip_split_horizon", pp);
-    n.rip_passive = PromiseGetConstraintAsBoolean(ctx, "rip_passive", pp);
-
-    n.nat_pool = PromiseGetConstraintAsRval(pp, "nat_pool", RVAL_TYPE_SCALAR);
-    n.relay_policy = PromiseGetConstraintAsRval(pp, "relay_policy", RVAL_TYPE_SCALAR);
-
     return n;
 }
 

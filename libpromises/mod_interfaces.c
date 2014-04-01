@@ -38,7 +38,6 @@ static const ConstraintSyntax linkstate_constraints[] =
     ConstraintSyntaxNewInt("mtu", CF_INTRANGE, "MTU setting", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("speed", CF_INTRANGE, "Link speed in MB/s", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("minimum_bond_aggregation", CF_INTRANGE, "Smallest number of links up to allow bonding", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("ospf_link_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "Network type across this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -52,6 +51,7 @@ static const ConstraintSyntax linkservice_constraints[] =
     ConstraintSyntaxNewString("ospf_area_authentication_digest", CF_ANYSTRING, "Authentication digest", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_substitute_prefix", CF_ANYSTRING, "Replacement prefix during rewriting", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_prefix_range", CF_ANYSTRING, "Search prefix during route rewriting", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_link_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "Network type across this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

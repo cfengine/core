@@ -19,7 +19,7 @@ dist()
 
 { 
   git checkout $BRANCH
-  NO_SUBPROJECTS=1 ./autogen.sh
+  ./autogen.sh --with-tokyocabinet=/usr
   make dist
 }
 
@@ -30,7 +30,7 @@ check()
   cd ..
   tar xf core/cfengine-$CURR_VERSION.tar.gz
   cd cfengine-$CURR_VERSION
-  ./configure --with-tokyocabinet --disable-coverage --disable-shared
+  ./configure --with-tokyocabinet=/usr --disable-coverage --disable-shared
   make check -j8
 }
 

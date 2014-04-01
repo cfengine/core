@@ -70,7 +70,8 @@ libcf_agent_la_SOURCES = \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h \
-        verify_users.c verify_users.h
+        verify_users.c verify_users.h \
+        cf-agent-windows-functions.h
 
 if !NT
 libcf_agent_la_SOURCES += nfs.c nfs.h

@@ -5,6 +5,8 @@ else
  noinst_LTLIBRARIES = libpromises.la
 endif
 
+EXTRA_DIST = extensions_template.c extensions_template.h enterprise_extension.sed math.pc
+
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv $(ENTERPRISE_CPPFLAGS)
 
@@ -44,7 +46,7 @@ libpromises_la_SOURCES = \
         dbm_tokyocab.c \
         dir.h dir_priv.h \
         enterprise_extension.c enterprise_extension.h \
-	enterprise_stubs.c \
+        enterprise_stubs.c \
         eval_context.c eval_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
@@ -62,7 +64,7 @@ libpromises_la_SOURCES = \
         item_lib.c item_lib.h \
         iteration.c iteration.h \
         keyring.c keyring.h\
-	known_dirs.c known_dirs.h \
+        known_dirs.c known_dirs.h \
         lastseen.c lastseen.h \
         loading.c loading.h \
         locks.c locks.h \
@@ -113,7 +115,9 @@ libpromises_la_SOURCES = \
         variable.c variable.h \
         verify_classes.c verify_classes.h \
         verify_reports.c \
-        verify_vars.c verify_vars.h
+        verify_vars.c verify_vars.h \
+        cf-windows-functions.h \
+        bootstrap.inc
 
 if !NT
 
@@ -158,14 +162,15 @@ libpromises_la_SOURCES += \
 endif
 
 BUILT_SOURCES = cf3lex.c cf3parse.h cf3parse.c \
-	$(srcdir)/enterprise_extension.c \
-	$(srcdir)/enterprise_extension.h
+	enterprise_extension.c \
+	enterprise_extension.h
 
 ENTERPRISE_EXTENSION_GENERATE = $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
 ENTERPRISE_EXTENSION_MAKE = @if test -z "$(V)"; then echo "  SED   " $@; else echo "$(ENTERPRISE_EXTENSION_GENERATE)"; fi; $(ENTERPRISE_EXTENSION_GENERATE)
-$(srcdir)/enterprise_extension.c: extensions_template.c enterprise_extension.sed
+
+enterprise_extension.c: extensions_template.c enterprise_extension.sed
 	$(ENTERPRISE_EXTENSION_MAKE)
-$(srcdir)/enterprise_extension.h: extensions_template.h enterprise_extension.sed
+enterprise_extension.h: extensions_template.h enterprise_extension.sed
 	$(ENTERPRISE_EXTENSION_MAKE)
 
 CLEANFILES = *.gcno *.gcda $(BUILT_SOURCES)
@@ -186,6 +191,5 @@ libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la \
 ../libutils/libutils.la:
 	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
 
-# This should be run by hand to generate bootstrap.inc
-bootstrap-inc:
+bootstrap.inc:
 	perl ./text2cstring.pl failsafe.cf > bootstrap.inc

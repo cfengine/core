@@ -466,6 +466,36 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
     return result;
 }
 
+static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMode new_line_mode)
+{
+    FILE *fp = safe_fopen(dest_filename, (new_line_mode == NewLineMode_Native) ? "wt" : "w");
+    if (!fp)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to open destination file '%s' for writing. (fopen: %s)",
+            dest_filename, GetErrorStr());
+        return false;
+    }
+
+    Buffer *output_buffer = param;
+
+    size_t bytes_written = fwrite(BufferData(output_buffer), sizeof(char), BufferSize(output_buffer), fp);
+    if (bytes_written != BufferSize(output_buffer))
+    {
+        Log(LOG_LEVEL_ERR, "Error writing to output file '%s' when writing. %zd bytes written but expected %d. (fclose: %s)",
+            dest_filename, bytes_written, BufferSize(output_buffer), GetErrorStr());
+        fclose(fp);
+        return false;
+    }
+
+    if (fclose(fp) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to close file '%s' after writing. (fclose: %s)",
+            dest_filename, GetErrorStr());
+        return false;
+    }
+
+    return true;
+}
 
 static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, Attributes a,
                                             EditContext *edcontext)
@@ -506,39 +536,27 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     Buffer *output_buffer = BufferNew();
     if (MustacheRender(output_buffer, StringWriterData(template_writer), a.template_data))
     {
-        // commit
-        FILE *output_file = safe_fopen(pp->promiser, (edcontext->new_line_mode == NewLineMode_Native) ? "wt" : "w");
-        if (!output_file)
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Output file '%s' could not be opened for writing", pp->promiser);
-            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-        }
-
-        fwrite(BufferData(output_buffer), sizeof(char), BufferSize(output_buffer), output_file);
-
-        JsonDestroy(default_template_data);
-        WriterClose(template_writer);
-        BufferDestroy(output_buffer);
-
-        fflush(output_file);
-        fclose(output_file);
-
         unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-        if (access(pp->promiser, R_OK) == 0)
+        HashString(BufferData(output_buffer), BufferSize(output_buffer), rendered_output_digest, CF_DEFAULT_DIGEST);
+        if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
         {
-            HashFile(pp->promiser, rendered_output_digest, CF_DEFAULT_DIGEST);
-            if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
+            if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, a, edcontext->new_line_mode))
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
                      pp->promiser, a.edit_template);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
+            else
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
+                     pp->promiser, a.edit_template);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            }
         }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Cannot read rendered mustache template at '%s', in order to compare it to a previously rendered version",
-                pp->promiser);
-        }
+
+        JsonDestroy(default_template_data);
+        WriterClose(template_writer);
+        BufferDestroy(output_buffer);
 
         return result;
     }

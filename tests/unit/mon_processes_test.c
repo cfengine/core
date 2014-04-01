@@ -1,8 +1,9 @@
 #include "test.h"
 
-#include "generic_agent.h"
-#include "item_lib.h"
-#include "mon.h"
+#include <generic_agent.h>
+#include <item_lib.h>
+#include <systype.h>
+#include <mon.h>
 
 static void tests_setup(void)
 {

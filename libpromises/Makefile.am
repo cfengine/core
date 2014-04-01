@@ -33,7 +33,6 @@ libpromises_la_SOURCES = \
         cf3globals.c \
         chflags.c chflags.h \
         class.c class.h \
-        classes.c \
         constants.c \
         conversion.c conversion.h \
         crypto.c crypto.h \
@@ -107,6 +106,7 @@ libpromises_la_SOURCES = \
         string_expressions.c string_expressions.h \
         syntax.c syntax.h \
         syslog_client.c syslog_client.h \
+        systype.c systype.h \
         timeout.c timeout.h \
         unix.c unix.h \
         var_expressions.c var_expressions.h \

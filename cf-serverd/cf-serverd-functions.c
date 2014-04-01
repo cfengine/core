@@ -30,6 +30,7 @@
 #include <bootstrap.h>
 #include <scope.h>
 #include <signals.h>
+#include <systype.h>
 #include <mutex.h>
 #include <locks.h>
 #include <exec_tools.h>

@@ -143,11 +143,14 @@ static void GetCPUInfo(EvalContext *ctx);
 static const char *const CLASSATTRIBUTES[][3] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = {"-", "-", "-"},       /* as appear here are matched. The fields are sysname and machine */
-    [PLATFORM_CONTEXT_OPENVZ] = {"virt_host_vz_vzps", ".*", ".*"}, /* VZ Host with vzps installed (virt_host_vz_vzps) */
+    [PLATFORM_CONTEXT_OPENVZ] = {"virt_host_vz_vzps", ".*", ".*"}, /* VZ with vzps */
     [PLATFORM_CONTEXT_HP] = {"hp-ux", ".*", ".*"},      /* hpux */
     [PLATFORM_CONTEXT_AIX] = {"aix", ".*", ".*"},       /* aix */
     [PLATFORM_CONTEXT_LINUX] = {"linux", ".*", ".*"},   /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = {"sunos", ".*", "5.*"},  /* solaris */
+    [PLATFORM_CONTEXT_SOLARIS] = {"sunos", ".*",
+                                  "5\\.1[1-9].*"},      /* new solaris, SunOS >= 5.11 */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = {"sunos", ".*",
+                                      "5\\.([2-9]|10)(\\..*)?"}, /* old solaris, SunOS < 5.11 */
     [PLATFORM_CONTEXT_FREEBSD] = {"freebsd", ".*", ".*"}, /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = {"netbsd", ".*", ".*"},   /* NetBSD */
     [PLATFORM_CONTEXT_CRAYOS] = {"sn.*", "cray*", ".*"},  /* cray */
@@ -160,7 +163,7 @@ static const char *const CLASSATTRIBUTES[][3] =
     [PLATFORM_CONTEXT_DRAGONFLY] = {"dragonfly", ".*", ".*"}, /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = {"windows_nt.*", ".*", ".*"},  /* NT (native) */
     [PLATFORM_CONTEXT_VMWARE] = {"vmkernel", ".*", ".*"}, /* VMWARE / ESX */
-    [PLATFORM_CONTEXT_ANDROID] = {"android", ".*", ".*"}, /* android: Warning uname return linux */
+    [PLATFORM_CONTEXT_ANDROID] = {"android", ".*", ".*"}, /* android: Warning uname returns linux */
 };
 
 static const char *const VRESOLVCONF[] =
@@ -170,7 +173,8 @@ static const char *const VRESOLVCONF[] =
     [PLATFORM_CONTEXT_HP] = "/etc/resolv.conf",          /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/resolv.conf",         /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/resolv.conf",       /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/etc/resolv.conf",     /* solaris */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/resolv.conf",     /* new solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/etc/resolv.conf", /* old solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/etc/resolv.conf",     /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "/etc/resolv.conf",      /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "/etc/resolv.conf",      /* cray */
@@ -193,7 +197,8 @@ static const char *const VMAILDIR[] =
     [PLATFORM_CONTEXT_HP] = "/var/mail",           /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/var/spool/mail",    /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/var/spool/mail",  /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/var/mail",      /* solaris */
+    [PLATFORM_CONTEXT_SOLARIS] = "/var/mail",      /* new solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/var/mail",  /* old solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/var/mail",      /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "/var/mail",       /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "/usr/mail",       /* cray */
@@ -216,7 +221,8 @@ static const char *const VEXPORTS[] =
     [PLATFORM_CONTEXT_HP] = "/etc/exports",             /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/exports",            /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/exports",          /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/etc/dfs/dfstab",     /* solaris */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/dfs/dfstab",     /* new solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/etc/dfs/dfstab", /* old solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/etc/exports",        /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "/etc/exports",         /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "/etc/exports",         /* cray */

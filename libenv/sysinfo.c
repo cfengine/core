@@ -1919,53 +1919,41 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
 }
 
 /*
- * @brief : /etc/issue on debian can include special characters
- *          escaped with '/' or '@'. This function will get rid
- *          them.
+ * @brief Purge /etc/issue escapes on debian
+ *
+ * On debian, /etc/issue can include special characters escaped with
+ * '\\' or '@'. This function removes such escape sequences.
  *
  * @param[in,out] buffer: string to be sanitized
- *
- * @return : 0 if everything went fine, <>0 otherwise
  */
-static int LinuxDebianSanitizeIssue(char *buffer)
+static void LinuxDebianSanitizeIssue(char *buffer)
 {
     bool escaped = false;
-    char *s2, *s;
-    s2 = buffer;
-    for (s = buffer; *s != '\0'; s++)
+    char *dst = buffer, *src = buffer, *tail = dst;
+    while (*src != '\0')
     {
-        if (*s=='\\' || *s=='@')
+        char here = *src;
+        src++;
+        if (here == '\\' || here == '@' || escaped)
         {
-             if (escaped == false)
-             {
-                 escaped = true;
-             }
-             else
-             {
-                 escaped = false;
-             }
+            /* Skip over escapes and the character each acts on. */
+            escaped = !escaped;
         }
         else
         {
-             if (escaped == false)
-             {
-                 *s2 = *s;
-                 s2++;
-             }
-             else
-             {
-                 escaped = false;
-             }
+            /* Copy everything else verbatim: */
+            *dst = here;
+            dst++;
+            /* Keep track of (just after) last non-space: */
+            if (!isspace(here))
+            {
+                tail = dst;
+            }
         }
     }
-    *s2 = '\0';
-    s2--;
-    while (*s2 == ' ')
-    {
-        *s2 = '\0';
-        s2--;
-    }
-    return 0;
+
+    assert(tail == dst || isspace(*tail));
+    *tail = '\0';
 }
 
 /******************************************************************/

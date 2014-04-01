@@ -388,14 +388,14 @@ const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax file_control_constraints[] =
+const ConstraintSyntax FILE_CONTROL_CONSTRAINTS[] =
 {
     ConstraintSyntaxNewString("namespace", CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax ospf_control_constraints[] =
+const ConstraintSyntax OSPF_CONTROLBODY[] =
 {
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_log_adjacency_changes", "normal,detail,none", "OSPF logging of neighbour changes", SYNTAX_STATUS_NORMAL),
@@ -403,9 +403,8 @@ const ConstraintSyntax ospf_control_constraints[] =
     ConstraintSyntaxNewInt("ospf_log_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_router_id", CF_ANYSTRING, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_log_file", CF_ANYSTRING, "Log file for OSPF messages, if supported on platform", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_service_start", CF_ABSPATHRANGE, "Command to start the ospf services", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_stub", "Mark current OSPF area a stub", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Hello heartbeat interval", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF router priority", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,rip,bgp", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_external_metric_type", "1,2", "How to calculate metrics for external routes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_VALRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),
@@ -470,8 +469,8 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_RUNC, CFR_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew("file", file_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew("ospf", ospf_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_FILEC, FILE_CONTROL_CONSTRAINTS, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_OSPFC, OSPF_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
     BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),

@@ -18,7 +18,9 @@ body common control
 bundle agent init
 {
   vars:
-    any::
+    freebsd|solaris::
+      "mode" int => "04751";
+    !freebsd.!solaris::
       "mode" int => "01751";
     linux::
       "owner" string => "sys";
@@ -30,8 +32,13 @@ bundle agent init
       "owner" string => "undefined-please-fix";
       "group" string => "undefined-please-fix";
 
-    pass2.!windows::
+    pass2.(freebsd|solaris)::
+      "expect[modeoct]" string => "104755";
+
+    pass2.!(freebsd|solaris|windows)::
       "expect[modeoct]" string => "101755";
+
+    pass2.!windows::
       "expect[uid]" string => "0";
       "expect[gid]" string => "0";
 
@@ -95,8 +102,11 @@ body perms test_perms(m)
 bundle agent check
 {
   vars:
-    !windows::
+    freebsd|solaris::
+      "expect[modeoct]" string => "104755";
+    !freebsd.!solaris.!windows::
       "expect[modeoct]" string => "101755";
+    !windows::
       "expect[uid]" string => "0";
       "expect[gid]" string => "0";
     any::

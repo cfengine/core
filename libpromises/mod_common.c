@@ -404,7 +404,6 @@ const ConstraintSyntax OSPF_CONTROLBODY[] =
     ConstraintSyntaxNewString("ospf_router_id", CF_ANYSTRING, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_log_file", CF_ANYSTRING, "Log file for OSPF messages, if supported on platform", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_service_start", CF_ABSPATHRANGE, "Command to start the ospf services", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("ospf_stub", "Mark current OSPF area a stub", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,rip,bgp", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_external_metric_type", "1,2", "How to calculate metrics for external routes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_VALRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),

@@ -67,6 +67,7 @@
 int ACTIVE_THREADS = 0; /* GLOBAL_X */
 
 int CFD_MAXPROCESSES = 0; /* GLOBAL_P */
+int LSD_MAXREADERS = 0; /* GLOBAL_P */
 bool DENYBADCLOCKS = true; /* GLOBAL_P */
 int MAXTRIES = 5; /* GLOBAL_P */
 bool LOGENCRYPT = false; /* GLOBAL_P */

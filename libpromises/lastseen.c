@@ -29,6 +29,10 @@
 #include <files_hashes.h>
 #include <locks.h>
 #include <item_lib.h>
+#include <known_dirs.h>
+#ifdef LMDB
+#include <lmdb.h>
+#endif
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
@@ -638,4 +642,47 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
     Log(LOG_LEVEL_INFO, "Removed corresponding entries from lastseen database.");
 
     return 0;
+}
+
+int UpdateLastSeenMaxReaders(int maxreaders)
+{
+    int rc = 0;
+#ifdef LMDB
+    char workbuf[CF_BUFSIZE];
+    MDB_env *env;
+
+    if (maxreaders > 504L)
+    {
+        rc = mdb_env_create(&env);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not create lastseen database env %s",
+                mdb_strerror(rc));
+            goto err;
+        }
+
+        rc = mdb_env_set_maxreaders(env, maxreaders);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not change lastseen maxreaders to %d : %s",
+                maxreaders, mdb_strerror(rc));
+            goto err;
+        }
+
+        snprintf(workbuf, CF_BUFSIZE, "%s%ccf_lastseen.lmdb", GetWorkDir(), FILE_SEPARATOR);
+        rc = mdb_env_open(env, workbuf, MDB_NOSUBDIR, 0644);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not open lastseen database env %s",
+                mdb_strerror(rc));
+            goto err;
+        }
+err:
+        if (env)
+        {
+            mdb_env_close(env);
+        }
+    }
+#endif
+    return rc;
 }

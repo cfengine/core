@@ -372,6 +372,11 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
                     Log(LOG_LEVEL_ERR, "Could not commit: %s", mdb_strerror(rc));
                 }
             }
+            else if (rc == MDB_NOTFOUND)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Entry not found: %s", mdb_strerror(rc));
+                mdb_txn_abort(txn);
+            }
             else
             {
                 Log(LOG_LEVEL_ERR, "Could not delete: %s", mdb_strerror(rc));

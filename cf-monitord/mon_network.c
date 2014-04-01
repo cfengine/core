@@ -76,36 +76,36 @@ static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum 
 static const char *const VNETSTAT[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
-    [PLATFORM_CONTEXT_OPENVZ] = "/bin/netstat -rn",         /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "/usr/bin/netstat -rn",     /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "/usr/bin/netstat -rn",     /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "/bin/netstat -rn",         /* linux */
+    [PLATFORM_CONTEXT_OPENVZ] = "/bin/netstat -rn",          /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/usr/bin/netstat -rn",          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/usr/bin/netstat -rn",         /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/bin/netstat -rn",           /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/usr/bin/netstat -rn",     /* solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/usr/bin/netstat -rn",     /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "/usr/bin/netstat -rn",     /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "/usr/ucb/netstat -rn",     /* cray */
-    [PLATFORM_CONTEXT_WINDOWS_NT] = "/cygdrive/c/WINNT/System32/netstat",       /* NT */
+    [PLATFORM_CONTEXT_NETBSD] = "/usr/bin/netstat -rn",      /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/usr/ucb/netstat -rn",      /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/cygdrive/c/WINNT/System32/netstat", /* NT */
     [PLATFORM_CONTEXT_SYSTEMV] = "/usr/bin/netstat -rn",     /* Unixware */
     [PLATFORM_CONTEXT_OPENBSD] = "/usr/bin/netstat -rn",     /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "/usr/bin/netstat -rn",     /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "/usr/sbin/netstat -rn",    /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "/usr/bin/netstat -rn",     /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "/usr/bin/netstat -rn",     /* dragonfly */
-    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
-    [PLATFORM_CONTEXT_VMWARE] = "/usr/bin/netstat",         /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/netstat -rn",    /* android */
+    [PLATFORM_CONTEXT_CFSCO] = "/usr/bin/netstat -rn",       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/usr/sbin/netstat -rn",     /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/usr/bin/netstat -rn",         /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/usr/bin/netstat -rn",   /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",              /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/usr/bin/netstat",          /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/netstat -rn", /* android */
 };
 
 /* Implementation */
 
 void MonNetworkInit(void)
 {
- 
+
     DeleteItemList(MON_TCP4);
     DeleteItemList(MON_TCP6);
     DeleteItemList(MON_UDP4);
     DeleteItemList(MON_UDP6);
- 
+
     MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
 
     for (int i = 0; i < ATTR; i++)
@@ -288,12 +288,12 @@ void MonNetworkGatherData(double *cf_this)
         }
 
         // End extract type
-        
+
         switch (type)
         {
         case cfn_new:  sscanf(vbuff, "%*s %*s %*s %s %s", local, remote);  /* linux-like */
             break;
-            
+
         case cfn_old:
             sscanf(vbuff, "%s %s", local, remote);
             break;
@@ -314,7 +314,7 @@ void MonNetworkGatherData(double *cf_this)
         sp++;
 
         char *localport = sp;
-        
+
         if (strstr(vbuff, "LISTEN"))
         {
             // General bucket
@@ -344,7 +344,7 @@ void MonNetworkGatherData(double *cf_this)
 
 
         // Now look at outgoing
-        
+
         for (sp = remote + strlen(remote) - 1; (sp >= remote) && (isdigit((int) *sp)); sp--)
         {
         }
@@ -353,7 +353,7 @@ void MonNetworkGatherData(double *cf_this)
         char *remoteport = sp;
 
         // Now look for the specific vital signs to count frequencies
-            
+
         for (i = 0; i < ATTR; i++)
         {
             if (strcmp(localport, ECGSOCKS[i].portnr) == 0)
@@ -374,7 +374,7 @@ void MonNetworkGatherData(double *cf_this)
 
     cf_pclose(pp);
 
-/* Now save the state for ShowState() 
+/* Now save the state for ShowState()
    the state is not smaller than the last or at least 40 minutes
    older. This mirrors the persistence of the maxima classes */
 

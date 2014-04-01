@@ -391,9 +391,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
     else
     {
         Log(LOG_LEVEL_ERR, "Variable %s has no promised value", pp->promiser);
-        Log(LOG_LEVEL_ERR, "Rule from %s at/before line %llu",
-            PromiseGetBundle(pp)->source_path,
-            (unsigned long long)opts.cp_save->offset.line);
+        Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 

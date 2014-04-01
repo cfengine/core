@@ -1089,12 +1089,8 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
     {
         if (caller)
         {
-            Log(LOG_LEVEL_ERR,
-                "Argument arity mismatch in body '%s' at line %llu "
-                "in file '%s', expected %d, got %d",
-                body->name, (unsigned long long)caller->offset.line,
-                PromiseGetBundle(caller)->source_path, RlistLen(body->args),
-                RlistLen(args));
+            Log(LOG_LEVEL_ERR, "Argument arity mismatch in body '%s' at line %zu in file '%s', expected %d, got %d",
+                body->name, caller->offset.line, PromiseGetBundle(caller)->source_path, RlistLen(body->args), RlistLen(args));
         }
         else
         {
@@ -1486,8 +1482,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
             BufferAppendChar(path, '\'');
             if (i == SeqLength(ctx->stack) - 1)
             {
-                BufferAppendF(path, "[%llu]",
-                             (unsigned long long)frame->data.promise_iteration.index);
+                BufferAppendF(path, "[%zd]", frame->data.promise_iteration.index);
             }
             break;
         }
@@ -2367,9 +2362,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 
     if (PromiseGetBundle(pp)->source_path)
     {
-        WriterWriteF(w, " source path '%s' at line %llu",
-                     PromiseGetBundle(pp)->source_path,
-                     (unsigned long long)pp->offset.line);
+        WriterWriteF(w, " source path '%s' at line %zu", PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
 
     switch (pp->promisee.type)

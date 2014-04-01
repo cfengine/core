@@ -131,13 +131,16 @@
 
 #endif
 
-
 /* Fallback uptime calculation: Parse the "uptime" command in case the
  * platform-specific way fails or returns absurd number. */
 static time_t GetBootTimeFromUptimeCommand(time_t now);
 
-
 #endif  /* ifndef __MINGW32__ */
+
+#define LSB_RELEASE_FILENAME "/etc/lsb-release"
+#define DEBIAN_VERSION_FILENAME "/etc/debian_version"
+#define DEBIAN_ISSUE_FILENAME "/etc/issue"
+
 
 /*****************************************************/
 
@@ -151,6 +154,7 @@ static void Linux_Oracle_Version(EvalContext *ctx);
 static int Linux_Suse_Version(EvalContext *ctx);
 static int Linux_Slackware_Version(EvalContext *ctx, char *filename);
 static int Linux_Debian_Version(EvalContext *ctx);
+static int Linux_Misc_Version(EvalContext *ctx);
 static int Linux_Mandrake_Version(EvalContext *ctx);
 static int Linux_Mandriva_Version(EvalContext *ctx);
 static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *relstring, char *vendor);
@@ -1019,9 +1023,14 @@ static void OSClasses(EvalContext *ctx)
         Linux_Slackware_Version(ctx, SLACKWARE_ANCIENT_VERSION_FILENAME);
     }
 
-    if (stat("/etc/debian_version", &statbuf) != -1)
+    if (stat(DEBIAN_VERSION_FILENAME, &statbuf) != -1)
     {
         Linux_Debian_Version(ctx);
+    }
+
+    if (stat(LSB_RELEASE_FILENAME, &statbuf) != -1)
+    {
+        Linux_Misc_Version(ctx);
     }
 
     if (stat("/usr/bin/aptitude", &statbuf) != -1)
@@ -1965,10 +1974,59 @@ static int LinuxDebianSanitizeIssue(char *buffer)
 }
 
 /******************************************************************/
+
+static int Linux_Misc_Version(EvalContext *ctx)
+{
+    FILE *fp;
+    char flavour[CF_MAXVARSIZE];
+    char version[CF_MAXVARSIZE];
+    char os[CF_MAXVARSIZE];
+    char *sp;
+    char buffer[CF_BUFSIZE];
+
+    *os = '\0';
+    *version = '\0';
+
+    if ((fp = fopen(LSB_RELEASE_FILENAME, "r")) != NULL)
+    {
+        while (!feof(fp))
+        {
+            if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+            {
+                continue;
+            }
+
+            if (strstr(buffer, "Cumulus"))
+            {
+                EvalContextClassPutHard(ctx, "cumulus", "inventory,attribute_name=none,source=agent");
+                strcpy(os, "cumulus");
+            }
+
+            if ((sp = strstr(buffer, "DISTRIB_RELEASE=")))
+            {
+                version[0] = '\0';
+                sscanf(sp+strlen("DISTRIB_RELEASE="), "%[^\n]", version);
+                CanonifyNameInPlace(version);
+            }
+        }
+    }
+
+    fclose(fp);
+
+    if (*os && *version)
+    {
+        snprintf(flavour, CF_MAXVARSIZE, "%s_%s", os, version);
+        SetFlavour(ctx, flavour);
+        return 1;
+    }
+
+    return 0;
+}
+
+/******************************************************************/
+
 static int Linux_Debian_Version(EvalContext *ctx)
 {
-#define DEBIAN_VERSION_FILENAME "/etc/debian_version"
-#define DEBIAN_ISSUE_FILENAME "/etc/issue"
     int major = -1;
     int release = -1;
     int result;

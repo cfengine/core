@@ -2903,16 +2903,6 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
             EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
                                    "source=function,function=selectservers");
             VarRefDestroy(ref);
-
-            /* TODO is this some kind of undocumented feature? */
-            if (IsDefinedClass(ctx, CanonifyName(host)))
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "This host is in the list and has promised to join the class '%s' - joined",
-                    array_lval);
-                EvalContextClassPutSoft(ctx, array_lval, CONTEXT_SCOPE_NAMESPACE,
-                                        "source=function,function=selectservers");
-            }
         }
     }
 

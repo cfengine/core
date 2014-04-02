@@ -184,3 +184,12 @@
    fun:SetRepositoryLocation
    ...
 }
+
+{
+   cfe-global-varname-regex
+   Memcheck:Leak
+   ...
+   fun:CompileRegex
+   fun:IsValidVariableName
+   ...
+}

@@ -467,11 +467,14 @@ typedef enum
     OSPF_CONTROL_ROUTER_ID,
     OSPF_CONTROL_LOG_FILE,
     OSPF_CONTROL_REDISTRIBUTE,
-    OSPF_CONTROL_EXTERNAL_METRIC_TYPE,
     OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC,
     OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC,
     OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC,
     OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC,
+    OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC_TYPE,
+    OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC_TYPE,
+    OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC_TYPE,
+    OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC_TYPE,
     OSPF_CONTROL_NONE
 } OspfControl;
 
@@ -984,17 +987,26 @@ struct LinkStateOSPF_
     bool ospf_abr_summarization; // Not "no-summary"
     char ospf_area_type; // stub, nssa etc
     int ospf_area;
-    LinkStateOSPF *next;
 };
+
+typedef enum
+{
+    CF_RC_INITIAL,
+    CF_RC_INTERFACE,
+    CF_RC_OSPF,
+    CF_RC_BGP
+} RouterCategory;
+
 
 typedef struct CommonOSPF_ CommonOSPF;
 
 struct CommonOSPF_
 {
+    int log_timestamp_precision; // 0,6
+    char *log_file;
+
     char *ospf_log_adjacency_changes;
-    int ospf_log_timestamp_precision; // 0,6
     char *ospf_router_id;
-    char *ospf_log_file;
 
     bool ospf_redistribute_kernel;
     bool ospf_redistribute_connected;
@@ -1006,7 +1018,10 @@ struct CommonOSPF_
     int ospf_redistribute_static_metric;
     int ospf_redistribute_bgp_metric;
 
-    int ospf_external_metric_type; // 1 or 2
+    int ospf_redistribute_kernel_metric_type;
+    int ospf_redistribute_connected_metric_type;
+    int ospf_redistribute_static_metric_type;
+    int ospf_redistribute_bgp_metric_type;
 };
 
 typedef struct Bridges_ Bridges;

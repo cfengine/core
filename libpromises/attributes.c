@@ -181,6 +181,9 @@ Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
     attr.interface = GetInterfaceConstraints(ctx, pp);
 
+    attr.havelinkstate = PromiseGetConstraintAsBoolean(ctx, "link_state", pp);
+    attr.havelinkservices = PromiseGetConstraintAsBoolean(ctx, "link_services", pp);
+
     attr.havebridge = (attr.interface.bridge_interfaces == NULL) ? false : true;
     attr.havebond = (attr.interface.bond_interfaces == NULL) ? false : true;
     attr.haveipv4 = (attr.interface.v4_addresses == NULL) ? false : true;

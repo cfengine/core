@@ -171,20 +171,22 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         return false;
     }
 
-    if (a.interface.autoneg && (a.interface.speed || a.interface.duplex))
+    if (a.havelinkstate)
     {
-        Log(LOG_LEVEL_ERR, "Interface '%s' cannot promise speed/duplex and auto-negotiation at same time", pp->promiser);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
-    }
+        if (a.interface.autoneg && (a.interface.speed || a.interface.duplex))
+        {
+            Log(LOG_LEVEL_ERR, "Interface '%s' cannot promise speed/duplex and auto-negotiation at same time", pp->promiser);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            return false;
+        }
 
-    if ((a.interface.speed || a.interface.duplex) && !(a.interface.speed && a.interface.duplex))
-    {
-        Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex", pp->promiser);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
+        if ((a.interface.speed || a.interface.duplex) && !(a.interface.speed && a.interface.duplex))
+        {
+            Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex", pp->promiser);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            return false;
+        }
     }
-
 
     return true;
 }

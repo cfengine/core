@@ -53,6 +53,17 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level);
 static int CompareRval(const void *rval1_item, RvalType rval1_type, const void *rval2_item, RvalType rval2_type);
 
+static bool IsValidVariableName(const char *var_name)
+{
+    // must be removed at some point (global), but for now this offers an attractive speedup
+    static pcre *rx = NULL;
+    if (!rx)
+    {
+        rx = CompileRegex("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*");
+    }
+
+    return StringMatchFullWithPrecompiledRegex(rx, var_name);
+}
 
 PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
 {
@@ -261,7 +272,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             return result;
         }
 
-        if (!StringMatchFull("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
+        if (!IsValidVariableName(pp->promiser))
         {
             Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
             PromiseRef(LOG_LEVEL_ERR, pp);

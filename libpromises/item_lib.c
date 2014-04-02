@@ -811,6 +811,17 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
         return false;
     }
 
+    pcre *rx = NULL;
+    if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT ||
+        type == ITEM_MATCH_TYPE_REGEX_COMPLETE)
+    {
+        rx = CompileRegex(string);
+        if (!rx)
+        {
+            return false;
+        }
+    }
+
     Item *ip = *list, *last = NULL;
     CYCLE_DECLARE(ip, slow, toggle);
     while (ip != NULL)
@@ -841,7 +852,7 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
             case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
                 flip = true; /* and fall through */
             case ITEM_MATCH_TYPE_REGEX_COMPLETE:
-                match = StringMatchFull(string, ip->name);
+                match = StringMatchFullWithPrecompiledRegex(rx, ip->name);
                 break;
             }
             if (flip)
@@ -866,6 +877,10 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
                 free(ip->name);
                 free(ip->classes);
                 free(ip);
+                if (rx)
+                {
+                    pcre_free(rx);
+                }
 
                 return true;
             }
@@ -873,6 +888,11 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
         last = ip;
         ip = ip->next;
         CYCLE_CHECK(ip, slow, toggle);
+    }
+
+    if (rx)
+    {
+        pcre_free(rx);
     }
 
     return false;

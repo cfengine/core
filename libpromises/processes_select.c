@@ -37,11 +37,11 @@
 #include <zones.h>
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
-static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
+static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
 static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
-static int GetProcColumnIndex(char *name1, char *name2, char **names);
+static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
 
@@ -188,33 +188,39 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
 
     GetProcessColumnNames(processes->name, &names[0], start, end);
 
-    for (Item *ip = processes->next; ip != NULL; ip = ip->next)
+    pcre *rx = CompileRegex(process_name);
+    if (rx)
     {
-        int s, e;
-
-        if (StringMatch(process_name, ip->name, &s, &e))
+        for (Item *ip = processes->next; ip != NULL; ip = ip->next)
         {
-            if (NULL_OR_EMPTY(ip->name))
+            int s, e;
+
+            if (StringMatchWithPrecompiledRegex(rx, ip->name, &s, &e))
             {
-                continue;
+                if (NULL_OR_EMPTY(ip->name))
+                {
+                    continue;
+                }
+
+                if (attrselect && !SelectProcess(ip->name, names, start, end, a))
+                {
+                    continue;
+                }
+
+                pid_t pid = ExtractPid(ip->name, names, end);
+
+                if (pid == -1)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Unable to extract pid while looking for %s", process_name);
+                    continue;
+                }
+
+                PrependItem(&result, ip->name, "");
+                result->counter = (int)pid;
             }
-
-            if (attrselect && !SelectProcess(ip->name, names, start, end, a))
-            {
-                continue;
-            }
-
-            pid_t pid = ExtractPid(ip->name, names, end);
-
-            if (pid == -1)
-            {
-                Log(LOG_LEVEL_VERBOSE, "Unable to extract pid while looking for %s", process_name);
-                continue;
-            }
-
-            PrependItem(&result, ip->name, "");
-            result->counter = (int)pid;
         }
+
+        pcre_free(rx);
     }
 
     for (int i = 0; i < CF_PROCCOLS; i++)
@@ -406,7 +412,8 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
 /***************************************************************************/
 
-static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line)
+static bool SelectProcRegexMatch(const char *name1, const char *name2,
+                                 const char *regex, char **colNames, char **line)
 {
     int i;
 
@@ -552,7 +559,7 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
 /*******************************************************************/
 
-static int GetProcColumnIndex(char *name1, char *name2, char **names)
+static int GetProcColumnIndex(const char *name1, const char *name2, char **names)
 {
     int i;
 

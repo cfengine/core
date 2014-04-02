@@ -6271,22 +6271,32 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
     int start, end;
     int count = 0;
 
-    if (!NULL_OR_EMPTY(pattern))
+    if (NULL_OR_EMPTY(pattern))
     {
-        while (StringMatch(pattern, file_buffer, &start, &end))
-        {
-            CloseStringHole(file_buffer, start, end);
+        return file_buffer;
+    }
 
-            if (count++ > strlen(file_buffer))
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Comment regex '%s' was irreconcilable reading input '%s' probably because it legally matches nothing",
-                    pattern, filename);
-                return file_buffer;
-            }
+    pcre *rx = CompileRegex(pattern);
+    if (!rx)
+    {
+        return file_buffer;
+    }
+
+    while (StringMatchWithPrecompiledRegex(rx, file_buffer, &start, &end))
+    {
+        CloseStringHole(file_buffer, start, end);
+
+        if (count++ > strlen(file_buffer))
+        {
+            Log(LOG_LEVEL_ERR,
+                "Comment regex '%s' was irreconcilable reading input '%s' probably because it legally matches nothing",
+                pattern, filename);
+            pcre_free(rx);
+            return file_buffer;
         }
     }
 
+    pcre_free(rx);
     return file_buffer;
 }
 

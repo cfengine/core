@@ -947,26 +947,6 @@ void EvalContextClear(EvalContext *ctx)
 
 }
 
-StringSet *StringSetAddAllMatchingIterator(StringSet* base, StringSetIterator it, const char *filter_regex)
-{
-    const char *element = NULL;
-    while ((element = SetIteratorNext(&it)))
-    {
-        /* FIXME: Review this strcmp moved out from StringMatch. */
-        if (!strcmp(filter_regex, element)
-            || StringMatch(filter_regex, element, NULL, NULL))
-        {
-            StringSetAdd(base, xstrdup(element));
-        }
-    }
-    return base;
-}
-
-StringSet *StringSetAddAllMatching(StringSet* base, const StringSet* filtered, const char *filter_regex)
-{
-    return StringSetAddAllMatchingIterator(base, StringSetIteratorInit((StringSet*)filtered), filter_regex);
-}
-
 static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
 {
     StackFrame *frame = xmalloc(sizeof(StackFrame));

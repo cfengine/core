@@ -275,232 +275,146 @@ void XextensionX_library_close(void *handle);
 
 #ifndef BUILDING_xEXTENSIONx_EXTENSION
 
-// The __ret__assign and __ret_ref parameters are to work around functions returning void.
-#define xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, __real__func__par, __stub__func__par) \
-    { \
-        void *__handle = XextensionX_library_open(); \
-        if (__handle) \
-        { \
-            __func##__type func_ptr = shlib_load(__handle, #__func "__wrapper"); \
-            if (func_ptr) \
-            { \
-                int __successful = 0; \
-                __ret__assign func_ptr __real__func__par;     \
-                if (__successful) \
-                { \
-                    XextensionX_library_close(__handle); \
-                    return __ret__ref; \
-                } \
-            } \
-            XextensionX_library_close(__handle); \
-        } \
-        return __func##__stub __stub__func__par;  \
-    }
-
-# define xEXTENSIONx_FUNC_0ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref) \
+# define xEXTENSIONx_FUNC_0ARG_DECLARE_IMPL(__ret, __func) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_0ARG_REAL_SIGNATURE(__ret, __func); \
-    inline static xEXTENSIONx_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, xEXTENSIONx_CANARY_VALUE), \
-                                ()) \
+    xEXTENSIONx_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func); \
     xEXTENSIONx_FUNC_0ARG_REAL_SIGNATURE(__ret, __func)
 
-# define xEXTENSIONx_FUNC_1ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1) \
+# define xEXTENSIONx_FUNC_1ARG_DECLARE_IMPL(__ret, __func, __t1, __p1) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1); \
-    inline static xEXTENSIONx_FUNC_1ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1)) \
+    xEXTENSIONx_FUNC_1ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1); \
     xEXTENSIONx_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1)
 
-# define xEXTENSIONx_FUNC_2ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2) \
+# define xEXTENSIONx_FUNC_2ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2); \
-    inline static xEXTENSIONx_FUNC_2ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2)) \
+    xEXTENSIONx_FUNC_2ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2); \
     xEXTENSIONx_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2)
 
-# define xEXTENSIONx_FUNC_3ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3) \
+# define xEXTENSIONx_FUNC_3ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3); \
-    inline static xEXTENSIONx_FUNC_3ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3)) \
+    xEXTENSIONx_FUNC_3ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3); \
     xEXTENSIONx_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
 
-# define xEXTENSIONx_FUNC_4ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+# define xEXTENSIONx_FUNC_4ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4); \
-    inline static xEXTENSIONx_FUNC_4ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4)) \
+    xEXTENSIONx_FUNC_4ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4); \
     xEXTENSIONx_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
 
-# define xEXTENSIONx_FUNC_5ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+# define xEXTENSIONx_FUNC_5ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5); \
-    inline static xEXTENSIONx_FUNC_5ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5)) \
+    xEXTENSIONx_FUNC_5ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5); \
     xEXTENSIONx_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
 
-# define xEXTENSIONx_FUNC_6ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+# define xEXTENSIONx_FUNC_6ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6); \
-    inline static xEXTENSIONx_FUNC_6ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6)) \
+    xEXTENSIONx_FUNC_6ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6); \
     xEXTENSIONx_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
 
-# define xEXTENSIONx_FUNC_7ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+# define xEXTENSIONx_FUNC_7ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7); \
-    inline static xEXTENSIONx_FUNC_7ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7)) \
+    xEXTENSIONx_FUNC_7ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7); \
     xEXTENSIONx_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
 
-# define xEXTENSIONx_FUNC_8ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+# define xEXTENSIONx_FUNC_8ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8); \
-    inline static xEXTENSIONx_FUNC_8ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8)) \
+    xEXTENSIONx_FUNC_8ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8); \
     xEXTENSIONx_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
 
-# define xEXTENSIONx_FUNC_9ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+# define xEXTENSIONx_FUNC_9ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9); \
-    inline static xEXTENSIONx_FUNC_9ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9)) \
+    xEXTENSIONx_FUNC_9ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9); \
     xEXTENSIONx_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
-# define xEXTENSIONx_FUNC_10ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
+# define xEXTENSIONx_FUNC_10ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10); \
-    inline static xEXTENSIONx_FUNC_10ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10)) \
+    xEXTENSIONx_FUNC_10ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10); \
     xEXTENSIONx_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
-# define xEXTENSIONx_FUNC_11ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
+# define xEXTENSIONx_FUNC_11ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11); \
-    inline static xEXTENSIONx_FUNC_11ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11)) \
+    xEXTENSIONx_FUNC_11ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11); \
     xEXTENSIONx_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
-# define xEXTENSIONx_FUNC_12ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
+# define xEXTENSIONx_FUNC_12ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12); \
-    inline static xEXTENSIONx_FUNC_12ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12)) \
+    xEXTENSIONx_FUNC_12ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12); \
     xEXTENSIONx_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
-# define xEXTENSIONx_FUNC_13ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
+# define xEXTENSIONx_FUNC_13ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13); \
-    inline static xEXTENSIONx_FUNC_13ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13)) \
+    xEXTENSIONx_FUNC_13ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13); \
     xEXTENSIONx_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
-# define xEXTENSIONx_FUNC_14ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
+# define xEXTENSIONx_FUNC_14ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14); \
-    inline static xEXTENSIONx_FUNC_14ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14)) \
+    xEXTENSIONx_FUNC_14ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14); \
     xEXTENSIONx_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
-# define xEXTENSIONx_FUNC_15ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
+# define xEXTENSIONx_FUNC_15ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15, int32_t __end_canary); \
-    xEXTENSIONx_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15); \
-    inline static xEXTENSIONx_FUNC_15ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
-                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, __p15, xEXTENSIONx_CANARY_VALUE), \
-                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, __p15)) \
+    xEXTENSIONx_FUNC_15ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15); \
     xEXTENSIONx_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
 
 # define xEXTENSIONx_FUNC_0ARG_DECLARE(__ret, __func) \
-    xEXTENSIONx_FUNC_0ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value)
+    xEXTENSIONx_FUNC_0ARG_DECLARE_IMPL(__ret, __func)
 # define xEXTENSIONx_FUNC_1ARG_DECLARE(__ret, __func, __t1, __p1) \
-    xEXTENSIONx_FUNC_1ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1)
+    xEXTENSIONx_FUNC_1ARG_DECLARE_IMPL(__ret, __func, __t1, __p1)
 # define xEXTENSIONx_FUNC_2ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2) \
-    xEXTENSIONx_FUNC_2ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2)
+    xEXTENSIONx_FUNC_2ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2)
 # define xEXTENSIONx_FUNC_3ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    xEXTENSIONx_FUNC_3ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3)
+    xEXTENSIONx_FUNC_3ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
 # define xEXTENSIONx_FUNC_4ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    xEXTENSIONx_FUNC_4ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
+    xEXTENSIONx_FUNC_4ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
 # define xEXTENSIONx_FUNC_5ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    xEXTENSIONx_FUNC_5ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
+    xEXTENSIONx_FUNC_5ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
 # define xEXTENSIONx_FUNC_6ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    xEXTENSIONx_FUNC_6ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
+    xEXTENSIONx_FUNC_6ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
 # define xEXTENSIONx_FUNC_7ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    xEXTENSIONx_FUNC_7ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
+    xEXTENSIONx_FUNC_7ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
 # define xEXTENSIONx_FUNC_8ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    xEXTENSIONx_FUNC_8ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
+    xEXTENSIONx_FUNC_8ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
 # define xEXTENSIONx_FUNC_9ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    xEXTENSIONx_FUNC_9ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
+    xEXTENSIONx_FUNC_9ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
 # define xEXTENSIONx_FUNC_10ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    xEXTENSIONx_FUNC_10ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
+    xEXTENSIONx_FUNC_10ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
 # define xEXTENSIONx_FUNC_11ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    xEXTENSIONx_FUNC_11ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
+    xEXTENSIONx_FUNC_11ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
 # define xEXTENSIONx_FUNC_12ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    xEXTENSIONx_FUNC_12ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
+    xEXTENSIONx_FUNC_12ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
 # define xEXTENSIONx_FUNC_13ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    xEXTENSIONx_FUNC_13ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
+    xEXTENSIONx_FUNC_13ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
 # define xEXTENSIONx_FUNC_14ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    xEXTENSIONx_FUNC_14ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
+    xEXTENSIONx_FUNC_14ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
 # define xEXTENSIONx_FUNC_15ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    xEXTENSIONx_FUNC_15ARG_DECLARE_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
+    xEXTENSIONx_FUNC_15ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
 # define xEXTENSIONx_VOID_FUNC_0ARG_DECLARE(__ret, __func) \
-    xEXTENSIONx_FUNC_0ARG_DECLARE_IMPL(__ret, __func, , )
+    xEXTENSIONx_FUNC_0ARG_DECLARE_IMPL(__ret, __func)
 # define xEXTENSIONx_VOID_FUNC_1ARG_DECLARE(__ret, __func, __t1, __p1) \
-    xEXTENSIONx_FUNC_1ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1)
+    xEXTENSIONx_FUNC_1ARG_DECLARE_IMPL(__ret, __func, __t1, __p1)
 # define xEXTENSIONx_VOID_FUNC_2ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2) \
-    xEXTENSIONx_FUNC_2ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2)
+    xEXTENSIONx_FUNC_2ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2)
 # define xEXTENSIONx_VOID_FUNC_3ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    xEXTENSIONx_FUNC_3ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3)
+    xEXTENSIONx_FUNC_3ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
 # define xEXTENSIONx_VOID_FUNC_4ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    xEXTENSIONx_FUNC_4ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
+    xEXTENSIONx_FUNC_4ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
 # define xEXTENSIONx_VOID_FUNC_5ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    xEXTENSIONx_FUNC_5ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
+    xEXTENSIONx_FUNC_5ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
 # define xEXTENSIONx_VOID_FUNC_6ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    xEXTENSIONx_FUNC_6ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
+    xEXTENSIONx_FUNC_6ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
 # define xEXTENSIONx_VOID_FUNC_7ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    xEXTENSIONx_FUNC_7ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
+    xEXTENSIONx_FUNC_7ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
 # define xEXTENSIONx_VOID_FUNC_8ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    xEXTENSIONx_FUNC_8ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
+    xEXTENSIONx_FUNC_8ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
 # define xEXTENSIONx_VOID_FUNC_9ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    xEXTENSIONx_FUNC_9ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
+    xEXTENSIONx_FUNC_9ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
 # define xEXTENSIONx_VOID_FUNC_10ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    xEXTENSIONx_FUNC_10ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
+    xEXTENSIONx_FUNC_10ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
 # define xEXTENSIONx_VOID_FUNC_11ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    xEXTENSIONx_FUNC_11ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
+    xEXTENSIONx_FUNC_11ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
 # define xEXTENSIONx_VOID_FUNC_12ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    xEXTENSIONx_FUNC_12ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
+    xEXTENSIONx_FUNC_12ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
 # define xEXTENSIONx_VOID_FUNC_13ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    xEXTENSIONx_FUNC_13ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
+    xEXTENSIONx_FUNC_13ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
 # define xEXTENSIONx_VOID_FUNC_14ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    xEXTENSIONx_FUNC_14ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
+    xEXTENSIONx_FUNC_14ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
 # define xEXTENSIONx_VOID_FUNC_15ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    xEXTENSIONx_FUNC_15ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
+    xEXTENSIONx_FUNC_15ARG_DECLARE_IMPL(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
 #else // BUILDING_xEXTENSIONx_EXTENSION
 
@@ -736,71 +650,203 @@ void XextensionX_library_close(void *handle);
 
 #ifndef BUILDING_xEXTENSIONx_EXTENSION
 
-#define xEXTENSIONx_FUNC_0ARG_DEFINE_STUB(__ret, __func) \
+// The __ret__assign and __ret_ref parameters are to work around functions returning void.
+#define xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, __real__func__par, __stub__func__par) \
+    { \
+        void *__handle = XextensionX_library_open(); \
+        if (__handle) \
+        { \
+            static __func##__type func_ptr = NULL; \
+            if (!func_ptr) \
+            { \
+                func_ptr = shlib_load(__handle, #__func "__wrapper"); \
+            } \
+            if (func_ptr) \
+            { \
+                int __successful = 0; \
+                __ret__assign func_ptr __real__func__par;     \
+                if (__successful) \
+                { \
+                    XextensionX_library_close(__handle); \
+                    return __ret__ref; \
+                } \
+            } \
+            XextensionX_library_close(__handle); \
+        } \
+        return __func##__stub __stub__func__par;  \
+    }
+
+# define xEXTENSIONx_FUNC_0ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref) \
+    xEXTENSIONx_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, xEXTENSIONx_CANARY_VALUE), \
+                                ()) \
     xEXTENSIONx_FUNC_0ARG_REAL_SIGNATURE(__ret, __func)
-#define xEXTENSIONx_FUNC_1ARG_DEFINE_STUB(__ret, __func, __t1, __p1) \
+
+# define xEXTENSIONx_FUNC_1ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1) \
+    xEXTENSIONx_FUNC_1ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1)) \
     xEXTENSIONx_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1)
-#define xEXTENSIONx_FUNC_2ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2) \
+
+# define xEXTENSIONx_FUNC_2ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2) \
+    xEXTENSIONx_FUNC_2ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2)) \
     xEXTENSIONx_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2)
-#define xEXTENSIONx_FUNC_3ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+
+# define xEXTENSIONx_FUNC_3ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3) \
+    xEXTENSIONx_FUNC_3ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3)) \
     xEXTENSIONx_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
-#define xEXTENSIONx_FUNC_4ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+
+# define xEXTENSIONx_FUNC_4ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+    xEXTENSIONx_FUNC_4ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4)) \
     xEXTENSIONx_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
-#define xEXTENSIONx_FUNC_5ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+
+# define xEXTENSIONx_FUNC_5ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+    xEXTENSIONx_FUNC_5ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5)) \
     xEXTENSIONx_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
-#define xEXTENSIONx_FUNC_6ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+
+# define xEXTENSIONx_FUNC_6ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+    xEXTENSIONx_FUNC_6ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6)) \
     xEXTENSIONx_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
-#define xEXTENSIONx_FUNC_7ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+
+# define xEXTENSIONx_FUNC_7ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+    xEXTENSIONx_FUNC_7ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7)) \
     xEXTENSIONx_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
-#define xEXTENSIONx_FUNC_8ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+
+# define xEXTENSIONx_FUNC_8ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+    xEXTENSIONx_FUNC_8ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8)) \
     xEXTENSIONx_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
-#define xEXTENSIONx_FUNC_9ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+
+# define xEXTENSIONx_FUNC_9ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+    xEXTENSIONx_FUNC_9ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9)) \
     xEXTENSIONx_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
-#define xEXTENSIONx_FUNC_10ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
+# define xEXTENSIONx_FUNC_10ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
+    xEXTENSIONx_FUNC_10ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10)) \
     xEXTENSIONx_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
-#define xEXTENSIONx_FUNC_11ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
+# define xEXTENSIONx_FUNC_11ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
+    xEXTENSIONx_FUNC_11ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11)) \
     xEXTENSIONx_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
-#define xEXTENSIONx_FUNC_12ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
+# define xEXTENSIONx_FUNC_12ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
+    xEXTENSIONx_FUNC_12ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12)) \
     xEXTENSIONx_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
-#define xEXTENSIONx_FUNC_13ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
+# define xEXTENSIONx_FUNC_13ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
+    xEXTENSIONx_FUNC_13ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13)) \
     xEXTENSIONx_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
-#define xEXTENSIONx_FUNC_14ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
+# define xEXTENSIONx_FUNC_14ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
+    xEXTENSIONx_FUNC_14ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14)) \
     xEXTENSIONx_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
-#define xEXTENSIONx_FUNC_15ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
+# define xEXTENSIONx_FUNC_15ARG_DEFINE_STUB_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
+    xEXTENSIONx_FUNC_15ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
+        xEXTENSIONx_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
+                                (xEXTENSIONx_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, __p15, xEXTENSIONx_CANARY_VALUE), \
+                                (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, __p15)) \
     xEXTENSIONx_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
+#define xEXTENSIONx_FUNC_0ARG_DEFINE_STUB(__ret, __func) \
+    xEXTENSIONx_FUNC_0ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value)
+#define xEXTENSIONx_FUNC_1ARG_DEFINE_STUB(__ret, __func, __t1, __p1) \
+    xEXTENSIONx_FUNC_1ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1)
+#define xEXTENSIONx_FUNC_2ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2) \
+    xEXTENSIONx_FUNC_2ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2)
+#define xEXTENSIONx_FUNC_3ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+    xEXTENSIONx_FUNC_3ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3)
+#define xEXTENSIONx_FUNC_4ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+    xEXTENSIONx_FUNC_4ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
+#define xEXTENSIONx_FUNC_5ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+    xEXTENSIONx_FUNC_5ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
+#define xEXTENSIONx_FUNC_6ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+    xEXTENSIONx_FUNC_6ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
+#define xEXTENSIONx_FUNC_7ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+    xEXTENSIONx_FUNC_7ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
+#define xEXTENSIONx_FUNC_8ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+    xEXTENSIONx_FUNC_8ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
+#define xEXTENSIONx_FUNC_9ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+    xEXTENSIONx_FUNC_9ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
+#define xEXTENSIONx_FUNC_10ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
+    xEXTENSIONx_FUNC_10ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
+#define xEXTENSIONx_FUNC_11ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
+    xEXTENSIONx_FUNC_11ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
+#define xEXTENSIONx_FUNC_12ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
+    xEXTENSIONx_FUNC_12ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
+#define xEXTENSIONx_FUNC_13ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
+    xEXTENSIONx_FUNC_13ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
+#define xEXTENSIONx_FUNC_14ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
+    xEXTENSIONx_FUNC_14ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
+#define xEXTENSIONx_FUNC_15ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
+    xEXTENSIONx_FUNC_15ARG_DEFINE_STUB_IMPL(__ret, __func, __ret __ret_value =, __ret_value, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
+
 #define xEXTENSIONx_VOID_FUNC_0ARG_DEFINE_STUB(__ret, __func) \
-    xEXTENSIONx_FUNC_0ARG_REAL_SIGNATURE(__ret, __func)
+    xEXTENSIONx_FUNC_0ARG_DEFINE_STUB_IMPL(__ret, __func, , )
 #define xEXTENSIONx_VOID_FUNC_1ARG_DEFINE_STUB(__ret, __func, __t1, __p1) \
-    xEXTENSIONx_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1)
+    xEXTENSIONx_FUNC_1ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1)
 #define xEXTENSIONx_VOID_FUNC_2ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2) \
-    xEXTENSIONx_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2)
+    xEXTENSIONx_FUNC_2ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2)
 #define xEXTENSIONx_VOID_FUNC_3ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    xEXTENSIONx_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
+    xEXTENSIONx_FUNC_3ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3)
 #define xEXTENSIONx_VOID_FUNC_4ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    xEXTENSIONx_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
+    xEXTENSIONx_FUNC_4ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
 #define xEXTENSIONx_VOID_FUNC_5ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    xEXTENSIONx_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
+    xEXTENSIONx_FUNC_5ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
 #define xEXTENSIONx_VOID_FUNC_6ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    xEXTENSIONx_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
+    xEXTENSIONx_FUNC_6ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
 #define xEXTENSIONx_VOID_FUNC_7ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    xEXTENSIONx_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
+    xEXTENSIONx_FUNC_7ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
 #define xEXTENSIONx_VOID_FUNC_8ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    xEXTENSIONx_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
+    xEXTENSIONx_FUNC_8ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
 #define xEXTENSIONx_VOID_FUNC_9ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    xEXTENSIONx_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
+    xEXTENSIONx_FUNC_9ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
 #define xEXTENSIONx_VOID_FUNC_10ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    xEXTENSIONx_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
+    xEXTENSIONx_FUNC_10ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
 #define xEXTENSIONx_VOID_FUNC_11ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    xEXTENSIONx_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
+    xEXTENSIONx_FUNC_11ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
 #define xEXTENSIONx_VOID_FUNC_12ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    xEXTENSIONx_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
+    xEXTENSIONx_FUNC_12ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
 #define xEXTENSIONx_VOID_FUNC_13ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    xEXTENSIONx_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
+    xEXTENSIONx_FUNC_13ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
 #define xEXTENSIONx_VOID_FUNC_14ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    xEXTENSIONx_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
+    xEXTENSIONx_FUNC_14ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
 #define xEXTENSIONx_VOID_FUNC_15ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    xEXTENSIONx_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
+    xEXTENSIONx_FUNC_15ARG_DEFINE_STUB_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
 #define xEXTENSIONx_FUNC_DEFINE_REAL_INVALID In_core_code_you_need_to_use_DEFINE_STUB func()
 

@@ -94,7 +94,7 @@ bundle agent check
 
       "$(sort)_check_c" string => "";
 
-      "$(numerics)_check_d" string => "a,b,,";
+      "$(numerics)_check_d" string => ",,a,b";
       "$(non_numerics)_check_d" string => ",,a,b";
 
       "$(numerics)_check_e" string => "a,b,1";
@@ -105,11 +105,11 @@ bundle agent check
       "real_check_f" string => "0,0.1,3.2,100.0";
 
       "$(non_numerics)_check_g" string => ",-2.1,0.88,00.88,b";
-      "$(numerics)_check_g" string => "b,-2.1,,00.88,0.88";
+      "$(numerics)_check_g" string => ",b,-2.1,00.88,0.88";
 
       "lex_check_ip" string => ",-1,1.2.3.4,100.200.100.0,9,9.7,9.7.5,9.7.5.1,where are the IP addresses?";
-      "int_check_ip" string => "where are the IP addresses?,-1,,1.2.3.4,9.7.5,9.7,9,9.7.5.1,100.200.100.0";
-      "real_check_ip" string => "where are the IP addresses?,-1,,1.2.3.4,9,9.7.5,9.7,9.7.5.1,100.200.100.0";
+      "int_check_ip" string => ",where are the IP addresses?,-1,1.2.3.4,9.7.5,9.7,9,9.7.5.1,100.200.100.0";
+      "real_check_ip" string => ",where are the IP addresses?,-1,1.2.3.4,9.7.5,9.7,9,9.7.5.1,100.200.100.0";
       "IP_check_ip" string => ",-1,9,9.7,9.7.5,where are the IP addresses?,1.2.3.4,9.7.5.1,100.200.100.0";
       "MAC_check_ip" string => $(lex_check_ip);
 

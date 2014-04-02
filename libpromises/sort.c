@@ -224,17 +224,17 @@ static bool StringItemNumberLess(const char *lhs, const char *rhs, ARG_UNUSED vo
     double left;
     double right;
 
-    int matched_left = sscanf(lhs, "%lf", &left);
-    int matched_right = sscanf(rhs, "%lf", &right);
+    bool matched_left = sscanf(lhs, "%lf", &left) > 0;
+    bool matched_right = sscanf(rhs, "%lf", &right) > 0;
 
     if (!matched_left)
     {
-        matched_left = sscanf(lhs, "%lf%s", &left, remainder);
+        matched_left = sscanf(lhs, "%lf%s", &left, remainder) > 0;
     }
 
     if (!matched_right)
     {
-        matched_right = sscanf(rhs, "%lf%s", &right, remainder);
+        matched_right = sscanf(rhs, "%lf%s", &right, remainder) > 0;
     }
 
     if (matched_left && matched_right)

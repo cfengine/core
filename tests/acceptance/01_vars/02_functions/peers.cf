@@ -15,7 +15,7 @@ body common control
 bundle agent init
 {
   methods:
-      "nohosts" usebundle => dcs_emptyfile("$(G.testfile).nohosts");
+      "nohosts" usebundle => cfe_emptyfile("$(G.testfile).nohosts");
 
       "nopeers" usebundle => cfe_mustache_makefile_string
       (

@@ -19,8 +19,8 @@ body common control
 bundle agent init
 {
   methods:
-      "empty good" usebundle => dcs_emptyfile("$(G.testfile).good");
-      "empty bad" usebundle => dcs_emptyfile("$(G.testfile).bad");
+      "empty good" usebundle => cfe_emptyfile("$(G.testfile).good");
+      "empty bad" usebundle => cfe_emptyfile("$(G.testfile).bad");
 
       "first filestat good" usebundle => init_filestat("good1", "$(G.testfile).good");
       "first filestat bad" usebundle => init_filestat("bad1", "$(G.testfile).bad");
@@ -28,11 +28,11 @@ bundle agent init
       "Remove good" usebundle => dcs_fini("$(G.testfile).good");
       "Remove bad" usebundle => dcs_fini("$(G.testfile).bad");
 
-      "ready good" usebundle => dcs_makefile("$(G.testfile).good", "# Set good");
-      "ready bad" usebundle => dcs_makefile("$(G.testfile).bad", "# Set bad");
+      "ready good" usebundle => cfe_makefile("$(G.testfile).good", "# Set good");
+      "ready bad" usebundle => cfe_makefile("$(G.testfile).bad", "# Set bad");
 
-      "link good" usebundle => dcs_hardlinkfile("$(G.testfile).good", "$(G.testfile).goodlink");
-      "link bad" usebundle => dcs_hardlinkfile("$(G.testfile).bad", "$(G.testfile).badlink");
+      "link good" usebundle => cfe_hardlinkfile("$(G.testfile).good", "$(G.testfile).goodlink");
+      "link bad" usebundle => cfe_hardlinkfile("$(G.testfile).bad", "$(G.testfile).badlink");
 
       "second filestat good" usebundle => init_filestat("good2", "$(G.testfile).good");
       "second filestat bad" usebundle => init_filestat("bad2", "$(G.testfile).bad");

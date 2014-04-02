@@ -454,29 +454,6 @@ bundle agent dcs_fini(file)
       "$(this.bundle): deleting $(file) with $(G.rm) -rf";
 }
 
-bundle agent dcs_tidy(file)
-{
-  files:
-      "$(file)" delete => tidy;
-
-  reports:
-    EXTRA::
-      "$(this.bundle): deleting $(file) with delete => tidy";
-}
-
-bundle agent dcs_copydir(from, to)
-{
-  files:
-      "$(to)/."
-      create => "true",
-      depth_search => dcs_recurse("inf"),
-      copy_from => dcs_sync($(from));
-
-  reports:
-    EXTRA::
-      "$(this.bundle): copying directory $(from) to $(to)";
-}
-
 bundle agent dcs_copyfile(from, to)
 {
   files:
@@ -489,13 +466,6 @@ bundle agent dcs_copyfile(from, to)
       "$(this.bundle): copying file $(from) to $(to)";
 }
 
-body depth_search dcs_recurse(d)
-
-{
-      depth => "$(d)";
-      xdev  => "true";
-}
-
 body copy_from dcs_sync(f)
 {
       source => "$(f)";
@@ -505,72 +475,10 @@ body copy_from dcs_sync(f)
       compare => "digest";
 }
 
-bundle agent dcs_makefile(file, str)
-{
-  files:
-      "$(file)"
-      create => "true",
-      edit_line => insert_lines($(str)),
-      edit_defaults => empty;
-
-  reports:
-    EXTRA::
-      "$(this.bundle): creating $(file) with contents '$(str)'";
-}
-
-bundle agent dcs_emptyfile(file)
-{
-  files:
-      "$(file)"
-      create => "true",
-      edit_defaults => empty;
-
-  reports:
-    EXTRA::
-      "$(this.bundle): creating empty $(file) with 0 size";
-}
-
 body contain dcs_useshell
 {
       useshell => "true";
       chdir => "/";
-}
-
-bundle agent dcs_hardlinkfile(from, to)
-{
-  files:
-      "$(to)"
-      move_obstructions => "true",
-      link_from => dcs_hardlink($(from));
-
-  reports:
-    EXTRA::
-      "$(this.bundle): $(to) will point to $(from)";
-}
-
-body link_from dcs_hardlink(source)
-{
-      source => $(source);
-      link_type => "hardlink";
-}
-
-bundle agent dcs_linkfile(from, to, type)
-{
-  files:
-      "$(to)"
-      move_obstructions => "true",
-      link_from => dcs_link($(from), $(type));
-
-  reports:
-    EXTRA::
-      "$(this.bundle): $(to) will point to $(from) with link type $(type)";
-}
-
-
-body link_from dcs_link(source, type)
-{
-      source => $(source);
-      link_type => $(type);
 }
 
 #######################################################

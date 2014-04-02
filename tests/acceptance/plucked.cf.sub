@@ -638,6 +638,10 @@ body perms mog(mode,user,group)
 }
 
 body perms test_aware_mog(mode, user, group)
+# @brief Set the file's mode, owner and group based on the `test` class
+# @param mode The new mode
+# @param user The username of the new owner (if `test`, `$(this.promiser_uid)`)
+# @param group The group name (if `test`, `$(this.promiser_gid)`)
 {
     any::
       mode   => "$(mode)";
@@ -747,4 +751,177 @@ bundle agent cfe_mustache_makefile_string(mustache_file, json_string, target_fil
       edit_template => $(mustache_file),
       template_data => parsejson($(json_string)),
       template_method => "mustache";
+}
+
+bundle agent cfe_tidy(file)
+# @brief Remove a file
+# @param file to remove
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => cfe_tidy("/tmp/z.txt");
+# ```
+{
+  files:
+      "$(file)" delete => tidy;
+
+  reports:
+    inform_mode::
+      "$(this.bundle): deleting $(file) with delete => tidy";
+}
+
+bundle agent cfe_syncdir(from, to)
+# @brief Synchronize a directory entire, deleting unknown files
+# @param from source directory
+# @param to destination directory
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => cfe_syncdir("/tmp", "/var/tmp");
+# ```
+{
+  files:
+      "$(to)/."
+      create => "true",
+      depth_search => recurse("inf"),
+      copy_from => cfe_copyfrom_sync($(from));
+
+  reports:
+    inform_mode::
+      "$(this.bundle): copying directory $(from) to $(to)";
+}
+
+bundle agent cfe_copyfile(from, to)
+# @brief Copy a file
+# @param from source file
+# @param to destination file
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => cfe_copyfile("/tmp/z.txt", "/var/tmp/y.txt");
+# ```
+{
+  files:
+      "$(to)"
+      create => "true",
+      copy_from => cfe_copyfrom_sync($(from));
+
+  reports:
+    inform_mode::
+      "$(this.bundle): copying file $(from) to $(to)";
+}
+
+body copy_from cfe_copyfrom_sync(f)
+# @brief Copy a directory or file with digest checksums, preserving attributes and purging leftovers
+# @param f the file or directory
+{
+      source => "$(f)";
+      purge => "true";
+      preserve => "true";
+      type_check => "false";
+      compare => "digest";
+}
+
+bundle agent cfe_makefile(file, str)
+# @brief Make a file from a string
+# @param file target
+# @param str the string data
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => cfe_makefile("/tmp/z.txt", "Some text
+# and some more text here");
+# ```
+{
+  files:
+      "$(file)"
+      create => "true",
+      edit_line => insert_lines($(str)),
+      edit_defaults => empty;
+
+  reports:
+    inform_mode::
+      "$(this.bundle): creating $(file) with contents '$(str)'";
+}
+
+bundle agent cfe_emptyfile(file)
+# @brief Make an empty file
+# @param file target
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => cfe_emptyfile("/tmp/z.txt");
+# ```
+{
+  files:
+      "$(file)"
+      create => "true",
+      edit_defaults => empty;
+
+  reports:
+    inform_mode::
+      "$(this.bundle): creating empty $(file) with 0 size";
+}
+
+bundle agent cfe_hardlinkfile(target, link)
+# @brief Make a hard link to a file
+# @param target of link
+# @param link the hard link's location
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => cfe_hardlinkfile("/tmp/z.txt", "/tmp/z.link");
+# ```
+{
+  files:
+      "$(link)"
+      move_obstructions => "true",
+      link_from => cfe_linkfrom($(target), "hardlink");
+
+  reports:
+    inform_mode::
+      "$(this.bundle): $(link) will be a hard link to $(target)";
+}
+
+bundle agent cfe_linkfile(target, link)
+# @brief Make a symlink to a file
+# @param target of symlink
+# @param link the symlink's location
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => cfe_linkfile("/tmp/z.txt", "/tmp/z.link");
+# ```
+{
+  files:
+      "$(link)"
+      move_obstructions => "true",
+      link_from => cfe_linkfrom($(target), "symlink");
+
+  reports:
+    inform_mode::
+      "$(this.bundle): $(link) will be a symlink to $(target)";
+}
+
+body link_from cfe_linkfrom(source, type)
+# @brief Make any kind of link to a file
+# @param source link to this
+# @param type the link's type (`symlink` or `hardlink`)
+{
+      source => $(source);
+      link_type => $(type);
 }

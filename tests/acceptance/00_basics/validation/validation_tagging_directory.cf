@@ -28,7 +28,7 @@ bundle agent test
       "run" usebundle => test_dorun("inputdir", $(sys.inputdir), "$(sys.cf_agent) -K $(options)");
 
       # make this machine a hub
-      "mk hub" usebundle => dcs_makefile($(hubfile), "$(sys.host)");
+      "mk hub" usebundle => cfe_makefile($(hubfile), "$(sys.host)");
 
       "run" usebundle => test_dorun("masterdir", $(sys.masterdir), "$(sys.cf_agent) -K $(options)");
 }
@@ -54,20 +54,20 @@ bundle agent test_dorun(name, dir, tagopt)
 
   methods:
       "rsync"
-      usebundle => dcs_copydir("$(this.promise_dirname)/testdir",
-                                          $(dir));
+      usebundle => cfe_syncdir("$(this.promise_dirname)/testdir",
+                               $(dir));
 
       "master2cf"
-      usebundle => dcs_copyfile("$(dir)/$(masters).master",
-                                           "$(dir)/$(masters)");
+      usebundle => cfe_copyfile("$(dir)/$(masters).master",
+                                "$(dir)/$(masters)");
 
       "make ignored file 1"
-      usebundle => dcs_makefile("$(dir)/ignoreme",
-                                           "fnord $(sys.date)");
+      usebundle => cfe_makefile("$(dir)/ignoreme",
+                                "fnord $(sys.date)");
 
       "make ignored file 2"
-      usebundle => dcs_makefile("$(dir)/ignoredir/2",
-                                           "fnord $(sys.date)");
+      usebundle => cfe_makefile("$(dir)/ignoredir/2",
+                                "fnord $(sys.date)");
 
       "tag1" usebundle => test_tag("1",
                                    $(name),
@@ -83,8 +83,8 @@ bundle agent test_dorun(name, dir, tagopt)
       "read2" usebundle => test_read("2", $(name), $(dir));
 
       "make good validated file"
-      usebundle => dcs_makefile("$(dir)/cf_promises_validated",
-                                           $(simulated_validated_ok));
+      usebundle => cfe_makefile("$(dir)/cf_promises_validated",
+                                $(simulated_validated_ok));
 
       "tag3" usebundle => test_tag("3",
                                    $(name),
@@ -93,8 +93,8 @@ bundle agent test_dorun(name, dir, tagopt)
       "read3" usebundle => test_read("3", $(name), $(dir));
 
       "make bad validated file"
-      usebundle => dcs_makefile("$(dir)/cf_promises_validated",
-                                           $(simulated_validated_bad));
+      usebundle => cfe_makefile("$(dir)/cf_promises_validated",
+                                $(simulated_validated_bad));
 
       "tag4" usebundle => test_tag("4",
                                    $(name),

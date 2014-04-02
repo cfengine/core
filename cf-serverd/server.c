@@ -422,7 +422,7 @@ static void *HandleConnection(void *c)
     /* ============================================================ */
 
 
-    Log(LOG_LEVEL_INFO, "Connection closed, terminating thread");
+    Log(LOG_LEVEL_INFO, "Closed connection, terminating thread");
 
   ret1:
     ThreadLock(cft_server_children);

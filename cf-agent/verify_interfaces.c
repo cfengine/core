@@ -35,6 +35,7 @@
 #include <pipes.h>
 #include <item_lib.h>
 #include <expand.h>
+#include <network_services.h>
 
 #define CF_DEBIAN_IFCONF "/etc/network/interfaces"
 #define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
@@ -47,7 +48,6 @@
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetVlanInfo(Item **list, const Promise *pp, const char *interface);
@@ -300,6 +300,13 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     DeleteInterfaceInfo(netinterfaces);
 
+    LinkStateOSPF *ospfp = xcalloc(sizeof(LinkStateOSPF), 1);
+
+    if (QueryOSPFInterfaceState(ctx, pp, ospfp))
+    {
+    }
+
+    free(ospfp);
 }
 
 /****************************************************************************/

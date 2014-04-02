@@ -37,6 +37,7 @@
 #include <expand.h>
 #include <network_services.h>
 #include <mod_common.h>
+#include <conversion.h>
 
 /*****************************************************************************/
 /*                                                                           */
@@ -45,8 +46,6 @@
 /* Created: Tue Apr  1 12:29:21 2014                                         */
 /*                                                                           */
 /*****************************************************************************/
-
-
 
 #define VTYSH_FILENAME "/usr/bin/vtysh"
 
@@ -65,6 +64,8 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
 
  if (constraints)
     {
+    OSPF_ACTIVE = (CommonOSPF *)calloc(sizeof(CommonOSPF), 1);
+    
     for (size_t i = 0; i < SeqLength(constraints); i++)
        {
        Constraint *cp = SeqAt(constraints, i);
@@ -84,14 +85,101 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
           continue;
           }
 
-       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_HELLO_INTERVAL].lval) == 0)
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_ADJACENCY_CHANGES].lval) == 0)
           {
-          printf("\n");
-          Log(LOG_LEVEL_VERBOSE, "Setting maxconnections to %d", CFA_MAXTHREADS);
+          OSPF_ACTIVE->ospf_log_adjacency_changes = (char *) value;
+          Log(LOG_LEVEL_VERBOSE, "Setting ospf_log_adjacency_changes to %s", (const char *)value);
+          continue;
+          }
+
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_TIMESTAMP_PRECISION].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_log_timestamp_precision = (int) IntFromString(value); // 0,6
+          Log(LOG_LEVEL_VERBOSE, "Setting the ospf timestamp precision to %d microseconds", OSPF_ACTIVE->ospf_log_timestamp_precision);
+          continue;
+          }
+
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_ROUTER_ID].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_router_id = (char *)value;
+          Log(LOG_LEVEL_VERBOSE, "Setting the router-id (trad. \"loopback address\") to %s", (char *)value);
           continue;
           }
        
-      
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_FILE].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_log_file = (char *)value;
+          Log(LOG_LEVEL_VERBOSE, "Setting the ospf log fileto %s", (char *)value);
+          continue;
+          }
+    
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE].lval) == 0)
+          {
+          for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+             {
+             if (strcmp(rp->val.item, "kernel"))
+                {
+                OSPF_ACTIVE->ospf_redistribute_kernel = true;
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf redistribution from kernel FIB");
+                continue;
+                }
+             if (strcmp(rp->val.item, "connected"))
+                {
+                OSPF_ACTIVE->ospf_redistribute_connected = true;
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf redistribution from connected networks");
+                continue;
+                }
+             if (strcmp(rp->val.item, "static"))
+                {
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf redistribution from static FIB");
+                OSPF_ACTIVE->ospf_redistribute_static = true;
+                continue;
+                }
+             if (strcmp(rp->val.item, "bgp"))
+                {
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf to allow bgp route injection");
+                OSPF_ACTIVE->ospf_redistribute_bgp = true;
+                continue;
+                }
+             }
+
+          continue;
+          }
+   
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_EXTERNAL_METRIC_TYPE].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_external_metric_type = (int) IntFromString(value); // 1 or 2
+          Log(LOG_LEVEL_VERBOSE, "Setting external metric type to %d", OSPF_ACTIVE->ospf_external_metric_type);
+          continue;
+          }
+    
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_redistribute_kernel_metric = (int) IntFromString(value);
+          Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", OSPF_ACTIVE->ospf_redistribute_kernel_metric);
+          continue;
+          }
+    
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_redistribute_connected_metric = (int) IntFromString(value);
+          Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", OSPF_ACTIVE->ospf_redistribute_connected_metric);
+          continue;
+          }
+    
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_redistribute_static_metric = (int) IntFromString(value);
+          Log(LOG_LEVEL_VERBOSE, "Setting metric for static routes to %d", OSPF_ACTIVE->ospf_redistribute_kernel_metric);
+          continue;
+          }
+    
+       if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC].lval) == 0)
+          {
+          OSPF_ACTIVE->ospf_redistribute_bgp_metric = (int) IntFromString(value);
+          Log(LOG_LEVEL_VERBOSE, "Setting metric for bgp routes to %d", OSPF_ACTIVE->ospf_redistribute_kernel_metric);
+          continue;
+          }
        }
     }
 }
@@ -104,6 +192,8 @@ bool HaveOSPFService(EvalContext *ctx)
 
  if (IsDefinedClass(ctx, "cumulus"))
     {
+    // Might want to check the port instead
+
     if (stat(VTYSH_FILENAME, &sb) == -1)
        {
        return false;

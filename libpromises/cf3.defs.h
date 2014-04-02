@@ -466,7 +466,6 @@ typedef enum
     OSPF_CONTROL_LOG_TIMESTAMP_PRECISION,
     OSPF_CONTROL_ROUTER_ID,
     OSPF_CONTROL_LOG_FILE,
-    OSPF_CONTROL_SERVICE_START,
     OSPF_CONTROL_REDISTRIBUTE,
     OSPF_CONTROL_EXTERNAL_METRIC_TYPE,
     OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC,
@@ -953,10 +952,11 @@ struct PackageItem_
 };
 
 /*************************************************************************/
-/* Interfaces                                                            */
+/* Interfaces and their services                                         */
 /*************************************************************************/
 
 typedef struct LinkState_ LinkState;
+typedef struct LinkStateOSPF_ LinkStateOSPF;
 
 struct LinkState_
 {
@@ -970,15 +970,43 @@ struct LinkState_
     bool up;
     bool is_parent;
     int mtu;
+    LinkStateOSPF *ospf;
     LinkState *next;
 };
 
-typedef struct LinkOSPF_ LinkOSPF;
-
-struct LinkOSPF_
+struct LinkStateOSPF_
 {
+    int ospf_hello_interval;
+    int ospf_priority;
+    char *ospf_link_type;
+    char *ospf_authentication_digest;
+    bool ospf_passive_interface;
+    bool ospf_abr_summarization; // Not "no-summary"
+    char ospf_area_type; // stub, nssa etc
+    int ospf_area;
+    LinkStateOSPF *next;
+};
 
-    LinkOSPF *next;
+typedef struct CommonOSPF_ CommonOSPF;
+
+struct CommonOSPF_
+{
+    char *ospf_log_adjacency_changes;
+    int ospf_log_timestamp_precision; // 0,6
+    char *ospf_router_id;
+    char *ospf_log_file;
+
+    bool ospf_redistribute_kernel;
+    bool ospf_redistribute_connected;
+    bool ospf_redistribute_static;
+    bool ospf_redistribute_bgp;
+
+    int ospf_redistribute_kernel_metric;
+    int ospf_redistribute_connected_metric;
+    int ospf_redistribute_static_metric;
+    int ospf_redistribute_bgp_metric;
+
+    int ospf_external_metric_type; // 1 or 2
 };
 
 typedef struct Bridges_ Bridges;

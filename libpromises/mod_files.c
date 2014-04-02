@@ -287,7 +287,7 @@ static const ConstraintSyntax copy_from_constraints[] =
      * 'source'
      */
     ConstraintSyntaxNewString("source", CF_PATHRANGE, "Reference source file from which to copy", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("servers", "[A-Za-z0-9_.:-\\[\\]]+", "List of servers in order of preference from which to copy", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("servers", "[A-Za-z0-9_.:\\-\\[\\]]+", "List of servers in order of preference from which to copy", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("collapse_destination_dir", "true/false Place files in subdirectories into the root destination directory during copy", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("compare", "atime,mtime,ctime,digest,hash,exists,binary", "Menu option policy for comparing source and image file attributes. Default: mtime or ctime differs", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("copy_backup", "true,false,timestamp", "Menu option policy for file backup/version control. Default value: true", SYNTAX_STATUS_NORMAL),

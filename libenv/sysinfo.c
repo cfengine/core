@@ -2527,9 +2527,11 @@ int GetUptimeSeconds(time_t now)
     kstat_ctl_t *kc;
     kstat_t *kp;
 
-    if(kc = kstat_open())
+    kc = kstat_open();
+    if(kc != 0)
     {
-        if(kp = kstat_lookup(kc, "unix", 0, "system_misc"))
+        kp = kstat_lookup(kc, "unix", 0, "system_misc");
+        if(kp != 0)
         {
             boot_time = (time_t)(kp->ks_crtime / NANOSECONDS_PER_SECOND);
         }

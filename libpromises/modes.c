@@ -217,7 +217,9 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
                 Log(LOG_LEVEL_INFO, "Symbolic and numeric form for modes mixed");
             }
 
-            Log(LOG_LEVEL_DEBUG, "Modestring [PLUS = %" PRIoMAX "] [MINUS = %" PRIoMAX "]", (uintmax_t)*plusmask, (uintmax_t)*minusmask);
+            Log(LOG_LEVEL_DEBUG,
+                "Modestring [PLUS = %jo] [MINUS = %jo]",
+                (uintmax_t) *plusmask, (uintmax_t) *minusmask);
             return true;
 
         default:

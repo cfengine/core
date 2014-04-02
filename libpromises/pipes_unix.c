@@ -80,9 +80,9 @@ static void SetChildFD(int fd, pid_t pid)
 
     if (fd >= MAX_FD)
     {
-        Log(LOG_LEVEL_ERR, /* TODO: why is this reported as an error ? */
+        Log(LOG_LEVEL_WARNING,
             "File descriptor %d of child %jd higher than MAX_FD, check for defunct children",
-            fd, (intmax_t)pid);
+            fd, (intmax_t) pid);
         new_max = fd + 32;
     }
 
@@ -579,7 +579,8 @@ int cf_pclose(FILE *pp)
     {
         ThreadUnlock(cft_count);
         Log(LOG_LEVEL_ERR,
-            "File descriptor %d of child higher than MAX_FD in cf_pclose, check for defunct children", fd);
+            "File descriptor %d of child higher than MAX_FD in cf_pclose!",
+            fd);
         pid = 0;
     }
     else

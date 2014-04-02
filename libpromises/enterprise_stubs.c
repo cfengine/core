@@ -27,6 +27,7 @@
 
 #include <prototypes3.h>
 #include <syntax.h>
+#include <eval_context.h>
 
 #include <enterprise_extension.h>
 
@@ -216,14 +217,14 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ShowPromise, ARG_UNUSED const Promis
 {
 }
 
-ENTERPRISE_FUNC_0ARG_DEFINE_STUB(void *, EvalContextEnterpriseStateNew)
+ENTERPRISE_FUNC_0ARG_DEFINE_STUB(EvalContextEnterpriseState *, EvalContextEnterpriseStateNew)
 {
     Log(LOG_LEVEL_DEBUG, "Not initializing enterprise state for evaluation context");
     return NULL;
 }
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, EvalContextEnterpriseStateDestroy,
-                                      ARG_UNUSED void *,_estate)
+                                      ARG_UNUSED EvalContextEnterpriseState *,_estate)
 {
 }
 

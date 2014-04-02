@@ -26,6 +26,7 @@
 
 #include <shared_lib.h>
 #include <logging.h>
+#include <mutex.h>
 
 #include <dlfcn.h>
 
@@ -48,7 +49,11 @@ void *shlib_open(const char *lib_name)
 
 void *shlib_load(void *handle, const char *symbol_name)
 {
-    return dlsym(handle, symbol_name);
+    static pthread_mutex_t dlsym_mutex = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+    ThreadLock(&dlsym_mutex);
+    void *ret = dlsym(handle, symbol_name);
+    ThreadUnlock(&dlsym_mutex);
+    return ret;
 }
 
 void shlib_close(void *handle)

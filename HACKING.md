@@ -167,7 +167,13 @@ under_scored.
 https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README It
 contains many good practices not only suitable for library writers.
 
-* C99 is allowed, use it.
+* C99 is encouraged, use it. Only exception is for libc functions that
+  we don't provide wrappers in libcompat. Current cases you should avoid
+  C99 (or even better submit a libcompat patch):
+  * fprintf, sprintf. We *do* have a wrapper for ```snprintf``` though,
+      so *do* use C99 for all of ```Log```, ```WriterWriteF``` etc,
+      because they call the latter.
+  * sscanf
 
 * Control statements need to have braces, no matter how simple they are.
 

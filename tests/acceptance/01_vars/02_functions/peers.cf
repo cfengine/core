@@ -1,0 +1,156 @@
+#######################################################
+#
+# Test peers()
+# Ref:Redmine:4848 (https://cfengine.com/dev/issues/4848)
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  methods:
+      "nohosts" usebundle => dcs_emptyfile("$(G.testfile).nohosts");
+
+      "nopeers" usebundle => cfe_mustache_makefile_string
+      (
+        "$(this.promise_filename).mustache",
+        '{ "peers": [ "a", "b", "c" ] }',
+        "$(G.testfile).nopeers"
+      );
+
+      "somepeers" usebundle => cfe_mustache_makefile_string
+      (
+        "$(this.promise_filename).mustache",
+        '{ "peers": [ "a", "b", "c", "$(sys.fqhost)" ] }',
+        "$(G.testfile).somepeers"
+      );
+
+      "allpeers" usebundle => cfe_mustache_makefile_string
+      (
+        "$(this.promise_filename).mustache",
+        '{ "peers": [ "$(sys.fqhost)", "$(sys.fqhost)", "$(sys.fqhost)", "$(sys.fqhost)" ] }',
+        "$(G.testfile).allpeers"
+      );
+}
+
+bundle agent test
+{
+  vars:
+      "tests" slist => { "nohosts", "nopeers", "somepeers", "allpeers" };
+      "subtests" ilist => { "0", "1", "2", "3", "4", "5" };
+
+      "peers_$(tests)_$(subtests)" slist => peers("$(G.testfile).$(tests)", "#.*", $(subtests));
+      "peerleaders_$(tests)_$(subtests)" slist => peerleaders("$(G.testfile).$(tests)", "#.*", $(subtests));
+      "actual_peers_$(tests)_$(subtests)" string => format("%S", "peers_$(tests)_$(subtests)");
+      "actual_peerleaders_$(tests)_$(subtests)" string => format("%S", "peerleaders_$(tests)_$(subtests)");
+      "actual_peerleader_$(tests)_$(subtests)" string => peerleader("$(G.testfile).$(tests)", "#.*", $(subtests));
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "f" slist => { "peers", "peerleader", "peerleaders" };
+      "tests" slist => { @(test.tests) };
+      "subtests" ilist => { @(test.subtests) };
+
+      "good_cases" slist =>
+      {
+        "peers_nohosts_2", "peers_nohosts_3", "peers_nohosts_4", "peers_nohosts_5",
+        "peers_nopeers_2", "peers_nopeers_3", "peers_nopeers_4", "peers_nopeers_5",
+        "peers_somepeers_2", "peers_somepeers_3", "peers_somepeers_4",  "peers_somepeers_5",
+        "peers_allpeers_2", "peers_allpeers_3", "peers_allpeers_4",  "peers_allpeers_5",
+
+        "peerleader_somepeers_2", "peerleader_somepeers_3", "peerleader_somepeers_4",  "peerleader_somepeers_5",
+        "peerleader_allpeers_2", "peerleader_allpeers_3", "peerleader_allpeers_4",  "peerleader_allpeers_5",
+
+        "peerleaders_nohosts_2", "peerleaders_nohosts_3", "peerleaders_nohosts_4", "peerleaders_nohosts_5",
+        "peerleaders_nopeers_2", "peerleaders_nopeers_3", "peerleaders_nopeers_4", "peerleaders_nopeers_5",
+        "peerleaders_somepeers_2", "peerleaders_somepeers_3", "peerleaders_somepeers_4",  "peerleaders_somepeers_5",
+        "peerleaders_allpeers_2", "peerleaders_allpeers_3", "peerleaders_allpeers_4",  "peerleaders_allpeers_5",
+      };
+
+      "bad_cases" slist =>
+      {
+        "peers_nohosts_0", "peers_nohosts_1",
+        "peers_nopeers_0", "peers_nopeers_1",
+        "peers_somepeers_0", "peers_somepeers_1",
+        "peers_allpeers_0", "peers_allpeers_1",
+
+        "peerleader_nohosts_0", "peerleader_nohosts_1", "peerleader_nohosts_2", "peerleader_nohosts_3", "peerleader_nohosts_4", "peerleader_nohosts_5", 
+        "peerleader_nopeers_0", "peerleader_nopeers_1", "peerleader_nopeers_2", "peerleader_nopeers_3", "peerleader_nopeers_4", "peerleader_nopeers_5", 
+        "peerleader_somepeers_0", "peerleader_somepeers_1",
+        "peerleader_allpeers_0", "peerleader_allpeers_1",
+
+        "peerleaders_nohosts_0", "peerleaders_nohosts_1",
+        "peerleaders_nopeers_0", "peerleaders_nopeers_1",
+        "peerleaders_somepeers_0", "peerleaders_somepeers_1",
+        "peerleaders_allpeers_0", "peerleaders_allpeers_1",
+      };
+
+      "expected_peers_allpeers_$(subtests)" string => '{ --empty-list-- }';
+      "expected_peers_nopeers_$(subtests)" string => '{ --empty-list-- }';
+      "expected_peers_nohosts_$(subtests)" string => '{ --empty-list-- }';
+      "expected_peers_somepeers_2" string => '{ "c" }';
+      "expected_peers_somepeers_3" string => '{ --empty-list-- }';
+      "expected_peers_somepeers_4" string => '{ "a", "b", "c" }';
+      "expected_peers_somepeers_5" string => '{ "a", "b", "c" }';
+
+      "expected_peerleader_allpeers_$(subtests)" string => 'localhost';
+      "expected_peerleader_somepeers_2" string => 'c';
+      "expected_peerleader_somepeers_3" string => 'localhost';
+      "expected_peerleader_somepeers_4" string => 'a';
+      "expected_peerleader_somepeers_5" string => 'a';
+
+      "expected_peerleaders_nohosts_$(subtests)" string => '{ --empty-list-- }';
+
+      "expected_peerleaders_nopeers_2" string => '{ "a", "c" }';
+      "expected_peerleaders_nopeers_3" string => '{ "a" }';
+      "expected_peerleaders_nopeers_4" string => '{ "a" }';
+      "expected_peerleaders_nopeers_5" string => '{ "a" }';
+
+      "expected_peerleaders_somepeers_2" string => '{ "a", "c" }';
+      "expected_peerleaders_somepeers_3" string => '{ "a", "localhost" }';
+      "expected_peerleaders_somepeers_4" string => '{ "a" }';
+      "expected_peerleaders_somepeers_5" string => '{ "a" }';
+
+      "expected_peerleaders_allpeers_2" string => '{ "localhost", "localhost" }';
+      "expected_peerleaders_allpeers_3" string => '{ "localhost", "localhost" }';
+      "expected_peerleaders_allpeers_4" string => '{ "localhost" }';
+      "expected_peerleaders_allpeers_5" string => '{ "localhost" }';
+
+      "c[$(f)_$(tests)_$(subtests)]" string => "ok_$(f)_$(tests)_$(subtests)";
+      "cases" slist => getvalues(c);
+      "cs" string => join(",", cases);
+
+  classes:
+      "ok_$(bad_cases)" not => isvariable("test.actual_$(bad_cases)");
+      "ok_$(good_cases)" expression => strcmp("$(expected_$(good_cases))",
+                                              "$(test.actual_$(good_cases))");
+
+  methods:
+      "" usebundle => dcs_passif_expected($(cs), "", $(this.promise_filename)),
+      inherit => "true";
+
+  reports:
+    EXTRA::
+      "$(good_cases): as expected, '$(expected_$(good_cases))'"
+      ifvarclass => "ok_$(good_cases)";
+
+      "$(bad_cases): as expected, no variable"
+      ifvarclass => "ok_$(bad_cases)";
+
+    DEBUG::
+      "$(good_cases): NOT as expected, '$(expected_$(good_cases))' != '$(test.actual_$(good_cases))'"
+      ifvarclass => "!ok_$(good_cases)";
+
+      "$(bad_cases): NOT as expected, has variable '$(test.actual_$(bad_cases))'"
+      ifvarclass => "!ok_$(bad_cases)";
+}

@@ -24,12 +24,15 @@
 #@ echo alpha > /tmp/cfe_hostlist
 #@ echo beta >> /tmp/cfe_hostlist
 #@ echo gamma >> /tmp/cfe_hostlist
+#@ echo "Set HOSTNAME appropriately beforehand"
+#@ echo $HOSTNAME >> /tmp/cfe_hostlist
+#@ echo "Delta Delta Delta may I help ya help ya help ya"
 #@ echo delta1 >> /tmp/cfe_hostlist
 #@ echo delta2 >> /tmp/cfe_hostlist
 #@ echo delta3 >> /tmp/cfe_hostlist
-#@ echo may1 I help ya >> /tmp/cfe_hostlist
-#@ echo may2 I help ya >> /tmp/cfe_hostlist
-#@ echo may3 I help ya >> /tmp/cfe_hostlist
+#@ echo may1.I.help.ya >> /tmp/cfe_hostlist
+#@ echo may2.I.help.ya >> /tmp/cfe_hostlist
+#@ echo may3.I.help.ya >> /tmp/cfe_hostlist
 #@ ```
 #+end_src
 ###############################################################################
@@ -51,8 +54,11 @@ bundle agent peers
 
   reports:
 
-      # note that only the first word from the file will be used
+      # note that the current host name is fourth in the host list, so
+      # its peer group is the first 4-host group, minus the host itself.
       "/tmp/cfe_hostlist mypeer $(mygroup)";
+      # note that the current host name is fourth in the host list, so
+      # the peer leader is "alpha"
       "/tmp/cfe_hostlist myleader $(myleader)";
       "/tmp/cfe_hostlist another leader $(all_leaders)";
 }
@@ -60,10 +66,12 @@ bundle agent peers
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: /tmp/cfe_hostlist mypeer may3
-#@ R: /tmp/cfe_hostlist myleader $(myleader)
-#@ R: /tmp/cfe_hostlist another leader may3
-#@ R: /tmp/cfe_hostlist another leader delta2
+#@ R: /tmp/cfe_hostlist mypeer alpha
+#@ R: /tmp/cfe_hostlist mypeer beta
+#@ R: /tmp/cfe_hostlist mypeer gamma
+#@ R: /tmp/cfe_hostlist myleader alpha
 #@ R: /tmp/cfe_hostlist another leader alpha
+#@ R: /tmp/cfe_hostlist another leader delta1
+#@ R: /tmp/cfe_hostlist another leader may2.I.help.ya
 #@ ```
 #+end_src

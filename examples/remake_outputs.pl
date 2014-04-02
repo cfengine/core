@@ -5,6 +5,7 @@ use strict;
 use Data::Dumper;
 use Getopt::Long;
 use File::Basename;
+use Sys::Hostname;
 
 $|=1;                                   # autoflush
 
@@ -216,6 +217,7 @@ sub run_example
         # skip Markdown markup like ```
         next unless m/^\w/;
         s/FILE/$tempfile/g;
+        s/\$HOSTNAME/hostname()/ge;
         print "processing $file: Running prep '$_'"
          if $options{verbose};
         system($_);

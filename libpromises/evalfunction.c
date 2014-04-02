@@ -4568,7 +4568,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, ARG_UNUSED con
 
 static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    Rlist *rp, *newlist, *pruned;
+    Rlist *rp, *pruned;
     char *split = "\n";
     char *file_buffer = NULL;
     int i, found, maxent = 100000, maxsize = 100000;
@@ -4579,6 +4579,12 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
     char *comment = RlistScalarValue(finalargs->next);
     int groupsize = IntFromString(RlistScalarValue(finalargs->next->next));
 
+    if (2 > groupsize)
+    {
+        Log(LOG_LEVEL_WARNING, "Function %s: called with a nonsensical group size of %d, failing", fp->name, groupsize);
+        return FnFailure();
+    }
+
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
     if (file_buffer == NULL)
@@ -4588,14 +4594,7 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
 
     file_buffer = StripPatterns(file_buffer, comment, filename);
 
-    if (file_buffer == NULL)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
-    }
-    else
-    {
-        newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
-    }
+    Rlist *const newlist = file_buffer ? RlistFromSplitRegex(file_buffer, split, maxent, true) : NULL;
 
 /* Slice up the list and discard everything except our slice */
 
@@ -4612,8 +4611,7 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
             continue;
         }
 
-        s[0] = '\0';
-        sscanf(RlistScalarValue(rp), "%s", s);
+        strlcpy(s, RlistScalarValue(rp), CF_MAXVARSIZE);
 
         if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
         {
@@ -4639,23 +4637,25 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
     }
 
     RlistDestroy(newlist);
-    free(file_buffer);
+    free(file_buffer); // OK if it's NULL
 
-    if (pruned)
+    if (pruned && found)
     {
+        RlistReverse(&pruned);
         return (FnCallResult) { FNCALL_SUCCESS, { pruned, RVAL_TYPE_LIST } };
     }
-    else
-    {
-        return FnFailure();
-    }
+
+    RlistDestroy(pruned);
+    pruned = NULL;
+    RlistPrepend(&pruned, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+    return (FnCallResult) { FNCALL_SUCCESS, { pruned, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallPeerLeader(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    Rlist *rp, *newlist;
+    Rlist *rp;
     char *split = "\n";
     char *file_buffer = NULL, buffer[CF_MAXVARSIZE];
     int i, found, maxent = 100000, maxsize = 100000;
@@ -4668,96 +4668,11 @@ static FnCallResult FnCallPeerLeader(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
     char *comment = RlistScalarValue(finalargs->next);
     int groupsize = IntFromString(RlistScalarValue(finalargs->next->next));
 
-    file_buffer = (char *) CfReadFile(filename, maxsize);
-
-    if (file_buffer == NULL)
+    if (2 > groupsize)
     {
+        Log(LOG_LEVEL_WARNING, "Function %s: called with a nonsensical group size of %d, failing", fp->name, groupsize);
         return FnFailure();
     }
-    else
-    {
-        file_buffer = StripPatterns(file_buffer, comment, filename);
-
-        if (file_buffer == NULL)
-        {
-            return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
-        }
-        else
-        {
-            newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
-        }
-    }
-
-/* Slice up the list and discard everything except our slice */
-
-    i = 0;
-    found = false;
-    buffer[0] = '\0';
-
-    for (rp = newlist; rp != NULL; rp = rp->next)
-    {
-        char s[CF_MAXVARSIZE];
-
-        if (EmptyString(RlistScalarValue(rp)))
-        {
-            continue;
-        }
-
-        s[0] = '\0';
-        sscanf(RlistScalarValue(rp), "%s", s);
-
-        if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
-        {
-            found = true;
-        }
-
-        if (i % groupsize == 0)
-        {
-            if (found)
-            {
-                if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
-                {
-                    strncpy(buffer, "localhost", CF_MAXVARSIZE - 1);
-                }
-                else
-                {
-                    strncpy(buffer, s, CF_MAXVARSIZE - 1);
-                }
-                break;
-            }
-        }
-
-        i++;
-    }
-
-    RlistDestroy(newlist);
-    free(file_buffer);
-
-    if (strlen(buffer) > 0)
-    {
-        return FnReturn(buffer);
-    }
-    else
-    {
-        return FnFailure();
-    }
-
-}
-
-/*********************************************************************/
-
-static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
-    Rlist *rp, *newlist, *pruned;
-    char *split = "\n";
-    char *file_buffer = NULL;
-    int i, maxent = 100000, maxsize = 100000;
-
-/* begin fn specific content */
-
-    char *filename = RlistScalarValue(finalargs);
-    char *comment = RlistScalarValue(finalargs->next);
-    int groupsize = IntFromString(RlistScalarValue(finalargs->next->next));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
@@ -4768,12 +4683,89 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
     file_buffer = StripPatterns(file_buffer, comment, filename);
 
-    if (file_buffer == NULL)
+    Rlist *const newlist = file_buffer ? RlistFromSplitRegex(file_buffer, split, maxent, true) : NULL;
+
+/* Slice up the list and discard everything except our slice */
+
+    i = 0;
+    found = false;
+    buffer[0] = '\0';
+
+    for (rp = newlist; rp != NULL; rp = rp->next)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
+        if (EmptyString(RlistScalarValue(rp)))
+        {
+            continue;
+        }
+
+        char s[CF_MAXVARSIZE];
+        strlcpy(s, RlistScalarValue(rp), CF_MAXVARSIZE);
+
+        const bool this_host = (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0);
+
+        if (i % groupsize == 0)
+        {
+            if (this_host)
+            {
+                strlcpy(buffer, "localhost", CF_MAXVARSIZE);
+            }
+            else
+            {
+                strlcpy(buffer, s, CF_MAXVARSIZE);
+            }
+        }
+
+        if (this_host)
+        {
+            found = true;
+            break;
+        }
+
+        i++;
     }
 
-    newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
+    RlistDestroy(newlist);
+    free(file_buffer);
+
+    if (found)
+    {
+        return FnReturn(buffer);
+    }
+
+    return FnFailure();
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    Rlist *rp, *pruned;
+    char *split = "\n";
+    char *file_buffer = NULL;
+    int i, maxent = 100000, maxsize = 100000;
+
+/* begin fn specific content */
+
+    char *filename = RlistScalarValue(finalargs);
+    char *comment = RlistScalarValue(finalargs->next);
+    int groupsize = IntFromString(RlistScalarValue(finalargs->next->next));
+
+    if (2 > groupsize)
+    {
+        Log(LOG_LEVEL_WARNING, "Function %s: called with a nonsensical group size of %d, failing", fp->name, groupsize);
+        return FnFailure();
+    }
+
+    file_buffer = (char *) CfReadFile(filename, maxsize);
+
+    if (file_buffer == NULL)
+    {
+        return FnFailure();
+    }
+
+    file_buffer = StripPatterns(file_buffer, comment, filename);
+
+    Rlist *const newlist = file_buffer ? RlistFromSplitRegex(file_buffer, split, maxent, true) : NULL;
 
 /* Slice up the list and discard everything except our slice */
 
@@ -4789,8 +4781,7 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
             continue;
         }
 
-        s[0] = '\0';
-        sscanf(RlistScalarValue(rp), "%s", s);
+        strlcpy(s, RlistScalarValue(rp), CF_MAXVARSIZE);
 
         if (i % groupsize == 0)
         {
@@ -4810,14 +4801,13 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     RlistDestroy(newlist);
     free(file_buffer);
 
-    if (pruned)
+    if (NULL == pruned)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { pruned, RVAL_TYPE_LIST } };
+        RlistPrepend(&pruned, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
     }
-    else
-    {
-        return FnFailure();
-    }
+
+    RlistReverse(&pruned);
+    return (FnCallResult) { FNCALL_SUCCESS, { pruned, RVAL_TYPE_LIST } };
 
 }
 
@@ -7233,7 +7223,7 @@ static const FnCallArg PEERS_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name of host list"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Comment regex pattern"},
-    {CF_VALRANGE, CF_DATA_TYPE_INT, "Peer group size"},
+    {"2,64", CF_DATA_TYPE_INT, "Peer group size"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -7249,7 +7239,7 @@ static const FnCallArg PEERLEADERS_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name of host list"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Comment regex pattern"},
-    {CF_VALRANGE, CF_DATA_TYPE_INT, "Peer group size"},
+    {"2,64", CF_DATA_TYPE_INT, "Peer group size"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

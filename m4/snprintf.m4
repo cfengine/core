@@ -113,7 +113,8 @@ AC_DEFUN([HW_FUNC_VSNPRINTF],
           [[char buf[43];
           if (testprintf(buf, 4, "The answer is %27.2g.", 42.0) != 42 ||
               testprintf(buf, 0, "No, it's %32zu.", (size_t)42) != 42 ||
-              buf[0] != 'T' || buf[3] != '\0')
+              buf[0] != 'T' || buf[3] != '\0' ||
+	      testprintf(NULL, 0, "") != 0)            /* POSSIBLE SEGFAULT ON NON-C99 LIBCs!!! */
             return 1;]])],
         [hw_cv_func_vsnprintf_c99=yes],
         [hw_cv_func_vsnprintf_c99=no],
@@ -159,7 +160,8 @@ AC_DEFUN([HW_FUNC_SNPRINTF],
           [[char buf[43];
           if (snprintf(buf, 4, "The answer is %27.2g.", 42.0) != 42 ||
               snprintf(buf, 0, "No, it's %32zu.", (size_t)42) != 42 ||
-              buf[0] != 'T' || buf[3] != '\0')
+              buf[0] != 'T' || buf[3] != '\0' ||
+	      snprintf(NULL, 0, "") != 0)            /* POSSIBLE SEGFAULT ON NON-C99 LIBCs!!! */
             return 1;]])],
         [hw_cv_func_snprintf_c99=yes],
         [hw_cv_func_snprintf_c99=no],

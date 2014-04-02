@@ -1986,13 +1986,16 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
 
     if ((newperm & 07777) == (dstat->st_mode & 07777))  /* file okay */
     {
-        Log(LOG_LEVEL_DEBUG, "File okay, newperm '%" PRIoMAX "', stat '%" PRIoMAX "'", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File permissions on '%s' as promised", file);
+        Log(LOG_LEVEL_DEBUG, "File okay, newperm '%jo', stat '%jo'",
+            (uintmax_t) (newperm & 07777), (uintmax_t) (dstat->st_mode & 07777));
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr,
+             "File permissions on '%s' as promised", file);
         result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Trying to fix mode...newperm '%" PRIoMAX "', stat '%" PRIoMAX "'", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
+        Log(LOG_LEVEL_DEBUG, "Trying to fix mode...newperm '%jo', stat '%jo'",
+            (uintmax_t) (newperm & 07777), (uintmax_t) (dstat->st_mode & 07777));
 
         switch (attr.transaction.action)
         {
@@ -2032,15 +2035,15 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
 
     if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))  /* file okay */
     {
-        Log(LOG_LEVEL_DEBUG, "BSD File okay, flags '%" PRIxMAX "', current '%" PRIxMAX "'",
-                (uintmax_t)(newflags & CHFLAGS_MASK),
-                (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
+        Log(LOG_LEVEL_DEBUG, "BSD File okay, flags '%jx', current '%jx'",
+                (uintmax_t) (newflags & CHFLAGS_MASK),
+                (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "BSD Fixing '%s', newflags '%" PRIxMAX "', flags '%" PRIxMAX "'",
-                file, (uintmax_t)(newflags & CHFLAGS_MASK),
-                (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
+        Log(LOG_LEVEL_DEBUG, "BSD Fixing '%s', newflags '%jx', flags '%jx'",
+                file, (uintmax_t) (newflags & CHFLAGS_MASK),
+                (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
 
         switch (attr.transaction.action)
         {
@@ -2048,8 +2051,8 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
 
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
                  "'%s' has flags %jo - [should be %jo]",
-                 file, (uintmax_t)(dstat->st_mode & CHFLAGS_MASK),
-                 (uintmax_t)(newflags & CHFLAGS_MASK));
+                 file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
+                 (uintmax_t) (newflags & CHFLAGS_MASK));
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             break;
 
@@ -2059,16 +2062,18 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
             {
                 if (chflags(file, newflags & CHFLAGS_MASK) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_DENIED, pp, attr, "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
-                         (uintmax_t)newflags, file, GetErrorStr());
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_DENIED, pp, attr,
+                         "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
+                         (uintmax_t) newflags, file, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_DENIED);
                     break;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "'%s' had flags %jo, changed it to %jo", file,
-                         (uintmax_t)(dstat->st_flags & CHFLAGS_MASK),
-                         (uintmax_t)(newflags & CHFLAGS_MASK));
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                         "'%s' had flags %jo, changed it to %jo", file,
+                         (uintmax_t) (dstat->st_flags & CHFLAGS_MASK),
+                         (uintmax_t) (newflags & CHFLAGS_MASK));
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
@@ -3371,12 +3376,14 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
             {
                 if (uid != CF_SAME_OWNER)
                 {
-                    Log(LOG_LEVEL_DEBUG, "Change owner to uid '%" PRIuMAX "' if possible", (uintmax_t)uid);
+                    Log(LOG_LEVEL_DEBUG, "Change owner to uid '%ju' if possible",
+                        (uintmax_t) uid);
                 }
 
                 if (gid != CF_SAME_GROUP)
                 {
-                    Log(LOG_LEVEL_DEBUG, "Change group to gid '%" PRIuMAX "' if possible)", (uintmax_t)gid);
+                    Log(LOG_LEVEL_DEBUG, "Change group to gid '%ju' if possible",
+                        (uintmax_t) gid);
                 }
             }
 
@@ -3398,8 +3405,9 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
             {
                 if (!uidmatch)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Owner of '%s' was %ju, setting to %ju", file, (uintmax_t)sb->st_uid,
-                         (uintmax_t)uid);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                         "Owner of '%s' was %ju, setting to %ju",
+                         file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 }
 

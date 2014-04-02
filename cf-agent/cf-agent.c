@@ -1543,6 +1543,11 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
     case TYPE_SEQUENCE_INTERFACES:
 
         InitializeOSPF(policy, ctx);
+
+        if (QueryOSPFServiceState(ctx, OSPF_ACTIVE))
+        {
+            //....
+        }
         break;
 
     default:

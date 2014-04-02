@@ -45,6 +45,8 @@ AgentType THIS_AGENT_TYPE; /* GLOBAL_C, initialized later */
 
 Item *PROCESSTABLE = NULL; /* GLOBAL_X */
 
+CommonOSPF *OSPF_ACTIVE = NULL;
+
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/

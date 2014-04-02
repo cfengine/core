@@ -36,7 +36,7 @@
 #include <exec_tools.h>
 #include <unix.h>
 #include <man.h>
-#include <tls_server.h>                              /* ServerTLSInitialize */
+#include <server_tls.h>                              /* ServerTLSInitialize */
 #include <timeout.h>
 #include <unix_iface.h>
 #include <known_dirs.h>

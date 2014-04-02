@@ -40,7 +40,7 @@
 #include <cf-serverd-enterprise-stubs.h>
 #include <audit.h>
 #include <cfnet.h>
-#include <tls_server.h>
+#include <server_tls.h>                                       /* ServerTLS* */
 #include <server_common.h>
 #include <connection_info.h>
 #include <cf-windows-functions.h>

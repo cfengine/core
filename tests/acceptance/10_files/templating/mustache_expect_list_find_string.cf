@@ -25,8 +25,6 @@ bundle agent init
       "first filestat good" usebundle => init_filestat("good1", "$(G.testfile).good");
       "first filestat bad" usebundle => init_filestat("bad1", "$(G.testfile).bad");
 
-      "sleep 1" usebundle => dcs_sleep("1");
-
       "Remove good" usebundle => dcs_fini("$(G.testfile).good");
       "Remove bad" usebundle => dcs_fini("$(G.testfile).bad");
 
@@ -35,14 +33,12 @@ bundle agent init
 
       "second filestat good" usebundle => init_filestat("good2", "$(G.testfile).good");
       "second filestat bad" usebundle => init_filestat("bad2", "$(G.testfile).bad");
-
-      "sleep 1" usebundle => dcs_sleep("1");
 }
 
 bundle agent init_filestat(n, f)
 {
   vars:
-      "filestat_$(n)" string => format("%s,%s,%s,%s", filestat($(f), "basename"), filestat($(f), "mtime"), filestat($(f), "ctime"), filestat($(f), "ino"));
+      "filestat_$(n)" string => format("%s,%s", filestat($(f), "basename"), filestat($(f), "ino"));
 }
 
 #######################################################
@@ -86,22 +82,19 @@ template expects list of strings
       "filestats_good_str" string => format("%S", filestats_good);
       "filestats_bad_str" string => format("%S", filestats_bad);
 
-      "unique_filestats_good" slist => unique(filestats_good);
-      "unique_filestats_bad" slist => unique(filestats_bad);
-
-      "num_unique_filestats_good" int => length(unique_filestats_good);
-      "num_unique_filestats_bad" int => length(unique_filestats_bad);
-
   classes:
-      "ok_filestats_good" expression => strcmp("3", "num_unique_filestats_good");
-      "ok_filestats_bad" expression => strcmp("2", "num_unique_filestats_bad");
+      "ok_filestats_good_1_2" not => strcmp("$(init_filestat.filestat_good1)", "$(init_filestat.filestat_good2)");
+      "ok_filestats_good_2_3" not => strcmp("$(init_filestat.filestat_good2)", "$(init_filestat.filestat_good3)");
+
+      "ok_filestats_bad_1_2" not => strcmp("$(init_filestat.filestat_bad1)", "$(init_filestat.filestat_bad2)");
+      "ok_filestats_bad_2_3" expression => strcmp("$(init_filestat.filestat_bad2)", "$(init_filestat.filestat_bad3)");
 
       "ok_content_good" expression => strcmp($(expected_good), $(test.actual_good));
       "ok_content_bad" expression => strcmp($(expected_bad), $(test.actual_bad));
 
 
   methods:
-      "" usebundle => dcs_passif_expected("ok_filestats_good,ok_filestats_bad,ok_content_good,ok_content_bad",
+      "" usebundle => dcs_passif_expected("ok_filestats_good_1_2,ok_filestats_good_2_3,ok_filestats_bad_1_2,ok_filestats_bad_2_3,ok_content_good,ok_content_bad",
                                           "",
                                           $(this.promise_filename)),
       inherit => "true";
@@ -114,11 +107,17 @@ template expects list of strings
       "OK: As expected bad '$(expected_bad)'"
       ifvarclass => "ok_content_bad";
 
-      "OK: Expected 3 different filestats for $(G.testfile).good template rendering."
-      ifvarclass => "ok_filestats_good";
+      "OK: good filestats $(filestats_good_str) change from step 1 to step 2"
+      ifvarclass => "ok_filestats_good_1_2";
 
-      "OK: Expected 2 different filestats for $(G.testfile).bad template rendering."
-      ifvarclass => "ok_filestats_bad";
+      "OK: good filestats $(filestats_good_str) change from step 2 to step 3"
+      ifvarclass => "ok_filestats_good_2_3";
+
+      "OK: bad filestats $(filestats_bad_str) change from step 1 to step 2"
+      ifvarclass => "ok_filestats_bad_1_2";
+
+      "OK: bad filestats $(filestats_bad_str) don't change from step 2 to step 3"
+      ifvarclass => "ok_filestats_bad_2_3";
 
     DEBUG::
       "FAIL: Expected '$(expected_good)' <> '$(test.actual_good)'"
@@ -127,11 +126,18 @@ template expects list of strings
       "FAIL: Expected '$(expected_bad)' <> '$(test.actual_bad)'"
       ifvarclass => "!ok_content_bad";
 
-      "FAIL: good filestats $(filestats_good_str) unique count is $(num_unique_filestats_good)"
-      ifvarclass => "!ok_filestats_good";
+      "FAIL: good filestats $(filestats_good_str) don't change enough from step 1 to step 2"
+      ifvarclass => "!ok_filestats_good_1_2";
 
-      "FAIL: bad filestats $(filestats_bad_str) unique count is $(num_unique_filestats_bad)"
-      ifvarclass => "!ok_filestats_bad";
+      "FAIL: good filestats $(filestats_good_str) don't change enough from step 2 to step 3"
+      ifvarclass => "!ok_filestats_good_2_3";
+
+      "FAIL: bad filestats $(filestats_bad_str) don't change enough from step 1 to step 2"
+      ifvarclass => "!ok_filestats_bad_1_2";
+
+      "FAIL: bad filestats $(filestats_bad_str) change from step 2 to step 3"
+      ifvarclass => "!ok_filestats_bad_2_3";
+
 }
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

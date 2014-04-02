@@ -31,6 +31,9 @@ bundle agent init
       "ready good" usebundle => dcs_makefile("$(G.testfile).good", "# Set good");
       "ready bad" usebundle => dcs_makefile("$(G.testfile).bad", "# Set bad");
 
+      "link good" usebundle => dcs_hardlinkfile("$(G.testfile).good", "$(G.testfile).goodlink");
+      "link bad" usebundle => dcs_hardlinkfile("$(G.testfile).bad", "$(G.testfile).badlink");
+
       "second filestat good" usebundle => init_filestat("good2", "$(G.testfile).good");
       "second filestat bad" usebundle => init_filestat("bad2", "$(G.testfile).bad");
 }
@@ -38,7 +41,7 @@ bundle agent init
 bundle agent init_filestat(n, f)
 {
   vars:
-      "filestat_$(n)" string => format("%s,%s", filestat($(f), "basename"), filestat($(f), "ino"));
+      "filestat_$(n)" string => format("%s,%s", filestat($(f), "basename"), filestat($(f), "nlink"));
 }
 
 #######################################################

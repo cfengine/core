@@ -87,4 +87,5 @@ bool DeleteDBCursor(CF_DBC *dbcp);
 
 char *DBIdToPath(const char *workdir, dbid id);
 
+int UpdateLastSeenMaxReaders(int maxreaders);
 #endif  /* NOT CFENGINE_DBM_API_H */

@@ -46,7 +46,6 @@
 void ThisAgentInit(void);
 GenericAgentConfig *CheckOpts(int argc, char **argv);
 int OpenReceiverChannel(void);
-int UpdateLastSeenMaxReaders(int maxreaders);
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
 typedef int (*InitServerFunction)(size_t queue_size);
 int InitServer(size_t queue_size);

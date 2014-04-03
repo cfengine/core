@@ -178,7 +178,9 @@ bundle agent cfe_internal_call_update
 {
   commands:
 
-    any::
+    # On Windows we need cf-execd to call update.cf, otherwise the daemons will
+    # not run under the SYSTEM account.
+    !windows::
 
       "$(sys.cf_agent) -f update.cf"
       handle => "cfe_internal_call_update_commands_call_update_cf";

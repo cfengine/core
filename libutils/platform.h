@@ -46,7 +46,7 @@
 #endif
  /* Increase select(2) FD limit from 64. It's documented and valid to do it
   * like that provided that we define it *before* including winsock2.h. */
-# define FD_SETSIZE 512
+# define FD_SETSIZE 4096
 #else
 # define MAX_FILENAME 254
 #endif

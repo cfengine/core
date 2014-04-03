@@ -1308,6 +1308,8 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
 static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    const bool installed_mode = (0 == strcmp(fp->name, "packagesmatching"));
+
     char *regex_package = RlistScalarValue(finalargs);
     char *regex_version = RlistScalarValue(finalargs->next);
     char *regex_arch = RlistScalarValue(finalargs->next->next);
@@ -1317,14 +1319,21 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
     char filename[CF_MAXVARSIZE], regex[CF_BUFSIZE];
     FILE *fin;
 
-    GetSoftwareCacheFilename(filename);
+    if (installed_mode)
+    {
+        GetSoftwareCacheFilename(filename);
+    }
+    else
+    {
+        GetSoftwarePatchesFilename(filename);
+    }
 
     if ((fin = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "%s cannot open the package inventory '%s' - "
+        Log(LOG_LEVEL_VERBOSE, "%s cannot open the %s packages inventory '%s' - "
             "This is not necessarily an error. Either the inventory policy has not been included, "
             "or it has not had time to have an effect yet. A future call may still succeed. (fopen: %s)",
-            fp->name, filename, GetErrorStr());
+            fp->name, installed_mode ? "installed" : "available", filename, GetErrorStr());
         JsonDestroy(json);
         return FnFailure();
     }
@@ -7761,7 +7770,9 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("or", CF_DATA_TYPE_STRING, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("packagesmatching", CF_DATA_TYPE_CONTAINER, PACKAGESMATCHING_ARGS, &FnCallPackagesMatching, "List the defined packages (\"name,version,arch,manager\") matching regex arg1=name,arg2=version,arg3=arch,arg4=method",
+    FnCallTypeNew("packagesmatching", CF_DATA_TYPE_CONTAINER, PACKAGESMATCHING_ARGS, &FnCallPackagesMatching, "List the installed packages (\"name,version,arch,manager\") matching regex arg1=name,arg2=version,arg3=arch,arg4=method",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("packageupdatesmatching", CF_DATA_TYPE_CONTAINER, PACKAGESMATCHING_ARGS, &FnCallPackagesMatching, "List the available patches (\"name,version,arch,manager\") matching regex arg1=name,arg2=version,arg3=arch,arg4=method.  Enterprise only.",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parseintarray", CF_DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray, "Read an array of integers from a string, indexing by first entry on line and sequentially within each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

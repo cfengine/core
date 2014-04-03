@@ -38,8 +38,13 @@ bundle edit_line init_edit
 
 bundle agent test
 {
-  vars:
-    "result" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
+  commands:
+    debug_mode::
+      "$(sys.cf_agent) -Kd $(this.promise_filename).sub";
+    verbose_mode::
+      "$(sys.cf_agent) -Kv $(this.promise_filename).sub";
+    !debug_mode.!verbose_mode::
+      "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
 }
 
 bundle agent check

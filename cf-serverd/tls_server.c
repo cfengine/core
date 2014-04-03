@@ -227,8 +227,8 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
  *         the negotiated protocol version.
  * @retval false in case of error.
  */
-static int ServerIdentificationDialog(ConnectionInfo *conn_info,
-                                      char *username, size_t username_size)
+static bool ServerIdentificationDialog(ConnectionInfo *conn_info,
+                                       char *username, size_t username_size)
 {
     int ret;
     char input[1024] = "";
@@ -245,7 +245,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
     if (ret != len)
     {
         Log(LOG_LEVEL_NOTICE, "Connection was hung up!");
-        return -1;
+        return false;
     }
 
     /* Receive CFE_v%d ... \n IDENTITY USERNAME=... */
@@ -254,7 +254,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
     {
         Log(LOG_LEVEL_NOTICE,
             "Client closed connection early! He probably does not trust our key...");
-        return -1;
+        return false;
     }
 
     int version_received = -1;
@@ -264,7 +264,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
         Log(LOG_LEVEL_NOTICE,
             "Protocol version negotiation failed! Received: %s",
             input);
-        return -1;
+        return false;
     }
 
     /* For now we support only one version inside TLS. */
@@ -274,7 +274,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
         Log(LOG_LEVEL_NOTICE,
             "Client advertises disallowed protocol version: %d",
             version_received);
-        return -1;
+        return false;
         /* TODO send "BAD ..." ? */
     }
 
@@ -289,7 +289,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
         {
             Log(LOG_LEVEL_NOTICE,
                 "Client closed connection during identification dialog!");
-            return -1;
+            return false;
         }
         line2 = input;
     }
@@ -324,7 +324,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
             {
                 Log(LOG_LEVEL_NOTICE, "Received invalid IDENTITY: %s=%s",
                     word1, word2);
-                return -1;
+                return false;
             }
             Log(LOG_LEVEL_VERBOSE, "Setting IDENTITY: %s=%s",
                 word1, word2);
@@ -343,7 +343,7 @@ static int ServerIdentificationDialog(ConnectionInfo *conn_info,
     /* Version client and server agreed on. */
     conn_info->type = version_received;
 
-    return 1;
+    return true;
 }
 
 static int ServerSendWelcome(const ServerConnectionState *conn)

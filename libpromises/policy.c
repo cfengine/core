@@ -1157,9 +1157,7 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
     const char *path = PolicyElementSourceFile(error->type, error->subject);
 
     // FIX: need to track columns in SourceOffset
-    WriterWriteF(writer, "%s:%llu:%llu: error: %s\n",
-                 path, (unsigned long long)offset.line,
-                 (unsigned long long)0, error->message);
+    WriterWriteF(writer, "%s:%zu:%zu: error: %s\n", path, offset.line, (size_t)0, error->message);
 }
 
 static char *PolicyErrorToString(const PolicyError *error)
@@ -1168,9 +1166,9 @@ static char *PolicyErrorToString(const PolicyError *error)
     const char *path = PolicyElementSourceFile(error->type, error->subject);
 
     Writer *msg = StringWriter();
-    WriterWriteF(msg, "%s:%llu:%llu: %s.",
-                 path, (unsigned long long)offset.line,
-                 (unsigned long long)0, error->message);
+    WriterWriteF(msg, "%s:%zu:%zu: %s.",
+                 path, offset.line,
+                 (size_t)0, error->message);
 
     switch (error->type)
     {

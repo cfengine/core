@@ -301,9 +301,8 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     {
         if (caller)
         {
-            Log(LOG_LEVEL_ERR, "No such FnCall '%s' in promise '%s' near line %llu",
-                fp->name, PromiseGetBundle(caller)->source_path,
-                (unsigned long long)caller->offset.line);
+            Log(LOG_LEVEL_ERR, "No such FnCall '%s' in promise '%s' near line %zd",
+                  fp->name, PromiseGetBundle(caller)->source_path, caller->offset.line);
         }
         else
         {

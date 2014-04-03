@@ -395,9 +395,8 @@ static bool SetDelimiters(const char *content, size_t content_len,
     size_t num_tokens = StringCountTokens(content, content_len, " \t");
     if (num_tokens != 2)
     {
-        Log(LOG_LEVEL_WARNING, "Could not parse delimiter mustache, "
-            "number of tokens is %llu, expected 2 in '%s'",
-            (unsigned long long) num_tokens, content);
+        Log(LOG_LEVEL_WARNING, "Could not parse delimiter mustache, number of tokens is %zd, expected 2 in '%s'",
+            num_tokens, content);
         return false;
     }
 

@@ -846,9 +846,8 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
         DirClose(dirh);
     }
 
-    Log(LOG_LEVEL_DEBUG, "largest ver is '%s', name is '%s'",
-        matchVers, matchName);
-    Log(LOG_LEVEL_DEBUG, "match %d", match);
+    Log(LOG_LEVEL_DEBUG, "FindLargestVersionAvail: largest version of '%s' is '%s' (match=%d)",
+        matchName, matchVers, match);
 
     return match;
 }
@@ -1412,8 +1411,8 @@ VersionCmpResult ComparePackages(EvalContext *ctx,
                                  PromiseResult *result)
 {
     Log(LOG_LEVEL_VERBOSE, "Comparing %s package (%s,%s,%s) "
-        "with given (%s,%s,%s) [name,version,arch]",
-        mode, pi->name, pi->version, pi->arch, n, v, arch);
+        "to [%s] with given (%s,%s,%s) [name,version,arch]",
+        mode, pi->name, pi->version, pi->arch, PackageVersionComparatorToString(a.packages.package_select), n, v, arch);
 
     if (CompareCSVName(n, pi->name) != 0)
     {
@@ -1445,10 +1444,11 @@ VersionCmpResult ComparePackages(EvalContext *ctx,
     VersionCmpResult vc = CompareVersions(ctx, pi->version, v, a, pp, result);
     Log(LOG_LEVEL_VERBOSE,
         "Version comparison returned %s for %s package (%s,%s,%s) "
-        "against given (%s,%s,%s) [name,version,arch]",
+        "to [%s] with given (%s,%s,%s) [name,version,arch]",
         vc == VERCMP_MATCH ? "MATCH" : vc == VERCMP_NO_MATCH ? "NO_MATCH" : "ERROR",
         mode,
         pi->name, pi->version, pi->arch,
+        PackageVersionComparatorToString(a.packages.package_select),
         n, v, arch);
 
     return vc;
@@ -1472,13 +1472,14 @@ static VersionCmpResult PatchMatch(EvalContext *ctx,
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for %s (%s,%s,%s) [name,version,arch] in package manager %s", mode, n, v, a, mp->manager);
+    Log(LOG_LEVEL_VERBOSE, "PatchMatch: looking for %s to [%s] with given (%s,%s,%s) [name,version,arch] in package manager %s",
+        mode, PackageVersionComparatorToString(attr.packages.package_select), n, v, a, mp->manager);
 
     for (PackageItem *pi = mp->patch_list; pi != NULL; pi = pi->next)
     {
         if (FullTextMatch(ctx, n, pi->name)) /* Check regexes */
         {
-            Log(LOG_LEVEL_VERBOSE, "Regular expression match succeeded for %s against %s", n, pi->name);
+            Log(LOG_LEVEL_VERBOSE, "PatchMatch: regular expression match succeeded for %s against %s", n, pi->name);
             return VERCMP_MATCH;
         }
         else
@@ -1486,7 +1487,7 @@ static VersionCmpResult PatchMatch(EvalContext *ctx,
             VersionCmpResult res = ComparePackages(ctx, n, v, a, pi, attr, pp, mode, result);
             if (res != VERCMP_NO_MATCH)
             {
-                Log(LOG_LEVEL_VERBOSE, "Patch comparison for %s was decisive: %s", pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
+                Log(LOG_LEVEL_VERBOSE, "PatchMatch: patch comparison for %s was decisive: %s", pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
                 return res;
             }
         }
@@ -1518,7 +1519,7 @@ static VersionCmpResult PackageMatch(EvalContext *ctx,
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for %s (%s,%s,%s) [name,version,arch] in package manager %s", mode, n, v, a, mp->manager);
+    Log(LOG_LEVEL_VERBOSE, "PackageMatch: looking for %s (%s,%s,%s) [name,version,arch] in package manager %s", mode, n, v, a, mp->manager);
 
     for (PackageItem *pi = mp->pack_list; pi != NULL; pi = pi->next)
     {
@@ -1526,7 +1527,7 @@ static VersionCmpResult PackageMatch(EvalContext *ctx,
 
         if (res != VERCMP_NO_MATCH)
         {
-            Log(LOG_LEVEL_VERBOSE, "Package comparison for %s %s was decisive: %s", mode, pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
+            Log(LOG_LEVEL_VERBOSE, "PackageMatch: package comparison for %s %s was decisive: %s", mode, pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
             return res;
         }
     }
@@ -1602,13 +1603,20 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Pro
     Log(LOG_LEVEL_VERBOSE, "Installed package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
         name, "*", arch, installed == VERCMP_MATCH ? "MATCH" : "ERROR-OR-NOMATCH");
 
+    if (installed == VERCMP_ERROR)
+    {
+        cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare installed package versions");
+        result = PromiseResultUpdate_HELPER(pp, result, PROMISE_RESULT_FAIL);
+        return result;
+    }
+
     VersionCmpResult matches = PackageMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
     Log(LOG_LEVEL_VERBOSE, "Available package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
         name, version, arch, matches == VERCMP_MATCH ? "MATCH" : "ERROR-OR-NOMATCH");
 
-    if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
+    if (matches == VERCMP_ERROR)
     {
-        cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
+        cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare available package versions");
         result = PromiseResultUpdate_HELPER(pp, result, PROMISE_RESULT_FAIL);
         return result;
     }

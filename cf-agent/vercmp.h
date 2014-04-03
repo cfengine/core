@@ -42,4 +42,6 @@ typedef enum
  */
 VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v2, Attributes a, const Promise *pp, PromiseResult *result);
 
+const char* PackageVersionComparatorToString(const PackageVersionComparator pvc);
+
 #endif

@@ -144,34 +144,27 @@ VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v
                                  const Promise *pp, PromiseResult *result)
 {
     VersionCmpResult cmp_result;
-    const char *cmp_operator = "";
 
     switch (a.packages.package_select)
     {
     case PACKAGE_VERSION_COMPARATOR_EQ:
     case PACKAGE_VERSION_COMPARATOR_NONE:
         cmp_result = CompareVersionsEqual(ctx, v1, v2, a, pp, result);
-        cmp_operator = "==";
         break;
     case PACKAGE_VERSION_COMPARATOR_NEQ:
         cmp_result = InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp, result));
-        cmp_operator = "!=";
         break;
     case PACKAGE_VERSION_COMPARATOR_LT:
         cmp_result = CompareVersionsLess(ctx, v1, v2, a, pp, result);
-        cmp_operator = "<";
         break;
     case PACKAGE_VERSION_COMPARATOR_GT:
         cmp_result = CompareVersionsLess(ctx, v2, v1, a, pp, result);
-        cmp_operator = ">";
         break;
     case PACKAGE_VERSION_COMPARATOR_GE:
         cmp_result = InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp, result));
-        cmp_operator = ">=";
         break;
     case PACKAGE_VERSION_COMPARATOR_LE:
         cmp_result = InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp, result));
-        cmp_operator = "<=";
         break;
     default:
         ProgrammingError("Unexpected comparison value: %d", a.packages.package_select);
@@ -192,7 +185,27 @@ VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v
         break;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Checked whether package version %s %s %s: %s", v1, cmp_operator, v2, text_result);
+    Log(LOG_LEVEL_VERBOSE, "Checked whether package version %s %s %s: %s",
+        v1, PackageVersionComparatorToString(a.packages.package_select), v2, text_result);
 
     return cmp_result;
+}
+
+const char* PackageVersionComparatorToString(const PackageVersionComparator pvc)
+{
+    switch (pvc)
+    {
+    case PACKAGE_VERSION_COMPARATOR_EQ:   return "==";
+    case PACKAGE_VERSION_COMPARATOR_NONE: return "==";
+    case PACKAGE_VERSION_COMPARATOR_NEQ:  return "!=";
+    case PACKAGE_VERSION_COMPARATOR_LT:   return "<";
+    case PACKAGE_VERSION_COMPARATOR_GT:   return ">";
+    case PACKAGE_VERSION_COMPARATOR_GE:   return ">=";
+    case PACKAGE_VERSION_COMPARATOR_LE:   return "<=";
+
+    default:
+        ProgrammingError("Unexpected PackageVersionComparator value: %d", pvc);
+    }
+
+    return NULL;
 }

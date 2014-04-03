@@ -1,0 +1,49 @@
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  vars:
+      "services" slist => { "single" };
+      "policies" slist => { "start", "stop", "restart" };
+
+  services:
+      "$(services)"
+      service_policy => "$(policies)",
+      classes => scoped_classes_generic("namespace", "$(services)_$(policies)");
+}
+
+bundle agent standard_services(service, state)
+{
+  reports:
+    EXTRA::
+      "$(this.bundle): passthrough for $(service) -> $(state)";
+}
+
+bundle agent check
+{
+  vars:
+      "s" slist => { @(test.services) };
+      "p" slist => { @(test.policies) };
+
+  methods:
+      "collect" usebundle => dcs_all_classes_to_string("$(s)_$(p)"),
+      inherit => "true",
+      useresult => "$(s)_$(p)";
+
+    EXTRA::
+      "" usebundle => dcs_report_generic_classes("$(s)_$(p)"),
+      inherit => "true";
+
+    any::
+      "report" usebundle => dcs_passif_expected('single_start_kept,single_stop_kept,single_restart_kept',
+                                                'single_start_repaired,single_start_failed,single_start_denied,single_start_timeout,single_stop_repaired,single_stop_failed,single_stop_denied,single_stop_timeout,single_restart_repaired,single_restart_failed,single_restart_denied,single_restart_timeout',
+                                                $(this.promise_filename));
+
+  reports:
+    EXTRA::
+      "Class strings for service $(s), policy $(p): $($(s)_$(p)[str])";
+}

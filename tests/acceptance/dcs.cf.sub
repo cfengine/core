@@ -344,7 +344,7 @@ bundle agent dcs_all_negative_classes(prefix)
 bundle agent dcs_all_classes_to_string(prefix)
 {
   vars:
-      "classes_all" slist => classesmatching("$(prefix)_.*_(kept|notkept|failed|denied|repaired|timeout)");
+      "classes_all" slist => classesmatching("$(prefix)_.*(kept|notkept|failed|denied|repaired|timeout)");
       "classes" slist => sort(classes_all, "lex");
       "found_str" string => format("%S", classes);
 

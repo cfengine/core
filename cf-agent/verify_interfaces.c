@@ -86,7 +86,8 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
 
     if (!IsPrivileged())
     {
-        return PROMISE_RESULT_SKIPPED;
+        Log(LOG_LEVEL_INFO, "Interface %s cannot be configured without root privilege", pp->promiser);
+//       return PROMISE_RESULT_SKIPPED;
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "interface-%s", pp->promiser);
@@ -286,7 +287,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     CheckInterfaceOptions(promiser, result, ctx, netinterfaces, a, pp);
 
-    if (strcmp(a->interface.state, "up") == 0)
+    if (a->interface.state && strcmp(a->interface.state, "up") == 0)
     {
         snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_DEBIAN_IP_COMM, promiser);
 
@@ -294,15 +295,13 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
         {
             *result = PROMISE_RESULT_FAIL;
         }
-
-        return;
     }
 
     DeleteInterfaceInfo(netinterfaces);
 
     LinkStateOSPF *ospfp = xcalloc(sizeof(LinkStateOSPF), 1);
 
-    if (QueryOSPFInterfaceState(ctx, pp, ospfp))
+    if (a->havelinkservices && QueryOSPFInterfaceState(ctx, a, pp, ospfp))
     {
     }
 
@@ -575,7 +574,7 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
         }
         else
         {
-            if (full && strcmp(a->interface.duplex, "full") != 0)
+            if (full && a->interface.duplex && strcmp(a->interface.duplex, "full") != 0)
             {
                 fix = true;
             }
@@ -598,7 +597,6 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
             }
         }
     }
-
 }
 
 /****************************************************************************/

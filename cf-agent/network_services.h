@@ -12,4 +12,6 @@
 void InitializeOSPF(const Policy *policy, EvalContext *ctx);
 bool HaveOSPFService(EvalContext *ctx);
 int QueryOSPFServiceState(EvalContext *ctx, CommonOSPF *ospfp);
-int QueryOSPFInterfaceState(EvalContext *ctx, const Promise *pp, LinkStateOSPF *ospfp);
+int QueryOSPFInterfaceState(EvalContext *ctx, const Attributes *a, const Promise *pp, LinkStateOSPF *ospfp);
+CommonOSPF *NewOSPFState(void);
+void DeleteOSPFState(CommonOSPF *state);

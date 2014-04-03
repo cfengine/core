@@ -72,6 +72,7 @@ extern int LASTSEENEXPIREAFTER;
 extern const char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
 extern CommonOSPF *OSPF_ACTIVE;
+extern CommonOSPF *OSPF_POLICY;
 
 extern const char *const DAY_TEXT[];
 extern const char *const MONTH_TEXT[];

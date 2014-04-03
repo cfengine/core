@@ -481,6 +481,19 @@ body contain dcs_useshell
       chdir => "/";
 }
 
+bundle agent dcs_runagent(args)
+{
+  commands:
+    debug_mode::
+      "$(sys.cf_agent) -Kdf $(args)";
+    verbose_mode::
+      "$(sys.cf_agent) -Kvf $(args)";
+    inform_mode::
+      "$(sys.cf_agent) -KIf $(args)";
+    !debug_mode.!verbose_mode.!inform_mode::
+      "$(sys.cf_agent) -Kf $(args)";
+}
+
 #######################################################
 # Test based on whether two strings are the same
 

@@ -10,28 +10,23 @@ body common control
 
 bundle agent init
 {
-  files:
-    "$(G.testfile)"
-      delete => init_delete;
+  methods:
+      "make filerepo" usebundle => cfe_makefile($(G.testfile),
+                                                "");
 }
 
-body delete init_delete
-{
-  rmdirs => "true";
-}
-
-body package_method test_method(currentdir)
+body package_method test_method_filerepo(currentdir)
 {
       package_changes => "individual";
-      package_list_command => "/bin/cat $(currentdir)/test_repository/installed.txt";
-      package_installed_regex => ".*";
-      package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
-      package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
-      package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+      package_list_command => "$(G.cat) $(currentdir)/test_repository/installed.txt | $(G.grep) 'i '";
+      package_installed_regex => "i .*";
+      package_list_name_regex    => "^[ia] (\S+?)\s\S+?\s\S+$";
+      package_list_version_regex => "^[ia] \S+?\s(\S+?)\s\S+$";
+      package_list_arch_regex    => "^[ia] \S+?\s\S+?\s(\S+)$";
 
-      package_add_command    => "$(G.echo) >>$(G.testfile) ADD";
-      package_update_command => "$(G.echo) >>$(G.testfile) UPDATE";
-      package_delete_command => "$(G.echo) >>$(G.testfile) DELETE";
+      package_add_command    => "$(G.echo) >>$(G.testfile) filerepo ADD";
+      package_update_command => "$(G.echo) >>$(G.testfile) filerepo UPDATE";
+      package_delete_command => "$(G.echo) >>$(G.testfile) filerepo DELETE";
 
       package_file_repositories => { "$(currentdir)/test_repository" };
       package_name_convention => "$(name)-$(version).$(arch).rpm";
@@ -39,245 +34,242 @@ body package_method test_method(currentdir)
 
 bundle agent test
 {
-  vars:
-    "currentdir" string => dirname("$(this.promise_filename)");
-
   packages:
     "install-exact-version"
       package_policy => "addupdate",
       package_select => "==",
       package_version => "2.2.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "update-to-exact-version"
       package_policy => "addupdate",
       package_select => "==",
       package_version => "2.2.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "delete-exact-version"
       package_policy => "delete",
       package_select => "==",
       package_version => "2.2.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "install-lessorequal-version"
       package_policy => "addupdate",
       package_select => "<=",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "update-to-lessorequal-version"
       package_policy => "addupdate",
       package_select => "<=",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "install-lessthan-version"
       package_policy => "addupdate",
       package_select => "<",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "update-to-lessthan-version"
       package_policy => "addupdate",
       package_select => "<",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "install-greaterorequal-version"
       package_policy => "addupdate",
       package_select => ">=",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "update-to-greaterorequal-version"
       package_policy => "addupdate",
       package_select => ">=",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "update-to-greaterorequal-version-already-greater-installed"
       package_policy => "addupdate",
       package_select => ">=",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "install-greaterthan-version"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "update-to-greaterthan-version"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "update-to-greaterthan-version-already-greater-installed"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-install-exact-version"
       package_policy => "addupdate",
       package_select => "==",
       package_version => "2.1.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-update-to-exact-version"
       package_policy => "addupdate",
       package_select => "==",
       package_version => "2.1.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-delete-exact-version"
       package_policy => "delete",
       package_select => "==",
       package_version => "2.1.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-install-lessorequal-version"
       package_policy => "addupdate",
       package_select => "<=",
       package_version => "2.1.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-update-to-lessorequal-version"
       package_policy => "addupdate",
       package_select => "<=",
       package_version => "2.1.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-install-lessthan-version"
       package_policy => "addupdate",
       package_select => "<",
       package_version => "2.1.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-update-to-lessthan-version"
       package_policy => "addupdate",
       package_select => "<",
       package_version => "2.1.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-install-greaterorequal-version"
       package_policy => "addupdate",
       package_select => ">=",
       package_version => "2.4.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-update-to-greaterorequal-version"
       package_policy => "addupdate",
       package_select => ">=",
       package_version => "2.4.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-install-greaterthan-version"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2.4.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "mismatch-update-to-greaterthan-version"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2.4.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-install-exact-version"
       package_policy => "addupdate",
       package_select => "==",
       package_version => "2.2.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-update-to-exact-version"
       package_policy => "addupdate",
       package_select => "==",
       package_version => "2.2.3",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-install-lessorequal-version"
       package_policy => "addupdate",
       package_select => "<=",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-update-to-lessorequal-version"
       package_policy => "addupdate",
       package_select => "<=",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-install-lessthan-version"
       package_policy => "addupdate",
       package_select => "<",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-update-to-lessthan-version"
       package_policy => "addupdate",
       package_select => "<",
       package_version => "2.4.5",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-install-greaterorequal-version"
       package_policy => "addupdate",
       package_select => ">=",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-update-to-greaterorequal-version"
       package_policy => "addupdate",
       package_select => ">=",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-install-greaterthan-version"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 
     "missing-update-to-greaterthan-version"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2.0.1",
       package_architectures => { "i386" },
-      package_method => test_method("$(currentdir)");
+      package_method => test_method_filerepo($(this.promise_dirname));
 }

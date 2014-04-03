@@ -1,19 +1,41 @@
-update-to-exact-version 1.4.3 i386
-update-to-lessorequal-version 1.4.3 i386
-update-to-lessthan-version 1.4.3 i386
-update-to-greaterorequal-version 1.4.3 i386
-update-to-greaterthan-version 1.4.3 i386
-update-to-greaterorequal-version-already-greater-installed 2.2.2 i386
-update-to-greaterthan-version-already-greater-installed 2.2.2 i386
-mismatch-update-to-exact-version 1.4.3 i386
-mismatch-update-to-lessorequal-version 1.4.3 i386
-mismatch-update-to-lessthan-version 1.4.3 i386
-mismatch-update-to-greaterorequal-version 1.4.3 i386
-mismatch-update-to-greaterthan-version 1.4.3 i386
-missing-update-to-exact-version 1.4.3 i386
-missing-update-to-lessorequal-version 1.4.3 i386
-missing-update-to-lessthan-version 1.4.3 i386
-missing-update-to-greaterorequal-version 1.4.3 i386
-missing-update-to-greaterthan-version 1.4.3 i386
-delete-exact-version 2.2.3 i386
-mismatch-delete-exact-version 2.2.3 i386
+i update-to-exact-version 1.4.3 i386
+i update-to-lessorequal-version 1.4.3 i386
+i update-to-lessthan-version 1.4.3 i386
+i update-to-greaterorequal-version 1.4.3 i386
+i update-to-greaterthan-version 1.4.3 i386
+i update-to-greaterorequal-version-already-greater-installed 2.2.2 i386
+i update-to-greaterthan-version-already-greater-installed 2.2.2 i386
+i mismatch-update-to-exact-version 1.4.3 i386
+i mismatch-update-to-lessorequal-version 1.4.3 i386
+i mismatch-update-to-lessthan-version 1.4.3 i386
+i mismatch-update-to-greaterorequal-version 1.4.3 i386
+i mismatch-update-to-greaterthan-version 1.4.3 i386
+i missing-update-to-exact-version 1.4.3 i386
+i missing-update-to-lessorequal-version 1.4.3 i386
+i missing-update-to-lessthan-version 1.4.3 i386
+i missing-update-to-greaterorequal-version 1.4.3 i386
+i missing-update-to-greaterthan-version 1.4.3 i386
+i delete-exact-version 2.2.3 i386
+i mismatch-delete-exact-version 2.2.3 i386
+a install-exact-version-2.2.3.i386.rpm
+a install-greaterorequal-version-2.2.3.i386.rpm
+a install-greaterthan-version-2.2.3.i386.rpm
+a install-lessorequal-version-2.2.3.i386.rpm
+a install-lessthan-version-2.2.3.i386.rpm
+a mismatch-install-exact-version-2.2.3.i386.rpm
+a mismatch-install-greaterorequal-version-2.2.3.i386.rpm
+a mismatch-install-greaterthan-version-2.2.3.i386.rpm
+a mismatch-install-lessorequal-version-2.2.3.i386.rpm
+a mismatch-install-lessthan-version-2.2.3.i386.rpm
+a mismatch-update-to-exact-version-2.2.3.i386.rpm
+a mismatch-update-to-greaterorequal-version-2.2.3.i386.rpm
+a mismatch-update-to-greaterthan-version-2.2.3.i386.rpm
+a mismatch-update-to-lessorequal-version-2.2.3.i386.rpm
+a mismatch-update-to-lessthan-version-2.2.3.i386.rpm
+a update-to-exact-version-2.2.3.i386.rpm
+a update-to-greaterorequal-version-2.2.3.i386.rpm
+a update-to-greaterorequal-version-already-greater-installed-2.2.3.i386.rpm
+a update-to-greaterthan-version-2.2.3.i386.rpm
+a update-to-greaterthan-version-already-greater-installed-2.2.3.i386.rpm
+a update-to-lessorequal-version-2.2.3.i386.rpm
+a update-to-lessthan-version-2.2.3.i386.rpm

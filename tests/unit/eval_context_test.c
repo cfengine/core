@@ -6,7 +6,7 @@ void tests_setup(void)
 {
     static char env[] = /* Needs to be static for putenv() */
         "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/CFENGINE_eval_context_test.XXXXXX";
-    const char *workdir = strchr(env, '=');
+    char *workdir = strchr(env, '=');
     assert(workdir && workdir[1] == '/');
     workdir++;
 

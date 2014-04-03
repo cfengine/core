@@ -253,22 +253,6 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     exit(42);
 }
 
-void Log(LogLevel level, const char *fmt, ...)
-{
-    va_list ap;
-    char buf[CF_BUFSIZE] = "";
-
-    va_start(ap, fmt);
-    vsnprintf(buf, CF_BUFSIZE - 1, fmt, ap);
-    va_end(ap);
-    printf("Log: %s\n", buf);
-}
-
-const char *GetErrorStr(void)
-{
-    return strerror(errno);
-}
-
 void FatalError(const EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)
@@ -291,30 +275,6 @@ void FatalError(const EvalContext *ctx, char *fmt, ...)
 
 
 pthread_mutex_t test_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-
-int ThreadLock(pthread_mutex_t *t)
-{
-    int result = pthread_mutex_lock(&test_lock);
-
-    if (result != 0)
-    {
-        fprintf(stderr, "Could not lock mutex");
-    }
-
-    return true;
-}
-
-int ThreadUnlock(pthread_mutex_t *t)
-{
-    int result = pthread_mutex_unlock(&test_lock);
-
-    if (result != 0)
-    {
-        fprintf(stderr, "Could not unlock mutex");
-    }
-
-    return true;
-}
 
 pthread_mutex_t *cft_dbhandle;
 

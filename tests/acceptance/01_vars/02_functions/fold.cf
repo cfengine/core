@@ -140,7 +140,7 @@ bundle agent check
       "expected[a][realmin]" string => "a";
       "expected[b][realmin]" string => "9";
       "expected[c][realmin]" string => "-1";
-      "expected[d][realmin]" string => "a";
+      "expected[d][realmin]" string => "";
       "expected[e][realmin]" string => "a";
       "expected[f][realmin]" string => "100";
       "expected[g][realmin]" string => "-3.33";
@@ -166,7 +166,7 @@ bundle agent check
       "expected[a][realmax]" string => "c";
       "expected[b][realmax]" string => "100";
       "expected[c][realmax]" string => "-1";
-      "expected[d][realmax]" string => "";
+      "expected[d][realmax]" string => "b";
       "expected[e][realmax]" string => "1";
       "expected[f][realmax]" string => "300";
       "expected[g][realmax]" string => "1.11";

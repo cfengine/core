@@ -7,7 +7,10 @@ AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../li
 LDADD = ../../libpromises/libpromises.la libtest.la
 
 check_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils/alloc.c ../../libpromises/patches.c ../../libpromises/constants.c
+libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
+	../../libutils/alloc.c \
+	../../libpromises/patches.c \
+	../../libpromises/constants.c
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
@@ -24,11 +27,13 @@ libdb_la_SOURCES = ../../libpromises/dbm_api.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
 	../../libpromises/dbm_migration_bundles.c \
+	../../libutils/logging.c \
 	../../libutils/atexit.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
 libdb_la_LIBADD = libstr.la
+libdb_la_CPPFLAGS = $(AM_CPPFLAGS)
 
 check_PROGRAMS = \
 	arg_split_test \

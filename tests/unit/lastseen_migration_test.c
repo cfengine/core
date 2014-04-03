@@ -249,21 +249,6 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
-void Log(LogLevel level, const char *fmt, ...)
-{
-    fprintf(stderr, "CFOUT<%d>: ", level);
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    fprintf(stderr, "\n");
-}
-
-const char *GetErrorStr(void)
-{
-    return strerror(errno);
-}
-
 HashMethod CF_DEFAULT_DIGEST;
 pthread_mutex_t *cft_output;
 char VIPADDRESS[CF_MAX_IP_LEN];
@@ -276,16 +261,6 @@ char *MapAddress(char *addr)
 }
 
 char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
-{
-    fail();
-}
-
-int ThreadLock(pthread_mutex_t *name)
-{
-    fail();
-}
-
-int ThreadUnlock(pthread_mutex_t *name)
 {
     fail();
 }

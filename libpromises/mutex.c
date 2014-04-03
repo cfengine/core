@@ -24,6 +24,9 @@
 
 #include <mutex.h>
 
+#include <logging.h>                                            /* Log */
+
+
 static pthread_mutex_t MUTEXES[] = /* GLOBAL_T */
 {
     PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
@@ -39,47 +42,38 @@ pthread_mutex_t *cft_getaddr = &MUTEXES[2]; /* GLOBAL_T */
 pthread_mutex_t *cft_server_children = &MUTEXES[3]; /* GLOBAL_T */
 pthread_mutex_t *cft_server_filter = &MUTEXES[4]; /* GLOBAL_T */
 
-#define MUTEX_NAME_SIZE 32
 
-static void GetMutexName(const pthread_mutex_t *mutex, char *mutexname)
-{
-    if (mutex >= cft_lock && mutex <= cft_server_filter)
-    {
-        sprintf(mutexname, "mutex %ld", (long) (mutex - cft_lock));
-    }
-    else
-    {
-        sprintf(mutexname, "unknown mutex 0x%p", mutex);
-    }
-}
+int __ThreadLock(pthread_mutex_t *mutex,
+                 const char *funcname, const char *filename, int lineno)
 
-int ThreadLock(pthread_mutex_t *mutex)
 {
     int result = pthread_mutex_lock(mutex);
 
     if (result != 0)
     {
-        char mutexname[MUTEX_NAME_SIZE];
-
-        GetMutexName(mutex, mutexname);
-
-        printf("!! Could not lock %s: %s\n", mutexname, strerror(result));
+        /* Log() is blocking on mutexes itself inside malloc(), so maybe not
+         * the best idea here. */
+        Log(LOG_LEVEL_ERR,
+            "Locking failure at %s:%d function %s! (pthread_mutex_lock: %s)",
+            filename, lineno, funcname, GetErrorStrFromCode(result));
         return false;
     }
+
     return true;
 }
 
-int ThreadUnlock(pthread_mutex_t *mutex)
+int __ThreadUnlock(pthread_mutex_t *mutex,
+                 const char *funcname, const char *filename, int lineno)
 {
     int result = pthread_mutex_unlock(mutex);
 
     if (result != 0)
     {
-        char mutexname[MUTEX_NAME_SIZE];
-
-        GetMutexName(mutex, mutexname);
-
-        printf("!! Could not unlock %s: %s\n", mutexname, strerror(result));
+        /* Log() is blocking on mutexes itself inside malloc(), so maybe not
+         * the best idea here. */
+        Log(LOG_LEVEL_ERR,
+            "Locking failure at %s:%d function %s! (pthread_mutex_unlock: %s)",
+            filename, lineno, funcname, GetErrorStrFromCode(result));
         return false;
     }
 

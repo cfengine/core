@@ -33,7 +33,12 @@ extern pthread_mutex_t *cft_getaddr;
 extern pthread_mutex_t *cft_server_children;
 extern pthread_mutex_t *cft_server_filter;
 
-int ThreadLock(pthread_mutex_t *name);
-int ThreadUnlock(pthread_mutex_t *name);
+#define ThreadLock(m)     __ThreadLock(m, __func__, __FILE__, __LINE__)
+#define ThreadUnlock(m) __ThreadUnlock(m, __func__, __FILE__, __LINE__)
+
+int __ThreadLock(pthread_mutex_t *name,
+                 const char *funcname, const char *filename, int lineno);
+int __ThreadUnlock(pthread_mutex_t *name,
+                   const char *funcname, const char *filename, int lineno);
 
 #endif

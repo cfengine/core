@@ -546,6 +546,7 @@ static void OpenSSLLock_callback(int mode, int index, char *file, int line)
 static void SetupOpenSSLThreadLocks(void)
 {
     const int num_locks = CRYPTO_num_locks();
+    assert(cf_openssl_locks == NULL);
     cf_openssl_locks = xmalloc(num_locks * sizeof(*cf_openssl_locks));
 
     for (int i = 0; i < num_locks; i++)
@@ -591,4 +592,5 @@ static void CleanupOpenSSLThreadLocks(void)
     }
 
     free(cf_openssl_locks);
+    cf_openssl_locks = NULL;
 }

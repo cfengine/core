@@ -5,7 +5,7 @@
 
 body common control
 {
-      bundlesequence => { "test" };
+      bundlesequence => { default("$(this.promise_filename)") };
       inputs => { "../../default.cf.sub" };
       version => "1.0";
 }

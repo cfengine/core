@@ -29,6 +29,10 @@
 #include <files_hashes.h>
 #include <locks.h>
 #include <item_lib.h>
+#include <known_dirs.h>
+#ifdef LMDB
+#include <lmdb.h>
+#endif
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
@@ -639,3 +643,4 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
 
     return 0;
 }
+

@@ -344,6 +344,17 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 CFD_MAXPROCESSES = (int) IntFromString(value);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
                 Log(LOG_LEVEL_VERBOSE, "Setting maxconnections to %d", CFD_MAXPROCESSES);
+#ifdef LMDB
+                static int LSD_MAXREADERS = 0;
+                if (LSD_MAXREADERS < CFD_MAXPROCESSES)
+                {
+                    int rc = UpdateLastSeenMaxReaders(CFD_MAXPROCESSES);
+                    if (rc == 0)
+                    {
+                        LSD_MAXREADERS = CFD_MAXPROCESSES;
+                    }
+                }
+#endif
                 continue;
             }
 

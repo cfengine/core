@@ -364,7 +364,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             }
             ThreadUnlock(cft_server_children);
         }
-
         /* Check whether we have established peering with a hub */
         if (CollectCallHasPending())
         {

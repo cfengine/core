@@ -30,6 +30,7 @@
 #include "dbm_priv.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "known_dirs.h"
 
 #ifdef LMDB
 
@@ -63,6 +64,9 @@ const char *DBPrivGetFileExtension(void)
 #define LMDB_MAXSIZE    104857600
 #endif
 
+/* Lastseen default number of maxreaders = 4x the default lmdb maxreaders */
+#define DEFAULT_LASTSEEN_MAXREADERS (126*4)
+
 DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
@@ -82,6 +86,17 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
         Log(LOG_LEVEL_ERR, "Could not set mapsize for database %s: %s",
               dbpath, mdb_strerror(rc));
         goto err;
+    }
+    if (id == dbid_lastseen)
+    {
+        /* lastseen needs by default 4x more reader locks than other DBs*/
+        rc = mdb_env_set_maxreaders(db->env, DEFAULT_LASTSEEN_MAXREADERS);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not set maxreaders for database %s: %s",
+                  dbpath, mdb_strerror(rc));
+            goto err;
+        }
     }
     if (id != dbid_locks)
     {
@@ -521,4 +536,43 @@ char *DBPrivDiagnose(const char *dbpath)
     return StringFormat("Unable to diagnose LMDB file (not implemented) for '%s'", dbpath);
 }
 
+int UpdateLastSeenMaxReaders(int maxreaders)
+{
+    int rc = 0;
+    /* We assume that every cf_lastseen DB has already a minimum of 504 maxreaders */
+    if (maxreaders > DEFAULT_LASTSEEN_MAXREADERS)
+    {
+        char workbuf[CF_BUFSIZE];
+        MDB_env *env = NULL;
+        rc = mdb_env_create(&env);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not create lastseen database env : %s",
+                mdb_strerror(rc));
+            goto err;
+        }
+
+        rc = mdb_env_set_maxreaders(env, maxreaders);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not change lastseen maxreaders to %d : %s",
+                maxreaders, mdb_strerror(rc));
+            goto err;
+        }
+
+        snprintf(workbuf, CF_BUFSIZE, "%s%ccf_lastseen.lmdb", GetWorkDir(), FILE_SEPARATOR);
+        rc = mdb_env_open(env, workbuf, MDB_NOSUBDIR, 0644);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not open lastseen database env : %s",
+                mdb_strerror(rc));
+        }
+err:
+        if (env)
+        {
+            mdb_env_close(env);
+        }
+    }
+    return rc;
+}
 #endif

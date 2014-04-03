@@ -1064,6 +1064,8 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         {
             if ((a.packages.package_file_repositories != NULL))
             {
+                Log(LOG_LEVEL_VERBOSE, "Package method specifies a file repository");
+
                 {
                     VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
                     EvalContextVariablePut(ctx, ref_name, name, CF_DATA_TYPE_STRING, "source=promise");
@@ -1101,6 +1103,10 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                     break;
                 }
             }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Package method does NOT specify a file repository");
+            }
 
             Log(LOG_LEVEL_VERBOSE, "Schedule package for addition");
 
@@ -1137,6 +1143,8 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             // expand local repository in the name convetion, if present
             if (a.packages.package_file_repositories)
             {
+                Log(LOG_LEVEL_VERBOSE, "Package method specifies a file repository");
+
                 // remove any "$(repo)" from the name convention string
 
                 if (strncmp(id, "$(firstrepo)", 12) == 0)
@@ -1158,6 +1166,10 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                             "in any of the listed repositories", idBuf);
                     }
                 }
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Package method does NOT specify a file repository");
             }
 
             result = PromiseResultUpdate_HELPER(pp, result,
@@ -1217,6 +1229,8 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
         if ((a.packages.package_file_repositories != NULL))
         {
+            Log(LOG_LEVEL_VERBOSE, "Package method specifies a file repository");
+
             {
                 VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
                 EvalContextVariablePut(ctx, ref_name, name, CF_DATA_TYPE_STRING, "source=promise");
@@ -1257,6 +1271,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         }
         else
         {
+            Log(LOG_LEVEL_VERBOSE, "Package method does NOT specify a file repository");
             strlcpy(largestVerAvail, version, sizeof(largestVerAvail));  // user-supplied version
         }
 

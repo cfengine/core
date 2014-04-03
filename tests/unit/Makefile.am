@@ -10,7 +10,8 @@ check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
 	../../libutils/alloc.c \
 	../../libpromises/patches.c \
-	../../libpromises/constants.c
+	../../libpromises/constants.c \
+        ../../libpromises/known_dirs.c
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la

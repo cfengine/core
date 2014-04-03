@@ -1543,10 +1543,11 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
     case TYPE_SEQUENCE_INTERFACES:
 
         InitializeOSPF(policy, ctx);
+        OSPF_ACTIVE = NewOSPFState();
 
         if (QueryOSPFServiceState(ctx, OSPF_ACTIVE))
         {
-            //....
+            printf("NOW FIX COMMON xxxxxxxxxxxx----------------------------------------\n");
         }
         break;
 
@@ -1588,6 +1589,7 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
         // If Cumulus of ifipdown2
         printf("NOW EDIT /etc/networks/interfaces ??\n");
 
+        DeleteOSPFState(OSPF_ACTIVE);
         break;
 
     default:

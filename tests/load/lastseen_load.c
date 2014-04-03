@@ -50,21 +50,6 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
-void Log(LogLevel level, const char *fmt, ...)
-{
-    fprintf(stderr, "CFOUT<%d>: ", level);
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    fprintf(stderr, "\n");
-}
-
-const char *GetErrorStr(void)
-{
-    return strerror(errno);
-}
-
 HashMethod CF_DEFAULT_DIGEST;
 const char *const DAY_TEXT[] = {};
 const char *const MONTH_TEXT[] = {};
@@ -96,16 +81,6 @@ char *MapAddress(char *addr)
 }
 
 char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
-{
-    exit(42);
-}
-
-int ThreadLock(pthread_mutex_t *name)
-{
-    exit(42);
-}
-
-int ThreadUnlock(pthread_mutex_t *name)
 {
     exit(42);
 }

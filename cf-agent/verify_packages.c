@@ -2028,7 +2028,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                         }
                         else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
                         {
-                            Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                            Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
                         }
                         else
                         {
@@ -2093,7 +2093,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                             }
                             else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
                             {
-                                Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                                Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
                             }
                             else
                             {
@@ -2245,7 +2245,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
                         }
                         else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
                         {
-                            Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                            Log(LOG_LEVEL_DEBUG, "ExecutePatch: Ignoring outcome for special package '%s'", pi->name);
                         }
                         else
                         {
@@ -2288,7 +2288,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
                         }
                         else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
                         {
-                            Log(LOG_LEVEL_DEBUG, "Ignoring outcome for special package '%s'", pi->name);
+                            Log(LOG_LEVEL_DEBUG, "ExecutePatch: Ignoring outcome for special package '%s'", pi->name);
                         }
                         else
                         {
@@ -2681,7 +2681,7 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Patch line '%s', with name '%s', version '%s', arch '%s'", item, name, version, arch);
+    Log(LOG_LEVEL_DEBUG, "PrependPatchItem: Patch line '%s', with name '%s', version '%s', arch '%s'", item, name, version, arch);
 
     if (PackageInItemList(chklist, name, version, arch))
     {
@@ -2710,7 +2710,7 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
 
         if ((strcmp(name, "") != 0) || (strcmp(version, "") != 0))
         {
-            Log(LOG_LEVEL_DEBUG, "Extracted package name '%s', version '%s', arch '%s'", name, version, arch);
+            Log(LOG_LEVEL_DEBUG, "PrependMultiLinePackageItem: Extracted package name '%s', version '%s', arch '%s'", name, version, arch);
             PrependPackageItem(ctx, list, name, version, arch, pp);
         }
 
@@ -2773,7 +2773,7 @@ static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list,
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Package line '%s', name '%s', version '%s', arch '%s'", item, name, version, arch);
+    Log(LOG_LEVEL_DEBUG, "PrependListPackageItem: Package line '%s', name '%s', version '%s', arch '%s'", item, name, version, arch);
 
     return PrependPackageItem(ctx, list, name, version, arch, pp);
 }

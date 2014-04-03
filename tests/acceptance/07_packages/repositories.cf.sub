@@ -37,11 +37,6 @@ body package_method test_method(currentdir)
       package_name_convention => "$(name)-$(version).$(arch).rpm";
 }
 
-body classes ifrepaired(repaired_class)
-{
-      promise_repaired => { "$(repaired_class)" };
-}
-
 bundle agent test
 {
   vars:

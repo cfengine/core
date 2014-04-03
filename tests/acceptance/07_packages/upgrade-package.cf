@@ -30,20 +30,15 @@ body package_method yum_rpm
       package_delete_command => "$(G.false)";
 }
 
-body classes ifrepaired(repaired_class)
-{
-      promise_repaired => { "$(repaired_class)" };
-}
-
 bundle agent test
 {
   packages:
-      "which" 
+      "which"
       package_policy => "addupdate",
       package_select => "==",
       package_version => "2",
       package_method => yum_rpm,
-      classes => ifrepaired("whichrepaired");  
+      classes => if_repaired("whichrepaired");
 }
 
 bundle agent check

@@ -53,7 +53,7 @@ bundle agent check
   files:
       "$(G.testdir)/destfile.*\.cfsaved"
       touch => "true",
-      classes => ifrepaired("ok");
+      classes => if_repaired("ok");
 
   reports:
     ok::
@@ -62,9 +62,5 @@ bundle agent check
       "$(this.promise_filename) FAIL";
 }
 
-body classes ifrepaired(classname)
-{
-      promise_repaired => { "$(classname)" };
-}
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

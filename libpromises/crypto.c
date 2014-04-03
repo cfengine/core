@@ -527,8 +527,8 @@ static void OpenSSLLock_callback(int mode, int index, char *file, int line)
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR,
-                "OpenSSL locking failure at %s:%d! (pthread_mutex_lock: %d)",
-                file, line, ret);
+                "OpenSSL locking failure at %s:%d! (pthread_mutex_lock: %s)",
+                file, line, GetErrorStrFromCode(ret));
         }
     }
     else
@@ -537,8 +537,8 @@ static void OpenSSLLock_callback(int mode, int index, char *file, int line)
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR,
-                "OpenSSL locking failure at %s:%d! (pthread_mutex_unlock: %d)",
-                file, line, ret);
+                "OpenSSL locking failure at %s:%d! (pthread_mutex_unlock: %s)",
+                file, line, GetErrorStrFromCode(ret));
         }
     }
 }
@@ -558,8 +558,8 @@ static void SetupOpenSSLThreadLocks(void)
         {
             Log(LOG_LEVEL_ERR,
                 "Failed to use error-checking mutexes for openssl,"
-                " falling back to normal ones (pthread_mutexattr_settype: %d)",
-                ret);
+                " falling back to normal ones (pthread_mutexattr_settype: %s)",
+                GetErrorStrFromCode(ret));
             pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
         }
         ret = pthread_mutex_init(&cf_openssl_locks[i], &attr);
@@ -567,7 +567,8 @@ static void SetupOpenSSLThreadLocks(void)
         {
             Log(LOG_LEVEL_CRIT,
                 "Failed to use initialise mutexes for openssl"
-                " (pthread_mutex_init: %d)!", ret);
+                " (pthread_mutex_init: %s)!",
+                GetErrorStrFromCode(ret));
         }
         pthread_mutexattr_destroy(&attr);
     }

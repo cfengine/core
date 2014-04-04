@@ -926,12 +926,13 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
 {
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
+    time_t now = time(NULL);
 
-    if (validated_at > time(NULL))
+    if (validated_at > now)
     {
         Log(LOG_LEVEL_INFO,
-            "Clock seems to have jumped back in time, mtime of %jd is newer than current time, touching it",
-            (intmax_t) validated_at);
+            "Clock seems to have jumped back in time, mtime of %jd is newer than current time %jd, touching it",
+            (intmax_t) validated_at, now);
 
         GenericAgentTagReleaseDirectory(config,
                                         NULL, // use GetAutotagDir

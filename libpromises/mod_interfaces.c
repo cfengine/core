@@ -49,7 +49,7 @@ static const ConstraintSyntax linkservice_constraints[] =
     ConstraintSyntaxNewString("ospf_authentication_digest", CF_ANYSTRING, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_passive_interface", "No service updates over this channel", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_abr_summarization", "Allow Area Border Router to inject summaries into a stub area via this interface", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("ospf_area_type", "stub,nssa", "Stub type area", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_area_type", "stub,nssa,normal", "Stub type area", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

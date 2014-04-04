@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <openssl/bn.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <string.h>
@@ -277,16 +278,18 @@ static int always_true(X509_STORE_CTX *store_ctx ARG_UNUSED,
 
 int ssl_server_init()
 {
-    int ret;
     /*
      * This is twisted. We can generate the required keys by calling RSA_generate_key,
      * however we cannot put the private part and the public part in the two containers.
      * For that we need to save each part to a file and then load each part from
      * the respective file.
      */
-    RSA *key = NULL;
-    key = RSA_generate_key(1024, 17, NULL, NULL);
-    if (!key)
+    int ret;
+    RSA *key = RSA_new();
+    BIGNUM *bignum = BN_new();
+    BN_set_word(bignum, 17);
+    ret = RSA_generate_key_ex(key, 1024, bignum, NULL);
+    if (!ret)
     {
         correctly_initialized = false;
         return -1;
@@ -461,16 +464,19 @@ void ssl_client_init()
      * For that we need to save each part to a file and then load each part from
      * the respective file.
      */
-    RSA *key = NULL;
-    key = RSA_generate_key(1024, 17, NULL, NULL);
-    if (!key)
+    int ret;
+    RSA *key = RSA_new();
+    BIGNUM *bignum = BN_new();
+    BN_set_word(bignum, 17);
+    ret = RSA_generate_key_ex(key, 1024, bignum, NULL);
+    if (!ret)
     {
         correctly_initialized = false;
         return;
     }
+
     char name_template_private[128];
     char name_template_public[128];
-    int ret;
 
     ret = snprintf(name_template_private,
                    sizeof(name_template_private),

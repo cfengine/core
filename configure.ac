@@ -95,7 +95,8 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(libcompat)
-AC_FUNC_GETLOADAVG 
+AC_CHECK_DECLS(getloadavg)
+AC_FUNC_GETLOADAVG
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")

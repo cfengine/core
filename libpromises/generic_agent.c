@@ -411,22 +411,18 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
     {
         Log(LOG_LEVEL_DEBUG, "Tagging directory %s for validation", dirname);
 
-        if (GenericAgentIsPolicyReloadNeeded(config))
+        GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
+
+        bool wrote_validated = WritePolicyValidatedFile(config, filename);
+
+        if (!wrote_validated)
         {
-            Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
-            GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
-
-            bool wrote_validated = WritePolicyValidatedFile(config, filename);
-
-            if (!wrote_validated)
-            {
-                Log(LOG_LEVEL_VERBOSE, "The promises_validated file %s was NOT updated", filename);
-                return false;
-            }
-
-            Log(LOG_LEVEL_DEBUG, "The promises_validated file %s was updated", filename);
-            return true;
+            Log(LOG_LEVEL_VERBOSE, "The promises_validated file %s was NOT updated", filename);
+            return false;
         }
+
+        Log(LOG_LEVEL_DEBUG, "The promises_validated file %s was updated", filename);
+        return true;
     }
 
     return true;
@@ -930,12 +926,13 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
 {
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
+    time_t now = time(NULL);
 
-    if (validated_at > time(NULL))
+    if (validated_at > now)
     {
         Log(LOG_LEVEL_INFO,
-            "Clock seems to have jumped back in time, mtime of %jd is newer than current time, touching it",
-            (intmax_t) validated_at);
+            "Clock seems to have jumped back in time, mtime of %jd is newer than current time %jd, touching it",
+            (intmax_t) validated_at, now);
 
         GenericAgentTagReleaseDirectory(config,
                                         NULL, // use GetAutotagDir

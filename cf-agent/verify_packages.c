@@ -974,7 +974,7 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
 }
 
 /**
-   @brief Returns true if a package (n, a) is installed and v is larger than the installed version
+   @brief Returns true if a package (n,v,a) is installed and v is larger than the installed version
 
    Called by SchedulePackageOp
 
@@ -990,13 +990,13 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
    @param ctx [in] The evaluation context
    @param n [in] the specific name
    @param v [in] the specific version
-   @param arch [in] the specific architecture
+   @param a [in] the specific architecture
    @param instV [inout] the matched package version (written on match)
    @param instA [inout] the matched package architecture (written on match)
    @param attr [in] the promise Attributes for this operation
    @param pp [in] the Promise for this operation
    @param result [inout] the PromiseResult for this operation
-   @returns boolean if given (n,v,arch) is newer than known packages
+   @returns boolean if given (n,v,a) is newer than known packages
 */
 static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, const char *a, char *instV, char *instA, Attributes attr,
                                 const Promise *pp, PromiseResult *result)
@@ -1074,7 +1074,7 @@ static const char *PackageAction2String(PackageAction pa)
 }
 
 /**
-   @brief Adds a specific package (n,v,a) [name, version, architecture] as specified by Attributes attr to the scheduled operations
+   @brief Adds a specific package (name,version,arch) as specified by Attributes a to the scheduled operations
 
    Called by SchedulePackageOp.
 
@@ -1122,7 +1122,7 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
 }
 
 /**
-   @brief Adds a specific patch (n,v,a) [name, version, architecture] as specified by Attributes attr to the scheduled operations
+   @brief Adds a specific patch (name,version,arch) as specified by Attributes a to the scheduled operations
 
    Called by SchedulePackageOp.
 
@@ -1871,6 +1871,27 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, const Pro
     return false;
 }
 
+/**
+   @brief Checks the state of a specific package (name,version,arch) as specified by Attributes a
+
+   Called by VerifyPromisedPackage.
+
+   * copies a into a2, overrides a2.packages.package_select to PACKAGE_VERSION_COMPARATOR_EQ
+   * VersionCmpResult installed = check if (name,*,arch) is installed with PackageMatch (note version override!)
+   * if PackageMatch returned an error, fail the promise
+   * VersionCmpResult matches = check if (name,version,arch) is installed with PackageMatch
+   * if PackageMatch returned an error, fail the promise
+   * if VersionCheckSchedulePackage with "matches" and "installed" passes, call SchedulePackageOp on the package
+
+   @param ctx [in] The evaluation context
+   @param a [in] the Attributes specifying how to compare
+   @param pp [in] the Promise for this operation
+   @param name [in] the specific name
+   @param version [in] the specific version
+   @param arch [in] the specific architecture
+   @param no_version [in] ignore the version, be cool
+   @returns the promise result
+*/
 static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Promise *pp, const char *name, const char *version,
                                        const char *arch, bool no_version)
 {

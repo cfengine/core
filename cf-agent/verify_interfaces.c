@@ -77,6 +77,11 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
 
     Attributes a = GetInterfaceAttributes(ctx, pp);
 
+    if (!IsDefinedClass(ctx, pp->classes))
+    {
+        return PROMISE_RESULT_SKIPPED;
+    }
+
     if (!InterfaceSanityCheck(ctx, a, pp))
     {
         return PROMISE_RESULT_FAIL;

@@ -210,20 +210,9 @@ avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 endif
 endif
-#
-# file_writer_test overrides fclose(3) which causes gcov to fail as gcov
-# instrumentation code uses fclose(3).
-#
 
-if MACOSX
-file_writer_test_CFLAGS = $(AM_CFLAGS)
-else
-file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
-endif
-
+file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
-file_writer_test_LDADD = libstr.la
-file_writer_test_LDFLAGS =
 
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la

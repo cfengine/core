@@ -1418,6 +1418,25 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     return result;
 }
 
+/**
+   @brief Compare a PackageItem to a specific package (n,v,arch) as specified by Attributes a
+
+   Called by PatchMatch and PackageMatch.
+
+   First, checks the package names are the same (according to CompareCSVName).
+   Second, checks the architectures are the same or arch is "*"
+   Third, checks the versions with CompareVersions or version is "*"
+
+   @param ctx [in] The evaluation context
+   @param n [in] the specific name
+   @param v [in] the specific version
+   @param arch [in] the specific architecture
+   @param pi [in] the PackageItem to check
+   @param a [in] the Attributes specifying how to compare
+   @param pp [in] the Promise for this operation
+   @param mode [in] the operating mode, informational for logging
+   @returns the version comparison result
+*/
 VersionCmpResult ComparePackages(EvalContext *ctx,
                                  const char *n, const char *v, const char *arch,
                                  PackageItem *pi, Attributes a,
@@ -1470,6 +1489,26 @@ VersionCmpResult ComparePackages(EvalContext *ctx,
 
 }
 
+/**
+   @brief Finds a specific package (n,v,a) [name, version, architecture] as specified by Attributes attr
+
+   Called by VerifyPromisedPatch.
+
+   Goes through all the installed packages to find matches for the given attributes.
+
+   The package manager is checked against attr.packages.package_list_command.
+
+   The package name is checked as a regular expression. then (n,v,a) with ComparePac kages.
+
+   @param ctx [in] The evaluation context
+   @param n [in] the specific name
+   @param v [in] the specific version
+   @param a [in] the specific architecture
+   @param attr [in] the Attributes specifying how to compare
+   @param pp [in] the Promise for this operation
+   @param mode [in] the operating mode, informational for logging
+   @returns the version comparison result
+*/
 static VersionCmpResult PatchMatch(EvalContext *ctx,
                                    const char *n, const char *v, const char *a,
                                    Attributes attr, const Promise *pp,
@@ -1512,6 +1551,26 @@ static VersionCmpResult PatchMatch(EvalContext *ctx,
     return VERCMP_NO_MATCH;
 }
 
+/**
+   @brief Finds a specific package (n,v,a) [name, version, architecture] as specified by Attributes attr
+
+   Called by CheckPackageState.
+
+   Goes through all the installed packages to find matches for the given attributes.
+
+   The package manager is checked against attr.packages.package_list_command.
+
+   The (n,v,a) search is done with ComparePackages.
+
+   @param ctx [in] The evaluation context
+   @param n [in] the specific name
+   @param v [in] the specific version
+   @param a [in] the specific architecture
+   @param attr [in] the Attributes specifying how to compare
+   @param pp [in] the Promise for this operation
+   @param mode [in] the operating mode, informational for logging
+   @returns the version comparison result
+*/
 static VersionCmpResult PackageMatch(EvalContext *ctx,
                                      const char *n, const char *v, const char *a,
                                      Attributes attr,
@@ -2394,6 +2453,12 @@ void ExecuteScheduledPackages(EvalContext *ctx)
 
 /** Cleanup **/
 
+/**
+ * @brief Clean the package schedule and installed lists.
+ *
+ * Called by cf-agent only.  Cleans bookkeeping data.
+ *
+ */
 void CleanScheduledPackages(void)
 {
     DeletePackageManagers(PACKAGE_SCHEDULE);

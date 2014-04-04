@@ -573,9 +573,13 @@ int rpl_vasprintf(char **, const char *, va_list);
 int rpl_asprintf(char **, const char *, ...);
 # endif
 #endif /* HAVE_STDARG_H */
-#if !defined(isfinite)
+
+/* For example Solaris, does not have isfinite() in <math.h>. */
+#if !HAVE_DECL_ISFINITE
+# include <ieeefp.h>
 # define isfinite(x) finite(x)
 #endif
+
 #if !HAVE_DECL_GETLINE
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 #endif

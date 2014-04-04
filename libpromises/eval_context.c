@@ -2249,7 +2249,9 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
                 int fd = creat(logname, filemode);
                 if (fd >= 0)
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Created log file '%s' with requested permissions %o", logname, filemode);
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Created log file '%s' with requested permissions %jo",
+                        logname, (intmax_t) filemode);
                     close(fd);
                 }
             }

@@ -2799,6 +2799,8 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     return(uptime ? (now - uptime) : -1);
 }
 
+/*****************************************************************************/
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);

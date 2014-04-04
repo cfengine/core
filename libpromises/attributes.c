@@ -1723,6 +1723,25 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.speed = PromiseGetConstraintAsInt(ctx, "speed", pp);
     i.min_bonding = PromiseGetConstraintAsInt(ctx, "min_bonding", pp);
 
+    i.ospf_hello_interval = PromiseGetConstraintAsInt(ctx, "ospf_hello_interval", pp);
+    i.ospf_priority = PromiseGetConstraintAsInt(ctx, "ospf_priority", pp);
+    i.ospf_link_type = PromiseGetConstraintAsRval(pp, "ospf_link_type", RVAL_TYPE_SCALAR);
+    i.ospf_authentication_digest = PromiseGetConstraintAsRval(pp, "ospf_authentication_digest", RVAL_TYPE_SCALAR);
+    i.ospf_passive_interface = PromiseGetConstraintAsBoolean(ctx, "ospf_passive_interface", pp);
+    i.ospf_abr_summarization = PromiseGetConstraintAsBoolean(ctx, "ospf_abr_summarization", pp);
+
+    char *areatype = PromiseGetConstraintAsRval(pp, "ospf_area_type", RVAL_TYPE_SCALAR);
+    if (areatype && strcmp(areatype, "stub") == 0)
+    {
+        i.ospf_area_type = 's';
+    }
+    else
+    {
+        i.ospf_area_type = 'n';
+    }
+
+    i.ospf_area = PromiseGetConstraintAsInt(ctx, "ospf_area", pp);
+
     return i;
 }
 

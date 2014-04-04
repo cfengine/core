@@ -80,7 +80,7 @@ if (state->ospf_log_adjacency_changes)
 
 if (state->ospf_router_id)
    {
-   (state->ospf_router_id);
+   free(state->ospf_router_id);
    }
 
 free(state);
@@ -335,7 +335,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
  char comm[CF_BUFSIZE];
 
  // Log file
- 
+
  if (policy->log_file)
     {
     if (state->log_file == NULL || strcmp(policy->log_file, state->log_file) == 0)
@@ -358,7 +358,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
  if (policy->log_timestamp_precision != state->log_timestamp_precision)
     {
     snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"log timestamp precision %d\"", VTYSH_FILENAME, policy->log_timestamp_precision);
-    
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: log timestamp precision %d microseconds", policy->log_timestamp_precision);
@@ -368,7 +368,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
        Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise log timestamp precision: %d microseconds", policy->log_timestamp_precision);
        }
     }
- 
+
  // Adjacency change logging
 
  if (policy->ospf_log_adjacency_changes)
@@ -376,7 +376,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
     if (strcmp(policy->ospf_log_adjacency_changes, state->ospf_log_adjacency_changes) != 0)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"log-adjacency-changes %s\"", VTYSH_FILENAME, policy->ospf_log_adjacency_changes);
-       
+
        if (!ExecRouteCommand(comm))
           {
           Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: log adjacency change logging %s ", policy->ospf_log_adjacency_changes);
@@ -394,8 +394,8 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
     {
     if (strcmp(policy->ospf_router_id, state->ospf_router_id) != 0)
        {
-       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"router-id 10.1.0.1\"", VTYSH_FILENAME, policy->ospf_router_id);
-       
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"router-id %s\"", VTYSH_FILENAME, policy->ospf_router_id);
+
        if (!ExecRouteCommand(comm))
           {
           Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: router-id is %s", policy->ospf_router_id);
@@ -409,7 +409,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
  else if (state->ospf_router_id)
     {
     snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no router-id\"", VTYSH_FILENAME);
-    
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no router-id");
@@ -419,7 +419,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
        Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: removed router-id");
        }
     }
- 
+
  // Route redistribution
  // kernel
 
@@ -442,7 +442,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel\"", VTYSH_FILENAME);
        }
-    
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute kernel");
@@ -455,7 +455,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
  else if (state->ospf_redistribute_kernel)
     {
     snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute kernel\"", VTYSH_FILENAME);
-        
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute kernel");
@@ -487,7 +487,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected\"", VTYSH_FILENAME);
        }
-    
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute connected");
@@ -500,7 +500,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
  else if (state->ospf_redistribute_connected)
     {
     snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute connected\"", VTYSH_FILENAME);
-        
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute connected");
@@ -532,7 +532,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static\"", VTYSH_FILENAME);
        }
-    
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute static");
@@ -545,7 +545,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
  else if (state->ospf_redistribute_static)
     {
     snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute static\"", VTYSH_FILENAME);
-        
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute static");
@@ -577,7 +577,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp\"", VTYSH_FILENAME);
        }
-    
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute bgp");
@@ -590,7 +590,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
  else if (state->ospf_redistribute_bgp)
     {
     snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute bgp\"", VTYSH_FILENAME);
-        
+
     if (!ExecRouteCommand(comm))
        {
        Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute bgp");
@@ -683,6 +683,161 @@ int QueryOSPFInterfaceState(EvalContext *ctx, const Attributes *a, const Promise
  Log(LOG_LEVEL_VERBOSE, "Interface %s currently points to ospf_area_type: %c", pp->promiser, ospfp->ospf_area_type);
 
  return true;
+}
+
+/*****************************************************************************/
+
+void KeepOSPFInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateOSPF *ospfp)
+
+{
+ char comm[CF_BUFSIZE];
+
+ // String
+
+ if (a->interface.ospf_link_type)
+    {
+    if (strcmp(a->interface.ospf_link_type, ospfp->ospf_link_type) != 0)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ospf network %s\""
+                VTYSH_FILENAME, pp->promiser, a->interface.ospf_link_type);
+
+       if (!ExecRouteCommand(comm))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Failed to set keep promised OSPF link_type: %s", a->interface.ospf_link_type);
+          *result = PROMISE_RESULT_FAIL;
+          }
+       else
+          {
+          Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: link_type %s", a->interface.ospf_link_type);
+          *result = PROMISE_RESULT_CHANGE;
+          }
+       }
+    }
+
+ if (a->interface.ospf_authentication_digest)
+    {
+    if (strcmp(a->interface.ospf_authentication_digest, ospfp->ospf_authentication_digest) != 0)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ip ospf authentication message-digest\"",
+                VTYSH_FILENAME, pp->promiser);
+
+       if (!ExecRouteCommand(comm))
+          {
+          // Ignore?
+          }
+
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ip ospf message-digest-key 1 md5 %s\"",
+                VTYSH_FILENAME, pp->promiser, a->interface.ospf_authentication_digest);
+
+       if (!ExecRouteCommand(comm))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Failed to set keep promised OSPF link_type: %s", a->interface.ospf_link_type);
+          *result = PROMISE_RESULT_FAIL;
+          }
+       else
+          {
+          Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: link_type %s", a->interface.ospf_link_type);
+          *result = PROMISE_RESULT_CHANGE;
+          }
+       }
+    }
+
+ // Int
+
+ if (a->interface.ospf_hello_interval > 0)
+    {
+    if (a->interface.ospf_hello_interval == ospfp->ospf_hello_interval)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ip ospf hello-interval %d\"",
+                VTYSH_FILENAME, pp->promiser, a->interface.ospf_hello_interval);
+
+       if (!ExecRouteCommand(comm))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Failed to set keep promised OSPF hello-interval: %d", a->interface.ospf_hello_interval);
+          *result = PROMISE_RESULT_FAIL;
+          }
+       else
+          {
+          Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: hello-interval %d", a->interface.ospf_hello_interval);
+          *result = PROMISE_RESULT_CHANGE;
+          }
+       }
+    }
+
+ if (a->interface.ospf_priority > 0)
+    {
+    if (a->interface.ospf_priority == ospfp->ospf_priority)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ip ospf priority %d\"",
+                VTYSH_FILENAME, pp->promiser, a->interface.ospf_priority);
+
+       if (!ExecRouteCommand(comm))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Failed to set keep promised OSPF priority: %d", a->interface.ospf_priority);
+          *result = PROMISE_RESULT_FAIL;
+          }
+       else
+          {
+          Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: priority%d", a->interface.ospf_priority);
+          *result = PROMISE_RESULT_CHANGE;
+          }
+       }
+    }
+
+ if (a->interface.ospf_area != ospfp->ospf_area || a->interface.ospf_area_type != ospfp->ospf_area_type
+     || a->interface.ospf_abr_summarization != ospfp->ospf_abr_summarization)
+    {
+    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ip ospf area 0.0.0.%d\"",
+             VTYSH_FILENAME, pp->promiser, a->interface.ospf_area);
+
+    if (a->interface.ospf_area_type == 's')
+       {
+       strcat(comm, " stub");
+       }
+
+    if (!a->interface.ospf_abr_summarization)
+       {
+       strcat(comm, " no-usmmary");
+       }
+
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep promised OSPF area: %d", a->interface.ospf_priority);
+       *result = PROMISE_RESULT_FAIL;
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: area %d", a->interface.ospf_priority);
+       *result = PROMISE_RESULT_CHANGE;
+       }
+    }
+
+ // Boolean
+
+ if (a->interface.ospf_passive_interface != ospfp->ospf_passive_interface)
+    {
+    if (a->interface.ospf_passive_interface)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"passive %s\"",
+                VTYSH_FILENAME, pp->promiser);
+       }
+    else
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no passive %s\"",
+                VTYSH_FILENAME, pp->promiser);
+       }
+
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep promised OSPF passive interface");
+       *result = PROMISE_RESULT_FAIL;
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise for passive interface");
+       *result = PROMISE_RESULT_CHANGE;
+       }
+    }
 }
 
 /*****************************************************************************/
@@ -977,7 +1132,7 @@ static int ExecRouteCommand(char *cmd)
  FILE *pfp;
  size_t line_size = CF_BUFSIZE;
  int ret = true;
- 
+
  if (DONTDO)
     {
     Log(LOG_LEVEL_VERBOSE, "Need to execute command '%s' for interface routing configuration", cmd);

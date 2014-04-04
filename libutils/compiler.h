@@ -30,31 +30,32 @@
 
 #if defined(__GNUC__) && (__GNUC__ >= 3)
 
-#  if defined (__MINGW32__)
-#    define FUNC_ATTR_PRINTF(string_index, first_to_check) \
-       __attribute__((format(gnu_printf, string_index, first_to_check)))
-#  else
-#    define FUNC_ATTR_PRINTF(string_index, first_to_check) \
-       __attribute__((format(printf, string_index, first_to_check)))
-#  endif
+
 #  define FUNC_ATTR_NORETURN  __attribute__((noreturn))
+#  define FUNC_ATTR_PRINTF(string_index, first_to_check) \
+     __attribute__((format(__printf__, string_index, first_to_check)))
+#  define FUNC_UNUSED __attribute__((unused))
+#  define ARG_UNUSED __attribute__((unused))
+#  define FUNC_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+
 #  if (__GNUC__ >= 4) && (__GNUC_MINOR__ >=5)
 #    define FUNC_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #  else
 #    define FUNC_DEPRECATED(msg) __attribute__((deprecated))
 #  endif
-#  define FUNC_UNUSED __attribute__((unused))
-#  define ARG_UNUSED __attribute__((unused))
-#  define FUNC_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+
 
 #else /* not gcc >= 3.0 */
 
-#  define FUNC_ATTR_PRINTF(string_index, first_to_check)
+
 #  define FUNC_ATTR_NORETURN
-#  define FUNC_DEPRECATED(msg)
+#  define FUNC_ATTR_PRINTF(string_index, first_to_check)
 #  define FUNC_UNUSED
 #  define ARG_UNUSED
 #  define FUNC_WARN_UNUSED_RESULT
+
+#  define FUNC_DEPRECATED(msg)
+
 
 #endif  /* gcc >= 3.0 */
 

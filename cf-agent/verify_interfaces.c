@@ -308,6 +308,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     if (a->havelinkservices && QueryOSPFInterfaceState(ctx, a, pp, ospfp))
     {
+        KeepOSPFInterfacePromises(ctx, a, pp, result, ospfp);
     }
 
     free(ospfp);

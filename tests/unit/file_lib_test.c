@@ -23,8 +23,8 @@
 */
 
 #include <test.h>
-#include <file_lib.h>
 
+#include <file_lib.h>
 #include <bool.h>
 
 #define TEMP_DIR "/tmp/file_lib_test"

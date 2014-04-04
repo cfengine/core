@@ -905,6 +905,7 @@ struct timespec
 #endif
 
 /* Must be always the last one! */
+#include <deprecated.h>
 #include <config.post.h>
 
 

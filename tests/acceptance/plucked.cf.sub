@@ -433,8 +433,8 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
 
   reports:
     verbose_mode|EXTRA::
-      "Line for '$(i)' exists" ifvarclass => "exists_$(ci[$(i)])";
-      "Line for '$(i)' does not exist" ifvarclass => "!exists_$(ci[$(i)])";
+      "$(this.bundle): Line for '$(i)' exists" ifvarclass => "exists_$(ci[$(i)])";
+      "$(this.bundle): Line for '$(i)' does not exist" ifvarclass => "!exists_$(ci[$(i)])";
 
 }
 
@@ -774,7 +774,7 @@ bundle agent cfe_tidy(file)
       "$(file)" delete => tidy;
 
   reports:
-    inform_mode::
+    inform_mode|EXTRA::
       "$(this.bundle): deleting $(file) with delete => tidy";
 }
 
@@ -797,7 +797,7 @@ bundle agent cfe_syncdir(from, to)
       copy_from => cfe_copyfrom_sync($(from));
 
   reports:
-    inform_mode::
+    inform_mode|EXTRA::
       "$(this.bundle): copying directory $(from) to $(to)";
 }
 
@@ -819,7 +819,7 @@ bundle agent cfe_copyfile(from, to)
       copy_from => cfe_copyfrom_sync($(from));
 
   reports:
-    inform_mode::
+    inform_mode|EXTRA::
       "$(this.bundle): copying file $(from) to $(to)";
 }
 
@@ -854,7 +854,7 @@ bundle agent cfe_makefile(file, str)
       edit_defaults => empty;
 
   reports:
-    inform_mode::
+    inform_mode|EXTRA::
       "$(this.bundle): creating $(file) with contents '$(str)'";
 }
 
@@ -875,7 +875,7 @@ bundle agent cfe_emptyfile(file)
       edit_defaults => empty;
 
   reports:
-    inform_mode::
+    inform_mode|EXTRA::
       "$(this.bundle): creating empty $(file) with 0 size";
 }
 
@@ -897,7 +897,7 @@ bundle agent cfe_hardlinkfile(target, link)
       link_from => cfe_linkfrom($(target), "hardlink");
 
   reports:
-    inform_mode::
+    inform_mode|EXTRA::
       "$(this.bundle): $(link) will be a hard link to $(target)";
 }
 
@@ -919,7 +919,7 @@ bundle agent cfe_linkfile(target, link)
       link_from => cfe_linkfrom($(target), "symlink");
 
   reports:
-    inform_mode::
+    inform_mode|EXTRA::
       "$(this.bundle): $(link) will be a symlink to $(target)";
 }
 

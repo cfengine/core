@@ -716,7 +716,7 @@ void KeepOSPFInterfacePromises(EvalContext *ctx, const Attributes *a, const Prom
 
  if (a->interface.ospf_authentication_digest)
     {
-    if (strcmp(a->interface.ospf_authentication_digest, ospfp->ospf_authentication_digest) != 0)
+    if (ospfp->ospf_authentication_digest == NULL || strcmp(a->interface.ospf_authentication_digest, ospfp->ospf_authentication_digest) != 0)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ip ospf authentication message-digest\"",
                 VTYSH_FILENAME, pp->promiser);
@@ -1028,7 +1028,7 @@ static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, co
 
  if ((sp = GetStringAfter(line, " ip ospf area")) != NULL)
     {
-    Log(LOG_LEVEL_VERBOSE, "Authentication digest %s", sp);
+    Log(LOG_LEVEL_VERBOSE, "OSPF Area %s", sp);
     sscanf(sp, "%*d.%*d.%*d.%d", &(ospfp->ospf_area));
     free(sp);
     char buffer[CF_SMALLBUF];

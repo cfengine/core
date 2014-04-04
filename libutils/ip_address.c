@@ -22,9 +22,10 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <stdint.h>
 #include <ctype.h>
-#include <platform.h>
 #include <ip_address.h>
 #include <alloc.h>
 

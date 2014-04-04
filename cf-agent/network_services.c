@@ -55,6 +55,7 @@ static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, co
 static char *GetStringAfter(const char *line, const char *prefix);
 static int GetIntAfter(const char *line, const char *prefix);
 static bool GetMetricIf(const char *line, const char *prefix, int *metric, int *metric_type);
+static int ExecRouteCommand(char *cmd);
 
 /*****************************************************************************/
 
@@ -252,15 +253,6 @@ int QueryOSPFServiceState(EvalContext *ctx, CommonOSPF *ospfp)
  char comm[CF_BUFSIZE];
  RouterCategory state = CF_RC_INITIAL;
 
-    printf("xOSPF redistributing kernel routes: %d with metric %d (type %d)\n",
-       ospfp->ospf_redistribute_kernel,ospfp->ospf_redistribute_kernel_metric,ospfp->ospf_redistribute_kernel_metric_type);
-   printf("xOSPF redistributing connected networks: %d with metric %d (type %d)\n",
-       ospfp->ospf_redistribute_connected, ospfp->ospf_redistribute_connected_metric, ospfp->ospf_redistribute_connected_metric_type);
-   printf("xOSPF redistributing static routes: %d with metric %d (type %d)\n",
-       ospfp->ospf_redistribute_static, ospfp->ospf_redistribute_static_metric, ospfp->ospf_redistribute_static_metric_type);
-   printf("xOSPF redistributing bgp: %d with metric %d (type %d)\n",
-       ospfp->ospf_redistribute_bgp, ospfp->ospf_redistribute_bgp_metric, ospfp->ospf_redistribute_bgp_metric_type);
-
  snprintf(comm, CF_BUFSIZE, "%s -c \"show running-config\"", VTYSH_FILENAME);
 
  if ((pfp = cf_popen(comm, "r", true)) == NULL)
@@ -324,17 +316,290 @@ int QueryOSPFServiceState(EvalContext *ctx, CommonOSPF *ospfp)
       Log(LOG_LEVEL_VERBOSE, "OSPF router-id: %s ", ospfp->ospf_router_id);
       }
 
-   //Log(LOG_LEVEL_VERBOSE,
-   printf("OSPF redistributing kernel routes: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing kernel routes: %d with metric %d (type %d)\n",
        ospfp->ospf_redistribute_kernel,ospfp->ospf_redistribute_kernel_metric,ospfp->ospf_redistribute_kernel_metric_type);
-   printf("OSPF redistributing connected networks: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing connected networks: %d with metric %d (type %d)\n",
        ospfp->ospf_redistribute_connected, ospfp->ospf_redistribute_connected_metric, ospfp->ospf_redistribute_connected_metric_type);
-   printf("OSPF redistributing static routes: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing static routes: %d with metric %d (type %d)\n",
        ospfp->ospf_redistribute_static, ospfp->ospf_redistribute_static_metric, ospfp->ospf_redistribute_static_metric_type);
-   printf("OSPF redistributing bgp: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing bgp: %d with metric %d (type %d)\n",
        ospfp->ospf_redistribute_bgp, ospfp->ospf_redistribute_bgp_metric, ospfp->ospf_redistribute_bgp_metric_type);
 
  return true;
+}
+
+/*****************************************************************************/
+
+void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
+{
+ char comm[CF_BUFSIZE];
+
+ // Log file
+ 
+ if (policy->log_file)
+    {
+    if (state->log_file == NULL || strcmp(policy->log_file, state->log_file) == 0)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"log file %s\"", VTYSH_FILENAME, policy->log_file);
+
+       if (!ExecRouteCommand(comm))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Failed to set keep promised OSPF log file: %s", policy->log_file);
+          }
+       else
+          {
+          Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: log file to: %s", policy->log_file);
+          }
+       }
+    }
+
+ // Timestamp precision
+
+ if (policy->log_timestamp_precision != state->log_timestamp_precision)
+    {
+    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"log timestamp precision %d\"", VTYSH_FILENAME, policy->log_timestamp_precision);
+    
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: log timestamp precision %d microseconds", policy->log_timestamp_precision);
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise log timestamp precision: %d microseconds", policy->log_timestamp_precision);
+       }
+    }
+ 
+ // Adjacency change logging
+
+ if (policy->ospf_log_adjacency_changes)
+    {
+    if (strcmp(policy->ospf_log_adjacency_changes, state->ospf_log_adjacency_changes) != 0)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"log-adjacency-changes %s\"", VTYSH_FILENAME, policy->ospf_log_adjacency_changes);
+       
+       if (!ExecRouteCommand(comm))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: log adjacency change logging %s ", policy->ospf_log_adjacency_changes);
+          }
+       else
+          {
+          Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: log adjacency change logging %s ", policy->ospf_log_adjacency_changes);
+          }
+       }
+    }
+
+ // Router id / "loopback"
+
+ if (policy->ospf_router_id)
+    {
+    if (strcmp(policy->ospf_router_id, state->ospf_router_id) != 0)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"router-id 10.1.0.1\"", VTYSH_FILENAME, policy->ospf_router_id);
+       
+       if (!ExecRouteCommand(comm))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: router-id is %s", policy->ospf_router_id);
+          }
+       else
+          {
+          Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: router-id is %s", policy->ospf_router_id);
+          }
+       }
+    }
+ else if (state->ospf_router_id)
+    {
+    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no router-id\"", VTYSH_FILENAME);
+    
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no router-id");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: removed router-id");
+       }
+    }
+ 
+ // Route redistribution
+ // kernel
+
+ if (policy->ospf_redistribute_kernel)
+    {
+    if (policy->ospf_redistribute_kernel_metric && policy->ospf_redistribute_kernel_metric_type)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel metric %d metric-type %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_kernel_metric,
+                policy->ospf_redistribute_kernel_metric_type);
+       }
+    else if (policy->ospf_redistribute_kernel_metric)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel metric %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_kernel_metric);
+       }
+    else
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel\"", VTYSH_FILENAME);
+       }
+    
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute kernel");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute kernel");
+       }
+    }
+ else if (state->ospf_redistribute_kernel)
+    {
+    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute kernel\"", VTYSH_FILENAME);
+        
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute kernel");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: no redistribute kernel");
+       }
+    }
+
+  // connected
+
+  if (policy->ospf_redistribute_connected)
+    {
+    if (policy->ospf_redistribute_connected_metric && policy->ospf_redistribute_connected_metric_type)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected metric %d metric-type %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_connected_metric,
+                policy->ospf_redistribute_connected_metric_type);
+       }
+    else if (policy->ospf_redistribute_connected_metric)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected metric %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_connected_metric);
+       }
+    else
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected\"", VTYSH_FILENAME);
+       }
+    
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute connected");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute connected");
+       }
+    }
+ else if (state->ospf_redistribute_connected)
+    {
+    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute connected\"", VTYSH_FILENAME);
+        
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute connected");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: no redistribute connected");
+       }
+    }
+
+  // static
+
+ if (policy->ospf_redistribute_static)
+    {
+    if (policy->ospf_redistribute_static_metric && policy->ospf_redistribute_static_metric_type)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static metric %d metric-type %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_static_metric,
+                policy->ospf_redistribute_static_metric_type);
+       }
+    else if (policy->ospf_redistribute_static_metric)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static metric %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_static_metric);
+       }
+    else
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static\"", VTYSH_FILENAME);
+       }
+    
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute static");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute static");
+       }
+    }
+ else if (state->ospf_redistribute_static)
+    {
+    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute static\"", VTYSH_FILENAME);
+        
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute static");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: no redistribute static");
+       }
+    }
+
+  // bgp
+
+  if (policy->ospf_redistribute_bgp)
+    {
+    if (policy->ospf_redistribute_bgp_metric && policy->ospf_redistribute_bgp_metric_type)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp metric %d metric-type %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_bgp_metric,
+                policy->ospf_redistribute_bgp_metric_type);
+       }
+    else if (policy->ospf_redistribute_bgp_metric)
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp metric %d\"",
+                VTYSH_FILENAME,
+                policy->ospf_redistribute_bgp_metric);
+       }
+    else
+       {
+       snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp\"", VTYSH_FILENAME);
+       }
+    
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute bgp");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute bgp");
+       }
+    }
+ else if (state->ospf_redistribute_bgp)
+    {
+    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"no redistribute bgp\"", VTYSH_FILENAME);
+        
+    if (!ExecRouteCommand(comm))
+       {
+       Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: no redistribute bgp");
+       }
+    else
+       {
+       Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: no redistribute bgp");
+       }
+    }
 }
 
 /*****************************************************************************/
@@ -526,7 +791,6 @@ static void HandleOSPFServiceConfig(EvalContext *ctx, CommonOSPF *ospfp, char *l
 
  if (GetMetricIf(line, " redistribute bgp", &metric, &metric_type))
     {
-    printf("XXXXXXXXXXXXXXXx\n");
     ospfp->ospf_redistribute_bgp = true;
     if (metric != CF_NOINT)
        {
@@ -703,4 +967,55 @@ static bool GetMetricIf(const char *line, const char *prefix, int *metric, int *
     }
 
  return result;
+}
+
+
+/****************************************************************************/
+
+static int ExecRouteCommand(char *cmd)
+{
+ FILE *pfp;
+ size_t line_size = CF_BUFSIZE;
+ int ret = true;
+ 
+ if (DONTDO)
+    {
+    Log(LOG_LEVEL_VERBOSE, "Need to execute command '%s' for interface routing configuration", cmd);
+    return true;
+    }
+
+ if ((pfp = cf_popen(cmd, "r", true)) == NULL)
+    {
+    Log(LOG_LEVEL_ERR, "Unable to execute '%s'", cmd);
+    return false;
+    }
+
+ char *line = xmalloc(line_size);
+
+ while (!feof(pfp))
+    {
+    *line = '\0';
+    CfReadLine(&line, &line_size, pfp);
+
+    if (feof(pfp))
+       {
+       break;
+       }
+
+    // VTYSH errors:
+    // There is already same network statement
+    // Can't find specified network area configuration
+    // % Unknown command.
+
+    if (strlen(line) > 0)
+       {
+       Log(LOG_LEVEL_ERR, "%s", line);
+       ret = false;
+       break;
+       }
+    }
+
+ free(line);
+ cf_pclose(pfp);
+ return ret;
 }

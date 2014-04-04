@@ -1547,7 +1547,7 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
 
         if (QueryOSPFServiceState(ctx, OSPF_ACTIVE))
         {
-            printf("NOW FIX COMMON xxxxxxxxxxxx----------------------------------------\n");
+            KeepOSPFLinkServiceControlPromises(OSPF_POLICY, OSPF_ACTIVE);
         }
         break;
 

@@ -115,11 +115,6 @@ CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
 dnl ######################################################################
-dnl Check for getloadavg()
-dnl ######################################################################
-AC_FUNC_GETLOADAVG
-
-dnl ######################################################################
 dnl Whether to build extensions as builtin extensions or a separate
 dnl plugin. The default is plugin.
 dnl --enable-builtin-extensions is the default on Windows, and can be
@@ -634,6 +629,9 @@ AC_CHECK_DECLS(isfinite, [], [], [[#include <math.h>]])
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
+
+AC_CHECK_DECLS(getloadavg)
+AC_FUNC_GETLOADAVG
 
 CF3_PATH_ROOT_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$CHPASSWD" != "x"],

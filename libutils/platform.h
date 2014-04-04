@@ -551,13 +551,20 @@ int setegid(gid_t egid);
 #if !HAVE_DECL_SETLINEBUF
 void setlinebuf(FILE *stream);
 #endif
+
 #if HAVE_STDARG_H
 # include <stdarg.h>
 # if !HAVE_VSNPRINTF
 int rpl_vsnprintf(char *, size_t, const char *, va_list);
+/* If [v]snprintf() does not exist or is not C99 compatible, then we assume
+ * that [v]printf() and [v]fprintf() need to be provided as well. */
+int rpl_vprintf(const char *format, va_list ap);
+int rpl_vfprintf(FILE *stream, const char *format, va_list ap);
 # endif
 # if !HAVE_SNPRINTF
 int rpl_snprintf(char *, size_t, const char *, ...);
+int rpl_printf(const char *format, ...);
+int rpl_fprintf(FILE *stream, const char *format, ...);
 # endif
 # if !HAVE_VASPRINTF
 int rpl_vasprintf(char **, const char *, va_list);

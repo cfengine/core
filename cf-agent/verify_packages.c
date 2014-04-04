@@ -996,7 +996,7 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
    @param attr [in] the promise Attributes for this operation
    @param pp [in] the Promise for this operation
    @param result [inout] the PromiseResult for this operation
-   @returns boolean if given (n,v,a) is newer than known packages
+   @returns boolean if given (n,v,arch) is newer than known packages
 */
 static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, const char *a, char *instV, char *instA, Attributes attr,
                                 const Promise *pp, PromiseResult *result)
@@ -1044,6 +1044,12 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
     return false;
 }
 
+/**
+   @brief Returns string version of a PackageAction
+
+   @param pa [in] The PackageAction
+   @returns string representation of pa or a ProgrammingError
+*/
 static const char *PackageAction2String(PackageAction pa)
 {
     switch (pa)
@@ -1067,6 +1073,25 @@ static const char *PackageAction2String(PackageAction pa)
     }
 }
 
+/**
+   @brief Adds a specific package (n,v,a) [name, version, architecture] as specified by Attributes attr to the scheduled operations
+
+   Called by SchedulePackageOp.
+
+   Either warn or fix, based on a->transaction.action.
+
+   To fix, calls GetPackageManager and enqueues the desired operation and package with the returned manager 
+
+   @param ctx [in] The evaluation context
+   @param a [in] the Attributes specifying how to compare
+   @param mgr [in] the specific manager name
+   @param pa [in] the PackageAction to enqueue
+   @param name [in] the specific name
+   @param version [in] the specific version
+   @param arch [in] the specific architecture
+   @param pp [in] the Promise for this operation
+   @returns the promise result
+*/
 static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a, char *mgr, PackageAction pa,
                                           const char *name, const char *version, const char *arch,
                                           const Promise *pp)
@@ -1082,6 +1107,12 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
     case cfa_fix:
     {
         PackageManager *manager = GetPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+
+        if (NULL == manager)
+        {
+            ProgrammingError("AddPackageToSchedule: Null package manager found!!!");
+        }
+
         PrependPackageItem(ctx, &(manager->pack_list), name, version, arch, pp);
         return PROMISE_RESULT_CHANGE;
     }
@@ -1090,6 +1121,25 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
     }
 }
 
+/**
+   @brief Adds a specific patch (n,v,a) [name, version, architecture] as specified by Attributes attr to the scheduled operations
+
+   Called by SchedulePackageOp.
+
+   Either warn or fix, based on a->transaction.action.
+
+   To fix, calls GetPackageManager and enqueues the desired operation and package with the returned manager 
+
+   @param ctx [in] The evaluation context
+   @param a [in] the Attributes specifying how to compare
+   @param mgr [in] the specific manager name
+   @param pa [in] the PackageAction to enqueue
+   @param name [in] the specific name
+   @param version [in] the specific version
+   @param arch [in] the specific architecture
+   @param pp [in] the Promise for this operation
+   @returns the promise result
+*/
 static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, char *mgr, PackageAction pa,
                                         const char *name, const char *version, const char *arch,
                                         const Promise *pp)
@@ -1105,6 +1155,12 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
     case cfa_fix:
     {
         PackageManager *manager = GetPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+
+        if (NULL == manager)
+        {
+            ProgrammingError("AddPatchToSchedule: Null package manager found!!!");
+        }
+
         PrependPackageItem(ctx, &(manager->patch_list), name, version, arch, pp);
         return PROMISE_RESULT_CHANGE;
     }
@@ -1649,7 +1705,7 @@ VersionCmpResult ComparePackages(EvalContext *ctx,
 
    The package manager is checked against attr.packages.package_list_command.
 
-   The package name is checked as a regular expression. then (n,v,a) with ComparePac kages.
+   The package name is checked as a regular expression. then (n,v,a) with ComparePackages.
 
    @param ctx [in] The evaluation context
    @param n [in] the specific name

@@ -32,6 +32,7 @@
 #include <files_interfaces.h>
 #include <string_lib.h>
 #include <known_dirs.h>
+#include <conversion.h>
 
 #include <cf-windows-functions.h>
 
@@ -697,4 +698,46 @@ const char *GetSoftwarePatchesFilename(char *buffer)
     snprintf(buffer, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, SOFTWARE_PATCHES_CACHE);
     MapName(buffer);
     return buffer;
+}
+
+const char *RealPackageManager(const char *manager)
+{
+    const char *pos = strchr(manager, ' ');
+    if (!pos || pos - manager < 4)
+    {
+        return CommandArg0(manager);
+    }
+    if (strncmp(pos - 4, "/env", 4) != 0
+        && strncmp(manager, "env ", 4) != 0)
+    {
+        return CommandArg0(manager);
+    }
+
+    // Look for variable assignments.
+    const char *last_pos;
+    bool eq_sign_found = false;
+    while (true)
+    {
+        last_pos = pos + 1;
+        pos = strpbrk(last_pos, "= ");
+        if (!pos)
+        {
+            break;
+        }
+        if (*pos == '=')
+        {
+            eq_sign_found = true;
+        }
+        else if (eq_sign_found)
+        {
+            eq_sign_found = false;
+        }
+        else
+        {
+            return CommandArg0(last_pos);
+        }
+    }
+
+    // Reached the end? Weird. Must be env command with no real command.
+    return CommandArg0(manager);
 }

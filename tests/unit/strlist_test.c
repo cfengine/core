@@ -1,6 +1,6 @@
 #include <test.h>
-#include <cmockery.h>
 
+#include <cmockery.h>
 #include <strlist.h>
 
 

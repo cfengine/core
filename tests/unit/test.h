@@ -14,6 +14,11 @@
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+
+/* Use this define for specific overrides inside all our source tree. */
+#define CFENGINE_TEST
+
+
 char *file_read_string(FILE *in);
 
 void assert_file_equal(FILE *a, FILE *b);

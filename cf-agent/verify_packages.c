@@ -621,6 +621,25 @@ static void ReportSoftware(PackageManager *list)
     fclose(fout);
 }
 
+/**
+   @brief Gets the cached list of installed packages from file
+
+   Called by VerifyInstalledPackages
+
+   * calls GetSoftwareCacheFilename to get the inventory CSV filename
+   * respects a.packages.package_list_update_ifelapsed, returns NULL if file is too old
+   * parses the CSV out of the file (name, version, arch, manager) with each limited to 250 chars
+   * for each line
+   * * if architecture is "default", replace it with default_arch
+   * * if the package manager name matches, call PrependPackageItem
+
+   @param ctx [in] The evaluation context
+   @param manager [in] the PackageManager we want
+   @param default_arch [in] the default architecture
+   @param a [in] the promise Attributes for this operation
+   @param pp [in] the Promise for this operation
+   @returns list of PackageItems
+*/
 static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manager, const char *default_arch, Attributes a,
                                          const Promise *pp)
 {
@@ -710,6 +729,27 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
     return list;
 }
 
+/**
+   @brief Verifies installed packages for a single Promise
+
+   Called by VerifyPackagesPromise
+
+   * from all_mgrs, gets the package manager matching a.packages.package_list_command
+   * populate manager->pack_list with GetCachedPackageList
+   * on Windows, use NovaWin_PackageListInstalledFromAPI if a.packages.package_list_command is set to PACKAGE_LIST_COMMAND_WINAPI
+   * on other platforms, use PackageListInstalledFromCommand
+   * call ReportSoftware to save the installed packages inventory
+   * if a.packages.package_patch_list_command is set, use it and parse each line with a.packages.package_patch_installed_regex; if it matches, call PrependPatchItem
+   * call ReportPatches to save the available updates inventory (Enterprise only)
+
+   @param ctx [in] The evaluation context
+   @param all_mgrs [in] a list of PackageManagers
+   @param default_arch [in] the default architecture
+   @param a [in] the promise Attributes for this operation
+   @param pp [in] the Promise for this operation
+   @param result [inout] the PromiseResult for this operation
+   @returns boolean pass/fail of verification
+*/
 static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, const char *default_arch,
                                    Attributes a, const Promise *pp, PromiseResult *result)
 {
@@ -840,7 +880,7 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
         free(vbuff);
     }
 
-    ReportPatches(INSTALLED_PACKAGE_LISTS);
+    ReportPatches(INSTALLED_PACKAGE_LISTS); // Enterprise only
 
     if (LEGACY_OUTPUT)
     {
@@ -859,6 +899,28 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
 
 /** Evaluate what needs to be done **/
 
+/**
+   @brief Finds the largest version of a package available in a file repository
+
+   Called by SchedulePackageOp
+
+   * match = false
+   * for each directory in repositories
+   * * try to match refAnyVer against each file
+   * * if it matches and CompareVersions says it's the biggest found so far, copy the matched version and name into matchName and matchVers and set match to true
+   * return match
+
+   @param ctx [in] The evaluation context
+   @param matchName [inout] the matched package name (written on match)
+   @param matchVers [inout] the matched package version (written on match)
+   @param refAnyVer [in] the regex to match against the filename to extract a version
+   @param ver [in] the version sought
+   @param repositories [in] the list of directories (file repositories)
+   @param a [in] the promise Attributes for this operation
+   @param pp [in] the Promise for this operation
+   @param result [inout] the PromiseResult for this operation
+   @returns boolean pass/fail of search
+*/
 int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, const char *refAnyVer, const char *ver,
                             Rlist *repositories, Attributes a, const Promise *pp, PromiseResult *result)
 /* Returns true if a version gt/ge ver is found in local repos, false otherwise */
@@ -911,10 +973,33 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
     return match;
 }
 
+/**
+   @brief Returns true if a package (n, a) is installed and v is larger than the installed version
+
+   Called by SchedulePackageOp
+
+   * for each known PackageManager, compare to attr.packages.package_list_command
+   * bail out if no manager was found
+   * for each PackageItem pi in the manager's package list
+   * * if pi->name equals n and (a is "*" or a equals pi->arch)
+   * * * record instV and instA
+   * * * copy attr into attr2 and override the attr2.packages.package_select to PACKAGE_VERSION_COMPARATOR_LT
+   * * * return CompareVersions of the new monster
+   * return false if the above found no matches
+
+   @param ctx [in] The evaluation context
+   @param n [in] the specific name
+   @param v [in] the specific version
+   @param arch [in] the specific architecture
+   @param instV [inout] the matched package version (written on match)
+   @param instA [inout] the matched package architecture (written on match)
+   @param attr [in] the promise Attributes for this operation
+   @param pp [in] the Promise for this operation
+   @param result [inout] the PromiseResult for this operation
+   @returns boolean if given (n,v,a) is newer than known packages
+*/
 static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, const char *a, char *instV, char *instA, Attributes attr,
                                 const Promise *pp, PromiseResult *result)
-/* Returns true if a package (n, a) is installed and v is larger than
- * the installed version. instV and instA are the version and arch installed. */
 {
     PackageManager *mp = INSTALLED_PACKAGE_LISTS;
     while (mp != NULL)
@@ -924,6 +1009,13 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
             break;
         }
         mp = mp->next;
+    }
+
+    if (NULL == mp)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Found no package manager matching attr.packages.package_list_command '%s'",
+            attr.packages.package_list_command == NULL ? "[empty]" : attr.packages.package_list_command);
+        return false;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Looking for an installed package older than (%s,%s,%s) [name,version,arch]", n, v, a);

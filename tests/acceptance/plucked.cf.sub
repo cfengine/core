@@ -404,7 +404,7 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
       # If the line is commented out, uncomment and replace with
       # the correct value
       "^$(cp)($(i)$(bp).*|$(i))$"
-             comment => "Uncommented the value $(i)",
+             comment => "Uncommented the value '$(i)'",
         replace_with => value("$(i)$(sep)$($(v)[$(i)])"),
           ifvarclass => "!exists_$(ci[$(i)]).!replace_attempted_$(ci[$(i)]).!multiple_comments_$(ci[$(i)])",
              classes => always("uncommented_$(ci[$(i)])");
@@ -412,24 +412,30 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
       # If the line is there with the wrong value, replace with
       # the correct value
       "^\s*($(i)$(bp)(?!$(ev[$(i)])$).*|$(i))$"
-           comment => "Correct the value $(i)",
+           comment => "Correct the value '$(i)'",
       replace_with => value("$(i)$(sep)$($(v)[$(i)])"),
            classes => always("replace_attempted_$(ci[$(i)])");
 
   insert_lines:
-      # If the line doesn't exist, or there is more than one occurance
+      # If the line doesn't exist, or there is more than one occurrence
       # of the LHS commented out, insert a new line and try to place it
       # after the commented LHS (keep new line with old comments)
       "$(i)$(sep)$($(v)[$(i)])"
-         comment => "Insert the value, marker exists $(i)",
+         comment => "Insert the value, marker '$(i)' exists",
         location => after("^$(cp)($(i)$(bp).*|$(i))$"),
       ifvarclass => "replace_attempted_$(ci[$(i)]).multiple_comments_$(ci[$(i)])";
 
-      # If the line doesn't exist and there are no occurances
+      # If the line doesn't exist and there are no occurrences
       # of the LHS commented out, insert a new line at the eof
       "$(i)$(sep)$($(v)[$(i)])"
-         comment => "Insert the value, marker doesn't exist $(i)",
-      ifvarclass => "replace_attempted_$(ci[$(i)]).!multiple_comments_$(ci[$(i)])";
+         comment => "Insert the value, marker '$(i)' doesn't exist",
+      ifvarclass => "replace_attempted_$(ci[$(i)]).!multiple_comments_$(ci[$(i)]).!exists_$(ci[$(i)])";
+
+  reports:
+    verbose_mode|EXTRA::
+      "Line for '$(i)' exists" ifvarclass => "exists_$(ci[$(i)])";
+      "Line for '$(i)' does not exist" ifvarclass => "!exists_$(ci[$(i)])";
+
 }
 
 bundle edit_line set_config_values_matching(v,pat)

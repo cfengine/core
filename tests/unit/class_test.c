@@ -1,4 +1,5 @@
 #include <test.h>
+
 #include <class.h>
 
 static void test_class_ref(void)

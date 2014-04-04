@@ -1,6 +1,5 @@
-#include <platform.h>
-
 #include <test.h>
+
 #include <array_map_priv.h>
 #include <hash_map_priv.h>
 #include <map.h>

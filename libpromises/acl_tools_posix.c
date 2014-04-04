@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <cf3.defs.h>
 #include <acl_tools.h>
 

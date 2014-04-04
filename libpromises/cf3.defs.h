@@ -1481,7 +1481,16 @@ typedef struct
     bool bonding;
     bool autoneg;
     int min_bonding;
-    // Proxy body
+    // ospf
+    int ospf_hello_interval;
+    int ospf_priority;
+    char *ospf_link_type;
+    char *ospf_authentication_digest;
+    bool ospf_passive_interface;
+    bool ospf_abr_summarization; // Not "no-summary"
+    char ospf_area_type; // stub, nssa etc
+    int ospf_area;
+
 } Interfaces;
 
 /*************************************************************************/
@@ -1679,4 +1688,3 @@ extern const ConstraintSyntax CFEX_CONTROLBODY[];
 typedef struct ServerConnectionState_ ServerConnectionState;
 
 #endif
-

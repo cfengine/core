@@ -117,6 +117,26 @@ PackageManager *INSTALLED_PACKAGE_LISTS = NULL; /* GLOBAL_X */
 
 #define PACKAGE_IGNORED_CFE_INTERNAL "cfe_internal_non_existing_package"
 
+/**
+   @brief Verifies a single packages promise
+
+   Called by cf-agent.
+
+   * checks "name", "version", "arch", "firstrepo" variables from the "this" context
+   * gets the package attributes into a
+   * on Windows, if the package_list_command is not defined, use the hard-coded PACKAGE_LIST_COMMAND_WINAPI
+   * do a package sanity check on the promise
+   * print promise banner
+   * reset to root directory (Yum bugfix)
+   * get the default architecture from a.packages.package_default_arch_command into default_arch
+   * call VerifyInstalledPackages with default_arch
+   * if the package action is "patch", call VerifyPromisedPatch and return its result through PromiseResultUpdate_HELPER
+   * for all other package actions, call VerifyPromisedPackage and return its result through PromiseResultUpdate_HELPER
+
+   @param ctx [in] The evaluation context
+   @param pp [in] the Promise for this operation
+   @returns the promise result
+*/
 PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
 {
     CfLock thislock;
@@ -222,7 +242,17 @@ end:
     return result;
 }
 
-/** Pre-check of promise contents **/
+/**
+   @brief Pre-check of promise contents
+
+   Called by VerifyPackagesPromise.  Does many sanity checks on the
+   promise attributes and semantics.
+
+   @param ctx [in] The evaluation context
+   @param a [in] the promise Attributes for this operation
+   @param pp [in] the Promise for this operation
+   @returns the promise result
+*/
 
 static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
 {
@@ -430,8 +460,24 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
     return true;
 }
 
-/** Get the list of installed packages **/
+/**
+   @brief Generates the list of installed packages
 
+   Called by VerifyInstalledPackages
+
+   * assembles the package list from a.packages.package_list_command
+   * respects a.packages.package_commands_useshell (boolean)
+   * parses with a.packages.package_multiline_start and if successful, calls PrependMultiLinePackageItem
+   * else, parses with a.packages.package_installed_regex and if successful, calls PrependListPackageItem
+
+   @param ctx [in] The evaluation context
+   @param installed_list [in] a list of PackageItems
+   @param default_arch [in] the default architecture
+   @param a [in] the promise Attributes for this operation
+   @param pp [in] the Promise for this operation
+   @param result [inout] the PromiseResult for this operation
+   @returns boolean pass/fail of command run
+*/
 static bool PackageListInstalledFromCommand(EvalContext *ctx,
                                             PackageItem **installed_list,
                                             const char *default_arch,
@@ -533,6 +579,19 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
     return cf_pclose(fin) == 0;
 }
 
+/**
+   @brief Writes the software inventory
+
+   Called by VerifyInstalledPackages
+
+   * calls GetSoftwareCacheFilename to get the inventory CSV filename
+   * for each PackageManager in the list
+   *  * for each PackageItem in the PackageManager's list
+   *  * write name, version, architecture, manager name
+
+   @param ctx [in] The evaluation context
+   @param list [in] a list of PackageManagers
+*/
 static void ReportSoftware(PackageManager *list)
 {
     FILE *fout;

@@ -333,14 +333,12 @@ mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 # tls_generic_test uses stub functions interposition which does not work (yet)
 # under OS X. Another way of stubbing functions from libpromises is needed.
 if !XNU
-if !SOLARIS # tls_generic_test is broken under solaris
 check_PROGRAMS += tls_generic_test
 tls_generic_test_SOURCES = tls_generic_test.c
 tls_generic_test_LDADD = libtest.la \
 	../../libutils/libutils.la \
 	../../libpromises/libpromises.la \
 	../../libcfnet/libcfnet.la
-endif
 endif
 
 version_test_SOURCES = version_test.c

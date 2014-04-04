@@ -956,6 +956,39 @@ static void HandleOSPFServiceConfig(EvalContext *ctx, CommonOSPF *ospfp, char *l
     Log(LOG_LEVEL_VERBOSE, "Discovered redistribution of bgp routes with metric %d (type %d)", metric, metric_type);
     return;
     }
+
+ // Try to infer the ospf area
+
+ if ((sp = GetStringAfter(line, " network")) != NULL)
+    {
+    char network[CF_MAXVARSIZE] = { 0 };
+    char buffer[CF_SMALLBUF];
+    int area = CF_NOINT;
+
+    sscanf(sp, "%s", network);
+
+    VarRef *ref = VarRefParseFromScope("ip_addresses", "sys");    
+    DataType value_type = CF_DATA_TYPE_NONE;
+    Rlist *iplist= (Rlist *)EvalContextVariableGet(ctx, ref, &value_type);
+    VarRefDestroy(ref);
+    
+    for (Rlist *rp = iplist; rp != NULL; rp=rp->next)
+       {
+       if (FuzzySetMatch(network, (char *)(rp->val.item)) == 0)
+          {
+          sscanf(line + strlen("   network") + strlen(network), "area 0.0.0.%d", &area);
+          Log(LOG_LEVEL_VERBOSE, "Interface address %s seems to be in area %d (inferred from obsolete network area state)", (char *)(rp->val.item), area);
+          }
+       }
+    free(sp);
+    if (area != CF_NOINT)
+       {
+       snprintf(buffer, CF_SMALLBUF, "ospf_area_%d", area);
+       EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+       EvalContextHeapPersistentSave(ctx, buffer, CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
+       }
+    return;
+    }
 }
 
 /*****************************************************************************/
@@ -998,6 +1031,13 @@ static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, co
     Log(LOG_LEVEL_VERBOSE, "Authentication digest %s", sp);
     sscanf(sp, "%*d.%*d.%*d.%d", &(ospfp->ospf_area));
     free(sp);
+    char buffer[CF_SMALLBUF];
+    if (ospfp->ospf_area != CF_NOINT)
+       {
+       snprintf(buffer, CF_SMALLBUF, "ospf_area_%d", ospfp->ospf_area);
+       EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+       EvalContextHeapPersistentSave(ctx, buffer, CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
+       }
     return;
     }
 
@@ -1015,6 +1055,7 @@ static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, co
     {
     char network[CF_MAXVARSIZE] = { 0 };
     char address[CF_MAX_IP_LEN] = { 0 };
+    char buffer[CF_SMALLBUF];
     int area = CF_NOINT;
 
     sscanf(sp, "%s", network);
@@ -1031,10 +1072,14 @@ static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, co
           }
        }
     free(sp);
+    if (ospfp->ospf_area != CF_NOINT)
+       {
+       snprintf(buffer, CF_SMALLBUF, "ospf_area_%d", ospfp->ospf_area);
+       EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+       EvalContextHeapPersistentSave(ctx, buffer, CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
+       }
     return;
     }
-
- //  infer the area type
 
  if (ospfp->ospf_area != CF_NOINT)
     {

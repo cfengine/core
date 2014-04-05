@@ -1817,9 +1817,27 @@ static VersionCmpResult PackageMatch(EvalContext *ctx,
     return VERCMP_NO_MATCH;
 }
 
-static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, const Promise *pp, int matches, int installed)
+/**
+   @brief Check if the operation should be scheduled based on the package policy, if the package matches, and if it's installed
+
+   Called by CheckPackageState.
+
+   Uses a.packages.package_policy to determine operating mode.
+
+   The meaning of matches and installed depends on the package_policy:
+   * PACKAGE_ACTION_DELETE: schedule if (matches AND installed)
+   * PACKAGE_ACTION_REINSTALL: schedule if (matches AND installed)
+   * all other policies: schedule if (not matches OR not installed)
+
+   @param ctx [in] The evaluation context
+   @param a [in] the Attributes specifying the package policy
+   @param pp [in] the Promise for this operation
+   @param matches [in] whether the package matches
+   @param installed [in] whether the package is installed
+   @returns whether the package operation should be scheduled
+*/
+static int WillSchedulePackageOperation(EvalContext *ctx, Attributes a, const Promise *pp, int matches, int installed)
 {
-/* The meaning of matches and installed depends on the package policy */
     PackageAction policy = a.packages.package_policy;
 
     switch (policy)
@@ -1827,7 +1845,7 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, const Pro
     case PACKAGE_ACTION_DELETE:
         if (matches && installed)
         {
-            Log(LOG_LEVEL_VERBOSE, "VersionCheckSchedulePackage: Package %s to be deleted is installed.", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "WillSchedulePackageOperation: Package %s to be deleted is installed.", pp->promiser);
             return true;
         }
         else
@@ -1840,7 +1858,7 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, const Pro
     case PACKAGE_ACTION_REINSTALL:
         if (matches && installed)
         {
-            Log(LOG_LEVEL_VERBOSE, "VersionCheckSchedulePackage: Package %s to be reinstalled is already installed.", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "WillSchedulePackageOperation: Package %s to be reinstalled is already installed.", pp->promiser);
             return true;
         }
         else
@@ -1855,7 +1873,7 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, const Pro
         {
             if (matches && !installed)
             {
-                Log(LOG_LEVEL_VERBOSE, "VersionCheckSchedulePackage: Package %s is not installed.", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "WillSchedulePackageOperation: Package %s is not installed.", pp->promiser);
             }
 
             return true;
@@ -1881,7 +1899,7 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, const Pro
    * if PackageMatch returned an error, fail the promise
    * VersionCmpResult matches = check if (name,version,arch) is installed with PackageMatch
    * if PackageMatch returned an error, fail the promise
-   * if VersionCheckSchedulePackage with "matches" and "installed" passes, call SchedulePackageOp on the package
+   * if WillSchedulePackageOperation with "matches" and "installed" passes, call SchedulePackageOp on the package
 
    @param ctx [in] The evaluation context
    @param a [in] the Attributes specifying how to compare
@@ -1923,7 +1941,7 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Pro
         return result;
     }
 
-    if (VersionCheckSchedulePackage(ctx, a2, pp, matches, installed))
+    if (WillSchedulePackageOperation(ctx, a2, pp, matches, installed))
     {
         Log(LOG_LEVEL_VERBOSE, "CheckPackageState: matched package (%s,%s,%s) [name,version,arch]; scheduling operation", name, version, arch);
         return SchedulePackageOp(ctx, name, version, arch, installed, matches, no_version, a, pp);

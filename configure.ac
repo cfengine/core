@@ -971,7 +971,7 @@ dnl Enable extended attributes. Used for SELinux and ACLs
 dnl #######################################################################
 
 AC_CHECK_FUNCS(listxattr, [AC_DEFINE(WITH_XATTR, 1, [Define if you have a libc that supports extended attributes])])
-AC_CHECK_HEADERS([attr/xattr.h, sys/xattr.h])
+AC_CHECK_HEADERS([attr/xattr.h sys/xattr.h])
 
 AC_MSG_CHECKING([whether xattr functions have extra arguments])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <sys/types.h>

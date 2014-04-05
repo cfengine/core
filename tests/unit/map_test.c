@@ -73,6 +73,8 @@ static void test_insert_jumbo(void)
         assert_true(StringMapHasKey(jumbo_map, s));
         /* free(s); */
     }
+
+    StringMapPrintStats(jumbo_map, stdout);
 }
 
 static void test_remove(void)

@@ -107,6 +107,9 @@ void MapSoftDestroy(Map *map);
  */
 bool MapContainsSameKeys(const Map *map1, const Map *map2);
 
+void MapPrintStats(const Map *map, FILE *f);
+
+
 #define TYPED_MAP_DECLARE(Prefix, KeyType, ValueType)                   \
     typedef struct                                                      \
     {                                                                   \
@@ -123,6 +126,7 @@ bool MapContainsSameKeys(const Map *map1, const Map *map2);
     void Prefix##MapDestroy(Prefix##Map *map);                          \
     void Prefix##MapSoftDestroy(Prefix##Map *map);                          \
     bool Prefix##MapContainsSameKeys(const Prefix##Map *map1, const Prefix##Map *map2); \
+    void Prefix##MapPrintStats(const Prefix##Map *map, FILE *f); \
 
 #define TYPED_MAP_DEFINE(Prefix, KeyType, ValueType, hash_fn, equal_fn, \
                          destroy_key_fn, destroy_value_fn)              \
@@ -180,6 +184,11 @@ bool MapContainsSameKeys(const Map *map1, const Map *map2);
     bool Prefix##MapContainsSameKeys(const Prefix##Map *map1, const Prefix##Map *map2) \
     {                                                                   \
         return MapContainsSameKeys(map1->impl, map2->impl);             \
+    }                                                                   \
+                                                                        \
+    void Prefix##MapPrintStats(const Prefix##Map *map, FILE *f)         \
+    {                                                                   \
+        return MapPrintStats(map->impl, f);                             \
     }                                                                   \
 
 TYPED_MAP_DECLARE(String, char *, char *)

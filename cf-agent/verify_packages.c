@@ -622,6 +622,30 @@ static void ReportSoftware(PackageManager *list)
 }
 
 /**
+   @brief Invalidates the software inventory
+
+   Called by ExecuteSchedule and ExecutePatch
+
+   * calls GetSoftwareCacheFilename to get the inventory CSV filename
+   * sets atime and mtime on that file to 0
+*/
+static void InvalidateSoftwareCache(void)
+{
+    char name[CF_BUFSIZE];
+    struct utimbuf epoch = { 0, 0 };
+
+    GetSoftwareCacheFilename(name);
+
+    if (utime(name, &epoch) != 0)
+    {
+        if (errno != ENOENT)
+        {
+            Log(LOG_LEVEL_ERR, "Cannot mark software cache as invalid. (utimes: %s)", GetErrorStr());
+        }
+    }
+}
+
+/**
    @brief Gets the cached list of installed packages from file
 
    Called by VerifyInstalledPackages
@@ -2166,22 +2190,6 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
 }
 
 /** Execute scheduled operations **/
-
-static void InvalidateSoftwareCache(void)
-{
-    char name[CF_BUFSIZE];
-    struct utimbuf epoch = { 0, 0 };
-
-    GetSoftwareCacheFilename(name);
-
-    if (utime(name, &epoch) != 0)
-    {
-        if (errno != ENOENT)
-        {
-            Log(LOG_LEVEL_ERR, "Cannot mark software cache as invalid. (utimes: %s)", GetErrorStr());
-        }
-    }
-}
 
 static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, PackageAction action)
 {

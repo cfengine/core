@@ -1055,7 +1055,7 @@ static void OSClasses(EvalContext *ctx)
     {
         OpenVZ_Detect(ctx);
     }
-    
+
 #ifdef XEN_CPUID_SUPPORT
     else if (Xen_Hv_Check())
     {
@@ -1199,7 +1199,7 @@ static void OSClasses(EvalContext *ctx)
         EvalContextClassPutHard(ctx, "smartmachine", "source=agent,derived-from=sys.version");
     }
 #endif
-    
+
     /* FIXME: this variable needs redhat/SUSE/debian classes to be defined and
      * hence can't be initialized earlier */
 
@@ -1908,7 +1908,7 @@ static int LinuxDebianSanitizeIssue(char *buffer)
              {
                  escaped = true;
              }
-             else 
+             else
              {
                  escaped = false;
              }
@@ -1920,7 +1920,7 @@ static int LinuxDebianSanitizeIssue(char *buffer)
                  *s2 = *s;
                  s2++;
              }
-             else 
+             else
              {
                  escaped = false;
              }
@@ -1930,7 +1930,7 @@ static int LinuxDebianSanitizeIssue(char *buffer)
     s2--;
     while (*s2==' ')
     {
-        *s2='\0'; 
+        *s2='\0';
         s2--;
     }
     return 0;
@@ -1991,7 +1991,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
     {
         return 1;
     }
-    
+
     os[0] = '\0';
     sscanf(buffer, "%250s", os);
 
@@ -2160,7 +2160,7 @@ static int EOS_Version(EvalContext *ctx)
 { char buffer[CF_BUFSIZE];
 
  // e.g. Arista Networks EOS 4.10.2
- 
+
     if (ReadLine("/etc/Eos-release", buffer, sizeof(buffer)))
     {
         if (strstr(buffer, "EOS"))
@@ -2175,7 +2175,7 @@ static int EOS_Version(EvalContext *ctx)
             EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
         }
     }
-    
+
     return 0;
 }
 
@@ -2186,7 +2186,7 @@ static int MiscOS(EvalContext *ctx)
 { char buffer[CF_BUFSIZE];
 
  // e.g. BIG-IP 10.1.0 Build 3341.1084
- 
+
     if (ReadLine("/etc/issue", buffer, sizeof(buffer)))
     {
        if (strstr(buffer, "BIG-IP"))
@@ -2203,7 +2203,7 @@ static int MiscOS(EvalContext *ctx)
            SetFlavour(ctx, "BIG-IP");
        }
     }
-    
+
     return 0;
 }
 
@@ -2333,7 +2333,7 @@ static void OpenVZ_Detect(EvalContext *ctx)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
         EvalContextClassPutHard(ctx, "virt_host_vz", "inventory,attribute_name=Virtual host,source=agent");
-        /* if the file /bin/vzps is there, it is safe to use the processes promise type */ 
+        /* if the file /bin/vzps is there, it is safe to use the processes promise type */
         if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
         {
             EvalContextClassPutHard(ctx, "virt_host_vz_vzps", "inventory,attribute_name=Virtual host,source=agent");
@@ -2655,11 +2655,11 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     time_t uptime = 0;
     const char *errptr;
     int erroffset;
-    
+
     rx = pcre_compile(UPTIME_REGEXP, 0, &errptr, &erroffset, NULL);
     if (rx == NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "failed to compile regexp to parse uptime command"); 
+        Log(LOG_LEVEL_DEBUG, "failed to compile regexp to parse uptime command");
         return(-1);
     }
 

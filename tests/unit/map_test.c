@@ -47,15 +47,11 @@ static void test_insert(void)
     StringMapDestroy(map);
 }
 
-static char *StringTimes(char *str, size_t times)
+static char *CharTimes(char c, size_t times)
 {
-    size_t len = strlen(str);
-    char *res = xmalloc((sizeof(char) * len * times) + 1);
-    for (size_t i = 0; i < (len * times); i += len)
-    {
-        memcpy(res + i, str, len);
-    }
-    res[len*times] = '\0';
+    char *res = xmalloc(times + 1);
+    memset(res, c, times);
+    res[times] = '\0';
     return res;
 }
 
@@ -64,9 +60,9 @@ static void test_insert_jumbo(void)
     StringMap *map = StringMapNew();
     for (int i = 0; i < 10000; i++)
     {
-        char *s = StringTimes("a", i);
+        char *s = CharTimes('a', i);
         assert_false(StringMapHasKey(map, s));
-        StringMapInsert(map, StringTimes("a", i), NULL);
+        StringMapInsert(map, CharTimes('a', i), NULL);
         assert_true(StringMapHasKey(map, s));
         free(s);
     }
@@ -150,7 +146,7 @@ static void test_iterate(void)
 
     for (int i = 0; i < 10000; i++)
     {
-        char *s = StringTimes("a", i);
+        char *s = CharTimes('a', i);
         assert_false(StringMapHasKey(map, s));
         StringMapInsert(map, xstrdup(s), xstrdup(s));
         assert_true(StringMapHasKey(map, s));
@@ -190,7 +186,7 @@ static void test_hashmap_degenerate_hash_fn(void)
 
     for (int i = 0; i < 100; i++)
     {
-        HashMapInsert(hashmap, StringTimes("a", i), StringTimes("a", i));
+        HashMapInsert(hashmap, CharTimes('a', i), CharTimes('a', i));
     }
 
     MapKeyValue *item = HashMapGet(hashmap, "aaaa");

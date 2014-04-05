@@ -2196,6 +2196,8 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
 
    Called by ExecutePackageSchedule.
 
+   Almost identical to ExecutePatch.
+
    * verify = false
    * for each PackageManager pm in the schedule
    * * if pm->pack_list is empty or the scheduled pm->action doesn't match the given action, skip this pm
@@ -2522,6 +2524,40 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
     return true;
 }
 
+/**
+   @brief Central dispatcher for scheduled patch operations
+
+   Called by ExecutePackageSchedule.
+
+   Almost identical to ExecuteSchedule except it only accepts the
+   PATCH PackageAction and operates on the PackageManagers' patch_list.
+
+   * for each PackageManager pm in the schedule
+   * * if pm->patch_list is empty or the scheduled pm->action doesn't match the given action, skip this pm
+   * * estimate the size of the command string from pm->patch_list and pm->policy (SHOULD USE Buffer)
+   * * from the first PackageItem in pm->patch_list, get the Promise pp and its Attributes a
+   * * switch(action)
+   * * * case PATCH:
+   * * * * command_string = a.packages.package_patch_command + estimated_size room for package names
+
+   * * if the command string ends with $, run it with ExecPackageCommand(command, verify) and magic the promise evaluation
+   * * else, switch(pm->policy)
+   * * * case INDIVIDUAL:
+   * * * * for each PackageItem in the patch_list, build the command and run it with ExecPackageCommand(command, verify) and magic the promise evaluation
+   * * * * NOTE with file repositories and ADD/UPDATE operations, the package name gets the repo path too
+   * * * * NOTE special treatment of PACKAGE_IGNORED_CFE_INTERNAL
+   * * * case BULK:
+   * * * * for all PackageItems in the patch_list, build the command and run it with ExecPackageCommand(command, verify) and magic the promise evaluation
+   * * * * NOTE with file repositories and ADD/UPDATE operations, the package name gets the repo path too
+   * * * * NOTE special treatment of PACKAGE_IGNORED_CFE_INTERNAL
+   * * clean up command_string
+   * InvalidateSoftwareCache
+
+   @param ctx [in] The evaluation context
+   @param schedule [in] the PackageManager list with the operations schedule
+   @param action [in] the PackageAction desired
+   @returns boolean success/fail (fail only on ProgrammingError, should never happen)
+*/
 static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, PackageAction action)
 {
     for (const PackageManager *pm = schedule; pm != NULL; pm = pm->next)
@@ -2713,6 +2749,20 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
     return true;
 }
 
+/**
+   @brief Ordering manager for scheduled package operations
+
+   Called by ExecuteScheduledPackages.
+
+   * ExecuteSchedule(schedule, DELETE)
+   * ExecuteSchedule(schedule, ADD)
+   * ExecuteSchedule(schedule, UPDATE)
+   * ExecutePatch(schedule, PATCH)
+   * ExecuteSchedule(schedule, VERIFY)
+
+   @param ctx [in] The evaluation context
+   @param schedule [in] the PackageManager list with the operations schedule
+*/
 static void ExecutePackageSchedule(EvalContext *ctx, PackageManager *schedule)
 {
     if (LEGACY_OUTPUT)
@@ -2761,6 +2811,12 @@ static void ExecutePackageSchedule(EvalContext *ctx, PackageManager *schedule)
     }
 }
 
+/**
+ * @brief Execute the full package schedule.
+ *
+ * Called by cf-agent only.
+ *
+ */
 void ExecuteScheduledPackages(EvalContext *ctx)
 {
     if (PACKAGE_SCHEDULE)

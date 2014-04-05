@@ -1223,23 +1223,23 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     Buffer *expanded = BufferNew();
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
-        VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
+        VarRef *ref_name = VarRefParseFromScope("name", PACKAGES_CONTEXT);
         EvalContextVariablePut(ctx, ref_name, name, CF_DATA_TYPE_STRING, "source=promise");
 
-        VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
+        VarRef *ref_version = VarRefParseFromScope("version", PACKAGES_CONTEXT);
         EvalContextVariablePut(ctx, ref_version, version, CF_DATA_TYPE_STRING, "source=promise");
 
-        VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
+        VarRef *ref_arch = VarRefParseFromScope("arch", PACKAGES_CONTEXT);
         EvalContextVariablePut(ctx, ref_arch, arch, CF_DATA_TYPE_STRING, "source=promise");
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
-            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, expanded);
+            ExpandScalar(ctx, NULL, PACKAGES_CONTEXT, a.packages.package_delete_convention, expanded);
             strlcpy(id, BufferData(expanded), CF_EXPANDSIZE);
         }
         else if (a.packages.package_name_convention)
         {
-            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_name_convention, expanded);
+            ExpandScalar(ctx, NULL, PACKAGES_CONTEXT, a.packages.package_name_convention, expanded);
             strlcpy(id, BufferData(expanded), CF_EXPANDSIZE);
         }
         else
@@ -1310,17 +1310,17 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                 Log(LOG_LEVEL_VERBOSE, "Package method specifies a file repository");
 
                 {
-                    VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
+                    VarRef *ref_name = VarRefParseFromScope("name", PACKAGES_CONTEXT_ANYVER);
                     EvalContextVariablePut(ctx, ref_name, name, CF_DATA_TYPE_STRING, "source=promise");
 
-                    VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
+                    VarRef *ref_version = VarRefParseFromScope("version", PACKAGES_CONTEXT_ANYVER);
                     EvalContextVariablePut(ctx, ref_version, "(.*)", CF_DATA_TYPE_STRING, "source=promise");
 
-                    VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
+                    VarRef *ref_arch = VarRefParseFromScope("arch", PACKAGES_CONTEXT_ANYVER);
                     EvalContextVariablePut(ctx, ref_arch, arch, CF_DATA_TYPE_STRING, "source=promise");
 
                     BufferClear(expanded);
-                    ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, expanded);
+                    ExpandScalar(ctx, NULL, PACKAGES_CONTEXT_ANYVER, a.packages.package_name_convention, expanded);
 
                     EvalContextVariableRemove(ctx, ref_name);
                     VarRefDestroy(ref_name);
@@ -1475,17 +1475,17 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             Log(LOG_LEVEL_VERBOSE, "Package method specifies a file repository");
 
             {
-                VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
+                VarRef *ref_name = VarRefParseFromScope("name", PACKAGES_CONTEXT_ANYVER);
                 EvalContextVariablePut(ctx, ref_name, name, CF_DATA_TYPE_STRING, "source=promise");
 
-                VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
+                VarRef *ref_version = VarRefParseFromScope("version", PACKAGES_CONTEXT_ANYVER);
                 EvalContextVariablePut(ctx, ref_version, "(.*)", CF_DATA_TYPE_STRING, "source=promise");
 
-                VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
+                VarRef *ref_arch = VarRefParseFromScope("arch", PACKAGES_CONTEXT_ANYVER);
                 EvalContextVariablePut(ctx, ref_arch, arch, CF_DATA_TYPE_STRING, "source=promise");
 
                 BufferClear(expanded);
-                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, expanded);
+                ExpandScalar(ctx, NULL, PACKAGES_CONTEXT_ANYVER, a.packages.package_name_convention, expanded);
 
                 EvalContextVariableRemove(ctx, ref_name);
                 VarRefDestroy(ref_name);
@@ -1557,17 +1557,17 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                         inst_arch[1] = '\0';
                     }
 
-                    VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
+                    VarRef *ref_name = VarRefParseFromScope("name", PACKAGES_CONTEXT);
                     EvalContextVariablePut(ctx, ref_name, name, CF_DATA_TYPE_STRING, "source=promise");
 
-                    VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
+                    VarRef *ref_version = VarRefParseFromScope("version", PACKAGES_CONTEXT);
                     EvalContextVariablePut(ctx, ref_version, inst_ver, CF_DATA_TYPE_STRING, "source=promise");
 
-                    VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
+                    VarRef *ref_arch = VarRefParseFromScope("arch", PACKAGES_CONTEXT);
                     EvalContextVariablePut(ctx, ref_arch, inst_arch, CF_DATA_TYPE_STRING, "source=promise");
 
                     BufferClear(expanded);
-                    ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, expanded);
+                    ExpandScalar(ctx, NULL, PACKAGES_CONTEXT, a.packages.package_delete_convention, expanded);
                     id_del = BufferData(expanded);
 
                     EvalContextVariableRemove(ctx, ref_name);

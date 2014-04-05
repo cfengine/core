@@ -63,13 +63,13 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
 {
     Buffer *expanded_command = BufferNew();
     {
-        VarRef *ref_v1 = VarRefParseFromScope("v1", "cf_pack_context");
+        VarRef *ref_v1 = VarRefParseFromScope("v1", PACKAGES_CONTEXT);
         EvalContextVariablePut(ctx, ref_v1, v1, CF_DATA_TYPE_STRING, "source=promise");
 
-        VarRef *ref_v2 = VarRefParseFromScope("v2", "cf_pack_context");
+        VarRef *ref_v2 = VarRefParseFromScope("v2", PACKAGES_CONTEXT);
         EvalContextVariablePut(ctx, ref_v2, v2, CF_DATA_TYPE_STRING, "source=promise");
 
-        ExpandScalar(ctx, NULL, "cf_pack_context", command, expanded_command);
+        ExpandScalar(ctx, NULL, PACKAGES_CONTEXT, command, expanded_command);
 
         EvalContextVariableRemove(ctx, ref_v1);
         VarRefDestroy(ref_v1);

@@ -1950,6 +1950,41 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Pro
     return result;
 }
 
+/**
+   @brief Verifies a promised patch operation as defined by a and pp
+
+   Called by VerifyPackagesPromise.
+
+   * package name is pp->promiser
+   * installed and matches counts = 0
+   * copies a into a2 and overrides a2.packages.package_select to PACKAGE_VERSION_COMPARATOR_EQ
+   * promise result starts as NOOP
+   * if package version is given
+   * * for arch = each architecture requested in a2, or (if none given) any architecture "*"
+   * * * installed1 = PatchMatch(a2, name, any version, any architecture)
+   * * * matches1 = PatchMatch(a2, name, requested version, arch)
+   * * * if either installed1 or matches1 failed, return promise error
+   * * * else, installed += installed1; matches += matches1
+   * else if package_version_regex is given
+   * * assume that package_name_regex and package_arch_regex are also given and use the 3 regexes to extract name, version, arch
+   * * * installed = PatchMatch(a2, matched name, any version, any architecture)
+   * * * matches = PatchMatch(a2, matched name, matched version, matched architecture)
+   * * * if either installed or matches failed, return promise error
+   * else (no explicit version is given) (SAME LOOP AS EXPLICIT VERSION LOOP ABOVE)
+   * * no_version = true
+   * * for arch = each architecture requested in a2, or (if none given) any architecture "*"
+   * * * requested version = any version '*'
+   * * * installed1 = PatchMatch(a2, name, any version, any architecture)
+   * * * matches1 = PatchMatch(a2, name, requested version '*', arch)
+   * * * if either installed1 or matches1 failed, return promise error
+   * * * else, installed += installed1; matches += matches1
+   * finally, call SchedulePackageOp with the found name, version, arch, installed, matches, no_version
+
+   @param ctx [in] The evaluation context
+   @param a [in] the Attributes specifying how to compare
+   @param pp [in] the Promise for this operation
+   @returns the promise result (failure or NOOP)
+*/
 static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     char version[CF_MAXVARSIZE];
@@ -1964,15 +1999,14 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
     a2.packages.package_select = PACKAGE_VERSION_COMPARATOR_EQ;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (a2.packages.package_version)
+    if (a2.packages.package_version) /* The version is specified explicitly */
     {
-        /* The version is specified separately */
-
-        for (rp = a2.packages.package_architectures; rp != NULL; rp = rp->next)
+        // Note this loop will run if rp is NULL
+        for (rp = a2.packages.package_architectures; ; rp = rp->next)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, a2.packages.package_version, CF_MAXVARSIZE - 1);
-            strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
+            strncpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE - 1);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
@@ -1985,25 +2019,11 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
 
             installed += installed1;
             matches += matches1;
-        }
 
-        if (a2.packages.package_architectures == NULL)
-        {
-            strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, a2.packages.package_version, CF_MAXVARSIZE - 1);
-            strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed]", &result);
-            matches = PatchMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
-
-            if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
-            {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
-                result = PromiseResultUpdate_HELPER(pp, result, PROMISE_RESULT_FAIL);
-                return result;
-            }
+            if (NULL == rp) break; // Note we exit the loop explicitly here
         }
     }
-    else if (a2.packages.package_version_regex)
+    else if (a2.packages.package_version_regex) // version is not given, but a version regex is
     {
         /* The name, version and arch are to be extracted from the promiser */
         strncpy(version, ExtractFirstReference(a2.packages.package_version_regex, package), CF_MAXVARSIZE - 1);
@@ -2019,15 +2039,16 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
             return result;
         }
     }
-    else
+    else // the desired package version was not specified
     {
         no_version = true;
 
-        for (rp = a2.packages.package_architectures; rp != NULL; rp = rp->next)
+        // Note this loop will run if rp is NULL
+        for (rp = a2.packages.package_architectures; ; rp = rp->next)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, "*", CF_MAXVARSIZE - 1);
-            strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
+            strncpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE - 1);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
@@ -2040,22 +2061,8 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
 
             installed += installed1;
             matches += matches1;
-        }
 
-        if (a2.packages.package_architectures == NULL)
-        {
-            strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, "*", CF_MAXVARSIZE - 1);
-            strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed]", &result);
-            matches = PatchMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
-
-            if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
-            {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
-                result = PromiseResultUpdate_HELPER(pp, result, PROMISE_RESULT_FAIL);
-                return result;
-            }
+            if (NULL == rp) break; // Note we exit the loop explicitly here
         }
     }
 

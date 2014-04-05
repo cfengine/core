@@ -100,9 +100,18 @@
 #define BOOT_TIME_WITH_PROCFS
 #endif
 
+#ifdef HAVE_UTMP_H
+# include <utmp.h>
+# define BOOT_TIME_WITH_UTMP
+#elif HAVE_UTMPX_H
+# include <utmpx.h>
+# define BOOT_TIME_WITH_UTMPX
+#endif
+
 #if defined(BOOT_TIME_WITH_SYSINFO) || defined(BOOT_TIME_WITH_SYSCTL) || \
     defined(BOOT_TIME_WITH_KSTAT) || defined(BOOT_TIME_WITH_PSTAT_GETPROC) || \
-    defined(BOOT_TIME_WITH_PROCFS)
+    defined(BOOT_TIME_WITH_PROCFS) || \
+    defined(BOOT_TIME_WITH_UTMP) || defined(BOOT_TIME_WITH_UTMPX)
 #define CF_SYS_UPTIME_IMPLEMENTED
 static time_t GetBootTimeFromUptimeCommand(time_t); // Last resort
 #ifdef HAVE_PCRE_H
@@ -2518,14 +2527,16 @@ int GetUptimeSeconds(time_t now)
 #endif
 
 #if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
-    struct sysinfo s;
 
+    struct sysinfo s;
     if (sysinfo(&s) == 0)
     {
        // Don't return yet, sanity checking below
        boot_time = now - s.uptime;
     }
+
 #elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
+
     /* From command line you can get this with:
        kstat -p unix:0:system_misc:boot_time */
     kstat_ctl_t *kc = kstat_open();
@@ -2545,32 +2556,56 @@ int GetUptimeSeconds(time_t now)
         }
         kstat_close(kc);
     }
-#elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
-    struct pst_status p;
 
+#elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
+
+    struct pst_status p;
     if (pstat_getproc(&p, sizeof(p), 0, 1) == 1)
     {
         boot_time = (time_t)p.pst_start;
     }
 
 #elif defined(BOOT_TIME_WITH_SYSCTL)        // BSD-derived platforms
+
     int mib[2] = { CTL_KERN, KERN_BOOTTIME };
     struct timeval boot;
-    size_t len;
-
-    len = sizeof(boot);
+    size_t len = sizeof(boot);
     if (sysctl(mib, 2, &boot, &len, NULL, 0) == 0)
     {
         boot_time = boot.tv_sec;
     }
 
-#elif defined(BOOT_TIME_WITH_PROCFS)        // Second-to-last resort: procfs
-    struct stat p;
+#elif defined(BOOT_TIME_WITH_PROCFS)
 
+    struct stat p;
     if (stat("/proc/1", &p) == 0)
     {
         boot_time = p.st_ctime;
     }
+
+#elif defined(BOOT_TIME_WITH_UTMP)          /* SystemV, highly portable way */
+
+    struct utmp query = { .ut_type = BOOT_TIME };
+    struct utmp *result;
+    setutent();
+    result = getutid(&query);
+    if (result != NULL)
+    {
+        boot_time = result->ut_time;
+    }
+    endutent();
+
+#elif defined(BOOT_TIME_WITH_UTMPX)                            /* POSIX way */
+
+    struct utmpx query = { .ut_type = BOOT_TIME };
+    struct utmpx *result;
+    setutxent();
+    result = getutxid(&query);
+    if (result != NULL)
+    {
+        boot_time = result->ut_tv.tv_sec;
+    }
+    endutxent();
 
 #endif
 

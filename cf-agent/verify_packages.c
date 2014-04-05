@@ -1205,6 +1205,70 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
     }
 }
 
+/**
+   @brief Schedules a package operation based on the action, package state, and everything else.
+
+   Called by VerifyPromisedPatch and CheckPackageState.
+
+   This function has a complexity metric of 3 Googols.
+
+   * if package_delete_convention or package_name_convention are given and apply to the operation, construct the package name from them (from PACKAGES_CONTEXT)
+   * else, just use the given package name
+   * warn about "*" in the package name
+   * set package_select_in_range with magic
+   * create PackageAction policy from the package_policy and then split ADDUPDATE into ADD or UPDATE based on "installed"
+   * result starts as NOOP
+   * switch(policy)
+
+   * * case ADD and "installed":
+   * * * if we have package_file_repositories
+   * * * * use the package_name_convention to build the package name (from PACKAGES_CONTEXT_ANYVER, setting version to "*")
+   * * * * if FindLargestVersionAvail finds the latest package version in the file repos, use that as the package name
+   * * * AddPackageToSchedule package_add_command, ADD, package name, etc.
+
+   * * case DELETE and (matched AND package_select_in_range) OR (installed AND no_version_specified):
+   * * * fail promise unless package_delete_command
+   * * * if we have package_file_repositories
+   * * * * clean up the name string from any "repo" references and add the right file repo
+   * * * AddPackageToSchedule package_delete_command, DELETE, package name, etc.
+
+   * * case REINSTALL:
+   * * * fail promise unless package_delete_command
+   * * * fail promise if no_version_specified
+   * * * if (matched AND package_select_in_range) OR (installed AND no_version_specified) do AddPackageToSchedule package_delete_command, DELETE, package name, etc.
+   * * * AddPackageToSchedule package_add_command, ADD, package name, etc.
+
+   * * case UPDATE:
+   * * * if we have package_file_repositories
+   * * * * use the package_name_convention to build the package name (from PACKAGES_CONTEXT_ANYVER, setting version to "*")
+   * * * * if FindLargestVersionAvail finds the latest package version in the file repos, use that as the package name
+   * * * if installed, IsNewerThanInstalled is checked, and if it returns false we don't update an up-to-date package
+   * * * if installed or (matched AND package_select_in_range AND !no_version_specified) (this is the main update condition)
+   * * * * if package_update_command is not given
+   * * * * * if package_delete_convention is given, use it to build id_del (from PACKAGES_CONTEXT)
+   * * * * * fail promise if package_update_command and package_add_command are not given
+   * * * * * AddPackageToSchedule with package_delete_command, DELETE, id_del, etc
+   * * * * * AddPackageToSchedule with package_add_command, ADD, package name, etc
+   * * * * else we have package_update_command, so AddPackageToSchedule with package_update_command, UPDATE, package name, etc
+   * * * else the package is not updateable: no match or not installed, fail promise
+
+   * * case PATCH:
+   * * * if matched and not installed, AddPatchToSchedule with package_patch_command, PATCH, package name, etc.
+
+   * * case VERIFY:
+   * * * if (matched and package_select_in_range) OR (installed AND no_version_specified), AddPatchToSchedule with package_verify_command, VERIFY, package name, etc.
+
+   @param ctx [in] The evaluation context
+   @param name [in] the specific name
+   @param version [in] the specific version
+   @param arch [in] the specific architecture
+   @param installed [in] is the package installed?
+   @param matched [in] is the package matched in the available list?
+   @param no_version_specified [in] no version was specified in the promise
+   @param a [in] the Attributes specifying how to compare
+   @param pp [in] the Promise for this operation
+   @returns the promise result
+*/
 static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const char *version, const char *arch, int installed, int matched,
                                        int no_version_specified, Attributes a, const Promise *pp)
 {
@@ -1269,6 +1333,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             "a missing attribute (name/version/arch) should be specified");
     }
 
+    // This is very confusing
     int package_select_in_range;
     switch (a.packages.package_select)
     {
@@ -1372,6 +1437,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
     case PACKAGE_ACTION_DELETE:
 
+        // we're deleting a matched package found in a range OR an installed package with no version
         if ((matched && package_select_in_range) ||
             (installed && no_version_specified))
         {
@@ -1383,7 +1449,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                 BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
-            // expand local repository in the name convetion, if present
+            // expand local repository in the name convention, if present
             if (a.packages.package_file_repositories)
             {
                 Log(LOG_LEVEL_VERBOSE, "Package method specifies a file repository");
@@ -1442,6 +1508,8 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                 BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
+
+            // we're deleting a matched package found in a range OR an installed package with no version
             if ((matched && package_select_in_range) ||
                 (installed && no_version_specified))
             {

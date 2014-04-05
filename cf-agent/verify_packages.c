@@ -1104,7 +1104,7 @@ static const char *PackageAction2String(PackageAction pa)
 
    Either warn or fix, based on a->transaction.action.
 
-   To fix, calls GetPackageManager and enqueues the desired operation and package with the returned manager 
+   To fix, calls GetPackageManager and enqueues the desired operation and package with the returned manager
 
    @param ctx [in] The evaluation context
    @param a [in] the Attributes specifying how to compare
@@ -1152,7 +1152,7 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
 
    Either warn or fix, based on a->transaction.action.
 
-   To fix, calls GetPackageManager and enqueues the desired operation and package with the returned manager 
+   To fix, calls GetPackageManager and enqueues the desired operation and package with the returned manager
 
    @param ctx [in] The evaluation context
    @param a [in] the Attributes specifying how to compare
@@ -2191,6 +2191,45 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
 
 /** Execute scheduled operations **/
 
+/**
+   @brief Central dispatcher for scheduled operations
+
+   Called by ExecutePackageSchedule.
+
+   * verify = false
+   * for each PackageManager pm in the schedule
+   * * if pm->pack_list is empty or the scheduled pm->action doesn't match the given action, skip this pm
+   * * estimate the size of the command string from pm->pack_list and pm->policy (SHOULD USE Buffer)
+   * * from the first PackageItem in pm->pack_list, get the Promise pp and its Attributes a
+   * * switch(action)
+   * * * case ADD:
+   * * * * command_string = a.packages.package_add_command + estimated_size room for package names
+   * * * case DELETE:
+   * * * * command_string = a.packages.package_delete_command + estimated_size room for package names
+   * * * case UPDATE:
+   * * * * command_string = a.packages.package_update_command + estimated_size room for package names
+   * * * case VERIFY:
+   * * * * command_string = a.packages.package_verify_command + estimated_size room for package names
+   * * * * verify = true
+
+   * * if the command string ends with $, run it with ExecPackageCommand(command, verify) and magic the promise evaluation
+   * * else, switch(pm->policy)
+   * * * case INDIVIDUAL:
+   * * * * for each PackageItem in the pack_list, build the command and run it with ExecPackageCommand(command, verify) and magic the promise evaluation
+   * * * * NOTE with file repositories and ADD/UPDATE operations, the package name gets the repo path too
+   * * * * NOTE special treatment of PACKAGE_IGNORED_CFE_INTERNAL
+   * * * case BULK:
+   * * * * for all PackageItems in the pack_list, build the command and run it with ExecPackageCommand(command, verify) and magic the promise evaluation
+   * * * * NOTE with file repositories and ADD/UPDATE operations, the package name gets the repo path too
+   * * * * NOTE special treatment of PACKAGE_IGNORED_CFE_INTERNAL
+   * * clean up command_string
+   * if the operation was not a verification, InvalidateSoftwareCache
+
+   @param ctx [in] The evaluation context
+   @param schedule [in] the PackageManager list with the operations schedule
+   @param action [in] the PackageAction desired
+   @returns boolean success/fail (fail only on ProgrammingError, should never happen)
+*/
 static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, PackageAction action)
 {
     bool verify = false;

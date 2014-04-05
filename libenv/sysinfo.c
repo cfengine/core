@@ -2505,9 +2505,12 @@ static void GetCPUInfo(EvalContext *ctx)
 
 // Implemented in Windows specific section.
 #ifndef __MINGW32__
+
+/**
+   Return the number of seconds the system has been online given the current
+   time() as an argument, or return -1 if unavailable or unimplemented.
+*/
 int GetUptimeSeconds(time_t now)
-// Return the number of seconds the system has been online given the current
-// time() as an argument, or return -1 if unavailable or unimplemented.
 {
 #ifdef CF_SYS_UPTIME_IMPLEMENTED
     time_t boot_time = 0;
@@ -2523,20 +2526,25 @@ int GetUptimeSeconds(time_t now)
        boot_time = now - s.uptime;
     }
 #elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
-#define NANOSECONDS_PER_SECOND 1000000000
-    kstat_ctl_t *kc;
-    kstat_t *kp;
-
-    kc = kstat_open();
+    /* From command line you can get this with:
+       kstat -p unix:0:system_misc:boot_time */
+    kstat_ctl_t *kc = kstat_open();
     if(kc != 0)
     {
-        kp = kstat_lookup(kc, "unix", 0, "system_misc");
+        kstat_t *kp = kstat_lookup(kc, "unix", 0, "system_misc");
         if(kp != 0)
         {
-            boot_time = (time_t)(kp->ks_crtime / NANOSECONDS_PER_SECOND);
+            if (kstat_read(kc, kp, NULL) != -1)
+            {
+                kstat_named_t *knp = kstat_data_lookup(kp, "boot_time");
+                if (knp != NULL)
+                {
+                    boot_time = knp->value.ui32;
+                }
+            }
         }
         kstat_close(kc);
-    }  
+    }
 #elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
     struct pst_status p;
 

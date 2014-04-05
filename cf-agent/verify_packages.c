@@ -2135,7 +2135,7 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
 */
 static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const Promise *pp)
 {
-    const char *name = pp->promiser;
+    const char *package = pp->promiser;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (a.packages.package_version)
@@ -2146,7 +2146,7 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
         if (a.packages.package_architectures == NULL)
         {
             Log(LOG_LEVEL_VERBOSE, " ... trying any arch '*'");
-            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, name, a.packages.package_version, "*", false));
+            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, package, a.packages.package_version, "*", false));
         }
         else
         {
@@ -2154,7 +2154,7 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
             {
                 Log(LOG_LEVEL_VERBOSE, " ... trying listed arch '%s'", RlistScalarValue(rp));
                 result = PromiseResultUpdate_HELPER(pp, result,
-                                             CheckPackageState(ctx, a, pp, name, a.packages.package_version,
+                                             CheckPackageState(ctx, a, pp, package, a.packages.package_version,
                                                                RlistScalarValue(rp), false));
             }
         }
@@ -2167,11 +2167,16 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
         char version[CF_MAXVARSIZE];
         char name[CF_MAXVARSIZE];
         char arch[CF_MAXVARSIZE];
-        strlcpy(version, ExtractFirstReference(a.packages.package_version_regex, name), CF_MAXVARSIZE);
-        strlcpy(name, ExtractFirstReference(a.packages.package_name_regex, name), CF_MAXVARSIZE);
-        strlcpy(arch, ExtractFirstReference(a.packages.package_arch_regex, name), CF_MAXVARSIZE);
+        strlcpy(version, ExtractFirstReference(a.packages.package_version_regex, package), CF_MAXVARSIZE);
+        strlcpy(name, ExtractFirstReference(a.packages.package_name_regex, package), CF_MAXVARSIZE);
+        strlcpy(arch, ExtractFirstReference(a.packages.package_arch_regex, package), CF_MAXVARSIZE);
 
-        if (arch[0] == '\0' || strcmp(arch, "CF_NOMATCH") == 0) // no match on arch regex, use any arch
+        if (!arch[0])
+        {
+            strncpy(arch, "*", CF_MAXVARSIZE - 1);
+        }
+
+        if (strcmp(arch, "CF_NOMATCH") == 0)    // no match on arch regex, use any arch
         {
             strcpy(arch, "*");
         }
@@ -2186,14 +2191,14 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
         if (a.packages.package_architectures == NULL)
         {
             Log(LOG_LEVEL_VERBOSE, " ... trying any arch '*' and any version '*'");
-            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, name, "*", "*", true));
+            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, package, "*", "*", true));
         }
         else
         {
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
                 Log(LOG_LEVEL_VERBOSE, " ... trying listed arch '%s' and any version '*'", RlistScalarValue(rp));
-                result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, name, "*", RlistScalarValue(rp), true));
+                result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, package, "*", RlistScalarValue(rp), true));
             }
         }
     }

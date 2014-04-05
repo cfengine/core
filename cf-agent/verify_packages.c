@@ -51,6 +51,18 @@
 #include <cf-agent-enterprise-stubs.h>
 #include <cf-windows-functions.h>
 
+/* Called structure:
+
+   Top-level: cf-agent calls...
+
+   * CleanScheduledPackages
+
+   * VerifyPackagesPromise -> all the Verify* functions that schedule operation
+
+   * ExecuteScheduledPackages -> all the Execute* functions to run operations
+
+ */
+
 /** Entry points from VerifyPackagesPromise **/
 
 #define REPORT_THIS_PROMISE(__pp) (strncmp(__pp->promiser, "cfe_internal_", 13) != 0)

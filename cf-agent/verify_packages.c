@@ -1860,7 +1860,7 @@ static VersionCmpResult PackageMatch(EvalContext *ctx,
 
    Uses a.packages.package_policy to determine operating mode.
 
-   The meaning of matches and installed depends on the package_policy:
+   The use of matches and installed depends on the package_policy:
    * PACKAGE_ACTION_DELETE: schedule if (matches AND installed)
    * PACKAGE_ACTION_REINSTALL: schedule if (matches AND installed)
    * all other policies: schedule if (not matches OR not installed)
@@ -1876,6 +1876,9 @@ static int WillSchedulePackageOperation(EvalContext *ctx, Attributes a, const Pr
 {
     PackageAction policy = a.packages.package_policy;
 
+    Log(LOG_LEVEL_DEBUG, "WillSchedulePackageOperation: on entry, action %s: package %s matches = %s, installed = %s.",
+        PackageAction2String(policy), pp->promiser, matches ? "yes" : "no", installed ? "yes" : "no");
+
     switch (policy)
     {
     case PACKAGE_ACTION_DELETE:
@@ -1886,6 +1889,7 @@ static int WillSchedulePackageOperation(EvalContext *ctx, Attributes a, const Pr
         }
         else
         {
+            Log(LOG_LEVEL_DEBUG, "WillSchedulePackageOperation: Package %s can't be deleted if it's not installed, NOOP.", pp->promiser);
             cfPS_HELPER_1ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Package %s to be deleted does not exist anywhere",
                  pp->promiser);
         }
@@ -1899,23 +1903,24 @@ static int WillSchedulePackageOperation(EvalContext *ctx, Attributes a, const Pr
         }
         else
         {
+            Log(LOG_LEVEL_DEBUG, "WillSchedulePackageOperation: Package %s already installed, NOOP.", pp->promiser);
             cfPS_HELPER_1ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Package '%s' already installed and matches criteria",
                  pp->promiser);
         }
         break;
 
     default:
-        if ((!installed) || (!matches))
+        if (!matches) // why do we schedule a 'not matched' operation?
         {
-            if (matches && !installed)
-            {
-                Log(LOG_LEVEL_VERBOSE, "WillSchedulePackageOperation: Package %s is not installed.", pp->promiser);
-            }
-
             return true;
         }
-        else
+        else if (!installed) // matches and not installed
         {
+            return true;
+        }
+        else // matches and installed
+        {
+            Log(LOG_LEVEL_DEBUG, "WillSchedulePackageOperation: Package %s already installed, NOOP.", pp->promiser);
             cfPS_HELPER_1ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Package '%s' already installed and matches criteria",
                  pp->promiser);
         }
@@ -1956,7 +1961,7 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Pro
     a2.packages.package_select = PACKAGE_VERSION_COMPARATOR_EQ;
 
     VersionCmpResult installed = PackageMatch(ctx, name, "*", arch, a2, pp, "[installed]", &result);
-    Log(LOG_LEVEL_VERBOSE, "Installed package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
+    Log(LOG_LEVEL_VERBOSE, "CheckPackageState: Installed package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
         name, "*", arch, installed == VERCMP_MATCH ? "MATCH" : "ERROR-OR-NOMATCH");
 
     if (installed == VERCMP_ERROR)
@@ -1967,7 +1972,7 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Pro
     }
 
     VersionCmpResult matches = PackageMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
-    Log(LOG_LEVEL_VERBOSE, "Available package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
+    Log(LOG_LEVEL_VERBOSE, "CheckPackageState: Available package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
         name, version, arch, matches == VERCMP_MATCH ? "MATCH" : "ERROR-OR-NOMATCH");
 
     if (matches == VERCMP_ERROR)

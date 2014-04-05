@@ -185,7 +185,7 @@ VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v
         break;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Checked whether package version %s %s %s: %s",
+    Log(LOG_LEVEL_VERBOSE, "CompareVersions: Checked whether package version %s %s %s: %s",
         v1, PackageVersionComparatorToString(a.packages.package_select), v2, text_result);
 
     return cmp_result;

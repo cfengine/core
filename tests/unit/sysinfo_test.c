@@ -10,6 +10,7 @@ static void test_uptime(void)
      * reboot the machine, dammit! :-)
      */
     int uptime = GetUptimeMinutes(time(NULL));
+    printf("Uptime: %.2f days\n", uptime / (60.0 * 24));
     assert_in_range(uptime, 5, 60*24*365*2);
 }
 

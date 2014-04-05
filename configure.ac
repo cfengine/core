@@ -945,6 +945,10 @@ AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
 
 dnl Solaris uses kstat.h to get time-of-boot
 AC_CHECK_HEADERS(kstat.h)
+dnl SystemV way to get uptime, highly portable
+AC_CHECK_HEADERS(utmp.h)
+dnl POSIX way to get uptime
+AC_CHECK_HEADERS(utmpx.h)
 
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry

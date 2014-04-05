@@ -1953,7 +1953,7 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Pro
 /**
    @brief Verifies a promised patch operation as defined by a and pp
 
-   Called by VerifyPackagesPromise.
+   Called by VerifyPackagesPromise for the patch operation.
 
    * package name is pp->promiser
    * installed and matches counts = 0
@@ -1961,20 +1961,20 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, const Pro
    * promise result starts as NOOP
    * if package version is given
    * * for arch = each architecture requested in a2, or (if none given) any architecture "*"
-   * * * installed1 = PatchMatch(a2, name, any version, any architecture)
+   * * * installed1 = PatchMatch(a2, name, any version "*", any architecture "*")
    * * * matches1 = PatchMatch(a2, name, requested version, arch)
    * * * if either installed1 or matches1 failed, return promise error
    * * * else, installed += installed1; matches += matches1
    * else if package_version_regex is given
    * * assume that package_name_regex and package_arch_regex are also given and use the 3 regexes to extract name, version, arch
-   * * * installed = PatchMatch(a2, matched name, any version, any architecture)
+   * * * installed = PatchMatch(a2, matched name, any version "*", any architecture "*")
    * * * matches = PatchMatch(a2, matched name, matched version, matched architecture)
    * * * if either installed or matches failed, return promise error
    * else (no explicit version is given) (SAME LOOP AS EXPLICIT VERSION LOOP ABOVE)
    * * no_version = true
    * * for arch = each architecture requested in a2, or (if none given) any architecture "*"
    * * * requested version = any version '*'
-   * * * installed1 = PatchMatch(a2, name, any version, any architecture)
+   * * * installed1 = PatchMatch(a2, name, any version "*", any architecture "*")
    * * * matches1 = PatchMatch(a2, name, requested version '*', arch)
    * * * if either installed1 or matches1 failed, return promise error
    * * * else, installed += installed1; matches += matches1
@@ -2074,9 +2074,32 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
     return PROMISE_RESULT_NOOP;
 }
 
+/**
+   @brief Verifies a promised package operation as defined by a and pp
+
+   Called by VerifyPackagesPromise for any non-patch operation.
+
+   * package name is pp->promiser
+   * promise result starts as NOOP
+   * if package version is given
+   * * if no architecture given, the promise result comes from CheckPackageState with name, version, any architecture '*', no_version=false
+   * * else if architectures were given, the promise result comes from CheckPackageState with name, version, arch, no_version=false FOR EACH ARCHITECTURE
+   * else if package_version_regex is given
+   * * assume that package_name_regex and package_arch_regex are also given and use the 3 regexes to extract name, version, arch
+   * * if the arch extraction failed, use any architecture '*'
+   * * the promise result comes from CheckPackageState with name, version, arch, no_version=false)
+   * else (no explicit version is given) (SAME LOOP AS EXPLICIT VERSION LOOP ABOVE)
+   * * if no architecture given, the promise result comes from CheckPackageState with name, any version "*", any architecture '*', no_version=true
+   * * else if architectures were given, the promise result comes from CheckPackageState with name, any version "*", arch, no_version=true FOR EACH ARCHITECTURE
+
+   @param ctx [in] The evaluation context
+   @param a [in] the Attributes specifying how to compare
+   @param pp [in] the Promise for this operation
+   @returns the promise result as set by CheckPackageState
+*/
 static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const Promise *pp)
 {
-    const char *package = pp->promiser;
+    const char *name = pp->promiser;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (a.packages.package_version)
@@ -2087,7 +2110,7 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
         if (a.packages.package_architectures == NULL)
         {
             Log(LOG_LEVEL_VERBOSE, " ... trying any arch '*'");
-            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, package, a.packages.package_version, "*", false));
+            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, name, a.packages.package_version, "*", false));
         }
         else
         {
@@ -2095,7 +2118,7 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
             {
                 Log(LOG_LEVEL_VERBOSE, " ... trying listed arch '%s'", RlistScalarValue(rp));
                 result = PromiseResultUpdate_HELPER(pp, result,
-                                             CheckPackageState(ctx, a, pp, package, a.packages.package_version,
+                                             CheckPackageState(ctx, a, pp, name, a.packages.package_version,
                                                                RlistScalarValue(rp), false));
             }
         }
@@ -2108,16 +2131,11 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
         char version[CF_MAXVARSIZE];
         char name[CF_MAXVARSIZE];
         char arch[CF_MAXVARSIZE];
-        strlcpy(version, ExtractFirstReference(a.packages.package_version_regex, package), CF_MAXVARSIZE);
-        strlcpy(name, ExtractFirstReference(a.packages.package_name_regex, package), CF_MAXVARSIZE);
-        strlcpy(arch, ExtractFirstReference(a.packages.package_arch_regex, package), CF_MAXVARSIZE);
+        strlcpy(version, ExtractFirstReference(a.packages.package_version_regex, name), CF_MAXVARSIZE);
+        strlcpy(name, ExtractFirstReference(a.packages.package_name_regex, name), CF_MAXVARSIZE);
+        strlcpy(arch, ExtractFirstReference(a.packages.package_arch_regex, name), CF_MAXVARSIZE);
 
-        if (!arch[0])
-        {
-            strncpy(arch, "*", CF_MAXVARSIZE - 1);
-        }
-
-        if (strcmp(arch, "CF_NOMATCH") == 0)    // no match on arch regex, use any arch
+        if (arch[0] == '\0' || strcmp(arch, "CF_NOMATCH") == 0) // no match on arch regex, use any arch
         {
             strcpy(arch, "*");
         }
@@ -2132,14 +2150,14 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
         if (a.packages.package_architectures == NULL)
         {
             Log(LOG_LEVEL_VERBOSE, " ... trying any arch '*' and any version '*'");
-            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, package, "*", "*", true));
+            result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, name, "*", "*", true));
         }
         else
         {
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
                 Log(LOG_LEVEL_VERBOSE, " ... trying listed arch '%s' and any version '*'", RlistScalarValue(rp));
-                result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, package, "*", RlistScalarValue(rp), true));
+                result = PromiseResultUpdate_HELPER(pp, result, CheckPackageState(ctx, a, pp, name, "*", RlistScalarValue(rp), true));
             }
         }
     }

@@ -29,6 +29,10 @@ Preparing for running tests
   the --unsafe option (can damage your system), you may have to use
   --gainroot=sudo in order to get correct results.
 
+* If you want output in color, set CFENGINE_COLOR to 1.  If you want
+  diff output colorized, you also need to install the colordiff
+  utility.
+
 ------------------------------------------------------------------------------
 Running testsuite
 ------------------------------------------------------------------------------

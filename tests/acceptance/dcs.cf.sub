@@ -26,7 +26,7 @@ bundle common G
       "exeext" string => "";
 
     any::
-      "cmds" slist => { "date", "diff", "echo", "egrep", "false", "grep", "gzip", "hexdump",
+      "cmds" slist => { "date", "diff", "colordiff", "echo", "egrep", "false", "grep", "gzip", "hexdump",
                         "ln", "mkdir", "od", "perl", "printf", "pwd", "rm", "sort", "touch",
                         "true", "wc", "cat", "sed", "psexec", "seq" };
 
@@ -51,9 +51,17 @@ bundle common G
       "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)"),
       scope => "namespace";
 
+      "want_color" expression => strcmp(getenv("CFENGINE_COLOR", 4k), "1");
+
   vars:
       "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
       ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
+
+    want_color::
+      "diff_maybecolor" string => ifelse(isvariable("colordiff"), $(colordiff),
+                                         $(diff));
+    !want_color::
+      "diff_maybecolor" string => $(diff);
 
   classes:
       "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
@@ -248,17 +256,17 @@ bundle agent xml_check_diff(file1, file2, test, expected_difference)
       "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-      "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-      "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
 
   classes:
       "has_unified_diff" expression => returnszero(
-                                                    "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
+                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
 
     c14n_files_created::
       "no_difference" expression => returnszero(
-                                                 "$(G.diff) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
+                                                 "$(G.diff_maybecolor) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
                                                  "useshell");
 
       "expected_difference" expression => strcmp("$(expected_difference)", "yes");
@@ -382,16 +390,16 @@ bundle agent dcs_if_diff_expected(file1, file2, expected_difference, pass_class,
       "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-      "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-      "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
 
   classes:
       "has_unified_diff" expression => returnszero(
-                                                    "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
+                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
 
       "no_difference" expression => returnszero(
-                                                 "$(G.diff) $(file1) $(file2) >$(G.dev_null) 2>&1",
+                                                 "$(G.diff_maybecolor) $(file1) $(file2) >$(G.dev_null) 2>&1",
                                                  "useshell");
 
       "expected_difference" expression => strcmp("$(expected_difference)", "yes");

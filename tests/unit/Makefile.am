@@ -308,7 +308,9 @@ exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c ../../cf-execd/execd-config.c
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la
+sysinfo_test_LDADD = libtest.la \
+	../../libenv/libenv.la \
+	../../libpromises/libpromises.la
 
 mon_cpu_test_SOURCES = mon_cpu_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_cpu.c
 mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la

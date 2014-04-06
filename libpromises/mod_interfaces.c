@@ -100,7 +100,7 @@ static const BodySyntax balancing_body = BodySyntaxNew("route_select", balance_c
 
 static const ConstraintSyntax network_constraints[] =
 {
-    ConstraintSyntaxNewBody("routed_to", &route_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("reachable_through", &route_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("balanced_destinations", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("route_select", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

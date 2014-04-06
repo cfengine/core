@@ -373,7 +373,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
 
  if (policy->ospf_log_adjacency_changes)
     {
-    if (strcmp(policy->ospf_log_adjacency_changes, state->ospf_log_adjacency_changes) != 0)
+    if (state->ospf_log_adjacency_changes == NULL || strcmp(policy->ospf_log_adjacency_changes, state->ospf_log_adjacency_changes) != 0)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"log-adjacency-changes %s\"", VTYSH_FILENAME, policy->ospf_log_adjacency_changes);
 
@@ -392,7 +392,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
 
  if (policy->ospf_router_id)
     {
-    if (strcmp(policy->ospf_router_id, state->ospf_router_id) != 0)
+    if (state->ospf_router_id == NULL || strcmp(policy->ospf_router_id, state->ospf_router_id) != 0)
        {
        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"router-id %s\"", VTYSH_FILENAME, policy->ospf_router_id);
 
@@ -1209,7 +1209,7 @@ static int ExecRouteCommand(char *cmd)
 
     if (strlen(line) > 0)
        {
-       Log(LOG_LEVEL_ERR, "%s", line);
+       //Log(LOG_LEVEL_ERR, "%s", line);
        ret = false;
        break;
        }

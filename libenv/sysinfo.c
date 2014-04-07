@@ -129,6 +129,7 @@ static int Xen_Domain(EvalContext *ctx);
 static int EOS_Version(EvalContext *ctx);
 static int MiscOS(EvalContext *ctx);
 static void OpenVZ_Detect(EvalContext *ctx);
+static void Linux_Systemd_Detect(EvalContext *ctx);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
@@ -1055,6 +1056,9 @@ static void OSClasses(EvalContext *ctx)
         EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
     }
 #endif
+
+    /* check for systemd init process */
+    Linux_Systemd_Detect(ctx);
 
 #else
 
@@ -2382,6 +2386,52 @@ static int Xen_Hv_Check(void)
 }
 
 #endif
+
+/******************************************************************/
+
+static void Linux_Systemd_Detect(EvalContext *ctx)
+{
+    char proc1[CF_MAXVARSIZE];
+    struct stat statbuf;
+    char *slash;
+
+    if (!ReadLine("/proc/1/cmdline", proc1, sizeof(proc1)))
+    {
+        UnexpectedError("Failed to read /proc/1/cmdline");
+        return;
+    }
+
+    if (lstat(proc1, &statbuf) != 0)
+    {
+        UnexpectedError("Failed to stat %s", proc1);
+        return;
+    }
+    if (S_ISLNK(statbuf.st_mode))
+    {
+        int len;
+        len = readlink(proc1, proc1, sizeof(proc1));
+        if (len <= 0)
+        {
+            UnexpectedError("Failed to readlink %s", proc1);
+            return;
+        }
+        *(proc1 + len) = '\0';
+    }
+    Log(LOG_LEVEL_VERBOSE, "Init process: %s", proc1);
+    slash = strrchr(proc1, '/');
+    if (slash == NULL)
+    {
+        slash = proc1;
+    }
+    else
+    {
+        slash++;
+    }
+    if (strcmp(slash, "systemd") == 0)
+    {
+        EvalContextClassPutHard(ctx, slash, "inventory,attribute_name=none,source=agent");
+    }
+}
 
 /******************************************************************/
 

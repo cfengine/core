@@ -1,0 +1,14 @@
+bundle agent dynamic_included
+{
+  meta:
+      "tags" string => "included";
+
+  classes:
+      "class_defined_from_included_bundle"
+      expression => "any",
+      scope => "namespace";
+
+  reports:
+    DEBUG::
+      "$(this.promise_filename) activated $(this.bundle)";
+}

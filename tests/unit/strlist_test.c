@@ -8,7 +8,7 @@ static StrList *SL = NULL;
 
 
 /* Strings that will be inserted to strlist, listed here in sorted order. */
-char *STRINGS[] =
+char *PATH_STRINGS[] =
 {
     " ",
     "  ",
@@ -18,12 +18,12 @@ char *STRINGS[] =
     "blah",
     "waza"
 };
-#define STRINGS_LEN (sizeof(STRINGS) / sizeof(STRINGS[0]))
+#define PATH_STRINGS_LEN (sizeof(PATH_STRINGS) / sizeof(PATH_STRINGS[0]))
 
-/* Ideally we need the numbers [0..STRINGS_LEN) in random order in order to
+/* Ideally we need the numbers [0..PATH_STRINGS_LEN) in random order in order to
  * insert non-sorted. To make the test reproducible, here is one random
  * order. Feel free to experiment with changing this. */
-size_t INSERT_ORDER[STRINGS_LEN] =
+size_t INSERT_ORDER[PATH_STRINGS_LEN] =
 {
     5, 3, 1, 0, 4, 6, 2
 };
@@ -34,14 +34,14 @@ static void test_init_SL()
     SL = calloc(1, sizeof(*SL));
 
     /* Insert in random order. */
-    for (size_t i = 0; i < STRINGS_LEN; i++)
+    for (size_t i = 0; i < PATH_STRINGS_LEN; i++)
     {
-        size_t ret = StrList_Append(&SL, STRINGS[ INSERT_ORDER[i] ]);
+        size_t ret = StrList_Append(&SL, PATH_STRINGS[ INSERT_ORDER[i] ]);
         assert_int_equal(ret, i);
-        assert_string_equal(StrList_At(SL, i), STRINGS[ INSERT_ORDER[i] ]);
+        assert_string_equal(StrList_At(SL, i), PATH_STRINGS[ INSERT_ORDER[i] ]);
     }
 
-    assert_int_equal(StrList_Len(SL), STRINGS_LEN);
+    assert_int_equal(StrList_Len(SL), PATH_STRINGS_LEN);
 
     StrList_Finalise(&SL);
 }
@@ -49,11 +49,11 @@ static void test_init_SL()
 static void test_StrList_Sort()
 {
     StrList_Sort(SL, string_Compare);
-    assert_int_equal(StrList_Len(SL), STRINGS_LEN);
+    assert_int_equal(StrList_Len(SL), PATH_STRINGS_LEN);
 
-    for (size_t i = 0; i < STRINGS_LEN; i++)
+    for (size_t i = 0; i < PATH_STRINGS_LEN; i++)
     {
-        assert_string_equal(StrList_At(SL, i), STRINGS[i]);
+        assert_string_equal(StrList_At(SL, i), PATH_STRINGS[i]);
     }
 }
 
@@ -63,9 +63,9 @@ static void test_StrList_BinarySearch()
     bool found;
 
     /* Search for existing strings. */
-    for (size_t i = 0; i < STRINGS_LEN; i++)
+    for (size_t i = 0; i < PATH_STRINGS_LEN; i++)
     {
-        found = StrList_BinarySearch(SL, STRINGS[i], &pos);
+        found = StrList_BinarySearch(SL, PATH_STRINGS[i], &pos);
         assert_int_equal(found, true);
         assert_int_equal(pos, i);
     }
@@ -83,7 +83,7 @@ static void test_StrList_BinarySearch()
 
     found = StrList_BinarySearch(SL, "zzz", &pos);
     assert_int_equal(found, false);
-    assert_int_equal(pos, STRINGS_LEN);
+    assert_int_equal(pos, PATH_STRINGS_LEN);
 
     found = StrList_BinarySearch(SL, "/path/", &pos);
     assert_int_equal(found, false);
@@ -96,7 +96,7 @@ static void test_StrList_BinarySearch()
 
 static void test_StrList_SearchLongestPrefix()
 {
-    /* REMINDER: STRINGS[] = { " ", "  ", "/", "/path", "/path/to/file.name", "blah", "waza" }; */
+    /* REMINDER: PATH_STRINGS[] = { " ", "  ", "/", "/path", "/path/to/file.name", "blah", "waza" }; */
 
     size_t ret, ret2, ret3;
 

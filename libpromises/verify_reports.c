@@ -41,6 +41,7 @@
 #include <ornaments.h>
 #include <eval_context.h>
 #include <actuator.h>
+#include <syslog_client.h>
 
 static bool PrintFile(const char *filename, size_t max_lines);
 static void ReportToFile(const char *logfile, const char *message);
@@ -125,6 +126,11 @@ static void ReportToLog(const char *message)
     fprintf(stdout, "R: %s\n", message);
 #ifndef __MINGW32__
     syslog(LOG_NOTICE, "R: %s", message);
+#endif
+#ifdef __ANDROID__
+    char log_string[1024];
+    snprintf(log_string, sizeof(log_string), "R: %s", message);
+    RemoteSysLog(LOG_NOTICE, log_string);
 #endif
 }
 

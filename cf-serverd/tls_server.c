@@ -598,8 +598,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     switch (GetCommandNew(recvbuffer))
     {
-    case PROTOCOL_COMMAND_EXEC:                                 /* TODO always file never directory, no end with '/' */
+    case PROTOCOL_COMMAND_EXEC:
     {
+        /* TODO check it is always file, never directory, no end with '/' */
         char args[256];
         int ret = sscanf(recvbuffer, "EXEC %255[^\n]", args);
         if (ret != 1)                    /* No arguments, use default args. */

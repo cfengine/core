@@ -69,9 +69,9 @@ bool StrList_BinarySearch(const StrList *slp, const char *s,
 size_t StrList_SearchLongestPrefix(const StrList *sl,
                                   const char *s, size_t s_len,
                                   char separator, bool direction_forward);
-size_t StrList_SearchShortestPrefix(const StrList *sl,
-                                    const char *s, size_t s_len,
-                                    bool direction_forward);
+size_t StrList_SearchForPrefix(const StrList *sl,
+                               const char *s, size_t s_len,
+                               bool direction_forward);
 
 
 #endif

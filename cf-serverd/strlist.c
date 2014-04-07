@@ -649,9 +649,18 @@ size_t StrList_SearchLongestPrefix(const StrList *sl,
     return found;
 }
 
-size_t StrList_SearchShortestPrefix(const StrList *sl,
-                                    const char *s, size_t s_len,
-                                    bool direction_forward)
+/**
+ *  Search within the given strlist for any prefix of the string #s (or exact
+ *  match). Not guaranteed it will return the shortest or longest prefix, just
+ *  that it will return *fast* once a prefix or exact match is found.
+ *
+ *  @param #direction_forward if set to false then search is done for suffix,
+ *                            not prefix.
+ *  @return the index of the found string, (size_t) -1 if not found.
+ */
+size_t StrList_SearchForPrefix(const StrList *sl,
+                               const char *s, size_t s_len,
+                               bool direction_forward)
 {
     /* Remember, NULL strlist is equivalent to empty strlist. */
     if (sl == NULL)
@@ -699,7 +708,7 @@ size_t StrList_SearchShortestPrefix(const StrList *sl,
             while (chr_idx < min_len &&
                    s[s_len - 1 - chr_idx] == s2[s2_len - 1 - chr_idx])
             {
-                chr_idx ++;
+                chr_idx++;
             }
         }
 

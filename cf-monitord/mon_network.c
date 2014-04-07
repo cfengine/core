@@ -317,6 +317,8 @@ void MonNetworkGatherData(double *cf_this)
                 case cfn_raw4:
                     packet = cfn_raw6;
                     break;
+                default:
+                    break;
                 }
             }
             break;

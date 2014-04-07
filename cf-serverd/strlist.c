@@ -480,7 +480,8 @@ bool StrList_BinarySearch(const StrList *slp, const char *s,
 }
 
 /* Search a sorted strlist for string s, of s_len, in forward or backward
- * direction (strlist must be sorted with string_CompareFromEnd()). */
+ * direction (for the latter the strlist must be sorted with
+ * string_CompareFromEnd()). */
 static
 size_t StrList_BinarySearchExtended(const StrList *sl,
                                     const char *s, size_t s_len,
@@ -601,15 +602,16 @@ size_t StrList_SearchLongestPrefix(const StrList *sl,
         char *separator_at;
         if (direction_forward)
         {
+            /* Find next separator, skipping the previous one. */
             separator_at = memchr(&s[s_prefix_len], separator,
                                   s_len - s_prefix_len);
             s_prefix_len = separator_at - &s[0] + 1;
         }
         else
         {
-            /* In this case, prefix actually means suffix. Nevertheless syntax
-             * is the same for memrchr() as with memchr(). */
-            separator_at = memrchr(&s[s_prefix_len], separator,
+            /* In this case, SearchLongestPrefix should be SearchLongestSuffix.
+             * Find next separator from the end, skipping the previous one. */
+            separator_at = memrchr(s, separator,
                                    s_len - s_prefix_len);
             s_prefix_len = &s[s_len - 1] - separator_at + 1;
         }

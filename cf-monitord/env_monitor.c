@@ -587,7 +587,7 @@ static void ArmClasses(EvalContext *ctx, Averages av)
     char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
     static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE] = { { 0 } };
     extern Item *ALL_INCOMING;
-    extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
+    extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6, *MON_RAW4, *MON_RAW6;
 
     for (i = 0; i < CF_OBSERVABLES; i++)
     {
@@ -679,6 +679,8 @@ static void ArmClasses(EvalContext *ctx, Averages av)
     AddOpenPorts("listening_udp4_ports", MON_UDP4, &mon_data);
     AddOpenPorts("listening_tcp6_ports", MON_TCP6, &mon_data);
     AddOpenPorts("listening_tcp4_ports", MON_TCP4, &mon_data);
+    AddOpenPorts("listening_raw4_ports", MON_RAW4, &mon_data);
+    AddOpenPorts("listening_raw6_ports", MON_RAW6, &mon_data);
 
     // Port addresses
 
@@ -712,7 +714,19 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         snprintf(buff,CF_BUFSIZE,"udp4_port_addr[%s]=%s",ip->name,ip->classes);
         AppendItem(&mon_data, buff, NULL);
     }
-    
+
+    for (ip = MON_RAW6; ip != NULL; ip=ip->next)
+    {
+        snprintf(buff,CF_BUFSIZE,"raw6_port_addr[%s]=%s",ip->name,ip->classes);
+        AppendItem(&mon_data, buff, NULL);
+    }
+
+    for (ip = MON_RAW4; ip != NULL; ip=ip->next)
+    {
+        snprintf(buff,CF_BUFSIZE,"raw4_port_addr[%s]=%s",ip->name,ip->classes);
+        AppendItem(&mon_data, buff, NULL);
+    }
+
     PublishEnvironment(mon_data);
 
     DeleteItemList(mon_data);

@@ -444,7 +444,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
            identity of peer. */
         bool b = ServerIdentificationDialog(conn->conn_info, conn->username,
                                             sizeof(conn->username));
-        if (!b)
+        if (b != true)
         {
             return -1;
         }

@@ -1585,10 +1585,7 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_INTERFACES:
-
-        // If Cumulus of ifipdown2
-        printf("NOW EDIT /etc/networks/interfaces ??\n");
-
+        WriteNativeInterfacesFile();
         DeleteOSPFState(OSPF_ACTIVE);
         break;
 

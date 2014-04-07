@@ -1,0 +1,64 @@
+#######################################################
+#
+# Test array expansion for CFEngine templates.
+# Redmine #3442
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "data[user-a][home]" string => "/tmp/test/user-a";
+
+  methods:
+      "" usebundle => cfe_makefile("$(G.testfile).expected",
+                                   "CASE1: passed var /tmp/test/user-a .foo .bar
+CASE2: local var /tmp/test/user-a .foo .bar");
+
+      "" usebundle => cfe_makefile("$(G.testfile).template",
+                                   "CASE1: passed var $(const.dollar)($(const.dollar)(test2.info)[user-a][home]) .foo .bar
+CASE2: local var $(const.dollar)($(const.dollar)(test2.local_info)[user-a][home]) .foo .bar");
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "" usebundle => test2("init.data");
+
+}
+
+bundle agent test2(info)
+{
+  vars:
+      "local_info" string => "init.data";
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_defaults => empty,
+      edit_template => "$(G.testfile).template";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
+                                        "$(G.testfile).expected",
+                                        "$(this.promise_filename)");
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

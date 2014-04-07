@@ -36,6 +36,7 @@
 #include <item_lib.h>
 #include <expand.h>
 #include <network_services.h>
+#include <files_operators.h>
 
 #define CF_DEBIAN_IFCONF "/etc/network/interfaces"
 #define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
@@ -45,6 +46,8 @@
 #define CF_DEBIAN_IFQUERY "/usr/sbin/ifquery"
 #define CF_DEBIAN_IFUP "/usr/sbin/ifup"
 #define CF_DEBIAN_ETHTOOL "/usr/bin/ethtool"
+
+bool INTERFACE_WANTS_NATIVE = false;
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
@@ -92,7 +95,7 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
     if (!IsPrivileged())
     {
         Log(LOG_LEVEL_INFO, "Interface %s cannot be configured without root privilege", pp->promiser);
-//       return PROMISE_RESULT_SKIPPED;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "interface-%s", pp->promiser);
@@ -210,6 +213,13 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
         Log(LOG_LEVEL_ERR, "'interfaces' promises are not yet supported on this platform");
         *result = PROMISE_RESULT_INTERRUPTED;
         return;
+    }
+
+    if ((strcmp(a->interface.manager, "native") == 0) || (strcmp(a->interface.manager, "nativefirst") == 0))
+    {
+        // Signal to the DeleteType post processor WriteNativeInterfacesFile that we are going native!
+
+        INTERFACE_WANTS_NATIVE = true;
     }
 }
 
@@ -974,6 +984,53 @@ int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
     free(line);
     cf_pclose(pfp);
     return true;
+}
+
+/****************************************************************************/
+
+void WriteNativeInterfacesFile()
+{
+    Item *reverse_output = NULL, *output;
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char comm[CF_BUFSIZE];
+    char *line = xmalloc(line_size);
+
+    if (!INTERFACE_WANTS_NATIVE)
+    {
+        return;
+    }
+
+    //ifquery --running -a > /etc/network/interfaces
+
+    snprintf(comm, CF_BUFSIZE, "%s --running -a", CF_DEBIAN_IFQUERY);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_IFQUERY);
+        free(line);
+        return;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        PrependItem(&reverse_output, line, NULL);
+    }
+
+    output = ReverseItemList(reverse_output);
+
+    Attributes a = { {0} };
+    a.edits.backup = BACKUP_OPTION_TIMESTAMP;
+
+    SaveItemListAsFile(output, CF_DEBIAN_IFCONF, a, NewLineMode_Unix);
+    free(line);
 }
 
 /****************************************************************************/

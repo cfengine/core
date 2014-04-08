@@ -932,7 +932,7 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
     {
         Log(LOG_LEVEL_INFO,
             "Clock seems to have jumped back in time, mtime of %jd is newer than current time %jd, touching it",
-            (intmax_t) validated_at, now);
+            (intmax_t) validated_at, (intmax_t) now);
 
         GenericAgentTagReleaseDirectory(config,
                                         NULL, // use GetAutotagDir

@@ -253,10 +253,11 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
         [SYNTAX_TYPE_MATCH_OK] = "OK",
 
         [SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED] = "Cannot check unexpanded value",
-        [SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED] = "Real range specification should not be enclosed in brackets - just \"a,b\"",
-        [SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS] = "Range format specifier should be of form \"a,b\" but got multiple items",
+        [SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED] = "Real range specification should not be enclosed in brackets - just 'a,b'",
+        [SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS] = "Range format specifier should be of form 'a,b'' but got multiple items",
         [SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR] = "Attempted to give a scalar to a non-scalar type",
         [SYNTAX_TYPE_MATCH_ERROR_GOT_LIST] = "Attempted to give a list to a non-list type",
+        [SYNTAX_TYPE_MATCH_ERROR_GOT_NULL] = "Attempted to give a value of type null",
 
         [SYNTAX_TYPE_MATCH_ERROR_STRING_UNIX_PERMISSION] = "Error parsing Unix permission string",
 
@@ -266,7 +267,7 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
         [SYNTAX_TYPE_MATCH_ERROR_INT_PARSE] = "Cannot parse value as integer",
         [SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE] = "Integer is out of range",
 
-        [SYNTAX_TYPE_MATCH_ERROR_REAL_INF] = "Keyword \"inf\" has an integer value, cannot be used as real",
+        [SYNTAX_TYPE_MATCH_ERROR_REAL_INF] = "Keyword 'inf' has an integer value, cannot be used as real",
         [SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE] = "Real value is out of range",
 
         [SYNTAX_TYPE_MATCH_ERROR_OPTS_OUT_OF_RANGE] = "Selection is out of bounds",
@@ -355,8 +356,10 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
         return SYNTAX_TYPE_MATCH_OK;
 
     case RVAL_TYPE_CONTAINER:
-    case RVAL_TYPE_NOPROMISEE:
         break;
+
+    case RVAL_TYPE_NOPROMISEE:
+        return SYNTAX_TYPE_MATCH_ERROR_GOT_NULL;
     }
 
 /* If we get here, we have a literal scalar type */

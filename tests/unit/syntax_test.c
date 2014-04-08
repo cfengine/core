@@ -102,6 +102,13 @@ static void test_copy_from_servers(void)
     assert_true(StringMatchFull(y->range.validation_string, "2604:2000:8441:e300:224:d7ff:fec5:338"));
 }
 
+static void test_typecheck_null_rval(void)
+{
+    SyntaxTypeMatch err = CheckConstraintTypeMatch("whatever", (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                                   CF_DATA_TYPE_STRING, "abc", 0);
+    assert_int_equal(SYNTAX_TYPE_MATCH_ERROR_GOT_NULL, err);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -121,7 +128,8 @@ int main()
 
         unit_test(test_lookup_constraint_edit_xml_set_attribute_attribute_value),
 
-        unit_test(test_copy_from_servers)
+        unit_test(test_copy_from_servers),
+        unit_test(test_typecheck_null_rval),
     };
 
     return run_tests(tests);

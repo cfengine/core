@@ -114,6 +114,7 @@ static time_t GetBootTimeFromUptimeCommand(time_t); // Last resort
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef __linux__
+static int Linux_Os_Release(EvalContext *ctx);
 static int Linux_Fedora_Version(EvalContext *ctx);
 static int Linux_Redhat_Version(EvalContext *ctx);
 static void Linux_Oracle_VM_Server_Version(EvalContext *ctx);
@@ -931,6 +932,11 @@ static void OSClasses(EvalContext *ctx)
 /* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
    we test for those distributions first */
 
+    if (stat("/etc/os-release", &statbuf) != -1)
+    {
+        Linux_Os_Release(ctx);
+    }
+
     if (stat("/etc/mandriva-release", &statbuf) != -1)
     {
         Linux_Mandriva_Version(ctx);
@@ -1213,6 +1219,146 @@ static void OSClasses(EvalContext *ctx)
 /*********************************************************************************/
 
 #ifdef __linux__
+
+static int Linux_Os_Release(EvalContext *ctx)
+{
+#define OS_REL_FILENAME "/etc/os-release"
+
+    char classbuf[CF_MAXVARSIZE];
+
+    Log(LOG_LEVEL_VERBOSE, "This appears to have an os-release.");
+
+    FILE *fp = fopen(OS_REL_FILENAME, "r");
+    if (fp == NULL)
+    {
+        return 1;
+    }
+
+    char vbuf[CF_BUFSIZE], strid[CF_MAXVARSIZE], strversion[CF_MAXVARSIZE];
+
+    int major = -1, minor = -1;
+    char *strmajor = NULL, *strminor = NULL;
+    while (fgets(vbuf, sizeof(vbuf), fp) != NULL)
+    {
+        char *nptr, *vptr; /* name, value ptrs */
+
+        nptr = strrchr(vbuf, '=');
+        if (nptr == NULL)
+        {
+            continue;
+        }
+        vptr = nptr;
+        /* search left of '=' for non-blank char */
+        while (isspace(*(nptr-1)))
+        {
+            nptr--;
+        }
+        *nptr = '\0';
+        /* search right of '=' for non-blank char */
+        do
+        {
+            vptr++;
+        }
+        while (isspace(*vptr));
+        /* value could be enclosed in " */
+        if (*vptr == '"')
+        {
+            char *eos;
+            eos = ++vptr;
+            /* find closing " and remove it */
+            while (*eos && *eos != '"')
+            {
+                eos++;
+            }
+            *eos = '\0';
+        }
+        else
+        {
+            char *eos = vptr + strlen(vptr);
+            while (eos > vptr && isspace(*(eos-1)))
+            {
+                eos--;
+            }
+            *eos = '\0';            
+        }
+        Log(LOG_LEVEL_VERBOSE, "Discovered nptr >%s<, vptr >%s<", vbuf, vptr);
+        if (strcmp(vbuf, "ID") == 0)
+        {
+            strlcpy(strid, vptr, sizeof(strid));
+            Log(LOG_LEVEL_VERBOSE, "Discovered ID '%s'", strid);
+        }
+
+        if (strcmp(vbuf, "VERSION_ID") == 0)
+        {
+            strlcpy(strversion, vptr, sizeof(strversion));
+            switch (sscanf(strversion, "%d.%d", &major, &minor))
+            {
+                case 1:
+                    strmajor = strversion;
+                    minor = -1;
+                    strminor = NULL;
+                    break;
+                case 2:
+                    strmajor = strversion;
+                    strminor = strchr(strversion, '.');
+                    *strminor++ = '\0';
+                    break;
+                default:
+                    UnexpectedError("Non-numeric VERSION_ID in /etc/os-release");
+                    strmajor = strminor = NULL;
+                    break;
+            }
+            Log(LOG_LEVEL_VERBOSE, "Discovered VERSION_ID '%s', strmajor '%s', strminor '%s'", strversion, strmajor, strminor);
+        }
+    }
+    if (ferror(fp))
+    {
+        UnexpectedError("Failed to read line from stream");
+    }
+    else
+    {
+        assert(feof(fp));
+    }
+
+    fclose(fp);
+
+    EvalContextClassPutHard(ctx, strid, "inventory,attribute_name=none,source=agent");
+    int i;
+    char *cptr;
+    for (i = 0; i < strlen(strid); i++)
+    {
+        classbuf[i] = toupper(strid[i]);
+    }
+    if (strcmp(classbuf, "OPENSUSE") == 0)
+    {
+        strcpy(classbuf, "openSUSE");
+    }
+    cptr = classbuf + i;
+
+    Log(LOG_LEVEL_VERBOSE, "Discovered %s version %s.%s", classbuf, strmajor, strminor?strminor:"");
+    EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+    if (strmajor != NULL)
+    {
+        *cptr++ = '_';
+        strcpy(cptr, strmajor);
+        cptr += strlen(strmajor);
+        Log(LOG_LEVEL_VERBOSE, "Classbuf >%s<", classbuf);
+        SetFlavour(ctx, classbuf);
+        if (strminor != NULL)
+        {
+            *cptr++ = '_';
+            strcpy(cptr, strminor);
+            Log(LOG_LEVEL_VERBOSE, "Classbuf >%s<", classbuf);
+            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s", OS_REL_FILENAME);
+    }
+    return 0;
+}
+
 static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 {
     char relstring[CF_MAXVARSIZE];

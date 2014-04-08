@@ -626,7 +626,7 @@ static void ReportSoftware(PackageManager *list)
         {
             fprintf(fout, "%s,", CanonifyChar(pi->name, ','));
             fprintf(fout, "%s,", CanonifyChar(pi->version, ','));
-            fprintf(fout, "%s,%s\n", pi->arch, ReadLastNode(CommandArg0(mp->manager)));
+            fprintf(fout, "%s,%s\n", pi->arch, ReadLastNode(RealPackageManager(mp->manager)));
         }
     }
 

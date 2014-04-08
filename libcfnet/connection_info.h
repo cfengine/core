@@ -52,6 +52,8 @@ struct ConnectionInfo {
     int sd;                           /* Socket descriptor */
     SSL *ssl;                         /* OpenSSL struct for TLS connections */
     Key *remote_key;
+    socklen_t ss_len;
+    struct sockaddr_storage ss;
 };
 
 typedef struct ConnectionInfo ConnectionInfo;

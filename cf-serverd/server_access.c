@@ -73,7 +73,8 @@ bool access_CheckResource(const struct resource_acl *acl,
             access = true;
         }
     }
-    if (!access && acl->admit.hostnames != NULL && hostname != NULL)
+    if (!access && acl->admit.hostnames != NULL &&
+        hostname != NULL && *hostname != '\0')
     {
         size_t pos = StrList_SearchLongestPrefix(acl->admit.hostnames,
                                                  hostname, 0,
@@ -143,7 +144,8 @@ bool access_CheckResource(const struct resource_acl *acl,
             access = false;
         }
     }
-    if (access && acl->deny.hostnames != NULL && hostname != NULL)
+    if (access && acl->deny.hostnames != NULL &&
+        hostname != NULL && *hostname != '\0')
     {
         size_t pos = StrList_SearchLongestPrefix(acl->deny.hostnames,
                                                  hostname, 0,

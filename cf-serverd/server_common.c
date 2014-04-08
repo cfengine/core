@@ -1384,19 +1384,22 @@ size_t ReplaceSpecialVariables(char *buf, size_t buf_size,
 {
     size_t ret = 0;
 
-    if ((find1 != NULL) && (find1[0] != '\0') && (repl1 != NULL))
+    if ((find1 != NULL) && (find1[0] != '\0') &&
+        (repl1 != NULL) && (repl1[0] != '\0'))
     {
         size_t ret2 = StringReplace(buf, buf_size, find1, repl1);
         ret = MAX(ret, ret2);           /* size_t is unsigned, thus -1 wins */
     }
     if ((ret != (size_t) -1) &&
-        (find2 != NULL) && (find2[0] != '\0') && (repl2 != NULL))
+        (find2 != NULL) && (find2[0] != '\0') &&
+        (repl2 != NULL) && (repl2[0] != '\0'))
     {
         size_t ret2 = StringReplace(buf, buf_size, find2, repl2);
         ret = MAX(ret, ret2);
     }
     if ((ret != (size_t) -1) &&
-        (find3 != NULL) && (find3[0] != '\0') && (repl3 != NULL))
+        (find3 != NULL) && (find3[0] != '\0') &&
+        (repl3 != NULL) && (repl3[0] != '\0'))
     {
         size_t ret2 = StringReplace(buf, buf_size, find3, repl3);
         ret = MAX(ret, ret2);

@@ -1165,8 +1165,9 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
         }
     }
 
-    if ((attr.copy.servers != NULL) && (strcmp(RlistScalarValue(attr.copy.servers), "localhost") != 0))
+    if (conn != NULL)
     {
+        assert(attr.copy.servers && strcmp(RlistScalarValue(attr.copy.servers), "localhost"));
         Log(LOG_LEVEL_DEBUG, "This is a remote copy from server '%s'", RlistScalarValue(attr.copy.servers));
         remote = true;
     }
@@ -3172,12 +3173,13 @@ static int cf_stat(const char *file, struct stat *buf, FileCopy fc, AgentConnect
         return -1;
     }
 
-    if ((fc.servers == NULL) || (strcmp(RlistScalarValue(fc.servers), "localhost") == 0))
+    if (conn == NULL)
     {
         return stat(file, buf);
     }
     else
     {
+        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
         return cf_remote_stat(file, buf, "file", fc.encrypt, conn);
     }
 }
@@ -3190,10 +3192,11 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 {
     memset(linkbuf, 0, buffsize);
 
-    if ((attr.copy.servers == NULL) || (strcmp(RlistScalarValue(attr.copy.servers), "localhost") == 0))
+    if (conn == NULL)
     {
         return readlink(sourcefile, linkbuf, buffsize - 1);
     }
+    assert(attr.copy.servers && strcmp(RlistScalarValue(attr.copy.servers), "localhost"));
 
     const Stat *sp = ClientCacheLookup(conn, RlistScalarValue(attr.copy.servers), sourcefile);
 

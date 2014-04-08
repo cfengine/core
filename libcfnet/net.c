@@ -216,7 +216,7 @@ int SocketConnect(const char *host, const char *port,
                     .ai_family = force_ipv4 ? AF_INET : AF_UNSPEC,
                     .ai_socktype = SOCK_STREAM,
                     /* returned address is for bind() */
-                    query2.ai_flags = AI_PASSIVE
+                    .ai_flags = AI_PASSIVE
                 };
 
                 int ret2 = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2);

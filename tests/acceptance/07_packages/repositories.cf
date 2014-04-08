@@ -25,7 +25,14 @@ filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterorequal-
 filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterorequal-version-2.2.3.i386.rpm
 filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-lessthan-version-2.2.3.i386.rpm
 filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-lessorequal-version-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-exact-version-2.2.3.i386.rpm");
+filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-exact-version-2.2.3.i386.rpm
+packagerepo DELETE delete-exact-version-2.2.3.i386.rpm
+packagerepo ADD install-exact-version-2.2.3.i386.rpm
+packagerepo ADD long-name-should-be-wildcard*-*.*.rpm
+packagerepo UPDATE substring2-name-[0-9].*.i386.rpm
+packagerepo UPDATE substring-name-99999999.i386.rpm
+packagerepo UPDATE long-name-should-be-updated-99999999.i386.rpm
+packagerepo UPDATE update-to-exact-version-2.2.3.i386.rpm");
 
 }
 
@@ -38,7 +45,10 @@ bundle agent test
 bundle agent check
 {
   methods:
-    "any" usebundle => sorted_check_diff("$(G.testfile)", "$(G.testfile).expected", "$(this.promise_filename)");
+      "any" usebundle => sorted_check_diff("$(G.testfile)",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 29

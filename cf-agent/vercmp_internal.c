@@ -27,6 +27,8 @@
 #include <files_names.h>
 #include <vercmp_internal.h>
 #include <rlist.h>
+#include <matching.h>
+#include <match_scope.h>
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);
 
@@ -68,6 +70,20 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
     if (result)
     {
         Log(LOG_LEVEL_VERBOSE, "Verified that versioning models are compatible");
+    }
+    else if ((v2[0] == '[' || v2[0] == '(')) // Redmine#2986: looks like a regex
+    {
+        Log(LOG_LEVEL_VERBOSE, "Assuming that versioning models don't apply since '%s' is a regular expression, so allowing the '%s' versioning model and always returning that it's greater", v1, v2);
+        result = false; // skipping the loop below
+        switch(cmp)
+        {
+        case PACKAGE_VERSION_COMPARATOR_LT:
+            version_matched = VERCMP_MATCH;
+            break;
+        default:
+            version_matched = VERCMP_NO_MATCH;
+            break;
+        }
     }
     else
     {

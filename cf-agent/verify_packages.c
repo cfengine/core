@@ -1214,7 +1214,10 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
 
    * if package_delete_convention or package_name_convention are given and apply to the operation, construct the package name from them (from PACKAGES_CONTEXT)
    * else, just use the given package name
-   * warn about "*" in the package name
+
+   * if "*" was requested originally or we're using file repositories, allow "*" in the package name to be passed to the package manager
+   * else, fail this promise (but see code for exact details relevant to Redmine#2986 because there are several checks)
+
    * set package_select_in_range with magic
    * create PackageAction policy from the package_policy and then split ADDUPDATE into ADD or UPDATE based on "installed"
    * result starts as NOOP
@@ -1277,10 +1280,24 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     char largestPackAvail[CF_MAXVARSIZE];
     char id[CF_EXPANDSIZE];
 
+    bool name_has_wildcard = strchr(name, '*');
+
+    // Redmine#2986: when the Yum manager sees package pidgin-*-*, it
+    // will try to install everything starting with "pidgin", but
+    // that's legitimate for e.g. the APT manager where you have
+    // "pidgin=*" (so the version wildcard can't be part of the
+    // filename).  Try to protect from that here without adding new
+    // package method attributes.
+    bool name_convention_has_rpm_wildcard = (NULL != a.packages.package_name_convention &&
+                                             (strstr(a.packages.package_name_convention, "$(name)-$(version)-$(arch)") ||
+                                              strstr(a.packages.package_name_convention, "$(name)-$(version).$(arch)")));
+
+    bool version_looks_like_rpm_regex = (NULL != version && (version[0] == '[' || version[0] == '('));
+
     Log(LOG_LEVEL_VERBOSE,
         "Checking if package (%s,%s,%s) [name,version,arch] "
-        "is at the desired state (installed=%d,matched=%d)",
-        name, version, arch, installed, matched);
+        "is at the desired state (installed = %s,matched = %s)",
+        name, version, arch, installed ? "yes" : "no", matched ? "yes" : "no");
 
 /* Now we need to know the name-convention expected by the package manager */
 
@@ -1325,12 +1342,36 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         strlcpy(id, name, CF_EXPANDSIZE);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Package promises to refer to itself as '%s' to the manager", id);
+    Log(LOG_LEVEL_VERBOSE, "Package originally promised as '%s' promises to refer to itself as '%s' to the manager", name, id);
 
     if (strchr(id, '*'))
     {
-        Log(LOG_LEVEL_VERBOSE, "Package name contains '*' -- perhaps "
-            "a missing attribute (name/version/arch) should be specified");
+        // If the original name had a wildcard OR we're using file repositories...
+        if (name_has_wildcard || NULL != a.packages.package_file_repositories)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Package name contains '*' -- perhaps "
+                "a missing attribute (name/version/arch) should be specified");
+        }
+        else if (name_convention_has_rpm_wildcard && !version_looks_like_rpm_regex)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Redmine#2986: the package name '%s' to be passed to the package manager contains '*' "
+                "AND the RPM package_name_convention of name-version-arch is in use, "
+                "AND the version is not a RPM Jedi avoidance mind trick AND a wildcard was not specified in the promiser '%s' "
+                "AND file repositories are not in use -- "
+                "that indicates a missing attribute (name/version/arch). "
+                "Skipping this package installation request.",
+                id, name);
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package skipped due to wildcards");
+            BufferDestroy(expanded);
+            return PROMISE_RESULT_FAIL;
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Redmine#2986: the package name '%s' to be passed to the package manager contains '*'"
+                " -- that indicates a missing attribute (name/version/arch), but the package_name_convention "
+                "seems to imply it will work.  Let's see.",
+                id);
+        }
     }
 
     // This is very confusing

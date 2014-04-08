@@ -1632,6 +1632,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a SUSE system.");
     EvalContextClassPutHard(ctx, "SUSE", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "suse", "inventory,attribute_name=none,source=agent");
 
     /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
      * Keep this for backwards compatibility until CFEngine 3.7

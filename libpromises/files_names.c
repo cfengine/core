@@ -703,12 +703,8 @@ const char *GetSoftwarePatchesFilename(char *buffer)
 const char *RealPackageManager(const char *manager)
 {
     const char *pos = strchr(manager, ' ');
-    if (!pos || pos - manager < 4)
-    {
-        return CommandArg0(manager);
-    }
-    if (strncmp(pos - 4, "/env", 4) != 0
-        && strncmp(manager, "env ", 4) != 0)
+    if (strncmp(manager, "env ", 4) != 0
+        && (!pos || pos - manager < 4 || strncmp(pos - 4, "/env", 4) != 0))
     {
         return CommandArg0(manager);
     }

@@ -714,7 +714,14 @@ const char *RealPackageManager(const char *manager)
     bool eq_sign_found = false;
     while (true)
     {
-        last_pos = pos + 1;
+        if (eq_sign_found)
+        {
+            last_pos = pos + 1;
+        }
+        else
+        {
+            last_pos = pos + strspn(pos, " "); // Skip over consecutive spaces.
+        }
         pos = strpbrk(last_pos, "= ");
         if (!pos)
         {

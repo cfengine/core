@@ -455,6 +455,6 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
         return -1;
     }
 
-    Log(LOG_LEVEL_DEBUG, "TLSRecvLines() %d bytes long: %s", got, buf);
+    LogRaw(LOG_LEVEL_DEBUG, "TLSRecvLines(): ", buf, got);
     return got;
 }

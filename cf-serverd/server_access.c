@@ -87,9 +87,9 @@ bool access_CheckResource(const struct resource_acl *acl,
     if (!access && acl->admit.hostnames != NULL && hostname != NULL)
     {
         size_t hostname_len = strlen(hostname);
-        size_t pos = StrList_SearchShortestPrefix(acl->admit.hostnames,
-                                                  hostname, hostname_len,
-                                                  false);
+        size_t pos = StrList_SearchForPrefix(acl->admit.hostnames,
+                                             hostname, hostname_len,
+                                             false);
 
         /* === Legacy regex matching, slow, TODO DEPRECATE === */
         bool regex_match = false;
@@ -160,9 +160,9 @@ bool access_CheckResource(const struct resource_acl *acl,
     if (access && acl->deny.hostnames != NULL && hostname != NULL)
     {
         size_t hostname_len = strlen(hostname);
-        size_t pos = StrList_SearchShortestPrefix(acl->deny.hostnames,
-                                                  hostname, hostname_len,
-                                                  false);
+        size_t pos = StrList_SearchForPrefix(acl->deny.hostnames,
+                                             hostname, hostname_len,
+                                             false);
         /* === Legacy regex matching, slow, TODO DEPRECATE === */
         bool regex_match = false;
         if (pos == (size_t) -1)

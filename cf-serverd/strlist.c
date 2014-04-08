@@ -480,7 +480,8 @@ bool StrList_BinarySearch(const StrList *slp, const char *s,
 }
 
 /* Search a sorted strlist for string s, of s_len, in forward or backward
- * direction (strlist must be sorted with string_CompareFromEnd()). */
+ * direction (for the latter the strlist must be sorted with
+ * string_CompareFromEnd()). */
 static
 size_t StrList_BinarySearchExtended(const StrList *sl,
                                     const char *s, size_t s_len,
@@ -601,15 +602,16 @@ size_t StrList_SearchLongestPrefix(const StrList *sl,
         char *separator_at;
         if (direction_forward)
         {
+            /* Find next separator, skipping the previous one. */
             separator_at = memchr(&s[s_prefix_len], separator,
                                   s_len - s_prefix_len);
             s_prefix_len = separator_at - &s[0] + 1;
         }
         else
         {
-            /* In this case, prefix actually means suffix. Nevertheless syntax
-             * is the same for memrchr() as with memchr(). */
-            separator_at = memrchr(&s[s_prefix_len], separator,
+            /* In this case, SearchLongestPrefix should be SearchLongestSuffix.
+             * Find next separator from the end, skipping the previous one. */
+            separator_at = memrchr(s, separator,
                                    s_len - s_prefix_len);
             s_prefix_len = &s[s_len - 1] - separator_at + 1;
         }
@@ -647,9 +649,18 @@ size_t StrList_SearchLongestPrefix(const StrList *sl,
     return found;
 }
 
-size_t StrList_SearchShortestPrefix(const StrList *sl,
-                                    const char *s, size_t s_len,
-                                    bool direction_forward)
+/**
+ *  Search within the given strlist for any prefix of the string #s (or exact
+ *  match). Not guaranteed it will return the shortest or longest prefix, just
+ *  that it will return *fast* once a prefix or exact match is found.
+ *
+ *  @param #direction_forward if set to false then search is done for suffix,
+ *                            not prefix.
+ *  @return the index of the found string, (size_t) -1 if not found.
+ */
+size_t StrList_SearchForPrefix(const StrList *sl,
+                               const char *s, size_t s_len,
+                               bool direction_forward)
 {
     /* Remember, NULL strlist is equivalent to empty strlist. */
     if (sl == NULL)
@@ -697,7 +708,7 @@ size_t StrList_SearchShortestPrefix(const StrList *sl,
             while (chr_idx < min_len &&
                    s[s_len - 1 - chr_idx] == s2[s2_len - 1 - chr_idx])
             {
-                chr_idx ++;
+                chr_idx++;
             }
         }
 

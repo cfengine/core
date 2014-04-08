@@ -200,7 +200,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     unsigned long err;
     unsigned char digest[EVP_MAX_MD_SIZE];
     int encrypted_len, nonce_len = 0, len, session_size;
-    bool implicitly_trust_server;
+    bool need_to_implicitly_trust_server;
     char enterprise_field = 'c';
     RSA *server_pubkey = NULL;
 
@@ -246,19 +246,19 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     /* Ask the server to send us the public key if we don't have it. */
     if ((server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip)))
     {
-        implicitly_trust_server = false;
+        need_to_implicitly_trust_server = false;
         encrypted_len = RSA_size(server_pubkey);
     }
     else
     {
-        implicitly_trust_server = true;
+        need_to_implicitly_trust_server = true;
         encrypted_len = nonce_len;
     }
 
 // Server pubkey is what we want to has as a unique ID
 
     snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c",
-             implicitly_trust_server ? 'n': 'y',
+             need_to_implicitly_trust_server ? 'n': 'y',
              encrypted_len, nonce_len, enterprise_field);
 
     out = xmalloc(encrypted_len);
@@ -332,24 +332,32 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         return false;
     }
 
-    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) || (HashesMatch(digest, in, HASH_METHOD_MD5)))  // Legacy
+    /* Check if challenge reply was correct */
+    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) ||
+        (HashesMatch(digest, in, HASH_METHOD_MD5)))  // Legacy
     {
-        if (implicitly_trust_server == false)        /* challenge reply was correct */
+        if (need_to_implicitly_trust_server == false)
         {
-            Log(LOG_LEVEL_VERBOSE, ".....................[.h.a.i.l.].................................");
-            Log(LOG_LEVEL_VERBOSE, "Strong authentication of server '%s' connection confirmed", conn->this_server);
+            /* The IP was found in lastseen. */
+            Log(LOG_LEVEL_VERBOSE,
+                ".....................[.h.a.i.l.].................................");
+            Log(LOG_LEVEL_VERBOSE,
+                "Strong authentication of server '%s' connection confirmed",
+                conn->this_server);
         }
-        else
+        else                                /* IP was not found in lastseen */
         {
             if (trust_key)
             {
-                Log(LOG_LEVEL_VERBOSE, "Trusting server identity, promise to accept key from '%s' = '%s'", conn->this_server,
-                      conn->remoteip);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Trusting server identity, promise to accept key from '%s' = '%s'",
+                    conn->this_server, conn->remoteip);
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Not authorized to trust public key of server '%s' (trustkey = false)",
-                      conn->this_server);
+                Log(LOG_LEVEL_ERR,
+                    "Not authorized to trust public key of server '%s' (trustkey = false)",
+                    conn->this_server);
                 RSA_free(server_pubkey);
                 return false;
             }

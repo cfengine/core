@@ -6,7 +6,7 @@
 #include <matching.h>                 /* IsRegexItemIn */
 #include <net.h>                      /* ReceiveTransaction,SendTransaction */
 #include <signals.h>
-#include <string_lib.c>                               /* ToLowerStrInplace */
+#include <string_lib.h>                               /* ToLowerStrInplace */
 #include <lastseen.h>                                 /* LastSaw1 */
 #include <files_hashes.h>                             /* HashString */
 #include <crypto.h>                                   /* HavePublicKey */

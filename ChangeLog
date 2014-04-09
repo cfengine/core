@@ -65,8 +65,15 @@
             - standard library split: lib/3.5 (compatibility) and lib/3.6 (mainline)
             - many standard library bundles and bodies, especially packages- and file-related, were revised and fixed
             - supports both Community and Enterprise
-            - new 'inventory/' structure to provide dmidecode, LSB, etc. system inventory (configured mainly in def.cf)
+            - new 'inventory/' structure to provide OS, dmidecode, LSB, etc. system inventory (configured mainly in def.cf)
             - cf_promises_release_id contains the policy release ID which is the GIT HEAD SHA if available or hash of tree
+            - a bunch'o'bundles to make starting with CFEngine easier:
+		- file-related: file_mustache, file_mustache_jsonstring, file_tidy, dir_sync, file_copy, file_link, file_hardlink, file_empty, file_make
+		- packages-related: package_absent, package_present, package_latest, package_specific_present, package_specific_absent, package_specific_latest, package_specific
+		- XML-related: xml_insert_tree_nopath, xml_insert_tree, xml_set_value, xml_set_attribute
+		- VCS-related: git_init, git_add, git_checkout, git_checkout_new_branch, git_clean, git_stash, git_stash_and_clean, git_commit, git
+		- process-related: process_kill
+		- other: cmerge, url_ping, logrotate, prunedir
 
 	- The failsafe.cf policy, run on bootstrap and in some other
 	  unusual cases, has been extracted from C code into

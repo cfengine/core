@@ -28,7 +28,7 @@ bundle agent test
       "run" usebundle => test_dorun("inputdir", $(sys.inputdir), "$(sys.cf_agent) -K $(options)");
 
       # make this machine a hub
-      "mk hub" usebundle => cfe_makefile($(hubfile), "$(sys.host)");
+      "mk hub" usebundle => file_make($(hubfile), "$(sys.host)");
 
       "run" usebundle => test_dorun("masterdir", $(sys.masterdir), "$(sys.cf_agent) -K $(options)");
 }
@@ -54,19 +54,19 @@ bundle agent test_dorun(name, dir, tagopt)
 
   methods:
       "rsync"
-      usebundle => cfe_syncdir("$(this.promise_dirname)/testdir",
+      usebundle => dir_sync("$(this.promise_dirname)/testdir",
                                $(dir));
 
       "master2cf"
-      usebundle => cfe_copyfile("$(dir)/$(masters).master",
+      usebundle => file_copy("$(dir)/$(masters).master",
                                 "$(dir)/$(masters)");
 
       "make ignored file 1"
-      usebundle => cfe_makefile("$(dir)/ignoreme",
+      usebundle => file_make("$(dir)/ignoreme",
                                 "fnord $(sys.date)");
 
       "make ignored file 2"
-      usebundle => cfe_makefile("$(dir)/ignoredir/2",
+      usebundle => file_make("$(dir)/ignoredir/2",
                                 "fnord $(sys.date)");
 
       "tag1" usebundle => test_tag("1",
@@ -83,7 +83,7 @@ bundle agent test_dorun(name, dir, tagopt)
       "read2" usebundle => test_read("2", $(name), $(dir));
 
       "make good validated file"
-      usebundle => cfe_makefile("$(dir)/cf_promises_validated",
+      usebundle => file_make("$(dir)/cf_promises_validated",
                                 $(simulated_validated_ok));
 
       "tag3" usebundle => test_tag("3",
@@ -93,7 +93,7 @@ bundle agent test_dorun(name, dir, tagopt)
       "read3" usebundle => test_read("3", $(name), $(dir));
 
       "make bad validated file"
-      usebundle => cfe_makefile("$(dir)/cf_promises_validated",
+      usebundle => file_make("$(dir)/cf_promises_validated",
                                 $(simulated_validated_bad));
 
       "tag4" usebundle => test_tag("4",

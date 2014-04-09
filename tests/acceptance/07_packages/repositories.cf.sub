@@ -11,8 +11,8 @@ body common control
 bundle agent init
 {
   methods:
-      "make filerepo" usebundle => cfe_makefile($(G.testfile),
-                                                "");
+      "make filerepo" usebundle => file_make($(G.testfile),
+                                             "");
 }
 
 body package_method test_method_filerepo(currentdir)

@@ -19,8 +19,8 @@ body common control
 bundle agent init
 {
   methods:
-      "empty good" usebundle => cfe_emptyfile("$(G.testfile).good");
-      "empty bad" usebundle => cfe_emptyfile("$(G.testfile).bad");
+      "empty good" usebundle => file_empty("$(G.testfile).good");
+      "empty bad" usebundle => file_empty("$(G.testfile).bad");
 
       "first filestat good" usebundle => init_filestat("good1", "$(G.testfile).good");
       "first filestat bad" usebundle => init_filestat("bad1", "$(G.testfile).bad");
@@ -28,11 +28,11 @@ bundle agent init
       "Remove good" usebundle => dcs_fini("$(G.testfile).good");
       "Remove bad" usebundle => dcs_fini("$(G.testfile).bad");
 
-      "ready good" usebundle => cfe_makefile("$(G.testfile).good", "# Set good");
-      "ready bad" usebundle => cfe_makefile("$(G.testfile).bad", "# Set bad");
+      "ready good" usebundle => file_make("$(G.testfile).good", "# Set good");
+      "ready bad" usebundle => file_make("$(G.testfile).bad", "# Set bad");
 
-      "link good" usebundle => cfe_hardlinkfile("$(G.testfile).good", "$(G.testfile).goodlink");
-      "link bad" usebundle => cfe_hardlinkfile("$(G.testfile).bad", "$(G.testfile).badlink");
+      "link good" usebundle => file_hardlink("$(G.testfile).good", "$(G.testfile).goodlink");
+      "link bad" usebundle => file_hardlink("$(G.testfile).bad", "$(G.testfile).badlink");
 
       "second filestat good" usebundle => init_filestat("good2", "$(G.testfile).good");
       "second filestat bad" usebundle => init_filestat("bad2", "$(G.testfile).bad");
@@ -49,11 +49,11 @@ bundle agent init_filestat(n, f)
 bundle agent test
 {
   methods:
-      "mustache good" usebundle => cfe_mustache_makefile_string($(template),
+      "mustache good" usebundle => file_mustache_jsonstring($(template),
                                                                 '{"mykeys": ["template expects list of strings"]}',
                                                                 "$(G.testfile).good");
 
-      "mustache bad" usebundle => cfe_mustache_makefile_string($(template),
+      "mustache bad" usebundle => file_mustache_jsonstring($(template),
                                                                 '{"mykeys": "string but template expects list of strings"}',
                                                                 "$(G.testfile).bad");
 

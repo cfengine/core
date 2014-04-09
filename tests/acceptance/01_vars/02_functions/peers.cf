@@ -15,23 +15,23 @@ body common control
 bundle agent init
 {
   methods:
-      "nohosts" usebundle => cfe_emptyfile("$(G.testfile).nohosts");
+      "nohosts" usebundle => file_empty("$(G.testfile).nohosts");
 
-      "nopeers" usebundle => cfe_mustache_makefile_string
+      "nopeers" usebundle => file_mustache_jsonstring
       (
         "$(this.promise_filename).mustache",
         '{ "peers": [ "a", "b", "c" ] }',
         "$(G.testfile).nopeers"
       );
 
-      "somepeers" usebundle => cfe_mustache_makefile_string
+      "somepeers" usebundle => file_mustache_jsonstring
       (
         "$(this.promise_filename).mustache",
         '{ "peers": [ "a", "b", "c", "$(sys.fqhost)" ] }',
         "$(G.testfile).somepeers"
       );
 
-      "allpeers" usebundle => cfe_mustache_makefile_string
+      "allpeers" usebundle => file_mustache_jsonstring
       (
         "$(this.promise_filename).mustache",
         '{ "peers": [ "$(sys.fqhost)", "$(sys.fqhost)", "$(sys.fqhost)", "$(sys.fqhost)" ] }',

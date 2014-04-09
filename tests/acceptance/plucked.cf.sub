@@ -625,6 +625,15 @@ body copy_from backup_local_cp(from)
       copy_backup => "timestamp";
 }
 
+body link_from linkfrom(source, type)
+# @brief Make any kind of link to a file
+# @param source link to this
+# @param type the link's type (`symlink` or `hardlink`)
+{
+      source => $(source);
+      link_type => $(type);
+}
+
 body perms m(mode)
 # @brief Set the file mode
 # @param mode The new mode
@@ -641,22 +650,6 @@ body perms mog(mode,user,group)
       owners => { "$(user)" };
       groups => { "$(group)" };
       mode   => "$(mode)";
-}
-
-body perms test_aware_mog(mode, user, group)
-# @brief Set the file's mode, owner and group based on the `test` class
-# @param mode The new mode
-# @param user The username of the new owner (if `test`, `$(this.promiser_uid)`)
-# @param group The group name (if `test`, `$(this.promiser_gid)`)
-{
-    any::
-      mode   => "$(mode)";
-    not_test::
-      owners => { "$(user)" };
-      groups => { "$(group)" };
-    test::
-      owners => { $(this.promiser_uid) };
-      groups => { $(this.promiser_gid) };
 }
 
 body depth_search recurse(d)
@@ -717,7 +710,7 @@ body changes all_changes
       update_hashes  => "yes";
 }
 
-bundle agent cfe_mustache_makefile(mustache_file, json_file, target_file)
+bundle agent file_mustache(mustache_file, json_file, target_file)
 # @brief Make a file from a Mustache template and a JSON file
 # @param mustache_file the file with the Mustache template
 # @param json_file a file with JSON data
@@ -727,7 +720,7 @@ bundle agent cfe_mustache_makefile(mustache_file, json_file, target_file)
 #
 # ```cf3
 # methods:
-#      "m" usebundle => cfe_mustache_makefile("x.mustache", "y.json", "z.txt");
+#      "m" usebundle => file_mustache("x.mustache", "y.json", "z.txt");
 # ```
 {
   files:
@@ -738,7 +731,7 @@ bundle agent cfe_mustache_makefile(mustache_file, json_file, target_file)
       template_method => "mustache";
 }
 
-bundle agent cfe_mustache_makefile_string(mustache_file, json_string, target_file)
+bundle agent file_mustache_jsonstring(mustache_file, json_string, target_file)
 # @brief Make a file from a Mustache template and a JSON string
 # @param mustache_file the file with the Mustache template
 # @param json_string a string with JSON data
@@ -748,7 +741,7 @@ bundle agent cfe_mustache_makefile_string(mustache_file, json_string, target_fil
 #
 # ```cf3
 # methods:
-#      "m" usebundle => cfe_mustache_makefile_string("x.mustache", '{ "x": "y" }', "z.txt");
+#      "m" usebundle => file_mustache_jsonstring("x.mustache", '{ "x": "y" }', "z.txt");
 # ```
 {
   files:
@@ -759,7 +752,7 @@ bundle agent cfe_mustache_makefile_string(mustache_file, json_string, target_fil
       template_method => "mustache";
 }
 
-bundle agent cfe_tidy(file)
+bundle agent file_tidy(file)
 # @brief Remove a file
 # @param file to remove
 #
@@ -767,7 +760,7 @@ bundle agent cfe_tidy(file)
 #
 # ```cf3
 # methods:
-#      "" usebundle => cfe_tidy("/tmp/z.txt");
+#      "" usebundle => file_tidy("/tmp/z.txt");
 # ```
 {
   files:
@@ -778,7 +771,7 @@ bundle agent cfe_tidy(file)
       "$(this.bundle): deleting $(file) with delete => tidy";
 }
 
-bundle agent cfe_syncdir(from, to)
+bundle agent dir_sync(from, to)
 # @brief Synchronize a directory entire, deleting unknown files
 # @param from source directory
 # @param to destination directory
@@ -787,21 +780,21 @@ bundle agent cfe_syncdir(from, to)
 #
 # ```cf3
 # methods:
-#      "" usebundle => cfe_syncdir("/tmp", "/var/tmp");
+#      "" usebundle => dir_sync("/tmp", "/var/tmp");
 # ```
 {
   files:
       "$(to)/."
       create => "true",
       depth_search => recurse("inf"),
-      copy_from => cfe_copyfrom_sync($(from));
+      copy_from => copyfrom_sync($(from));
 
   reports:
     inform_mode|EXTRA::
       "$(this.bundle): copying directory $(from) to $(to)";
 }
 
-bundle agent cfe_copyfile(from, to)
+bundle agent file_copy(from, to)
 # @brief Copy a file
 # @param from source file
 # @param to destination file
@@ -810,20 +803,20 @@ bundle agent cfe_copyfile(from, to)
 #
 # ```cf3
 # methods:
-#      "" usebundle => cfe_copyfile("/tmp/z.txt", "/var/tmp/y.txt");
+#      "" usebundle => file_copy("/tmp/z.txt", "/var/tmp/y.txt");
 # ```
 {
   files:
       "$(to)"
       create => "true",
-      copy_from => cfe_copyfrom_sync($(from));
+      copy_from => copyfrom_sync($(from));
 
   reports:
     inform_mode|EXTRA::
       "$(this.bundle): copying file $(from) to $(to)";
 }
 
-body copy_from cfe_copyfrom_sync(f)
+body copy_from copyfrom_sync(f)
 # @brief Copy a directory or file with digest checksums, preserving attributes and purging leftovers
 # @param f the file or directory
 {
@@ -834,7 +827,7 @@ body copy_from cfe_copyfrom_sync(f)
       compare => "digest";
 }
 
-bundle agent cfe_makefile(file, str)
+bundle agent file_make(file, str)
 # @brief Make a file from a string
 # @param file target
 # @param str the string data
@@ -843,7 +836,7 @@ bundle agent cfe_makefile(file, str)
 #
 # ```cf3
 # methods:
-#      "" usebundle => cfe_makefile("/tmp/z.txt", "Some text
+#      "" usebundle => file_make("/tmp/z.txt", "Some text
 # and some more text here");
 # ```
 {
@@ -858,7 +851,7 @@ bundle agent cfe_makefile(file, str)
       "$(this.bundle): creating $(file) with contents '$(str)'";
 }
 
-bundle agent cfe_emptyfile(file)
+bundle agent file_empty(file)
 # @brief Make an empty file
 # @param file target
 #
@@ -866,7 +859,7 @@ bundle agent cfe_emptyfile(file)
 #
 # ```cf3
 # methods:
-#      "" usebundle => cfe_emptyfile("/tmp/z.txt");
+#      "" usebundle => file_empty("/tmp/z.txt");
 # ```
 {
   files:
@@ -879,7 +872,7 @@ bundle agent cfe_emptyfile(file)
       "$(this.bundle): creating empty $(file) with 0 size";
 }
 
-bundle agent cfe_hardlinkfile(target, link)
+bundle agent file_hardlink(target, link)
 # @brief Make a hard link to a file
 # @param target of link
 # @param link the hard link's location
@@ -888,20 +881,20 @@ bundle agent cfe_hardlinkfile(target, link)
 #
 # ```cf3
 # methods:
-#      "" usebundle => cfe_hardlinkfile("/tmp/z.txt", "/tmp/z.link");
+#      "" usebundle => file_hardlink("/tmp/z.txt", "/tmp/z.link");
 # ```
 {
   files:
       "$(link)"
       move_obstructions => "true",
-      link_from => cfe_linkfrom($(target), "hardlink");
+      link_from => linkfrom($(target), "hardlink");
 
   reports:
     inform_mode|EXTRA::
       "$(this.bundle): $(link) will be a hard link to $(target)";
 }
 
-bundle agent cfe_linkfile(target, link)
+bundle agent file_link(target, link)
 # @brief Make a symlink to a file
 # @param target of symlink
 # @param link the symlink's location
@@ -910,24 +903,15 @@ bundle agent cfe_linkfile(target, link)
 #
 # ```cf3
 # methods:
-#      "" usebundle => cfe_linkfile("/tmp/z.txt", "/tmp/z.link");
+#      "" usebundle => file_link("/tmp/z.txt", "/tmp/z.link");
 # ```
 {
   files:
       "$(link)"
       move_obstructions => "true",
-      link_from => cfe_linkfrom($(target), "symlink");
+      link_from => linkfrom($(target), "symlink");
 
   reports:
     inform_mode|EXTRA::
       "$(this.bundle): $(link) will be a symlink to $(target)";
-}
-
-body link_from cfe_linkfrom(source, type)
-# @brief Make any kind of link to a file
-# @param source link to this
-# @param type the link's type (`symlink` or `hardlink`)
-{
-      source => $(source);
-      link_type => $(type);
 }

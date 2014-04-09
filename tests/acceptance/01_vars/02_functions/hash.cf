@@ -27,7 +27,7 @@ the hash function!";';
 ";
 
   methods:
-      "make $(strings)" usebundle => cfe_makefile("$(G.testfile).$(strings).txt", "$(base_$(strings))");
+      "make $(strings)" usebundle => file_make("$(G.testfile).$(strings).txt", "$(base_$(strings))");
 }
 
 #######################################################

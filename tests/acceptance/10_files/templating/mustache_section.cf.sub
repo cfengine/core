@@ -8,7 +8,7 @@ body common control
 bundle agent test
 {
   methods:
-      "m" usebundle => cfe_mustache_makefile_string("$(this.promise_filename).mustache",
-                                                    '{ "x": "y" }',
-                                                    "$(sys.workdir)/state/out.txt");
+      "m" usebundle => file_mustache_jsonstring("$(this.promise_filename).mustache",
+                                                '{ "x": "y" }',
+                                                "$(sys.workdir)/state/out.txt");
 }

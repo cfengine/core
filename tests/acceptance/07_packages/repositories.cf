@@ -11,7 +11,7 @@ body common control
 bundle agent init
 {
   methods:
-      "make" usebundle => cfe_makefile("$(G.testfile).expected",
+      "make" usebundle => file_make("$(G.testfile).expected",
                                        "
 filerepo DELETE delete-exact-version-2.2.3.i386.rpm
 filerepo ADD $(G.cwd)/./07_packages/test_repository/install-greaterthan-version-2.2.3.i386.rpm

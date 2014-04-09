@@ -53,7 +53,7 @@
                 - timestamp key is epoch of last time validated
         - cf-promises when run without --full-check (-c) no longer errors on missing bodies
         - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
-          (Redmine #3734).
+          (Redmine #3734).  The "suse" lowercase version is also provided for convenience (Redmine #5417).
         - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
         - including the same file multiple times in 'body control inputs' is not an error
         - portnumber in body copy_from now supports service names like

@@ -617,14 +617,14 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         char arg0[PATH_MAX];
-        size_t ret2 = CommandArg0_bound(arg0, CFRUNCOMMAND, sizeof(arg0));
-        if (ret2 == (size_t) -1)
+        size_t zret = CommandArg0_bound(arg0, CFRUNCOMMAND, sizeof(arg0));
+        if (zret == (size_t) -1)
         {
             goto protocol_error;
         }
 
-        ret2 = PreprocessRequestPath(arg0, sizeof(arg0));
-        if (ret2 == (size_t) -1)
+        zret = PreprocessRequestPath(arg0, sizeof(arg0));
+        if (zret == (size_t) -1)
         {
             goto protocol_error;
         }
@@ -679,17 +679,17 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         /* TODO batch all the following in one function since it's very
          * similar in all of GET, OPENDIR and STAT. */
 
-        ret = ShortcutsExpand(filename, sizeof(filename),
-                              SV.path_shortcuts,
-                              conn->ipaddr, conn->revdns,
-                              KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-        if (ret == (size_t) -1)
+        size_t zret = ShortcutsExpand(filename, sizeof(filename),
+                                     SV.path_shortcuts,
+                                     conn->ipaddr, conn->revdns,
+                                     KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        if (zret == (size_t) -1)
         {
             goto protocol_error;
         }
 
-        ret = PreprocessRequestPath(filename, sizeof(filename));
-        if (ret == (size_t) -1)
+        zret = PreprocessRequestPath(filename, sizeof(filename));
+        if (zret == (size_t) -1)
         {
             goto protocol_error;
         }
@@ -740,17 +740,17 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         /* sizeof()-1 because we need one extra byte for
            appending '/' afterwards. */
-        ret = ShortcutsExpand(filename, sizeof(filename) - 1,
-                              SV.path_shortcuts,
-                              conn->ipaddr, conn->revdns,
-                              KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-        if (ret == (size_t) -1)
+        size_t zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+                                      SV.path_shortcuts,
+                                      conn->ipaddr, conn->revdns,
+                                      KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        if (zret == (size_t) -1)
         {
             goto protocol_error;
         }
 
-        ret = PreprocessRequestPath(filename, sizeof(filename) - 1);
-        if (ret == (size_t) -1)
+        zret = PreprocessRequestPath(filename, sizeof(filename) - 1);
+        if (zret == (size_t) -1)
         {
             goto protocol_error;
         }
@@ -803,17 +803,17 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         /* sizeof()-1 because we need one extra byte for
            appending '/' afterwards. */
-        ret = ShortcutsExpand(filename, sizeof(filename) - 1,
-                              SV.path_shortcuts,
-                              conn->ipaddr, conn->revdns,
-                              KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-        if (ret == (size_t) -1)
+        size_t zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+                                      SV.path_shortcuts,
+                                      conn->ipaddr, conn->revdns,
+                                      KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        if (zret == (size_t) -1)
         {
             goto protocol_error;
         }
 
-        ret = PreprocessRequestPath(filename, sizeof(filename) - 1);
-        if (ret == (size_t) -1)
+        zret = PreprocessRequestPath(filename, sizeof(filename) - 1);
+        if (zret == (size_t) -1)
         {
             RefuseAccess(conn, recvbuffer);
             return true;

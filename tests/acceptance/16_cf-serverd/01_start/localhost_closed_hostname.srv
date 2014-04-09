@@ -28,7 +28,7 @@ bundle server access_rules()
 {
   access:
       "$(G.testdir)/source_file"
-        admit   => { "0.0.0.0/0" },  # admit everyone
-        deny    => { "localhost" };  # deny is stronger than admit
+        admit   => { "0.0.0.0/0" },                           # admit everyone
+        deny    => { "localhost", "localhost.localdomain" };  # deny is stronger than admit
 }
 

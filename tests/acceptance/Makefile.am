@@ -5,15 +5,15 @@ AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
 
 noinst_PROGRAMS =
 
-noinst_LTLIBRARIES = libmock-package-manager.la
-libmock_package_manager_la_SOURCES = mock-package-manager.c
+noinst_LTLIBRARIES = libmock_package_manager.la
+libmock_package_manager_la_SOURCES = mock_package_manager.c
 libmock_package_manager_la_LIBADD = ../../libpromises/libpromises.la
 
 if !BUILTIN_EXTENSIONS
-noinst_PROGRAMS += mock-package-manager
+noinst_PROGRAMS += mock_package_manager
 
 mock_package_manager_SOURCES =
-mock_package_manager_LDADD = libmock-package-manager.la
+mock_package_manager_LDADD = libmock_package_manager.la
 endif # !BUILTIN_EXTENSIONS
 
 if HAVE_LIBXML2
@@ -34,7 +34,7 @@ TESTS_ENVIRONMENT = env \
 	CF_PROMISES=`pwd`/../../cf-promises/cf-promises \
 	CF_SERVERD=`pwd`/../../cf-serverd/cf-serverd \
 	CF_KEY=`pwd`/../../cf-key/cf-key \
-	MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager
+	MOCK_PACKAGE_MANAGER=`pwd`/mock_package_manager
 if !HAVE_LIBXML2
 TESTS_ENVIRONMENT += LIBXML2_TESTS=0
 endif

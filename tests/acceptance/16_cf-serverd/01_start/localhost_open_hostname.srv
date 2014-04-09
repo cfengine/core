@@ -28,6 +28,6 @@ bundle server access_rules()
 {
   access:
       "$(G.testdir)/source_file"
-        admit   => { "localhost" };
+        admit   => { "localhost", "localhost.localdomain" };
 }
 

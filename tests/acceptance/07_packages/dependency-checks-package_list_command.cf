@@ -26,6 +26,10 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      # Windows has its own mechanism to list packages, and doesn't use the package body.
+      "test_skip_unsupported" string => "windows";
+
   packages:
       "bash-1.0-amd64"
       package_policy => "add",

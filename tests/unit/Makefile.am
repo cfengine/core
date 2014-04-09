@@ -328,9 +328,11 @@ endif
 
 version_test_SOURCES = version_test.c
 
-hash_test_SOURCES = hash_test.c ../../libutils/libutils.la
+hash_test_SOURCES = hash_test.c
+hash_test_LDADD = ../../libutils/libutils.la
 
-key_test_SOURCES = key_test.c ../../libutils/libutils.la
+key_test_SOURCES = key_test.c
+key_test_LDADD = ../../libutils/libutils.la
 
 strlist_test_SOURCES = strlist_test.c ../../cf-serverd/strlist.c ../../cf-serverd/strlist.h
 

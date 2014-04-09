@@ -335,14 +335,16 @@ static void *HandleConnection(void *c)
              * (or maxconnections/3) consecutive connections, because none of
              * the existing threads finished. */
             Log(LOG_LEVEL_CRIT,
-                "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
+                "Server seems to be paralyzed. DOS attack? "
+                "Committing apoptosis...");
             FatalError(conn->ctx, "Terminating");
         }
         TRIES++;
         ThreadUnlock(cft_server_children);
 
         Log(LOG_LEVEL_ERR,
-            "Too many threads (%d > %d), dropping connection! Increase server maxconnections?",
+            "Too many threads (%d > %d), dropping connection! "
+            "Increase server maxconnections?",
             ACTIVE_THREADS, CFD_MAXPROCESSES);
 
         DeleteConn(conn);
@@ -406,6 +408,28 @@ static void *HandleConnection(void *c)
     /* =========================  MAIN LOOPS  ========================= */
     if (protocol_version >= CF_PROTOCOL_TLS)
     {
+        /* New protocol does DNS reverse look up of the connected
+         * IP address, to check hostname access_rules. */
+        if (NEED_REVERSE_LOOKUP)
+        {
+            ret = getnameinfo((const struct sockaddr *) &conn->conn_info->ss,
+                              conn->conn_info->ss_len,
+                              conn->revdns, sizeof(conn->revdns),
+                              NULL, 0, NI_NAMEREQD);
+            if (ret != 0)
+            {
+                Log(LOG_LEVEL_INFO,
+                    "Reverse lookup failed (getnameinfo: %s)!",
+                    gai_strerror(ret));
+            }
+            else
+            {
+                Log(LOG_LEVEL_INFO,
+                    "Hostname (reverse looked up): %s",
+                    conn->revdns);
+            }
+        }
+
         while (BusyWithNewProtocol(conn->ctx, conn))
         {
         }
@@ -459,6 +483,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     conn->session_key = NULL;
     conn->encryption_type = 'c';
     conn->maproot = false;      /* Only public files (chmod o+r) accessible */
+    conn->revdns[0] = '\0';
 
     Log(LOG_LEVEL_DEBUG, "New socket %d", ConnectionInfoSocket(info));
 

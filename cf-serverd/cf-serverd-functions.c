@@ -280,9 +280,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     CfLock thislock;
     extern int COLLECT_WINDOW;
 
-    struct sockaddr_storage cin;
-    socklen_t addrlen = sizeof(cin);
-
     MakeSignalPipe();
 
     signal(SIGINT, HandleSignalsForDaemon);
@@ -429,23 +426,30 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
                 if (FD_ISSET(sd, &rset))
                 {
-                    int new_client = accept(sd, (struct sockaddr *)&cin, &addrlen);
-                    if (new_client == -1)
+                    /* TODO embed ConnectionInfo into ServerConnectionState. */
+                    ConnectionInfo *info = ConnectionInfoNew();
+                    if (info == NULL)
                     {
                         continue;
                     }
+
+                    info->ss_len = sizeof(info->ss);
+                    info->sd = accept(sd, (struct sockaddr *) &info->ss,
+                                      &info->ss_len);
+
+                    if (info->sd == -1)
+                    {
+                        ConnectionInfoDestroy(&info);
+                        continue;
+                    }
+
                     /* Just convert IP address to string, no DNS lookup. */
                     char ipaddr[CF_MAX_IP_LEN] = "";
-                    getnameinfo((struct sockaddr *) &cin, addrlen,
+                    getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
                                 ipaddr, sizeof(ipaddr),
                                 NULL, 0, NI_NUMERICHOST);
 
-                    ConnectionInfo *info = ConnectionInfoNew();
-                    if (info)
-                    {
-                        ConnectionInfoSetSocket(info, new_client);
-                        ServerEntryPoint(ctx, ipaddr, info);
-                    }
+                    ServerEntryPoint(ctx, ipaddr, info);
                 }
             }
         }
@@ -545,7 +549,9 @@ int OpenReceiverChannel(void)
         if (setsockopt(sd, SOL_SOCKET, SO_LINGER,
                        &cflinger, sizeof(cflinger)) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Socket option SO_LINGER was not accepted. (setsockopt: %s)", GetErrorStr());
+            Log(LOG_LEVEL_ERR,
+                "Socket option SO_LINGER was not accepted. (setsockopt: %s)",
+                GetErrorStr());
             exit(EXIT_FAILURE);
         }
 
@@ -648,6 +654,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             SV.allowlegacyconnects = NULL;
 
             /* New ACLs */
+            NEED_REVERSE_LOOKUP = false;
             acl_Free(paths_acl);    paths_acl = NULL;
             acl_Free(classes_acl);  classes_acl = NULL;
             acl_Free(vars_acl);     vars_acl = NULL;

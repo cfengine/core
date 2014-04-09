@@ -636,7 +636,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
          * request, rather than only the arguments. */
 
         if (acl_CheckPath(paths_acl, arg0,
-                          conn->ipaddr, conn->hostname,
+                          conn->ipaddr, conn->revdns,
                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {
@@ -681,7 +681,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         ret = ShortcutsExpand(filename, sizeof(filename),
                               SV.path_shortcuts,
-                              conn->ipaddr, conn->hostname,
+                              conn->ipaddr, conn->revdns,
                               KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (ret == (size_t) -1)
         {
@@ -700,7 +700,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             "Translated to:", "GET", filename);
 
         if (acl_CheckPath(paths_acl, filename,
-                          conn->ipaddr, conn->hostname,
+                          conn->ipaddr, conn->revdns,
                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {
@@ -742,7 +742,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
            appending '/' afterwards. */
         ret = ShortcutsExpand(filename, sizeof(filename) - 1,
                               SV.path_shortcuts,
-                              conn->ipaddr, conn->hostname,
+                              conn->ipaddr, conn->revdns,
                               KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (ret == (size_t) -1)
         {
@@ -762,7 +762,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             "Translated to:", "OPENDIR", filename);
 
         if (acl_CheckPath(paths_acl, filename,
-                          conn->ipaddr, conn->hostname,
+                          conn->ipaddr, conn->revdns,
                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {
@@ -805,7 +805,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
            appending '/' afterwards. */
         ret = ShortcutsExpand(filename, sizeof(filename) - 1,
                               SV.path_shortcuts,
-                              conn->ipaddr, conn->hostname,
+                              conn->ipaddr, conn->revdns,
                               KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (ret == (size_t) -1)
         {
@@ -832,7 +832,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             "Translated to:", "STAT", filename);
 
         if (acl_CheckPath(paths_acl, filename,
-                          conn->ipaddr, conn->hostname,
+                          conn->ipaddr, conn->revdns,
                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {
@@ -874,7 +874,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         /* TODO if this is literals_acl, then when should I check vars_acl? */
         if (acl_CheckExact(literals_acl, var,
-                           conn->ipaddr, conn->hostname,
+                           conn->ipaddr, conn->revdns,
                            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {
@@ -919,7 +919,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
                     struct resource_acl *racl = &classes_acl->acls[i];
 
                     /* Does this ACL apply to this host? */
-                    if (access_CheckResource(racl, conn->ipaddr, conn->hostname,
+                    if (access_CheckResource(racl, conn->ipaddr, conn->revdns,
                                              KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
                         == true)
                     {
@@ -960,7 +960,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         if (acl_CheckExact(query_acl, name,
-                           conn->ipaddr, conn->hostname,
+                           conn->ipaddr, conn->revdns,
                            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {
@@ -979,7 +979,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_CALL_ME_BACK:
 
         if (acl_CheckExact(query_acl, "collect_calls",
-                           conn->ipaddr, conn->hostname,
+                           conn->ipaddr, conn->revdns,
                            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {

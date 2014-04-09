@@ -718,24 +718,41 @@ static enum admit_type AdmitType(const char *s)
     }
 }
 
+bool NEED_REVERSE_LOOKUP = false;
+
 static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
 {
     size_t ret;
 
     switch (AdmitType(entry))
     {
+
     case ADMIT_TYPE_IP:
         /* TODO convert IP string to binary representation. */
         ret = StrList_Append(&ad->ips, entry);
         break;
+
     case ADMIT_TYPE_KEY:
         ret = StrList_Append(&ad->keys, entry);
         break;
+
     case ADMIT_TYPE_HOSTNAME:
         /* TODO clean up possible regex, if it starts with ".*"
          * then store two entries: entry, and *dot*entry. */
         ret = StrList_Append(&ad->hostnames, entry);
+
+        /* If any hostname rule is present, we set a global flag to turn on
+         * reverse DNS lookup in the new protocol. */
+        if (!NEED_REVERSE_LOOKUP)
+        {
+            Log(LOG_LEVEL_INFO,
+                "Found hostname admit/deny access_rules, "
+                "turning on reverse DNS lookups on every connection");
+            NEED_REVERSE_LOOKUP = true;
+        }
+
         break;
+
     default:
         Log(LOG_LEVEL_WARNING,
             "Access rule 'admit: %s' is not IP, hostname or key, ignoring",

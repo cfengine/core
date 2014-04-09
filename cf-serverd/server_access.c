@@ -37,13 +37,11 @@ bool access_CheckResource(const struct resource_acl *acl,
     assert(ipaddr != NULL);
     assert(key != NULL);
 
-    size_t pos = (size_t) -1;
     bool access = false;                                 /* DENY by default */
 
     /* First we check for admission, secondly for denial, so that denial takes
      * precedence. */
 
-    const char *rule;
     if (acl->admit.ips)
     {
         /* Still using legacy code here, doing linear search over all IPs in
@@ -52,7 +50,7 @@ bool access_CheckResource(const struct resource_acl *acl,
          * subnet length.
          */
 
-        bool found_rule = false;
+        const char *rule = NULL;
         for (int i = 0; i < StrList_Len(acl->admit.ips); i++)
         {
             if (FuzzySetMatch(StrList_At(acl->admit.ips, i),
@@ -62,37 +60,27 @@ bool access_CheckResource(const struct resource_acl *acl,
                 StringMatchFull(StrList_At(acl->admit.ips, i),
                                 MapAddress(ipaddr)))
             {
-                found_rule = true;
                 rule = StrList_At(acl->admit.ips, i);
                 break;
             }
         }
 
-        if (found_rule)
+        if (rule != NULL)
         {
-            Log(LOG_LEVEL_DEBUG, "access_Check: admit IP: %s", rule);
+            Log(LOG_LEVEL_DEBUG,
+                "Admit IP due to rule: %s",
+                rule);
             access = true;
         }
     }
-    if (!access && acl->admit.keys != NULL)
+    if (!access && acl->admit.hostnames != NULL &&
+        hostname != NULL && *hostname != '\0')
     {
-        bool ret = StrList_BinarySearch(acl->admit.keys, key, &pos);
-        if (ret)
-        {
-            rule = acl->admit.keys->list[pos]->str;
-            Log(LOG_LEVEL_DEBUG, "access_Check: admit key: %s", rule);
-            access = true;
-        }
-    }
-    if (!access && acl->admit.hostnames != NULL && hostname != NULL)
-    {
-        size_t hostname_len = strlen(hostname);
-        size_t pos = StrList_SearchForPrefix(acl->admit.hostnames,
-                                             hostname, hostname_len,
-                                             false);
+        size_t pos = StrList_SearchLongestPrefix(acl->admit.hostnames,
+                                                 hostname, 0,
+                                                 '.', false);
 
         /* === Legacy regex matching, slow, TODO DEPRECATE === */
-        bool regex_match = false;
         if (pos == (size_t) -1)
         {
             for (int i = 0; i < StrList_Len(acl->admit.hostnames); i++)
@@ -105,27 +93,35 @@ bool access_CheckResource(const struct resource_acl *acl,
                 }
             }
         }
-        /* ===   === */
+        /* =================================================== */
 
         if (pos != (size_t) -1)
         {
-            rule            = acl->admit.hostnames->list[pos]->str;
-            size_t rule_len = acl->admit.hostnames->list[pos]->len;
-            /* The rule in the access list has to be an exact match, or be a
-             * subdomain match (i.e. the rule begins with '.') or a regex. */
-            if (rule_len == hostname_len || rule[0] == '.' || regex_match)
-            {
-                Log(LOG_LEVEL_DEBUG, "access_Check: admit hostname: %s", rule);
-                access = true;
-            }
+            Log(LOG_LEVEL_DEBUG,
+                "Admit hostname due to rule: %s",
+                StrList_At(acl->admit.hostnames, pos));
+            access = true;
         }
     }
+    if (!access && acl->admit.keys != NULL)
+    {
+        size_t pos;
+        bool ret = StrList_BinarySearch(acl->admit.keys, key, &pos);
+        if (ret)
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "Admit key due to rule: %s",
+                StrList_At(acl->admit.keys, pos));
+            access = true;
+        }
+    }
+
 
     /* If access has been granted, we might need to deny it based on ACL. */
 
     if (access && acl->deny.ips != NULL)
     {
-        bool found_rule = false;
+        const char *rule = NULL;
         for (int i = 0; i < StrList_Len(acl->deny.ips); i++)
         {
             if (FuzzySetMatch(StrList_At(acl->deny.ips, i),
@@ -135,36 +131,27 @@ bool access_CheckResource(const struct resource_acl *acl,
                 StringMatchFull(StrList_At(acl->deny.ips, i),
                                 MapAddress(ipaddr)))
             {
-                found_rule = true;
-                rule = acl->deny.ips->list[i]->str;
+                rule = StrList_At(acl->deny.ips, i);
                 break;
             }
         }
 
-        if (found_rule)
+        if (rule != NULL)
         {
-            Log(LOG_LEVEL_DEBUG, "access_Check: deny IP: %s", rule);
+            Log(LOG_LEVEL_DEBUG,
+                "Deny IP due to rule: %s",
+                rule);
             access = false;
         }
     }
-    if (access && acl->deny.keys != NULL)
+    if (access && acl->deny.hostnames != NULL &&
+        hostname != NULL && *hostname != '\0')
     {
-        bool ret = StrList_BinarySearch(acl->deny.keys, key, &pos);
-        if (ret)
-        {
-            rule = StrList_At(acl->deny.keys, pos);
-            Log(LOG_LEVEL_DEBUG, "access_Check: deny key: %s", rule);
-            access = false;
-        }
-    }
-    if (access && acl->deny.hostnames != NULL && hostname != NULL)
-    {
-        size_t hostname_len = strlen(hostname);
-        size_t pos = StrList_SearchForPrefix(acl->deny.hostnames,
-                                             hostname, hostname_len,
-                                             false);
+        size_t pos = StrList_SearchLongestPrefix(acl->deny.hostnames,
+                                                 hostname, 0,
+                                                 '.', false);
+
         /* === Legacy regex matching, slow, TODO DEPRECATE === */
-        bool regex_match = false;
         if (pos == (size_t) -1)
         {
             for (int i = 0; i < StrList_Len(acl->deny.hostnames); i++)
@@ -177,19 +164,26 @@ bool access_CheckResource(const struct resource_acl *acl,
                 }
             }
         }
-        /* ===   === */
+        /* =================================================== */
 
         if (pos != (size_t) -1)
         {
-            rule            = acl->deny.hostnames->list[pos]->str;
-            size_t rule_len = acl->deny.hostnames->list[pos]->len;
-            /* The rule in the access list has to be an exact match, or be a
-             * subdomain match (i.e. the rule begins with '.') or a regex. */
-            if (rule_len == hostname_len || rule[0] == '.' || regex_match)
-            {
-                Log(LOG_LEVEL_DEBUG, "access_Check: deny hostname: %s", rule);
-                access = false;
-            }
+            Log(LOG_LEVEL_DEBUG,
+                "Deny hostname due to rule: %s",
+                StrList_At(acl->deny.hostnames, pos));
+            access = false;
+        }
+    }
+    if (access && acl->deny.keys != NULL)
+    {
+        size_t pos;
+        bool ret = StrList_BinarySearch(acl->deny.keys, key, &pos);
+        if (ret)
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "Deny key due to rule: %s",
+                StrList_At(acl->deny.keys, pos));
+            access = false;
         }
     }
 

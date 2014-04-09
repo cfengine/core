@@ -98,6 +98,7 @@ struct ServerConnectionState_
     ConnectionInfo *conn_info;
     /* TODO sockaddr_storage, even though we can keep the text as cache. */
     char ipaddr[CF_MAX_IP_LEN];
+    char revdns[MAXHOSTNAMELEN];
 #ifdef __MINGW32__
     /* We avoid dynamically allocated buffers due to potential memory leaks,
      * but this is still too big at 2K! */
@@ -153,5 +154,6 @@ extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;
 extern ServerAccess SV;
 extern char CFRUNCOMMAND[CF_MAXVARSIZE];
+extern bool NEED_REVERSE_LOOKUP;
 
 #endif

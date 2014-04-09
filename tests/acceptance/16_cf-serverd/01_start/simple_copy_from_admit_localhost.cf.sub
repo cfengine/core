@@ -1,0 +1,62 @@
+#######################################################
+#
+# Test cf-serverd related promises, mtime simple copy localhost
+# The source server has access_rules admit=>{"localhost"}
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      # "$(G.testdir)/dest_file_classic" copy_from => copy_src_file("classic");
+      "$(G.testdir)/dest_file_latest" copy_from => copy_src_file("latest");
+}
+
+#########################################################
+
+body copy_from copy_src_file(protocol_version)
+{
+      source      => "$(G.testdir)/source_file";
+      servers     => { "127.0.0.1" };
+      compare     => "mtime";
+      copy_backup => "false";
+      protocol_version => "$(protocol_version)";
+
+      portnumber => "9884"; # localhost_open_hostname
+
+      #encrypt     => "true";
+      #verify      => "true";
+      #purge       => "false";
+      #type_check  => "true";
+      #force_ipv4  => "true";
+      trustkey => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+  methods:
+      # "any" usebundle => dcs_check_diff("$(G.testdir)/source_file",
+      #                                       "$(G.testdir)/dest_file_classic","$(fn[1])");
+      "any" usebundle => dcs_check_diff("$(G.testdir)/source_file",
+                                            "$(G.testdir)/dest_file_latest","$(fn[1])");
+}

@@ -1,0 +1,68 @@
+#######################################################
+#
+# Test cf-serverd related promises, mtime simple copy localhost
+# The source server has access_rules admit=>{"localhost"}
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      # "$(G.testdir)/dest_file_classic"
+      #   copy_from => copy_src_file("classic"),
+      #   classes => if_repaired("repaired_classic");
+      "$(G.testdir)/dest_file_latest"
+        copy_from => copy_src_file("latest"),
+        classes => if_repaired("repaired_latest");
+}
+
+#########################################################
+
+body copy_from copy_src_file(protocol_version)
+{
+      source      => "$(G.testdir)/source_file";
+      servers     => { "127.0.0.1" };
+      compare     => "mtime";
+      copy_backup => "false";
+      protocol_version => "$(protocol_version)";
+
+      portnumber => "9885"; # localhost_closed_hostname
+
+      #encrypt     => "true";
+      #verify      => "true";
+      #purge       => "false";
+      #type_check  => "true";
+      #force_ipv4  => "true";
+      trustkey => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+  reports:
+
+    !repaired_classic.!repaired_latest::
+      "$(fn[1]) Pass";
+    repaired_classic|repaired_latest::
+      "$(fn[1]) FAIL";
+
+}

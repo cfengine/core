@@ -68,6 +68,9 @@
             - new 'inventory/' structure to provide dmidecode, LSB, etc. system inventory (configured mainly in def.cf)
             - cf_promises_release_id contains the policy release ID which is the GIT HEAD SHA if available or hash of tree
 
+	- The failsafe.cf policy, run on bootstrap and in some other
+	  unusual cases, has been extracted from C code into
+	  libpromises/failsafe.cf
         - New promise type "users" for managing local user accounts.
         - New attribute "allowlegacyconnects" in body server control,
           which enables serving policy via non-latest cfengine protocol,

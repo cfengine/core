@@ -821,7 +821,6 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
     }
 
     manager->pack_list = GetCachedPackageList(ctx, manager, default_arch, a, pp, false);
-    manager->patch_list = GetCachedPackageList(ctx, manager, default_arch, a, pp, true);
 
     if (manager->pack_list != NULL)
     {
@@ -855,6 +854,13 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
     ReportSoftware(INSTALLED_PACKAGE_LISTS);
 
 /* Now get available updates */
+    if (manager->patch_list != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Already have a patch list for this manager ");
+        return true;
+    }
+
+    manager->patch_list = GetCachedPackageList(ctx, manager, default_arch, a, pp, true);
 
     if (manager->patch_list != NULL)
     {

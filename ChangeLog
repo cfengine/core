@@ -13,7 +13,7 @@
             - 'usebundle' promisees are logged for all the bundle promises
             - output from 'reports' promises has nothing prefixed except 'R: '
             - a log line with stack path is generated when the promise type evaluated changes
-        - LMDB is the default database for local data storage
+        - LMDB (symas.com/mdb) is the default database for local data storage : use version 0.9.9 or later
           cf-agent --self-diagnostics (-x) is only implemented for TCDB, not for LMDB
         - port argument in readtcp() and selectservers() may be a
           service name (e.g. "http", "pop3").

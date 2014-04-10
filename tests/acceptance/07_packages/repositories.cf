@@ -10,22 +10,33 @@ body common control
 
 bundle agent init
 {
+  vars:
+      "d" string => "$(const.dirsep)";
+    # Due to shell rules, windows includes certain characters on certain commands,
+    # while Unix does not.
+    windows::
+      "q" string => '"';
+      "s" string => ' ';
+    !windows::
+      "q" string => '';
+      "s" string => '';
+
   methods:
       "make" usebundle => file_make("$(G.testfile).expected",
                                        "
-filerepo DELETE delete-exact-version-2.2.3.i386.rpm
-filerepo ADD $(G.cwd)/./07_packages/test_repository/install-greaterthan-version-2.2.3.i386.rpm
-filerepo ADD $(G.cwd)/./07_packages/test_repository/install-greaterorequal-version-2.2.3.i386.rpm
-filerepo ADD $(G.cwd)/./07_packages/test_repository/install-lessthan-version-2.2.3.i386.rpm
-filerepo ADD $(G.cwd)/./07_packages/test_repository/install-lessorequal-version-2.2.3.i386.rpm
-filerepo ADD $(G.cwd)/./07_packages/test_repository/install-exact-version-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterthan-version-already-greater-installed-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterthan-version-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterorequal-version-already-greater-installed-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterorequal-version-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-lessthan-version-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-lessorequal-version-2.2.3.i386.rpm
-filerepo UPDATE $(G.cwd)/./07_packages/test_repository/update-to-exact-version-2.2.3.i386.rpm");
+$(s)filerepo DELETE delete-exact-version-2.2.3.i386.rpm
+$(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-greaterthan-version-2.2.3.i386.rpm$(q)
+$(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-greaterorequal-version-2.2.3.i386.rpm$(q)
+$(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-lessthan-version-2.2.3.i386.rpm$(q)
+$(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-lessorequal-version-2.2.3.i386.rpm$(q)
+$(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-exact-version-2.2.3.i386.rpm$(q)
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-greaterthan-version-already-greater-installed-2.2.3.i386.rpm$(q)
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-greaterthan-version-2.2.3.i386.rpm$(q)
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-greaterorequal-version-already-greater-installed-2.2.3.i386.rpm$(q)
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-greaterorequal-version-2.2.3.i386.rpm$(q)
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-lessthan-version-2.2.3.i386.rpm$(q)
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-lessorequal-version-2.2.3.i386.rpm$(q)
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-exact-version-2.2.3.i386.rpm$(q)");
 
 }
 

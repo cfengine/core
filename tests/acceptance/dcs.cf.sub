@@ -28,8 +28,10 @@ bundle common G
     any::
       "cmds" slist => { "date", "diff", "colordiff", "echo", "egrep", "false", "grep", "gzip", "hexdump",
                         "ln", "mkdir", "od", "perl", "printf", "pwd", "rm", "sort", "touch",
-                        "true", "wc", "cat", "sed", "psexec", "seq" };
+                        "true", "wc", "cat", "sed", "psexec", "seq", "mock_package_manager" };
 
+    any::
+      "paths[tests]" string                  => "$(this.promise_dirname)";
     !windows::
       "paths[bin]" string                    => "/bin";
       "paths[usr_bin]" string                => "/usr/bin";
@@ -41,7 +43,7 @@ bundle common G
       "paths[msys_bin]" string               => "c:\\msys\\bin";
       "paths[pstools]" string                => "c:\\PSTools";
       "paths[strawberry_perl_bin]" string    => "c:\\strawberry\\perl\\bin";
-      "paths[local]" string                  => "$(this.promise_dirname)\\tool_wrappers";
+      "paths[tool_wrappers]" string          => "$(this.promise_dirname)\\tool_wrappers";
 
     any::
       "paths_indices" slist => getindices("paths");

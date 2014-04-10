@@ -15,6 +15,10 @@ body common control
 
 bundle agent init
 {
+  meta:
+      # Windows has its own mechanism to list packages, and doesn't use the package body.
+      "test_skip_needs_work" string => "windows";
+
   vars:
       "dummy" string => "dummy";
 }

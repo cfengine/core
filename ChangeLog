@@ -206,7 +206,6 @@
         - Removed limitation of input length to internal buffer sizes
 	    - directories ending with "/" are not ignored
 	    - lsdir() always return a list now, never a scalar
-        - cf-serverd stat()s the file tree only when needed, not every second
         - 'abortclasses' fixed to work in common bundles and other cases
         - namespaced 'edit_line' bundles now work (Redmine#3781)
         - lists are interpolated in correct order (Redmine#3122)

@@ -414,7 +414,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
     if (SendTransaction(conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Transmission failed/refused talking to %.255s:%.255s. (stat: %s)",
+        Log(LOG_LEVEL_ERR, "Transmission failed/refused talking to %.255s:%.255s. (stat: %s)",
             conn->this_server, file, GetErrorStr());
         return -1;
     }
@@ -435,7 +435,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
     if (BadProtoReply(recvbuffer))
     {
-        Log(LOG_LEVEL_VERBOSE, "Server returned error: %s",
+        Log(LOG_LEVEL_ERR, "Server returned error '%s'",
             recvbuffer + strlen("BAD: "));
         errno = EPERM;
         return -1;
@@ -634,13 +634,13 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
         if (FailedProtoReply(recvbuffer))
         {
-            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, dirname);
+            Log(LOG_LEVEL_WARNING, "Network access to '%s:%s' denied", conn->this_server, dirname);
             return NULL;
         }
 
         if (BadProtoReply(recvbuffer))
         {
-            Log(LOG_LEVEL_INFO, "%s", recvbuffer + strlen("BAD: "));
+            Log(LOG_LEVEL_WARNING, "%s", recvbuffer + strlen("BAD: "));
             return NULL;
         }
 
@@ -844,7 +844,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
         if ((n_read_total == 0) && (strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
-            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
+            Log(LOG_LEVEL_WARNING, "Network access to '%s:%s' denied", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1021,7 +1021,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if ((n_read_total == 0) && (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
-            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
+            Log(LOG_LEVEL_WARNING, "Network access to '%s:%s' denied", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1043,7 +1043,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if ((value > 0) && (strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0))
         {
-            Log(LOG_LEVEL_INFO, "Network access to cleartext '%s:%s' denied",
+            Log(LOG_LEVEL_WARNING, "Network access to cleartext '%s:%s' denied",
                 conn->this_server, source);
             close(dd);
             free(buf);

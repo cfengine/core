@@ -156,25 +156,24 @@
             - 'bundlesmatching' - returns list of defined bundles matching a regex and tags
             - 'canonifyuniquely' - converts a string into a unique, legal class name
             - 'classesmatching' - returns list of set classes matching a regex and tags
-            - 'eval' - evaluates mathematical expressions
-            - 'findfiles' - returns list of files matching a search pattern
+            - 'eval' - evaluates mathematical expressions; knows SI k, m, g quantifiers, e.g. "100k"
+            - 'findfiles' - list files matching a search pattern; use "**" for recursive searches
             - 'makerule' - evaluates whether a target file needs to be rebuilt from sources
-            - 'sort' - can sort lexicographically, numerically (int or real), by IP, or by MAC
-            - 'max', 'min' - returns maximum and minimum in a container or list (sorted by a
-              'sort' method)
-            - 'mean' - returns numeric mean of a container or list
+            - 'max', 'min' - returns maximum and minimum of the numbers in a container or list
+              (sorted by a 'sort' method)
+            - 'mean' - returns the mean of the numbers in a container or list
+            - 'nth' - learned to look up by key in a data container holding a map
             - 'packagesmatching' - returns a filtered list of installed packages.
+            - 'readfile' - learned to read system files of unknown size like those in /proc
+            - 'sort' - can sort lexicographically, numerically (int or real), by IP, or by MAC
             - 'string_downcase', 'string_upcase' - returns the lower-/upper-case version of a
               string
             - 'string_head', 'string_tail' - returns the beginning/end of a string
             - 'string_length' - returns the length of a string
             - 'string_reverse' - reverses a string
+            - 'string_split' - improved implementation, deprecates 'splitstring'
             - 'variablesmatching' - returns a list of variables matching a regex and tags
             - 'variance' - returns the variance of numbers in a list or container
-            - 'eval' - learned about SI k, m, g quantifiers, e.g. "100k"
-            - 'readfile' - learned to read system files of unknown size like those in /proc
-            - 'nth' - learned to look up by key in a data container holding a map
-            - 'string_split' - improved implementation, deprecates 'splitstring'
         - New hard classes
             - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will
               be deprecated)

@@ -99,8 +99,8 @@ libutils/config.post.h
 tests/acceptance/*.log
 tests/acceptance/.succeeded
 tests/acceptance/workdir
-tests/acceptance/mock-package-manager
-tests/acceptance/mock-package-manager.exe
+tests/acceptance/mock[-_]package[-_]manager
+tests/acceptance/mock[-_]package[-_]manager.exe
 tests/acceptance/xml-c14nize
 tests/acceptance//xml-c14nize.exe
 tests/acceptance/dnswrapper.so

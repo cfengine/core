@@ -851,22 +851,22 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
         }
     }
 
-    ReportSoftware(INSTALLED_PACKAGE_LISTS);
-
-/* Now get available updates */
     if (manager->patch_list != NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Already have a patch list for this manager ");
         return true;
     }
 
-    manager->patch_list = GetCachedPackageList(ctx, manager, default_arch, a, pp, true);
+    ReportSoftware(INSTALLED_PACKAGE_LISTS);
 
+/* Now get available updates */
     if (manager->patch_list != NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "After loading from the cache file, we have a (cached) patch list for this manager ");
         return true;
     }
+
+    manager->patch_list = GetCachedPackageList(ctx, manager, default_arch, a, pp, true);
 
     if (a.packages.package_patch_list_command != NULL)
     {

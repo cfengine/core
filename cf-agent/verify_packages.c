@@ -916,7 +916,10 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
         free(vbuff);
     }
 
-    ReportPatches(INSTALLED_PACKAGE_LISTS); // Enterprise only
+    if (a.packages.package_patch_list_command != NULL)
+    {
+        ReportPatches(INSTALLED_PACKAGE_LISTS); // Enterprise only
+    }
 
     if (LEGACY_OUTPUT)
     {

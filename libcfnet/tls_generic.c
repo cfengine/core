@@ -372,8 +372,8 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
 /**
  * @brief Receives data from the SSL session and stores it on the buffer.
  * @param ssl SSL information.
- * @param buffer Buffer to store received data, at least of size CF_BUFSIZE.
- * @param length Length of the data to receive.
+ * @param buffer Buffer, of size at least CF_BUFSIZE, to store received data.
+ * @param length Length of the data to receive, must be < CF_BUFSIZE.
  * @return The length of the received data, which could be smaller or equal
  *         than the requested or -1 in case of error or 0 if connection was
  *         closed.

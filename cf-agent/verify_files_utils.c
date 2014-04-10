@@ -2408,7 +2408,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     if (cf_stat(attr.copy.source, &ssb, attr.copy, conn) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
              "Can't stat file '%s' in files.copy_from promise", source);
         return PROMISE_RESULT_FAIL;
     }

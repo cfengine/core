@@ -48,7 +48,7 @@ static bool LastRecvTimedOut(void)
 }
 
 /**
- * @brief Recieve up to #toget bytes, plus a '\0', into buffer from sd.
+ * @brief Receive up to #toget bytes, plus a '\0', into buffer from sd.
  * @param sd Socket descriptor
  * @param buffer Buffer into which to read data
  * @param toget Number of bytes to read; a '\0' shall be written after

@@ -372,7 +372,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
 /**
  * @brief Receives data from the SSL session and stores it on the buffer.
  * @param ssl SSL information.
- * @param buffer Buffer to store the received data.
+ * @param buffer Buffer to store received data, at least of size CF_BUFSIZE.
  * @param length Length of the data to receive.
  * @return The length of the received data, which could be smaller or equal
  *         than the requested or -1 in case of error or 0 if connection was
@@ -384,27 +384,29 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
 int TLSRecv(SSL *ssl, char *buffer, int length)
 {
     assert(length > 0);
+    assert(length < CF_BUFSIZE);
 
     int received = SSL_read(ssl, buffer, length);
-    if (received == 0)
-    {
-        if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Remote peer terminated TLS session");
-            return 0;
-        }
-        else
-        {
-            TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "TLS session abruptly closed. SSL_read", received);
-            return 0;
-        }
-    }
     if (received < 0)
     {
         TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_read", received);
         return -1;
     }
+    else if (received == 0)
+    {
+        if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Remote peer terminated TLS session");
+        }
+        else
+        {
+            TLSLogError(ssl, LOG_LEVEL_ERR,
+                        "TLS session abruptly closed. SSL_read", received);
+        }
+    }
+
+    assert(received < CF_BUFSIZE);
+    buffer[received] = '\0';
 
     return received;
 }

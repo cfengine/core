@@ -87,6 +87,10 @@ int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len
 
 /*************************************************************************/
 
+/**
+ *  @return 0 in case of socket closed, -1 in case of other error, or
+ *          >0 the number of bytes read.
+ */
 int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
 {
     char proto[CF_INBAND_OFFSET + 1] = { 0 };

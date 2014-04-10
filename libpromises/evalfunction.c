@@ -4875,6 +4875,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
     if (!s || SeqLength(s) == 0)
     {
         SeqDestroy(s);
+        free(arrayname);
         return FnReturnContext(false);
     }
 

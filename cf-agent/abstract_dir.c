@@ -42,7 +42,7 @@ struct AbstractDir_
 AbstractDir *AbstractDirOpen(const char *dirname, FileCopy fc, AgentConnection *conn)
 {
     AbstractDir *d = xcalloc(1, sizeof(AbstractDir));
-    if (fc.servers == NULL || strcmp(RlistScalarValue(fc.servers), "localhost") == 0)
+    if (conn == NULL)
     {
         d->local_dir = DirOpen(dirname);
         if (d->local_dir == NULL)
@@ -53,6 +53,7 @@ AbstractDir *AbstractDirOpen(const char *dirname, FileCopy fc, AgentConnection *
     }
     else
     {
+        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
         d->list = RemoteDirList(dirname, fc.encrypt, conn);
         if (d->list == NULL)
         {

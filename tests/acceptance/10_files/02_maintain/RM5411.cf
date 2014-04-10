@@ -1,0 +1,31 @@
+# RedMine 5411: segfaults. -*- Mode: cfengine -*-
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/src" create => "true";
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testdir)/dst" copy_from => chained("$(G.testdir)/src");
+}
+
+body copy_from chained(sourcedir)
+{
+      source  => "$(sourcedir)";
+      servers => { "x", "localhost" };
+}
+
+bundle agent check
+{
+  reports: # If we made it this far, we didn't segfault.
+      "$(this.promise_filename) Pass";
+}

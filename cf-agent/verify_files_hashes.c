@@ -223,7 +223,7 @@ int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, 
         return true;
     }
 
-    if ((fc.servers == NULL) || (strcmp(RlistScalarValue(fc.servers), "localhost") == 0))
+    if (conn == NULL)
     {
         HashFile(file1, digest1, CF_DEFAULT_DIGEST);
         HashFile(file2, digest2, CF_DEFAULT_DIGEST);
@@ -241,6 +241,7 @@ int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, 
     }
     else
     {
+        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
         return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
@@ -256,7 +257,7 @@ int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat,
         return true;
     }
 
-    if ((fc.servers == NULL) || (strcmp(RlistScalarValue(fc.servers), "localhost") == 0))
+    if (conn == NULL)
     {
         fd1 = safe_open(file1, O_RDONLY | O_BINARY, 0400);
         fd2 = safe_open(file2, O_RDONLY | O_BINARY, 0400);
@@ -283,6 +284,7 @@ int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat,
     }
     else
     {
+        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
         Log(LOG_LEVEL_DEBUG, "Using network checksum instead");
         return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }

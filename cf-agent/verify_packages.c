@@ -662,50 +662,33 @@ static void InvalidateSoftwareCache(void)
 
    Called by VerifyInstalledPackages
 
-   * calls patch_mode ? GetSoftwarePatchesFilename ? GetSoftwareCacheFilename to get the inventory CSV filename
-   * the reference file is the one from GetSoftwareCacheFilename!!!
-   * respects a.packages.package_list_update_ifelapsed, returns NULL if the reference file is too old
-   * parses the CSV out of the cache file (name, version, arch, manager) with each limited to 250 chars
+   * calls GetSoftwareCacheFilename to get the inventory CSV filename
+   * respects a.packages.package_list_update_ifelapsed, returns NULL if file is too old
+   * parses the CSV out of the file (name, version, arch, manager) with each limited to 250 chars
    * for each line
    * * if architecture is "default", replace it with default_arch
-   * * if the package manager name matches, call PrependPackageItem to append to the list
-   * returns the list
+   * * if the package manager name matches, call PrependPackageItem
 
    @param ctx [in] The evaluation context
    @param manager [in] the PackageManager we want
    @param default_arch [in] the default architecture
    @param a [in] the promise Attributes for this operation
    @param pp [in] the Promise for this operation
-   @param patch_mode [in] whether we're loading patches or packages
    @returns list of PackageItems
 */
 static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manager, const char *default_arch, Attributes a,
-                                         const Promise *pp, bool patch_mode)
+                                         const Promise *pp)
 {
     PackageItem *list = NULL;
-    char fname[CF_BUFSIZE]; // we used to scan the package name into the file 'name' which was bad
-    char reference_fname[CF_BUFSIZE];
-
     char name[CF_MAXVARSIZE], version[CF_MAXVARSIZE], arch[CF_MAXVARSIZE], mgr[CF_MAXVARSIZE], line[CF_BUFSIZE];
     char thismanager[CF_MAXVARSIZE];
     FILE *fin;
     time_t horizon = 24 * 60, now = time(NULL);
     struct stat sb;
 
-    const char* mode_desc = patch_mode ? "patches" : "packages";
+    GetSoftwareCacheFilename(name);
 
-    GetSoftwareCacheFilename(reference_fname);
-
-    if (patch_mode)
-    {
-        GetSoftwarePatchesFilename(fname);
-    }
-    else
-    {
-        GetSoftwareCacheFilename(fname);
-    }
-
-    if (stat(reference_fname, &sb) == -1)
+    if (stat(name, &sb) == -1)
     {
         return NULL;
     }
@@ -718,18 +701,18 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
     if (now - sb.st_mtime < horizon * 60)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Cache reference file '%s' for %s '%s' exists and is sufficiently fresh according to (package_list_update_ifelapsed)", reference_fname, mode_desc, fname);
+            "Cache file '%s' exists and is sufficiently fresh according to (package_list_update_ifelapsed)", name);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Cache reference file '%s' for %s '%s' exists, but it is out of date (package_list_update_ifelapsed)", reference_fname, mode_desc, fname);
+        Log(LOG_LEVEL_VERBOSE, "Cache file '%s' exists, but it is out of date (package_list_update_ifelapsed)", name);
         return NULL;
     }
 
-    if ((fin = fopen(fname, "r")) == NULL)
+    if ((fin = fopen(name, "r")) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Cannot open the %s cache file '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
-            mode_desc, fname, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Cannot open the source log '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
+              name, GetErrorStr());
         return NULL;
     }
 
@@ -744,7 +727,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
         {
             if (ferror(fin))
             {
-                UnexpectedError("Failed to read line %d from stream '%s'", linenumber+1, fname);
+                UnexpectedError("Failed to read line %d from stream '%s'", linenumber+1, name);
                 break;
             }
             else /* feof */
@@ -756,7 +739,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
         int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, mgr);
         if (scancount != 4)
         {
-            Log(LOG_LEVEL_VERBOSE, "Could only read %d values from line %d in %s cache file '%s'", scancount, linenumber, mode_desc, fname);
+            Log(LOG_LEVEL_VERBOSE, "Could only read %d values from line %d in '%s'", scancount, linenumber, name);
         }
 
         /*
@@ -820,11 +803,11 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
         return true;
     }
 
-    manager->pack_list = GetCachedPackageList(ctx, manager, default_arch, a, pp, false);
+    manager->pack_list = GetCachedPackageList(ctx, manager, default_arch, a, pp);
 
     if (manager->pack_list != NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "After loading from the cache file, we have a (cached) package list for this manager ");
+        Log(LOG_LEVEL_VERBOSE, "Already have a (cached) package list for this manager ");
         return true;
     }
 
@@ -851,22 +834,9 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
         }
     }
 
-    if (manager->patch_list != NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Already have a patch list for this manager ");
-        return true;
-    }
-
     ReportSoftware(INSTALLED_PACKAGE_LISTS);
 
 /* Now get available updates */
-    if (manager->patch_list != NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE, "After loading from the cache file, we have a (cached) patch list for this manager ");
-        return true;
-    }
-
-    manager->patch_list = GetCachedPackageList(ctx, manager, default_arch, a, pp, true);
 
     if (a.packages.package_patch_list_command != NULL)
     {

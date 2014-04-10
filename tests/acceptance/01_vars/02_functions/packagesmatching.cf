@@ -48,37 +48,16 @@ bundle agent test
 
   vars:
       "all_packages" data => packagesmatching(".*", ".*", ".*", ".*");
-      "all_string" string => storejson(all_packages);
+      "all_string" string => format("packages = %S", all_packages);
 }
 
 #######################################################
 
 bundle agent check
 {
-  vars:
-      "expected" string => '[
-  {
-    "name": "bfoobar",
-    "version": "1",
-    "arch": "besm6",
-    "method": "printf"
-  }
-]';
-
-  classes:
-    any::
-      "ok" expression => strcmp($(test.all_string), $(expected));
-
-  reports:
-    DEBUG::
-      "package count check '$(test.all_string)' != '$(expected)'"
-      ifvarclass => "!ok";
-
-      "package count check '$(test.all_string)' == '$(expected)'"
-      ifvarclass => "ok";
-
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_check_strcmp($(test.all_string),
+                                       'packages = [{"name":"bfoobar","version":"1","arch":"besm6","method":"printf"}]',
+                                       $(this.promise_filename),
+                                       "no");
 }

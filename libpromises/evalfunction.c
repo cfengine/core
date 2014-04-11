@@ -2788,7 +2788,9 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Function selectservers was promised a list called '%s' but this was not found", listvar);
+        Log(LOG_LEVEL_VERBOSE,
+            "Function selectservers was promised a list called '%s' but this was not found",
+            listvar);
         return FnFailure();
     }
 
@@ -2810,7 +2812,8 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     if (DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function selectservers was promised a list called '%s' but this variable is not a list", listvar);
+            "Function selectservers was promised a list called '%s' but this variable is not a list",
+            listvar);
         free(array_lval);
         return FnFailure();
     }
@@ -2877,8 +2880,6 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
 
             if (strlen(regex) == 0 || StringMatchFull(regex, recvbuf))
             {
-                count++;                                   /* query matches */
-
                 Log(LOG_LEVEL_VERBOSE,
                     "selectservers: Got matching reply from host %s address %s",
                     host, txtaddr);
@@ -2889,12 +2890,12 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                 EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
                                        "source=function,function=selectservers");
                 VarRefDestroy(ref);
+
+                count++;
             }
         }
-        else
+        else                      /* If query is empty, all hosts are added */
         {
-            count++;              /* If query is empty, all hosts are added */
-
             Log(LOG_LEVEL_VERBOSE,
                 "selectservers: Got reply from host %s address %s",
                 host, txtaddr);
@@ -2905,6 +2906,8 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
             EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
                                    "source=function,function=selectservers");
             VarRefDestroy(ref);
+
+            count++;
         }
     }
 

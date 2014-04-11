@@ -60,6 +60,7 @@
 #include <files_lib.h>
 #include <connection_info.h>
 #include <printsize.h>
+#include <csv_parser.h>
 
 #include <math_eval.h>
 
@@ -1328,6 +1329,8 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
         GetSoftwarePatchesFilename(filename);
     }
 
+    Log(LOG_LEVEL_DEBUG, "%s: reading inventory from '%s'", fp->name, filename);
+
     if ((fin = fopen(filename, "r")) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "%s cannot open the %s packages inventory '%s' - "
@@ -1340,13 +1343,10 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
 
     int linenumber = 0;
 
-    size_t line_size = CF_BUFSIZE;
-    char *line = xmalloc(line_size);
-
     for(;;)
     {
-        ssize_t res = CfReadLine(&line, &line_size, fin);
-        if (res == -1)
+        char *line = GetCsvLineNext(fin);
+        if (NULL == line)
         {
             if (!feof(fin))
             {
@@ -1374,29 +1374,31 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
 
         if (StringMatchFull(regex, line))
         {
-            char name[CF_MAXVARSIZE], version[CF_MAXVARSIZE], arch[CF_MAXVARSIZE], method[CF_MAXVARSIZE];
+            Seq *list = SeqParseCsvString(line);
             JsonElement *line_obj = JsonObjectCreate(4);
-            int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, method);
-            if (scancount != 4)
+            if (SeqLength(list) != 4)
             {
-                Log(LOG_LEVEL_ERR, "Line %d from package inventory '%s' did not yield 4 elements", linenumber, filename);
+                Log(LOG_LEVEL_ERR, "Line %d from package inventory '%s' did not yield 4 elements: %s", linenumber, filename, line);
                 JsonDestroy(line_obj);
                 ++linenumber;
+                SeqDestroy(list);
                 continue;
             }
 
-            JsonObjectAppendString(line_obj, "name", name);
-            JsonObjectAppendString(line_obj, "version", version);
-            JsonObjectAppendString(line_obj, "arch", arch);
-            JsonObjectAppendString(line_obj, "method", method);
+            JsonObjectAppendString(line_obj, "name", SeqAt(list, 0));
+            JsonObjectAppendString(line_obj, "version", SeqAt(list, 1));
+            JsonObjectAppendString(line_obj, "arch", SeqAt(list, 2));
+            JsonObjectAppendString(line_obj, "method", SeqAt(list, 3));
+            SeqDestroy(list);
+
             JsonArrayAppendObject(json, line_obj);
         }
 
         ++linenumber;
+        free(line);
     }
 
     fclose(fin);
-    free(line);
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
 

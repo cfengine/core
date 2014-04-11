@@ -49,6 +49,7 @@
 #include <eval_context.h>
 #include <retcode.h>
 #include <known_dirs.h>
+#include <csv_writer.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <cf-windows-functions.h>
 
@@ -687,17 +688,31 @@ static void ReportSoftware(PackageManager *list)
         return;
     }
 
-    for (mp = list; mp != NULL; mp = mp->next)
+    Writer *writer_installed = FileWriter(fout);
+
+    CsvWriter *c = CsvWriterOpen(writer_installed);
+    if (c)
     {
-        for (pi = mp->pack_list; pi != NULL; pi = pi->next)
+        for (mp = list; mp != NULL; mp = mp->next)
         {
-            fprintf(fout, "%s,", CanonifyChar(pi->name, ','));
-            fprintf(fout, "%s,", CanonifyChar(pi->version, ','));
-            fprintf(fout, "%s,%s\n", pi->arch, ReadLastNode(RealPackageManager(mp->manager)));
+            for (pi = mp->pack_list; pi != NULL; pi = pi->next)
+            {
+                CsvWriterField(c, pi->name);
+                CsvWriterField(c, pi->version);
+                CsvWriterField(c, pi->arch);
+                CsvWriterField(c, ReadLastNode(RealPackageManager(mp->manager)));
+                CsvWriterNewRecord(c);
+            }
         }
+
+        CsvWriterClose(c);
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Cannot write CSV to file '%s'", name);
     }
 
-    fclose(fout);
+    WriterClose(writer_installed);
 }
 
 /**

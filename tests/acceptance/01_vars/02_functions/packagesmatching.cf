@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test packagesmatching()
+# Test packagesmatching() and that the env prefix is stripped
 #
 #######################################################
 
@@ -18,14 +18,79 @@ bundle agent init
   packages:
       "cfe-no-such-package"
       package_policy => "add",
-      package_method => mock;
+      package_method => mock1;
+
+      "cfe-no-such-package"
+      package_policy => "add",
+      package_method => mock2;
+
+      # the parsing of env X="y z" fails
+
+      # "cfe-no-such-package"
+      # package_policy => "add",
+      # package_method => mock3;
+
+      "cfe-no-such-package"
+      package_policy => "add",
+      package_method => mock4;
 }
 
-body package_method mock
+body package_method mock1
 {
       package_changes => "individual";
 
       package_list_command => "$(G.printf) 'bfoobar-1-besm6'";
+      package_list_name_regex => "^([^-]+)";
+      package_list_version_regex => "^[^-]+-([^-]+)";
+      package_list_arch_regex => "^[^-]+-[^-]+-([\S]+)";
+
+      package_installed_regex => ".*";
+
+      package_add_command => "$(G.false)";
+      package_update_command => "$(G.false)";
+      package_delete_command => "$(G.false)";
+      package_verify_command => "$(G.false)";
+}
+
+body package_method mock2
+{
+      package_changes => "individual";
+
+      package_list_command => "/usr/bin/env $(G.printf) 'bfoobar-1-besm6'";
+      package_list_name_regex => "^([^-]+)";
+      package_list_version_regex => "^[^-]+-([^-]+)";
+      package_list_arch_regex => "^[^-]+-[^-]+-([\S]+)";
+
+      package_installed_regex => ".*";
+
+      package_add_command => "$(G.false)";
+      package_update_command => "$(G.false)";
+      package_delete_command => "$(G.false)";
+      package_verify_command => "$(G.false)";
+}
+
+body package_method mock3
+{
+      package_changes => "individual";
+
+      package_list_command => '/usr/bin/env X="y z" $(G.printf) "bfoobar-1-besm6"';
+      package_list_name_regex => "^([^-]+)";
+      package_list_version_regex => "^[^-]+-([^-]+)";
+      package_list_arch_regex => "^[^-]+-[^-]+-([\S]+)";
+
+      package_installed_regex => ".*";
+
+      package_add_command => "$(G.false)";
+      package_update_command => "$(G.false)";
+      package_delete_command => "$(G.false)";
+      package_verify_command => "$(G.false)";
+}
+
+body package_method mock4
+{
+      package_changes => "individual";
+
+      package_list_command => "/usr/bin/env X=Y $(G.printf) 'bfoobar-1-besm6'";
       package_list_name_regex => "^([^-]+)";
       package_list_version_regex => "^[^-]+-([^-]+)";
       package_list_arch_regex => "^[^-]+-[^-]+-([\S]+)";
@@ -55,9 +120,11 @@ bundle agent test
 
 bundle agent check
 {
+  vars:
+      "e" string => '{"name":"bfoobar","version":"1","arch":"besm6","method":"printf"}';
   methods:
       "" usebundle => dcs_check_strcmp($(test.all_string),
-                                       'packages = [{"name":"bfoobar","version":"1","arch":"besm6","method":"printf"}]',
+                                       'packages = [$(e),$(e),$(e)]',
                                        $(this.promise_filename),
                                        "no");
 }

@@ -380,7 +380,7 @@ const ConstraintSyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 
 const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 {
-    ConstraintSyntaxNewString("export_zenoss", CF_PATHRANGE, "Generate report for Zenoss integration", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("export_zenoss", CF_PATHRANGE, "Generate report for Zenoss integration", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewStringList("exclude_hosts", "", "A list of IP addresses of hosts to exclude from report collection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("hub_schedule", "", "The class schedule used by cf-hub for report collation", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("port", "1,65535", "Default port for contacting hub nodes. Default value: 5308", SYNTAX_STATUS_NORMAL),

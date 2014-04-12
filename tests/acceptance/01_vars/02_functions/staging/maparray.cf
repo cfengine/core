@@ -1,0 +1,36 @@
+# maparray() test, https://cfengine.com/dev/issues/5452
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+  vars:
+    any::
+      "list_expected" slist => { "services/afs/afs.cf", "services/base/base.cf" };
+
+}
+
+bundle agent test
+{
+  vars:
+    any::
+      "bundles[services][afs]"  slist => { "afs.cf" };
+      "bundles[services][base]" string => "base.cf";
+
+      "actual" slist => maparray("services/$(this.k)/$(this.v)", "bundles[services]");
+      "actual_sorted" slist => sort(actual, "lex");
+      "actual_str" string => format('%S', actual_sorted);
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_check_strcmp($(test.actual_str),
+                                       '{ "services/afs/afs.cf", "services/base/base.cf" }',
+                                       $(this.promise_filename),
+                                       "no");
+}

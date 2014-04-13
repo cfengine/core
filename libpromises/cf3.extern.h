@@ -35,8 +35,6 @@ extern RSA *PRIVKEY, *PUBKEY;
 extern char BINDINTERFACE[CF_MAXVARSIZE];
 extern time_t CONNTIMEOUT;
 
-extern char CFWORKDIR[CF_BUFSIZE];
-
 extern const char *const CLASSTEXT[];
 
 extern time_t CFSTARTTIME;

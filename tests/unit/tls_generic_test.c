@@ -17,6 +17,8 @@
 #include <tls_client.h>
 #include <connection_info.h>
 
+char CFWORKDIR[CF_BUFSIZE];
+
 /*
  * We create the appropriate SSL structures before starting the tests.
  * We delete them afterwards

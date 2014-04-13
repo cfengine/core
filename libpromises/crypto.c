@@ -88,11 +88,12 @@ void CryptoDeInitialize()
 static void RandomSeed(void)
 {
     char vbuff[CF_BUFSIZE];
+    const char* const workdir = GetWorkDir();
 
 /* Use the system database as the entropy source for random numbers */
-    Log(LOG_LEVEL_DEBUG, "RandomSeed() work directory is '%s'", CFWORKDIR);
+    Log(LOG_LEVEL_DEBUG, "RandomSeed() work directory is '%s'", workdir);
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", workdir, FILE_SEPARATOR);
 
     Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'", vbuff);
 
@@ -190,6 +191,7 @@ void PolicyHubUpdateKeys(const char *policy_server)
     if (GetAmPolicyHub() && NULL != PUBKEY)
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        const char* const workdir = GetWorkDir();
 
         char dst_public_key_filename[CF_BUFSIZE] = "";
         {
@@ -197,7 +199,7 @@ void PolicyHubUpdateKeys(const char *policy_server)
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
             snprintf(dst_public_key_filename, CF_MAXVARSIZE,
                      "%s/ppkeys/%s-%s.pub",
-                     CFWORKDIR,
+                     workdir,
                      "root",
                      HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
             MapName(dst_public_key_filename);
@@ -207,7 +209,7 @@ void PolicyHubUpdateKeys(const char *policy_server)
         if ((stat(dst_public_key_filename, &sb) == -1))
         {
             char src_public_key_filename[CF_BUFSIZE] = "";
-            snprintf(src_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", CFWORKDIR);
+            snprintf(src_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", workdir);
             MapName(src_public_key_filename);
 
             // copy localhost.pub to root-HASH.pub on policy server
@@ -263,16 +265,17 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
     unsigned long err;
     FILE *fp;
     RSA *newkey = NULL;
+    const char* const workdir = GetWorkDir();
 
     snprintf(keyname, CF_MAXVARSIZE, "%s-%s", username, digest);
 
-    snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
+    snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", workdir, keyname);
     MapName(newname);
 
     if (stat(newname, &statbuf) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Did not find new key format '%s'", newname);
-        snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
+        snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", workdir, username, ipaddress);
         MapName(oldname);
 
         Log(LOG_LEVEL_VERBOSE, "Trying old style '%s'", oldname);
@@ -349,7 +352,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     }
 
     ret = snprintf(filename, sizeof(filename), "%s/ppkeys/%s.pub",
-                   CFWORKDIR, keyname);
+                   GetWorkDir(), keyname);
     if (ret >= sizeof(filename))
     {
         Log(LOG_LEVEL_ERR, "Filename too long!");

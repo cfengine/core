@@ -752,7 +752,8 @@ static FILE *NewStream(char *name)
     }
     else
     {
-        snprintf(filename, CF_BUFSIZE, "%s/outputs/%s_runagent.out", CFWORKDIR, name);
+        snprintf(filename, CF_BUFSIZE, "%s%coutputs%c%s_runagent.out",
+                 GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR, name);
     }
 
     if (OUTPUT_TO_FILE)

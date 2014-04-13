@@ -26,6 +26,7 @@
 
 #include <keyring.h>
 #include <dir.h>
+#include <known_dirs.h>
 
 /***************************************************************/
 
@@ -56,7 +57,8 @@ int RemovePublicKey(const char *id)
     const struct dirent *dirp;
     char suffix[CF_BUFSIZE];
 
-    snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
+    snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", GetWorkDir());
+
     MapName(keysdir);
 
     if ((dirh = DirOpen(keysdir)) == NULL)

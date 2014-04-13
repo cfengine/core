@@ -40,7 +40,6 @@
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                        /* PRIVKEY,PUBKEY,LoadSecretKeys */
 #include <bootstrap.h>                     /* ReadPolicyServerFile */
-extern char CFWORKDIR[];
 
 
 /* Global SSL context for client connections over new TLS protocol. */

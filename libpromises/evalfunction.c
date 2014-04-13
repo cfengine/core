@@ -61,6 +61,7 @@
 #include <connection_info.h>
 #include <printsize.h>
 #include <csv_parser.h>
+#include <known_dirs.h>
 
 #include <math_eval.h>
 
@@ -1671,10 +1672,12 @@ static FnCallResult FnCallUseModule(EvalContext *ctx,
 
 /* begin fn specific content */
 
-    char *command = RlistScalarValue(finalargs);
-    char *args = RlistScalarValue(finalargs->next);
+    const char* const command = RlistScalarValue(finalargs);
+    const char* const args = RlistScalarValue(finalargs->next);
+    const char* const workdir = GetWorkDir();
 
-    snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\"", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command);
+    snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\"",
+             workdir, FILE_SEPARATOR, FILE_SEPARATOR, command);
 
     if (stat(CommandArg0(modulecmd), &statbuf) == -1)
     {
@@ -1694,7 +1697,9 @@ static FnCallResult FnCallUseModule(EvalContext *ctx,
         return FnFailure();
     }
 
-    snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\" %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
+    snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\" %s",
+             workdir, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
+
     Log(LOG_LEVEL_VERBOSE, "Executing and using module [%s]", modulecmd);
 
     if (!ExecModule(ctx, modulecmd))

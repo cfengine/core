@@ -6,6 +6,8 @@
 #include <sysinfo_priv.h>
 #include <loading.h>
 
+char CFWORKDIR[CF_BUFSIZE];
+
 void test_load_masterfiles(void)
 {
     EvalContext *ctx = EvalContextNew();

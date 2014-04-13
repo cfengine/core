@@ -5,6 +5,7 @@
 #include <lastseen.h>
 #include <item_lib.h>
 #include <misc_lib.h>                                          /* xsnprintf */
+#include <known_dirs.h>
 
 
 char CFWORKDIR[CF_BUFSIZE];
@@ -30,14 +31,16 @@ static void tests_setup(void)
 {
     xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_test.XXXXXX");
     mkdtemp(CFWORKDIR);
+    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 static void tests_teardown(void)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -f '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", GetStateDir());
     system(cmd);
-    xsnprintf(cmd, CF_BUFSIZE, "rmdir '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rmdir '%s'", GetStateDir());
     system(cmd);
 }
 

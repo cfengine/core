@@ -35,8 +35,6 @@ extern RSA *PRIVKEY, *PUBKEY;
 extern char BINDINTERFACE[CF_MAXVARSIZE];
 extern time_t CONNTIMEOUT;
 
-extern char CFWORKDIR[CF_BUFSIZE];
-
 extern time_t CFSTARTTIME;
 
 extern struct utsname VSYSNAME;

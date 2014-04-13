@@ -39,6 +39,7 @@
 #include <eval_context.h>
 #include <crypto.h>
 #include <file_lib.h>
+#include <known_dirs.h>
 
 
 static const char *const passphrase = "Cfengine passphrase";
@@ -124,7 +125,9 @@ int TrustKey(const char* pubkey)
     if (NULL == digeststr)
         return 1; /* ERROR exitcode */
 
-    snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
+    snprintf(outfilename, CF_BUFSIZE, "%s%cppkeys%croot-%s.pub",
+             GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR, digeststr);
+
     free(digeststr);
 
     ok = CopyRegularFileDisk(pubkey, outfilename);
@@ -313,7 +316,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     fclose(fp);
 
-    snprintf(vbuff, CF_BUFSIZE, "%s/randseed", CFWORKDIR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", GetWorkDir(), FILE_SEPARATOR);
     if (RAND_write_file(vbuff) != 1024)
     {
         Log(LOG_LEVEL_ERR, "Unable to write randseed");

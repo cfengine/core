@@ -492,18 +492,22 @@ static bool WriteReleaseIdFile(const char *filename, const char *dirname)
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 {
     char cmd[CF_BUFSIZE];
+    const char* const workdir = GetWorkDir();
 
     Log(LOG_LEVEL_VERBOSE, "Verifying the syntax of the inputs...");
     {
         char cfpromises[CF_MAXVARSIZE];
-        snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
-                 EXEC_SUFFIX);
+
+        snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s",
+                 workdir, FILE_SEPARATOR, FILE_SEPARATOR, EXEC_SUFFIX);
 
         struct stat sb;
         if (stat(cfpromises, &sb) == -1)
         {
-            Log(LOG_LEVEL_ERR, "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
-                  EXEC_SUFFIX, CFWORKDIR, FILE_SEPARATOR);
+            Log(LOG_LEVEL_ERR,
+                "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
+                EXEC_SUFFIX, workdir, FILE_SEPARATOR);
+
             return false;
         }
 
@@ -595,16 +599,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     const char *workdir = GetWorkDir();
 
-    /* TODO: CFWORKDIR global gets initialized here. (GLOBAL_C)
-     * Do not remove this block until its use has been obliterated elsewhere. */
+    if (!workdir)
     {
-        if (!workdir)
-        {
-            FatalError(ctx, "Error determining working directory");
-        }
-
-        strcpy(CFWORKDIR, workdir);
-        MapName(CFWORKDIR);
+        FatalError(ctx, "Error determining working directory");
     }
 
     OpenLog(LOG_USER);
@@ -1037,7 +1034,7 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
 
     {
         char filename[MAX_FILENAME];
-        snprintf(filename, MAX_FILENAME, "%s/policy_server.dat", CFWORKDIR);
+        snprintf(filename, MAX_FILENAME, "%s%cpolicy_server.dat", GetWorkDir(), FILE_SEPARATOR);
         MapName(filename);
 
         struct stat sb;

@@ -62,8 +62,6 @@ char VFQNAME[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */
 char VUQNAME[CF_MAXVARSIZE] = ""; /* GLOBAL_E */
 char VDOMAIN[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */
 
-char CFWORKDIR[CF_BUFSIZE] = ""; /* GLOBAL_C */
-
 /*
   Default value for copytype attribute. Loaded by cf-agent from body control
 */

@@ -37,6 +37,7 @@
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                       /* LoadSecretKeys */
+#include <bootstrap.h>                     /* ReadPolicyServerFile */
 
 
 extern RSA *PRIVKEY, *PUBKEY;

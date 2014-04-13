@@ -6,6 +6,8 @@
 #include <misc_lib.h>                                          /* xsnprintf */
 #include <known_dirs.h>
 
+char CFWORKDIR[CF_BUFSIZE];
+
 static void tests_setup(void)
 {
     xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/mon_processes_test.XXXXXX");

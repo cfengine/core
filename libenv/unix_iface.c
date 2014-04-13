@@ -33,6 +33,7 @@
 #include <regex.h>                                       /* StringMatchFull */
 #include <files_interfaces.h>
 #include <files_names.h>
+#include <known_dirs.h>
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>
@@ -726,7 +727,7 @@ static void InitIgnoreInterfaces()
     FILE *fin;
     char filename[CF_BUFSIZE],regex[CF_MAXVARSIZE];
 
-    snprintf(filename, sizeof(filename), "%s%cinputs%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, CF_IGNORE_INTERFACES);
+    snprintf(filename, sizeof(filename), "%s%cinputs%c%s", GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR, CF_IGNORE_INTERFACES);
 
     if ((fin = fopen(filename,"r")) == NULL)
     {

@@ -6,6 +6,8 @@
 #include <known_dirs.h>
 
 
+char CFWORKDIR[CF_BUFSIZE];
+
 static void tests_setup(void)
 {
     OpenSSL_add_all_digests();

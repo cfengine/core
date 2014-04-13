@@ -161,7 +161,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
                 Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
             }
 
-            WriteAmPolicyHubFile(CFWORKDIR, am_policy_server);
+            WriteAmPolicyHubFile(am_policy_server);
         }
 
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
@@ -186,7 +186,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             return;
         }
 
-        if (GetAmPolicyHub(GetWorkDir()))
+        if (GetAmPolicyHub())
         {
             EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap,deprecated,alias=policy_server");
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
@@ -241,7 +241,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
                 GenericAgentTagReleaseDirectory(config,
                                                 NULL, // use GetAutotagDir
                                                 write_validated_file, // true
-                                                GetAmPolicyHub(GetWorkDir())); // write release ID?
+                                                GetAmPolicyHub()); // write release ID?
             }
 
             if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
@@ -572,8 +572,11 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
 /* Define trusted directories */
 
+    const char *workdir = GetWorkDir();
+
+    /* TODO: CFWORKDIR global gets initialized here. (GLOBAL_C)
+     * Do not remove this block until its use has been obliterated elsewhere. */
     {
-        const char *workdir = GetWorkDir();
         if (!workdir)
         {
             FatalError(ctx, "Error determining working directory");
@@ -586,17 +589,24 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     OpenLog(LOG_USER);
     SetSyslogFacility(LOG_USER);
 
-    Log(LOG_LEVEL_VERBOSE, "Work directory is %s", CFWORKDIR);
+    Log(LOG_LEVEL_VERBOSE, "Work directory is %s", workdir);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cupdate.conf", GetInputDir(), FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+
+    snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetLogDir(), FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+    snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetPidDir(), FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+    snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetStateDir(), FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
 
     snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
@@ -610,7 +620,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         chmod(vbuff, sb.st_mode | 0700);
     }
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", workdir, FILE_SEPARATOR);
 
     if (stat(vbuff, &sb) == -1)
     {
@@ -621,7 +631,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         chmod(vbuff, sb.st_mode | 0700);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    const char* const statedir = GetStateDir();
+
+    sprintf(ebuff, "%s%ccf_procs", statedir, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
     if (stat(ebuff, &statbuf) == -1)
@@ -629,27 +641,27 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_rootprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%ccf_rootprocs", statedir, FILE_SEPARATOR);
 
     if (stat(ebuff, &statbuf) == -1)
     {
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_otherprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%ccf_otherprocs", statedir, FILE_SEPARATOR);
 
     if (stat(ebuff, &statbuf) == -1)
     {
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%cprevious_state%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%cprevious_state%c", statedir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
-    sprintf(ebuff, "%s%cstate%cdiff%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%cdiff%c", statedir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
-    sprintf(ebuff, "%s%cstate%cuntracked%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%cuntracked%c", statedir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
     OpenNetwork();
@@ -662,7 +674,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
         LoadSecretKeys();
-        char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
+        char *bootstrapped_policy_server = ReadPolicyServerFile(workdir);
         PolicyHubUpdateKeys(bootstrapped_policy_server);
         free(bootstrapped_policy_server);
         cfnet_init();
@@ -826,7 +838,7 @@ static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirn
     }
     else if (MINUSF)
     {
-        snprintf(dirname, max_size, "%s/state", CFWORKDIR);
+        snprintf(dirname, max_size, "%s%c", GetStateDir(), FILE_SEPARATOR);
     }
     else
     {
@@ -1061,38 +1073,40 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     struct stat statbuf;
     char vbuff[CF_BUFSIZE];
 
+    const char* const workdir = GetWorkDir();
+    const char* const statedir = GetStateDir();
+
     if (uname(&VSYSNAME) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't get kernel name info. (uname: %s)", GetErrorStr());
         memset(&VSYSNAME, 0, sizeof(VSYSNAME));
     }
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%c.", workdir, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 
     Log(LOG_LEVEL_VERBOSE, "Making sure that locks are private...");
 
-    if (chown(CFWORKDIR, getuid(), getgid()) == -1)
+    if (chown(workdir, getuid(), getgid()) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to set owner on '%s'' to '%ju.%ju'. (chown: %s)", CFWORKDIR, (uintmax_t)getuid(),
+        Log(LOG_LEVEL_ERR, "Unable to set owner on '%s'' to '%ju.%ju'. (chown: %s)", workdir, (uintmax_t)getuid(),
             (uintmax_t)getgid(), GetErrorStr());
     }
 
-    if (stat(CFWORKDIR, &statbuf) != -1)
+    if (stat(workdir, &statbuf) != -1)
     {
         /* change permissions go-w */
-        chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
+        chmod(workdir, (mode_t) (statbuf.st_mode & ~022));
     }
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, false);
-
+    MakeParentDirectory(GetStateDir(), false);
     Log(LOG_LEVEL_VERBOSE, "Checking integrity of the state database");
-    snprintf(vbuff, CF_BUFSIZE, "%s%cstate", CFWORKDIR, FILE_SEPARATOR);
+
+    snprintf(vbuff, CF_BUFSIZE, "%s", statedir);
 
     if (stat(vbuff, &statbuf) == -1)
     {
-        snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+        snprintf(vbuff, CF_BUFSIZE, "%s%c", statedir, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, false);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
@@ -1108,7 +1122,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
-            Log(LOG_LEVEL_ERR, "UNTRUSTED: State directory %s (mode %jo) was not private!", CFWORKDIR,
+            Log(LOG_LEVEL_ERR, "UNTRUSTED: State directory %s (mode %jo) was not private!", workdir,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */
@@ -1116,11 +1130,11 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Checking integrity of the module directory");
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%cmodules", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%cmodules", workdir, FILE_SEPARATOR);
 
     if (stat(vbuff, &statbuf) == -1)
     {
-        snprintf(vbuff, CF_BUFSIZE, "%s%cmodules%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+        snprintf(vbuff, CF_BUFSIZE, "%s%cmodules%c.", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, false);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
@@ -1144,11 +1158,11 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Checking integrity of the PKI directory");
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys", workdir, FILE_SEPARATOR);
 
     if (stat(vbuff, &statbuf) == -1)
     {
-        snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+        snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys%c", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, false);
 
         chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
@@ -1158,7 +1172,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 077)
         {
-            FatalError(ctx, "UNTRUSTED: Private key directory %s%cppkeys (mode %jo) was not private!\n", CFWORKDIR,
+            FatalError(ctx, "UNTRUSTED: Private key directory %s%cppkeys (mode %jo) was not private!\n", workdir,
                        FILE_SEPARATOR, (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */

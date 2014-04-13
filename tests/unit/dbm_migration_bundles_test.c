@@ -1,7 +1,10 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <cf3.defs.h>
 #include <dbm_api.h>
 #include <test.h>
 #include <lastseen.h>
+#include <known_dirs.h>
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -12,6 +15,8 @@ static void tests_setup(void)
 {
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/persistent_lock_test.XXXXXX");
     mkdtemp(CFWORKDIR);
+    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 static void tests_teardown(void)
@@ -32,7 +37,7 @@ static const Event dummy_event = {
 static DBHandle *setup(bool clean)
 {
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", GetStateDir());
     system(cmd);
 
     DBHandle *db;

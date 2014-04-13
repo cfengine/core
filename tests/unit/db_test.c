@@ -1,4 +1,7 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <test.h>
+#include <known_dirs.h>
 
 #include <cf3.defs.h>
 #include <dbm_api.h>
@@ -11,6 +14,8 @@ void tests_setup(void)
 {
     xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_test.XXXXXX");
     mkdtemp(CFWORKDIR);
+    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 void tests_teardown(void)
@@ -137,12 +142,12 @@ void test_recreate(void)
     /* Test that recreating database works properly */
 #ifdef HAVE_LIBTOKYOCABINET
     char tcdb_db[CF_BUFSIZE];
-    xsnprintf(tcdb_db, CF_BUFSIZE, "%s/cf_classes.tcdb", CFWORKDIR);
+    xsnprintf(tcdb_db, CF_BUFSIZE, "%s/cf_classes.tcdb", GetStateDir());
     CreateGarbage(tcdb_db);
 #endif
 #ifdef HAVE_LIBQDBM
     char qdbm_db[CF_BUFSIZE];
-    xsnprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", CFWORKDIR);
+    xsnprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", GetStateDir());
     CreateGarbage(qdbm_db);
 #endif
 #ifdef HAVE_LIBLMDB

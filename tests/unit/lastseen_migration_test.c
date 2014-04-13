@@ -4,6 +4,7 @@
 #include <dbm_api.h>
 #include <lastseen.h>
 #include <misc_lib.h>                                          /* xsnprintf */
+#include <known_dirs.h>
 
 
 typedef struct
@@ -20,6 +21,8 @@ void tests_setup(void)
 {
     xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
     mkdtemp(CFWORKDIR);
+    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 /*
@@ -28,7 +31,7 @@ void tests_setup(void)
 static DBHandle *setup(bool clean)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", GetStateDir());
     system(cmd);
 
     DBHandle *db;

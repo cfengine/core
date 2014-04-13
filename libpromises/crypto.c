@@ -231,8 +231,7 @@ bool LoadSecretKeys(void)
 
 void PolicyHubUpdateKeys(const char *policy_server)
 {
-    if (GetAmPolicyHub(CFWORKDIR)
-        && NULL != PUBKEY)
+    if (GetAmPolicyHub() && NULL != PUBKEY)
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
 

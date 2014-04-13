@@ -33,6 +33,7 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 #include <addr_lib.h>
+#include <known_dirs.h>
 
 typedef enum
 {
@@ -419,11 +420,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
 
     if (strncmp(inout, "in", 2) == 0)
     {
-        snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_incoming.%s", CFWORKDIR, TCPNAMES[i]);
+        snprintf(filename, CF_BUFSIZE, "%s%ccf_incoming.%s", GetStateDir(), FILE_SEPARATOR, TCPNAMES[i]);
     }
     else
     {
-        snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
+        snprintf(filename, CF_BUFSIZE, "%s%ccf_outgoing.%s", GetStateDir(), FILE_SEPARATOR, TCPNAMES[i]);
     }
 
     Log(LOG_LEVEL_VERBOSE, "TCP Save '%s'", filename);
@@ -449,6 +450,8 @@ void MonNetworkSnifferGatherData(void)
     int i;
     char vbuff[CF_BUFSIZE];
 
+    const char* const statedir = GetStateDir();
+
     for (i = 0; i < CF_NETATTR; i++)
     {
         struct stat statbuf;
@@ -456,7 +459,7 @@ void MonNetworkSnifferGatherData(void)
         time_t now = time(NULL);
 
         Log(LOG_LEVEL_DEBUG, "save incoming '%s'", TCPNAMES[i]);
-        snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, TCPNAMES[i]);
+        snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_incoming.%s", statedir, FILE_SEPARATOR, TCPNAMES[i]);
 
         if (stat(vbuff, &statbuf) != -1)
         {
@@ -485,7 +488,7 @@ void MonNetworkSnifferGatherData(void)
         time_t now = time(NULL);
 
         Log(LOG_LEVEL_DEBUG, "save outgoing '%s'", TCPNAMES[i]);
-        snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
+        snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_outgoing.%s", statedir, FILE_SEPARATOR, TCPNAMES[i]);
 
         if (stat(vbuff, &statbuf) != -1)
         {

@@ -46,6 +46,7 @@
 #include <verify_classes.h>
 #include <cf-monitord-enterprise-stubs.h>
 #include <unix_iface.h>
+#include <known_dirs.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -116,15 +117,16 @@ void MonitorInitialize(void)
 {
     int i, j, k;
     char vbuff[CF_BUFSIZE];
+    const char* const statedir = GetStateDir();
 
-    snprintf(vbuff, sizeof(vbuff), "%s/state/cf_users", CFWORKDIR);
+    snprintf(vbuff, sizeof(vbuff), "%s/cf_users", statedir);
     MapName(vbuff);
     CreateEmptyFile(vbuff);
 
-    snprintf(ENVFILE_NEW, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENVNEW_FILE);
+    snprintf(ENVFILE_NEW, CF_BUFSIZE, "%s/%s", statedir, CF_ENVNEW_FILE);
     MapName(ENVFILE_NEW);
 
-    snprintf(ENVFILE, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
+    snprintf(ENVFILE, CF_BUFSIZE, "%s/%s", statedir, CF_ENV_FILE);
     MapName(ENVFILE);
 
     MonEntropyClassesInit();
@@ -204,7 +206,7 @@ static void LoadHistogram(void)
 
     char filename[CF_BUFSIZE];
 
-    snprintf(filename, CF_BUFSIZE, "%s/state/histograms", CFWORKDIR);
+    snprintf(filename, CF_BUFSIZE, "%s%chistograms", GetStateDir(), FILE_SEPARATOR);
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
@@ -828,7 +830,7 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
             }
         }
 
-        snprintf(filename, CF_BUFSIZE, "%s/state/histograms", CFWORKDIR);
+        snprintf(filename, CF_BUFSIZE, "%s%chistograms", GetStateDir(), FILE_SEPARATOR);
 
         if ((fp = fopen(filename, "w")) == NULL)
         {

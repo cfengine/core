@@ -4,7 +4,7 @@
 #include "item_lib.h"
 #include "mon.h"
 #include <misc_lib.h>                                          /* xsnprintf */
-
+#include <known_dirs.h>
 
 static void tests_setup(void)
 {
@@ -12,7 +12,7 @@ static void tests_setup(void)
     mkdtemp(CFWORKDIR);
 
     char buf[CF_BUFSIZE];
-    xsnprintf(buf, CF_BUFSIZE, "%s/state", CFWORKDIR);
+    xsnprintf(buf, CF_BUFSIZE, "%s", GetStateDir());
     mkdir(buf, 0755);
 }
 

@@ -31,6 +31,7 @@
 #include <atexit.h>
 #include <logging.h>
 #include <misc_lib.h>
+#include <known_dirs.h>
 
 
 static int DBPathLock(const char *filename);
@@ -72,20 +73,20 @@ static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
 static const char *const DB_PATHS[] = {
     [dbid_classes] = "cf_classes",
-    [dbid_variables] = "state/cf_variables",
+    [dbid_variables] = "cf_variables",
     [dbid_performance] = "performance",
     [dbid_checksums] = "checksum_digests",
     [dbid_filestats] = "stats",
-    [dbid_changes] = "state/cf_changes",
-    [dbid_observations] = "state/cf_observations",
-    [dbid_state] = "state/cf_state",
+    [dbid_changes] = "cf_changes",
+    [dbid_observations] = "cf_observations",
+    [dbid_state] = "cf_state",
     [dbid_lastseen] = "cf_lastseen",
     [dbid_audit] = "cf_audit",
-    [dbid_locks] = "state/cf_lock",
-    [dbid_history] = "state/history",
-    [dbid_measure] = "state/nova_measures",
-    [dbid_static] = "state/nova_static",
-    [dbid_scalars] = "state/nova_pscalar",
+    [dbid_locks] = "cf_lock",
+    [dbid_history] = "history",
+    [dbid_measure] = "nova_measures",
+    [dbid_static] = "nova_static",
+    [dbid_scalars] = "nova_pscalar",
     [dbid_windows_registry] = "mswin",
     [dbid_cache] = "nova_cache",
     [dbid_license] = "nova_track",
@@ -96,13 +97,13 @@ static const char *const DB_PATHS[] = {
 
 /******************************************************************************/
 
-char *DBIdToPath(const char *workdir, dbid id)
+char *DBIdToPath(const char *statedir, dbid id)
 {
     assert(DB_PATHS[id] != NULL);
 
     char *filename;
     if (xasprintf(&filename, "%s/%s.%s",
-                  workdir, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
+                  statedir, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
     {
         ProgrammingError("Unable to construct database filename for file %s", DB_PATHS[id]);
     }
@@ -121,7 +122,7 @@ static DBHandle *DBHandleGet(int id)
 
     if (db_handles[id].filename == NULL)
     {
-        db_handles[id].filename = DBIdToPath(CFWORKDIR, id);
+        db_handles[id].filename = DBIdToPath(GetStateDir(), id);
 
         /* Initialize mutexes as error-checking ones. */
         pthread_mutexattr_t attr;

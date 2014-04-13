@@ -34,6 +34,7 @@
 #include <tokyo_check.h>
 #include <lastseen.h>
 #include <file_lib.h>
+#include <known_dirs.h>
 
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message)
@@ -140,9 +141,9 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
     return res;
 }
 
-static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid id)
+static AgentDiagnosticsResult AgentDiagnosticsCheckDB(ARG_UNUSED const char *workdir, dbid id)
 {
-    char *dbpath = DBIdToPath(workdir, id);
+    char *dbpath = DBIdToPath(GetStateDir(), id);
     char *error = DBPrivDiagnose(dbpath);
 
     if (error)

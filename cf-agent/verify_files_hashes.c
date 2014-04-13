@@ -33,6 +33,7 @@
 #include <files_hashes.h>
 #include <misc_lib.h>
 #include <eval_context.h>
+#include <known_dirs.h>
 
 int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {

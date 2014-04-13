@@ -96,7 +96,8 @@ static bool TwinExists(void)
     char twinfilename[CF_BUFSIZE];
     struct stat sb;
 
-    snprintf(twinfilename, CF_BUFSIZE, "%s/%s", CFWORKDIR, TwinFilename());
+    snprintf(twinfilename, CF_BUFSIZE, "%s/%s", GetWorkDir(), TwinFilename());
+
     MapName(twinfilename);
 
     return (stat(twinfilename, &sb) == 0) && (IsExecutable(twinfilename));
@@ -107,11 +108,13 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
 {
     bool twin_exists = TwinExists();
 
+    const char* const workdir = GetWorkDir();
+
     snprintf(buffer, CF_BUFSIZE,
-             "\"%s/%s\" -f failsafe.cf "
-             "&& \"%s/%s\" -Dfrom_cfexecd%s",
-             CFWORKDIR, twin_exists ? TwinFilename() : AgentFilename(),
-             CFWORKDIR, AgentFilename(), scheduled_run ? ",scheduled_run" : "");
+             "\"%s%c%s\" -f failsafe.cf "
+             "&& \"%s%c%s\" -Dfrom_cfexecd%s",
+             workdir, FILE_SEPARATOR, twin_exists ? TwinFilename() : AgentFilename(),
+             workdir, FILE_SEPARATOR, AgentFilename(), scheduled_run ? ",scheduled_run" : "");
 }
 
 #ifndef __MINGW32__
@@ -207,8 +210,9 @@ void LocalExec(const ExecConfig *config)
             strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
             CanonifyNameInPlace(canonified_fq_name);
 
+            snprintf(filename, CF_BUFSIZE, "%s/outputs/cf_%s_%s_%p",
+                     GetWorkDir(), canonified_fq_name, line, thread_name);
 
-            snprintf(filename, CF_BUFSIZE, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, canonified_fq_name, line, thread_name);
             MapName(filename);
         }
     }
@@ -494,7 +498,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     {
         char prev_file[CF_BUFSIZE];
-        snprintf(prev_file, CF_BUFSIZE - 1, "%s/outputs/previous", CFWORKDIR);
+        snprintf(prev_file, CF_BUFSIZE, "%s/outputs/previous", GetWorkDir());
         MapName(prev_file);
 
         if (CompareResult(file, prev_file) == 0)

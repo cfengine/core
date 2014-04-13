@@ -701,7 +701,7 @@ int RootDirLength(const char *f)
 /* Buffer should be at least CF_MAXVARSIZE large */
 const char *GetSoftwareCacheFilename(char *buffer)
 {
-    snprintf(buffer, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, SOFTWARE_PACKAGES_CACHE);
+    snprintf(buffer, CF_MAXVARSIZE, "%s%c%s", GetStateDir(), FILE_SEPARATOR, SOFTWARE_PACKAGES_CACHE);
     MapName(buffer);
     return buffer;
 }
@@ -709,7 +709,7 @@ const char *GetSoftwareCacheFilename(char *buffer)
 /* Buffer should be at least CF_MAXVARSIZE large */
 const char *GetSoftwarePatchesFilename(char *buffer)
 {
-    snprintf(buffer, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, SOFTWARE_PATCHES_CACHE);
+    snprintf(buffer, CF_MAXVARSIZE, "%s/%s", GetStateDir(), SOFTWARE_PATCHES_CACHE);
     MapName(buffer);
     return buffer;
 }

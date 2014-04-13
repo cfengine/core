@@ -305,7 +305,7 @@ static void KeepHardClasses(EvalContext *ctx)
         if (existing_policy_server)
         {
             free(existing_policy_server);
-            if (GetAmPolicyHub(CFWORKDIR))
+            if (GetAmPolicyHub())
             {
                 MarkAsPolicyServer(ctx);
             }

@@ -245,7 +245,7 @@ int SocketConnect(const char *host, const char *port,
                 }
                 if (ap2 == NULL)
                 {
-                    Log(LOG_LEVEL_INFO,
+                    Log(LOG_LEVEL_ERR,
                         "Unable to bind to interface '%s'. (bind: %s)",
                         BINDINTERFACE, GetErrorStr());
                 }
@@ -367,7 +367,7 @@ bool TryConnect(int sd, unsigned long timeout_ms,
         ret = select(sd + 1, NULL, &myset, NULL, tvp);
         if (ret == 0)
         {
-            Log(LOG_LEVEL_ERR, "Timeout connecting to server");
+            Log(LOG_LEVEL_INFO, "Timeout connecting to server");
             return false;
         }
         if (ret == -1)

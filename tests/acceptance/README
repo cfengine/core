@@ -33,22 +33,9 @@ Preparing for running tests
   diff output colorized, you also need to install the colordiff
   utility.
 
-* if you plan to use `git bisect` to hunt for a bug, try something
-  like this, contributed by the indomitable Chris Dituri specifically
-  for `01_vars/01_basic/009.cf` (any test can be bisected this way,
-  just adjust the next-to-last line):
-
-```
-#!/bin/bash
-
-make -j3 clean && \
-./autogen.sh && \
-./configure --enable-debug && \
-make -j3 && \
-(cd ./tests/acceptance && \
-    ./testall 01_vars/01_basic/009.cf | grep -q "009.cf Pass" && \
-    (test ! $? && exit $?) || exit 1)
-```
+* if you plan to use `git bisect` to hunt for a bug, try
+  tests/acceptance/bisect-acceptance.pl, contributed by the
+  indomitable Chris Dituri
 
 ------------------------------------------------------------------------------
 Running testsuite

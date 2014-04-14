@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test simple variables failures
+# Test simple real variable failures
 #
 #######################################################
 
@@ -15,8 +15,6 @@ body common control
 
 bundle agent init
 {
-  vars:
-      "dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,28 +22,25 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "zero_p" real => "0e2345678"; # Exponent too big, but still zero
-      "zero_n" real => "0e-2345678"; # Exponent too big, but still zero
+      # Exponent too big, parser should reject and cf-promises should bail
+      "zero_p" real => "0e2345678";
+      # Exponent too big, parser should reject and cf-promises should bail
+      "zero_n" real => "0e-2345678";
 }
 
 #######################################################
 
 bundle agent check
 {
-  classes:
-      "ok" and => {
-                    isgreaterthan("$(test.zero_p)", "-0.1"),
-                    islessthan("$(test.zero_p)", "0.1"),
-                    isgreaterthan("$(test.zero_n)", "-0.1"),
-                    islessthan("$(test.zero_n)", "0.1"),
-      };
   reports:
     DEBUG::
       "zero_p == $(test.zero_p)";
       "zero_n == $(test.zero_n)";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
+
+    any::
+      # this policy should never be evaluated by cf-agent,
+      # parser should reject and cf-promises should bail.
+      # FAIL by default just in-case.
       "$(this.promise_filename) FAIL";
 }
 

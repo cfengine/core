@@ -5518,7 +5518,8 @@ static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     }
     JsonElement *json = NULL;
     const char *data = StringWriterData(contents);
-    if (JsonParse(&data, &json) != JSON_PARSE_OK)
+    if ((JsonParse(&data, &json) != JSON_PARSE_OK) ||
+        (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE))
     {
         Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s'", input_path);
         WriterClose(contents);
@@ -5533,7 +5534,8 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 {
     const char *data = RlistScalarValue(args);
     JsonElement *json = NULL;
-    if (JsonParse(&data, &json) != JSON_PARSE_OK)
+    if ((JsonParse(&data, &json) != JSON_PARSE_OK)||
+        (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE))
     {
         Log(LOG_LEVEL_ERR, "Error parsing JSON expression '%s'", data);
         return FnFailure();
@@ -6690,7 +6692,8 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             const char *hold = BufferData(holder);
             Log(LOG_LEVEL_DEBUG, "Module protocol parsing JSON %s", content);
 
-            if (JsonParse(&hold, &json) != JSON_PARSE_OK)
+            if ((JsonParse(&hold, &json) != JSON_PARSE_OK) ||
+                (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE))
             {
                 Log(LOG_LEVEL_INFO, "Module protocol passed an invalid or too-long JSON structure, must be object or array");
             }

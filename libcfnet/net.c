@@ -189,7 +189,7 @@ int SocketConnect(const char *host, const char *port,
     if (ret != 0)
     {
         Log(LOG_LEVEL_INFO,
-              "Unable to find host or service %s : %s (%s)",
+              "Unable to find host '%s' service '%s' (%s)",
               host, port, gai_strerror(ret));
         return -1;
     }

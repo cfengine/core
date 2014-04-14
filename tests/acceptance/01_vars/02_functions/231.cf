@@ -1,0 +1,47 @@
+# maparray() test, https://cfengine.com/dev/issues/5452 
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+  vars:
+    any::
+      "list_expected" slist => { "services/afs/afs.cf", "services/base/base.cf" };
+      
+}
+
+bundle agent test
+{
+  vars:
+    any::
+      "bundles[services][afs]"  slist => { "afs.cf" };
+      "bundles[services][base]" slist => { "base.cf" };
+
+      "list_actual"   slist => maparray("services/$(this.k)/$(this.v)", "bundles[services]");
+}
+
+bundle agent check
+{
+  vars:
+    any::
+      "string_actual"   string => join(",", "test.list_actual");
+      "string_expected" string => join(",", "init.list_expected");
+
+  classes:
+    any::
+      "ok" expression => strcmp($(string_actual), $(string_expected)); 
+
+  reports:
+    DEBUG::
+      "list_actual:   $(test.list_actual)";
+      "list_expected: $(init.list_expected)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

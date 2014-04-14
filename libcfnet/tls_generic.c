@@ -244,6 +244,11 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
         goto err3;
     }
 
+    if (getenv("CFENGINE_TEST_PURIFY_OPENSSL") != NULL)
+    {
+        RSA_blinding_off(privkey);
+    }
+
     /* Not really needed since the other side does not
        verify the signature. */
     ret = X509_sign(x509, pkey, md);

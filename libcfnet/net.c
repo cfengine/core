@@ -365,6 +365,11 @@ bool TryConnect(int sd, unsigned long timeout_ms,
         }
 
         ret = select(sd + 1, NULL, &myset, NULL, tvp);
+        if (ret == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Timeout connecting to server");
+            return false;
+        }
         if (ret == -1)
         {
             Log(LOG_LEVEL_ERR,

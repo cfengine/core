@@ -668,6 +668,31 @@ static void test_parse_tzz_evil_key(void)
     JsonDestroy(obj);
 }
 
+static void test_parse_primitives(void)
+{
+    JsonElement *pri = NULL;
+
+    const char *data = "\"foo\"";
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &pri));
+    assert_string_equal("foo", JsonPrimitiveGetAsString(pri));
+    JsonDestroy(pri);
+
+    data = "-123";
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &pri));
+    assert_true(-123 == JsonPrimitiveGetAsInteger(pri));
+    JsonDestroy(pri);
+
+    data = "1.23";
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &pri));
+    assert_double_close(1.23, JsonPrimitiveGetAsReal(pri));
+    JsonDestroy(pri);
+
+    data = "true";
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &pri));
+    assert_true(JsonPrimitiveGetAsBool(pri));
+    JsonDestroy(pri);
+}
+
 static void test_parse_array_simple(void)
 {
     const char *data = ARRAY_SIMPLE;
@@ -1197,6 +1222,7 @@ int main()
         unit_test(test_parse_array_nested_garbage),
         unit_test(test_parse_object_escaped),
         unit_test(test_parse_tzz_evil_key),
+        unit_test(test_parse_primitives),
         unit_test(test_array_remove_range),
         unit_test(test_remove_key_from_object),
         unit_test(test_detach_key_from_object),

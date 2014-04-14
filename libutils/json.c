@@ -61,6 +61,23 @@ struct JsonElement_
 // JsonElement Functions
 // *******************************************************************************************
 
+const char *JsonPrimitiveTypeToString(JsonPrimitiveType type)
+{
+    switch (type)
+    {
+    case JSON_PRIMITIVE_TYPE_STRING:
+        return "string";
+    case JSON_PRIMITIVE_TYPE_REAL:
+    case JSON_PRIMITIVE_TYPE_INTEGER:
+        return "number";
+    case JSON_PRIMITIVE_TYPE_BOOL:
+        return "boolean";
+    default:
+        assert(false && "Never reach");
+        return "(null)";
+    }
+}
+
 static void JsonElementSetPropertyName(JsonElement *element, const char *propertyName)
 {
     assert(element);
@@ -919,7 +936,7 @@ JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key)
     return detached;
 }
 
-const char *JsonObjectGetAsString(JsonElement *object, const char *key)
+const char *JsonObjectGetAsString(const JsonElement *object, const char *key)
 {
     assert(object);
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -976,7 +993,7 @@ JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key)
     return NULL;
 }
 
-JsonElement *JsonObjectGet(JsonElement *object, const char *key)
+JsonElement *JsonObjectGet(const JsonElement *object, const char *key)
 {
     assert(object);
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -1667,6 +1684,53 @@ static JsonParseError JsonParseAsNumber(const char **data, JsonElement **json_ou
     }
 }
 
+static JsonParseError JsonParseAsPrimitive(const char **data, JsonElement **json_out)
+{
+    switch (**data)
+    {
+    case '"':
+        {
+            char *value = NULL;
+            JsonParseError err = JsonParseAsString(data, &value);
+            if (err != JSON_PARSE_OK)
+            {
+                return err;
+            }
+            *json_out = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, JsonDecodeString(value));
+            free(value);
+        }
+        return JSON_PARSE_OK;
+
+    default:
+        if (**data == '-' || **data == '0' || IsDigit(**data))
+        {
+            JsonParseError err = JsonParseAsNumber(data, json_out);
+            if (err != JSON_PARSE_OK)
+            {
+                return err;
+            }
+            return JSON_PARSE_OK;
+        }
+
+        JsonElement *child_bool = JsonParseAsBoolean(data);
+        if (child_bool)
+        {
+            *json_out = child_bool;
+            return JSON_PARSE_OK;
+        }
+
+        JsonElement *child_null = JsonParseAsNull(data);
+        if (child_null)
+        {
+            *json_out = child_null;
+            return JSON_PARSE_OK;
+        }
+
+        *json_out = NULL;
+        return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
+    }
+}
+
 static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out)
 {
     if (**data != '[')
@@ -1983,8 +2047,7 @@ JsonParseError JsonParse(const char **data, JsonElement **json_out)
         }
         else
         {
-            *json_out = NULL;
-            return JSON_PARSE_ERROR_INVALID_START;
+            return JsonParseAsPrimitive(data, json_out);
         }
     }
 

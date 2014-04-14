@@ -242,7 +242,7 @@ void JsonObjectAppendElement(JsonElement *object, const char *key, JsonElement *
   @param key [in] the key of the field.
   @returns A pointer to the string value, or NULL if non-existant.
   */
-const char *JsonObjectGetAsString(JsonElement *object, const char *key);
+const char *JsonObjectGetAsString(const JsonElement *object, const char *key);
 
 /**
   @brief Get the value of a field in an object, as an object.
@@ -260,7 +260,7 @@ JsonElement *JsonObjectGetAsObject(JsonElement *object, const char *key);
   */
 JsonElement *JsonObjectGetAsArray(JsonElement *object, const char *key);
 
-JsonElement *JsonObjectGet(JsonElement *object, const char *key);
+JsonElement *JsonObjectGet(const JsonElement *object, const char *key);
 
 /**
   @brief Append a string to an array.
@@ -381,6 +381,8 @@ typedef int JsonComparator(const JsonElement *, const JsonElement *, void *user_
 void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data);
 JsonElement *JsonAt(const JsonElement *container, size_t index);
 JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices);
+
+const char *JsonPrimitiveTypeToString(JsonPrimitiveType type);
 
 
 JsonIterator JsonIteratorInit(const JsonElement *container);

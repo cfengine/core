@@ -2853,45 +2853,38 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                                txtaddr, sizeof(txtaddr));
         if (sd == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Couldn't open a tcp socket. (socket %s)",
-                GetErrorStr());
             continue;
         }
 
         if (strlen(sendstring) > 0)
         {
-            if (SendSocketStream(sd, sendstring, strlen(sendstring)) == -1)
+            if (SendSocketStream(sd, sendstring, strlen(sendstring)) != -1)
             {
-                cf_closesocket(sd);
-                continue;
-            }
+                char recvbuf[CF_BUFSIZE];
+                ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
 
-            char recvbuf[CF_BUFSIZE];
-            ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
-            cf_closesocket(sd);
+                if (n_read != -1)
+                {
+                    /* maxbytes was checked earlier, but just make sure... */
+                    assert(n_read < sizeof(recvbuf));
+                    recvbuf[n_read] = '\0';
 
-            if (n_read == -1)
-            {
-                continue;
-            }
+                    if (strlen(regex) == 0 || StringMatchFull(regex, recvbuf))
+                    {
+                        Log(LOG_LEVEL_VERBOSE,
+                            "selectservers: Got matching reply from host %s address %s",
+                            host, txtaddr);
 
-            assert(n_read < sizeof(recvbuf));
-            recvbuf[n_read] = '\0';
+                        char buffer[CF_MAXVARSIZE] = "";
+                        snprintf(buffer, sizeof(buffer), "%s[%zu]", array_lval, count);
+                        VarRef *ref = VarRefParse(buffer);
+                        EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
+                                               "source=function,function=selectservers");
+                        VarRefDestroy(ref);
 
-            if (strlen(regex) == 0 || StringMatchFull(regex, recvbuf))
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "selectservers: Got matching reply from host %s address %s",
-                    host, txtaddr);
-
-                char buffer[CF_MAXVARSIZE] = "";
-                snprintf(buffer, sizeof(buffer), "%s[%zu]", array_lval, count);
-                VarRef *ref = VarRefParse(buffer);
-                EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
-                                       "source=function,function=selectservers");
-                VarRefDestroy(ref);
-
-                count++;
+                        count++;
+                    }
+                }
             }
         }
         else                      /* If query is empty, all hosts are added */
@@ -2909,6 +2902,8 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
 
             count++;
         }
+
+        cf_closesocket(sd);
     }
 
     PolicyDestroy(select_server_policy);

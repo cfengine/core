@@ -334,6 +334,12 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
 {
  char comm[CF_BUFSIZE];
 
+ if (policy == NULL || state == NULL)
+    {
+    Log(LOG_LEVEL_VERBOSE,"OSPF not running, skipping setup\n");
+    return;
+    }
+ 
  // Log file
 
  if (policy->log_file)

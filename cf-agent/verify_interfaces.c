@@ -189,9 +189,10 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
             return false;
         }
 
-        if ((a.interface.speed || a.interface.duplex) && !(a.interface.speed && a.interface.duplex))
+        if ((a.interface.speed != CF_NOINT || a.interface.duplex != NULL) && !(a.interface.speed == CF_NOINT && a.interface.duplex == NULL))
         {
-            Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex if either is promised", pp->promiser);
+            printf("found %d and %d\n",a.interface.speed, a.interface.duplex);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }

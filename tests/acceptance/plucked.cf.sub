@@ -486,7 +486,7 @@ bundle edit_line set_user_field(user,field,val)
 # formatted file like `/etc/passwd`
 # @param user The user to be modified
 # @param field The field that should be modified
-# @param val THe value for `field`
+# @param val The value for `field`
 #
 # **Note:** To manage local users with CFEngine 3.6 and later,
 # consider making `users` promises instead of modifying system files.

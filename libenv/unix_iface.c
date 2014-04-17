@@ -578,6 +578,8 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 {
     FILE *pp = NULL;
     char buffer[CF_BUFSIZE];
+    char interface[CF_SMALLBUF];
+    Rlist *ips = NULL;
 
 /* Whatever the manuals might say, you cannot get IPV6
    interface configuration from the ioctls. This seems
@@ -628,6 +630,24 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
             }
         }
 
+        if (isalnum(buffer[0])) // This line is the interface indentifier
+        {
+            char one[CF_SMALLBUF], two[CF_SMALLBUF];
+            one[0] = '\0';
+            two[0] = '\0';
+
+            if (isdigit(buffer[0])) // e.g. 1: eth0 stuff
+            {
+                sscanf(buffer, "%31s %31s", one, two);
+            }
+            else // e.g. eth0:
+            {
+                sscanf(buffer, "%31[^: \t] ", two);
+            }
+
+            strcpy(interface, two);
+        }
+
         if (strcasestr(buffer, "inet6"))
         {
             Item *ip, *list = NULL;
@@ -647,9 +667,19 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
                 if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
+                    char name[CF_MAXVARSIZE];
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
                     EvalContextAddIpAddress(ctx, ip->name);
-                    EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
+                    snprintf(name, sizeof(name), "ipv6_%s", CanonifyName(ip->name));
+                    EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
+
+                    RlistAppendScalar(&ips, ip->name);
+
+                    if (strncmp(ip->name, "fe80:", 5) != 0) // Skip link-local invisible addresses
+                    {
+                        snprintf(name, sizeof(name), "ipv6[%s]", CanonifyName(interface));
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip->name, CF_DATA_TYPE_STRING, "source=agent");
+                    }
                 }
             }
 
@@ -658,6 +688,15 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
     }
 
     cf_pclose(pp);
+
+    if (ips)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv6_addresses", ips, CF_DATA_TYPE_STRING_LIST,
+                                      "inventory,source=agent,attribute_name=IPv6 addresses");
+    }
+
+    RlistDestroy(ips);
+
 }
 
 /*******************************************************************/

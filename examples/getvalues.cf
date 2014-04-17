@@ -35,8 +35,13 @@ bundle agent example
 
       "values" slist => getvalues("v");
 
+      # works with data containers too
+      "d" data => parsejson('{ "k": [ 1, 2, 3, "a", "b", "c" ] }');
+      "cvalues" slist => getvalues("d[k]");
+
   reports:
       "Found values: $(values)";
+      "Found container values: $(cvalues)";
 
 }
 #+end_src
@@ -45,5 +50,11 @@ bundle agent example
 #@ ```
 #@ R: Found values: value_2
 #@ R: Found values: value_1
+#@ R: Found container values: 1
+#@ R: Found container values: 2
+#@ R: Found container values: 3
+#@ R: Found container values: a
+#@ R: Found container values: b
+#@ R: Found container values: c
 #@ ```
 #+end_src

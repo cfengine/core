@@ -316,13 +316,13 @@ int QueryOSPFServiceState(EvalContext *ctx, CommonOSPF *ospfp)
       Log(LOG_LEVEL_VERBOSE, "OSPF router-id: %s ", ospfp->ospf_router_id);
       }
 
-   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing kernel routes: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing kernel routes: %d with metric %d (type %d)",
        ospfp->ospf_redistribute_kernel,ospfp->ospf_redistribute_kernel_metric,ospfp->ospf_redistribute_kernel_metric_type);
-   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing connected networks: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing connected networks: %d with metric %d (type %d)",
        ospfp->ospf_redistribute_connected, ospfp->ospf_redistribute_connected_metric, ospfp->ospf_redistribute_connected_metric_type);
-   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing static routes: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing static routes: %d with metric %d (type %d)",
        ospfp->ospf_redistribute_static, ospfp->ospf_redistribute_static_metric, ospfp->ospf_redistribute_static_metric_type);
-   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing bgp: %d with metric %d (type %d)\n",
+   Log(LOG_LEVEL_VERBOSE,"OSPF redistributing bgp: %d with metric %d (type %d)",
        ospfp->ospf_redistribute_bgp, ospfp->ospf_redistribute_bgp_metric, ospfp->ospf_redistribute_bgp_metric_type);
 
  return true;
@@ -336,7 +336,7 @@ void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
 
  if (policy == NULL || state == NULL)
     {
-    Log(LOG_LEVEL_VERBOSE,"OSPF not running, skipping setup\n");
+    Log(LOG_LEVEL_VERBOSE,"OSPF not running, skipping setup");
     return;
     }
  

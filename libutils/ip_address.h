@@ -85,4 +85,23 @@ bool IPAddressIsIPAddress(Buffer *source, IPAddress **address);
   */
 int IPAddressCompareLess(IPAddress *a, IPAddress *b);
 
+struct IPV4Address
+{
+    uint8_t octets[4];
+    uint16_t port;
+    unsigned int mask;
+};
+struct IPV6Address
+{
+    uint16_t sixteen[8];
+    uint16_t port;
+    unsigned int mask;
+};
+
+struct IPAddress
+{
+    void *address;
+    int type;
+};
+
 #endif // CFENGINE_IP_ADDRESS_H

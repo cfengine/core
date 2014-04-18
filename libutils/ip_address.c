@@ -29,19 +29,6 @@
 #include <ip_address.h>
 #include <alloc.h>
 
-struct IPV4Address {
-    uint8_t octets[4];
-    uint16_t port;
-};
-struct IPV6Address {
-    uint16_t sixteen[8];
-    uint16_t port;
-};
-
-struct IPAddress {
-    void *address;
-    int type;
-};
 
 #define Char2Dec(o, c) \
     (o * 10) + c - '0'
@@ -84,12 +71,14 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
     char *p = NULL;
     int octet = 0;
     int port = 0;
+    int mask = 0;
     int period_counter = 0;
     int port_counter = 0;
     int char_counter = 0;
     bool is_period = false;
     bool is_digit = false;
     bool is_port = false;
+    bool is_mask = false;
     bool has_digit = false;
 
     /*
@@ -123,8 +112,11 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
      * 7 <--+----+----+     |
      *     error      | ':' |
      *               _5-----+
+     *     error      | '/' |
+     *               _99----+
      *             d \| done
      */
+
     int state = 0;
     bool state_change = false;
     for (p = (char *)source; *p != '\0'; ++p)
@@ -135,6 +127,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
         is_digit = isdigit(*p);
         is_period = (*p == '.') ? 1 : 0;
         is_port = (*p == ':') ? 1 : 0;
+        is_mask = (*p == '/') ? 1 : 0;
         /*
          * Update the corresponding flags.
          */
@@ -145,6 +138,10 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
         if (is_port)
         {
             port_counter++;
+        }
+        if (is_mask)
+        {
+            state = 99;
         }
         /*
          * Do the right operation depending on the state
@@ -216,6 +213,17 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
                 state_change = true;
             }
             break;
+        case 99:
+            if (is_digit)
+            {
+                mask = Char2Dec(mask, *p);
+            }
+            else
+            {
+                state_change = true;
+            }
+            break;
+
         case 6:
         default:
             return -1;
@@ -235,6 +243,10 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             return -1;
         }
         if (port > 65535)
+        {
+            return -1;
+        }
+        if (mask > 30)
         {
             return -1;
         }
@@ -313,6 +325,12 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             address->port = port;
         }
     }
+
+    if (state == 99)
+    {
+        address->mask = mask;
+    }
+
     /*
      * If state is 6 then there was an error.
      */
@@ -360,6 +378,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
     int unsorted_pointer = 0;
     int bracket_expected = 0;
     int port = 0;
+    int mask = 0;
     int char_counter = 0;
     bool is_start_bracket = 0;
     bool is_end_bracket = 0;
@@ -367,10 +386,12 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
     bool is_hexdigit = 0;
     bool is_upper_hexdigit = 0;
     bool is_digit = 0;
+    bool is_mask = false;
     int zero_compression = 0;
     int already_compressed = 0;
     int state = 0;
     bool state_change = false;
+    bool read_mask = false;
 
     /*
      * Initialize our container for unknown numbers.
@@ -403,11 +424,34 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         is_hexdigit = isxdigit(*p);
         is_digit = isdigit(*p);
         is_colon = (*p == ':') ? 1 : 0;
+        is_mask = (*p == '/') ? 1 : 0;
+
         if (is_hexdigit)
         {
             if (isalpha(*p))
             {
                 is_upper_hexdigit = isupper(*p);
+            }
+        }
+
+        if (is_mask)
+        {
+            read_mask = true;
+            continue;
+        }
+
+        if (read_mask)
+        {
+            if (is_digit)
+            {
+                mask = Char2Dec(mask, *p);
+
+                if (mask > 64)
+                {
+                    return -1;
+                }
+
+                continue;
             }
         }
 
@@ -682,6 +726,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
             break;
         case 10:
             break;
+
         case 11:
         default:
             return -1;
@@ -696,6 +741,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         {
             return -1;
         }
+
         if (state_change)
         {
             sixteen = 0;
@@ -851,12 +897,18 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
             address->port = port;
         }
     }
+
     if (state == 11)
     {
         /*
          * Error state
          */
         return -1;
+    }
+
+    if (address)
+    {
+        address->mask = mask;
     }
     return 0;
 }
@@ -1197,4 +1249,3 @@ bool IPAddressIsIPAddress(Buffer *source, IPAddress **address)
     }
     return true;
 }
-

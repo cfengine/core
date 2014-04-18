@@ -76,6 +76,7 @@
 #include <misc_lib.h>
 #include <buffer.h>
 #include <loading.h>
+#include <../libenv/unix_iface.h>
 
 #include <mod_common.h>
 #include <network_services.h>
@@ -1548,6 +1549,8 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
         if (QueryOSPFServiceState(ctx, OSPF_ACTIVE))
         {
             KeepOSPFLinkServiceControlPromises(OSPF_POLICY, OSPF_ACTIVE);
+            // Update interface info
+            GetInterfacesInfo(ctx);
         }
         break;
 

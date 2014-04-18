@@ -37,6 +37,9 @@
 #include <expand.h>
 #include <network_services.h>
 #include <files_operators.h>
+#include <communication.h>
+#include <ip_address.h>
+#include <string_lib.h>
 
 #define CF_DEBIAN_IFCONF "/etc/network/interfaces"
 #define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
@@ -192,7 +195,55 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         if ((a.interface.speed != CF_NOINT || a.interface.duplex != NULL) && !(a.interface.speed == CF_NOINT && a.interface.duplex == NULL))
         {
             Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex if either is promised", pp->promiser);
-            printf("found %d and %d\n",a.interface.speed, a.interface.duplex);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            return false;
+        }
+    }
+
+    for (Rlist *rp = a.interface.v4_addresses; rp != NULL; rp=rp->next)
+    {
+        char test[CF_MAXVARSIZE];
+        if (strlen(rp->val.item) > CF_MAX_IP_LEN)
+        {
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            return false;
+        }
+
+        strcpy(test, rp->val.item);
+        ToLowerStrInplace(test);
+
+        Buffer *buf = BufferNewFrom(test, strlen(test));
+        IPAddress *ip1 = IPAddressNew(buf);
+        BufferDestroy(buf);
+        if (ip1 == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address (CIDR format expected)", pp->promiser);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            return false;
+        }
+    }
+
+    for (Rlist *rp = a.interface.v6_addresses; rp != NULL; rp=rp->next)
+    {
+        char test[CF_MAXVARSIZE];
+
+        if (strlen(rp->val.item) > CF_MAX_IP_LEN)
+        {
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            return false;
+        }
+
+        strcpy(test, rp->val.item);
+        ToLowerStrInplace(test);
+
+        Buffer *buf = BufferNewFrom(test, strlen(test));
+        IPAddress *ip1 = IPAddressNew(buf);
+        BufferDestroy(buf);
+        if (ip1 == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -459,7 +510,7 @@ static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext 
 
     for (rp = a->interface.v4_addresses; rp != NULL; rp = rp->next)
     {
-        if (!RlistKeyIn(addresses, rp->val.item))
+        if (!IPAddressInList(addresses, rp->val.item))
         {
             *result = PROMISE_RESULT_CHANGE;
 
@@ -487,7 +538,7 @@ static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext 
     {
         for (rpa = addresses; rpa != NULL; rpa=rpa->next)
         {
-            if (!RlistKeyIn(a->interface.v4_addresses, rpa->val.item))
+            if (!IPAddressInList(a->interface.v4_addresses, rpa->val.item))
             {
                 *result = PROMISE_RESULT_CHANGE;
 
@@ -509,10 +560,11 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
 {
     Rlist *rp, *rpa;
     char cmd[CF_BUFSIZE];
+    char b[CF_MAX_IP_LEN], c[CF_MAX_IP_LEN];
 
     for (rp = a->interface.v6_addresses; rp != NULL; rp = rp->next)
     {
-        if (!RlistKeyIn(addresses, rp->val.item))
+        if (!IPAddressInList(addresses, rp->val.item))
         {
             *result = PROMISE_RESULT_CHANGE;
 
@@ -532,7 +584,7 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
     {
         for (rpa = addresses; rpa != NULL; rpa=rpa->next)
         {
-            if (!RlistKeyIn(a->interface.v6_addresses, rpa->val.item))
+            if (!IPAddressInList(a->interface.v6_addresses, rpa->val.item))
             {
                 *result = PROMISE_RESULT_CHANGE;
 
@@ -972,7 +1024,7 @@ int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
 
         if (strncmp("ERROR:", line, 6) == 0 || strstr(line, "error") == 0)
         {
-            Log(LOG_LEVEL_ERR, "Execution returned an error: %s", line);
+            Log(LOG_LEVEL_ERR, "Interface returned an error: %s", line);
             *result = PROMISE_RESULT_FAIL;
             break;
         }
@@ -1385,4 +1437,84 @@ static void DeleteBridgeInfo(Bridges *bridges)
         next = bp->next;
         free((char *)bp);
     }
+}
+
+/****************************************************************************/
+
+bool IPAddressInList(Rlist *cidr1, char *cidr2)
+{
+    Rlist *rp;
+
+    for (rp = cidr1; rp != NULL; rp=rp->next)
+    {
+        if (CompareCIDR(rp->val.item, cidr2))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/****************************************************************************/
+
+bool CompareCIDR(char *cidr1, char *cidr2)
+{
+    ToLowerStrInplace(cidr1);
+    ToLowerStrInplace(cidr2);
+
+    Buffer *one = BufferNewFrom(cidr1, strlen(cidr1));
+    Buffer *two = BufferNewFrom(cidr2, strlen(cidr2));
+
+    if (one == NULL || two == NULL)
+    {
+        return false;
+    }
+
+    IPAddress *ip1 = IPAddressNew(one);
+    IPAddress *ip2 = IPAddressNew(two);
+
+    if (ip1->type != ip2->type)
+    {
+        return false;
+    }
+
+    if (ip1->type == IP_ADDRESS_TYPE_IPV4)
+    {
+        struct IPV4Address *v4_1 = (struct IPV4Address *)ip1->address;
+        struct IPV4Address *v4_2 = (struct IPV4Address *)ip2->address;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (v4_1->octets[i] != v4_2->octets[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+        //printf("ONE: %u.%u.%u.%u/%u\n", ipv4->octets[0], ipv4->octets[1], ipv4->octets[2], ipv4->octets[3], ipv4->mask);
+    }
+    else if (ip1->type == IP_ADDRESS_TYPE_IPV6)
+    {
+        struct IPV6Address *v6_1 = (struct IPV6Address *)ip1->address;
+        struct IPV6Address *v6_2 = (struct IPV6Address *)ip2->address;
+
+        for (int i = 0; i < 8; i++)
+        {
+            if (v6_1->sixteen[i] != v6_2->sixteen[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+
+        //printf("ONE: %x:%x:%x:%x:%x:%x:%x:%x/%u\n", ipv6->sixteen[0], ipv6->sixteen[1], ipv6->sixteen[2],
+        //       ipv6->sixteen[3], ipv6->sixteen[4], ipv6->sixteen[5], ipv6->sixteen[6], ipv6->sixteen[7], ipv6->mask);
+    }
+
+    BufferDestroy(one);
+    BufferDestroy(two);
+
 }

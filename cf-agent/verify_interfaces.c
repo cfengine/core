@@ -1492,6 +1492,11 @@ bool CompareCIDR(char *cidr1, char *cidr2)
             }
         }
 
+        if (v4_1->mask != v4_2->mask)
+        {
+            return false;
+        }
+
         return true;
         //printf("ONE: %u.%u.%u.%u/%u\n", ipv4->octets[0], ipv4->octets[1], ipv4->octets[2], ipv4->octets[3], ipv4->mask);
     }
@@ -1506,6 +1511,11 @@ bool CompareCIDR(char *cidr1, char *cidr2)
             {
                 return false;
             }
+        }
+
+        if (v6_1->mask != v6_2->mask)
+        {
+            return false;
         }
 
         return true;

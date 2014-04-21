@@ -64,6 +64,12 @@ Buffer *IPAddressGetAddress(IPAddress *address);
   */
 int IPAddressGetPort(IPAddress *address);
 /**
+  @brief Recovers the network mask (if specified).
+  @param address IPAddress object.
+  @return The network mask (if specified).
+ */
+int IPAddressGetMask(IPAddress *address);
+/**
   @brief Compares two IP addresses.
   @param a IP address of the first object.
   @param b IP address of the second object.

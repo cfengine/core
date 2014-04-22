@@ -8,6 +8,12 @@ body common control
       version => "1.0";
 }
 
+body agent control
+{
+      # 5 seconds timeout for selectservers for non-connecting host 8.8.8.8
+      default_timeout => "5";
+}
+
 bundle agent init
 {
 }

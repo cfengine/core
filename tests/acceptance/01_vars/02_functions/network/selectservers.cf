@@ -31,21 +31,16 @@ bundle agent check
       "second_is_ok" expression => isvariable("test.alive_servers[1]");
       "third_is_bad"        not => isvariable("test.alive_servers[2]");
       "fourth_is_bad"       not => isvariable("test.alive_servers[3]");
-      "fifth_is_bad"        not => isvariable("test.alive_servers[4]");
+
+  methods:
+      # All above classes must be set for test to pass
+      "" usebundle => dcs_passif_expected("up2servers,first_is_ok,second_is_ok,third_is_bad,fourth_is_bad",
+					  "", $(this.promise_filename)),
+          inherit => "true";
 
   reports:
     DEBUG::
       "retval:        $(test.retval)";
       "alive_servers: $(test.alive_servers[0]) $(test.alive_servers[1]) $(test.alive_servers[2])";
-    DEBUG.up2servers::   "up2servers";
-    DEBUG.first_is_ok::  "first_is_ok";
-    DEBUG.second_is_ok:: "second_is_ok";
-    DEBUG.third_is_bad:: "third_is_bad";
-    DEBUG.fourth_is_bad::"fourth_is_bad";
-
-    up2servers.first_is_ok.second_is_ok.third_is_bad.fourth_is_bad::
-      "$(this.promise_filename) Pass";
-    !up2servers|!first_is_ok|!second_is_ok|!third_is_bad|!fourth_is_bad::
-      "$(this.promise_filename) FAIL";
 }
 

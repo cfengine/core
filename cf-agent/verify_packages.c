@@ -48,6 +48,7 @@
 #include <ornaments.h>
 #include <eval_context.h>
 #include <retcode.h>
+#include <known_dirs.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <cf-windows-functions.h>
 
@@ -477,6 +478,8 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
 
    Called by VerifyInstalledPackages
 
+   * calls a.packages.package_list_update_command if $(sys.workdir)/state/software_update_timestamp_<manager>
+     is older than the interval specified in package_list_update_ifelapsed.
    * assembles the package list from a.packages.package_list_command
    * respects a.packages.package_commands_useshell (boolean)
    * parses with a.packages.package_multiline_start and if successful, calls PrependMultiLinePackageItem
@@ -498,7 +501,71 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
 {
     if (a.packages.package_list_update_command != NULL)
     {
-        ExecPackageCommand(ctx, a.packages.package_list_update_command, false, false, a, pp, result);
+        time_t horizon = 24 * 60, now = time(NULL);
+        bool call_update = true;
+        struct stat sb;
+        char update_timestamp_file[PATH_MAX];
+
+        snprintf(update_timestamp_file, sizeof(update_timestamp_file), "%s%cstate%csoftware_update_timestamp_%s",
+                 GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR,
+                 ReadLastNode(RealPackageManager(a.packages.package_add_command)));
+
+        if (stat(update_timestamp_file, &sb) != -1)
+        {
+            if (a.packages.package_list_update_ifelapsed != CF_NOINT)
+            {
+                horizon = a.packages.package_list_update_ifelapsed;
+            }
+
+            char *rel, *action;
+            if (now - sb.st_mtime < horizon * 60)
+            {
+                rel = "less";
+                action = "Not updating";
+                call_update = false;
+            }
+            else
+            {
+                rel = "more";
+                action = "Updating";
+            }
+            Log(LOG_LEVEL_VERBOSE, "'%s' is %s than %i minutes old. %s package list.",
+                update_timestamp_file, rel, a.packages.package_list_update_ifelapsed, action);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "'%s' does not exist. Updating package list.", update_timestamp_file);
+        }
+
+        if (call_update)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Calling package list update command: '%s'", a.packages.package_list_update_command);
+            ExecPackageCommand(ctx, a.packages.package_list_update_command, false, false, a, pp, result);
+
+            // Touch timestamp file.
+            int err = utime(update_timestamp_file, NULL);
+            if (err < 0)
+            {
+                if (errno == ENOENT)
+                {
+                    int fd = open(update_timestamp_file, O_WRONLY | O_CREAT, 0600);
+                    if (fd >= 0)
+                    {
+                        close(fd);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR, "Could not create timestamp file '%s'. (open: '%s')",
+                            update_timestamp_file, GetErrorStr());
+                    }
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Could not update timestamp file '%s'. (utime: '%s')",
+                        update_timestamp_file, GetErrorStr());
+                }
+            }
+        }
     }
 
     if (LEGACY_OUTPUT)

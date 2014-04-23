@@ -39,7 +39,6 @@
 #include <files_operators.h>
 #include <communication.h>
 #include <ip_address.h>
-#include <string_lib.h>
 
 #define CF_DEBIAN_IFCONF "/etc/network/interfaces"
 #define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
@@ -205,7 +204,7 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         char test[CF_MAXVARSIZE];
         if (strlen(rp->val.item) > CF_MAX_IP_LEN)
         {
-            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv4 address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -218,7 +217,7 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         BufferDestroy(buf);
         if (ip1 == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address (CIDR format expected)", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv4 address (CIDR format expected)", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -230,7 +229,7 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
 
         if (strlen(rp->val.item) > CF_MAX_IP_LEN)
         {
-            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv6 address %s (CIDR format expected) (len = %d/%d)", pp->promiser, (char *)rp->val.item,strlen(rp->val.item),CF_MAX_IP_LEN);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -241,9 +240,10 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         Buffer *buf = BufferNewFrom(test, strlen(test));
         IPAddress *ip1 = IPAddressNew(buf);
         BufferDestroy(buf);
+
         if (ip1 == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IP address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv6 address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -1456,75 +1456,4 @@ bool IPAddressInList(Rlist *cidr1, char *cidr2)
     return false;
 }
 
-/****************************************************************************/
 
-bool CompareCIDR(char *cidr1, char *cidr2)
-{
-    ToLowerStrInplace(cidr1);
-    ToLowerStrInplace(cidr2);
-
-    Buffer *one = BufferNewFrom(cidr1, strlen(cidr1));
-    Buffer *two = BufferNewFrom(cidr2, strlen(cidr2));
-
-    if (one == NULL || two == NULL)
-    {
-        return false;
-    }
-
-    IPAddress *ip1 = IPAddressNew(one);
-    IPAddress *ip2 = IPAddressNew(two);
-
-    if (ip1->type != ip2->type)
-    {
-        return false;
-    }
-
-    if (ip1->type == IP_ADDRESS_TYPE_IPV4)
-    {
-        struct IPV4Address *v4_1 = (struct IPV4Address *)ip1->address;
-        struct IPV4Address *v4_2 = (struct IPV4Address *)ip2->address;
-
-        for (int i = 0; i < 4; i++)
-        {
-            if (v4_1->octets[i] != v4_2->octets[i])
-            {
-                return false;
-            }
-        }
-
-        if (v4_1->mask != v4_2->mask)
-        {
-            return false;
-        }
-
-        return true;
-        //printf("ONE: %u.%u.%u.%u/%u\n", ipv4->octets[0], ipv4->octets[1], ipv4->octets[2], ipv4->octets[3], ipv4->mask);
-    }
-    else if (ip1->type == IP_ADDRESS_TYPE_IPV6)
-    {
-        struct IPV6Address *v6_1 = (struct IPV6Address *)ip1->address;
-        struct IPV6Address *v6_2 = (struct IPV6Address *)ip2->address;
-
-        for (int i = 0; i < 8; i++)
-        {
-            if (v6_1->sixteen[i] != v6_2->sixteen[i])
-            {
-                return false;
-            }
-        }
-
-        if (v6_1->mask != v6_2->mask)
-        {
-            return false;
-        }
-
-        return true;
-
-        //printf("ONE: %x:%x:%x:%x:%x:%x:%x:%x/%u\n", ipv6->sixteen[0], ipv6->sixteen[1], ipv6->sixteen[2],
-        //       ipv6->sixteen[3], ipv6->sixteen[4], ipv6->sixteen[5], ipv6->sixteen[6], ipv6->sixteen[7], ipv6->mask);
-    }
-
-    BufferDestroy(one);
-    BufferDestroy(two);
-
-}

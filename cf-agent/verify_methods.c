@@ -44,6 +44,15 @@ static void GetReturnValue(EvalContext *ctx, const Bundle *callee, const Promise
 
 /*****************************************************************************/
 
+/*
+ * This function should only be called from the evaluator so that methods promises
+ * never report REPAIRED compliance (the promises inside will do that already).
+ *
+ * Promise types that delegate to bundles (services and users) should call VerifyMethod,
+ * which maintains the REPAIRED compliance so that it bubbles up correctly to the parent
+ * promise type.
+ */
+
 PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetMethodAttributes(ctx, pp);
@@ -55,8 +64,15 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-
     PromiseResult result = VerifyMethod(ctx, cp->rval, a, pp);
+    switch (result)
+    {
+    case PROMISE_RESULT_CHANGE:
+        result = PROMISE_RESULT_NOOP;
+    default:
+        break;
+    }
+
     return result;
 }
 
@@ -134,10 +150,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
             break;
 
         case PROMISE_RESULT_CHANGE:
-            // the promises inside the invoked bundle have logged and reported REPAIRED compliance.
-            // No need to report the method as REPAIRED - make this message verbose, and over-ride compliance as KEPT.
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
-            result = PROMISE_RESULT_NOOP;
             break;
 
         case PROMISE_RESULT_FAIL:

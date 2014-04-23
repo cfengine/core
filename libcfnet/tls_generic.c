@@ -366,7 +366,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
         else
         {
             TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "TLS session abruptly closed. SSL_write", sent);
+                        "Connection unexpectedly closed. SSL_write", sent);
             return 0;
         }
     }
@@ -411,7 +411,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
         else
         {
             TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "TLS session abruptly closed. SSL_read", received);
+                        "Connection unexpectedly closed. SSL_read", received);
         }
     }
 

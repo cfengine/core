@@ -5508,6 +5508,72 @@ static FnCallResult FnCallReadRealList(EvalContext *ctx, ARG_UNUSED const Policy
     return ReadList(ctx, fp, args, CF_DATA_TYPE_REAL);
 }
 
+static FnCallResult FnCallReadCSV(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *args)
+{
+    const char *filename = RlistScalarValue(args);
+    size_t size_max = IntFromString(RlistScalarValue(args->next));
+
+    size_t count = 0;
+
+    FILE *fin = safe_fopen(filename, "r");
+    if (NULL == fin)
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s cannot open the CSV file '%s' (fopen: %s)",
+            fp->name, filename, GetErrorStr());
+        return FnFailure();
+    }
+
+    JsonElement *json = JsonArrayCreate(50);
+    int linenumber = 0;
+    for(;;)
+    {
+        char *line = GetCsvLineNext(fin);
+        ++linenumber;
+
+        if (NULL == line)
+        {
+            if (!feof(fin))
+            {
+                Log(LOG_LEVEL_ERR, "%s: unable to read line from CSV file '%s'. (fread: %s)",
+                    fp->name, filename, GetErrorStr());
+                fclose(fin);
+                JsonDestroy(json);
+                return FnFailure();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        count += strlen(line);
+        if (count > size_max)
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: line %d from CSV file '%s' exceeded limit %lu, done with file",
+                fp->name, linenumber, filename, size_max);
+            free(line);
+            break;
+        }
+
+        Seq *list = SeqParseCsvString(line);
+        free(line);
+
+        JsonElement *line_obj = JsonArrayCreate(SeqLength(list));
+
+        for (size_t i = 0; i < SeqLength(list); i++)
+        {
+            JsonArrayAppendString(line_obj, SeqAt(list, i));
+        }
+        
+        SeqDestroy(list);
+        JsonArrayAppendObject(json, line_obj);
+    }
+
+    fclose(fin);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+}
+
 static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *args)
 {
     const char *input_path = RlistScalarValue(args);
@@ -7810,6 +7876,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("randomint", CF_DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits, excluding the upper",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readcsv", CF_DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadCSV, "Parse a CSV file and return a JSON data container with the contents",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readfile", CF_DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile, "Read max number of bytes from named file and assign to variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintarray", CF_DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray, "Read an array of integers from a file, indexed by first entry on line and sequentially on each line; return line count",

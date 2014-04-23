@@ -192,21 +192,19 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     }
     else   /* ret == 0 */
     {
-        Log(LOG_LEVEL_WARNING, "%s: Server's public key is UNKNOWN!",
-            ConnectionInfoPrintableKeyHash(conn_info));
-
         if (trust_server)             /* We're most probably bootstrapping. */
         {
-            Log(LOG_LEVEL_WARNING,
-                "%s: Explicitly trusting this key from now on.",
+            Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
                 ConnectionInfoPrintableKeyHash(conn_info));
             SavePublicKey(username, ConnectionInfoPrintableKeyHash(conn_info),
                           KeyRSA(ConnectionInfoKey(conn_info)));
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack!");
-            Log(LOG_LEVEL_ERR, "Rebootstrap the client if you really want to start trusting this new key.");
+            Log(LOG_LEVEL_ERR,
+                "TRUST FAILED, server presented an untrusted key, dropping connection!");
+            Log(LOG_LEVEL_ERR,
+                "Rebootstrap the client if you really want to start trusting this new key");
             return -1;
         }
     }

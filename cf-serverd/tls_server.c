@@ -472,7 +472,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
             {
                 Log(LOG_LEVEL_VERBOSE,
-                    "Host was found in \"trustkeysfrom\" list");
+                    "Peer was found in \"trustkeysfrom\" list");
                 Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
                     KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
@@ -482,9 +482,9 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             else
             {
                 Log(LOG_LEVEL_NOTICE,
-                    "TRUST FAILED, host presented an untrusted key, dropping connection!");
+                    "TRUST FAILED, peer presented an untrusted key, dropping connection!");
                 Log(LOG_LEVEL_VERBOSE,
-                    "Add host to \"trustkeysfrom\" if you really want to start trusting this new key.");
+                    "Add peer to \"trustkeysfrom\" if you really want to start trusting this new key.");
                 return -1;
             }
         }

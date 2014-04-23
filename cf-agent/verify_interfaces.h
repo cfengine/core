@@ -30,5 +30,4 @@ int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
 PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp);
 void WriteNativeInterfacesFile(void);
 bool IPAddressInList(Rlist *cidr1, char *cidr2);
-bool CompareCIDR(char *cidr1, char *cidr2);
 #endif

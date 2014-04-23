@@ -137,16 +137,24 @@ char *StringVFormat(const char *fmt, va_list ap);
 char *StringFormat(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
 
 /**
- * @brief Find the initial segment of memory (up to #n bytes) consisting of character #c.
+ * @brief Find the first non-#c (up to #n bytes) after #mem.
  *
- * @return first byte which is not #c, or #mem + #n if all bytes in memory segment are #c
+ * @return A pointer to the first byte which is not #c, or #mem + #n
+ * if all bytes up to there are #c.
+ *
+ * @note Callers who pass in a const-qualified #mem must treat the
+ * return as const-qualified; it is declared non-const for the benefit
+ * of callers passing in a non-const #mem.
  */
 void *MemSpan(const void *mem, char c, size_t n);
 
 /**
- * @brief Find the initial segment of memory (up to #n bytes) consisting not of character #c.
+ * @brief Find the first #c within #n bytes of #mem.
  *
- * @return first byte which is #c, or #mem + #n if none of bytes in memory segment are #c
+ * @return A pointer to the first byte which is #c, or #mem + #n if no
+ * byte before that is #c.
+ *
+ * @note Handle the return as for MemSpan(), above.
  */
 void *MemSpanInverse(const void *mem, char c, size_t n);
 

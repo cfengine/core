@@ -829,63 +829,43 @@ bool StringEndsWith(const char *str, const char *suffix)
         return false;
     }
 
-    for (size_t i = 0; i < suffix_len; i++)
-    {
-        if (str[str_len - i - 1] != suffix[suffix_len - i - 1])
-        {
-            return false;
-        }
-    }
-
-    return true;
+    return 0 == strcmp(str + str_len - suffix_len, suffix);
 }
 
 bool StringStartsWith(const char *str, const char *prefix)
 {
-    int str_len = strlen(str);
-    int prefix_len = strlen(prefix);
-
-    if (prefix_len > str_len)
-    {
-        return false;
-    }
-
-    for (int i = 0; i < prefix_len; i++)
-    {
-        if (str[i] != prefix[i])
-        {
-            return false;
-        }
-    }
-    return true;
+    return 0 == strncmp(str, prefix, strlen(prefix));
 }
 
 void *MemSpan(const void *mem, char c, size_t n)
 {
-    const char *end = mem + n;
-    for (; (char*)mem < end; ++mem)
+    const char *p = mem;
+    size_t i = 0;
+    while (i < n && p[i] == c)
     {
-        if (*((char *)mem) != c)
-        {
-            return (char *)mem;
-        }
+        i++;
     }
 
-    return (char *)mem;
+    /* We have to cast away constness here: callers who pass us a
+     * non-const mem want a non-const return back, so we return a
+     * non-const pointer; but we want to allow callers to pass a
+     * const-qualified mem, as long as they have the sense to not use
+     * the non-const-ness of our return !
+     */
+    return (void *)(p + i);
 }
 
 void *MemSpanInverse(const void *mem, char c, size_t n)
 {
-    const char *end = mem + n;
-    for (; (char*)mem < end; ++mem)
+    const char *p = mem;
+    size_t i = 0;
+    while (i < n && p[i] != c)
     {
-        if (*((char*)mem) == c)
-        {
-            return (char *)mem;
-        }
+        i++;
     }
 
-    return (char *)mem;
+    /* Cast away constness, as for MemSpan */
+    return (void *)(p + i);
 }
 
 /*

@@ -2788,7 +2788,9 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Function selectservers was promised a list called '%s' but this was not found", listvar);
+        Log(LOG_LEVEL_VERBOSE,
+            "Function selectservers was promised a list called '%s' but this was not found",
+            listvar);
         return FnFailure();
     }
 
@@ -2810,7 +2812,8 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     if (DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function selectservers was promised a list called '%s' but this variable is not a list", listvar);
+            "Function selectservers was promised a list called '%s' but this variable is not a list",
+            listvar);
         free(array_lval);
         return FnFailure();
     }
@@ -2850,51 +2853,42 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                                txtaddr, sizeof(txtaddr));
         if (sd == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Couldn't open a tcp socket. (socket %s)",
-                GetErrorStr());
             continue;
         }
 
         if (strlen(sendstring) > 0)
         {
-            if (SendSocketStream(sd, sendstring, strlen(sendstring)) == -1)
+            if (SendSocketStream(sd, sendstring, strlen(sendstring)) != -1)
             {
-                cf_closesocket(sd);
-                continue;
-            }
+                char recvbuf[CF_BUFSIZE];
+                ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
 
-            char recvbuf[CF_BUFSIZE];
-            ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
-            cf_closesocket(sd);
+                if (n_read != -1)
+                {
+                    /* maxbytes was checked earlier, but just make sure... */
+                    assert(n_read < sizeof(recvbuf));
+                    recvbuf[n_read] = '\0';
 
-            if (n_read == -1)
-            {
-                continue;
-            }
+                    if (strlen(regex) == 0 || StringMatchFull(regex, recvbuf))
+                    {
+                        Log(LOG_LEVEL_VERBOSE,
+                            "selectservers: Got matching reply from host %s address %s",
+                            host, txtaddr);
 
-            assert(n_read < sizeof(recvbuf));
-            recvbuf[n_read] = '\0';
+                        char buffer[CF_MAXVARSIZE] = "";
+                        snprintf(buffer, sizeof(buffer), "%s[%zu]", array_lval, count);
+                        VarRef *ref = VarRefParse(buffer);
+                        EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
+                                               "source=function,function=selectservers");
+                        VarRefDestroy(ref);
 
-            if (strlen(regex) == 0 || StringMatchFull(regex, recvbuf))
-            {
-                count++;                                   /* query matches */
-
-                Log(LOG_LEVEL_VERBOSE,
-                    "selectservers: Got matching reply from host %s address %s",
-                    host, txtaddr);
-
-                char buffer[CF_MAXVARSIZE] = "";
-                snprintf(buffer, sizeof(buffer), "%s[%zu]", array_lval, count);
-                VarRef *ref = VarRefParse(buffer);
-                EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
-                                       "source=function,function=selectservers");
-                VarRefDestroy(ref);
+                        count++;
+                    }
+                }
             }
         }
-        else
+        else                      /* If query is empty, all hosts are added */
         {
-            count++;              /* If query is empty, all hosts are added */
-
             Log(LOG_LEVEL_VERBOSE,
                 "selectservers: Got reply from host %s address %s",
                 host, txtaddr);
@@ -2906,16 +2900,10 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                                    "source=function,function=selectservers");
             VarRefDestroy(ref);
 
-            /* TODO is this some kind of undocumented feature? */
-            if (IsDefinedClass(ctx, CanonifyName(host)))
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "This host is in the list and has promised to join the class '%s' - joined",
-                    array_lval);
-                EvalContextClassPutSoft(ctx, array_lval, CONTEXT_SCOPE_NAMESPACE,
-                                        "source=function,function=selectservers");
-            }
+            count++;
         }
+
+        cf_closesocket(sd);
     }
 
     PolicyDestroy(select_server_policy);

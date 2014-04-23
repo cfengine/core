@@ -1,0 +1,52 @@
+# Test that failure to connect to remote host does not result in "Could not
+# close socket" error messages.
+
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+body agent control
+{
+      # 5 seconds timeout for selectservers for non-connecting host 8.8.8.8
+      default_timeout => "5";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  vars:
+
+      # The first two hosts listen to port 80, the third does not listen
+      # to port 80, the fourth does not even resolve
+      "hosts"     slist   => { "cfengine.com", "ntua.gr", "8.8.8.8", "inexistent-server" };
+      "retval"    int     => selectservers("@(hosts)","80","","","100","alive_servers");
+}
+
+bundle agent check
+{
+  classes:
+      "up2servers"   expression => strcmp("$(test.retval)", "2");
+
+      "first_is_ok"  expression => isvariable("test.alive_servers[0]");
+      "second_is_ok" expression => isvariable("test.alive_servers[1]");
+      "third_is_bad"        not => isvariable("test.alive_servers[2]");
+      "fourth_is_bad"       not => isvariable("test.alive_servers[3]");
+
+  methods:
+      # All above classes must be set for test to pass
+      "" usebundle => dcs_passif_expected("up2servers,first_is_ok,second_is_ok,third_is_bad,fourth_is_bad",
+					  "", $(this.promise_filename)),
+          inherit => "true";
+
+  reports:
+    DEBUG::
+      "retval:        $(test.retval)";
+      "alive_servers: $(test.alive_servers[0]) $(test.alive_servers[1]) $(test.alive_servers[2])";
+}
+

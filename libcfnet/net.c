@@ -189,7 +189,7 @@ int SocketConnect(const char *host, const char *port,
     if (ret != 0)
     {
         Log(LOG_LEVEL_INFO,
-              "Unable to find host or service %s : %s (%s)",
+              "Unable to find host '%s' service '%s' (%s)",
               host, port, gai_strerror(ret));
         return -1;
     }
@@ -245,7 +245,7 @@ int SocketConnect(const char *host, const char *port,
                 }
                 if (ap2 == NULL)
                 {
-                    Log(LOG_LEVEL_INFO,
+                    Log(LOG_LEVEL_ERR,
                         "Unable to bind to interface '%s'. (bind: %s)",
                         BINDINTERFACE, GetErrorStr());
                 }
@@ -365,6 +365,11 @@ bool TryConnect(int sd, unsigned long timeout_ms,
         }
 
         ret = select(sd + 1, NULL, &myset, NULL, tvp);
+        if (ret == 0)
+        {
+            Log(LOG_LEVEL_INFO, "Timeout connecting to server");
+            return false;
+        }
         if (ret == -1)
         {
             Log(LOG_LEVEL_ERR,
@@ -424,7 +429,7 @@ int SetReceiveTimeout(int fd, unsigned long ms)
 {
     assert(ms > 0);
 
-    Log(LOG_LEVEL_VERBOSE, "Setting socket timeout to %lu milliseconds.", ms);
+    Log(LOG_LEVEL_VERBOSE, "Setting socket timeout to %lu seconds.", ms/1000);
 
 /* On windows SO_RCVTIMEO is set by a DWORD indicating the timeout in
  * milliseconds, on UNIX it's a struct timeval. */

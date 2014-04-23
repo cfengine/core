@@ -143,6 +143,10 @@ err:
         mdb_env_close(db->env);
     }
     free(db);
+    if (rc == MDB_INVALID)
+    {
+        return DB_PRIV_DATABASE_BROKEN;
+    }
     return NULL;
 }
 

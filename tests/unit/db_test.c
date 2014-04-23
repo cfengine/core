@@ -81,7 +81,7 @@ void test_iter_delete_entry(void)
     CloseDB(db);
 }
 
-#if defined(HAVE_LIBTOKYOCABINET) || defined(HAVE_LIBQDBM)
+#if defined(HAVE_LIBTOKYOCABINET) || defined(HAVE_LIBQDBM) || defined(HAVE_LIBLMDB)
 static void CreateGarbage(const char *filename)
 {
     FILE *fh = fopen(filename, "w");
@@ -106,6 +106,12 @@ void test_recreate(void)
     snprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", CFWORKDIR);
     CreateGarbage(qdbm_db);
 #endif
+#ifdef HAVE_LIBLMDB
+    char lmdb_db[CF_BUFSIZE];
+    snprintf(lmdb_db, CF_BUFSIZE, "%s/cf_classes.lmdb", CFWORKDIR);
+    CreateGarbage(lmdb_db);
+#endif
+
     CF_DB *db;
     assert_int_equal(OpenDB(&db, dbid_classes), true);
     CloseDB(db);

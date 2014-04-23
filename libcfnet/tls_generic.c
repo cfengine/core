@@ -53,9 +53,9 @@ int TLSVerifyCallback(X509_STORE_CTX *ctx ARG_UNUSED,
  * @return 1 if the certificate received during the TLS handshake is valid
  *         signed and its public key is the same with the stored one for that
  *         host.
- * @return 0 if stored key for the host is missing or differs from the one
+ * @retval 0 if stored key for the host is missing or differs from the one
  *         received.
- * @return -1 in case of other error (error will be Log()ed).
+ * @retval -1 in case of other error (error will be Log()ed).
  * @note When return value is != -1 (so no error occured) the #conn_info struct
  *       should have been populated, with key received and its hash.
  */

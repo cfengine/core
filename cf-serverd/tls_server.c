@@ -468,18 +468,12 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 
         if (ret == 0)                                  /* untrusted key */
         {
-            Log(LOG_LEVEL_WARNING,
-                "%s: Client's public key is UNKNOWN!",
-                KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-
             if ((SV.trustkeylist != NULL) &&
                 (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
             {
                 Log(LOG_LEVEL_VERBOSE,
-                    "Host %s was found in the \"trustkeysfrom\" list",
-                    conn->ipaddr);
-                Log(LOG_LEVEL_WARNING,
-                    "%s: Explicitly trusting this key from now on.",
+                    "Host was found in \"trustkeysfrom\" list");
+                Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
                     KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
                 SavePublicKey(conn->username, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
@@ -488,8 +482,8 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             else
             {
                 Log(LOG_LEVEL_NOTICE,
-                    "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
-                Log(LOG_LEVEL_NOTICE,
+                    "TRUST FAILED, host presented an untrusted key, dropping connection!");
+                Log(LOG_LEVEL_VERBOSE,
                     "Add host to \"trustkeysfrom\" if you really want to start trusting this new key.");
                 return -1;
             }

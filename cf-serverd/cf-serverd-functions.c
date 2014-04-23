@@ -537,7 +537,7 @@ int OpenReceiverChannel(void)
         if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,
                        &yes, sizeof(yes)) == -1)
         {
-            Log(LOG_LEVEL_WARNING,
+            Log(LOG_LEVEL_VERBOSE,
                 "Socket option SO_REUSEADDR was not accepted. (setsockopt: %s)",
                 GetErrorStr());
         }

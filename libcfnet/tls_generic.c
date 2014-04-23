@@ -300,20 +300,6 @@ static const char *TLSPrimarySSLError(int code)
     return "Unknown OpenSSL error code!";
 }
 
-/**
- * @brief Sends the data stored on the buffer using a TLS session.
- * @param ssl SSL information.
- * @param buffer Data to send.
- * @param length Length of the data to send.
- * @return The length of the data sent (which could be smaller than the
- *         requested length) or -1 in case of error.
- * @note Use only for *blocking* sockets. Set
- *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
- *       operation completed or an error occured.
- *
- * @TODO ERR_get_error is only meaningful for some error codes, so check and
- *       return empty string otherwise.
- */
 static const char *TLSSecondarySSLError(int code ARG_UNUSED)
 {
     return ERR_reason_error_string(ERR_get_error());
@@ -332,14 +318,33 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
 {
     assert(prepend != NULL);
 
-    const char *err2 = TLSSecondarySSLError(code);
+    int errcode         = SSL_get_error(ssl, code);
+    const char *errstr1 = TLSPrimarySSLError(errcode);
+    /* The following is only logged for completeness reasons, it's not useful
+     * for SSL_read() and SSL_write(). */
+    const char *errstr2 = TLSSecondarySSLError(code);
 
-    Log(level, "%s: (%d %s) %s",
+    Log(level, "%s: (%d %s) %s %s",
         prepend, code,
-        TLSPrimarySSLError(SSL_get_error(ssl, code)),
-        err2 == NULL ? "" : err2);
+        errstr1,
+        (errstr2 == NULL) ? "" : errstr2,        /* most likely empty */
+        (errno == 0)      ? "" : GetErrorStr()); /* code==SSL_ERROR_SYSCALL */
 }
 
+/**
+ * @brief Sends the data stored on the buffer using a TLS session.
+ * @param ssl SSL information.
+ * @param buffer Data to send.
+ * @param length Length of the data to send.
+ * @return The length of the data sent (which could be smaller than the
+ *         requested length) or -1 in case of error.
+ * @note Use only for *blocking* sockets. Set
+ *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
+ *       operation completed or an error occured.
+ *
+ * @TODO ERR_get_error is only meaningful for some error codes, so check and
+ *       return empty string otherwise.
+ */
 int TLSSend(SSL *ssl, const char *buffer, int length)
 {
     assert(length >= 0);

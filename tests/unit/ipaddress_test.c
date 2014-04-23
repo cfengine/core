@@ -1,3 +1,5 @@
+#include "cf3.defs.h"
+#include "cf3.extern.h"
 #include <test.h>
 
 #include <string.h>
@@ -33,6 +35,10 @@ static void test_ipv4(void)
      * 1.1.1.1: Fail
      * 2.3.4.5:65536 Fail
      * a.b.c.d Fail
+     * 1.1.1.1/10 Ok
+     * 1.1.1.1/ Fail
+     * 1.1.1.1/33 Fail
+     * 1.1.1.1/0 Fail
      */
     struct IPV4Address ipv4;
     memset(&ipv4, 0, sizeof(struct IPV4Address));
@@ -99,6 +105,19 @@ static void test_ipv4(void)
     assert_int_equal(ipv4.octets[3], 10);
     assert_int_equal(ipv4.port, 65535);
     memset(&ipv4, 0, sizeof(struct IPV4Address));
+    assert_int_equal(0, IPV4_parser("1.1.1.1/10", &ipv4));
+    assert_int_equal(ipv4.octets[0], 1);
+    assert_int_equal(ipv4.octets[1], 1);
+    assert_int_equal(ipv4.octets[2], 1);
+    assert_int_equal(ipv4.octets[3], 1);
+    assert_int_equal(ipv4.mask, 10);
+    memset(&ipv4, 0, sizeof(struct IPV4Address));
+    assert_int_equal(-1, IPV4_parser("1.1.1.1/", &ipv4));
+    memset(&ipv4, 0, sizeof(struct IPV4Address));
+    assert_int_equal(-1, IPV4_parser("1.1.1.1/33", &ipv4));
+    memset(&ipv4, 0, sizeof(struct IPV4Address));
+    assert_int_equal(-1, IPV4_parser("1.1.1.1/0", &ipv4));
+    memset(&ipv4, 0, sizeof(struct IPV4Address));
     assert_int_equal(-1, IPV4_parser("0", &ipv4));
     memset(&ipv4, 0, sizeof(struct IPV4Address));
     assert_int_equal(-1, IPV4_parser("0.1", &ipv4));
@@ -158,6 +177,14 @@ static void test_ipv6(void)
      * 0:1:2::4 Ok
      * 0::2:3:4 Ok
      * ::3:4 Ok
+     * 1:1:1:1:1:1:1:1/22 Ok
+     * [1:1:1:1:1:1:1:1]/22 Ok
+     * 1:1:1:1:1:1:1:1/ Fail
+     * 1:1:1:1:1:1:1:1/65 Fail
+     * 1:1:1:1:1:1:1:1/0 Fail
+     * [1:1:1:1:1:1:1:1]/ Fail
+     * [1:1:1:1:1:1:1:1]/65 Fail
+     * [1:1:1:1:1:1:1:1]/0 Fail
      * ::::::: Fail
      * A:B:C:D:E:F:0:1 Fail
      */
@@ -261,6 +288,41 @@ static void test_ipv6(void)
     assert_int_equal(ipv6.sixteen[6], 3);
     assert_int_equal(ipv6.sixteen[7], 4);
     assert_int_equal(ipv6.port, 0);
+    memset(&ipv6, 0, sizeof(struct IPV6Address));
+    assert_int_equal(0, IPV6_parser("1:1:1:1:1:1:1:1/22", &ipv6));
+    assert_int_equal(ipv6.sixteen[0], 1);
+    assert_int_equal(ipv6.sixteen[1], 1);
+    assert_int_equal(ipv6.sixteen[2], 1);
+    assert_int_equal(ipv6.sixteen[3], 1);
+    assert_int_equal(ipv6.sixteen[4], 1);
+    assert_int_equal(ipv6.sixteen[5], 1);
+    assert_int_equal(ipv6.sixteen[6], 1);
+    assert_int_equal(ipv6.sixteen[7], 1);
+    assert_int_equal(ipv6.port, 0);
+    assert_int_equal(ipv6.mask, 22);
+    assert_int_equal(0, IPV6_parser("[1:1:1:1:1:1:1:1]/22", &ipv6));
+    assert_int_equal(ipv6.sixteen[0], 1);
+    assert_int_equal(ipv6.sixteen[1], 1);
+    assert_int_equal(ipv6.sixteen[2], 1);
+    assert_int_equal(ipv6.sixteen[3], 1);
+    assert_int_equal(ipv6.sixteen[4], 1);
+    assert_int_equal(ipv6.sixteen[5], 1);
+    assert_int_equal(ipv6.sixteen[6], 1);
+    assert_int_equal(ipv6.sixteen[7], 1);
+    assert_int_equal(ipv6.port, 0);
+    assert_int_equal(ipv6.mask, 22);
+    memset(&ipv6, 0, sizeof(struct IPV6Address));
+    assert_int_equal(-1, IPV6_parser("1:1:1:1:1:1:1:1/", &ipv6));
+    memset(&ipv6, 0, sizeof(struct IPV6Address));
+    assert_int_equal(-1, IPV6_parser("1:1:1:1:1:1:1:1/65", &ipv6));
+    memset(&ipv6, 0, sizeof(struct IPV6Address));
+    assert_int_equal(-1, IPV6_parser("1:1:1:1:1:1:1:1/0", &ipv6));
+    memset(&ipv6, 0, sizeof(struct IPV6Address));
+    assert_int_equal(-1, IPV6_parser("[1:1:1:1:1:1:1:1]/", &ipv6));
+    memset(&ipv6, 0, sizeof(struct IPV6Address));
+    assert_int_equal(-1, IPV6_parser("[1:1:1:1:1:1:1:1]/65", &ipv6));
+    memset(&ipv6, 0, sizeof(struct IPV6Address));
+    assert_int_equal(-1, IPV6_parser("[1:1:1:1:1:1:1:1]/0", &ipv6));
     memset(&ipv6, 0, sizeof(struct IPV6Address));
     assert_int_equal(-1, IPV6_parser(":::::::", &ipv6));
     memset(&ipv6, 0, sizeof(struct IPV6Address));

@@ -1,0 +1,5 @@
+emptydata,99,xyz,/default/default/methods/'any'[0],p,[],[],default,ny,default.cf.sub
+emptydata,99,def,/default/default/methods/'any'/default/test_run/methods/'any'[0],q,[],[],default,ny,default.cf.sub
+emptydata,99,abc,/default/default/methods/'any'/default/test_run/methods/'any'[0],r,[],[],default,ny,default.cf.sub
+emptydata,99,pqr,/default/default/methods/'any'/default/test_run/methods/'any'[0],s,[],[],default,ny,default.cf.sub
+emptydata,110,???,"[""Proposed executable file '/TEST.cfengine.willfail' doesn't exist"",""'/TEST.cfengine.willfail' promises to be executable but isn't""]",default

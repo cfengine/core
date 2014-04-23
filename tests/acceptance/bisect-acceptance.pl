@@ -12,6 +12,7 @@ $|=1;                                   # autoflush
 my %options = (
                help => 0,
                fixup => 0,
+               make => "make -j3",
                repo_root => "../../",
               );
 
@@ -20,6 +21,7 @@ GetOptions(\%options,
            "fixup|f!",
            "good=s",
            "bad=s",
+           "make=s",
           );
 
 usage() if ($options{help});
@@ -57,8 +59,8 @@ TESTSTR
   print qx/git bisect bad $options{bad}/;
 }
 
-my $script = "make -j3 clean && ./autogen.sh && ./configure --enable-debug && " .
-             "make -j3 && " . $test;
+my $m = $options{make};
+my $script = "($m clean && ./autogen.sh && ./configure --enable-debug && $m || exit 125) && " . $test;
 
 system("git bisect run sh -c '$script'");
 
@@ -68,7 +70,7 @@ exit $rc;
 
 sub usage {
   print <<EOHIPPUS;
-Syntax: $0 [-f|--fixup] --good=<commit-sha> --bad=<commit-sha> TEST.cf
+Syntax: $0 [-f|--fixup] [--make="make command"] --good=<commit-sha> --bad=<commit-sha> TEST.cf
 
 Automatically git bisect against the specified CFEngine acceptance test;
 cleaning artifacts, regenerating autotools files, and rebuilding binaries
@@ -83,6 +85,7 @@ that fixed a bug, use `--fixup`
 
 [-g|--good]:  the commit-sha whose build produces known good results.
 [-b|--bad]:   the commit-sha whose build produces known bad results.
+[-m|--make]:  a make command (default $options{make})
 
 This script expects to be run from inside tests/acceptance/.
 

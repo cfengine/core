@@ -303,8 +303,26 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     if (a->interface.delete)
     {
-        // delete it, if it makes sense
-        printf("NOT IMPLEMENTED YET\n");
+        Log(LOG_LEVEL_INFO, "Shutting down and removing bridge interface %s", promiser);
+
+        snprintf(cmd, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, promiser);
+
+        if ((ExecCommand(cmd, result, pp) != 0))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Parent bridge interface %s could not be shutdown", promiser);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+
+        snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_DEBIAN_IP_COMM, promiser);
+
+        if ((ExecCommand(cmd, result, pp) != 0))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Virtual interface %s could not be removed", promiser);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+
         DeleteInterfaceInfo(netinterfaces);
         return;
     }
@@ -761,6 +779,12 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 
     if (!have_bridge_interface)
     {
+        if (a->interface.delete)
+        {
+            // All is ok
+            return;
+        }
+
         Log(LOG_LEVEL_INFO, "Adding bridge interface %s", promiser);
 
         snprintf(comm, CF_BUFSIZE, "%s addbr %s", CF_DEBIAN_BRCTL, promiser);
@@ -771,6 +795,31 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
             *result = PROMISE_RESULT_FAIL;
             return;
         }
+    }
+
+    if (a->interface.delete)
+    {
+        Log(LOG_LEVEL_INFO, "Shutting down and removing bridge interface %s", promiser);
+
+        snprintf(comm, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, promiser);
+
+        if ((ExecCommand(comm, result, pp) != 0))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Parent bridge interface %s could not be shutdown", promiser);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+
+        snprintf(comm, CF_BUFSIZE, "%s delbr %s", CF_DEBIAN_BRCTL, promiser);
+
+        if ((ExecCommand(comm, result, pp) != 0))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Parent bridge interface %s could not be removed", promiser);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+
+        return;
     }
 
     for (rp = a->interface.bridge_interfaces; rp != NULL; rp = rp->next)

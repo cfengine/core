@@ -74,6 +74,8 @@ static const char *GetPlatformSpecificExpirationDate()
     return "0102000070";
 #elif defined(__hpux) || defined(__SVR4)
     return "02/01/70";
+#elif defined(__NetBSD__)
+    return "January 02 1970";
 #elif defined(__linux__)
     return "1970-01-02";
 #else

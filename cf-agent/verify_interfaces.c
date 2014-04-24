@@ -666,9 +666,11 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
 
 static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
-    Bridges *bridges = NULL;
+    Bridges *bridges = NULL, *bp;
     Rlist *rp;
     char comm[CF_BUFSIZE];
+    bool have_bridge_interface = false;
+    bool pre_req = true;
 
     if ((strcmp(a->interface.manager, "native") == 0) || (strcmp(a->interface.manager, "nativefirst") == 0))
     {
@@ -687,6 +689,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
     if (!GetBridgeInfo(&bridges, pp))
     {
         Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
+        *result = PROMISE_RESULT_FAIL;
         return;
     }
 
@@ -696,7 +699,6 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 
     // Warn if there is not a separate promise for the dependencies, but some interfaces names are implicit
     // due to VLAN etc
-
 
     Rlist *all_members = RlistCopy(a->interface.bridge_interfaces);
     LinkState *lsp;
@@ -709,53 +711,76 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
             {
                 if (!lsp->up)
                 {
-                    *result = PROMISE_RESULT_FAIL;
-                    Log(LOG_LEVEL_INFO, "Member interface %s exists but is down in bridge promise for %s", (char *)rp->val.item, promiser);
-                    return;
+                    // Try to bring them up, with or without config
+                    snprintf(comm, CF_BUFSIZE, "%s link set up dev %s", CF_DEBIAN_IP_COMM, lsp->name);
+                    if ((ExecCommand(comm, result, pp) != 0))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Couldn't bring up member interface %s yet", lsp->name);
+                        pre_req = false;
+                    }
                 }
 
-                // Mark this ok
-                *(char *)(rp->val.item) = '\0';
+                *(char *)(rp->val.item) = '\0';  // Mark this ok by blanking
             }
         }
     }
 
-    bool ok = true;
-
     for (rp = all_members; rp != NULL; rp=rp->next)
     {
-        if (*(char *)(rp->val.item) == '\0')
+        if (*(char *)(rp->val.item) != '\0')
         {
-            ok = false;
-            Log(LOG_LEVEL_INFO, "Member interface %s missing in bridge promise for %s", (char *)rp->val.item, promiser);
+            snprintf(comm, CF_BUFSIZE, "%s link set up dev %s", CF_DEBIAN_IP_COMM,  (char *)(rp->val.item));
+            if ((ExecCommand(comm, result, pp) != 0))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Couldn't bring up member %s of interface %s yet", (char *)(rp->val.item), promiser);
+                pre_req = false;
+            }
         }
     }
 
     RlistDestroy(all_members);
 
-    if (!ok)
+    if (!pre_req)
     {
         *result = PROMISE_RESULT_FAIL;
+        Log(LOG_LEVEL_INFO, "Member interfaces for %s were not all available, try bridging later", promiser);
         return;
     }
 
     // Now put the pieces together
 
-    snprintf(comm, CF_BUFSIZE, "%s addbr %s", CF_DEBIAN_BRCTL, promiser);
-
-    if ((ExecCommand(comm, result, pp) == 0))
+    for (bp = bridges; bp != NULL; bp = bp->next)
     {
-        // Promise ostensibly kept
-        return;
+        if (strcmp(bp->name, promiser) == 0)
+        {
+            have_bridge_interface = true;
+            Log(LOG_LEVEL_VERBOSE, "Parent bridge interface %s exists", promiser);
+            break;
+        }
+    }
+
+    if (!have_bridge_interface)
+    {
+        Log(LOG_LEVEL_INFO, "Adding bridge interface %s", promiser);
+
+        snprintf(comm, CF_BUFSIZE, "%s addbr %s", CF_DEBIAN_BRCTL, promiser);
+
+        if ((ExecCommand(comm, result, pp) != 0))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Parent bridge interface %s could not be added", promiser);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
     }
 
     for (rp = a->interface.bridge_interfaces; rp != NULL; rp = rp->next)
     {
-        snprintf(comm, CF_BUFSIZE, "%s addif %s", CF_DEBIAN_BRCTL, (char *)rp->val.item);
+        snprintf(comm, CF_BUFSIZE, "%s addif %s %s", CF_DEBIAN_BRCTL, promiser, (char *)rp->val.item);
 
-        if ((ExecCommand(comm, result, pp) == 0))
+        if ((ExecCommand(comm, result, pp) != 0))
         {
-            // Promise ostensibly kept
+            Log(LOG_LEVEL_VERBOSE, "Memeber for bridge %s could not be added", promiser);
+            *result = PROMISE_RESULT_FAIL;
             return;
         }
     }
@@ -1225,7 +1250,7 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rl
                 entry->is_parent = true;
             }
         }
-        else
+        else if (entry != NULL)
         {
             *indent = '\0';
             *hw_addr = '\0';
@@ -1449,5 +1474,3 @@ bool IPAddressInList(Rlist *cidr1, char *cidr2)
 
     return false;
 }
-
-

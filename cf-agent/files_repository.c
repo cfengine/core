@@ -54,7 +54,7 @@ void SetRepositoryChar(char c)
 
 /*********************************************************************/
 
-bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
+bool GetRepositoryPath(ARG_UNUSED const char *file, Attributes attr, char *destination)
 {
     if ((attr.repository == NULL) && (VREPOSITORY == NULL))
     {
@@ -72,18 +72,10 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
         repopathlen = strlcpy(destination, VREPOSITORY, CF_BUFSIZE);
     }
 
-    if (!JoinPath(destination, file))
+    if (repopathlen >= CF_BUFSIZE)
     {
         Log(LOG_LEVEL_ERR, "Internal limit, buffer ran out of space for long filename");
         return false;
-    }
-
-    for (char *s = destination + repopathlen; *s; s++)
-    {
-        if (*s == FILE_SEPARATOR)
-        {
-            *s = REPOSCHAR;
-        }
     }
 
     return true;

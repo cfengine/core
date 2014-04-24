@@ -1,0 +1,50 @@
+# Test that repository contains backup of file after updating it.
+
+body common control
+{
+      bundlesequence => { default("$(this.promise_filename)") };
+      inputs => { "../../dcs.cf.sub" };
+}
+
+body agent control
+{
+      default_repository => "$(sys.workdir)/repository";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile).orig"
+      create => "true",
+      edit_line => insert_lines("Original content");
+    "$(G.testfile).new"
+      create => "true",
+      edit_line => insert_lines("Updated content");
+    "$(G.testfile).copy"
+      create => "true",
+      edit_line => insert_lines("Original content");
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testfile).copy"
+      copy_from => source("$(G.testfile).new");
+}
+
+body copy_from source(file)
+{
+      source => "$(file)";
+      compare => "digest";
+}
+
+bundle agent check
+{
+  vars:
+      "backup_name_list" slist => splitstring("$(G.testfile).copy.cfsaved", "[\\/.]", 100);
+      "backup_name" string => join("_", "backup_name_list");
+
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile).orig", "$(sys.workdir)/repository/$(backup_name)",
+                                        "$(this.promise_filename)");
+}

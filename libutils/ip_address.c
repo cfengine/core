@@ -465,6 +465,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
                 is_upper_hexdigit = isupper(*p);
             }
         }
+
         switch (state)
         {
         case 0:
@@ -632,9 +633,25 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
             }
             else if (is_mask)
             {
-                if (address)
+                if (zero_compression)
                 {
-                    address->sixteen[state] = sixteen;
+                    /*
+                     * If zero compression is enabled, then we cannot trust the position
+                     * since we might compressed several fields. We store the value and
+                     * look at them afterwards.
+                     */
+                    unsorted_sixteen[unsorted_pointer] = sixteen;
+                    ++unsorted_pointer;
+                }
+                else
+                {
+                    /*
+                     * No zero compression, just assign the address and keep moving.
+                     */
+                    if (address)
+                    {
+                        address->sixteen[state] = sixteen;
+                    }
                 }
                 state = 10;
                 state_change = true;
@@ -738,7 +755,6 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
             else if (is_mask)
             {
                 state = 10;
-                printf("HERE-mask\n");
                 state_change = true;
             }
             else
@@ -947,7 +963,15 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
     {
         /*
          * This is the final state if a network mask was specified.
+         * We check first for non-closed brackets.
+         * Then we check if there is a number that has not been added to our array.
+         * Finally we move to zero compression.
          */
+        if (bracket_expected)
+        {
+            return -1;
+        }
+
         if (char_counter == 0)
         {
             return -1;
@@ -959,6 +983,29 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         if (address)
         {
             address->mask = mask;
+        }
+        if (zero_compression)
+        {
+            /*
+             * If there is no address, then we can just return :-)
+             */
+            if (address)
+            {
+                /*
+                 * We need to find the rightful positions for those numbers.
+                 * We use a simple trick:
+                 * We know how many unsorted addresses we have from unsorted pointer,
+                 * and we know that once zero_compression is activated we do not fill
+                 * any more numbers to the address structure. Therefore the right way
+                 * to do this is to take the array of unsorted_sixteen and start assigning
+                 * numbers backwards.
+                 */
+                int i = 0;
+                for (i = 0; i < unsorted_pointer; ++i)
+                {
+                    address->sixteen[7 - i] = unsorted_sixteen[unsorted_pointer - i - 1];
+                }
+            }
         }
     }
     if (state == 11)

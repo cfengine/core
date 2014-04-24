@@ -41,8 +41,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
 {
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
     char address[CF_ADDRSIZE];
-    int mask;
-    unsigned long a1, a2;
 
     if (strcmp(s1, s2) == 0)
     {
@@ -115,20 +113,28 @@ int FuzzySetMatch(const char *s1, const char *s2)
         if (isCIDR)
         {
             struct sockaddr_in addr1, addr2;
-            int shift;
+            unsigned long mask;
 
             address[0] = '\0';
-            mask = 0;
-            sscanf(s1, "%16[^/]/%d", address, &mask);
-            shift = 32 - mask;
+            int ret = sscanf(s1, "%16[^/]/%lu", address, &mask);
+            if (ret != 2 || mask > 32)
+            {
+                Log(LOG_LEVEL_ERR, "Invalid IPv4 CIDR: %s", s1);
+                return -1;
+            }
+            else if (mask == 0)
+            {
+                return 0;                     /* /0 CIDR matches everything */
+            }
 
-            addr1.sin_family = AF_INET;
             inet_pton(AF_INET, address, &addr1.sin_addr);
-            addr2.sin_family = AF_INET;
             inet_pton(AF_INET, s2, &addr2.sin_addr);
 
-            a1 = htonl(addr1.sin_addr.s_addr);
-            a2 = htonl(addr2.sin_addr.s_addr);
+            unsigned long a1 = htonl(addr1.sin_addr.s_addr);
+            unsigned long a2 = htonl(addr2.sin_addr.s_addr);
+
+            unsigned long shift = 32 - mask;
+            assert(shift < 32);                /* Undefined behaviour if 32 */
 
             a1 = a1 >> shift;
             a2 = a2 >> shift;
@@ -210,10 +216,15 @@ int FuzzySetMatch(const char *s1, const char *s2)
             int blocks;
             struct sockaddr_in6 addr1 = {0};
             struct sockaddr_in6 addr2 = {0};
+            unsigned long mask;
 
             address[0] = '\0';
-            mask = 0;
-            sscanf(s1, "%40[^/]/%d", address, &mask);
+            int ret = sscanf(s1, "%40[^/]/%lu", address, &mask);
+            if (ret != 2 || mask > 128)
+            {
+                Log(LOG_LEVEL_ERR, "Invalid IPv6 CIDR: %s", s1);
+                return -1;
+            }
             blocks = mask / 8;
 
             if (mask % 8 != 0)

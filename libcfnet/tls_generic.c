@@ -50,7 +50,7 @@ int TLSVerifyCallback(X509_STORE_CTX *ctx ARG_UNUSED,
 }
 
 /**
- * @return 1 if the certificate received during the TLS handshake is valid
+ * @retval 1 if the certificate received during the TLS handshake is valid
  *         signed and its public key is the same with the stored one for that
  *         host.
  * @retval 0 if stored key for the host is missing or differs from the one
@@ -318,6 +318,8 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
 {
     assert(prepend != NULL);
 
+    /* For when code==SSL_ERROR_SYSCALL. */
+    const char *syserr = (errno != 0) ? GetErrorStr() : "";
     int errcode         = SSL_get_error(ssl, code);
     const char *errstr1 = TLSPrimarySSLError(errcode);
     /* The following is only logged for completeness reasons, it's not useful
@@ -325,10 +327,9 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
     const char *errstr2 = TLSSecondarySSLError(code);
 
     Log(level, "%s: (%d %s) %s %s",
-        prepend, code,
-        errstr1,
+        prepend, code, errstr1,
         (errstr2 == NULL) ? "" : errstr2,        /* most likely empty */
-        (errno == 0)      ? "" : GetErrorStr()); /* code==SSL_ERROR_SYSCALL */
+        syserr);
 }
 
 /**

@@ -1709,7 +1709,6 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.untagged_vlan = PromiseGetConstraintAsRval(pp, "untagged_vlan", RVAL_TYPE_SCALAR);
     i.v4_addresses = PromiseGetConstraintAsList(ctx, "ipv4_addresses", pp);
     i.v6_addresses = PromiseGetConstraintAsList(ctx, "ipv6_addresses", pp);
-    i.v4_broadcast  = PromiseGetConstraintAsRval(pp, "ipv4_broadcast", RVAL_TYPE_SCALAR);
     i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.manager = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);

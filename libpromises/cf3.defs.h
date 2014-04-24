@@ -968,7 +968,6 @@ struct LinkState_
     char *name;
     char *parent;
     Rlist *v4_addresses;
-    char *v4_broadcast;
     Rlist *v6_addresses;
     char *hw_address;
     bool multicast;
@@ -1472,7 +1471,6 @@ typedef struct
     Rlist *bond_interfaces;
     Rlist *v6_addresses;
     Rlist *v4_addresses;
-    char *v4_broadcast;
     char *state;
     int mtu;
     int speed;

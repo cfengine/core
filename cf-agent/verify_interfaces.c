@@ -514,15 +514,9 @@ static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext 
         {
             *result = PROMISE_RESULT_CHANGE;
 
-            if (a->interface.v4_broadcast && strlen(a->interface.v4_broadcast) > 0)
-            {
-                snprintf(cmd, CF_BUFSIZE, "%s addr add %s broadcast %s dev %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, a->interface.v4_broadcast, promiser);
-                a->interface.v4_broadcast[0] = '\0'; // Only need to do this once
-            }
-            else
-            {
-                snprintf(cmd, CF_BUFSIZE, "%s addr add %s dev %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
-            }
+            // Broadcast is now assumed "ones"
+
+            snprintf(cmd, CF_BUFSIZE, "%s addr add %s broadcast + dev %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
 
             Log(LOG_LEVEL_VERBOSE, "Adding ipv4 %s to %s", (char *)rp->val.item, promiser);
 

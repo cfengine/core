@@ -47,15 +47,15 @@ bundle common G
       scope => "namespace";
 
       "want_color" expression => strcmp(getenv("CFENGINE_COLOR", 4k), "1");
+      "have_colordiff" expression => fileexists($(colordiff));
 
   vars:
       "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
       ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
 
-    want_color::
-      "diff_maybecolor" string => ifelse(isvariable("colordiff"), $(colordiff),
-                                         $(diff));
-    !want_color::
+    want_color.have_colordiff::
+      "diff_maybecolor" string => $(colordiff);
+    !want_color|!have_colordiff::
       "diff_maybecolor" string => $(diff);
 
   classes:
@@ -376,11 +376,11 @@ bundle agent dcs_if_diff_expected(file1, file2, expected_difference, pass_class,
       "file1r" string => readfile("$(file1)", "99999999");
       "file2r" string => readfile("$(file2)", "99999999");
 
-    DEBUG_HEXDUMP.check_ready.!no_difference.has_hexdump::
+    (EXTRA|DEBUG_HEXDUMP).check_ready.!no_difference.has_hexdump::
       "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
       "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
 
-    DEBUG_HEXDUMP.check_ready.!no_difference.!has_hexdump::
+    (EXTRA|DEBUG_HEXDUMP).check_ready.!no_difference.!has_hexdump::
       "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
       "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
@@ -421,13 +421,15 @@ $(file1r)";
       "CONTENTS OF $(file2):
 $(file2r)";
       "$(diffu)";
-    DEBUG_HEXDUMP.check_ready.!no_difference.!expected_difference::
+    (DEBUG_HEXDUMP|EXTRA).check_ready.!no_difference.!expected_difference::
       "hexdump $(file1):
 $(file1h)";
       "hexdump $(file2):
 $(file2h)";
     DEBUG.check_ready.no_difference.expected_difference::
       "Contents of $(file1) and $(file) are the same but should differ.";
+    EXTRA::
+      "Diff command: $(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)";
 }
 
 bundle agent dcs_sleep(t)

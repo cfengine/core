@@ -27,6 +27,8 @@
 
 #include <platform.h>
 
+#define RFC3164_LEN 1024
+
 /*
  * This module provides implementation of UDP syslog protocol
  */

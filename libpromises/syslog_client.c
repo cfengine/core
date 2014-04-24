@@ -103,8 +103,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
         }
         else
         {
-            const size_t rfc3164_len = 1024;
-            char message[rfc3164_len];
+            char message[RFC3164_LEN];
             char timebuffer[26];
             pid_t pid = getpid();
 

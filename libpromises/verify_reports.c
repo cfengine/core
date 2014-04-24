@@ -128,7 +128,7 @@ static void ReportToLog(const char *message)
     syslog(LOG_NOTICE, "R: %s", message);
 #endif
 #ifdef __ANDROID__
-    char log_string[1024];
+    char log_string[RFC3164_LEN];
     snprintf(log_string, sizeof(log_string), "R: %s", message);
     RemoteSysLog(LOG_NOTICE, log_string);
 #endif

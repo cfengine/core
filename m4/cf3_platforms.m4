@@ -7,6 +7,7 @@
 # Bad example: use LINUX to select code which parses output of coreutils' ps(1).
 #
 AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
+AM_CONDITIONAL([MACOSX], [test -n "`echo ${target_os} | grep darwin`"])
 AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
 AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
 AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])

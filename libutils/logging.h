@@ -40,7 +40,8 @@ typedef enum
     LOG_LEVEL_NOTICE,
     LOG_LEVEL_INFO,
     LOG_LEVEL_VERBOSE,
-    LOG_LEVEL_DEBUG
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_DEBUG2
 } LogLevel;
 
 const char *LogLevelToString(LogLevel level);

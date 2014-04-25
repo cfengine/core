@@ -62,7 +62,7 @@ long IntFromString(const char *s);
 bool DoubleFromString(const char *s, double *value_out);
 bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out);
 bool IsRealNumber(const char *s);
-
+int GetBondingMode(char *s);
 
 // Misc.
 char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serialization scheme.. Found 5 so far.

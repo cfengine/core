@@ -1714,7 +1714,6 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.manager = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.spanning = PromiseGetConstraintAsRval(pp, "spanning", RVAL_TYPE_SCALAR);
-    i.bonding = PromiseGetConstraintAsBoolean(ctx, "bonding", pp);
     i.autoneg = PromiseGetConstraintAsBoolean(ctx, "auto_negotiation", pp);
     i.purge = PromiseGetConstraintAsBoolean(ctx, "purge_addresses", pp);
     i.delete = PromiseGetConstraintAsBoolean(ctx, "delete", pp);
@@ -1740,6 +1739,9 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     }
 
     i.ospf_area = PromiseGetConstraintAsInt(ctx, "ospf_area", pp);
+
+    char *sp = PromiseGetConstraintAsRval(pp, "bonding", RVAL_TYPE_SCALAR);
+    i.bonding = GetBondingMode(sp);
 
     return i;
 }

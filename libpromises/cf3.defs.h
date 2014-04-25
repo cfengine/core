@@ -1478,7 +1478,7 @@ typedef struct
     char *duplex;
     char *spanning;
     char *manager;
-    bool bonding;
+    int bonding;
     bool autoneg;
     int min_bonding;
     // ospf

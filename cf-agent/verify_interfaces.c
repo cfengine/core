@@ -168,6 +168,13 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         return false;
     }
 
+    if (a.havebond && a.interface.bonding == CF_NOINT)
+    {
+        Log(LOG_LEVEL_ERR, "Must set bonding mode in 'interfaces' promise '%s', e.g. \'802.3ad\'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
     if (PromiseGetConstraintAsBoolean(ctx, "spanning_tree", pp) && !a.havebridge)
     {
         Log(LOG_LEVEL_ERR, "Spanning tree on non-bridge for 'interfaces' promise '%s'", pp->promiser);
@@ -910,6 +917,30 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
             // Good, we're done
             return;
         }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Shutting down and removing aggregate/bond interface %s", promiser);
+
+            snprintf(cmd, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, promiser);
+
+            if ((ExecCommand(cmd, result, pp) != 0))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Aggregate interface %s could not be shutdown", promiser);
+                *result = PROMISE_RESULT_FAIL;
+                return;
+
+                snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_DEBIAN_IP_COMM, promiser);
+
+                if ((ExecCommand(cmd, result, pp) != 0))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Aggregate interface %s could not be removed", promiser);
+                    *result = PROMISE_RESULT_FAIL;
+                    return;
+                }
+
+                return;
+            }
+        }
     }
 
     if (got_children == all_children)
@@ -942,14 +973,17 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
         }
     }
 
-    // Add the master / parent
-    snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond mode 1", CF_DEBIAN_IP_COMM, promiser);
-
-    if ((ExecCommand(cmd, result, pp) != 0))
+    if (!got_master)
     {
-        Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s failed", (char *)rp->val.item, promiser);
-        *result = PROMISE_RESULT_FAIL;
-        return;
+        // Add the master / parent
+        snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond mode %d", CF_DEBIAN_IP_COMM, promiser, a->interface.bonding);
+
+        if ((ExecCommand(cmd, result, pp) != 0))
+        {
+            Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s failed", (char *)rp->val.item, promiser);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
     }
 
     // Re-add children and subordinates

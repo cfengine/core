@@ -29,7 +29,7 @@
 
 static const ConstraintSyntax linkstate_constraints[] =
 {
-    ConstraintSyntaxNewBool("bonding", "If true, the Link Aggregation Control Protocol is enabled to bond interfaces", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("bonding", "balance-rr,active-backup,balance-xor,broadcast,802.3ad,balance-tlb,balance-alb", "The Link Aggregation Control Protocol is enabled to bond interfaces", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("manager", "cfengine,native,nativefirst", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("state", "up,down", "Status of interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("duplex", "half,full", "Duplex wiring configuration", SYNTAX_STATUS_NORMAL),

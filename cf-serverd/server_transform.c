@@ -793,7 +793,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
             if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
-                ap->encrypt = true;
+                ap->encrypt = BooleanFromString(cp->rval.item);
                 continue;
             }
             if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_SHORTCUT].lval) == 0)

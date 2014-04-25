@@ -191,16 +191,17 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
 
     if (a.havelinkstate)
     {
-        if (a.interface.autoneg && (a.interface.speed || a.interface.duplex))
+        if (a.interface.autoneg && a.interface.duplex)
         {
             Log(LOG_LEVEL_ERR, "Interface '%s' cannot promise speed/duplex and auto-negotiation at same time", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
 
-        if ((a.interface.speed != CF_NOINT || a.interface.duplex != NULL) && !(a.interface.speed == CF_NOINT && a.interface.duplex == NULL))
+        if ((a.interface.speed != CF_NOINT || a.interface.duplex != NULL) && (a.interface.speed == CF_NOINT || a.interface.duplex == NULL))
         {
             Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex if either is promised", pp->promiser);
+            printf("XX %d and %s\n",a.interface.speed, a.interface.duplex);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -896,7 +897,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
     {
         bool orphan = true;
 
-        if (strcmp (lsp->name, promiser) && lsp->is_parent)
+        if (strcmp (lsp->name, promiser) == 0 && lsp->is_parent)
         {
             got_master++;
             continue;
@@ -999,7 +1000,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
         if ((ExecCommand(cmd, result, pp) != 0))
         {
-            Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s failed", (char *)rp->val.item, promiser);
+            Log(LOG_LEVEL_INFO, "Bond interface master %s promise failed", promiser);
             *result = PROMISE_RESULT_FAIL;
             return;
         }

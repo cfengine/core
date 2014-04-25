@@ -885,6 +885,8 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
     char cmd[CF_BUFSIZE];
     int got_master = 0, got_children = 0, all_children = 0;
 
+    // $ /sbin/modprobe bonding
+
     for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
     {
         all_children++;
@@ -892,6 +894,8 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
     for (lsp = ifs; lsp != NULL; lsp=lsp->next) // Long list
     {
+        bool orphan = true;
+
         if (strcmp (lsp->name, promiser) && lsp->is_parent)
         {
             got_master++;
@@ -904,8 +908,22 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
             {
                 if (lsp->parent && (strcmp(lsp->parent, promiser) == 0))
                 {
+                    orphan = false;
                     got_children++;
+                    break;
                 }
+            }
+        }
+
+        if (orphan && lsp->parent && (strcmp(lsp->parent, promiser) == 0))
+        {
+            snprintf(cmd, CF_BUFSIZE, "%s link set %s nomaster", CF_DEBIAN_IP_COMM, lsp->name);
+
+            Log(LOG_LEVEL_VERBOSE, "Freeing superfluous bonded interface %s from master %s", lsp->name, promiser);
+            if ((ExecCommand(cmd, result, pp) != 0))
+            {
+                Log(LOG_LEVEL_INFO, "Freeing bond child %s for 'interfaces' promise %s failed", lsp->name, promiser);
+                *result = PROMISE_RESULT_FAIL;
             }
         }
     }
@@ -929,17 +947,16 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
                 *result = PROMISE_RESULT_FAIL;
                 return;
 
+                // All members slaves are freed when we will the master
                 snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_DEBIAN_IP_COMM, promiser);
 
                 if ((ExecCommand(cmd, result, pp) != 0))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Aggregate interface %s could not be removed", promiser);
                     *result = PROMISE_RESULT_FAIL;
-                    return;
                 }
-
-                return;
             }
+            return;
         }
     }
 
@@ -975,14 +992,27 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
     if (!got_master)
     {
-        // Add the master / parent
-        snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond mode %d", CF_DEBIAN_IP_COMM, promiser, a->interface.bonding);
+        // new drivers should support this later
+        // snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond mode %d", CF_DEBIAN_IP_COMM, promiser, a->interface.bonding);
+
+        snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond", CF_DEBIAN_IP_COMM, promiser);
 
         if ((ExecCommand(cmd, result, pp) != 0))
         {
             Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s failed", (char *)rp->val.item, promiser);
             *result = PROMISE_RESULT_FAIL;
             return;
+        }
+
+        // cat mode > /sys/class/net/bond0/bonding/mode
+
+        FILE *fout;
+        snprintf(cmd, CF_BUFSIZE, "/sys/class/net/%s/bonding/mode", promiser);
+
+        if ((fout = fopen(cmd, "w")) != NULL)
+        {
+            fprintf(fout, "%d", a->interface.bonding);
+            fclose(fout);
         }
     }
 
@@ -998,6 +1028,8 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
             *result = PROMISE_RESULT_FAIL;
         }
     }
+
+    // Interface comes up later
 }
 
 /****************************************************************************/

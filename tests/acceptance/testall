@@ -76,17 +76,25 @@ VALGRIND_OPTS="--leak-check=full --show-reachable=yes --suppressions=valgrind-su
 
 case "$OSTYPE" in
   msys)
-    GAINROOT=${GAINROOT:-}
+    if whoami -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
+      # Don't use elevate if we already have the privileges. It is slower and
+      # pops up a flashing window for every single test.
+      DEFAULT_GAINROOT=
+    else
+      DEFAULT_GAINROOT="`dirname $0`/tool_wrappers/elevate.sh"
+    fi
     # Use hardlinks on Windows. Using symbolic links will work, but Msys creates a
     # real copy, which eats disk space very quickly when you multiply with the number
     # of tests.
     LN_CMD="ln -f"
     ;;
   *)
-    GAINROOT=${GAINROOT:-fakeroot}
+    DEFAULT_GAINROOT=fakeroot
     LN_CMD="ln -sf"
     ;;
 esac
+
+GAINROOT=${GAINROOT:-$DEFAULT_GAINROOT}
 
 PASSED_TESTS=0
 FAILED_TESTS=0
@@ -303,13 +311,24 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       printf "gdb --args " >> "$WORKDIR/runtest"
     fi
 
+    if [ "$OSTYPE" = "msys" ]; then
+      # On Windows we need to redirect from within runtest, because processes
+      # spawned with GAINROOT do not inherit the console.
+      INNER_REDIRECT=">$OUTFILE 2>&1"
+      OUTER_REDIRECT=
+    else
+      # On Unix we need to redirect outside of runtest, to avoid the file being
+      # owned by the wrong user in case GAINROOT is sudo.
+      INNER_REDIRECT=
+      OUTER_REDIRECT=">$OUTFILE 2>&1"
+    fi
     if [ -n "$USE_VALGRIND" ] && [ x"$EXPECTED_CRASH" = "x" ]; then
       if grep libtool < "$AGENT" > /dev/null; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
       printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
     else
-      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
+      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} $INNER_REDIRECT\n" >> "$WORKDIR/runtest"
     fi
 
     chmod +x "$WORKDIR/runtest"
@@ -317,7 +336,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     if [ "$GDB" = 1 ]; then
       $GAINROOT "$WORKDIR/runtest"
     else
-      $GAINROOT "$WORKDIR/runtest" >$OUTFILE 2>&1
+      eval $GAINROOT "$WORKDIR/runtest" $OUTER_REDIRECT
     fi
     RETVAL=$?
     cat $OUTFILE >> "$LOG"

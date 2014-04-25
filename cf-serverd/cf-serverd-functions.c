@@ -516,10 +516,11 @@ int OpenReceiverChannel(void)
         }
 
        #ifdef IPV6_V6ONLY
-        /* Some platforms don't listen to both address families (windows) for
-           the IPv6 loopback address and need this flag. Some other platforms
-           won't even honour this flag (openbsd). */
-        if (BINDINTERFACE[0] == '\0')
+        /* Properly implemented getaddrinfo(AI_PASSIVE) should return the IPV6
+           loopback address first. Some platforms (Windows) don't listen to
+           both address families when binding to it and need this flag. Some
+           other platforms won't even honour this flag (openbsd). */
+        if (BINDINTERFACE[0] == '\0' && ap->ai_family == AF_INET6)
         {
             int no = 0;
             if (setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY,
@@ -537,7 +538,7 @@ int OpenReceiverChannel(void)
         if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,
                        &yes, sizeof(yes)) == -1)
         {
-            Log(LOG_LEVEL_WARNING,
+            Log(LOG_LEVEL_VERBOSE,
                 "Socket option SO_REUSEADDR was not accepted. (setsockopt: %s)",
                 GetErrorStr());
         }

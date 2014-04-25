@@ -1711,8 +1711,7 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.v6_addresses = PromiseGetConstraintAsList(ctx, "ipv6_addresses", pp);
     i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
-    i.manager = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
-    i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
+    i.manager = PromiseGetConstraintAsRval(pp, "manager", RVAL_TYPE_SCALAR);
     i.spanning = PromiseGetConstraintAsRval(pp, "spanning", RVAL_TYPE_SCALAR);
     i.autoneg = PromiseGetConstraintAsBoolean(ctx, "auto_negotiation", pp);
     i.purge = PromiseGetConstraintAsBoolean(ctx, "purge_addresses", pp);
@@ -1743,6 +1742,9 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     char *sp = PromiseGetConstraintAsRval(pp, "bonding", RVAL_TYPE_SCALAR);
     i.bonding = GetBondingMode(sp);
 
+    printf("speed = %d\n", i.speed);
+    printf("mtu = %d\n", i.mtu);
+    printf("duplex = %s\n", i.duplex);
     return i;
 }
 

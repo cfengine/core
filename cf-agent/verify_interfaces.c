@@ -201,7 +201,6 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         if ((a.interface.speed != CF_NOINT || a.interface.duplex != NULL) && (a.interface.speed == CF_NOINT || a.interface.duplex == NULL))
         {
             Log(LOG_LEVEL_ERR, "Interface '%s' should promise both speed and duplex if either is promised", pp->promiser);
-            printf("XX %d and %s\n",a.interface.speed, a.interface.duplex);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -275,7 +274,7 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
         return;
     }
 
-    if ((strcmp(a->interface.manager, "native") == 0) || (strcmp(a->interface.manager, "nativefirst") == 0))
+    if (a->interface.manager && ((strcmp(a->interface.manager, "native") == 0) || (strcmp(a->interface.manager, "nativefirst") == 0)))
     {
         // Signal to the DeleteType post processor WriteNativeInterfacesFile that we are going native!
 

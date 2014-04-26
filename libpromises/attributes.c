@@ -1741,10 +1741,6 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
 
     char *sp = PromiseGetConstraintAsRval(pp, "bonding", RVAL_TYPE_SCALAR);
     i.bonding = GetBondingMode(sp);
-
-    printf("speed = %d\n", i.speed);
-    printf("mtu = %d\n", i.mtu);
-    printf("duplex = %s\n", i.duplex);
     return i;
 }
 

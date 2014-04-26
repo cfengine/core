@@ -665,7 +665,7 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
                 fix = true;
             }
 
-            if (a->interface.speed != speed && a->interface.speed != speed)
+            if (a->interface.speed != CF_NOINT && a->interface.speed != speed)
             {
                 fix = true;
             }
@@ -1608,18 +1608,26 @@ static int CheckSetBondMode(char *promiser, int bmode, PromiseResult *result, co
 
     if (!mode_ok)
     {
-        InterfaceDown(promiser, result, pp);
-
-        if ((fp = safe_fopen(cmd, "w")) != NULL)
+        if (DONTDO)
         {
-            fprintf(fp, "%d", bmode);
-            fclose(fp);
+            Log(LOG_LEVEL_INFO, "Need to set bonding mode %d for interface %s", bmode, promiser);
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "Failed to set mode %d for %s promise failed", bmode, promiser);
-            *result = PROMISE_RESULT_FAIL;
-            return false;
+            Log(LOG_LEVEL_INFO, "Trying to set bonding mode %d for interface %s", bmode, promiser);
+            InterfaceDown(promiser, result, pp);
+
+            if ((fp = safe_fopen(cmd, "w")) != NULL)
+            {
+                fprintf(fp, "%d", bmode);
+                fclose(fp);
+            }
+            else
+            {
+                Log(LOG_LEVEL_INFO, "Failed to set mode %d for %s promise failed", bmode, promiser);
+                *result = PROMISE_RESULT_FAIL;
+                return false;
+            }
         }
     }
 

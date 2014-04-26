@@ -72,7 +72,9 @@ static Rlist *IPV6Addresses(LinkState *ifs, char *interface);
 static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promise *pp);
 static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
 static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg);
-static int CheckSetBondMode(char *promiser, int mode);
+static int CheckSetBondMode(char *promiser, int mode, PromiseResult *result, const Promise *pp);
+static int InterfaceDown(char *interface, PromiseResult *result, const Promise *pp);
+static int InterfaceUp(char *interface, PromiseResult *result, const Promise *pp);
 
 /****************************************************************************/
 
@@ -382,12 +384,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     if (a->interface.state && strcmp(a->interface.state, "up") == 0)
     {
-        snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_DEBIAN_IP_COMM, promiser);
-
-        if (!ExecCommand(cmd, result, pp))
-        {
-            *result = PROMISE_RESULT_FAIL;
-        }
+        InterfaceUp(promiser, result, pp);
     }
 
     DeleteInterfaceInfo(netinterfaces);
@@ -940,14 +937,13 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
         {
             Log(LOG_LEVEL_INFO, "Shutting down and removing aggregate/bond interface %s", promiser);
 
-            snprintf(cmd, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, promiser);
-
-            if ((ExecCommand(cmd, result, pp) != 0))
+            if (InterfaceDown(promiser, result, pp))
             {
-                Log(LOG_LEVEL_VERBOSE, "Aggregate interface %s could not be shutdown", promiser);
-                *result = PROMISE_RESULT_FAIL;
                 return;
+            }
 
+            if (a->interface.delete)
+            {
                 // All members slaves are freed when we will the master
                 snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_DEBIAN_IP_COMM, promiser);
 
@@ -965,11 +961,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
     {
         Log(LOG_LEVEL_VERBOSE, "All children accounted for on aggregate interface %s", promiser);
 
-        if (CheckSetBondMode(promiser, a->interface.bonding))
-        {
-            *result = PROMISE_RESULT_FAIL;
-        }
-
+        CheckSetBondMode(promiser, a->interface.bonding, result, pp);
         return;
     }
 
@@ -999,9 +991,6 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
     if (!got_master)
     {
-        // new drivers should support this later
-        // snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond mode %d", CF_DEBIAN_IP_COMM, promiser, a->interface.bonding);
-        printf("MAKING MASTER...\n");
         snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond", CF_DEBIAN_IP_COMM, promiser);
 
         if ((ExecCommand(cmd, result, pp) != 0))
@@ -1011,14 +1000,9 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
             return;
         }
     }
-    else
-    {
-        printf("ALREADY GOT MASTER...\n");
-    }
 
-    if (CheckSetBondMode(promiser, a->interface.bonding))
+    if (CheckSetBondMode(promiser, a->interface.bonding, result, pp))
     {
-        *result = PROMISE_RESULT_FAIL;
         return;
     }
 
@@ -1598,7 +1582,7 @@ bool IPAddressInList(Rlist *cidr1, char *cidr2)
 
 /****************************************************************************/
 
-static int CheckSetBondMode(char *promiser, int bmode)
+static int CheckSetBondMode(char *promiser, int bmode, PromiseResult *result, const Promise *pp)
 {
     FILE *fp;
     int mode_ok = false;
@@ -1624,7 +1608,8 @@ static int CheckSetBondMode(char *promiser, int bmode)
 
     if (!mode_ok)
     {
-        printf("SETTING MASTER MODE...%d\n",  bmode);
+        InterfaceDown(promiser, result, pp);
+
         if ((fp = safe_fopen(cmd, "w")) != NULL)
         {
             fprintf(fp, "%d", bmode);
@@ -1633,8 +1618,47 @@ static int CheckSetBondMode(char *promiser, int bmode)
         else
         {
             Log(LOG_LEVEL_INFO, "Failed to set mode %d for %s promise failed", bmode, promiser);
+            *result = PROMISE_RESULT_FAIL;
             return false;
         }
+    }
+
+    return true;
+}
+
+/****************************************************************************/
+
+static int InterfaceDown(char *interface, PromiseResult *result, const Promise *pp)
+{
+    char cmd[CF_BUFSIZE];
+
+    Log(LOG_LEVEL_VERBOSE, "Bringing interface %s down", interface);
+    snprintf(cmd, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, interface);
+
+    if ((ExecCommand(cmd, result, pp) != 0))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Interface %s could not be shut down", interface);
+        *result = PROMISE_RESULT_FAIL;
+        return false;
+    }
+
+    return true;
+}
+
+/****************************************************************************/
+
+static int InterfaceUp(char *interface, PromiseResult *result, const Promise *pp)
+{
+    char cmd[CF_BUFSIZE];
+
+    Log(LOG_LEVEL_VERBOSE, "Bringing interface %s up", interface);
+
+    snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_DEBIAN_IP_COMM, interface);
+
+    if (!ExecCommand(cmd, result, pp))
+    {
+        *result = PROMISE_RESULT_FAIL;
+        return false;
     }
 
     return true;

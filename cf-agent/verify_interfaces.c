@@ -72,6 +72,7 @@ static Rlist *IPV6Addresses(LinkState *ifs, char *interface);
 static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promise *pp);
 static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
 static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg);
+static int CheckSetBondMode(char *promiser, int mode);
 
 /****************************************************************************/
 
@@ -963,6 +964,12 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
     if (got_children == all_children)
     {
         Log(LOG_LEVEL_VERBOSE, "All children accounted for on aggregate interface %s", promiser);
+
+        if (CheckSetBondMode(promiser, a->interface.bonding))
+        {
+            *result = PROMISE_RESULT_FAIL;
+        }
+
         return;
     }
 
@@ -994,7 +1001,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
     {
         // new drivers should support this later
         // snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond mode %d", CF_DEBIAN_IP_COMM, promiser, a->interface.bonding);
-
+        printf("MAKING MASTER...\n");
         snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond", CF_DEBIAN_IP_COMM, promiser);
 
         if ((ExecCommand(cmd, result, pp) != 0))
@@ -1003,25 +1010,24 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
             *result = PROMISE_RESULT_FAIL;
             return;
         }
-
-        // cat mode > /sys/class/net/bond0/bonding/mode
-
-        FILE *fout;
-        snprintf(cmd, CF_BUFSIZE, "/sys/class/net/%s/bonding/mode", promiser);
-
-        if ((fout = fopen(cmd, "w")) != NULL)
-        {
-            fprintf(fout, "%d", a->interface.bonding);
-            fclose(fout);
-        }
+    }
+    else
+    {
+        printf("ALREADY GOT MASTER...\n");
     }
 
-    // Re-add children and subordinates
+    if (CheckSetBondMode(promiser, a->interface.bonding))
+    {
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
+
+    // Re-add children/slave/subordinates
 
     for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
     {
         snprintf(cmd, CF_BUFSIZE, "%s link set %s master %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
-
+        printf("Try to bond slave: %s\n", cmd);
         if ((ExecCommand(cmd, result, pp) != 0))
         {
             Log(LOG_LEVEL_INFO, "Bond interface child %s for 'interfaces' promise %s failed", (char *)rp->val.item, promiser);
@@ -1588,4 +1594,48 @@ bool IPAddressInList(Rlist *cidr1, char *cidr2)
     }
 
     return false;
+}
+
+/****************************************************************************/
+
+static int CheckSetBondMode(char *promiser, int bmode)
+{
+    FILE *fp;
+    int mode_ok = false;
+    char cmd[CF_BUFSIZE];
+
+    snprintf(cmd, CF_BUFSIZE, "/sys/class/net/%s/bonding/mode", promiser);
+
+    // Converge("cat mode > /sys/class/net/bond0/bonding/mode")
+
+    if ((fp = safe_fopen(cmd, "r")) != NULL)
+    {
+        size_t line_size = CF_SMALLBUF;
+        char *line = xmalloc(line_size), mode[CF_SMALLBUF];
+        snprintf(mode, CF_SMALLBUF, "%u", bmode);
+        CfReadLine(&line, &line_size, fp);
+        if (strstr(line, mode))
+        {
+            mode_ok = true;
+        }
+        free(line);
+        fclose(fp);
+    }
+
+    if (!mode_ok)
+    {
+        printf("SETTING MASTER MODE...%d\n",  bmode);
+        if ((fp = safe_fopen(cmd, "w")) != NULL)
+        {
+            fprintf(fp, "%d", bmode);
+            fclose(fp);
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Failed to set mode %d for %s promise failed", bmode, promiser);
+            return false;
+        }
+    }
+
+    return true;
 }

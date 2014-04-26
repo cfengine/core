@@ -45,7 +45,7 @@ int GetBondingMode(char *s)
 
     for (i = 0; opts[i] != NULL; i++)
     {
-        if (strcmp(s, opts[i]) == 0)
+        if (s && strcmp(s, opts[i]) == 0)
         {
             return i;
         }

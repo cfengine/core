@@ -54,7 +54,18 @@ static const ConstraintSyntax linkservice_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
+static const ConstraintSyntax tunnel_constraints[] =
+{
+    ConstraintSyntaxNewInt("tunnel_id", CF_VALRANGE, "Tunnel identifier number (VxLAN VNI etc)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_id_address", CF_IPRANGE, "Tunnel local management address", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_multicast_group", CF_IPRANGE, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_interface", CF_IPRANGE, "Optional particular interface for tunnel", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_alien_registration", CF_IDRANGE, "Name of a CFEngine array variable pointing to remote ARP data", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
 
+
+static const BodySyntax tunnel_body = BodySyntaxNew("tunnel", tunnel_constraints, NULL, SYNTAX_STATUS_NORMAL);
 static const BodySyntax linkstate_body = BodySyntaxNew("link_state", linkstate_constraints, NULL, SYNTAX_STATUS_NORMAL);
 static const BodySyntax linkservice_body = BodySyntaxNew("link_services", linkservice_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
@@ -71,6 +82,7 @@ static const ConstraintSyntax interface_constraints[] =
     ConstraintSyntaxNewStringList("ipv6_addresses", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_services", &linkservice_body, "Services configured on the interface", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("tunnel", &tunnel_body, "Tunnel and overlay configuration", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("purge_addresses", "Remove existing addresses from interface if not defined here", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

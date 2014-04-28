@@ -23,10 +23,6 @@ bundle agent init
 
 bundle agent test
 {
-  meta:
-      # Should be "suppress_fail", but test case crashes, so we need to skip.
-      "test_skip_needs_work" string => "windows",
-        meta => { "redmine4751" };
   packages:
       "a:b:c"
       package_policy => "add",

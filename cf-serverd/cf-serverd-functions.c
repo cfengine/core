@@ -350,16 +350,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
     while (!IsPendingTermination())
     {
-        /* Note that this loop is executed from main thread only, but
-           ACTIVE_THREADS might still change from connection threads. */
-        if (ThreadLock(cft_server_children))
-        {
-            if (ACTIVE_THREADS == 0)
-            {
-                CheckFileChanges(ctx, policy, config);
-            }
-            ThreadUnlock(cft_server_children);
-        }
         /* Check whether we have established peering with a hub */
         if (CollectCallHasPending())
         {
@@ -401,6 +391,20 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                 };
                 int max_fd = (sd > signal_pipe) ? (sd + 1) : (signal_pipe + 1);
                 ret_val = select(max_fd, &rset, NULL, NULL, &timeout);
+
+                /* Lock even though this is executed from main thread only, as
+                   ACTIVE_THREADS changes from connection threads. */
+                if (ThreadLock(cft_server_children))
+                {
+                    if (ACTIVE_THREADS == 0)
+                    {
+                        /* Check for new policy just before spawning the
+                         * thread, since server reconfiguration can only
+                         * happen when no threads are spawned. */
+                        CheckFileChanges(ctx, policy, config);
+                    }
+                    ThreadUnlock(cft_server_children);
+                }
 
                 // Empty the signal pipe. We don't need the values.
                 unsigned char buf;

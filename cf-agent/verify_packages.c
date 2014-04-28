@@ -1470,7 +1470,10 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                     EvalContextVariablePut(ctx, ref_arch, arch, CF_DATA_TYPE_STRING, "source=promise");
 
                     BufferClear(expanded);
-                    ExpandScalar(ctx, NULL, PACKAGES_CONTEXT_ANYVER, a.packages.package_name_convention, expanded);
+                    if (a.packages.package_name_convention)
+                    {
+                        ExpandScalar(ctx, NULL, PACKAGES_CONTEXT_ANYVER, a.packages.package_name_convention, expanded);
+                    }
 
                     EvalContextVariableRemove(ctx, ref_name);
                     VarRefDestroy(ref_name);

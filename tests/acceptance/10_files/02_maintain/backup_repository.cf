@@ -3,7 +3,7 @@
 body common control
 {
       bundlesequence => { default("$(this.promise_filename)") };
-      inputs => { "../../dcs.cf.sub" };
+      inputs => { "../../default.cf.sub" };
 }
 
 body agent control

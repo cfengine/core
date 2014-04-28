@@ -502,6 +502,9 @@ static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, Eva
         Log(LOG_LEVEL_INFO, "Tagging VLAN %d on %s for 'interfaces' promise", vlan_id, promiser);
     }
 
+    snprintf(cmd, CF_BUFSIZE, "%s.%d", pp->promiser, vlan_id);
+    InterfaceUp(cmd, result, pp);
+
     return ret;
 }
 
@@ -1074,7 +1077,11 @@ static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext
     if ((ExecCommand(cmd, result, pp) != 0))
     {
         Log(LOG_LEVEL_INFO, "Untagged VLAN %d/interface alias on %s for 'interfaces' promise failed", vlan_id, promiser);
+        return;
     }
+
+    InterfaceUp(interface, result, pp);
+
 }
 
 /****************************************************************************/

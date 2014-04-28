@@ -53,8 +53,8 @@ bool INTERFACE_WANTS_NATIVE = false;
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetVlanInfo(Item **list, const Promise *pp, const char *interface);
 static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rlist *filter);
 static void DeleteInterfaceInfo(LinkState *interfaces);
@@ -268,7 +268,7 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
 {
     if (IsDefinedClass(ctx,"linux"))
     {
-        AssessDebianInterfacePromise(promiser, result, ctx, a, pp);
+        AssessLinuxInterfacePromise(promiser, result, ctx, a, pp);
     }
     else
     {
@@ -289,7 +289,7 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
 /* Level 1                                                                  */
 /****************************************************************************/
 
-static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     LinkState *netinterfaces = NULL;
     Rlist *filter = NULL;
@@ -362,7 +362,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     if (a->havetvlan)
     {
-        AssessDebianTaggedVlan(promiser, result, ctx, a, pp);
+        AssessLinuxTaggedVlan(promiser, result, ctx, a, pp);
     }
 
     if (a->haveuvlan)
@@ -401,7 +401,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
 /****************************************************************************/
 
-static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     Item *ip;
     Rlist *rp;

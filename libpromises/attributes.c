@@ -183,6 +183,7 @@ Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
 
     attr.havelinkstate = PromiseGetConstraintAsBoolean(ctx, "link_state", pp);
     attr.havelinkservices = PromiseGetConstraintAsBoolean(ctx, "link_services", pp);
+    attr.havetunnel = PromiseGetConstraintAsBoolean(ctx, "tunnel", pp);
 
     attr.havebridge = (attr.interface.bridge_interfaces == NULL) ? false : true;
     attr.havebond = (attr.interface.bond_interfaces == NULL) ? false : true;
@@ -1741,6 +1742,13 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
 
     char *sp = PromiseGetConstraintAsRval(pp, "bonding", RVAL_TYPE_SCALAR);
     i.bonding = GetBondingMode(sp);
+
+    i.tunnel_id = PromiseGetConstraintAsInt(ctx, "tunnel_id", pp);
+    i.tunnel_loopback = PromiseGetConstraintAsRval(pp, "tunnel_address", RVAL_TYPE_SCALAR);
+    i.tunnel_multicast_group = PromiseGetConstraintAsRval(pp, "tunnel_multicast_group", RVAL_TYPE_SCALAR);
+    i.tunnel_interface = PromiseGetConstraintAsRval(pp, "tunnel_interface", RVAL_TYPE_SCALAR);
+    i.tunnel_alien_arp = PromiseGetConstraintAsRval(pp, "tunnel_alien_arp", RVAL_TYPE_SCALAR);
+
     return i;
 }
 

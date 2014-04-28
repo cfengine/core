@@ -41,8 +41,6 @@
 #include <ip_address.h>
 
 #define CF_DEBIAN_IFCONF "/etc/network/interfaces"
-#define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
-#define CF_DEBIAN_VLAN_COMMAND "/sbin/vconfig"
 #define CF_DEBIAN_IP_COMM "/sbin/ip"
 #define CF_DEBIAN_BRCTL "/usr/sbin/brctl"
 #define CF_DEBIAN_IFQUERY "/usr/sbin/ifquery"
@@ -54,8 +52,9 @@ bool INTERFACE_WANTS_NATIVE = false;
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static int GetVlanInfo(Item **list, const Promise *pp, const char *interface);
+
+static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
+static int GetVlanInfo(Item **list, LinkState *ifs, const char *interface);
 static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rlist *filter);
 static void DeleteInterfaceInfo(LinkState *interfaces);
 static int GetBridgeInfo(Bridges **list, const Promise *pp);
@@ -75,6 +74,7 @@ static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg
 static int CheckSetBondMode(char *promiser, int mode, PromiseResult *result, const Promise *pp);
 static int InterfaceDown(char *interface, PromiseResult *result, const Promise *pp);
 static int InterfaceUp(char *interface, PromiseResult *result, const Promise *pp);
+static int VlanUp(char *interface, int id, PromiseResult *result, const Promise *pp);
 
 /****************************************************************************/
 
@@ -362,7 +362,7 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
 
     if (a->havetvlan)
     {
-        AssessLinuxTaggedVlan(promiser, result, ctx, a, pp);
+        AssessLinuxTaggedVlan(promiser, result, ctx, netinterfaces, a, pp);
     }
 
     if (a->haveuvlan)
@@ -401,16 +401,15 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
 
 /****************************************************************************/
 
-static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
-    Item *ip;
     Rlist *rp;
     int vlan_id = 0, found;
-    Item *vlans = NULL;          /* GLOBAL_X */
+    Item *ip, *vlans = NULL;
 
     // Look through the labelled VLANs to see if they are on this interface
 
-    if (!GetVlanInfo(&vlans, pp, promiser))
+    if (!GetVlanInfo(&vlans, ifs, promiser))
     {
         Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
         return;
@@ -457,8 +456,13 @@ static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalCon
         {
             if (ip->counter == vlan_id)
             {
-                DeleteItem(&vlans, ip);
+                ip->counter = CF_NOINT;
                 found = true;
+            }
+
+            if (found && (ip->time == false)) // up status in "time" field
+            {
+                VlanUp(promiser, vlan_id, result, pp);
             }
         }
 
@@ -472,13 +476,18 @@ static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalCon
             // Something's wrong...
             return;
         }
+
+        VlanUp(promiser, vlan_id, result, pp);
     }
 
     // Anything remaining needs to be removed
 
     for (ip = vlans; ip != NULL; ip=ip->next)
     {
-        DeleteTaggedVLAN(vlan_id, promiser, result, ctx, a, pp);
+        if (ip->counter != CF_NOINT)
+        {
+            DeleteTaggedVLAN(vlan_id, promiser, result, ctx, a, pp);
+        }
     }
 
     DeleteItemList(vlans);
@@ -491,19 +500,13 @@ static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, Eva
     char cmd[CF_BUFSIZE];
     int ret;
 
-    Log(LOG_LEVEL_VERBOSE, "Did not find tagged VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
-
-    snprintf(cmd, CF_BUFSIZE, "%s add %s %d", CF_DEBIAN_VLAN_COMMAND, pp->promiser, vlan_id);
-
-// ip link add link eth0 name eth0.10 type vlan id 10
+    snprintf(cmd, CF_BUFSIZE, "%s link add link %s name %s.%d type vlan id %d", CF_DEBIAN_IP_COMM,
+             pp->promiser, pp->promiser, vlan_id, vlan_id);
 
     if ((ret = ExecCommand(cmd, result, pp)))
     {
-        Log(LOG_LEVEL_INFO, "Tagging VLAN %d on %s for 'interfaces' promise", vlan_id, promiser);
+        Log(LOG_LEVEL_VERBOSE, "Tagging VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
     }
-
-    snprintf(cmd, CF_BUFSIZE, "%s.%d", pp->promiser, vlan_id);
-    InterfaceUp(cmd, result, pp);
 
     return ret;
 }
@@ -517,7 +520,7 @@ static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, 
 
     Log(LOG_LEVEL_VERBOSE, "Attempting to remove VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
 
-    snprintf(cmd, CF_BUFSIZE, "%s rem %s.%d", CF_DEBIAN_VLAN_COMMAND, promiser, vlan_id);
+    snprintf(cmd, CF_BUFSIZE, "%s link delete %s.%d", CF_DEBIAN_IP_COMM, promiser, vlan_id);
 
     if ((ret = ExecCommand(cmd, result, pp)))
     {
@@ -1221,51 +1224,26 @@ void WriteNativeInterfacesFile()
 /* INFO                                                                     */
 /****************************************************************************/
 
-static int GetVlanInfo(Item **list, const Promise *pp, const char *interface)
+static int GetVlanInfo(Item **list, LinkState *ifs, const char *interface)
 {
-    FILE *fp;
-    size_t line_size = CF_BUFSIZE;
-    char *line = xmalloc(line_size);
-    char ifname[CF_SMALLBUF];
-    char ifparent[CF_SMALLBUF];
+    LinkState *lsp;
 
-// kernel: modprobe 8021q must be done before running this
-
-/*
-  host$ sudo more /proc/net/vlan/config
-  VLAN Dev name    | VLAN ID
-  Name-Type: VLAN_NAME_TYPE_RAW_PLUS_VID_NO_PAD
-  eth0.34        | 34  | eth0
-  eth0.35        | 35  | eth0
-  eth0.36        | 36  | eth0
-  eth0.37        | 37  | eth0
-*/
-
-    if ((fp = safe_fopen(CF_DEBIAN_VLAN_FILE, "r")) == NULL)
+    for (lsp = ifs; lsp != NULL; lsp=lsp->next)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open '%s' - try modprobe 8021q to install driver", CF_DEBIAN_VLAN_FILE);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
-    }
-
-    // Skip two headers
-    CfReadLine(&line, &line_size, fp);
-    CfReadLine(&line, &line_size, fp);
-
-    while (!feof(fp))
-    {
-        int id = CF_NOINT;
-        CfReadLine(&line, &line_size, fp);
-        sscanf(line, "%s | %d | %s", ifname, &id, ifparent);
-
-        if (strcmp(ifparent, interface) == 0)
+        if (strchr(lsp->name, '.'))
         {
-            PrependFullItem(list, ifname, NULL, id, 0);
+            int id = CF_NOINT;
+            char ifname[CF_SMALLBUF];
+
+            sscanf(lsp->name, "%31[^.].%d", ifname, &id);
+
+            if (strcmp(ifname, (char *)interface) == 0 && (id > 0))
+            {
+                PrependFullItem(list, ifname, NULL, id, lsp->up);
+            }
         }
     }
 
-    fclose(fp);
-    free(line);
     return true;
 }
 
@@ -1658,6 +1636,16 @@ static int InterfaceDown(char *interface, PromiseResult *result, const Promise *
     }
 
     return true;
+}
+
+/****************************************************************************/
+
+static int VlanUp(char *interface, int id, PromiseResult *result, const Promise *pp)
+{
+    char cmd[CF_BUFSIZE];
+
+    snprintf(cmd, CF_BUFSIZE, "%s.%d", interface, id);
+    return InterfaceUp(cmd, result, pp);
 }
 
 /****************************************************************************/

@@ -57,10 +57,10 @@ static const ConstraintSyntax linkservice_constraints[] =
 static const ConstraintSyntax tunnel_constraints[] =
 {
     ConstraintSyntaxNewInt("tunnel_id", CF_VALRANGE, "Tunnel identifier number (VxLAN VNI etc)", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("tunnel_id_address", CF_IPRANGE, "Tunnel local management address", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_address", CF_IPRANGE, "Tunnel local management/loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_multicast_group", CF_IPRANGE, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_interface", CF_IPRANGE, "Optional particular interface for tunnel", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("tunnel_alien_registration", CF_IDRANGE, "Name of a CFEngine array variable pointing to remote ARP data", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_alien_arp", CF_IDRANGE, "Name of a CFEngine array variable pointing to remote ARP data", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

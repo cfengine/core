@@ -29,6 +29,7 @@
 #include <locks.h>
 #include <promises.h>
 #include <string_lib.h>
+#include <regex.h>
 #include <misc_lib.h>
 #include <files_lib.h>
 #include <files_interfaces.h>
@@ -40,19 +41,19 @@
 #include <communication.h>
 #include <ip_address.h>
 
-#define CF_DEBIAN_IFCONF "/etc/network/interfaces"
-#define CF_DEBIAN_IP_COMM "/sbin/ip"
-#define CF_DEBIAN_BRCTL "/usr/sbin/brctl"
-#define CF_DEBIAN_IFQUERY "/usr/sbin/ifquery"
-#define CF_DEBIAN_IFUP "/usr/sbin/ifup"
-#define CF_DEBIAN_ETHTOOL "/usr/bin/ethtool"
+#define CF_LINUX_IFCONF "/etc/network/interfaces"
+#define CF_LINUX_IP_COMM "/sbin/ip"
+#define CF_LINUX_BRCTL "/usr/sbin/brctl"
+#define CF_LINUX_IFQUERY "/usr/sbin/ifquery"
+#define CF_LINUX_IFUP "/usr/sbin/ifup"
+#define CF_LINUX_ETHTOOL "/usr/bin/ethtool"
 
 bool INTERFACE_WANTS_NATIVE = false;
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-
+static void AssessVxLAN(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
 static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
 static int GetVlanInfo(Item **list, LinkState *ifs, const char *interface);
 static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rlist *filter);
@@ -70,11 +71,16 @@ static Rlist *IPV4Addresses(LinkState *ifs, char *interface);
 static Rlist *IPV6Addresses(LinkState *ifs, char *interface);
 static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promise *pp);
 static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
-static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg);
+static void GetInterfaceOptions(const Promise *pp, int *full, int *speed, int *autoneg);
 static int CheckSetBondMode(char *promiser, int mode, PromiseResult *result, const Promise *pp);
 static int InterfaceDown(char *interface, PromiseResult *result, const Promise *pp);
 static int InterfaceUp(char *interface, PromiseResult *result, const Promise *pp);
 static int VlanUp(char *interface, int id, PromiseResult *result, const Promise *pp);
+static int DeleteInterface(char *interface, PromiseResult *result, const Promise *pp);
+static LinkState *MatchInterface(LinkState *fsp, char *interface);
+static int GetVxlan(char *promiser, int *vni, char *dev, char *loopback, char *multicast);
+static void TunnelAlienRegistration(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void BridgeAlien(char *loopback, char *mac,int vni, PromiseResult *result, const Promise *pp);
 
 /****************************************************************************/
 
@@ -133,7 +139,6 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
         ProgrammingError("Unknown promise result");
         break;
     }
-
 
     YieldCurrentLock(thislock);
     return result;
@@ -239,7 +244,7 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
 
         if (strlen(rp->val.item) > CF_MAX_IP_LEN)
         {
-            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv6 address %s (CIDR format expected) (len = %d/%d)", pp->promiser, (char *)rp->val.item,strlen(rp->val.item),CF_MAX_IP_LEN);
+            Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv6 address %s (CIDR format expected) (len = %d/%d)", pp->promiser, (char *)rp->val.item,(int)strlen(rp->val.item),CF_MAX_IP_LEN);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -293,7 +298,6 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
 {
     LinkState *netinterfaces = NULL;
     Rlist *filter = NULL;
-    char cmd[CF_BUFSIZE];
 
     if (a->havebond)
     {
@@ -314,40 +318,22 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
     if (a->interface.delete)
     {
         Log(LOG_LEVEL_INFO, "Shutting down and removing bridge interface %s", promiser);
-
-        snprintf(cmd, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, promiser);
-
-        if ((ExecCommand(cmd, result, pp) != 0))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Parent bridge interface %s could not be shutdown", promiser);
-            *result = PROMISE_RESULT_FAIL;
-            return;
-        }
-
-        snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_DEBIAN_IP_COMM, promiser);
-
-        if ((ExecCommand(cmd, result, pp) != 0))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Virtual interface %s could not be removed", promiser);
-            *result = PROMISE_RESULT_FAIL;
-            return;
-        }
-
+        InterfaceDown(promiser, result, pp);
+        DeleteInterface(promiser, result, pp);
         DeleteInterfaceInfo(netinterfaces);
         return;
     }
 
     if (a->interface.state && strcmp(a->interface.state, "down") == 0)
     {
-        snprintf(cmd, CF_BUFSIZE, "%s link set dev %s down", CF_DEBIAN_IP_COMM, promiser);
-
-        if (!ExecCommand(cmd, result, pp))
-        {
-            *result = PROMISE_RESULT_FAIL;
-        }
-
+        InterfaceDown(promiser, result, pp);
         DeleteInterfaceInfo(netinterfaces);
         return;
+    }
+
+    if (a->havetunnel)
+    {
+        AssessVxLAN(promiser, result, ctx, netinterfaces, a, pp);
     }
 
     if (a->haveipv4)
@@ -397,6 +383,168 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
     }
 
     free(ospfp);
+}
+
+/****************************************************************************/
+
+static void AssessVxLAN(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+{
+    LinkState *lsp;
+    int vni = CF_NOINT;
+    char dev[CF_SMALLBUF];
+    char loopback[CF_MAX_IP_LEN] = {0};
+    char multicast[CF_MAX_IP_LEN] = {0};
+    bool match = false;
+    char comm[CF_BUFSIZE], opt[CF_MAXVARSIZE];
+
+    if ((lsp = MatchInterface(ifs, promiser)) != NULL)
+    {
+        if (a->interface.delete)
+        {
+            *result = PROMISE_RESULT_CHANGE;
+            DeleteInterface(promiser, result, pp);
+            return;
+        }
+
+        if (!GetVxlan(promiser, &vni, dev, loopback, multicast))
+        {
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+
+        match = true;
+    }
+
+    if (a->interface.state && strcmp(a->interface.state, "down") == 0 && lsp->up)
+    {
+        InterfaceDown(promiser,result,pp);
+        *result = PROMISE_RESULT_CHANGE;
+        return;
+    }
+
+    if (a->interface.tunnel_multicast_group && strcmp(loopback, a->interface.tunnel_multicast_group) != 0)
+    {
+        match = false;
+    }
+    else if (a->interface.tunnel_loopback && strcmp(loopback, a->interface.tunnel_loopback) != 0)
+    {
+        match = false;
+    }
+    else if (a->interface.tunnel_interface && strcmp(dev, a->interface.tunnel_interface) != 0)
+    {
+        match = false;
+    }
+    else if (vni != a->interface.tunnel_id)
+    {
+        match = false;
+    }
+
+    if (match)
+    {
+        return;
+    }
+
+    if (lsp != NULL)
+    {
+        // Need to start again to fix settings
+        InterfaceDown(promiser, result, pp);
+        DeleteInterface(promiser, result, pp);
+    }
+
+    snprintf(comm, CF_BUFSIZE, "%s link add %s type vxlan id %d", CF_LINUX_IP_COMM, promiser, a->interface.tunnel_id);
+
+    if (a->interface.tunnel_multicast_group)
+    {
+        snprintf(opt, CF_MAXVARSIZE, " group %s", a->interface.tunnel_multicast_group);
+        if (!JoinComm(comm, opt, CF_BUFSIZE))
+        {
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+    }
+
+    if (a->interface.tunnel_loopback)
+    {
+        snprintf(opt, CF_MAXVARSIZE, " local %s", a->interface.tunnel_loopback);
+        if (!JoinComm(comm, opt, CF_BUFSIZE))
+        {
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+    }
+
+    if (a->interface.tunnel_interface)
+    {
+        snprintf(opt, CF_MAXVARSIZE, " dev %s", a->interface.tunnel_interface);
+        if (!JoinComm(comm, opt, CF_BUFSIZE))
+        {
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+    }
+
+    if (!ExecCommand(comm, result, pp))
+    {
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Established VTEP %s for VNI %d", promiser, a->interface.tunnel_id);
+    *result = PROMISE_RESULT_CHANGE;
+
+    if (a->interface.tunnel_alien_arp)
+    {
+        TunnelAlienRegistration(promiser, result, ctx, a, pp);
+    }
+}
+
+/****************************************************************************/
+
+static void TunnelAlienRegistration(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    VarRef *ref = VarRefParse(a->interface.tunnel_alien_arp);
+    DataType type = CF_DATA_TYPE_NONE;
+    const void *value = EvalContextVariableGet(ctx, ref, &type);
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+    Variable *var = NULL;
+    char regex[CF_MAXVARSIZE];
+    snprintf(regex, CF_MAXVARSIZE, "^(?!%s$).*", a->interface.tunnel_loopback);
+
+    // Based on getvalues() function
+
+    while ((var = VariableTableIteratorNext(iter)))
+    {
+        if (var->ref->num_indices != 1)
+        {
+            continue;
+        }
+
+        if (!StringMatchFull(regex, var->ref->indices[ref->num_indices]))
+        {
+            continue;
+        }
+
+        switch (var->rval.type)
+        {
+        case RVAL_TYPE_SCALAR:
+
+            BridgeAlien(var->ref->indices[ref->num_indices], var->rval.item, a->interface.tunnel_id,result, pp);
+            break;
+
+        case RVAL_TYPE_LIST:
+            for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
+            {
+                BridgeAlien(var->ref->indices[ref->num_indices], RlistScalarValue(rp), a->interface.tunnel_id,result, pp);
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    VariableTableIteratorDestroy(iter);
+    VarRefDestroy(ref);
 }
 
 /****************************************************************************/
@@ -477,6 +625,7 @@ static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalCon
             return;
         }
 
+        *result = PROMISE_RESULT_CHANGE;
         VlanUp(promiser, vlan_id, result, pp);
     }
 
@@ -486,6 +635,7 @@ static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalCon
     {
         if (ip->counter != CF_NOINT)
         {
+            *result = PROMISE_RESULT_CHANGE;
             DeleteTaggedVLAN(vlan_id, promiser, result, ctx, a, pp);
         }
     }
@@ -500,7 +650,7 @@ static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, Eva
     char cmd[CF_BUFSIZE];
     int ret;
 
-    snprintf(cmd, CF_BUFSIZE, "%s link add link %s name %s.%d type vlan id %d", CF_DEBIAN_IP_COMM,
+    snprintf(cmd, CF_BUFSIZE, "%s link add link %s name %s.%d type vlan id %d", CF_LINUX_IP_COMM,
              pp->promiser, pp->promiser, vlan_id, vlan_id);
 
     if ((ret = ExecCommand(cmd, result, pp)))
@@ -520,7 +670,7 @@ static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, 
 
     Log(LOG_LEVEL_VERBOSE, "Attempting to remove VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
 
-    snprintf(cmd, CF_BUFSIZE, "%s link delete %s.%d", CF_DEBIAN_IP_COMM, promiser, vlan_id);
+    snprintf(cmd, CF_BUFSIZE, "%s link delete %s.%d", CF_LINUX_IP_COMM, promiser, vlan_id);
 
     if ((ret = ExecCommand(cmd, result, pp)))
     {
@@ -545,7 +695,7 @@ static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext 
 
             // Broadcast is now assumed "ones"
 
-            snprintf(cmd, CF_BUFSIZE, "%s addr add %s broadcast + dev %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
+            snprintf(cmd, CF_BUFSIZE, "%s addr add %s broadcast + dev %s", CF_LINUX_IP_COMM, (char *)rp->val.item, promiser);
 
             Log(LOG_LEVEL_VERBOSE, "Adding ipv4 %s to %s", (char *)rp->val.item, promiser);
 
@@ -566,7 +716,7 @@ static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext 
                 *result = PROMISE_RESULT_CHANGE;
 
                 Log(LOG_LEVEL_VERBOSE, "Purging ipv4 %s from %s", (char *)rpa->val.item, promiser);
-                snprintf(cmd, CF_BUFSIZE, "%s addr del %s dev %s", CF_DEBIAN_IP_COMM, (char *)rpa->val.item, promiser);
+                snprintf(cmd, CF_BUFSIZE, "%s addr del %s dev %s", CF_LINUX_IP_COMM, (char *)rpa->val.item, promiser);
 
                 if (!ExecCommand(cmd, result, pp))
                 {
@@ -583,7 +733,6 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
 {
     Rlist *rp, *rpa;
     char cmd[CF_BUFSIZE];
-    char b[CF_MAX_IP_LEN], c[CF_MAX_IP_LEN];
 
     for (rp = a->interface.v6_addresses; rp != NULL; rp = rp->next)
     {
@@ -591,7 +740,7 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
         {
             *result = PROMISE_RESULT_CHANGE;
 
-            snprintf(cmd, CF_BUFSIZE, "%s -6 addr add %s dev %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
+            snprintf(cmd, CF_BUFSIZE, "%s -6 addr add %s dev %s", CF_LINUX_IP_COMM, (char *)rp->val.item, promiser);
 
             Log(LOG_LEVEL_VERBOSE, "Adding ipv6 %s to %s", (char *)rp->val.item, promiser);
 
@@ -612,7 +761,7 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
                 *result = PROMISE_RESULT_CHANGE;
 
                 Log(LOG_LEVEL_VERBOSE, "Purging ipv6 %s from %s", (char *)rpa->val.item, promiser);
-                snprintf(cmd, CF_BUFSIZE, "%s -6 addr del %s dev %s", CF_DEBIAN_IP_COMM, (char *)rpa->val.item, promiser);
+                snprintf(cmd, CF_BUFSIZE, "%s -6 addr del %s dev %s", CF_LINUX_IP_COMM, (char *)rpa->val.item, promiser);
 
                 if (!ExecCommand(cmd, result, pp))
                 {
@@ -642,7 +791,7 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
     {
         if (a->interface.mtu != 0 && a->interface.mtu != lsp->mtu)
         {
-            snprintf(comm, CF_BUFSIZE, "%s link set dev %s mtu %d", CF_DEBIAN_IP_COMM, promiser, lsp->mtu);
+            snprintf(comm, CF_BUFSIZE, "%s link set dev %s mtu %d", CF_LINUX_IP_COMM, promiser, lsp->mtu);
             if ((ExecCommand(comm, result, pp) == 0))
             {
                 *result = PROMISE_RESULT_FAIL;
@@ -661,7 +810,7 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
 
         if (a->interface.autoneg && !autoneg)
         {
-            snprintf(comm, CF_BUFSIZE, "%s %s autoneg on", CF_DEBIAN_ETHTOOL, promiser);
+            snprintf(comm, CF_BUFSIZE, "%s %s autoneg on", CF_LINUX_ETHTOOL, promiser);
             fix = true;
         }
         else
@@ -677,7 +826,7 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
             }
 
             snprintf(comm, CF_BUFSIZE, "%s %s speed %d duplex %s autoneg off",
-                     CF_DEBIAN_ETHTOOL, promiser, a->interface.speed, a->interface.duplex);
+                     CF_LINUX_ETHTOOL, promiser, a->interface.speed, a->interface.duplex);
         }
 
         if (fix)
@@ -741,7 +890,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
                 if (!lsp->up)
                 {
                     // Try to bring them up, with or without config
-                    snprintf(comm, CF_BUFSIZE, "%s link set up dev %s", CF_DEBIAN_IP_COMM, lsp->name);
+                    snprintf(comm, CF_BUFSIZE, "%s link set up dev %s", CF_LINUX_IP_COMM, lsp->name);
                     if ((ExecCommand(comm, result, pp) != 0))
                     {
                         Log(LOG_LEVEL_VERBOSE, "Couldn't bring up member interface %s yet", lsp->name);
@@ -758,7 +907,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
     {
         if (*(char *)(rp->val.item) != '\0')
         {
-            snprintf(comm, CF_BUFSIZE, "%s link set up dev %s", CF_DEBIAN_IP_COMM,  (char *)(rp->val.item));
+            snprintf(comm, CF_BUFSIZE, "%s link set up dev %s", CF_LINUX_IP_COMM,  (char *)(rp->val.item));
             if ((ExecCommand(comm, result, pp) != 0))
             {
                 Log(LOG_LEVEL_VERBOSE, "Couldn't bring up member %s of interface %s yet", (char *)(rp->val.item), promiser);
@@ -798,7 +947,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 
         Log(LOG_LEVEL_INFO, "Adding bridge interface %s", promiser);
 
-        snprintf(comm, CF_BUFSIZE, "%s addbr %s", CF_DEBIAN_BRCTL, promiser);
+        snprintf(comm, CF_BUFSIZE, "%s addbr %s", CF_LINUX_BRCTL, promiser);
 
         if ((ExecCommand(comm, result, pp) != 0))
         {
@@ -812,7 +961,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
     {
         Log(LOG_LEVEL_INFO, "Shutting down and removing bridge interface %s", promiser);
 
-        snprintf(comm, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, promiser);
+        snprintf(comm, CF_BUFSIZE, "%s link set down dev %s", CF_LINUX_IP_COMM, promiser);
 
         if ((ExecCommand(comm, result, pp) != 0))
         {
@@ -821,7 +970,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
             return;
         }
 
-        snprintf(comm, CF_BUFSIZE, "%s delbr %s", CF_DEBIAN_BRCTL, promiser);
+        snprintf(comm, CF_BUFSIZE, "%s delbr %s", CF_LINUX_BRCTL, promiser);
 
         if ((ExecCommand(comm, result, pp) != 0))
         {
@@ -835,7 +984,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 
     for (rp = a->interface.bridge_interfaces; rp != NULL; rp = rp->next)
     {
-        snprintf(comm, CF_BUFSIZE, "%s addif %s %s", CF_DEBIAN_BRCTL, promiser, (char *)rp->val.item);
+        snprintf(comm, CF_BUFSIZE, "%s addif %s %s", CF_LINUX_BRCTL, promiser, (char *)rp->val.item);
 
         if ((ExecCommand(comm, result, pp) != 0))
         {
@@ -846,8 +995,8 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
     }
 
     /* will be replaced with
-       snprintf(cmd, CF_BUFSIZE, "%s link add name %s type bridge", CF_DEBIAN_IP_COMM, promiser);
-       snprintf(cmd, CF_BUFSIZE, "%s link set dev %s master", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
+       snprintf(cmd, CF_BUFSIZE, "%s link add name %s type bridge", CF_LINUX_IP_COMM, promiser);
+       snprintf(cmd, CF_BUFSIZE, "%s link set dev %s master", CF_LINUX_IP_COMM, (char *)rp->val.item, promiser);
     */
 
     DeleteBridgeInfo(bridges);
@@ -859,7 +1008,7 @@ static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promis
 {
     char comm[CF_BUFSIZE];
 
-    snprintf(comm, CF_BUFSIZE, "%s --check %s --with-depends", CF_DEBIAN_IFQUERY, promiser);
+    snprintf(comm, CF_BUFSIZE, "%s --check %s --with-depends", CF_LINUX_IFQUERY, promiser);
 
     if ((ExecCommand(comm, result, pp) == 0))
     {
@@ -867,7 +1016,7 @@ static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promis
         return true;
     }
 
-    snprintf(comm, CF_BUFSIZE, "%s %s --with-depends", CF_DEBIAN_IFUP, promiser);
+    snprintf(comm, CF_BUFSIZE, "%s %s --with-depends", CF_LINUX_IFUP, promiser);
 
     if ((ExecCommand(comm, result, pp) == 0))
     {
@@ -921,7 +1070,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
         if (orphan && lsp->parent && (strcmp(lsp->parent, promiser) == 0))
         {
-            snprintf(cmd, CF_BUFSIZE, "%s link set %s nomaster", CF_DEBIAN_IP_COMM, lsp->name);
+            snprintf(cmd, CF_BUFSIZE, "%s link set %s nomaster", CF_LINUX_IP_COMM, lsp->name);
 
             Log(LOG_LEVEL_VERBOSE, "Freeing superfluous bonded interface %s from master %s", lsp->name, promiser);
             if ((ExecCommand(cmd, result, pp) != 0))
@@ -951,7 +1100,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
             if (a->interface.delete)
             {
                 // All members slaves are freed when we will the master
-                snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_DEBIAN_IP_COMM, promiser);
+                snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_LINUX_IP_COMM, promiser);
 
                 if ((ExecCommand(cmd, result, pp) != 0))
                 {
@@ -977,7 +1126,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
         for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
         {
-            snprintf(cmd, CF_BUFSIZE, "%s link set %s down", CF_DEBIAN_IP_COMM, (char *)rp->val.item);
+            snprintf(cmd, CF_BUFSIZE, "%s link set %s down", CF_LINUX_IP_COMM, (char *)rp->val.item);
 
             if ((ExecCommand(cmd, result, pp) != 0))
             {
@@ -985,7 +1134,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
                 *result = PROMISE_RESULT_FAIL;
             }
 
-            snprintf(cmd, CF_BUFSIZE, "%s addr flush dev %s ", CF_DEBIAN_IP_COMM, (char *)rp->val.item);
+            snprintf(cmd, CF_BUFSIZE, "%s addr flush dev %s ", CF_LINUX_IP_COMM, (char *)rp->val.item);
 
             if ((ExecCommand(cmd, result, pp) != 0))
             {
@@ -997,7 +1146,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
     if (!got_master)
     {
-        snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond", CF_DEBIAN_IP_COMM, promiser);
+        snprintf(cmd, CF_BUFSIZE, "%s link add %s type bond", CF_LINUX_IP_COMM, promiser);
 
         if ((ExecCommand(cmd, result, pp) != 0))
         {
@@ -1016,7 +1165,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
     for (rp = a->interface.bond_interfaces; rp != NULL; rp=rp->next)
     {
-        snprintf(cmd, CF_BUFSIZE, "%s link set %s master %s", CF_DEBIAN_IP_COMM, (char *)rp->val.item, promiser);
+        snprintf(cmd, CF_BUFSIZE, "%s link set %s master %s", CF_LINUX_IP_COMM, (char *)rp->val.item, promiser);
         printf("Try to bond slave: %s\n", cmd);
         if ((ExecCommand(cmd, result, pp) != 0))
         {
@@ -1075,7 +1224,7 @@ static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext
 
     Log(LOG_LEVEL_VERBOSE, "Did not find untagged VLAN %d on %s (i.e. virtual device %s)", vlan_id, promiser, interface);
 
-    snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_DEBIAN_IP_COMM, interface);
+    snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_LINUX_IP_COMM, interface);
 
     if ((ExecCommand(cmd, result, pp) != 0))
     {
@@ -1159,6 +1308,7 @@ int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
         if (strncmp("ERROR:", line, 6) == 0 || strstr(line, "error") == 0)
         {
             Log(LOG_LEVEL_ERR, "Interface returned an error: %s", line);
+            printf("CMD: %s\n", cmd);
             *result = PROMISE_RESULT_FAIL;
             break;
         }
@@ -1190,11 +1340,11 @@ void WriteNativeInterfacesFile()
 
     //ifquery --running -a > /etc/network/interfaces
 
-    snprintf(comm, CF_BUFSIZE, "%s --running -a", CF_DEBIAN_IFQUERY);
+    snprintf(comm, CF_BUFSIZE, "%s --running -a", CF_LINUX_IFQUERY);
 
     if ((pfp = cf_popen(comm, "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_IFQUERY);
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_LINUX_IFQUERY);
         free(line);
         return;
     }
@@ -1216,7 +1366,7 @@ void WriteNativeInterfacesFile()
     Attributes a = { {0} };
     a.edits.backup = BACKUP_OPTION_TIMESTAMP;
 
-    SaveItemListAsFile(output, CF_DEBIAN_IFCONF, a, NewLineMode_Unix);
+    SaveItemListAsFile(output, CF_LINUX_IFCONF, a, NewLineMode_Unix);
     free(line);
 }
 
@@ -1265,11 +1415,11 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rl
     int mtu = CF_NOINT;
     LinkState *entry = NULL;
 
-    snprintf(comm, CF_BUFSIZE, "%s addr", CF_DEBIAN_IP_COMM);
+    snprintf(comm, CF_BUFSIZE, "%s addr", CF_LINUX_IP_COMM);
 
     if ((pfp = cf_popen(comm, "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_IP_COMM);
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_LINUX_IP_COMM);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -1374,7 +1524,7 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rl
 
 /****************************************************************************/
 
-static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg)
+static void GetInterfaceOptions(const Promise *pp, int *full, int *speed, int *autoneg)
 {
     FILE *pfp;
     size_t line_size = CF_BUFSIZE;
@@ -1382,11 +1532,11 @@ static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg
     char comm[CF_BUFSIZE];
     char *sp;
 
-    snprintf(comm, CF_BUFSIZE, "%s %s", CF_DEBIAN_ETHTOOL, pp->promiser);
+    snprintf(comm, CF_BUFSIZE, "%s %s", CF_LINUX_ETHTOOL, pp->promiser);
 
     if ((pfp = cf_popen(comm, "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_ETHTOOL);
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_LINUX_ETHTOOL);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
@@ -1452,11 +1602,11 @@ static int GetBridgeInfo(Bridges **list, const Promise *pp)
     Bridges *entry = NULL;
     int n;
 
-    snprintf(comm, CF_BUFSIZE, "%s show", CF_DEBIAN_BRCTL);
+    snprintf(comm, CF_BUFSIZE, "%s show", CF_LINUX_BRCTL);
 
     if ((pfp = cf_popen(comm, "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_BRCTL);
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_LINUX_BRCTL);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -1626,7 +1776,7 @@ static int InterfaceDown(char *interface, PromiseResult *result, const Promise *
     char cmd[CF_BUFSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "Bringing interface %s down", interface);
-    snprintf(cmd, CF_BUFSIZE, "%s link set down dev %s", CF_DEBIAN_IP_COMM, interface);
+    snprintf(cmd, CF_BUFSIZE, "%s link set down dev %s", CF_LINUX_IP_COMM, interface);
 
     if ((ExecCommand(cmd, result, pp) != 0))
     {
@@ -1656,7 +1806,7 @@ static int InterfaceUp(char *interface, PromiseResult *result, const Promise *pp
 
     Log(LOG_LEVEL_VERBOSE, "Bringing interface %s up", interface);
 
-    snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_DEBIAN_IP_COMM, interface);
+    snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_LINUX_IP_COMM, interface);
 
     if (!ExecCommand(cmd, result, pp))
     {
@@ -1665,4 +1815,158 @@ static int InterfaceUp(char *interface, PromiseResult *result, const Promise *pp
     }
 
     return true;
+}
+
+/****************************************************************************/
+
+static int DeleteInterface(char *interface, PromiseResult *result, const Promise *pp)
+{
+    char cmd[CF_BUFSIZE];
+
+    Log(LOG_LEVEL_VERBOSE, "Deleting interface %s up", interface);
+
+    snprintf(cmd, CF_BUFSIZE, "%s link delete dev %s", CF_LINUX_IP_COMM, interface);
+
+    if ((ExecCommand(cmd, result, pp) != 0))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Interface %s could not be removed", interface);
+        *result = PROMISE_RESULT_FAIL;
+        return false;
+    }
+
+    return true;
+}
+
+/****************************************************************************/
+
+static LinkState *MatchInterface(LinkState *fsp, char *interface)
+{
+    LinkState *lsp;
+
+    for (lsp = fsp; lsp != NULL; lsp=lsp->next)
+    {
+        if (strcmp(fsp->name, interface) == 0)
+        {
+            return lsp;
+        }
+    }
+
+    return NULL;
+}
+
+/****************************************************************************/
+
+static int GetVxlan(char *promiser, int *vni, char *dev, char *loopback, char *multicast)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char comm[CF_BUFSIZE];
+    char *sp, *line = xmalloc(line_size);
+    bool got_result = false;
+
+    snprintf(comm, CF_BUFSIZE, "%s -d link show dev %s", CF_LINUX_IP_COMM, promiser);
+
+    //29: vtep2000: <BROADCAST,MULTICAST> mtu 1450 qdisc noop state DOWN mode DEFAULT
+    //link/ether 96:07:57:22:d3:85 brd ff:ff:ff:ff:ff:ff
+    //vxlan id 2000 group 239.0.0.2 local 172.2.2.2 dev eth0 port 32768 61000 ageing 300
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_LINUX_IP_COMM);
+        return false;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        if (strstr(line, "vxlan"))
+        {
+            got_result = true;
+            break;
+        }
+    }
+
+    fclose(pfp);
+
+    if (!got_result)
+    {
+        return false;
+    }
+
+    if ((sp = strstr(line, "id")) != NULL)
+    {
+        sscanf(sp, "id %d", vni);
+    }
+
+    if ((sp = strstr(line, "local")) != NULL)
+    {
+        sscanf(sp, "local %s", loopback);
+    }
+
+    if ((sp = strstr(line, "group")) != NULL)
+    {
+        sscanf(sp, "group %s", multicast);
+    }
+
+    if ((sp = strstr(line, "dev")) != NULL)
+    {
+        sscanf(sp, "dev %s", dev);
+    }
+
+    free(line);
+    return true;
+}
+
+/****************************************************************************/
+
+bool JoinComm(char *s, char *ds, size_t size)
+{
+    if (strlen(s) + strlen(ds) < size)
+    {
+        strcat(s, ds);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+/****************************************************************************/
+
+static void BridgeAlien(char *loopback, char *mac,int vni, PromiseResult *result, const Promise *pp)
+{
+    struct stat sb;
+    char comm[CF_BUFSIZE];
+
+    if (stat("/bin/bridge", &sb) != -1)
+    {
+        snprintf(comm, CF_BUFSIZE, "/bin/bridge fdb add %s dev %s dst %s\n", mac, pp->promiser, loopback);
+    }
+    else if (stat("/usr/sbin/bridge", &sb) != -1)
+    {
+        snprintf(comm, CF_BUFSIZE, "/usr/sbin/bridge fdb add %s dev %s dst %s\n", mac, pp->promiser, loopback);
+    }
+    else
+    {
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
+
+    if (!ExecCommand(comm, result, pp))
+    {
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Bridge alien MAC address %s on VTEP %s for VNI %d", mac, loopback, vni);
+
+    *result = PROMISE_RESULT_CHANGE;
+    return;
 }

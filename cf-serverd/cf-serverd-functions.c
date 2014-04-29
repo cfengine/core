@@ -275,7 +275,6 @@ void ThisAgentInit(void)
 void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     int sd = -1;
-    fd_set rset;
     int ret_val;
     CfLock thislock;
     extern int COLLECT_WINDOW;
@@ -322,28 +321,25 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     if (!NO_FORK)
-    {
 #ifdef __MINGW32__
-
+    {
         Log(LOG_LEVEL_VERBOSE,
             "Windows does not support starting processes in the background - running in foreground");
-
-#else /* !__MINGW32__ */
-
+    }
+#else
+    {
         if (fork() != 0)
         {
             _exit(EXIT_SUCCESS);
         }
 
         ActAsDaemon();
-#endif /* !__MINGW32__ */
     }
 
-#ifndef __MINGW32__
     /* Close sd on exec, needed for not passing the socket to cf-runagent
      * spawned commands. */
     fcntl(sd, F_SETFD, FD_CLOEXEC);
-#endif /* !__MINGW32__ */
+#endif
 
     Log(LOG_LEVEL_NOTICE, "Server is starting...");
     WritePID("cf-serverd.pid");
@@ -351,16 +347,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
     while (!IsPendingTermination())
     {
-        /* Note that this loop is executed from main thread only, but
-           ACTIVE_THREADS might still change from connection threads. */
-        if (ThreadLock(cft_server_children))
-        {
-            if (ACTIVE_THREADS == 0)
-            {
-                CheckFileChanges(ctx, policy, config);
-            }
-            ThreadUnlock(cft_server_children);
-        }
         /* Check whether we have established peering with a hub */
         if (CollectCallHasPending())
         {
@@ -384,76 +370,86 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                 CollectCallMarkProcessed();
             }
         }
-        else
+
+        Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
+        struct timeval timeout = { .tv_sec = 60 };
+        int signal_pipe = GetSignalPipe();
+        fd_set rset;
+        FD_ZERO(&rset);
+        FD_SET(signal_pipe, &rset);
+        /* sd might be -1 if "listen" attribute in body server control is set
+         * to off (enterprise feature for call-collected clients). */
+        if (sd != -1)
         {
-            /* check if listening is working */
-            if (sd != -1)
+            FD_SET(sd, &rset);
+        }
+
+        ret_val = select(MAX(sd, signal_pipe) + 1,
+                         &rset, NULL, NULL, &timeout);
+
+        /* Empty the signal pipe, it is there to only detect missed signals
+         * in-between while(!IsPendingTermination()) and select(). */
+        unsigned char buf;
+        while (recv(signal_pipe, &buf, 1, 0) > 0) {}
+
+        if (ThreadLock(cft_server_children))
+        {
+            if (ACTIVE_THREADS == 0)
             {
-                // Look for normal incoming service requests
-                int signal_pipe = GetSignalPipe();
-                FD_ZERO(&rset);
-                FD_SET(sd, &rset);
-                FD_SET(signal_pipe, &rset);
+                /* Check for new policy just before spawning the
+                 * thread, since server reconfiguration can only
+                 * happen when no threads are spawned. */
+                CheckFileChanges(ctx, policy, config);
+            }
+            ThreadUnlock(cft_server_children);
+        }
 
-                Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
-                struct timeval timeout = {
-                    .tv_sec = 60,
-                    .tv_usec = 0
-                };
-                int max_fd = (sd > signal_pipe) ? (sd + 1) : (signal_pipe + 1);
-                ret_val = select(max_fd, &rset, NULL, NULL, &timeout);
-
-                // Empty the signal pipe. We don't need the values.
-                unsigned char buf;
-                while (recv(signal_pipe, &buf, 1, 0) > 0) {}
-
-                if (ret_val == -1)      /* Error received from call to select */
-                {
-                    if (errno == EINTR)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
-                        exit(1);
-                    }
-                }
-                else if (!ret_val) /* No data waiting, we must have timed out! */
-                {
-                    continue;
-                }
-
-                if (FD_ISSET(sd, &rset))
-                {
-                    /* TODO embed ConnectionInfo into ServerConnectionState. */
-                    ConnectionInfo *info = ConnectionInfoNew();
-                    if (info == NULL)
-                    {
-                        continue;
-                    }
-
-                    info->ss_len = sizeof(info->ss);
-                    info->sd = accept(sd, (struct sockaddr *) &info->ss,
-                                      &info->ss_len);
-
-                    if (info->sd == -1)
-                    {
-                        ConnectionInfoDestroy(&info);
-                        continue;
-                    }
-
-                    /* Just convert IP address to string, no DNS lookup. */
-                    char ipaddr[CF_MAX_IP_LEN] = "";
-                    getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
-                                ipaddr, sizeof(ipaddr),
-                                NULL, 0, NI_NUMERICHOST);
-
-                    ServerEntryPoint(ctx, ipaddr, info);
-                }
+        if (ret_val == -1)        /* Error received from call to select */
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
+                exit(1);
             }
         }
+        else if (ret_val == 0)                              /* time out */
+        {
+            continue;
+        }
+
+        if (sd != -1 && FD_ISSET(sd, &rset))
+        {
+            /* TODO embed ConnectionInfo into ServerConnectionState. */
+            ConnectionInfo *info = ConnectionInfoNew();
+            if (info == NULL)
+            {
+                continue;
+            }
+
+            info->ss_len = sizeof(info->ss);
+            info->sd = accept(sd, (struct sockaddr *) &info->ss,
+                              &info->ss_len);
+
+            if (info->sd == -1)
+            {
+                ConnectionInfoDestroy(&info);
+                continue;
+            }
+
+            /* Just convert IP address to string, no DNS lookup. */
+            char ipaddr[CF_MAX_IP_LEN] = "";
+            getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
+                        ipaddr, sizeof(ipaddr),
+                        NULL, 0, NI_NUMERICHOST);
+
+            ServerEntryPoint(ctx, ipaddr, info);
+        }
     }
+
     CollectCallStop();
     PolicyDestroy(server_cfengine_policy);
 }

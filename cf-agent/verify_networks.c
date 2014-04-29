@@ -36,7 +36,7 @@
 #include <pipes.h>
 #include <item_lib.h>
 
-#define CF_DEBIAN_IP_COMM "/sbin/ip"
+#define CF_LINUX_IP_COMM "/sbin/ip"
 
 static int NetworkSanityCheck(Attributes a,  const Promise *pp);
 static void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
@@ -160,11 +160,11 @@ static int GetRouteInfo(FIBState **list, const Promise *pp)
     char network[CF_MAX_IP_LEN], gateway[CF_MAX_IP_LEN], device[CF_MAX_IP_LEN];
     FIBState *entry = NULL;
 
-    snprintf(comm, CF_BUFSIZE, "%s route", CF_DEBIAN_IP_COMM);
+    snprintf(comm, CF_BUFSIZE, "%s route", CF_LINUX_IP_COMM);
 
     if ((pfp = cf_popen(comm, "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_IP_COMM);
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_LINUX_IP_COMM);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -216,7 +216,7 @@ static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext
                 {
                     if (a->networks.delete_route)
                     {
-                        snprintf(cmd, CF_BUFSIZE, "%s route del %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+                        snprintf(cmd, CF_BUFSIZE, "%s route del %s via %s dev %s", CF_LINUX_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
                         Log(LOG_LEVEL_VERBOSE, "Deleting static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
                     }
                     else
@@ -227,14 +227,14 @@ static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext
                 }
                 else
                 {
-                    snprintf(cmd, CF_BUFSIZE, "%s route replace %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+                    snprintf(cmd, CF_BUFSIZE, "%s route replace %s via %s dev %s", CF_LINUX_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
                     Log(LOG_LEVEL_VERBOSE, "Adding static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
                 }
             }
         }
         else
         {
-            snprintf(cmd, CF_BUFSIZE, "%s route replace %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+            snprintf(cmd, CF_BUFSIZE, "%s route replace %s via %s dev %s", CF_LINUX_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
             Log(LOG_LEVEL_VERBOSE, "Adding static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
         }
 

@@ -30,6 +30,7 @@
 #include <logging.h>
 #include <chflags.h>
 #include <audit.h>
+#include <string_lib.h>
 
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
@@ -208,6 +209,18 @@ Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveroutedto = PromiseGetConstraintAsBoolean(ctx, "routed_to", pp);
     attr.havebalance = PromiseGetConstraintAsBoolean(ctx, "balanced_destinations", pp);
 
+    return attr;
+}
+
+/*******************************************************************/
+
+Attributes GetArpAttributes(const EvalContext *ctx, const Promise *pp)
+{
+    Attributes attr = { {0} };
+
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.arp = GetArpConstraints(ctx, pp);
     return attr;
 }
 
@@ -1762,6 +1775,19 @@ Networks GetNetworkConstraints(const EvalContext *ctx, const Promise *pp)
     n.gateway_interface = PromiseGetConstraintAsRval(pp, "gateway_interface", RVAL_TYPE_SCALAR);
     n.delete_route = PromiseGetConstraintAsBoolean(ctx, "delete_route", pp);
     return n;
+}
+
+/*******************************************************************/
+
+Arp GetArpConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    Arp a;
+
+    a.link_address = PromiseGetConstraintAsRval(pp, "link_address", RVAL_TYPE_SCALAR);
+    ToLowerStrInplace(a.link_address);
+    a.interface = PromiseGetConstraintAsRval(pp, "interface", RVAL_TYPE_SCALAR);
+    a.delete_link = PromiseGetConstraintAsBoolean(ctx, "delete_link", pp);
+    return a;
 }
 
 /*******************************************************************/

@@ -34,6 +34,25 @@ typedef enum
     IP_ADDRESS_TYPE_IPV6
 } IPAddressVersion;
 
+struct IPV4Address
+{
+    uint8_t octets[4];
+    uint32_t mask;
+    uint16_t port;
+};
+struct IPV6Address
+{
+    uint16_t sixteen[8];
+    uint16_t port;
+    uint32_t mask;
+};
+
+struct IPAddress
+{
+    void *address;
+    int type;
+};
+
 /**
   @brief Creates a new IPAddress object from a string.
   @param source Buffer containing the string representation of the ip address.

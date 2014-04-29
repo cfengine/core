@@ -321,27 +321,25 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     if (!NO_FORK)
+#ifdef __MINGW32__
     {
-#ifndef __MINGW32__
-
+        Log(LOG_LEVEL_VERBOSE,
+            "Windows does not support starting processes in the background - running in foreground");
+    }
+#else
+    {
         if (fork() != 0)
         {
             _exit(EXIT_SUCCESS);
         }
 
         ActAsDaemon();
-
-        /* Close sd on exec, needed for not passing the socket to cf-runagent
-         * spawned commands. */
-        fcntl(sd, F_SETFD, FD_CLOEXEC);
-
-#else
-
-        Log(LOG_LEVEL_VERBOSE,
-            "Windows does not support starting processes in the background - running in foreground");
-
-#endif
     }
+
+    /* Close sd on exec, needed for not passing the socket to cf-runagent
+     * spawned commands. */
+    fcntl(sd, F_SETFD, FD_CLOEXEC);
+#endif
 
     Log(LOG_LEVEL_NOTICE, "Server is starting...");
     WritePID("cf-serverd.pid");

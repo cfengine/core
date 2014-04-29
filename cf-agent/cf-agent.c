@@ -89,6 +89,7 @@ typedef enum
     TYPE_SEQUENCE_CONTEXTS,
     TYPE_SEQUENCE_INTERFACES,
     TYPE_SEQUENCE_NETWORKS,
+    TYPE_SEQUENCE_ADDRESSES,
     TYPE_SEQUENCE_USERS,
     TYPE_SEQUENCE_FILES,
     TYPE_SEQUENCE_PACKAGES,
@@ -134,7 +135,8 @@ static const char *const AGENT_TYPESEQUENCE[] =
     "defaults",
     "classes",                  /* Maelstrom order 2 */
     "interfaces",
-    "networks",
+    "routes",
+    "addresses",
     "users",
     "files",
     "packages",
@@ -1437,9 +1439,13 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     {
         result = VerifyInterfacePromise(ctx, pp);
     }
-    else if (strcmp("networks", pp->parent_promise_type->name) == 0)
+    else if (strcmp("routes", pp->parent_promise_type->name) == 0)
     {
-        result = VerifyNetworkingPromise(ctx, pp);
+        result = VerifyRoutePromise(ctx, pp);
+    }
+    else if (strcmp("addresses", pp->parent_promise_type->name) == 0)
+    {
+        result = VerifyArpPromise(ctx, pp);
     }
     else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {

@@ -30,25 +30,6 @@
 #include <alloc.h>
 #include <string_lib.h>
 
-struct IPV4Address
-{
-    uint8_t octets[4];
-    uint32_t mask;
-    uint16_t port;
-};
-struct IPV6Address
-{
-    uint16_t sixteen[8];
-    uint16_t port;
-    uint32_t mask;
-};
-
-struct IPAddress
-{
-    void *address;
-    int type;
-};
-
 #define Char2Dec(o, c)                          \
     (o * 10) + c - '0'
 

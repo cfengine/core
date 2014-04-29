@@ -2459,6 +2459,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
     const char *arg_array = RlistScalarValue(finalargs->next);
 
     VariableTableIterator *iter;
+    size_t selected_index = 0;
     {
         VarRef *ref = VarRefParse(arg_array);
         if (!VarRefIsQualified(ref))
@@ -2468,6 +2469,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
         }
 
         iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+        selected_index = ref->num_indices;
         VarRefDestroy(ref);
     }
 
@@ -2476,12 +2478,12 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
     Buffer *expbuf = BufferNew();
     while ((var = VariableTableIteratorNext(iter)))
     {
-        if (var->ref->num_indices != 1)
+        if (var->ref->num_indices <= selected_index)
         {
             continue;
         }
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", var->ref->indices[0], CF_DATA_TYPE_STRING, "source=function,function=maparray");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", var->ref->indices[selected_index], CF_DATA_TYPE_STRING, "source=function,function=maparray");
 
         switch (var->rval.type)
         {

@@ -1,0 +1,26 @@
+#
+body common control
+{
+      inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4822" };
+
+  methods:
+      "any" usebundle => file_make("$(G.testdir)/source_file",
+                                   "Source and Destination are DIFFERENT_A");
+      "any" usebundle => file_make("$(G.testdir)/dest_file_latest",
+                                   "Source and Destination are DIFFERENT_B");
+      "any" usebundle => file_make("$(G.testdir)/dest_file_classic",
+                                   "Source and Destination are DIFFERENT_C");
+      "any" usebundle => generate_key;
+      "any" usebundle => start_server("localhost_open");
+      "any" usebundle => run_test("$(this.promise_filename).sub");
+      "any" usebundle => stop_server("localhost_open");
+}

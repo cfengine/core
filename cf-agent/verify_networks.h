@@ -27,6 +27,7 @@
 
 #include <cf3.defs.h>
 
-PromiseResult VerifyNetworkingPromise(EvalContext *ctx, const Promise *pp);
+PromiseResult VerifyRoutePromise(EvalContext *ctx, const Promise *pp);
+PromiseResult VerifyArpPromise(EvalContext *ctx, const Promise *pp);
 
 #endif

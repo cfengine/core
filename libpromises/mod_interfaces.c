@@ -60,7 +60,7 @@ static const ConstraintSyntax tunnel_constraints[] =
     ConstraintSyntaxNewString("tunnel_address", CF_IPRANGE, "Tunnel local management/loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_multicast_group", CF_IPRANGE, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_interface", CF_IPRANGE, "Optional particular interface for tunnel", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("tunnel_alien_arp", CF_IDRANGE, "Name of a CFEngine array variable pointing to remote ARP data", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_alien_addresses", CF_IDRANGE, "Name of a CFEngine array variable pointing to remote ADDRESSES data", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -89,7 +89,7 @@ static const ConstraintSyntax interface_constraints[] =
 
 /**********************************************************************************************/
 
-static const ConstraintSyntax route_constraints[] =
+static const ConstraintSyntax reachable_constraints[] =
 {
     ConstraintSyntaxNewString("gateway_ip", CF_ANYSTRING, "IP address on gateway to next hop", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("gateway_interface", CF_ANYSTRING, "Interface name of gateway to next hop", SYNTAX_STATUS_NORMAL),
@@ -97,24 +97,24 @@ static const ConstraintSyntax route_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax route_body = BodySyntaxNew("reachable_through", route_constraints, NULL, SYNTAX_STATUS_NORMAL);
-
-static const ConstraintSyntax balance_constraints[] =
-{
-    ConstraintSyntaxNewString("algorithm", CF_ANYSTRING, "Load sharing algorithm, e.g. RR, LRU", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("nat_pool", CF_INTRANGE, "Port range for NAT traffoc", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-static const BodySyntax balancing_body = BodySyntaxNew("route_select", balance_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax route_body = BodySyntaxNew("reachable_through", reachable_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 /**********************************************************************************************/
 
-static const ConstraintSyntax network_constraints[] =
+static const ConstraintSyntax route_constraints[] =
 {
     ConstraintSyntaxNewBody("reachable_through", &route_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("balanced_destinations", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("route_select", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+/**********************************************************************************************/
+
+static const ConstraintSyntax addresses_constraints[] =
+{
+    ConstraintSyntaxNewString("link_address", CF_ANYSTRING, "The link level (MAC) address of the promiser", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("delete_link", "If this link mapping exists, remove it", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("interface", CF_IDRANGE, "Interface for neighbour discovery", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -123,6 +123,7 @@ static const ConstraintSyntax network_constraints[] =
 const PromiseTypeSyntax CF_INTERFACES_PROMISE_TYPES[] =
 {
     PromiseTypeSyntaxNew("agent", "interfaces", interface_constraints, NULL, SYNTAX_STATUS_NORMAL),
-    PromiseTypeSyntaxNew("agent", "routes", network_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("agent", "routes", route_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("agent", "addresses", addresses_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };

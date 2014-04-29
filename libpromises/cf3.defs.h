@@ -1046,6 +1046,17 @@ struct FIBState_
     FIBState *next;
 };
 
+typedef struct ARPState_ ARPState;
+
+struct ARPState_
+{
+    char *ip;
+    char *mac;
+    char *device;
+    char *state;
+    ARPState *next;
+};
+
 /*************************************************************************/
 
 typedef struct
@@ -1509,6 +1520,15 @@ typedef struct
 
 /*************************************************************************/
 
+typedef struct
+{
+    char *link_address;
+    char *interface;
+    bool delete_link;
+} Arp;
+
+/*************************************************************************/
+
 typedef enum
 {
     ENVIRONMENT_STATE_CREATE,
@@ -1569,6 +1589,7 @@ typedef struct
 typedef struct
 {
     Interfaces interface;
+    Arp arp;
     Networks networks;
     FileSelect select;
     FilePerms perms;

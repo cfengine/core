@@ -29,23 +29,28 @@
 #include <ornaments.h>
 #include <locks.h>
 #include <promises.h>
-#include <string_lib.h>
 #include <misc_lib.h>
 #include <files_lib.h>
 #include <files_interfaces.h>
 #include <pipes.h>
 #include <item_lib.h>
+#include <ip_address.h>
+#include <string_lib.h>
 
 #define CF_LINUX_IP_COMM "/sbin/ip"
 
 static int NetworkSanityCheck(Attributes a,  const Promise *pp);
-static void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int ArpSanityCheck(Attributes a,  const Promise *pp);
+static void AssessRoutePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessArpPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetRouteInfo(FIBState **list, const Promise *pp);
+static int GetArpInfo(ARPState **list, const Promise *pp);
 static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp);
+static void DeleteARPState(ARPState *arptable);
 
 /****************************************************************************/
 
-PromiseResult VerifyNetworkingPromise(EvalContext *ctx, const Promise *pp)
+PromiseResult VerifyRoutePromise(EvalContext *ctx, const Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -68,7 +73,7 @@ PromiseResult VerifyNetworkingPromise(EvalContext *ctx, const Promise *pp)
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    AssessNetworkingPromise(pp->promiser, &result, ctx, &a, pp);
+    AssessRoutePromise(pp->promiser, &result, ctx, &a, pp);
 
     switch (result)
     {
@@ -124,16 +129,7 @@ static int NetworkSanityCheck(Attributes a,  const Promise *pp)
 
 /****************************************************************************/
 
-void AssessRoutingServices()
-{
-    // OSPF
-    // RIP
-    // BGP
-}
-
-/****************************************************************************/
-
-void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+void AssessRoutePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     FIBState *fib = NULL;
 
@@ -250,3 +246,229 @@ static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext
 }
 
 
+/****************************************************************************/
+/* ARP                                                                      */
+/****************************************************************************/
+
+PromiseResult VerifyArpPromise(EvalContext *ctx, const Promise *pp)
+{
+    CfLock thislock;
+    char lockname[CF_BUFSIZE];
+
+    Attributes a = GetArpAttributes(ctx, pp);
+
+    if (!ArpSanityCheck(a, pp))
+    {
+        return PROMISE_RESULT_FAIL;
+    }
+
+    PromiseBanner(pp);
+
+    snprintf(lockname, CF_BUFSIZE - 1, "arp-%s", pp->promiser);
+
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    if (thislock.lock == NULL)
+    {
+        return PROMISE_RESULT_SKIPPED;
+    }
+
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    AssessArpPromise(pp->promiser, &result, ctx, &a, pp);
+
+    switch (result)
+    {
+    case PROMISE_RESULT_NOOP:
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Arp promise kept");
+        break;
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_INTERRUPTED:
+    case PROMISE_RESULT_WARN:
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, a, "Arp promise not kept");
+        break;
+    case PROMISE_RESULT_CHANGE:
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Arp promise repaired");
+        break;
+    default:
+        ProgrammingError("Unknown promise result");
+        break;
+    }
+
+
+    YieldCurrentLock(thislock);
+    return result;
+}
+
+/****************************************************************************/
+
+static void AssessArpPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    ARPState *arptable = NULL;
+    char comm[CF_BUFSIZE];
+    char ivar[CF_SMALLBUF];
+    char *choice = a->arp.interface;
+
+    if (!GetArpInfo(&arptable, pp))
+    {
+        *result = PROMISE_RESULT_INTERRUPTED;
+        return;
+    }
+
+    DataType type = CF_DATA_TYPE_NONE;
+    snprintf(ivar, CF_MAXVARSIZE, "sys.interface");
+    VarRef *ref = VarRefParse(ivar);
+    const void *default_interface = EvalContextVariableGet(ctx, ref, &type);
+    VarRefDestroy(ref);
+
+    if (a->arp.interface == NULL && default_interface == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Cannot determine interface for addresses promise");
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
+
+    if (a->arp.interface == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "No interface specified so defaulting to system discovered %s", (char *)default_interface);
+        choice = default_interface;
+    }
+
+    for (ARPState *ap = arptable; ap != NULL; ap=ap->next)
+    {
+        if (strcmp(ap->ip, promiser) == NULL)
+        {
+            if (strcmp(ap->mac, a->arp.link_address) == 0 &&
+                strcmp(ap->device, choice) == 0 &&
+                strcmp(ap->state, "PERMANENT") == 0)
+            {
+                // All ok
+                return;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    if (a->arp.delete_link)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Deleting neighbour address resolution for %s", promiser);
+        snprintf(comm, CF_BUFSIZE, "%s neighbour delete %s dev %s", CF_LINUX_IP_COMM, promiser, choice);
+
+        if (!ExecCommand(comm, result, pp))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to change address bindings");
+            *result = PROMISE_RESULT_FAIL;
+        }
+
+        return;
+    }
+
+    if (a->arp.link_address)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Adding neighbour address resolution for %s", promiser);
+        printf("Addinging neighbour address resolution for %s\n", promiser);
+        snprintf(comm, CF_BUFSIZE, "%s neighbour add %s lladdr %s dev %s nud permanent", CF_LINUX_IP_COMM, promiser, a->arp.link_address, choice);
+
+        if (!ExecCommand(comm, result, pp))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to change address bindings");
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+    }
+
+    DeleteARPState(arptable);
+}
+
+/****************************************************************************/
+
+static int ArpSanityCheck(Attributes a,  const Promise *pp)
+{
+    char *sp;
+
+    if (sp = strchr(pp->promiser, '/'))
+    {
+        Log(LOG_LEVEL_ERR, "IP address should not include a mask `%s' in promise '%s'", sp, pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    if (a.arp.delete_link && a.arp.link_address)
+    {
+        Log(LOG_LEVEL_ERR, "Conflicting promise attributes in promise '%s'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    return true;
+}
+
+/****************************************************************************/
+
+static int GetArpInfo(ARPState **list, const Promise *pp)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char comm[CF_BUFSIZE];
+    char ip[CF_MAX_IP_LEN], mac[CF_MAX_IP_LEN], device[CF_SMALLBUF], state[CF_SMALLBUF];
+    ARPState *entry = NULL;
+
+    snprintf(comm, CF_BUFSIZE, "%s neighbour show", CF_LINUX_IP_COMM);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_LINUX_IP_COMM);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        /*
+          192.168.1.1 dev wlan0 lladdr 00:1d:7e:28:22:c6 REACHABLE
+
+        */
+
+        sscanf(line, "%64s dev %31s lladdr %31s %31s", ip, device, mac, state);
+        entry = xcalloc(sizeof(FIBState), 1);
+        entry->next = *list;
+        *list = entry;
+        entry->ip = xstrdup(ip);
+        entry->mac = xstrdup(mac);
+        entry->device = xstrdup(device);
+        entry->state = xstrdup(state);
+    }
+
+    free(line);
+    cf_pclose(pfp);
+
+    return true;
+}
+
+/****************************************************************************/
+
+static void DeleteARPState(ARPState *arptable)
+{
+    ARPState *ap, *next;
+
+    for (ap = arptable; ap != NULL; ap = next)
+    {
+        free(ap->ip);
+        free(ap->mac);
+        free(ap->state);
+        free(ap->device);
+        next = ap->next;
+        free((char *)ap);
+    }
+}

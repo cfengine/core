@@ -13,7 +13,8 @@ bundle agent test
         meta => { "redmine4822" };
 
   methods:
-      "any" usebundle => dcs_fini("$(G.testdir)/destination_file");
+      "any" usebundle => dcs_fini("$(G.testdir)/dest_file_classic");
+      "any" usebundle => dcs_fini("$(G.testdir)/dest_file_latest");
       "any" usebundle => file_make("$(G.testdir)/source_file",
                                       "This is the source file to copy $(sys.date) - always fresh");
       "any" usebundle => generate_key;

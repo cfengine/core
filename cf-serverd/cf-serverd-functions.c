@@ -479,9 +479,9 @@ int InitServer(size_t queue_size)
 
 int OpenReceiverChannel(void)
 {
-    struct addrinfo *response, *ap;
+    struct addrinfo *response = NULL, *ap;
     struct addrinfo query = {
-        .ai_flags = AI_PASSIVE,
+        .ai_flags = AI_PASSIVE | AI_NUMERICSERV,
         .ai_family = AF_UNSPEC,
         .ai_socktype = SOCK_STREAM
     };
@@ -497,9 +497,14 @@ int OpenReceiverChannel(void)
     sprintf(servname, "%d", CFENGINE_PORT);
 
     /* Resolve listening interface. */
-    if (getaddrinfo(ptr, servname, &query, &response) != 0)
+    int gres;
+    if ((gres = getaddrinfo(ptr, servname, &query, &response)) != 0)
     {
-        Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", gai_strerror(gres));
+        if (response)
+        {
+            freeaddrinfo(response);
+        }
         return -1;
     }
 

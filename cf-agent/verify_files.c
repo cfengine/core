@@ -711,7 +711,7 @@ static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp
 
 /* Check if we are searching over a regular expression */
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
+    PromiseResult result = PROMISE_RESULT_SKIPPED;
     if (literal)
     {
         // Prime the promiser temporarily, may override later

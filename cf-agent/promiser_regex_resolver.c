@@ -68,7 +68,7 @@ PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, const Pr
     pbuffer[0] = '\0';
     path = SplitString(wildpath, '/');  // require forward slash in regex on all platforms
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
+    PromiseResult result = PROMISE_RESULT_SKIPPED;
     for (ip = path; ip != NULL; ip = ip->next)
     {
         if ((ip->name == NULL) || (strlen(ip->name) == 0))

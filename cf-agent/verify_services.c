@@ -170,7 +170,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
 
     PromiseBanner(pp);
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
+    PromiseResult result = PROMISE_RESULT_SKIPPED;
     if (strcmp(a.service.service_type, "windows") == 0)
     {
 #ifdef __MINGW32__

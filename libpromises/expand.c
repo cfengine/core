@@ -179,7 +179,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
 
     PromiseIterator *iter_ctx = NULL;
     size_t i = 0;
-    PromiseResult result = PROMISE_RESULT_NOOP;
+    PromiseResult result = PROMISE_RESULT_SKIPPED;
     Buffer *expbuf = BufferNew();
     for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); i++, PromiseIteratorNext(iter_ctx))
     {

@@ -1195,7 +1195,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
         PROCESSTABLE = NULL;
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
+    PromiseResult result = PROMISE_RESULT_SKIPPED;
 
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
@@ -1613,7 +1613,7 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const 
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     pid_t child = 1;
-    PromiseResult result = PROMISE_RESULT_NOOP;
+    PromiseResult result = PROMISE_RESULT_SKIPPED;
 
     if (background)
     {

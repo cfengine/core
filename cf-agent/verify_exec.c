@@ -104,8 +104,9 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
     }
 
     // explicitly set commands promises that end up changing to KEPT. This is because commands promises
-    // shares code with packages promises (VerifyCommandRetcode), so we enforce this condition here.
-    if (result == PROMISE_RESULT_CHANGE)
+    // shares code with packages promises (VerifyCommandRetcode), so we enforce this condition here,
+    // unless a body classes explicitly defines return codes for the REPAIRED state.
+    if (result == PROMISE_RESULT_CHANGE && !(a.classes.retcode_repaired))
     {
         result = PROMISE_RESULT_NOOP;
     }

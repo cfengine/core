@@ -631,6 +631,9 @@ int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flag
 #ifndef AT_SYMLINK_NOFOLLOW
 #define AT_SYMLINK_NOFOLLOW 0x1000
 #endif
+#ifndef AT_FDCWD
+#define AT_FDCWD (-2)
+#endif
 #endif
 
 #if !HAVE_DECL_LOG2

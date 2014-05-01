@@ -254,7 +254,7 @@ int safe_open(const char *pathname, int flags, ...)
     {
         first_dir = ".";
     }
-    currentfd = open(first_dir, O_RDONLY);
+    currentfd = openat(AT_FDCWD, first_dir, O_RDONLY);
     if (currentfd < 0)
     {
         return -1;

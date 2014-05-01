@@ -59,6 +59,7 @@ static pthread_mutex_t CHDIR_LOCK = PTHREAD_MUTEX_INITIALIZER;
 /**
  * Generic *at function.
  * @param dirfd File descriptor pointing to directory to do lookup in.
+ *              AT_FDCWD constant means to look in current directory.
  * @param func Function to call while in the directory.
  * @param cleanup Function to call if we need to clean up because of a failed call.
  * @param data Private data for the supplied functions.
@@ -77,37 +78,43 @@ int generic_at_function(int dirfd, int (*func)(void *data), void (*cleanup)(void
                         GetErrorStrFromCode(mutex_err));
     }
 
-    cwd = open(".", O_RDONLY);
-    if (cwd < 0)
+    if (dirfd != AT_FDCWD)
     {
-        mutex_err = pthread_mutex_unlock(&CHDIR_LOCK);
-        if (mutex_err)
+        cwd = open(".", O_RDONLY);
+        if (cwd < 0)
         {
-            UnexpectedError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                            GetErrorStrFromCode(mutex_err));
-        }
-        return -1;
-    }
-
-    if (fchdir(dirfd) < 0)
-    {
-        close(cwd);
-
-        mutex_err = pthread_mutex_unlock(&CHDIR_LOCK);
-        if (mutex_err)
-        {
-            UnexpectedError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                            GetErrorStrFromCode(mutex_err));
+            mutex_err = pthread_mutex_unlock(&CHDIR_LOCK);
+            if (mutex_err)
+            {
+                UnexpectedError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
+                                GetErrorStrFromCode(mutex_err));
+            }
+            return -1;
         }
 
-        return -1;
+        if (fchdir(dirfd) < 0)
+        {
+            close(cwd);
+
+            mutex_err = pthread_mutex_unlock(&CHDIR_LOCK);
+            if (mutex_err)
+            {
+                UnexpectedError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
+                                GetErrorStrFromCode(mutex_err));
+            }
+
+            return -1;
+        }
     }
 
     int result = func(data);
     saved_errno = errno;
 
-    fchdir_ret = fchdir(cwd);
-    close(cwd);
+    if (dirfd != AT_FDCWD)
+    {
+        fchdir_ret = fchdir(cwd);
+        close(cwd);
+    }
 
     mutex_err = pthread_mutex_unlock(&CHDIR_LOCK);
     if (mutex_err)
@@ -116,12 +123,15 @@ int generic_at_function(int dirfd, int (*func)(void *data), void (*cleanup)(void
                         GetErrorStrFromCode(mutex_err));
     }
 
-    if (fchdir_ret < 0)
+    if (dirfd != AT_FDCWD)
     {
-        cleanup(data);
-        Log(LOG_LEVEL_WARNING, "Could not return to original working directory in '%s'. "
-            "Things may not behave as expected. (fchdir: '%s')", __FUNCTION__, GetErrorStr());
-        return -1;
+        if (fchdir_ret < 0)
+        {
+            cleanup(data);
+            Log(LOG_LEVEL_WARNING, "Could not return to original working directory in '%s'. "
+                "Things may not behave as expected. (fchdir: '%s')", __FUNCTION__, GetErrorStr());
+            return -1;
+        }
     }
 
     errno = saved_errno;

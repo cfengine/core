@@ -45,21 +45,33 @@
 int TEST_SYMLINK_COUNTDOWN = 0;
 const char *TEST_SYMLINK_NAME = "";
 const char *TEST_SYMLINK_TARGET = "";
+// If this is true, when the countdown has been reached, we alternate
+// between deleting and creating the link. This is to test the race condition
+// when creating files. Defaults to false.
+bool TEST_SYMLINK_ALTERNATE = false;
 
 static int ORIG_DIR = -1;
 
 void test_switch_symlink(void)
 {
-    if (--TEST_SYMLINK_COUNTDOWN == 0) {
-        rmdir(TEST_SYMLINK_NAME);
-        unlink(TEST_SYMLINK_NAME);
-        assert_int_equal(symlink(TEST_SYMLINK_TARGET, TEST_SYMLINK_NAME), 0);
-        // If we already are root, we must force the link to be non-root,
-        // otherwise the test may have no purpose.
-        if (getuid() == 0)
+    if (--TEST_SYMLINK_COUNTDOWN <= 0) {
+        if (TEST_SYMLINK_COUNTDOWN == 0
+            || (TEST_SYMLINK_ALTERNATE && (TEST_SYMLINK_COUNTDOWN & 1)))
         {
-            // 100 exists in most installations, but it doesn't really matter.
-            assert_int_equal(lchown(TEST_SYMLINK_NAME, 100, 100), 0);
+            rmdir(TEST_SYMLINK_NAME);
+            unlink(TEST_SYMLINK_NAME);
+        }
+        if (TEST_SYMLINK_COUNTDOWN == 0
+            || (TEST_SYMLINK_ALTERNATE && !(TEST_SYMLINK_COUNTDOWN & 1)))
+        {
+            assert_int_equal(symlink(TEST_SYMLINK_TARGET, TEST_SYMLINK_NAME), 0);
+            // If we already are root, we must force the link to be non-root,
+            // otherwise the test may have no purpose.
+            if (getuid() == 0)
+            {
+                // 100 exists in most installations, but it doesn't really matter.
+                assert_int_equal(lchown(TEST_SYMLINK_NAME, 100, 100), 0);
+            }
         }
     }
 }
@@ -130,6 +142,8 @@ static void setup_tempfiles(void)
     }
 
     (void)result;
+
+    TEST_SYMLINK_ALTERNATE = false;
 }
 
 static void return_to_test_dir(void)
@@ -485,7 +499,7 @@ static void test_safe_open_safe_switched_dir_symlink(void)
     return_to_test_dir();
 }
 
-static void test_safe_open_create_inserted_symlink(void)
+static void test_safe_open_create_safe_inserted_symlink(void)
 {
     setup_tempfiles();
 
@@ -496,13 +510,33 @@ static void test_safe_open_create_inserted_symlink(void)
     // safe_open() instead.
     //test_switch_symlink();
 
+    int fd;
+    assert_true((fd = safe_open(TEST_LINK, O_RDONLY | O_CREAT, 0644)) >= 0);
+    check_contents(fd, TEST_STRING);
+    close(fd);
+
+    return_to_test_dir();
+}
+
+static void test_safe_open_create_alternating_symlink(void)
+{
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_ALTERNATE = true;
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //test_switch_symlink();
+
     assert_true(safe_open(TEST_LINK, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
 
     return_to_test_dir();
 }
 
-static void test_safe_open_create_switched_symlink(void)
+static void test_safe_open_create_unsafe_switched_symlink(void)
 {
     setup_tempfiles();
 
@@ -1232,8 +1266,9 @@ int main(int argc, char **argv)
             unit_test(test_safe_open_safe_inserted_dir_symlink),
             unit_test(test_safe_open_unsafe_switched_dir_symlink),
             unit_test(test_safe_open_safe_switched_dir_symlink),
-            unit_test(test_safe_open_create_inserted_symlink),
-            unit_test(test_safe_open_create_switched_symlink),
+            unit_test(test_safe_open_create_safe_inserted_symlink),
+            unit_test(test_safe_open_create_alternating_symlink),
+            unit_test(test_safe_open_create_unsafe_switched_symlink),
             unit_test(test_safe_open_dangling_symlink),
             unit_test(test_safe_open_root),
             unit_test(test_safe_open_ending_slashes),

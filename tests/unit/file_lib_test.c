@@ -37,7 +37,7 @@
 #define TEST_SUBSTRING "YELLOW balloon"
 #define TEST_SUBSUBSTRING "RED balloon"
 
-// These are just a way to pass parameters into test_switch_symlink().
+// These are just a way to pass parameters into switch_symlink_hook().
 // Since it can be called from CFEngine code, we need to do it like this.
 // The way COUNTDOWN works is that it counts down towards zero for each
 // component in the path passed to safe_open(). When it reaches zero,
@@ -52,7 +52,7 @@ bool TEST_SYMLINK_ALTERNATE = false;
 
 static int ORIG_DIR = -1;
 
-void test_switch_symlink(void)
+void switch_symlink_hook(void)
 {
     if (--TEST_SYMLINK_COUNTDOWN <= 0) {
         if (TEST_SYMLINK_COUNTDOWN == 0
@@ -290,7 +290,7 @@ static void test_safe_open_unsafe_symlink(void)
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = "/etc/passwd";
-    test_switch_symlink();
+    switch_symlink_hook();
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK, O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
@@ -305,7 +305,7 @@ static void test_safe_open_safe_symlink(void)
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
-    test_switch_symlink();
+    switch_symlink_hook();
 
     int fd;
     assert_true((fd = safe_open(TEMP_DIR "/" TEST_LINK, O_RDONLY)) >= 0);
@@ -324,7 +324,7 @@ static void test_safe_open_unsafe_inserted_symlink(void)
     TEST_SYMLINK_TARGET = "/etc/passwd";
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_LINK, O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
@@ -341,7 +341,7 @@ static void test_safe_open_safe_inserted_symlink(void)
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_LINK, O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
@@ -358,7 +358,7 @@ static void test_safe_open_unsafe_switched_symlink(void)
     TEST_SYMLINK_TARGET = "/etc/passwd";
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_FILE, O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
@@ -375,7 +375,7 @@ static void test_safe_open_safe_switched_symlink(void)
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     int fd;
     assert_true((fd = safe_open(TEMP_DIR "/" TEST_FILE, O_RDONLY)) >= 0);
@@ -392,7 +392,7 @@ static void test_safe_open_unsafe_dir_symlink(void)
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = "/etc";
-    test_switch_symlink();
+    switch_symlink_hook();
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK "/passwd", O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
@@ -407,7 +407,7 @@ static void test_safe_open_safe_dir_symlink(void)
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEST_SUBDIR;
-    test_switch_symlink();
+    switch_symlink_hook();
 
     int fd;
     assert_true((fd = safe_open(TEST_LINK "/" TEST_FILE, O_RDONLY)) >= 0);
@@ -426,7 +426,7 @@ static void test_safe_open_unsafe_inserted_dir_symlink(void)
     TEST_SYMLINK_TARGET = "/etc";
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_LINK "/passwd", O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
@@ -443,7 +443,7 @@ static void test_safe_open_safe_inserted_dir_symlink(void)
     TEST_SYMLINK_TARGET = TEST_SUBDIR;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_LINK "/" TEST_FILE, O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
@@ -466,7 +466,7 @@ static void test_safe_open_unsafe_switched_dir_symlink(void)
     TEST_SYMLINK_TARGET = "/etc";
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_LINK "/passwd", O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
@@ -489,7 +489,7 @@ static void test_safe_open_safe_switched_dir_symlink(void)
     TEST_SYMLINK_TARGET = TEST_SUBDIR;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     int fd;
     assert_true((fd = safe_open(TEST_LINK "/" TEST_FILE, O_RDONLY)) >= 0);
@@ -508,7 +508,7 @@ static void test_safe_open_create_safe_inserted_symlink(void)
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     int fd;
     assert_true((fd = safe_open(TEST_LINK, O_RDONLY | O_CREAT, 0644)) >= 0);
@@ -528,7 +528,7 @@ static void test_safe_open_create_alternating_symlink(void)
     TEST_SYMLINK_ALTERNATE = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_LINK, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
@@ -545,7 +545,7 @@ static void test_safe_open_create_unsafe_switched_symlink(void)
     TEST_SYMLINK_TARGET = "/etc/passwd";
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
@@ -562,7 +562,7 @@ static void test_safe_open_create_dangling_symlink(void)
     TEST_SYMLINK_TARGET = "/etc/file-that-for-sure-does-not-exist";
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
@@ -579,7 +579,7 @@ static void test_safe_open_dangling_symlink(void)
     TEST_SYMLINK_TARGET = "/etc/file-that-for-sure-does-not-exist";
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_true(safe_open(TEST_FILE, O_RDONLY, 0644) < 0);
     assert_int_equal(errno, ENOENT);
@@ -904,7 +904,7 @@ static void test_safe_chown_unsafe_link(void)
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_int_equal(chown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
@@ -1056,7 +1056,7 @@ static void test_safe_lchown_unsafe_link(void)
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_int_equal(lchown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
@@ -1086,7 +1086,7 @@ static void test_safe_lchown_unsafe_link_to_directory(void)
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR;
-    test_switch_symlink();
+    switch_symlink_hook();
 
     assert_int_equal(lchown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
@@ -1196,7 +1196,7 @@ static void test_safe_chmod_unsafe_link(void)
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
-    //test_switch_symlink();
+    //switch_symlink_hook();
 
     assert_int_equal(chown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
 

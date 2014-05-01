@@ -169,8 +169,8 @@ NewLineMode FileNewLineMode(ARG_UNUSED const char *file)
 #endif // !__MINGW32__
 
 #ifdef TEST_SYMLINK_ATOMICITY
-void test_switch_symlink();
-#define TEST_SYMLINK_SWITCH_POINT test_switch_symlink();
+void switch_symlink_hook();
+#define TEST_SYMLINK_SWITCH_POINT switch_symlink_hook();
 #else
 #define TEST_SYMLINK_SWITCH_POINT
 #endif

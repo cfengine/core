@@ -357,6 +357,35 @@ static void test_expand_scalar_nested_inner_undefined(void **state)
     BufferDestroy(res);
 }
 
+static void test_expand_list_nested(void **state)
+{
+    EvalContext *ctx = *state;
+    {
+        VarRef *lval = VarRefParse("default:bundle.i");
+        EvalContextVariablePut(ctx, lval, "one", CF_DATA_TYPE_STRING, NULL);
+        VarRefDestroy(lval);
+    }
+    {
+        VarRef *lval = VarRefParse("default:bundle.inner[one]");
+        Rlist *list = NULL;
+        RlistAppendScalar(&list, "foo");
+        EvalContextVariablePut(ctx, lval, list, CF_DATA_TYPE_STRING_LIST, NULL);
+        RlistDestroy(list);
+        VarRefDestroy(lval);
+    }
+
+    Rlist *outer = NULL;
+    RlistAppendScalar(&outer, "@{inner[$(i)]}");
+
+    Rlist *expanded = ExpandList(ctx, "default", "bundle", outer, true);
+
+    assert_int_equal(1, RlistLen(expanded));
+    assert_string_equal("foo", RlistScalarValue(expanded));
+
+    RlistDestroy(outer);
+    RlistDestroy(expanded);
+}
+
 static PromiseResult actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert_string_equal("first", pp->promiser);
@@ -542,6 +571,7 @@ int main()
         unit_test_setup_teardown(test_expand_scalar_array_with_scalar_arg, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_scalar_undefined, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_scalar_nested_inner_undefined, test_setup, test_teardown),
+        unit_test_setup_teardown(test_expand_list_nested, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_promise_array_with_scalar_arg, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_promise_slist, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_promise_array_with_slist_arg, test_setup, test_teardown)

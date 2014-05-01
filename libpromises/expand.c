@@ -519,6 +519,14 @@ static Rval ExpandListEntry(EvalContext *ctx,
             char naked[CF_MAXVARSIZE];
             GetNaked(naked, entry.item);
 
+            if (IsExpandable(naked))
+            {
+                Buffer *out = BufferNew();
+                ExpandScalar(ctx, ns, scope, naked, out);
+                strlcpy(naked, BufferData(out), CF_MAXVARSIZE);
+                BufferDestroy(out);
+            }
+
             if (!IsExpandable(naked))
             {
                 VarRef *ref = VarRefParseFromScope(naked, scope);

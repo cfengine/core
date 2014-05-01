@@ -553,7 +553,7 @@ static void test_safe_open_create_unsafe_switched_symlink(void)
     return_to_test_dir();
 }
 
-static void test_safe_open_dangling_symlink(void)
+static void test_safe_open_create_dangling_symlink(void)
 {
     setup_tempfiles();
 
@@ -566,6 +566,23 @@ static void test_safe_open_dangling_symlink(void)
 
     assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
+}
+
+static void test_safe_open_dangling_symlink(void)
+{
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = "/etc/file-that-for-sure-does-not-exist";
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //test_switch_symlink();
+
+    assert_true(safe_open(TEST_FILE, O_RDONLY, 0644) < 0);
+    assert_int_equal(errno, ENOENT);
 
     return_to_test_dir();
 }
@@ -1269,6 +1286,7 @@ int main(int argc, char **argv)
             unit_test(test_safe_open_create_safe_inserted_symlink),
             unit_test(test_safe_open_create_alternating_symlink),
             unit_test(test_safe_open_create_unsafe_switched_symlink),
+            unit_test(test_safe_open_create_dangling_symlink),
             unit_test(test_safe_open_dangling_symlink),
             unit_test(test_safe_open_root),
             unit_test(test_safe_open_ending_slashes),

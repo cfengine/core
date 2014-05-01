@@ -169,8 +169,8 @@ NewLineMode FileNewLineMode(ARG_UNUSED const char *file)
 #endif // !__MINGW32__
 
 #ifdef TEST_SYMLINK_ATOMICITY
-void test_switch_symlink();
-#define TEST_SYMLINK_SWITCH_POINT test_switch_symlink();
+void switch_symlink_hook();
+#define TEST_SYMLINK_SWITCH_POINT switch_symlink_hook();
 #else
 #define TEST_SYMLINK_SWITCH_POINT
 #endif
@@ -254,7 +254,7 @@ int safe_open(const char *pathname, int flags, ...)
     {
         first_dir = ".";
     }
-    currentfd = open(first_dir, O_RDONLY);
+    currentfd = openat(AT_FDCWD, first_dir, O_RDONLY);
     if (currentfd < 0)
     {
         return -1;
@@ -282,76 +282,100 @@ int safe_open(const char *pathname, int flags, ...)
             }
         }
 
-        struct stat stat_before, stat_after;
-        int stat_before_result = fstatat(currentfd, component, &stat_before, AT_SYMLINK_NOFOLLOW);
-        if (stat_before_result < 0
-            && (errno != ENOENT
-                || next_component // Meaning "not a leaf".
-                || !(flags & O_CREAT)))
+        // In cases of a race condition when creating a file, our attempt to open it may fail
+        // (see O_EXCL and O_CREAT flags below). However, this can happen even under normal
+        // circumstances, if we are unlucky; it does not mean that someone is up to something bad.
+        // So retry it a few times before giving up.
+        int attempts = 3;
+        while (true)
         {
-            close(currentfd);
-            return -1;
-        }
-
-        TEST_SYMLINK_SWITCH_POINT
-
-        if (!next_component)
-        {
-            // Last component.
-            if (stat_before_result < 0)
+            if (restore_slash)
             {
-                // Doesn't exist. Make *sure* we create it.
-                flags |= O_EXCL;
+                *restore_slash = '\0';
+            }
+
+            struct stat stat_before, stat_after;
+            int stat_before_result = fstatat(currentfd, component, &stat_before, AT_SYMLINK_NOFOLLOW);
+            if (stat_before_result < 0
+                && (errno != ENOENT
+                    || next_component // Meaning "not a leaf".
+                    || !(flags & O_CREAT)))
+            {
+                close(currentfd);
+                return -1;
+            }
+
+            TEST_SYMLINK_SWITCH_POINT
+
+            if (!next_component)
+            {
+                // Last component.
+                if (stat_before_result < 0)
+                {
+                    // Doesn't exist. Make *sure* we create it.
+                    flags |= O_EXCL;
+                }
+                else
+                {
+                    // Already exists. Make sure we *don't* create it.
+                    flags &= ~O_CREAT;
+                }
+                if (restore_slash)
+                {
+                    *restore_slash = '/';
+                }
+                int filefd = openat(currentfd, component, flags, mode);
+                if (filefd < 0)
+                {
+                    if ((stat_before_result < 0 && !(orig_flags & O_EXCL) && errno == EEXIST)
+                        || (stat_before_result >= 0 && orig_flags & O_CREAT && errno == ENOENT))
+                    {
+                        if (--attempts >= 0)
+                        {
+                            // Might be our fault. Try again.
+                            flags = orig_flags;
+                            continue;
+                        }
+                        else
+                        {
+                            // Too many attempts. Give up.
+                            errno = EACCES;
+                        }
+                    }
+                    close(currentfd);
+                    return -1;
+                }
+                close(currentfd);
+                currentfd = filefd;
             }
             else
             {
-                // Already exists. Make sure we *don't* create it.
-                flags &= ~O_CREAT;
-            }
-            if (restore_slash)
-            {
-                *restore_slash = '/';
-            }
-            int filefd = openat(currentfd, component, flags, mode);
-            close(currentfd);
-            if (filefd < 0)
-            {
-                if (stat_before_result < 0 && errno == EEXIST)
+                int new_currentfd = openat(currentfd, component, O_RDONLY);
+                close(currentfd);
+                if (new_currentfd < 0)
                 {
-                    errno = EACCES;
+                    return -1;
                 }
-                else if (stat_before_result >= 0 && orig_flags & O_CREAT && errno == ENOENT)
-                {
-                    errno = EACCES;
-                }
-                return -1;
+                currentfd = new_currentfd;
             }
-            currentfd = filefd;
-        }
-        else
-        {
-            int new_currentfd = openat(currentfd, component, O_RDONLY);
-            close(currentfd);
-            if (new_currentfd < 0)
-            {
-                return -1;
-            }
-            currentfd = new_currentfd;
-        }
 
-        if (stat_before_result == 0)
-        {
-            if (fstat(currentfd, &stat_after) < 0)
+            if (stat_before_result == 0)
             {
-                close(currentfd);
-                return -1;
+                if (fstat(currentfd, &stat_after) < 0)
+                {
+                    close(currentfd);
+                    return -1;
+                }
+                if (stat_before.st_uid != stat_after.st_uid || stat_before.st_gid != stat_after.st_gid)
+                {
+                    close(currentfd);
+                    errno = EACCES;
+                    return -1;
+                }
             }
-            if (stat_before.st_uid != stat_after.st_uid || stat_before.st_gid != stat_after.st_gid)
-            {
-                close(currentfd);
-                errno = EACCES;
-                return -1;
-            }
+
+            // If we got here, we've been successful, so don't try again.
+            break;
         }
     }
 

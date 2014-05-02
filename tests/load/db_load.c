@@ -33,6 +33,20 @@ static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
 
+static void tests_setup(void)
+{
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/db_load.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
+}
+
 static void *contend(ARG_UNUSED void *param)
 {
     CF_DB *db;
@@ -195,10 +209,7 @@ int main(int argc, char **argv)
     /* To clean up after databases are closed */
     atexit(&Cleanup);
 
-    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_load.XXXXXX");
-    mkdtemp(CFWORKDIR);
-    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
-    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
+    tests_setup();
 
     int numthreads = atoi(argv[1]);
 

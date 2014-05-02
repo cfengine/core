@@ -5,15 +5,28 @@
 #include <lastseen.h>
 #include <known_dirs.h>
 
+char CFWORKDIR[CF_BUFSIZE];
+
+static void tests_setup(void)
+{
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/lastseen_migration_test.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
+}
+
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 
 int main()
 {
-    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
-    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
-    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
+    tests_setup();
 
     for (int i = 0; i < 1000000; ++i)
     {

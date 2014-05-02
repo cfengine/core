@@ -308,7 +308,7 @@ int TLSTry(ConnectionInfo *conn_info)
             ret = SSL_connect(ssl);
             if (ret <= 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and failed");
+                Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and failed.  Make sure the remote is not running a 3.5.x or older cf-serverd.");
                 TLSLogError(ssl, LOG_LEVEL_ERR,
                             "Connection handshake client connect", ret);
                 return -1;
@@ -317,7 +317,7 @@ int TLSTry(ConnectionInfo *conn_info)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
+            Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried.  Make sure the remote is not running a 3.5.x or older cf-serverd.");
             TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client select", ret);
             return -1;
         }

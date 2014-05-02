@@ -17,9 +17,16 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 static void tests_setup(void)
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
-    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/lastseen_test.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
     mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 

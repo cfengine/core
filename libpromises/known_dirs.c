@@ -84,7 +84,7 @@ static const char *GetDefaultDir_helper(char dir[MAX_DIR_LENGTH], const char *ro
 #define GET_DEFAULT_DIRECTORY_DEFINE(FUNC, STATIC, GLOBAL, FOLDER)  \
 static const char *GetDefault##FUNC##Dir(void)                      \
 {                                                                   \
-    static char STATIC##dir[MAX_DIR_LENGTH] = ""; /* GLOBAL_C */    \
+    static char STATIC##dir[MAX_DIR_LENGTH]; /* GLOBAL_C */         \
     return GetDefaultDir_helper(STATIC##dir, GLOBAL, FOLDER);       \
 }                                                                   \
 

@@ -1,4 +1,13 @@
-3.6 Release Candidate
+3.7.x   (Master Branch)
+
+        Changes:
+        - all embedded databases are now rooted in the state/ directory.
+
+        New features:
+        - compile time option (--with-statedir) to
+          override the default state/ directory path.
+
+3.6     (Release Candidate)
 
         Changes:
         - Changes to logging output

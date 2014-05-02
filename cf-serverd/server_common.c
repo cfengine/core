@@ -1106,20 +1106,23 @@ void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvb
     TranslatePath(filename, rfilename);
 
     unsigned char digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
+    /* TODO connection might timeout if this takes long! */
     HashFile(filename, digest2, CF_DEFAULT_DIGEST);
 
     if (HashesMatch(digest1, digest2, CF_DEFAULT_DIGEST))
     {
-        sprintf(sendbuffer, "%s", CFD_FALSE);
+        assert(strlen(CFD_FALSE) < CF_BUFSIZE);
+        strcpy(sendbuffer, CFD_FALSE);
         Log(LOG_LEVEL_DEBUG, "Hashes matched ok");
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     }
     else
     {
-        sprintf(sendbuffer, "%s", CFD_TRUE);
+        assert(strlen(CFD_TRUE) < CF_BUFSIZE);
+        strcpy(sendbuffer, CFD_TRUE);
         Log(LOG_LEVEL_DEBUG, "Hashes didn't match");
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     }
+
+    SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
 }
 
 void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)

@@ -25,6 +25,7 @@
 #ifndef CFENGINE_LASTSEEN_H
 #define CFENGINE_LASTSEEN_H
 
+
 typedef struct
 {
     time_t lastseen;
@@ -58,5 +59,6 @@ int LastSeenHostKeyCount(void);
 bool IsLastSeenCoherent(void);
 int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
                            char *equivalent);
+
 
 #endif

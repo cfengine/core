@@ -23,7 +23,7 @@
 */
 
 #include <processes_select.h>
-
+#include <process_lib.h>
 #include <eval_context.h>
 #include <files_names.h>
 #include <conversion.h>
@@ -771,10 +771,8 @@ static bool IsBanner(char *psline)
 
 /*get the command and args from /proc */
 static int GetExtendedArgs(const char * pid, char *args)
-{
-    const char *dummy = "./test.sh -a this_is_a_very_long_option -b this_is_also_avery_long_option -c not_quite_there_yet -d we_should_be_over_80_chars_now";
-    strcpy(args, dummy);
-    return 0;
+{ 
+    return GetPsArgs(pid, args);
 }
 /*extend the process table with zone and args*/
 void SolarisExtendColumns(char *vbuff)

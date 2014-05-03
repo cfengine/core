@@ -1,49 +1,4 @@
-/*
- * CDDL HEADER START
- *
- * The contents of this file are subject to the terms of the
- * Common Development and Distribution License (the "License").
- * You may not use this file except in compliance with the License.
- *
- * You can obtain a copy of the license at usr/src/OPENSOLARIS.LICENSE
- * or http://www.opensolaris.org/os/licensing.
- * See the License for the specific language governing permissions
- * and limitations under the License.
- *
- * When distributing Covered Code, include this CDDL HEADER in each
- * file and include the License file at usr/src/OPENSOLARIS.LICENSE.
- * If applicable, add the following below this CDDL HEADER, with the
- * fields enclosed by brackets "[]" replaced with your own identifying
- * information: Portions Copyright [yyyy] [name of copyright owner]
- *
- * CDDL HEADER END
- */
-/*
- * Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
- * Use is subject to license terms.
- * Copyright 2012, Joyent, Inc.  All rights reserved.
- */
-
-/*	Copyright (c) 1984, 1986, 1987, 1988, 1989 AT&T	*/
-/*	  All Rights Reserved	*/
-
-/*
- * University Copyright- Copyright (c) 1982, 1986, 1988
- * The Regents of the University of California
- * All Rights Reserved
- *
- * University Acknowledgment- Portions of this document are derived from
- * software developed by the University of California, Berkeley, and its
- * contributors.
- */
-
-/*
- * ps -- print things about processes.
- */
-
-#define	_SYSCALL32
-
-#include <stdio.h>
+#include <ps_solaris.h>
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
@@ -52,12 +7,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mkdev.h>
-#include "unistd.h"
 #include <stdlib.h>
 #include <limits.h>
 #include <dirent.h>
-#include "procfs.h"
-#include "param.h"
 #include <sys/ttold.h>
 #include <libelf.h>
 #include <gelf.h>
@@ -65,32 +17,22 @@
 #include <wctype.h>
 #include <stdarg.h>
 #include <sys/proc.h>
-#include "priv_utils.h"
 #include <zone.h>
+#include "../cf-ps/priv_utils.h"
+#include "../cf-ps/unistd.h"
+#include "../cf-ps/procfs.h"
+#include "../cf-ps/param.h"
 
+
+
+#define	NARG	100
+#define	_SYSCALL32
 
 struct psent {
     psinfo_t *psinfo;
     char *psargs;
     int found;
 };
-
-static	int     twidth;
-static	char	hdr[81];
-static	int	    eflg;	/* Display environment as well as arguments */
-static	int	    xflg;	/* Include processes with no controlling tty */
-static	uid_t	my_uid;
-static char	    stdbuf[BUFSIZ];
-static	int     pidwidth;
-static	char   *procdir = "/proc";	/* standard /proc directory */
-
-
-static	int    preadargs(int, psinfo_t *, char *);
-static	int    preadenvs(int, psinfo_t *, char *);
-static	char   *err_string(int);
-
-
-
 int GetPsArgs(const char *process, char *args)
 {
     psinfo_t info;		/* process information structure from /proc */
@@ -99,23 +41,16 @@ int GetPsArgs(const char *process, char *args)
     struct psent *psent;
     int entsize;
     int nent;
-    pid_t maxpid;
-
-
+    int	    eflg = 0;	/* Display environment as well as arguments */
+    char   *procdir = "/proc";	/* standard /proc directory */
     pid_t	pid;		/* pid: process id */
     pid_t	ppid;		/* ppid: parent process id */
     int	   found;
-
-    size_t	size;
-
     char	psname[100];
     char	asname[100];
     int	pdlen;
 
-
     (void) setlocale(LC_ALL, "");
-
-    my_uid = getuid();
 
     /*
      * This program needs the proc_owner privilege
@@ -123,23 +58,7 @@ int GetPsArgs(const char *process, char *args)
     (void) __init_suid_priv(PU_CLEARLIMITSET, PRIV_PROC_OWNER,
         (char *)NULL);
 
-    /*
-     * calculate width of pid fields based on configured MAXPID
-     * (must be at least 5 to retain output format compatibility)
-     */
-    maxpid = (pid_t)sysconf(_SC_MAXPID);
-    pidwidth = 1;
-    while ((maxpid /= 10) > 0)
-        ++pidwidth;
-    pidwidth = pidwidth < 5 ? 5 : pidwidth;
-
-
     twidth = NCARGS;
-
-    setbuf(stdout, stdbuf);
-
-    xflg++;
-
 
     /* allocate an initial guess for the number of processes */
     entsize = 1024;
@@ -150,12 +69,6 @@ int GetPsArgs(const char *process, char *args)
     }
     nent = 0;	/* no active entries yet */
 
-
-    (void) sprintf(hdr, "%*s TT       S  TIME COMMAND",
-            pidwidth + 1, "PID");
-
-    twidth = twidth - strlen(hdr) + 6;
-    (void) printf("%s\n", hdr);
 
     if (twidth > PRARGSZ && (psargs = malloc(twidth)) == NULL) {
         (void) fprintf(stderr, "ps: no memory\n");
@@ -208,8 +121,7 @@ retry:
             if (saverr == EAGAIN)
                 goto retry;
             if (saverr != ENOENT)
-                (void) fprintf(stderr, "ps: read() on %s: %s\n",
-                    psname, err_string(saverr));
+                Log(LOG_LEVEL_ERR, "rps.c read() failed on %s.", psname);
             continue;
         }
         (void) close(psfd);
@@ -226,17 +138,15 @@ retry:
          */
         if (asfd > 0) {
             if ((psargs != NULL &&
-                preadargs(asfd, &info, psargs) == -1) ||
-                (eflg && preadenvs(asfd, &info, psargs) == -1)) {
+                preadargs(asfd, &info, psargs, twidth) == -1) ||
+                (eflg && preadenvs(asfd, &info, psargs, twidth) == -1)) {
                 int	saverr = errno;
 
                 (void) close(asfd);
                 if (saverr == EAGAIN)
                     goto retry;
                 if (saverr != ENOENT)
-                    (void) fprintf(stderr,
-                        "ps: read() on %s: %s\n",
-                        asname, err_string(saverr));
+                     Log(LOG_LEVEL_ERR, "rps.c read() failed on %s.", asname);
                 continue;
             }
         } else {
@@ -292,9 +202,7 @@ closeit:
  * This allows >PRARGSZ characters of arguments to be displayed but,
  * unlike pr_psargs[], the process may have changed them.
  */
-#define	NARG	100
-static int
-preadargs(int pfd, psinfo_t *psinfo, char *psargs)
+static int preadargs(int pfd, psinfo_t *psinfo, char *psargs, int twidth)
 {
     off_t argvoff = (off_t)psinfo->pr_argv;
     size_t len;
@@ -375,7 +283,7 @@ out:
  * Append them to psargs if there is room.
  */
 static int
-preadenvs(int pfd, psinfo_t *psinfo, char *psargs)
+preadenvs(int pfd, psinfo_t *psinfo, char *psargs, int twidth)
 {
     off_t envpoff = (off_t)psinfo->pr_envp;
     int len;
@@ -450,17 +358,4 @@ preadenvs(int pfd, psinfo_t *psinfo, char *psargs)
     *psa = '\0';
 
     return (0);
-}
-
-
-static char *
-err_string(int err)
-{
-    static char buf[32];
-    char *str = strerror(err);
-
-    if (str == NULL)
-        (void) sprintf(str = buf, "Errno #%d", err);
-
-    return (str);
 }

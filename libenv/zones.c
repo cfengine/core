@@ -86,4 +86,18 @@ bool ForeignZone(char *s)
     return false;
 }
 
+int  CurrentZoneName(char *s)
+{
+    zoneid_t zid;
+    int ok = -1;
+
+    if ((zid = getzoneid()) < 0)
+    {
+        return ok;
+    }
+
+    ok = getzonenamebyid(zid, s, ZONENAME_MAX);
+    return ok;
+}
+
 #endif // !__MINGW32__

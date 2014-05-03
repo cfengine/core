@@ -272,7 +272,8 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     int rc;
 
     /* If there's an open cursor, use its txn */
-    if (db->mc)
+    bool have_cursor = db->mc != NULL;
+    if (have_cursor)
     {
         txn = mdb_cursor_txn(db->mc);
         rc = MDB_SUCCESS;
@@ -289,7 +290,7 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
         data.mv_size = value_size;
         rc = mdb_put(txn, db->dbi, &mkey, &data, 0);
         /* don't commit here if there's a cursor */
-        if (!db->mc)
+        if (!have_cursor)
         {
             if (rc == MDB_SUCCESS)
             {
@@ -367,11 +368,13 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
     int rc;
 
     /* If there's an open cursor, use its txn */
-    if (db->mc)
+    bool have_cursor = db->mc != NULL;
+    if (have_cursor)
     {
         txn = mdb_cursor_txn(db->mc);
         rc = MDB_SUCCESS;
-    } else
+    }
+    else
     {
         rc = mdb_txn_begin(db->env, NULL, 0, &txn);
     }
@@ -381,7 +384,7 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
         mkey.mv_size = key_size;
         rc = mdb_del(txn, db->dbi, &mkey, NULL);
         /* don't commit here if there's a cursor */
-        if (!db->mc)
+        if (!have_cursor)
         {
             if (rc == MDB_SUCCESS)
             {

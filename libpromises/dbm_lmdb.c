@@ -69,6 +69,7 @@ const char *DBPrivGetFileExtension(void)
 DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
+    db->wtxn = NULL;
     MDB_txn *txn = NULL;
     int rc;
 
@@ -123,6 +124,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
     {
         Log(LOG_LEVEL_ERR, "Could not open database dbi %s: %s",
               dbpath, mdb_strerror(rc));
+        mdb_txn_abort(txn);
         goto err;
     }
     rc = mdb_txn_commit(txn);
@@ -132,8 +134,6 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
               dbpath, mdb_strerror(rc));
         goto err;
     }
-    txn = NULL;
-    db->wtxn = NULL;
     return db;
 
 err:

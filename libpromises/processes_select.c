@@ -35,6 +35,9 @@
 #include <rlist.h>
 #include <policy.h>
 #include <zones.h>
+#ifdef HAVE_ZONE_H
+# include <zone.h>
+#endif
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
@@ -44,6 +47,7 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
+static bool IsBanner(char *psline);
 
 /***************************************************************************/
 
@@ -752,13 +756,106 @@ static int ExtractPid(char *psentry, char **names, int *end)
     return pid;
 }
 
+
 #ifndef __MINGW32__
+
+static bool IsBanner(char *psline)
+{
+    if (strstr(psline, "%CPU"))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+/*get the command and args from /proc */
+static int GetExtendedArgs(const char * pid, char *args)
+{
+    const char *dummy = "./test.sh -a this_is_a_very_long_option -b this_is_also_avery_long_option -c not_quite_there_yet -d we_should_be_over_80_chars_now";
+    strcpy(args, dummy);
+    return 0;
+}
+/*extend the process table with zone and args*/
+void SolarisExtendColumns(char *vbuff)
+{
+
+    static int pid_column = 0;
+
+    size_t vbuff_size = CF_BUFSIZE;
+
+    char *copy = xmalloc(vbuff_size);
+
+    strcpy(copy, vbuff);
+
+    char *end = vbuff + strlen(vbuff) - 1;
+    char *items[CF_PROCCOLS];
+
+    int i=0;
+
+    char *tok;
+    tok = strtok (copy," ");
+
+    while (tok != NULL)
+    {
+        items[i] = xmalloc(128);
+        strcpy(items[i++], tok);
+        tok = strtok (NULL, " ");
+    }
+
+
+    if (IsBanner(vbuff))
+    {
+# ifdef HAVE_GETZONEID
+
+        char zone[ZONENAME_MAX];
+
+        if (CurrentZoneName(zone) < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to obtain zone name. (fread: %s)", GetErrorStr());
+        }
+
+        size_t zlen = strlen(zone);
+        sprintf(end, " %*s", zlen+4, "ZONE");
+#endif
+        end += zlen+5;
+        sprintf(end, " %s", "COMMAND");
+
+
+        pid_column = GetProcColumnIndex("PID", "PID", &items[0]);
+    }
+    else
+    {
+# ifdef HAVE_GETZONEID
+
+        char zone_name[ZONENAME_MAX];
+
+        if (CurrentZoneName(zone_name) < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to obtain zone name. (fread: %s)", GetErrorStr());
+        }
+
+        size_t zlen = strlen(zone_name);
+        sprintf(end, " %*s", zlen+4, zone_name);
+#endif
+        end += zlen+5;
+
+        size_t clen = 0;
+        size_t cbuff_size = CF_BUFSIZE;
+        char *cbuf = xmalloc(cbuff_size);
+        GetExtendedArgs(items[pid_column], cbuf);
+        clen = strlen(cbuf);
+        sprintf(end, " %*s", clen, cbuf);
+    }
+}
+
 int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE], *sp = NULL;
     Item *rootprocs = NULL;
     Item *otherprocs = NULL;
+
 
     if (PROCESSTABLE)
     {
@@ -798,7 +895,9 @@ int LoadProcessTable(Item **procdata)
                 break;
             }
         }
-
+#ifdef __sun
+        SolarisExtendColumns(vbuff);
+#endif
         for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
         {
             *sp = '\0';
@@ -846,4 +945,4 @@ int LoadProcessTable(Item **procdata)
     free(vbuff);
     return true;
 }
-#endif
+#endif //__MINGW32__

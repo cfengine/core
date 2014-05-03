@@ -48,4 +48,5 @@ time_t GetProcessStartTime(pid_t pid);
  */
 int GracefulTerminate(pid_t pid, time_t process_start_time);
 
+
 #endif

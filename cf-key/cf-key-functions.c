@@ -24,7 +24,6 @@
 
 #include <generic_agent.h>
 
-#include <dbm_api.h>
 #include <lastseen.h>
 #include <dir.h>
 #include <scope.h>

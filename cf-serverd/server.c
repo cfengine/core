@@ -51,7 +51,7 @@
 
 
 /*
-  The only two exported function in this file is the following, used only in
+  The only exported function in this file is the following, used only in
   cf-serverd-functions.c.
 
   void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
@@ -129,6 +129,8 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
     {
         if (!ThreadLock(cft_count))
         {
+            cf_closesocket(ConnectionInfoSocket(info));
+            ConnectionInfoDestroy(&info);
             return;
         }
 
@@ -157,16 +159,9 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
     }
 
     PrependItem(&SV.connectionlist, MapAddress(ipaddr), intime);
-
-    if (!ThreadUnlock(cft_count))
-    {
-        cf_closesocket(ConnectionInfoSocket(info));
-        ConnectionInfoDestroy(&info);
-        return;
-    }
+    ThreadUnlock(cft_count);
 
     SpawnConnection(ctx, ipaddr, info);
-
 }
 
 /**********************************************************************/
@@ -201,16 +196,13 @@ static void PurgeOldConnections(Item **list, time_t now)
 
         if (now > then + 7200)
         {
-            Log(LOG_LEVEL_VERBOSE, "Purging IP address %s from connection list", ip->name);
+            Log(LOG_LEVEL_DEBUG, "Purging IP address from connection list: %s",
+                ip->name);
             DeleteItem(list, ip);
         }
     }
 
-    if (!ThreadUnlock(cft_count))
-    {
-        return;
-    }
-
+    ThreadUnlock(cft_count);
     Log(LOG_LEVEL_DEBUG, "Done purging old connections");
 }
 
@@ -223,7 +215,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
     pthread_t tid;
     pthread_attr_t threadattrs;
 
-    conn = NewConn(ctx, info);
+    conn = NewConn(ctx, info);                 /* freed in HandleConnection */
     int sd_accepted = ConnectionInfoSocket(info);
     strlcpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN );
 
@@ -324,8 +316,7 @@ static void *HandleConnection(void *c)
     if (!ret)
     {
         Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
-        DeleteConn(conn);
-        return NULL;
+        goto ret2;
     }
     else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
     {
@@ -337,18 +328,18 @@ static void *HandleConnection(void *c)
             Log(LOG_LEVEL_CRIT,
                 "Server seems to be paralyzed. DOS attack? "
                 "Committing apoptosis...");
+            ThreadUnlock(cft_server_children);
             FatalError(conn->ctx, "Terminating");
         }
-        TRIES++;
-        ThreadUnlock(cft_server_children);
 
+        TRIES++;
         Log(LOG_LEVEL_ERR,
             "Too many threads (%d > %d), dropping connection! "
             "Increase server maxconnections?",
             ACTIVE_THREADS, CFD_MAXPROCESSES);
 
-        DeleteConn(conn);
-        return NULL;
+        ThreadUnlock(cft_server_children);
+        goto ret2;
     }
 
     ACTIVE_THREADS++;
@@ -368,8 +359,7 @@ static void *HandleConnection(void *c)
         ret = ServerTLSPeek(conn->conn_info);
         if (ret == -1)
         {
-            DeleteConn(conn);
-            return NULL;
+            goto ret1;
         }
     }
 
@@ -379,8 +369,7 @@ static void *HandleConnection(void *c)
         ret = ServerTLSSessionEstablish(conn);
         if (ret == -1)
         {
-            DeleteConn(conn);
-            return NULL;
+            goto ret1;
         }
     }
     else if (protocol_version < CF_PROTOCOL_LATEST &&
@@ -392,16 +381,14 @@ static void *HandleConnection(void *c)
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");
-            DeleteConn(conn);
-            return NULL;
+            goto ret1;
         }
     }
     else
     {
         UnexpectedError("HandleConnection: ProtocolVersion %d!",
                         ConnectionInfoProtocolVersion(conn->conn_info));
-        DeleteConn(conn);
-        return NULL;
+        goto ret1;
     }
 
 
@@ -445,13 +432,13 @@ static void *HandleConnection(void *c)
 
     Log(LOG_LEVEL_INFO, "Connection closed, terminating thread");
 
+  ret1:
     ThreadLock(cft_server_children);
-    {
-        ACTIVE_THREADS--;
-        DeleteConn(conn);
-    }
+    ACTIVE_THREADS--;
     ThreadUnlock(cft_server_children);
 
+  ret2:
+    DeleteConn(conn);
     return NULL;
 }
 
@@ -492,23 +479,21 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 
 /***************************************************************/
 
+/**
+ * @note This function is thread-safe. Do NOT wrap it with mutex!
+ */
 static void DeleteConn(ServerConnectionState *conn)
 {
     cf_closesocket(ConnectionInfoSocket(conn->conn_info));
     ConnectionInfoDestroy(&conn->conn_info);
     free(conn->session_key);
+
     if (conn->ipaddr != NULL)
     {
-        if (!ThreadLock(cft_count))
+        if (ThreadLock(cft_count))
         {
-            return;
-        }
-
-        DeleteItemMatching(&SV.connectionlist, MapAddress(conn->ipaddr));
-
-        if (!ThreadUnlock(cft_count))
-        {
-            return;
+            DeleteItemMatching(&SV.connectionlist, MapAddress(conn->ipaddr));
+            ThreadUnlock(cft_count);
         }
     }
 

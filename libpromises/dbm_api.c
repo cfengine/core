@@ -448,16 +448,19 @@ StringMap *LoadDatabaseToStringMap(dbid database_id)
             continue;
         }
 
+        if (key[key_size -1] != '\0')
+        {
+            Log(LOG_LEVEL_VERBOSE, "Database key is not null terminated, skipping.");
+            continue;
+        }
+
         if (!value)
         {
             Log(LOG_LEVEL_VERBOSE, "Invalid entry (key='%s') in database.", key);
             continue;
         }
 
-        void *val = xcalloc(1, value_size);
-        val = memcpy(val, value, value_size);
-
-        StringMapInsert(db_map, xstrdup(key), val);
+        StringMapInsert(db_map, xstrdup(key), xmemdup(value, value_size));
     }
 
     DeleteDBCursor(db_cursor);

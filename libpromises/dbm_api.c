@@ -418,3 +418,51 @@ static void DBPathMoveBroken(const char *filename)
 
     free(filename_broken);
 }
+
+StringMap *LoadDatabaseToStringMap(dbid database_id)
+{
+    CF_DB *db_conn = NULL;
+    CF_DBC *db_cursor = NULL;
+    char *key = NULL;
+    void *value = NULL;
+    int key_size = 0;
+    int value_size = 0;
+
+    if (!OpenDB(&db_conn, database_id))
+    {
+        return NULL;
+    }
+
+    if (!NewDBCursor(db_conn, &db_cursor))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to scan db");
+        CloseDB(db_conn);
+        return NULL;
+    }
+
+    StringMap *db_map = StringMapNew();
+    while (NextDB(db_cursor, &key, &key_size, &value, &value_size))
+    {
+        if (!key)
+        {
+            continue;
+        }
+
+        if (!value)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Invalid entry (key='%s') in database.", key);
+            continue;
+        }
+
+        void *val = xcalloc(1, value_size);
+        val = memcpy(val, value, value_size);
+
+        StringMapInsert(db_map, xstrdup(key), val);
+    }
+
+    DeleteDBCursor(db_cursor);
+    CloseDB(db_conn);
+
+    return db_map;
+}
+

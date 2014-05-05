@@ -25,6 +25,8 @@
 #ifndef CFENGINE_DBM_API_H
 #define CFENGINE_DBM_API_H
 
+#include <map.h>
+
 typedef enum
 {
     dbid_classes,
@@ -88,4 +90,5 @@ bool DeleteDBCursor(CF_DBC *dbcp);
 char *DBIdToPath(const char *workdir, dbid id);
 
 int UpdateLastSeenMaxReaders(int maxreaders);
+StringMap *LoadDatabaseToStringMap(dbid database_id);
 #endif  /* NOT CFENGINE_DBM_API_H */

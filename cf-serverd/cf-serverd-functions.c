@@ -275,7 +275,6 @@ void ThisAgentInit(void)
 void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     int sd = -1;
-    int ret_val;
     CfLock thislock;
     extern int COLLECT_WINDOW;
 
@@ -345,7 +344,8 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     WritePID("cf-serverd.pid");
     CollectCallStart(COLLECT_INTERVAL);
 
-    while (!IsPendingTermination())
+    bool error = false;
+    while (!error && !IsPendingTermination())
     {
         /* Check whether we have established peering with a hub */
         if (CollectCallHasPending())
@@ -384,69 +384,66 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             FD_SET(sd, &rset);
         }
 
-        ret_val = select(MAX(sd, signal_pipe) + 1,
-                         &rset, NULL, NULL, &timeout);
+        int select_ret = select(MAX(sd, signal_pipe) + 1,
+                                &rset, NULL, NULL, &timeout);
 
-        /* Empty the signal pipe, it is there to only detect missed signals
-         * in-between while(!IsPendingTermination()) and select(). */
-        unsigned char buf;
-        while (recv(signal_pipe, &buf, 1, 0) > 0) {}
-
-        if (ThreadLock(cft_server_children))
+        if (select_ret == -1)
         {
-            if (ACTIVE_THREADS == 0)
+            if (errno != EINTR)
             {
-                /* Check for new policy just before spawning the
-                 * thread, since server reconfiguration can only
-                 * happen when no threads are spawned. */
-                CheckFileChanges(ctx, policy, config);
-            }
-            ThreadUnlock(cft_server_children);
-        }
-
-        if (ret_val == -1)        /* Error received from call to select */
-        {
-            if (errno == EINTR)
-            {
-                continue;
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
-                exit(1);
+                Log(LOG_LEVEL_ERR,
+                    "Error while waiting for connections. (select: %s)",
+                    GetErrorStr());
+                error = true;                                   /* quit */
             }
         }
-        else if (ret_val == 0)                              /* time out */
+        else                                          /* timeout or success */
         {
-            continue;
-        }
+            /* Empty the signal pipe, it is there to only detect missed signals
+             * in-between while(!IsPendingTermination()) and select(). */
+            unsigned char buf;
+            while (recv(signal_pipe, &buf, 1, 0) > 0) {}
 
-        if (sd != -1 && FD_ISSET(sd, &rset))
-        {
-            /* TODO embed ConnectionInfo into ServerConnectionState. */
-            ConnectionInfo *info = ConnectionInfoNew();
-            if (info == NULL)
+            if (ThreadLock(cft_server_children))
             {
-                continue;
+                if (ACTIVE_THREADS == 0)
+                {
+                    /* Check for new policy just before spawning the
+                     * thread, since server reconfiguration can only
+                     * happen when no threads are active. */
+                    CheckFileChanges(ctx, policy, config);
+                }
+                ThreadUnlock(cft_server_children);
             }
 
-            info->ss_len = sizeof(info->ss);
-            info->sd = accept(sd, (struct sockaddr *) &info->ss,
-                              &info->ss_len);
-
-            if (info->sd == -1)
+            /* Is there new connection pending at our listening socket? */
+            if (select_ret > 0 && sd != -1 && FD_ISSET(sd, &rset))
             {
-                ConnectionInfoDestroy(&info);
-                continue;
+                /* TODO embed ConnectionInfo into ServerConnectionState. */
+                ConnectionInfo *info = ConnectionInfoNew();
+                if (info == NULL)
+                {
+                    continue;
+                }
+
+                info->ss_len = sizeof(info->ss);
+                info->sd = accept(sd, (struct sockaddr *) &info->ss,
+                                  &info->ss_len);
+
+                if (info->sd == -1)
+                {
+                    ConnectionInfoDestroy(&info);
+                    continue;
+                }
+
+                /* Just convert IP address to string, no DNS lookup. */
+                char ipaddr[CF_MAX_IP_LEN] = "";
+                getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
+                            ipaddr, sizeof(ipaddr),
+                            NULL, 0, NI_NUMERICHOST);
+
+                ServerEntryPoint(ctx, ipaddr, info);
             }
-
-            /* Just convert IP address to string, no DNS lookup. */
-            char ipaddr[CF_MAX_IP_LEN] = "";
-            getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
-                        ipaddr, sizeof(ipaddr),
-                        NULL, 0, NI_NUMERICHOST);
-
-            ServerEntryPoint(ctx, ipaddr, info);
         }
     }
 

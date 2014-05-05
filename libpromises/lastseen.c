@@ -279,7 +279,6 @@ bool IsLastSeenCoherent(void)
     Item *ahosts=NULL;
     Item *khosts=NULL;
 
-    char val[CF_BUFSIZE];
     while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
         if (key[0] != 'k' && key[0] != 'q' && key[0] != 'a' )
@@ -307,12 +306,9 @@ bool IsLastSeenCoherent(void)
                 {
                     PrependItem(&kkeys, key+1, NULL);
                 }
-                if (ReadDB(db, key, &val, vsize))
+                if (IsItemIn(khosts, value)==false)
                 {
-                    if (IsItemIn(khosts, val)==false)
-                    {
-                        PrependItem(&khosts, val, NULL);
-                    }
+                    PrependItem(&khosts, value, NULL);
                 }
             }
         }
@@ -323,12 +319,9 @@ bool IsLastSeenCoherent(void)
             {
                 PrependItem(&ahosts, key+1, NULL);
             }
-            if (ReadDB(db, key, &val, vsize))
+            if (IsItemIn(akeys, value)==false)
             {
-                if (IsItemIn(akeys, val)==false)
-                {
-                    PrependItem(&akeys, val, NULL);
-                }
+                PrependItem(&akeys, value, NULL);
             }
         }
     }
@@ -508,6 +501,7 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
     char *key;
     void *value;
     int ksize, vsize;
+    Seq *hostkeys = SeqNew(100, free);
 
     while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
@@ -517,13 +511,27 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
             continue;
         }
 
-        const char *hostkey = key + 1;
-        const char *address = value;
+        SeqAppend(hostkeys, xstrdup(key + 1));
+    }
+
+    DeleteDBCursor(cursor);
+    
+    for (int i = 0; i < SeqLength(hostkeys); ++i)
+    {
+        const char *hostkey = SeqAt(hostkeys, i);
+
+        char keyhost_key[CF_BUFSIZE];
+        snprintf(keyhost_key, CF_BUFSIZE, "k%s", hostkey);
+        char address[CF_BUFSIZE];
+        if (!ReadDB(db, keyhost_key, &address, sizeof(address)))
+        {
+            Log(LOG_LEVEL_ERR, "Failed to read address for key '%s'.", hostkey);
+            continue;
+        }
 
         char incoming_key[CF_BUFSIZE];
         snprintf(incoming_key, CF_BUFSIZE, "qi%s", hostkey);
         KeyHostSeen incoming;
-
         if (ReadDB(db, incoming_key, &incoming, sizeof(incoming)))
         {
             if (!(*callback)(hostkey, address, true, &incoming, ctx))
@@ -535,7 +543,6 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
         char outgoing_key[CF_BUFSIZE];
         snprintf(outgoing_key, CF_BUFSIZE, "qo%s", hostkey);
         KeyHostSeen outgoing;
-
         if (ReadDB(db, outgoing_key, &outgoing, sizeof(outgoing)))
         {
             if (!(*callback)(hostkey, address, false, &outgoing, ctx))
@@ -545,7 +552,8 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
         }
     }
 
-    DeleteDBCursor(cursor);
+    SeqDestroy(hostkeys);
+
     CloseDB(db);
 
     return true;

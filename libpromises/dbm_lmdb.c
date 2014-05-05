@@ -40,8 +40,20 @@ struct DBPriv_
 {
     MDB_env *env;
     MDB_dbi dbi;
+#ifndef NDEBUG
+    // Used to detect misuses of DBRead/DBWrite inside cursor loops.
+    // We set this to 0x1 when a thread creates a cursor, and back to 0x0 when
+    // it is destroyed.
+    pthread_key_t cursor_active_key;
+#endif
     MDB_txn *wtxn;
 };
+
+#ifndef NDEBUG
+#define ASSERT_CURSOR_NOT_ACTIVE() assert(pthread_getspecific(db->cursor_active_key) == NULL)
+#else
+#define ASSERT_CURSOR_NOT_ACTIVE() (void)(0)
+#endif
 
 struct DBCursorPriv_
 {
@@ -134,6 +146,11 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
               dbpath, mdb_strerror(rc));
         goto err;
     }
+
+#ifndef NDEBUG
+    pthread_key_create(&db->cursor_active_key, NULL);
+#endif
+
     return db;
 
 err:
@@ -161,6 +178,8 @@ void DBPrivCloseDB(DBPriv *db)
 
 void DBPrivCommit(DBPriv *db)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     if (db->wtxn)
     {
         int rc;
@@ -176,6 +195,8 @@ void DBPrivCommit(DBPriv *db)
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     MDB_val mkey, data;
     MDB_txn *txn;
     int rc;
@@ -203,6 +224,8 @@ bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 
 int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     MDB_val mkey, data;
     MDB_txn *txn;
     int rc;
@@ -231,6 +254,8 @@ int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
 
 bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     MDB_val mkey, data;
     MDB_txn *txn;
     int rc;
@@ -266,6 +291,8 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
 
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     MDB_val mkey, data;
     MDB_txn *txn;
     int rc = mdb_txn_begin(db->env, NULL, 0, &txn);
@@ -299,6 +326,8 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
 
 bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     MDB_val mkey, data;
     int rc;
     if (db->wtxn == NULL)
@@ -346,6 +375,8 @@ bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size, const void *
 
 bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     MDB_val mkey;
     MDB_txn *txn;
     int rc = mdb_txn_begin(db->env, NULL, 0, &txn);
@@ -382,6 +413,8 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
 
 DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 {
+    ASSERT_CURSOR_NOT_ACTIVE();
+
     DBCursorPriv *cursor = NULL;
     MDB_txn *txn;
     int rc;
@@ -408,6 +441,11 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
     {
         Log(LOG_LEVEL_ERR, "Could not create cursor txn: %s", mdb_strerror(rc));
     }
+
+#ifndef NDEBUG
+    // We use dummy pointer, we just need to know that it's not null.
+    pthread_setspecific(db->cursor_active_key, (const void *)0x1);
+#endif
 
     return cursor;
 }
@@ -507,6 +545,9 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
     {
         Log(LOG_LEVEL_ERR, "Could not commit cursor txn: %s", mdb_strerror(rc));
     }
+#ifndef NDEBUG
+    pthread_setspecific(cursor->db->cursor_active_key, NULL);
+#endif
     free(cursor);
 }
 

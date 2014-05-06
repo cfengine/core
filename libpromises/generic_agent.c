@@ -1034,7 +1034,7 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
 
     {
         char filename[MAX_FILENAME];
-        snprintf(filename, MAX_FILENAME, "%s%cpolicy_server.dat", GetWorkDir(), FILE_SEPARATOR);
+        snprintf(filename, MAX_FILENAME, "%s/policy_server.dat", GetWorkDir());
         MapName(filename);
 
         struct stat sb;

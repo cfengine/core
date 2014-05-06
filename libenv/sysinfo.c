@@ -832,7 +832,7 @@ static void Get3Environment(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Looking for environment from cf-monitord...");
 
-    snprintf(env, CF_BUFSIZE, "%s%c%s", GetStateDir(), FILE_SEPARATOR, CF_ENV_FILE);
+    snprintf(env, CF_BUFSIZE, "%s/%s", GetStateDir(), CF_ENV_FILE);
     MapName(env);
 
     if (stat(env, &statbuf) == -1)

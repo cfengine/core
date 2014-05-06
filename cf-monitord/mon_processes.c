@@ -58,7 +58,7 @@ void MonProcessesGatherData(double *cf_this)
     cf_this[ob_rootprocs] += numRootProcs;
     cf_this[ob_otherprocs] += numOtherProcs;
 
-    snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_users", GetStateDir(), FILE_SEPARATOR);
+    snprintf(vbuff, CF_MAXVARSIZE, "%s/cf_users", GetStateDir());
     MapName(vbuff);
     RawSaveItemList(userList, vbuff, NewLineMode_Unix);
 

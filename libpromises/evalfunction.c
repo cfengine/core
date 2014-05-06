@@ -171,7 +171,7 @@ static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
         else
         {
             Log(LOG_LEVEL_WARNING,
-                "Function '%s'' was not called from a promise; "
+                "Function '%s' was not called from a promise; "
                 "the unqualified variable reference %s cannot be qualified automatically.",
                 fp->name,
                 varname);
@@ -191,7 +191,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
     DataType value_type = CF_DATA_TYPE_NONE;
     const void *value = EvalContextVariableGet(ctx, ref, &value_type);
     bool want_type = true;
-    
+
     for (int di = 0; di < disallowed_count; di++)
     {
         if (disallowed_datatypes[di] == value_type)
@@ -1919,7 +1919,8 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
         }
         else
         {
-            Log(LOG_LEVEL_WARNING, "Function '%s'' was given an unqualified variable reference, "
+            Log(LOG_LEVEL_WARNING,
+                "Function '%s' was given an unqualified variable reference, "
                 "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
                 fp->name, RlistScalarValue(finalargs));
             VarRefDestroy(ref);
@@ -2024,7 +2025,8 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
         }
         else
         {
-            Log(LOG_LEVEL_WARNING, "Function '%s' was given an unqualified variable reference, "
+            Log(LOG_LEVEL_WARNING,
+                "Function '%s' was given an unqualified variable reference, "
                 "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
                 fp->name, RlistScalarValue(finalargs));
             VarRefDestroy(ref);
@@ -2323,7 +2325,8 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
                     }
                     else
                     {
-                        Log(LOG_LEVEL_WARNING, "Function '%s'' was given an unqualified variable reference, "
+                        Log(LOG_LEVEL_WARNING,
+                            "Function '%s' was given an unqualified variable reference, "
                             "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
                             fp->name, RlistScalarValue(finalargs));
                         VarRefDestroy(ref);
@@ -6283,8 +6286,9 @@ static void *CfReadFile(const char *filename, int maxsize)
 
     /* FIXME: Is it necessary here? Move to caller(s) */
     if (SingleLine(result))
+    {
         StripTrailingNewline(result, size);
-
+    }
     return result;
 }
 

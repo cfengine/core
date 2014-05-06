@@ -847,6 +847,8 @@ AC_REPLACE_FUNCS(inet_ntop inet_pton)
 
 AC_CHECK_FUNCS(getifaddrs)
 
+AC_CHECK_FUNCS(getprocs64)
+
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])

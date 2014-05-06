@@ -10,6 +10,7 @@
 /*
  * AIX 5.3 is missing this declaration
  */
+#ifndef GETPROCS64
 int getprocs64(struct procentry64 *, int, struct fdsinfo64 *, int, pid_t *, int);
 
 int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, int files_size, pid_t* pid, int count)
@@ -56,7 +57,7 @@ int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, i
         return 0;
     }
 }
-
+#endif
 static void test_get_start_time_process1(void)
 {
     time_t t = GetProcessStartTime(1);

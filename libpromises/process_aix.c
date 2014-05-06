@@ -33,8 +33,9 @@
 /*
  * AIX 5.3 is missing this declaration
  */
+#ifndef HAVE_GETPROCS64
 int getprocs64(struct procentry64 *, int, struct fdsinfo64 *, int, pid_t *, int);
-
+#endif
 static bool FillProcEntry(struct procentry64* pe, pid_t pid)
 {
     pid_t nextpid = pid;

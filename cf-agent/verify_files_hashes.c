@@ -394,7 +394,7 @@ void LogHashChange(const char *file, FileState status, char *msg, const Promise 
 
 /* This is inefficient but we don't want to lose any data */
 
-    snprintf(fname, CF_BUFSIZE, "%s%c%s", GetStateDir(), FILE_SEPARATOR, CF_FILECHANGE_NEW);
+    snprintf(fname, CF_BUFSIZE, "%s/%s", GetStateDir(), CF_FILECHANGE_NEW);
     MapName(fname);
 
 #ifndef __MINGW32__

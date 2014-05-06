@@ -217,7 +217,7 @@ bool RemovePolicyServerFile(const char *workdir)
 bool GetAmPolicyHub(void)
 {
     char path[CF_BUFSIZE] = { 0 };
-    snprintf(path, sizeof(path), "%s%cam_policy_hub", GetStateDir(), FILE_SEPARATOR);
+    snprintf(path, sizeof(path), "%s/am_policy_hub", GetStateDir());
     MapName(path);
 
     struct stat sb;

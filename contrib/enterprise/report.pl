@@ -19,7 +19,7 @@ my %outputs = (
               );
 
 my %options = (
-               url => 'http://admin:admin@localhost:80/',
+               url => $ENV{CFENGINE_MP_URL} || 'http://admin:admin@localhost:80/',
                output => 'csv',
                limit => 100000,
                verbose => 0,

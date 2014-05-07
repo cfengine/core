@@ -100,10 +100,13 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
     }
     if (id != dbid_locks)
     {
-        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);
-    }
-    else
-    {
+        /* From LMDB docs: if the filesystem preserves write order and the
+         * MDB_WRITEMAP flag is not used, transactions exhibit ACI (atomicity,
+         * consistency, isolation) properties and only lose D
+         * (durability). I.e. database integrity is maintained.
+         *
+         * We make sure we sync to disk frequently though by having
+         * DBPrivCloseDB() call mdb_env_sync(). */
         rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR|MDB_NOSYNC, 0644);
     }
     if (rc)
@@ -153,6 +156,7 @@ void DBPrivCloseDB(DBPriv *db)
 {
     if (db->env)
     {
+        mdb_env_sync(db->env, 1);
         mdb_env_close(db->env);
         db->wtxn = NULL;
     }

@@ -448,6 +448,11 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     CollectCallStop();
+    if (sd != -1)
+    {
+        cf_closesocket(sd);                       /* Close listening socket */
+    }
+
     YieldCurrentLock(thislock);
     PolicyDestroy(server_cfengine_policy);
 }

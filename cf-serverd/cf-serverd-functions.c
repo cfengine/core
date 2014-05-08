@@ -549,7 +549,7 @@ int OpenReceiverChannel(void)
         if (setsockopt(sd, SOL_SOCKET, SO_LINGER,
                        &cflinger, sizeof(cflinger)) == -1)
         {
-            Log(LOG_LEVEL_ERR,
+            Log(LOG_LEVEL_INFO,
                 "Socket option SO_LINGER was not accepted. (setsockopt: %s)",
                 GetErrorStr());
         }
@@ -570,7 +570,8 @@ int OpenReceiverChannel(void)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Could not bind server address. (bind: %s)", GetErrorStr());
+            Log(LOG_LEVEL_INFO,
+                "Could not bind server address. (bind: %s)", GetErrorStr());
             cf_closesocket(sd);
         }
     }

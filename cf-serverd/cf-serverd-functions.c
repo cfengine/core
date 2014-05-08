@@ -448,6 +448,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     CollectCallStop();
+    YieldCurrentLock(thislock);
     PolicyDestroy(server_cfengine_policy);
 }
 

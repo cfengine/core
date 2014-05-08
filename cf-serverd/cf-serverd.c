@@ -28,6 +28,13 @@
 #include <server_transform.h>
 #include <loading.h>
 
+
+static void ThisAgentInit(void)
+{
+    umask(077);
+}
+
+
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);

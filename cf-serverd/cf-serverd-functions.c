@@ -581,12 +581,6 @@ int OpenReceiverChannel(void)
         }
     }
 
-    if (sd < 0)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't open/bind a socket");
-        exit(EXIT_FAILURE);
-    }
-
     freeaddrinfo(response);
     return sd;
 }

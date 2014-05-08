@@ -557,7 +557,6 @@ int OpenReceiverChannel(void)
             Log(LOG_LEVEL_ERR,
                 "Socket option SO_LINGER was not accepted. (setsockopt: %s)",
                 GetErrorStr());
-            exit(EXIT_FAILURE);
         }
 
         if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)

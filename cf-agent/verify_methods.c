@@ -65,13 +65,6 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
     }
 
     PromiseResult result = VerifyMethod(ctx, cp->rval, a, pp);
-    switch (result)
-    {
-    case PROMISE_RESULT_CHANGE:
-        result = PROMISE_RESULT_NOOP;
-    default:
-        break;
-    }
 
     return result;
 }

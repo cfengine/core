@@ -52,6 +52,7 @@ extern char VUQNAME[];
 
 extern bool DONTDO;
 extern bool MINUSF;
+extern bool BOOTSTRAP_MODE;
 
 extern const char *const VPSCOMM[];
 extern const char *const VPSOPTS[];

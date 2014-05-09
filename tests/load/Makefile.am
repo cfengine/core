@@ -8,11 +8,11 @@ AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
 	-I../../libpromises
 
 
-EXTRA_DIST = run_db_load
+EXTRA_DIST = run_db_load.sh
 
 check_PROGRAMS = db_load lastseen_load
 
-TESTS = run_db_load
+TESTS = run_db_load.sh
 
 db_load_SOURCES = db_load.c 
 db_load_LDADD = ../unit/libdb.la

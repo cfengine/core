@@ -154,6 +154,13 @@ char BINDINTERFACE[CF_MAXVARSIZE]; /* GLOBAL_P */
 */
 bool MINUSF = false; /* GLOBAL_A */
 
+/*
+  Set in cf-agent.c:CheckOpts.
+
+  Utilized in enterprise report generation.
+*/
+bool BOOTSTRAP_MODE = false; /* GLOBAL_A */
+
 /* Set in libenv/sysinfo.c::DetectEnvironment (called every time environment
    reload is performed).
 

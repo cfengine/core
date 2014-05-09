@@ -393,6 +393,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                                                "promises.cf");
                 config->agent_specific.agent.bootstrap_policy_server =
                     xstrdup(mapped_policy_server);
+
+                BOOTSTRAP_MODE = true;
             }
             break;
 

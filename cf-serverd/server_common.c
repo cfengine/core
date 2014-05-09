@@ -454,7 +454,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         }
     }
 
-    snprintf(ebuff, CF_BUFSIZE, "%s --inform", CFRUNCOMMAND);
+    snprintf(ebuff, CF_BUFSIZE, "%s --Dcfruncommand --inform", CFRUNCOMMAND);
 
     if (strlen(ebuff) + strlen(args) + 6 > CF_BUFSIZE)
     {

@@ -59,9 +59,6 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size,
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size,
              const void *value, int value_size);
 
-bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size,
-             const void *value, int value_size);
-
 bool DBPrivDelete(DBPriv *db, const void *key, int key_size);
 
 

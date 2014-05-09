@@ -248,11 +248,6 @@ static void DBWriteTestData(CF_DB *db)
 /* Stub out */
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
-{
-    exit(42);
-}
-
 void FatalError(const EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)

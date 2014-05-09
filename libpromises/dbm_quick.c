@@ -221,11 +221,6 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     return true;
 }
 
-bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
-{
-    return DBPrivWrite(db, key, key_size, value, value_size);
-}
-
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
     if (!Lock(db))

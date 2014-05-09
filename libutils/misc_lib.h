@@ -28,6 +28,26 @@
 #include <compiler.h>
 #include <platform.h>
 
+
+#define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
+#define UnexpectedError(...) __UnexpectedError(__FILE__, __LINE__, __VA_ARGS__)
+
+
+#ifndef NDEBUG
+
+# define CF_ASSERT(condition, ...)                                      \
+    do {                                                                \
+        if (!(condition))                                               \
+            ProgrammingError(__VA_ARGS__);                              \
+    } while(0)
+
+#else
+  /* TODO in non-debug builds, this could be UnexpectedError(), but it needs
+   * to be rate limited to avoid spamming the console.  */
+# define CF_ASSERT(condition, ...) (void)(0)
+#endif
+
+
 /*
   In contrast to the standard C modulus operator (%), this gives
   you an unsigned modulus. So where -1 % 3 => -1,
@@ -39,10 +59,8 @@ size_t UpperPowerOfTwo(size_t v);
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...) \
     FUNC_ATTR_PRINTF(3, 4) FUNC_ATTR_NORETURN;
-#define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
 
 void __UnexpectedError(const char *file, int lineno, const char *format, ...) \
     FUNC_ATTR_PRINTF(3, 4);
-#define UnexpectedError(...) __UnexpectedError(__FILE__, __LINE__, __VA_ARGS__)
 
 #endif

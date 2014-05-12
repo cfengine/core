@@ -81,8 +81,6 @@ struct EvalContext_
     StringSet *dependency_handles;
     RBTree *function_cache;
 
-    void *enterprise_state;
-
     uid_t uid;
     uid_t gid;
     pid_t pid;
@@ -832,8 +830,6 @@ EvalContext *EvalContextNew(void)
         LoggingPrivSetContext(pctx);
     }
 
-    ctx->enterprise_state = EvalContextEnterpriseStateNew();
-
     ctx->launch_directory = NULL;
 
     return ctx;
@@ -844,7 +840,6 @@ void EvalContextDestroy(EvalContext *ctx)
     if (ctx)
     {
         free(ctx->launch_directory);
-        EvalContextEnterpriseStateDestroy(ctx->enterprise_state);
 
         {
             LoggingPrivContext *pctx = LoggingPrivGetContext();
@@ -2487,11 +2482,6 @@ void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool v
 bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option)
 {
     return !!(ctx->eval_options & option);
-}
-
-EvalContextEnterpriseState *EvalContextGetEnterpriseState(const EvalContext *ctx)
-{
-    return ctx->enterprise_state;
 }
 
 void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path)

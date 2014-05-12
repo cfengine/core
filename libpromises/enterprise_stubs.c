@@ -217,17 +217,6 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ShowPromise, ARG_UNUSED const Promis
 {
 }
 
-ENTERPRISE_FUNC_0ARG_DEFINE_STUB(EvalContextEnterpriseState *, EvalContextEnterpriseStateNew)
-{
-    Log(LOG_LEVEL_DEBUG, "Not initializing enterprise state for evaluation context");
-    return NULL;
-}
-
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, EvalContextEnterpriseStateDestroy,
-                                      ARG_UNUSED EvalContextEnterpriseState *,_estate)
-{
-}
-
 ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, EvalContextLogPromiseIterationOutcome,
                                       ARG_UNUSED EvalContext *, ctx,
                                       ARG_UNUSED const Promise *, pp,

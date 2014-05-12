@@ -52,6 +52,5 @@ ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, CollectCallStop);
 ENTERPRISE_FUNC_0ARG_DECLARE(bool, CollectCallHasPending);
 ENTERPRISE_FUNC_1ARG_DECLARE(int, CollectCallGetPending, ARG_UNUSED int *, queue_length);
 ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, CollectCallMarkProcessed);
-ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, FprintAvahiCfengineTag, FILE *, fp);
 
 #endif

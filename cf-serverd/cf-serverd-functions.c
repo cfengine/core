@@ -347,10 +347,14 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             DeleteAuthList(&SV.vardeny, &SV.vardenytail);
             DeleteAuthList(&SV.roles, &SV.rolestail);
 
+            /* Should be no currently open connections */
+            assert(SV.connectionlist == NULL);
+
             /* body server control ACLs */
             DeleteItemList(SV.trustkeylist);    SV.trustkeylist = NULL;
             DeleteItemList(SV.attackerlist);    SV.attackerlist = NULL;
             DeleteItemList(SV.nonattackerlist); SV.nonattackerlist = NULL;
+            DeleteItemList(SV.allowuserlist);   SV.allowuserlist = NULL;
             DeleteItemList(SV.multiconnlist);   SV.multiconnlist = NULL;
             DeleteItemList(SV.allowuserlist);   SV.allowuserlist = NULL;
             DeleteItemList(SV.allowlegacyconnects);

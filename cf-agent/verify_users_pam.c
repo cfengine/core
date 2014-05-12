@@ -788,6 +788,58 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
     }
 }
 
+static bool SupportsNoHomedirCreation(void)
+{
+    typedef enum
+    {
+        SUPPORTS_NO_HOMEDIR_CREATION_UNKNOWN,
+        SUPPORTS_NO_HOMEDIR_CREATION_YES,
+        SUPPORTS_NO_HOMEDIR_CREATION_NO
+    } SupportsNoHomedirCreation_Enum;
+    static SupportsNoHomedirCreation_Enum supports_no_homedir_creation = SUPPORTS_NO_HOMEDIR_CREATION_UNKNOWN;
+
+    if (supports_no_homedir_creation != SUPPORTS_NO_HOMEDIR_CREATION_UNKNOWN)
+    {
+        return supports_no_homedir_creation == SUPPORTS_NO_HOMEDIR_CREATION_YES;
+    }
+
+    char help_argument[] = " --help";
+    char help_command[strlen(USERADD) + sizeof(help_argument)];
+    snprintf(help_command, sizeof(help_command), "%s%s", USERADD, help_argument);
+
+    FILE *fptr = cf_popen(help_command, "r", true);
+    char *buf = NULL;
+    size_t bufsize = 0;
+    while (CfReadLine(&buf, &bufsize, fptr) >= 0)
+    {
+        char *m_pos = buf;
+        while ((m_pos = strstr(m_pos, "-M")))
+        {
+            // Check that each side of "-M" is not a letter, and not part of "--M".
+            if (m_pos
+                && (m_pos == buf
+                    || (m_pos[-1] != '-' && (isspace(m_pos[-1]) || ispunct(m_pos[-1]))))
+                && (m_pos[2] == '\0'
+                    || (isspace(m_pos[2]) || ispunct(m_pos[2]))))
+            {
+                supports_no_homedir_creation = SUPPORTS_NO_HOMEDIR_CREATION_YES;
+                // Break out of strstr loop, but read till the end to avoid broken pipes.
+                break;
+            }
+            m_pos++;
+        }
+    }
+    cf_pclose(fptr);
+    free(buf);
+
+    if (supports_no_homedir_creation != SUPPORTS_NO_HOMEDIR_CREATION_YES)
+    {
+        supports_no_homedir_creation = SUPPORTS_NO_HOMEDIR_CREATION_NO;
+    }
+    return supports_no_homedir_creation == SUPPORTS_NO_HOMEDIR_CREATION_YES;
+}
+
+
 static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
                          EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
@@ -846,6 +898,12 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         StringAppend(cmd, " -s \"", sizeof(cmd));
         StringAppend(cmd, u.shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
+    }
+    if (SupportsNoHomedirCreation())
+    {
+        // Prevents creation of home_dir.
+        // We want home_bundle to do that.
+        StringAppend(cmd, " -M", sizeof(cmd));
     }
     StringAppend(cmd, " ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));

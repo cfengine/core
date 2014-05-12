@@ -486,9 +486,9 @@ int main(int argc, char *argv[])
     DONE = true;
     kill(child, SIGUSR1);
 
-    /* === WAIT AT MOST 10 SECONDS FOR EVERYBODY TO FINISH === */
+    /* === WAIT AT MOST 30 SECONDS FOR EVERYBODY TO FINISH === */
 
-    printf("Waiting at most 10s for all threads to finish...\n");
+    printf("Waiting at most 30s for all threads to finish...\n");
 
     unsigned long finished_children = 0;
     time_t wait_starttime = time(NULL);
@@ -496,7 +496,7 @@ int main(int argc, char *argv[])
     ThreadLock(&end_mtx);
     while (!(    FINISHED_THREADS == TOTAL_NUM_THREADS
              && finished_children == total_num_children)
-           && seconds_waited < 10)
+           && seconds_waited < 30)
     {
         struct timespec ts = { .tv_sec = 1 };
         if (FINISHED_THREADS < TOTAL_NUM_THREADS)

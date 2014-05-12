@@ -6,7 +6,10 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      inputs => { "../../default.cf.sub",
+                  "user_queries.cf.sub",
+                  "disable_sudo_tty_requirement.cf.sub"
+                };
       bundlesequence  => { default("$(this.promise_filename)") };
       cache_system_functions => "no";
 }
@@ -19,6 +22,9 @@ bundle agent init
   users:
     "johndoe"
       policy => "absent";
+
+  methods:
+      "any" usebundle => disable_sudo_tty_requirement;
 }
 
 #######################################################
@@ -40,7 +46,7 @@ bundle agent check
 
   classes:
     !windows::
-      "ok" expression => regcmp(".*Succeeded.*", execresult("sudo su johndoe $(currentdir)$(const.dirsep)add_user_with_shell.txt", "useshell"));
+      "ok" expression => regcmp(".*Succeeded.*", execresult("sudo -n su johndoe $(currentdir)$(const.dirsep)add_user_with_shell.txt", "useshell"));
 
   reports:
     ok|windows::

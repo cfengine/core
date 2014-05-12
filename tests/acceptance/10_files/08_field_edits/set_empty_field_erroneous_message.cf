@@ -1,0 +1,27 @@
+#######################################################
+#
+# catch spurious editing messages in field editing
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => file_make($(G.testfile), "root:sikrt:16104::::::");
+      "" usebundle => dcs_passif_output("",
+                                        ".*(Edited|Setting).*",
+                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | $(G.grep) field",
+                                        $(this.promise_filename));
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

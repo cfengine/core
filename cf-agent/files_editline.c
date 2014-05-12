@@ -2142,13 +2142,16 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "set") == 0)
     {
-        if (RlistLen(*columns) == 1)
+        int length = RlistLen(*columns);
+        if (length == 1 && strcmp(RlistScalarValue(*columns), a.column.column_value) == 0)
         {
-            if (strcmp(RlistScalarValue(*columns), a.column.column_value) == 0)
-            {
-                Log(LOG_LEVEL_VERBOSE, "Field sub-value set as promised");
-                return false;
-            }
+            Log(LOG_LEVEL_VERBOSE, "Field sub-value set as promised");
+            return false;
+        }
+        else if (length == 0 && strcmp("", a.column.column_value) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Empty field sub-value set as promised");
+            return false;
         }
 
         Log(LOG_LEVEL_INFO, "Setting field sub-value '%s' in '%s'", a.column.column_value, edcontext->filename);

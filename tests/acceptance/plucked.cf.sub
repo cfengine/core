@@ -481,6 +481,24 @@ bundle edit_line set_config_values_matching(v,pat)
 
 }
 
+bundle edit_line set_user_field(user,field,val)
+# @brief Set the value of field number "field" in a `:-field`
+# formatted file like `/etc/passwd`
+# @param user The user to be modified
+# @param field The field that should be modified
+# @param val The value for `field`
+#
+# **Note:** To manage local users with CFEngine 3.6 and later,
+# consider making `users` promises instead of modifying system files.
+{
+  field_edits:
+
+      "$(user):.*"
+
+      comment => "Edit a user attribute in the password file",
+      edit_field => col(":","$(field)","$(val)","set");
+}
+
 body edit_field fstab_options(newval, method)
 # @brief Edit the options field in a fstab format
 # @param newval the new option

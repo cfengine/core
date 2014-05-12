@@ -23,6 +23,7 @@
 */
 
 #include <cf-serverd-functions.h>
+#include <cf-serverd-enterprise-stubs.h> /* CleanReportBookFilterSet() */
 
 #include <known_dirs.h>
 #include <server_transform.h>
@@ -71,6 +72,7 @@ int main(int argc, char *argv[])
     GenericAgentConfigDestroy(config);
     PolicyDestroy(policy);
     EvalContextDestroy(ctx);
+    CleanReportBookFilterSet();
 
     return 0;
 }

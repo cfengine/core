@@ -69,12 +69,10 @@
 #define BOOT_TIME_WITH_PSTAT_GETPROC
 #endif
 
-// Solaris: kstat() for kernel statistics
-// See http://dsc.sun.com/solaris/articles/kstatc.html
-// BSD also has a kstat.h (albeit in sys), so check SOLARIS just to be paranoid
-#if defined(__sun) && defined(HAVE_KSTAT_H)
-#include <kstat.h>
-#define BOOT_TIME_WITH_KSTAT
+
+// required to determine system uptime for Solaris
+#if defined(__sun) 
+#include <utmpx.h>
 #endif
 
 // BSD: sysctl(3) to get kern.boottime, CPU count, etc.
@@ -2514,19 +2512,18 @@ int GetUptimeSeconds(time_t now)
        // Don't return yet, sanity checking below
        boot_time = now - s.uptime;
     }
-#elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
-#define NANOSECONDS_PER_SECOND 1000000000
-    kstat_ctl_t *kc;
-    kstat_t *kp;
+#elif defined(__sun)         // Solaris platform
+    struct utmpx * ent;
 
-    if(kc = kstat_open())
+    while ( ( ent = getutxent ( ) ) ) 
     {
-        if(kp = kstat_lookup(kc, "unix", 0, "system_misc"))
+        if ( !strcmp ( "system boot", ent->ut_line ) ) 
         {
-            boot_time = (time_t)(kp->ks_crtime / NANOSECONDS_PER_SECOND);
-        }
-        kstat_close(kc);
+          boot_time = (ent->ut_tv.tv_sec);
+        }      
     }  
+    
+    return(boot_time > 0 ? (now - boot_time) : -1);
 #elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
     struct pst_status p;
 

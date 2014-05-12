@@ -32,7 +32,7 @@ GetOptions(\%options,
            "limit:i",           # note that you can say "LIMIT N" in the query!
            "url:s",
            "host:s",
-           "list!"
+           "list|list-hosts!"
           );
 
 # Create a user agent object

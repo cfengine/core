@@ -6,7 +6,10 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      inputs => { "../../default.cf.sub",
+                  "user_queries.cf.sub",
+                  "disable_sudo_tty_requirement.cf.sub"
+                };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 
@@ -38,6 +41,9 @@ bundle agent init
     "$(G.testfile).2"
       create => "true",
       perms => init_perms_body_sys;
+
+  methods:
+      "any" usebundle => disable_sudo_tty_requirement;
 }
 
 #######################################################
@@ -56,9 +62,9 @@ bundle agent test
 
   commands:
     !windows::
-      "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
+      "sudo -n -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
         contain => test_contain_body;
-      "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile).2'"
+      "sudo -n -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile).2'"
         contain => test_contain_body;
 }
 

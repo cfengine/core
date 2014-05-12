@@ -534,7 +534,8 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
         KeyHostSeen incoming;
         if (ReadDB(db, incoming_key, &incoming, sizeof(incoming)))
         {
-            if (!(*callback)(hostkey, address, true, &incoming, ctx))
+            if (callback != NULL &&
+                !(*callback)(hostkey, address, true, &incoming, ctx))
             {
                 break;
             }
@@ -545,7 +546,8 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
         KeyHostSeen outgoing;
         if (ReadDB(db, outgoing_key, &outgoing, sizeof(outgoing)))
         {
-            if (!(*callback)(hostkey, address, false, &outgoing, ctx))
+            if (callback != NULL &&
+                !(*callback)(hostkey, address, false, &outgoing, ctx))
             {
                 break;
             }
@@ -651,4 +653,3 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
 
     return 0;
 }
-

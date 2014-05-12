@@ -31,6 +31,7 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "known_dirs.h"
+#include "misc_lib.h"                                    /* UnexpectedError */
 
 #ifdef LMDB
 
@@ -49,11 +50,10 @@ struct DBPriv_
     MDB_txn *wtxn;
 };
 
-#ifndef NDEBUG
-#define ASSERT_CURSOR_NOT_ACTIVE() assert(pthread_getspecific(db->cursor_active_key) == NULL)
-#else
-#define ASSERT_CURSOR_NOT_ACTIVE() (void)(0)
-#endif
+#define ASSERT_CURSOR_NOT_ACTIVE()                                      \
+    CF_ASSERT(pthread_getspecific(db->cursor_active_key) == NULL,       \
+              "Open cursor while accessing database!")
+
 
 struct DBCursorPriv_
 {

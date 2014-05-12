@@ -119,6 +119,7 @@ tests/unit/rb-tree-test
 
 tests/load/db_load
 tests/load/lastseen_load
+tests/load/lastseen_threaded_load
 
 # examples
 examples/cfengine_stdlib.cf

@@ -140,6 +140,18 @@ bool ServerTLSInitialize()
 
 void ServerTLSDeInitialize()
 {
+    if (PUBKEY)
+    {
+        RSA_free(PUBKEY);
+        PUBKEY = NULL;
+    }
+
+    if (PRIVKEY)
+    {
+        RSA_free(PRIVKEY);
+        PRIVKEY = NULL;
+    }
+
     if (SSLSERVERCERT != NULL)
     {
         X509_free(SSLSERVERCERT);

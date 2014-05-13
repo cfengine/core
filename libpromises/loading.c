@@ -416,7 +416,8 @@ static JsonElement *ReadReleaseIdFileFromInputs()
     JsonParseError err = JsonParseFile(filename, 4096, &validated_doc);
     if (err != JSON_PARSE_OK)
     {
-        Log(LOG_LEVEL_WARNING, "Could not read release ID: '%s' did not contain valid JSON data. "
+        Log(LOG_LEVEL_WARNING,
+            "Could not read release ID: '%s' did not contain valid JSON data. "
             "(JsonParseFile: '%s')", filename, JsonParseErrorToString(err));
     }
 

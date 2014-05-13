@@ -515,7 +515,13 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
     }
 
     DeleteDBCursor(cursor);
-    
+    CloseDB(db);
+
+    if (!OpenDB(&db, dbid_lastseen))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to re-open lastseen database");
+        return false;
+    }
     for (int i = 0; i < SeqLength(hostkeys); ++i)
     {
         const char *hostkey = SeqAt(hostkeys, i);

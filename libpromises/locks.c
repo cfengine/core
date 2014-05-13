@@ -955,8 +955,15 @@ void PurgeLocks(void)
             return;
         }
     }
+    CloseLock(dbp);
 
     Log(LOG_LEVEL_VERBOSE, "Looking for stale locks to purge");
+
+    dbp = OpenLock();
+    if(!dbp)
+    {
+        return;
+    }
 
     if (!NewDBCursor(dbp, &dbcp))
     {
@@ -988,7 +995,13 @@ void PurgeLocks(void)
 
     entry.time = now;
     DeleteDBCursor(dbcp);
+    CloseLock(dbp);
 
+    dbp = OpenLock();
+    if(!dbp)
+    {
+        return;
+    }
     WriteDB(dbp, "lock_horizon", &entry, sizeof(entry));
     CloseLock(dbp);
 }

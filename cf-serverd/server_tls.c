@@ -401,8 +401,6 @@ static int ServerSendWelcome(const ServerConnectionState *conn)
  */
 int ServerTLSSessionEstablish(ServerConnectionState *conn)
 {
-    int ret;
-
     if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         assert(ConnectionInfoSSL(conn->conn_info) == NULL);
@@ -421,7 +419,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
         /* Now we are letting OpenSSL take over the open socket. */
         SSL_set_fd(ssl, ConnectionInfoSocket(conn->conn_info));
 
-        ret = SSL_accept(ssl);
+        int ret = SSL_accept(ssl);
         if (ret <= 0)
         {
             TLSLogError(ssl, LOG_LEVEL_ERR,

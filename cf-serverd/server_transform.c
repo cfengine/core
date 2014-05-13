@@ -1364,9 +1364,7 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail)
 {
-    Auth *ptr;
-
-    ptr = xcalloc(1, sizeof(Auth));
+    Auth *ptr = xcalloc(1, sizeof(Auth));
 
     if (*listtail == NULL)       /* Last element in the list */
     {

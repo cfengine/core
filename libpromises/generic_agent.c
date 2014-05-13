@@ -1286,12 +1286,11 @@ const char *NameVersion(void)
 
 static void CleanPidFile(void)
 {
-    if (unlink(PIDFILE) != 0)
+    if (unlink(PIDFILE) != 0 && errno != ENOENT)
     {
-        if (errno != ENOENT)
-        {
-            Log(LOG_LEVEL_ERR, "Unable to remove pid file '%s'. (unlink: %s)", PIDFILE, GetErrorStr());
-        }
+        Log(LOG_LEVEL_ERR,
+            "Unable to remove pid file '%s'. (unlink: %s)",
+            PIDFILE, GetErrorStr());
     }
 }
 
@@ -1306,20 +1305,20 @@ static void RegisterPidCleanup(void)
 
 void WritePID(char *filename)
 {
-    FILE *fp;
-
     pthread_once(&pid_cleanup_once, RegisterPidCleanup);
 
-    snprintf(PIDFILE, CF_BUFSIZE - 1, "%s%c%s", GetPidDir(), FILE_SEPARATOR, filename);
+    snprintf(PIDFILE, CF_BUFSIZE, "%s%c%s", GetPidDir(), FILE_SEPARATOR, filename);
 
-    if ((fp = fopen(PIDFILE, "w")) == NULL)
+    FILE *fp = fopen(PIDFILE, "w");
+    if (fp == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Could not write to PID file '%s'. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_INFO,
+            "Could not write to PID file '%s'. (fopen: %s)",
+            filename, GetErrorStr());
         return;
     }
 
     fprintf(fp, "%ju\n", (uintmax_t)getpid());
-
     fclose(fp);
 }
 

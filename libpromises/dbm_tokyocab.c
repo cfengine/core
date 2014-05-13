@@ -279,11 +279,6 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     return ret;
 }
 
-bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
-{
-    return DBPrivWrite(db, key, key_size, value, value_size);
-}
-
 /*
  * This one has to be locked against cursor -- deleting entries might interrupt
  * iteration.

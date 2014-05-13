@@ -35,6 +35,12 @@ static const DBMigrationFunction *const dbm_migration_plans[dbid_max] = {
     [dbid_lastseen] = dbm_migration_plan_lastseen
 };
 
+#ifdef LMDB
+bool DBMigrate(ARG_UNUSED DBHandle *db, ARG_UNUSED  dbid id)
+{
+    return true;
+}
+#else
 static size_t DBVersion(DBHandle *db)
 {
     char version[64];
@@ -66,6 +72,6 @@ bool DBMigrate(DBHandle *db, dbid id)
             }
         }
     }
-
     return true;
 }
+#endif

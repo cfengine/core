@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
     EndAudit(ctx, CFA_BACKGROUND);
     EvalContextDestroy(ctx);
 
-    GenerateDiffReports(config->input_file);
+    GenerateDiffReports(config);
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
     GenericAgentConfigDestroy(config);

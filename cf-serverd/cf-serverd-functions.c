@@ -448,6 +448,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     CollectCallStop();
+    YieldCurrentLock(thislock);
     PolicyDestroy(server_cfengine_policy);
 }
 
@@ -476,7 +477,7 @@ int InitServer(size_t queue_size)
 
 int OpenReceiverChannel(void)
 {
-    struct addrinfo *response, *ap;
+    struct addrinfo *response = NULL, *ap;
     struct addrinfo query = {
         .ai_flags = AI_PASSIVE,
         .ai_family = AF_UNSPEC,
@@ -494,9 +495,14 @@ int OpenReceiverChannel(void)
     sprintf(servname, "%d", CFENGINE_PORT);
 
     /* Resolve listening interface. */
-    if (getaddrinfo(ptr, servname, &query, &response) != 0)
+    int gres;
+    if ((gres = getaddrinfo(ptr, servname, &query, &response)) != 0)
     {
-        Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", gai_strerror(gres));
+        if (response)
+        {
+            freeaddrinfo(response);
+        }
         return -1;
     }
 
@@ -543,10 +549,9 @@ int OpenReceiverChannel(void)
         if (setsockopt(sd, SOL_SOCKET, SO_LINGER,
                        &cflinger, sizeof(cflinger)) == -1)
         {
-            Log(LOG_LEVEL_ERR,
+            Log(LOG_LEVEL_INFO,
                 "Socket option SO_LINGER was not accepted. (setsockopt: %s)",
                 GetErrorStr());
-            exit(EXIT_FAILURE);
         }
 
         if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)
@@ -565,15 +570,10 @@ int OpenReceiverChannel(void)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Could not bind server address. (bind: %s)", GetErrorStr());
+            Log(LOG_LEVEL_INFO,
+                "Could not bind server address. (bind: %s)", GetErrorStr());
             cf_closesocket(sd);
         }
-    }
-
-    if (sd < 0)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't open/bind a socket");
-        exit(EXIT_FAILURE);
     }
 
     freeaddrinfo(response);

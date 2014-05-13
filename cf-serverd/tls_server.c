@@ -554,22 +554,22 @@ static ProtocolCommandNew GetCommandNew(char *str)
 
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
-    char recvbuffer[CF_BUFSIZE + CF_BUFEXT];
+    /* The CF_BUFEXT extra space is there to ensure we're not reading out of
+     * bounds in commands that carry extra binary arguments, like MD5. */
+    char recvbuffer[CF_BUFSIZE + CF_BUFEXT] = { 0 };
     char sendbuffer[CF_BUFSIZE] = { 0 };
-    char filename[sizeof(recvbuffer)];
+    char filename[CF_BUFSIZE + 1];      /* +1 for appending slash sometimes */
     int received;
-    ServerFileGetState get_args;
+    ServerFileGetState get_args = { 0 };
 
     /* We already encrypt because of the TLS layer, no need to encrypt more. */
     const int encrypted = 0;
 
-    memset(recvbuffer, 0, CF_BUFSIZE + CF_BUFEXT);
-    memset(&get_args, 0, sizeof(get_args));
-
-    /* Legacy stuff only for old protocol */
+    /* Legacy stuff only for old protocol. */
     assert(conn->rsa_auth == 1);
     assert(conn->user_data_set == 1);
 
+    /* Receive up to CF_BUFSIZE - 1 bytes. */
     received = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
     if (received == -1 || received == 0)
     {
@@ -853,10 +853,62 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         return true;
     }
     case PROTOCOL_COMMAND_MD5:
+    {
+        int ret = sscanf(recvbuffer, "MD5 %[^\n]", filename);
+        if (ret != 1)
+        {
+            goto protocol_error;
+        }
 
-        CompareLocalHash(conn, sendbuffer, recvbuffer);
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Received:", "MD5", filename);
+
+        /* TODO batch all the following in one function since it's very
+         * similar in all of GET, OPENDIR and STAT. */
+
+        size_t zret = ShortcutsExpand(filename, sizeof(filename),
+                                     SV.path_shortcuts,
+                                     conn->ipaddr, conn->revdns,
+                                     KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        if (zret == (size_t) -1)
+        {
+            goto protocol_error;
+        }
+
+        zret = PreprocessRequestPath(filename, sizeof(filename));
+        if (zret == (size_t) -1)
+        {
+            goto protocol_error;
+        }
+
+        PathRemoveTrailingSlash(filename, strlen(filename));
+
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Translated to:", "MD5", filename);
+
+        if (acl_CheckPath(paths_acl, filename,
+                          conn->ipaddr, conn->revdns,
+                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to file: %s", filename);
+            RefuseAccess(conn, recvbuffer);
+            return true;
+        }
+
+        assert(CF_DEFAULT_DIGEST_LEN <= EVP_MAX_MD_SIZE);
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
+
+        assert(CF_BUFSIZE + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN
+               <= sizeof(recvbuffer));
+        memcpy(digest, recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET,
+               CF_DEFAULT_DIGEST_LEN);
+
+        CompareLocalHash(filename, digest, sendbuffer);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+
         return true;
-
+    }
     case PROTOCOL_COMMAND_VAR:
     {
         char var[256];

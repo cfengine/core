@@ -792,11 +792,7 @@ static void PolicyUpdateIfSafe(EvalContext *ctx, Policy **policy,
 static void AcceptAndHandle(EvalContext *ctx, int sd)
 {
     /* TODO embed ConnectionInfo into ServerConnectionState. */
-    ConnectionInfo *info = ConnectionInfoNew();
-    if (info == NULL)
-    {
-        return;
-    }
+    ConnectionInfo *info = ConnectionInfoNew(); /* Uses xcalloc() */
 
     info->ss_len = sizeof(info->ss);
     info->sd = accept(sd, (struct sockaddr *) &info->ss, &info->ss_len);
@@ -831,6 +827,10 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     InitSignals();
     ServerTLSInitialize();
     int sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
+
+    /* Necessary for our use of select() to work in WaitForIncoming(): */
+    assert(sd < sizeof(fd_set) * CHAR_BIT &&
+           GetSignalPipe() < sizeof(fd_set) * CHAR_BIT);
 
     Policy *server_cfengine_policy = PolicyNew();
     CfLock thislock = AcquireServerLock(ctx, config, server_cfengine_policy);

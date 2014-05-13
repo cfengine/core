@@ -138,6 +138,21 @@ bool ServerTLSInitialize()
     return false;
 }
 
+void ServerTLSDeInitialize()
+{
+    if (SSLSERVERCERT != NULL)
+    {
+        X509_free(SSLSERVERCERT);
+        SSLSERVERCERT = NULL;
+    }
+
+    if (SSLSERVERCONTEXT != NULL)
+    {
+        SSL_CTX_free(SSLSERVERCONTEXT);
+        SSLSERVERCONTEXT = NULL;
+    }
+}
+
 /**
  * @brief Set the connection type to CLASSIC or TLS.
 

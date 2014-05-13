@@ -34,8 +34,7 @@ static void run_test_in_policy(const char *policy_filename, TestFn fn)
     fn(ctx, policy);
 
     PolicyDestroy(policy);
-    EvalContextDestroy(ctx);
-    GenericAgentConfigDestroy(agent_config);
+    GenericAgentFinalize(ctx, agent_config);
 }
 
 static void execd_config_empty_cb(const EvalContext *ctx, const Policy *policy)

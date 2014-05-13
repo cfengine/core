@@ -69,9 +69,8 @@ int main(int argc, char *argv[])
 
     Log(LOG_LEVEL_NOTICE, "Cleaning up and exiting...");
 
-    GenericAgentConfigDestroy(config);
     PolicyDestroy(policy);
-    EvalContextDestroy(ctx);
+    GenericAgentFinalize(ctx, config);
     CleanReportBookFilterSet();
 
     return 0;

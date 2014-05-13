@@ -20,8 +20,7 @@ void test_load_masterfiles(void)
     assert_true(masterfiles);
 
     PolicyDestroy(masterfiles);
-    GenericAgentConfigDestroy(config);
-    EvalContextDestroy(ctx);
+    GenericAgentFinalize(ctx, config);
 }
 
 void test_resolve_absolute_input_path(void)

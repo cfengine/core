@@ -726,4 +726,5 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
     YieldCurrentLock(thislock);
     PolicyDestroy(server_cfengine_policy);
+    ServerTLSDeInitialize();
 }

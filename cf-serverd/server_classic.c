@@ -1243,10 +1243,32 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
+        encrypted = true;
         /* roll through, no break */
 
     case PROTOCOL_COMMAND_MD5:
-        CompareLocalHash(conn, sendbuffer, recvbuffer);
+
+        memset(filename, 0, sizeof(filename));
+        sscanf(recvbuffer, "MD5 %[^\n]", filename);
+
+        if (!AccessControl(ctx, filename, conn, encrypted))
+        {
+            Log(LOG_LEVEL_INFO, "Access denied to get object");
+            RefuseAccess(conn, recvbuffer);
+            return true;
+        }
+
+        assert(CF_DEFAULT_DIGEST_LEN <= EVP_MAX_MD_SIZE);
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
+
+        assert(CF_BUFSIZE + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN
+               <= sizeof(recvbuffer));
+        memcpy(digest, recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET,
+               CF_DEFAULT_DIGEST_LEN);
+
+        CompareLocalHash(filename, digest, sendbuffer);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+
         return true;
 
     case PROTOCOL_COMMAND_VAR_SECURE:

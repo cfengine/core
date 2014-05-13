@@ -482,6 +482,7 @@ static void DeleteConn(ServerConnectionState *conn)
         cf_closesocket(sd);
     }
     ConnectionInfoDestroy(&conn->conn_info);
+
     free(conn->session_key);
 
     if (conn->ipaddr != NULL)
@@ -493,6 +494,5 @@ static void DeleteConn(ServerConnectionState *conn)
         }
     }
 
-    *conn = (ServerConnectionState) {0};
     free(conn);
 }

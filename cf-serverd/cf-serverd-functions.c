@@ -555,17 +555,18 @@ static int InitServer(size_t queue_size)
     if (sd == -1)
     {
         Log(LOG_LEVEL_ERR, "Unable to start server");
-        exit(EXIT_FAILURE);
     }
-
-    if (listen(sd, queue_size) == -1)
+    else if (listen(sd, queue_size) == -1)
     {
         Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
         cf_closesocket(sd);
-        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        return sd;
     }
 
-    return sd;
+    exit(EXIT_FAILURE);
 }
 
 /* Set up standard signal-handling. */

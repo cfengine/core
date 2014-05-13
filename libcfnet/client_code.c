@@ -503,7 +503,9 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
         {
             if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
             {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Copy failed (no space?) while copying to '%s' from network '%s'",
+                    destination, GetErrorStr());
                 return false;
             }
 
@@ -515,7 +517,9 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
         {
             if (FullWrite(dd, cur, copy_span - cur) < 0)
             {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Copy failed (no space?) while copying to '%s' from network '%s'",
+                    destination, GetErrorStr());
                 return false;
             }
 

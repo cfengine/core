@@ -69,11 +69,7 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
 bool cfnet_init()
 {
     CryptoInitialize();
-
-    if (TLSClientInitialize())
-        return true;
-    else
-        return false;
+    return TLSClientInitialize();
 }
 
 void cfnet_shut()

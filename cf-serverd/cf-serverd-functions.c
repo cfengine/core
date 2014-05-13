@@ -618,9 +618,12 @@ static void PrepareServer(int sd)
         ActAsDaemon();
     }
 
-    /* Close sd on exec, needed for not passing the socket to cf-runagent
-     * spawned commands. */
-    fcntl(sd, F_SETFD, FD_CLOEXEC);
+    if (sd != -1)
+    {
+        /* Close sd on exec, needed for not passing the socket to
+         * cf-runagent spawned commands. */
+        fcntl(sd, F_SETFD, FD_CLOEXEC);
+    }
 #endif
 
     Log(LOG_LEVEL_NOTICE, "Server is starting...");

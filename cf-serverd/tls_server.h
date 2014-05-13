@@ -35,6 +35,7 @@
 
 
 bool ServerTLSInitialize();
+void ServerTLSDeInitialize();
 int ServerTLSPeek(ConnectionInfo *conn_info);
 int ServerTLSSessionEstablish(ServerConnectionState *conn);
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn);

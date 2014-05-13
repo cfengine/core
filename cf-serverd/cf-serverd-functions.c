@@ -726,7 +726,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     {
         if (ACTIVE_THREADS == 0)
         {
-            PolicyDestroy(server_cfengine_policy);
+            ServerTLSDeInitialize();
         }
         ThreadUnlock(cft_server_children);
     }

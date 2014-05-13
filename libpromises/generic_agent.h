@@ -96,6 +96,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentAddEditionClasses, EvalContext *, ctx);
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
+void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentWriteVersion, Writer *, w);
 void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *const hints[], bool accepts_file_argument);
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config);

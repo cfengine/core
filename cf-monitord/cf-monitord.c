@@ -126,8 +126,7 @@ int main(int argc, char *argv[])
     MonitorStartServer(ctx, policy);
 
     PolicyDestroy(policy);
-    GenericAgentConfigDestroy(config);
-    EvalContextDestroy(ctx);
+    GenericAgentFinalize(ctx, config);
     return 0;
 }
 

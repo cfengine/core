@@ -196,8 +196,7 @@ int main(int argc, char *argv[])
     }
 
     PolicyDestroy(policy);
-    GenericAgentConfigDestroy(config);
-    EvalContextDestroy(ctx);
+    GenericAgentFinalize(ctx, config);
 }
 
 /*******************************************************************/

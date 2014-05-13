@@ -82,6 +82,8 @@ void CryptoDeInitialize()
     {
         EVP_cleanup();
         CleanupOpenSSLThreadLocks();
+        // TODO: Is there an ERR_unload_crypto_strings() ?
+        // TODO: Are there OpenSSL_clear_all_{digests,algorithms} ?
         crypto_initialized = false;
     }
 }

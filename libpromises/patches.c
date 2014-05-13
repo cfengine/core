@@ -222,11 +222,13 @@ int cf_closesocket(int sd)
 
 int LinkOrCopy(const char *from, const char *to, int sym)
 /**
- *  Creates symlink to file on platforms supporting it, copies on
- *  others.
- **/
+ * Creates a (symbolic or hard) link to file on platforms supporting
+ * it, copies on others.
+ * @param from Name of target file.
+ * @param to Name of link (or copy) to be created.
+ * @param sym Set false for hard link, true for symbolic link.
+ */
 {
-
 #ifdef __MINGW32__                    // only copy on Windows for now
 
     if (!CopyFile(from, to, TRUE))

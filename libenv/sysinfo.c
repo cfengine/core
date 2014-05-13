@@ -2186,7 +2186,8 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
 
 static int EOS_Version(EvalContext *ctx)
 
-{ char buffer[CF_BUFSIZE];
+{
+    char buffer[CF_BUFSIZE];
 
  // e.g. Arista Networks EOS 4.10.2
 

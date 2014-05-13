@@ -55,11 +55,7 @@
 bool cfnet_init()
 {
     CryptoInitialize();
-
-    if (TLSClientInitialize())
-        return true;
-    else
-        return false;
+    return TLSClientInitialize();
 }
 
 void cfnet_shut()

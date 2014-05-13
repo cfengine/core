@@ -52,8 +52,8 @@ struct DBPriv_
 typedef struct DBTxn_
 {
     MDB_txn *txn;
-    // Whether txn is a write (true) or read-only (false) transaction.
-    bool write_txn;
+    // Whether txn is a read/write (true) or read-only (false) transaction.
+    bool rw_txn;
 } DBTxn;
 
 struct DBCursorPriv_
@@ -103,7 +103,7 @@ static int GetWriteTransaction(DBPriv *db, MDB_txn **txn)
         pthread_setspecific(db->txn_key, db_txn);
     }
 
-    if (db_txn->txn && !db_txn->write_txn)
+    if (db_txn->txn && !db_txn->rw_txn)
     {
         rc = mdb_txn_commit(db_txn->txn);
         if (rc != MDB_SUCCESS)
@@ -118,7 +118,7 @@ static int GetWriteTransaction(DBPriv *db, MDB_txn **txn)
         rc = mdb_txn_begin(db->env, NULL, 0, &db_txn->txn);
         if (rc == MDB_SUCCESS)
         {
-            db_txn->write_txn = true;
+            db_txn->rw_txn = true;
         }
         else
         {
@@ -136,7 +136,7 @@ static void AbortTransaction(DBPriv *db)
     DBTxn *db_txn = pthread_getspecific(db->txn_key);
     mdb_txn_abort(db_txn->txn);
     db_txn->txn = NULL;
-    db_txn->write_txn = false;
+    db_txn->rw_txn = false;
 }
 
 static void DestroyTransaction(void *ptr)

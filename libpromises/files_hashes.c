@@ -148,7 +148,8 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
 
 /*******************************************************************/
 
-int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest2[EVP_MAX_MD_SIZE + 1],
+int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
+                const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type)
 {
     int i, size = EVP_MAX_MD_SIZE;

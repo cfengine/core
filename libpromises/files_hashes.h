@@ -29,7 +29,8 @@
 
 void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
-int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest2[EVP_MAX_MD_SIZE + 1],
+int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
+                const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type);
 char *HashPrintSafe(HashMethod type, bool use_prefix, const unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4]);
 char *SkipHashType(char *hash);

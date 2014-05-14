@@ -1091,34 +1091,29 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     return 0;
 }
 
-void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer)
+bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 1],
+                      char sendbuffer[CF_BUFSIZE])
 {
-    unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-    char filename[CF_BUFSIZE], rfilename[CF_BUFSIZE];
+    char translated_filename[CF_BUFSIZE] = { 0 };
+    TranslatePath(translated_filename, filename);
 
-    sscanf(recvbuffer, "MD5 %[^\n]", rfilename);
+    unsigned char file_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    /* TODO connection might timeout if this takes long! */
+    HashFile(translated_filename, file_digest, CF_DEFAULT_DIGEST);
 
-    memcpy(digest1, recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET,
-           CF_DEFAULT_DIGEST_LEN);
-
-    memset(sendbuffer, 0, CF_BUFSIZE);
-
-    TranslatePath(filename, rfilename);
-
-    unsigned char digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
-    HashFile(filename, digest2, CF_DEFAULT_DIGEST);
-
-    if (HashesMatch(digest1, digest2, CF_DEFAULT_DIGEST))
+    if (HashesMatch(digest, file_digest, CF_DEFAULT_DIGEST))
     {
-        sprintf(sendbuffer, "%s", CFD_FALSE);
+        assert(strlen(CFD_FALSE) < CF_BUFSIZE);
+        strcpy(sendbuffer, CFD_FALSE);
         Log(LOG_LEVEL_DEBUG, "Hashes matched ok");
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+        return true;
     }
     else
     {
-        sprintf(sendbuffer, "%s", CFD_TRUE);
+        assert(strlen(CFD_TRUE) < CF_BUFSIZE);
+        strcpy(sendbuffer, CFD_TRUE);
         Log(LOG_LEVEL_DEBUG, "Hashes didn't match");
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+        return false;
     }
 }
 

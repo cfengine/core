@@ -160,7 +160,9 @@ static void RandomSeed(void)
     }
 }
 
-static const char *const priv_passphrase = "Cfengine passphrase";
+/* PEM functions need the const cast away, but hopefully the default
+ * call-back doesn't actually modify its user-data. */
+static const char priv_passphrase[] = "Cfengine passphrase";
 
 /**
  * @return true the error is not so severe that we must stop
@@ -179,8 +181,8 @@ bool LoadSecretKeys(void)
             return false;
         }
 
-        if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL,
-                                              (void *)priv_passphrase)) == NULL)
+        PRIVKEY = PEM_read_RSAPrivateKey(fp, NULL, NULL, (void*) priv_passphrase);
+        if (PRIVKEY == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Error reading private key. (PEM_read_RSAPrivateKey: %s)",
@@ -207,7 +209,7 @@ bool LoadSecretKeys(void)
             return false;
         }
 
-        PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, (void *)priv_passphrase);
+        PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, (void*) priv_passphrase);
         if (NULL == PUBKEY)
         {
             Log(LOG_LEVEL_ERR,

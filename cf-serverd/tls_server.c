@@ -469,7 +469,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
         if (ret == 0)                                  /* untrusted key */
         {
             if ((SV.trustkeylist != NULL) &&
-                (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
+                (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Peer was found in \"trustkeysfrom\" list");

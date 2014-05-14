@@ -208,13 +208,12 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     int encrypted_len, nonce_len = 0, len, session_size;
     bool need_to_implicitly_trust_server;
     char enterprise_field = 'c';
-    RSA *server_pubkey = NULL;
 
-    if ((PUBKEY == NULL) || (PRIVKEY == NULL))
+    if (PUBKEY == NULL || PRIVKEY == NULL)
     {
         /* Try once more to load the keys, maybe the system is converging. */
         LoadSecretKeys();
-        if ((PUBKEY == NULL) || (PRIVKEY == NULL))
+        if (PUBKEY == NULL || PRIVKEY == NULL)
         {
             char *pubkeyfile = PublicKeyFile(GetWorkDir());
             Log(LOG_LEVEL_ERR, "No public/private key pair found at: %s", pubkeyfile);
@@ -250,7 +249,8 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
     /* Ask the server to send us the public key if we don't have it. */
-    if ((server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip)))
+    RSA *server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip);
+    if (server_pubkey)
     {
         need_to_implicitly_trust_server = false;
         encrypted_len = RSA_size(server_pubkey);

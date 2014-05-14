@@ -75,7 +75,6 @@ extern int NO_FORK;
 extern bool DENYBADCLOCKS;
 extern int MAXTRIES;
 extern bool LOGENCRYPT;
-extern Item *CONNECTIONLIST;
 
 /*******************************************************************/
 

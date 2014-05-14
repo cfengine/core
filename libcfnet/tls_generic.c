@@ -480,7 +480,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
 
     EVP_PKEY_free(pkey);
 
-    assert (x509 != NULL);
+    assert(x509 != NULL);
     return x509;
 
 

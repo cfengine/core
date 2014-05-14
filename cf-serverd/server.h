@@ -133,7 +133,7 @@ typedef struct
 
 
 /* Used in cf-serverd-functions.c. */
-void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
+void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info);
 
 
 AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);

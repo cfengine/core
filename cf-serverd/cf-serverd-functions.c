@@ -706,7 +706,9 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                             ipaddr, sizeof(ipaddr),
                             NULL, 0, NI_NUMERICHOST);
 
-                ServerEntryPoint(ctx, ipaddr, info);
+                /* IPv4 mapped addresses (e.g. "::ffff:192.168.1.2") are
+                 * hereby represented with their IPv4 counterpart. */
+                ServerEntryPoint(ctx, MapAddress(ipaddr), info);
             }
         }
     }

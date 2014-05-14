@@ -54,7 +54,7 @@
   The only exported function in this file is the following, used only in
   cf-serverd-functions.c.
 
-  void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
+  void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info);
 
   TODO move this file to cf-serverd-functions.c or most probably server_common.c.
 */
@@ -80,7 +80,7 @@ char CFRUNCOMMAND[CF_MAXVARSIZE] = { 0 };                       /* GLOBAL_P */
 
 /******************************************************************/
 
-static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
+static void SpawnConnection(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info);
 static void PurgeOldConnections(Item **list, time_t now);
 static void *HandleConnection(void *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info);
@@ -88,7 +88,7 @@ static void DeleteConn(ServerConnectionState *conn);
 
 /****************************************************************************/
 
-void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
+void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info)
 {
     time_t now;
 
@@ -98,7 +98,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     /* TODO change nonattackerlist, attackerlist and especially connectionlist
      *      to binary searched lists, or remove them from the main thread! */
-    if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
+    if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, ipaddr)))
     {
         Log(LOG_LEVEL_ERR,
             "Remote host '%s' not in allowconnects, denying connection",
@@ -108,7 +108,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         return;
     }
 
-    if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
+    if (IsMatchItemIn(SV.attackerlist, ipaddr))
     {
         Log(LOG_LEVEL_ERR,
             "Remote host '%s' is in denyconnects, denying connection",
@@ -125,7 +125,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     PurgeOldConnections(&SV.connectionlist, now);
 
-    if (!IsMatchItemIn(SV.multiconnlist, MapAddress(ipaddr)))
+    if (!IsMatchItemIn(SV.multiconnlist, ipaddr))
     {
         if (!ThreadLock(cft_count))
         {
@@ -134,7 +134,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
             return;
         }
 
-        if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
+        if (IsItemIn(SV.connectionlist, ipaddr))
         {
             ThreadUnlock(cft_count);
             Log(LOG_LEVEL_ERR,
@@ -158,7 +158,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         return;
     }
 
-    PrependItem(&SV.connectionlist, MapAddress(ipaddr), intime);
+    PrependItem(&SV.connectionlist, ipaddr, intime);
     ThreadUnlock(cft_count);
 
     SpawnConnection(ctx, ipaddr, info);
@@ -208,7 +208,7 @@ static void PurgeOldConnections(Item **list, time_t now)
 
 /*********************************************************************/
 
-static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
+static void SpawnConnection(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info)
 {
     ServerConnectionState *conn = NULL;
     int ret;
@@ -377,7 +377,7 @@ static void *HandleConnection(void *c)
     {
         /* This connection is legacy protocol. Do we allow it? */
         if (SV.allowlegacyconnects != NULL &&           /* By default we do */
-            !IsMatchItemIn(SV.allowlegacyconnects, MapAddress(conn->ipaddr)))
+            !IsMatchItemIn(SV.allowlegacyconnects, conn->ipaddr))
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");
@@ -492,7 +492,7 @@ static void DeleteConn(ServerConnectionState *conn)
     {
         if (ThreadLock(cft_count))
         {
-            DeleteItemMatching(&SV.connectionlist, MapAddress(conn->ipaddr));
+            DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
             ThreadUnlock(cft_count);
         }
     }

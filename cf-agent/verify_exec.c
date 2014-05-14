@@ -109,6 +109,10 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
     if (result == PROMISE_RESULT_CHANGE && !(a.classes.retcode_repaired))
     {
         result = PROMISE_RESULT_NOOP;
+        if (a.classes.change)
+        {
+            Log(LOG_LEVEL_WARNING, "Commands promises will set kept, not repaired classes from 3.7 on. Set repaired_returncodes explicitly");
+        }
     }
 
     YieldCurrentLock(thislock);

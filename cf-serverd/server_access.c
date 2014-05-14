@@ -4,7 +4,6 @@
 
 #include <cf3.defs.h>                                     /* FILE_SEPARATOR */
 #include <addr_lib.h>                                     /* FuzzySetMatch */
-#include <conversion.h>                                   /* MapAddress */
 #include <string_lib.h>                      /* StringMatchFull TODO REMOVE */
 #include <misc_lib.h>
 
@@ -53,12 +52,9 @@ bool access_CheckResource(const struct resource_acl *acl,
         const char *rule = NULL;
         for (int i = 0; i < StrList_Len(acl->admit.ips); i++)
         {
-            if (FuzzySetMatch(StrList_At(acl->admit.ips, i),
-                              MapAddress(ipaddr))
-                == 0 ||
+            if (FuzzySetMatch(StrList_At(acl->admit.ips, i), ipaddr) == 0 ||
                 /* Legacy regex matching, TODO DEPRECATE */
-                StringMatchFull(StrList_At(acl->admit.ips, i),
-                                MapAddress(ipaddr)))
+                StringMatchFull(StrList_At(acl->admit.ips, i), ipaddr))
             {
                 rule = StrList_At(acl->admit.ips, i);
                 break;
@@ -124,12 +120,9 @@ bool access_CheckResource(const struct resource_acl *acl,
         const char *rule = NULL;
         for (int i = 0; i < StrList_Len(acl->deny.ips); i++)
         {
-            if (FuzzySetMatch(StrList_At(acl->deny.ips, i),
-                              MapAddress(ipaddr))
-                == 0 ||
+            if (FuzzySetMatch(StrList_At(acl->deny.ips, i), ipaddr) == 0 ||
                 /* Legacy regex matching, TODO DEPRECATE */
-                StringMatchFull(StrList_At(acl->deny.ips, i),
-                                MapAddress(ipaddr)))
+                StringMatchFull(StrList_At(acl->deny.ips, i), ipaddr))
             {
                 rule = StrList_At(acl->deny.ips, i);
                 break;

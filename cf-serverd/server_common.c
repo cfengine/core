@@ -314,7 +314,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
             if (StringMatchFull(ap->path, RlistScalarValue(rp)))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))) ||
+                if ((IsMatchItemIn(ap->accesslist, conn->ipaddr)) ||
                     (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)) ||
                     (IsRegexItemIn(ctx, ap->accesslist, userid1)) ||
                     (IsRegexItemIn(ctx, ap->accesslist, userid2)) ||

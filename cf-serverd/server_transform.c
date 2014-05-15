@@ -962,11 +962,19 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
                 path);
             Log(LOG_LEVEL_INFO,
                 "WARNING: this means that (not) having a trailing slash defines if it's (not) a directory!");
+            /* Legacy: convert trailing "/." to "/" */
+            if (path_len >= 2 &&
+                path[path_len - 1] == '.' &&
+                path[path_len - 2] == '/')
+            {
+                path[path_len - 1] = '\0';
+                path_len--;
+            }
         }
     }
     else                                 /* file exists, path canonicalised */
     {
-        /* If it's a directory append trailing '/'. */
+        /* If it's a directory append trailing '/' */
         path_len = ret2;
         int is_dir = IsDirReal(path);
         if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)

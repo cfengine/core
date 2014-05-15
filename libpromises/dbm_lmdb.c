@@ -156,8 +156,9 @@ const char *DBPrivGetFileExtension(void)
     return "lmdb";
 }
 
+/* Corresponds to a maximum of 50000 pages */
 #ifndef LMDB_MAXSIZE
-#define LMDB_MAXSIZE    104857600
+#define LMDB_MAXSIZE    204800000
 #endif
 
 /* Lastseen default number of maxreaders = 4x the default lmdb maxreaders */
@@ -185,7 +186,15 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
               dbpath, mdb_strerror(rc));
         goto err;
     }
-    rc = mdb_env_set_mapsize(db->env, LMDB_MAXSIZE);
+    if (id == dbid_locks || id == dbid_history || id == dbid_observations ||
+        id == dbid_classes || id == dbid_variables)
+    {
+        rc = mdb_env_set_mapsize(db->env, LMDB_MAXSIZE * 2);
+    }
+    else
+    {
+        rc = mdb_env_set_mapsize(db->env, LMDB_MAXSIZE);
+    }
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not set mapsize for database %s: %s",

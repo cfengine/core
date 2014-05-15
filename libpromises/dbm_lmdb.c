@@ -497,9 +497,21 @@ bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_s
     data.mv_data = (void *)value;
     data.mv_size = value_size;
 
-    if ((rc = mdb_cursor_put(cursor->mc, NULL, &data, MDB_CURRENT)) != MDB_SUCCESS)
+    if (cursor->curkv)
     {
-        Log(LOG_LEVEL_ERR, "Could not write cursor entry: %s", mdb_strerror(rc));
+        MDB_val curkey;
+        curkey.mv_data = cursor->curkv;
+        curkey.mv_size = sizeof(cursor->curkv);
+
+        if ((rc = mdb_cursor_put(cursor->mc, &curkey, &data, MDB_CURRENT)) != MDB_SUCCESS)
+        {
+            Log(LOG_LEVEL_ERR, "Could not write cursor entry: %s", mdb_strerror(rc));
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Could not write cursor entry: cannot find current key");
+        rc = MDB_INVALID;
     }
     return rc == MDB_SUCCESS;
 }

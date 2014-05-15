@@ -36,6 +36,7 @@
             - timestamp key is timestamp (sec since unix epoch) of last time validated
             - the masterfiles now come from https://github.com/cfengine/masterfiles and are
               not in the core repository
+        - cf-serverd calls cf-agent with -Dcfruncommand when executing cf-runagent requests
 
         New features:
         - New promise type "users" for managing local user accounts.

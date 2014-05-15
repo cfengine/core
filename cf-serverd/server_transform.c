@@ -1008,8 +1008,8 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
 
   err_unknown:
         Log(LOG_LEVEL_ERR,
-            "Path '%s' in access_rules gave error '%s', ignoring!",
-            pp->promiser, GetErrorStr());
+            "Failed to canonicalize path '%s' in access_rules, ignoring!",
+            pp->promiser);
         return;
 }
 

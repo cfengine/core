@@ -65,6 +65,7 @@ check_PROGRAMS = \
 	lastseen_test \
 	lastseen_migration_test \
 	db_test \
+	db_concurrent_test \
 	dbm_migration_bundles_test \
 	misc_lib_test \
 	item_lib_test \

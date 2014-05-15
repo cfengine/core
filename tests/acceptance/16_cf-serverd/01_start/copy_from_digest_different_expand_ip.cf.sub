@@ -24,17 +24,17 @@ bundle agent test
 {
   files:
       "$(G.testdir)/destination_file"
-        copy_from => copy_src_file("latest"),
+        copy_from => copy_src_file,
         classes => if_repaired("repaired");
 }
 
 #########################################################
 
-body copy_from copy_src_file(protocol_version)
+body copy_from copy_src_file
 {
-      protocol_version => "$(protocol_version)";
-
       source      => "$(G.testdir)/127.0.0.1.txt";
+
+      protocol_version => "latest";
       servers     => { "127.0.0.1" };
       compare     => "digest";
       copy_backup => "false";

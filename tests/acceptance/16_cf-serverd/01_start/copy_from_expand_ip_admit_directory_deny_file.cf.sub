@@ -1,0 +1,65 @@
+#######################################################
+#
+# copy_from from within recursively admitted directory that does not
+# exist during daemon init time, e.g. /path/to/$(connection.ip),
+# but the file itself is in "deny" list!
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+
+      # Directory admitted in cf-serverd using trailing slash
+      "$(G.testdir)/destination_file1"
+        copy_from => copy_src_file("$(G.testdir)/127.0.0.1_DIR1/DENY_FILE"),
+	classes => if_repaired("repaired1");
+
+      # Directory admitted in cf-serverd using trailing slashdot
+      "$(G.testdir)/destination_file2"
+        copy_from => copy_src_file("$(G.testdir)/127.0.0.1_DIR2/DENY_FILE"),
+	classes => if_repaired("repaired2");
+}
+
+#########################################################
+
+body copy_from copy_src_file(file)
+{
+      source      => "$(file)";
+
+      protocol_version => "latest";
+      servers     => { "127.0.0.1" };
+      copy_backup => "false";
+      trustkey    => "true";
+      portnumber  => "9876"; # localhost_open
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+  reports:
+    !repaired1.!repaired2::
+      "$(fn[1]) Pass";
+    repaired1|repaired2::
+      "$(fn[1]) FAIL";
+
+}

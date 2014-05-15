@@ -1,5 +1,79 @@
 ### This is an auto-generated file, see Makefile.am and `make pluck` ###
 
+body contain in_dir_shell(dir)
+# @brief run command after switching to directory "dir" with full shell
+# @param dir directory to change into
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_dir_shell("/tmp");
+# ```
+{
+      chdir => "$(dir)";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+}
+
+body contain in_shell
+# @brief run command in shell
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_shell;
+# ```
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+}
+
+body contain in_shell_bg
+# @brief deprecated
+# This bundle previously had an invalid background attribute that was caught by
+# parser strictness enhancements. Backgrounding is handeled by the body action
+# background attribute.
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+}
+
+body contain in_shell_and_silent
+# @brief run command in shell and suppress output
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_shell_and_silent,
+#      comment => "Silently run command in shell";
+# ```
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      no_output => "true";
+}
+
+body contain in_dir_shell_and_silent(dir)
+# @brief run command in shell after switching to 'dir' and suppress output
+# @param dir directory to change into
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    "/bin/pwd | /bin/cat"
+#      contain => in_dir_shell_and_silent("/tmp"),
+#      comment => "Silently run command in shell";
+# ```
+
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      no_output => "true";
+      chdir => "$(dir)";
+}
+
 body action if_elapsed(x)
 # @brief Evaluate the promise every `x` minutes
 # @param x The time in minutes between promise evaluations
@@ -100,6 +174,12 @@ body classes always(x)
       repair_failed => { "$(x)" };
       repair_denied => { "$(x)" };
       repair_timeout => { "$(x)" };
+}
+
+body classes kept_successful_command
+# @brief Set command to "kept" instead of "repaired" if it returns 0
+{
+      kept_returncodes => { "0" };
 }
 
 bundle edit_line insert_lines(lines)
@@ -857,78 +937,4 @@ bundle agent file_link(target, link)
   reports:
     inform_mode|EXTRA::
       "$(this.bundle): $(link) will be a symlink to $(target)";
-}
-
-body contain in_dir_shell(dir)
-# @brief run command after switching to directory "dir" with full shell
-# @param dir directory to change into
-#
-# **Example:**
-#
-# ```cf3
-#  commands:
-#    "/bin/pwd | /bin/cat"
-#      contain => in_dir_shell("/tmp");
-# ```
-{
-      chdir => "$(dir)";
-      useshell => "true"; # canonical "useshell" but this is backwards-compatible
-}
-
-body contain in_shell
-# @brief run command in shell
-#
-# **Example:**
-#
-# ```cf3
-#  commands:
-#    "/bin/pwd | /bin/cat"
-#      contain => in_shell;
-# ```
-{
-      useshell => "true"; # canonical "useshell" but this is backwards-compatible
-}
-
-body contain in_shell_bg
-# @brief deprecated
-# This bundle previously had an invalid background attribute that was caught by
-# parser strictness enhancements. Backgrounding is handeled by the body action
-# background attribute.
-{
-      useshell => "true"; # canonical "useshell" but this is backwards-compatible
-}
-
-body contain in_shell_and_silent
-# @brief run command in shell and suppress output
-#
-# **Example:**
-#
-# ```cf3
-#  commands:
-#    "/bin/pwd | /bin/cat"
-#      contain => in_shell_and_silent,
-#      comment => "Silently run command in shell";
-# ```
-{
-      useshell => "true"; # canonical "useshell" but this is backwards-compatible
-      no_output => "true";
-}
-
-body contain in_dir_shell_and_silent(dir)
-# @brief run command in shell after switching to 'dir' and suppress output
-# @param dir directory to change into
-#
-# **Example:**
-#
-# ```cf3
-#  commands:
-#    "/bin/pwd | /bin/cat"
-#      contain => in_dir_shell_and_silent("/tmp"),
-#      comment => "Silently run command in shell";
-# ```
-
-{
-      useshell => "true"; # canonical "useshell" but this is backwards-compatible
-      no_output => "true";
-      chdir => "$(dir)";
 }

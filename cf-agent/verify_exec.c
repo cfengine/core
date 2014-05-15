@@ -92,7 +92,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
     switch (RepairExec(ctx, a, pp, &result))
     {
     case ACTION_RESULT_OK:
-        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
         break;
 
     case ACTION_RESULT_TIMEOUT:

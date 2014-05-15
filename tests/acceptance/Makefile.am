@@ -47,4 +47,4 @@ CLEANFILES = *.gcno *.gcda
 
 pluck:
 	echo '### This is an auto-generated file, see Makefile.am and `make pluck` ###' > plucked.cf.sub
-	../../contrib/cf-locate/cf-locate -f -p '( if_|edit_line set_config|set_user_field|set_variable_values\(|edit_field|set_line_based|location|replace_with|local_cp|empty|shell|immediate|mog| m\b|recurse|tidy| all|classes_generic| start|always|^value|edit_field line|insert_lines|(link|copy)from| file_mustache| (file|dir)_(copy|tidy|sync|make|empty|link|hardlink))' ../../../masterfiles/lib/3.6 >> plucked.cf.sub
+	../../contrib/cf-locate/cf-locate -f -p '( if_|kept_successful_command|edit_line set_config|set_user_field|set_variable_values\(|edit_field|set_line_based|location|replace_with|local_cp|empty|shell|immediate|mog| m\b|recurse|tidy| all|classes_generic| start|always|^value|edit_field line|insert_lines|(link|copy)from| file_mustache| (file|dir)_(copy|tidy|sync|make|empty|link|hardlink))' ../../../masterfiles/lib/3.6 >> plucked.cf.sub

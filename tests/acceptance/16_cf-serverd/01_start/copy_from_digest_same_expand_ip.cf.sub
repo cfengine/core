@@ -23,9 +23,9 @@ bundle agent init
 bundle agent test
 {
   files:
-      "$(G.testdir)/dest_file_latest"
+      "$(G.testdir)/destination_file"
         copy_from => copy_src_file("latest"),
-        classes => if_repaired("repaired_latest");
+        classes => if_repaired("repaired");
 }
 
 #########################################################
@@ -51,9 +51,9 @@ bundle agent check
 
   reports:
 
-    !repaired_latest::
+    !repaired::
       "$(fn[1]) Pass";
-    repaired_latest::
+    repaired::
       "$(fn[1]) FAIL";
 
 }

@@ -352,6 +352,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             DeleteItemList(SV.attackerlist);    SV.attackerlist = NULL;
             DeleteItemList(SV.nonattackerlist); SV.nonattackerlist = NULL;
             DeleteItemList(SV.multiconnlist);   SV.multiconnlist = NULL;
+            DeleteItemList(SV.allowuserlist);   SV.allowuserlist = NULL;
             DeleteItemList(SV.allowlegacyconnects);
             SV.allowlegacyconnects = NULL;
 

@@ -1132,19 +1132,52 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     return true;
 }
 
+static struct passwd *GetPwEntry(const char *puser)
+{
+    FILE *fptr = fopen("/etc/passwd", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/passwd': %s", GetErrorStr());
+        return NULL;
+    }
+
+    struct passwd *passwd_info;
+    bool found = false;
+    while ((passwd_info = fgetpwent(fptr)))
+    {
+        if (strcmp(puser, passwd_info->pw_name) == 0)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fptr);
+
+    if (found)
+    {
+        return passwd_info;
+    }
+    else
+    {
+        // Failure to find the user means we just set errno to zero.
+        // Perhaps not optimal, but we cannot pass ENOENT, because the fopen might
+        // fail for this reason, and that should not be treated the same.
+        errno = 0;
+        return NULL;
+    }
+}
+
 void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, enum cfopaction action,
                             EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     bool res;
 
     struct passwd *passwd_info;
-    errno = 0;
-    passwd_info = getpwnam(puser);
-    // Apparently POSIX is ambiguous here. All the values below mean "not found".
-    if (!passwd_info && errno != 0 && errno != ENOENT && errno != EBADF && errno != ESRCH
-        && errno != EWOULDBLOCK && errno != EPERM)
+    passwd_info = GetPwEntry(puser);
+    if (!passwd_info && errno != 0)
     {
-        Log(LOG_LEVEL_ERR, "Could not get information from user database. (getpwnam: '%s')", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Could not get information from user database.");
         return;
     }
 

@@ -140,7 +140,7 @@ static DBHandle *DBHandleGet(int id)
  * @brief Wait for all users of all databases to close the DBs. Then acquire
  * the mutexes *AND KEEP THEM LOCKED* so that no background thread can open
  * any database. So make sure you exit soon...
-
+ *
  * @warning This is usually register with atexit(), however you have to make
  * sure no other DB-cleaning exit hook was registered before, so that this is
  * called last.
@@ -178,6 +178,11 @@ void CloseAllDBExit()
                     "Database %s refcount is still not zero (%d), forcing CloseDB()!",
                     db_handles[i].filename, db_handles[i].refcount);
                 DBPrivCloseDB(db_handles[i].priv);
+            }
+            else /* TODO: can we clean this up unconditionally ? */
+            {
+                free(db_handles[i].filename);
+                db_handles[i].filename = NULL;
             }
         }
     }

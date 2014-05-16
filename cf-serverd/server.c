@@ -170,39 +170,31 @@ static void PurgeOldConnections(Item **list, time_t now)
    /* Some connections might not terminate properly. These should be cleaned
       every couple of hours. That should be enough to prevent spamming. */
 {
-    Item *ip;
-    int then = 0;
+    assert(list != NULL);
 
     Log(LOG_LEVEL_DEBUG, "Purging Old Connections...");
 
-    if (!ThreadLock(cft_count))
+    if (ThreadLock(cft_count))
     {
-        return;
-    }
-
-    if (list == NULL)
-    {
-        ThreadUnlock(cft_count);
-        return;
-    }
-
-    Item *next;
-
-    for (ip = *list; ip != NULL; ip = next)
-    {
-        sscanf(ip->classes, "%d", &then);
-
-        next = ip->next;
-
-        if (now > then + 7200)
+        Item *ip, *next;
+        for (ip = *list; ip != NULL; ip = next)
         {
-            Log(LOG_LEVEL_DEBUG, "Purging IP address from connection list: %s",
-                ip->name);
-            DeleteItem(list, ip);
+            int then = 0;
+            sscanf(ip->classes, "%d", &then);
+
+            next = ip->next;
+
+            if (now > then + 7200)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "IP address '%s' has been more than two hours in connection list, purging",
+                    ip->name);
+                DeleteItem(list, ip);
+            }
         }
+        ThreadUnlock(cft_count);
     }
 
-    ThreadUnlock(cft_count);
     Log(LOG_LEVEL_DEBUG, "Done purging old connections");
 }
 

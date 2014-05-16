@@ -1,7 +1,8 @@
 #######################################################
 #
-# copy_from compare=>"digest" with server-side expansion of IP address
-# (TLS protocol only) when file is already there - should not copy
+# copy_from from within recursively admitted directory that does not
+# exist during daemon init time, e.g. /path/to/$(connection.ip),
+# but the file itself is in "deny" list!
 #
 #######################################################
 
@@ -23,20 +24,26 @@ bundle agent init
 bundle agent test
 {
   files:
-      "$(G.testdir)/destination_file"
-        copy_from => copy_src_file,
-        classes => if_repaired("repaired");
+
+      # Directory admitted in cf-serverd using trailing slash
+      "$(G.testdir)/destination_file1"
+        copy_from => copy_src_file("$(G.testdir)/127.0.0.1_DIR1/DENY_FILE"),
+	classes => if_repaired("repaired1");
+
+      # Directory admitted in cf-serverd using trailing slashdot
+      "$(G.testdir)/destination_file2"
+        copy_from => copy_src_file("$(G.testdir)/127.0.0.1_DIR2/DENY_FILE"),
+	classes => if_repaired("repaired2");
 }
 
 #########################################################
 
-body copy_from copy_src_file
+body copy_from copy_src_file(file)
 {
-      source      => "$(G.testdir)/127.0.0.1.txt";
+      source      => "$(file)";
 
       protocol_version => "latest";
       servers     => { "127.0.0.1" };
-      compare     => "digest";
       copy_backup => "false";
       trustkey    => "true";
       portnumber  => "9876"; # localhost_open
@@ -50,10 +57,9 @@ bundle agent check
       "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
   reports:
-
-    !repaired::
+    !repaired1.!repaired2::
       "$(fn[1]) Pass";
-    repaired::
+    repaired1|repaired2::
       "$(fn[1]) FAIL";
 
 }

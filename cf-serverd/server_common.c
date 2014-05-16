@@ -454,7 +454,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         }
     }
 
-    snprintf(ebuff, CF_BUFSIZE, "%s --Dcfruncommand --inform", CFRUNCOMMAND);
+    snprintf(ebuff, CF_BUFSIZE, "%s -Dcfruncommand --inform", CFRUNCOMMAND);
 
     if (strlen(ebuff) + strlen(args) + 6 > CF_BUFSIZE)
     {
@@ -1666,6 +1666,7 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
     {
         if (dst_len + 2 > sizeof(dst))
         {
+            Log(LOG_LEVEL_INFO, "Error, path too long: %s", reqpath);
             return (size_t) -1;
         }
 

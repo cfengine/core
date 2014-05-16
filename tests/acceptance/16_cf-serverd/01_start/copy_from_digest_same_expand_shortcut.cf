@@ -15,7 +15,7 @@ bundle agent test
   methods:
       "any" usebundle => file_make("$(G.testdir)/source_file",
                                    "Source and Destination are identical.");
-      "any" usebundle => file_make("$(G.testdir)/dest_file_latest",
+      "any" usebundle => file_make("$(G.testdir)/destination_file",
                                    "Source and Destination are identical.");
       "any" usebundle => generate_key;
       "any" usebundle => start_server("localhost_open");

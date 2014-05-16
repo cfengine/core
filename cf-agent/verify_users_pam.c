@@ -580,16 +580,26 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
     bool ret = true;
     struct group *group_info;
 
-    setgrent();
+    FILE *fptr = fopen("/etc/group", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/group': %s", GetErrorStr());
+        return false;
+    }
+
     while (true)
     {
         errno = 0;
-        group_info = getgrent();
+        // Use fgetgrent() instead of getgrent(), to guarantee that the
+        // returned group is a local group, and not for example from LDAP.
+        group_info = fgetgrent(fptr);
         if (!group_info)
         {
-            if (errno)
+            // Documentation among Unices is conflicting on return codes, but at
+            // least Linux returns ENOENT when there are no more entries.
+            if (errno && errno != ENOENT)
             {
-                Log(LOG_LEVEL_ERR, "Error while getting group list. (getgrent: '%s')", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Error while getting group list. (fgetgrent: '%s')", GetErrorStr());
                 ret = false;
             }
             break;
@@ -603,9 +613,59 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
             }
         }
     }
-    endgrent();
+
+    fclose(fptr);
 
     return ret;
+}
+
+static bool EqualGid(const char *key, const struct group *entry)
+{
+    return (atoi(key) == entry->gr_gid);
+}
+
+static bool EqualGroupName(const char *key, const struct group *entry)
+{
+    return (strcmp(key, entry->gr_name) == 0);
+}
+
+// Uses fgetgrent() instead of getgrnam(), to guarantee that the returned group
+// is a local group, and not for example from LDAP.
+static struct group *GetGrEntry(const char *key,
+                                bool (*equal_fn)(const char *key, const struct group *entry))
+{
+    FILE *fptr = fopen("/etc/group", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/group': %s", GetErrorStr());
+        return NULL;
+    }
+
+    struct group *group_info;
+    bool found = false;
+    while ((group_info = fgetgrent(fptr)))
+    {
+        if (equal_fn(key, group_info))
+        {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fptr);
+
+    if (found)
+    {
+        return group_info;
+    }
+    else
+    {
+        // Failure to find the user means we just set errno to zero.
+        // Perhaps not optimal, but we cannot pass ENOENT, because the fopen might
+        // fail for this reason, and that should not be treated the same.
+        errno = 0;
+        return NULL;
+    }
 }
 
 static void TransformGidsToGroups(StringSet **list)
@@ -622,50 +682,32 @@ static void TransformGidsToGroups(StringSet **list)
             continue;
         }
         // In groups vs gids, groups take precedence. So check if it exists.
-        errno = 0;
-        struct group *group_info = getgrnam(data);
+        struct group *group_info = GetGrEntry(data, &EqualGroupName);
         if (!group_info)
         {
-            switch (errno)
+            if (errno == 0)
             {
-            case 0:
-            case ENOENT:
-            case EBADF:
-            case ESRCH:
-            case EWOULDBLOCK:
-            case EPERM:
-                // POSIX is apparently ambiguous here. All values mean "not found".
-                errno = 0;
-                group_info = getgrgid(atoi(data));
+                group_info = GetGrEntry(data, &EqualGid);
                 if (!group_info)
                 {
-                    switch (errno)
+                    if (errno != 0)
                     {
-                    case 0:
-                    case ENOENT:
-                    case EBADF:
-                    case ESRCH:
-                    case EWOULDBLOCK:
-                    case EPERM:
-                        // POSIX is apparently ambiguous here. All values mean "not found".
-                        //
-                        // Neither group nor gid is found. This will lead to an error later, but we don't
-                        // handle that here.
-                        break;
-                    default:
-                        Log(LOG_LEVEL_ERR, "Error while checking group name '%s'. (getgrgid: '%s')", data, GetErrorStr());
+                        Log(LOG_LEVEL_ERR, "Error while checking group name '%s': %s", data, GetErrorStr());
                         StringSetDestroy(new_list);
                         return;
                     }
+                    // Neither group nor gid is found. This will lead to an error later, but we don't
+                    // handle that here.
                 }
                 else
                 {
                     // Replace gid with group name.
                     StringSetAdd(new_list, xstrdup(group_info->gr_name));
                 }
-                break;
-            default:
-                Log(LOG_LEVEL_ERR, "Error while checking group name '%s'. (getgrnam: '%s')", data, GetErrorStr());
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Error while checking group name '%s': '%s'", data, GetErrorStr());
                 StringSetDestroy(new_list);
                 return;
             }
@@ -723,12 +765,10 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
         // We try name first, even if it looks like a gid. Only fall back to gid.
         struct group *group_info;
         errno = 0;
-        group_info = getgrnam(u.group_primary);
-        // Apparently POSIX is ambiguous here. All the values below mean "not found".
-        if (!group_info && errno != 0 && errno != ENOENT && errno != EBADF && errno != ESRCH
-            && errno != EWOULDBLOCK && errno != EPERM)
+        group_info = GetGrEntry(u.group_primary, &EqualGroupName);
+        if (!group_info && errno != 0)
         {
-            Log(LOG_LEVEL_ERR, "Could not obtain information about group '%s'. (getgrnam: '%s')", u.group_primary, GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Could not obtain information about group '%s': %s", u.group_primary, GetErrorStr());
             gid = -1;
         }
         else if (!group_info)
@@ -1132,19 +1172,54 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     return true;
 }
 
+// Uses fgetpwent() instead of getpwnam(), to guarantee that the returned user
+// is a local user, and not for example from LDAP.
+static struct passwd *GetPwEntry(const char *puser)
+{
+    FILE *fptr = fopen("/etc/passwd", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/passwd': %s", GetErrorStr());
+        return NULL;
+    }
+
+    struct passwd *passwd_info;
+    bool found = false;
+    while ((passwd_info = fgetpwent(fptr)))
+    {
+        if (strcmp(puser, passwd_info->pw_name) == 0)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fptr);
+
+    if (found)
+    {
+        return passwd_info;
+    }
+    else
+    {
+        // Failure to find the user means we just set errno to zero.
+        // Perhaps not optimal, but we cannot pass ENOENT, because the fopen might
+        // fail for this reason, and that should not be treated the same.
+        errno = 0;
+        return NULL;
+    }
+}
+
 void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, enum cfopaction action,
                             EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     bool res;
 
     struct passwd *passwd_info;
-    errno = 0;
-    passwd_info = getpwnam(puser);
-    // Apparently POSIX is ambiguous here. All the values below mean "not found".
-    if (!passwd_info && errno != 0 && errno != ENOENT && errno != EBADF && errno != ESRCH
-        && errno != EWOULDBLOCK && errno != EPERM)
+    passwd_info = GetPwEntry(puser);
+    if (!passwd_info && errno != 0)
     {
-        Log(LOG_LEVEL_ERR, "Could not get information from user database. (getpwnam: '%s')", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Could not get information from user database.");
         return;
     }
 

@@ -424,6 +424,9 @@ uid_t getuid(void);
 #if !HAVE_DECL_GETGID
 gid_t getgid(void);
 #endif
+#if !HAVE_DECL_FGETGRENT
+struct group *fgetgrent(FILE *stream);
+#endif
 #if !HAVE_DECL_DRAND48
 double drand48(void);
 #endif

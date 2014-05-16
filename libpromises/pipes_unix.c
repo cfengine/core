@@ -555,7 +555,7 @@ static int cf_pwait(pid_t pid)
 
 int cf_pclose(FILE *pp)
 {
-    int fd;
+    int fd = fileno(pp);
     pid_t pid;
 
     if (!ThreadLock(cft_count))
@@ -572,7 +572,6 @@ int cf_pclose(FILE *pp)
     ThreadUnlock(cft_count);
 
     ALARM_PID = -1;
-    fd = fileno(pp);
 
     if (fd >= MAX_FD)
     {
@@ -602,6 +601,7 @@ int cf_pclose(FILE *pp)
 
 bool PipeToPid(pid_t *pid, FILE *pp)
 {
+    int fd = fileno(pp);
     if (!ThreadLock(cft_count))
     {
         return false;
@@ -613,9 +613,7 @@ bool PipeToPid(pid_t *pid, FILE *pp)
         return false;
     }
 
-    int fd = fileno(pp);
     *pid = CHILDREN[fd];
-
     ThreadUnlock(cft_count);
 
     return true;

@@ -170,9 +170,11 @@ static void PurgeOldConnections(Item **list, time_t now)
    /* Some connections might not terminate properly. These should be cleaned
       every couple of hours. That should be enough to prevent spamming. */
 {
+    assert(list != NULL);
+
     Log(LOG_LEVEL_DEBUG, "Purging Old Connections...");
 
-    if (ThreadLock(cft_count) && list != NULL)
+    if (ThreadLock(cft_count))
     {
         Item *ip, *next;
         for (ip = *list; ip != NULL; ip = next)
@@ -190,8 +192,8 @@ static void PurgeOldConnections(Item **list, time_t now)
                 DeleteItem(list, ip);
             }
         }
+        ThreadUnlock(cft_count);
     }
-    ThreadUnlock(cft_count);
 
     Log(LOG_LEVEL_DEBUG, "Done purging old connections");
 }

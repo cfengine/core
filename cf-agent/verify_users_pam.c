@@ -1159,6 +1159,8 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     return true;
 }
 
+// Uses fgetpwent() instead of getpwnam(), to guarantee that the returned user
+// is a local user, and not for example from LDAP.
 static struct passwd *GetPwEntry(const char *puser)
 {
     FILE *fptr = fopen("/etc/passwd", "r");

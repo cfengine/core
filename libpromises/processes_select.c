@@ -690,7 +690,7 @@ static const char *GetProcessOptions(void)
 
     if (IsGlobalZone())
     {
-        snprintf(psopts, CF_BUFSIZE, "%s,zone", VPSOPTS[VPSHARDCLASS]);
+        snprintf(psopts, CF_BUFSIZE, "%s,zone", VPSOPTS[VSYSTEMHARDCLASS]);
         return psopts;
     }
 
@@ -703,7 +703,7 @@ static const char *GetProcessOptions(void)
 
 # endif
 
-    return VPSOPTS[VPSHARDCLASS];
+    return VPSOPTS[VSYSTEMHARDCLASS];
 }
 #endif
 
@@ -768,7 +768,7 @@ int LoadProcessTable(Item **procdata)
 
     const char *psopts = GetProcessOptions();
 
-    snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VPSHARDCLASS], psopts);
+    snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], psopts);
 
     Log(LOG_LEVEL_VERBOSE, "Observe process table with %s", pscomm);
 

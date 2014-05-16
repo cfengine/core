@@ -67,6 +67,8 @@ static void CloseChildrenFD()
             close(i);
         }
     }
+    free(CHILDREN);
+    CHILDREN = NULL;
     ThreadUnlock(cft_count);
 }
 

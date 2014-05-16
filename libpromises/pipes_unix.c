@@ -76,22 +76,22 @@ static void CloseChildrenFD()
 
 static void SetChildFD(int fd, pid_t pid)
 {
-    int new_fd = 0;
+    int new_max = 0;
 
     if (fd >= MAX_FD)
     {
-        Log(LOG_LEVEL_ERR,
-                "File descriptor %d of child %jd higher than MAX_FD, check for defunct children",
-                fd, (intmax_t)pid);
-        new_fd = fd + 32;
+        Log(LOG_LEVEL_ERR, /* TODO: why is this reported as an error ? */
+            "File descriptor %d of child %jd higher than MAX_FD, check for defunct children",
+            fd, (intmax_t)pid);
+        new_max = fd + 32;
     }
 
     ThreadLock(cft_count);
 
-    if (new_fd)
+    if (new_max)
     {
-        CHILDREN = xrealloc(CHILDREN, new_fd * sizeof(pid_t));
-        MAX_FD = new_fd;
+        CHILDREN = xrealloc(CHILDREN, new_max * sizeof(pid_t));
+        MAX_FD = new_max;
     }
 
     CHILDREN[fd] = pid;

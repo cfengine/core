@@ -560,38 +560,34 @@ int cf_pclose(FILE *pp)
 
     if (!ThreadLock(cft_count))
     {
+        fclose(pp);
         return -1;
     }
 
     if (CHILDREN == NULL)       /* popen hasn't been called */
     {
         ThreadUnlock(cft_count);
+        fclose(pp);
         return -1;
     }
-
-    ThreadUnlock(cft_count);
 
     ALARM_PID = -1;
 
     if (fd >= MAX_FD)
     {
+        ThreadUnlock(cft_count);
         Log(LOG_LEVEL_ERR,
-              "File descriptor %d of child higher than MAX_FD in cf_pclose, check for defunct children", fd);
-        pid = -1;
+            "File descriptor %d of child higher than MAX_FD in cf_pclose, check for defunct children", fd);
+        pid = 0;
     }
     else
     {
-        if ((pid = CHILDREN[fd]) == 0)
-        {
-            return -1;
-        }
-
-        ThreadLock(cft_count);
+        pid = CHILDREN[fd];
         CHILDREN[fd] = 0;
         ThreadUnlock(cft_count);
     }
 
-    if (fclose(pp) == EOF)
+    if (fclose(pp) == EOF || pid == 0)
     {
         return -1;
     }

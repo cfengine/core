@@ -640,6 +640,15 @@ body copy_from local_cp(from)
       source      => "$(from)";
 }
 
+body copy_from perms_cp(from)
+# @brief Copy a local file and preserve file permissions on the local copy.
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+      preserve    => "true";
+}
+
 body copy_from backup_local_cp(from)
 # @brief Copy a local file and  keep a backup of old versions.
 #
@@ -665,6 +674,15 @@ body perms m(mode)
       mode   => "$(mode)";
 }
 
+body perms mo(mode,user)
+# @brief Set the file's mode and owners
+# @param mode The new mode
+# @param user The username of the new owner
+{
+      owners => { "$(user)" };
+      mode   => "$(mode)";
+}
+
 body perms mog(mode,user,group)
 # @brief Set the file's mode, owner and group
 # @param mode The new mode
@@ -674,6 +692,46 @@ body perms mog(mode,user,group)
       owners => { "$(user)" };
       groups => { "$(group)" };
       mode   => "$(mode)";
+}
+
+body perms og(u,g)
+# @brief Set the file's owner and group
+# @param u The username of the new owner
+# @param g The group name
+{
+      owners => { "$(u)" };
+      groups => { "$(g)" };
+}
+
+body perms owner(user)
+# @brief Set the file's owner
+# @param user The username of the new owner
+{
+      owners => { "$(user)" };
+}
+
+body perms system_owned(mode)
+# @brief Set the file owner and group to the system default
+# @param mode the access permission in octal format
+#
+# **Example:**
+#
+# ```cf3
+# files:
+#     "/etc/passwd" perms => system_owned("0644");
+# ```
+{
+      mode   => "$(mode)";
+      owners => { "root" };
+
+    freebsd|openbsd|netbsd|darwin::
+      groups => { "wheel" };
+
+    linux::
+      groups => { "root" };
+
+    solaris::
+      groups => { "sys" };
 }
 
 body depth_search recurse(d)

@@ -1307,49 +1307,39 @@ static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp)
 
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 {
-    Rlist *rp;
-    Auth *ap;
+    Auth *ap = GetOrCreateAuth(pp->promiser, &SV.roles, &SV.rolestail);
+    const char *const authorizer = CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval;
+    size_t i = SeqLength(pp->conlist);
 
-    ap = GetOrCreateAuth(pp->promiser, &SV.roles, &SV.rolestail);
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    while (i > 0)
     {
+        i--;
         Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (!IsDefinedClass(ctx, cp->classes))
+        if (strcmp(cp->lval, authorizer) == 0)
         {
-            continue;
-        }
-
-        switch (cp->rval.type)
-        {
-        case RVAL_TYPE_LIST:
-
-            for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
+            if (cp->rval.type != RVAL_TYPE_LIST)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Right-hand side of authorize promise for '%s' should be a list",
+                    pp->promiser);
+            }
+            else if (IsDefinedClass(ctx, cp->classes))
             {
                 /* This is for remote class activation by means of cf-runagent.*/
-                if (strcmp(cp->lval, CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval) == 0)
+                for (const Rlist *rp = cp->rval.item; rp != NULL; rp = rp->next)
                 {
                     PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
                 }
             }
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            UnexpectedError("Constraint of type FNCALL is invalid in this context!");
-            break;
-
-        default:
-
-            if ((strcmp(cp->lval, "comment") == 0) || (strcmp(cp->lval, "handle") == 0))
-            {
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Right-hand side of authorize promise for '%s' should be a list", pp->promiser);
-            }
-            break;
+        }
+        else if (strcmp(cp->lval, "comment") != 0 &&
+                 strcmp(cp->lval, "handle") != 0 &&
+                 /* Are there other known list constraints ? if not, skip this: */
+                 cp->rval.type != RVAL_TYPE_LIST)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Unrecognised promise '%s' for %s",
+                cp->lval, pp->promiser);
         }
     }
 }

@@ -360,10 +360,10 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
 
     while (true)
     {
-        size_t line_size = CF_BUFSIZE;
-        char *line = xmalloc(line_size);
+        size_t line_size = 0;
+        char *line = NULL;
 
-        int read_result = getline(&line, &line_size, passwd_fd);
+        int read_result = CfReadLine(&line, &line_size, passwd_fd);
         if (read_result < 0)
         {
             if (!feof(passwd_fd))
@@ -376,11 +376,6 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
             {
                 break;
             }
-        }
-        else if (read_result >= sizeof(line))
-        {
-            Log(LOG_LEVEL_ERR, "Unusually long line found in password database while editing user '%s'. Not updating.",
-                puser);
         }
 
         // Editing the password database is risky business, so do as little parsing as possible.

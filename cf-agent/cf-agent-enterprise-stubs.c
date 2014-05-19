@@ -42,11 +42,15 @@ ENTERPRISE_FUNC_8ARG_DEFINE_STUB(PromiseResult, LogFileChange,
     return PROMISE_RESULT_NOOP;
 }
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_NoteVarUsageDB, ARG_UNUSED EvalContext *, ctx)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_NoteVarUsageDB,
+                                      ARG_UNUSED EvalContext *, ctx,
+                                      ARG_UNUSED const GenericAgentConfig *, config)
 {
 }
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_NoteClassUsage, ARG_UNUSED EvalContext *, ctx)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_NoteClassUsage,
+                                      ARG_UNUSED EvalContext *, ctx,
+                                      ARG_UNUSED const GenericAgentConfig *, config)
 {
 }
 

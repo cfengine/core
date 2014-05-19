@@ -66,6 +66,8 @@ typedef enum
     i_locked
 } which;
 
+static bool SupportsOption(const char *cmd, const char *option);
+
 static const char *GetPlatformSpecificExpirationDate()
 {
      // 2nd January 1970.
@@ -477,7 +479,7 @@ static bool ChangePassword(const char *puser, const char *password, PasswordForm
 
 #ifdef HAVE_CHPASSWD
     struct stat statbuf;
-    if (stat(CHPASSWD, &statbuf) != -1)
+    if (stat(CHPASSWD, &statbuf) != -1 && SupportsOption(CHPASSWD, "-e"))
     {
         return ChangePasswordHashUsingChpasswd(puser, password);
     }
@@ -823,41 +825,30 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
     }
 }
 
-static bool SupportsNoHomedirCreation(void)
+static bool SupportsOption(const char *cmd, const char *option)
 {
-    typedef enum
-    {
-        SUPPORTS_NO_HOMEDIR_CREATION_UNKNOWN,
-        SUPPORTS_NO_HOMEDIR_CREATION_YES,
-        SUPPORTS_NO_HOMEDIR_CREATION_NO
-    } SupportsNoHomedirCreation_Enum;
-    static SupportsNoHomedirCreation_Enum supports_no_homedir_creation = SUPPORTS_NO_HOMEDIR_CREATION_UNKNOWN;
-
-    if (supports_no_homedir_creation != SUPPORTS_NO_HOMEDIR_CREATION_UNKNOWN)
-    {
-        return supports_no_homedir_creation == SUPPORTS_NO_HOMEDIR_CREATION_YES;
-    }
-
+    bool supports_option = false;
     char help_argument[] = " --help";
-    char help_command[strlen(USERADD) + sizeof(help_argument)];
-    snprintf(help_command, sizeof(help_command), "%s%s", USERADD, help_argument);
+    char help_command[strlen(cmd) + sizeof(help_argument)];
+    snprintf(help_command, sizeof(help_command), "%s%s", cmd, help_argument);
 
     FILE *fptr = cf_popen(help_command, "r", true);
     char *buf = NULL;
     size_t bufsize = 0;
+    size_t optlen = strlen(option);
     while (CfReadLine(&buf, &bufsize, fptr) >= 0)
     {
         char *m_pos = buf;
-        while ((m_pos = strstr(m_pos, "-M")))
+        while ((m_pos = strstr(m_pos, option)))
         {
-            // Check that each side of "-M" is not a letter, and not part of "--M".
-            if (m_pos
-                && (m_pos == buf
+            // Check against false alarms, e.g. hyphenated words in normal text or an
+            // option (say, "-M") that is part of "--M".
+            if ((m_pos == buf
                     || (m_pos[-1] != '-' && (isspace(m_pos[-1]) || ispunct(m_pos[-1]))))
-                && (m_pos[2] == '\0'
-                    || (isspace(m_pos[2]) || ispunct(m_pos[2]))))
+                && (m_pos[optlen] == '\0'
+                    || (isspace(m_pos[optlen]) || ispunct(m_pos[optlen]))))
             {
-                supports_no_homedir_creation = SUPPORTS_NO_HOMEDIR_CREATION_YES;
+                supports_option = true;
                 // Break out of strstr loop, but read till the end to avoid broken pipes.
                 break;
             }
@@ -867,11 +858,7 @@ static bool SupportsNoHomedirCreation(void)
     cf_pclose(fptr);
     free(buf);
 
-    if (supports_no_homedir_creation != SUPPORTS_NO_HOMEDIR_CREATION_YES)
-    {
-        supports_no_homedir_creation = SUPPORTS_NO_HOMEDIR_CREATION_NO;
-    }
-    return supports_no_homedir_creation == SUPPORTS_NO_HOMEDIR_CREATION_YES;
+    return supports_option;
 }
 
 
@@ -934,7 +921,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         StringAppend(cmd, u.shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
-    if (SupportsNoHomedirCreation())
+    if (SupportsOption(USERADD, "-M"))
     {
         // Prevents creation of home_dir.
         // We want home_bundle to do that.

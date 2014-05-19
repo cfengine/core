@@ -2468,7 +2468,10 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                 return false;
             }
 
-            Log(LOG_LEVEL_INFO, "Installing %-.39s...", pp->promiser);
+            if (REPORT_THIS_PROMISE(pp))
+            {
+                Log(LOG_LEVEL_INFO, "Installing %-.39s...", pp->promiser);
+            }
 
             command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
             strcpy(command_string, a.packages.package_add_command);

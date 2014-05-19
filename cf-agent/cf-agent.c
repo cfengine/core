@@ -265,8 +265,8 @@ int main(int argc, char *argv[])
     }
 
     // only note class usage when default policy is run
-    Nova_NoteClassUsage(ctx);
-    Nova_NoteVarUsageDB(ctx);
+    Nova_NoteClassUsage(ctx, config);
+    Nova_NoteVarUsageDB(ctx, config);
     Nova_TrackExecution(config->input_file);
     PurgeLocks();
     BackupLockDatabase();

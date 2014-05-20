@@ -320,3 +320,147 @@ ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, LicenseInstall, ARG_UNUSED char *, path_s
 
     return false;
 }
+
+int ForceKeyRemoval(const char *hash)
+{
+/**
+    Removal of a key hash is made of two passes :
+    Pass #1 (read-only)
+      -> fetches the IP addresses directly linked to the hash key
+    Pass #2 (made of deletes)
+      -> remove all the IP addresses in the previous list
+      -> remove the physical key.pub from the filesystem
+
+    WARNING: Please backup your lastseen database before calling this
+             function in the case where a 1-to-1 relatioship between
+             the IP and a single keyhash does not exist
+**/
+    CF_DB *dbp;
+    CF_DBC *dbcp;
+    char *key;
+    void *value;
+    int ksize, vsize;
+
+    Seq *hostips = SeqNew(100, free);
+    if (OpenDB(&dbp, dbid_lastseen))
+    {
+        if (NewDBCursor(dbp, &dbcp))
+        {
+            while (NextDB(dbcp, &key, &ksize, &value, &vsize))
+            {
+                if ((key[0] != 'a') || (value == NULL))
+                {
+                    continue;
+                }
+                if (!strncmp(hash, value, strlen(hash)))
+                { 
+                    SeqAppend(hostips, xstrdup(key + 1));
+                }
+            }
+            DeleteDBCursor(dbcp);
+        }
+        CloseDB(dbp);
+    }
+    if (OpenDB(&dbp, dbid_lastseen))
+    {
+        char tmp[CF_BUFSIZE];
+        snprintf(tmp, CF_BUFSIZE, "k%s", hash);
+        char vtmp[CF_BUFSIZE];
+        if (!ReadDB(dbp, tmp, &vtmp, sizeof(vtmp)))
+        {
+            Log(LOG_LEVEL_ERR, "Failed to read the main hash key entry '%s'. Will continue to purge other entries related to it.", hash);
+        }
+        else
+        {
+            SeqAppend(hostips, xstrdup(vtmp + 1));
+        }
+        snprintf(tmp, CF_BUFSIZE, "k%s", hash);
+        DeleteDB(dbp, tmp);
+        snprintf(tmp, CF_BUFSIZE, "qi%s", hash);
+        DeleteDB(dbp, tmp);
+        snprintf(tmp, CF_BUFSIZE, "qo%s", hash);
+        DeleteDB(dbp, tmp);
+        RemovePublicKey(hash);
+        for (int i = 0; i < SeqLength(hostips); ++i)
+        {
+            const char *myip = SeqAt(hostips, i);
+            snprintf(tmp, CF_BUFSIZE, "a%s", myip);
+            DeleteDB(dbp, tmp);
+        }
+        CloseDB(dbp);
+    }
+    SeqDestroy(hostips);
+    return 0;
+}
+
+int ForceIpAddressRemoval(const char *ip)
+{
+/**
+    Removal of an ip is made of two passes :
+    Pass #1 (read-only)
+      -> fetches the key hashes directly linked to the ip address
+    Pass #2 (made of deletes)
+      -> remove all the key hashes in the previous list
+      -> remove the physical key hashes .pub files from the filesystem
+
+    WARNING: Please backup your lastseen database before calling this
+             function in the case where a 1-to-1 relatioship between
+             the IP and a single keyhash does not exist
+**/
+    CF_DB *dbp;
+    CF_DBC *dbcp;
+    char *key;
+    void *value;
+    int ksize, vsize;
+
+    Seq *hostkeys = SeqNew(100, free);
+    if (OpenDB(&dbp, dbid_lastseen))
+    {
+        if (NewDBCursor(dbp, &dbcp))
+        {
+            while (NextDB(dbcp, &key, &ksize, &value, &vsize))
+            {
+                if ((key[0] != 'k') || (value == NULL))
+                {
+                    continue;
+                }
+                if (!strncmp(ip, value, strlen(ip)))
+                { 
+                    SeqAppend(hostkeys, xstrdup(key + 1));
+                }
+            }
+            DeleteDBCursor(dbcp);
+        }
+        CloseDB(dbp);
+    }
+    if (OpenDB(&dbp, dbid_lastseen))
+    {
+        char tmp[CF_BUFSIZE];
+        snprintf(tmp, CF_BUFSIZE, "a%s", ip);
+        char vtmp[CF_BUFSIZE];
+        if (!ReadDB(dbp, tmp, &vtmp, sizeof(vtmp)))
+        {
+            Log(LOG_LEVEL_ERR, "Failed to read the main ip address entry '%s'. Will continue to purge other entries related to it.", ip);
+        }
+        else
+        {
+            SeqAppend(hostkeys, xstrdup(vtmp + 1));
+        }
+        snprintf(tmp, CF_BUFSIZE, "a%s", ip);
+        DeleteDB(dbp, tmp);
+        for (int i = 0; i < SeqLength(hostkeys); ++i)
+        {
+            const char *myk = SeqAt(hostkeys, i);
+            snprintf(tmp, CF_BUFSIZE, "k%s", myk);
+            DeleteDB(dbp, tmp);
+            snprintf(tmp, CF_BUFSIZE, "qi%s", myk);
+            DeleteDB(dbp, tmp);
+            snprintf(tmp, CF_BUFSIZE, "qo%s", myk);
+            DeleteDB(dbp, tmp);
+            RemovePublicKey(myk);
+        }
+        CloseDB(dbp);
+    }
+    SeqDestroy(hostkeys);
+    return 0;
+}

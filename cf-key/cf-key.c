@@ -118,13 +118,29 @@ int main(int argc, char *argv[])
 
     if (REMOVEKEYS)
     {
-        int status = RemoveKeys(remove_keys_host, !FORCEREMOVAL);
-        if (FORCEREMOVAL && (status == 0 || status == 1))
+        int status;
+        if (FORCEREMOVAL)
         {
-            Log (LOG_LEVEL_VERBOSE,
-                "Forced removal of entry '%s' was successful",
-                remove_keys_host);
-            return 0;
+            if (!strncmp(remove_keys_host, "SHA=", 3) ||
+                !strncmp(remove_keys_host, "MD5=", 3))
+            {
+                status = ForceKeyRemoval(remove_keys_host);
+            }
+            else
+            {
+                status = ForceIpAddressRemoval(remove_keys_host);
+            }
+        }
+        else
+        {
+            status = RemoveKeys(remove_keys_host, true);
+            if (status == 0 || status == 1)
+            {
+                Log (LOG_LEVEL_VERBOSE,
+                    "Forced removal of entry '%s' was successful",
+                    remove_keys_host);
+                return 0;
+            }
         }
         return status;
     }

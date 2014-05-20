@@ -389,7 +389,7 @@ bool DeleteIpFromLastSeen(const char *ip, char *digest)
         {
             if (digest != NULL)
             {
-                strcpy(digest, bufkey);
+                strcpy(digest, bufkey + 1);
             }
             DeleteDB(db, bufkey);
             DeleteDB(db, bufhost);

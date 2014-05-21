@@ -1,28 +1,3 @@
-# body common control
-# {
-#   bundlesequence => { "test" };
-# }
-
-# bundle common G
-# {
-#   vars:
-#     "grep" string => "/bin/grep";
-#     "sed" string => "/bin/sed";
-# }
-
-# bundle agent test
-# {
-#   methods:
-#     "any" usebundle => user_is_unlocked("johndoe", "yep", "nope");
-
-#   reports:
-#     "any: $(user_get_password_hash.hash)";
-#     yep::
-#       "Yep!";
-#     nope::
-#       "Nope!";
-# }
-
 bundle common user_tests
 {
   vars:

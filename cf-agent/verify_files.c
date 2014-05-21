@@ -689,7 +689,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     }
 
 exit:
-    result = PromiseResultUpdate(result, FinishEditContext(ctx, edcontext, a, pp));
+    FinishEditContext(ctx, edcontext, a, pp, &result);
     YieldCurrentLock(thislock);
     return result;
 }

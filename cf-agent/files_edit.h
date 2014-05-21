@@ -41,7 +41,8 @@ typedef struct
 
 // filename must not be freed until FinishEditContext.
 EditContext *NewEditContext(char *filename, Attributes a);
-PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp);
+void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp,
+                       PromiseResult *result);
 
 #ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed);

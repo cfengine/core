@@ -87,30 +87,42 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
 /*****************************************************************************/
 
-PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp)
+void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp,
+                       PromiseResult *result)
 {
-    PromiseResult result = PROMISE_RESULT_NOOP;
+    if (*result == PROMISE_RESULT_NOOP || *result == PROMISE_RESULT_CHANGE)
+    {
+        // A sub promise with CHANGE status does not necessarily mean that the
+        // file has really changed.
+        *result = PROMISE_RESULT_NOOP;
+    }
+    else
+    {
+        // Failure or skipped. Don't update the file.
+        goto end;
+    }
+
     if (DONTDO || (a.transaction.action == cfa_warn))
     {
         if (ec &&
-            !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result) &&
+            !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result) &&
             ec->num_edits > 0)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
                  "Should edit file '%s' but only a warning promised",
                  ec->filename);
-            result = PROMISE_RESULT_WARN;
+            *result = PROMISE_RESULT_WARN;
         }
         else
         {
-            result = PROMISE_RESULT_NOOP;
+            *result = PROMISE_RESULT_NOOP;
         }
     }
     else if (ec && (ec->num_edits > 0))
     {
         if (a.haveeditline || a.edit_template)
         {
-            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result))
+            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result))
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                      "No edit changes to file '%s' need saving", ec->filename);
@@ -119,13 +131,13 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                      "Edit file '%s'", ec->filename);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                      "Unable to save file '%s' after editing", ec->filename);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
         }
 
@@ -144,19 +156,19 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                      "Edited xml file '%s'", ec->filename);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                      "Failed to edit XML file '%s'", ec->filename);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
             xmlFreeDoc(ec->xmldoc);
 #else
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "Cannot edit XML files without LIBXML2");
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 #endif
         }
     }
@@ -166,13 +178,12 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
              "No edit changes to file '%s' need saving", ec->filename);
     }
 
+end:
     if (ec != NULL)
     {
         DeleteItemList(ec->file_start);
         free(ec);
     }
-
-    return result;
 }
 
 /*********************************************************************/

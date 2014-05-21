@@ -6,7 +6,7 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
+  inputs => { "../../default.cf.sub", "../../plucked.cf.sub" };
   bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
@@ -26,11 +26,11 @@ bundle agent test
       "$(G.testfile)"
       create => "true",
       edit_template => "$(this.promise_filename).nonexistant",
-      classes => default_cf_sub_scoped_generic_classes("test_file_template", "namespace");
+      classes => scoped_classes_generic("namespace", "test_file_template");
 
   methods:
     DEBUG::
-      "report" usebundle => default_cf_sub_report_generic_classes("test_file_template");
+      "report" usebundle => dcs_report_generic_classes("test_file_template");
 }
 
 #######################################################
@@ -38,20 +38,17 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "created" expression => fileexists($(G.testfile));
-
-      "ok" and => { "!created",
-                    "!test_file_template_kept",
-                    "!test_file_template_repaired",
-                    "test_file_template_failed",
+      "ok" and => { "!test_file_template_kept",
+                    "test_file_template_repaired", # create => "true"
+                    "test_file_template_failed", # edit_template
                     "!test_file_template_denied",
                     "!test_file_template_timeout" };
 
   reports:
     DEBUG.created::
-      "Erroneously created the test file $(G.testfile)";
+      "Correctly created the test file $(G.testfile)";
     DEBUG.!created::
-      "Correctly did not create the test file $(G.testfile)";
+      "Erroneously did not create the test file $(G.testfile)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

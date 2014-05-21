@@ -134,7 +134,9 @@ bool ServerTLSInitialize()
 
     /* Set options to always request a certificate from the peer, either we
      * are client or server. */
-    SSL_CTX_set_verify(SSLSERVERCONTEXT, SSL_VERIFY_PEER, NULL);
+    SSL_CTX_set_verify(SSLSERVERCONTEXT,
+                       SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                       NULL);
     /* Always accept that certificate, we do proper checking after TLS
      * connection is established since OpenSSL can't pass a connection
      * specific pointer to the callback (so we would have to lock).  */

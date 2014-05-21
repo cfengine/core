@@ -71,6 +71,9 @@ body classes check_classes_body
 bundle agent check
 {
   methods:
+      "any" usebundle => remove_stale_groups;
+
+  methods:
     "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "success", "failure"),
       classes => always("methods_run");
 

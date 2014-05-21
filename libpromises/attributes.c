@@ -667,7 +667,6 @@ DefineClasses GetClassDefinitionConstraints(const EvalContext *ctx, const Promis
     c.denied = (Rlist *) PromiseGetConstraintAsList(ctx, "repair_denied", pp);
     c.timeout = (Rlist *) PromiseGetConstraintAsList(ctx, "repair_timeout", pp);
     c.kept = (Rlist *) PromiseGetConstraintAsList(ctx, "promise_kept", pp);
-    c.interrupt = (Rlist *) PromiseGetConstraintAsList(ctx, "on_interrupt", pp);
 
     c.del_change = (Rlist *) PromiseGetConstraintAsList(ctx, "cancel_repaired", pp);
     c.del_kept = (Rlist *) PromiseGetConstraintAsList(ctx, "cancel_kept", pp);

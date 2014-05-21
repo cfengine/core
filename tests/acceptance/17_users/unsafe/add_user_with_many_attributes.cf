@@ -43,6 +43,9 @@ bundle agent test
 bundle agent check
 {
   methods:
+      "any" usebundle => remove_stale_groups;
+
+  methods:
     "any" usebundle => user_has_uid("johndoe", "9876", "uid_success", "uid_failure"),
       classes => always("uid_methods_run");
 

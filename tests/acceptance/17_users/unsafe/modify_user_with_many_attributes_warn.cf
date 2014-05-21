@@ -76,6 +76,9 @@ body password test_password
 bundle agent check
 {
   methods:
+      "any" usebundle => remove_stale_groups;
+
+  methods:
     "any" usebundle => user_has_uid("johndoe", "8765", "uid_success", "uid_failure"),
       classes => always("uid_methods_run");
 

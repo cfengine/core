@@ -37,6 +37,15 @@ bundle common user_tests
       "group2" string => "Administrators";
 }
 
+bundle agent remove_stale_groups
+{
+  # When we create a user and change its primary GID afterwards, its original
+  # group may linger and cause problems later.
+  commands:
+      "groupdel johndoe"
+        contain => in_shell;
+}
+
 bundle agent user_exists(user, true_class, false_class)
 {
   commands:

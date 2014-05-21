@@ -70,6 +70,9 @@ body classes check_classes_body
 
 bundle agent check
 {
+  methods:
+      "any" usebundle => remove_stale_groups;
+
   files:
     "$(G.testfile)"
       perms => check_perms_body,

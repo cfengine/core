@@ -40,6 +40,9 @@ bundle agent test
 bundle agent check
 {
   methods:
+      "any" usebundle => remove_stale_groups;
+
+  methods:
     windows::
       "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "pgroup_failure", "pgroup_success"),
         classes => always("pgroup_methods_run");

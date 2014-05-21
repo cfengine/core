@@ -62,9 +62,9 @@ bundle agent test
 
   commands:
     !windows::
-      "sudo -n -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
+      "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
         contain => test_contain_body;
-      "sudo -n -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile).2'"
+      "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile).2'"
         contain => test_contain_body;
 }
 

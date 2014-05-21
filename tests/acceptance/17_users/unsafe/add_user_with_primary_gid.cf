@@ -51,7 +51,7 @@ bundle agent test
 
   commands:
     !windows::
-      "sudo -n -u johndoe $(G.touch) $(G.testfile)"
+      "sudo -u johndoe $(G.touch) $(G.testfile)"
         contain => test_contain_body;
 }
 

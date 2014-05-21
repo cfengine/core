@@ -954,7 +954,6 @@ typedef struct
     Rlist *denied;
     Rlist *timeout;
     Rlist *kept;
-    Rlist *interrupt;
     int persist;
     PersistentClassPolicy timer;
     Rlist *del_change;

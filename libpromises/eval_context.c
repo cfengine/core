@@ -2173,17 +2173,13 @@ static void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, Def
 
     case PROMISE_RESULT_WARN:
     case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_INTERRUPTED:
         add_classes = dc.failure;
         del_classes = dc.del_notkept;
         break;
 
     case PROMISE_RESULT_DENIED:
         add_classes = dc.denied;
-        del_classes = dc.del_notkept;
-        break;
-
-    case PROMISE_RESULT_INTERRUPTED:
-        add_classes = dc.interrupt;
         del_classes = dc.del_notkept;
         break;
 

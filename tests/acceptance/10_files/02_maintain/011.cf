@@ -43,10 +43,10 @@ bundle agent test
 
   files:
       "$(G.testdir)/destdir/foo"
-      copy_from => sync_cp("$(G.testdir)/srcdir/foo");
+      copy_from => test_sync_cp("$(G.testdir)/srcdir/foo");
 }
 
-body copy_from sync_cp(from)
+body copy_from test_sync_cp(from)
 {
       source      => "$(from)";
 }

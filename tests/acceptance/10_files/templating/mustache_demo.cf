@@ -49,12 +49,6 @@ bundle agent test
       "Rendering template file $(template_file) to $(G.testfile)";
 }
 
-body copy_from sync_cp(from)
-{
-      source => "$(from)";
-}
-
-
 #######################################################
 
 bundle agent check

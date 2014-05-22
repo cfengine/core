@@ -48,11 +48,11 @@ bundle agent test
 
   files:
       "$(G.testdir)/destdir"
-      copy_from => sync_cp("$(G.testdir)/srcdir"),
+      copy_from => test_sync_cp("$(G.testdir)/srcdir"),
       depth_search => recurse("inf");
 }
 
-body copy_from sync_cp(from)
+body copy_from test_sync_cp(from)
 {
       source      => "$(from)";
       purge       => "true";

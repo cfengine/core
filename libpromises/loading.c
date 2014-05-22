@@ -530,9 +530,10 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
     if (validated_doc)
     {
         const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
+	
         if (release_id)
         {
-            policy->release_id = xstrndup(release_id, (2 * CF_SHA256_LEN) + 1);
+            policy->release_id = xstrndup(release_id, strlen(release_id));
         }
         JsonDestroy(validated_doc);
     }

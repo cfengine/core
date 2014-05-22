@@ -185,7 +185,9 @@
             - 'sys.inputdir' - the directory where CFEngine searches for policy files
             - 'sys.key_digest' - the digest of the host's cryptographic key
             - 'sys.libdir', 'sys.local_libdir' - the location of the CFEngine libraries
+            - 'sys.logdir' - the directory where the CFEngine log files are saved
             - 'sys.masterdir' - the location of masterfiles on the policy server
+            - 'sys.piddir' - the directory where the daemon pid files are saved
             - 'sys.sysday' - the number of days since the beginning of the UNIX epoch
             - 'sys.systime' - the number of seconds since the beginning of the UNIX epoch
             - 'sys.update_policy_path' - the name of the update policy file

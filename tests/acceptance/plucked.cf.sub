@@ -632,12 +632,59 @@ body replace_with uncomment
       occurrences => "all";
 }
 
+body copy_from secure_cp(from,server)
+# @brief Download a file from a remote server over an encrypted channel
+#
+# Only copy the file if it is different from the local copy, and verify
+# that the copy is correct.
+# 
+# @param from The location of the file on the remote server
+# @param server The hostname or IP of the server from which to download
+{
+      source      => "$(from)";
+      servers     => { "$(server)" };
+      compare     => "digest";
+      encrypt     => "true";
+      verify      => "true";
+}
+
+body copy_from remote_cp(from,server)
+# @brief Download a file from a remote server.
+#
+# @param from The location of the file on the remote server
+# @param server The hostname or IP of the server from which to download
+{
+      servers     => { "$(server)" };
+      source      => "$(from)";
+      compare     => "mtime";
+}
+
+body copy_from remote_dcp(from,server)
+# @brief Download a file from a remote server if it is different from the local copy.
+#
+# @param from The location of the file on the remote server
+# @param server The hostname or IP of the server from which to download
+{
+      servers     => { "$(server)" };
+      source      => "$(from)";
+      compare     => "digest";
+}
+
 body copy_from local_cp(from)
 # @brief Copy a local file.
 #
 # @param from The path to the source file.
 {
       source      => "$(from)";
+}
+
+body copy_from local_dcp(from)
+# @brief Copy a local file if it is different from the existing copy.
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+      compare     => "digest";
 }
 
 body copy_from perms_cp(from)
@@ -656,6 +703,48 @@ body copy_from backup_local_cp(from)
 {
       source      => "$(from)";
       copy_backup => "timestamp";
+}
+
+body copy_from seed_cp(from)
+# @brief Copy a local file if the file does not already exist, i.e. seed the placement
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+      compare     => "exists";
+}
+
+body copy_from sync_cp(from,server)
+# @brief Download a file if the local copy does not already exist, i.e. seed the placement
+#
+# @param from The location of the file on the remote server
+# @param server The hostname or IP of the server from which to download
+{
+      servers     => { "$(server)" };
+      source      => "$(from)";
+      purge       => "true";
+      preserve    => "true";
+      type_check  => "false";
+}
+
+body copy_from no_backup_cp(from)
+# @brief Copy a local file and don't make any backup of the previous version
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+      copy_backup => "false";
+}
+
+body copy_from no_backup_dcp(from)
+# @brief Copy a local file if contents have changed, and don't make any backup
+# of the previous version
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+      copy_backup => "false";
+      compare     => "digest";
 }
 
 body link_from linkfrom(source, type)

@@ -229,8 +229,8 @@ bundle agent user_is_unlocked(user, true_class, false_class)
 {
   commands:
     !windows::
-      # Notice the empty field at the end. That field (expiry) should be gone.
-      "$(G.grep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*::' /etc/shadow"
+      # Notice the field at the end. That field (expiry) should be gone or zero.
+      "$(G.egrep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:(|0):' /etc/shadow"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 

@@ -335,8 +335,9 @@ char *GetCsvLineNext(FILE *fp)
 
     for (;;)
     {
-        char current = fgetc(fp);
-        if (current == EOF)
+        int current = fgetc(fp);
+
+        if (current == EOF || feof(fp))
         {
             break;
         }

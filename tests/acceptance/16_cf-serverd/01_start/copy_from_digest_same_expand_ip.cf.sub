@@ -1,0 +1,59 @@
+#######################################################
+#
+# copy_from compare=>"digest" with server-side expansion of IP address
+# (TLS protocol only) when file is already there - should not copy
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testdir)/destination_file"
+        copy_from => copy_src_file,
+        classes => if_repaired("repaired");
+}
+
+#########################################################
+
+body copy_from copy_src_file
+{
+      source      => "$(G.testdir)/127.0.0.1.txt";
+
+      protocol_version => "latest";
+      servers     => { "127.0.0.1" };
+      compare     => "digest";
+      copy_backup => "false";
+      trustkey    => "true";
+      portnumber  => "9876"; # localhost_open
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+  reports:
+
+    !repaired::
+      "$(fn[1]) Pass";
+    repaired::
+      "$(fn[1]) FAIL";
+
+}

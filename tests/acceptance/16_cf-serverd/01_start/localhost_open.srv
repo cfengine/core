@@ -26,6 +26,32 @@ bundle server access_rules()
 {
   access:
 
-      "$(G.testdir)/source_file"     admit   => { "127.0.0.1", "::1" };
+      "$(G.testdir)/source_file"
+        admit    => { "127.0.0.1", "::1" },
+        shortcut => "simple_source";
+
+      "$(G.testdir)/$(connection.ip).txt"
+        admit_ips => { "$(connection.ip)" },
+        shortcut  => "expand_ip_source";
+
+
+      # Directory existing only in connection time (not in daemon init
+      # time), after special variables have been expanded. So we need to
+      # specify recursive access by appending trailing slash or slashdot.
+
+      # Trailing slash
+      "$(G.testdir)/$(connection.ip)_DIR1/"
+        admit_ips => { "$(connection.ip)" };
+
+      # Trailing slashdot, should be equivalent to trailing slash
+      "$(G.testdir)/$(connection.ip)_DIR2/."
+        admit_ips => { "$(connection.ip)" };
+
+
+      # Deny access to a file within a recursively admitted directory!
+      "$(G.testdir)/$(connection.ip)_DIR1/DENY_FILE"
+        deny_ips => { "$(connection.ip)" };
+      "$(G.testdir)/$(connection.ip)_DIR2/DENY_FILE"
+        deny_ips => { "$(connection.ip)" };
 }
 

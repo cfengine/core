@@ -1,0 +1,60 @@
+#######################################################
+#
+# copy_from compare=>"digest" when file is there but differs - should copy
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      # "$(G.testdir)/dest_file_classic"
+      #   copy_from => copy_src_file("classic"),
+      #   classes => if_repaired("repaired_classic");
+      "$(G.testdir)/dest_file_latest"
+        copy_from => copy_src_file("latest"),
+        classes => if_repaired("repaired_latest");
+}
+
+#########################################################
+
+body copy_from copy_src_file(protocol_version)
+{
+      protocol_version => "$(protocol_version)";
+
+      source      => "$(G.testdir)/source_file";
+      servers     => { "127.0.0.1" };
+      compare     => "digest";
+      copy_backup => "false";
+      trustkey    => "true";
+      portnumber  => "9876"; # localhost_open
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+  methods:
+
+      # "any" usebundle => dcs_check_diff("$(G.testdir)/source_file",
+      #                                   "$(G.testdir)/dest_file_classic","$(fn[1])");
+      "any" usebundle => dcs_check_diff("$(G.testdir)/source_file",
+                                        "$(G.testdir)/dest_file_latest","$(fn[1])");
+}

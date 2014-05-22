@@ -6,7 +6,10 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      inputs => { "../../default.cf.sub",
+                  "user_queries.cf.sub",
+                  "disable_sudo_tty_requirement.cf.sub"
+                };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 
@@ -38,6 +41,9 @@ bundle agent init
     "$(G.testfile).2"
       create => "true",
       perms => init_perms_body_sys;
+
+  methods:
+      "any" usebundle => disable_sudo_tty_requirement;
 }
 
 #######################################################

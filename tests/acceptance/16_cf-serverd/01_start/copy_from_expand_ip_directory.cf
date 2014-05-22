@@ -1,0 +1,37 @@
+#
+body common control
+{
+      inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/127.0.0.1_DIR1/." create => "true";
+      "$(G.testdir)/127.0.0.1_DIR2/." create => "true";
+}
+
+bundle agent test
+{
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4822" };
+
+  methods:
+      "any" usebundle => file_make("$(G.testdir)/127.0.0.1_DIR1/ADMIT_FILE",
+                                   "ADMIT_FILE A CONTENTS");
+      "any" usebundle => file_make("$(G.testdir)/127.0.0.1_DIR1/DENY_FILE",
+                                   "DENY_FILE A CONTENTS");
+      "any" usebundle => file_make("$(G.testdir)/127.0.0.1_DIR2/ADMIT_FILE",
+                                   "ADMIT_FILE B CONTENTS");
+      "any" usebundle => file_make("$(G.testdir)/127.0.0.1_DIR2/DENY_FILE",
+                                   "DENY_FILE B CONTENTS");
+      "any" usebundle => dcs_fini("$(G.testdir)/destination_file1");
+      "any" usebundle => dcs_fini("$(G.testdir)/destination_file2");
+      "any" usebundle => generate_key;
+      "any" usebundle => start_server("localhost_open");
+      "any" usebundle => run_test("$(this.promise_filename).sub");
+      "any" usebundle => stop_server("localhost_open");
+}

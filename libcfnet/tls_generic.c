@@ -191,7 +191,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     }
 
     ASN1_TIME *t1 = X509_gmtime_adj(X509_get_notBefore(x509), 0);
-    ASN1_TIME *t2 = X509_gmtime_adj(X509_get_notAfter(x509), 60*60*24*365*50);
+    ASN1_TIME *t2 = X509_gmtime_adj(X509_get_notAfter(x509), 60*60*24*365*10);
     if (t1 == NULL || t2 == NULL)
     {
         Log(LOG_LEVEL_ERR, "X509_gmtime_adj: %s",

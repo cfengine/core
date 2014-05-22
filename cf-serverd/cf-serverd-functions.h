@@ -25,6 +25,7 @@
 #ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
 #define CFENGINE_CF_SERVERD_FUNCTIONS_H
 
+
 #include <platform.h>
 
 #include <generic_agent.h>
@@ -43,12 +44,12 @@
 #include <xml_writer.h>
 #include <pipes.h>
 
-void ThisAgentInit(void);
-GenericAgentConfig *CheckOpts(int argc, char **argv);
-int OpenReceiverChannel(void);
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
+
 typedef int (*InitServerFunction)(size_t queue_size);
-int InitServer(size_t queue_size);
+
+
+GenericAgentConfig *CheckOpts(int argc, char **argv);
 void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
 
-#endif // CFSERVERDFUNCTIONS_H
+
+#endif

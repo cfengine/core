@@ -1,28 +1,3 @@
-# body common control
-# {
-#   bundlesequence => { "test" };
-# }
-
-# bundle common G
-# {
-#   vars:
-#     "grep" string => "/bin/grep";
-#     "sed" string => "/bin/sed";
-# }
-
-# bundle agent test
-# {
-#   methods:
-#     "any" usebundle => user_is_unlocked("johndoe", "yep", "nope");
-
-#   reports:
-#     "any: $(user_get_password_hash.hash)";
-#     yep::
-#       "Yep!";
-#     nope::
-#       "Nope!";
-# }
-
 bundle common user_tests
 {
   vars:
@@ -35,6 +10,15 @@ bundle common user_tests
     windows::
       "group1" string => "Users";
       "group2" string => "Administrators";
+}
+
+bundle agent remove_stale_groups
+{
+  # When we create a user and change its primary GID afterwards, its original
+  # group may linger and cause problems later.
+  commands:
+      "groupdel johndoe"
+        contain => in_shell;
 }
 
 bundle agent user_exists(user, true_class, false_class)
@@ -245,8 +229,8 @@ bundle agent user_is_unlocked(user, true_class, false_class)
 {
   commands:
     !windows::
-      # Notice the empty field at the end. That field (expiry) should be gone.
-      "$(G.grep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*::' /etc/shadow"
+      # Notice the field at the end. That field (expiry) should be gone or zero.
+      "$(G.egrep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:(|0):' /etc/shadow"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 

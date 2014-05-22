@@ -66,6 +66,8 @@ typedef enum
     i_locked
 } which;
 
+static bool SupportsOption(const char *cmd, const char *option);
+
 static const char *GetPlatformSpecificExpirationDate()
 {
      // 2nd January 1970.
@@ -360,10 +362,10 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
 
     while (true)
     {
-        size_t line_size = CF_BUFSIZE;
-        char *line = xmalloc(line_size);
+        size_t line_size = 0;
+        char *line = NULL;
 
-        int read_result = getline(&line, &line_size, passwd_fd);
+        int read_result = CfReadLine(&line, &line_size, passwd_fd);
         if (read_result < 0)
         {
             if (!feof(passwd_fd))
@@ -376,11 +378,6 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
             {
                 break;
             }
-        }
-        else if (read_result >= sizeof(line))
-        {
-            Log(LOG_LEVEL_ERR, "Unusually long line found in password database while editing user '%s'. Not updating.",
-                puser);
         }
 
         // Editing the password database is risky business, so do as little parsing as possible.
@@ -482,7 +479,7 @@ static bool ChangePassword(const char *puser, const char *password, PasswordForm
 
 #ifdef HAVE_CHPASSWD
     struct stat statbuf;
-    if (stat(CHPASSWD, &statbuf) != -1)
+    if (stat(CHPASSWD, &statbuf) != -1 && SupportsOption(CHPASSWD, "-e"))
     {
         return ChangePasswordHashUsingChpasswd(puser, password);
     }
@@ -580,16 +577,26 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
     bool ret = true;
     struct group *group_info;
 
-    setgrent();
+    FILE *fptr = fopen("/etc/group", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/group': %s", GetErrorStr());
+        return false;
+    }
+
     while (true)
     {
         errno = 0;
-        group_info = getgrent();
+        // Use fgetgrent() instead of getgrent(), to guarantee that the
+        // returned group is a local group, and not for example from LDAP.
+        group_info = fgetgrent(fptr);
         if (!group_info)
         {
-            if (errno)
+            // Documentation among Unices is conflicting on return codes, but at
+            // least Linux returns ENOENT when there are no more entries.
+            if (errno && errno != ENOENT)
             {
-                Log(LOG_LEVEL_ERR, "Error while getting group list. (getgrent: '%s')", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Error while getting group list. (fgetgrent: '%s')", GetErrorStr());
                 ret = false;
             }
             break;
@@ -603,9 +610,59 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
             }
         }
     }
-    endgrent();
+
+    fclose(fptr);
 
     return ret;
+}
+
+static bool EqualGid(const char *key, const struct group *entry)
+{
+    return (atoi(key) == entry->gr_gid);
+}
+
+static bool EqualGroupName(const char *key, const struct group *entry)
+{
+    return (strcmp(key, entry->gr_name) == 0);
+}
+
+// Uses fgetgrent() instead of getgrnam(), to guarantee that the returned group
+// is a local group, and not for example from LDAP.
+static struct group *GetGrEntry(const char *key,
+                                bool (*equal_fn)(const char *key, const struct group *entry))
+{
+    FILE *fptr = fopen("/etc/group", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/group': %s", GetErrorStr());
+        return NULL;
+    }
+
+    struct group *group_info;
+    bool found = false;
+    while ((group_info = fgetgrent(fptr)))
+    {
+        if (equal_fn(key, group_info))
+        {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fptr);
+
+    if (found)
+    {
+        return group_info;
+    }
+    else
+    {
+        // Failure to find the user means we just set errno to zero.
+        // Perhaps not optimal, but we cannot pass ENOENT, because the fopen might
+        // fail for this reason, and that should not be treated the same.
+        errno = 0;
+        return NULL;
+    }
 }
 
 static void TransformGidsToGroups(StringSet **list)
@@ -622,50 +679,32 @@ static void TransformGidsToGroups(StringSet **list)
             continue;
         }
         // In groups vs gids, groups take precedence. So check if it exists.
-        errno = 0;
-        struct group *group_info = getgrnam(data);
+        struct group *group_info = GetGrEntry(data, &EqualGroupName);
         if (!group_info)
         {
-            switch (errno)
+            if (errno == 0)
             {
-            case 0:
-            case ENOENT:
-            case EBADF:
-            case ESRCH:
-            case EWOULDBLOCK:
-            case EPERM:
-                // POSIX is apparently ambiguous here. All values mean "not found".
-                errno = 0;
-                group_info = getgrgid(atoi(data));
+                group_info = GetGrEntry(data, &EqualGid);
                 if (!group_info)
                 {
-                    switch (errno)
+                    if (errno != 0)
                     {
-                    case 0:
-                    case ENOENT:
-                    case EBADF:
-                    case ESRCH:
-                    case EWOULDBLOCK:
-                    case EPERM:
-                        // POSIX is apparently ambiguous here. All values mean "not found".
-                        //
-                        // Neither group nor gid is found. This will lead to an error later, but we don't
-                        // handle that here.
-                        break;
-                    default:
-                        Log(LOG_LEVEL_ERR, "Error while checking group name '%s'. (getgrgid: '%s')", data, GetErrorStr());
+                        Log(LOG_LEVEL_ERR, "Error while checking group name '%s': %s", data, GetErrorStr());
                         StringSetDestroy(new_list);
                         return;
                     }
+                    // Neither group nor gid is found. This will lead to an error later, but we don't
+                    // handle that here.
                 }
                 else
                 {
                     // Replace gid with group name.
                     StringSetAdd(new_list, xstrdup(group_info->gr_name));
                 }
-                break;
-            default:
-                Log(LOG_LEVEL_ERR, "Error while checking group name '%s'. (getgrnam: '%s')", data, GetErrorStr());
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Error while checking group name '%s': '%s'", data, GetErrorStr());
                 StringSetDestroy(new_list);
                 return;
             }
@@ -723,12 +762,10 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
         // We try name first, even if it looks like a gid. Only fall back to gid.
         struct group *group_info;
         errno = 0;
-        group_info = getgrnam(u.group_primary);
-        // Apparently POSIX is ambiguous here. All the values below mean "not found".
-        if (!group_info && errno != 0 && errno != ENOENT && errno != EBADF && errno != ESRCH
-            && errno != EWOULDBLOCK && errno != EPERM)
+        group_info = GetGrEntry(u.group_primary, &EqualGroupName);
+        if (!group_info && errno != 0)
         {
-            Log(LOG_LEVEL_ERR, "Could not obtain information about group '%s'. (getgrnam: '%s')", u.group_primary, GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Could not obtain information about group '%s': %s", u.group_primary, GetErrorStr());
             gid = -1;
         }
         else if (!group_info)
@@ -788,6 +825,43 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
     }
 }
 
+static bool SupportsOption(const char *cmd, const char *option)
+{
+    bool supports_option = false;
+    char help_argument[] = " --help";
+    char help_command[strlen(cmd) + sizeof(help_argument)];
+    snprintf(help_command, sizeof(help_command), "%s%s", cmd, help_argument);
+
+    FILE *fptr = cf_popen(help_command, "r", true);
+    char *buf = NULL;
+    size_t bufsize = 0;
+    size_t optlen = strlen(option);
+    while (CfReadLine(&buf, &bufsize, fptr) >= 0)
+    {
+        char *m_pos = buf;
+        while ((m_pos = strstr(m_pos, option)))
+        {
+            // Check against false alarms, e.g. hyphenated words in normal text or an
+            // option (say, "-M") that is part of "--M".
+            if ((m_pos == buf
+                    || (m_pos[-1] != '-' && (isspace(m_pos[-1]) || ispunct(m_pos[-1]))))
+                && (m_pos[optlen] == '\0'
+                    || (isspace(m_pos[optlen]) || ispunct(m_pos[optlen]))))
+            {
+                supports_option = true;
+                // Break out of strstr loop, but read till the end to avoid broken pipes.
+                break;
+            }
+            m_pos++;
+        }
+    }
+    cf_pclose(fptr);
+    free(buf);
+
+    return supports_option;
+}
+
+
 static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
                          EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
@@ -846,6 +920,12 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         StringAppend(cmd, " -s \"", sizeof(cmd));
         StringAppend(cmd, u.shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
+    }
+    if (SupportsOption(USERADD, "-M"))
+    {
+        // Prevents creation of home_dir.
+        // We want home_bundle to do that.
+        StringAppend(cmd, " -M", sizeof(cmd));
     }
     StringAppend(cmd, " ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
@@ -1074,19 +1154,54 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     return true;
 }
 
+// Uses fgetpwent() instead of getpwnam(), to guarantee that the returned user
+// is a local user, and not for example from LDAP.
+static struct passwd *GetPwEntry(const char *puser)
+{
+    FILE *fptr = fopen("/etc/passwd", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/passwd': %s", GetErrorStr());
+        return NULL;
+    }
+
+    struct passwd *passwd_info;
+    bool found = false;
+    while ((passwd_info = fgetpwent(fptr)))
+    {
+        if (strcmp(puser, passwd_info->pw_name) == 0)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fptr);
+
+    if (found)
+    {
+        return passwd_info;
+    }
+    else
+    {
+        // Failure to find the user means we just set errno to zero.
+        // Perhaps not optimal, but we cannot pass ENOENT, because the fopen might
+        // fail for this reason, and that should not be treated the same.
+        errno = 0;
+        return NULL;
+    }
+}
+
 void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, enum cfopaction action,
                             EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     bool res;
 
     struct passwd *passwd_info;
-    errno = 0;
-    passwd_info = getpwnam(puser);
-    // Apparently POSIX is ambiguous here. All the values below mean "not found".
-    if (!passwd_info && errno != 0 && errno != ENOENT && errno != EBADF && errno != ESRCH
-        && errno != EWOULDBLOCK && errno != EPERM)
+    passwd_info = GetPwEntry(puser);
+    if (!passwd_info && errno != 0)
     {
-        Log(LOG_LEVEL_ERR, "Could not get information from user database. (getpwnam: '%s')", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Could not get information from user database.");
         return;
     }
 

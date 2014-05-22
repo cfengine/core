@@ -265,8 +265,8 @@ int main(int argc, char *argv[])
     }
 
     // only note class usage when default policy is run
-    Nova_NoteClassUsage(ctx);
-    Nova_NoteVarUsageDB(ctx);
+    Nova_NoteClassUsage(ctx, config);
+    Nova_NoteVarUsageDB(ctx, config);
     Nova_TrackExecution(config->input_file);
     PurgeLocks();
     BackupLockDatabase();
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
     EndAudit(ctx, CFA_BACKGROUND);
     EvalContextDestroy(ctx);
 
-    GenerateDiffReports(config->input_file);
+    GenerateDiffReports(config);
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
     GenericAgentConfigDestroy(config);
@@ -314,6 +314,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     char **argv_tmp = TranslateOldBootstrapOptionsSeparate(&argc_new, argv);
     char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
     FreeStringArray(argc_new, argv_tmp);
+
+    /* true if cf-agent is executed by cf-serverd in response to a cf-runagent invocation.
+     * In that case, prohibit file-input, no-lock and dry-runs to prevent remote execution of
+     * arbitrary policy and DoS attacks.
+     */
+    bool cfruncommand = false;
 
     while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hlC::E", OPTIONS, NULL)) != EOF)
     {
@@ -401,7 +407,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            config->heap_soft = StringSetFromString(optarg, ',');
+            {
+                StringSet *defined_classes = StringSetFromString(optarg, ',');
+                cfruncommand = StringSetContains(defined_classes, "cfruncommand");
+                config->heap_soft = defined_classes;
+            }
             break;
 
         case 'N':
@@ -492,6 +502,23 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
         exit(EXIT_FAILURE);
+    }
+
+    if (cfruncommand)
+    {
+        /* Do not allow remote cf-agent executions that imply no-lock
+         * or execution of a file other that promises.cf.
+         */
+        if (config->ignore_locks)
+        {
+            Log(LOG_LEVEL_ERR, "Remote execution cannot ignore locks");
+            exit(EXIT_FAILURE);
+        }
+        if (MINUSF) // GenericAgentConfigSetInputFile also sets MINUSF
+        {
+            Log(LOG_LEVEL_ERR, "Specifying input files is not allowed for remote execution");
+            exit(EXIT_FAILURE);
+        }
     }
 
     FreeStringArray(argc_new, argv_new);

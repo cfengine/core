@@ -38,7 +38,7 @@ libdb_la_SOURCES = ../../libpromises/dbm_api.c \
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
-libdb_la_LIBADD = libstr.la
+libdb_la_LIBADD = libstr.la ../../libutils/libutils.la
 libdb_la_CPPFLAGS = $(AM_CPPFLAGS)
 
 check_PROGRAMS = \
@@ -64,6 +64,8 @@ check_PROGRAMS = \
 	sequence_test \
 	lastseen_test \
 	lastseen_migration_test \
+	db_test \
+	db_concurrent_test \
 	dbm_migration_bundles_test \
 	misc_lib_test \
 	item_lib_test \

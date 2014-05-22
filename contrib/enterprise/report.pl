@@ -13,14 +13,17 @@ use Getopt::Long;
 my %outputs = (
                csv => sub { my $data = decode_json( shift ); print_csv($data, shift) },
                html => sub { my $data = decode_json( shift ); print_html($data, shift) },
+               list => sub { my $data = decode_json( shift ); print_hostlist($data, shift) },
+               host => sub { my $data = decode_json( shift ); print_hostinfo($data, shift) },
                json => sub { print @_ },
               );
 
 my %options = (
-               url => 'http://admin:admin@localhost:80/',
+               url => $ENV{CFENGINE_MP_URL} || 'http://admin:admin@localhost:80/',
                output => 'csv',
                limit => 100000,
                verbose => 0,
+               list => 0,
               );
 
 GetOptions(\%options,
@@ -28,6 +31,8 @@ GetOptions(\%options,
            "output:s",
            "limit:i",           # note that you can say "LIMIT N" in the query!
            "url:s",
+           "host:s",
+           "list|list-hosts!"
           );
 
 # Create a user agent object
@@ -35,7 +40,18 @@ my $ua = LWP::UserAgent->new;
 
 my $query = shift;
 
-die "Syntax: $0 [--url BASEURL] [--limit N] [--output @{[ join('|', sort keys %outputs) ]}] QUERY"
+if ($options{list})
+{
+    $query = "SELECT Hosts.HostName, Contexts.ContextName FROM Hosts JOIN Contexts ON Hosts.Hostkey = Contexts.HostKey";
+    $options{output} = 'list';
+}
+elsif (exists $options{host})
+{
+    $query = "SELECT Variables.Bundle, Variables.VariableName, Variables.VariableValue FROM Variables WHERE Variables.HostKey = (SELECT Hosts.Hostkey FROM Hosts WHERE Hosts.HostName = '$options{host}')";
+    $options{output} = 'host';
+}
+
+die "Syntax: $0 [--url BASEURL] [--limit N] [--output @{[ join('|', sort keys %outputs) ]}] [QUERY|--list|--host HOSTNAME]"
  unless ($query && exists $outputs{$options{output}});
 
 $query =~ s/\v+/ /g;
@@ -101,4 +117,30 @@ sub print_html
   print "</tr>\n";
  }
  print "</table></body></html>\n";
+}
+
+sub print_hostlist
+{
+    my $data = shift;
+    my %list;
+
+    foreach my $row (@{$data->{data}->[0]->{rows}})
+    {
+        push @{$list{$row->[1]}}, $row->[0];
+    }
+
+    print encode_json(\%list), "\n";
+}
+
+sub print_hostinfo
+{
+    my $data = shift;
+    my %info;
+
+    foreach my $row (@{$data->{data}->[0]->{rows}})
+    {
+        $info{"$row->[0]_$row->[1]"} = $row->[2];
+    }
+
+    print encode_json(\%info), "\n";
 }

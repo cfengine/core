@@ -558,10 +558,20 @@ then
 	exit 1
 fi
 
-if [ "$UNSAFE_TESTS" = "1" -a "$GAINROOT" = "fakeroot" ]; then
-    echo "Unsafe tests do not play well together with fakeroot. Please use a different"
-    echo "--gainroot (like \"sudo\"), or you will get incorrect results."
-    exit 1
+if [ "$UNSAFE_TESTS" = "1" ]; then
+    if [ "$GAINROOT" = "fakeroot" ]; then
+        echo "Unsafe tests do not play well together with fakeroot. Please use a different"
+        echo "--gainroot (like \"sudo\"), or you will get incorrect results."
+        exit 1
+    fi
+
+    # Make sure test dir is accessible to everyone, because unsafe tests may
+    # switch user during the test (users promises do this).
+    DIR="$(cd "$(dirname "$0")"; pwd)"
+    while [ "$DIR" != "/" -a "$DIR" != "" ]; do
+        $GAINROOT chmod go+rx "$DIR"
+        DIR="$(dirname "$DIR")"
+    done
 fi
 
 if [ $# -gt 0 ]; then

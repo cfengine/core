@@ -1,0 +1,20 @@
+# Disable the requiretty setting in /etc/sudoers.
+
+body file control
+{
+    inputs => { "../../plucked.cf.sub" };
+}
+
+bundle agent disable_sudo_tty_requirement
+{
+  files:
+      "/etc/sudoers"
+        edit_line => comment_requiretty;
+}
+
+bundle edit_line comment_requiretty
+{
+  replace_patterns:
+      "^Defaults *requiretty"
+        replace_with => value("#Defaults requiretty");
+}

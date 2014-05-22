@@ -32,7 +32,7 @@ int cf_lstat(const char *file, struct stat *buf, FileCopy fc, AgentConnection *c
 
 /**
  * @brief Works exactly like posix 'getline', EXCEPT it does not include carriage return at the end.
- * @return -1 on error OR EOF, so check. Or bytes read without null terminator. Never returns zero.
+ * @return -1 on error OR EOF, so check. Or bytes in buff without null terminator.
  */
 ssize_t CfReadLine(char **buff, size_t *size, FILE *fp);
 

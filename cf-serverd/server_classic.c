@@ -2,7 +2,6 @@
 
 #include <cf3.defs.h>
 #include <item_lib.h>                 /* IsMatchItemIn */
-#include <conversion.h>               /* MapAddress */
 #include <matching.h>                 /* IsRegexItemIn */
 #include <net.h>                      /* ReceiveTransaction,SendTransaction */
 #include <signals.h>
@@ -213,14 +212,14 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..");
 
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) ||
+                if ((IsMatchItemIn(ap->maproot, conn->ipaddr)) ||
                     (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
@@ -247,7 +246,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             /* or if it's an exact match */
             (strcmp(transpath, transrequest) == 0))
         {
-            if ((IsMatchItemIn(dp->accesslist, MapAddress(conn->ipaddr))) ||
+            if ((IsMatchItemIn(dp->accesslist, conn->ipaddr)) ||
                 (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))
             {
                 access = false;
@@ -327,7 +326,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) ||
+                if ((IsMatchItemIn(ap->maproot, conn->ipaddr)) ||
                     (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
@@ -338,7 +337,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                     Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                 }
 
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
@@ -352,7 +351,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
     {
         if (strcmp(ap->path, name) == 0)
         {
-            if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+            if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
                 || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
             {
                 access = false;
@@ -426,7 +425,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                     {
                         Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
-                        if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
+                        if ((IsMatchItemIn(ap->maproot, conn->ipaddr))
                             || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                         {
                             conn->maproot = true;
@@ -437,7 +436,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                             Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                         }
 
-                        if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                        if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
                             || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                         {
                             access = true;
@@ -451,7 +450,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
             {
                 if (strcmp(ap->path, ip->name) == 0)
                 {
-                    if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                    if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
                         || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = false;
@@ -550,7 +549,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
     const char *udigest = KeyPrintableHash(ConnectionInfoKey(conn->conn_info));
     assert(udigest != NULL);
 
-    if ((savedkey = HavePublicKey(conn->username, MapAddress(conn->ipaddr), udigest)))
+    if ((savedkey = HavePublicKey(conn->username, conn->ipaddr, udigest)))
     {
         Log(LOG_LEVEL_VERBOSE, "A public key was already known from %s/%s - no trust required", conn->hostname,
               conn->ipaddr);
@@ -568,7 +567,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
      * directory): Allow access only if host is listed in "trustkeysfrom" body
      * server control option. */
 
-    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
+    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
     {
         Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust", conn->hostname, conn->ipaddr);
         SendTransaction(conn->conn_info, "OK: unknown key was accepted on trust", 0, CF_DONE);
@@ -1243,10 +1242,32 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
+        encrypted = true;
         /* roll through, no break */
 
     case PROTOCOL_COMMAND_MD5:
-        CompareLocalHash(conn, sendbuffer, recvbuffer);
+
+        memset(filename, 0, sizeof(filename));
+        sscanf(recvbuffer, "MD5 %[^\n]", filename);
+
+        if (!AccessControl(ctx, filename, conn, encrypted))
+        {
+            Log(LOG_LEVEL_INFO, "Access denied to get object");
+            RefuseAccess(conn, recvbuffer);
+            return true;
+        }
+
+        assert(CF_DEFAULT_DIGEST_LEN <= EVP_MAX_MD_SIZE);
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
+
+        assert(CF_BUFSIZE + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN
+               <= sizeof(recvbuffer));
+        memcpy(digest, recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET,
+               CF_DEFAULT_DIGEST_LEN);
+
+        CompareLocalHash(filename, digest, sendbuffer);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+
         return true;
 
     case PROTOCOL_COMMAND_VAR_SECURE:

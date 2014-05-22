@@ -6,7 +6,10 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      inputs => { "../../default.cf.sub",
+                  "user_queries.cf.sub",
+                  "disable_sudo_tty_requirement.cf.sub"
+                };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 
@@ -22,6 +25,9 @@ bundle agent init
   files:
     "$(G.testfile)"
       delete => init_delete;
+
+  methods:
+      "any" usebundle => disable_sudo_tty_requirement;
 }
 
 body delete init_delete
@@ -64,6 +70,9 @@ body classes check_classes_body
 
 bundle agent check
 {
+  methods:
+      "any" usebundle => remove_stale_groups;
+
   methods:
     "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "success", "failure"),
       classes => always("methods_run");

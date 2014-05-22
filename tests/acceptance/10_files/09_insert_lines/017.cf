@@ -33,7 +33,7 @@ bundle agent test {
 bundle edit_line insert_dir {
   insert_lines:
       "$(G.testroot)" insert_type => "file",
-      classes => if_notkept("fail");
+      classes => if_notkept("ok");
 }
 
 #######################################################
@@ -43,9 +43,9 @@ bundle agent check
   reports:
     DEBUG::
       "This should only pass if inserting lines from a directory fails";
-    !fail::
+    ok::
       "$(this.promise_filename) Pass";
-    fail::
+    !ok::
       "$(this.promise_filename) FAIL";
 }
 

@@ -208,15 +208,7 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
  * evaluator again, once variables promises are no longer specially handled */
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
 
-typedef struct EvalContextEnterpriseState_ EvalContextEnterpriseState;
-
-EvalContextEnterpriseState *EvalContextGetEnterpriseState(const EvalContext *ctx);
-
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp);
-
-ENTERPRISE_FUNC_0ARG_DECLARE(EvalContextEnterpriseState *, EvalContextEnterpriseStateNew);
-ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EvalContextEnterpriseStateDestroy,
-                                  EvalContextEnterpriseState *, estate);
 
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, EvalContextLogPromiseIterationOutcome,
                                   EvalContext *, ctx,

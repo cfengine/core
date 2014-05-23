@@ -28,6 +28,7 @@
 #include <platform.h>
 #include <logging.h>
 
+
 void CryptoInitialize(void);
 void CryptoDeInitialize(void);
 

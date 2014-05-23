@@ -54,16 +54,17 @@ static X509 *SSLCLIENTCERT = NULL; /* GLOBAL_X */
 bool TLSClientInitialize()
 {
     int ret;
-    static bool is_initialised = false; /* GLOBAL_X */
+    static bool is_initialised = false;
 
     if (is_initialised)
     {
         return true;
     }
 
-    /* OpenSSL is needed for our new protocol over TLS. */
-    SSL_library_init();
-    SSL_load_error_strings();
+    if (!TLSGenericInitialize())
+    {
+        return false;
+    }
 
     SSLCLIENTCONTEXT = SSL_CTX_new(SSLv23_client_method());
     if (SSLCLIENTCONTEXT == NULL)
@@ -283,6 +284,9 @@ int TLSTry(ConnectionInfo *conn_info)
             ERR_reason_error_string(ERR_get_error()));
         return -1;
     }
+
+    /* Pass conn_info inside the ssl struct for TLSVerifyCallback(). */
+    SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn_info);
 
     /* Initiate the TLS handshake over the already open TCP socket. */
     int sd = ConnectionInfoSocket(conn_info);

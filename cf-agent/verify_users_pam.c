@@ -861,6 +861,28 @@ static bool SupportsOption(const char *cmd, const char *option)
     return supports_option;
 }
 
+static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof_cmd,
+                               const char *action_msg, const char *cap_action_msg)
+{
+    if (strlen(cmd) >= sizeof_cmd - 1)
+    {
+        // Instead of checking every StringAppend call, assume that a maxed out
+        // string length overflowed the string.
+        Log(LOG_LEVEL_ERR, "Command line too long while %s user '%s'", action_msg, puser);
+        return false;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
+
+    int status;
+    status = system(cmd);
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
+        return false;
+    }
+    return true;
+}
 
 static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
                          EvalContext *ctx, const Attributes *a, const Promise *pp)
@@ -937,21 +959,8 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
     }
     else
     {
-        if (strlen(cmd) >= sizeof(cmd) - 1)
+        if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "creating", "Creating"))
         {
-            // Instead of checking every string call above, assume that a maxed out
-            // string length overflowed the string.
-            Log(LOG_LEVEL_ERR, "Command line too long while creating user '%s'", puser);
-            return false;
-        }
-
-        Log(LOG_LEVEL_VERBOSE, "Creating user '%s'. (command: '%s')", puser, cmd);
-
-        int status;
-        status = system(cmd);
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-        {
-            Log(LOG_LEVEL_ERR, "Command returned error while creating user '%s'. (Command line: '%s')", puser, cmd);
             return false;
         }
 
@@ -1002,27 +1011,8 @@ static bool DoRemoveUser (const char *puser, enum cfopaction action)
         Log(LOG_LEVEL_NOTICE, "Need to remove user '%s'.", puser);
         return false;
     }
-    else
-    {
-        if (strlen(cmd) >= sizeof(cmd) - 1)
-        {
-            // Instead of checking every string call above, assume that a maxed out
-            // string length overflowed the string.
-            Log(LOG_LEVEL_ERR, "Command line too long while removing user '%s'", puser);
-            return false;
-        }
 
-        Log(LOG_LEVEL_VERBOSE, "Removing user '%s'. (command: '%s')", puser, cmd);
-
-        int status;
-        status = system(cmd);
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-        {
-            Log(LOG_LEVEL_ERR, "Command returned error while removing user '%s'. (Command line: '%s')", puser, cmd);
-            return false;
-        }
-    }
-    return true;
+    return ExecuteUserCommand(puser, cmd, sizeof(cmd), "removing", "Removing");
 }
 
 static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd_info, uint32_t changemap, enum cfopaction action)
@@ -1054,18 +1044,13 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
 
     if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
     {
-        StringAppend(cmd, " -G \"", sizeof(cmd));
-        char sep[2] = { '\0', '\0' };
-        for (Rlist *i = u.groups_secondary; i; i = i->next)
-        {
-            if (strcmp(RvalScalarValue(i->val), CF_NULL_VALUE) != 0)
-            {
-                StringAppend(cmd, sep, sizeof(cmd));
-                StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
-                sep[0] = ',';
-            }
-        }
-        StringAppend(cmd, "\"", sizeof(cmd));
+        /* Work around bug on SUSE. If secondary groups contain a group that is
+           the same group as the primary group, the secondary group is not set.
+           This happens even if the primary group is changed in the same call.
+           Therefore, set an empty group list first, and then set it to the real
+           list later.
+        */
+        StringAppend(cmd, " -G \"\"", sizeof(cmd));
     }
 
     if (CFUSR_CHECKBIT (changemap, i_home) != 0)
@@ -1133,22 +1118,31 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     }
     else if (changemap != 0)
     {
-        if (strlen(cmd) >= sizeof(cmd) - 1)
+        if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
         {
-            // Instead of checking every string call above, assume that a maxed out
-            // string length overflowed the string.
-            Log(LOG_LEVEL_ERR, "Command line too long while modifying user '%s'", puser);
             return false;
         }
-
-        Log(LOG_LEVEL_VERBOSE, "Modifying user '%s'. (command: '%s')", puser, cmd);
-
-        int status;
-        status = system(cmd);
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+        if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
         {
-            Log(LOG_LEVEL_ERR, "Command returned error while modifying user '%s'. (Command line: '%s')", puser, cmd);
-            return false;
+            // Set real group list (see -G comment earlier).
+            strcpy(cmd, USERMOD);
+            StringAppend(cmd, " -G \"", sizeof(cmd));
+            char sep[2] = { '\0', '\0' };
+            for (Rlist *i = u.groups_secondary; i; i = i->next)
+            {
+                if (strcmp(RvalScalarValue(i->val), CF_NULL_VALUE) != 0)
+                {
+                    StringAppend(cmd, sep, sizeof(cmd));
+                    StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
+                    sep[0] = ',';
+                }
+            }
+            StringAppend(cmd, "\" ", sizeof(cmd));
+            StringAppend(cmd, puser, sizeof(cmd));
+            if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
+            {
+                return false;
+            }
         }
     }
     return true;

@@ -1,0 +1,29 @@
+### Users main BEGIN ###
+bundle agent main
+{
+  vars:
+      "users" slist => { "jack", "john" };
+      "skel" string => "/etc/skel";
+
+  users:
+    !windows::
+      "$(users)"
+        policy => "present",
+        home_dir => "/home/$(users)",
+        home_bundle => home_skel($(users), $(skel));
+}
+### Users main END ###
+
+### Home Bundle BEGIN ###
+bundle agent home_skel(user, skel)
+# @brief Initalize a users home directory with the contents of skel
+# @param user The users home directory to create
+# @param skel The directory to seed the users home with
+{
+  files:
+    "/home/$(user)/."
+      create => "true",
+      copy_from => seed_cp($(skel)),
+      depth_search => recurse("inf");
+}
+### Home Bundle END ###

@@ -22,14 +22,6 @@ bundle agent create_test_file
       create => "true";
 }
 
-bundle edit_line append_if_no_line(value)
-{ 
-  insert_lines:
-
-      "$(value)"
-      comment => "Append a line to the file if it doesn't already exist";
-}
-
 body changes diff
 {
       hash           => "sha256";

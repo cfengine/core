@@ -333,7 +333,10 @@ if !XNU
 if !SOLARIS # tls_generic_test is broken under solaris
 check_PROGRAMS += tls_generic_test
 tls_generic_test_SOURCES = tls_generic_test.c
-tls_generic_test_LDADD = libtest.la ../../libutils/libutils.la ../../libpromises/libpromises.la ../../libcfnet/libcfnet.la
+tls_generic_test_LDADD = libtest.la \
+	../../libutils/libutils.la \
+	../../libpromises/libpromises.la \
+	../../libcfnet/libcfnet.la
 endif
 endif
 

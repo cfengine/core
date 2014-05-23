@@ -92,7 +92,7 @@ static const char *const HINTS[] =
 {
     [PROMISES_OPTION_EVAL_FUNCTIONS] = "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'yes'",
     [PROMISES_OPTION_SHOW_CLASSES] = "Show discovered classes, including those defined in common bundles in policy",
-    [PROMISES_OPTION_SHOW_VARIABLES] = "Show discovered variables, including those defined anywhere in policy",
+    [PROMISES_OPTION_SHOW_VARIABLES] = "Show discovered variables, including those defined without dependency to user-defined classes in policy",
     "Print the help message",
     "Use the specified bundlesequence for verification",
     "Enable debugging output",

@@ -43,12 +43,6 @@ body rename rotate
       rotate => "1";
 }
 
-body action warn_only
-{
-      action_policy => "warn";
-      ifelapsed => "60";
-}
-
 #######################################################
 
 bundle agent check

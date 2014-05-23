@@ -63,11 +63,11 @@ bundle edit_line test_delete(str)
 {
   delete_lines:
       "$(str)"
-      action => warn_only,
+      action => test_warn_only,
       classes => full_set;
 }
 
-body action warn_only
+body action test_warn_only
 {
       action_policy => "nop";
 }

@@ -443,7 +443,9 @@ int ssl_server_init()
     }
 
     /* Set options to always request a certificate from the peer. */
-    SSL_CTX_set_verify(SSLSERVERCONTEXT, SSL_VERIFY_PEER, NULL);
+    SSL_CTX_set_verify(SSLSERVERCONTEXT,
+                       SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                       NULL);
     /* Always accept that certificate, this is a dummy server. */
     SSL_CTX_set_cert_verify_callback(SSLSERVERCONTEXT, always_true, NULL);
     correctly_initialized = true;

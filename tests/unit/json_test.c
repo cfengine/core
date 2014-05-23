@@ -785,6 +785,69 @@ static void test_parse_empty_string(void)
     assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
 
     assert_false(json);
+
+    data = "\"\"";
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+
+    assert_string_equal("", JsonPrimitiveGetAsString(json));
+
+    JsonDestroy(json);
+}
+
+static char *JsonToString(const JsonElement *json)
+{
+    Writer *w = StringWriter();
+    JsonWriteCompact(w, json);
+    return StringWriterClose(w);
+}
+
+static void test_parse_escaped_string(void)
+{
+    {
+        const char *data = "\"\\\\\"";
+        const char *original = data;
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+
+        assert_string_equal("\\", JsonPrimitiveGetAsString(json));
+
+        char *out = JsonToString(json);
+        assert_string_equal(original, out);
+        free(out);
+
+        JsonDestroy(json);
+    }
+
+    {
+        // included by paranoia from Redmine #5773
+        const char *data = "\"/\\\\//\\\\/\\\\\"";
+        const char *original = data;
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+
+        assert_string_equal("/\\//\\/\\", JsonPrimitiveGetAsString(json));
+
+        char *out = JsonToString(json);
+        assert_string_equal(original, out);
+        free(out);
+
+        JsonDestroy(json);
+    }
+
+    {
+        const char *data = "\"x\\tx\"";
+        const char *original = data;
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+
+        assert_string_equal("x\tx", JsonPrimitiveGetAsString(json));
+
+        char *out = JsonToString(json);
+        assert_string_equal(original, out);
+        free(out);
+
+        JsonDestroy(json);
+    }
 }
 
 static void test_parse_good_numbers(void)
@@ -1204,6 +1267,7 @@ int main()
         unit_test(test_merge_array),
         unit_test(test_merge_object),
         unit_test(test_parse_empty_string),
+        unit_test(test_parse_escaped_string),
         unit_test(test_parse_empty_containers),
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),

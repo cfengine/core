@@ -1500,6 +1500,7 @@ const char* JsonParseErrorToString(JsonParseError error)
 
         [JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_START] = "Unable to parse json data as string, did not start with doublequote",
         [JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_END] = "Unable to parse json data as string, did not end with doublequote",
+        [JSON_PARSE_ERROR_STRING_UNSUPPORTED_ESCAPE] = "Unsupported escape sequence",
 
         [JSON_PARSE_ERROR_NUMBER_EXPONENT_NEGATIVE] = "Unable to parse json data as number, - not at the start or not after exponent",
         [JSON_PARSE_ERROR_NUMBER_EXPONENT_POSITIVE] = "Unable to parse json data as number, + without preceding exponent",
@@ -1543,26 +1544,47 @@ static JsonParseError JsonParseAsString(const char **data, char **str_out)
 
     for (*data = *data + 1; **data != '\0'; *data = *data + 1)
     {
-        if (**data == '"' && *(*data - 1) != '\\')
+        switch (**data)
         {
+        case '"':
             *str_out = StringWriterClose(writer);
             return JSON_PARSE_OK;
-        }
 
-        /* unescaping input strings */
-        if (**data == '\\' &&
-                (*(*data + 1) == '\"' ||
-                 *(*data + 1) == '\\' ||
-                 *(*data + 1) == '\b' ||
-                 *(*data + 1) == '\f' ||
-                 *(*data + 1) == '\n' ||
-                 *(*data + 1) == '\r' ||
-                 *(*data + 1) == '\t'))
-        {
+        case '\\':
+            *data = *data + 1;
+            switch (**data)
+            {
+            case '\\':
+            case '"':
+            case '/':
+                WriterWriteChar(writer, **data);
+                continue;
+            case 'b':
+                WriterWriteChar(writer, '\b');
+                continue;
+            case 'f':
+                WriterWriteChar(writer, '\f');
+                continue;
+            case 'n':
+                WriterWriteChar(writer, '\n');
+                continue;
+            case 'r':
+                WriterWriteChar(writer, '\r');
+                continue;
+            case 't':
+                WriterWriteChar(writer, '\t');
+                continue;
+
+            default:
+                WriterClose(writer);
+                *str_out = NULL;
+                return JSON_PARSE_ERROR_STRING_UNSUPPORTED_ESCAPE;
+            }
+
+        default:
+            WriterWriteChar(writer, **data);
             continue;
         }
-
-        WriterWriteChar(writer, **data);
     }
 
     WriterClose(writer);

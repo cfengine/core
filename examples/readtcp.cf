@@ -30,7 +30,7 @@ bundle agent example
 {
   vars:
 
-      "my80" string => readtcp("cfengine.com","80","GET /index.php HTTP/1.1$(const.r)$(const.n)Host: cfengine.com$(const.r)$(const.n)$(const.r)$(const.n)",20);
+      "my80" string => readtcp("cfengine.com","80","GET /wp-includes/js/jquery/jquery.color.min.js HTTP/1.1$(const.r)$(const.n)Host: cfengine.com$(const.r)$(const.n)$(const.r)$(const.n)",20);
 
   classes:
 

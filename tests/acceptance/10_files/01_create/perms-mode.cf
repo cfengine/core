@@ -19,7 +19,7 @@ bundle agent test
     freebsd|solaris::
       "modes" slist => { "1", "333", "100", "200", "777" };
     !freebsd.!solaris::
-      "modes" slist => { "1", "333", "100", "200", "777", "1111", "1010", "13400" };
+      "modes" slist => { "1", "333", "100", "200", "777", "1111", "1010", "13400", "22222" };
 
   files:
       "$(G.testdir)/$(modes)"
@@ -49,6 +49,7 @@ bundle agent check
   "1111": "$(win_r)",
   "1010": "$(win_r)",
   "13400": "$(win_r)",
+  "22222": "$(win_r)",
 }');
 
     freebsd|solaris::
@@ -72,6 +73,7 @@ bundle agent check
   "1111": "101111",
   "1010": "101010",
   "13400": "103400",
+  "22222": "102222",
 }');
 
     any::
@@ -84,7 +86,7 @@ bundle agent check
       "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777" };
 
       !freebsd.!solaris::
-      "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777", "ok_1111", "ok_1010", "ok_13400" };
+      "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777", "ok_1111", "ok_1010", "ok_13400", "ok_22222" };
 
   reports:
     DEBUG::

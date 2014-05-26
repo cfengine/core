@@ -410,7 +410,6 @@ const ConstraintSyntax OSPF_CONTROLBODY[] =
     ConstraintSyntaxNewNull()
 };
 
-
 const ConstraintSyntax BGP_CONTROLBODY[] =
 {
     ConstraintSyntaxNewOption("bgp_log_adjacency_changes", "normal,detail,none", "BGP logging of neighbour changes", SYNTAX_STATUS_NORMAL),

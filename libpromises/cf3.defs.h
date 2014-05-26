@@ -370,6 +370,7 @@ typedef enum
 #define CF_HUBC     "hub"
 #define CF_FILEC    "file"
 #define CF_OSPFC    "ospf"
+#define CF_BGPC     "bgp"
 
 typedef enum
 {
@@ -383,6 +384,7 @@ typedef enum
     AGENT_TYPE_HUB,
     AGENT_TYPE_FILE,
     AGENT_TYPE_OSPF,
+    AGENT_TYPE_BGP,
     AGENT_TYPE_NOAGENT
 } AgentType;
 
@@ -530,7 +532,7 @@ typedef enum
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
 #define CF_IPRANGE     "[a-zA-Z0-9_$(){}/.:-]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_(){}.$@]+"
-#define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
+#define CF_NAKEDLRANGE "@[(][a-zA-Z0-9_$(){}\\[\\].:]+[)]"
 #define CF_ANYSTRING   ".*"
 
 #define CF_KEYSTRING   "^(SHA|MD5)=[0123456789abcdef]*$"

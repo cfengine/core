@@ -681,3 +681,46 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
     LogRaw(LOG_LEVEL_DEBUG, "TLSRecvLines(): ", buf, got);
     return got;
 }
+
+/**
+ * Set safe OpenSSL defaults commonly used by both clients and servers.
+ */
+void TLSSetDefaultOptions(SSL_CTX *ssl_ctx)
+{
+    /* Clear all flags, we do not want compatibility tradeoffs like
+     * SSL_OP_LEGACY_SERVER_CONNECT. */
+    SSL_CTX_clear_options(ssl_ctx, SSL_CTX_get_options(ssl_ctx));
+
+    /* Use only TLS v1 or later.
+       TODO policy option for SSL_OP_NO_TLSv{1,1_1} */
+    long options = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+
+    /* No session resumption or renegotiation for now. */
+    options |= SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
+
+    /* Disable another way of resuption, session tickets (RFC 5077). */
+    options |= SSL_OP_NO_TICKET;
+
+    SSL_CTX_set_options(ssl_ctx, options);
+
+
+    /* Disable both server-side and client-side session caching, to
+       complement the previous options. Safe for now, might enable for
+       performance in the future. */
+    SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF);
+
+
+    /* Never bother with retransmissions, SSL_write() should
+     * always either write the whole amount or fail. */
+    SSL_CTX_set_mode(ssl_ctx, SSL_MODE_AUTO_RETRY);
+
+    /* Set options to always request a certificate from the peer,
+       either we are client or server. */
+    SSL_CTX_set_verify(ssl_ctx,
+                       SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                       NULL);
+    /* Always accept that certificate, we do proper checking after TLS
+     * connection is established since OpenSSL can't pass a connection
+     * specific pointer to the callback (so we would have to lock).  */
+    SSL_CTX_set_cert_verify_callback(ssl_ctx, TLSVerifyCallback, NULL);
+}

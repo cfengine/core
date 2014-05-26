@@ -1,0 +1,77 @@
+
+#
+# Parsing paramaterized arrays
+#
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { "init", "check" };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => write,
+      edit_defaults => empty;
+
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => write_control,
+      edit_defaults => empty;
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile).expected",
+                                        "$(G.testfile).actual",
+                                        "$(this.promise_filename)");
+
+}
+
+#######################################################
+
+bundle edit_line write_control
+{
+  insert_lines:
+
+      "1
+3
+2
+one
+two
+three
+four";
+}
+
+bundle edit_line write
+{
+  vars:
+
+      "a[1]" string => "a";
+      "a[2]" string => "b";
+      "a[3]" string => "c";
+
+      "alias" string => "a";
+      "list" slist => getindices($(alias));
+
+      "one[$(sys.uqhost)]" slist => { "one", "two" };
+      "two"         slist => { "three", "four" };
+      "oneandtwo"   slist => { @(one[$(sys.uqhost)]), @(two) };
+
+  insert_lines:
+
+      "$(list)";
+      "$(oneandtwo)";
+}
+

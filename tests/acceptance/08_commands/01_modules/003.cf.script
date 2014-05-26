@@ -1,3 +1,0 @@
-#!/bin/sh
-
-echo =myvar[dot.dash-test]=42

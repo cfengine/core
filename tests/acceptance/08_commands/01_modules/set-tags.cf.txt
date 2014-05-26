@@ -1,0 +1,12 @@
+^context=xyz
+^meta=xyz,abc=def,,??what is this??
++myclass
+=myvar=hello there
+@mylist={"abc", "def", "ghi"}
+@myalist={"{{abc}}", "  ' def}", "ghi'''"}
+^meta=1,2,3
+@myblist={'{{a,bc}}', '  " de,f}', 'gh,,i"""'}
++mybclass
+^meta=a,b,c
+@myclist={"{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''"}
++mycclass

@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub", "../../plucked.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -15,24 +15,23 @@ body common control
 bundle agent init
 {
   vars:
-      "script_name" string => "$(this.promise_filename).script";
+      "script_name" string => "$(this.promise_filename).txt";
 }
 
 #######################################################
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine1884" };
-
-  classes:
-      "matched" expression => regextract(".+/([^/]+)$",
-					 "${init.script_name}",
-					 "script_basename");
+  vars:
+    !windows::
+      "cat_prefix" string => "cat";
+    windows::
+      "cat_prefix" string => "cat_exe";
 
   commands:
-      "$(init.script_name)" module => "true";
+      "$(G.cat) $(init.script_name)"
+        contain => in_shell,
+        module => "true";
 }
 
 #######################################################
@@ -40,18 +39,16 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "canonical_script_basename" string => canonify("${test.script_basename[1]}");
-
-      "generated_indices" slist => getindices("${canonical_script_basename}.answer");
+      "generated_indices" slist => getindices("$(test.cat_prefix).answer");
 
   classes:
 
-      "ok" and => { strcmp("${${canonical_script_basename}.answer[42]}", "Yes"),
-                    strcmp("${${canonical_script_basename}.answer[41]}", "No") };
+      "ok" and => { strcmp("${$(test.cat_prefix).answer[42]}", "Yes"),
+                    strcmp("${$(test.cat_prefix).answer[41]}", "No") };
 
   reports:
     DEBUG::
-      "${${canonical_script_basename}.answer[${generated_indices}]}";
+      "${$(test.cat_prefix).answer[${generated_indices}]}";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

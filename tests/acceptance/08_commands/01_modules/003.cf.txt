@@ -1,0 +1,1 @@
+=myvar[dot.dash-test]=42

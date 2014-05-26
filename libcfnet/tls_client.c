@@ -74,14 +74,7 @@ bool TLSClientInitialize()
         goto err1;
     }
 
-    /* Use only TLS v1 or later.
-       TODO option for SSL_OP_NO_TLSv{1,1_1} */
-    SSL_CTX_set_options(SSLCLIENTCONTEXT,
-                        SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
-
-    /* Never bother with retransmissions, SSL_write() should
-     * always either write the whole amount or fail. */
-    SSL_CTX_set_mode(SSLCLIENTCONTEXT, SSL_MODE_AUTO_RETRY);
+    TLSSetDefaultOptions(SSLCLIENTCONTEXT);
 
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
@@ -123,14 +116,6 @@ bool TLSClientInitialize()
             ERR_reason_error_string(ERR_get_error()));
         goto err3;
     }
-
-    /* Set options to always request a certificate from the peer, either we
-     * are client or server. */
-    SSL_CTX_set_verify(SSLCLIENTCONTEXT, SSL_VERIFY_PEER, NULL);
-    /* Always accept that certificate, we do proper checking after TLS
-     * connection is established since OpenSSL can't pass a connection
-     * specific pointer to the callback (so we would have to lock).  */
-    SSL_CTX_set_cert_verify_callback(SSLCLIENTCONTEXT, TLSVerifyCallback, NULL);
 
     is_initialised = true;
     return true;

@@ -35,7 +35,7 @@
 extern int CONNECTIONINFO_SSL_IDX;
 
 
-bool TLSGenericInitialize();
+bool TLSGenericInitialize(void);
 int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
 int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
 X509 *TLSGenerateCertFromPrivKey(RSA *privkey);
@@ -43,5 +43,6 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code);
 int TLSSend(SSL *ssl, const char *buffer, int length);
 int TLSRecv(SSL *ssl, char *buffer, int length);
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
+void TLSSetDefaultOptions(SSL_CTX *ssl_ctx);
 
 #endif

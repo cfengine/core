@@ -53,9 +53,10 @@ bool ServerTLSInitialize()
 {
     int ret;
 
-    /* OpenSSL is needed for our new protocol over TLS. */
-    SSL_library_init();
-    SSL_load_error_strings();
+    if (!TLSGenericInitialize())
+    {
+        return false;
+    }
 
     assert(SSLSERVERCONTEXT == NULL);
     SSLSERVERCONTEXT = SSL_CTX_new(SSLv23_server_method());
@@ -134,7 +135,9 @@ bool ServerTLSInitialize()
 
     /* Set options to always request a certificate from the peer, either we
      * are client or server. */
-    SSL_CTX_set_verify(SSLSERVERCONTEXT, SSL_VERIFY_PEER, NULL);
+    SSL_CTX_set_verify(SSLSERVERCONTEXT,
+                       SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                       NULL);
     /* Always accept that certificate, we do proper checking after TLS
      * connection is established since OpenSSL can't pass a connection
      * specific pointer to the callback (so we would have to lock).  */
@@ -397,6 +400,9 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             return -1;
         }
         ConnectionInfoSetSSL(conn->conn_info, ssl);
+
+        /* Pass conn_info inside the ssl struct for TLSVerifyCallback(). */
+        SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn->conn_info);
 
         /* Now we are letting OpenSSL take over the open socket. */
         int sd = ConnectionInfoSocket(conn->conn_info);

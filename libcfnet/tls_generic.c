@@ -35,24 +35,234 @@
 #include <assert.h>
 
 
-/**
- * this is an always succeeding callback for SSL_CTX_set_cert_verify_callback().
- *
- * Verifying with a callback is the best way, *but* OpenSSL does not provide a
- * thread-safe way to passing a pointer with custom data (connection info). So
- * we always succeed verification here, and verify properly *after* the
- * handshake is complete.
- */
-int TLSVerifyCallback(X509_STORE_CTX *ctx ARG_UNUSED,
-                      void *arg ARG_UNUSED)
+int CONNECTIONINFO_SSL_IDX = -1;
+
+
+bool TLSGenericInitialize()
 {
-    return 1;
+    static bool is_initialised = false;
+
+    /* We must make sure that SSL_get_ex_new_index() is called only once! */
+    if (is_initialised)
+    {
+        return true;
+    }
+
+    /* OpenSSL is needed for TLS. */
+    SSL_library_init();
+    SSL_load_error_strings();
+
+    /* Register a unique place to store ConnectionInfo within SSL struct. */
+    CONNECTIONINFO_SSL_IDX =
+        SSL_get_ex_new_index(0, "Pointer to ConnectionInfo",
+                             NULL, NULL, NULL);
+
+    is_initialised = true;
+    return true;
 }
 
 /**
- * @retval 1 if the certificate received during the TLS handshake is valid
- *         signed and its public key is the same with the stored one for that
- *         host.
+ * @retval 1 equal
+ * @retval 0 not equal
+ * @retval -1 error
+ */
+static int CompareCertToRSA(X509 *cert, RSA *rsa_key)
+{
+    int ret;
+    int retval = -1;                                            /* ERROR */
+
+    EVP_PKEY *cert_pkey = X509_get_pubkey(cert);
+    if (cert_pkey == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "X509_get_pubkey: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto ret1;
+    }
+    if (EVP_PKEY_type(cert_pkey->type) != EVP_PKEY_RSA)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Received key of unknown type, only RSA currently supported!");
+        goto ret2;
+    }
+
+    RSA *cert_rsa_key = EVP_PKEY_get1_RSA(cert_pkey);
+    if (cert_rsa_key == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "TLSVerifyPeer: EVP_PKEY_get1_RSA failed!");
+        goto ret2;
+    }
+
+    EVP_PKEY *rsa_pkey = EVP_PKEY_new();
+    if (rsa_pkey == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "TLSVerifyPeer: EVP_PKEY_new allocation failed!");
+        goto ret3;
+    }
+
+    ret = EVP_PKEY_set1_RSA(rsa_pkey, rsa_key);
+    if (ret == 0)
+    {
+        Log(LOG_LEVEL_ERR, "TLSVerifyPeer: EVP_PKEY_set1_RSA failed!");
+        goto ret4;
+    }
+
+    ret = EVP_PKEY_cmp(cert_pkey, rsa_pkey);
+    if (ret == 1)
+    {
+        Log(LOG_LEVEL_DEBUG,
+            "Public key to certificate compare equal");
+        retval = 1;                                             /* EQUAL */
+    }
+    else if (ret == 0 || ret == -1)
+    {
+        Log(LOG_LEVEL_DEBUG,
+            "Public key to certificate compare different");
+        retval = 0;                                            /* NOT EQUAL */
+    }
+    else
+    {
+        const char *errmsg = ERR_reason_error_string(ERR_get_error());
+        Log(LOG_LEVEL_ERR, "OpenSSL EVP_PKEY_cmp: %d %s",
+            ret, errmsg ? errmsg : "");
+    }
+
+  ret4:
+    EVP_PKEY_free(rsa_pkey);
+  ret3:
+    RSA_free(cert_rsa_key);
+  ret2:
+    EVP_PKEY_free(cert_pkey);
+
+  ret1:
+    return retval;
+}
+
+/**
+ * The only thing we make sure here is that any key change is not allowed. All
+ * the rest of authentication happens separately *after* the initial
+ * handshake, thus *after* this callback has returned successfully and TLS
+ * session has been established.
+ */
+int TLSVerifyCallback(X509_STORE_CTX *store_ctx,
+                      void *arg ARG_UNUSED)
+{
+
+    /* It's kind of tricky to get custom connection-specific info in this
+     * callback. We first acquire a pointer to the SSL struct of the
+     * connection and... */
+    int ssl_idx = SSL_get_ex_data_X509_STORE_CTX_idx();
+    SSL *ssl = X509_STORE_CTX_get_ex_data(store_ctx, ssl_idx);
+    if (ssl == NULL)
+    {
+        UnexpectedError("No SSL context during handshake, denying!");
+        return 0;
+    }
+
+    /* ...and then we ask for the custom data we attached there. */
+    ConnectionInfo *conn_info = SSL_get_ex_data(ssl, CONNECTIONINFO_SSL_IDX);
+    if (conn_info == NULL)
+    {
+        UnexpectedError("No conn_info at index %d", CONNECTIONINFO_SSL_IDX);
+        return 0;
+    }
+
+    /* From that data get the key if the connection is already established. */
+    RSA *already_negotiated_key = KeyRSA(ConnectionInfoKey(conn_info));
+    /* Is there an already negotiated certificate? */
+    X509 *previous_tls_cert = SSL_get_peer_certificate(ssl);
+
+    if (previous_tls_cert == NULL)
+    {
+        Log(LOG_LEVEL_DEBUG, "TLSVerifyCallback: no ssl->peer_cert");
+        if (already_negotiated_key == NULL)
+        {
+            Log(LOG_LEVEL_DEBUG, "TLSVerifyCallback: no conn_info->key");
+            Log(LOG_LEVEL_DEBUG,
+                "This must be the initial TLS handshake, accepting");
+            return 1;                                   /* ACCEPT HANDSHAKE */
+        }
+        else
+        {
+            UnexpectedError("Initial handshake, but old keys differ, denying!");
+            return 0;
+        }
+    }
+    else                                     /* TLS renegotiation handshake */
+    {
+        if (already_negotiated_key == NULL)
+        {
+            Log(LOG_LEVEL_DEBUG, "TLSVerifyCallback: no conn_info->key");
+            Log(LOG_LEVEL_ERR,
+                "Renegotiation handshake before trust was established, denying!");
+            X509_free(previous_tls_cert);
+            return 0;                                           /* fishy */
+        }
+        else
+        {
+            /* previous_tls_cert key should match already_negotiated_key. */
+            if (CompareCertToRSA(previous_tls_cert,
+                                 already_negotiated_key) != 1)
+            {
+                UnexpectedError("Renegotiation caused keys to differ, denying!");
+                X509_free(previous_tls_cert);
+                return 0;
+            }
+            else
+            {
+                /* THIS IS THE ONLY WAY TO CONTINUE */
+            }
+        }
+    }
+
+    assert(previous_tls_cert != NULL);
+    assert(already_negotiated_key != NULL);
+
+    /* At this point we have ensured that previous_tls_cert->key is equal
+     * to already_negotiated_key, so we might as well forget the former. */
+    X509_free(previous_tls_cert);
+
+    /* We want to compare already_negotiated_key to the one the peer
+     * negotiates in this TLS renegotiation. So, extract first certificate out
+     * of the chain the peer sent. It should be the only one since we do not
+     * support certificate chains, we just want the RSA key. */
+    STACK_OF(X509) *chain = X509_STORE_CTX_get_chain(store_ctx);
+    if (chain == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "No certificate chain inside TLS handshake, denying!");
+        return 0;
+    }
+
+    int chain_len = sk_X509_num(chain);
+    if (chain_len != 1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "More than one certificate presented in TLS handshake, refusing handshake!");
+        return 0;
+    }
+
+    X509 *new_cert = sk_X509_value(chain, 0);
+    if (new_cert == NULL)
+    {
+        UnexpectedError("NULL certificate at the beginning of chain!");
+        return 0;
+    }
+
+    if (CompareCertToRSA(new_cert, already_negotiated_key) != 1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Peer attempted to change key during TLS renegotiation, denying!");
+        return 0;
+    }
+
+    Log(LOG_LEVEL_DEBUG,
+        "TLS renegotiation occurred but keys are still the same, accepting");
+    return 1;                                           /* ACCEPT HANDSHAKE */
+}
+
+/**
+ * @retval 1 if the public key used by the peer in the TLS handshake is the
+ *         same with the one stored for that host.
  * @retval 0 if stored key for the host is missing or differs from the one
  *         received.
  * @retval -1 in case of other error (error will be Log()ed).

@@ -32,6 +32,10 @@
 #include <logging.h>                                            /* LogLevel */
 
 
+extern int CONNECTIONINFO_SSL_IDX;
+
+
+bool TLSGenericInitialize();
 int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
 int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
 X509 *TLSGenerateCertFromPrivKey(RSA *privkey);

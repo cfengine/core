@@ -29,9 +29,9 @@ static bool correctly_initialized = false;
 static pid_t pid = -1;
 static int server_public_key_file = -1;
 static int certificate_file = -1;
-static char server_name_template_public[] = "/tmp/tls_test/ghijklXXXXXX";
-static char server_certificate_template_public[] = "/tmp/tls_test/certXXXXXX";
-static char temporary_folder[] = "/tmp/tls_test";
+static char temporary_folder[] = "/tmp/tls_test_XXXXXX";
+static char server_name_template_public[128];
+static char server_certificate_template_public[128];
 /*
  * Helper functions, used to start a server and a client.
  * Notice that the child is the server, not the other way around.
@@ -268,8 +268,15 @@ int start_child_process()
     return 0;
 }
 
+static int always_true(X509_STORE_CTX *store_ctx ARG_UNUSED,
+                       void *arg ARG_UNUSED)
+{
+    return 1;
+}
+
 int ssl_server_init()
 {
+    int ret;
     /*
      * This is twisted. We can generate the required keys by calling RSA_generate_key,
      * however we cannot put the private part and the public part in the two containers.
@@ -283,10 +290,14 @@ int ssl_server_init()
         correctly_initialized = false;
         return -1;
     }
-    char name_template_private[] = "/tmp/tls_test/abcdefXXXXXX";
+
+    char name_template_private[128];
+    ret = snprintf(name_template_private, sizeof(name_template_private), "%s/%s",
+                   temporary_folder, "name_template_private.XXXXXX");
+    assert(ret > 0 && ret < sizeof(name_template_private));
+
     int private_key_file = 0;
     FILE *private_key_stream = NULL;
-    int ret = 0;
 
     private_key_file = mkstemp(name_template_private);
     if (private_key_file < 0)
@@ -315,16 +326,7 @@ int ssl_server_init()
     }
     fclose(private_key_stream);
 
-    int public_key_file = 0;
-    FILE *public_key_stream = NULL;
-    public_key_file = mkstemp(server_name_template_public);
-    if (public_key_file < 0)
-    {
-        correctly_initialized = false;
-        return -1;
-    }
-    server_public_key_file = public_key_file;
-    public_key_stream = fdopen(public_key_file, "w+");
+    FILE *public_key_stream = fdopen(server_public_key_file, "w+");
     if (!public_key_stream)
     {
         correctly_initialized = false;
@@ -337,7 +339,7 @@ int ssl_server_init()
         return -1;
     }
     fflush(public_key_stream);
-    fsync(public_key_file);
+
     fseek(public_key_stream, 0L, SEEK_SET);
     PUBKEY = PEM_read_RSAPublicKey(public_key_stream, (RSA **)NULL, NULL, NULL);
     if (!PUBKEY)
@@ -410,15 +412,7 @@ int ssl_server_init()
                 ERR_reason_error_string(ERR_get_error()));
             goto err3;
         }
-        /*
-         * Create a temporary file and save the certificate there
-         */
-        certificate_file = mkstemp(server_certificate_template_public);
-        if (certificate_file < 0)
-        {
-            correctly_initialized = false;
-            return -1;
-        }
+
         FILE *certificate_stream = fdopen(certificate_file, "w+");
         if (!certificate_stream)
         {
@@ -427,7 +421,6 @@ int ssl_server_init()
         }
         PEM_write_X509(certificate_stream, x509);
         fflush(certificate_stream);
-        fsync(certificate_file);
     }
 
     SSL_CTX_use_certificate(SSLSERVERCONTEXT, SSLSERVERCERT);
@@ -449,13 +442,12 @@ int ssl_server_init()
         goto err3;
     }
 
-    /* Set options to always request a certificate from the peer, either we
-     * are client or server. */
-    SSL_CTX_set_verify(SSLSERVERCONTEXT, SSL_VERIFY_PEER, NULL);
-    /* Always accept that certificate, we do proper checking after TLS
-     * connection is established since OpenSSL can't pass a connection
-     * specific pointer to the callback (so we would have to lock).  */
-    SSL_CTX_set_cert_verify_callback(SSLSERVERCONTEXT, TLSVerifyCallback, NULL);
+    /* Set options to always request a certificate from the peer. */
+    SSL_CTX_set_verify(SSLSERVERCONTEXT,
+                       SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                       NULL);
+    /* Always accept that certificate, this is a dummy server. */
+    SSL_CTX_set_cert_verify_callback(SSLSERVERCONTEXT, always_true, NULL);
     correctly_initialized = true;
     return 0;
   err3:
@@ -484,19 +476,23 @@ void ssl_client_init()
         correctly_initialized = false;
         return;
     }
-    char name_template_private[] = "/tmp/tls_test/mnopqrXXXXXX";
-    char name_template_public[] = "/tmp/tls_test/stuvwxXXXXXX";
-    int private_key_file = 0;
-    FILE *private_key_stream = NULL;
-    int ret = 0;
+    char name_template_private[128];
+    char name_template_public[128];
+    int ret;
 
-    private_key_file = mkstemp(name_template_private);
+    ret = snprintf(name_template_private,
+                   sizeof(name_template_private),
+                   "%s/%s",
+                   temporary_folder, "name_template_private.XXXXXX");
+    assert(ret > 0 && ret < sizeof(name_template_private));
+
+    int private_key_file = mkstemp(name_template_private);
     if (private_key_file < 0)
     {
         correctly_initialized = false;
         return;
     }
-    private_key_stream = fdopen(private_key_file, "w+");
+    FILE *private_key_stream = fdopen(private_key_file, "w+");
     if (!private_key_stream)
     {
         correctly_initialized = false;
@@ -517,15 +513,20 @@ void ssl_client_init()
     }
     fclose(private_key_stream);
 
-    int public_key_file = 0;
-    FILE *public_key_stream = NULL;
-    public_key_file = mkstemp(name_template_public);
+    ret = snprintf(name_template_public,
+                   sizeof(name_template_public),
+                   "%s/%s",
+                   temporary_folder, "name_template_public.XXXXXX");
+    assert(ret > 0 && ret < sizeof(name_template_public));
+
+    int public_key_file = mkstemp(name_template_public);
     if (public_key_file < 0)
     {
+        perror("mkstemp");
         correctly_initialized = false;
         return;
     }
-    public_key_stream = fdopen(public_key_file, "w+");
+    FILE *public_key_stream = fdopen(public_key_file, "w+");
     if (!public_key_stream)
     {
         correctly_initialized = false;
@@ -650,25 +651,56 @@ void ssl_client_init()
     return;
 }
 
+static bool create_temps()
+{
+    int ret;
+    char *retp = mkdtemp(temporary_folder);
+    if (retp == NULL)
+    {
+        perror("mkdtemp");
+        return false;
+    }
+
+    ret = snprintf(server_name_template_public,
+                   sizeof(server_name_template_public),
+                   "%s/%s",
+                   temporary_folder, "server_name_template_public.XXXXXX");
+    assert(ret > 0 && ret < sizeof(server_name_template_public));
+
+    server_public_key_file = mkstemp(server_name_template_public);
+    if (server_public_key_file < 0)
+    {
+        perror("mkstemp");
+        return false;
+    }
+
+    ret = snprintf(server_certificate_template_public,
+                   sizeof(server_certificate_template_public),
+                   "%s/%s",
+                   temporary_folder, "server_certificate_template_public.XXXXXX");
+    assert(ret > 0 && ret < sizeof(server_certificate_template_public));
+
+    certificate_file = mkstemp(server_certificate_template_public);
+    if (certificate_file < 0)
+    {
+        perror("mkstemp");
+        return false;
+    }
+
+    return true;
+}
+
 void tests_setup(void)
 {
     int ret = 0;
 
-    /*
-     * Create a temporary folder to store our files.
-     * We do not use mkdtemp to avoid putting our temporary files in the wrong place.
-     * In any case, mkdir fails if the folder already exists.
-     */
-    ret = mkdir(temporary_folder, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
-    if (ret < 0)
+    TLSGenericInitialize();
+
+    if (!create_temps())
     {
-        printf("could not create folder %s\n", temporary_folder);
         correctly_initialized = false;
         return;
     }
-    /* OpenSSL is needed for our new protocol over TLS. */
-    SSL_library_init();
-    SSL_load_error_strings();
 
     /*
      * First we start a new process to have a server for our tests.
@@ -1085,20 +1117,18 @@ int EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
  * int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
  */
 #define ASSERT_INITIALIZED assert_true(correctly_initialized)
+
+
 static void test_TLSVerifyCallback(void)
 {
     ASSERT_INITIALIZED;
-    /*
-     * This function always returns 1.
-     * We do this in order to be able to avoid the locking.
-     * This test exists as a reminder for the future, in case somebody changes the return value
-     * this test will fail. Update the logic in the TLS negotiation if you change the verification
-     * callback.
-     */
+
     RESET_STATUS;
-    X509_STORE_CTX ctx;
-    char test[16];
-    assert_int_equal(1, TLSVerifyCallback(&ctx, test));
+    /*
+     * TODO test that TLSVerifyCallback returns 0 in case certificate changes
+     * during renegotiation. Must initialise a connection, and then trigger
+     * renegotiation with and without the certificate changing.
+     */
     RESET_STATUS;
 }
 
@@ -1147,6 +1177,8 @@ static void test_TLSVerifyPeer(void)
     ssl = SSL_new(SSLCLIENTCONTEXT);
     assert_true(ssl != NULL);
     SSL_set_fd(ssl, server);
+    /* Pass conn_info inside the ssl struct for TLSVerifyCallback(). */
+    SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn_info);
     /*
      * Establish the TLS connection over the socket.
      */
@@ -1162,6 +1194,7 @@ static void test_TLSVerifyPeer(void)
      */
     X509 *certificate = NULL;
     FILE *certificate_stream = fopen(server_certificate_template_public, "r");
+    assert_true(certificate_stream != NULL);
     certificate = PEM_read_X509(certificate_stream, (X509 **)NULL, NULL, NULL);
     assert_true(certificate != NULL);
 
@@ -1313,6 +1346,11 @@ static void test_TLSBasicIO(void)
     ssl = SSL_new(SSLCLIENTCONTEXT);
     assert_true(ssl != NULL);
     SSL_set_fd(ssl, server);
+
+    /* Pass dummy conn_info inside the ssl struct for TLSVerifyCallback(), not
+     * needed for anything else in here. */
+    ConnectionInfo *conn_info = ConnectionInfoNew();
+    SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn_info);
     /*
      * Establish the TLS connection over the socket.
      */
@@ -1395,6 +1433,7 @@ static void test_TLSBasicIO(void)
     {
         SSL_free(ssl);
     }
+    ConnectionInfoDestroy(&conn_info);
     RESET_STATUS;
 }
 
@@ -1405,7 +1444,7 @@ int main()
 
     const UnitTest tests[] =
     {
-        unit_test(test_TLSVerifyCallback),
+        /* unit_test(test_TLSVerifyCallback), */
         unit_test(test_TLSVerifyPeer),
         unit_test(test_TLSBasicIO)
     };

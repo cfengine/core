@@ -67,10 +67,7 @@ bool ServerTLSInitialize()
         goto err1;
     }
 
-    /* Use only TLS v1 or later.
-       TODO option for SSL_OP_NO_TLSv{1,1_1} */
-    SSL_CTX_set_options(SSLSERVERCONTEXT,
-                        SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+    TLSSetDefaultOptions(SSLSERVERCONTEXT);
 
     /*
      * CFEngine is not a web server so we don't need many ciphers. We only
@@ -92,10 +89,6 @@ bool ServerTLSInitialize()
             "No valid ciphers in cipher list: %s",
             cipher_list);
     }
-
-    /* Never bother with retransmissions, SSL_write() should
-     * always either write the whole amount or fail. */
-    SSL_CTX_set_mode(SSLSERVERCONTEXT, SSL_MODE_AUTO_RETRY);
 
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
@@ -132,16 +125,6 @@ bool ServerTLSInitialize()
             ERR_reason_error_string(ERR_get_error()));
         goto err3;
     }
-
-    /* Set options to always request a certificate from the peer, either we
-     * are client or server. */
-    SSL_CTX_set_verify(SSLSERVERCONTEXT,
-                       SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
-                       NULL);
-    /* Always accept that certificate, we do proper checking after TLS
-     * connection is established since OpenSSL can't pass a connection
-     * specific pointer to the callback (so we would have to lock).  */
-    SSL_CTX_set_cert_verify_callback(SSLSERVERCONTEXT, TLSVerifyCallback, NULL);
 
     return true;
 

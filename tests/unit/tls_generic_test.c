@@ -358,14 +358,11 @@ int ssl_server_init()
         goto err1;
     }
 
-    /* Use only TLS v1 or later.
-       TODO option for SSL_OP_NO_TLSv{1,1_1} */
-    SSL_CTX_set_options(SSLSERVERCONTEXT,
-                        SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+    TLSSetDefaultOptions(SSLSERVERCONTEXT);
 
-    /* Never bother with retransmissions, SSL_write() should
-     * always either write the whole amount or fail. */
-    SSL_CTX_set_mode(SSLSERVERCONTEXT, SSL_MODE_AUTO_RETRY);
+    /* Override one of the default options: always accept peer's certificate,
+     * this is a dummy server. */
+    SSL_CTX_set_cert_verify_callback(SSLSERVERCONTEXT, always_true, NULL);
 
     /*
      * Create cert into memory and load it into SSL context.
@@ -442,12 +439,6 @@ int ssl_server_init()
         goto err3;
     }
 
-    /* Set options to always request a certificate from the peer. */
-    SSL_CTX_set_verify(SSLSERVERCONTEXT,
-                       SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
-                       NULL);
-    /* Always accept that certificate, this is a dummy server. */
-    SSL_CTX_set_cert_verify_callback(SSLSERVERCONTEXT, always_true, NULL);
     correctly_initialized = true;
     return 0;
   err3:
@@ -556,14 +547,7 @@ void ssl_client_init()
         goto err1;
     }
 
-    /* Use only TLS v1 or later.
-       TODO option for SSL_OP_NO_TLSv{1,1_1} */
-    SSL_CTX_set_options(SSLCLIENTCONTEXT,
-                        SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
-
-    /* Never bother with retransmissions, SSL_write() should
-     * always either write the whole amount or fail. */
-    SSL_CTX_set_mode(SSLCLIENTCONTEXT, SSL_MODE_AUTO_RETRY);
+    TLSSetDefaultOptions(SSLCLIENTCONTEXT);
 
     /*
      * Create cert into memory and load it into SSL context.
@@ -608,8 +592,6 @@ void ssl_client_init()
             goto err3;
         }
     }
-    /* Log(LOG_LEVEL_ERR, "generate cert from priv key: %s", */
-    /*     ERR_reason_error_string(ERR_get_error())); */
 
     SSL_CTX_use_certificate(SSLCLIENTCONTEXT, SSLCLIENTCERT);
 
@@ -629,14 +611,6 @@ void ssl_client_init()
             ERR_reason_error_string(ERR_get_error()));
         goto err3;
     }
-
-    /* Set options to always request a certificate from the peer, either we
-     * are client or server. */
-    SSL_CTX_set_verify(SSLCLIENTCONTEXT, SSL_VERIFY_PEER, NULL);
-    /* Always accept that certificate, we do proper checking after TLS
-     * connection is established since OpenSSL can't pass a connection
-     * specific pointer to the callback (so we would have to lock).  */
-    SSL_CTX_set_cert_verify_callback(SSLCLIENTCONTEXT, TLSVerifyCallback, NULL);
 
     correctly_initialized = true;
     return;

@@ -410,6 +410,19 @@ const ConstraintSyntax OSPF_CONTROLBODY[] =
     ConstraintSyntaxNewNull()
 };
 
+
+const ConstraintSyntax BGP_CONTROLBODY[] =
+{
+    ConstraintSyntaxNewOption("bgp_log_adjacency_changes", "normal,detail,none", "BGP logging of neighbour changes", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("bgp_this_as", CF_VALRANGE, "This router's BGP autonomous system number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("bgp_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("bgp_log_file", CF_ANYSTRING, "Log file for BGP messages, if supported on platform", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOptionList("bgp_redistribute", "kernel,connected,static,ospf", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("bgp_bestpath", "", "Path selection policy for BGP", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("bgp_networks", CF_IPRANGE, "Declare local networks to advertise for this router", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
 const ConstraintSyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 {
     ConstraintSyntaxNewString("aggregation_point", CF_ABSPATHRANGE, "The root directory of the data cache for CMDB aggregation", SYNTAX_STATUS_REMOVED),
@@ -467,6 +480,7 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_FILEC, FILE_CONTROL_CONSTRAINTS, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_OSPFC, OSPF_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_BGPC, BGP_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
     BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),

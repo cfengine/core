@@ -43,6 +43,8 @@ static const ConstraintSyntax linkstate_constraints[] =
 
 static const ConstraintSyntax linkservice_constraints[] =
 {
+    // OSPF
+
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_link_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "OSPF interface type", SYNTAX_STATUS_NORMAL),
@@ -51,6 +53,19 @@ static const ConstraintSyntax linkservice_constraints[] =
     ConstraintSyntaxNewBool("ospf_abr_summarization", "Allow Area Border Router to inject summaries into a stub area via this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_area_type", "stub,nssa,normal", "Stub type area", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+
+    // BGP
+
+    ConstraintSyntaxNewString("bgp_declare_session_source", CF_ANYSTRING, "Redefine identity of source IP on a connection (aka bgp-update-source)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("bgp_session_neighbors", CF_IPRANGE, "A list of IP addresses or the current (unnumbered) interface to establish a bgp connection to one or more remote peers", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("bgp_peer_as", CF_INTRANGE, "The remote peer's AS number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("bgp_route_reflector", "client,server", "For iBGP, a central route redistribuion hub", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("bgp_ttl_security", CF_INTRANGE, "Do not accept bgp frames more than this number of hops away", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("bgp_advertisement_interval", CF_INTRANGE, "How long do we wait to broadcast changes (default 30 seconds for eBGP and 5 seconds for iBGP)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("bgp_internal_next_hop_self", "iBGP hops within the same AS, not to a different AS", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOptionList("bgp_advertise_families", "ipv4_unicast,ipv6_unicast", "Address families to activate from the list of networks on this router (see bgp control settings)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("bgp_external_soft_reconfiguration_inbound", "Allow updates from a neighbor without full reset of BGP session, cache policy history", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("bgp_graceful_restart", "BGP session restart RFC, default is false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

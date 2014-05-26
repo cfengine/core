@@ -1719,23 +1719,25 @@ void print_xml(const char *const format, ...)
     }
 }
 
-void append_xml(const char *ofile, const char *ifile)
+static void append_xml(const char *ofile, const char *ifile)
 {
     if (!global_is_file_writer_test)
     {
-        char ch;
-        FILE* xmlfile = fopen(ofile, "ab");
-        FILE* xml_tmp = fopen(ifile, "rb");
-        while(!feof(xml_tmp))
+        FILE* xmlout = fopen(ofile, "ab");
+        if (xmlout)
         {
-            ch = getc(xml_tmp);
-            if(!feof(xml_tmp))
+            FILE* xmlsrc = fopen(ifile, "rb");
+            if (xmlsrc)
             {
-                putc(ch, xmlfile);
+                int ch;
+                while (!feof(xmlsrc) && EOF != (ch = getc(xmlsrc)))
+                {
+                    putc(ch, xmlout);
+                }
+                fclose(xmlsrc);
             }
+            fclose(xmlout);
         }
-        fclose(xmlfile);
-        fclose(xml_tmp);
     }
 }
 

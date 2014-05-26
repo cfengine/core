@@ -1,0 +1,4 @@
+@mylist={"abc", "def", "ghi"} 
+@myalist={"{{abc}}", "  ' def}", "ghi'''"} 
+@myblist={'{{a,bc}}', '  " de,f}', 'gh,,i"""'} 
+@myclist={"{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''"} 

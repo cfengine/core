@@ -1,5 +1,0 @@
-#!/bin/sh
-
-echo +CLASSTOBEDEFINED
-echo -UNDEFINEDCLASS
-echo =answer=42

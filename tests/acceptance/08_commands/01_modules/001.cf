@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub", "../../plucked.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -16,46 +16,42 @@ body common control
 bundle agent init
 {
   vars:
-      "script_name" string => "$(this.promise_filename).script";
+      "script_name" string => "$(this.promise_filename).txt";
 }
 
 #######################################################
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine1884" };
-
-  classes:
-      "matched" expression => regextract(".+/([^/]+)$",
-					 "${init.script_name}",
-					 "script_basename");
+  vars:
+    !windows::
+      "cat_prefix" string => "cat";
+    windows::
+      "cat_prefix" string => "cat_exe";
 
   commands:
-      "$(init.script_name)" module => "true";
+      "$(G.cat) $(init.script_name)"
+        contain => in_shell,
+        module => "true";
 }
 
 #######################################################
 
 bundle agent check
 {
-  vars:
-      "canonical_script_basename" string => canonify("${test.script_basename[1]}");
-
   classes:
 
     CLASSTOBEDEFINED.!UNDEFINEDCLASS::
       "classok" expression => "any";
 
     any::
-      "varok" expression => strcmp("${${canonical_script_basename}.answer}", "42");
+      "varok" expression => strcmp("${$(test.cat_prefix).answer}", "42");
 
       "ok" and => { "classok", "varok" };
 
   reports:
     DEBUG::
-      "${${canonical_script_basename}.answer} =?= 42";
+      "${$(test.cat_prefix).answer} =?= 42";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

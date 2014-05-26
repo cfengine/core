@@ -291,11 +291,12 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         }
 #endif /* !__MINGW32__ */
 
+        const char *open_mode = a.module ? "rt" : "r";
         if (a.contain.shelltype == SHELL_TYPE_POWERSHELL)
         {
 #ifdef __MINGW32__
             pfp =
-                cf_popen_powershell_setuid(cmdline, "r", a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
+                cf_popen_powershell_setuid(cmdline, open_mode, a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
                                   a.transaction.background);
 #else // !__MINGW32__
             Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
@@ -305,13 +306,13 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         else if (a.contain.shelltype == SHELL_TYPE_USE)
         {
             pfp =
-                cf_popen_shsetuid(cmdline, "r", a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
+                cf_popen_shsetuid(cmdline, open_mode, a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
                                   a.transaction.background);
         }
         else
         {
             pfp =
-                cf_popensetuid(cmdline, "r", a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
+                cf_popensetuid(cmdline, open_mode, a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
                                a.transaction.background);
         }
 

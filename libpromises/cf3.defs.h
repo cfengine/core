@@ -504,7 +504,7 @@ typedef enum
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
 #define CF_IPRANGE     "[a-zA-Z0-9_$(){}.:-]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_(){}.$@]+"
-#define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
+#define CF_NAKEDLRANGE "@[(][a-zA-Z0-9_$(){}\\[\\].:]+[)]"
 #define CF_ANYSTRING   ".*"
 
 #define CF_KEYSTRING   "^(SHA|MD5)=[0123456789abcdef]*$"

@@ -458,19 +458,19 @@ void _fail(const char *const file, const int line) FUNC_ATTR_NORETURN;
                    void **const state, const UnitTestFunctionType function_type, const void *const heap_check_point);
      int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const char *const file);
 
-// XML init and output
+#if 0 // XML init and output - not actually used outside cmockery.c
     void vinit_xml (const char *const format, va_list args);
     void vprint_xml(const char *const format, va_list args);
     void init_xml (const char *const format, ...);
     void print_xml(const char *const format, ...);
-    void vinit_cunit_run_files (const char *const file, const char *const format, va_list args);
-    void init_cunit_run_files (const char *const file, const char *const format, ...);
-    void append_xml_tmp(const char *ofile, const char *ifile);
+#endif
 
 // Standard output and error print methods.
      void print_message(const char *const format, ...);
      void print_error(const char *const format, ...);
+#if 0 /* Not used outside cmockery.c */
      void vprint_message(const char *const format, va_list args);
      void vprint_error(const char *const format, va_list args);
+#endif
 
 #endif

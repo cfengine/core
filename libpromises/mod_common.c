@@ -412,7 +412,6 @@ const ConstraintSyntax OSPF_CONTROLBODY[] =
 
 const ConstraintSyntax BGP_CONTROLBODY[] =
 {
-    ConstraintSyntaxNewOption("bgp_log_adjacency_changes", "normal,detail,none", "BGP logging of neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_this_as", CF_VALRANGE, "This router's BGP autonomous system number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("bgp_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("bgp_log_file", CF_ANYSTRING, "Log file for BGP messages, if supported on platform", SYNTAX_STATUS_NORMAL),

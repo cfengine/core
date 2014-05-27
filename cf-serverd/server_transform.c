@@ -395,7 +395,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 {
                     if (!IsItemIn(SV.nonattackerlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.nonattackerlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SV.nonattackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -410,7 +410,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 {
                     if (!IsItemIn(SV.attackerlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.attackerlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SV.attackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -430,7 +430,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 {
                     if (!IsItemIn(SV.multiconnlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.multiconnlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SV.multiconnlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -445,7 +445,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 {
                     if (!IsItemIn(SV.allowuserlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.allowuserlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SV.allowuserlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -460,7 +460,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 {
                     if (!IsItemIn(SV.trustkeylist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.trustkeylist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SV.trustkeylist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -475,7 +475,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 {
                     if (!IsItemIn(SV.allowlegacyconnects, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.allowlegacyconnects, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SV.allowlegacyconnects, RlistScalarValue(rp), cp->classes);
                     }
                 }
 

@@ -1346,31 +1346,17 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail)
 {
-    Auth *ptr = xcalloc(1, sizeof(Auth));
-
-    if (*listtail == NULL)       /* Last element in the list */
-    {
-        assert(*list == NULL);
-        *list = ptr;
-    }
-    else
-    {
-        (*listtail)->next = ptr;
-    }
-
-    char *path_dup = xstrdup(path);
+    Auth **nextp = *listtail ? &((*listtail)->next) : list;
+    assert(*nextp == NULL);
+    *listtail = *nextp = xcalloc(1, sizeof(Auth));
+    (*nextp)->path = xstrdup(path);
 
 #ifdef __MINGW32__
-    int i;
-
-    for (i = 0; path_dup[i] != '\0'; i++)
+    for (char *p = (*nextp)->path; *p != '\0'; p++)
     {
-        path_dup[i] = ToLower(path_dup[i]);
+        *p = ToLower(*p);
     }
 #endif /* __MINGW32__ */
-
-    ptr->path = path_dup;
-    *listtail = ptr;
 }
 
 static Auth *GetAuthPath(const char *path, Auth *list)

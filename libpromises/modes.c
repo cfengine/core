@@ -154,6 +154,12 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
             affected = 07777;   /* TODO: Hard-coded; see below */
             sscanf(sp, "%o", &value);
 
+            if (value & S_IFMT)
+            {
+                Log(LOG_LEVEL_INFO, "Mode-Value is not entirely within the system's allowed permissions (octal %o) and will be filtered accordingly : %s",
+                    S_IFMT, modestring);
+            }
+
             /* stat() returns the file types in the mode, but they
              * can't be set.  So we clear the file-type as per POSIX
              * 2001 instead of erroring out, leaving just the

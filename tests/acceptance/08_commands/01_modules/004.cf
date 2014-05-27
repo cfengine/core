@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub", "../../plucked.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -16,7 +16,7 @@ body common control
 bundle agent init
 {
   vars:
-      "script_name" string => "$(this.promise_filename).script";
+      "script_name" string => "$(this.promise_filename).txt";
 
 }
 
@@ -24,18 +24,16 @@ bundle agent init
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine1884" };
-
-  classes:
-      "matched" expression => regextract(".+/([^/]+)$",
-					 "${init.script_name}",
-					 "script_basename");
+  vars:
+    !windows::
+      "cat_prefix" string => "cat";
+    windows::
+      "cat_prefix" string => "cat_exe";
 
   commands:
-      "$(init.script_name)" module => "true";
-
+      "$(G.cat) $(init.script_name)"
+        contain => in_shell,
+        module => "true";
 }
 
 #######################################################
@@ -53,12 +51,10 @@ bundle agent check
       "actual2" string => join(":", "list2");
       "actual3" string => join(":", "list3");
 
-      "canonical_script_basename" string => canonify("${test.script_basename[1]}");
-
-      "joined0" string => join(":", "${canonical_script_basename}.mylist");
-      "joined1" string => join(":", "${canonical_script_basename}.myalist");
-      "joined2" string => join(":", "${canonical_script_basename}.myblist");
-      "joined3" string => join(":", "${canonical_script_basename}.myclist");
+      "joined0" string => join(":", "$(test.cat_prefix).mylist");
+      "joined1" string => join(":", "$(test.cat_prefix).myalist");
+      "joined2" string => join(":", "$(test.cat_prefix).myblist");
+      "joined3" string => join(":", "$(test.cat_prefix).myclist");
 
   classes:
 

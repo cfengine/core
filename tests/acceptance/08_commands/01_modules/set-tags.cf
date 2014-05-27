@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub", "../../plucked.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -16,7 +16,7 @@ body common control
 bundle common init
 {
   vars:
-      "script_name" string => "$(this.promise_filename).script";
+      "script_name" string => "$(this.promise_filename).txt";
 
 }
 
@@ -24,13 +24,10 @@ bundle common init
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine1884" };
-
   commands:
-      "$(init.script_name)" module => "true";
-
+      "$(G.cat) $(init.script_name)"
+        contain => in_shell,
+        module => "true";
 }
 
 #######################################################

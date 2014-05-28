@@ -35,14 +35,14 @@
 #include <pipes.h>
 #include <item_lib.h>
 #include <expand.h>
-#include <network_services.h>
+#include <routing_services.h>
 #include <mod_common.h>
 #include <conversion.h>
 #include <addr_lib.h>
 
 /*****************************************************************************/
 /*                                                                           */
-/* File: network_services.c                                                  */
+/* File: routing_services.c                                                  */
 /*                                                                           */
 /* Created: Tue Apr  1 12:29:21 2014                                         */
 /*                                                                           */
@@ -50,23 +50,27 @@
 
 #define VTYSH_FILENAME "/usr/bin/vtysh"
 
-static void HandleOSPFServiceConfig(EvalContext *ctx, CommonOSPF *ospfp, char *line);
+static void HandleOSPFServiceConfig(EvalContext *ctx, CommonRouting *ospfp, char *line);
 static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, const char *line, const Attributes *a, const Promise *pp);
+static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *line);
+static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp);
 static char *GetStringAfter(const char *line, const char *prefix);
 static int GetIntAfter(const char *line, const char *prefix);
 static bool GetMetricIf(const char *line, const char *prefix, int *metric, int *metric_type);
 static int ExecRouteCommand(char *cmd);
 
 /*****************************************************************************/
+/* OSPF                                                                      */
+/*****************************************************************************/
 
-CommonOSPF *NewOSPFState()
+CommonRouting *NewRoutingState()
 {
-    return (CommonOSPF *)calloc(sizeof(CommonOSPF), 1);
+    return (CommonRouting *)calloc(sizeof(CommonRouting), 1);
 }
 
 /*****************************************************************************/
 
-void DeleteOSPFState(CommonOSPF *state)
+void DeleteRoutingState(CommonRouting *state)
 {
     if (state->log_file)
     {
@@ -88,10 +92,10 @@ void DeleteOSPFState(CommonOSPF *state)
 
 /*****************************************************************************/
 
-void InitializeOSPF(const Policy *policy, EvalContext *ctx)
+void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
 
 {
-    if (!HaveOSPFService(ctx))
+    if (!HaveRoutingService(ctx))
     {
         return;
     }
@@ -101,7 +105,7 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
 
     if (constraints)
     {
-        OSPF_POLICY = (CommonOSPF *)calloc(sizeof(CommonOSPF), 1);
+        ROUTING_POLICY = (CommonRouting *)calloc(sizeof(CommonRouting), 1);
 
         for (size_t i = 0; i < SeqLength(constraints); i++)
         {
@@ -124,28 +128,28 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_ADJACENCY_CHANGES].lval) == 0)
             {
-                OSPF_POLICY->ospf_log_adjacency_changes = (char *) value;
+                ROUTING_POLICY->ospf_log_adjacency_changes = (char *) value;
                 Log(LOG_LEVEL_VERBOSE, "Setting ospf_log_adjacency_changes to %s", (const char *)value);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_TIMESTAMP_PRECISION].lval) == 0)
             {
-                OSPF_POLICY->log_timestamp_precision = (int) IntFromString(value); // 0,6
-                Log(LOG_LEVEL_VERBOSE, "Setting the logging timestamp precision to %d microseconds", OSPF_POLICY->log_timestamp_precision);
+                ROUTING_POLICY->log_timestamp_precision = (int) IntFromString(value); // 0,6
+                Log(LOG_LEVEL_VERBOSE, "Setting the logging timestamp precision to %d microseconds", ROUTING_POLICY->log_timestamp_precision);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_ROUTER_ID].lval) == 0)
             {
-                OSPF_POLICY->ospf_router_id = (char *)value;
+                ROUTING_POLICY->ospf_router_id = (char *)value;
                 Log(LOG_LEVEL_VERBOSE, "Setting the router-id (trad. \"loopback address\") to %s", (char *)value);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_FILE].lval) == 0)
             {
-                OSPF_POLICY->log_file = (char *)value;
+                ROUTING_POLICY->log_file = (char *)value;
                 Log(LOG_LEVEL_VERBOSE, "Setting the log file to %s", (char *)value);
                 continue;
             }
@@ -156,26 +160,26 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
                 {
                     if (strcmp(rp->val.item, "kernel"))
                     {
-                        OSPF_POLICY->ospf_redistribute_kernel = true;
+                        ROUTING_POLICY->ospf_redistribute_kernel = true;
                         Log(LOG_LEVEL_VERBOSE, "Setting ospf redistribution from kernel FIB");
                         continue;
                     }
                     if (strcmp(rp->val.item, "connected"))
                     {
-                        OSPF_POLICY->ospf_redistribute_connected = true;
+                        ROUTING_POLICY->ospf_redistribute_connected = true;
                         Log(LOG_LEVEL_VERBOSE, "Setting ospf redistribution from connected networks");
                         continue;
                     }
                     if (strcmp(rp->val.item, "static"))
                     {
                         Log(LOG_LEVEL_VERBOSE, "Setting ospf redistribution from static FIB");
-                        OSPF_POLICY->ospf_redistribute_static = true;
+                        ROUTING_POLICY->ospf_redistribute_static = true;
                         continue;
                     }
                     if (strcmp(rp->val.item, "bgp"))
                     {
                         Log(LOG_LEVEL_VERBOSE, "Setting ospf to allow bgp route injection");
-                        OSPF_POLICY->ospf_redistribute_bgp = true;
+                        ROUTING_POLICY->ospf_redistribute_bgp = true;
                         continue;
                     }
                 }
@@ -185,57 +189,57 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_kernel_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", OSPF_POLICY->ospf_redistribute_kernel_metric);
+                ROUTING_POLICY->ospf_redistribute_kernel_metric = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_connected_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", OSPF_POLICY->ospf_redistribute_connected_metric);
+                ROUTING_POLICY->ospf_redistribute_connected_metric = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_connected_metric);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_static_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for static routes to %d", OSPF_POLICY->ospf_redistribute_kernel_metric);
+                ROUTING_POLICY->ospf_redistribute_static_metric = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric for static routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_bgp_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for bgp routes to %d", OSPF_POLICY->ospf_redistribute_kernel_metric);
+                ROUTING_POLICY->ospf_redistribute_bgp_metric = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC_TYPE].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_kernel_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", OSPF_POLICY->ospf_redistribute_kernel_metric_type);
+                ROUTING_POLICY->ospf_redistribute_kernel_metric_type = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC_TYPE].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_connected_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", OSPF_POLICY->ospf_redistribute_connected_metric_type);
+                ROUTING_POLICY->ospf_redistribute_connected_metric_type = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_connected_metric_type);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC_TYPE].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_static_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for static routes to %d", OSPF_POLICY->ospf_redistribute_kernel_metric_type);
+                ROUTING_POLICY->ospf_redistribute_static_metric_type = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for static routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
                 continue;
             }
 
             if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC_TYPE].lval) == 0)
             {
-                OSPF_POLICY->ospf_redistribute_bgp_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for bgp routes to %d", OSPF_POLICY->ospf_redistribute_kernel_metric_type);
+                ROUTING_POLICY->ospf_redistribute_bgp_metric_type = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
                 continue;
             }
         }
@@ -244,7 +248,7 @@ void InitializeOSPF(const Policy *policy, EvalContext *ctx)
 
 /*****************************************************************************/
 
-int QueryOSPFServiceState(EvalContext *ctx, CommonOSPF *ospfp)
+int QueryRoutingServiceState(EvalContext *ctx, CommonRouting *routingp)
 
 {
     FILE *pfp;
@@ -286,11 +290,12 @@ int QueryOSPFServiceState(EvalContext *ctx, CommonOSPF *ospfp)
         {
         case CF_RC_INITIAL:
         case CF_RC_OSPF:
-            HandleOSPFServiceConfig(ctx, ospfp, line);
+            HandleOSPFServiceConfig(ctx, routingp, line);
             break;
 
         case CF_RC_INTERFACE:
         case CF_RC_BGP:
+            HandleBGPServiceConfig(ctx, routingp, line);
         default:
             break;
         }
@@ -299,38 +304,38 @@ int QueryOSPFServiceState(EvalContext *ctx, CommonOSPF *ospfp)
     free(line);
     cf_pclose(pfp);
 
-    if (ospfp->log_file)
+    if (routingp->log_file)
     {
-        Log(LOG_LEVEL_VERBOSE, "OSPF log file: %s", ospfp->log_file);
+        Log(LOG_LEVEL_VERBOSE, "OSPF log file: %s", routingp->log_file);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "OSPF log timestamp precision: %d microseconds", ospfp->log_timestamp_precision);
+    Log(LOG_LEVEL_VERBOSE, "OSPF log timestamp precision: %d microseconds", routingp->log_timestamp_precision);
 
-    if (ospfp->ospf_log_adjacency_changes)
+    if (routingp->ospf_log_adjacency_changes)
     {
-        Log(LOG_LEVEL_VERBOSE, "OSPF log adjacency change logging: %s ", ospfp->ospf_log_adjacency_changes);
+        Log(LOG_LEVEL_VERBOSE, "OSPF log adjacency change logging: %s ", routingp->ospf_log_adjacency_changes);
     }
 
-    if (ospfp->ospf_router_id)
+    if (routingp->ospf_router_id)
     {
-        Log(LOG_LEVEL_VERBOSE, "OSPF router-id: %s ", ospfp->ospf_router_id);
+        Log(LOG_LEVEL_VERBOSE, "OSPF router-id: %s ", routingp->ospf_router_id);
     }
 
     Log(LOG_LEVEL_VERBOSE,"OSPF redistributing kernel routes: %d with metric %d (type %d)",
-        ospfp->ospf_redistribute_kernel,ospfp->ospf_redistribute_kernel_metric,ospfp->ospf_redistribute_kernel_metric_type);
+        routingp->ospf_redistribute_kernel,routingp->ospf_redistribute_kernel_metric,routingp->ospf_redistribute_kernel_metric_type);
     Log(LOG_LEVEL_VERBOSE,"OSPF redistributing connected networks: %d with metric %d (type %d)",
-        ospfp->ospf_redistribute_connected, ospfp->ospf_redistribute_connected_metric, ospfp->ospf_redistribute_connected_metric_type);
+        routingp->ospf_redistribute_connected, routingp->ospf_redistribute_connected_metric, routingp->ospf_redistribute_connected_metric_type);
     Log(LOG_LEVEL_VERBOSE,"OSPF redistributing static routes: %d with metric %d (type %d)",
-        ospfp->ospf_redistribute_static, ospfp->ospf_redistribute_static_metric, ospfp->ospf_redistribute_static_metric_type);
+        routingp->ospf_redistribute_static, routingp->ospf_redistribute_static_metric, routingp->ospf_redistribute_static_metric_type);
     Log(LOG_LEVEL_VERBOSE,"OSPF redistributing bgp: %d with metric %d (type %d)",
-        ospfp->ospf_redistribute_bgp, ospfp->ospf_redistribute_bgp_metric, ospfp->ospf_redistribute_bgp_metric_type);
+        routingp->ospf_redistribute_bgp, routingp->ospf_redistribute_bgp_metric, routingp->ospf_redistribute_bgp_metric_type);
 
     return true;
 }
 
 /*****************************************************************************/
 
-void KeepOSPFLinkServiceControlPromises(CommonOSPF *policy, CommonOSPF *state)
+void KeepOSPFLinkServiceControlPromises(CommonRouting *policy, CommonRouting *state)
 {
     char comm[CF_BUFSIZE];
 
@@ -671,6 +676,7 @@ int QueryOSPFInterfaceState(EvalContext *ctx, const Attributes *a, const Promise
 
         case CF_RC_INITIAL:
         case CF_RC_BGP:
+            break;
         default:
             break;
         }
@@ -704,7 +710,7 @@ void KeepOSPFInterfacePromises(EvalContext *ctx, const Attributes *a, const Prom
     {
         if (strcmp(a->interface.ospf_link_type, ospfp->ospf_link_type) != 0)
         {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ospf network %s\""
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ospf network %s\"",
                      VTYSH_FILENAME, pp->promiser, a->interface.ospf_link_type);
 
             if (!ExecRouteCommand(comm))
@@ -848,7 +854,7 @@ void KeepOSPFInterfacePromises(EvalContext *ctx, const Attributes *a, const Prom
 
 /*****************************************************************************/
 
-bool HaveOSPFService(EvalContext *ctx)
+bool HaveRoutingService(EvalContext *ctx)
 
 { struct stat sb;
 
@@ -871,10 +877,84 @@ bool HaveOSPFService(EvalContext *ctx)
 }
 
 /*****************************************************************************/
+/* BGP                                                                       */
+/*****************************************************************************/
+
+void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgp)
+
+{
+}
+
+/*****************************************************************************/
+
+int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise *pp, LinkStateBGP *bgpp)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char comm[CF_BUFSIZE];
+    char search[CF_MAXVARSIZE];
+    RouterCategory state = CF_RC_INITIAL;
+
+    snprintf(comm, CF_BUFSIZE, "%s -c \"show running-config\"", VTYSH_FILENAME);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", VTYSH_FILENAME);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        if (*line == '!')
+        {
+            state = CF_RC_INITIAL;
+            continue;
+        }
+
+        if (strncmp(line, "router bgp", strlen("router bgp")) == 0)
+        {
+            state = CF_RC_BGP;
+        }
+
+        switch(state)
+        {
+        case CF_RC_OSPF:
+        case CF_RC_INTERFACE:
+            break;
+
+        case CF_RC_INITIAL:
+        case CF_RC_BGP:
+            HandleBGPInterfaceConfig(ctx, bgpp, line, a, pp);
+            break;
+        default:
+            break;
+        }
+    }
+
+    free(line);
+    cf_pclose(pfp);
+
+    Log(LOG_LEVEL_VERBOSE, "Interface %s currently has ospf_hello_interval: %d", pp->promiser, bgpp->bgp_remote_as);
+
+
+    return true;
+}
+
+
+/*****************************************************************************/
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static void HandleOSPFServiceConfig(EvalContext *ctx, CommonOSPF *ospfp, char *line)
+static void HandleOSPFServiceConfig(EvalContext *ctx, CommonRouting *ospfp, char *line)
 {
     int i, metric = 0, metric_type = 2;
     char *sp;
@@ -1112,6 +1192,38 @@ static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, co
     }
 }
 
+/*****************************************************************************/
+
+static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *line)
+{
+    int i;
+    char *sp;
+
+    if ((i = GetIntAfter(line, "router bgp")) != CF_NOINT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Discovered BGP ASN %d", i);
+        bgpp->bgp_local_as = i;
+        return;
+    }
+
+    // THIS will conflict with ospf as it is a common setting..
+
+    if ((sp = GetStringAfter(line, "log file")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Log file is %s", sp);
+        bgpp->log_file = sp;
+        return;
+    }
+
+
+
+}
+
+/*****************************************************************************/
+
+static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp)
+{
+}
 
 /*****************************************************************************/
 /* tools                                                                     */

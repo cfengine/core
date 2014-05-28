@@ -415,6 +415,7 @@ const ConstraintSyntax BGP_CONTROLBODY[] =
     ConstraintSyntaxNewInt("bgp_this_as", CF_VALRANGE, "This router's BGP autonomous system number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("bgp_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("bgp_log_file", CF_ANYSTRING, "Log file for BGP messages, if supported on platform", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("bgp_log_adjacency_changes", "normal,detail,none", "Activate logging for bgp neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("bgp_redistribute", "kernel,connected,static,ospf", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("bgp_bestpath", "", "Path selection policy for BGP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("bgp_networks", CF_IPRANGE, "Declare local networks to advertise for this router", SYNTAX_STATUS_NORMAL),

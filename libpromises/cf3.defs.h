@@ -992,6 +992,20 @@ struct LinkStateOSPF_
     int ospf_area;
 };
 
+struct LinkStateBGP_
+{
+    int bgp_remote_as;
+    char *interface;
+    Rlist *bgp_neighbours;
+    bool bgp_reflector; // i.e. we are the server
+    int bgp_ttl_security;
+    int bgp_advert_interval;
+    bool bgp_next_hop_self;
+    Rlist *bgp_families;
+    bool bgp_graceful_restart;
+    int bgp_maximum_paths;
+};
+
 typedef enum
 {
     CF_RC_INITIAL,
@@ -1001,9 +1015,9 @@ typedef enum
 } RouterCategory;
 
 
-typedef struct CommonOSPF_ CommonOSPF;
+typedef struct CommonRouting_ CommonRouting;
 
-struct CommonOSPF_
+struct CommonRouting_
 {
     int log_timestamp_precision; // 0,6
     char *log_file;
@@ -1025,6 +1039,41 @@ struct CommonOSPF_
     int ospf_redistribute_connected_metric_type;
     int ospf_redistribute_static_metric_type;
     int ospf_redistribute_bgp_metric_type;
+
+    bool bgp_log_adjacency_changes;
+
+    int bgp_local_as;
+    char *bgp_router_id;
+    Rlist *bgp_advertisable_networks;
+    bool bgp_redistribute_kernel;
+    bool bgp_redistribute_connected;
+    bool bgp_redistribute_static;
+    bool bgp_redistribute_opsf;
+};
+
+typedef struct LinkStateBGP_ LinkStateBGP;
+typedef struct BGPNeighbour_ BGPNeighbour;
+typedef struct AFSettings_ AFSettings;
+
+struct AFSettings
+{
+    char *family;
+    Rlist *networks;
+    int advert_interval;
+    int maximum_paths;
+    int have_ibgp_networks;
+    int have_ebgp_networks;
+    bool next_hop_self;
+    bool soft_inbound;
+};
+
+struct BGPNeighbor
+{
+    int AS;
+    char *ip_address;
+    bool reflector;
+    int multihop;
+    Rlist *activate; // List of families
 };
 
 typedef struct Bridges_ Bridges;
@@ -1508,6 +1557,16 @@ typedef struct
     char *tunnel_multicast_group;
     char *tunnel_interface;
     char *tunnel_alien_arp;
+    // bgp
+    int bgp_remote_as;
+    Rlist *bgp_neighbours;
+    bool bgp_reflector; // i.e. we are the server
+    int bgp_ttl_security;
+    int bgp_advert_interval;
+    bool bgp_next_hop_self;
+    Rlist *bgp_families;
+    bool bgp_graceful_restart;
+    int bgp_maximum_paths;
 
 } Interfaces;
 

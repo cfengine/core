@@ -116,13 +116,20 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                 continue;
             }
 
-            VarRef *ref = VarRefParseFromScope(cp->lval, "control_ospf");
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_routing_services");
             const void *value = EvalContextVariableGet(ctx, ref, NULL);
             VarRefDestroy(ref);
 
             if (!value)
             {
-                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in ospf control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in routing_services control body", cp->lval);
+                continue;
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[ROUTING_CONTROL_LOG_FILE].lval) == 0)
+            {
+                ROUTING_POLICY->log_file = (char *)value;
+                Log(LOG_LEVEL_VERBOSE, "Setting the log file to %s", (char *)value);
                 continue;
             }
 
@@ -144,13 +151,6 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
             {
                 ROUTING_POLICY->ospf_router_id = (char *)value;
                 Log(LOG_LEVEL_VERBOSE, "Setting the router-id (trad. \"loopback address\") to %s", (char *)value);
-                continue;
-            }
-
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_LOG_FILE].lval) == 0)
-            {
-                ROUTING_POLICY->log_file = (char *)value;
-                Log(LOG_LEVEL_VERBOSE, "Setting the log file to %s", (char *)value);
                 continue;
             }
 
@@ -241,6 +241,77 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                 ROUTING_POLICY->ospf_redistribute_bgp_metric_type = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric-type for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
                 continue;
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_LOCAL_AS].lval) == 0)
+            {
+                ROUTING_POLICY->bgp_local_as = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %d", ROUTING_POLICY->bgp_local_as);
+                continue;
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_ROUTER_ID].lval) == 0)
+            {
+                ROUTING_POLICY->bgp_router_id = (char *)value;
+                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %s", ROUTING_POLICY->bgp_router_id);
+                continue;
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_LOG_ADJACENCY_CHANGES].lval) == 0)
+            {
+                ROUTING_POLICY->bgp_log_adjacency_changes = (char *)value;
+                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %s", ROUTING_POLICY->bgp_log_adjacency_changes);
+                continue;
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_REDISTRIBUTE].lval) == 0)
+            {
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+                {
+                    if (strcmp(rp->val.item, "kernel"))
+                    {
+                        ROUTING_POLICY->bgp_redistribute_kernel = true;
+                        Log(LOG_LEVEL_VERBOSE, "Setting bgp redistribution from kernel FIB");
+                        continue;
+                    }
+                    if (strcmp(rp->val.item, "connected"))
+                    {
+                        ROUTING_POLICY->bgp_redistribute_connected = true;
+                        Log(LOG_LEVEL_VERBOSE, "Setting bgp redistribution from connected networks");
+                        continue;
+                    }
+                    if (strcmp(rp->val.item, "static"))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Setting bgp redistribution from static FIB");
+                        ROUTING_POLICY->bgp_redistribute_static = true;
+                        continue;
+                    }
+                    if (strcmp(rp->val.item, "ospf"))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Setting bgp to allow ospf route injection");
+                        ROUTING_POLICY->bgp_redistribute_ospf = true;
+                        continue;
+                    }
+                }
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_BESTPATH].lval) == 0)
+            {
+                ROUTING_POLICY->bgp_bestpath = (Rlist *)value;
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Setting BGP best path option: %s", (char *)rp->val.item);
+                }
+                continue;
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_NETWORKS].lval) == 0)
+            {
+                ROUTING_POLICY->bgp_advertisable_networks = (Rlist *)value;
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Setting BGP network advertisement for: %s", (char *)rp->val.item);
+                }
             }
         }
     }

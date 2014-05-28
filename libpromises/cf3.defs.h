@@ -464,10 +464,10 @@ typedef enum
 
 typedef enum
 {
+    ROUTING_CONTROL_LOG_FILE,
     OSPF_CONTROL_LOG_ADJACENCY_CHANGES,
     OSPF_CONTROL_LOG_TIMESTAMP_PRECISION,
     OSPF_CONTROL_ROUTER_ID,
-    OSPF_CONTROL_LOG_FILE,
     OSPF_CONTROL_REDISTRIBUTE,
     OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC,
     OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC,
@@ -477,8 +477,14 @@ typedef enum
     OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC_TYPE,
     OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC_TYPE,
     OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC_TYPE,
-    OSPF_CONTROL_NONE
-} OspfControl;
+    BGP_LOCAL_AS,
+    BGP_ROUTER_ID,
+    BGP_LOG_ADJACENCY_CHANGES,
+    BGP_REDISTRIBUTE,
+    BGP_BESTPATH,
+    BGP_NETWORKS,
+    ROUTE_CONTROL_NONE
+} RouteServiceControl;
 
 /*************************************************************************/
 
@@ -1042,11 +1048,13 @@ struct CommonRouting_
 
     int bgp_local_as;
     char *bgp_router_id;
-    Rlist *bgp_advertisable_networks;
+
     bool bgp_redistribute_kernel;
     bool bgp_redistribute_connected;
     bool bgp_redistribute_static;
-    bool bgp_redistribute_opsf;
+    bool bgp_redistribute_ospf;
+    Rlist *bgp_bestpath;
+    Rlist *bgp_advertisable_networks;
 };
 
 typedef struct LinkStateBGP_ LinkStateBGP;

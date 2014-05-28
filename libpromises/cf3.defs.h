@@ -369,8 +369,7 @@ typedef enum
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
 #define CF_FILEC    "file"
-#define CF_OSPFC    "ospf"
-#define CF_BGPC     "bgp"
+#define CF_ROUTEC    "routing_services"
 
 typedef enum
 {
@@ -383,8 +382,7 @@ typedef enum
     AGENT_TYPE_KEYGEN,
     AGENT_TYPE_HUB,
     AGENT_TYPE_FILE,
-    AGENT_TYPE_OSPF,
-    AGENT_TYPE_BGP,
+    AGENT_TYPE_ROUTING,
     AGENT_TYPE_NOAGENT
 } AgentType;
 

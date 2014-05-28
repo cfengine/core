@@ -101,7 +101,7 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
     }
 
     // Look for the control body for ospf
-    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_OSPF);
+    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_ROUTING);
 
     if (constraints)
     {
@@ -126,35 +126,35 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_ADJACENCY_CHANGES].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_LOG_ADJACENCY_CHANGES].lval) == 0)
             {
                 ROUTING_POLICY->ospf_log_adjacency_changes = (char *) value;
                 Log(LOG_LEVEL_VERBOSE, "Setting ospf_log_adjacency_changes to %s", (const char *)value);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_TIMESTAMP_PRECISION].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_LOG_TIMESTAMP_PRECISION].lval) == 0)
             {
                 ROUTING_POLICY->log_timestamp_precision = (int) IntFromString(value); // 0,6
                 Log(LOG_LEVEL_VERBOSE, "Setting the logging timestamp precision to %d microseconds", ROUTING_POLICY->log_timestamp_precision);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_ROUTER_ID].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_ROUTER_ID].lval) == 0)
             {
                 ROUTING_POLICY->ospf_router_id = (char *)value;
                 Log(LOG_LEVEL_VERBOSE, "Setting the router-id (trad. \"loopback address\") to %s", (char *)value);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_LOG_FILE].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_LOG_FILE].lval) == 0)
             {
                 ROUTING_POLICY->log_file = (char *)value;
                 Log(LOG_LEVEL_VERBOSE, "Setting the log file to %s", (char *)value);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE].lval) == 0)
             {
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
@@ -187,56 +187,56 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_kernel_metric = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_connected_metric = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_connected_metric);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_static_metric = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric for static routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_bgp_metric = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC_TYPE].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC_TYPE].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_kernel_metric_type = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC_TYPE].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC_TYPE].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_connected_metric_type = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_connected_metric_type);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC_TYPE].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC_TYPE].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_static_metric_type = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric-type for static routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
                 continue;
             }
 
-            if (strcmp(cp->lval, OSPF_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC_TYPE].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC_TYPE].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_bgp_metric_type = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting metric-type for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);

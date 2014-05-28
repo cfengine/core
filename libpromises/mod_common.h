@@ -58,7 +58,7 @@ typedef enum
 
 
 extern const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_NONE + 1];
-extern const ConstraintSyntax OSPF_CONTROLBODY[];
+extern const ConstraintSyntax ROUTING_CONTROLBODY[];
 
 CommonControl CommonControlFromString(const char *lval);
 

@@ -1762,6 +1762,21 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.tunnel_interface = PromiseGetConstraintAsRval(pp, "tunnel_interface", RVAL_TYPE_SCALAR);
     i.tunnel_alien_arp = PromiseGetConstraintAsRval(pp, "tunnel_alien_arp", RVAL_TYPE_SCALAR);
 
+    i.bgp_remote_as = PromiseGetConstraintAsInt(ctx, "bgp_peer_as", pp);
+    i.bgp_neighbours = PromiseGetConstraintAsList(ctx, "bgp_session_neighbours", pp);
+
+    if (strcmp(PromiseGetConstraintAsBoolean(ctx, "bgp_route_reflector", pp),"server") == 0)
+    {
+        i.bgp_reflector = true;
+    }
+
+    i.bgp_ttl_security = PromiseGetConstraintAsInt(ctx, "bgp_ttl_security", pp);
+    i.bgp_advert_interval = PromiseGetConstraintAsInt(ctx, "bgp_advertisement_interval", pp);
+    i.bgp_next_hop_self = PromiseGetConstraintAsBoolean(ctx, "bgp_next_hop_self", pp);
+    i.bgp_families = PromiseGetConstraintAsList(ctx, "bgp_advertise_families", pp);
+    i.bgp_graceful_restart = PromiseGetConstraintAsBoolean(ctx, "bgp_graceful_restart", pp);
+    i.bgp_maximum_paths = PromiseGetConstraintAsInt(ctx, "bgp_maximum_paths", pp);
+
     return i;
 }
 

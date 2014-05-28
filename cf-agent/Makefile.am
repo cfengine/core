@@ -65,7 +65,7 @@ libcf_agent_la_SOURCES = \
         verify_processes.c verify_processes.h \
         verify_services.c verify_services.h \
         verify_environments.c verify_environments.h \
-        network_services.c network_services.h \
+        routing_services.c routing_services.h \
         files_edit.c files_edit.h \
         files_editline.c files_editline.h \
         files_editxml.c files_editxml.h \

@@ -409,13 +409,11 @@ const ConstraintSyntax ROUTING_CONTROLBODY[] =
     ConstraintSyntaxNewInt("ospf_redistribute_bgp_metric", CF_VALRANGE, "Metric for redistributed BGP route", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_local_as", CF_VALRANGE, "This router's BGP autonomous system number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("bgp_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("bgp_log_adjacency_changes", "normal,detail,none", "Activate logging for bgp neighbour changes", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("bgp_log_neighbor_changes", CF_BOOL, "Activate logging for bgp neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("bgp_redistribute", "kernel,connected,static,ospf", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("bgp_bestpath", "", "Path selection policy for BGP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("bgp_networks", CF_IPRANGE, "Declare local networks to advertise for this router", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
-
 
 const ConstraintSyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 {

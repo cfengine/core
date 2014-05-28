@@ -257,10 +257,10 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                 continue;
             }
 
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_LOG_ADJACENCY_CHANGES].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_LOG_NEIGHBOR_CHANGES].lval) == 0)
             {
-                ROUTING_POLICY->bgp_log_adjacency_changes = (char *)value;
-                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %s", ROUTING_POLICY->bgp_log_adjacency_changes);
+                ROUTING_POLICY->bgp_log_neighbor_changes = (char *)value;
+                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %s", ROUTING_POLICY->bgp_log_neighbor_changes);
                 continue;
             }
 
@@ -293,16 +293,6 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                         continue;
                     }
                 }
-            }
-
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_BESTPATH].lval) == 0)
-            {
-                ROUTING_POLICY->bgp_bestpath = (Rlist *)value;
-                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Setting BGP best path option: %s", (char *)rp->val.item);
-                }
-                continue;
             }
 
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_NETWORKS].lval) == 0)
@@ -1016,6 +1006,14 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
 
     Log(LOG_LEVEL_VERBOSE, "Interface %s currently has ospf_hello_interval: %d", pp->promiser, bgpp->bgp_remote_as);
 
+    char *bgp_router_id;
+
+    bool bgp_redistribute_kernel;
+    bool bgp_redistribute_connected;
+    bool bgp_redistribute_static;
+    bool bgp_redistribute_ospf;
+    Rlist *bgp_advertisable_networks;
+
 
     return true;
 }
@@ -1270,14 +1268,14 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
     int i;
     char *sp;
 
-    if ((i = GetIntAfter(line, "router bgp")) != CF_NOINT)
+    // These don't really belong in BGP or OSPF, but either can set them??
+
+    if ((i = GetIntAfter(line, "log timestamp precision")) != CF_NOINT)
     {
-        Log(LOG_LEVEL_VERBOSE, "Discovered BGP ASN %d", i);
-        bgpp->bgp_local_as = i;
+        Log(LOG_LEVEL_VERBOSE, "Found log timestamp precision of %d", i);
+        bgpp->log_timestamp_precision = i;
         return;
     }
-
-    // THIS will conflict with ospf as it is a common setting..
 
     if ((sp = GetStringAfter(line, "log file")) != NULL)
     {
@@ -1286,8 +1284,55 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
         return;
     }
 
+    // bgp
 
+    if ((i = GetIntAfter(line, "router bgp")) != CF_NOINT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Discovered BGP ASN %d", i);
+        bgpp->bgp_local_as = i;
+        return;
+    }
 
+    if ((sp = GetStringAfter(line, "log file")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Log file is %s", sp);
+        bgpp->log_file = sp;
+        return;
+    }
+
+    if ((sp = GetStringAfter(line, " network")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Adding network %s", sp);
+        RlistPrependScalarIdemp(&(bgpp->bgp_advertisable_networks), sp);
+        return;
+    }
+
+    if ((sp = GetStringAfter(line, " redistribute")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Adding redistribution source %s", sp);
+
+        if (strcmp(sp, "kernel") == NULL)
+        {
+            bgpp->bgp_redistribute_kernel = true;
+        }
+
+        if (strcmp(sp, "static") == NULL)
+        {
+            bgpp->bgp_redistribute_static = true;
+        }
+
+        if (strcmp(sp, "ospf") == NULL)
+        {
+            bgpp->bgp_redistribute_ospf = true;
+        }
+
+        if (strcmp(sp, "connected") == NULL)
+        {
+            bgpp->bgp_redistribute_connected = true;
+        }
+
+        return;
+    }
 }
 
 /*****************************************************************************/

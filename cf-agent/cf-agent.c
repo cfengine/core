@@ -1555,7 +1555,7 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
         if (QueryRoutingServiceState(ctx, ROUTING_ACTIVE))
         {
             KeepOSPFLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
-            // Update interface info
+            KeepBGPLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
             GetInterfacesInfo(ctx);
         }
         break;

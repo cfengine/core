@@ -259,8 +259,8 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
 
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_LOG_NEIGHBOR_CHANGES].lval) == 0)
             {
-                ROUTING_POLICY->bgp_log_neighbor_changes = (char *)value;
-                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %s", ROUTING_POLICY->bgp_log_neighbor_changes);
+                ROUTING_POLICY->bgp_log_neighbor_changes = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %d", ROUTING_POLICY->bgp_log_neighbor_changes);
                 continue;
             }
 
@@ -347,6 +347,11 @@ int QueryRoutingServiceState(EvalContext *ctx, CommonRouting *routingp)
             continue;
         }
 
+        if (strncmp(line, "router bgp", strlen("router bgp")) == 0 || strncmp(line, " address-family", strlen(" address-family")) == 0)
+        {
+            state = CF_RC_BGP;
+        }
+
         switch(state)
         {
         case CF_RC_INITIAL:
@@ -382,14 +387,59 @@ int QueryRoutingServiceState(EvalContext *ctx, CommonRouting *routingp)
         Log(LOG_LEVEL_VERBOSE, "OSPF router-id: %s ", routingp->ospf_router_id);
     }
 
-    Log(LOG_LEVEL_VERBOSE,"OSPF redistributing kernel routes: %d with metric %d (type %d)",
-        routingp->ospf_redistribute_kernel,routingp->ospf_redistribute_kernel_metric,routingp->ospf_redistribute_kernel_metric_type);
-    Log(LOG_LEVEL_VERBOSE,"OSPF redistributing connected networks: %d with metric %d (type %d)",
-        routingp->ospf_redistribute_connected, routingp->ospf_redistribute_connected_metric, routingp->ospf_redistribute_connected_metric_type);
-    Log(LOG_LEVEL_VERBOSE,"OSPF redistributing static routes: %d with metric %d (type %d)",
-        routingp->ospf_redistribute_static, routingp->ospf_redistribute_static_metric, routingp->ospf_redistribute_static_metric_type);
-    Log(LOG_LEVEL_VERBOSE,"OSPF redistributing bgp: %d with metric %d (type %d)",
-        routingp->ospf_redistribute_bgp, routingp->ospf_redistribute_bgp_metric, routingp->ospf_redistribute_bgp_metric_type);
+    if (routingp->ospf_redistribute_kernel)
+    {
+        Log(LOG_LEVEL_VERBOSE,"OSPF redistributing kernel routes: %d with metric %d (type %d)",
+            routingp->ospf_redistribute_kernel,routingp->ospf_redistribute_kernel_metric,routingp->ospf_redistribute_kernel_metric_type);
+    }
+
+    if (routingp->ospf_redistribute_connected)
+    {
+        Log(LOG_LEVEL_VERBOSE,"OSPF redistributing connected networks: %d with metric %d (type %d)",
+            routingp->ospf_redistribute_connected, routingp->ospf_redistribute_connected_metric, routingp->ospf_redistribute_connected_metric_type);
+    }
+
+    if (routingp->ospf_redistribute_static)
+    {
+        Log(LOG_LEVEL_VERBOSE,"OSPF redistributing static routes: %d with metric %d (type %d)",
+            routingp->ospf_redistribute_static, routingp->ospf_redistribute_static_metric, routingp->ospf_redistribute_static_metric_type);
+    }
+
+    if (routingp->ospf_redistribute_bgp)
+    {
+        Log(LOG_LEVEL_VERBOSE,"OSPF redistributing bgp: %d with metric %d (type %d)",
+            routingp->ospf_redistribute_bgp, routingp->ospf_redistribute_bgp_metric, routingp->ospf_redistribute_bgp_metric_type);
+    }
+
+    if (routingp->bgp_router_id)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Host currently has bgp router_id: %s", routingp->bgp_router_id);
+    }
+
+    if (routingp->bgp_redistribute_kernel)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Host is currently redistributing kernel routes");
+    }
+
+    if (routingp->bgp_redistribute_static)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Host is currently redistributing static routes");
+    }
+
+    if (routingp->bgp_redistribute_connected)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Host is currently redistributing connected routes");
+    }
+
+    if (routingp->bgp_redistribute_ospf)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Host is currently redistributing ospf routes");
+    }
+
+    for (Rlist *rp = routingp->bgp_advertisable_networks; rp != NULL; rp=rp->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Host is currently advertising network %s", (char *)rp->val.item);
+    }
 
     return true;
 }
@@ -944,6 +994,14 @@ bool HaveRoutingService(EvalContext *ctx)
 void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgp)
 
 {
+    printf("FILLL ME INN....1\n");
+}
+
+/*****************************************************************************/
+
+void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *state)
+{
+    printf("FILLL ME INN....2\n");
 }
 
 /*****************************************************************************/
@@ -981,7 +1039,7 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
             continue;
         }
 
-        if (strncmp(line, "router bgp", strlen("router bgp")) == 0)
+        if (strncmp(line, "router bgp", strlen("router bgp")) == 0 || strncmp(line, " address-family", strlen(" address-family")) == 0)
         {
             state = CF_RC_BGP;
         }
@@ -1006,18 +1064,8 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
 
     Log(LOG_LEVEL_VERBOSE, "Interface %s currently has ospf_hello_interval: %d", pp->promiser, bgpp->bgp_remote_as);
 
-    char *bgp_router_id;
-
-    bool bgp_redistribute_kernel;
-    bool bgp_redistribute_connected;
-    bool bgp_redistribute_static;
-    bool bgp_redistribute_ospf;
-    Rlist *bgp_advertisable_networks;
-
-
     return true;
 }
-
 
 /*****************************************************************************/
 /* Level 1                                                                   */
@@ -1286,6 +1334,13 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
 
     // bgp
 
+    if ((sp = GetStringAfter(line, " bgp router-id")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "BGP Router ID is %s", sp);
+        bgpp->bgp_router_id = sp;
+        return;
+    }
+
     if ((i = GetIntAfter(line, "router bgp")) != CF_NOINT)
     {
         Log(LOG_LEVEL_VERBOSE, "Discovered BGP ASN %d", i);
@@ -1339,6 +1394,7 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
 
 static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp)
 {
+    printf("FILLL ME INN....3\n");
 }
 
 /*****************************************************************************/

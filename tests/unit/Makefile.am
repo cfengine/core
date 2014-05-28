@@ -76,6 +76,7 @@ check_PROGRAMS = \
 	files_lib_test \
 	file_lib_test \
 	map_test \
+	parsemode_test \
 	parser_test \
 	policy_test \
 	sort_test \

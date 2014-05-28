@@ -79,7 +79,7 @@
 #include <../libenv/unix_iface.h>
 
 #include <mod_common.h>
-#include <network_services.h>
+#include <routing_services.h>
 
 typedef enum
 {
@@ -1549,12 +1549,12 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
 
     case TYPE_SEQUENCE_INTERFACES:
 
-        InitializeOSPF(policy, ctx);
-        OSPF_ACTIVE = NewOSPFState();
+        InitializeRoutingServices(policy, ctx);
+        ROUTING_ACTIVE = NewRoutingState();
 
-        if (QueryOSPFServiceState(ctx, OSPF_ACTIVE))
+        if (QueryRoutingServiceState(ctx, ROUTING_ACTIVE))
         {
-            KeepOSPFLinkServiceControlPromises(OSPF_POLICY, OSPF_ACTIVE);
+            KeepOSPFLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
             // Update interface info
             GetInterfacesInfo(ctx);
         }
@@ -1595,7 +1595,7 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
 
     case TYPE_SEQUENCE_INTERFACES:
         WriteNativeInterfacesFile();
-        DeleteOSPFState(OSPF_ACTIVE);
+        DeleteRoutingState(ROUTING_ACTIVE);
         break;
 
     default:

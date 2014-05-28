@@ -36,7 +36,7 @@
 #include <pipes.h>
 #include <item_lib.h>
 #include <expand.h>
-#include <network_services.h>
+#include <routing_services.h>
 #include <files_operators.h>
 #include <communication.h>
 #include <ip_address.h>
@@ -383,6 +383,15 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
     }
 
     free(ospfp);
+
+    LinkStateBGP *bgpp = xcalloc(sizeof(LinkStateBGP), 1);
+
+    if (a->havelinkservices && QueryBGPInterfaceState(ctx, a, pp, bgpp))
+    {
+        KeepBGPInterfacePromises(ctx, a, pp, result, bgpp);
+    }
+
+    free(bgpp);
 }
 
 /****************************************************************************/

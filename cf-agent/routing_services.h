@@ -19,3 +19,4 @@ CommonRouting *NewRoutingState(void);
 void DeleteRoutingState(CommonRouting *state);
 void KeepOSPFLinkServiceControlPromises(CommonRouting *policy, CommonRouting *state);
 void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgpp);
+void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *state);

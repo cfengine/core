@@ -395,7 +395,7 @@ const ConstraintSyntax FILE_CONTROL_CONSTRAINTS[] =
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax OSPF_CONTROLBODY[] =
+const ConstraintSyntax ROUTING_CONTROLBODY[] =
 {
     ConstraintSyntaxNewOption("ospf_log_adjacency_changes", "normal,detail,none", "OSPF logging of neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_log_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
@@ -407,11 +407,6 @@ const ConstraintSyntax OSPF_CONTROLBODY[] =
     ConstraintSyntaxNewInt("ospf_redistribute_connected_metric", CF_VALRANGE, "Metric for redistributed direct connetions", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_static_metric", CF_VALRANGE, "Metric for redistributed static route", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_bgp_metric", CF_VALRANGE, "Metric for redistributed BGP route", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-const ConstraintSyntax BGP_CONTROLBODY[] =
-{
     ConstraintSyntaxNewInt("bgp_this_as", CF_VALRANGE, "This router's BGP autonomous system number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("bgp_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("bgp_log_file", CF_ANYSTRING, "Log file for BGP messages, if supported on platform", SYNTAX_STATUS_NORMAL),
@@ -419,8 +414,10 @@ const ConstraintSyntax BGP_CONTROLBODY[] =
     ConstraintSyntaxNewOptionList("bgp_redistribute", "kernel,connected,static,ospf", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("bgp_bestpath", "", "Path selection policy for BGP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("bgp_networks", CF_IPRANGE, "Declare local networks to advertise for this router", SYNTAX_STATUS_NORMAL),
+
     ConstraintSyntaxNewNull()
 };
+
 
 const ConstraintSyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
 {
@@ -478,8 +475,7 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_FILEC, FILE_CONTROL_CONSTRAINTS, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew(CF_OSPFC, OSPF_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew(CF_BGPC, BGP_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_ROUTEC, ROUTING_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
     BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),

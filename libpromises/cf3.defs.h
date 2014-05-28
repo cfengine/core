@@ -1008,6 +1008,7 @@ struct LinkStateBGP_
     Rlist *bgp_families;
     bool bgp_graceful_restart;
     int bgp_maximum_paths;
+    bool bgp_ipv6_neighbor_discovery_route_advertisement;
 };
 
 typedef enum
@@ -1572,6 +1573,7 @@ typedef struct
     Rlist *bgp_families;
     bool bgp_graceful_restart;
     int bgp_maximum_paths;
+    char *bgp_ipv6_neighbor_discovery_route_advertisement;
 
 } Interfaces;
 

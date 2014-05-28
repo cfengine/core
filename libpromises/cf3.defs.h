@@ -479,7 +479,7 @@ typedef enum
     OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC_TYPE,
     BGP_LOCAL_AS,
     BGP_ROUTER_ID,
-    BGP_LOG_ADJACENCY_CHANGES,
+    BGP_LOG_NEIGHBOR_CHANGES,
     BGP_REDISTRIBUTE,
     BGP_BESTPATH,
     BGP_NETWORKS,
@@ -1044,7 +1044,7 @@ struct CommonRouting_
     int ospf_redistribute_static_metric_type;
     int ospf_redistribute_bgp_metric_type;
 
-    bool bgp_log_adjacency_changes;
+    bool bgp_log_neighbor_changes;
 
     int bgp_local_as;
     char *bgp_router_id;
@@ -1053,7 +1053,6 @@ struct CommonRouting_
     bool bgp_redistribute_connected;
     bool bgp_redistribute_static;
     bool bgp_redistribute_ospf;
-    Rlist *bgp_bestpath;
     Rlist *bgp_advertisable_networks;
 };
 

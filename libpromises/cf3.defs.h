@@ -1011,6 +1011,8 @@ struct CommonRouting_
 {
     int log_timestamp_precision; // 0,6
     char *log_file;
+    char *password;
+    bool enable_password;
 
     char *ospf_log_adjacency_changes;
     char *ospf_router_id;

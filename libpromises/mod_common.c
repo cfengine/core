@@ -398,6 +398,7 @@ const ConstraintSyntax FILE_CONTROL_CONSTRAINTS[] =
 const ConstraintSyntax ROUTING_CONTROLBODY[] =
 {
     ConstraintSyntaxNewString("routing_service_log_file", CF_ANYSTRING, "Log file for route service messages, if supported on platform", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("routing_service_password", CF_ANYSTRING, "Password for service, if supported on platform", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_log_adjacency_changes", "normal,detail,none", "OSPF logging of neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_log_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),

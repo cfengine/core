@@ -372,10 +372,15 @@ int QueryRoutingServiceState(EvalContext *ctx, CommonRouting *routingp)
 
     if (routingp->log_file)
     {
-        Log(LOG_LEVEL_VERBOSE, "OSPF log file: %s", routingp->log_file);
+        Log(LOG_LEVEL_VERBOSE, "Routing log file: %s", routingp->log_file);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "OSPF log timestamp precision: %d microseconds", routingp->log_timestamp_precision);
+    if (routingp->password)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Routing service password: %s, enabled = %d", routingp->password, routingp->enable_password);
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Routing log timestamp precision: %d microseconds", routingp->log_timestamp_precision);
 
     if (routingp->ospf_log_adjacency_changes)
     {
@@ -1001,7 +1006,268 @@ void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promi
 
 void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *state)
 {
-    printf("FILLL ME INN....2\n");
+    char comm[CF_BUFSIZE];
+
+    if (policy == NULL || state == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,"BGP not running, skipping setup");
+        return;
+    }
+
+    if (policy->bgp_local_as == 0 && state->bgp_local_as == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,"No BGP AS is defined for this host, skipping setup");
+        return;
+    }
+
+    // Log file
+
+    if (policy->log_file)
+    {
+        if (state->log_file == NULL || strcmp(policy->log_file, state->log_file) == 0)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"log file %s\"", VTYSH_FILENAME, policy->log_file);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to set keep promised routing service log file: %s", policy->log_file);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept routing service promise: log file to: %s", policy->log_file);
+            }
+        }
+    }
+
+    if (policy->password != state->password)
+    {
+        if (state->password == NULL || policy->password && strcmp(policy->password, state->password) == 0)
+        {
+            if (policy->password == NULL || strcmp(policy->password, "none") == 0|| strcmp(policy->password, "disabled") == 0)
+            {
+                policy->enable_password = false;
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"no enable password\"", VTYSH_FILENAME);
+            }
+            else
+            {
+                policy->enable_password = true;
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"password %s\"", VTYSH_FILENAME, policy->password);
+            }
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to set keep promised routing service password");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept routing service promise: password set", policy->password);
+            }
+
+            if (policy->enable_password)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"enable password %s\"", VTYSH_FILENAME, policy->password);
+
+                if (!ExecRouteCommand(comm))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Failed to set keep routing service password promise");
+                }
+                else
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Kept routing service promise: password set to %s", policy->password);
+                }
+            }
+        }
+    }
+
+    // Adjacency change logging
+
+    if (policy->bgp_local_as != state->bgp_local_as)
+    {
+        // Remove existing AS
+        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"no router bgp %d\"", VTYSH_FILENAME, state->bgp_local_as);
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise to remove existing AS %d ", state->bgp_local_as);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise - removed current AS %d", state->bgp_local_as);
+        }
+
+        if (policy->bgp_local_as == 0)
+        {
+            // We're done - deactivate AS
+            return;
+        }
+
+        // Add back correct AS
+
+        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"", VTYSH_FILENAME, policy->bgp_local_as);
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: establish ASN %d on this router", policy->bgp_local_as);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: establish ASN %d on this router", policy->bgp_local_as);
+        }
+    }
+
+    if (policy->bgp_log_neighbor_changes != state->bgp_log_neighbor_changes)
+    {
+        if (state->bgp_log_neighbor_changes)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"no bgp log-neighbor-changes\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"bgp log-neighbor-changes\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: log neighbor change logging");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: neighbor change logging");
+        }
+    }
+
+    // Router id / "loopback"
+
+    if (policy->bgp_router_id)
+    {
+        if (state->bgp_router_id == NULL || strcmp(policy->bgp_router_id, state->bgp_router_id) != 0)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"router-id %s\"", VTYSH_FILENAME, policy->bgp_local_as, policy->bgp_router_id);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: router-id is %s", policy->bgp_router_id);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: router-id is %s", policy->bgp_router_id);
+            }
+        }
+    }
+    else
+    {
+        if (state->bgp_router_id && strcmp(state->bgp_router_id, "0.0.0.0") == 0) // empty state is 0.0.0.0 always present
+        {
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"no bgp router-id\"", VTYSH_FILENAME, policy->bgp_local_as);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: no router-id");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: removed/reset router-id");
+            }
+        }
+    }
+
+    // Route redistribution
+    // kernel
+
+    if (policy->bgp_redistribute_kernel != state->bgp_redistribute_kernel)
+    {
+        if (state->bgp_redistribute_kernel)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgpp %d \" -c \"no redistribute kernel\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"redistribute kernel\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: on redistribute kernel");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: on redistribute kernel");
+        }
+    }
+
+    // connected
+
+    if (policy->bgp_redistribute_connected != state->bgp_redistribute_connected)
+    {
+        if (state->bgp_redistribute_connected)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgpp %d \" -c \"no redistribute connected\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"redistribute connected\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: on redistribute connected");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: on redistribute connected");
+        }
+    }
+
+    // static
+
+    if (policy->bgp_redistribute_static != state->bgp_redistribute_static)
+    {
+        if (state->bgp_redistribute_static)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgpp %d \" -c \"no redistribute static\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"redistribute static\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: on redistribute static");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: on redistribute static");
+        }
+    }
+
+    // ospf
+
+    if (policy->bgp_redistribute_ospf != state->bgp_redistribute_ospf)
+    {
+        if (state->bgp_redistribute_ospf)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgpp %d \" -c \"no redistribute ospf\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"redistribute ospf\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: on redistribute ospf");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: on redistribute ospf");
+        }
+    }
+
+
 }
 
 /*****************************************************************************/
@@ -1012,7 +1278,6 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
     char comm[CF_BUFSIZE];
-    char search[CF_MAXVARSIZE];
     RouterCategory state = CF_RC_INITIAL;
 
     snprintf(comm, CF_BUFSIZE, "%s -c \"show running-config\"", VTYSH_FILENAME);
@@ -1089,6 +1354,21 @@ static void HandleOSPFServiceConfig(EvalContext *ctx, CommonRouting *ospfp, char
     {
         Log(LOG_LEVEL_VERBOSE, "Log file is %s", sp);
         ospfp->log_file = sp;
+        return;
+    }
+
+    if ((sp = GetStringAfter(line, "password")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Password is %s", sp);
+        ospfp->password = sp;
+        return;
+    }
+
+    if ((sp = GetStringAfter(line, "enable password")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Password is %s", sp);
+        ospfp->password = sp;
+        ospfp->enable_password = true;
         return;
     }
 
@@ -1329,6 +1609,21 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
     {
         Log(LOG_LEVEL_VERBOSE, "Log file is %s", sp);
         bgpp->log_file = sp;
+        return;
+    }
+
+    if ((sp = GetStringAfter(line, "password")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Password is %s", sp);
+        bgpp->password = sp;
+        return;
+    }
+
+    if ((sp = GetStringAfter(line, "enable password")) != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Password is %s", sp);
+        bgpp->password = sp;
+        bgpp->enable_password = true;
         return;
     }
 

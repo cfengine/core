@@ -72,6 +72,7 @@ static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum 
     {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
     {"631", "ipp", ob_ipp_in, ob_ipp_out},
     {"89", "ospf-raw", ob_ospf_in, ob_ospf_out},
+    {"179", "bgp", ob_bgp_in, ob_bgp_out},
 };
 
 static const char *const VNETSTAT[] =

@@ -30,12 +30,10 @@ bundle agent test
 {
   classes:
 
-      # This is an easy way to check if a list is empty, better than
+      # Note that if you use length() or none() or all() they will go
+      # through all the elements!!! This is an easy way to check if a
+      # list is empty, better than
       # expression => strcmp(length(x), "0")
-
-      # Note that if you use length() or none() or every() they will
-      # go through all the elements!!! some() returns as soon as any
-      # element matches.
       "empty_x" not => some(".*", x);
       "empty_y" not => some(".*", y);
 

@@ -31,6 +31,7 @@
 #include <chflags.h>
 #include <audit.h>
 #include <string_lib.h>
+#include <communication.h>
 
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
@@ -1765,7 +1766,22 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.bgp_remote_as = PromiseGetConstraintAsInt(ctx, "bgp_peer_as", pp);
     i.bgp_neighbours = PromiseGetConstraintAsList(ctx, "bgp_session_neighbours", pp);
 
-    if (strcmp(PromiseGetConstraintAsBoolean(ctx, "bgp_route_reflector", pp),"server") == 0)
+    for (Rlist *rp = i.bgp_neighbours; rp != NULL; rp=rp->next)
+    {
+        if (strchr(rp->val.item, '/'))
+        {
+            Log(LOG_LEVEL_ERR, "Neighbour IP address should be a host not be a network address '%s' in BGP interface promise", (char *)rp->val.item);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+        }
+
+        if (!IsIPV4Address(rp->val.item) && !IsIPV6Address(rp->val.item))
+        {
+            Log(LOG_LEVEL_ERR, "Invalid neighbour IP address '%s' in BGP interface promise", (char *)rp->val.item);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+        }
+    }
+
+    if (strcmp(PromiseGetConstraintAsRval(pp, "bgp_route_reflector", RVAL_TYPE_SCALAR), "server") == 0)
     {
         i.bgp_reflector = true;
     }
@@ -1776,7 +1792,7 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.bgp_families = PromiseGetConstraintAsList(ctx, "bgp_advertise_families", pp);
     i.bgp_graceful_restart = PromiseGetConstraintAsBoolean(ctx, "bgp_graceful_restart", pp);
     i.bgp_maximum_paths = PromiseGetConstraintAsInt(ctx, "bgp_maximum_paths", pp);
-    i.bgp_ipv6_neighbor_discovery_route_advertisement = PromiseGetConstraintAsBoolean(ctx, "bgp_ipv6_neighbor_discovery_route_advertisement", pp);
+    i.bgp_ipv6_neighbor_discovery_route_advertisement = PromiseGetConstraintAsRval(pp, "bgp_ipv6_neighbor_discovery_route_advertisement", RVAL_TYPE_SCALAR);
     return i;
 }
 

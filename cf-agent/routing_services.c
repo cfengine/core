@@ -39,6 +39,7 @@
 #include <mod_common.h>
 #include <conversion.h>
 #include <addr_lib.h>
+#include <communication.h>
 
 /*****************************************************************************/
 /*                                                                           */
@@ -295,12 +296,37 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                 }
             }
 
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_NETWORKS].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_V4_NETWORKS].lval) == 0)
             {
-                ROUTING_POLICY->bgp_advertisable_networks = (Rlist *)value;
+                ROUTING_POLICY->bgp_advertisable_v4_networks = (Rlist *)value;
+
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Setting BGP network advertisement for: %s", (char *)rp->val.item);
+                    if (IsIPV4Address(rp->val.item))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Setting BGP ipv4 network advertisement for: %s", (char *)rp->val.item);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR, "BGP network advertisement %s is not a valid ipv4 address", (char *)rp->val.item);
+                    }
+                }
+            }
+
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_V6_NETWORKS].lval) == 0)
+            {
+                ROUTING_POLICY->bgp_advertisable_v6_networks = (Rlist *)value;
+
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+                {
+                    if (IsIPV6Address(rp->val.item))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Setting BGP ipv6 network advertisement for: %s", (char *)rp->val.item);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR, "BGP network advertisement %s is not a valid ipv6 address", (char *)rp->val.item);
+                    }
                 }
             }
         }
@@ -441,9 +467,14 @@ int QueryRoutingServiceState(EvalContext *ctx, CommonRouting *routingp)
         Log(LOG_LEVEL_VERBOSE, "Host is currently redistributing ospf routes");
     }
 
-    for (Rlist *rp = routingp->bgp_advertisable_networks; rp != NULL; rp=rp->next)
+    for (Rlist *rp = routingp->bgp_advertisable_v4_networks; rp != NULL; rp=rp->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Host is currently advertising network %s", (char *)rp->val.item);
+        Log(LOG_LEVEL_VERBOSE, "Host is currently advertising ipv4 network %s", (char *)rp->val.item);
+    }
+
+    for (Rlist *rp = routingp->bgp_advertisable_v6_networks; rp != NULL; rp=rp->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Host is currently advertising ipv6 network %s", (char *)rp->val.item);
     }
 
     return true;
@@ -1267,7 +1298,81 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
         }
     }
 
+    // Now handle manually advertised networks - will there be transient behavioural issues?
 
+    for (Rlist *rp = policy->bgp_advertisable_v4_networks; rp != NULL; rp=rp->next)
+    {
+        if (!RlistKeyIn(state->bgp_advertisable_v4_networks, rp->val.item))
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv4 unicast\" -c \"network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: add ipv4 network");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: added ipv4 network %s", (char *)rp->val.item);
+            }
+        }
+    }
+
+    // Purge others not in policy
+
+    for (Rlist *rp = state->bgp_advertisable_v4_networks; rp != NULL; rp=rp->next)
+    {
+        if (RlistKeyIn(policy->bgp_advertisable_v4_networks, rp->val.item))
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv4 unicast\" -c \"no network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: purge ipv4 network");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: purged ipv4 network %s", (char *)rp->val.item);
+            }
+        }
+    }
+
+    // v6
+
+    for (Rlist *rp = policy->bgp_advertisable_v6_networks; rp != NULL; rp=rp->next)
+    {
+        if (!RlistKeyIn(state->bgp_advertisable_v6_networks, rp->val.item))
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv6\" -c \"network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: add ipv6 network");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: added ipv6 network %s", (char *)rp->val.item);
+            }
+        }
+    }
+
+    // Purge others not in policy
+
+    for (Rlist *rp = state->bgp_advertisable_v6_networks; rp != NULL; rp=rp->next)
+    {
+        if (RlistKeyIn(policy->bgp_advertisable_v6_networks, rp->val.item))
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv6\" -c \"no network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: purge ipv6 network");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: purged ipv6 network %s", (char *)rp->val.item);
+            }
+        }
+    }
 }
 
 /*****************************************************************************/
@@ -1653,7 +1758,15 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
     if ((sp = GetStringAfter(line, " network")) != NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Adding network %s", sp);
-        RlistPrependScalarIdemp(&(bgpp->bgp_advertisable_networks), sp);
+
+        if (IsIPV6Address(sp))
+        {
+            RlistPrependScalarIdemp(&(bgpp->bgp_advertisable_v6_networks), sp);
+        }
+        else
+        {
+            RlistPrependScalarIdemp(&(bgpp->bgp_advertisable_v4_networks), sp);
+        }
         return;
     }
 

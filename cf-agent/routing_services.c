@@ -54,11 +54,12 @@
 static void HandleOSPFServiceConfig(EvalContext *ctx, CommonRouting *ospfp, char *line);
 static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, const char *line, const Attributes *a, const Promise *pp);
 static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *line);
-static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp);
+static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp, char *family);
 static char *GetStringAfter(const char *line, const char *prefix);
 static int GetIntAfter(const char *line, const char *prefix);
 static bool GetMetricIf(const char *line, const char *prefix, int *metric, int *metric_type);
 static int ExecRouteCommand(char *cmd);
+static BGPNeighbour *GetPeer(char *id, LinkStateBGP *bgpp);
 
 /*****************************************************************************/
 /* OSPF                                                                      */
@@ -1067,7 +1068,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
 
     if (policy->password != state->password)
     {
-        if (state->password == NULL || policy->password && strcmp(policy->password, state->password) == 0)
+        if ((state->password == NULL) || (policy->password && strcmp(policy->password, state->password) == 0))
         {
             if (policy->password == NULL || strcmp(policy->password, "none") == 0|| strcmp(policy->password, "disabled") == 0)
             {
@@ -1086,7 +1087,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Kept routing service promise: password set", policy->password);
+                Log(LOG_LEVEL_VERBOSE, "Kept routing service promise: password set");
             }
 
             if (policy->enable_password)
@@ -1377,6 +1378,7 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
     FILE *pfp;
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
+    char *family = xstrdup("ipv4 unicast");
     char comm[CF_BUFSIZE];
     RouterCategory state = CF_RC_INITIAL;
 
@@ -1404,8 +1406,15 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
             continue;
         }
 
-        if (strncmp(line, "router bgp", strlen("router bgp")) == 0 || strncmp(line, " address-family", strlen(" address-family")) == 0)
+        if (strncmp(line, "router bgp", strlen("router bgp")) == 0)
         {
+            state = CF_RC_BGP;
+        }
+
+        if (strncmp(line, " address-family", strlen(" address-family")) == 0)
+        {
+            free(family);
+            family = xstrdup(line + strlen(" address-family "));
             state = CF_RC_BGP;
         }
 
@@ -1417,7 +1426,7 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
 
         case CF_RC_INITIAL:
         case CF_RC_BGP:
-            HandleBGPInterfaceConfig(ctx, bgpp, line, a, pp);
+            HandleBGPInterfaceConfig(ctx, bgpp, line, a, pp, family);
             break;
         default:
             break;
@@ -1426,9 +1435,7 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
 
     free(line);
     cf_pclose(pfp);
-
-    Log(LOG_LEVEL_VERBOSE, "Interface %s currently has ospf_hello_interval: %d", pp->promiser, bgpp->bgp_remote_as);
-
+    free(family);
     return true;
 }
 
@@ -1795,9 +1802,150 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
 
 /*****************************************************************************/
 
-static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp)
+static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp, char *family)
 {
-    printf("FILLL ME INN....3\n");
+    int i;
+    char *sp;
+    BGPNeighbour *bp;
+    int as;
+    char peer_id[CF_MAX_IP_LEN];
+
+    if ((i = GetIntAfter(line, "router bgp")) != CF_NOINT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Discovered BGP local ASN %d", i);
+        bgpp->bgp_local_as = i;
+        return;
+    }
+
+    if (strncmp(line, " neighbor", strlen(" neighbor")) == 0)
+    {
+        as = CF_NOINT;
+        peer_id[0] = '\0';
+
+        sscanf(line+strlen(" neighbor"), "%63s", peer_id);
+
+        char *args = line + strlen(" neighbor") + strlen(peer_id) + 2;
+
+        bp = GetPeer(peer_id, bgpp);
+
+        if (strstr(args, "remote-as"))
+        {
+            sscanf(args,"remote-as %d", &as);
+            bp->bgp_remote_as = as;
+
+            if (as == bgpp->bgp_local_as)
+            {
+                bgpp->have_ibgp_peers = true;
+                Log(LOG_LEVEL_VERBOSE,"Found AS %d for ibgp peer %s\n", as, peer_id);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE,"Found AS %d for ebgp peer %s\n", as, peer_id);
+                bgpp->have_ebgp_peers = true;
+            }
+
+            return;
+        }
+
+        if (sscanf(args, "ebgp-multihop %d", &(bp->bgp_multihop)))
+        {
+            Log(LOG_LEVEL_VERBOSE,"Found ebgp-multihop %d for peer %s\n", bp->bgp_multihop, peer_id);
+            return;
+        }
+
+        if (sscanf(args, "ttl-security %d", &(bp->bgp_ttl_security)))
+        {
+            Log(LOG_LEVEL_VERBOSE,"Found ttl-security %d for peer %s\n", bp->bgp_ttl_security, peer_id);
+            return;
+        }
+
+        if (strcmp(args, "activate") == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,"Found peer %s activation for family %s\n", peer_id, family);
+            IdempPrependItem(&(bgpp->advertise_families), family, NULL);
+            return;
+        }
+
+        if (strcmp(args, "soft-reconfiguration inbound") == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,"Found inbound soft reconfiguration for peer %s\n", peer_id);
+            bp->bgp_soft_inbound = true;
+            return;
+        }
+
+        if (strcmp(args, "next-hop-self") == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,"Perceived next-hop-self for peer %s\n", peer_id);
+            bp->bgp_next_hop_self = true;
+            return;
+        }
+
+        if (strcmp(args, "route-reflector-client") == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,"Route-reflector role detected for peer %s\n", peer_id);
+            bp->bgp_reflector = true;
+            return;
+        }
+
+        if (sscanf(args, "advertisement-interval %d", &(bp->bgp_advert_interval)))
+        {
+            Log(LOG_LEVEL_VERBOSE,"Found advertisement interval %d for peer %s\n", bp->bgp_advert_interval, peer_id);
+            return;
+        }
+    }
+
+    if (sscanf(line, " maximum-paths %d", &(bgpp->bgp_maximum_paths_external)))
+    {
+        Log(LOG_LEVEL_VERBOSE,"Found maximum-paths %d for peer %s\n", bgpp->bgp_maximum_paths_external, peer_id);
+        return;
+    }
+
+    if (sscanf(line, " maximum-paths ibgp %d", &(bgpp->bgp_maximum_paths_internal)))
+    {
+        Log(LOG_LEVEL_VERBOSE,"Found maximum-paths ibgp %d for peer %s\n", bgpp->bgp_maximum_paths_internal, peer_id);
+        return;
+    }
+
+    if (strcmp(line, " bgp graceful-restart") == 0)
+    {
+        bgpp->bgp_graceful_restart = true;
+        Log(LOG_LEVEL_VERBOSE,"Found graceful-restart for peer %s\n", peer_id);
+    }
+
+    if (strcmp(line, " ipv6 nd suppress-ra") == 0)
+    {
+        bgpp->bgp_ipv6_neighbor_discovery_route_advertisement = "suppress";
+        Log(LOG_LEVEL_VERBOSE,"Found neighbour discovery route advertisement suppression for peer %s\n", peer_id);
+    }
+
+    Rlist *advertise_families;
+
+}
+
+/*****************************************************************************/
+
+static BGPNeighbour *GetPeer(char *id, LinkStateBGP *bgpp)
+{
+    BGPNeighbour *bp;
+
+    if (strlen(id) == 0)
+    {
+        return NULL;
+    }
+
+    for (bp = bgpp->bgp_peers; bp != NULL; bp=bp->next)
+    {
+        if (strcmp(bp->bgp_neighbour, id) == 0)
+        {
+            return bp;
+        }
+    }
+
+    bp = xcalloc(sizeof(BGPNeighbour), 1);
+    bp->next = bgpp->bgp_peers;
+    bgpp->bgp_peers = bp;
+    bp->bgp_neighbour = xstrdup(id);
+    return bp;
 }
 
 /*****************************************************************************/

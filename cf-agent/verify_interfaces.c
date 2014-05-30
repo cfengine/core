@@ -230,12 +230,15 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         Buffer *buf = BufferNewFrom(test, strlen(test));
         IPAddress *ip1 = IPAddressNew(buf);
         BufferDestroy(buf);
-        if (ip1 == NULL)
+
+        if (ip1 == NULL || ip1->type != IP_ADDRESS_TYPE_IPV4)
         {
             Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv4 address (CIDR format expected)", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
+
+        IPAddressDestroy(&ip1);
     }
 
     for (Rlist *rp = a.interface.v6_addresses; rp != NULL; rp=rp->next)
@@ -256,12 +259,14 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         IPAddress *ip1 = IPAddressNew(buf);
         BufferDestroy(buf);
 
-        if (ip1 == NULL)
+        if (ip1 == NULL ||  ip1->type != IP_ADDRESS_TYPE_IPV6)
         {
             Log(LOG_LEVEL_ERR, "Interface '%s' has improper IPv6 address %s (CIDR format expected)", pp->promiser, (char *)rp->val.item);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
+
+        IPAddressDestroy(&ip1);
     }
 
     return true;

@@ -412,7 +412,8 @@ const ConstraintSyntax ROUTING_CONTROLBODY[] =
     ConstraintSyntaxNewString("bgp_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("bgp_log_neighbor_changes", CF_BOOL, "Activate logging for bgp neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("bgp_redistribute", "kernel,connected,static,ospf", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("bgp_networks", CF_IPRANGE, "Declare local networks to advertise for this router", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("bgp_ipv4_networks", CF_IPRANGE, "Declare local ipv4 networks to advertise for this router", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("bgp_ipv6_networks", CF_IPRANGE, "Declare local ipv6 networks to advertise for this router", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

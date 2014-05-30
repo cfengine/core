@@ -191,56 +191,35 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_kernel_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_connected_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_connected_metric);
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf metric for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_connected_metric);
                 continue;
             }
 
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_static_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for static routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf metric for static routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC].lval) == 0)
             {
                 ROUTING_POLICY->ospf_redistribute_bgp_metric = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf metric for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric);
                 continue;
             }
 
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_KERNEL_METRIC_TYPE].lval) == 0)
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_METRIC_TYPE].lval) == 0)
             {
-                ROUTING_POLICY->ospf_redistribute_kernel_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
-                continue;
-            }
-
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_CONNECTED_METRIC_TYPE].lval) == 0)
-            {
-                ROUTING_POLICY->ospf_redistribute_connected_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for kernel routes to %d", ROUTING_POLICY->ospf_redistribute_connected_metric_type);
-                continue;
-            }
-
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_STATIC_METRIC_TYPE].lval) == 0)
-            {
-                ROUTING_POLICY->ospf_redistribute_static_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for static routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
-                continue;
-            }
-
-            if (strcmp(cp->lval, ROUTING_CONTROLBODY[OSPF_CONTROL_REDISTRIBUTE_BGP_METRIC_TYPE].lval) == 0)
-            {
-                ROUTING_POLICY->ospf_redistribute_bgp_metric_type = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting metric-type for bgp routes to %d", ROUTING_POLICY->ospf_redistribute_kernel_metric_type);
+                ROUTING_POLICY->ospf_redistribute_external_metric_type = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting ospf metric-type for redistributed routes to %d", ROUTING_POLICY->ospf_redistribute_external_metric_type);
                 continue;
             }
 
@@ -254,14 +233,14 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_ROUTER_ID].lval) == 0)
             {
                 ROUTING_POLICY->bgp_router_id = (char *)value;
-                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %s", ROUTING_POLICY->bgp_router_id);
+                Log(LOG_LEVEL_VERBOSE, "Setting BGP router ID to %s", ROUTING_POLICY->bgp_router_id);
                 continue;
             }
 
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_LOG_NEIGHBOR_CHANGES].lval) == 0)
             {
                 ROUTING_POLICY->bgp_log_neighbor_changes = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting BGP AS number to %d", ROUTING_POLICY->bgp_log_neighbor_changes);
+                Log(LOG_LEVEL_VERBOSE, "Setting BGP log neighbour changes");
                 continue;
             }
 
@@ -421,25 +400,25 @@ int QueryRoutingServiceState(EvalContext *ctx, CommonRouting *routingp)
     if (routingp->ospf_redistribute_kernel)
     {
         Log(LOG_LEVEL_VERBOSE,"OSPF redistributing kernel routes: %d with metric %d (type %d)",
-            routingp->ospf_redistribute_kernel,routingp->ospf_redistribute_kernel_metric,routingp->ospf_redistribute_kernel_metric_type);
+            routingp->ospf_redistribute_kernel,routingp->ospf_redistribute_kernel_metric,routingp->ospf_redistribute_external_metric_type);
     }
 
     if (routingp->ospf_redistribute_connected)
     {
         Log(LOG_LEVEL_VERBOSE,"OSPF redistributing connected networks: %d with metric %d (type %d)",
-            routingp->ospf_redistribute_connected, routingp->ospf_redistribute_connected_metric, routingp->ospf_redistribute_connected_metric_type);
+            routingp->ospf_redistribute_connected, routingp->ospf_redistribute_connected_metric, routingp->ospf_redistribute_external_metric_type);
     }
 
     if (routingp->ospf_redistribute_static)
     {
         Log(LOG_LEVEL_VERBOSE,"OSPF redistributing static routes: %d with metric %d (type %d)",
-            routingp->ospf_redistribute_static, routingp->ospf_redistribute_static_metric, routingp->ospf_redistribute_static_metric_type);
+            routingp->ospf_redistribute_static, routingp->ospf_redistribute_static_metric, routingp->ospf_redistribute_external_metric_type);
     }
 
     if (routingp->ospf_redistribute_bgp)
     {
         Log(LOG_LEVEL_VERBOSE,"OSPF redistributing bgp: %d with metric %d (type %d)",
-            routingp->ospf_redistribute_bgp, routingp->ospf_redistribute_bgp_metric, routingp->ospf_redistribute_bgp_metric_type);
+            routingp->ospf_redistribute_bgp, routingp->ospf_redistribute_bgp_metric, routingp->ospf_redistribute_external_metric_type);
     }
 
     if (routingp->bgp_router_id)
@@ -583,31 +562,35 @@ void KeepOSPFLinkServiceControlPromises(CommonRouting *policy, CommonRouting *st
 
     if (policy->ospf_redistribute_kernel)
     {
-        if (policy->ospf_redistribute_kernel_metric && policy->ospf_redistribute_kernel_metric_type)
+        if (!state->ospf_redistribute_kernel || (policy->ospf_redistribute_kernel_metric != state->ospf_redistribute_kernel_metric
+                                                 && policy->ospf_redistribute_kernel_metric_type != policy->ospf_redistribute_external_metric_type))
         {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel metric %d metric-type %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_kernel_metric,
-                     policy->ospf_redistribute_kernel_metric_type);
-        }
-        else if (policy->ospf_redistribute_kernel_metric)
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel metric %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_kernel_metric);
-        }
-        else
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel\"", VTYSH_FILENAME);
-        }
+            if (policy->ospf_redistribute_kernel_metric && policy->ospf_redistribute_external_metric_type)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel metric %d metric-type %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_kernel_metric,
+                         policy->ospf_redistribute_external_metric_type);
+            }
+            else if (policy->ospf_redistribute_kernel_metric)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel metric %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_kernel_metric);
+            }
+            else
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute kernel\"", VTYSH_FILENAME);
+            }
 
-        if (!ExecRouteCommand(comm))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute kernel");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute kernel");
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute kernel");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute kernel");
+            }
         }
     }
     else if (state->ospf_redistribute_kernel)
@@ -628,31 +611,35 @@ void KeepOSPFLinkServiceControlPromises(CommonRouting *policy, CommonRouting *st
 
     if (policy->ospf_redistribute_connected)
     {
-        if (policy->ospf_redistribute_connected_metric && policy->ospf_redistribute_connected_metric_type)
+        if (!policy->ospf_redistribute_connected || (policy->ospf_redistribute_connected_metric != state->ospf_redistribute_connected_metric
+                                                     && policy->ospf_redistribute_connected_metric_type != policy->ospf_redistribute_external_metric_type))
         {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected metric %d metric-type %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_connected_metric,
-                     policy->ospf_redistribute_connected_metric_type);
-        }
-        else if (policy->ospf_redistribute_connected_metric)
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected metric %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_connected_metric);
-        }
-        else
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected\"", VTYSH_FILENAME);
-        }
+            if (policy->ospf_redistribute_connected_metric && policy->ospf_redistribute_external_metric_type)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected metric %d metric-type %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_connected_metric,
+                         policy->ospf_redistribute_external_metric_type);
+            }
+            else if (policy->ospf_redistribute_connected_metric)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected metric %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_connected_metric);
+            }
+            else
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute connected\"", VTYSH_FILENAME);
+            }
 
-        if (!ExecRouteCommand(comm))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute connected");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute connected");
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute connected");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute connected");
+            }
         }
     }
     else if (state->ospf_redistribute_connected)
@@ -673,31 +660,35 @@ void KeepOSPFLinkServiceControlPromises(CommonRouting *policy, CommonRouting *st
 
     if (policy->ospf_redistribute_static)
     {
-        if (policy->ospf_redistribute_static_metric && policy->ospf_redistribute_static_metric_type)
+        if (!state->ospf_redistribute_static || (policy->ospf_redistribute_static_metric != state->ospf_redistribute_static_metric
+                                                 && policy->ospf_redistribute_static_metric_type != policy->ospf_redistribute_external_metric_type))
         {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static metric %d metric-type %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_static_metric,
-                     policy->ospf_redistribute_static_metric_type);
-        }
-        else if (policy->ospf_redistribute_static_metric)
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static metric %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_static_metric);
-        }
-        else
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static\"", VTYSH_FILENAME);
-        }
+            if (policy->ospf_redistribute_static_metric && policy->ospf_redistribute_external_metric_type)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static metric %d metric-type %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_static_metric,
+                         policy->ospf_redistribute_external_metric_type);
+            }
+            else if (policy->ospf_redistribute_static_metric)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static metric %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_static_metric);
+            }
+            else
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute static\"", VTYSH_FILENAME);
+            }
 
-        if (!ExecRouteCommand(comm))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute static");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute static");
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute static");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute static");
+            }
         }
     }
     else if (state->ospf_redistribute_static)
@@ -718,31 +709,35 @@ void KeepOSPFLinkServiceControlPromises(CommonRouting *policy, CommonRouting *st
 
     if (policy->ospf_redistribute_bgp)
     {
-        if (policy->ospf_redistribute_bgp_metric && policy->ospf_redistribute_bgp_metric_type)
+        if (!state->ospf_redistribute_bgp || (policy->ospf_redistribute_bgp_metric != state->ospf_redistribute_bgp_metric
+                                              && policy->ospf_redistribute_bgp_metric_type != policy->ospf_redistribute_external_metric_type))
         {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp metric %d metric-type %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_bgp_metric,
-                     policy->ospf_redistribute_bgp_metric_type);
-        }
-        else if (policy->ospf_redistribute_bgp_metric)
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp metric %d\"",
-                     VTYSH_FILENAME,
-                     policy->ospf_redistribute_bgp_metric);
-        }
-        else
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp\"", VTYSH_FILENAME);
-        }
+            if (policy->ospf_redistribute_bgp_metric && policy->ospf_redistribute_external_metric_type)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp metric %d metric-type %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_bgp_metric,
+                         policy->ospf_redistribute_external_metric_type);
+            }
+            else if (policy->ospf_redistribute_bgp_metric)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp metric %d\"",
+                         VTYSH_FILENAME,
+                         policy->ospf_redistribute_bgp_metric);
+            }
+            else
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router ospf\" -c \"redistribute bgp\"", VTYSH_FILENAME);
+            }
 
-        if (!ExecRouteCommand(comm))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute bgp");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute bgp");
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep OSPF promise: redistribute bgp");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Kept OSPF promise: redistribute bgp");
+            }
         }
     }
     else if (state->ospf_redistribute_bgp)
@@ -1308,7 +1303,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
 
             if (!ExecRouteCommand(comm))
             {
-                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: add ipv4 network");
+                Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: add ipv4 network %s", (char *)rp->val.item);
             }
             else
             {
@@ -1321,7 +1316,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
 
     for (Rlist *rp = state->bgp_advertisable_v4_networks; rp != NULL; rp=rp->next)
     {
-        if (RlistKeyIn(policy->bgp_advertisable_v4_networks, rp->val.item))
+        if (!RlistKeyIn(policy->bgp_advertisable_v4_networks, rp->val.item))
         {
             snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv4 unicast\" -c \"no network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
 
@@ -1359,7 +1354,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
 
     for (Rlist *rp = state->bgp_advertisable_v6_networks; rp != NULL; rp=rp->next)
     {
-        if (RlistKeyIn(policy->bgp_advertisable_v6_networks, rp->val.item))
+        if (!RlistKeyIn(policy->bgp_advertisable_v6_networks, rp->val.item))
         {
             snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv6\" -c \"no network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
 

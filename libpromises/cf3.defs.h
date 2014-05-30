@@ -1048,41 +1048,35 @@ struct CommonRouting_
 
 typedef struct LinkStateBGP_ LinkStateBGP;
 typedef struct BGPNeighbour_ BGPNeighbour;
-typedef struct AFSettings_ AFSettings;
 
-struct AFSettings
+struct BGPNeighbour_
 {
-    char *family;
-    Rlist *networks;
-    int advert_interval;
-    int maximum_paths;
-    int have_ibgp_networks;
-    int have_ebgp_networks;
-    bool next_hop_self;
-    bool soft_inbound;
-};
+    char *bgp_neighbour;
+    int bgp_remote_as;
+    int bgp_advert_interval;
+    int bgp_multihop;
+    int bgp_ttl_security;
 
-struct BGPNeighbor
-{
-    int AS;
-    char *ip_address;
-    bool reflector;
-    int multihop;
-    Rlist *activate; // List of families
+    bool bgp_soft_inbound;
+    bool bgp_reflector; // i.e. we are the server
+    bool bgp_next_hop_self;
+    BGPNeighbour *next;
 };
 
 struct LinkStateBGP_
 {
-    int bgp_remote_as;
-    char *interface;
-    Rlist *bgp_neighbours;
-    bool bgp_reflector; // i.e. we are the server
-    int bgp_ttl_security;
-    int bgp_advert_interval;
-    bool bgp_next_hop_self;
-    Rlist *bgp_families;
+    BGPNeighbour *bgp_peers;
+    int bgp_local_as;
+
+    bool have_ibgp_peers;
+    bool have_ebgp_peers;
+
+    int bgp_maximum_paths_internal;
+    int bgp_maximum_paths_external;
+
+    Item *advertise_families;
     bool bgp_graceful_restart;
-    int bgp_maximum_paths;
+
     char *bgp_ipv6_neighbor_discovery_route_advertisement;
 };
 

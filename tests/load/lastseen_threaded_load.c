@@ -120,7 +120,7 @@ static void thread_exit_clean()
 
 void *lastsaw_worker_thread(void *arg)
 {
-    intptr_t thread_id = (intptr_t) arg;
+    int thread_id = (intptr_t) arg;
 
     size_t i = 0;
     while (!DONE)
@@ -147,7 +147,7 @@ void *lastsaw_worker_thread(void *arg)
 
 void *keycount_worker_thread(void *arg)
 {
-    intptr_t id = (intptr_t) arg;
+    int id = (intptr_t) arg;
 
     while (!DONE)
     {
@@ -161,7 +161,7 @@ void *keycount_worker_thread(void *arg)
 
 void *scanlastseen_worker_thread(void *arg)
 {
-    intptr_t id = (intptr_t) arg;
+    int id = (intptr_t) arg;
 
     while (!DONE)
     {
@@ -252,9 +252,9 @@ void worker_process()
         else
         {
             char hostkey[50];
-            snprintf(hostkey, sizeof(hostkey), "SHA-%040zx", child_COUNTER);
+            snprintf(hostkey, sizeof(hostkey), "SHA-%040lx", child_COUNTER);
             char ip[50];
-            snprintf(ip, sizeof(ip), "250.%03zu.%03zu.%03zu",
+            snprintf(ip, sizeof(ip), "250.%03lu.%03lu.%03lu",
                       child_COUNTER / (256*256),
                      (child_COUNTER / 256) % 256,
                       child_COUNTER % 256);
@@ -274,23 +274,23 @@ void worker_process()
 
 
 void spawn_worker_threads(void *(*worker_routine) (void *),
-                           int num_threads, const char *description)
+                          int num_threads, const char *description)
 {
     pthread_t tid[num_threads];
 
     printf("Spawning %s worker threads: ", description);
-    for (intptr_t i = 0; i < num_threads; i++)
+    for (int i = 0; i < num_threads; i++)
     {
         int ret = pthread_create(&tid[i], NULL,
-                                 worker_routine, (void *) i);
+                                 worker_routine, (void *)(intptr_t) i);
         if (ret != 0)
         {
-            fprintf(stderr, "pthread_create(%jd): %s",
-                    (intmax_t) i, GetErrorStrFromCode(ret));
+            fprintf(stderr, "pthread_create(%d): %s",
+                    i, GetErrorStrFromCode(ret));
             exit(EXIT_FAILURE);
         }
 
-        printf("%lu ", i+1);
+        printf("%i ", i+1);
     }
     printf("done!\n");
 }

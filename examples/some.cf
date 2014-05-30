@@ -29,12 +29,23 @@ body common control
 bundle agent test
 {
   classes:
+
+      # Note that if you use length() or none() or all() they will go
+      # through all the elements!!! This is an easy way to check if a
+      # list is empty, better than
+      # expression => strcmp(length(x), "0")
+      "empty_x" not => some(".*", x);
+      "empty_y" not => some(".*", y);
+
       "some11" expression => some("long string", test1);
       "some12" expression => some("none", test1);
       "some21" expression => some("long string", test2);
       "some22" expression => some("none", test2);
 
   vars:
+      "x" slist => { "a", "b" };
+      "y" slist => { };
+
       "test1" slist => {
                         1,2,3,
                         "one", "two", "three",
@@ -51,6 +62,12 @@ bundle agent test
                         "one", "two", "three",]');
 
   reports:
+    empty_x::
+      "x has no elements";
+    empty_y::
+      "y has no elements";
+
+    any::
       "The test1 list is $(test1)";
     some11::
       "some() test1 1 passed";
@@ -76,6 +93,7 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
+#@ R: y has no elements
 #@ R: The test1 list is 1
 #@ R: The test1 list is 2
 #@ R: The test1 list is 3

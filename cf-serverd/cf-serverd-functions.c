@@ -316,6 +316,40 @@ static void KeepHardClasses(EvalContext *ctx)
     GenericAgentAddEditionClasses(ctx);
 }
 
+/* Must not be called unless ACTIVE_THREADS is zero: */
+static void ClearAuthAndACLs(void)
+{
+    /* Old ACLs */
+    DeleteAuthList(&SV.admit, &SV.admittail);
+    DeleteAuthList(&SV.deny, &SV.denytail);
+    DeleteAuthList(&SV.varadmit, &SV.varadmittail);
+    DeleteAuthList(&SV.vardeny, &SV.vardenytail);
+    DeleteAuthList(&SV.roles, &SV.rolestail);
+
+    /* Should be no currently open connections */
+    assert(SV.connectionlist == NULL);
+
+    /* body server control ACLs */
+    DeleteItemList(SV.trustkeylist);        SV.trustkeylist = NULL;
+    DeleteItemList(SV.attackerlist);        SV.attackerlist = NULL;
+    DeleteItemList(SV.nonattackerlist);     SV.nonattackerlist = NULL;
+    DeleteItemList(SV.allowuserlist);       SV.allowuserlist = NULL;
+    DeleteItemList(SV.multiconnlist);       SV.multiconnlist = NULL;
+    DeleteItemList(SV.allowuserlist);       SV.allowuserlist = NULL;
+    DeleteItemList(SV.allowlegacyconnects); SV.allowlegacyconnects = NULL;
+
+    StringMapDestroy(SV.path_shortcuts);    SV.path_shortcuts = NULL;
+    free(SV.allowciphers);                  SV.allowciphers = NULL;
+
+    /* New ACLs */
+    NEED_REVERSE_LOOKUP = false;
+    acl_Free(paths_acl);    paths_acl = NULL;
+    acl_Free(classes_acl);  classes_acl = NULL;
+    acl_Free(vars_acl);     vars_acl = NULL;
+    acl_Free(literals_acl); literals_acl = NULL;
+    acl_Free(query_acl);    query_acl = NULL;
+}
+
 static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'",
@@ -340,32 +374,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
 
             strcpy(VDOMAIN, "undefined.domain");
 
-            /* Old ACLs */
-            DeleteAuthList(&SV.admit, &SV.admittail);
-            DeleteAuthList(&SV.deny, &SV.denytail);
-            DeleteAuthList(&SV.varadmit, &SV.varadmittail);
-            DeleteAuthList(&SV.vardeny, &SV.vardenytail);
-            DeleteAuthList(&SV.roles, &SV.rolestail);
-
-            /* body server control ACLs */
-            DeleteItemList(SV.trustkeylist);    SV.trustkeylist = NULL;
-            DeleteItemList(SV.attackerlist);    SV.attackerlist = NULL;
-            DeleteItemList(SV.nonattackerlist); SV.nonattackerlist = NULL;
-            DeleteItemList(SV.multiconnlist);   SV.multiconnlist = NULL;
-            DeleteItemList(SV.allowuserlist);   SV.allowuserlist = NULL;
-            DeleteItemList(SV.allowlegacyconnects);
-            SV.allowlegacyconnects = NULL;
-
-            /* New ACLs */
-            NEED_REVERSE_LOOKUP = false;
-            acl_Free(paths_acl);    paths_acl = NULL;
-            acl_Free(classes_acl);  classes_acl = NULL;
-            acl_Free(vars_acl);     vars_acl = NULL;
-            acl_Free(literals_acl); literals_acl = NULL;
-            acl_Free(query_acl);    query_acl = NULL;
-
-            StringMapDestroy(SV.path_shortcuts);  SV.path_shortcuts = NULL;
-            free(SV.allowciphers);                SV.allowciphers = NULL;
+            ClearAuthAndACLs();
             PolicyDestroy(*policy);               *policy = NULL;
 
             /* STEP 2: Set Environment, Parse and Evaluate policy */
@@ -726,6 +735,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     {
         if (ACTIVE_THREADS == 0)
         {
+            ClearAuthAndACLs();
             ServerTLSDeInitialize();
         }
         ThreadUnlock(cft_server_children);

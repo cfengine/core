@@ -57,7 +57,7 @@ static const ConstraintSyntax linkservice_constraints[] =
     // BGP
 
     ConstraintSyntaxNewString("bgp_declare_session_source", CF_ANYSTRING, "Redefine identity of source IP on a connection (aka bgp-update-source)", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("bgp_session_neighbors", CF_IPRANGE, "A list of IP addresses or the current (unnumbered) interface to establish a bgp connection to one or more remote peers", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("bgp_session_neighbor", CF_IPRANGE, "A list of IP addresses or the current (unnumbered) interface to establish a bgp connection to one or more remote peers", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_peer_as", CF_INTRANGE, "The remote peer's AS number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("bgp_route_reflector", "client,server", "For iBGP, a central route redistribuion hub", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_ttl_security", CF_INTRANGE, "Do not accept bgp frames more than this number of hops away", SYNTAX_STATUS_NORMAL),

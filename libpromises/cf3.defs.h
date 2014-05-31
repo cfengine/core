@@ -1074,7 +1074,7 @@ struct LinkStateBGP_
     int bgp_maximum_paths_internal;
     int bgp_maximum_paths_external;
 
-    Item *advertise_families;
+    Item *bgp_advertise_families;
     bool bgp_graceful_restart;
 
     char *bgp_ipv6_neighbor_discovery_route_advertisement;
@@ -1563,7 +1563,7 @@ typedef struct
     char *tunnel_alien_arp;
     // bgp
     int bgp_remote_as;
-    Rlist *bgp_neighbours;
+    char *bgp_neighbour;
     bool bgp_reflector; // i.e. we are the server
     int bgp_ttl_security;
     int bgp_advert_interval;

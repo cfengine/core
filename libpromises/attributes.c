@@ -1764,21 +1764,12 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.tunnel_alien_arp = PromiseGetConstraintAsRval(pp, "tunnel_alien_arp", RVAL_TYPE_SCALAR);
 
     i.bgp_remote_as = PromiseGetConstraintAsInt(ctx, "bgp_peer_as", pp);
-    i.bgp_neighbours = PromiseGetConstraintAsList(ctx, "bgp_session_neighbours", pp);
+    i.bgp_neighbour = PromiseGetConstraintAsRval(pp, "bgp_session_neighbor", RVAL_TYPE_SCALAR);
 
-    for (Rlist *rp = i.bgp_neighbours; rp != NULL; rp=rp->next)
+    if (i.bgp_neighbour && (IsIPV4Address(i.bgp_neighbour) ||IsIPV6Address(i.bgp_neighbour)) && strchr(i.bgp_neighbour, '/'))
     {
-        if (strchr(rp->val.item, '/'))
-        {
-            Log(LOG_LEVEL_ERR, "Neighbour IP address should be a host not be a network address '%s' in BGP interface promise", (char *)rp->val.item);
-            PromiseRef(LOG_LEVEL_ERR, pp);
-        }
-
-        if (!IsIPV4Address(rp->val.item) && !IsIPV6Address(rp->val.item))
-        {
-            Log(LOG_LEVEL_ERR, "Invalid neighbour IP address '%s' in BGP interface promise", (char *)rp->val.item);
-            PromiseRef(LOG_LEVEL_ERR, pp);
-        }
+        Log(LOG_LEVEL_ERR, "Neighbour IP address should be a host not be a network address '%s' in BGP interface promise", i.bgp_neighbour);
+        PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
     if (strcmp(PromiseGetConstraintAsRval(pp, "bgp_route_reflector", RVAL_TYPE_SCALAR), "server") == 0)

@@ -483,6 +483,7 @@ typedef enum
     BGP_REDISTRIBUTE,
     BGP_V4_NETWORKS,
     BGP_V6_NETWORKS,
+    BGP_GRACEFUL_RESTART,
     ROUTE_CONTROL_NONE
 } RouteServiceControl;
 
@@ -1044,6 +1045,7 @@ struct CommonRouting_
     bool bgp_redistribute_ospf;
     Rlist *bgp_advertisable_v4_networks;
     Rlist *bgp_advertisable_v6_networks;
+    bool bgp_graceful_restart;
 };
 
 typedef struct LinkStateBGP_ LinkStateBGP;
@@ -1075,8 +1077,6 @@ struct LinkStateBGP_
     int bgp_maximum_paths_external;
 
     Item *bgp_advertise_families;
-    bool bgp_graceful_restart;
-
     char *bgp_ipv6_neighbor_discovery_route_advertisement;
 };
 
@@ -1569,7 +1569,6 @@ typedef struct
     int bgp_advert_interval;
     bool bgp_next_hop_self;
     Rlist *bgp_families;
-    bool bgp_graceful_restart;
     int bgp_maximum_paths;
     char *bgp_ipv6_neighbor_discovery_route_advertisement;
 

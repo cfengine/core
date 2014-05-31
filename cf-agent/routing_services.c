@@ -238,6 +238,13 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
                 continue;
             }
 
+            if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_GRACEFUL_RESTART].lval) == 0)
+            {
+                ROUTING_POLICY->bgp_graceful_restart = (int) IntFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting graceful-restart = %d", ROUTING_POLICY->bgp_graceful_restart);
+                continue;
+            }
+
             if (strcmp(cp->lval, ROUTING_CONTROLBODY[BGP_LOG_NEIGHBOR_CHANGES].lval) == 0)
             {
                 ROUTING_POLICY->bgp_log_neighbor_changes = (int) IntFromString(value);
@@ -1044,26 +1051,25 @@ void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promi
     for (BGPNeighbour *bp=bgpp->bgp_peers; bp != NULL; bp=bp->next)
     {
         printf("Existing peer is known to us at address %s\n", bp->bgp_neighbour);
+
+        bool bgp_reflector; // i.e. we are the server
+        int bgp_ttl_security;
+
+        for ( Item *ip = bgpp->bgp_advertise_families; ip != NULL; ip=ip->next)
+        {
+            printf("address-families %s\n", ip->name);
+            int bgp_advert_interval;
+            bool bgp_next_hop_self;
+            int bgp_maximum_paths;
+        }
+
+// pp->promiser
+        char *bgp_ipv6_neighbor_discovery_route_advertisement;
     }
 
-    for ( Item *ip = bgpp->bgp_advertise_families; ip != NULL; ip=ip->next)
-    {
-        printf("address-families %s\n", ip->name);
-
-    }
-
-
-    bool bgp_reflector; // i.e. we are the server
-    int bgp_ttl_security;
-    int bgp_advert_interval;
-    bool bgp_next_hop_self;
-    Rlist *bgp_families;
     bool bgp_graceful_restart;
-    int bgp_maximum_paths;
-    char *bgp_ipv6_neighbor_discovery_route_advertisement;
 
 
-    // Maxpaths
 
 
     // WARNING there is a route that has not been covered by interface promises...
@@ -1179,6 +1185,27 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
         else
         {
             Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: establish ASN %d on this router", policy->bgp_local_as);
+        }
+    }
+
+    if (policy->bgp_graceful_restart != state->bgp_graceful_restart)
+    {
+        if (state->bgp_graceful_restart)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"no bgp graceful-restart\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"bgp graceful-restart\"", VTYSH_FILENAME, policy->bgp_local_as);
+        }
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to keep BGP promise: set graceful-restart to %d", policy->bgp_graceful_restart);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Kept BGP promise: neighbor change logging");
         }
     }
 
@@ -1790,6 +1817,12 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
         return;
     }
 
+    if (strcmp(line, " bgp graceful-restart") == 0)
+    {
+        bgpp->bgp_graceful_restart = true;
+        Log(LOG_LEVEL_VERBOSE,"Found graceful-restart, global setting\n");
+    }
+
     if ((sp = GetStringAfter(line, "log file")) != NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Log file is %s", sp);
@@ -1944,12 +1977,6 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
     {
         Log(LOG_LEVEL_VERBOSE,"Found maximum-paths ibgp %d for peer %s\n", bgpp->bgp_maximum_paths_internal, peer_id);
         return;
-    }
-
-    if (strcmp(line, " bgp graceful-restart") == 0)
-    {
-        bgpp->bgp_graceful_restart = true;
-        Log(LOG_LEVEL_VERBOSE,"Found graceful-restart for peer %s\n", peer_id);
     }
 
     if (strcmp(line, " ipv6 nd suppress-ra") == 0)

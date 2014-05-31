@@ -1781,7 +1781,6 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.bgp_advert_interval = PromiseGetConstraintAsInt(ctx, "bgp_advertisement_interval", pp);
     i.bgp_next_hop_self = PromiseGetConstraintAsBoolean(ctx, "bgp_next_hop_self", pp);
     i.bgp_families = PromiseGetConstraintAsList(ctx, "bgp_advertise_families", pp);
-    i.bgp_graceful_restart = PromiseGetConstraintAsBoolean(ctx, "bgp_graceful_restart", pp);
     i.bgp_maximum_paths = PromiseGetConstraintAsInt(ctx, "bgp_maximum_paths", pp);
     i.bgp_ipv6_neighbor_discovery_route_advertisement = PromiseGetConstraintAsRval(pp, "bgp_ipv6_neighbor_discovery_route_advertisement", RVAL_TYPE_SCALAR);
     return i;

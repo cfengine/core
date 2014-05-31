@@ -66,7 +66,6 @@ static const ConstraintSyntax linkservice_constraints[] =
     ConstraintSyntaxNewBool("bgp_internal_next_hop_self", "iBGP hops within the same AS. Router knows how to forward to prefixes it announces", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("bgp_advertise_families", "ipv4_unicast,ipv6_unicast", "Share networks in these address families to neighbour", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("bgp_external_soft_reconfiguration_inbound", "Allow updates from a neighbor without full reset of BGP session, cache policy history", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("bgp_graceful_restart", "BGP session restart RFC, default is false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("bgp_ipv6_neighbor_discovery_route_advertisement", "allow,suppress", "For iBGP, a central route redistribuion hub", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

@@ -1023,10 +1023,50 @@ bool HaveRoutingService(EvalContext *ctx)
 /* BGP                                                                       */
 /*****************************************************************************/
 
-void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgp)
+void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgpp)
 
 {
-    printf("FILLL ME INN....1\n");
+    printf("I AM interface %s\n", pp->promiser);
+    printf(" representing bgp AS %d\n", bgpp->bgp_local_as);
+    printf("I should be AS %d\n",ROUTING_POLICY->bgp_local_as);
+
+    if (ROUTING_POLICY->bgp_local_as == a->interface.bgp_remote_as)
+    {
+        printf("Interface connection connects us to our own AS %d (iBGP)\n", a->interface.bgp_remote_as);
+    }
+    else
+    {
+        printf("Interface connection connects us to remote AS %d\n", a->interface.bgp_remote_as);
+    }
+
+    printf("interface %s promises to peer with neighbour known by address %s\n", pp->promiser, a->interface.bgp_neighbour);
+
+    for (BGPNeighbour *bp=bgpp->bgp_peers; bp != NULL; bp=bp->next)
+    {
+        printf("Existing peer is known to us at address %s\n", bp->bgp_neighbour);
+    }
+
+    for ( Item *ip = bgpp->bgp_advertise_families; ip != NULL; ip=ip->next)
+    {
+        printf("address-families %s\n", ip->name);
+
+    }
+
+
+    bool bgp_reflector; // i.e. we are the server
+    int bgp_ttl_security;
+    int bgp_advert_interval;
+    bool bgp_next_hop_self;
+    Rlist *bgp_families;
+    bool bgp_graceful_restart;
+    int bgp_maximum_paths;
+    char *bgp_ipv6_neighbor_discovery_route_advertisement;
+
+
+    // Maxpaths
+
+
+    // WARNING there is a route that has not been covered by interface promises...
 }
 
 /*****************************************************************************/
@@ -1862,7 +1902,7 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
         if (strcmp(args, "activate") == 0)
         {
             Log(LOG_LEVEL_VERBOSE,"Found peer %s activation for family %s\n", peer_id, family);
-            IdempPrependItem(&(bgpp->advertise_families), family, NULL);
+            IdempPrependItem(&(bgpp->bgp_advertise_families), family, NULL);
             return;
         }
 
@@ -1917,8 +1957,6 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
         bgpp->bgp_ipv6_neighbor_discovery_route_advertisement = "suppress";
         Log(LOG_LEVEL_VERBOSE,"Found neighbour discovery route advertisement suppression for peer %s\n", peer_id);
     }
-
-    Rlist *advertise_families;
 
 }
 

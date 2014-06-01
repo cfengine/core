@@ -60,7 +60,7 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
 
     switch (result) {
     case PROMISE_RESULT_NOOP:
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "User promise kept");
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "User promise kept");
         break;
     case PROMISE_RESULT_FAIL:
     case PROMISE_RESULT_DENIED:

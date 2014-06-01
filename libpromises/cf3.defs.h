@@ -1043,9 +1043,9 @@ struct CommonRouting_
     bool bgp_redistribute_connected;
     bool bgp_redistribute_static;
     bool bgp_redistribute_ospf;
+    bool bgp_graceful_restart;
     Rlist *bgp_advertisable_v4_networks;
     Rlist *bgp_advertisable_v6_networks;
-    bool bgp_graceful_restart;
 };
 
 typedef struct LinkStateBGP_ LinkStateBGP;

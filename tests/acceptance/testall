@@ -214,7 +214,7 @@ usage() {
   echo
   echo " --no-crashing disable tests that are expected to crash (for use with valgrind)."
   echo
-  echo " --printlog   print the full test.log output immediately."
+  echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
   echo
   echo " --gdb         Run test under GDB"
   echo " --valgrind    Run test under Valgrind"

@@ -40,6 +40,7 @@
 #include <conversion.h>
 #include <addr_lib.h>
 #include <communication.h>
+#include <string_lib.h>
 
 /*****************************************************************************/
 /*                                                                           */
@@ -289,13 +290,13 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (IsIPV4Address(rp->val.item))
+                    if (IsIPV4NetworkAddress(rp->val.item))
                     {
                         Log(LOG_LEVEL_VERBOSE, "Setting BGP ipv4 network advertisement for: %s", (char *)rp->val.item);
                     }
                     else
                     {
-                        Log(LOG_LEVEL_ERR, "BGP network advertisement %s is not a valid ipv4 address", (char *)rp->val.item);
+                        Log(LOG_LEVEL_ERR, "BGP network advertisement %s is not a valid ipv4 network address", (char *)rp->val.item);
                     }
                 }
             }
@@ -306,13 +307,15 @@ void InitializeRoutingServices(const Policy *policy, EvalContext *ctx)
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (IsIPV6Address(rp->val.item))
+                    ToLowerStrInplace(rp->val.item);
+
+                    if (IsIPV6NetworkAddress(rp->val.item))
                     {
                         Log(LOG_LEVEL_VERBOSE, "Setting BGP ipv6 network advertisement for: %s", (char *)rp->val.item);
                     }
                     else
                     {
-                        Log(LOG_LEVEL_ERR, "BGP network advertisement %s is not a valid ipv6 address", (char *)rp->val.item);
+                        Log(LOG_LEVEL_ERR, "BGP network advertisement %s is not a valid ipv6 network address", (char *)rp->val.item);
                     }
                 }
             }
@@ -1032,47 +1035,309 @@ bool HaveRoutingService(EvalContext *ctx)
 
 void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgpp)
 
-{
-    printf("I AM interface %s\n", pp->promiser);
-    printf(" representing bgp AS %d\n", bgpp->bgp_local_as);
-    printf("I should be AS %d\n",ROUTING_POLICY->bgp_local_as);
+{ BGPNeighbour *bp;
+    char comm[CF_BUFSIZE];
+    bool am_ibgp = false;
+    bool am_unnumbered = false;
+    Item *address_families = NULL;
+
+    Log(LOG_LEVEL_VERBOSE, "Verifying BGP link service promises for interface %s", pp->promiser);
+    Log(LOG_LEVEL_VERBOSE, "Interface %s belongs to ASN %d", pp->promiser, bgpp->bgp_local_as);
 
     if (ROUTING_POLICY->bgp_local_as == a->interface.bgp_remote_as)
     {
-        printf("Interface connection connects us to our own AS %d (iBGP)\n", a->interface.bgp_remote_as);
+        Log(LOG_LEVEL_VERBOSE,"Interface connection connects us to our own AS %d (iBGP)\n", a->interface.bgp_remote_as);
+        am_ibgp = true;
     }
     else
     {
-        printf("Interface connection connects us to remote AS %d\n", a->interface.bgp_remote_as);
+        Log(LOG_LEVEL_VERBOSE,"Interface connection connects us to remote AS %d\n", a->interface.bgp_remote_as);
     }
 
-    printf("interface %s promises to peer with neighbour known by address %s\n", pp->promiser, a->interface.bgp_neighbour);
-
-    for (BGPNeighbour *bp=bgpp->bgp_peers; bp != NULL; bp=bp->next)
+    if (a->interface.bgp_neighbour && !(IsIPV4Address(a->interface.bgp_neighbour) || IsIPV6Address(a->interface.bgp_neighbour)))
     {
-        printf("Existing peer is known to us at address %s\n", bp->bgp_neighbour);
+        Log(LOG_LEVEL_VERBOSE, "(The peer %s seems to be reached by an unnumbered interface)\n", a->interface.bgp_neighbour);
+        am_unnumbered = true;
+    }
 
-        bool bgp_reflector; // i.e. we are the server
-        int bgp_ttl_security;
+    if ((bp = GetPeer(a->interface.bgp_neighbour, bgpp)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Software error in BGP handling looking for %s", a->interface.bgp_neighbour);
+        *result = PROMISE_RESULT_FAIL;
+        return;
+    }
 
-        for ( Item *ip = bgpp->bgp_advertise_families; ip != NULL; ip=ip->next)
+    if ((bp->bgp_remote_as != 0) && (bp->bgp_remote_as !=  a->interface.bgp_remote_as))
+    {
+        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"no neighbor %s remote-as %d\"",
+                 VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, a->interface.bgp_neighbour, bp->bgp_remote_as);
+
+        if (!ExecRouteCommand(comm))
         {
-            printf("address-families %s\n", ip->name);
-            int bgp_advert_interval;
-            bool bgp_next_hop_self;
-            int bgp_maximum_paths;
+            Log(LOG_LEVEL_VERBOSE, "Failed to remove incorrect BGP session %s ASN %d", a->interface.bgp_neighbour, bp->bgp_remote_as);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Removed existing BGP session %s ASN %d", a->interface.bgp_neighbour, bp->bgp_remote_as);
+        }
+    }
+
+    if (bp->bgp_remote_as !=  a->interface.bgp_remote_as)
+    {
+        snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"neighbor %s remote-as %d\"",
+                 VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+
+        if (!ExecRouteCommand(comm))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to establish BGP session %s ASN %d", a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Established BGP session %s ASN %d", a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+        }
+    }
+
+    // Now interface family specific commands
+    // Transduce address families for this router implementation
+
+    for (Rlist *rp = a->interface.bgp_families; rp != NULL; rp=rp->next)
+    {
+        if (strcmp(rp->val.item, "ipv4_unicast") == 0)
+        {
+            PrependItem(&address_families, "ipv4 unicast", NULL);
         }
 
-// pp->promiser
-        char *bgp_ipv6_neighbor_discovery_route_advertisement;
+        if (strcmp(rp->val.item, "ipv6_unicast") == 0)
+        {
+            PrependItem(&address_families, "ipv6", NULL);
+        }
     }
 
-    bool bgp_graceful_restart;
+    // The cleansing
 
+    for (Item *ip = bgpp->bgp_advertise_families; ip != NULL; ip=ip->next)
+    {
+        if (!IsItemIn(address_families, ip->name))
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"   -c \"address-family %s\" -c \"no neighbor %s remote-as %d activate\"",
+                     VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour, a->interface.bgp_remote_as);
 
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to deactivate %s in BGP session %s ASN %d", ip->name, a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+                *result = PROMISE_RESULT_FAIL;
+                return;
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Established BGP session %s ASN %d", a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+            }
+        }
+    }
 
+    // Activation
 
-    // WARNING there is a route that has not been covered by interface promises...
+    for (Item *ip = address_families; ip != NULL; ip=ip->next)
+    {
+        if (!IsItemIn(bgpp->bgp_peers,a->interface.bgp_neighbour))
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"   -c \"address-family %s\" -c \"neighbor %s remote-as %d\"",
+                     VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name,  a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to add BGP session %s ASN %d on family %s", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
+                *result = PROMISE_RESULT_FAIL;
+                continue;
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Added BGP session %s ASN %d on family", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
+            }
+        }
+
+        // Must activate before setting any params - ipv4 only reports NOT active
+
+        if (!IsItemIn(bgpp->bgp_advertise_families, ip->name))
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"   -c \"address-family %s\" -c \"neighbor %s activate\"",
+                     VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name,  a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to activate BGP session %s ASN %d on family %s", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
+                *result = PROMISE_RESULT_FAIL;
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Activated BGP session %s ASN %d on family", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
+            }
+        }
+
+        // Route reflector
+
+        if (am_ibgp)
+        {
+            if (bp->bgp_reflector != a->interface.bgp_reflector)
+            {
+                if (bp->bgp_reflector)
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"no neighbor %s route-reflector-client\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour);
+                }
+                else
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"neighbor %s route-reflector-client\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour);
+                }
+
+                if (!ExecRouteCommand(comm))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Failed establish BGP route reflector for %s over %s", a->interface.bgp_neighbour, ip->name);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Established BGP route reflector for %s over %s", a->interface.bgp_neighbour, ip->name);
+                }
+            }
+        }
+
+        // ttl-security
+
+        if (!am_unnumbered)
+        {
+            if (bp->bgp_ttl_security != a->interface.bgp_ttl_security)
+            {
+                if (a->interface.bgp_ttl_security)
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"neighbor %s ttl-security hops %d\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour, a->interface.bgp_ttl_security);
+                }
+                else
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"no neighbor %s ttl-security hops %d\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour, a->interface.bgp_ttl_security);
+                }
+            }
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed establish BGP ttl-security hops %d for %s over %s",  a->interface.bgp_ttl_security, a->interface.bgp_neighbour, ip->name);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Established BGP ttl-security hops %d for %s over %s",  a->interface.bgp_ttl_security, a->interface.bgp_neighbour, ip->name);
+            }
+        }
+
+        // advertisement_interval
+
+        if (bp->bgp_advert_interval != a->interface.bgp_advert_interval)
+        {
+            if (a->interface.bgp_advert_interval)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"neighbor %s advertisement-interval %d\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour, a->interface.bgp_advert_interval);
+            }
+            else
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"no neighbor %s advertisement-interval\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour);
+            }
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to set BGP advertisement interval");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Set BGP advertisement interval for %s to %d", a->interface.bgp_neighbour, a->interface.bgp_advert_interval);
+            }
+        }
+
+        if (bp->bgp_next_hop_self != a->interface.bgp_next_hop_self)
+        {
+            if (a->interface.bgp_next_hop_self)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"neighbor %s next-hop-self\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour);
+            }
+            else
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"no neighbor %s next-hop-self\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_neighbour);
+            }
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to set BGP next-hop-self");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Set BGP next-hop-self for %s to %d", a->interface.bgp_neighbour, a->interface.bgp_advert_interval);
+            }
+        }
+
+        // maximum paths
+
+        if (bgpp->bgp_maximum_paths_internal != a->interface.bgp_maximum_paths)
+        {
+            if (a->interface.bgp_maximum_paths == 0)
+            {
+                if (am_ibgp)
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"maximum-paths ibgp\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name);
+                }
+                else
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"maximum-paths\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name);
+                }
+            }
+            else
+            {
+                if (am_ibgp)
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"maximum-paths ibgp %d\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_maximum_paths);
+                }
+                else
+                {
+                    snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"  -c \"address-family %s\" -c \"maximum-paths %d\"", VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name, a->interface.bgp_maximum_paths);
+                }
+            }
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to set BGP maximum-paths");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Set BGP maximum-paths for %s to %d", a->interface.bgp_neighbour, a->interface.bgp_maximum_paths);
+            }
+        }
+    }
+
+    DeleteItemList(address_families);
+
+    if (bgpp->bgp_ipv6_neighbor_discovery_route_advertisement && a->interface.bgp_ipv6_neighbor_discovery_route_advertisement)
+    {
+        if (strcmp(bgpp->bgp_ipv6_neighbor_discovery_route_advertisement, a->interface.bgp_ipv6_neighbor_discovery_route_advertisement) != 0)
+        {
+            if (strcmp(a->interface.bgp_ipv6_neighbor_discovery_route_advertisement, "suppress") == 0)
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"ipv6 nd suppress-ra\"", VTYSH_FILENAME, pp->promiser);
+            }
+            else
+            {
+                snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"interface %s\" -c \"no ipv6 nd suppress-ra\"", VTYSH_FILENAME, pp->promiser);
+            }
+
+            if (!ExecRouteCommand(comm))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to set BGP neighbour discovery route suppression");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Set BGP neighbour discovery route suppression %s", pp->promiser);
+            }
+
+        }
+    }
 }
 
 /*****************************************************************************/
@@ -1403,7 +1668,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
 
     for (Rlist *rp = policy->bgp_advertisable_v6_networks; rp != NULL; rp=rp->next)
     {
-        if (!RlistKeyIn(state->bgp_advertisable_v6_networks, rp->val.item))
+        if (!IPAddressInList(state->bgp_advertisable_v6_networks, rp->val.item))
         {
             snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv6\" -c \"network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
 
@@ -1422,7 +1687,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
 
     for (Rlist *rp = state->bgp_advertisable_v6_networks; rp != NULL; rp=rp->next)
     {
-        if (!RlistKeyIn(policy->bgp_advertisable_v6_networks, rp->val.item))
+        if (!IPAddressInList(policy->bgp_advertisable_v6_networks, rp->val.item))
         {
             snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\" -c \"address-family ipv6\" -c \"no network %s\"", VTYSH_FILENAME, policy->bgp_local_as, (char *)rp->val.item);
 
@@ -1446,9 +1711,13 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
     char *family = xstrdup("ipv4 unicast");
+    char search[CF_MAXVARSIZE];
     char comm[CF_BUFSIZE];
     RouterCategory state = CF_RC_INITIAL;
 
+    IdempPrependItem(&(bgpp->bgp_advertise_families), family, NULL);
+
+    snprintf(search, CF_MAXVARSIZE, "interface %s", pp->promiser);
     snprintf(comm, CF_BUFSIZE, "%s -c \"show running-config\"", VTYSH_FILENAME);
 
     if ((pfp = cf_popen(comm, "r", true)) == NULL)
@@ -1478,6 +1747,11 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
             state = CF_RC_BGP;
         }
 
+        if (strcmp(line, search) == 0)
+        {
+            state = CF_RC_INTERFACE;
+        }
+
         if (strncmp(line, " address-family", strlen(" address-family")) == 0)
         {
             free(family);
@@ -1488,7 +1762,21 @@ int QueryBGPInterfaceState(EvalContext *ctx, const Attributes *a, const Promise 
         switch(state)
         {
         case CF_RC_OSPF:
+            break;
+
         case CF_RC_INTERFACE:
+            if (strcmp(line, " ipv6 nd suppress-ra") == 0)
+            {
+                bgpp->bgp_ipv6_neighbor_discovery_route_advertisement = "suppress";
+                Log(LOG_LEVEL_VERBOSE, "Found neighbour discovery route advertisement suppression for interface %s\n", pp->promiser);
+            }
+
+            if (strcmp(line, " no ipv6 nd suppress-ra") == 0)
+            {
+                bgpp->bgp_ipv6_neighbor_discovery_route_advertisement = "allow";
+                Log(LOG_LEVEL_VERBOSE, "Found neighbour discovery route advertisement suppression for interface %s\n", pp->promiser);
+            }
+
             break;
 
         case CF_RC_INITIAL:
@@ -1878,7 +2166,6 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
 static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp, char *family)
 {
     int i;
-    char *sp;
     BGPNeighbour *bp;
     int as;
     char peer_id[CF_MAX_IP_LEN];
@@ -1934,7 +2221,7 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
 
         if (strcmp(args, "activate") == 0)
         {
-            Log(LOG_LEVEL_VERBOSE,"Found peer %s activation for family %s\n", peer_id, family);
+            Log(LOG_LEVEL_VERBOSE, "Found peer %s activation for family %s\n", peer_id, family);
             IdempPrependItem(&(bgpp->bgp_advertise_families), family, NULL);
             return;
         }
@@ -1967,6 +2254,25 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
         }
     }
 
+    if (strncmp(line, " no neighbor", strlen(" no neighbor")) == 0)
+    {
+        as = CF_NOINT;
+        peer_id[0] = '\0';
+
+        sscanf(line+strlen(" no neighbor"), "%63s", peer_id);
+
+        char *args = line + strlen(" no neighbor") + strlen(peer_id) + 2;
+
+        bp = GetPeer(peer_id, bgpp);
+
+        if (strcmp(args, "activate") == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Found peer %s de-activation for family %s\n", peer_id, family);
+            DeleteItem(&(bgpp->bgp_advertise_families), ReturnItemIn(bgpp->bgp_advertise_families,family));
+            return;
+        }
+    }
+
     if (sscanf(line, " maximum-paths %d", &(bgpp->bgp_maximum_paths_external)))
     {
         Log(LOG_LEVEL_VERBOSE,"Found maximum-paths %d for peer %s\n", bgpp->bgp_maximum_paths_external, peer_id);
@@ -1978,13 +2284,6 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
         Log(LOG_LEVEL_VERBOSE,"Found maximum-paths ibgp %d for peer %s\n", bgpp->bgp_maximum_paths_internal, peer_id);
         return;
     }
-
-    if (strcmp(line, " ipv6 nd suppress-ra") == 0)
-    {
-        bgpp->bgp_ipv6_neighbor_discovery_route_advertisement = "suppress";
-        Log(LOG_LEVEL_VERBOSE,"Found neighbour discovery route advertisement suppression for peer %s\n", peer_id);
-    }
-
 }
 
 /*****************************************************************************/

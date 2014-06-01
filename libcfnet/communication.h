@@ -39,6 +39,8 @@ AgentConnection *NewAgentConn(const char *server_name);
   @param ap AgentConnection structure.
   */
 void DeleteAgentConn(AgentConnection *ap);
+int IsIPV6NetworkAddress(char *name);
+int IsIPV4NetworkAddress(char *name);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
 int Hostname2IPString(char *dst, const char *hostname, size_t dst_size);

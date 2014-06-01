@@ -66,6 +66,51 @@ void DeleteAgentConn(AgentConnection *conn)
     free(conn);
 }
 
+/*******************************************************/
+
+int IsIPV4NetworkAddress(char *name)
+{
+    char *sp;
+
+    if (!IsIPV4Address(name))
+    {
+        return false;
+    }
+
+    if ((sp = strchr(name, '/')))
+    {
+        if (strncmp(sp-2, ".0", 2) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*******************************************************/
+
+int IsIPV6NetworkAddress(char *name)
+{
+    char *sp;
+    if (!IsIPV6Address(name))
+    {
+        return false;
+    }
+
+    if ((sp = strchr(name, '/')))
+    {
+        if (strncmp(sp-2, "::", 2) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*******************************************************/
+
 int IsIPV6Address(char *name)
 {
     if (!name)

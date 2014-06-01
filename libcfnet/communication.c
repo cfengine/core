@@ -66,6 +66,51 @@ void DeleteAgentConn(AgentConnection *conn)
     free(conn);
 }
 
+/*******************************************************/
+
+int IsIPV4NetworkAddress(char *name)
+{
+    char *sp;
+
+    if (!IsIPV4Address(name))
+    {
+        return false;
+    }
+
+    if ((sp = strchr(name, '/')))
+    {
+        if (strncmp(sp-2, ".0", 2) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*******************************************************/
+
+int IsIPV6NetworkAddress(char *name)
+{
+    char *sp;
+    if (!IsIPV6Address(name))
+    {
+        return false;
+    }
+
+    if ((sp = strchr(name, '/')))
+    {
+        if (strncmp(sp-2, "::", 2) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*******************************************************/
+
 int IsIPV6Address(char *name)
 {
     if (!name)
@@ -200,7 +245,7 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
     {
         Log(LOG_LEVEL_ERR,
             "Unable to convert IP address '%s'. (getaddrinfo: %s)",
-              ipaddr, gai_strerror(ret));
+            ipaddr, gai_strerror(ret));
         return -1;
     }
 
@@ -255,13 +300,13 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
 
 unsigned short SocketFamily(int sd)
 {
-   struct sockaddr_storage ss = {0};
-   socklen_t len = sizeof(ss);
+    struct sockaddr_storage ss = {0};
+    socklen_t len = sizeof(ss);
 
-   if (getsockname(sd, (struct sockaddr *) &ss, &len) == -1)
-   {
-       Log(LOG_LEVEL_ERR, "Could not get socket family. (getsockname: %s)", GetErrorStr());
-   }
+    if (getsockname(sd, (struct sockaddr *) &ss, &len) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Could not get socket family. (getsockname: %s)", GetErrorStr());
+    }
 
-   return ss.ss_family;
+    return ss.ss_family;
 }

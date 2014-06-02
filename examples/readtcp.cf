@@ -30,7 +30,7 @@ bundle agent example
 {
   vars:
 
-      "my80" string => readtcp("cfengine.com","80","GET /wp-includes/js/jquery/jquery.color.min.js HTTP/1.1$(const.r)$(const.n)Host: cfengine.com$(const.r)$(const.n)$(const.r)$(const.n)",20);
+      "my80" string => readtcp("myserver.com","80","GET /index.html HTTP/1.1$(const.r)$(const.n)Host: myserver.com$(const.r)$(const.n)$(const.r)$(const.n)",20);
 
   classes:
 
@@ -46,10 +46,4 @@ bundle agent example
 
       "Server is not responding - got $(my80)";
 }
-#+end_src
-###############################################################################
-#+begin_src example_output
-#@ ```
-#@ R: Server is alive
-#@ ```
 #+end_src

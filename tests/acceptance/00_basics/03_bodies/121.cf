@@ -87,12 +87,12 @@ bundle agent check
   vars:
       "expect[promise_kept]" string        => "";
       "expect[promise_repaired]" string        => "";
-      "expect[repair_failed]" string        => "";
+      "expect[repair_failed]" string        => "ON";
       "expect[repair_denied]" string        => "";
       "expect[repair_timeout]" string        => "";
       "expect[cancel_kept]" string        => "ON";
       "expect[cancel_repaired]" string        => "ON";
-      "expect[cancel_notkept]" string        => "ON";
+      "expect[cancel_notkept]" string        => "";
 
       # Everything from here down is "boilerplate" to these 1xx.cf tests
       "lookfor" slist => {

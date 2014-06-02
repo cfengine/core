@@ -69,9 +69,11 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Prom
 
         if (!matched)
         {
-            Log(LOG_LEVEL_VERBOSE,
-                "Command related to promiser '%s' returned code %d -- did not match any failed, repaired or kept lists",
-                  pp->promiser, retcode);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
+                 "Command related to promiser '%s' returned code not defined as promise kept, not kept or repaired; setting to failed: %d",
+                 pp->promiser, retcode);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            result_retcode = false;
         }
 
     }

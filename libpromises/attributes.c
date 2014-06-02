@@ -1772,7 +1772,8 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
         PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
-    if (strcmp(PromiseGetConstraintAsRval(pp, "bgp_route_reflector", RVAL_TYPE_SCALAR), "server") == 0)
+    char *refl = PromiseGetConstraintAsRval(pp, "bgp_route_reflector", RVAL_TYPE_SCALAR);
+    if (refl && (strcmp(refl, "server") == 0))
     {
         i.bgp_reflector = true;
     }

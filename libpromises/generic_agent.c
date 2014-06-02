@@ -711,6 +711,18 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 }
 
+void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)
+{
+    /* TODO, FIXME: what else from the above do we need to undo here ? */
+    if (config->agent_type != AGENT_TYPE_KEYGEN)
+    {
+        cfnet_shut();
+    }
+    CryptoDeInitialize();
+    GenericAgentConfigDestroy(config);
+    EvalContextDestroy(ctx);
+}
+
 static bool MissingInputFile(const char *input_file)
 {
     struct stat sb;

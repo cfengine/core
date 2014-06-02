@@ -30,11 +30,11 @@
 
 #include <errno.h>
 
-extern FILE *yyin; /* cf3parse.c */
-extern int yyparse(void); /* cf3parse.c */
-extern int yylex_destroy(void); /* cf3lex.c */
+int yyparse(void);
 
 ParserState P = { 0 }; /* GLOBAL_X */
+
+extern FILE *yyin;
 
 static void ParserStateReset(ParserState *p, bool discard)
 {
@@ -136,7 +136,6 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
     }
 
     fclose(yyin);
-    yylex_destroy();
 
     if (P.error_count > 0)
     {

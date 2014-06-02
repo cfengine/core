@@ -275,11 +275,11 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         IPAddressDestroy(&ip1);
     }
 
-    if (a.interface.bgp_ttl_security ||
-        a.interface.bgp_advert_interval ||
+    if (a.interface.bgp_ttl_security != CF_NOINT ||
+        a.interface.bgp_advert_interval != CF_NOINT ||
         a.interface.bgp_next_hop_self ||
         a.interface.bgp_families ||
-        a.interface.bgp_maximum_paths ||
+        a.interface.bgp_maximum_paths != CF_NOINT ||
         a.interface.bgp_ipv6_neighbor_discovery_route_advertisement
         )
     {
@@ -290,13 +290,16 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         }
     }
 
-    if (ROUTING_POLICY->bgp_local_as != a.interface.bgp_remote_as)
+    if (ROUTING_POLICY != NULL) // This is set by body routing_services control
     {
-        // This is ebgp
-        if (a.interface.bgp_reflector)
+        if (ROUTING_POLICY->bgp_local_as != a.interface.bgp_remote_as)
         {
-            Log(LOG_LEVEL_ERR, "Interface '%s', route reflectors only apply to iBGP", pp->promiser);
-            PromiseRef(LOG_LEVEL_ERR, pp);
+            // This is ebgp
+            if (a.interface.bgp_reflector)
+            {
+                Log(LOG_LEVEL_ERR, "Interface '%s', route reflectors only apply to iBGP", pp->promiser);
+                PromiseRef(LOG_LEVEL_ERR, pp);
+            }
         }
     }
 

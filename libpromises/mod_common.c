@@ -402,7 +402,7 @@ const ConstraintSyntax ROUTING_CONTROLBODY[] =
     ConstraintSyntaxNewOption("ospf_log_adjacency_changes", "normal,detail,none", "OSPF logging of neighbour changes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_log_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,bgp", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,bgp", "Sources of routing information to distribute", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_redistribute_metric_type", "1,2", "How to calculate metrics for external routes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_VALRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_redistribute_connected_metric", CF_VALRANGE, "Metric for redistributed direct connetions", SYNTAX_STATUS_NORMAL),

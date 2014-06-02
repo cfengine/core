@@ -1556,7 +1556,6 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
         {
             KeepOSPFLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
             KeepBGPLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
-            GetInterfacesInfo(ctx);
         }
         break;
 
@@ -1596,6 +1595,7 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
     case TYPE_SEQUENCE_INTERFACES:
         WriteNativeInterfacesFile();
         DeleteRoutingState(ROUTING_ACTIVE);
+        GetInterfacesInfo(ctx);
         break;
 
     default:

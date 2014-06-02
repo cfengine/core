@@ -36,6 +36,7 @@
 #include <crypto.h>
 #include <known_dirs.h>
 #include <man.h>
+#include <signals.h>
 
 #include <cf-key-functions.h>
 
@@ -96,12 +97,22 @@ static const char *const HINTS[] =
 };
 
 /*****************************************************************************/
+static void ThisAgentInit(void)
+{
+    signal(SIGINT, HandleSignalsForAgent);
+    signal(SIGTERM, HandleSignalsForAgent);
+    signal(SIGHUP, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGUSR1, HandleSignalsForAgent);
+    signal(SIGUSR2, HandleSignalsForAgent);
+}
 
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
+    ThisAgentInit();
 
     GenericAgentDiscoverContext(ctx, config);
 

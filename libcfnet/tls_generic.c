@@ -558,6 +558,21 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
     }
 }
 
+static void assert_SSLIsBlocking(const SSL *ssl)
+{
+#ifndef NDEBUG
+    int fd = SSL_get_fd(ssl);
+    if (fd >= 0)
+    {
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags != -1 && (flags & O_NONBLOCK) != 0)
+        {
+            ProgrammingError("OpenSSL socket is non-blocking!");
+        }
+    }
+#endif
+}
+
 /**
  * @brief Sends the data stored on the buffer using a TLS session.
  * @param ssl SSL information.
@@ -575,6 +590,7 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
 int TLSSend(SSL *ssl, const char *buffer, int length)
 {
     assert(length >= 0);
+    assert_SSLIsBlocking(ssl);
 
     if (length == 0)
     {
@@ -622,6 +638,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
 {
     assert(length > 0);
     assert(length < CF_BUFSIZE);
+    assert_SSLIsBlocking(ssl);
 
     int received = SSL_read(ssl, buffer, length);
     if (received < 0)

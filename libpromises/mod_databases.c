@@ -41,7 +41,7 @@ static const BodySyntax database_server_body = BodySyntaxNew("database_server", 
 static const ConstraintSyntax databases_constraints[] =
 {
     ConstraintSyntaxNewBody("database_server", &database_server_body, "Credentials for connecting to a local/remote database server", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("database_type", "sql,ms_registry", "The type of database that is to be manipulated. Default value: none", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("database_type", "sql,ms_registry,sqlite", "The type of database that is to be manipulated. Default value: none", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("database_operation", "create,delete,drop,cache,verify,restore", "The nature of the promise - to be or not to be", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("database_columns", ".*", "A list of column definitions to be promised by SQL databases", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("database_rows", ".*,.*", "An ordered list of row values to be promised by SQL databases", SYNTAX_STATUS_NORMAL),

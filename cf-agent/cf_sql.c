@@ -30,6 +30,10 @@
 # include <mysql/mysql.h>
 #endif
 
+#ifdef HAVE_SQLITE3_H
+# include <sqlite3.h>
+#endif
+
 #ifdef HAVE_PGSQL_LIBPQ_FE_H
 # include <pgsql/libpq-fe.h>
 #elif defined(HAVE_LIBPQ_FE_H)

@@ -315,6 +315,21 @@ then
     )
 fi
 
+dnl SQLite
+
+AC_ARG_WITH([sqlite],
+    [AS_HELP_STRING([--with-sqlite[[=PATH]]], [Enable SQLite connector])])
+AS_IF([test -n "$with_sqlite" && test "x$with_sqlite" != "xno"], [WITH_SQLITE=1], [WITH_SQLITE=0])
+
+if test $WITH_SQLITE = 1; then
+  CF3_WITH_LIBRARY(sqlite3, [
+    AC_CHECK_LIB(sqlite3, sqlite3_open, [], [AC_MSG_ERROR(Cannot find SQLITE)])
+    AC_CHECK_HEADERS(sqlite3.h, [], [AC_MSG_ERROR(Cannot find SQLITE)])
+    AC_DEFINE(SQLITE, 1, [Define if SQLITE is available])
+  ])
+fi
+
+
 dnl
 dnl In-process databases
 dnl
@@ -1329,6 +1344,10 @@ if test "x$ac_cv_lib_pq_PQconnectdb" = "xyes"; then
   AC_MSG_RESULT([-> PostgreSQL connector: $POSTGRESQL_PATH])
 else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
+fi
+
+if test $WITH_SQLITE = 1; then
+  AC_MSG_RESULT([-> DB: SQLITE: $SQLITE_PATH])
 fi
 
 if test $WITH_LMDB = 1; then

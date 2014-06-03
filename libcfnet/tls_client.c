@@ -289,37 +289,63 @@ int TLSTry(ConnectionInfo *conn_info)
     int sd = ConnectionInfoSocket(conn_info);
     SSL_set_fd(ssl, sd);
 
-    int ret = SSL_connect(ssl);
-    if (ret <= 0)
+    struct timeval timeout_start;
+    gettimeofday(&timeout_start, NULL);
+    while (true)
     {
-        TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake client first attempt failed; retrying", ret);
-        Log(LOG_LEVEL_VERBOSE, "Checking if the connect operation can be retried");
-        /* Retry just in case something was problematic at that point in time */
         fd_set wfds;
         FD_ZERO(&wfds);
         FD_SET(sd, &wfds);
-        struct timeval tv;
-        tv.tv_sec = 10;
-        tv.tv_usec = 0;
-        int ready = select(sd+1, NULL, &wfds, NULL, &tv);
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(sd, &rfds);
+        struct timeval now, timeout;
+        gettimeofday(&now, NULL);
+        // Find out remaining time since timeout_start.
+        timeout.tv_sec = timeout_start.tv_sec + 10;
+        if (now.tv_sec > timeout.tv_sec
+            || (now.tv_sec == timeout.tv_sec && now.tv_usec >= timeout.tv_usec))
+        {
+            Log(LOG_LEVEL_ERR, "Connection handshake client timed out.");
+            return -1;
+        }
+        timeout.tv_sec -= now.tv_sec;
+        timeout.tv_usec = (timeout_start.tv_usec + 1000000 - now.tv_usec) % 1000000;
+
+        int ready = select(sd+1, &rfds, &wfds, NULL, &timeout);
 
         if (ready > 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "The connect operation can be retried");
-            ret = SSL_connect(ssl);
+            Log(LOG_LEVEL_VERBOSE, "Attempting connection handshake client");
+            int ret = SSL_connect(ssl);
             if (ret <= 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and failed.  Make sure the remote is not running a 3.5.x or older cf-serverd.");
-                TLSLogError(ssl, LOG_LEVEL_ERR,
-                            "Connection handshake client connect", ret);
-                return -1;
+                int error = SSL_get_error(ssl, ret);
+                if (error == SSL_ERROR_WANT_READ || error == SSL_ERROR_WANT_WRITE)
+                {
+                    /* Slow connection, retry as long as the timeout has not expired. */
+                    TLSLogError(ssl, LOG_LEVEL_DEBUG, "Connection handshake client delayed; retrying", ret);
+                    continue;
+                }
+                else
+                {
+                    TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client failed. ", ret);
+                    Log(LOG_LEVEL_VERBOSE, "Make sure the remote is not running a 3.5.x or older cf-serverd.");
+                    return -1;
+                }
             }
-            Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and succeeded");
+            Log(LOG_LEVEL_VERBOSE, "Connection handshake client operation succeeded");
+            break;
+        }
+        else if (ready == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Connection handshake client timed out.");
+            return -1;
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried.  Make sure the remote is not running a 3.5.x or older cf-serverd.");
-            TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client select", ret);
+            Log(LOG_LEVEL_ERR, "The connect operation failed. (select: '%s').", GetErrorStr());
+            Log(LOG_LEVEL_VERBOSE, "Make sure the remote is not running a 3.5.x or older cf-serverd.");
             return -1;
         }
     }

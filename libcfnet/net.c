@@ -372,9 +372,18 @@ bool TryConnect(int sd, unsigned long timeout_ms,
         }
         if (ret == -1)
         {
-            Log(LOG_LEVEL_ERR,
-                "Error while waiting for connection (select: %s)",
-                GetErrorStr());
+            if (errno == EINTR)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Received signal while waiting for connection (select: %s)",
+                    GetErrorStr());
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Error while waiting for connection (select: %s)",
+                    GetErrorStr());
+            }
             return false;
         }
 

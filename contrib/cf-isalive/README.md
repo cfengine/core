@@ -4,10 +4,12 @@ Detect and alert when CFEngine is stuck
 
 ## 1. About
 
-Script used to detect and alert when CFEngine is stuck or dead and not applying any
-promise for a while (`MAX_SECOND_LATE`)
+Script used to detect and alert when CFEngine is stuck or dead and not applying
+any promise for a while (`MAX_SECOND_LATE`)
 
 ## 2. Usage
+
+Simply run the script. You'll only get output on failure, as illustrated below.
 
 ### 2.1. On a system where CFEngine is stuck
 
@@ -18,20 +20,22 @@ Last /var/cfengine/promise_summary.log line:
 1401544020,1401544080: Outcome of version Percolate Promises.cf 1.4 (agent-0):
     Promises observed to be kept 100%, Promises repaired 0%, Promises not
     repaired 0%
-root@host:~#
+root@host:~# echo $?
+1
 ```
 
 ### 2.2. On a system where CFEngine is in a good state
 
 ```
 root@host:~# /etc/cron.hourly/cf-isalive
-root@host:~#
+root@host:~# echo $?
+0
 ```
 
 ## 3. Installation
 
 Ideally you want to run this script hourly and get its output by email.
-It's easy to do on any debian based system:
+It's easy to do on any debian-based system:
 
 ```
 root@host:~# cp cf-isalive /etc/cron.hourly/cf-isalive

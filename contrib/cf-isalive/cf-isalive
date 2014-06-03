@@ -6,10 +6,12 @@ Detect and alert when CFEngine is stuck
 
 ## 1. About
 
-Script used to detect and alert when CFEngine is stuck and not applying any
-promise for a while (`MAX_SECOND_LATE`)
+Script used to detect and alert when CFEngine is stuck or dead and not applying
+any promise for a while (`MAX_SECOND_LATE`)
 
 ## 2. Usage
+
+Simply run the script. You'll only get output on failure, as illustrated below.
 
 ### 2.1. On a system where CFEngine is stuck
 
@@ -20,20 +22,22 @@ Last /var/cfengine/promise_summary.log line:
 1401544020,1401544080: Outcome of version Percolate Promises.cf 1.4 (agent-0):
     Promises observed to be kept 100%, Promises repaired 0%, Promises not
     repaired 0%
-root@host:~#
+root@host:~# echo $?
+1
 ```
 
 ### 2.2. On a system where CFEngine is in a good state
 
 ```
 root@host:~# /etc/cron.hourly/cf-isalive
-root@host:~#
+root@host:~# echo $?
+0
 ```
 
 ## 3. Installation
 
 Ideally you want to run this script hourly and get its output by email.
-It's easy to do on any debian based system:
+It's easy to do on any debian-based system:
 
 ```
 root@host:~# cp cf-isalive /etc/cron.hourly/cf-isalive
@@ -57,15 +61,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
 
 import re
 import time
 
 
+# The location of the promise summary log file
 CF_PROMISE_SUMMARY_FILE = u'/var/cfengine/promise_summary.log'
-MAX_SECOND_LATE = 3600  # An instance is not alerting the ops if it's late less
-                        # than this amount of seconds
+
+# An instance is not alerting the ops if it's late less than this amount of
+# seconds
+MAX_SECOND_LATE = 3600
 
 
 def get_last_line_of_file(filepath):
@@ -73,24 +81,30 @@ def get_last_line_of_file(filepath):
     Get the last line of the file
 
     Args:
-        filepath (unicode)
+        filepath (basestring)
 
     Returns:
         str
     """
-    assert isinstance(filepath, unicode)
+    assert isinstance(filepath, basestring)
 
     try:
         logfile = open(CF_PROMISE_SUMMARY_FILE, 'r')
     except IOError:
         exit('Unable to open {}'.format(CF_PROMISE_SUMMARY_FILE))
 
-    loglines = logfile.readlines()
+    last_line = ''
+
+    while True:
+        line = logfile.readline()
+        if not line:
+            break
+        last_line = line
+
     logfile.close()
 
-    last_line = ''
-    if len(loglines) > 0:
-        last_line = loglines[-1].rstrip('\n')
+    # Remove the newline char from the last line we got
+    last_line = last_line.rstrip('\n')
 
     return last_line
 
@@ -107,11 +121,11 @@ def main():
     # In enterprise_stubs.c
     # "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept
     #   %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%"
-    regex = re.compile('^(\d+),(\d+): Outcome of version (.*?) \(.*?\):'
-                       ' Promises observed to be kept (\d{1,3})%, Promises'
-                       ' repaired (\d{1,3})%, Promises not repaired'
-                       ' (\d{1,3})%$')
-    matches = regex.match(last_line)
+    regex = ('^(\d+),(\d+): Outcome of version (.*?) \(.*?\):'
+             ' Promises observed to be kept (\d{1,3})%, Promises'
+             ' repaired (\d{1,3})%, Promises not repaired'
+             ' (\d{1,3})%$')
+    matches = re.match(regex, last_line)
     if not matches:
         exit('Unable to parse the last line of promise_summary.log')
 
@@ -126,10 +140,9 @@ def main():
     # Since when this instance has not scheduled a CFEngine run ?
     sec_late = int(time.time() - float(end_time))
     if sec_late > MAX_SECOND_LATE:
-        print ("I'm late ! CFEngine did not run for {} seconds ! Check me !"
-               .format(sec_late))
-        print "Last {} line:".format(CF_PROMISE_SUMMARY_FILE)
-        print last_line
+        exit("I'm late ! CFEngine did not run for {} seconds ! Check me !\n"
+             "Last {} line:\n{}"
+             .format(sec_late, CF_PROMISE_SUMMARY_FILE, last_line))
 
 if __name__ == '__main__':
     main()

@@ -187,7 +187,8 @@ usage() {
   echo " --quiet"
   echo
   echo " --gainroot=<command> forces use of command to gain root privileges,"
-  echo "           otherwise fakeroot is used."
+  echo "           otherwise fakeroot is used.  Use --gainroot=env to make this"
+  echo "           option a no-op (e.g. you're running inside fakeroot already)"
   echo
   echo " --agent   provides a way to specify non-default cf-agent location,"
   echo "           and defaults to $DEFAGENT."

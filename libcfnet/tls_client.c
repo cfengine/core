@@ -31,12 +31,6 @@
 #include <tls_client.h>
 #include <tls_generic.h>
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
-#include <sys/time.h>
-#include <unistd.h>
-#include <sys/types.h>
-#ifndef __MINGW32__
-#include <sys/select.h>
-#endif // __MINGW32__
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                        /* PRIVKEY,PUBKEY,LoadSecretKeys */
 #include <bootstrap.h>                     /* ReadPolicyServerFile */
@@ -274,43 +268,16 @@ int TLSTry(ConnectionInfo *conn_info)
     SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn_info);
 
     /* Initiate the TLS handshake over the already open TCP socket. */
-    int sd = ConnectionInfoSocket(conn_info);
-    SSL_set_fd(ssl, sd);
+    SSL_set_fd(ssl, ConnectionInfoSocket(conn_info));
 
     int ret = SSL_connect(ssl);
     if (ret <= 0)
     {
-        TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake client first attempt failed; retrying", ret);
-        Log(LOG_LEVEL_VERBOSE, "Checking if the connect operation can be retried");
-        /* Retry just in case something was problematic at that point in time */
-        fd_set wfds;
-        FD_ZERO(&wfds);
-        FD_SET(sd, &wfds);
-        struct timeval tv;
-        tv.tv_sec = 10;
-        tv.tv_usec = 0;
-        int ready = select(sd+1, NULL, &wfds, NULL, &tv);
-
-        if (ready > 0)
-        {
-            Log(LOG_LEVEL_VERBOSE, "The connect operation can be retried");
-            ret = SSL_connect(ssl);
-            if (ret <= 0)
-            {
-                Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and failed.  Make sure the remote is not running a 3.5.x or older cf-serverd.");
-                TLSLogError(ssl, LOG_LEVEL_ERR,
-                            "Connection handshake client connect", ret);
-                return -1;
-            }
-            Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and succeeded");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried.  Make sure the remote is not running a 3.5.x or older cf-serverd.");
-            TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client select", ret);
-            return -1;
-        }
+        TLSLogError(ssl, LOG_LEVEL_ERR,
+                    "Failed to establish TLS connection", ret);
+        return -1;
     }
+
     Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
         SSL_get_cipher_name(ssl),
         SSL_get_cipher_version(ssl));

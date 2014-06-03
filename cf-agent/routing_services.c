@@ -1166,7 +1166,7 @@ void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promi
         if (!IsItemIn(bgpp->bgp_advertise_families, ip->name))
         {
             snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"   -c \"address-family %s\" -c \"neighbor %s activate\"",
-                     VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name,  a->interface.bgp_neighbour, a->interface.bgp_remote_as);
+                     VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name,  a->interface.bgp_neighbour);
 
             if (!ExecRouteCommand(comm))
             {
@@ -1175,7 +1175,7 @@ void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promi
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Activated BGP session %s ASN %d on family", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
+                Log(LOG_LEVEL_VERBOSE, "Activated BGP session %s ASN %d on family %s", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
             }
         }
 
@@ -2300,7 +2300,7 @@ static BGPNeighbour *GetPeer(char *id, LinkStateBGP *bgpp)
         return NULL;
     }
 
-    if (bp = IsNeighbourIn(bgpp->bgp_peers, id))
+    if ((bp = IsNeighbourIn(bgpp->bgp_peers, id)))
     {
         return bp;
     }

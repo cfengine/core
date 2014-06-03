@@ -284,6 +284,13 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
     pcopy->promiser = RvalScalarValue(returnval);
 
+    if ((strcmp("files", pp->parent_promise_type->name) != 0) &&
+        (strcmp("storage", pp->parent_promise_type->name) != 0))
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pcopy->promiser,
+                                  CF_DATA_TYPE_STRING, "source=promise");
+    }
+
     if (pp->promisee.item)
     {
         pcopy->promisee = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", pp->promisee, true, pp);

@@ -1198,8 +1198,6 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iter
 
     LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pexp->promiser, CF_DATA_TYPE_STRING, "source=promise");
-
     return pexp;
 }
 

@@ -332,7 +332,7 @@ static void test_ipv4_address_comparison(void)
     IPAddress *b = NULL;
     Buffer *bufferA = NULL;
     Buffer *bufferB = NULL;
-            
+
     bufferA = BufferNew();
     assert_true(bufferA != NULL);
     BufferSet(bufferA, "1.1.1.1", strlen("1.1.1.1"));
@@ -344,15 +344,15 @@ static void test_ipv4_address_comparison(void)
     BufferSet(bufferB, "1.1.1.1", strlen("1.1.1.1"));
     b = IPAddressNew(bufferB);
     assert_true(b != NULL);
-    
+
     assert_true(IPAddressIsEqual(a, b));
-    
+
     BufferSet(bufferA, "1.2.3.4", strlen("1.2.3.4"));
     assert_int_equal(IPAddressDestroy(&a), 0);
     a = IPAddressNew(bufferA);
     assert_true(a != NULL);
-    
-    assert_false(IPAddressIsEqual(a, b));       
+
+    assert_false(IPAddressIsEqual(a, b));
 
     BufferSet(bufferB, "1.2.1.1", strlen("1.2.1.1"));
     assert_int_equal(IPAddressDestroy(&b), 0);
@@ -657,15 +657,15 @@ int main()
 {
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
-    {
-        unit_test(test_ipv4)
-        , unit_test(test_char2hex)
-        , unit_test(test_ipv6)
-        , unit_test(test_generic_interface)
-        , unit_test(test_ipv4_address_comparison)
-        , unit_test(test_ipv6_address_comparison)
-        , unit_test(test_isipaddress)
-    };
+        {
+            unit_test(test_ipv4)
+            , unit_test(test_char2hex)
+            , unit_test(test_ipv6)
+            , unit_test(test_generic_interface)
+            , unit_test(test_ipv4_address_comparison)
+            , unit_test(test_ipv6_address_comparison)
+            , unit_test(test_isipaddress)
+        };
 
     return run_tests(tests);
 }

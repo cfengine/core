@@ -61,6 +61,7 @@ static int GetIntAfter(const char *line, const char *prefix);
 static bool GetMetricIf(const char *line, const char *prefix, int *metric, int *metric_type);
 static int ExecRouteCommand(char *cmd);
 static BGPNeighbour *GetPeer(char *id, LinkStateBGP *bgpp);
+static BGPNeighbour *IsNeighbourIn(BGPNeighbour *list, char *name);
 
 /*****************************************************************************/
 /* OSPF                                                                      */
@@ -1143,7 +1144,7 @@ void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promi
 
     for (Item *ip = address_families; ip != NULL; ip=ip->next)
     {
-        if (!IsItemIn(bgpp->bgp_peers,a->interface.bgp_neighbour))
+        if (!IsNeighbourIn(bgpp->bgp_peers,a->interface.bgp_neighbour))
         {
             snprintf(comm, CF_BUFSIZE, "%s -c \"configure terminal\" -c \"router bgp %d\"   -c \"address-family %s\" -c \"neighbor %s remote-as %d\"",
                      VTYSH_FILENAME, ROUTING_POLICY->bgp_local_as, ip->name,  a->interface.bgp_neighbour, a->interface.bgp_remote_as);
@@ -1156,7 +1157,7 @@ void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promi
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Added BGP session %s ASN %d on family", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
+                Log(LOG_LEVEL_VERBOSE, "Added BGP session %s ASN %d on family %s", a->interface.bgp_neighbour, a->interface.bgp_remote_as, ip->name);
             }
         }
 
@@ -2287,6 +2288,8 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
 }
 
 /*****************************************************************************/
+/* tools                                                                     */
+/*****************************************************************************/
 
 static BGPNeighbour *GetPeer(char *id, LinkStateBGP *bgpp)
 {
@@ -2297,12 +2300,9 @@ static BGPNeighbour *GetPeer(char *id, LinkStateBGP *bgpp)
         return NULL;
     }
 
-    for (bp = bgpp->bgp_peers; bp != NULL; bp=bp->next)
+    if (bp = IsNeighbourIn(bgpp->bgp_peers, id))
     {
-        if (strcmp(bp->bgp_neighbour, id) == 0)
-        {
-            return bp;
-        }
+        return bp;
     }
 
     bp = xcalloc(sizeof(BGPNeighbour), 1);
@@ -2313,7 +2313,20 @@ static BGPNeighbour *GetPeer(char *id, LinkStateBGP *bgpp)
 }
 
 /*****************************************************************************/
-/* tools                                                                     */
+
+BGPNeighbour *IsNeighbourIn(BGPNeighbour *list, char *name)
+{
+    for (BGPNeighbour *bp = list;  bp != NULL; bp=bp->next)
+    {
+        if (strcmp(name, bp->bgp_neighbour) == 0)
+        {
+            return bp;
+        }
+    }
+
+    return NULL;
+}
+
 /*****************************************************************************/
 
 static int GetIntAfter(const char *line, const char *prefix)

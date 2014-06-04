@@ -1,6 +1,9 @@
 #include <test.h>
 
 #include <eval_context.h>
+#include <known_dirs.h>
+
+char CFWORKDIR[CF_BUFSIZE];
 
 void tests_setup(void)
 {
@@ -14,9 +17,7 @@ void tests_setup(void)
     strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
     putenv(env);
 
-    char state_dir[PATH_MAX];
-    snprintf(state_dir, PATH_MAX, "%s/state", workdir);
-    mkdir(state_dir, 0766);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 void tests_teardown(void)

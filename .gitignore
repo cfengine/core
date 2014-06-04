@@ -1,3 +1,7 @@
+# git mergetool leftovers
+
+*.[ch].orig
+
 # intermediate / autogen
 
 *.la

@@ -1,4 +1,7 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <test.h>
+#include <known_dirs.h>
 
 #include <cf3.defs.h>
 #include <dbm_api.h>
@@ -7,8 +10,16 @@ char CFWORKDIR[CF_BUFSIZE];
 
 void tests_setup(void)
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/db_test.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 void tests_teardown(void)
@@ -135,12 +146,12 @@ void test_recreate(void)
     /* Test that recreating database works properly */
 #ifdef HAVE_LIBTOKYOCABINET
     char tcdb_db[CF_BUFSIZE];
-    snprintf(tcdb_db, CF_BUFSIZE, "%s/cf_classes.tcdb", CFWORKDIR);
+    snprintf(tcdb_db, CF_BUFSIZE, "%s/cf_classes.tcdb", GetStateDir());
     CreateGarbage(tcdb_db);
 #endif
 #ifdef HAVE_LIBQDBM
     char qdbm_db[CF_BUFSIZE];
-    snprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", CFWORKDIR);
+    snprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", GetStateDir());
     CreateGarbage(qdbm_db);
 #endif
 #ifdef HAVE_LIBLMDB

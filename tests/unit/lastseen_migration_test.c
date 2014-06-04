@@ -1,7 +1,10 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <cf3.defs.h>
 #include <dbm_api.h>
 #include <test.h>
 #include <lastseen.h>
+#include <known_dirs.h>
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -18,8 +21,16 @@ char CFWORKDIR[CF_BUFSIZE];
 
 void tests_setup(void)
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/lastseen_migration_test.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 /*
@@ -28,7 +39,7 @@ void tests_setup(void)
 static DBHandle *setup(bool clean)
 {
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", GetStateDir());
     system(cmd);
 
     DBHandle *db;

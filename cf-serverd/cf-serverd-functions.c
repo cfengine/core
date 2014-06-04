@@ -301,10 +301,10 @@ static void KeepHardClasses(EvalContext *ctx)
     char name[CF_BUFSIZE];
     if (name != NULL)
     {
-        char *existing_policy_server = ReadPolicyServerFile(CFWORKDIR);
+        char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
         if (existing_policy_server)
         {
-            if (GetAmPolicyHub(CFWORKDIR))
+            if (GetAmPolicyHub())
             {
                 EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap");
             }

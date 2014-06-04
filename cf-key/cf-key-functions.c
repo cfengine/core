@@ -129,6 +129,8 @@ int TrustKey(const char* pubkey)
     return (ok? 0 : 1);
 }
 
+extern bool cf_key_interrupted;
+
 bool ShowHost(const char *hostkey, const char *address, bool incoming,
                      const KeyHostSeen *quality, void *ctx)
 {
@@ -144,7 +146,7 @@ bool ShowHost(const char *hostkey, const char *address, bool incoming,
            address, (ret != -1) ? hostname : "-",
            cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
 
-    return true;
+    return !cf_key_interrupted;
 }
 
 void ShowLastSeenHosts()

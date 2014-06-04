@@ -31,6 +31,8 @@
 #include <communication.h>
 #include <string_lib.h>
 #include <regex.h>                                       /* StringMatchFull */
+#include <files_interfaces.h>
+#include <files_names.h>
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>
@@ -78,9 +80,9 @@ static void InitIgnoreInterfaces(void);
 
 static Rlist *IGNORE_INTERFACES = NULL; /* GLOBAL_E */
 
-
-/*********************************************************************/
-
+// This is the openlldp implementation for Cumulus/Debian only
+#define CF_LLDP_TOOL "/usr/sbin/lldpctl"
+static void TryLLDPDiscovery(EvalContext *ctx, char *interface);
 
 /******************************************************************/
 
@@ -534,6 +536,9 @@ void GetInterfacesInfo(EvalContext *ctx)
                         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, CF_DATA_TYPE_STRING, "source=agent");
                     }
                 }
+
+                TryLLDPDiscovery(ctx, ifp->ifr_name);
+
             }
 
             // Set the hardware/mac address array
@@ -796,3 +801,110 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
 #endif /* _AIX */
 
 #endif /* !__MINGW32__ */
+
+/****************************************************************************/
+
+static void TryLLDPDiscovery(EvalContext *ctx, char *interface)
+{
+    struct stat sb;
+    char cmd[CF_BUFSIZE];
+    char data[CF_MAXVARSIZE];
+    char cmp[CF_MAXVARSIZE];
+    char varname[CF_MAXVARSIZE];
+
+    if (stat(CF_LLDP_TOOL, &sb) == -1)
+    {
+        return;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Access to LLDP data\n");
+
+    snprintf(cmd, sizeof(cmd),
+             "%s show neighbors %s -f keyvalue",
+             CF_LLDP_TOOL, interface);
+
+    FILE *pfp = cf_popen(cmd, "r", true);
+    if (pfp == NULL)
+    {
+        return;
+    }
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
+    char *offset = line + strlen(cmp);
+
+    while (!feof(pfp))
+    {
+        *line = '\0';
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        /* output format
+           lldp.eth1.via=LLDP
+           lldp.eth1.rid=1
+           lldp.eth1.age=27 days, 21:58:05
+           lldp.eth1.chassis.mac=00:e0:0c:00:00:fd
+           lldp.eth1.chassis.name=cumulus-switch1   // Hostname of remote box
+           lldp.eth1.chassis.descr=Cumulus Linux    // OS
+           lldp.eth1.chassis.mgmt-ip=10.100.100.176 // IPv4 on remote interface
+           lldp.eth1.chassis.Bridge.enabled=off     //
+           lldp.eth1.chassis.Router.enabled=on      //
+           lldp.eth1.port.mac=08:9e:01:ce:c1:eb     // neighbour's interface mac address
+           lldp.eth1.port.descr=swp48               // neighbour's interface id/name
+        */
+
+        if (strncmp("chassis.name=", offset, strlen("chassis.name=")) == 0)
+        {
+            sscanf(offset+strlen("chassis.name="), "%s", data);
+            Log(LOG_LEVEL_VERBOSE, "Connected to: %s\n", data);
+            snprintf(varname, CF_MAXVARSIZE, "lldp_remote_hostname[%s]", interface);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, varname, data, CF_DATA_TYPE_STRING, "inventory, source=lldp");
+        }
+
+        if (strncmp("chassis.descr=", offset, strlen("chassis.descr=")) == 0)
+        {
+            sscanf(offset+strlen("chassis.descr="), "%s", data);
+            Log(LOG_LEVEL_VERBOSE, "Type of system: %s\n", data);
+            snprintf(varname, CF_MAXVARSIZE, "lldp_system_type[%s]", interface);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, varname, data, CF_DATA_TYPE_STRING, "inventory, source=lldp");
+        }
+
+        if (strncmp("chassis.mgmt-ip=", offset, strlen("chassis.mgmt-ip=")) == 0)
+        {
+            sscanf(offset+strlen("chassis.mgmt-ip="), "%s", data);
+            Log(LOG_LEVEL_VERBOSE, "Remote IPv4: %s\n", data);
+            snprintf(varname, CF_MAXVARSIZE, "lldp_remote_ipv4[%s]", interface);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, varname, data, CF_DATA_TYPE_STRING, "inventory, source=lldp");
+
+            snprintf(varname, CF_MAXVARSIZE, "connected_to_ipv4_%s", CanonifyName(data));
+            EvalContextClassPutHard(ctx, varname, "inventory,attribute_name=none,source=lldp");
+            EvalContextHeapPersistentSave(ctx, varname, CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
+
+        }
+
+        if (strncmp("port.descr=", offset, strlen("port.descr=")) == 0)
+        {
+            sscanf(offset+strlen("port.descr="), "%s", data);
+            Log(LOG_LEVEL_VERBOSE, "Remote port: %s\n", data);
+            snprintf(varname, CF_MAXVARSIZE, "lldp_remote_port[%s]", interface);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, varname, data, CF_DATA_TYPE_STRING, "inventory, source=lldp");
+        }
+
+        if (strncmp("port.mac=", offset, strlen("port.mac=")) == 0)
+        {
+            sscanf(offset+strlen("port.mac="), "%s", data);
+            Log(LOG_LEVEL_VERBOSE, "Remote mac: %s\n", data);
+            snprintf(varname, CF_MAXVARSIZE, "lldp_remote_mac[%s]", interface);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, varname, data, CF_DATA_TYPE_STRING, "inventory, source=lldp");
+        }
+
+    }
+
+    free(line);
+    cf_pclose(pfp);
+}

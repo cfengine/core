@@ -97,14 +97,20 @@ static const char *const HINTS[] =
 };
 
 /*****************************************************************************/
+
+bool cf_key_interrupted = false;
+
+static void handleSignal(int signum)
+{
+    cf_key_interrupted = true;
+
+    signal(signum, handleSignal);
+}
+
 static void ThisAgentInit(void)
 {
-    signal(SIGINT, HandleSignalsForAgent);
-    signal(SIGTERM, HandleSignalsForAgent);
-    signal(SIGHUP, SIG_IGN);
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignalsForAgent);
-    signal(SIGUSR2, HandleSignalsForAgent);
+    signal(SIGINT, handleSignal);
+    signal(SIGTERM, handleSignal);
 }
 
 int main(int argc, char *argv[])

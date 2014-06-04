@@ -415,40 +415,14 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
         SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn->conn_info);
 
         /* Now we are letting OpenSSL take over the open socket. */
-        int sd = ConnectionInfoSocket(conn->conn_info);
-        SSL_set_fd(ssl, sd);
+        SSL_set_fd(ssl, ConnectionInfoSocket(conn->conn_info));
 
         ret = SSL_accept(ssl);
         if (ret <= 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Checking if the accept operation can be retried");
-            /* Retry just in case something was problematic at that point in time */
-            fd_set rfds;
-            FD_ZERO(&rfds);
-            FD_SET(sd, &rfds);
-            struct timeval tv;
-            tv.tv_sec = 10;
-            tv.tv_usec = 0;
-            int ready = select(sd+1, &rfds, NULL, NULL, &tv);
-
-            if (ready > 0)
-            {
-                Log(LOG_LEVEL_VERBOSE, "The accept operation can be retried");
-                ret = SSL_accept(ssl);
-                if (ret <= 0)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and failed");
-                    TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server accept", ret);
-                    return -1;
-                }
-                Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and succeeded");
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
-                TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server select", ret);
-                return -1;
-            }
+            TLSLogError(ssl, LOG_LEVEL_ERR,
+                        "Failed to accept TLS connection", ret);
+            return -1;
         }
 
         Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",

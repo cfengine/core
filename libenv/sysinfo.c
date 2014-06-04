@@ -2009,9 +2009,8 @@ static int Linux_Misc_Version(EvalContext *ctx)
                 CanonifyNameInPlace(version);
             }
         }
+        fclose(fp);
     }
-
-    fclose(fp);
 
     if (*os && *version)
     {

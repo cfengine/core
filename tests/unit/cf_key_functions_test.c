@@ -5,6 +5,9 @@
 #include <cmockery.h>
 #include <cf-key-functions.h>
 
+// Satisfy extern declared signal flag in cf-key-functions.c
+bool cf_key_interrupted = false;
+
 static void test_RemoveKeys(void)
 {
 	assert_true(1);

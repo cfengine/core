@@ -168,7 +168,7 @@ ShellType ShellTypeFromString(const char *string)
 
 DatabaseType DatabaseTypeFromString(const char *s)
 {
-    static const char *const DB_TYPES[] = { "mysql", "postgres", NULL };
+    static const char *const DB_TYPES[] = { "mysql", "postgres", "sqlite", NULL };
 
     return FindTypeInArray(DB_TYPES, s, DATABASE_TYPE_NONE, DATABASE_TYPE_NONE);
 }

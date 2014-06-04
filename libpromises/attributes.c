@@ -1691,6 +1691,7 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
     d.db_server_password = PromiseGetConstraintAsRval(pp, "db_server_password", RVAL_TYPE_SCALAR);
     d.db_server_host = PromiseGetConstraintAsRval(pp, "db_server_host", RVAL_TYPE_SCALAR);
     d.db_connect_db = PromiseGetConstraintAsRval(pp, "db_server_connection_db", RVAL_TYPE_SCALAR);
+    d.db_directory = PromiseGetConstraintAsRval(pp, "db_embedded_directory_path", RVAL_TYPE_SCALAR);
     d.type = PromiseGetConstraintAsRval(pp, "database_type", RVAL_TYPE_SCALAR);
     d.server = PromiseGetConstraintAsRval(pp, "database_server", RVAL_TYPE_SCALAR);
     d.columns = PromiseGetConstraintAsList(ctx, "database_columns", pp);

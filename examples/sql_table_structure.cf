@@ -13,20 +13,26 @@ bundle agent databases
 {
   databases:
 
-      "cfengine_db/users"
+      "cfengine_db.users"
 
       database_operation => "create",
       database_type => "sql",
-      database_columns => { 
-                            "username,varchar,50",
-                            "password,varchar,80",
-                            "email,varchar,20",
+      database_columns => {
+                            "username varchar(50)",
+                            "password varchar(80)",
+                            "email varchar(20)",
       },
-      database_server => local_mysql("root", "");
+      database_server => sqlite;
 }
 
 
-body database_server local_mysql(username, password) 
+body database_server sqlite
+{
+      db_server_type => "sqlite";
+      db_embedded_directory_path => "/tmp";
+}
+
+body database_server local_mysql(username, password)
 {
       db_server_owner => "$(username)";
       db_server_password => "$(password)";

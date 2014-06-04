@@ -134,9 +134,16 @@ static int GetWriteTransaction(DBPriv *db, MDB_txn **txn)
 static void AbortTransaction(DBPriv *db)
 {
     DBTxn *db_txn = pthread_getspecific(db->txn_key);
-    mdb_txn_abort(db_txn->txn);
-    db_txn->txn = NULL;
-    db_txn->rw_txn = false;
+    if (db_txn != NULL)
+    {
+        if (db_txn->txn != NULL)
+        {
+            mdb_txn_abort(db_txn->txn);
+        }
+
+        pthread_setspecific(db->txn_key, NULL);
+        free(db_txn);
+    }
 }
 
 static void DestroyTransaction(void *ptr)
@@ -258,10 +265,15 @@ err:
 
 void DBPrivCloseDB(DBPriv *db)
 {
+    /* Abort LMDB transaction of the current thread. There should only be some
+     * transaction open when the signal handler or atexit() hook is called. */
+    AbortTransaction(db);
+
     if (db->env)
     {
         mdb_env_close(db->env);
     }
+
     pthread_key_delete(db->txn_key);
     free(db);
 }

@@ -36,11 +36,167 @@
 # include <libpq-fe.h>
 #endif
 
+#ifdef HAVE_SQLITE3_H
+# include <sqlite3.h>
+#endif
+
+
 /* CFEngine connectors for sql databases. Note that there are significant
    differences in db admin functions in the various implementations. e.g.
    sybase/mysql "use database, create database" not in postgres.
 */
 
+/*****************************************************************************/
+/* SQLite                                                                    */
+/*****************************************************************************/
+
+#ifdef HAVE_SQLITE3_H
+
+typedef struct
+{
+    sqlite3 *conn;
+    sqlite3_stmt *res;
+
+} DbSQLiteConn;
+
+/*****************************************************************************/
+
+static DbSQLiteConn *CfConnectSQLiteDB(const char *path, const char *database)
+{
+    DbSQLiteConn *lc;
+    char qualified[CF_BUFSIZE];
+
+    snprintf(qualified, CF_BUFSIZE, "%s%c%s", path, FILE_SEPARATOR, database);
+    Log(LOG_LEVEL_VERBOSE, "This is a SQLite database %s", qualified);
+
+    lc = xcalloc(1, sizeof(DbSQLiteConn));
+
+    sqlite3_initialize();
+
+    int rc = sqlite3_open(qualified, &(lc->conn));
+
+    if (rc != SQLITE_OK)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing SQLite database '%s'", sqlite3_errmsg(lc->conn));
+        sqlite3_close(lc->conn);
+        free(lc);
+        return NULL;
+    }
+
+    return lc;
+}
+
+/*****************************************************************************/
+
+static void CfCloseSQLiteDB(DbSQLiteConn *lc)
+{
+    if (lc->res)
+    {
+        sqlite3_finalize(lc->res);
+    }
+    sqlite3_close(lc->conn);
+    free(lc);
+}
+
+/*****************************************************************************/
+
+static void CfNewQuerySQLiteDb(CfdbConn *c, const char *query)
+{
+    DbSQLiteConn *lc = c->data;
+    char *zErrMsg = 0;
+
+    c->result = false;
+    c->maxrows = 0;
+    c->maxcolumns = 0;
+
+    if (sqlite3_prepare_v2(lc->conn,  query, -1, &(lc->res), 0) == SQLITE_OK)
+    {
+        c->maxcolumns = sqlite3_column_count(lc->res);
+        c->result = true;
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Failed result for (%s) SQLite database '%s'", query, sqlite3_errmsg(lc->conn));
+        sqlite3_free(zErrMsg);
+    }
+}
+
+
+/*****************************************************************************/
+
+static void CfFetchSQLiteRow(CfdbConn *c)
+{
+    DbSQLiteConn *lc = (DbSQLiteConn *)c->data;
+
+    if (sqlite3_step(lc->res) == SQLITE_ROW)
+    {
+        c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
+        c->result = true;
+
+        for (int col = 0; col < c->maxcolumns; col++)
+        {
+            c->rowdata[col] = xstrdup((char *) sqlite3_column_text(lc->res, col));
+        }
+
+        c->row++;
+    }
+    else
+    {
+        c->rowdata = NULL;
+        c->result = false;
+    }
+}
+
+/*****************************************************************************/
+
+static void CfDeleteSQLiteQuery(CfdbConn *c)
+{
+    DbSQLiteConn *lc = (DbSQLiteConn *)c->data;
+
+    if (c->rowdata)
+    {
+        for (int col = 0; col < c->maxcolumns; col++)
+        {
+            if (c->rowdata[col])
+            {
+                free(c->rowdata[col]);
+            }
+        }
+
+        c->rowdata = NULL;
+    }
+
+    sqlite3_finalize(lc->res);
+}
+
+#else
+
+static void *CfConnectSQLiteDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED const char *password, ARG_UNUSED const char *database)
+{
+    Log(LOG_LEVEL_INFO, "There is no SQLite support compiled into this version");
+    return NULL;
+}
+
+static void CfCloseSQLiteDB(ARG_UNUSED void *c)
+{
+}
+
+static void CfNewQuerySQLiteDb(ARG_UNUSED CfdbConn *c, ARG_UNUSED const char *query)
+{
+}
+
+static void CfFetchSQLiteRow(ARG_UNUSED CfdbConn *c)
+{
+}
+
+static void CfDeleteSQLiteQuery(ARG_UNUSED CfdbConn *c)
+{
+}
+
+#endif
+
+/*****************************************************************************/
+/* MYSQL                                                                     */
 /*****************************************************************************/
 
 #ifdef HAVE_LIBMYSQLCLIENT
@@ -171,6 +327,10 @@ static void CfDeleteMysqlQuery(ARG_UNUSED CfdbConn *c)
 
 #endif
 
+/*****************************************************************************/
+/* Postgresql                                                                */
+/*****************************************************************************/
+
 #if defined(HAVE_LIBPQ) &&\
     (defined(HAVE_PGSQL_LIBPQ_FE_H) || defined(HAVE_LIBPQ_FE_H))
 
@@ -182,8 +342,7 @@ typedef struct
 
 /*****************************************************************************/
 
-static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
-                                               const char *user, const char *password, const char *database)
+static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host, const char *user, const char *password, const char *database)
 {
     DbPostgresqlConn *c;
     char format[CF_BUFSIZE];
@@ -319,7 +478,7 @@ static void CfDeletePostgresqlQuery(ARG_UNUSED CfdbConn *c)
 
 /*****************************************************************************/
 
-int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db)
+int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db, char *path)
 {
 
     cfdb->connected = false;
@@ -346,13 +505,19 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
         cfdb->data = CfConnectPostgresqlDB(remotehost, dbuser, passwd, db);
         break;
 
+    case DATABASE_TYPE_SQLITE:
+        cfdb->data = CfConnectSQLiteDB(path, db);
+        break;
+
     default:
         Log(LOG_LEVEL_VERBOSE, "There is no SQL database selected");
         break;
     }
 
     if (cfdb->data)
+    {
         cfdb->connected = true;
+    }
 
     cfdb->blank = xstrdup("");
     return true;
@@ -375,6 +540,10 @@ void CfCloseDB(CfdbConn *cfdb)
 
     case DATABASE_TYPE_POSTGRES:
         CfClosePostgresqlDb(cfdb->data);
+        break;
+
+    case DATABASE_TYPE_SQLITE:
+        CfCloseSQLiteDB(cfdb->data);
         break;
 
     default:
@@ -423,6 +592,10 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
         CfNewQueryPostgresqlDb(cfdb, query);
         break;
 
+    case DATABASE_TYPE_SQLITE:
+        CfNewQuerySQLiteDb(cfdb, query);
+        break;
+
     default:
         Log(LOG_LEVEL_VERBOSE, "There is no SQL database selected");
         break;
@@ -443,6 +616,10 @@ char **CfFetchRow(CfdbConn *cfdb)
 
     case DATABASE_TYPE_POSTGRES:
         CfFetchPostgresqlRow(cfdb);
+        break;
+
+    case DATABASE_TYPE_SQLITE:
+        CfFetchSQLiteRow(cfdb);
         break;
 
     default:
@@ -480,6 +657,10 @@ void CfDeleteQuery(CfdbConn *cfdb)
 
     case DATABASE_TYPE_POSTGRES:
         CfDeletePostgresqlQuery(cfdb);
+        break;
+
+    case DATABASE_TYPE_SQLITE:
+        CfDeleteSQLiteQuery(cfdb);
         break;
 
     default:

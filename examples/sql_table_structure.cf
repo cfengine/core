@@ -13,7 +13,7 @@ bundle agent databases
 {
   databases:
 
-      "cfengine_db.users"
+      "cfengine_db.copythat"
 
       database_operation => "create",
       database_type => "sql",
@@ -21,6 +21,7 @@ bundle agent databases
                             "username varchar(50)",
                             "password varchar(80)",
                             "email varchar(20)",
+                            "new_field integer",
       },
       database_server => sqlite;
 }

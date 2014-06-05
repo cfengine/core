@@ -91,10 +91,11 @@ static DbSQLiteConn *CfConnectSQLiteDB(const char *path, const char *database)
 
 static void CfCloseSQLiteDB(DbSQLiteConn *lc)
 {
-    if (lc->res)
+/*  if (lc->res)
     {
-        sqlite3_finalize(lc->res);
+    sqlite3_finalize(lc->res);
     }
+*/
     sqlite3_close(lc->conn);
     free(lc);
 }
@@ -121,7 +122,6 @@ static void CfNewQuerySQLiteDb(CfdbConn *c, const char *query)
         sqlite3_free(zErrMsg);
     }
 }
-
 
 /*****************************************************************************/
 
@@ -172,7 +172,7 @@ static void CfDeleteSQLiteQuery(CfdbConn *c)
 
 #else
 
-static void *CfConnectSQLiteDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED const char *password, ARG_UNUSED const char *database)
+static void *CfConnectSQLiteDB(ARG_UNUSED const char *path, ARG_UNUSED const char *database)
 {
     Log(LOG_LEVEL_INFO, "There is no SQLite support compiled into this version");
     return NULL;
@@ -493,20 +493,20 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
         db = "no db specified";
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Connect to SQL database '%s', user '%s', host '%s', type %d", db, dbuser, remotehost,
-          dbtype);
-
     switch (dbtype)
     {
     case DATABASE_TYPE_MYSQL:
+        Log(LOG_LEVEL_VERBOSE, "Connect to MySQL database '%s', user '%s', host '%s'", db, dbuser, remotehost);
         cfdb->data = CfConnectMysqlDB(remotehost, dbuser, passwd, db);
         break;
 
     case DATABASE_TYPE_POSTGRES:
+        Log(LOG_LEVEL_VERBOSE, "Connect to PostgreSQL database '%s', user '%s', host '%s'", db, dbuser, remotehost);
         cfdb->data = CfConnectPostgresqlDB(remotehost, dbuser, passwd, db);
         break;
 
     case DATABASE_TYPE_SQLITE:
+        Log(LOG_LEVEL_VERBOSE, "Connect to SQLite database '%s'", db);
         cfdb->data = CfConnectSQLiteDB(path, db);
         break;
 
@@ -565,8 +565,14 @@ void CfVoidQueryDB(CfdbConn *cfdb, char *query)
         return;
     }
 
-/* If we don't need to retrieve table entries...*/
     CfNewQueryDB(cfdb, query);
+
+    if (cfdb->type == DATABASE_TYPE_SQLITE)
+    {
+        // SQLite needs to do a null fetch to execute
+        CfFetchSQLiteRow(cfdb);
+    }
+
     CfDeleteQuery(cfdb);
 }
 

@@ -111,6 +111,10 @@ static void ThisAgentInit(void)
 {
     signal(SIGINT, handleSignal);
     signal(SIGTERM, handleSignal);
+    signal(SIGHUP, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGUSR1, HandleSignalsForAgent);
+    signal(SIGUSR2, HandleSignalsForAgent);
 }
 
 int main(int argc, char *argv[])

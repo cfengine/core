@@ -1,0 +1,73 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "animals" data => parsejson('
+      {
+         "dog": { "legs": 4, "tail": true, "names": [ "Fido", "Cooper", "Sandy" ] },
+         "cat": { "legs": 4, "tail": true, "names": [ "Fluffy", "Snowball", "Tabby" ] },
+         "dolphin": { "legs": 0, "tail": true, "names": [ "Flipper", "Duffy" ] },
+         "hamster": { "legs": 4, "tail": true, "names": [ "Skullcrusher", "Kimmy", "Fluffadoo" ] },
+      }');
+
+      "keys_unsorted" slist => getindices("animals");
+      "keys" slist => sort(keys_unsorted, "lex");
+
+      "animals_$(keys)" data => mergedata("animals[$(keys)]");
+
+  methods:
+      # pass the container and a key inside it
+      "any" usebundle => analyze(@(animals), $(keys));
+}
+
+bundle agent analyze(animals, a)
+{
+  vars:
+      "names" slist => getvalues("animals[$(a)][names]");
+      "names_str" string => format("%S", names);
+
+  reports:
+      "$(this.bundle): possible names for animal '$(a)': $(names_str)";
+      "$(this.bundle): describe animal '$(a)' => name = $(a), legs = $(animals[$(a)][legs]), tail = $(animals[$(a)][tail])";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: analyze: possible names for animal 'cat': { "Fluffy", "Snowball", "Tabby" }
+#@ R: analyze: describe animal 'cat' => name = cat, legs = 4, tail = true
+#@ R: analyze: possible names for animal 'dog': { "Fido", "Cooper", "Sandy" }
+#@ R: analyze: describe animal 'dog' => name = dog, legs = 4, tail = true
+#@ R: analyze: possible names for animal 'dolphin': { "Flipper", "Duffy" }
+#@ R: analyze: describe animal 'dolphin' => name = dolphin, legs = 0, tail = true
+#@ R: analyze: possible names for animal 'hamster': { "Skullcrusher", "Kimmy", "Fluffadoo" }
+#@ R: analyze: describe animal 'hamster' => name = hamster, legs = 4, tail = true
+#@ ```
+#+end_src

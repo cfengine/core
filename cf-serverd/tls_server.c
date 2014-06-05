@@ -165,13 +165,13 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
     }
     else if (got == 0)
     {
-        Log(LOG_LEVEL_NOTICE,
+        Log(LOG_LEVEL_INFO,
             "Peer closed TCP connection without sending data!");
         return -1;
     }
     else if (got < peek_size)
     {
-        Log(LOG_LEVEL_NOTICE,
+        Log(LOG_LEVEL_INFO,
             "Peer sent only %lld bytes! Considering the protocol as Classic",
             (long long)got);
         ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_CLASSIC);

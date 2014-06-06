@@ -13,16 +13,25 @@ bundle agent databases
 {
   databases:
 
-      "cfengine_db.copythat"
+      "cfengine.db/brand_new"
+
+      database_type => "sql",
+
 
       database_operation => "create",
-      database_type => "sql",
+
       database_columns => {
-                            "username varchar(50)",
-                            "password varchar(80)",
-                            "email varchar(20)",
-                            "new_field integer",
+                            "mighty varchar(50)",
+                            "killer varchar(80)",
+                            "batman varchar(20)",
+                            "rating integer",
       },
+      database_rows => {
+                         "mighty='mouse', killer='cheeses', batman => 'yes', rating=>'5' ",
+                         "mighty='gort', killer=>'raygun', batman => 'yes', rating=>'10' ",
+                         "mighty='fred', killer='queen', batman => 'no', rating=>'10' ",
+      },
+
       database_server => sqlite;
 }
 
@@ -40,6 +49,7 @@ body database_server local_mysql(username, password)
       db_server_host => "localhost";
       db_server_type => "mysql";
       db_server_connection_db => "mysql";
+
 }
 
 

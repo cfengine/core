@@ -98,19 +98,20 @@ static const char *const HINTS[] =
 
 /*****************************************************************************/
 
+typedef void (*CfKeySigHandler)(int signum);
 bool cf_key_interrupted = false;
 
-static void handleSignal(int signum)
+static void handleShowKeysSignal(int signum)
 {
     cf_key_interrupted = true;
 
-    signal(signum, handleSignal);
+    signal(signum, handleShowKeysSignal);
 }
 
-static void ThisAgentInit(void)
+static void ThisAgentInit(CfKeySigHandler sighandler)
 {
-    signal(SIGINT, handleSignal);
-    signal(SIGTERM, handleSignal);
+    signal(SIGINT, sighandler);
+    signal(SIGTERM, sighandler);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForAgent);
@@ -122,12 +123,12 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
-    ThisAgentInit();
 
     GenericAgentDiscoverContext(ctx, config);
 
     if (SHOWHOSTS)
     {
+        ThisAgentInit(handleShowKeysSignal);
         ShowLastSeenHosts();
         return 0;
     }
@@ -137,6 +138,7 @@ int main(int argc, char *argv[])
         return PrintDigest(print_digest_arg);
     }
 
+    ThisAgentInit(HandleSignalsForAgent);
     if (REMOVEKEYS)
     {
         int status;

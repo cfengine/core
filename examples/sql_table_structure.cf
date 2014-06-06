@@ -15,10 +15,9 @@ bundle agent databases
 
       "cfengine.db/brand_new"
 
-      database_type => "sql",
-
-
-      database_operation => "create",
+      # These are the defaults
+      # database_type => "sql",
+      # database_operation => "create",
 
       database_columns => {
                             "mighty varchar(50)",

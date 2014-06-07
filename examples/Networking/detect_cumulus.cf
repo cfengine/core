@@ -1,0 +1,19 @@
+
+
+bundle agent main
+{
+  reports:
+
+    cumulus::
+
+      "PASS! Cumulus detected";
+}
+
+
+##
+
+
+body common control
+{
+      bundlesequence => { "main" };
+}

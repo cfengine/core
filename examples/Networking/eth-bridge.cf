@@ -1,0 +1,37 @@
+
+bundle agent main()
+{
+  interfaces:
+
+      "br1"
+      delete => "true";
+
+      #               comment => "Bridge vlans",
+      #     bridge_interfaces => { "swp20", "swp21", "swp22" }, # all the same
+      #        ipv4_addresses => { "10.10.10.1/24"  },
+      #            link_state => spanning_tree("on");
+
+      #  "br1"
+      #               comment => "Bridge vlans",
+      #     bridge_interfaces => { "wlan0", "eth0" }, # all the same
+      #            link_state => spanning_tree("on");
+
+  reports:
+
+      "Add vlans to interface $(int_group)";
+}
+
+##
+
+body link_state spanning_tree(x)
+{
+      state => "up";
+      spanning_tree => "$(x)";
+}
+
+##
+
+body common control
+{
+      bundlesequence => { "main" };
+}

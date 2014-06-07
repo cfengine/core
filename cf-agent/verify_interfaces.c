@@ -653,11 +653,9 @@ static void AssessVxLAN(char *promiser, PromiseResult *result, EvalContext *ctx,
 
 /****************************************************************************/
 
-static void TunnelAlienRegistration(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static void TunnelAlienRegistration(ARG_UNUSED char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     VarRef *ref = VarRefParse(a->interface.tunnel_alien_arp);
-    DataType type = CF_DATA_TYPE_NONE;
-    const void *value = EvalContextVariableGet(ctx, ref, &type);
     VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
     Variable *var = NULL;
     char regex[CF_MAXVARSIZE];
@@ -798,13 +796,12 @@ static void AssessLinuxTaggedVlan(char *promiser, PromiseResult *result, EvalCon
 
 /****************************************************************************/
 
-static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Attributes *a, const Promise *pp)
 {
     char cmd[CF_BUFSIZE];
     int ret;
 
-    snprintf(cmd, CF_BUFSIZE, "%s link add link %s name %s.%d type vlan id %d", CF_LINUX_IP_COMM,
-             pp->promiser, pp->promiser, vlan_id, vlan_id);
+    snprintf(cmd, CF_BUFSIZE, "%s link add link %s name %s.%d type vlan id %d", CF_LINUX_IP_COMM, pp->promiser, pp->promiser, vlan_id, vlan_id);
 
     if ((ret = ExecCommand(cmd, result, pp)))
     {
@@ -816,7 +813,7 @@ static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, Eva
 
 /****************************************************************************/
 
-static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Attributes *a, const Promise *pp)
 {
     char cmd[CF_BUFSIZE];
     int ret;
@@ -835,7 +832,7 @@ static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, 
 
 /****************************************************************************/
 
-static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext *ctx,  Rlist *addresses, const Attributes *a, const Promise *pp)
+static void AssessIPv4Config(char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx,  Rlist *addresses, const Attributes *a, const Promise *pp)
 {
     Rlist *rp, *rpa;
     char cmd[CF_BUFSIZE];
@@ -882,7 +879,7 @@ static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext 
 
 /****************************************************************************/
 
-static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp)
+static void AssessIPv6Config(char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp)
 {
     Rlist *rp, *rpa;
     char cmd[CF_BUFSIZE];
@@ -927,7 +924,7 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
 
 /****************************************************************************/
 
-static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+static void CheckInterfaceOptions(char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 
 { LinkState *lsp;
     char comm[CF_BUFSIZE];
@@ -995,7 +992,7 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
 
 /****************************************************************************/
 
-static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+static void AssessBridge(char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
     Bridges *bridges = NULL, *bp;
     Rlist *rp;
@@ -1183,7 +1180,7 @@ static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promis
 
 /****************************************************************************/
 
-static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+static void AssessLACPBond(char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 
 {
     Rlist *rp;

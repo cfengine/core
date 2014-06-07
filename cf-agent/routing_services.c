@@ -853,7 +853,7 @@ int QueryOSPFInterfaceState(EvalContext *ctx, const Attributes *a, const Promise
 
 /*****************************************************************************/
 
-void KeepOSPFInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateOSPF *ospfp)
+void KeepOSPFInterfacePromises(ARG_UNUSED EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateOSPF *ospfp)
 
 {
     char comm[CF_BUFSIZE];
@@ -1034,7 +1034,7 @@ bool HaveRoutingService(EvalContext *ctx)
 /* BGP                                                                       */
 /*****************************************************************************/
 
-void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgpp)
+void KeepBGPInterfacePromises(ARG_UNUSED EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result, LinkStateBGP *bgpp)
 
 { BGPNeighbour *bp;
     char comm[CF_BUFSIZE];
@@ -2054,7 +2054,7 @@ static void HandleOSPFInterfaceConfig(EvalContext *ctx, LinkStateOSPF *ospfp, co
 
 /*****************************************************************************/
 
-static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *line)
+static void HandleBGPServiceConfig(ARG_UNUSED EvalContext *ctx, CommonRouting *bgpp, char *line)
 {
     int i;
     char *sp;
@@ -2138,22 +2138,22 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
     {
         Log(LOG_LEVEL_VERBOSE, "Adding redistribution source %s", sp);
 
-        if (strcmp(sp, "kernel") == NULL)
+        if (strcmp(sp, "kernel") == 0)
         {
             bgpp->bgp_redistribute_kernel = true;
         }
 
-        if (strcmp(sp, "static") == NULL)
+        if (strcmp(sp, "static") == 0)
         {
             bgpp->bgp_redistribute_static = true;
         }
 
-        if (strcmp(sp, "ospf") == NULL)
+        if (strcmp(sp, "ospf") == 0)
         {
             bgpp->bgp_redistribute_ospf = true;
         }
 
-        if (strcmp(sp, "connected") == NULL)
+        if (strcmp(sp, "connected") == 0)
         {
             bgpp->bgp_redistribute_connected = true;
         }
@@ -2164,7 +2164,7 @@ static void HandleBGPServiceConfig(EvalContext *ctx, CommonRouting *bgpp, char *
 
 /*****************************************************************************/
 
-static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const char *line, const Attributes *a, const Promise *pp, char *family)
+static void HandleBGPInterfaceConfig(ARG_UNUSED EvalContext *ctx, LinkStateBGP *bgpp, const char *line, ARG_UNUSED const Attributes *a, ARG_UNUSED const Promise *pp, char *family)
 {
     int i;
     BGPNeighbour *bp;
@@ -2185,7 +2185,7 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
 
         sscanf(line+strlen(" neighbor"), "%63s", peer_id);
 
-        char *args = line + strlen(" neighbor") + strlen(peer_id) + 2;
+        const char *args = line + strlen(" neighbor") + strlen(peer_id) + 2;
 
         bp = GetPeer(peer_id, bgpp);
 
@@ -2262,7 +2262,7 @@ static void HandleBGPInterfaceConfig(EvalContext *ctx, LinkStateBGP *bgpp, const
 
         sscanf(line+strlen(" no neighbor"), "%63s", peer_id);
 
-        char *args = line + strlen(" no neighbor") + strlen(peer_id) + 2;
+        const char *args = line + strlen(" no neighbor") + strlen(peer_id) + 2;
 
         bp = GetPeer(peer_id, bgpp);
 

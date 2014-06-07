@@ -1,0 +1,24 @@
+
+bundle agent main()
+{
+  routes:
+
+      "default"
+
+      reachable_through => gateway("199.243.22.4", "eth0");
+
+}
+
+
+##
+
+body reachable_through gateway(gw,if)
+{
+      gateway_ip => "$(gw)";
+      gateway_interface => "$(if)";
+}
+
+body common control
+{
+      bundlesequence => { "main" };
+}

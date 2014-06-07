@@ -1,0 +1,50 @@
+
+
+bundle agent Clos()
+{
+  vars:
+
+      "leaves" int => "5";
+      "clusters" int => "3";
+      "spines" int => "2";
+
+      "L" slist => { expandrange("[1-$(leaves)]","1") };
+      "C" slist => { expandrange("[1-$(clusters)]","1") };
+      "S" slist => { expandrange("[1-$(spines)]","1") };
+
+      "l" slist => { @(L) };
+      "c" slist => { @(C) };
+      "s" slist => { @(S) };
+
+  reports:
+
+      "Adjacency -----------------------------------------";
+
+      "L-$(L) -> C-$(C)";
+      "C-$(C) -> S-$(S)";
+
+      #
+
+      "North-South connections --------------------------";
+
+      "L-$(L),port[$(C)] -> C-$(C),port[$(L)]";
+      "C-$(C),port[$(clusters)+$(S)] -> S-$(S),port[$(C)]";
+
+      "East-West connections ----------------------------";
+
+      "L-$(L),port[$(clusters)+$(l)] -> L-$(l),port[$(leaves)+$(L)]";
+
+      "C-$(C),port[$(leaves)+$(spines)+$(c)] -> C-$(c),port[$(leaves)+$(spines)+$(C)]";
+
+      "S-$(S),port[$(clusters)+$(s)] -> S-$(s),port[$(clusters)+$(S)]";
+
+}
+
+
+##
+
+
+body common control
+{
+      bundlesequence => { "Clos" };
+}

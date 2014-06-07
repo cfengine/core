@@ -1,0 +1,98 @@
+bundle agent main()
+{
+  vars:
+
+      "logfile" string => "/var/run/log/quagga/bgpd.log";
+
+      "AS[10.1.1.1]" string => "65232";
+      "AS[10.1.1.2]" string => "65231";
+
+      "BGP_IP[swp0]" string => "2.2.2.2";
+
+  bgp_peers:
+
+      "65000"
+
+      comment => "Connect to Spine 1",
+      peer_with =>  ebgp_peer("192.168.2.2", "65000");
+
+  interfaces:
+
+    spine::
+
+      "swp20-23"
+      link_services =>  ibgp_reflector; # use un-interface
+
+    ToR::
+      "swp1-3"
+      link_services =>  ibgp_leaf;
+
+}
+
+################# TEMPLATES #######################
+
+body link_services ibgp_reflector
+{
+      ibgp_session_neighbors =>{ "$(this.promiser)" }; # or unnumbered -- mesh net so N:1
+      bgp_peer_as => "65000";
+      bgp_declare_session_source => "$(this.promiser)";
+      bgp_route_reflector_client => "true";
+      bgp_ttl_security => "1"; #?
+      bgp_advertisement_interval => "0";
+      bgp_log_neighbor_changes => "detail";
+      ibgp_next_hop_self => "true";
+}
+
+body link_services ibgp_leaf
+{
+      ibgp_session_neighbors =>{ "$(this.promiser)" }; # or unnumbered -- mesh net so N:1
+      bgp_peer_as => "65000";
+      bgp_declare_session_source => "$(this.promiser)";
+      bgp_route_reflector_client => "false";
+      bgp_ttl_security => "1"; #?
+      bgp_advertisement_interval => "0";
+      bgp_log_neighbor_changes => "detail";
+      ibgp_next_hop_self => "true";
+}
+
+
+#############################################
+
+body link_services ebgp_session(neigh, remoteas)
+{
+      ebgp_session_neighbor => "$(neigh)"; # or unnumbered  p2p so 1:1
+      bgp_peer_as => "$(remoteas)";
+      bgp_declare_session_source => "$(this.promiser)";
+      bgp_route_reflector_client => "true";
+
+      bgp_ttl_security => "1"; #?
+      bgp_advertisement_interval => "0";
+
+      bgp_log_neighbor_changes => "detail";
+
+      ebgp_multihop => "255";
+      ebgp_soft_reconfiguration_inbound => "true";
+
+}
+
+################# NODE SERVICE SETTINGS #######################
+
+body bgp control
+{
+    bgp_id_10_0_0_230::
+      bgp_this_as => "$AS[$(router_id)]";
+      bgp_router_id => "$(sys.ipv4[lo])";
+      bgp_log_file => "$(logfile)";
+      bgp_graceful_restart => "true";
+      bgp_networks => { "10.10.10.1/24", "10.10.20.1/24" };
+      bgp_redistribute => { "kernel", "static", "connected", "ospf" };
+
+      bgp_bestpath => { "as-path", "multipath-relax" };
+}
+
+################# BUREAUCRACY #######################
+
+body common control
+{
+      bundlesequence => { "main" };
+}

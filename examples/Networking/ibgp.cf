@@ -1,0 +1,83 @@
+########################################################################
+#
+#                         2 x 5 Clos pattern
+#
+#                     spine1   spine2
+#                X     X     X     X     X
+#              leaf1 leaf2 leaf3 leaf4 leaf5
+########################################################################
+
+bundle agent clos
+{
+  vars:
+
+      # Generate the interface lists used on the routers
+
+      "spine"  slist => expandrange("swp[1-5]", "1"); # point to 5 leafsw
+      "leaves" slist => expandrange("swp[1-2]", "1"); # point to 2 spinesw
+
+      "net_adverts[leaf1]" slist => { "10.10.10.1/24", "10.10.20.1/24" };
+      "net_adverts[leaf2]" slist => { "10.10.30.1/24", "10.10.40.1/24", "2001:0DB9:0:f101::1/64" };
+      "net_adverts[leaf3]" slist => { "192.168.1.0/24" };
+      "net_adverts[leaf4]" slist => { "192.168.1.0/24" };
+      "net_adverts[leaf5]" slist => { "192.168.1.0/24" };
+      "net_adverts[cflu-10004]" slist => { "192.168.1.0/24" };
+
+      "router_id[spine1]" string => "2.0.0.1";
+      "router_id[spine2]" string => "2.0.0.2";
+      "router_id[leaf1]" string => "1.0.0.1";
+      "router_id[leaf2]" string => "1.0.0.2";
+      "router_id[leaf3]" string => "1.0.0.3";
+      "router_id[leaf4]" string => "1.0.0.4";
+      "router_id[leaf5]" string => "1.0.0.5";
+      "router_id[cflu-10004]" string => "1.0.0.6";
+
+  interfaces:
+
+    any||spine::
+
+      "$(spine)"
+      link_services =>  ibgp_reflector("server");
+
+    ToR::
+
+      "$(leaves)"
+      link_services =>  ibgp_reflector("client");
+
+}
+
+# Library
+
+################# TEMPLATES #######################
+
+body link_services ibgp_reflector(role)
+{
+      bgp_session_neighbor => "$(this.promiser)";
+      bgp_peer_as => "65000";
+      bgp_route_reflector => "$(role)";
+      bgp_ttl_security => "1";
+      bgp_advertisement_interval => "0";
+      bgp_internal_next_hop_self => "true";
+      bgp_advertise_families => {"ipv4_unicast", "ipv6_unicast"};
+      bgp_maximum_paths => "64";
+}
+
+################# NODE SERVICE SETTINGS #######################
+
+body routing_services control
+{
+    any::
+      bgp_local_as => "65000";
+      bgp_router_id => "$(clos.router_id[$(sys.uqhost)])";
+      routing_service_log_file => "/var/run/log/quagga/bgpd.log";
+      bgp_ipv4_networks => { @(clos.net_adverts[$(sys.uqhost)]) };
+      bgp_redistribute => { "kernel", "static", "connected", "ospf" };
+      bgp_graceful_restart => "true";
+}
+
+################# BUREAUCRACY #######################
+
+body common control
+{
+      bundlesequence => { "clos" };
+}

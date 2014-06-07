@@ -1,0 +1,103 @@
+########################################################################
+#
+#                         2 x 5 Clos pattern
+#
+#                     spine1   spine2
+#                X     X     X     X     X
+#              leaf1 leaf2 leaf3 leaf4 leaf5
+########################################################################
+
+bundle agent clos()
+{
+  vars:
+
+      # Shared data to orchestrate the pattern
+
+      "net_adverts[leaf1]" slist => { "10.10.10.0/24", "10.10.20.10/24" };
+      "net_adverts[leaf2]" slist => { "10.10.30.0/24", "10.10.40.0/24", "2001:0DB9:0:f101::1/64" };
+      "net_adverts[leaf3]" slist => { "192.168.0/24" };
+      "net_adverts[leaf4]" slist => { "192.168.0/24" };
+      "net_adverts[leaf5]" slist => { "192.168.0/24" };
+
+      "router_ip[spine1]" string => "20.0.0.1";
+      "router_ip[spine2]" string => "20.0.0.2";
+      "router_ip[leaf1]" string => "10.0.0.1";
+      "router_ip[leaf2]" string => "10.0.0.2";
+      "router_ip[leaf3]" string => "10.0.0.3";
+      "router_ip[leaf4]" string => "10.0.0.4";
+      "router_ip[leaf5]" string => "10.0.0.5";
+
+      "AS[spine1]" int => "65001";
+      "AS[spine2]" int => "65002";
+      "AS[leaf1]" int => "65003";
+      "AS[leaf2]" int => "65004";
+      "AS[leaf3]" int => "65005";
+      "AS[leaf4]" int => "65006";
+      "AS[leaf5]" int => "65007";
+
+      # What is MY asn for each current executing agent
+
+      "as" string => "$(AS[$(sys.uqname)])";
+
+      # Generate the keys "foreach"
+
+      "s_ports" slist => expandrange("[1-5]", 1);
+      "l_ports" slist => expandrange("[1-2]", 1);
+
+  classes:
+
+      # Figure out which class/category the running agent belongs to
+
+      "spine" expression => regcmp("spine[0-9]+", "$(sys.uqhost)");
+      "ToR"   expression => regcmp("leaf[0-9]+", "$(sys.uqhost)");
+
+  interfaces:
+
+    spine::
+      "swp$(s_ports)"
+      comment => "Use ports swp1-5 consistently",
+      link_services => ebgp_session("$(s_ports)", "$(AS[$(s_port)s])");
+
+    ToR::
+      "swp$(l_ports)"
+      comment => "Use ports swp1-2 consistently",
+      link_services => ebgp_session("$(l_ports)", "$(AS_spine[$(l_ports)])");
+}
+
+################# TEMPLATES #######################
+
+body link_services ebgp_session(neigh, remoteas)
+{
+      bgp_session_neighbor => "$(neigh)"; # or unnumbered  p2p so 1:1
+      bgp_peer_as => "$(remoteas)";
+      bgp_ttl_security => "1"; #?
+      bgp_advertisement_interval => "0";
+      bgp_external_soft_reconfiguration_inbound => "true";
+      bgp_advertise_families => {"ipv4_unicast", "ipv6_unicast"}; # we declare networks
+}
+
+body link_services passive
+{
+      bgp_ipv6_neighbor_discovery_route_advertisement => "suppress";
+}
+
+################# NODE SERVICE SETTINGS #######################
+
+body routing_services control
+{
+      routing_service_log_file => "/var/run/log/quagga/bgpd.log";
+      routing_service_password => "x1234";
+      bgp_graceful_restart => "true";
+
+      bgp_local_as => "$(clos.as)";
+      bgp_ipv4_networks => { @(clos.net_adverts[$(sys.uqname)]) };
+      bgp_log_neighbor_changes => "true";
+      bgp_redistribute => { "kernel", "static", "connected", "ospf" };
+}
+
+################# BUREAUCRACY #######################
+
+body common control
+{
+      bundlesequence => { "clos" };
+}

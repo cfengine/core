@@ -197,7 +197,7 @@ static int GetRouteInfo(FIBState **list, const Promise *pp)
 
 /*************************************************************************/
 
-static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp)
+static void AssessStaticRoute(char *promiser, PromiseResult *result, ARG_UNUSED EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp)
 {
     FIBState *fip;
     char cmd[CF_BUFSIZE];
@@ -307,7 +307,7 @@ static void AssessArpPromise(char *promiser, PromiseResult *result, EvalContext 
     ARPState *arptable = NULL;
     char comm[CF_BUFSIZE];
     char ivar[CF_SMALLBUF];
-    char *choice = a->arp.interface;
+    const char *choice = a->arp.interface;
 
     if (!GetArpInfo(&arptable, pp))
     {
@@ -336,7 +336,7 @@ static void AssessArpPromise(char *promiser, PromiseResult *result, EvalContext 
 
     for (ARPState *ap = arptable; ap != NULL; ap=ap->next)
     {
-        if (strcmp(ap->ip, promiser) == NULL)
+        if (strcmp(ap->ip, promiser) == 0)
         {
             if (strcmp(ap->mac, a->arp.link_address) == 0 &&
                 strcmp(ap->device, choice) == 0 &&
@@ -389,7 +389,7 @@ static int ArpSanityCheck(Attributes a,  const Promise *pp)
 {
     char *sp;
 
-    if (sp = strchr(pp->promiser, '/'))
+    if ((sp = strchr(pp->promiser, '/')))
     {
         Log(LOG_LEVEL_ERR, "IP address should not include a mask `%s' in promise '%s'", sp, pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);

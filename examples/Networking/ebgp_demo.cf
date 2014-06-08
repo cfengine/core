@@ -1,0 +1,74 @@
+##################################################
+#
+# eBGP wan peering example - 2 AS talking to each other
+#
+#        R2
+#      /
+#   R1
+
+##################################################
+
+bundle agent bgp_demo()
+{
+  vars:
+
+      # Two devices associated with the following network advertisement
+
+      "net_adverts[cumulus_switch1]"         slist => { "10.10.10.0/24", "10.20.30.0/24"  };
+      "net_adverts[cfengine-PowerEdge-R200]" slist => { "20.20.20.0/24"  };
+
+  interfaces:
+    cumulus_switch1::
+
+      "swp47"
+      link_services => ebgp_session("192.168.47.2", "65002");
+
+    cfengine_poweredge_r200::
+
+      "eth0"
+      link_services => ebgp_session("192.168.47.1", "65001");
+
+}
+
+################# NODE SERVICE SETTINGS #######################
+
+body routing_services control
+{
+    cumulus_switch1::
+
+      bgp_local_as => "65001";
+      bgp_router_id => "1.1.1.1";
+      bgp_ipv4_networks => { @(bgp_demo.net_adverts[cumulus_switch1]) };
+
+    cfengine_poweredge_r200::
+
+      bgp_local_as => "65002";
+      bgp_router_id => "2.2.2.2";
+      bgp_ipv4_networks => { @(bgp_demo.net_adverts[$(sys.uqname)]) };
+
+    any::
+
+      routing_service_log_file => "/var/run/log/quagga/bgpd.log";
+      bgp_log_neighbor_changes => "true";
+      bgp_redistribute => { "kernel", "static", "connected", "ospf" };
+      bgp_graceful_restart => "true";
+}
+
+################# TEMPLATES #######################
+
+body link_services ebgp_session(directip, remoteas)
+{
+      bgp_session_neighbor => "$(directip)";
+      bgp_peer_as => "$(remoteas)";
+      bgp_ttl_security => "1";
+      bgp_advertisement_interval => "0";
+      bgp_external_soft_reconfiguration_inbound => "true";
+      bgp_advertise_families => { "ipv4_unicast" };
+}
+
+################# BUREAUCRACY #######################
+
+body common control
+{
+      bundlesequence => { "bgp_demo" };
+}

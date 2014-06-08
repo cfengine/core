@@ -1008,7 +1008,7 @@ void KeepOSPFInterfacePromises(ARG_UNUSED EvalContext *ctx, const Attributes *a,
 
 /*****************************************************************************/
 
-bool HaveRoutingService(EvalContext *ctx)
+bool HaveRoutingService(ARG_UNUSED EvalContext *ctx)
 
 { struct stat sb;
 

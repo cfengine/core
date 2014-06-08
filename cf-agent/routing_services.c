@@ -1012,19 +1012,14 @@ bool HaveRoutingService(EvalContext *ctx)
 
 { struct stat sb;
 
-    if (IsDefinedClass(ctx, "cumulus"))
+    if (stat(VTYSH_FILENAME, &sb) == -1)
     {
-        // Might want to check the port instead
-
-        if (stat(VTYSH_FILENAME, &sb) == -1)
-        {
-            return false;
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Quagga link services interface found at %s", VTYSH_FILENAME);
-            return true;
-        }
+        return false;
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Quagga link services interface found at %s", VTYSH_FILENAME);
+        return true;
     }
 
     return false;

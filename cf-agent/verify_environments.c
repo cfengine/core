@@ -282,6 +282,7 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Pr
     case cfv_virt_kvm:
     case cfv_virt_esx:
     case cfv_virt_vbox:
+    case cfv_virt_lxc:
     case cfv_virt_test:
         result = PromiseResultUpdate(result, VerifyVirtDomain(ctx, hyper_uri, envtype, a, pp));
         break;

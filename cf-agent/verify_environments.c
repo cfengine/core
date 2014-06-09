@@ -60,6 +60,7 @@ enum cfhypervisors
     cfv_zone,
     cfv_ec2,
     cfv_eucalyptus,
+    cfv_lxc,
     cfv_none
 };
 
@@ -221,6 +222,11 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Pr
     case cfv_virt_esx_net:
         snprintf(hyper_uri, CF_MAXVARSIZE - 1, "esx://127.0.0.1");
         envtype = cfv_virt_esx;
+        break;
+
+    case cfv_virt_lxc:
+        snprintf(hyper_uri, CF_MAXVARSIZE - 1, "lxc:///");
+        envtype = cfv_virt_lxc;
         break;
 
     case cfv_virt_test:
@@ -1047,7 +1053,7 @@ static enum cfhypervisors Str2Hypervisors(char *s)
 {
     static char *names[] = { "xen", "kvm", "esx", "vbox", "test",
         "xen_net", "kvm_net", "esx_net", "test_net",
-        "zone", "ec2", "eucalyptus", NULL
+        "zone", "ec2", "eucalyptus", "lxc", NULL
     };
     int i;
 

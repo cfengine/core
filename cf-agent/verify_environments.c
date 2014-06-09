@@ -52,6 +52,7 @@ enum cfhypervisors
     cfv_virt_kvm,
     cfv_virt_esx,
     cfv_virt_vbox,
+    cfv_virt_lxc,
     cfv_virt_test,
     cfv_virt_xen_net,
     cfv_virt_kvm_net,
@@ -60,7 +61,6 @@ enum cfhypervisors
     cfv_zone,
     cfv_ec2,
     cfv_eucalyptus,
-    cfv_lxc,
     cfv_none
 };
 
@@ -1052,9 +1052,9 @@ static void ShowDormant(void)
 
 static enum cfhypervisors Str2Hypervisors(char *s)
 {
-    static char *names[] = { "xen", "kvm", "esx", "vbox", "test",
+    static char *names[] = { "xen", "kvm", "esx", "vbox", "lxc", "test",
         "xen_net", "kvm_net", "esx_net", "test_net",
-        "zone", "ec2", "eucalyptus", "lxc", NULL
+        "zone", "ec2", "eucalyptus", NULL
     };
     int i;
 

@@ -37,6 +37,20 @@ bool IsPendingTermination(void)
 
 static int SIGNAL_PIPE[2] = { -1, -1 }; /* GLOBAL_C */
 
+static void CloseSignalPipe(void)
+{
+    int c = 2;
+    while (c > 0)
+    {
+        c--;
+        if (SIGNAL_PIPE[c] >= 0)
+        {
+            close(SIGNAL_PIPE[c]);
+            SIGNAL_PIPE[c] = -1;
+        }
+    }
+}
+
 /**
  * Make a pipe that can be used to flag that a signal has arrived.
  * Using a pipe avoids race conditions, since it saves its values until emptied.
@@ -73,6 +87,8 @@ void MakeSignalPipe(void)
         }
 #endif // __MINGW32__
     }
+
+    atexit(&CloseSignalPipe);
 }
 
 /**

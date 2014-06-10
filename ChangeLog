@@ -37,6 +37,11 @@
             - the masterfiles now come from https://github.com/cfengine/masterfiles and are
               not in the core repository
         - cf-serverd calls cf-agent with -Dcfruncommand when executing cf-runagent requests
+      - Mark as removed: promise_notkept_log_include, promise_notkept_log_exclude, promise_repaired_log_include,
+        promise_repaired_log_exclude, lasses_include, classes_exclude, variables_include,
+        variables_exclude attributes from report_data_select body (syntax is valid but not functional).
+        They have been replaced by the following attributes: promise_handle_include, 
+        promise_handle_exclude, metatags_include, metatags_exclude.
 
         New features:
         - New promise type "users" for managing local user accounts.

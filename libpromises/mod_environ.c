@@ -54,7 +54,7 @@ static const ConstraintSyntax CF_ENVIRON_BODIES[] =
     ConstraintSyntaxNewBody("environment_interface", &environment_interface_body, "Virtual environment outward identity and location", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("environment_resources", &environment_resources_body, "Virtual environment resource description", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("environment_state", "create,delete,running,suspended,down", "The desired dynamical state of the specified environment", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("environment_type", "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("environment_type", "lxc,xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

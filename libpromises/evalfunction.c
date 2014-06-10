@@ -6572,7 +6572,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         content[0] = '\0';
 
         // Allow modules to set their variable context (up to 50 characters)
-        if (1 == sscanf(line + 1, "context=%50[a-z]", content) && content[0] != '\0')
+        if (1 == sscanf(line + 1, "context=%50[a-zA-Z0-9_]", content) && content[0] != '\0')
         {
             Log(LOG_LEVEL_VERBOSE, "Module changed variable context from '%s' to '%s'", context, content);
             strcpy(context, content);

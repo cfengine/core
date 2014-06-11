@@ -6,6 +6,7 @@ libutils_la_SOURCES = \
 	alloc.c alloc.h \
 	atexit.c atexit.h \
 	compiler.h \
+	dir.h dir_priv.h \
 	hashes.c hashes.h \
 	sequence.c sequence.h \
 	set.c set.h \
@@ -38,6 +39,15 @@ libutils_la_SOURCES = \
 	queue.c queue.h \
 	ring_buffer.c ring_buffer.h \
 	printsize.h
+
+if !NT
+libutils_la_SOURCES += \
+        unix_dir.c
+endif
+if CYGWIN
+libutils_la_SOURCES += \
+        unix_dir.c
+endif
 
 CLEANFILES = *.gcno *.gcda
 

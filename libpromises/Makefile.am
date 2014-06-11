@@ -44,7 +44,6 @@ libpromises_la_SOURCES = \
         dbm_lmdb.c \
         dbm_quick.c \
         dbm_tokyocab.c \
-        dir.h dir_priv.h \
         enterprise_extension.c enterprise_extension.h \
         enterprise_stubs.c \
         eval_context.c eval_context.h \
@@ -151,15 +150,6 @@ endif
 endif
 
 endif # !NT
-
-if !NT
-libpromises_la_SOURCES += \
-        unix_dir.c
-endif
-if CYGWIN
-libpromises_la_SOURCES += \
-        unix_dir.c
-endif
 
 BUILT_SOURCES = cf3lex.c cf3parse.h cf3parse.c \
 	enterprise_extension.c \

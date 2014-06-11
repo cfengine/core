@@ -67,6 +67,20 @@ int IsDirReal(const char *path);
  */
 NewLineMode FileNewLineMode(const char *file);
 
+/* File node separator (cygwin can use \ or / but prefer \ for communicating
+ * with native windows commands). */
+
+#ifdef _WIN32
+# define IsFileSep(c) ((c) == '\\' || (c) == '/')
+#else
+# define IsFileSep(c) ((c) == '/')
+#endif
+
+bool IsAbsoluteFileName(const char *f);
+char *MapName(char *s);
+char *MapNameCopy(const char *s);
+char *MapNameForward(char *s);
+
 int safe_open(const char *pathname, int flags, ...);
 FILE *safe_fopen(const char *path, const char *mode);
 

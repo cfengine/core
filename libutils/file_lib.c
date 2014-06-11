@@ -168,6 +168,137 @@ NewLineMode FileNewLineMode(ARG_UNUSED const char *file)
 }
 #endif // !__MINGW32__
 
+bool IsAbsoluteFileName(const char *f)
+{
+    int off = 0;
+
+// Check for quoted strings
+
+    for (off = 0; f[off] == '\"'; off++)
+    {
+    }
+
+#ifdef _WIN32
+    if (IsFileSep(f[off]) && IsFileSep(f[off + 1]))
+    {
+        return true;
+    }
+
+    if (isalpha(f[off]) && f[off + 1] == ':' && IsFileSep(f[off + 2]))
+    {
+        return true;
+    }
+#endif
+    if (f[off] == '/')
+    {
+        return true;
+    }
+
+    return false;
+}
+
+/* We assume that s is at least MAX_FILENAME large.
+ * MapName() is thread-safe, but the argument is modified. */
+
+#ifdef _WIN32
+# if defined(__MINGW32__)
+
+char *MapNameCopy(const char *s)
+{
+    char *str = xstrdup(s);
+
+    char *c = str;
+    while ((c = strchr(c, '/')))
+    {
+        *c = '\\';
+    }
+
+    return str;
+}
+
+char *MapName(char *s)
+{
+    char *c = s;
+
+    while ((c = strchr(c, '/')))
+    {
+        *c = '\\';
+    }
+    return s;
+}
+
+# elif defined(__CYGWIN__)
+
+char *MapNameCopy(const char *s)
+{
+    Writer *w = StringWriter();
+
+    /* c:\a\b -> /cygdrive/c\a\b */
+    if (s[0] && isalpha(s[0]) && s[1] == ':')
+    {
+        WriterWriteF(w, "/cygdrive/%c", s[0]);
+        s += 2;
+    }
+
+    for (; *s; s++)
+    {
+        /* a//b//c -> a/b/c */
+        /* a\\b\\c -> a\b\c */
+        if (IsFileSep(*s) && IsFileSep(*(s + 1)))
+        {
+            continue;
+        }
+
+        /* a\b\c -> a/b/c */
+        WriterWriteChar(w, *s == '\\' ? '/' : *s);
+    }
+
+    return StringWriterClose(w);
+}
+
+char *MapName(char *s)
+{
+    char *ret = MapNameCopy(s);
+
+    if (strlcpy(s, ret, MAX_FILENAME) >= MAX_FILENAME)
+    {
+        FatalError(ctx, "Expanded path (%s) is longer than MAX_FILENAME ("
+                   TOSTRING(MAX_FILENAME) ") characters",
+                   ret);
+    }
+    free(ret);
+
+    return s;
+}
+
+# else/* !__MINGW32__ && !__CYGWIN__ */
+#  error Unknown NT-based compilation environment
+# endif/* __MINGW32__ || __CYGWIN__ */
+#else /* !_WIN32 */
+
+char *MapName(char *s)
+{
+    return s;
+}
+
+char *MapNameCopy(const char *s)
+{
+    return xstrdup(s);
+}
+
+#endif /* !_WIN32 */
+
+char *MapNameForward(char *s)
+/* Like MapName(), but maps all slashes to forward */
+{
+    while ((s = strchr(s, '\\')))
+    {
+        *s = '/';
+    }
+    return s;
+}
+
+
 #ifdef TEST_SYMLINK_ATOMICITY
 void switch_symlink_hook();
 #define TEST_SYMLINK_SWITCH_POINT switch_symlink_hook();

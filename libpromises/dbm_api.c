@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include <cf3.defs.h>
+#include <file_lib.h>
 
 #include <mutex.h>                                            /* ThreadLock */
 #include <dbm_api.h>

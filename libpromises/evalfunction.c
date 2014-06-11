@@ -6572,10 +6572,24 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         content[0] = '\0';
 
         // Allow modules to set their variable context (up to 50 characters)
-        if (1 == sscanf(line + 1, "context=%50[a-zA-Z0-9_]", content) && content[0] != '\0')
+        if (1 == sscanf(line + 1, "context=%50[^\n]", content) && content[0] != '\0')
         {
-            Log(LOG_LEVEL_VERBOSE, "Module changed variable context from '%s' to '%s'", context, content);
-            strcpy(context, content);
+            pcre *rx = CompileRegex("[a-zA-Z0-9_]+"); // symbol ID without \200 to \377
+            if (rx && StringMatchFullWithPrecompiledRegex(rx, content))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Module changed variable context from '%s' to '%s'", context, content);
+                strcpy(context, content);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Module protocol was given an unacceptable ^context directive '%s', skipping", content);
+            }
+
+            if (rx)
+            {
+                pcre_free(rx);
+            }
         }
         else if (1 == sscanf(line + 1, "meta=%1024[^\n]", content) && content[0] != '\0')
         {

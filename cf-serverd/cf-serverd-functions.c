@@ -518,8 +518,10 @@ static int OpenReceiverChannel(void)
         else
         {
             Log(LOG_LEVEL_INFO,
-                "Could not bind server address. (bind: %s)", GetErrorStr());
+                "Could not bind server address. (bind: %s)",
+                GetErrorStr());
             cf_closesocket(sd);
+            sd = -1;
         }
     }
 
@@ -585,6 +587,10 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     if (thislock.lock == NULL)
     {
         PolicyDestroy(server_cfengine_policy);
+        if (sd >= 0)
+        {
+            cf_closesocket(sd);
+        }
         return;
     }
 

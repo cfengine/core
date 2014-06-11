@@ -18,7 +18,7 @@
         - port argument in readtcp() and selectservers() may be a
           service name (e.g. "http", "pop3").
         - Enable source file in agent copy_from promises to be a relative path.
-	    - file "changes" reporting now reports with log level "notice", instead of "error".
+        - file "changes" reporting now reports with log level "notice", instead of "error".
         - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
         - interface is now canonified in sys.hardware_mac[interface] to align with
           sys.ipv4[interface] (Redmine #3418)

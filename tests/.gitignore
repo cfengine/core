@@ -1,0 +1,24 @@
+*.xml
+xml.tmp
+xml_tmp_*
+*.trs
+
+# acceptance tests
+/acceptance/*.log
+/acceptance/.succeeded
+/acceptance/workdir
+/acceptance/mock[-_]package[-_]manager
+/acceptance/mock[-_]package[-_]manager.exe
+/acceptance/xml-c14nize
+/acceptance/xml-c14nize.exe
+/acceptance/dnswrapper.so
+
+# unit tests
+/unit/*_test
+/unit/exec-config-test
+/unit/rb-tree-test
+
+# load tests
+/load/db_load
+/load/lastseen_load
+/load/lastseen_threaded_load

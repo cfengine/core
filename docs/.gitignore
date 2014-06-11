@@ -1,0 +1,27 @@
+# docs
+
+*.aux
+*.cp
+*.cps
+*.dvi
+*.fn
+*.ky
+*.pg
+*.toc
+*.tp
+*.vr
+*.log
+
+/doxygen
+/guides/*.html
+/guides/*.pdf
+/guides/*.tmp
+/guides/cf3-solutions.texinfo
+/manpages/*.8
+/reference/cf3-Reference.html
+/reference/cf3-Reference.pdf
+/reference/cf3-Reference.texinfo
+/tools/build-solutions-guide
+/tools/build-solutions-guide.exe
+/tools/build-stdlib
+/tools/build-stdlib.exe

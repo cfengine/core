@@ -7,125 +7,61 @@
 .libs
 Makefile
 Makefile.in
-aclocal.m4
-autom4te.cache
-compile
-config.guess
-config.log
-config.status
-config.sub
-configure
-depcomp
-install-sh
-libtool
-ltmain.sh
-m4/libtool.m4
-m4/lt*.m4
-missing
-revision
-stamp-h1
-ylwrap
-test-driver
 
-configure_flags.env
+/aclocal.m4
+/autom4te.cache
+/compile
+/config.guess
+/config.log
+/config.status
+/config.sub
+/configure
+/depcomp
+/install-sh
+/libtool
+/ltmain.sh
+/m4/libtool.m4
+/m4/lt*.m4
+/missing
+/revision
+/stamp-h1
+/ylwrap
+/test-driver
 
-# docs
-
-*.aux
-*.cp
-*.cps
-*.dvi
-*.fn
-*.ky
-*.pg
-*.toc
-*.tp
-*.vr
-*.log
-
-docs/doxygen
-docs/guides/*.html
-docs/guides/*.pdf
-docs/guides/*.tmp
-docs/guides/cf3-solutions.texinfo
-docs/manpages/*.8
-docs/reference/cf3-Reference.html
-docs/reference/cf3-Reference.pdf
-docs/reference/cf3-Reference.texinfo
-docs/tools/build-solutions-guide
-docs/tools/build-solutions-guide.exe
-docs/tools/build-stdlib
-docs/tools/build-stdlib.exe
+/configure_flags.env
 
 # binaries
-
-nova/cf-hub/cf-hub
-nova/cf-hub/cf-hub.exe
-nova/cf-know/cf-know
-nova/cf-know/cf-know.exe
-cf-agent/cf-agent
-cf-agent/cf-agent.exe
-cf-execd/cf-execd
-cf-execd/cf-execd.exe
-cf-key/cf-key
-cf-key/cf-key.exe
-cf-monitord/cf-monitord
-cf-monitord/cf-monitord.exe
-cf-promises/cf-promises
-cf-promises/cf-promises.exe
-cf-report/cf-report
-cf-report/cf-report.exe
-cf-runagent/cf-runagent
-cf-runagent/cf-runagent.exe
-cf-serverd/cf-serverd
-cf-serverd/cf-serverd.exe
-cf-upgrade/cf-upgrade
-cf-upgrade/cf-upgrade.exe
-ext/rpmvercmp
-ext/rpmvercmp.exe
+/cf-agent/cf-agent
+/cf-agent/cf-agent.exe
+/cf-execd/cf-execd
+/cf-execd/cf-execd.exe
+/cf-key/cf-key
+/cf-key/cf-key.exe
+/cf-monitord/cf-monitord
+/cf-monitord/cf-monitord.exe
+/cf-promises/cf-promises
+/cf-promises/cf-promises.exe
+/cf-runagent/cf-runagent
+/cf-runagent/cf-runagent.exe
+/cf-serverd/cf-serverd
+/cf-serverd/cf-serverd.exe
+/cf-upgrade/cf-upgrade
+/cf-upgrade/cf-upgrade.exe
+/ext/rpmvercmp
+/ext/rpmvercmp.exe
 
 # autogen
-
-libpromises/cf3lex.c
-libpromises/cf3parse.c
-libpromises/cf3parse.h
-cf3parse.output
-libutils/config.h
-libutils/config.h.in
-libutils/config.post.h
-
-# acceptance tests
-
-tests/acceptance/*.log
-tests/acceptance/.succeeded
-tests/acceptance/workdir
-tests/acceptance/mock[-_]package[-_]manager
-tests/acceptance/mock[-_]package[-_]manager.exe
-tests/acceptance/xml-c14nize
-tests/acceptance//xml-c14nize.exe
-tests/acceptance/dnswrapper.so
-tests/*/*.xml
-tests/*/xml.tmp
-tests/*/xml_tmp_*
-tests/*/*.trs
-
-# unit tests
-
-tests/unit/*_test
-tests/unit/exec-config-test
-tests/unit/rb-tree-test
-
-# load tests
-
-tests/load/db_load
-tests/load/lastseen_load
-tests/load/lastseen_threaded_load
+/libpromises/cf3lex.c
+/libpromises/cf3parse.c
+/libpromises/cf3parse.h
+/libutils/config.h
+/libutils/config.h.in
+/libutils/config.post.h
 
 # examples
-examples/cfengine_stdlib.cf
+/examples/cfengine_stdlib.cf
 
 # gcov/lcov
-
 *.gcno
 *.gcda
 *.trace
@@ -134,12 +70,9 @@ cfengine-lcov.info
 coverage-html/
 
 # links
-
-nova
-galaxy
+/nova
 
 # tags
-
 TAGS
 tags
 cscope.*
@@ -150,26 +83,22 @@ cscope.*
 .*.swo
 
 # emacs
-
 *~
 \#*#
 .dir-locals.el
 
 # eclipse
-
 .cproject
 .project
 .settings
 
 # qt-creator
-
-core.config
-core.creator
-core.creator.user
-core.files
-core.includes
+/core.config
+/core.creator
+/core.creator.user
+/core.files
+/core.includes
 *.autosave
 
 # Mac Finder
-
 .DS_Store

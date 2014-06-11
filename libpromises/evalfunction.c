@@ -3278,10 +3278,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
          arg = arg->next)  /* arg steps forward every time. */
     {
         const char *pattern = RlistScalarValue(arg);
-#ifdef __MINGW32__
-        RlistAppendScalarIdemp(&returnlist, pattern);
-#else /* !__MINGW32__ */
-
         glob_t globbuf;
         int globflags = 0; // TODO: maybe add GLOB_BRACE later
 
@@ -3315,7 +3311,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
                 free(expanded);
             }
         }
-#endif /* __MINGW32__ */
     }
 
     // When no entries were found, mark the empty list

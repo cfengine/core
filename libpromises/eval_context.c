@@ -1233,26 +1233,36 @@ Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
 static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
 {
     {
+        /* Check this class isn't marked to abort: */
         char context_copy[CF_MAXVARSIZE];
         char canonified_context[CF_MAXVARSIZE];
 
-        strcpy(canonified_context, name);
-        if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
+        if (strlcpy(canonified_context, name, CF_MAXVARSIZE) >= CF_MAXVARSIZE ||
+            Chop(canonified_context, CF_MAXVARSIZE) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
+            Log(LOG_LEVEL_ERR,
+                "Class name is too big for our buffer: truncated to '%s'",
+                canonified_context);
         }
         CanonifyNameInPlace(canonified_context);
 
         if (ns && strcmp(ns, "default") != 0)
         {
-            snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
+            if (snprintf(context_copy, CF_MAXVARSIZE, "%s:%s",
+                         ns, canonified_context) >= CF_MAXVARSIZE)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Namespaced class name oveflowed buffer: truncated to '%s'",
+                    context_copy);
+            }
         }
         else
         {
-            strlcpy(context_copy, canonified_context, CF_MAXVARSIZE);
+            /* Can't overflow: */
+            strcpy(context_copy, canonified_context);
         }
 
-        if (strlen(context_copy) == 0)
+        if (context_copy[0] == '\0')
         {
             return false;
         }

@@ -28,6 +28,7 @@
 #include <prototypes3.h>
 #include <syntax.h>
 #include <eval_context.h>
+#include <file_lib.h>
 
 #include <enterprise_extension.h>
 

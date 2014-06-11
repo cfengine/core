@@ -341,21 +341,6 @@ struct GidList_
     GidList *next;
 };
 
-/*******************************************************************/
-/* File path manipulation primitives                               */
-/*******************************************************************/
-
-/* Defined maximum length of a filename. */
-
-/* File node separator (cygwin can use \ or / but prefer \ for communicating
- * with native windows commands). */
-
-#ifdef _WIN32
-# define IsFileSep(c) ((c) == '\\' || (c) == '/')
-#else
-# define IsFileSep(c) ((c) == '/')
-#endif
-
 /*************************************************************************/
 /* Fundamental (meta) types                                              */
 /*************************************************************************/

@@ -25,8 +25,6 @@
 #ifndef CFENGINE_DIR_H
 #define CFENGINE_DIR_H
 
-#include <cf3.defs.h>
-
 typedef struct Dir_ Dir;
 
 Dir *DirOpen(const char *dirname);

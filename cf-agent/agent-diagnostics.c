@@ -33,6 +33,7 @@
 #include <dbm_priv.h>
 #include <tokyo_check.h>
 #include <lastseen.h>
+#include <file_lib.h>
 
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message)

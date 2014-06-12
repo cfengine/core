@@ -218,6 +218,7 @@
         - namespaced 'edit_line' bundles now work (Redmine#3781)
         - lists are interpolated in correct order (Redmine#3122)
         - cf-serverd reloads policies properly when they change
+        - lots of leaks (memory and file descriptor) fixed
 
 3.5.3
        Changes:

@@ -1,3 +1,6 @@
+Cfengine Propulsion Lab
+        - Networking: intefaces, addresses, routes promises
+
 3.6.1
         New features:
         - Introduced Solaris and AIX support into the 3.6 series, with many associated build and
@@ -32,7 +35,6 @@
           LMDB project has not yet integrated the change. (Redmine #6013)
 
 3.6.0
-
         Changes:
         - Changes to logging output
             - add process name and pid in syslog message (GitHub #789)

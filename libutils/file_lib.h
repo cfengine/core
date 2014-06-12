@@ -72,8 +72,12 @@ NewLineMode FileNewLineMode(const char *file);
 
 #ifdef _WIN32
 # define IsFileSep(c) ((c) == '\\' || (c) == '/')
+# define FILE_SEPARATOR '\\'
+# define FILE_SEPARATOR_STR "\\"
 #else
 # define IsFileSep(c) ((c) == '/')
+# define FILE_SEPARATOR '/'
+# define FILE_SEPARATOR_STR "/"
 #endif
 
 bool IsAbsoluteFileName(const char *f);
@@ -91,5 +95,13 @@ int safe_chmod(const char *path, mode_t mode);
 int safe_lchown(const char *path, uid_t owner, gid_t group);
 #endif
 int safe_creat(const char *pathname, mode_t mode);
+
+/**
+ * @brief Deletes directory path recursively. Symlinks are not followed.
+ *        Note that this function only deletes the contents of the directory, not the directory itself.
+ * @param path
+ * @return true if directory was deleted successfully, false if one or more files were not deleted.
+ */
+bool DeleteDirectoryTree(const char *path);
 
 #endif

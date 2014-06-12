@@ -31,6 +31,7 @@
 #include <logging.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <file_lib.h>
 #include <known_dirs.h>
 
 #ifdef LMDB

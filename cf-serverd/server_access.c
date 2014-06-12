@@ -2,10 +2,10 @@
 #include "strlist.h"
 #include "server.h"
 
-#include <cf3.defs.h>                                     /* FILE_SEPARATOR */
 #include <addr_lib.h>                                     /* FuzzySetMatch */
 #include <string_lib.h>                      /* StringMatchFull TODO REMOVE */
 #include <misc_lib.h>
+#include <file_lib.h>
 
 struct acl *paths_acl;
 struct acl *classes_acl, *vars_acl, *literals_acl;

@@ -23,6 +23,7 @@
 */
 
 #include <file_lib.h>
+#include <dir.h>
 
 #include <alloc.h>
 #include <logging.h>
@@ -728,4 +729,86 @@ int safe_chmod(const char *path, mode_t mode)
 int safe_creat(const char *pathname, mode_t mode)
 {
     return safe_open(pathname, O_CREAT | O_WRONLY | O_TRUNC, mode);
+}
+
+static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
+{
+    Dir *dirh = DirOpen(path);
+    const struct dirent *dirp;
+    bool failed = false;
+
+    if (dirh == NULL)
+    {
+        if (errno == ENOENT)
+        {
+            /* Directory disappeared on its own */
+            return true;
+        }
+
+        Log(LOG_LEVEL_INFO, "Unable to open directory '%s' during purge of directory tree '%s' (opendir: %s)",
+            path, basepath, GetErrorStr());
+        return false;
+    }
+
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
+    {
+        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
+        {
+            continue;
+        }
+
+        char subpath[PATH_MAX];
+        snprintf(subpath, sizeof(subpath), "%s" FILE_SEPARATOR_STR "%s", path, dirp->d_name);
+
+        struct stat lsb;
+        if (lstat(subpath, &lsb) == -1)
+        {
+            if (errno == ENOENT)
+            {
+                /* File disappeared on its own */
+                continue;
+            }
+
+            Log(LOG_LEVEL_VERBOSE, "Unable to stat file '%s' during purge of directory tree '%s' (lstat: %s)", path, basepath, GetErrorStr());
+            failed = true;
+        }
+        else
+        {
+            if (S_ISDIR(lsb.st_mode))
+            {
+                if (!DeleteDirectoryTreeInternal(basepath, subpath))
+                {
+                    failed = true;
+                }
+
+                if (rmdir(subpath) == -1)
+                {
+                    failed = true;
+                }
+            }
+            else
+            {
+                if (unlink(subpath) == -1)
+                {
+                    if (errno == ENOENT)
+                    {
+                        /* File disappeared on its own */
+                        continue;
+                    }
+
+                    Log(LOG_LEVEL_VERBOSE, "Unable to remove file '%s' during purge of directory tree '%s'. (unlink: %s)",
+                        subpath, basepath, GetErrorStr());
+                    failed = true;
+                }
+            }
+        }
+    }
+
+    DirClose(dirh);
+    return !failed;
+}
+
+bool DeleteDirectoryTree(const char *path)
+{
+    return DeleteDirectoryTreeInternal(path, path);
 }

@@ -388,17 +388,15 @@ Environments GetEnvironmentsConstraints(const EvalContext *ctx, const Promise *p
 {
     Environments e;
 
-    e.cpus = PromiseGetConstraintAsInt(ctx, "env_cpus", pp);
-    e.memory = PromiseGetConstraintAsInt(ctx, "env_memory", pp);
-    e.disk = PromiseGetConstraintAsInt(ctx, "env_disk", pp);
-    e.baseline = PromiseGetConstraintAsRval(pp, "env_baseline", RVAL_TYPE_SCALAR);
-    e.spec = PromiseGetConstraintAsRval(pp, "env_spec", RVAL_TYPE_SCALAR);
-    e.host = PromiseGetConstraintAsRval(pp, "environment_host", RVAL_TYPE_SCALAR);
-
-    e.addresses = PromiseGetConstraintAsList(ctx, "env_addresses", pp);
-    e.name = PromiseGetConstraintAsRval(pp, "env_name", RVAL_TYPE_SCALAR);
-    e.type = PromiseGetConstraintAsRval(pp, "environment_type", RVAL_TYPE_SCALAR);
-    e.state = EnvironmentStateFromString(PromiseGetConstraintAsRval(pp, "environment_state", RVAL_TYPE_SCALAR));
+    e.cpus = PromiseGetConstraintAsInt(ctx, "guest_cpus", pp);
+    e.memory = PromiseGetConstraintAsInt(ctx, "guest_memory", pp);
+    e.disk = PromiseGetConstraintAsInt(ctx, "guest_disk", pp);
+    e.image_path = PromiseGetConstraintAsRval(pp, "guest_image_path", RVAL_TYPE_SCALAR);
+    e.image_name = PromiseGetConstraintAsRval(pp, "guest_image_name", RVAL_TYPE_SCALAR);
+    e.spec = PromiseGetConstraintAsRval(pp, "guest_libvirt_xml", RVAL_TYPE_SCALAR);
+    e.addresses = PromiseGetConstraintAsList(ctx, "guest_addresses", pp);
+    e.type = PromiseGetConstraintAsRval(pp, "guest_type", RVAL_TYPE_SCALAR);
+    e.state = EnvironmentStateFromString(PromiseGetConstraintAsRval(pp, "guest_state", RVAL_TYPE_SCALAR));
 
     return e;
 }

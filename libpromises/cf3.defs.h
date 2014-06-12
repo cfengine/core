@@ -1444,7 +1444,8 @@ typedef struct
     int cpus;
     int memory;
     int disk;
-    char *baseline;
+    char *image_path;
+    char *image_name;
     char *spec;
     Rlist *addresses;
     char *name;

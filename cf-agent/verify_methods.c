@@ -57,14 +57,21 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetMethodAttributes(ctx, pp);
 
-    const Constraint *cp = PromiseGetConstraint(pp, "usebundle");
-    if (!cp)
+    const Constraint *cp;
+    Rval method_name;
+
+    if ((cp = PromiseGetConstraint(pp, "usebundle")))
     {
-        Log(LOG_LEVEL_VERBOSE, "Promise had no attribute 'usebundle', cannot call method");
-        return PROMISE_RESULT_FAIL;
+        method_name = cp->rval;
+    }
+    else
+    {
+        method_name = DefaultBundleConstraint(pp, "method");
     }
 
-    PromiseResult result = VerifyMethod(ctx, cp->rval, a, pp);
+    Log(LOG_LEVEL_VERBOSE, "Looking for a method called %s", (char *)method_name.item);
+
+    PromiseResult result = VerifyMethod(ctx, method_name, a, pp);
 
     return result;
 }
@@ -80,20 +87,20 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
     switch (call.type)
     {
     case RVAL_TYPE_FNCALL:
-        {
-            const FnCall *fp = RvalFnCallValue(call);
-            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
-            args = fp->args;
-        }
-        break;
+    {
+        const FnCall *fp = RvalFnCallValue(call);
+        ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
+        args = fp->args;
+    }
+    break;
 
     case RVAL_TYPE_SCALAR:
-        {
-            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name,
-                         RvalScalarValue(call), method_name);
-            args = NULL;
-        }
-        break;
+    {
+        ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name,
+                     RvalScalarValue(call), method_name);
+        args = NULL;
+    }
+    break;
 
     default:
         BufferDestroy(method_name);
@@ -181,7 +188,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
         if (IsCf3VarString(BufferData(method_name)))
         {
             Log(LOG_LEVEL_ERR,
-                  "A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
+                "A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
 
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,

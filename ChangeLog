@@ -1,5 +1,5 @@
 Cfengine Propulsion Lab
-        - services/methods get a default bundle name -> method|service_Canonify($(this.promiser))
+        - services/methods get a default bundle name -> method|service_Canonify($(this.promiser)) - must be in the same namespace as caller
 
 3.6.1
         New features:

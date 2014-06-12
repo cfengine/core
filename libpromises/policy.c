@@ -85,7 +85,7 @@ static bool PromiseCheck(const Promise *pp, Seq *errors);
 
 const Rval DefaultBundleConstraint(const Promise *pp, char *promisetype)
 {
-    char name[CF_BUFSIZE];
+    static char name[CF_BUFSIZE];
     snprintf(name, CF_BUFSIZE, "%s_%s", promisetype, CanonifyName(pp->promiser));
     return (Rval) { name, RVAL_TYPE_SCALAR };
 }

@@ -196,6 +196,8 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
 static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service_policy)
 {
     Rlist *args = NULL;
+    FnCall *call = NULL;
+
     switch (service_policy)
     {
     case SERVICE_POLICY_START:
@@ -221,7 +223,17 @@ static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service
         break;
     }
 
-    FnCall *call = FnCallNew("standard_services", args);
+    Rval name = DefaultBundleConstraint(pp, "service");
+
+    if (PolicyGetBundle(PolicyFromPromise(pp), PromiseGetBundle(pp)->ns, "agent", (char *)name.item))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Found service special bundle %s in ns %s\n", (char *)name.item, PromiseGetBundle(pp)->ns);
+        call = FnCallNew(name.item, args);
+    }
+    else
+    {
+        call = FnCallNew("standard_services", args);
+    }
 
     return call;
 }
@@ -270,4 +282,3 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
 
     return result;
 }
-

@@ -164,6 +164,7 @@ static int EOS_Version(EvalContext *ctx);
 static int MiscOS(EvalContext *ctx);
 static void OpenVZ_Detect(EvalContext *ctx);
 
+
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 static int Xen_Hv_Check(void);
@@ -2811,4 +2812,193 @@ void DetectEnvironment(EvalContext *ctx)
     Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);
+    DiscoverDocker(ctx);
+}
+
+
+/*****************************************************************************/
+
+void DiscoverDocker(EvalContext *ctx)
+{
+    struct stat sb;
+    char name[CF_MAXVARSIZE], value[CF_MAXVARSIZE];
+
+    if (stat(DOCKER_COMMAND, &sb) == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "No docker installation found: %s", DOCKER_COMMAND);
+        return;
+    }
+
+    DockerPS *active = QueryDockerProcessTable(&active);
+
+    for (DockerPS *ps = active; ps != NULL; ps=ps->next)
+    {
+        snprintf(name, CF_MAXVARSIZE, "docker_guest_ip[%s]", ps->name);
+        snprintf(value, CF_MAXVARSIZE, "%s", ps->ip);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, value, CF_DATA_TYPE_STRING, "inventory,docker_container,source=agent");
+    }
+
+    DeleteDockerPS(active);
+}
+
+/*****************************************************************************/
+
+DockerPS *QueryDockerProcessTable(DockerPS **containers)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char comm[CF_MAXVARSIZE], id[CF_MAXVARSIZE], image[CF_MAXVARSIZE], name[CF_MAXVARSIZE], address[CF_MAX_IP_LEN];
+    char *offset = 0;
+
+    *containers = NULL;
+
+    snprintf(comm, CF_MAXVARSIZE, "%s ps", DOCKER_COMMAND);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", DOCKER_COMMAND);
+        return NULL;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        if (strncmp(line, "Cannot connect", strlen("Cannot connect") == 0))
+        {
+            free(line);
+            cf_pclose(pfp);
+            return NULL;
+        }
+
+        if (strncmp(line, "CONTAINER", strlen("CONTAINER")) == 0)
+        {
+            offset = strstr(line, "NAME");
+
+            if (offset - line < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Output format of '%s ps' is unexpected", DOCKER_COMMAND);
+                free(line);
+                cf_pclose(pfp);
+                return NULL;
+            }
+        }
+
+        id[0] = image[0] = '\0';
+
+        if (offset > 0)
+        {
+            sscanf(line, "%s %s", id, image);
+            sscanf(offset, "%s", name);
+            GetDockerIPForContainer(name, address);
+            PrependDockerPS(containers, id, image, name, address);
+        }
+    }
+
+    free(line);
+    cf_pclose(pfp);
+    return *containers;
+}
+
+/*****************************************************************************/
+
+void PrependDockerPS(DockerPS **containers, char *id, char *image, char *name, char *address)
+{
+    DockerPS *ps;
+
+    if (id && strlen(id) == 0)
+    {
+        return;
+    }
+
+    if (image && strlen(image) == 0)
+    {
+        return;
+    }
+
+    ps = xcalloc(sizeof(DockerPS), 1);
+    ps->next = *containers;
+    ps->id = xstrdup(id);
+    ps->image = xstrdup(image);
+    ps->name = xstrdup(name);
+    ps->ip = xstrdup(address);
+    *containers = ps;
+}
+
+/*****************************************************************************/
+
+void DeleteDockerPS(DockerPS *list)
+{
+    DockerPS *next;
+
+    for (DockerPS *ps = list; ps != NULL; ps = next)
+    {
+        next = ps->next;
+        free(ps->id);
+        free(ps->image);
+        free(ps->ip);
+        free(ps->name);
+        free(ps);
+    }
+}
+
+/*****************************************************************************/
+
+void GetDockerIPForContainer(char *id, char *address)
+{
+    char comm[CF_BUFSIZE], result[CF_BUFSIZE];
+
+    snprintf(comm, CF_BUFSIZE, "%s inspect --format='{{.NetworkSettings.IPAddress}}' %s", DOCKER_COMMAND, id);
+
+    if (!ExecEnvCommand(comm, result))
+    {
+        *address = '\0';
+    }
+    else
+    {
+        snprintf(address, CF_MAX_IP_LEN, "%s", result);
+    }
+}
+
+/*****************************************************************************/
+
+int ExecEnvCommand(char *cmd, char *buffer)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    int ret = true;
+
+    if (DONTDO)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Need to execute command '%s' for guest_environment configuration", cmd);
+        return true;
+    }
+
+    if ((pfp = cf_popen(cmd, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", cmd);
+        return false;
+    }
+
+    char *line = xmalloc(line_size);
+
+    *line = '\0';
+    CfReadLine(&line, &line_size, pfp);
+
+    if (strstr(line, "Error"))
+    {
+        ret = false;
+    }
+
+    snprintf(buffer, CF_BUFSIZE, "%s", line);
+
+    free(line);
+    cf_pclose(pfp);
+    return ret;
 }

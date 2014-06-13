@@ -86,9 +86,6 @@
 #define SHIFTS_PER_DAY 4
 #define SHIFTS_PER_WEEK (4*7)
 
-#define CF_INDEX_FIELD_LEN 7
-#define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
-
 #define MAX_MONTH_NAME 9
 
 #define MAX_DIGEST_BYTES (512 / 8)  /* SHA-512 */
@@ -778,16 +775,6 @@ typedef enum
     LAST_SEEN_DIRECTION_INCOMING = '-',
     LAST_SEEN_DIRECTION_OUTGOING = '+'
 } LastSeenDirection;
-
-/************************************************************************************/
-
-typedef enum
-{
-    FILE_STATE_NEW,
-    FILE_STATE_REMOVED,
-    FILE_STATE_CONTENT_CHANGED,
-    FILE_STATE_STATS_CHANGED
-} FileState;
 
 /************************************************************************************/
 

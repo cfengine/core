@@ -24,7 +24,8 @@
 
 #include <cf3.defs.h>
 #include <files_lib.h>
-
+#include <files_interfaces.h>
+#include <item_lib.h>
 #include <actuator.h>
 #include <eval_context.h>
 #include <promises.h>
@@ -35,8 +36,11 @@
 #include <policy.h>
 #include <scope.h>
 #include <ornaments.h>
-
+#include <pipes.h>
 #include <verify_environments.h>
+#include <string_lib.h>
+#include <regex.h>
+#include <../libenv/sysinfo.h>
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/
@@ -59,6 +63,7 @@ enum cfhypervisors
     cfv_virt_esx_net,
     cfv_virt_test_net,
     cfv_zone,
+    cfv_docker,
     cfv_ec2,
     cfv_eucalyptus,
     cfv_none
@@ -79,6 +84,7 @@ static int EnvironmentsSanityChecks(Attributes a, const Promise *pp);
 static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Promise *pp);
 static PromiseResult VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, const Promise *pp);
 static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, const Promise *pp);
+static PromiseResult VerifyDockerContainer(EvalContext *ctx, Attributes a, const Promise *pp);
 static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
 static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
 static PromiseResult RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
@@ -90,6 +96,8 @@ static void ShowDormant(void);
 static PromiseResult CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, const Promise *pp);
 static PromiseResult DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
 static enum cfhypervisors Str2Hypervisors(char *s);
+static void VerifyDockerContainerRunning(EvalContext *ctx, Attributes a, const Promise *pp, DockerPS *containers, PromiseResult *result);
+static void VerifyDockerContainerNotRunning(EvalContext *ctx, Attributes a, const Promise *pp, DockerPS *containers, PromiseResult *result);
 
 /*****************************************************************************/
 
@@ -161,6 +169,25 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
 
 static int EnvironmentsSanityChecks(Attributes a, const Promise *pp)
 {
+    for (char *sp = pp->promiser; *sp != '\0'; sp++)
+    {
+        switch (*sp)
+        {
+        case ' ':
+        case '&':
+        case '"':
+        case '#':
+        case '/':
+        case '\\':
+        case '`':
+            Log(LOG_LEVEL_ERR, "Avoid using character '%c' in host/container names", *sp);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            return false;
+        default:
+            break;
+        }
+    }
+
     if (a.env.spec)
     {
         if (a.env.cpus != CF_NOINT || a.env.memory != CF_NOINT || a.env.disk != CF_NOINT)
@@ -241,8 +268,11 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Pr
         break;
 
     case cfv_zone:
-        snprintf(hyper_uri, CF_MAXVARSIZE - 1, "solaris_zone");
         envtype = cfv_zone;
+        break;
+
+    case cfv_docker:
+        envtype = cfv_docker;
         break;
 
     default:
@@ -295,6 +325,9 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Pr
     case cfv_ec2:
         break;
     case cfv_eucalyptus:
+        break;
+    case cfv_docker:
+        result = PromiseResultUpdate(result, VerifyDockerContainer(ctx, a, pp));
         break;
     default:
         break;
@@ -434,6 +467,49 @@ static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhyper
 }
 
 /*****************************************************************************/
+
+static PromiseResult VerifyDockerContainer(EvalContext *ctx, Attributes a, const Promise *pp)
+{
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    struct stat sb;
+
+    if (stat(DOCKER_COMMAND, &sb) == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "No docker installation found: %s", DOCKER_COMMAND);
+        return PROMISE_RESULT_FAIL;
+    }
+
+    DockerPS *active = QueryDockerProcessTable(&active);
+
+    if (!active)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Docker does not seem to be running");
+        return PROMISE_RESULT_FAIL;
+    }
+
+    switch (a.env.state)
+    {
+    case ENVIRONMENT_STATE_RUNNING:
+    case ENVIRONMENT_STATE_CREATE:
+        VerifyDockerContainerRunning(ctx, a, pp, active, &result);
+        break;
+
+    case ENVIRONMENT_STATE_SUSPENDED:
+    case ENVIRONMENT_STATE_DOWN:
+    case ENVIRONMENT_STATE_DELETE:
+        VerifyDockerContainerNotRunning(ctx, a, pp, active, &result);
+        break;
+
+    default:
+        Log(LOG_LEVEL_INFO, "No recogized state specified for this network environment");
+        break;
+    }
+
+    DeleteDockerPS(active);
+    return result;
+}
+
+/*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
@@ -462,8 +538,7 @@ static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attribute
 
             if (name && strcmp(name, pp->promiser) == 0)
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Found a running environment called '%s' - promise kept",
-                     name);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Found a running environment called '%s' - promise kept", name);
                 return PROMISE_RESULT_NOOP;
             }
 
@@ -1001,6 +1076,96 @@ static PromiseResult DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attri
 }
 
 /*****************************************************************************/
+
+static void VerifyDockerContainerRunning(EvalContext *ctx, Attributes a, const Promise *pp, DockerPS *containers, PromiseResult *result)
+{
+    int found = false;
+
+    for (DockerPS *ps = containers; ps != NULL; ps = ps->next)
+    {
+        if (strcmp(pp->promiser, ps->name) == 0)
+        {
+            found = true;
+
+            if (strncmp(ps->image, a.env.image_name, strlen(a.env.image_name)) != 0)
+            {
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "A container exists with the name \"%s\" but seems to be based on the image %s instead of %s", ps->name, ps->image, a.env.image_name);
+                *result = PROMISE_RESULT_FAIL;
+                return;
+            }
+        }
+    }
+
+// Start the container
+
+    if (!found)
+    {
+        char comm[CF_BUFSIZE], value[CF_BUFSIZE], address[CF_MAX_IP_LEN];
+
+        snprintf(comm, CF_BUFSIZE, "%s run -name %s -h %s -d %s", DOCKER_COMMAND, pp->promiser, pp->promiser, a.env.image_name);
+
+        if (!ExecEnvCommand(comm, value))
+        {
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Failed to keep promise to start Docker instance %s from 'comm' (%s)", pp->promiser, value);
+            *result = PROMISE_RESULT_FAIL;
+        }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Launched Docker container: %s", pp->promiser);
+            *result = PROMISE_RESULT_CHANGE;
+            GetDockerIPForContainer(value, address);
+            if (strlen(address) == 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Docker instance %s exited quickly (%s)", pp->promiser, comm);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Promise to start Docker instance %s kept (%s)", pp->promiser, address);
+            }
+
+            // Set vars  docker_guest[promiser] => ip
+            // Set has_running_docker_instances = number
+        }
+    }
+}
+
+/*****************************************************************************/
+
+static void VerifyDockerContainerNotRunning(EvalContext *ctx, Attributes a, const Promise *pp, DockerPS *containers, PromiseResult *result)
+{
+    char comm[CF_BUFSIZE], error[CF_BUFSIZE];
+    int found = false;
+
+    for (DockerPS *ps = containers; ps != NULL; ps = ps->next)
+    {
+        if (StringMatchFull(pp->promiser, ps->name) && strncmp(ps->image, a.env.image_name, strlen(a.env.image_name)) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Matched a Docker instance %s with same image (%s)", pp->promiser, a.env.image_name);
+
+            found = true;
+
+            snprintf(comm, CF_BUFSIZE, "%s stop %s", DOCKER_COMMAND, ps->id);
+
+            if (!ExecEnvCommand(comm, error))
+            {
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Failed to set keep promise to bring down Docker instance %s (%s)", ps->name, ps->id);
+                *result = PROMISE_RESULT_FAIL;
+            }
+            else
+            {
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Stopped Docker container: %s (%s)", ps->name, ps->id);
+                *result = PROMISE_RESULT_CHANGE;
+            }
+        }
+    }
+
+    if (!found)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Didn't match any Docker instance '%s' with same image (%s)", pp->promiser, a.env.image_name);
+    }
+}
+
+/*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
@@ -1054,7 +1219,7 @@ static enum cfhypervisors Str2Hypervisors(char *s)
 {
     static char *names[] = { "xen", "kvm", "esx", "vbox", "lxc", "test",
                              "xen_net", "kvm_net", "esx_net", "test_net",
-                             "zone", "ec2", "eucalyptus", NULL
+                             "zone", "docker", "ec2", "eucalyptus", NULL
     };
     int i;
 
@@ -1073,7 +1238,7 @@ static enum cfhypervisors Str2Hypervisors(char *s)
 
     return (enum cfhypervisors) i;
 }
-/*****************************************************************************/
+
 #else /* !HAVE_LIBVIRT */
 
 void NewEnvironmentsContext(void)

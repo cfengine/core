@@ -64,6 +64,7 @@ check_PROGRAMS = \
 	sequence_test \
 	lastseen_test \
 	lastseen_migration_test \
+	changes_migration_test \
 	db_test \
 	db_concurrent_test \
 	dbm_migration_bundles_test \
@@ -253,6 +254,7 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/misc_lib.c \
 	../../libutils/string_lib.c \
 	../../libutils/sequence.c \
+	../../libutils/unix_dir.c \
 	../../libutils/writer.c
 file_lib_test_LDADD = libtest.la
 file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY

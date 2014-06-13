@@ -45,6 +45,7 @@ libcf_agent_la_SOURCES = \
         comparray.c comparray.h \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
+	files_changes.c \
         promiser_regex_resolver.c promiser_regex_resolver.h \
         match_scope.c match_scope.h \
         retcode.c retcode.h \

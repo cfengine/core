@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <cmockery.h>
+#include <file_lib.h>
 #include <server_common.h>
 #include <crypto.h>
 #include <tls_generic.h>

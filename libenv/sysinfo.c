@@ -2964,6 +2964,8 @@ void GetDockerIPForContainer(char *id, char *address)
     {
         snprintf(address, CF_MAX_IP_LEN, "%s", result);
     }
+
+    Log(LOG_LEVEL_VERBOSE, "Looked for IP address for %s and got %s", id, result);
 }
 
 /*****************************************************************************/

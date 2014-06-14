@@ -1102,7 +1102,7 @@ static void VerifyDockerContainerRunning(EvalContext *ctx, Attributes a, const P
     {
         char comm[CF_BUFSIZE], value[CF_BUFSIZE], address[CF_MAX_IP_LEN];
 
-        snprintf(comm, CF_BUFSIZE, "%s run -name %s -h %s -d %s", DOCKER_COMMAND, pp->promiser, pp->promiser, a.env.image_name);
+        snprintf(comm, CF_BUFSIZE, "%s run --name %s --hostname %s -d %s", DOCKER_COMMAND, pp->promiser, pp->promiser, a.env.image_name);
 
         if (!ExecEnvCommand(comm, value))
         {

@@ -344,7 +344,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
         /* Fn-like objects are assumed to be parameterized bundles in these... */
 
-        checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle,service_bundle,home_bundle,if,ifvarclass", ',');
+        checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle,service_bundle,home_bundle", ',');
 
         if (!IsItemIn(checklist, lval))
         {

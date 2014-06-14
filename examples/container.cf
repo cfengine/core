@@ -27,7 +27,7 @@ bundle agent main
 {
   methods:
 
-    parent_host::
+    parent::
 
       "plant continuous delivery seeds" comment => "The files where people make changes";
       "pick the flowers"                comment => "Reap the harvest";
@@ -38,7 +38,7 @@ bundle agent main
       "feed from the parent" comment => "pick up files and build something";
 
   services:
-    parent_host::
+    parent::
       "budding children" comment => "Spawn some fledgings";
 }
 
@@ -85,29 +85,12 @@ bundle agent method_package_for_delivery
 }
 
 ###################################################################################
-# Containers
-###################################################################################
-
-bundle agent method_feed_from_the_parent
-{
-  files:
-
-      "/tmp/received"
-      comment => "Pick up the latest on the pipeline",
-      copy_from => secure_cp("$(my_name)_feed.txt","$(my.parent_address)");
-
-      "/tmp/result_for_pickup"
-      comment => "Do my part and deliver the result for pickup",
-      edit_line => append_if_no_line("A postcard from $(sys.ip_address) - Thanks, with love $(my.name)");
-}
-
-###################################################################################
 
 bundle agent service_budding_children(state)
 {
   guest_environments:
 
-    parent_host::
+    parent::
 
       "$(my.buds)"
 
@@ -123,6 +106,29 @@ body guest_details stem_cell
       guest_image_name => "cf-stem-cell";
 }
 
+###################################################################################
+# Containers
+###################################################################################
+
+bundle agent method_feed_from_the_parent
+{
+  services:
+
+      "ssh" comment => "So we can log in and inspect the containers";
+
+  files:
+
+      "/tmp/received"
+      comment => "Pick up the latest on the pipeline",
+      copy_from => secure_cp("$(my_name)_feed.txt","$(my.parent_address)");
+
+      "/tmp/result_for_pickup"
+      comment => "Do my part and deliver the result for pickup",
+      edit_line => append_if_no_line("A postcard from $(sys.ip_address) - Thanks, with love $(my.name)");
+}
+
+####################################################################################
+# Misc
 ####################################################################################
 
 body common control

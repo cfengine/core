@@ -288,7 +288,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         (strcmp("storage", pp->parent_promise_type->name) != 0))
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pcopy->promiser,
-                                  CF_DATA_TYPE_STRING, "source=promise");
+                                      CF_DATA_TYPE_STRING, "source=promise");
     }
 
     if (pp->promisee.item)
@@ -328,6 +328,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     {
         // look for 'if'/'ifvarclass' exclusion, to short-circuit evaluation of other constraints
         const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
+
         if (!ifvarclass)
         {
             ifvarclass = PromiseGetConstraint(pp, "if");
@@ -384,14 +385,12 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
                     if (LEGACY_OUTPUT)
                     {
                         Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as if/ifvarclass %s is not relevant",
-                            pp->promiser, RvalScalarValue(final));
+                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as if/ifvarclass) %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
                         Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
                     }
                     else
                     {
-                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant",
-                            pp->promiser, RvalScalarValue(final));
+                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant", pp->promiser, RvalScalarValue(final));
                     }
 
                     if (excluded)
@@ -486,12 +485,12 @@ void PromiseRef(LogLevel level, const Promise *pp)
     if (PromiseGetBundle(pp)->source_path)
     {
         Log(level, "Promise belongs to bundle '%s' in file '%s' near line %zu", PromiseGetBundle(pp)->name,
-             PromiseGetBundle(pp)->source_path, pp->offset.line);
+            PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
     else
     {
         Log(level, "Promise belongs to bundle '%s' near line %zu", PromiseGetBundle(pp)->name,
-              pp->offset.line);
+            pp->offset.line);
     }
 
     if (pp->comment)

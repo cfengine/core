@@ -1149,6 +1149,7 @@ static void VerifyDockerContainerNotRunning(EvalContext *ctx, Attributes a, cons
 
             found = true;
 
+            Log(LOG_LEVEL_VERBOSE, "Attempting polite stop to docker instance %s with image (%s)", pp->promiser, a.env.image_name);
             snprintf(comm, CF_BUFSIZE, "%s stop %s", DOCKER_COMMAND, ps->id);
 
             if (!ExecEnvCommand(comm, error))

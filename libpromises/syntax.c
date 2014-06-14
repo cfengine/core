@@ -344,7 +344,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
         /* Fn-like objects are assumed to be parameterized bundles in these... */
 
-        checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle,service_bundle,home_bundle", ',');
+        checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle,service_bundle,home_bundle,if,ifvarclass", ',');
 
         if (!IsItemIn(checklist, lval))
         {
@@ -885,6 +885,11 @@ static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
             /* Ok to allow fn calls of correct element-type in lists */
 
             if (dt == CF_DATA_TYPE_STRING && dtype == CF_DATA_TYPE_STRING_LIST)
+            {
+                return SYNTAX_TYPE_MATCH_OK;
+            }
+
+            if (dt == CF_DATA_TYPE_STRING && dtype == CF_DATA_TYPE_CONTEXT)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }

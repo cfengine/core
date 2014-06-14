@@ -569,7 +569,7 @@ static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attribute
     PromiseResult result = PROMISE_RESULT_NOOP;
     if ((dom = virDomainCreateXML(vc, xml_file, 0)))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Created a virtual domain '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Created a virtual domain '%s'", pp->promiser);
         result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
 
         if (a.env.cpus != CF_NOINT)
@@ -671,7 +671,7 @@ static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleted virtual domain '%s'", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleted virtual domain '%s'", pp->promiser);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
 
@@ -1116,7 +1116,7 @@ static void VerifyDockerContainerRunning(EvalContext *ctx, Attributes a, const P
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Launched Docker container: %s", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Launched Docker container: %s", pp->promiser);
             *result = PROMISE_RESULT_CHANGE;
             GetDockerIPForContainer(value, address);
             if (strlen(address) == 0)
@@ -1158,10 +1158,9 @@ static void VerifyDockerContainerNotRunning(EvalContext *ctx, Attributes a, cons
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Stopped Docker container: %s (%s)", ps->name, ps->id);
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Stopped Docker container: %s (%s)", ps->name, ps->id);
                 *result = PROMISE_RESULT_CHANGE;
             }
-
         }
     }
 

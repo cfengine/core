@@ -590,6 +590,52 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
             continue;
         }
 
+        if (strcmp(cp->lval, "ifvarclass") == 0 || strcmp(cp->lval, "if") == 0)
+        {
+            switch (cp->rval.type)
+            {
+            case RVAL_TYPE_SCALAR:
+                if (!IsDefinedClass(ctx, cp->rval.item))
+                {
+                    return opts;
+                }
+
+                break;
+
+            case RVAL_TYPE_FNCALL:
+            {
+                bool excluded = false;
+
+                /* eval it: e.g. ifvarclass => not("a_class") */
+
+                Rval res = FnCallEvaluate(ctx, PromiseGetPolicy(pp), cp->rval.item, pp).rval;
+
+                /* Don't continue unless function was evaluated properly */
+                if (res.type != RVAL_TYPE_SCALAR)
+                {
+                    RvalDestroy(res);
+                    return opts;
+                }
+
+                excluded = !IsDefinedClass(ctx, res.item);
+
+                RvalDestroy(res);
+
+                if (excluded)
+                {
+                    return opts;
+                }
+            }
+            break;
+
+            default:
+                Log(LOG_LEVEL_ERR, "Invalid if/ifvarclass type '%c': should be string or function", cp->rval.type);
+                continue;
+            }
+
+            continue;
+        }
+
         if (strcmp(cp->lval, "policy") == 0)
         {
             if (strcmp(cp->rval.item, "ifdefined") == 0)

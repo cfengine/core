@@ -19,9 +19,10 @@ bundle common G
       "exeext" string => "";
 
     any::
-      "cmds" slist => { "date", "diff", "colordiff", "echo", "egrep", "false", "grep", "gzip", "hexdump",
-                        "ln", "mkdir", "od", "perl", "printf", "pwd", "rm", "sort", "touch",
-                        "true", "wc", "cat", "sed", "psexec", "seq", "mock_package_manager" };
+      "cmds" slist => { "date", "diff", "cat", "colordiff", "echo", "egrep", "env", "false", "grep",
+                        "gzip", "hexdump", "ln", "mkdir", "mock_package_manager", "od", "perl",
+                        "printf", "psexec", "pwd", "rm", "sed", "seq", "sort", "touch", "true",
+                        "wc", };
 
     any::
       "paths[tests]" string                  => "$(this.promise_dirname)";

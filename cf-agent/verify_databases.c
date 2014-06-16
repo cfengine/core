@@ -118,7 +118,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Prom
         if (strchr("./\\", *sp))
         {
             count++;
-            strncpy(table, sp + 1, CF_MAXVARSIZE - 1);
+            strlcpy(table, sp + 1, CF_MAXVARSIZE);
             sscanf(pp->promiser, "%[^.\\/]", database);
 
             if (strlen(database) == 0)
@@ -142,7 +142,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Prom
 
     if (strlen(database) == 0)
     {
-        strncpy(database, pp->promiser, CF_MAXVARSIZE - 1);
+        strlcpy(database, pp->promiser, CF_MAXVARSIZE);
     }
 
     if (a.database.operation == NULL)
@@ -275,7 +275,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
 
     while (CfFetchRow(cfdb))
     {
-        strncpy(name, CfFetchColumn(cfdb, 0), CF_MAXVARSIZE - 1);
+        strlcpy(name, CfFetchColumn(cfdb, 0), CF_MAXVARSIZE);
 
         Log(LOG_LEVEL_VERBOSE, "Discovered a database called '%s'", name);
 
@@ -862,7 +862,7 @@ static int ValidateSQLTableName(char *table_path, char *db, char *table)
 
     memset(db, 0, CF_MAXVARSIZE);
     strncpy(db, table_path, sp - table_path - 1);
-    strncpy(table, sp, CF_MAXVARSIZE - 1);
+    strlcpy(table, sp, CF_MAXVARSIZE);
     return true;
 }
 

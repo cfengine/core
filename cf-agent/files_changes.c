@@ -77,15 +77,16 @@ static char *NewIndexKey(char type, const char *name, int *size)
 
 // "H_" plus pathname plus index_str in one block + \0
 
-    *size = strlen(name) + CHANGES_HASH_FILE_NAME_OFFSET + 3;
+    const size_t len = strlen(name);
+    *size = len + CHANGES_HASH_FILE_NAME_OFFSET + 3;
 
     chk_key = xcalloc(1, *size);
 
 // Data start after offset for index
 
-    strncpy(chk_key, "H_", 2);
-    strncpy(chk_key + 2, HashNameFromId(type), CHANGES_HASH_STRING_LEN);
-    strncpy(chk_key + 2 + CHANGES_HASH_FILE_NAME_OFFSET, name, strlen(name));
+    strlcpy(chk_key, "H_", 2);
+    strlcpy(chk_key + 2, HashNameFromId(type), CHANGES_HASH_STRING_LEN);
+    memcpy(chk_key + 2 + CHANGES_HASH_FILE_NAME_OFFSET, name, len);
     return chk_key;
 }
 

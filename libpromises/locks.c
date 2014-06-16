@@ -624,7 +624,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     char *promise = BodyName(pp);
     char cc_operator[CF_BUFSIZE], cc_operand[CF_BUFSIZE];
     snprintf(cc_operator, CF_MAXVARSIZE - 1, "%s-%s", promise, host);
-    strncpy(cc_operand, operand, CF_BUFSIZE - 1);
+    strlcpy(cc_operand, operand, CF_BUFSIZE);
     CanonifyNameInPlace(cc_operand);
     RemoveDates(cc_operand);
 

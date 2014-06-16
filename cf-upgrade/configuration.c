@@ -61,6 +61,7 @@ void ConfigurationDestroy(Configuration **configuration)
     {
         return;
     }
+    free ((*configuration)->cf_upgrade);
     free ((*configuration)->backup_path);
     free ((*configuration)->backup_tool);
     free ((*configuration)->copy_path);

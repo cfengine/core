@@ -1,6 +1,7 @@
 examplesdir = $(docdir)/examples
 dist_examples_DATA = $(srcdir)/*.cf
-FAKE_WORKDIR=/tmp/fake-cfengine-workdir 
+dist_examples_SCRIPTS = remake_outputs.pl
+FAKE_WORKDIR=/tmp/fake-cfengine-workdir
 MAINTAINERCLEANFILES = Makefile.in mdate-sh
 
 # only re-run the outputs for examples that already have an example_output block

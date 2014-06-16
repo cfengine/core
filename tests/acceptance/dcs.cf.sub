@@ -202,7 +202,8 @@ bundle agent test_precheck
 bundle agent dcs_sort(infile, outfile)
 {
   commands:
-      "$(G.sort) $(infile) > $(outfile)"
+      # Enforce byte sort order with LC_ALL.
+      "$(G.env) LC_ALL=C $(G.sort) $(infile) > $(outfile)"
       contain => in_shell;
 }
 

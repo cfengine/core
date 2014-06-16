@@ -149,6 +149,19 @@ void *SeqLookup(Seq *seq, const void *key, SeqItemComparator Compare)
     return NULL;
 }
 
+void *SeqBinaryLookup(Seq *seq, const void *key, SeqItemComparator Compare)
+{
+    ssize_t index = SeqBinaryIndexOf(seq, key, Compare);
+    if (index == -1)
+    {
+        return NULL;
+    }
+    else
+    {
+        return seq->data[index];
+    }
+}
+
 ssize_t SeqIndexOf(Seq *seq, const void *key, SeqItemComparator Compare)
 {
     for (size_t i = 0; i < seq->length; i++)
@@ -159,6 +172,39 @@ ssize_t SeqIndexOf(Seq *seq, const void *key, SeqItemComparator Compare)
         }
     }
 
+    return -1;
+}
+
+ssize_t SeqBinaryIndexOf(Seq *seq, const void *key, SeqItemComparator Compare)
+{
+    if (seq->length == 0)
+    {
+        return -1;
+    }
+
+    size_t low = 0;
+    size_t high = seq->length;
+
+    while (low < high)
+    {
+        // Invariant: low <= middle < high
+        size_t middle = low + ((high - low) >> 1); // ">> 1" is division by 2.
+        int result = Compare(key, seq->data[middle], NULL);
+        if (result == 0)
+        {
+            return middle;
+        }
+        if (result > 0)
+        {
+            low = middle + 1;
+        }
+        else
+        {
+            high = middle;
+        }
+    }
+
+    // Not found.
     return -1;
 }
 
@@ -209,6 +255,19 @@ static void QuickSortRecursive(void **data, int n, SeqItemComparator Compare, vo
 void SeqSort(Seq *seq, SeqItemComparator Compare, void *user_data)
 {
     QuickSortRecursive(seq->data, seq->length, Compare, user_data, 0);
+}
+
+Seq *SeqSoftSort(const Seq *seq, SeqItemComparator compare, void *user_data)
+{
+    size_t length = SeqLength(seq);
+    if (length == 0)
+    {
+        return SeqNew(0, NULL);
+    }
+
+    Seq *sorted_seq = SeqGetRange(seq, 0, length - 1);
+    SeqSort(sorted_seq, compare, user_data);
+    return sorted_seq;
 }
 
 void SeqSoftRemoveRange(Seq *seq, size_t start, size_t end)
@@ -273,7 +332,7 @@ void SeqShuffle(Seq *seq, unsigned int seed)
     srand(rand_state);
 }
 
-Seq *SeqGetRange(Seq *seq, size_t start, size_t end)
+Seq *SeqGetRange(const Seq *seq, size_t start, size_t end)
 {
     assert (seq);
 

@@ -564,35 +564,6 @@ int CompressPath(char *dest, const char *src)
 
 /*********************************************************************/
 
-int IsAbsoluteFileName(const char *f)
-{
-    int off = 0;
-
-// Check for quoted strings
-
-    for (off = 0; f[off] == '\"'; off++)
-    {
-    }
-
-#ifdef _WIN32
-    if (IsFileSep(f[off]) && IsFileSep(f[off + 1]))
-    {
-        return true;
-    }
-
-    if (isalpha(f[off]) && f[off + 1] == ':' && IsFileSep(f[off + 2]))
-    {
-        return true;
-    }
-#endif
-    if (f[off] == '/')
-    {
-        return true;
-    }
-
-    return false;
-}
-
 FilePathType FilePathGetType(const char *file_path)
 {
     if (IsAbsoluteFileName(file_path))

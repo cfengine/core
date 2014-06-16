@@ -1,0 +1,114 @@
+# Checks whether a whole directory is monitored correctly with
+# a file changes promise.
+
+body common control
+{
+    inputs => { "../../dcs.cf.sub",
+                "../../plucked.cf.sub",
+                "check_file_changes_log.cf.sub",
+              };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  methods:
+      "any" usebundle => setup_files;
+}
+
+bundle agent setup_files
+{
+  methods:
+      # Note: sorted, not in actual order, due to file system order sensitivity.
+      "any" usebundle => file_make("$(G.testfile).expected", "file.content,C,Content changed
+file.content,C,Content changed
+file.content,C,Content changed
+file.content,C,Content changed
+file.content,C,Content changed
+file.content,N,New file found
+file.content.cf-before-edit,N,New file found
+file.content.cf-before-edit,N,New file found
+file.content.cf-before-edit,N,New file found
+file.content.cf-before-edit,R,File removed
+file.content.cf-before-edit,R,File removed
+file.created,N,New file found
+file.created,N,New file found
+file.created,N,New file found
+file.created,R,File removed
+file.created,R,File removed
+file.new-ignored.content,N,New file found
+file.new-ignored.content,N,New file found
+file.new-ignored.content,N,New file found
+file.new-ignored.content,R,File removed
+file.new-ignored.content,R,File removed
+file.new-ignored.content,R,File removed
+file.new-ignored.removed,N,New file found
+file.new-ignored.removed,N,New file found
+file.new-ignored.removed,N,New file found
+file.new-ignored.removed,R,File removed
+file.new-ignored.removed,R,File removed
+file.new-ignored.removed,R,File removed
+file.new-ignored.same,N,New file found
+file.new-ignored.same,N,New file found
+file.new-ignored.same,N,New file found
+file.new-ignored.same,R,File removed
+file.new-ignored.same,R,File removed
+file.new-ignored.same,R,File removed
+file.removed,N,New file found
+file.removed,N,New file found
+file.removed,N,New file found
+file.removed,R,File removed
+file.removed,R,File removed
+file.removed,R,File removed
+file.same,N,New file found
+subdir,N,New file found
+subfile.content,C,Content changed
+subfile.content,C,Content changed
+subfile.content,C,Content changed
+subfile.content,C,Content changed
+subfile.content,C,Content changed
+subfile.content,N,New file found
+subfile.content.cf-before-edit,N,New file found
+subfile.content.cf-before-edit,N,New file found
+subfile.content.cf-before-edit,N,New file found
+subfile.content.cf-before-edit,R,File removed
+subfile.content.cf-before-edit,R,File removed
+subfile.created,N,New file found
+subfile.created,N,New file found
+subfile.created,N,New file found
+subfile.created,R,File removed
+subfile.created,R,File removed
+subfile.removed,N,New file found
+subfile.removed,N,New file found
+subfile.removed,N,New file found
+subfile.removed,R,File removed
+subfile.removed,R,File removed
+subfile.removed,R,File removed
+subfile.same,N,New file found");
+}
+
+bundle agent test
+{
+  commands:
+      "$(sys.cf_agent) -Dpass1 -Kf $(this.promise_filename).sub";
+      "$(sys.cf_agent) -Dpass2 -Kf $(this.promise_filename).sub";
+      "$(sys.cf_agent) -Dpass3 -Kf $(this.promise_filename).sub";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => check_file_changes_log("$(G.testfile).expected", "test_changes_log_ok",
+                                                "test_changes_log_fail", "sorted");
+
+  classes:
+      "ok" and => { "test_changes_log_ok",
+                    "!test_changes_log_fail",
+                  };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

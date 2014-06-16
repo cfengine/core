@@ -3278,10 +3278,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
          arg = arg->next)  /* arg steps forward every time. */
     {
         const char *pattern = RlistScalarValue(arg);
-#ifdef __MINGW32__
-        RlistAppendScalarIdemp(&returnlist, pattern);
-#else /* !__MINGW32__ */
-
         glob_t globbuf;
         int globflags = 0; // TODO: maybe add GLOB_BRACE later
 
@@ -3293,6 +3289,14 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
         for (int pi = 0; pi < candidate_count; pi++)
         {
             char* expanded = starstar ? SearchAndReplace(pattern, "**", candidates[pi]) : (char*) pattern;
+
+#ifdef _WIN32
+            if (strchr(expanded, '\\'))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Found backslash escape character in glob pattern '%s'. "
+                    "Was forward slash intended?", expanded);
+            }
+#endif
 
             if (0 == glob(expanded, globflags, NULL, &globbuf))
             {
@@ -3315,7 +3319,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
                 free(expanded);
             }
         }
-#endif /* __MINGW32__ */
     }
 
     // When no entries were found, mark the empty list

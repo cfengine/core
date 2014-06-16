@@ -26,7 +26,7 @@ xml_c14nize_LDADD = ../../libutils/libutils.la \
     $(LIBXML2_LIBS)
 endif
 
-EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub testall
+EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub testall dummy_etc
 
 TESTS = testall
 TESTS_ENVIRONMENT = env \

@@ -75,12 +75,16 @@ bundle agent check
 
       "algos" slist => { @(test.algos) };
       "strings" slist => { @(init.strings) };
+
   classes:
       "ok_$(strings)_$(algos)" expression => strcmp("$(test.$(strings)_$(algos))", "$($(strings)_$(algos))");
       "not_ok_$(strings)_$(algos)" not => strcmp("$(test.$(strings)_$(algos))", "$($(strings)_$(algos))");
 
       "ok_hmatch_$(strings)_$(algos)" expression => hashmatch("$(G.testfile).$(strings).txt", $(algos), "$($(strings)_$(algos))");
       "not_ok_hmatch_$(strings)_$(algos)" not => hashmatch("$(G.testfile).$(strings).txt", $(algos), "$($(strings)_$(algos))");
+
+      "ok_filehash_$(strings)_$(algos)" expression => strcmp(file_hash("$(G.testfile).$(strings).txt", $(algos)), "$($(strings)_$(algos))");
+      "not_ok_filehash_$(strings)_$(algos)" not => strcmp(file_hash("$(G.testfile).$(strings).txt", $(algos)), "$($(strings)_$(algos))");
 
       "ok_null" and => {
                          "ok_null_md5",
@@ -130,20 +134,49 @@ bundle agent check
                          "ok_hmatch_hard_sha512",
       };
 
-      "ok" and => { "ok_null", "ok_easy", "ok_hard",
-                    "ok_hmatch_null", "ok_hmatch_easy", "ok_hmatch_hard" };
+      "ok_filehash_null" and => {
+                         "ok_filehash_null_md5",
+                         "ok_filehash_null_sha1",
+                         "ok_filehash_null_sha256",
+                         "ok_filehash_null_sha384",
+                         "ok_filehash_null_sha512",
+      };
+
+      "ok_filehash_easy" and => {
+                         "ok_filehash_easy_md5",
+                         "ok_filehash_easy_sha1",
+                         "ok_filehash_easy_sha256",
+                         "ok_filehash_easy_sha384",
+                         "ok_filehash_easy_sha512",
+      };
+
+      "ok_filehash_hard" and => {
+                         "ok_filehash_hard_md5",
+                         "ok_filehash_hard_sha1",
+                         "ok_filehash_hard_sha256",
+                         "ok_filehash_hard_sha384",
+                         "ok_filehash_hard_sha512",
+      };
+
+  methods:
+      "" usebundle => dcs_passif_expected("ok_null,ok_easy,ok_hard,ok_filehash_null,ok_filehash_easy,ok_filehash_hard,ok_hmatch_null,ok_hmatch_easy,ok_hmatch_hard",
+                                          "",
+                                          $(this.promise_filename)),
+      inherit => "true";
 
   reports:
     DEBUG::
-      "$(strings) / $(algos) is OK" ifvarclass => "ok_$(strings)_$(algos)";
       "$(strings) / $(algos) failed, $(test.$(strings)_$(algos)) != $($(strings)_$(algos)) (original = $(init.$(strings)))"
       ifvarclass => "not_ok_$(strings)_$(algos)";
 
-      "$(strings) / $(algos) hashmatch is OK" ifvarclass => "ok_hmatch_$(strings)_$(algos)";
       "$(strings) / $(algos) hashmatch failed $($(strings)_$(algos)) against $(G.testfile).$(strings).txt"
       ifvarclass => "not_ok_hmatch_$(strings)_$(algos)";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+
+      "$(strings) / $(algos) file_hash failed $($(strings)_$(algos)) against $(G.testfile).$(strings).txt"
+      ifvarclass => "not_ok_filehash_$(strings)_$(algos)";
+
+    EXTRA::
+      "$(strings) / $(algos) is OK" ifvarclass => "ok_$(strings)_$(algos)";
+      "$(strings) / $(algos) hashmatch is OK" ifvarclass => "ok_hmatch_$(strings)_$(algos)";
+      "$(strings) / $(algos) file_hash is OK" ifvarclass => "ok_filehash_$(strings)_$(algos)";
 }

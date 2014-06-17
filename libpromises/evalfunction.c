@@ -700,17 +700,25 @@ static FnCallResult FnCallHandlerHash(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 /* begin fn specific content */
 
-    char *string = RlistScalarValue(finalargs);
+    char *string_or_filename = RlistScalarValue(finalargs);
     char *typestring = RlistScalarValue(finalargs->next);
+    const bool filehash_mode = strcmp(fp->name, "file_hash") == 0;
 
     type = HashIdFromName(typestring);
 
     if (FIPS_MODE && type == HASH_METHOD_MD5)
     {
-        Log(LOG_LEVEL_ERR, "FIPS mode is enabled, and md5 is not an approved algorithm in call to hash()");
+        Log(LOG_LEVEL_ERR, "FIPS mode is enabled, and md5 is not an approved algorithm in call to %s()", fp->name);
     }
 
-    HashString(string, strlen(string), digest, type);
+    if (filehash_mode)
+    {
+        HashFile(string_or_filename, digest, type);
+    }
+    else
+    {
+        HashString(string_or_filename, strlen(string_or_filename), digest, type);
+    }
 
     char hashbuffer[EVP_MAX_MD_SIZE * 4];
 
@@ -7012,6 +7020,13 @@ static const FnCallArg HASH_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg FILE_HASH_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File object name"},
+    {"md5,sha1,sha256,sha384,sha512", CF_DATA_TYPE_OPTION, "Hash or digest algorithm"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg HASHMATCH_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Filename to hash"},
@@ -7657,6 +7672,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("fileexists", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filesexist", CF_DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed",

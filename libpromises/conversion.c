@@ -31,6 +31,7 @@
 #include <item_lib.h>
 #include <logging.h>
 #include <rlist.h>
+#include <string_lib.h>
 
 
 static int IsSpace(char *remainder);
@@ -1088,7 +1089,7 @@ uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
         return uid;
     }
 
-    if (isdigit((int) uidbuff[0]))
+    if (StringIsNumeric(uidbuff))
     {
         sscanf(uidbuff, "%d", &tmp);
         uid = (uid_t) tmp;
@@ -1125,7 +1126,7 @@ gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
     struct group *gr;
     int gid = -2, tmp = -2;
 
-    if (isdigit((int) gidbuff[0]))
+    if (StringIsNumeric(gidbuff))
     {
         sscanf(gidbuff, "%d", &tmp);
         gid = (gid_t) tmp;

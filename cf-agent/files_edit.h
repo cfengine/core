@@ -28,6 +28,12 @@
 #include <cf3.defs.h>
 #include <file_lib.h>
 
+#define CF_EDIT_IFELAPSED 1     /* NOTE: If doing copy template then edit working copy,
+                                   the edit ifelapsed must not be higher than
+                                   the copy ifelapsed. This will make the working
+                                   copy equal to the copied template file - not the
+                                   copied + edited file. */
+
 typedef struct
 {
     char *filename;

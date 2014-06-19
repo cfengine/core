@@ -122,9 +122,9 @@ def main():
     # "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept
     #   %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%"
     regex = ('^(\d+),(\d+): Outcome of version (.*?) \(.*?\):'
-             ' Promises observed to be kept (\d{1,3})%, Promises'
-             ' repaired (\d{1,3})%, Promises not repaired'
-             ' (\d{1,3})%$')
+             ' Promises observed to be kept (\d{1,3}(\.\d\d)?)%, Promises'
+             ' repaired (\d{1,3}(\.\d\d)?)%, Promises not repaired'
+             ' (\d{1,3}(\.\d\d)?)%$')
     matches = re.match(regex, last_line)
     if not matches:
         exit('Unable to parse the last line of promise_summary.log')
@@ -133,8 +133,8 @@ def main():
     end_time = matches.groups()[1]
     # version_string = matches.groups()[2]
     # promises_kept = matches.groups()[3]
-    # promises_repaired = matches.groups()[4]
-    # promises_not_repaired = matches.groups()[5]
+    # promises_repaired = matches.groups()[5]
+    # promises_not_repaired = matches.groups()[7]
     # print matches.groups()
 
     # Since when this instance has not scheduled a CFEngine run ?

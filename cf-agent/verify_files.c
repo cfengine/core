@@ -39,6 +39,7 @@
 #include <files_editxml.h>
 #include <files_editline.h>
 #include <files_properties.h>
+#include <files_select.h>
 #include <item_lib.h>
 #include <match_scope.h>
 #include <attributes.h>
@@ -275,8 +276,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     /* If file or directory exists but it is not selected by body file_select
      * (if we have one) then just exit. But continue if it's a directory and
      * depth_search is on, so that we can file_select into it. */
-    if (exists && (!VerifyFileLeaf(ctx, path, &oslb, a, pp, &result)) &&
-        !(a.havedepthsearch && S_ISDIR(oslb.st_mode)))
+    if (exists
+        && (a.haveselect && !SelectLeaf(ctx, path, &oslb, a.select))
+        && !(a.havedepthsearch && S_ISDIR(oslb.st_mode)))
     {
         goto exit;
     }
@@ -356,18 +358,6 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Basedir '%s' not promising anything", path);
             }
         }
-
-        if (((a.change.report_changes) == FILE_CHANGE_REPORT_CONTENT_CHANGE) || ((a.change.report_changes) == FILE_CHANGE_REPORT_ALL))
-        {
-            if (a.havedepthsearch)
-            {
-                result = PromiseResultUpdate(result, PurgeHashes(ctx, NULL, a, pp));
-            }
-            else
-            {
-                result = PromiseResultUpdate(result, PurgeHashes(ctx, path, a, pp));
-            }
-        }
     }
 
 /* Phase 2a - copying is potentially threadable if no followup actions */
@@ -407,7 +397,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     exists = (stat(path, &osb) != -1);
 
-    if (exists && (S_ISREG(osb.st_mode)))
+    if (exists && (S_ISREG(osb.st_mode))
+        && (!a.haveselect || SelectLeaf(ctx, path, &osb, a.select)))
     {
         VerifyFileLeaf(ctx, path, &osb, a, pp, &result);
     }

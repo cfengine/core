@@ -168,7 +168,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         Log(LOG_LEVEL_DEBUG, "Examining rule in access list (%s,%s)", transrequest, ap->path);
 
         /* TODO MapName when constructing this list. */
-        strncpy(transpath, ap->path, CF_BUFSIZE - 1);
+        strlcpy(transpath, ap->path, CF_BUFSIZE);
         MapName(transpath);
 
         /* If everything is allowed */
@@ -232,7 +232,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     for (Auth *dp = SV.deny; dp != NULL; dp = dp->next)
     {
-        strncpy(transpath, dp->path, CF_BUFSIZE - 1);
+        strlcpy(transpath, dp->path, CF_BUFSIZE);
         MapName(transpath);
 
         /* If everything is denied */

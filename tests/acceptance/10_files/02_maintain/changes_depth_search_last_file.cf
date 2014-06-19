@@ -1,0 +1,53 @@
+# Checks whether a whole directory is monitored correctly with
+# a file changes promise even when all files are removed.
+
+body common control
+{
+    inputs => { "../../dcs.cf.sub",
+                "../../plucked.cf.sub",
+                "check_file_changes_log.cf.sub",
+              };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  methods:
+      "any" usebundle => setup_files;
+}
+
+bundle agent setup_files
+{
+  methods:
+      "any" usebundle => file_make("$(G.testfile).expected", "file,N,New file found
+file,R,File removed
+file,N,New file found
+file,R,File removed");
+}
+
+bundle agent test
+{
+  commands:
+      "$(sys.cf_agent) -Dpass1 -Kf $(this.promise_filename).sub";
+      "$(sys.cf_agent) -Dpass2 -Kf $(this.promise_filename).sub";
+      "$(sys.cf_agent) -Dpass3 -Kf $(this.promise_filename).sub";
+      "$(sys.cf_agent) -Dpass4 -Kf $(this.promise_filename).sub";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => check_file_changes_log("$(G.testfile).expected", "test_changes_log_ok",
+                                                "test_changes_log_fail", "");
+
+  classes:
+      "ok" and => { "test_changes_log_ok",
+                    "!test_changes_log_fail",
+                  };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

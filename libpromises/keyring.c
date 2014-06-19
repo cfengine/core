@@ -26,6 +26,7 @@
 
 #include <keyring.h>
 #include <dir.h>
+#include <file_lib.h>
 
 /***************************************************************/
 

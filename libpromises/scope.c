@@ -329,11 +329,11 @@ void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_o
     if (split_point)
     {
         strncpy(ns_out, scope, split_point - scope);
-        strncpy(bundle_out, split_point + 1, CF_MAXVARSIZE);
+        strlcpy(bundle_out, split_point + 1, CF_MAXVARSIZE);
     }
     else
     {
-        strncpy(bundle_out, scope, CF_MAXVARSIZE);
+        strlcpy(bundle_out, scope, CF_MAXVARSIZE);
     }
 }
 

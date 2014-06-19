@@ -278,6 +278,22 @@ int socketpair(int domain, int type, int protocol, int sv[2]);
 int fsync(int fd);
 #endif
 
+#if !HAVE_DECL_GLOB
+#define GLOB_NOSPACE 1
+#define GLOB_ABORTED 2
+#define GLOB_NOMATCH 3
+typedef struct {
+    size_t   gl_pathc;    /* Count of paths matched so far  */
+    char   **gl_pathv;    /* List of matched pathnames.  */
+    size_t   gl_offs;
+} glob_t;
+int glob(const char *pattern,
+         int flags,
+         int (*errfunc) (const char *epath, int eerrno),
+         glob_t *pglob);
+void globfree(glob_t *pglob);
+#endif
+
 #ifdef __APPLE__
 # include <sys/malloc.h>
 # include <sys/paths.h>

@@ -763,7 +763,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 {
                     char name[CF_MAXVARSIZE] = "";
 
-                    strncpy(name, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
+                    strlcpy(name, RlistScalarValue(rp), CF_MAXVARSIZE);
 
                     EvalContextHeapAddAbort(ctx, name, cp->classes);
                 }
@@ -778,7 +778,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     char name[CF_MAXVARSIZE] = "";
-                    strncpy(name, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
+                    strlcpy(name, RlistScalarValue(rp), CF_MAXVARSIZE);
 
                     EvalContextHeapAddAbortCurrentBundle(ctx, name, cp->classes);
                 }

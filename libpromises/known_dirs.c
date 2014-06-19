@@ -24,6 +24,7 @@
 
 #include <known_dirs.h>
 #include <cf3.defs.h>
+#include <file_lib.h>
 
 #include <cf-windows-functions.h>
 

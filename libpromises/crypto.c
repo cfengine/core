@@ -34,6 +34,7 @@
 #include <known_dirs.h>
 #include <bootstrap.h>
 #include <misc_lib.h>                   /* UnexpectedError,ProgrammingError */
+#include <file_lib.h>
 
 #ifdef DARWIN
 // On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h

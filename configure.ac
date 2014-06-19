@@ -317,7 +317,7 @@ AS_IF([test $WITH_TOKYO -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb
 
 if test $WITH_LMDB = 1; then
   CF3_WITH_LIBRARY(lmdb, [
-    AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)], [-lpthread])
     AC_CHECK_HEADERS(lmdb.h, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
     AC_DEFINE(LMDB, 1, [Define if Lightning MDB is available])
   ])

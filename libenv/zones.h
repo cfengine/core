@@ -30,6 +30,7 @@
 #ifndef __MINGW32__
 bool IsGlobalZone();
 bool ForeignZone(char *s);
+int  CurrentZoneName(char *s);
 #endif
 
 #endif // ZONES_H

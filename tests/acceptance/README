@@ -75,7 +75,8 @@ or directories to 'testall':
 Creating/editing test cases
 ------------------------------------------------------------------------------
 
-Each test should be 100% standalone, and must contain at least 3 main bundles:
+Each test should be 100% standalone, and must contain at least 1 of the main
+bundles:
 	init		setup, create initial and hoped-for final states
 	test		the actual test code
 	check		the comparison of expected and actual results
@@ -118,6 +119,38 @@ Output "$(this.promise_filename) Pass" for passing
 If you want to use tools like grep, diff, touch, etc, please use the
 $(G.grep) format so that the correct path to the tool is chosen by
 this template. If a tool is missing you can add it to the list below.
+
+------------------------------------------------------------------------------
+Waiting in tests
+------------------------------------------------------------------------------
+
+If your test needs to wait for a significant amount of time, for example in
+order for locks to expire, you should use the wait functionality in the test
+suite. It requires three parts:
+
+  1. Your test needs to be put in a "timed" directory.
+  2. Whenever you want to wait, use the
+     "dcs_wait($(this.promise_filename), <seconds>)" method to wait the
+     specified number of seconds.
+  3. Each test invocation will have a predefined class set,
+     "test_pass_<number>", where <number> is the current pass number starting
+     from one. This means you can wait several times.
+
+The test suite will keep track of time, and run other tests while your test is
+waiting. Some things to look out for though:
+
+  - During the wait time, your test is no longer running, so you cannot for
+    example do polling.
+  - You cannot leave daemons running while waiting, because it may interfere
+    with other tests. If you need that you will have to wait the traditional
+    way, by introducing sleeps in the policy itself.
+  - The timing is not guaranteed to be accurate to the second. The test will be
+    resumed as soon as the current test has finished running, but if it takes
+    a long time, this will add to the wait time.
+
+------------------------------------------------------------------------------
+Handling different platforms
+------------------------------------------------------------------------------
 
 For tests that need to be skipped on certain platforms, you can add
 special meta variables to one of the test bundles. These are the

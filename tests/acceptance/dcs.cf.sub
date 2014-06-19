@@ -574,6 +574,14 @@ bundle agent dcs_fail(test)
       "$(this.bundle): Explicitly failing...";
 }
 
+bundle agent dcs_wait(test, seconds)
+{
+  reports:
+      "$(test) Wait/$(seconds)";
+    EXTRA::
+      "$(this.bundle): Explicitly waiting $(seconds) seconds...";
+}
+
 bundle agent dcs_passif_fileexists(file, test)
 {
   classes:

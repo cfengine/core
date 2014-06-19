@@ -73,7 +73,7 @@ ACX_PTHREAD([],
             [AC_MSG_ERROR(pthread-compatible library is required to build CFEngine)])
 
 CC="$PTHREAD_CC"
-CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
 dnl ######################################################################

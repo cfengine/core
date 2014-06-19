@@ -1,4 +1,4 @@
-3.6 Release Candidate
+3.6.0
 
         Changes:
         - Changes to logging output
@@ -29,14 +29,19 @@
         - including the same file multiple times in 'body control inputs' is not an error
         - portnumber in body copy_from now supports service names like
           "cfengine", "pop3" etc, check /etc/services for more.
-    	- The failsafe.cf policy, run on bootstrap and in some other
-    	  unusual cases, has been extracted from C code into libpromises/failsafe.cf
+        - The failsafe.cf policy, run on bootstrap and in some other
+          unusual cases, has been extracted from C code into libpromises/failsafe.cf
         - masterfiles
             - cf_promises_validated is now in JSON format
             - timestamp key is timestamp (sec since unix epoch) of last time validated
             - the masterfiles now come from https://github.com/cfengine/masterfiles and are
               not in the core repository
         - cf-serverd calls cf-agent with -Dcfruncommand when executing cf-runagent requests
+      - Mark as removed: promise_notkept_log_include, promise_notkept_log_exclude, promise_repaired_log_include,
+        promise_repaired_log_exclude, classes_include, classes_exclude, variables_include,
+        variables_exclude attributes from report_data_select body (syntax is valid but not functional).
+        They have been replaced by the following attributes: promise_handle_include, 
+        promise_handle_exclude, metatags_include, metatags_exclude.
 
         New features:
         - New promise type "users" for managing local user accounts.
@@ -94,7 +99,7 @@
               "deny_keys". 
             - New "shortcut" attribute in bundle server access_rules used to
               dynamically expand non-absolute request paths.
-    	- masterfiles
+        - masterfiles
                 - standard library split: lib/3.5 (compatibility) and lib/3.6 (mainline)
                 - many standard library bundles and bodies, especially packages- and file-related,
                   were revised and fixed
@@ -104,15 +109,15 @@
                 - cf_promises_release_id contains the policy release ID which is the GIT HEAD SHA
                   if available or hash of tree
                 - a bunch'o'bundles to make starting with CFEngine easier:
-    		- file-related: file_mustache, file_mustache_jsonstring, file_tidy, dir_sync, file_copy,
+                - file-related: file_mustache, file_mustache_jsonstring, file_tidy, dir_sync, file_copy,
               file_link, file_hardlink, file_empty, file_make
-    		- packages-related: package_absent, package_present, package_latest,
+                - packages-related: package_absent, package_present, package_latest,
               package_specific_present, package_specific_absent, package_specific_latest, package_specific
-    		- XML-related: xml_insert_tree_nopath, xml_insert_tree, xml_set_value, xml_set_attribute
-    		- VCS-related: git_init, git_add, git_checkout, git_checkout_new_branch,
+                - XML-related: xml_insert_tree_nopath, xml_insert_tree, xml_set_value, xml_set_attribute
+                - VCS-related: git_init, git_add, git_checkout, git_checkout_new_branch,
               git_clean, git_stash, git_stash_and_clean, git_commit, git
-    		- process-related: process_kill
-    		- other: cmerge, url_ping, logrotate, prunedir
+                - process-related: process_kill
+                - other: cmerge, url_ping, logrotate, prunedir
         - New command line options for agent binaries
             - New options to cf-promises
                 - '--show-classes' and '--show-vars'
@@ -143,7 +148,7 @@
                 - 'getvariablemetatags' - returns list of meta tags for a variable
             - 'body file control' has an 'inputs' attribute to include library files and other
               dependencies
-	    - bundlesequences can be built with bundlesmatching() based on bundle name and tags
+            - bundlesequences can be built with bundlesmatching() based on bundle name and tags
         - New attributes in existing promise types and bodies
             - New option 'preserve_all_lines' for insert_type in insert_lines promises
             - Caching of expensive system functions to avoid multiple executions of
@@ -200,19 +205,20 @@
 
         Deprecations:
         - 'splitstring' - deprecated by 'string_split'
-    	- 'track_value'
-    	- 'skipverify'
+        - 'track_value'
+        - 'skipverify'
 
         Bug fixes: for a complete list of fixed bugs, see Redmine at https://cfengine.com/dev
         - various fixes in evaluation and variable resolution
         - Improve performance of list iteration (Redmine #1875)
         - Removed limitation of input length to internal buffer sizes
-	    - directories ending with "/" are not ignored
-	    - lsdir() always return a list now, never a scalar
+            - directories ending with "/" are not ignored
+            - lsdir() always return a list now, never a scalar
         - 'abortclasses' fixed to work in common bundles and other cases
         - namespaced 'edit_line' bundles now work (Redmine#3781)
         - lists are interpolated in correct order (Redmine#3122)
         - cf-serverd reloads policies properly when they change
+        - lots of leaks (memory and file descriptor) fixed
 
 3.5.3
        Changes:

@@ -41,6 +41,7 @@
 #include <files_hashes.h>
 #include <files_repository.h>
 #include <files_select.h>
+#include <files_changes.h>
 #include <expand.h>
 #include <conversion.h>
 #include <pipes.h>
@@ -110,15 +111,9 @@ void SetFileAutoDefineList(const Rlist *auto_define_list)
     AUTO_DEFINE_LIST = auto_define_list;
 }
 
-bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp, PromiseResult *result)
+void VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp, PromiseResult *result)
 {
 /* Here we can assume that we are in the parent directory of the leaf */
-
-    if (attr.haveselect && !SelectLeaf(ctx, path, sb, attr.select))
-    {
-        Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", path);
-        return false;
-    }
 
     Log(LOG_LEVEL_VERBOSE, "Handling file existence constraints on '%s'", path);
 
@@ -163,8 +158,6 @@ bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes at
             *result = PromiseResultUpdate(*result, VerifyFileAttributes(ctx, path, sb, attr, pp));
         }
     }
-
-    return true;
 }
 
 /* Checks whether item matches a list of wildcards */
@@ -1029,16 +1022,16 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
         {
             char vbuff[CF_BUFSIZE];
 
-            strcpy(vbuff, sourcefile);
+            strlcpy(vbuff, sourcefile, CF_BUFSIZE);
             ChopLastNode(vbuff);
             AddSlash(vbuff);
             strncat(vbuff, linkbuf, CF_BUFSIZE - 1);
-            strncpy(linkbuf, vbuff, CF_BUFSIZE - 1);
+            strlcpy(linkbuf, vbuff, CF_BUFSIZE);
         }
     }
     else
     {
-        strcpy(linkbuf, sourcefile);
+        strlcpy(linkbuf, sourcefile, CF_BUFSIZE);
     }
 
     lastnode = ReadLastNode(sourcefile);
@@ -1182,7 +1175,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
         char *forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
         *forkpointer = '\0';
 
-        strncpy(new, tmpstr, CF_BUFSIZE);
+        strlcpy(new, tmpstr, CF_BUFSIZE);
 
         free(tmpstr);
     }
@@ -1190,7 +1183,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
     {
 #endif
 
-        strncpy(new, dest, CF_BUFSIZE);
+        strlcpy(new, dest, CF_BUFSIZE);
 
         if (!JoinSuffix(new, CF_NEW))
         {
@@ -1244,7 +1237,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 
         Log(LOG_LEVEL_DEBUG, "Backup file '%s'", source);
 
-        strncpy(backup, dest, CF_BUFSIZE);
+        strlcpy(backup, dest, CF_BUFSIZE);
 
         if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP)
         {
@@ -1652,7 +1645,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
         {
             if (IsAbsPath(attr.rename.newname))
             {
-                strncpy(path, attr.rename.newname, CF_BUFSIZE - 1);
+                strlcpy(path, attr.rename.newname, CF_BUFSIZE);
             }
             else
             {
@@ -2119,6 +2112,8 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
     const struct dirent *dirp;
     char path[CF_BUFSIZE];
     struct stat lsb;
+    Seq *db_file_set = NULL;
+    Seq *selected_files = NULL;
 
     if (!attr.havedepthsearch)  /* if the search is trivial, make sure that we are in the parent dir of the leaf */
     {
@@ -2132,7 +2127,15 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
             return false;
         }
-        return VerifyFileLeaf(ctx, name, sb, attr, pp, result);
+        if (!attr.haveselect || SelectLeaf(ctx, path, sb, attr.select))
+        {
+            VerifyFileLeaf(ctx, name, sb, attr, pp, result);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     if (rlevel > CF_RECURSION_LIMIT)
@@ -2154,6 +2157,18 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         return false;
     }
 
+    if (attr.havechange)
+    {
+        db_file_set = SeqNew(1, &free);
+        if (!FileChangesGetDirectoryList(name, db_file_set))
+        {
+            SeqDestroy(db_file_set);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            return false;
+        }
+        selected_files = SeqNew(1, &free);
+    }
+
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!ConsiderLocalFile(dirp->d_name, name))
@@ -2166,8 +2181,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
         if (!JoinPath(path, dirp->d_name))
         {
-            DirClose(dirh);
-            return true;
+            goto end;
         }
 
         if (lstat(dirp->d_name, &lsb) == -1)
@@ -2178,11 +2192,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
         if (S_ISLNK(lsb.st_mode))       /* should we ignore links? */
         {
-            if (!KillGhostLink(ctx, path, attr, pp, result))
-            {
-                VerifyFileLeaf(ctx, path, &lsb, attr, pp, result);
-            }
-            else
+            if (KillGhostLink(ctx, path, attr, pp, result))
             {
                 continue;
             }
@@ -2232,9 +2242,36 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             }
         }
 
-        VerifyFileLeaf(ctx, path, &lsb, attr, pp, result);
+        if (!attr.haveselect || SelectLeaf(ctx, path, &lsb, attr.select))
+        {
+            if (attr.havechange)
+            {
+                if (!SeqBinaryLookup(db_file_set, dirp->d_name, (SeqItemComparator)strcmp))
+                {
+                    // See comments in FileChangesCheckAndUpdateDirectory(),
+                    // regarding this function call.
+                    FileChangesLogNewFile(path, pp);
+                }
+                SeqAppend(selected_files, xstrdup(dirp->d_name));
+            }
+
+            VerifyFileLeaf(ctx, path, &lsb, attr, pp, result);
+        }
+        else
+        {
+            Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", path);
+        }
     }
 
+    if (attr.havechange)
+    {
+        FileChangesCheckAndUpdateDirectory(name, selected_files, db_file_set,
+                                           attr.change.update, pp, result);
+    }
+
+end:
+    SeqDestroy(selected_files);
+    SeqDestroy(db_file_set);
     DirClose(dirh);
     return true;
 }
@@ -2415,7 +2452,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     start = BeginMeasure();
 
-    strncpy(vbuff, destination, CF_BUFSIZE - 4);
+    strlcpy(vbuff, destination, CF_BUFSIZE - 3);
 
     if (S_ISDIR(ssb.st_mode))   /* could be depth_search */
     {
@@ -2706,7 +2743,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
 
         /* Assemble pathnames */
 
-        strncpy(promiserpath, destination, CF_BUFSIZE - 1);
+        strlcpy(promiserpath, destination, CF_BUFSIZE);
         AddSlash(promiserpath);
 
         if (!JoinPath(promiserpath, dirp->d_name))
@@ -2717,7 +2754,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
             return result;
         }
 
-        strncpy(sourcepath, source, CF_BUFSIZE - 1);
+        strlcpy(sourcepath, source, CF_BUFSIZE);
         AddSlash(sourcepath);
 
         if (!JoinPath(sourcepath, dirp->d_name))
@@ -2777,8 +2814,8 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Att
             HashFile(file, digest1, HASH_METHOD_MD5);
             HashFile(file, digest2, HASH_METHOD_SHA1);
 
-            one = FileHashChanged(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result);
-            two = FileHashChanged(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result);
+            one = FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result);
+            two = FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result);
 
             if (one || two)
             {
@@ -2792,7 +2829,7 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Att
         {
             HashFile(file, digest1, attr.change.hash);
 
-            if (FileHashChanged(ctx, file, digest1, attr.change.hash, attr, pp, &result))
+            if (FileChangesCheckAndUpdateHash(ctx, file, digest1, attr.change.hash, attr, pp, &result))
             {
                 changed = true;
             }
@@ -2803,7 +2840,7 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Att
     {
         EvalContextHeapPersistentSave(ctx, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
         EvalContextClassPutSoft(ctx, "checksum_alerts", CONTEXT_SCOPE_NAMESPACE, "");
-        LogHashChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
+        FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
     }
 
     if (attr.change.report_diffs)
@@ -3421,142 +3458,12 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
 
 static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr, const Promise *pp)
 {
-    struct stat cmpsb;
-    CF_DB *dbp;
-    char message[CF_BUFSIZE];
-    int ok = true;
-
     if ((attr.change.report_changes != FILE_CHANGE_REPORT_STATS_CHANGE) && (attr.change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
         return;
     }
 
-    if (!OpenDB(&dbp, dbid_filestats))
-    {
-        return;
-    }
-
-    if (!ReadDB(dbp, file, &cmpsb, sizeof(struct stat)))
-    {
-        if (!DONTDO)
-        {
-            WriteDB(dbp, file, sb, sizeof(struct stat));
-            CloseDB(dbp);
-            return;
-        }
-    }
-
-    if (cmpsb.st_mode != sb->st_mode)
-    {
-        ok = false;
-    }
-
-    if (cmpsb.st_uid != sb->st_uid)
-    {
-        ok = false;
-    }
-
-    if (cmpsb.st_gid != sb->st_gid)
-    {
-        ok = false;
-    }
-
-    if (cmpsb.st_dev != sb->st_dev)
-    {
-        ok = false;
-    }
-
-    if (cmpsb.st_ino != sb->st_ino)
-    {
-        ok = false;
-    }
-
-    if (cmpsb.st_mtime != sb->st_mtime)
-    {
-        ok = false;
-    }
-
-    if (ok)
-    {
-        CloseDB(dbp);
-        return;
-    }
-
-    if (cmpsb.st_mode != sb->st_mode)
-    {
-        snprintf(message, CF_BUFSIZE - 1, "Permissions for '%s' changed %04jo -> %04jo", file,
-                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
-        Log(LOG_LEVEL_NOTICE, "%s", message);
-
-        char msg_temp[CF_MAXVARSIZE] = { 0 };
-        snprintf(msg_temp, sizeof(msg_temp), "Permission: %04jo -> %04jo",
-                 (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
-
-        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
-    }
-
-    if (cmpsb.st_uid != sb->st_uid)
-    {
-        snprintf(message, CF_BUFSIZE - 1, "Owner for '%s' changed %jd -> %jd", file, (uintmax_t) cmpsb.st_uid,
-                 (uintmax_t) sb->st_uid);
-        Log(LOG_LEVEL_NOTICE, "%s", message);
-
-        char msg_temp[CF_MAXVARSIZE] = { 0 };
-        snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
-                 (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
-
-        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
-    }
-
-    if (cmpsb.st_gid != sb->st_gid)
-    {
-        snprintf(message, CF_BUFSIZE - 1, "Group for '%s' changed %jd -> %jd", file, (uintmax_t) cmpsb.st_gid,
-                 (uintmax_t) sb->st_gid);
-        Log(LOG_LEVEL_NOTICE, "%s", message);
-
-        char msg_temp[CF_MAXVARSIZE] = { 0 };
-        snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
-                 (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
-
-        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
-    }
-
-    if (cmpsb.st_dev != sb->st_dev)
-    {
-        Log(LOG_LEVEL_NOTICE, "Device for '%s' changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
-              (intmax_t) sb->st_dev);
-    }
-
-    if (cmpsb.st_ino != sb->st_ino)
-    {
-        Log(LOG_LEVEL_NOTICE, "inode for '%s' changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
-              (uintmax_t) sb->st_ino);
-    }
-
-    if (cmpsb.st_mtime != sb->st_mtime)
-    {
-        char from[CF_MAXVARSIZE];
-        char to[CF_MAXVARSIZE];
-
-        strcpy(from, ctime(&(cmpsb.st_mtime)));
-        strcpy(to, ctime(&(sb->st_mtime)));
-        Chop(from, CF_MAXVARSIZE);
-        Chop(to, CF_MAXVARSIZE);
-        Log(LOG_LEVEL_NOTICE, "Last modified time for '%s' changed '%s' -> '%s'", file, from, to);
-    }
-
-    if (pp->comment)
-    {
-        Log(LOG_LEVEL_NOTICE, "Preceding promise '%s'", pp->comment);
-    }
-
-    if (attr.change.update && !DONTDO)
-    {
-        DeleteDB(dbp, file);
-        WriteDB(dbp, file, sb, sizeof(struct stat));
-    }
-
-    CloseDB(dbp);
+    FileChangesCheckAndUpdateStats(file, sb, attr.change.update, pp);
 }
 
 bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes attr, PromiseResult *result)

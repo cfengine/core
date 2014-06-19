@@ -25,6 +25,7 @@
 #include <constants.h>
 
 #include <eval_context.h>
+#include <file_lib.h>
 
 void LoadSystemConstants(EvalContext *ctx)
 {

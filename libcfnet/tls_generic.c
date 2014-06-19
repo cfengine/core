@@ -536,10 +536,41 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
      * for SSL_read() and SSL_write(). */
     const char *errstr2 = TLSSecondarySSLError(code);
 
-    Log(level, "%s: (%d %s) %s %s",
-        prepend, code, errstr1,
-        (errstr2 == NULL) ? "" : errstr2,        /* most likely empty */
-        syserr);
+    /* We know the socket is always blocking. However our blocking sockets
+     * have a timeout set via means of setsockopt(SO_RCVTIMEO), so internally
+     * OpenSSL can still get the EWOULDBLOCK error code from recv(). In that
+     * case OpenSSL gives us SSL_ERROR_WANT_READ despite the socket being
+     * blocking. So we log a proper error message! */
+    if (errcode == SSL_ERROR_WANT_READ)
+    {
+        Log(level, "%s: receive timeout", prepend);
+    }
+    else if (errcode == SSL_ERROR_WANT_WRITE)
+    {
+        Log(level, "%s: send timeout", prepend);
+    }
+    else
+    {
+        Log(level, "%s: (%d %s) %s %s",
+            prepend, code, errstr1,
+            (errstr2 == NULL) ? "" : errstr2,          /* most likely empty */
+            syserr);
+    }
+}
+
+static void assert_SSLIsBlocking(const SSL *ssl)
+{
+#ifndef NDEBUG
+    int fd = SSL_get_fd(ssl);
+    if (fd >= 0)
+    {
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags != -1 && (flags & O_NONBLOCK) != 0)
+        {
+            ProgrammingError("OpenSSL socket is non-blocking!");
+        }
+    }
+#endif
 }
 
 /**
@@ -559,6 +590,7 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
 int TLSSend(SSL *ssl, const char *buffer, int length)
 {
     assert(length >= 0);
+    assert_SSLIsBlocking(ssl);
 
     if (length == 0)
     {
@@ -606,6 +638,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
 {
     assert(length > 0);
     assert(length < CF_BUFSIZE);
+    assert_SSLIsBlocking(ssl);
 
     int received = SSL_read(ssl, buffer, length);
     if (received < 0)

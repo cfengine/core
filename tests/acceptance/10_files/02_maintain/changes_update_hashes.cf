@@ -3,7 +3,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub", "check_file_changes_log.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 
@@ -11,27 +11,52 @@ bundle agent init
 {
   files:
       # Not in database.
-      "$(G.testfile).new"
+      "$(G.testfile).update.new"
         create => "true";
       # Should be in database.
-      "$(G.testfile).same"
+      "$(G.testfile).update.same"
         create => "true",
-        changes => test_changes;
-      "$(G.testfile).updated"
+        changes => test_changes_update;
+      "$(G.testfile).update.updated"
         create => "true",
-        changes => test_changes;
+        changes => test_changes_update;
+
+      # Not in database.
+      "$(G.testfile).noupdate.new"
+        create => "true";
+      # Should be in database.
+      "$(G.testfile).noupdate.same"
+        create => "true",
+        changes => test_changes_noupdate;
+      "$(G.testfile).noupdate.updated"
+        create => "true",
+        changes => test_changes_noupdate;
 }
 
 bundle agent test
 {
   files:
-      "$(G.testfile).updated"
+      "$(G.testfile).update.updated"
+        edit_line => insert_text;
+      "$(G.testfile).noupdate.updated"
         edit_line => insert_text;
 
   methods:
-      "test_new" usebundle => test_new;
-      "test_same" usebundle => test_same;
-      "test_updated" usebundle => test_updated;
+      # Update each file twice. We cannot reuse the bundles because CFEngine
+      # will skip bundles it has done before.
+      "test_update_new" usebundle => test_update_new;
+      "test_update_same" usebundle => test_update_same;
+      "test_update_updated" usebundle => test_update_updated;
+      "test_update_new_again" usebundle => test_update_new_again;
+      "test_update_same_again" usebundle => test_update_same_again;
+      "test_update_updated_again" usebundle => test_update_updated_again;
+
+      "test_noupdate_new" usebundle => test_noupdate_new;
+      "test_noupdate_same" usebundle => test_noupdate_same;
+      "test_noupdate_updated" usebundle => test_noupdate_updated;
+      "test_noupdate_new_again" usebundle => test_noupdate_new_again;
+      "test_noupdate_same_again" usebundle => test_noupdate_same_again;
+      "test_noupdate_updated_again" usebundle => test_noupdate_updated_again;
 }
 
 bundle edit_line insert_text
@@ -40,35 +65,114 @@ bundle edit_line insert_text
       "Text";
 }
 
-bundle agent test_new
+bundle agent test_update_new
 {
   files:
-      "$(G.testfile).new"
-        changes => test_changes,
-        classes => kept_repaired_notkept("test_new_kept", "test_new_repaired", "test_new_notkept");
+      "$(G.testfile).update.new"
+        changes => test_changes_update,
+        classes => kept_repaired_notkept("test_update_new_kept", "test_update_new_repaired", "test_update_new_notkept");
 }
 
-bundle agent test_same
+bundle agent test_update_same
 {
   files:
-      "$(G.testfile).same"
-        changes => test_changes,
-        classes => kept_repaired_notkept("test_same_kept", "test_same_repaired", "test_same_notkept");
+      "$(G.testfile).update.same"
+        changes => test_changes_update,
+        classes => kept_repaired_notkept("test_update_same_kept", "test_update_same_repaired", "test_update_same_notkept");
 }
 
-bundle agent test_updated
+bundle agent test_update_updated
 {
   files:
-      "$(G.testfile).updated"
-        changes => test_changes,
-        classes => kept_repaired_notkept("test_updated_kept", "test_updated_repaired", "test_updated_notkept");
+      "$(G.testfile).update.updated"
+        changes => test_changes_update,
+        classes => kept_repaired_notkept("test_update_updated_kept", "test_update_updated_repaired", "test_update_updated_notkept");
 }
 
-body changes test_changes
+bundle agent test_update_new_again
+{
+  files:
+      "$(G.testfile).update.new"
+        changes => test_changes_update,
+        classes => kept_repaired_notkept("test_update_new_kept", "test_update_new_repaired", "test_update_new_notkept");
+}
+
+bundle agent test_update_same_again
+{
+  files:
+      "$(G.testfile).update.same"
+        changes => test_changes_update,
+        classes => kept_repaired_notkept("test_update_same_kept", "test_update_same_repaired", "test_update_same_notkept");
+}
+
+bundle agent test_update_updated_again
+{
+  files:
+      "$(G.testfile).update.updated"
+        changes => test_changes_update,
+        classes => kept_repaired_notkept("test_update_updated_kept", "test_update_updated_repaired", "test_update_updated_notkept");
+}
+
+bundle agent test_noupdate_new
+{
+  files:
+      "$(G.testfile).noupdate.new"
+        changes => test_changes_noupdate,
+        classes => kept_repaired_notkept("test_noupdate_new_kept", "test_noupdate_new_repaired", "test_noupdate_new_notkept");
+}
+
+bundle agent test_noupdate_same
+{
+  files:
+      "$(G.testfile).noupdate.same"
+        changes => test_changes_noupdate,
+        classes => kept_repaired_notkept("test_noupdate_same_kept", "test_noupdate_same_repaired", "test_noupdate_same_notkept");
+}
+
+bundle agent test_noupdate_updated
+{
+  files:
+      "$(G.testfile).noupdate.updated"
+        changes => test_changes_noupdate,
+        classes => kept_repaired_notkept("test_noupdate_updated_kept", "test_noupdate_updated_repaired", "test_noupdate_updated_notkept");
+}
+
+bundle agent test_noupdate_new_again
+{
+  files:
+      "$(G.testfile).noupdate.new"
+        changes => test_changes_noupdate,
+        classes => kept_repaired_notkept("test_noupdate_new_kept", "test_noupdate_new_repaired", "test_noupdate_new_notkept");
+}
+
+bundle agent test_noupdate_same_again
+{
+  files:
+      "$(G.testfile).noupdate.same"
+        changes => test_changes_noupdate,
+        classes => kept_repaired_notkept("test_noupdate_same_kept", "test_noupdate_same_repaired", "test_noupdate_same_notkept");
+}
+
+bundle agent test_noupdate_updated_again
+{
+  files:
+      "$(G.testfile).noupdate.updated"
+        changes => test_changes_noupdate,
+        classes => kept_repaired_notkept("test_noupdate_updated_kept", "test_noupdate_updated_repaired", "test_noupdate_updated_notkept");
+}
+
+body changes test_changes_update
 {
       hash           => "sha256";
       report_changes => "all";
       update_hashes  => "yes";
+}
+
+body changes test_changes_noupdate
+{
+      hash           => "sha256";
+      report_changes => "all";
+      update_hashes  => "no";
 }
 
 body classes kept_repaired_notkept(kept, repaired, notkept)
@@ -85,16 +189,39 @@ bundle agent check
   vars:
       "classes_set" slist => classesmatching("test_.*");
 
+  methods:
+      # Seems like CFEngine does two passes over files where we don't update
+      # hash, so the last four entries should really be two entries.
+      # If the number of "Content changed" lines is wrong, this is the first
+      # place to look.
+      "any" usebundle => file_make("$(G.testfile).file_changes_log", "TEST.cfengine.update.updated,C,Content changed
+TEST.cfengine.noupdate.updated,C,Content changed
+TEST.cfengine.noupdate.updated,C,Content changed
+TEST.cfengine.noupdate.updated,C,Content changed
+TEST.cfengine.noupdate.updated,C,Content changed");
+
+      "any" usebundle => check_file_changes_log("$(G.testfile).file_changes_log", "test_changes_log_ok",
+                                                "test_changes_log_fail", "");
+
   classes:
       "ok" and => {
                     "checksum_alerts",
-                    "test_new_repaired",
-                    "!test_new_notkept",
-                    "!test_same_repaired",
-                    "test_same_kept",
-                    "!test_same_notkept",
-                    "test_updated_repaired",
-                    "!test_updated_notkept",
+                    "test_update_new_repaired",
+                    "!test_update_new_notkept",
+                    "!test_update_same_repaired",
+                    "test_update_same_kept",
+                    "!test_update_same_notkept",
+                    "test_update_updated_repaired",
+                    "!test_update_updated_notkept",
+                    "test_noupdate_new_repaired",
+                    "!test_noupdate_new_notkept",
+                    "!test_noupdate_same_repaired",
+                    "test_noupdate_same_kept",
+                    "!test_noupdate_same_notkept",
+                    "!test_noupdate_updated_repaired",
+                    "test_noupdate_updated_notkept",
+                    "test_changes_log_ok",
+                    "!test_changes_log_fail",
       };
 
   reports:

@@ -1,0 +1,104 @@
+body common control
+{
+    inputs => { "../../dcs.cf.sub",
+                "../../plucked.cf.sub",
+              };
+    bundlesequence => { "init", "test" };
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)"
+        depth_search => recurse("inf"),
+        file_select => all,
+        delete => tidy;
+
+  methods:
+      "any" usebundle => setup_files;
+      "any" usebundle => init_monitoring;
+}
+
+bundle agent setup_files
+{
+  methods:
+      "any" usebundle => file_make("$(G.testdir)/file.same", "same");
+      "any" usebundle => file_make("$(G.testdir)/file.removed", "removed");
+      #"any" usebundle => file_make("$(G.testdir)/file.created", "created");
+      "any" usebundle => file_make("$(G.testdir)/file.content", "old content");
+      "any" usebundle => file_make("$(G.testdir)/file.always-ignored.same", "same");
+      "any" usebundle => file_make("$(G.testdir)/file.always-ignored.removed", "removed");
+      #"any" usebundle => file_make("$(G.testdir)/file.always-ignored.created", "created");
+      "any" usebundle => file_make("$(G.testdir)/file.always-ignored.content", "old content");
+      "any" usebundle => file_make("$(G.testdir)/file.new-ignored.same", "same");
+      "any" usebundle => file_make("$(G.testdir)/file.new-ignored.removed", "removed");
+      #"any" usebundle => file_make("$(G.testdir)/file.new-ignored.created", "created");
+      "any" usebundle => file_make("$(G.testdir)/file.new-ignored.content", "old content");
+      "any" usebundle => file_make("$(G.testdir)/subdir/subfile.same", "same");
+      #"any" usebundle => file_make("$(G.testdir)/subdir/subfile.created", "subfile created");
+      "any" usebundle => file_make("$(G.testdir)/subdir/subfile.removed", "subfile removed");
+      "any" usebundle => file_make("$(G.testdir)/subdir/subfile.content", "subfile old content");
+}
+
+bundle agent init_monitoring
+{
+  files:
+      "$(G.testdir)"
+        depth_search => recurse("inf"),
+        file_select => init_select,
+        changes => changes_body;
+}
+
+body file_select init_select
+{
+    leaf_name => { ".*always-ignored.*" };
+    file_result => "!leaf_name";
+}
+
+body changes changes_body
+{
+    report_changes => "all";
+    update_hashes => "true";
+}
+
+bundle agent test
+{
+  vars:
+      "remove" slist => { "file.removed",
+                          "file.always-ignored.removed",
+                          "file.new-ignored.removed",
+                          "subdir/subfile.removed",
+                        };
+      "create" slist => { "file.created",
+                          "file.always-ignored.created",
+                          "file.new-ignored.created",
+                          "subdir/subfile.created",
+                        };
+      "modify" slist => { "file.content",
+                          "file.always-ignored.content",
+                          "file.new-ignored.content",
+                          "subdir/subfile.content",
+                        };
+
+  files:
+      "$(G.testdir)/$(remove)"
+        delete => tidy;
+
+      "$(G.testdir)/$(create)"
+        create => "true";
+
+      "$(G.testdir)/$(modify)"
+        edit_line => insert_lines("extra content");
+
+  files:
+      "$(G.testdir)"
+        depth_search => recurse("inf"),
+        file_select => test_select,
+        changes => changes_body;
+}
+
+body file_select test_select
+{
+    leaf_name => { ".*ignored.*" };
+    file_result => "!leaf_name";
+}

@@ -1,0 +1,33 @@
+body common control
+{
+    inputs => { "../../dcs.cf.sub",
+                "../../plucked.cf.sub",
+              };
+    bundlesequence => { "init", "test" };
+}
+
+bundle agent init
+{
+  methods:
+    pass1|pass3::
+      "any" usebundle => file_make("$(G.testdir)/file", "content");
+
+  files:
+    pass2|pass4::
+      "$(G.testdir)/file"
+        delete => tidy;
+}
+
+body changes changes_body
+{
+    report_changes => "all";
+    update_hashes => "true";
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testdir)"
+        depth_search => recurse("inf"),
+        changes => changes_body;
+}

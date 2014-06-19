@@ -85,7 +85,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 
     if (strlen(backreference) == 0)
     {
-        strncpy(backreference, "CF_NOMATCH", CF_MAXVARSIZE);
+        strlcpy(backreference, "CF_NOMATCH", CF_MAXVARSIZE);
     }
 
     return backreference;

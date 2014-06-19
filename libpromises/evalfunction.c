@@ -700,17 +700,25 @@ static FnCallResult FnCallHandlerHash(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 /* begin fn specific content */
 
-    char *string = RlistScalarValue(finalargs);
+    char *string_or_filename = RlistScalarValue(finalargs);
     char *typestring = RlistScalarValue(finalargs->next);
+    const bool filehash_mode = strcmp(fp->name, "file_hash") == 0;
 
     type = HashIdFromName(typestring);
 
     if (FIPS_MODE && type == HASH_METHOD_MD5)
     {
-        Log(LOG_LEVEL_ERR, "FIPS mode is enabled, and md5 is not an approved algorithm in call to hash()");
+        Log(LOG_LEVEL_ERR, "FIPS mode is enabled, and md5 is not an approved algorithm in call to %s()", fp->name);
     }
 
-    HashString(string, strlen(string), digest, type);
+    if (filehash_mode)
+    {
+        HashFile(string_or_filename, digest, type);
+    }
+    else
+    {
+        HashString(string_or_filename, strlen(string_or_filename), digest, type);
+    }
 
     char hashbuffer[EVP_MAX_MD_SIZE * 4];
 
@@ -1441,7 +1449,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     int len = 0;
 
     memset(buf, 0, sizeof(buf));
-    strncpy(buf, string, sizeof(buf) - 1);
+    strlcpy(buf, string, sizeof(buf));
     len = strlen(buf);
 
     if (!strcmp(fp->name, "string_downcase"))
@@ -1476,7 +1484,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_head"))
     {
-        long max = IntFromString(RlistScalarValue(finalargs->next));
+        const long max = IntFromString(RlistScalarValue(finalargs->next));
         if (max < sizeof(buf))
         {
             buf[max] = '\0';
@@ -1484,7 +1492,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_tail"))
     {
-        long max = IntFromString(RlistScalarValue(finalargs->next));
+        const long max = IntFromString(RlistScalarValue(finalargs->next));
         if (max < len)
         {
             strncpy(buf, string + len - max, sizeof(buf) - 1);
@@ -2567,7 +2575,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED const Policy *pol
     }
     else
     {
-        strncpy(naked, listvar, CF_MAXVARSIZE - 1);
+        strlcpy(naked, listvar, CF_MAXVARSIZE);
     }
 
     VarRef *ref = VarRefParse(naked);
@@ -3278,10 +3286,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
          arg = arg->next)  /* arg steps forward every time. */
     {
         const char *pattern = RlistScalarValue(arg);
-#ifdef __MINGW32__
-        RlistAppendScalarIdemp(&returnlist, pattern);
-#else /* !__MINGW32__ */
-
         glob_t globbuf;
         int globflags = 0; // TODO: maybe add GLOB_BRACE later
 
@@ -3293,6 +3297,14 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
         for (int pi = 0; pi < candidate_count; pi++)
         {
             char* expanded = starstar ? SearchAndReplace(pattern, "**", candidates[pi]) : (char*) pattern;
+
+#ifdef _WIN32
+            if (strchr(expanded, '\\'))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Found backslash escape character in glob pattern '%s'. "
+                    "Was forward slash intended?", expanded);
+            }
+#endif
 
             if (0 == glob(expanded, globflags, NULL, &globbuf))
             {
@@ -3315,7 +3327,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
                 free(expanded);
             }
         }
-#endif /* __MINGW32__ */
     }
 
     // When no entries were found, mark the empty list
@@ -4266,7 +4277,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
             {
                 if (SeqLength(s) >= 4)
                 {
-                    strncpy(check_buffer, SeqAt(s, 3), CF_BUFSIZE);
+                    strlcpy(check_buffer, SeqAt(s, 3), CF_BUFSIZE);
                     check = check_buffer;
                 }
                 else
@@ -7009,6 +7020,13 @@ static const FnCallArg HASH_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg FILE_HASH_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File object name"},
+    {"md5,sha1,sha256,sha384,sha512", CF_DATA_TYPE_OPTION, "Hash or digest algorithm"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg HASHMATCH_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Filename to hash"},
@@ -7654,6 +7672,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("fileexists", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filesexist", CF_DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed",

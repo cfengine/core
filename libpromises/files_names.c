@@ -77,7 +77,7 @@ int IsNewerFileTree(const char *dir, time_t reftime)
                 continue;
             }
 
-            strncpy(path, dir, CF_BUFSIZE - 1);
+            strlcpy(path, dir, CF_BUFSIZE);
 
             if (!JoinPath(path, dirp->d_name))
             {
@@ -432,7 +432,7 @@ char *CanonifyName(const char *str)
 {
     static char buffer[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
 
-    strncpy(buffer, str, CF_BUFSIZE);
+    strlcpy(buffer, str, CF_BUFSIZE);
     CanonifyNameInPlace(buffer);
     return buffer;
 }
@@ -444,7 +444,7 @@ char *CanonifyChar(const char *str, char ch)
     static char buffer[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
     char *sp;
 
-    strncpy(buffer, str, CF_BUFSIZE - 1);
+    strlcpy(buffer, str, CF_BUFSIZE);
 
     for (sp = buffer; *sp != '\0'; sp++)
     {
@@ -510,7 +510,7 @@ int CompressPath(char *dest, const char *src)
     memset(dest, 0, CF_BUFSIZE);
 
     rootlen = RootDirLength(src);
-    strncpy(dest, src, rootlen);
+    memcpy(dest, src, rootlen);
 
     for (const char *sp = src + rootlen; *sp != '\0'; sp++)
     {
@@ -563,35 +563,6 @@ int CompressPath(char *dest, const char *src)
 }
 
 /*********************************************************************/
-
-int IsAbsoluteFileName(const char *f)
-{
-    int off = 0;
-
-// Check for quoted strings
-
-    for (off = 0; f[off] == '\"'; off++)
-    {
-    }
-
-#ifdef _WIN32
-    if (IsFileSep(f[off]) && IsFileSep(f[off + 1]))
-    {
-        return true;
-    }
-
-    if (isalpha(f[off]) && f[off + 1] == ':' && IsFileSep(f[off + 2]))
-    {
-        return true;
-    }
-#endif
-    if (f[off] == '/')
-    {
-        return true;
-    }
-
-    return false;
-}
 
 FilePathType FilePathGetType(const char *file_path)
 {

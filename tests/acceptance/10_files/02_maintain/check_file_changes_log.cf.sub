@@ -1,0 +1,60 @@
+# Checks whether the given content matches the content in
+# /var/cfengine/state/file_changes.log, but removes "unstable"
+# fields first (timestamp, promise ID, absolute path).
+#
+# The checks argument is a comma separated list of the following
+# options to check.
+#
+#   - check_mtime
+#   - sorted
+#
+# If the "check_*" flags are not given, those fields are filtered out
+# before comparing, since they are typically unstable.
+#
+# The "sorted" flag is to sort the log before comparing. This is
+# necessary for tests that depend on file system order, but the test
+# won't be as accurate.
+
+body file control
+{
+    inputs => { "../../plucked.cf.sub" };
+}
+
+bundle agent check_file_changes_log(file, pass_class, fail_class, checks)
+{
+  vars:
+      "classes_to_define" slist => splitstring($(checks), ",", 10);
+
+  classes:
+      "$(classes_to_define)" expression => "any";
+
+      "actual_exists" expression => fileexists("$(file).actual");
+
+  files:
+    !actual_exists::
+      "$(file).actual"
+        copy_from => local_cp("$(sys.workdir)/state/file_changes.log");
+    any::
+      "$(file).actual"
+        edit_line => remove_unstable_fields($(file));
+
+  methods:
+    sorted::
+      "any" usebundle => dcs_sort("$(file).actual", "$(file).actual.sort");
+      "any" usebundle => dcs_if_diff("$(file).actual.sort", "$(file)",
+                                     "$(pass_class)", "$(fail_class)");
+    !sorted::
+      "any" usebundle => dcs_if_diff("$(file).actual", "$(file)",
+                                     "$(pass_class)", "$(fail_class)");
+}
+
+bundle edit_line remove_unstable_fields(file)
+{
+  replace_patterns:
+      # Get rid of timestamp, promise ID and absolute path.
+      "^[0-9]+,[^,]*,[^,]+/"
+        replace_with => value("");
+  delete_lines:
+    !check_mtime::
+      ".*,S,Modified time:.*";
+}

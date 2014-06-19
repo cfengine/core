@@ -83,7 +83,7 @@ static void test_weird_chars_tolower(void)
     static const char *weirdstuff = "1345\0xff%$#@!";
 
     char weirdstuff_copy_lowercased[CF_MAXVARSIZE];
-    strncpy(weirdstuff_copy_lowercased, weirdstuff, CF_MAXVARSIZE);
+    strlcpy(weirdstuff_copy_lowercased, weirdstuff, CF_MAXVARSIZE);
     ToLowerStrInplace(weirdstuff_copy_lowercased);
 
     assert_string_equal(weirdstuff_copy_lowercased, weirdstuff);
@@ -92,7 +92,7 @@ static void test_weird_chars_tolower(void)
 static void test_alphabet_tolower(void)
 {
     char lo_alphabet_lowercased[CF_MAXVARSIZE];
-    strncpy(lo_alphabet_lowercased, lo_alphabet, CF_MAXVARSIZE);
+    strlcpy(lo_alphabet_lowercased, lo_alphabet, CF_MAXVARSIZE);
     ToLowerStrInplace(lo_alphabet_lowercased);
 
     assert_string_equal(lo_alphabet_lowercased, lo_alphabet);
@@ -101,7 +101,7 @@ static void test_alphabet_tolower(void)
 static void test_hi_alphabet_tolower(void)
 {
     char hi_alphabet_lowercased[CF_MAXVARSIZE];
-    strncpy(hi_alphabet_lowercased, hi_alphabet, CF_MAXVARSIZE);
+    strlcpy(hi_alphabet_lowercased, hi_alphabet, CF_MAXVARSIZE);
     ToLowerStrInplace(hi_alphabet_lowercased);
 
     assert_string_equal(hi_alphabet_lowercased, lo_alphabet);
@@ -138,7 +138,7 @@ static void test_weird_chars_toupper(void)
     static const char *weirdstuff = "1345\0xff%$#@!";
 
     char weirdstuff_copy_uppercased[CF_MAXVARSIZE];
-    strncpy(weirdstuff_copy_uppercased, weirdstuff, CF_MAXVARSIZE);
+    strlcpy(weirdstuff_copy_uppercased, weirdstuff, CF_MAXVARSIZE);
     ToUpperStrInplace(weirdstuff_copy_uppercased);
 
     assert_string_equal(weirdstuff_copy_uppercased, weirdstuff);
@@ -147,7 +147,7 @@ static void test_weird_chars_toupper(void)
 static void test_alphabet_toupper(void)
 {
     char lo_alphabet_uppercased[CF_MAXVARSIZE];
-    strncpy(lo_alphabet_uppercased, lo_alphabet, CF_MAXVARSIZE);
+    strlcpy(lo_alphabet_uppercased, lo_alphabet, CF_MAXVARSIZE);
     ToUpperStrInplace(lo_alphabet_uppercased);
 
     assert_string_equal(lo_alphabet_uppercased, hi_alphabet);
@@ -156,7 +156,7 @@ static void test_alphabet_toupper(void)
 static void test_hi_alphabet_toupper(void)
 {
     char hi_alphabet_uppercased[CF_MAXVARSIZE];
-    strncpy(hi_alphabet_uppercased, hi_alphabet, CF_MAXVARSIZE);
+    strlcpy(hi_alphabet_uppercased, hi_alphabet, CF_MAXVARSIZE);
     ToUpperStrInplace(hi_alphabet_uppercased);
 
     assert_string_equal(hi_alphabet_uppercased, hi_alphabet);

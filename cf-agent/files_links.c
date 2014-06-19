@@ -72,7 +72,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     }
     else
     {
-        strncpy(to, source, CF_BUFSIZE - 1);
+        strlcpy(to, source, CF_BUFSIZE);
     }
 
     if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */
@@ -328,7 +328,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
     }
     else
     {
-        strncpy(to, source, CF_BUFSIZE - 1);
+        strlcpy(to, source, CF_BUFSIZE);
     }
 
     if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */

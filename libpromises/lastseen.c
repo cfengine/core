@@ -482,29 +482,18 @@ clean:
 /*****************************************************************************/
 bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 {
-    DBHandle *db;
-    DBCursor *cursor;
-
-    if (!OpenDB(&db, dbid_lastseen))
+    StringMap *lastseen_db = LoadDatabaseToStringMap(dbid_lastseen);
+    if (!lastseen_db)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open lastseen database");
         return false;
     }
+    MapIterator it = MapIteratorInit(lastseen_db->impl);
+    MapKeyValue *item;
 
-    if (!NewDBCursor(db, &cursor))
-    {
-        Log(LOG_LEVEL_ERR, "Unable to create lastseen database cursor");
-        CloseDB(db);
-        return false;
-    }
-
-    char *key;
-    void *value;
-    int ksize, vsize;
     Seq *hostkeys = SeqNew(100, free);
-
-    while (NextDB(cursor, &key, &ksize, &value, &vsize))
+    while ((item = MapIteratorNext(&it)) != NULL)
     {
+        char *key = item->key;
         /* Only look for "keyhost" entries */
         if (key[0] != 'k')
         {
@@ -513,17 +502,15 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 
         SeqAppend(hostkeys, xstrdup(key + 1));
     }
-
-    DeleteDBCursor(cursor);
-    
     for (int i = 0; i < SeqLength(hostkeys); ++i)
     {
         const char *hostkey = SeqAt(hostkeys, i);
 
         char keyhost_key[CF_BUFSIZE];
         snprintf(keyhost_key, CF_BUFSIZE, "k%s", hostkey);
-        char address[CF_BUFSIZE];
-        if (!ReadDB(db, keyhost_key, &address, sizeof(address)))
+        char *address = NULL;
+        address = (char*)StringMapGet(lastseen_db, keyhost_key);
+        if (!address)
         {
             Log(LOG_LEVEL_ERR, "Failed to read address for key '%s'.", hostkey);
             continue;
@@ -531,10 +518,11 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 
         char incoming_key[CF_BUFSIZE];
         snprintf(incoming_key, CF_BUFSIZE, "qi%s", hostkey);
-        KeyHostSeen incoming;
-        if (ReadDB(db, incoming_key, &incoming, sizeof(incoming)))
+        KeyHostSeen *incoming = NULL;
+        incoming = (KeyHostSeen*)StringMapGet(lastseen_db, incoming_key);
+        if (incoming)
         {
-            if (!(*callback)(hostkey, address, true, &incoming, ctx))
+            if (!(*callback)(hostkey, address, true, incoming, ctx))
             {
                 break;
             }
@@ -542,19 +530,19 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 
         char outgoing_key[CF_BUFSIZE];
         snprintf(outgoing_key, CF_BUFSIZE, "qo%s", hostkey);
-        KeyHostSeen outgoing;
-        if (ReadDB(db, outgoing_key, &outgoing, sizeof(outgoing)))
+        KeyHostSeen *outgoing = NULL;
+        outgoing = (KeyHostSeen*)StringMapGet(lastseen_db, outgoing_key);
+        if (outgoing)
         {
-            if (!(*callback)(hostkey, address, false, &outgoing, ctx))
+            if (!(*callback)(hostkey, address, false, outgoing, ctx))
             {
                 break;
             }
         }
     }
 
+    StringMapDestroy(lastseen_db);
     SeqDestroy(hostkeys);
-
-    CloseDB(db);
 
     return true;
 }

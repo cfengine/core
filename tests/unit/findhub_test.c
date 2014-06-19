@@ -188,17 +188,18 @@ int avahi_simple_poll_loop(AvahiSimplePoll *sp)
     AvahiServiceResolver *sr = { (AvahiServiceResolver*)1 };
     switch(hostcount)
     {
-    case 0:
-        return 0;
-
     case 1:
         resolve_callback(sr, 0, 0, AVAHI_RESOLVER_FOUND, "cfenginehub", "tcp", "local", "host1", addr, 5308, NULL, 0, NULL);
         return 0;
+
     case 2:
         resolve_callback(sr, 0, 0, AVAHI_RESOLVER_FOUND, "cfenginehub", "tcp", "local", "host1", addr, 5308, NULL, 0, NULL);
         resolve_callback(sr, 0, 0, AVAHI_RESOLVER_FOUND, "cfenginehub", "tcp", "local", "host2", addr, 1234, NULL, 0, NULL);
         resolve_callback(sr, 0, 0, AVAHI_RESOLVER_FOUND, "cfenginehub", "tcp", "local", "host3", addr, 4321, NULL, 0, NULL);
         return 0;
+
+    default:
+        free(addr);
     };
 
     return 0;

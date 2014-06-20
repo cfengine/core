@@ -343,7 +343,6 @@ if test x"$with_openssl" = xno ; then
 fi
 
 CF3_WITH_LIBRARY(openssl, [
-   AC_CHECK_LIB(dl, dlopen, [], [])
    AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
    AC_CHECK_LIB(ssl, SSL_library_init, [], [])
    AC_CHECK_DECLS([SSL_CTX_clear_options], [], [], [[#include <openssl/ssl.h>]])
@@ -544,6 +543,7 @@ dnl ######################################################################
 
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(rt, clock_gettime)
+AC_CHECK_LIB(dl, dlopen)
 
 dnl ######################################################################
 dnl Check for special functions

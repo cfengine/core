@@ -21,14 +21,6 @@ AM_LDFLAGS = \
 	$(MYSQL_LDFLAGS) \
 	$(LIBXML2_LDFLAGS)
 
-if !FREEBSD
-if HAVE_AVAHI_COMMON
-if HAVE_AVAHI_CLIENT
-AM_LDFLAGS += -ldl
-endif
-endif
-endif
-
 libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \

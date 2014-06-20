@@ -1,0 +1,43 @@
+# Check whether file promises have a shorter expiry time than edit_line promises
+# resulting from templates. This will create an empty file because the file is
+# opened for editing, but all the edit_line promises have expired.
+
+body common control
+{
+    inputs => { "../../../dcs.cf.sub", "../../../plucked.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent test
+{
+  commands:
+      # Note, no -K, we are testing locks.
+      "$(sys.cf_agent) -v -D AUTO,DEBUG -f $(this.promise_filename).sub"
+        contain => in_shell;
+}
+
+bundle agent check
+{
+  methods:
+    test_pass_1::
+      "any" usebundle => dcs_wait($(this.promise_filename), 70);
+
+  vars:
+    test_pass_2::
+      "content_edit_line" string => readfile("$(G.testfile).edit_line", 10000);
+      "content_cftemplate" string => readfile("$(G.testfile).cftemplate", 10000);
+      "content_mustache" string => readfile("$(G.testfile).mustache", 10000);
+
+  classes:
+    test_pass_2::
+      "ok_edit_line" expression => strcmp($(content_edit_line), "text"),
+        scope => "namespace";
+      "ok_cftemplate" expression => strcmp($(content_cftemplate), "text"),
+        scope => "namespace";
+      "ok_mustache" expression => strcmp($(content_mustache), "text"),
+        scope => "namespace";
+
+  methods:
+    test_pass_2::
+      "any" usebundle => dcs_passif("ok_edit_line.ok_cftemplate.ok_mustache", $(this.promise_filename));
+}

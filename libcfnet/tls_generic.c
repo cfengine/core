@@ -720,9 +720,25 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
  */
 void TLSSetDefaultOptions(SSL_CTX *ssl_ctx)
 {
+#if HAVE_DECL_SSL_CTX_CLEAR_OPTIONS
     /* Clear all flags, we do not want compatibility tradeoffs like
      * SSL_OP_LEGACY_SERVER_CONNECT. */
     SSL_CTX_clear_options(ssl_ctx, SSL_CTX_get_options(ssl_ctx));
+#else
+    /* According to OpenSSL code v.0.9.8m, the first option to be added
+     * by default (SSL_OP_LEGACY_SERVER_CONNECT) was added at the same
+     * time SSL_CTX_clear_options appeared. Therefore, it is OK not to
+     * clear options if they are not set.
+     * If this assertion is proven to be false, output a clear warning
+     * to let the user know what happens. */
+    if (SSL_CTX_get_options(ssl_ctx) != 0)
+    {
+      Log(LOG_LEVEL_WARNING, "This version of CFEngine was compiled against OpenSSL < 0.9.8m, using it with a later OpenSSL version is insecure.");
+      Log(LOG_LEVEL_WARNING, "The current version uses compatibility workarounds that may allow CVE-2009-3555 exploitation.");
+      Log(LOG_LEVEL_WARNING, "Please update your CFEngine package or compile it against your current OpenSSL version.");
+    }
+#endif
+
 
     /* Use only TLS v1 or later.
        TODO policy option for SSL_OP_NO_TLSv{1,1_1} */
@@ -731,8 +747,10 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx)
     /* No session resumption or renegotiation for now. */
     options |= SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
 
-    /* Disable another way of resuption, session tickets (RFC 5077). */
+#ifdef SSL_OP_NO_TICKET
+    /* Disable another way of resumption, session tickets (RFC 5077). */
     options |= SSL_OP_NO_TICKET;
+#endif
 
     SSL_CTX_set_options(ssl_ctx, options);
 

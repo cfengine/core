@@ -1,10 +1,8 @@
 sbin_PROGRAMS = cf-upgrade
 
-LIBS=
-CORE_LIBS=
-cf_upgrade_CPPFLAGS=
-cf_upgrade_CFLAGS = $(CORE_CFLAGS)
-cf_upgrade_LDFLAGS = $(LIBS) $(CORE_LIBS)
+LIBS=				 # This tool should not link to anything
+AM_LDFLAGS=
+AM_CPPFLAGS=
 
 
 cf_upgrade_SOURCES = \

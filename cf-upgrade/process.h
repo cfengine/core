@@ -29,14 +29,14 @@
 #define RUN_PROCESS_FAILURE(x) \
     (x == RUN_PROCESS_FAILURE_VALUE) ? true : false;
 /**
-  @brief Runs the specified process and finishes the current one.
+  @brief Runs the specified process by replacing the current one.
   @param command Full path of the command to run.
   @param args Arguments for the program
   @param envp Environment to use.
   @return The exit status of the process or a negative value in case of error.
   @remarks This function does not return, unless there was an error.
   */
-int run_process_finish(const char *command, char **args, char **envp);
+int run_process_replace(const char *command, char **args, char **envp);
 /**
   @brief Runs the specified process and redirects the output to a file, waiting
   for the process to terminate.

@@ -11,7 +11,7 @@ executes, therefore if a package manager only returns 0, cf-upgrade has no way
 to identify problems.
 
 # Usage
-cf-upgrade accepts the following command-line arguments:
+cf-upgrade needs the following command-line arguments:
   * -b: backup script
   * -s: backup archive (full path including extension)
   * -f: CFEngine folder, by default /var/cfengine
@@ -21,6 +21,10 @@ Besides the main arguments, cf-upgrade accepts the following:
   * -h: print the help screen
   * -v: print the version
   * -c: Change the location of the copy of cf-upgrade. Default /tmp/cf-upgrade
+
+Hidden arguments for internal usage:
+  * -x: After cf-upgrade copies and re-executes itself, the original -i
+        argument will be replaced with -x, to flag that upgrade can start.
 
 # Some notes about the backup script
 The backup script could be written in any language, in fact it might even be a

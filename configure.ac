@@ -57,6 +57,44 @@ ENV_CFLAGS="$CFLAGS"
 CFLAGS=
 
 dnl ######################################################################
+dnl Checks for programs.
+dnl ######################################################################
+
+AC_PROG_CC
+AM_PROG_CC_C_O
+AC_PROG_MKDIR_P
+AC_EXEEXT
+
+# Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros
+m4_ifdef([LT_INIT],
+  [LT_INIT([disable-static])],
+  [AC_DISABLE_STATIC
+   AC_PROG_LIBTOOL])
+
+AM_PROG_LEX
+AC_PROG_YACC
+AC_PROG_INSTALL
+AC_CONFIG_LIBOBJ_DIR(libcompat)
+AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
+AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
+
+#
+# Add to the default list of places in CPPFLAGS to match LDFLAGS above
+# Don't add if cross-compiling (setting host), to avoid using native libs.
+#
+if test "x$cross_compiling" = "xno"; then
+  for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include
+  do
+    if test -d "$x"; then
+      y=`expr " $CPPFLAGS " : ".* -I$x "`
+      if test $y -eq 0; then
+        CPPFLAGS="$CPPFLAGS -I$x"
+      fi
+    fi
+  done
+fi
+
+dnl ######################################################################
 dnl Use pthreads if available
 dnl ######################################################################
 
@@ -77,44 +115,9 @@ CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
 dnl ######################################################################
-dnl Checks for programs.
+dnl Check for getloadavg()
 dnl ######################################################################
-
-AC_PROG_CC
-AM_PROG_CC_C_O
-AC_PROG_MKDIR_P
-AC_EXEEXT
-
-# Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros
-m4_ifdef([LT_INIT],
-  [LT_INIT([disable-static])],
-  [AC_DISABLE_STATIC
-   AC_PROG_LIBTOOL])
-
-AM_PROG_LEX
-AC_PROG_YACC
-AC_PROG_INSTALL
-AC_CONFIG_LIBOBJ_DIR(libcompat)
-AC_FUNC_GETLOADAVG 
-AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
-
-AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
-
-#
-# Add to the default list of places in CPPFLAGS to match LDFLAGS above
-# Don't add if cross-compiling (setting host), to avoid using native libs.
-#
-if test "x$cross_compiling" = "xno"; then
-  for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include
-  do
-    if test -d "$x"; then
-      y=`expr " $CPPFLAGS " : ".* -I$x "`
-      if test $y -eq 0; then
-        CPPFLAGS="$CPPFLAGS -I$x"
-      fi
-    fi
-  done
-fi
+AC_FUNC_GETLOADAVG
 
 dnl ######################################################################
 dnl Whether to build extensions as builtin extensions or a separate
@@ -987,7 +990,8 @@ AC_SUBST([CORE_LIBS])
 AC_CONFIG_FILES([configure_flags.env])
 
 dnl ######################################################################
-dnl And then use them.
+dnl TODO do not set all main flags here, but use them as needed in
+dnl subdirectories
 dnl ######################################################################
 
 CPPFLAGS="$CORE_CPPFLAGS"

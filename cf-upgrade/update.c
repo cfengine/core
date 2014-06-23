@@ -34,6 +34,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <assert.h>
+
 #ifndef __MINGW32__
 /* Unix implementation */
 int private_copy_to_temporary_location(const char *source, const char *destination)
@@ -293,9 +295,11 @@ int RunUpdate(const Configuration *configuration)
         {
             args[counter + i] = xstrdup(ConfigurationArgument(configuration, i));
         }
-        /* original, run the copy and die */
+        /* Replace current process with the copy. */
         args[counter + total] = NULL;
-        result = run_process_finish(copy, args, envp);
+        result = run_process_replace(copy, args, envp);
+
+        assert(false);
     }
     return 0;
 }

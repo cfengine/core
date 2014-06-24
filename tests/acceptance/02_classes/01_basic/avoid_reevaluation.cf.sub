@@ -1,0 +1,11 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { run };
+}
+
+bundle agent run
+{
+  classes:
+      "loquacious" expression => returnszero("$(G.echo) loquacious quaalude", "noshell");
+}

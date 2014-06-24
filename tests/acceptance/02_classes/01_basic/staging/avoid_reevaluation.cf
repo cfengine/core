@@ -1,0 +1,23 @@
+#######################################################
+#
+# Redmine#5241: do not reevaluate classes if they are known already
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_output(".*",
+                                        ".*loquacious quaalude.*",
+                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub -Dloquacious | $(G.grep) qua",
+                                        $(this.promise_filename));
+}

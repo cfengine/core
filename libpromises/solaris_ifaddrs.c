@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <net/if.h>
+#include <unistd.h>
 #include <solaris_ifaddrs.h>
 
 

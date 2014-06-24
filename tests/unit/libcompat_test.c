@@ -1,9 +1,14 @@
 #include <test.h>
+
 #include <cmockery.h>
 #include <string.h>
 
+
 /* Include the tested functions directly from libcompat! */
 #include <memmem.c>
+
+#define TEST_SNPRINTF 1
+#include <snprintf.c>
 
 
 /* TODO TEST MORE OF OUR libcompat REPLACEMENTS! */
@@ -95,12 +100,31 @@ static void test_memmem()
 }
 
 
+static void test_snprintf()
+{
+    int failures = snprintf_rigorous_test();
+
+    if (failures > 0)
+    {
+        puts("\n"
+            "=== WARNING your system's printf() generates different results ===\n"
+            "=== than our printf() in libcompat! ===\n"
+            "=== This is not a necessarily a bug, since this test has lots ===\n"
+            "=== of requirements to run properly, so testsuite result is not affected. ===\n"
+            "=== However it might indicate that printf() in your system's libc is buggy. ===\n"
+            );
+    }
+}
+
+
 int main()
 {
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_memmem)
+        unit_test(test_memmem),
+        unit_test(test_snprintf)
+        /* TODO test rpl_fprintf() outputs short and long strings correctly to a file. */
     };
 
     int ret = run_tests(tests);

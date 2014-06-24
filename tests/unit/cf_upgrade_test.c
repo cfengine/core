@@ -1,4 +1,5 @@
 #include <test.h>
+
 #include <stdlib.h>
 #include <cmockery.h>
 #include <configuration.h>

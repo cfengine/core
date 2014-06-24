@@ -1,7 +1,6 @@
-#include <platform.h>
+#include <test.h>
 
 #include <compiler.h>
-#include <test.h>
 #include <process_lib.h>
 #include <process_unix_priv.h>
 

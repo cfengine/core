@@ -179,6 +179,51 @@ void HashMapDestroy(HashMap *map)
     }
 }
 
+void HashMapPrintStats(const HashMap *hmap, FILE *f)
+{
+    size_t bucket_lengths[HASHMAP_BUCKETS] = { 0 };
+    size_t num_el = 0;
+    size_t num_buckets = 0;
+
+    for (int i = 0; i < HASHMAP_BUCKETS; i++)
+    {
+        BucketListItem *b = hmap->buckets[i];
+        if (b != NULL)
+        {
+            num_buckets++;
+        }
+        while (b != NULL)
+        {
+            num_el++;
+            bucket_lengths[i]++;
+            b = b->next;
+        }
+
+    }
+
+    fprintf(f, "\tTotal number of buckets:     %5d\n", HASHMAP_BUCKETS);
+    fprintf(f, "\tNumber of non-empty buckets: %5zu\n", num_buckets);
+    fprintf(f, "\tTotal number of elements:    %5zu\n", num_el);
+    fprintf(f, "\tAverage elements per non-empty bucket (load factor): %5.2f\n",
+            (float) num_el / num_buckets);
+
+    fprintf(f, "\tThe 10 longest buckets are: \n");
+    for (int j = 0; j < 10; j++)
+    {
+        /* Find the maximum 10 times, zeroing it after printing it. */
+        int longest_bucket_id = 0;
+        for (int i = 0; i < HASHMAP_BUCKETS; i++)
+        {
+            if (bucket_lengths[i] > bucket_lengths[longest_bucket_id])
+            {
+                longest_bucket_id = i;
+            }
+        }
+        fprintf(f, "\t\tbucket %5d with %zu elements\n",
+                longest_bucket_id, bucket_lengths[longest_bucket_id]);
+        bucket_lengths[longest_bucket_id] = 0;
+    }
+}
 /******************************************************************************/
 
 HashMapIterator HashMapIteratorInit(HashMap *map)

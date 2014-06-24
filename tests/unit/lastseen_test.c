@@ -1,6 +1,7 @@
+#include <test.h>
+
 #include <cf3.defs.h>
 #include <dbm_api.h>
-#include <test.h>
 #include <lastseen.h>
 #include <item_lib.h>
 

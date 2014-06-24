@@ -183,7 +183,7 @@ ipaddress_test_SOURCES = ipaddress_test.c
 
 protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/server_common.c \
-	../../cf-serverd/tls_server.c \
+	../../cf-serverd/server_tls.c \
 	../../cf-serverd/server.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c \
 	../../cf-serverd/server_transform.c \
@@ -199,7 +199,7 @@ findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/lo
 
 avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server_common.c \
-	../../cf-serverd/tls_server.c \
+	../../cf-serverd/server_tls.c \
 	../../cf-serverd/server.c \
 	../../cf-serverd/server_transform.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c \
@@ -210,20 +210,9 @@ avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 endif
 endif
-#
-# file_writer_test overrides fclose(3) which causes gcov to fail as gcov
-# instrumentation code uses fclose(3).
-#
 
-if MACOSX
-file_writer_test_CFLAGS = $(AM_CFLAGS)
-else
-file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
-endif
-
+file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
-file_writer_test_LDADD = libstr.la
-file_writer_test_LDFLAGS =
 
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la
@@ -268,7 +257,7 @@ logging_test_LDADD = libtest.la
 logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging.h
 logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
 
-connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/tls_server.c
+connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \
@@ -319,7 +308,9 @@ exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c ../../cf-execd/execd-config.c
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la
+sysinfo_test_LDADD = libtest.la \
+	../../libenv/libenv.la \
+	../../libpromises/libpromises.la
 
 mon_cpu_test_SOURCES = mon_cpu_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_cpu.c
 mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la
@@ -333,14 +324,12 @@ mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 # tls_generic_test uses stub functions interposition which does not work (yet)
 # under OS X. Another way of stubbing functions from libpromises is needed.
 if !XNU
-if !SOLARIS # tls_generic_test is broken under solaris
 check_PROGRAMS += tls_generic_test
 tls_generic_test_SOURCES = tls_generic_test.c
 tls_generic_test_LDADD = libtest.la \
 	../../libutils/libutils.la \
 	../../libpromises/libpromises.la \
 	../../libcfnet/libcfnet.la
-endif
 endif
 
 version_test_SOURCES = version_test.c

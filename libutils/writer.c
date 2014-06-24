@@ -126,7 +126,11 @@ static size_t FileWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
     size_t len = strnlen(str, len_);
 
+#ifdef CFENGINE_TEST
+    return CFENGINE_TEST_fwrite(str, 1, len, writer->file);
+#else
     return fwrite(str, 1, len, writer->file);
+#endif
 }
 
 /*********************************************************************/
@@ -232,7 +236,11 @@ void WriterClose(Writer *writer)
     }
     else
     {
+#ifdef CFENGINE_TEST
+        CFENGINE_TEST_fclose(writer->file);
+#else
         fclose(writer->file);
+#endif
     }
     free(writer);
 }

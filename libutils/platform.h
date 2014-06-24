@@ -403,6 +403,10 @@ typedef int socklen_t;
 #  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP PTHREAD_MUTEX_INITIALIZER
 #endif
 
+#if !HAVE_DECL_GETLOADAVG
+int getloadavg (double loadavg[], int nelem);
+#endif
+
 #if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 #endif
@@ -551,13 +555,20 @@ int setegid(gid_t egid);
 #if !HAVE_DECL_SETLINEBUF
 void setlinebuf(FILE *stream);
 #endif
+
 #if HAVE_STDARG_H
 # include <stdarg.h>
 # if !HAVE_VSNPRINTF
 int rpl_vsnprintf(char *, size_t, const char *, va_list);
+/* If [v]snprintf() does not exist or is not C99 compatible, then we assume
+ * that [v]printf() and [v]fprintf() need to be provided as well. */
+int rpl_vprintf(const char *format, va_list ap);
+int rpl_vfprintf(FILE *stream, const char *format, va_list ap);
 # endif
 # if !HAVE_SNPRINTF
 int rpl_snprintf(char *, size_t, const char *, ...);
+int rpl_printf(const char *format, ...);
+int rpl_fprintf(FILE *stream, const char *format, ...);
 # endif
 # if !HAVE_VASPRINTF
 int rpl_vasprintf(char **, const char *, va_list);
@@ -566,9 +577,13 @@ int rpl_vasprintf(char **, const char *, va_list);
 int rpl_asprintf(char **, const char *, ...);
 # endif
 #endif /* HAVE_STDARG_H */
-#if !defined(isfinite)
+
+/* For example Solaris, does not have isfinite() in <math.h>. */
+#if !HAVE_DECL_ISFINITE
+# include <ieeefp.h>
 # define isfinite(x) finite(x)
 #endif
+
 #if !HAVE_DECL_GETLINE
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 #endif
@@ -898,6 +913,7 @@ struct timespec
 #endif
 
 /* Must be always the last one! */
+#include <deprecated.h>
 #include <config.post.h>
 
 

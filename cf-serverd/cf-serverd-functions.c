@@ -35,7 +35,7 @@
 #include <exec_tools.h>
 #include <unix.h>
 #include <man.h>
-#include <tls_server.h>                              /* ServerTLSInitialize */
+#include <server_tls.h>                              /* ServerTLSInitialize */
 #include <timeout.h>
 #include <unix_iface.h>
 #include <known_dirs.h>
@@ -366,7 +366,8 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
 
         if (GenericAgentArePromisesValid(config))
         {
-            Log(LOG_LEVEL_INFO, "Rereading policy file '%s'", config->input_file);
+            Log(LOG_LEVEL_NOTICE, "Rereading policy file '%s'",
+                config->input_file);
 
             /* STEP 1: Free everything */
 

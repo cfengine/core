@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <stdint.h>
 #include <ctype.h>
 #include <alloc.h>

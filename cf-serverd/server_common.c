@@ -80,7 +80,7 @@ void RefuseAccess(ServerConnectionState *conn, char *errmesg)
         username, ipaddr, errmesg);
 }
 
-bool IsUserNameValid(char *username)
+bool IsUserNameValid(const char *username)
 {
     /* Add whatever characters are considered invalid in username */
     const char *invalid_username_characters = "\\/";
@@ -656,7 +656,8 @@ void CfGetFile(ServerFileGetState *args)
 
     stat(filename, &sb);
 
-    Log(LOG_LEVEL_DEBUG, "CfGetFile('%s'), size = %" PRIdMAX, filename, (intmax_t) sb.st_size);
+    Log(LOG_LEVEL_DEBUG, "CfGetFile('%s'), size = %jd",
+        filename, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 
@@ -751,7 +752,9 @@ void CfGetFile(ServerFileGetState *args)
                         }
                     }
 
-                    Log(LOG_LEVEL_DEBUG, "Aborting transfer after %" PRIdMAX ": file is changing rapidly at source.", (intmax_t)total);
+                    Log(LOG_LEVEL_DEBUG,
+                        "Aborting transfer after %jd: file is changing rapidly at source.",
+                        (intmax_t) total);
                     break;
                 }
 
@@ -812,7 +815,8 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
     stat(filename, &sb);
 
-    Log(LOG_LEVEL_DEBUG, "CfEncryptGetFile('%s'), size = %" PRIdMAX, filename, (intmax_t) sb.st_size);
+    Log(LOG_LEVEL_DEBUG, "CfEncryptGetFile('%s'), size = %jd",
+        filename, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 
@@ -1063,13 +1067,16 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
     /* send as plain text */
 
-    Log(LOG_LEVEL_DEBUG, "OK: type = %d, mode = %" PRIoMAX ", lmode = %" PRIoMAX ", uid = %" PRIuMAX ", gid = %" PRIuMAX ", size = %" PRIdMAX ", atime=%" PRIdMAX ", mtime = %" PRIdMAX,
-            cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (uintmax_t)cfst.cf_uid, (uintmax_t)cfst.cf_gid, (intmax_t) cfst.cf_size,
-            (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
+    Log(LOG_LEVEL_DEBUG, "OK: type = %d, mode = %jo, lmode = %jo, "
+        "uid = %ju, gid = %ju, size = %jd, atime=%jd, mtime = %jd",
+        cfst.cf_type, (uintmax_t) cfst.cf_mode, (uintmax_t) cfst.cf_lmode,
+        (uintmax_t) cfst.cf_uid, (uintmax_t) cfst.cf_gid, (intmax_t) cfst.cf_size,
+        (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
-    snprintf(sendbuffer, CF_BUFSIZE, "OK: %d %ju %ju %ju %ju %jd %jd %jd %jd %d %d %d %jd",
-             cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode,
-             (uintmax_t)cfst.cf_uid, (uintmax_t)cfst.cf_gid, (intmax_t)cfst.cf_size,
+    snprintf(sendbuffer, CF_BUFSIZE,
+             "OK: %d %ju %ju %ju %ju %jd %jd %jd %jd %d %d %d %jd",
+             cfst.cf_type, (uintmax_t) cfst.cf_mode, (uintmax_t) cfst.cf_lmode,
+             (uintmax_t) cfst.cf_uid, (uintmax_t) cfst.cf_gid,   (intmax_t) cfst.cf_size,
              (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime, (intmax_t) cfst.cf_ctime,
              cfst.cf_makeholes, cfst.cf_ino, cfst.cf_nlink, (intmax_t) cfst.cf_dev);
 

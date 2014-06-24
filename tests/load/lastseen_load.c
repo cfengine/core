@@ -38,7 +38,6 @@ int main()
 }
 
 /* STUBS */
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 void FatalError(char *s, ...)
 {

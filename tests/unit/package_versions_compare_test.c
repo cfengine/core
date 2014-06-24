@@ -1,9 +1,8 @@
-#include <cf3.defs.h>
+#include <test.h>
 
+#include <cf3.defs.h>
 #include <eval_context.h>
 #include <verify_packages.h>
-
-#include <test.h>
 
 void test_different_name(void)
 {

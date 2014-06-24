@@ -736,7 +736,7 @@ check_and_run_timed_tests() {
         TESTS_TIMED_REMAINING=$(($TESTS_TIMED_REMAINING - 1))
       fi
     fi
-    TEST_TIMED_INDEX=$((TEST_TIMED_INDEX+1))
+    TEST_TIMED_INDEX=$(($TEST_TIMED_INDEX+1))
   done
 }
 

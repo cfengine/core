@@ -27,6 +27,8 @@ Makefile.in
 /stamp-h1
 /ylwrap
 /test-driver
+/tests/unit/*.log
+/tests/load/*.log
 
 /configure_flags.env
 

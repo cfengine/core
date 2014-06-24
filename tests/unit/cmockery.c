@@ -873,11 +873,11 @@ static int value_in_set_display_error(const LargestIntegralType value,
         {
             return 1;
         }
-        print_error(LargestIntegralTypePrintfFormat " is %sin the set (",
+        print_error(LargestIntegralTypePrintfDecimal " is %sin the set (",
                     value, invert ? "" : "not ");
         for (i = 0; i < size_of_set; i++)
         {
-            print_error(LargestIntegralTypePrintfFormat ", ", set[i]);
+            print_error(LargestIntegralTypePrintfDecimal ", ", set[i]);
         }
         print_error(")\n");
     }
@@ -894,8 +894,8 @@ static int integer_in_range_display_error(const LargestIntegralType value, const
     {
         return 1;
     }
-    print_error(LargestIntegralTypePrintfFormat " is not within the range "
-                LargestIntegralTypePrintfFormat "-" LargestIntegralTypePrintfFormat "\n",
+    print_error(LargestIntegralTypePrintfDecimal " is not within the range "
+                LargestIntegralTypePrintfDecimal "-" LargestIntegralTypePrintfDecimal "\n",
                 value, range_min, range_max);
     return 0;
 }
@@ -910,8 +910,8 @@ static int integer_not_in_range_display_error(const LargestIntegralType value, c
     {
         return 1;
     }
-    print_error(LargestIntegralTypePrintfFormat " is within the range "
-                LargestIntegralTypePrintfFormat "-" LargestIntegralTypePrintfFormat "\n",
+    print_error(LargestIntegralTypePrintfDecimal " is within the range "
+                LargestIntegralTypePrintfDecimal "-" LargestIntegralTypePrintfDecimal "\n",
                 value, range_min, range_max);
     return 0;
 }

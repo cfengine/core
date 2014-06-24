@@ -30,7 +30,7 @@ static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
 
-static void *contend(ARG_UNUSED void *param)
+void *contend(void *param)
 {
     CF_DB *db;
 
@@ -246,7 +246,6 @@ static void DBWriteTestData(CF_DB *db)
 }
 
 /* Stub out */
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 void FatalError(const EvalContext *ctx, char *fmt, ...)
 {

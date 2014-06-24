@@ -61,7 +61,6 @@ dnl Checks for programs.
 dnl ######################################################################
 
 AC_PROG_CC
-AM_PROG_CC_C_O
 AC_PROG_MKDIR_P
 AC_EXEEXT
 

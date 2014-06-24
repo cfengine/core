@@ -12,8 +12,6 @@
 #include <cmockery.h>
 #include <stdio.h>
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 
 /* Use this define for specific overrides inside all our source tree. */
 #define CFENGINE_TEST

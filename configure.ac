@@ -65,6 +65,9 @@ AM_PROG_CC_C_O
 AC_PROG_MKDIR_P
 AC_EXEEXT
 
+dnl GCC specific flags
+m4_include([m4/cf3_gcc_flags.m4])
+
 # Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros
 m4_ifdef([LT_INIT],
   [LT_INIT([disable-static])],
@@ -1176,13 +1179,6 @@ AC_PATH_PROG(HOSTNAME, hostname, "", $PATH)
 
 AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`", [Special CFEngine symbol])
 AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Speial CFEngine symbol])
-
-
-dnl #####################################################################
-dnl GCC flags
-dnl #####################################################################
-
-m4_include([m4/cf3_gcc_flags.m4])
 
 
 dnl #####################################################################

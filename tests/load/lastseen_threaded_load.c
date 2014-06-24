@@ -179,12 +179,14 @@ void *scanlastseen_worker_thread(void *arg)
 
 unsigned long child_COUNTER;
 int PIPE_FD[2];
+FILE *PARENT_INPUT;
 bool child_START = false;
 
-void print_progress_handler(int signum ARG_UNUSED)
+void print_progress_sighandler(int signum ARG_UNUSED)
 {
-    printf("%5lu", child_COUNTER); putc('\0', stdout);
-    fflush(stdout);
+    fprintf(PARENT_INPUT, "%5lu", child_COUNTER);
+    putc('\0', PARENT_INPUT);
+    fflush(PARENT_INPUT);
 
     child_COUNTER = 0;
 }
@@ -202,11 +204,6 @@ void worker_process()
     struct sigaction new_handler;
     int ret;
 
-    /* 0. Output stdout to pipe. */
-    close(1);
-    dup(PIPE_FD[1]);
-    close(PIPE_FD[1]);
-
     /* 1a. Register SIGUSR1 handler so that we start/finish the test */
     new_handler = (struct sigaction) { .sa_handler = startstop_handler };
     sigemptyset(&new_handler.sa_mask);
@@ -218,7 +215,7 @@ void worker_process()
     }
 
     /* 1b. Register SIGUSR2 handler so that we report progress when pinged */
-    new_handler = (struct sigaction) { .sa_handler = print_progress_handler };
+    new_handler = (struct sigaction) { .sa_handler = print_progress_sighandler };
     sigemptyset(&new_handler.sa_mask);
     ret = sigaction(SIGUSR2, &new_handler, NULL);
     if (ret != 0)
@@ -381,6 +378,7 @@ to the same database.\n\n",
 
 int main(int argc, char *argv[])
 {
+    int ret;
     int lastsaw_num_threads, keycount_num_threads, scanlastseen_num_threads;
     const int total_num_children = 1;
 
@@ -402,17 +400,19 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     printf("Work directory: %s\n", CFWORKDIR);
-    /* char envvar[CF_BUFSIZE]; */
-    /* snprintf(envvar, sizeof(envvar), "TEST_CFENGINE_OVERRIDE_WORKDIR=%s", */
-    /*          CFWORKDIR); */
-    /* putenv(envvar); */
 
     START_TIME = time(NULL);
 
 
     /* === SPAWN A CHILD PROCESS FOR LATER === */
 
-    pipe(PIPE_FD);
+    ret = pipe(PIPE_FD);
+    if (ret != 0)
+    {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
     pid_t child = fork();
     if (child == -1)
     {
@@ -421,14 +421,24 @@ int main(int argc, char *argv[])
     }
     else if (child == 0)
     {
+        /* We only write to the pipe. */
         close(PIPE_FD[0]);
+        /* Connect pipe to a FILE to talk to parent via fprintf(). */
+        PARENT_INPUT = fdopen(PIPE_FD[1], "w");
+        if (PARENT_INPUT == NULL)
+        {
+            perror("child fdopen");
+            exit(EXIT_FAILURE);
+        }
+
         worker_process();
         exit(EXIT_SUCCESS);
     }
 
-    /* For now we support only one child process. */
-    CHILDREN_OUTPUTS[0] = PIPE_FD[0];
+    /* We only read from the pipe. */
     close(PIPE_FD[1]);
+    CHILDREN_OUTPUTS[0] = PIPE_FD[0];
+
     printf("Operations per second:\n\n");
 
     /* === CREATE WORKER THREADS === */

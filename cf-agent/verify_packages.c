@@ -2201,9 +2201,9 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
         // Note this loop will run if rp is NULL
         for (rp = a2.packages.package_architectures; ; rp = rp->next)
         {
-            strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, a2.packages.package_version, CF_MAXVARSIZE - 1);
-            strncpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE - 1);
+            strlcpy(name, pp->promiser, CF_MAXVARSIZE);
+            strlcpy(version, a2.packages.package_version, CF_MAXVARSIZE);
+            strlcpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
@@ -2223,9 +2223,9 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
     else if (a2.packages.package_version_regex) // version is not given, but a version regex is
     {
         /* The name, version and arch are to be extracted from the promiser */
-        strncpy(version, ExtractFirstReference(a2.packages.package_version_regex, package), CF_MAXVARSIZE - 1);
-        strncpy(name, ExtractFirstReference(a2.packages.package_name_regex, package), CF_MAXVARSIZE - 1);
-        strncpy(arch, ExtractFirstReference(a2.packages.package_arch_regex, package), CF_MAXVARSIZE - 1);
+        strlcpy(version, ExtractFirstReference(a2.packages.package_version_regex, package), CF_MAXVARSIZE);
+        strlcpy(name, ExtractFirstReference(a2.packages.package_name_regex, package), CF_MAXVARSIZE);
+        strlcpy(arch, ExtractFirstReference(a2.packages.package_arch_regex, package), CF_MAXVARSIZE);
         installed = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed]", &result);
         matches = PatchMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
 
@@ -2243,9 +2243,9 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
         // Note this loop will run if rp is NULL
         for (rp = a2.packages.package_architectures; ; rp = rp->next)
         {
-            strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, "*", CF_MAXVARSIZE - 1);
-            strncpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE - 1);
+            strlcpy(name, pp->promiser, CF_MAXVARSIZE);
+            strlcpy(version, "*", CF_MAXVARSIZE);
+            strlcpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
@@ -2334,12 +2334,12 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, const
 
         if (!arch[0])
         {
-            strncpy(arch, "*", CF_MAXVARSIZE - 1);
+            strlcpy(arch, "*", CF_MAXVARSIZE);
         }
 
         if (strcmp(arch, "CF_NOMATCH") == 0)    // no match on arch regex, use any arch
         {
-            strcpy(arch, "*");
+            strlcpy(arch, "*", CF_MAXVARSIZE);
         }
 
         Log(LOG_LEVEL_VERBOSE, " ... trying arch '%s' and version '%s'", arch, version);

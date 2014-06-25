@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include <cf3.defs.h>
+#include <file_lib.h>
 
 #include <mutex.h>                                            /* ThreadLock */
 #include <dbm_api.h>
@@ -76,6 +76,7 @@ static const char *const DB_PATHS[] = {
     [dbid_performance] = "performance",
     [dbid_checksums] = "checksum_digests",
     [dbid_filestats] = "stats",
+    [dbid_changes] = "state/cf_changes",
     [dbid_observations] = "state/cf_observations",
     [dbid_state] = "state/cf_state",
     [dbid_lastseen] = "cf_lastseen",

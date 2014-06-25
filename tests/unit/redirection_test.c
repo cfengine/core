@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     PRINT_TEST_BANNER();
     /* Find the proper path for our helper */
     char *base = dirname(argv[0]);
-    char helper = "/redirection_test_stub";
+    char *helper = "/redirection_test_stub";
     sprintf(path, "%s%s", base, helper);
     const UnitTest tests[] =
     {

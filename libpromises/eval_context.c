@@ -242,7 +242,7 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
     }
     else
     {
-         strncpy(copy, context, CF_MAXVARSIZE);
+         strlcpy(copy, context, CF_MAXVARSIZE);
     }
 
     if (Chop(copy, CF_EXPANDSIZE) == -1)
@@ -1306,7 +1306,7 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
         }
         else
         {
-            strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
+            strlcpy(context_copy, canonified_context, CF_MAXVARSIZE);
         }
 
         if (strlen(context_copy) == 0)

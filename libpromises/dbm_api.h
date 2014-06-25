@@ -32,8 +32,9 @@ typedef enum
     dbid_classes,
     dbid_variables,
     dbid_performance,
-    dbid_checksums,
-    dbid_filestats,
+    dbid_checksums, // Deprecated
+    dbid_filestats, // Deprecated
+    dbid_changes,
     dbid_observations,
     dbid_state,
     dbid_lastseen,

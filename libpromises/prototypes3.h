@@ -95,9 +95,6 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
 /* patches.c */
 
 int IsPrivileged(void);
-char *MapName(char *s);
-char *MapNameCopy(const char *s);
-char *MapNameForward(char *s);
 char *cf_strtimestamp_local(const time_t time, char *buf);
 char *cf_strtimestamp_utc(const time_t time, char *buf);
 int cf_closesocket(int sd);

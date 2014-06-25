@@ -25,6 +25,7 @@
 #include <dir.h>
 #include <dir_priv.h>
 #include <file_lib.h>
+#include <alloc.h>
 
 
 struct Dir_

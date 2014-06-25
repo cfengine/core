@@ -113,9 +113,29 @@ void SeqAppendSeq(Seq *seq, const Seq *items);
 void *SeqLookup(Seq *seq, const void *key, SeqItemComparator Compare);
 
 /**
+ * @brief Performs a binary search looking for the item matching the given key.
+ *        It is the programmer's responsibility to make sure that the sequence is already sorted.
+ * @param seq [in] The Sequence to search.
+ * @param key [in] The item to compare against.
+ * @param compare [in] Comparator function to use (return value has strcmp semantics).
+ * @returns A pointer to the found item, or NULL if not found.
+ */
+void *SeqBinaryLookup(Seq *seq, const void *key, SeqItemComparator Compare);
+
+/**
   @brief Linearly searches through the sequence and returns the index of the first matching object, or -1 if it doesn't exist.
   */
 ssize_t SeqIndexOf(Seq *seq, const void *key, SeqItemComparator Compare);
+
+/**
+ * @brief Performs a binary search looking for the item matching the given key.
+ *        It is the programmer's responsibility to make sure that the sequence is already sorted.
+ * @param seq [in] The Sequence to search.
+ * @param key [in] The item to compare against.
+ * @param compare [in] Comparator function to use (return value has strcmp semantics).
+ * @returns The index of the item, or -1 if it is not found.
+ */
+ssize_t SeqBinaryIndexOf(Seq *seq, const void *key, SeqItemComparator Compare);
 
 /**
   @brief Remove an inclusive range of items in the Sequence. A single item may be removed by specifiying start = end.
@@ -136,6 +156,13 @@ void SeqRemove(Seq *seq, size_t index);
   @param user_data [in] Pointer passed to the comparator function
   */
 void SeqSort(Seq *seq, SeqItemComparator compare, void *user_data);
+
+/**
+  @brief Returns a soft copy of the sequence sorted according to the given item comparator function.
+  @param compare [in] The comparator function used for sorting.
+  @param user_data [in] Pointer passed to the comparator function
+  */
+Seq *SeqSoftSort(const Seq *seq, SeqItemComparator compare, void *user_data);
 
 /**
   @brief Remove an inclusive range of item handles in the Sequence. A single item may be removed by specifiying start = end.
@@ -175,6 +202,6 @@ void SeqClear(Seq *seq);
   @param [in] end End index which will be included into.
   @return A pointer to sub sequence, NULL on error.
   */
-Seq *SeqGetRange(Seq *seq, size_t start, size_t end);
+Seq *SeqGetRange(const Seq *seq, size_t start, size_t end);
 
 #endif

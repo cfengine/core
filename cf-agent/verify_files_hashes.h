@@ -32,8 +32,4 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
 int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
 int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
 
-PromiseResult PurgeHashes(EvalContext *ctx, char *file, Attributes attr, const Promise *pp) FUNC_WARN_UNUSED_RESULT;
-
-void LogHashChange(const char *file, FileState status, char *msg, const Promise *pp);
-
 #endif

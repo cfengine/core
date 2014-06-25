@@ -1441,7 +1441,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     int len = 0;
 
     memset(buf, 0, sizeof(buf));
-    strncpy(buf, string, sizeof(buf) - 1);
+    strlcpy(buf, string, sizeof(buf));
     len = strlen(buf);
 
     if (!strcmp(fp->name, "string_downcase"))
@@ -1476,7 +1476,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_head"))
     {
-        long max = IntFromString(RlistScalarValue(finalargs->next));
+        const long max = IntFromString(RlistScalarValue(finalargs->next));
         if (max < sizeof(buf))
         {
             buf[max] = '\0';
@@ -1484,7 +1484,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_tail"))
     {
-        long max = IntFromString(RlistScalarValue(finalargs->next));
+        const long max = IntFromString(RlistScalarValue(finalargs->next));
         if (max < len)
         {
             strncpy(buf, string + len - max, sizeof(buf) - 1);
@@ -2567,7 +2567,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED const Policy *pol
     }
     else
     {
-        strncpy(naked, listvar, CF_MAXVARSIZE - 1);
+        strlcpy(naked, listvar, CF_MAXVARSIZE);
     }
 
     VarRef *ref = VarRefParse(naked);
@@ -4266,7 +4266,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
             {
                 if (SeqLength(s) >= 4)
                 {
-                    strncpy(check_buffer, SeqAt(s, 3), CF_BUFSIZE);
+                    strlcpy(check_buffer, SeqAt(s, 3), CF_BUFSIZE);
                     check = check_buffer;
                 }
                 else

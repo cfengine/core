@@ -987,8 +987,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_QUERY:
     {
         char query[256], name[128];
-        int ret1 = sscanf(recvbuffer, "QUERY %256[^\n]", query);
-        int ret2 = sscanf(recvbuffer, "QUERY %128s", name);
+        int ret1 = sscanf(recvbuffer, "QUERY %255[^\n]", query);
+        int ret2 = sscanf(recvbuffer, "QUERY %127s", name);
         if (ret1 != 1 || ret2 != 1)
         {
             goto protocol_error;

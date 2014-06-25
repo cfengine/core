@@ -288,7 +288,7 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 
         if ((hp = gethostbyname(fqn)))
         {
-            strncpy(dnsname, hp->h_name, CF_MAXVARSIZE);
+            strlcpy(dnsname, hp->h_name, CF_MAXVARSIZE);
             ToLowerStrInplace(dnsname);
         }
     }
@@ -391,7 +391,7 @@ static void GetNameInfo3(EvalContext *ctx)
 
 #ifdef _AIX
     snprintf(real_version, _SYS_NMLN, "%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
-    strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
+    strlcpy(VSYSNAME.release, real_version, _SYS_NMLN);
 #endif
 #ifdef __ANDROID__
     /*
@@ -407,13 +407,13 @@ static void GetNameInfo3(EvalContext *ctx)
     switch (_system_configuration.architecture)
     {
     case POWER_RS:
-        strncpy(VSYSNAME.machine, "power", _SYS_NMLN);
+        strlcpy(VSYSNAME.machine, "power", _SYS_NMLN);
         break;
     case POWER_PC:
-        strncpy(VSYSNAME.machine, "powerpc", _SYS_NMLN);
+        strlcpy(VSYSNAME.machine, "powerpc", _SYS_NMLN);
         break;
     case IA64:
-        strncpy(VSYSNAME.machine, "ia64", _SYS_NMLN);
+        strlcpy(VSYSNAME.machine, "ia64", _SYS_NMLN);
         break;
     }
 #endif
@@ -1056,8 +1056,8 @@ static void OSClasses(EvalContext *ctx)
 
 #else
 
-    char vbuff[CF_BUFSIZE];
-    strncpy(vbuff, VSYSNAME.release, CF_MAXVARSIZE);
+    char vbuff[CF_MAXVARSIZE];
+    strlcpy(vbuff, VSYSNAME.release, CF_MAXVARSIZE);
 
     for (char *sp = vbuff; *sp != '\0'; sp++)
     {

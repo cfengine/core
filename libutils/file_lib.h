@@ -67,6 +67,24 @@ int IsDirReal(const char *path);
  */
 NewLineMode FileNewLineMode(const char *file);
 
+/* File node separator (cygwin can use \ or / but prefer \ for communicating
+ * with native windows commands). */
+
+#ifdef _WIN32
+# define IsFileSep(c) ((c) == '\\' || (c) == '/')
+# define FILE_SEPARATOR '\\'
+# define FILE_SEPARATOR_STR "\\"
+#else
+# define IsFileSep(c) ((c) == '/')
+# define FILE_SEPARATOR '/'
+# define FILE_SEPARATOR_STR "/"
+#endif
+
+bool IsAbsoluteFileName(const char *f);
+char *MapName(char *s);
+char *MapNameCopy(const char *s);
+char *MapNameForward(char *s);
+
 int safe_open(const char *pathname, int flags, ...);
 FILE *safe_fopen(const char *path, const char *mode);
 
@@ -77,5 +95,13 @@ int safe_chmod(const char *path, mode_t mode);
 int safe_lchown(const char *path, uid_t owner, gid_t group);
 #endif
 int safe_creat(const char *pathname, mode_t mode);
+
+/**
+ * @brief Deletes directory path recursively. Symlinks are not followed.
+ *        Note that this function only deletes the contents of the directory, not the directory itself.
+ * @param path
+ * @return true if directory was deleted successfully, false if one or more files were not deleted.
+ */
+bool DeleteDirectoryTree(const char *path);
 
 #endif

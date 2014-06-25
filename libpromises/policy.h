@@ -340,6 +340,7 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
  * @return Effective constraint if found, otherwise NULL
  */
 Constraint *PromiseGetConstraint(const Promise *promise, const char *lval);
+Constraint *PromiseGetConstraintWithType(const Promise *promise, const char *lval, RvalType type);
 
 /**
  * @brief Get the first constraint from the promise. Checks that constraint does

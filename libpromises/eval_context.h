@@ -189,7 +189,6 @@ void EvalContextAddIpAddress(EvalContext *ctx, const char *address);
 void EvalContextDeleteIpAddresses(EvalContext *ctx);
 
 /* - Rest - */
-bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);
 void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool value);
 bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option);
 
@@ -199,7 +198,6 @@ void EvalContextSetIgnoreLocks(EvalContext *ctx, bool ignore);
 void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path);
 
 bool Abort(EvalContext *ctx);
-bool VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);
 void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result);
 bool MissingDependencies(EvalContext *ctx, const Promise *pp);
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);

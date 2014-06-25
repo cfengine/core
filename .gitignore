@@ -7,6 +7,7 @@
 .libs
 Makefile
 Makefile.in
+stamp-h1
 
 /aclocal.m4
 /autom4te.cache
@@ -24,7 +25,6 @@ Makefile.in
 /m4/lt*.m4
 /missing
 /revision
-/stamp-h1
 /ylwrap
 /test-driver
 /tests/unit/*.log

@@ -921,17 +921,6 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
 
 bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles)
 {
-    // check has body common control
-    {
-        const Body *common_control = PolicyGetBody(policy, NULL, "common", "control");
-        if (!common_control)
-        {
-            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_POLICY, policy,
-                                             POLICY_ERROR_POLICY_NOT_RUNNABLE));
-            return false;
-        }
-    }
-
     bool success = true;
 
     success &= PolicyCheckRequiredComments(ctx, policy, errors);

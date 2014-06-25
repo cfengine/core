@@ -362,11 +362,10 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
 static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config)
 {
-    const Rlist *bundlesequence = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE);
+    Rlist *bundlesequence = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE);
     if (!bundlesequence)
     {
-        Log(LOG_LEVEL_ERR, " No bundlesequence in the common control body");
-        return false;
+        RlistAppendScalar(&bundlesequence, "main");
     }
 
     const char *name;

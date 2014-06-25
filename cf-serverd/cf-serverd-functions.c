@@ -724,21 +724,23 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     CollectCallStop();
+
     if (sd != -1)
     {
         cf_closesocket(sd);                       /* Close listening socket */
     }
 
+    /* Clean up various allocations, if threads are not still lingering. */
     if (ThreadLock(cft_server_children))
     {
         if (ACTIVE_THREADS == 0)
         {
             ClearAuthAndACLs();
+            PolicyDestroy(server_cfengine_policy);
+            ServerTLSDeInitialize();
         }
         ThreadUnlock(cft_server_children);
     }
 
     YieldCurrentLock(thislock);
-    PolicyDestroy(server_cfengine_policy);
-    ServerTLSDeInitialize();
 }

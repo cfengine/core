@@ -338,7 +338,8 @@ tls_generic_test_SOURCES = tls_generic_test.c
 tls_generic_test_LDADD = libtest.la \
 	../../libutils/libutils.la \
 	../../libpromises/libpromises.la \
-	../../libcfnet/libcfnet.la
+	../../libcfnet/libcfnet.la \
+	../../cf-serverd/libcf-serverd.la
 endif
 
 version_test_SOURCES = version_test.c

@@ -395,6 +395,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
         else
         {
             strncpy(dest, src, 60);
+            dest[60] = '\0';
         }
         IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_MISC]), dest);
     }

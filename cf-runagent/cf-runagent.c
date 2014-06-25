@@ -279,7 +279,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 's':
-            strncpy(SENDCLASSES, optarg, CF_MAXVARSIZE);
+            strlcpy(SENDCLASSES, optarg, CF_MAXVARSIZE);
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
@@ -289,7 +289,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            strncpy(DEFINECLASSES, optarg, CF_MAXVARSIZE);
+            strlcpy(DEFINECLASSES, optarg, CF_MAXVARSIZE);
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
@@ -303,7 +303,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'o':
-            strncpy(REMOTE_AGENT_OPTIONS, optarg, CF_MAXVARSIZE);
+            strlcpy(REMOTE_AGENT_OPTIONS, optarg, CF_MAXVARSIZE);
             break;
 
         case 'I':
@@ -608,7 +608,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
             {
                 if (IsAbsPath(value))
                 {
-                    strncpy(OUTPUT_DIRECTORY, value, CF_BUFSIZE - 1);
+                    strlcpy(OUTPUT_DIRECTORY, value, CF_BUFSIZE);
                     Log(LOG_LEVEL_VERBOSE, "Setting output direcory to '%s'", OUTPUT_DIRECTORY);
                 }
                 continue;

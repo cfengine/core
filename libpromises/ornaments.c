@@ -41,7 +41,7 @@ void PromiseBanner(const Promise *pp)
 
     if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
     {
-        strncpy(handle, sp, CF_MAXVARSIZE - 1);
+        strlcpy(handle, sp, CF_MAXVARSIZE);
     }
     else
     {

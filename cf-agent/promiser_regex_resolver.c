@@ -118,9 +118,7 @@ PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, const Pr
         const struct dirent *dirp;
         Dir *dirh;
 
-        memset(regex, 0, CF_BUFSIZE);
-
-        strncpy(regex, ip->name, CF_BUFSIZE - 1);
+        strlcpy(regex, ip->name, CF_BUFSIZE);
 
         if ((dirh = DirOpen(pbuffer)) == NULL)
         {
@@ -158,7 +156,7 @@ PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, const Pr
 
                 count++;
 
-                strncpy(nextbuffer, pbuffer, CF_BUFSIZE - 1);
+                strlcpy(nextbuffer, pbuffer, CF_BUFSIZE);
                 AddSlash(nextbuffer);
                 strcat(nextbuffer, dirp->d_name);
 

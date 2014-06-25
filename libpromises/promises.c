@@ -471,7 +471,7 @@ static void DereferenceComment(Promise *pp)
     {
         *sp = '\0';
         offset = sp - pre_buffer + strlen("$(this.promiser)");
-        strncpy(post_buffer, pp->comment + offset, CF_BUFSIZE);
+        strlcpy(post_buffer, pp->comment + offset, CF_BUFSIZE);
         snprintf(buffer, CF_BUFSIZE, "%s%s%s", pre_buffer, pp->promiser, post_buffer);
 
         free(pp->comment);

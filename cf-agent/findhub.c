@@ -115,8 +115,8 @@ void resolve_callback(AvahiServiceResolver *r,
     case AVAHI_RESOLVER_FOUND:
         avahi_address_snprint_ptr(a, sizeof(a), address);
 
-        strncpy(hostprop->Hostname, host_name, 4096);
-        strncpy(hostprop->IPAddress, a, AVAHI_ADDRESS_STR_MAX);
+        strlcpy(hostprop->Hostname, host_name, 4096);
+        strlcpy(hostprop->IPAddress, a, AVAHI_ADDRESS_STR_MAX);
         hostprop->Port = port;
         ListAppend(hublist, hostprop);
         break;

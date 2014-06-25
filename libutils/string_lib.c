@@ -296,7 +296,7 @@ char *StringSubstring(const char *source, size_t source_len, int start, int len)
 
     char *result = xcalloc(end - start + 2, sizeof(char));
 
-    strncpy(result, source + start, end - start + 1);
+    memcpy(result, source + start, end - start + 1);
     return result;
 }
 
@@ -849,7 +849,7 @@ char **String2StringArray(const char *str, char separator)
         }
 
         arr[i] = xcalloc(len + 1, sizeof(char));
-        strncpy(arr[i], sp, len);
+        memcpy(arr[i], sp, len);
 
         sp = esp;
         i++;
@@ -870,10 +870,10 @@ void FreeStringArray(char **strs)
     for (i = 0; strs[i] != NULL; i++)
     {
         free(strs[i]);
+        strs[i] = NULL;
     }
 
     free(strs);
-    strs = NULL;
 }
 
 
@@ -1073,13 +1073,13 @@ bool StringNotMatchingSetCapped(const char *isp, int limit,
 
     if (l < limit-1)
     {
-        strncpy(obuf, isp, l);
+        memcpy(obuf, isp, l);
         obuf[l]='\0';
         return false;
     }
     else
     {
-        strncpy(obuf, isp, limit-1);
+        memcpy(obuf, isp, limit-1);
         obuf[limit-1]='\0';
         return true;
     }

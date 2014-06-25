@@ -235,8 +235,7 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
         if ((hostinfo = gethostbyname(nameBuf)) != NULL)
         {
             ip = inet_ntoa(*(struct in_addr *) *hostinfo->h_addr_list);
-            strncpy(ipBuf, ip, MAXIP4CHARLEN - 1);
-            ipBuf[MAXIP4CHARLEN - 1] = '\0';
+            strlcpy(ipBuf, ip, MAXIP4CHARLEN);
             return true;
         }
         else

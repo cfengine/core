@@ -150,7 +150,7 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
         return false;
     }
 
-    strncpy(pathbuf, parentandchild, CF_BUFSIZE - 1);   /* local copy */
+    strlcpy(pathbuf, parentandchild, CF_BUFSIZE);   /* local copy */
 
 #ifdef __APPLE__
     if (strstr(pathbuf, _PATH_RSRCFORKSPEC) != NULL)
@@ -283,7 +283,7 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
                     if (rsrcfork)
                     {
                         tmpstr = xmalloc(CF_BUFSIZE);
-                        strncpy(tmpstr, currentpath, CF_BUFSIZE);
+                        strlcpy(tmpstr, currentpath, CF_BUFSIZE);
                         strncat(tmpstr, _PATH_FORKSPECIFIER, CF_BUFSIZE);
 
                         /* CFEngine removed terminating slashes */

@@ -37,9 +37,9 @@ bool KeyNumericParserCallback(const char *field, const char *value, void *param)
 
     if (sscanf(value,
 #if defined(__MINGW32__)
-               "%I64u",
+               "%I64d",
 #else
-               "%llu",
+               "%lli",
 #endif
                &numeric_value) != 1)
     {

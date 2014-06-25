@@ -101,11 +101,11 @@ int GetCurrentUserName(char *userName, int userNameLen)
     if (user_ptr == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not get user name of current process, using 'UNKNOWN'. (getpwuid: %s)", GetErrorStr());
-        strncpy(userName, "UNKNOWN", userNameLen - 1);
+        strlcpy(userName, "UNKNOWN", userNameLen);
         return false;
     }
 
-    strncpy(userName, user_ptr->pw_name, userNameLen - 1);
+    strlcpy(userName, user_ptr->pw_name, userNameLen);
     return true;
 }
 

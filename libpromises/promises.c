@@ -308,26 +308,31 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
 
+    // if this is a class promise, check if it is already set, if so, skip
+    if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        // if this is a class promise, check if it is already set, if so, skip
-        if (strcmp("classes", pp->parent_promise_type->name) == 0)
+        if (IsDefinedClass(ctx, pcopy->promiser))
         {
-            if (IsDefinedClass(ctx, pcopy->promiser))
+            Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
+                pcopy->promiser);
+
+            if (excluded)
             {
-                Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
-                    pcopy->promiser);
-
-                if (excluded)
-                {
-                    *excluded = true;
-                }
-
-                return pcopy;
+                *excluded = true;
             }
+
+            return pcopy;
+        }
+    }
+
+    {
+        // look for 'if'/'ifvarclass' exclusion, to short-circuit evaluation of other constraints
+        const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
+        if (!ifvarclass)
+        {
+            ifvarclass = PromiseGetConstraint(pp, "if");
         }
 
-        // look for ifvarclass exclusion, to short-circuit evaluation of other constraints
-        const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
         if (ifvarclass)
         {
             Rval final;
@@ -336,18 +341,57 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
                 Constraint *cp_copy = PromiseAppendConstraint(pcopy, ifvarclass->lval, final, false);
                 cp_copy->offset = ifvarclass->offset;
 
-                char *excluding_class_expr = NULL;
-                if (VarClassExcluded(ctx, pcopy, &excluding_class_expr))
+                if (final.type == RVAL_TYPE_SCALAR && !IsDefinedClass(ctx, RvalScalarValue(final)))
                 {
                     if (LEGACY_OUTPUT)
                     {
                         Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as ifvarclass %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as if/ifvarclass %s is not relevant",
+                            pp->promiser, RvalScalarValue(final));
                         Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
                     }
                     else
                     {
-                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as ifvarclass '%s' is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant",
+                            pp->promiser, RvalScalarValue(final));
+                    }
+
+                    if (excluded)
+                    {
+                        *excluded = true;
+                    }
+
+                    return pcopy;
+                }
+            }
+        }
+    }
+
+    {
+        // look for 'unless' exclusion, to short-circuit evaluation of other constraints
+        const Constraint *unless = PromiseGetConstraint(pp, "unless");
+
+        if (unless)
+        {
+            Rval final;
+            if (EvaluateConstraintIteration(ctx, unless, &final))
+            {
+                Constraint *cp_copy = PromiseAppendConstraint(pcopy, unless->lval, final, false);
+                cp_copy->offset = unless->offset;
+
+                if (final.type == RVAL_TYPE_SCALAR && IsDefinedClass(ctx, RvalScalarValue(final)))
+                {
+                    if (LEGACY_OUTPUT)
+                    {
+                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as if/ifvarclass %s is not relevant",
+                            pp->promiser, RvalScalarValue(final));
+                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant",
+                            pp->promiser, RvalScalarValue(final));
                     }
 
                     if (excluded)
@@ -390,7 +434,10 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         Constraint *cp = SeqAt(pp->conlist, i);
 
         // special constraints ifvarclass and depends_on are evaluated before the rest of the constraints
-        if (strcmp(cp->lval, "ifvarclass") == 0 || strcmp(cp->lval, "depends_on") == 0)
+        if (strcmp(cp->lval, "ifvarclass") == 0 ||
+            strcmp(cp->lval, "if") == 0 ||
+            strcmp(cp->lval, "unless") == 0 ||
+            strcmp(cp->lval, "depends_on") == 0)
         {
             continue;
         }

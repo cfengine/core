@@ -2661,6 +2661,26 @@ Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
     return retval;
 }
 
+Constraint *PromiseGetConstraintWithType(const Promise *pp, const char *lval, RvalType type)
+{
+    assert(pp);
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+        if (cp->rval.type != type) {
+            continue;
+        }
+
+        if (strcmp(cp->lval, lval) == 0)
+        {
+            return cp;
+        }
+    }
+
+    return NULL;
+}
+
+
 Constraint *PromiseGetImmediateConstraint(const Promise *pp, const char *lval)
 {
     if (pp == NULL)

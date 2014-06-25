@@ -476,7 +476,9 @@ const ConstraintSyntax CF_COMMON_BODIES[] =
     ConstraintSyntaxNewString("comment", "", "A comment about this promise's real intention that follows through the program", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("depends_on", "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("handle", "", "A unique id-tag string for referring to this as a promisee elsewhere", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ifvarclass", "", "Extended classes ANDed with context", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ifvarclass", "", "Extended classes ANDed with context (alias for 'if')", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("if", "", "Extended classes ANDed with context", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("unless", "", "Negated 'if'", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("meta", "", "User-data associated with policy, e.g. key=value strings", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

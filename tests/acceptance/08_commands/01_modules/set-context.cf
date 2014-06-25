@@ -46,17 +46,19 @@ bundle agent check
       "actual2" string => join(":", "list2");
       "actual3" string => join(":", "list3");
 
-      "joined0" string => join(":", "xyz.mylist");
-      "joined1" string => join(":", "xyz.myalist");
-      "joined2" string => join(":", "xyz.myblist");
-      "joined3" string => join(":", "xyz.myclist");
+      "joined0" string => join(":", "xyz_123___456.mylist");
+      "joined1" string => join(":", "xyz_123___456.myalist");
+      "joined2" string => join(":", "xyz_123___456.myblist");
+      "joined3" string => join(":", "xyz_123___456.myclist");
 
       "c" slist => { "1", "2", "3", "4", "5", "6" };
-      "c$(c)" string => format("%S", "xyz.mycontainer$(c)");
+      "c$(c)" string => format("%S", "xyz_123___456.mycontainer$(c)");
 
       "e1" string => '{"x":[456,789]}';
       "e5" string => '["read","some","strings"]';
       "e6" string => '{"mix":["match"],"ping":"pong","paddle":true,"nothing":null}';
+
+      "hello_contexts" slist => { "xyz_123___456", "_456", "456", "_", "a__456__", "__a__", };
 
   classes:
 
@@ -65,7 +67,9 @@ bundle agent check
       "var1ok" expression => strcmp("${this.joined1}" , "${this.actual1}");
       "var2ok" expression => strcmp("${this.joined2}" , "${this.actual2}");
       "var3ok" expression => strcmp("${this.joined3}" , "${this.actual3}");
-      "var4ok" expression => strcmp("hello there" , "${xyz.myvar}");
+      "var4ok" expression => strcmp("hello there" , "${xyz_123___456.myvar}");
+
+      "hello_$(hello_contexts)_ok" expression => strcmp("hello there" , "${$(hello_contexts).myvar}");
 
       "ok_c1" expression => strcmp($(e1) , $(c1));
       "ok_c2" not => isvariable("c2");
@@ -75,12 +79,18 @@ bundle agent check
       "ok_c6" expression => strcmp($(e6) , $(c6));
 
       "ok" and => { "myclass", "var0ok", "var1ok", "var2ok", "var3ok", "var4ok",
+                    "hello_xyz_123___456_ok", "hello__456_ok", "hello_456_ok", "hello___ok", "hello_a__456___ok", "hello___a___ok",
                     "ok_c1", "ok_c2", "ok_c3", "ok_c4", "ok_c5", "ok_c6" };
 
   reports:
     DEBUG::
       "container $(c): $(e$(c)) != $(c$(c))"
       ifvarclass => "!ok_c$(c)";
+
+      "context $(hello_contexts) failed" ifvarclass => "!hello_$(hello_contexts)_ok";
+
+    EXTRA::
+      "context $(hello_contexts) worked" ifvarclass => "hello_$(hello_contexts)_ok";
 
     ok::
       "$(this.promise_filename) Pass";

@@ -116,3 +116,4 @@ char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 bool MINUSF = false;
 
 PlatformContext VSYSTEMHARDCLASS;
+PlatformContext VPSHARDCLASS; /* used to define which ps command to use*/

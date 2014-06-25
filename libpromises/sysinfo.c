@@ -78,6 +78,7 @@ static int VM_Version(EvalContext *ctx);
 static int Xen_Domain(EvalContext *ctx);
 static int EOS_Version(EvalContext *ctx);
 static int MiscOS(EvalContext *ctx);
+static void OpenVZ_Detect(EvalContext *ctx);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
@@ -93,6 +94,7 @@ static void GetCPUInfo(EvalContext *ctx);
 static const char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3] =
 {
     {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
+    {"virt_host_vz_vzps", ".*", ".*"},      /* VZ Host with vzps installed */
     {"hp-ux", ".*", ".*"},      /* hpux */
     {"aix", ".*", ".*"},        /* aix */
     {"linux", ".*", ".*"},      /* linux */
@@ -114,6 +116,7 @@ static const char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3] =
 static const char *VRESOLVCONF[PLATFORM_CONTEXT_MAX] =
 {
     "-",
+    "/etc/resolv.conf",         /* virt_host_vz_vzps */
     "/etc/resolv.conf",         /* hpux */
     "/etc/resolv.conf",         /* aix */
     "/etc/resolv.conf",         /* linux */
@@ -135,6 +138,7 @@ static const char *VRESOLVCONF[PLATFORM_CONTEXT_MAX] =
 static const char *VMAILDIR[PLATFORM_CONTEXT_MAX] =
 {
     "-",
+    "/var/spool/mail",          /* virt_host_vz_vzps */
     "/var/mail",                /* hpux */
     "/var/spool/mail",          /* aix */
     "/var/spool/mail",          /* linux */
@@ -156,6 +160,7 @@ static const char *VMAILDIR[PLATFORM_CONTEXT_MAX] =
 static const char *VEXPORTS[PLATFORM_CONTEXT_MAX] =
 {
     "-",
+    "/etc/exports",             /* virt_host_vz_vzps */
     "/etc/exports",             /* hpux */
     "/etc/exports",             /* aix */
     "/etc/exports",             /* linux */
@@ -364,6 +369,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
                     found = true;
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
+                    VPSHARDCLASS = (PlatformContext) i; /* this one can be overriden at vz detection */
                     ScopeNewSpecial(ctx, "sys", "class", CLASSTEXT[i], CF_DATA_TYPE_STRING);
                     break;
                 }
@@ -955,6 +961,11 @@ void OSClasses(EvalContext *ctx)
     if (stat("/etc/issue", &statbuf) != -1)
     {
         MiscOS(ctx);
+    }
+
+    if (stat("/proc/self/status", &statbuf) != -1)
+    {
+        OpenVZ_Detect(ctx);
     }
     
 #ifdef XEN_CPUID_SUPPORT
@@ -2207,6 +2218,68 @@ static int Xen_Domain(EvalContext *ctx)
     }
 
     return sufficient < 1 ? 1 : 0;
+}
+
+/******************************************************************/
+/*
+ * OpenVZ is a container-based virtualization for Linux.
+ * As a container based system, the host see all the processes of the
+ * guests, which give inconsistent results for processes promise type.
+ * On some installations, the tool /bin/vzps is present, which is an
+ * implementation of ps for vz system, so that it can see only local
+ * processes
+ *
+ * This method defines the classes
+ * * virt_host_vz on a host
+ * * virt_host_vz_vzps on a host with vzps installed
+ * * virt_guest_vz on a guest
+ *
+ * and if vzps is installed, it makes sure that vzps will be used for
+ * processes rather than ps
+ * */
+static void OpenVZ_Detect(EvalContext *ctx)
+{
+/* paths to file defining the type of vm (guest or host) */
+#define OPENVZ_HOST_FILENAME "/proc/bc/0"
+#define OPENVZ_GUEST_FILENAME "/proc/vz"
+/* path to the vzps binary */
+#define OPENVZ_VZPS_FILE "/bin/vzps"
+    struct stat statbuf;
+    int i;
+
+    /* The file /proc/bc/0 is present on host
+       The file /proc/vz is present on guest
+       If the host has /bin/vzps, we should use it for checking processes
+    */
+
+    if (stat(OPENVZ_HOST_FILENAME, &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
+        EvalContextHeapAddHard(ctx, "virt_host_vz");
+        /* if the file /bin/vzps is there, it is safe to use the processes promise type */ 
+        if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
+        {
+            EvalContextHeapAddHard(ctx, "virt_host_vz_vzps");
+            /* here we must redefine the value of VPSHARDCLASS */
+            for (i = 0; i < PLATFORM_CONTEXT_MAX; i++)
+            {
+                if (FullTextMatch(CLASSATTRIBUTES[i][0], "virt_host_vz_vzps"))
+                {
+                    VPSHARDCLASS = (PlatformContext) i;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Log(LOG_LEVEL_NOTICE, "This OpenVZ/Virtuozzo/Parallels Cloud Server host system does not have vzps installed; the processes promise type may not work as expected.\n");
+        }
+    }
+    else if (stat(OPENVZ_GUEST_FILENAME, &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server guest system.\n");
+        EvalContextHeapAddHard(ctx, "virt_guest_vz");
+    }
 }
 
 /******************************************************************/

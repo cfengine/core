@@ -670,34 +670,40 @@ AS_IF([test "x$USERADD" != x && \
 )
 
 
-CF3_WITH_LIBRARY(pam, [
-  AC_CHECK_LIB(pam, pam_start)
-  AC_CHECK_HEADERS([security/pam_appl.h])
-])
-dnl These platforms must have pam, others can have it, but not required.
-AS_CASE([$target_os],
-        [*gnu*|*solaris*|*aix*|*hpux*|*hp-ux*], [
-            AS_IF([test "x$ac_cv_lib_pam_pam_start" != "xyes"],
-                  [AC_MSG_ERROR(Cannot find PAM library)]
-            )
-            AS_IF([test "x$ac_cv_header_security_pam_appl_h" != "xyes"],
-                  [AC_MSG_ERROR(Cannot find PAM headers)]
-        )]
-)
-AS_IF([test "x$ac_cv_lib_pam_pam_start" = "xyes" && \
-       test "x$ac_cv_header_security_pam_appl_h" = "xyes"],
-      [have_pam=yes],
-      [have_pam=no]
-)
-AC_CHECK_FUNCS(fgetpwent fgetgrent)
-AS_IF([test "x$have_pam" = "xyes" && \
-    test "x$have_userprogs" = "xyes" && \
-    test "x$ac_cv_func_fgetpwent" = "xyes" && \
-    test "x$ac_cv_func_fgetgrent" = "xyes"],
+AC_ARG_WITH([pam], AS_HELP_STRING([--with-pam], [Compile with PAM support]))
+AS_IF([test x$with_pam != xno],
 [
-    users_promises_ok=yes
-],[
-    users_promises_ok=no
+  CF3_WITH_LIBRARY(pam, [
+    AC_CHECK_LIB(pam, pam_start)
+    AC_CHECK_HEADERS([security/pam_appl.h])
+  ])
+  dnl These platforms must have pam, others can have it, but not required.
+  AS_CASE([$target_os],
+          [*gnu*|*solaris*|*aix*|*hpux*|*hp-ux*], [
+              AS_IF([test "x$ac_cv_lib_pam_pam_start" != "xyes"],
+                    [AC_MSG_ERROR(Cannot find PAM library)]
+              )
+              AS_IF([test "x$ac_cv_header_security_pam_appl_h" != "xyes"],
+                    [AC_MSG_ERROR(Cannot find PAM headers)]
+          )]
+  )
+  AS_IF([test "x$ac_cv_lib_pam_pam_start" = "xyes" && \
+         test "x$ac_cv_header_security_pam_appl_h" = "xyes"],
+        [have_pam=yes],
+        [have_pam=no]
+  )
+  AC_CHECK_FUNCS(fgetpwent fgetgrent)
+  AS_IF([test "x$have_pam" = "xyes" && \
+      test "x$have_userprogs" = "xyes" && \
+      test "x$ac_cv_func_fgetpwent" = "xyes" && \
+      test "x$ac_cv_func_fgetgrent" = "xyes"],
+  [
+      users_promises_ok=yes
+  ],[
+      users_promises_ok=no
+  ])
+], [
+  users_promises_ok=no
 ])
 AM_CONDITIONAL(HAVE_USERS_PROMISE_DEPS, [test "x$users_promises_ok" = "xyes"])
 

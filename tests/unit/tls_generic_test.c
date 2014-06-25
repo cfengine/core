@@ -1375,6 +1375,8 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    atexit(tests_teardown);
+
     const UnitTest tests[] =
     {
         /* unit_test(test_TLSVerifyCallback), */
@@ -1383,6 +1385,6 @@ int main()
     };
 
     int result = run_tests(tests);
-    tests_teardown();
+
     return result;
 }

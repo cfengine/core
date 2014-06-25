@@ -126,6 +126,18 @@ bool TLSClientInitialize()
 
 void TLSDeInitialize()
 {
+    if (PUBKEY)
+    {
+        RSA_free(PUBKEY);
+        PUBKEY = NULL;
+    }
+
+    if (PRIVKEY)
+    {
+        RSA_free(PRIVKEY);
+        PRIVKEY = NULL;
+    }
+
     if (SSLCLIENTCERT != NULL)
     {
         X509_free(SSLCLIENTCERT);

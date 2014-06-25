@@ -197,8 +197,7 @@ int main(int argc, char *argv[])
     free(public_key_file);
     free(private_key_file);
 
-    GenericAgentConfigDestroy(config);
-    EvalContextDestroy(ctx);
+    GenericAgentFinalize(ctx, config);
     return 0;
 }
 

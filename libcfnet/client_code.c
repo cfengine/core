@@ -79,6 +79,12 @@ bool cfnet_init()
         return false;
 }
 
+void cfnet_shut()
+{
+    TLSDeInitialize();
+    CryptoDeInitialize();
+}
+
 static Seq *GetGlobalServerList(void)
 {
     /* Only ip address strings are stored in this list, so don't put any

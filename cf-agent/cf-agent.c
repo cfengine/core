@@ -281,12 +281,11 @@ int main(int argc, char *argv[])
     }
 
     EndAudit(ctx, CFA_BACKGROUND);
-    EvalContextDestroy(ctx);
 
     GenerateDiffReports(config);
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
-    GenericAgentConfigDestroy(config);
+    GenericAgentFinalize(ctx, config);
 
 #ifdef HAVE_LIBXML2
         xmlCleanupParser();

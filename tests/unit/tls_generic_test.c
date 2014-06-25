@@ -24,11 +24,10 @@ static SSL_CTX *SSLSERVERCONTEXT = NULL;
 static X509 *SSLSERVERCERT = NULL;
 static SSL_CTX *SSLCLIENTCONTEXT = NULL;
 static X509 *SSLCLIENTCERT = NULL;
-static bool correctly_initialized = false;
-static pid_t pid = -1;
+static pid_t CHILD_PID = -1;
 static int server_public_key_file = -1;
 static int certificate_file = -1;
-static char temporary_folder[] = "/tmp/tls_test_XXXXXX";
+static char TESTDIR[] = "/tmp/tls_test_XXXXXX";
 static char server_name_template_public[128];
 static char server_certificate_template_public[128];
 
@@ -57,13 +56,12 @@ static bool init_test_server()
     ret = RSA_generate_key_ex(key, 1024, bignum, NULL);
     if (!ret)
     {
-        correctly_initialized = false;
         return false;
     }
 
     char name_template_private[128];
     ret = snprintf(name_template_private, sizeof(name_template_private), "%s/%s",
-                   temporary_folder, "name_template_private.XXXXXX");
+                   TESTDIR, "name_template_private.XXXXXX");
     assert(ret > 0 && ret < sizeof(name_template_private));
 
     int private_key_file = 0;
@@ -72,26 +70,22 @@ static bool init_test_server()
     private_key_file = mkstemp(name_template_private);
     if (private_key_file < 0)
     {
-        correctly_initialized = false;
         return false;
     }
     private_key_stream = fdopen(private_key_file, "w+");
     if (!private_key_stream)
     {
-        correctly_initialized = false;
         return false;
     }
     ret = PEM_write_RSAPrivateKey(private_key_stream, key, NULL, NULL, 0, 0, NULL);
     if (ret == 0)
     {
-        correctly_initialized = false;
         return false;
     }
     fseek(private_key_stream, 0L, SEEK_SET);
     PRIVKEY = PEM_read_RSAPrivateKey(private_key_stream, (RSA **)NULL, NULL, NULL);
     if (!PRIVKEY)
     {
-        correctly_initialized = false;
         return false;
     }
     fclose(private_key_stream);
@@ -99,13 +93,11 @@ static bool init_test_server()
     FILE *public_key_stream = fdopen(server_public_key_file, "w+");
     if (!public_key_stream)
     {
-        correctly_initialized = false;
         return false;
     }
     ret = PEM_write_RSAPublicKey(public_key_stream, key);
     if (ret == 0)
     {
-        correctly_initialized = false;
         return false;
     }
     fflush(public_key_stream);
@@ -114,7 +106,6 @@ static bool init_test_server()
     PUBKEY = PEM_read_RSAPublicKey(public_key_stream, (RSA **)NULL, NULL, NULL);
     if (!PUBKEY)
     {
-        correctly_initialized = false;
         return false;
     }
     RSA_free(key);
@@ -371,26 +362,18 @@ static bool start_child_process()
     {
         return false;
     }
-    pid = fork();
-    if (pid < 0)
+    CHILD_PID = fork();
+    if (CHILD_PID < 0)
     {
         return false;
     }
-    else if (pid == 0)
+    else if (CHILD_PID == 0)                         /* CHILD a.k.a server */
     {
-        /*
-         * Child
-         * The child process is the one running the server.
-         */
         close (channel[0]);
         child_mainloop(channel[1]);
     }
-    else
+    else                                             /* PARENT a.k.a client */
     {
-        /*
-         * Parent
-         * The parent process is the process runing the test.
-         */
         close (channel[1]);
         int message = 0;
         result = read(channel[0], &message, sizeof(int));
@@ -409,7 +392,7 @@ static bool start_child_process()
              * Wait for child process
              */
             wait(NULL);
-            pid = -1;
+            CHILD_PID = -1;
             return false;
         }
         /*
@@ -424,7 +407,7 @@ static bool start_child_process()
              * Wait for child process
              */
             wait(NULL);
-            pid = -1;
+            CHILD_PID = -1;
             return false;
         }
         server_name_template_public[result] = '\0';
@@ -440,7 +423,7 @@ static bool start_child_process()
              * Wait for child process
              */
             wait(NULL);
-            pid = -1;
+            CHILD_PID = -1;
             return false;
         }
         server_certificate_template_public[result] = '\0';
@@ -478,7 +461,7 @@ static bool init_test_client()
     ret = snprintf(name_template_private,
                    sizeof(name_template_private),
                    "%s/%s",
-                   temporary_folder, "name_template_private.XXXXXX");
+                   TESTDIR, "name_template_private.XXXXXX");
     assert(ret > 0 && ret < sizeof(name_template_private));
 
     int private_key_file = mkstemp(name_template_private);
@@ -507,7 +490,7 @@ static bool init_test_client()
     ret = snprintf(name_template_public,
                    sizeof(name_template_public),
                    "%s/%s",
-                   temporary_folder, "name_template_public.XXXXXX");
+                   TESTDIR, "name_template_public.XXXXXX");
     assert(ret > 0 && ret < sizeof(name_template_public));
 
     int public_key_file = mkstemp(name_template_public);
@@ -620,7 +603,7 @@ static bool init_test_client()
 static bool create_temps()
 {
     int ret;
-    char *retp = mkdtemp(temporary_folder);
+    char *retp = mkdtemp(TESTDIR);
     if (retp == NULL)
     {
         perror("mkdtemp");
@@ -630,7 +613,7 @@ static bool create_temps()
     ret = snprintf(server_name_template_public,
                    sizeof(server_name_template_public),
                    "%s/%s",
-                   temporary_folder, "server_name_template_public.XXXXXX");
+                   TESTDIR, "server_name_template_public.XXXXXX");
     assert(ret > 0 && ret < sizeof(server_name_template_public));
 
     server_public_key_file = mkstemp(server_name_template_public);
@@ -643,7 +626,7 @@ static bool create_temps()
     ret = snprintf(server_certificate_template_public,
                    sizeof(server_certificate_template_public),
                    "%s/%s",
-                   temporary_folder, "server_certificate_template_public.XXXXXX");
+                   TESTDIR, "server_certificate_template_public.XXXXXX");
     assert(ret > 0 && ret < sizeof(server_certificate_template_public));
 
     certificate_file = mkstemp(server_certificate_template_public);
@@ -692,21 +675,18 @@ static void tests_teardown(void)
 
     if (server_public_key_file != -1)
     {
-        close (server_public_key_file);
+        close(server_public_key_file);
     }
     if (certificate_file != -1)
     {
-        close (server_public_key_file);
+        close(server_public_key_file);
     }
-    if (pid > 0)
+    if (CHILD_PID > 0)                                        /* kill child */
     {
-        /*
-         * Kill child process
-         */
-        kill(pid, SIGKILL);
+        kill(CHILD_PID, SIGTERM);
     }
     /* Delete temporary folder and files */
-    DIR *folder = opendir(temporary_folder);
+    DIR *folder = opendir(TESTDIR);
     if (folder)
     {
         struct dirent *entry = NULL;
@@ -717,13 +697,13 @@ static void tests_teardown(void)
                 /* Skip . and .. */
                 continue;
             }
-            char *name = (char *)xmalloc (strlen(temporary_folder) + strlen(entry->d_name) + 2);
-            sprintf(name, "%s/%s", temporary_folder, entry->d_name);
+            char *name = (char *)xmalloc (strlen(TESTDIR) + strlen(entry->d_name) + 2);
+            sprintf(name, "%s/%s", TESTDIR, entry->d_name);
             unlink(name);
             free (name);
         }
         closedir(folder);
-        rmdir(temporary_folder);
+        rmdir(TESTDIR);
     }
 }
 
@@ -1070,16 +1050,17 @@ int EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
  */
 
 
-static void test_TLSVerifyCallback(void)
+/*static void test_TLSVerifyCallback(void)
 {
     RESET_STATUS;
-    /*
-     * TODO test that TLSVerifyCallback returns 0 in case certificate changes
-     * during renegotiation. Must initialise a connection, and then trigger
-     * renegotiation with and without the certificate changing.
-     */
+
+//    TODO test that TLSVerifyCallback returns 0 in case certificate changes
+//    during renegotiation. Must initialise a connection, and then trigger
+//    renegotiation with and without the certificate changing.
+
     RESET_STATUS;
 }
+*/
 
 #define REREAD_CERTIFICATE(f, c) \
     rewind(f); \
@@ -1402,7 +1383,6 @@ int main()
     };
 
     int result = run_tests(tests);
-
     tests_teardown();
     return result;
 }

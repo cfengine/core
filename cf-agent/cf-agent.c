@@ -1055,16 +1055,15 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
-    const Rlist *bundlesequence = NULL;
+    Rlist *bundlesequence = NULL;
     if (config->bundlesequence)
     {
         Log(LOG_LEVEL_INFO, "Using command line specified bundlesequence");
         bundlesequence = config->bundlesequence;
     }
-    else if (!(bundlesequence = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE)))
+    else if (!(bundlesequence = (Rlist *)EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE)))
     {
-        Log(LOG_LEVEL_ERR, "No bundlesequence in the common control body");
-        exit(EXIT_FAILURE);
+        RlistAppendScalar(&bundlesequence, "main");
     }
 
     bool ok = true;

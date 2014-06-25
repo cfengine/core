@@ -76,9 +76,17 @@
 // Solaris: kstat() for kernel statistics
 // See http://dsc.sun.com/solaris/articles/kstatc.html
 // BSD also has a kstat.h (albeit in sys), so check __sun just to be paranoid
+
+/**
+ * @WARNING: Commented out because inside a Solaris 10 zone this gives the
+ *           uptime of the host machine (the hypervisor). We thus choose to
+ *           use UTMP for Solaris.
+ */
+/*
 #elif defined(__sun) && defined(HAVE_KSTAT_H)
 # include <kstat.h>
 # define BOOT_TIME_WITH_KSTAT
+*/
 
 // BSD: sysctl(3) to get kern.boottime, CPU count, etc.
 // See http://www.unix.com/man-page/FreeBSD/3/sysctl/

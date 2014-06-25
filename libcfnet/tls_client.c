@@ -64,7 +64,7 @@ bool TLSClientInitialize()
     if (SSLCLIENTCONTEXT == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err1;
     }
 
@@ -98,7 +98,7 @@ bool TLSClientInitialize()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -107,7 +107,7 @@ bool TLSClientInitialize()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -272,7 +272,7 @@ int TLSTry(ConnectionInfo *conn_info)
     if (ssl == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         return -1;
     }
 

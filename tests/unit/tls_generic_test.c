@@ -295,7 +295,7 @@ static void child_mainloop(int channel)
         if (remote_socket < 0)
         {
             Log (LOG_LEVEL_CRIT, "Could not accept connection");
-            continue;
+            exit(EXIT_FAILURE);
         }
         /*
          * We are not testing the server, we are testing the functions to send and receive data
@@ -309,7 +309,7 @@ static void child_mainloop(int channel)
             SSL_free(ssl);
             close (remote_socket);
             remote_socket = -1;
-            continue;
+            exit(EXIT_FAILURE);
         }
         SSL_set_fd(ssl, remote_socket);
         result = SSL_accept(ssl);
@@ -318,7 +318,7 @@ static void child_mainloop(int channel)
             Log(LOG_LEVEL_CRIT, "Could not accept a TLS connection");
             close (remote_socket);
             remote_socket = -1;
-            continue;
+            exit(EXIT_FAILURE);
         }
         /*
          * Our mission is pretty simple, receive data and send it back.
@@ -331,13 +331,13 @@ static void child_mainloop(int channel)
             if (received < 0)
             {
                 Log(LOG_LEVEL_CRIT, "Failure while receiving data over TLS");
-                break;
+                exit(EXIT_FAILURE);
             }
             sent = SSL_write(ssl, buffer, received);
             if (sent < 0)
             {
                 Log(LOG_LEVEL_CRIT, "Failure while sending data over TLS");
-                break;
+                exit(EXIT_FAILURE);
             }
         } while (received > 0);
         /*

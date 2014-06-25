@@ -362,10 +362,12 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
 static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config)
 {
-    Rlist *bundlesequence = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE);
+    Rlist *fallback = NULL;
+    const Rlist *bundlesequence = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE);
     if (!bundlesequence)
     {
-        RlistAppendScalar(&bundlesequence, "main");
+        RlistAppendScalar(&fallback, "main");
+        bundlesequence = fallback;
     }
 
     const char *name;
@@ -408,6 +410,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
         }
     }
 
+    RlistDestroy(fallback);
     return ok;
 }
 

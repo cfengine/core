@@ -1,0 +1,43 @@
+##############################################################################
+#
+# Redmine #6179: if and unless
+#
+##############################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  classes:
+      "check1" expression => "any", scope => "namespace";
+      "check2" expression => "any", scope => "namespace";
+}
+
+bundle agent test
+{
+  methods:
+      "" usebundle => file_make("$(G.testfile).present", ""),
+      if => "check1";
+
+      "" usebundle => file_make("$(G.testfile).absent", ""),
+      unless => "check2";
+}
+
+bundle agent check
+{
+      # If the output contains the string, we fail
+  classes:
+      "if_ok" expression => fileexists("$(G.testfile).present");
+      "unless_ok" not => fileexists("$(G.testfile).absent");
+
+  methods:
+      "" usebundle => dcs_passif_expected("if_ok,unless_ok",
+                                          "",
+                                          $(this.promise_filename)),
+      inherit => "true";
+}

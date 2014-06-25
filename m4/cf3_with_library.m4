@@ -19,23 +19,29 @@ AC_DEFUN([CF3_WITH_LIBRARY],
   if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck && test "x$with_[$1]" != x; then
     ULN[]_PATH="$with_[$1]"
     if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
-      ULN[]_CFLAGS="-I$with_[$1]/include"
+      ULN[]_CFLAGS=""
+      ULN[]_CPPFLAGS="-I$with_[$1]/include"
       ULN[]_LDFLAGS="-L$with_[$1]/lib"
     fi
   else
     ULN[]_PATH="default path"
   fi
 
+  #
+  # Save old environment
+  #
   save_CFLAGS="$CFLAGS"
   save_CPPFLAGS="$CPPFLAGS"
   save_LDFLAGS="$LDFLAGS"
   save_LIBS="$LIBS"
 
   CFLAGS="$CFLAGS $ULN[]_CFLAGS"
-  CPPFLAGS="$CPPFLAGS $ULN[]_CFLAGS"
+  CPPFLAGS="$CPPFLAGS $ULN[]_CPPFLAGS"
   LDFLAGS="$LDFLAGS $ULN[]_LDFLAGS"
-  LIBS=""
 
+  #
+  # Run checks passed as argument
+  #
   $2
 
   #

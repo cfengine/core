@@ -57,26 +57,6 @@ ENV_CFLAGS="$CFLAGS"
 CFLAGS=
 
 dnl ######################################################################
-dnl Use pthreads if available
-dnl ######################################################################
-
-AC_ARG_WITH([pthreads],
-    [AS_HELP_STRING([--with-pthreads[[=PATH]]],
-                    [Specify path to pthreads, if not the part of operating system])])
-
-if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
-   LIBS="$LIBS -L$with_pthreads/lib"
-   CFLAGS="$CFLAGS -I$with_pthreads/include"
-fi
-
-ACX_PTHREAD([],
-            [AC_MSG_ERROR(pthread-compatible library is required to build CFEngine)])
-
-CC="$PTHREAD_CC"
-CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
-LIBS="$PTHREAD_LIBS $LIBS"
-
-dnl ######################################################################
 dnl Checks for programs.
 dnl ######################################################################
 
@@ -95,9 +75,7 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_CONFIG_LIBOBJ_DIR(libcompat)
-AC_FUNC_GETLOADAVG 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
-
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
 #
@@ -115,6 +93,31 @@ if test "x$cross_compiling" = "xno"; then
     fi
   done
 fi
+
+dnl ######################################################################
+dnl Use pthreads if available
+dnl ######################################################################
+
+AC_ARG_WITH([pthreads],
+    [AS_HELP_STRING([--with-pthreads[[=PATH]]],
+                    [Specify path to pthreads, if not the part of operating system])])
+
+if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
+   LIBS="$LIBS -L$with_pthreads/lib"
+   CFLAGS="$CFLAGS -I$with_pthreads/include"
+fi
+
+ACX_PTHREAD([],
+            [AC_MSG_ERROR(pthread-compatible library is required to build CFEngine)])
+
+CC="$PTHREAD_CC"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+LIBS="$PTHREAD_LIBS $LIBS"
+
+dnl ######################################################################
+dnl Check for getloadavg()
+dnl ######################################################################
+AC_FUNC_GETLOADAVG
 
 dnl ######################################################################
 dnl Whether to build extensions as builtin extensions or a separate
@@ -987,7 +990,8 @@ AC_SUBST([CORE_LIBS])
 AC_CONFIG_FILES([configure_flags.env])
 
 dnl ######################################################################
-dnl And then use them.
+dnl TODO do not set all main flags here, but use them as needed in
+dnl subdirectories
 dnl ######################################################################
 
 CPPFLAGS="$CORE_CPPFLAGS"

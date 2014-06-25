@@ -697,8 +697,9 @@ static void tests_teardown(void)
                 /* Skip . and .. */
                 continue;
             }
-            char *name = (char *)xmalloc (strlen(TESTDIR) + strlen(entry->d_name) + 2);
-            sprintf(name, "%s/%s", TESTDIR, entry->d_name);
+
+            char *name;
+            xasprintf(&name, "%s/%s", TESTDIR, entry->d_name);
             unlink(name);
             free (name);
         }

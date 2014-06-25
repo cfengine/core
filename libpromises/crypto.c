@@ -135,10 +135,10 @@ bool LoadSecretKeys(void)
         if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL,
                                               (void *)priv_passphrase)) == NULL)
         {
-            unsigned long err = ERR_get_error();
+            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Error reading private key. (PEM_read_RSAPrivateKey: %s)",
-                ERR_reason_error_string(err));
+                (errmsg != NULL) ? errmsg : "no error message");
             PRIVKEY = NULL;
             fclose(fp);
             return false;
@@ -164,10 +164,10 @@ bool LoadSecretKeys(void)
         PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, (void *)priv_passphrase);
         if (NULL == PUBKEY)
         {
-            unsigned long err = ERR_get_error();
+            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
-                pubkeyfile, ERR_reason_error_string(err));
+                pubkeyfile, (errmsg != NULL) ? errmsg : "no error message");
             fclose(fp);
             free(pubkeyfile);
             return false;
@@ -264,7 +264,6 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 {
     char keyname[CF_MAXVARSIZE], newname[CF_BUFSIZE], oldname[CF_BUFSIZE];
     struct stat statbuf;
-    unsigned long err;
     FILE *fp;
     RSA *newkey = NULL;
 
@@ -317,8 +316,10 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
     if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL,
                                         (void *)pub_passphrase)) == NULL)
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)", ERR_reason_error_string(err));
+        const char *errmsg = ERR_reason_error_string(ERR_get_error());
+        Log(LOG_LEVEL_ERR,
+            "Error reading public key. (PEM_read_RSAPublicKey: %s)",
+            (errmsg != NULL) ? errmsg : "no error message");
         fclose(fp);
         return NULL;
     }
@@ -342,7 +343,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     char keyname[CF_MAXVARSIZE], filename[CF_BUFSIZE];
     struct stat statbuf;
     FILE *fp;
-    int err, ret;
+    int ret;
 
     ret = snprintf(keyname, sizeof(keyname), "%s-%s", user, digest);
     if (ret >= sizeof(keyname))
@@ -376,8 +377,10 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
 
     if (!PEM_write_RSAPublicKey(fp, key))
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Error saving public key to '%s'. (PEM_write_RSAPublicKey: %s)", filename, ERR_reason_error_string(err));
+        const char *errmsg = ERR_reason_error_string(ERR_get_error());
+        Log(LOG_LEVEL_ERR,
+            "Error saving public key to '%s'. (PEM_write_RSAPublicKey: %s)",
+            filename, (errmsg != NULL) ? errmsg : "no error message");
     }
 
     fclose(fp);

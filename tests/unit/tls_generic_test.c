@@ -358,7 +358,7 @@ int ssl_server_init()
     if (SSLSERVERCONTEXT == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err1;
     }
 
@@ -410,7 +410,7 @@ int ssl_server_init()
         {
             Log(LOG_LEVEL_ERR,
                 "Couldn't sign the public key for the TLS handshake: %s",
-                ERR_reason_error_string(ERR_get_error()));
+                TLSErrorString(ERR_get_error()));
             goto err3;
         }
 
@@ -430,7 +430,7 @@ int ssl_server_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -439,7 +439,7 @@ int ssl_server_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -550,7 +550,7 @@ void ssl_client_init()
     if (SSLCLIENTCONTEXT == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err1;
     }
 
@@ -595,7 +595,7 @@ void ssl_client_init()
         {
             Log(LOG_LEVEL_ERR,
                 "Couldn't sign the public key for the TLS handshake: %s",
-                ERR_reason_error_string(ERR_get_error()));
+                TLSErrorString(ERR_get_error()));
             goto err3;
         }
     }
@@ -606,7 +606,7 @@ void ssl_client_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -615,7 +615,7 @@ void ssl_client_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -980,7 +980,9 @@ RSA *original_HavePublicKey(const char *username, const char *ipaddress, const c
     if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR,
+            "Error reading public key. (PEM_read_RSAPublicKey: %s)",
+            TLSErrorString(err));
         fclose(fp);
         return NULL;
     }

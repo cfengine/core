@@ -42,7 +42,6 @@ static const char *const passphrase = "Cfengine passphrase";
 
 RSA* LoadPublicKey(const char* filename)
 {
-    unsigned long err;
     FILE* fp;
     RSA* key;
 
@@ -56,9 +55,10 @@ RSA* LoadPublicKey(const char* filename)
     if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL,
                                      (void *)passphrase)) == NULL)
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)",
-            ERR_reason_error_string(err));
+        const char *errmsg = ERR_reason_error_string(ERR_get_error());
+        Log(LOG_LEVEL_ERR,
+            "Error reading public key. (PEM_read_RSAPublicKey: %s)",
+            (errmsg != NULL) ? errmsg : "no error message");
         fclose(fp);
         return NULL;
     };
@@ -212,7 +212,6 @@ int RemoveKeys(const char *input, bool must_be_coherent)
 
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 {
-    unsigned long err;
 #ifdef OPENSSL_NO_DEPRECATED
     RSA *pair = RSA_new();
     BIGNUM *rsa_bignum = BN_new();
@@ -251,8 +250,9 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     if (pair == NULL)
 #endif
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to generate key '%s'", ERR_reason_error_string(err));
+        const char *errmsg = ERR_reason_error_string(ERR_get_error());
+        Log(LOG_LEVEL_ERR, "Unable to generate key '%s'",
+            (errmsg != NULL) ? errmsg : "no error message");
         return;
     }
 
@@ -276,8 +276,10 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     if (!PEM_write_RSAPrivateKey(fp, pair, cipher, (void *)passphrase,
                                  strlen(passphrase), NULL, NULL))
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)", ERR_reason_error_string(err));
+        const char *errmsg = ERR_reason_error_string(ERR_get_error());
+        Log(LOG_LEVEL_ERR,
+            "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)",
+            (errmsg != NULL) ? errmsg : "no error message");
         return;
     }
 
@@ -303,8 +305,10 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     if (!PEM_write_RSAPublicKey(fp, pair))
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to write public key. (PEM_write_RSAPublicKey: %s)", ERR_reason_error_string(err));
+        const char *errmsg = ERR_reason_error_string(ERR_get_error());
+        Log(LOG_LEVEL_ERR,
+            "Unable to write public key. (PEM_write_RSAPublicKey: %s)",
+            (errmsg != NULL) ? errmsg : "no error message");
         return;
     }
 

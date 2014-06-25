@@ -8,7 +8,7 @@
 #include <libgen.h>                                             /* basename */
 
 
-#define NSEC 10                            /* how long to run each loop */
+unsigned int ROUND_DURATION = 10;          /* how long to run each loop */
 #define NHOSTS 5000                        /* how many hosts to store in db */
 #define MAX_NUM_THREADS 10000
 #define MAX_NUM_FORKS   10000
@@ -340,39 +340,103 @@ void print_progress(int lastsaw_num_threads, int keycount_num_threads,
     }
 }
 
+void print_usage(const char *argv0)
+{
+        printf("\
+\n\
+Usage:\n\
+	%s [options] LASTSAW_NUM_THREADS [KEYCOUNT_NUM_THREADS [SCAN_NUM_THREADS]]\n\
+\n\
+This program creates many threads and optionally many processes stressing the\n\
+lastseen database.\n\
+\n\
+Options:\n\
+	-d N:	Duration of each round of testing in seconds (default is 10s)\n\
+	-c N:	After finishing all rounds with threads, N spawned child\n\
+		processes shall apply a mixed workload to the database each one\n\
+		for another round (default is 0, i.e. don't fork children)\n\
+\n",
+               argv0);
+}
+
 void parse_args(int argc, char *argv[],
                 int *lastsaw_num_threads, int *keycount_num_threads,
-                int *scanlastseen_num_threads)
+                int *scanlastseen_num_threads, int *num_forked_children)
 {
     *lastsaw_num_threads      = 0;
     *keycount_num_threads     = 0;
     *scanlastseen_num_threads = 0;
+    *num_forked_children = 0;
 
-    if (argc >= 2)
+    int i = 1;
+    while (i < argc && argv[i][0] == '-')
     {
-        sscanf(argv[1], "%d", lastsaw_num_threads);
-    }
-    if (argc >= 3)
-    {
-        sscanf(argv[2], "%d", keycount_num_threads);
-    }
-    if (argc >= 4)
-    {
-        sscanf(argv[3], "%d", scanlastseen_num_threads);
+        switch (argv[i][1])
+        {
+        case 'd':
+        {
+            i++;
+            int N = 0;
+            int ret = sscanf((argv[i] != NULL) ? argv[i] : "",
+                             "%d", &N);
+            if (ret != 1 || N <= 0)
+            {
+                print_usage(basename(argv[0]));
+                exit(EXIT_FAILURE);
+            }
+
+            ROUND_DURATION = N;
+            break;
+        }
+        case 'c':
+        {
+            i++;
+            int N = -1;
+            int ret = sscanf((argv[i] != NULL) ? argv[i] : "",
+                             "%d", &N);
+            if (ret != 1 || N < 0)
+            {
+                print_usage(basename(argv[0]));
+                exit(EXIT_FAILURE);
+            }
+
+            *num_forked_children = N;
+            break;
+        }
+        default:
+            print_usage(basename(argv[0]));
+            exit(EXIT_FAILURE);
+        }
+
+        i++;
     }
 
+    /* Last 3 arguments */
+
+    if (i < argc)
+    {
+        sscanf(argv[i], "%d", lastsaw_num_threads);
+    }
+    if (i + 1 < argc)
+    {
+        sscanf(argv[i + 1], "%d", keycount_num_threads);
+    }
+    if (i + 2 < argc)
+    {
+        sscanf(argv[i + 2], "%d", scanlastseen_num_threads);
+    }
+
+    /* lastsaw_num_threads is the only /mandatory/ argument. */
     if (*lastsaw_num_threads  <= 0 || *lastsaw_num_threads  > MAX_NUM_THREADS)
     {
-        printf("\
-Usage:\n\
-	%s LASTSAW_NUM_THREADS [KEYCOUNT_NUM_THREADS [SCAN_NUM_THREADS]]\n\
-\n\
-This program creates a parent process stressing lastseen. After several seconds\n\
-creating the threads you defined, it also spawns a separate process doing things\n\
-to the same database.\n\n",
-               basename(argv[0]));
-
+        print_usage(basename(argv[0]));
         exit(EXIT_FAILURE);
+    }
+
+    if (*num_forked_children > 1)                              /* TODO FIX! */
+    {
+        printf("WARNING: Currently only one forked child is supported TODO FIX!\n");
+        *num_forked_children = 1;
     }
 }
 
@@ -381,13 +445,13 @@ int main(int argc, char *argv[])
 {
     int ret;
     int lastsaw_num_threads, keycount_num_threads, scanlastseen_num_threads;
-    const int total_num_children = 1;
+    int num_forked_children;
 
     LogSetGlobalLevel(LOG_LEVEL_DEBUG);
 
     parse_args(argc, argv,
                &lastsaw_num_threads, &keycount_num_threads,
-               &scanlastseen_num_threads);
+               &scanlastseen_num_threads, &num_forked_children);
     TOTAL_NUM_THREADS =
         lastsaw_num_threads + keycount_num_threads + scanlastseen_num_threads;
 
@@ -407,49 +471,54 @@ int main(int argc, char *argv[])
 
     /* === SPAWN A CHILD PROCESS FOR LATER === */
 
-    ret = pipe(PIPE_FD);
-    if (ret != 0)
+    pid_t child;
+    if (num_forked_children > 0)
     {
-        perror("pipe");
-        exit(EXIT_FAILURE);
-    }
-
-    pid_t child = fork();
-    if (child == -1)
-    {
-        perror("fork");
-        exit(EXIT_FAILURE);
-    }
-    else if (child == 0)
-    {
-        /* We only write to the pipe. */
-        close(PIPE_FD[0]);
-        /* Connect pipe to a FILE to talk to parent via fprintf(). */
-        PARENT_INPUT = fdopen(PIPE_FD[1], "w");
-        if (PARENT_INPUT == NULL)
+        ret = pipe(PIPE_FD);
+        if (ret != 0)
         {
-            perror("child fdopen");
+            perror("pipe");
             exit(EXIT_FAILURE);
         }
 
-        worker_process();
-        exit(EXIT_SUCCESS);
+        child = fork();
+        if (child == -1)
+        {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+        else if (child == 0)                                    /* child */
+        {
+            /* We only write to the pipe. */
+            close(PIPE_FD[0]);
+            /* Connect pipe to a FILE to talk to parent via fprintf(). */
+            PARENT_INPUT = fdopen(PIPE_FD[1], "w");
+            if (PARENT_INPUT == NULL)
+            {
+                perror("child fdopen");
+                exit(EXIT_FAILURE);
+            }
+
+            worker_process();
+            exit(EXIT_SUCCESS);
+        }
+
+        /* We only read from the pipe. */
+        close(PIPE_FD[1]);
+        CHILDREN_OUTPUTS[0] = PIPE_FD[0];
     }
 
-    /* We only read from the pipe. */
-    close(PIPE_FD[1]);
-    CHILDREN_OUTPUTS[0] = PIPE_FD[0];
 
-    printf("Operations per second:\n\n");
+    printf("Showing number of operations per second:\n\n");
 
-    /* === CREATE WORKER THREADS === */
+    /* === CREATE lastsaw() WORKER THREADS === */
 
     spawn_worker_threads(lastsaw_worker_thread, lastsaw_num_threads,
                          "UpdateLastSawHost()");
 
-    /* === PRINT PROGRESS FOR NSEC SECONDS === */
+    /* === PRINT PROGRESS FOR ROUND_DURATION SECONDS === */
 
-    for (int i = 0; i < NSEC; i++)
+    for (int i = 0; i < ROUND_DURATION; i++)
     {
         sleep(1);
         print_progress(lastsaw_num_threads, 0, 0, 0);
@@ -463,8 +532,8 @@ int main(int argc, char *argv[])
         spawn_worker_threads(keycount_worker_thread, keycount_num_threads,
                              "LastSeenHostKeyCount()");
 
-        /* === PRINT PROGRESS FOR NSEC SECONDS === */
-        for (int i = 0; i < NSEC; i++)
+        /* === PRINT PROGRESS FOR ROUND_DURATION SECONDS === */
+        for (int i = 0; i < ROUND_DURATION; i++)
         {
             sleep(1);
             print_progress(lastsaw_num_threads, keycount_num_threads, 0, 0);
@@ -479,8 +548,8 @@ int main(int argc, char *argv[])
         spawn_worker_threads(scanlastseen_worker_thread, scanlastseen_num_threads,
                              "ScanLastSeenQuality()");
 
-        /* === PRINT PROGRESS FOR NSEC SECONDS === */
-        for (int i = 0; i < NSEC; i++)
+        /* === PRINT PROGRESS FOR ROUND_DURATION SECONDS === */
+        for (int i = 0; i < ROUND_DURATION; i++)
         {
             sleep(1);
             print_progress(lastsaw_num_threads, keycount_num_threads,
@@ -491,24 +560,28 @@ int main(int argc, char *argv[])
 
     /* === START CHILD PROCESS WORK === */
 
-    printf("Forking child doing mix of operations\n");
-    kill(child, SIGUSR1);
-
-    /* === PRINT PROGRESS FOR NSEC SECONDS === */
-
-    for (int i = 0; i < NSEC; i++)
+    if (num_forked_children > 0)
     {
-        sleep(1);
-        kill(child, SIGUSR2);                /* receive progress from child */
-        print_progress(lastsaw_num_threads, keycount_num_threads,
-                       scanlastseen_num_threads, 1);
-        putc('\n', stdout);
+        printf("Doing mix of operations in forked children\n");
+        kill(child, SIGUSR1);
+
+        /* === PRINT PROGRESS FOR ROUND_DURATION SECONDS === */
+
+        for (int i = 0; i < ROUND_DURATION; i++)
+        {
+            sleep(1);
+            kill(child, SIGUSR2);                /* receive progress from child */
+            print_progress(lastsaw_num_threads, keycount_num_threads,
+                           scanlastseen_num_threads, 1);
+            putc('\n', stdout);
+        }
+
+        kill(child, SIGUSR1);                     /* signal child to finish */
     }
 
-    /* === TEST FINISHED === */
+    /* === TEST FINISHED, signal threads to exit === */
 
     DONE = true;
-    kill(child, SIGUSR1);
 
     /* === WAIT AT MOST 30 SECONDS FOR EVERYBODY TO FINISH === */
 
@@ -519,7 +592,7 @@ int main(int argc, char *argv[])
     time_t seconds_waited = 0;
     ThreadLock(&end_mtx);
     while (!(    FINISHED_THREADS == TOTAL_NUM_THREADS
-             && finished_children == total_num_children)
+             && finished_children == num_forked_children)
            && seconds_waited < 30)
     {
         struct timespec ts;
@@ -549,7 +622,7 @@ int main(int argc, char *argv[])
     /* === CLEAN UP TODO register these with atexit() === */
 
     int retval = EXIT_SUCCESS;
-    if (finished_children != total_num_children)
+    if (finished_children != num_forked_children)
     {
         fprintf(stderr,
                 "Forked child seems to be still alive, killing it!\n");
@@ -570,9 +643,10 @@ int main(int argc, char *argv[])
         printf("DONE!\n\n");
     }
 
-    char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    char *cmd;
+    xasprintf(&cmd, "rm -rf '%s'", CFWORKDIR);
     system(cmd);
+    free(cmd);
 
     return retval;
 }

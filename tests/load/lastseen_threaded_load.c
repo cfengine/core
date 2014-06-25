@@ -110,7 +110,7 @@ static void thread_exit_clean()
     /* Signal that we finished. */
     ThreadLock(&end_mtx);
     FINISHED_THREADS++;
-    if (FINISHED_THREADS > TOTAL_NUM_THREADS)
+    if (FINISHED_THREADS >= TOTAL_NUM_THREADS)
     {
         pthread_cond_signal(&end_cond);
     }
@@ -521,7 +521,8 @@ int main(int argc, char *argv[])
              && finished_children == total_num_children)
            && seconds_waited < 30)
     {
-        struct timespec ts = { .tv_sec = 1 };
+        /* Wait 1 second for the thread to signal us before looping over. */
+        struct timespec ts = { .tv_sec = time(NULL) + 1 };
         if (FINISHED_THREADS < TOTAL_NUM_THREADS)
         {
             pthread_cond_timedwait(&end_cond, &end_mtx, &ts);

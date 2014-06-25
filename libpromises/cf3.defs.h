@@ -91,12 +91,6 @@
 #define MAX_DIGEST_BYTES (512 / 8)  /* SHA-512 */
 #define MAX_DIGEST_HEX (MAX_DIGEST_BYTES * 2)
 
-#define CF_EDIT_IFELAPSED 3     /* NOTE: If doing copy template then edit working copy,
-                                   the edit ifelapsed must not be higher than
-                                   the copy ifelapsed. This will make the working
-                                   copy equal to the copied template file - not the
-                                   copied + edited file. */
-
 
 /*******************************************************************/
 

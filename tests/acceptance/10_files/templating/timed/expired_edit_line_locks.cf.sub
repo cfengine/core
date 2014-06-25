@@ -1,0 +1,32 @@
+body common control
+{
+    inputs => { "../../../dcs.cf.sub", "../../../plucked.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent init
+{
+  methods:
+      "any" usebundle => file_make("$(G.testfile).template", "text");
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).edit_line"
+        create => "true",
+        edit_line => insert_lines("text"),
+        edit_defaults => empty;
+
+      "$(G.testfile).cftemplate"
+        create => "true",
+        edit_template => "$(G.testfile).template",
+        template_method => "cfengine";
+
+      "$(G.testfile).mustache"
+        create => "true",
+        edit_template => "$(G.testfile).template",
+        template_method => "mustache";
+}
+
+

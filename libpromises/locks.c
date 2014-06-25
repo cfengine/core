@@ -934,7 +934,8 @@ void PurgeLocks(void)
     CF_DBC *dbcp;
     char *key;
     int ksize, vsize;
-    LockData entry;
+    LockData lock_horizon;
+    LockData *entry = NULL;
     time_t now = time(NULL);
 
     CF_DB *dbp = OpenLock();
@@ -944,11 +945,11 @@ void PurgeLocks(void)
         return;
     }
 
-    memset(&entry, 0, sizeof(entry));
+    memset(&lock_horizon, 0, sizeof(lock_horizon));
 
-    if (ReadDB(dbp, "lock_horizon", &entry, sizeof(entry)))
+    if (ReadDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon)))
     {
-        if (now - entry.time < SECONDS_PER_WEEK * 4)
+        if (now - lock_horizon.time < SECONDS_PER_WEEK * 4)
         {
             Log(LOG_LEVEL_VERBOSE, "No lock purging scheduled");
             CloseLock(dbp);
@@ -964,7 +965,7 @@ void PurgeLocks(void)
         return;
     }
 
-    while (NextDB(dbcp, &key, &ksize, (void *) &entry, &vsize))
+    while (NextDB(dbcp, &key, &ksize, (void **)&entry, &vsize))
     {
 #ifdef LMDB
         if (key[0] == 'X')
@@ -979,17 +980,17 @@ void PurgeLocks(void)
         }
 #endif
 
-        if (now - entry.time > (time_t) CF_LOCKHORIZON)
+        if (now - entry->time > (time_t) CF_LOCKHORIZON)
         {
-            Log(LOG_LEVEL_VERBOSE, " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
+            Log(LOG_LEVEL_VERBOSE, " --> Purging lock (%jd) %s", (intmax_t)(now - entry->time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }
 
-    entry.time = now;
+    lock_horizon.time = now;
     DeleteDBCursor(dbcp);
 
-    WriteDB(dbp, "lock_horizon", &entry, sizeof(entry));
+    WriteDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
     CloseLock(dbp);
 }
 

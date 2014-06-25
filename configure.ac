@@ -343,6 +343,7 @@ CF3_WITH_LIBRARY(openssl, [
    AC_CHECK_LIB(dl, dlopen, [], [])
    AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
    AC_CHECK_LIB(ssl, SSL_library_init, [], [])
+   AC_CHECK_DECLS([SSL_CTX_clear_options], [], [], [[#include <openssl/ssl.h>]])
    AC_CHECK_HEADERS([openssl/opensslv.h], [], [AC_MSG_ERROR(Cannot find OpenSSL)])
 
    AC_MSG_CHECKING(for OpenSSL version)
@@ -889,6 +890,7 @@ AC_CHECK_DECLS(lstat)
 AC_CHECK_FUNCS(sleep)
 AC_CHECK_DECLS(socketpair, [], [], [[#include <sys/socket.h>]])
 AC_CHECK_DECLS(fsync)
+AC_CHECK_DECLS(glob, [], [], [[#include <glob.h>]])
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr

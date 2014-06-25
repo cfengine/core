@@ -26,6 +26,10 @@ bundle agent test
 
       "" usebundle => file_make("$(G.testfile).absent", ""),
       unless => "check2";
+
+      "" usebundle => file_make("$(G.testfile).absent", ""),
+      if => "check1",
+      unless => "check2";
 }
 
 bundle agent check

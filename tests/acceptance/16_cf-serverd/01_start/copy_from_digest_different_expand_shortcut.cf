@@ -9,7 +9,7 @@ body common control
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "windows",
+      "test_suppress_fail" string => "windows|sunos_5_10",
         meta => { "redmine4822" };
 
   methods:

@@ -298,7 +298,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
         return false;
     }
 
-    fprintf(fout, bootstrap_content);
+    fputs(bootstrap_content, fout);
     fclose(fout);
 
     if (chmod(filename, S_IRUSR | S_IWUSR) == -1)

@@ -1149,8 +1149,8 @@ JsonElement *JsonStringCreate(const char *value)
 
 JsonElement *JsonIntegerCreate(int value)
 {
-    char *buffer = xmalloc(PRINTSIZE(value));
-    sprintf(buffer, "%d", value);
+    char *buffer;
+    xasprintf(&buffer, "%d", value);
 
     return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_INTEGER, buffer);
 }

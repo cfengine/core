@@ -98,7 +98,9 @@ void HashCalculatePrintableRepresentation(Hash *hash)
     unsigned int i;
     for (i = 0; i < hash->size; i++)
     {
-        sprintf((char *) (hash->printable + 4 + 2 * i), "%02x", hash->digest[i]);
+        snprintf(hash->printable + 4 + 2 * i,
+                 sizeof(hash->printable) - (4 + 2 * i), "%02x",
+                 hash->digest[i]);
     }
     hash->printable[4 + 2 * hash->size] = '\0';
 }

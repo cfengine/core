@@ -111,11 +111,13 @@ void MonNetworkInit(void)
     {
         char vbuff[CF_BUFSIZE];
 
-        sprintf(vbuff, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
+        snprintf(vbuff, sizeof(vbuff), "%s/state/cf_incoming.%s",
+                 CFWORKDIR, ECGSOCKS[i].name);
         MapName(vbuff);
         CreateEmptyFile(vbuff);
 
-        sprintf(vbuff, "%s/state/cf_outgoing.%s", CFWORKDIR, ECGSOCKS[i].name);
+        snprintf(vbuff, sizeof(vbuff), "%s/state/cf_outgoing.%s",
+                 CFWORKDIR, ECGSOCKS[i].name);
         MapName(vbuff);
         CreateEmptyFile(vbuff);
     }

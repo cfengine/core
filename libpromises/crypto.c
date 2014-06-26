@@ -197,13 +197,13 @@ void PolicyHubUpdateKeys(const char *policy_server)
 
         char dst_public_key_filename[CF_BUFSIZE] = "";
         {
-            char buffer[EVP_MAX_MD_SIZE * 4];
+            char buffer[CF_HOSTKEY_STRING_SIZE];
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-            snprintf(dst_public_key_filename, CF_MAXVARSIZE,
+            snprintf(dst_public_key_filename, sizeof(dst_public_key_filename),
                      "%s/ppkeys/%s-%s.pub",
-                     CFWORKDIR,
-                     "root",
-                     HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
+                     CFWORKDIR, "root",
+                     HashPrintSafe(buffer, sizeof(buffer), digest,
+                                   CF_DEFAULT_DIGEST, true));
             MapName(dst_public_key_filename);
         }
 
@@ -237,9 +237,9 @@ void PolicyHubUpdateKeys(const char *policy_server)
  */
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
 {
-    char hash[CF_MAXVARSIZE];
+    char hash[CF_HOSTKEY_STRING_SIZE];
 
-    bool found = Address2Hostkey(ipaddress, hash);
+    bool found = Address2Hostkey(hash, sizeof(hash), ipaddress);
     if (found)
     {
         return HavePublicKey(username, ipaddress, hash);

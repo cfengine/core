@@ -27,13 +27,20 @@
 
 #include <cf3.defs.h>
 
+
+/* Enough room for "SHA=asdfasdfasdf". */
+#define CF_HOSTKEY_STRING_SIZE (4 + 2 * EVP_MAX_MD_SIZE + 1)
+
+
 void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
                 const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type);
-char *HashPrintSafe(HashMethod type, bool use_prefix, const unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4]);
+char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
+                    HashMethod type, bool use_prefix);
 char *SkipHashType(char *hash);
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
+
 
 #endif

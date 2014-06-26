@@ -544,10 +544,11 @@ static void GetNameInfo3(EvalContext *ctx)
 
     if (PUBKEY)
     {
-        char pubkey_digest[CF_MAXVARSIZE] = { 0 };
+        char pubkey_digest[CF_HOSTKEY_STRING_SIZE] = { 0 };
 
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-        HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, pubkey_digest);
+        HashPrintSafe(pubkey_digest, sizeof(pubkey_digest), digest,
+                      CF_DEFAULT_DIGEST, true);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=CFEngine ID");
 

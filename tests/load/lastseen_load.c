@@ -75,7 +75,8 @@ char *MapAddress(char *addr)
     exit(42);
 }
 
-char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
+char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
+                    HashMethod type, bool use_prefix)
 {
     exit(42);
 }

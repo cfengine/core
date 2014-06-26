@@ -46,6 +46,8 @@
 #include <addr_lib.h>
 #include <loading.h>
 #include <expand.h>                                 /* ProtocolVersionParse */
+#include <files_hashes.h>
+
 
 typedef enum
 {
@@ -408,7 +410,7 @@ static int HailServer(EvalContext *ctx, char *host)
 
     AgentConnection *conn;
     char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE],
-        digest[CF_MAXVARSIZE], user[CF_SMALLBUF];
+        hostkey[CF_HOSTKEY_STRING_SIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
     bool trustkey = false;
@@ -434,14 +436,14 @@ static int HailServer(EvalContext *ctx, char *host)
         return false;
     }
 
-    Address2Hostkey(ipaddr, digest);
+    Address2Hostkey(hostkey, sizeof(hostkey), ipaddr);
     GetCurrentUserName(user, CF_SMALLBUF);
 
     if (INTERACTIVE)
     {
         Log(LOG_LEVEL_VERBOSE, "Using interactive key trust...");
 
-        gotkey = HavePublicKey(user, ipaddr, digest) != NULL;
+        gotkey = HavePublicKey(user, ipaddr, hostkey) != NULL;
         if (!gotkey)
         {
             printf("WARNING - You do not have a public key from host %s = %s\n",

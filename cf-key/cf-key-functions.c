@@ -81,7 +81,7 @@ char* GetPubkeyDigest(const char* pubkey)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     RSA* key = NULL;
-    char* buffer = xmalloc(EVP_MAX_MD_SIZE * 4);
+    char* buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
 
     key = LoadPublicKey(pubkey);
     if (NULL == key)
@@ -90,7 +90,8 @@ char* GetPubkeyDigest(const char* pubkey)
     }
 
     HashPubKey(key, digest, CF_DEFAULT_DIGEST);
-    HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer);
+    HashPrintSafe(buffer, CF_HOSTKEY_STRING_SIZE,
+                  digest, CF_DEFAULT_DIGEST, true);
     return buffer;
 }
 

@@ -681,15 +681,16 @@ static void MailResult(const ExecConfig *config, const char *file)
     if (SafeStringLength(config->mail_subject) > 0)
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
-        char buffer[EVP_MAX_MD_SIZE * 4];
+        char buffer[CF_HOSTKEY_STRING_SIZE];
 
         char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
 
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
 
-        snprintf(vbuff, sizeof(vbuff), "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
+        snprintf(vbuff, sizeof(vbuff),
+                 "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
                  VFQNAME, config->ip_addresses, existing_policy_server,
-                 HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
+                 HashPrintSafe(buffer, sizeof(buffer), digest, CF_DEFAULT_DIGEST, true));
 
         send(sd, vbuff, strlen(vbuff), 0);
         free(existing_policy_server);

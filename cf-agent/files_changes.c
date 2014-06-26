@@ -491,9 +491,10 @@ bool FileChangesCheckAndUpdateHash_impl(const char *filename,
         if ((!found || update) && !DONTDO)
         {
             const char *action = found ? "Updating" : "Storing";
-            char buffer[EVP_MAX_MD_SIZE * 4];
-            Log(LOG_LEVEL_NOTICE, "%s %s hash for '%s' (%s)", action, HashNameFromId(type),
-                filename, HashPrintSafe(type, true, digest, buffer));
+            char buffer[CF_HOSTKEY_STRING_SIZE];
+            Log(LOG_LEVEL_NOTICE, "%s %s hash for '%s' (%s)", action,
+                HashNameFromId(type), filename,
+                HashPrintSafe(buffer, sizeof(buffer), digest, type, true));
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             WriteHash(dbp, type, filename, digest);

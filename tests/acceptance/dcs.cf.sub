@@ -203,7 +203,13 @@ bundle agent dcs_sort(infile, outfile)
 {
   commands:
       # Enforce byte sort order with LC_ALL.
+
+    !sunos_5_10::
       "$(G.env) LC_ALL=C $(G.sort) $(infile) > $(outfile)"
+      contain => in_shell;
+
+    sunos_5_10::
+      "$(G.env) LC_ALL=C $(G.perl) -n -e 'push @x, $_; END { print sort { $a cmp $b } @x } $(infile) > $(outfile)"
       contain => in_shell;
 }
 

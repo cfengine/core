@@ -58,14 +58,12 @@ bundle agent init
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "aix|sunos_5_10",
-        meta => { "redmine5209" };
-
   vars:
       "indices" slist => getindices("init.values");
 
-      "eval[$(indices)]" string => eval("$(init.values[$(indices)])", "math", "infix");
+      # convert the result to lowercase because some platforms use 'inf'
+      # and others 'Inf' and others... you don't wanna know
+      "eval[$(indices)]" string => string_downcase(eval("$(init.values[$(indices)])", "math", "infix"));
 }
 
 

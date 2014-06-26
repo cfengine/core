@@ -106,12 +106,52 @@ static int PasswordSupplier(int num_msg, const struct pam_message **msg,
     return PAM_SUCCESS;
 }
 
+#if HAVE_FGETSPENT
+// Uses fgetspent() instead of getspnam(), to guarantee that the returned user
+// is a local user, and not for example from LDAP.
+static struct spwd *GetSpEntry(const char *puser)
+{
+    FILE *fptr = fopen("/etc/shadow", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/shadow': %s", GetErrorStr());
+        return NULL;
+    }
+
+    struct spwd *spwd_info;
+    bool found = false;
+    while ((spwd_info = fgetspent(fptr)))
+    {
+        if (strcmp(puser, spwd_info->sp_namp) == 0)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fptr);
+
+    if (found)
+    {
+        return spwd_info;
+    }
+    else
+    {
+        // Failure to find the user means we just set errno to zero.
+        // Perhaps not optimal, but we cannot pass ENOENT, because the fopen might
+        // fail for this reason, and that should not be treated the same.
+        errno = 0;
+        return NULL;
+    }
+}
+#endif // HAVE_FGETSPENT
+
 static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info, const char **result)
 {
     // Silence warning.
     (void)puser;
 
-#ifdef HAVE_GETSPNAM
+#ifdef HAVE_FGETSPENT
     // If the hash is very short, it's probably a stub. Try getting the shadow password instead.
     if (strlen(passwd_info->pw_passwd) <= 4)
     {
@@ -119,12 +159,12 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
 
         struct spwd *spwd_info;
         errno = 0;
-        spwd_info = getspnam(puser);
+        spwd_info = GetSpEntry(puser);
         if (!spwd_info)
         {
             if (errno)
             {
-                Log(LOG_LEVEL_ERR, "Could not get information from user shadow database. (getspnam: '%s')", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Could not get information from user shadow database: %s", GetErrorStr());
                 return false;
             }
             else
@@ -139,7 +179,8 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
             return true;
         }
     }
-#endif // HAVE_GETSPNAM
+#endif // HAVE_FGETSPENT
+
     Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from passwd database.", puser);
     *result = passwd_info->pw_passwd;
     return true;

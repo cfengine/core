@@ -630,7 +630,7 @@ AC_CHECK_DECLS(isfinite, [], [], [[#include <math.h>]])
 
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
-AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
+AC_CHECK_FUNCS(fgetspent lckpwdf ulckpwdf)
 
 AC_CHECK_DECLS(getloadavg)
 AC_FUNC_GETLOADAVG

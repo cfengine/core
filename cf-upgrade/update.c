@@ -36,6 +36,10 @@
 
 #include <assert.h>
 
+
+extern char **environ;
+
+
 #ifndef __MINGW32__
 /* Unix implementation */
 int private_copy_to_temporary_location(const char *source, const char *destination)
@@ -276,9 +280,9 @@ int RunUpdate(const Configuration *configuration)
             log_entry (LogCritical, "Could not copy %s to %s", current, copy);
             return -1;
         }
+
         /* prepare the data for running the copy */
         char *args[COMMAND_LINE_OPTIONS + 1];
-        char *envp[] = { NULL };
         int counter = 0;
         args[counter++] = xstrdup(ConfigurationCopy(configuration));
         args[counter++] = xstrdup("-b");
@@ -297,7 +301,10 @@ int RunUpdate(const Configuration *configuration)
         }
         /* Replace current process with the copy. */
         args[counter + total] = NULL;
-        result = run_process_replace(copy, args, envp);
+
+        /* Effectively this does execvp(), i.e. preserves
+           current environment. */
+        result = run_process_replace(copy, args, environ);
 
         assert(false);
     }

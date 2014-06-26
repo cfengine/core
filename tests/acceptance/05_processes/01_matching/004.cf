@@ -25,7 +25,7 @@ bundle agent test
 {
   meta:
       "test_suppress_fail" string => "sunos_5_10",
-       meta => { "redmine6215" };
+      meta => { "redmine6215" };
       
   processes:
       "\bcf-agent\b"

@@ -188,7 +188,8 @@ char *HashPrintSafe(HashMethod type, bool use_prefix, const unsigned char digest
 
     for (i = 0; i < HashSizeFromId(type); i++)
     {
-        sprintf((char *) (buffer + prefix_offset + 2 * i), "%02x", digest[i]);
+        snprintf(buffer + prefix_offset + 2 * i,
+                 sizeof(buffer) - (prefix_offset + 2 * i), "%02x", digest[i]);
     }
 
     buffer[prefix_offset + 2*HashSizeFromId(type)] = '\0';

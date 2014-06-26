@@ -340,7 +340,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *o
         Log(LOG_LEVEL_DEBUG, "Couldn't read system clock");
     }
 
-    sprintf(buffer, "%s", ctime(&tim));
+    snprintf(buffer, sizeof(buffer), "%s", ctime(&tim));
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {

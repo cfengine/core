@@ -10,6 +10,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "sunos_5_10",
+      meta => { "redmine6214" };
+      
   commands:
       # Note, no -K, we are testing locks.
       "$(sys.cf_agent) -v -D AUTO,DEBUG -f $(this.promise_filename).sub"

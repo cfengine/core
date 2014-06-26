@@ -275,15 +275,11 @@
 #define HAVE___VA_COPY 1
 #endif	/* !defined(HAVE___VA_COPY) */
 #endif	/* HAVE_CONFIG_H */
-/* Make sure that if we test, only rpl versions are called. */
+
 #define snprintf rpl_snprintf
 #define vsnprintf rpl_vsnprintf
 #define asprintf rpl_asprintf
 #define vasprintf rpl_vasprintf
-/* #define printf rpl_printf */
-/* #define vprintf rpl_vprintf */
-/* #define fprintf rpl_fprintf */
-/* #define vfprintf rpl_vfprintf */
 #endif	/* TEST_SNPRINTF */
 
 #if !HAVE_SNPRINTF || !HAVE_VSNPRINTF || !HAVE_ASPRINTF || !HAVE_VASPRINTF

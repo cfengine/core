@@ -3,6 +3,7 @@
 #include <dbm_api.h>
 #include <process_lib.h>                               /* GracefulTerminate */
 #include <mutex.h>                                     /* ThreadLock */
+#include <misc_lib.h>                                  /* xclock_gettime */
 
 #include <libgen.h>                                             /* basename */
 
@@ -521,8 +522,11 @@ int main(int argc, char *argv[])
              && finished_children == total_num_children)
            && seconds_waited < 30)
     {
-        /* Wait 1 second for the thread to signal us before looping over. */
-        struct timespec ts = { .tv_sec = time(NULL) + 1 };
+        struct timespec ts;
+        xclock_gettime(CLOCK_REALTIME, &ts);
+
+        /* Wait at most 1s for the thread to signal us before looping over. */
+        ts.tv_sec++;
         if (FINISHED_THREADS < TOTAL_NUM_THREADS)
         {
             pthread_cond_timedwait(&end_cond, &end_mtx, &ts);

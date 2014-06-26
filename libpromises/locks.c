@@ -604,8 +604,9 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
-    char str_digest[CF_BUFSIZE];
-    HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, str_digest);
+    char str_digest[CF_HOSTKEY_STRING_SIZE];
+    HashPrintSafe(str_digest, sizeof(str_digest), digest,
+                  CF_DEFAULT_DIGEST, true);
 
     if (EvalContextPromiseLockCacheContains(ctx, str_digest))
     {

@@ -63,4 +63,6 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...) \
 void __UnexpectedError(const char *file, int lineno, const char *format, ...) \
     FUNC_ATTR_PRINTF(3, 4);
 
+void xclock_gettime(clockid_t clk_id, struct timespec *ts);
+
 #endif

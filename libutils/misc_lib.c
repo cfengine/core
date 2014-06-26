@@ -26,6 +26,7 @@
 
 #include <platform.h>
 #include <alloc.h>
+#include <logging.h>
 
 #include <stdarg.h>
 
@@ -83,4 +84,16 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     va_end(ap);
 
     free(fmt);
+}
+
+void xclock_gettime(clockid_t clk_id, struct timespec *ts)
+{
+    int ret = clock_gettime(clk_id, ts);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "clock_gettime() failed (%s), falling back to time()",
+            GetErrorStr());
+        *ts = (struct timespec) { .tv_sec = time(NULL) };
+    }
 }

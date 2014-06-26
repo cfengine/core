@@ -630,7 +630,7 @@ AC_REPLACE_FUNCS(localtime_r)
 AC_CHECK_DECLS(fgetgrent, [], [], [[#include <grp.h>]])
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
-AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
+AC_CHECK_FUNCS(fgetspent lckpwdf ulckpwdf)
 
 CF3_PATH_ROOT_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$CHPASSWD" != "x"],

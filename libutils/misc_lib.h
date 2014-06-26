@@ -63,6 +63,17 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...) \
 void __UnexpectedError(const char *file, int lineno, const char *format, ...) \
     FUNC_ATTR_PRINTF(3, 4);
 
+
+/**
+ * Unchecked versions of common functions, i.e. functions that no longer
+ * return anything, but try to continue in case of failure.
+ *
+ * @NOTE call these only with arguments that will always succeed!
+ */
+
+
 void xclock_gettime(clockid_t clk_id, struct timespec *ts);
+void xsnprintf(char *str, size_t str_size, const char *format, ...);
+
 
 #endif

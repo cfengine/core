@@ -375,7 +375,9 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
                         Log(LOG_LEVEL_NOTICE, "%s", cmdOutBuf);
                         cmdOutBufPos = 0;
                     }
-                    sprintf(cmdOutBuf + cmdOutBufPos, "Q: \"...%s\": %s\n", comm, line);
+                    snprintf(cmdOutBuf + cmdOutBufPos,
+                             sizeof(cmdOutBuf) - cmdOutBufPos,
+                             "Q: \"...%s\": %s\n", comm, line);
                     cmdOutBufPos += (lineOutLen - 1);
                 }
                 count++;

@@ -621,7 +621,8 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         chmod(vbuff, sb.st_mode | 0700);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(ebuff, sizeof(ebuff), "%s%cstate%ccf_procs",
+             CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
     if (stat(ebuff, &statbuf) == -1)
@@ -629,27 +630,32 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_rootprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(ebuff, sizeof(ebuff), "%s%cstate%ccf_rootprocs",
+             CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
     if (stat(ebuff, &statbuf) == -1)
     {
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_otherprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(ebuff, sizeof(ebuff), "%s%cstate%ccf_otherprocs",
+             CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
     if (stat(ebuff, &statbuf) == -1)
     {
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%cprevious_state%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(ebuff, sizeof(ebuff), "%s%cstate%cprevious_state%c",
+             CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
-    sprintf(ebuff, "%s%cstate%cdiff%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(ebuff, sizeof(ebuff), "%s%cstate%cdiff%c",
+             CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
-    sprintf(ebuff, "%s%cstate%cuntracked%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(ebuff, sizeof(ebuff), "%s%cstate%cuntracked%c",
+            CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
     OpenNetwork();

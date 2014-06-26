@@ -1472,7 +1472,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_length"))
     {
-        sprintf(buf, "%d", len);
+        snprintf(buf, sizeof(buf), "%d", len);
     }
     else if (!strcmp(fp->name, "string_head"))
     {
@@ -5265,7 +5265,7 @@ bool PortablyFormatTime(char *buffer, size_t bufsiz,
 
 #ifdef STRFTIME_s_HACK /* %s: seconds since epoch */
     char epoch[PRINTSIZE(when)];
-    sprintf(epoch, "%" PRIdMAX, (intmax_t)when);
+    snprintf(epoch, sizeof(epoch), "%j", (intmax_t) when);
 #endif /* STRFTIME_s_HACK */
 
     typedef char * SearchReplacePair[2];

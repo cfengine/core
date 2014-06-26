@@ -236,7 +236,7 @@ static bool ClearPasswordAdministrationFlags(const char *puser)
     const char *cmd_str = PWDADM " -c ";
     char final_cmd[strlen(cmd_str) + strlen(puser) + 1];
 
-    sprintf(final_cmd, "%s%s", cmd_str, puser);
+    snprintf(final_cmd, sizeof(final_cmd), "%s%s", cmd_str, puser);
 
     Log(LOG_LEVEL_VERBOSE, "Clearing password administration flags for user '%s'. (command: '%s')", puser, final_cmd);
 
@@ -403,11 +403,13 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
         *field_end = '\0';
         if (strcmp(line, puser) == 0)
         {
-            sprintf(new_line, "%s:%s:%s\n", line, password, field_end + 1);
+            snprintf(new_line, sizeof(new_line), "%s:%s:%s\n",
+                     line, password, field_end + 1);
         }
         else
         {
-            sprintf(new_line, "%s:%s:%s\n", line, field_start + 1, field_end + 1);
+            snprintf(new_line, sizeof(new_line), "%s:%s:%s\n",
+                     line, field_start + 1, field_end + 1);
         }
 
         free(line);
@@ -533,7 +535,7 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
         if (hash[0] != '!')
         {
             char new_hash[strlen(hash) + 2];
-            sprintf(new_hash, "!%s", hash);
+            snprintf(new_hash, sizeof(new_hash), "!%s", hash);
             if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
             {
                 return false;

@@ -348,14 +348,14 @@ static void RemoveAllFileTraces(CF_DB *db, const char *path)
         DeleteHash(db, c, path);
     }
     char key[strlen(path) + 3];
-    sprintf(key, "S_%s", path);
+    snprintf(key, sizeof(key), "S_%s", path);
     DeleteDB(db, key);
 }
 
 static bool GetDirectoryListFromDatabase(CF_DB *db, const char *path, Seq *files)
 {
     char key[strlen(path) + 3];
-    sprintf(key, "D_%s", path);
+    snprintf(key, sizeof(key), "D_%s", path);
     if (!HasKeyDB(db, key, sizeof(key)))
     {
         // Not an error, so successful, but seq remains unchanged.
@@ -413,7 +413,7 @@ static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *
     int no_files = SeqLength(files);
 
     char key[strlen(path) + 3];
-    sprintf(key, "D_%s", path);
+    snprintf(key, sizeof(key), "D_%s", path);
 
     if (no_files == 0)
     {
@@ -575,18 +575,19 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
         if (compare_result < 0)
         {
             /*
-              We would have called this here, but we assume that DepthSearch() has already done it
-              for us. The reason is that calling it here produces a very unnatural order, with all
-              stat and content changes, as well as all subdirectories, appearing in the log before
-              the message about a new file. This is because we save the list for last and *then*
-              compare it to the saved directory list, *after* traversing the tree. So we let
-              DepthSearch() do it while traversing instead. Removed files will still be listed
-              last.
+              We would have called this here, but we assume that DepthSearch()
+              has already done it for us. The reason is that calling it here
+              produces a very unnatural order, with all stat and content
+              changes, as well as all subdirectories, appearing in the log
+              before the message about a new file. This is because we save the
+              list for last and *then* compare it to the saved directory list,
+              *after* traversing the tree. So we let DepthSearch() do it while
+              traversing instead. Removed files will still be listed last.
             */
 #if 0
             char *file = SeqAt(disk_file_set, disk_pos);
             char path[strlen(name) + strlen(file) + 2];
-            sprintf(path, "%s/%s", name, file);
+            snprintf(path, sizeof(path), "%s/%s", name, file);
             FileChangesLogNewFile(path, pp);
 #endif
 
@@ -597,7 +598,7 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
         {
             char *db_file = SeqAt(db_file_set, db_pos);
             char path[strlen(name) + strlen(db_file) + 2];
-            sprintf(path, "%s/%s", name, db_file);
+            snprintf(path, sizeof(path), "%s/%s", name, db_file);
 
             Log(LOG_LEVEL_NOTICE, "File '%s' no longer exists", path);
             FileChangesLogChange(path, FILE_STATE_REMOVED, "File removed", pp);
@@ -645,7 +646,7 @@ void FileChangesCheckAndUpdateStats(const char *file, struct stat *sb, bool upda
     }
 
     char key[strlen(file) + 3];
-    sprintf(key, "S_%s", file);
+    snprintf(key, sizeof(key), "S_%s", file);
 
     if (!ReadDB(dbp, key, &cmpsb, sizeof(struct stat)))
     {

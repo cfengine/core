@@ -117,7 +117,7 @@ void MonitorInitialize(void)
     int i, j, k;
     char vbuff[CF_BUFSIZE];
 
-    sprintf(vbuff, "%s/state/cf_users", CFWORKDIR);
+    snprintf(vbuff, sizeof(vbuff), "%s/state/cf_users", CFWORKDIR);
     MapName(vbuff);
     CreateEmptyFile(vbuff);
 

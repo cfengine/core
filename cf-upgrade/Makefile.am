@@ -2,8 +2,8 @@ sbin_PROGRAMS = cf-upgrade
 
 LIBS=
 CORE_LIBS=
+cf_upgrade_CPPFLAGS=
 cf_upgrade_CFLAGS = $(CORE_CFLAGS)
-cf_upgrade_CPPFLAGS = $(CORE_CPPFLAGS)
 cf_upgrade_LDFLAGS = $(LIBS) $(CORE_LIBS)
 
 

@@ -10,7 +10,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 int main()
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
+    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
     mkdtemp(CFWORKDIR);
 
     for (int i = 0; i < 1000000; ++i)
@@ -22,16 +22,16 @@ int main()
         }
 
         char hostkey[50];
-        snprintf(hostkey, 50, "SHA-%040d", i);
+        xsnprintf(hostkey, 50, "SHA-%040d", i);
         char ip[50];
-        snprintf(ip, 50, "250.%03d.%03d.%03d", i / (256*256), (i / 256) % 256, i % 256);
+        xsnprintf(ip, 50, "250.%03d.%03d.%03d", i / (256*256), (i / 256) % 256, i % 256);
 
         UpdateLastSawHost(hostkey, ip, false, i);
         UpdateLastSawHost(hostkey, ip, true, 2000000 - i);
     }
 
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
     system(cmd);
 
     return 0;

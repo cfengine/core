@@ -49,10 +49,10 @@ struct stat filestat_value;
 
 static void test_setup(void)
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/changes_migration_test.XXXXXX");
+    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/changes_migration_test.XXXXXX");
     mkdtemp(CFWORKDIR);
     char state_dir[PATH_MAX];
-    snprintf(state_dir, sizeof(state_dir), "%s/state", CFWORKDIR);
+    xsnprintf(state_dir, sizeof(state_dir), "%s/state", CFWORKDIR);
     mkdir(state_dir, 0755);
 
     CF_DB *db;

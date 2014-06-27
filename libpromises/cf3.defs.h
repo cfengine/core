@@ -38,6 +38,7 @@
 #include <logging.h>
 
 #include <cfnet.h>                       /* ProtocolVersion, CF_BUFSIZE etc */
+#include <misc_lib.h>                    /* xsnprintf, ProgrammingError etc */
 
 
 /*******************************************************************/

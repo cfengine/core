@@ -136,7 +136,7 @@ void avahi_simple_poll_quit(AvahiSimplePoll *poll)
 
 char *avahi_address_snprint(char *buffer, size_t size, const AvahiAddress *address)
 {
-    snprintf(buffer, size, "10.0.0.100");
+    xsnprintf(buffer, size, "10.0.0.100");
 
     return NULL;
 }

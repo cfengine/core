@@ -411,8 +411,8 @@ static bool CallHostsSeenCallback(const char *hostkey, const char *address,
         return true;
     }
 
-    char buf[CF_BUFSIZE];
-    snprintf(buf, sizeof(buf), "%ju", (uintmax_t)quality->lastseen);
+    char buf[PRINTSIZE(uintmax_t)];
+    xsnprintf(buf, sizeof(buf), "%ju", (uintmax_t) quality->lastseen);
 
     PrependItem(addresses, address, buf);
 
@@ -1483,7 +1483,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_length"))
     {
-        snprintf(buf, sizeof(buf), "%d", len);
+        xsnprintf(buf, sizeof(buf), "%d", len);
     }
     else if (!strcmp(fp->name, "string_head"))
     {
@@ -5276,7 +5276,7 @@ bool PortablyFormatTime(char *buffer, size_t bufsiz,
 
 #ifdef STRFTIME_s_HACK /* %s: seconds since epoch */
     char epoch[PRINTSIZE(when)];
-    snprintf(epoch, sizeof(epoch), "%j", (intmax_t) when);
+    xsnprintf(epoch, sizeof(epoch), "%j", (intmax_t) when);
 #endif /* STRFTIME_s_HACK */
 
     typedef char * SearchReplacePair[2];

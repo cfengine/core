@@ -262,8 +262,8 @@ file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY
 sort_test_SOURCES = sort_test.c
 sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c mock_logging.c
-logging_test_LDADD = libtest.la
+logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
+logging_test_LDADD = libtest.la ../../libutils/libutils.la
 
 logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging.h
 logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la

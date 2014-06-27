@@ -28,8 +28,8 @@ static const char *ARRAY_OBJECT = "[\n" "  {\n" "    \"first\": \"one\"\n" "  }\
 
 static JsonElement *LoadTestFile(const char *filename)
 {
-    char path[1024];
-    sprintf(path, "%s/%s", TESTDATADIR, filename);
+    char path[PATH_MAX];
+    xsnprintf(path, sizeof(path), "%s/%s", TESTDATADIR, filename);
 
     Writer *w = FileRead(path, SIZE_MAX, NULL);
     if (!w)

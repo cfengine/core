@@ -120,7 +120,7 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
     if (new_policy_server)
     {
-        snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
+        xsnprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", new_policy_server, CF_DATA_TYPE_STRING, "source=bootstrap");
     }
     else

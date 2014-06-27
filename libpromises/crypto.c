@@ -469,7 +469,7 @@ void DebugBinOut(char *buffer, int len, char *comment)
 
     for (sp = buffer; sp < (unsigned char *) (buffer + len); sp++)
     {
-        snprintf(hexStr, sizeof(hexStr), "%2.2x", (int) *sp);
+        xsnprintf(hexStr, sizeof(hexStr), "%2.2x", (int) *sp);
         strcat(buf, hexStr);
     }
 

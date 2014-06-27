@@ -5550,7 +5550,7 @@ static FnCallResult FnCallReadCSV(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
         if (count > size_max)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: line %d from CSV file '%s' exceeded limit %lu, done with file",
-                fp->name, linenumber, filename, size_max);
+                fp->name, linenumber, filename, (long unsigned int)size_max);
             free(line);
             break;
         }

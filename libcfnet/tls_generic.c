@@ -570,6 +570,8 @@ static void assert_SSLIsBlocking(const SSL *ssl)
             ProgrammingError("OpenSSL socket is non-blocking!");
         }
     }
+#else // silence compiler warning
+    ssl = NULL;
 #endif
 }
 

@@ -33,7 +33,7 @@ char *GenTimeKey(time_t now)
 
     gmtime_r(&now, &tm);
 
-    snprintf(buf, sizeof(buf), "%3.3s:Hr%02d:Min%02d_%02d",
+    xsnprintf(buf, sizeof(buf), "%3.3s:Hr%02d:Min%02d_%02d",
              DAY_TEXT[tm.tm_wday ? (tm.tm_wday - 1) : 6],
              tm.tm_hour, tm.tm_min / 5 * 5, ((tm.tm_min + 5) / 5 * 5) % 60);
 

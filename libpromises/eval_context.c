@@ -1100,19 +1100,19 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
         ChopLastNode(path);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, CF_DATA_TYPE_STRING, "source=promise");
-        char number[CF_SMALLBUF];
-        snprintf(number, CF_SMALLBUF, "%llu", (unsigned long long)owner->offset.line);
+        char number[PRINTSIZE(uintmax_t)];
+        xsnprintf(number, CF_SMALLBUF, "%ju", (uintmax_t) owner->offset.line);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, CF_DATA_TYPE_STRING, "source=promise");
     }
 
     char v[PRINTSIZE(int)];
-    snprintf(v, sizeof(v), "%d", (int) ctx->uid);
+    xsnprintf(v, sizeof(v), "%d", (int) ctx->uid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, CF_DATA_TYPE_INT, "source=agent");
-    snprintf(v, sizeof(v), "%d", (int) ctx->gid);
+    xsnprintf(v, sizeof(v), "%d", (int) ctx->gid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, CF_DATA_TYPE_INT, "source=agent");
-    snprintf(v, sizeof(v), "%d", (int) ctx->pid);
+    xsnprintf(v, sizeof(v), "%d", (int) ctx->pid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_pid", v, CF_DATA_TYPE_INT, "source=agent");
-    snprintf(v, sizeof(v), "%d", (int) ctx->ppid);
+    xsnprintf(v, sizeof(v), "%d", (int) ctx->ppid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, CF_DATA_TYPE_INT, "source=agent");
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");

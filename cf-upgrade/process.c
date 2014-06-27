@@ -160,7 +160,7 @@ static void args_to_command_line(char **args, char *command_line)
     return 0;
 }
 
-int private_run_process_finish(const char *command, char **args, char **envp)
+int private_run_process_replace(const char *command, char **args, char **envp)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;

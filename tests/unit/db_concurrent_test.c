@@ -59,13 +59,13 @@ static void *fct2(void *arguments)
     OpenDB(&db, dbid_classes);
 
     for(int i = base*2000; i<base*2000+100; i++) {
-        sprintf(key, "foo%d", i);
-        sprintf(val, "bar%d", i);
+        xsnprintf(key, sizeof(key), "foo%d", i);
+        xsnprintf(val, sizeof(val), "bar%d", i);
         WriteDB(db, key, val, strlen(val) + 1);
     }
     for(int i = base*2000; i<base*2000+100; i++) {
-        sprintf(key, "foo%d", i);
-        sprintf(val, "bar%d", i + 1);
+        xsnprintf(key, sizeof(key), "foo%d", i);
+        xsnprintf(val, sizeof(val), "bar%d", i + 1);
 
         if ( (i % 2) == 0)
         {
@@ -75,16 +75,16 @@ static void *fct2(void *arguments)
     for(int i = base*2000; i<base*2000+100; i++) {
         if ( (i % 5) == 0)
         {
-            sprintf(key, "foo%d", i);
+            xsnprintf(key, sizeof(key), "foo%d", i);
             DeleteDB(db, key);
         }
     }
 
-    sprintf(key, "foo%d", base*2000+90);
+    xsnprintf(key, sizeof(key), "foo%d", base*2000+90);
     assert_int_equal(HasKeyDB(db, key, strlen(key)+1), false);
-    sprintf(key, "foo%d", base*2000+88);
+    xsnprintf(key, sizeof(key), "foo%d", base*2000+88);
     assert_int_equal(HasKeyDB(db, key, strlen(key)+1), true);
-    sprintf(key, "foo%d", base*2000+89);
+    xsnprintf(key, sizeof(key), "foo%d", base*2000+89);
     assert_int_equal(HasKeyDB(db, key, strlen(key)+1), true); 
 
     CloseDB(db);

@@ -13,17 +13,17 @@ char FILE_NAME_EMPTY[CF_BUFSIZE];
 
 static void tests_setup(void)
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/files_interfaces_test.XXXXXX");
+    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/files_interfaces_test.XXXXXX");
     mkdtemp(CFWORKDIR);
-    snprintf(FILE_NAME, CF_BUFSIZE, "%s/cf_files_interfaces_test", CFWORKDIR);
-    snprintf(FILE_NAME_CORRUPT, CF_BUFSIZE, "%s/cf_files_interfaces_test_corrupt", CFWORKDIR);
-    snprintf(FILE_NAME_EMPTY, CF_BUFSIZE, "%s/cf_files_interfaces_test_empty", CFWORKDIR);
+    xsnprintf(FILE_NAME, CF_BUFSIZE, "%s/cf_files_interfaces_test", CFWORKDIR);
+    xsnprintf(FILE_NAME_CORRUPT, CF_BUFSIZE, "%s/cf_files_interfaces_test_corrupt", CFWORKDIR);
+    xsnprintf(FILE_NAME_EMPTY, CF_BUFSIZE, "%s/cf_files_interfaces_test_empty", CFWORKDIR);
 }
 
 static void tests_teardown(void)
 {
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
     system(cmd);
 }
 

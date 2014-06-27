@@ -747,16 +747,23 @@ bool GeneratePolicyReleaseIDFromGit(char release_id_out[GENERIC_AGENT_CHECKSUM_S
     if (git_file)
     {
         char git_head[128];
-        fscanf(git_file, "ref: %127s", git_head);
+        int scanned = fscanf(git_file, "ref: %127s", git_head);
         fclose(git_file);
 
-        snprintf(git_filename, PATH_MAX, "%s/.git/%s", policy_dir, git_head);
-        git_file = fopen(git_filename, "r");
+        if (scanned == 1)
+        {
+            snprintf(git_filename, PATH_MAX, "%s/.git/%s", policy_dir, git_head);
+            git_file = fopen(git_filename, "r");
+        }
+        else
+        {
+            git_file = NULL;
+        }
         if (git_file)
         {
-            fscanf(git_file, "%40s", release_id_out);
+            scanned = fscanf(git_file, "%40s", release_id_out);
             fclose(git_file);
-            return true;
+            return scanned == 1;
         }
         else
         {

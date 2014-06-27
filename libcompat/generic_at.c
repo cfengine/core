@@ -69,7 +69,6 @@ int generic_at_function(int dirfd, int (*func)(void *data), void (*cleanup)(void
     int cwd;
     int mutex_err;
     int saved_errno;
-    int fchdir_ret;
 
     mutex_err = pthread_mutex_lock(&CHDIR_LOCK);
     if (mutex_err)
@@ -110,6 +109,7 @@ int generic_at_function(int dirfd, int (*func)(void *data), void (*cleanup)(void
     int result = func(data);
     saved_errno = errno;
 
+    int fchdir_ret = -1; // initialize to error to catch code paths that don't set but test
     if (dirfd != AT_FDCWD)
     {
         fchdir_ret = fchdir(cwd);

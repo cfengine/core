@@ -6,6 +6,8 @@
 #include <parser.h>
 #include <eval_context.h>
 #include <expand.h>
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 static Policy *TestParsePolicy(const char *filename)
 {

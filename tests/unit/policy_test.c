@@ -7,6 +7,7 @@
 #include <eval_context.h>
 #include <item_lib.h>
 #include <bootstrap.h>
+#include <misc_lib.h>                                          /* xsnprintf */
 
 static Policy *TestParsePolicy(const char *filename)
 {

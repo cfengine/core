@@ -1,6 +1,9 @@
 #include <test.h>
+
 #include <mustache.h>
 #include <files_lib.h>
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 size_t TestSpecFile(const char *testfile)
 {

@@ -458,13 +458,20 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
     }
     if ((rc = mdb_cursor_get(cursor->mc, &mkey, &data, MDB_NEXT)) == MDB_SUCCESS)
     {
-        cursor->curkv = xmalloc(mkey.mv_size + data.mv_size);
+        // Align second buffer to 64-bit boundary, to avoid alignment errors on
+        // certain platforms.
+        size_t keybuf_size = mkey.mv_size;
+        if (keybuf_size & 0x7)
+        {
+            keybuf_size += 8 - (keybuf_size % 8);
+        }
+        cursor->curkv = xmalloc(keybuf_size + data.mv_size);
         memcpy(cursor->curkv, mkey.mv_data, mkey.mv_size);
         *key = cursor->curkv;
         *key_size = mkey.mv_size;
         *value_size = data.mv_size;
-        memcpy((char *)cursor->curkv+mkey.mv_size, data.mv_data, data.mv_size);
-        *value = (char *)cursor->curkv + mkey.mv_size;
+        memcpy((char *)cursor->curkv+keybuf_size, data.mv_data, data.mv_size);
+        *value = (char *)cursor->curkv + keybuf_size;
         retval = true;
     }
     else if (rc != MDB_NOTFOUND)

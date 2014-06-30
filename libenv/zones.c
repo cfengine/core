@@ -52,7 +52,7 @@ bool ForeignZone(char *s)
 {
 // We want to keep the banner
 
-    if (strstr(s, "%CPU"))
+    if (strstr(s, "PID"))
     {
         return false;
     }
@@ -86,4 +86,18 @@ bool ForeignZone(char *s)
     return false;
 }
 
+int  CurrentZoneName(char *s)
+{
+    int ok = -1; 
+# ifdef HAVE_GETZONEID
+    zoneid_t zid;
+    if ((zid = getzoneid()) < 0)
+    {
+        return ok;
+    }
+
+    ok = getzonenamebyid(zid, s, ZONENAME_MAX);
+# endif
+    return ok;
+}
 #endif // !__MINGW32__

@@ -1,5 +1,8 @@
 #include <test.h>
+
 #include <files_interfaces.h>
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 #define FILE_SIZE (sizeof(FILE_CONTENTS) - 1)
 #define FILE_LINE "some garbage!"

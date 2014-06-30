@@ -1,10 +1,10 @@
+#include <test.h>
+
 #include <cf3.defs.h>
 #include <dbm_api.h>
-#include <test.h>
 #include <lastseen.h>
+#include <misc_lib.h>                                          /* xsnprintf */
 
-#include <setjmp.h>
-#include <cmockery.h>
 
 typedef struct
 {

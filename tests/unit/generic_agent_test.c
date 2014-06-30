@@ -6,6 +6,8 @@
 #include <sysinfo_priv.h>
 #include <loading.h>
 #include <file_lib.h>
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 void test_load_masterfiles(void)
 {

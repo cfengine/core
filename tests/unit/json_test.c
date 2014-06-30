@@ -2,8 +2,10 @@
 
 #include <json.h>
 #include <files_lib.h>
+#include <misc_lib.h>                                          /* xsnprintf */
 
 #include <float.h>
+
 
 static const char *OBJECT_ARRAY = "{\n" "  \"first\": [\n" "    \"one\",\n" "    \"two\"\n" "  ]\n" "}";
 

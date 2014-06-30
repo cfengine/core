@@ -27,3 +27,16 @@ bundle agent home_skel(user, skel)
       depth_search => recurse("inf");
 }
 ### Home Bundle END ###
+
+### Locked User BEGIN ###
+bundle agent service_accounts
+{
+  vars:
+      "users" slist => { "apache", "libuuid" };
+
+  users:
+    !windows::
+      "$(users)"
+        policy => "locked";
+}
+### Locked User END ###

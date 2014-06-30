@@ -661,10 +661,9 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
                                 decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING)
             <= 0)
         {
-            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Private decrypt failed = '%s'. Probably the client has the wrong public key for this server",
-                (errmsg != NULL) ? errmsg : "no error message");
+                CryptoLastErrorString());
             free(decrypted_nonce);
             return false;
         }
@@ -707,10 +706,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
-        Log(LOG_LEVEL_ERR,
-            "Private decrypt failed = %s",
-            (errmsg != NULL) ? errmsg : "no error message");
+        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
+            CryptoLastErrorString());
         RSA_free(newkey);
         return false;
     }
@@ -733,10 +730,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if ((newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
-        Log(LOG_LEVEL_ERR,
-            "Private decrypt failed = %s",
-            (errmsg != NULL) ? errmsg : "no error message");
+        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
+            CryptoLastErrorString());
         RSA_free(newkey);
         return false;
     }
@@ -783,10 +778,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (RSA_public_encrypt(nonce_len, in, out, newkey, RSA_PKCS1_PADDING) <= 0)
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
-        Log(LOG_LEVEL_ERR,
-            "Public encryption failed = %s",
-            (errmsg != NULL) ? errmsg : "no error message");
+        Log(LOG_LEVEL_ERR, "Public encryption failed = %s",
+            CryptoLastErrorString());
         free(out);
         return false;
     }
@@ -872,10 +865,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
         if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
-            const char *errmsg = ERR_reason_error_string(ERR_get_error());
-            Log(LOG_LEVEL_ERR,
-                "Private decrypt failed = %s",
-                (errmsg != NULL) ? errmsg : "no error message");
+            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
+                CryptoLastErrorString());
             BN_free(counter_challenge);
             free(out);
             return false;

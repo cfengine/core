@@ -23,6 +23,7 @@
 */
 
 #include <zones.h>
+#include <string_lib.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -52,7 +53,7 @@ bool ForeignZone(char *s)
 {
 // We want to keep the banner
 
-    if (strstr(s, "%CPU"))
+    if (strstr(s, "PID"))
     {
         return false;
     }
@@ -66,9 +67,8 @@ bool ForeignZone(char *s)
 
     if (strcmp(zone, "global") == 0)
     {
-        if (strcmp(s + strlen(s) - 6, "global") == 0)
+        if (StringStartsWith(s, "global") && isspace(s[6]))
         {
-            *(s + strlen(s) - 6) = '\0';
 
             for (sp = s + strlen(s) - 1; isspace(*sp); sp--)
             {
@@ -85,5 +85,16 @@ bool ForeignZone(char *s)
 # endif
     return false;
 }
-
+int  CurrentZoneName(const char *s)
+{
+# ifdef HAVE_GETZONEID
+    zoneid_t zid = getzoneid();
+    
+    if (zid >= 0)
+    {
+        return getzonenamebyid(zid, s, ZONENAME_MAX);
+    }
+# endif
+    return -1;
+}
 #endif // !__MINGW32__

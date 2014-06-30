@@ -66,7 +66,7 @@ const char *const VPSCOMM[] =
     [PLATFORM_CONTEXT_AIX] = "/bin/ps",                     /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/bin/ps",                   /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/bin/ps",                 /* solaris >= 11 */
-    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/bin/ps",             /* solaris  < 11 */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/ucb/ps",         /* solaris  < 11 */
     [PLATFORM_CONTEXT_FREEBSD] = "/bin/ps",                 /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "/bin/ps",                  /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "/bin/ps",                  /* cray */
@@ -92,8 +92,8 @@ const char *const VPSOPTS[] =
     [PLATFORM_CONTEXT_HP] = "-ef",                    /* hpux */
     [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",    /* aix */
     [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",     /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",  /* solaris */
-    [PLATFORM_CONTEXT_SUN_SOLARIS] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args", /* solaris < 11 */
+    [PLATFORM_CONTEXT_SOLARIS] = "auxlww",     /* solaris >= 11 */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxlww", /* solaris < 11 */
     [PLATFORM_CONTEXT_FREEBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "-elyf",              /* cray */

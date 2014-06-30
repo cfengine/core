@@ -1,7 +1,9 @@
 #include <test.h>
 
 #include <policy.h>
+#include <misc_lib.h>                                          /* xsnprintf */
 #include <parser.h>
+
 
 static Policy *TestParsePolicy(const char *filename)
 {

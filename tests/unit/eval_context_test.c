@@ -1,6 +1,8 @@
 #include <test.h>
 
 #include <eval_context.h>
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 void tests_setup(void)
 {

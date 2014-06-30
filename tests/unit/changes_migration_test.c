@@ -26,6 +26,8 @@
 #include <dbm_api.h>
 #include <cfnet.h>
 #include <sequence.h>
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 char CFWORKDIR[CF_BUFSIZE];
 

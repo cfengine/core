@@ -531,9 +531,9 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
     const char *syserr = (errno != 0) ? GetErrorStr() : "";
     int errcode         = SSL_get_error(ssl, code);
     const char *errstr1 = TLSPrimarySSLError(errcode);
-    /* The following is only logged for completeness reasons, it's not useful
-     * for SSL_read() and SSL_write(). */
-    const char *errstr2 = ERR_reason_error_string(code);
+    /* For SSL_ERROR_SSL, SSL_ERROR_SYSCALL (man SSL_get_error). It's not
+     * useful for SSL_read() and SSL_write(). */
+    const char *errstr2 = ERR_reason_error_string(ERR_get_error());
 
     /* We know the socket is always blocking. However our blocking sockets
      * have a timeout set via means of setsockopt(SO_RCVTIMEO), so internally

@@ -266,10 +266,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         if (RSA_public_encrypt(nonce_len, in, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
         {
-            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Public encryption failed. (RSA_public_encrypt: %s)",
-                (errmsg != NULL) ? errmsg : "no error message");
+            CryptoLastErrorString());
             free(out);
             RSA_free(server_pubkey);
             return false;
@@ -389,10 +388,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
         Log(LOG_LEVEL_ERR,
             "Private decrypt failed, abandoning. (RSA_private_decrypt: %s)",
-            (errmsg != NULL) ? errmsg : "no error message");
+            CryptoLastErrorString());
         RSA_free(server_pubkey);
         return false;
     }
@@ -435,10 +433,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         if ((newkey->n = BN_mpi2bn(in, len, NULL)) == NULL)
         {
-            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Private key decrypt failed. (BN_mpi2bn: %s)",
-                (errmsg != NULL) ? errmsg : "no error message");
+            CryptoLastErrorString());
             RSA_free(newkey);
             return false;
         }
@@ -455,10 +452,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         if ((newkey->e = BN_mpi2bn(in, len, NULL)) == NULL)
         {
-            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Public key decrypt failed. (BN_mpi2bn: %s)",
-                (errmsg != NULL) ? errmsg : "no error message");
+            CryptoLastErrorString());
             RSA_free(newkey);
             return false;
         }
@@ -489,10 +485,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (RSA_public_encrypt(session_size, conn->session_key, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
         Log(LOG_LEVEL_ERR,
             "Public encryption failed. (RSA_public_encrypt: %s)",
-            (errmsg != NULL) ? errmsg : "no error message");
+            CryptoLastErrorString());
         free(out);
         RSA_free(server_pubkey);
         return false;

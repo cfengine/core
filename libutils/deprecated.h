@@ -38,7 +38,7 @@
 #if defined(__linux__) && defined(__GLIBC__)
 
 int sprintf(char *str, const char *format, ...) \
-    FUNC_DEPRECATED("Always use snprintf() in place of sprintf()!");
+    FUNC_DEPRECATED("Better use snprintf() or xsnprintf()");
 
 #endif  /* __linux__ && __GLIBC__ */
 

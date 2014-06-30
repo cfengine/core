@@ -199,8 +199,8 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
     else if (got < peek_size)
     {
         Log(LOG_LEVEL_INFO,
-            "Peer sent only %lld bytes! Considering the protocol as Classic",
-            (long long)got);
+            "Peer sent only %zd bytes! Considering the protocol as Classic",
+            got);
         ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_CLASSIC);
     }
     else if (got == peek_size &&

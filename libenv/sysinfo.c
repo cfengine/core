@@ -544,10 +544,11 @@ static void GetNameInfo3(EvalContext *ctx)
 
     if (PUBKEY)
     {
-        char pubkey_digest[CF_MAXVARSIZE] = { 0 };
+        char pubkey_digest[CF_HOSTKEY_STRING_SIZE] = { 0 };
 
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-        HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, pubkey_digest);
+        HashPrintSafe(pubkey_digest, sizeof(pubkey_digest), digest,
+                      CF_DEFAULT_DIGEST, true);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=CFEngine ID");
 
@@ -650,7 +651,7 @@ static void GetNameInfo3(EvalContext *ctx)
 
     EnterpriseContext(ctx);
 
-    sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
+    snprintf(workbuf, sizeof(workbuf), "%u_bit", (unsigned) sizeof(void*) * 8);
     EvalContextClassPutHard(ctx, workbuf, "source=agent");
     Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", CanonifyName(workbuf));
 
@@ -1373,7 +1374,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
         strmajor[0] = '\0';
         if (sscanf(release, "%d", &major) != 0)
         {
-            sprintf(strmajor, "%d", major);
+            xsnprintf(strmajor, sizeof(strmajor), "%d", major);
         }
     }
 
@@ -1553,15 +1554,15 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         release += strlen(RELEASE_FLAG);
         if (sscanf(release, "%d.%d", &major, &minor) == 2)
         {
-            sprintf(strmajor, "%d", major);
-            sprintf(strminor, "%d", minor);
+            xsnprintf(strmajor, sizeof(strmajor), "%d", major);
+            xsnprintf(strminor, sizeof(strminor), "%d", minor);
         }
         /* red hat 9 is *not* red hat 9.0.
          * and same thing with RHEL AS 3
          */
         else if (sscanf(release, "%d", &major) == 1)
         {
-            sprintf(strmajor, "%d", major);
+            xsnprintf(strmajor, sizeof(strmajor), "%d", major);
             minor = -2;
         }
     }
@@ -1766,8 +1767,8 @@ static int Linux_Suse_Version(EvalContext *ctx)
         if (strchr(release, '.'))
         {
             sscanf(release, "%*s %d.%d", &major, &minor);
-            sprintf(strmajor, "%d", major);
-            sprintf(strminor, "%d", minor);
+            xsnprintf(strmajor, sizeof(strmajor), "%d", major);
+            xsnprintf(strminor, sizeof(strminor), "%d", minor);
 
             if (major != -1 && minor != -1)
             {
@@ -2113,8 +2114,8 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
         release += strlen(RELEASE_FLAG);
         if (sscanf(release, "%d.%d", &major, &minor) == 2)
         {
-            sprintf(strmajor, "%d", major);
-            sprintf(strminor, "%d", minor);
+            xsnprintf(strmajor, sizeof(strmajor), "%d", major);
+            xsnprintf(strminor, sizeof(strminor), "%d", minor);
         }
         else
         {

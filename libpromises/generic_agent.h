@@ -102,7 +102,6 @@ void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option opti
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
 time_t ReadTimestampFromPolicyValidatedFile(const GenericAgentConfig *config, const char *maybe_dirname);
 
-bool GeneratePolicyReleaseID(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *dirname);
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config);
 
 void CloseLog(void);

@@ -423,7 +423,7 @@ static void Apoptosis(void)
     if (LoadProcessTable(&PROCESSTABLE))
     {
         char myuid[PRINTSIZE(unsigned)];
-        sprintf(myuid, "%u", (unsigned)getuid());
+        xsnprintf(myuid, sizeof(myuid), "%u", (unsigned) getuid());
 
         Rlist *owners = NULL;
         RlistPrepend(&owners, myuid, RVAL_TYPE_SCALAR);

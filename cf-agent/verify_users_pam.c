@@ -236,7 +236,7 @@ static bool ClearPasswordAdministrationFlags(const char *puser)
     const char *cmd_str = PWDADM " -c ";
     char final_cmd[strlen(cmd_str) + strlen(puser) + 1];
 
-    sprintf(final_cmd, "%s%s", cmd_str, puser);
+    xsnprintf(final_cmd, sizeof(final_cmd), "%s%s", cmd_str, puser);
 
     Log(LOG_LEVEL_VERBOSE, "Clearing password administration flags for user '%s'. (command: '%s')", puser, final_cmd);
 
@@ -269,7 +269,7 @@ static bool ChangePasswordHashUsingChpasswd(const char *puser, const char *passw
     // String lengths plus a ':' and a '\n', but not including '\0'.
     size_t total_len = strlen(puser) + strlen(password) + 2;
     char change_string[total_len + 1];
-    snprintf(change_string, total_len + 1, "%s:%s\n", puser, password);
+    xsnprintf(change_string, total_len + 1, "%s:%s\n", puser, password);
     clearerr(cmd);
     if (fwrite(change_string, total_len, 1, cmd) != 1)
     {
@@ -318,11 +318,11 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
     }
 
     char backup_file[strlen(passwd_file) + strlen(".cf-backup") + 1];
-    snprintf(backup_file, sizeof(backup_file), "%s.cf-backup", passwd_file);
+    xsnprintf(backup_file, sizeof(backup_file), "%s.cf-backup", passwd_file);
     unlink(backup_file);
 
     char edit_file[strlen(passwd_file) + strlen(".cf-edit") + 1];
-    snprintf(edit_file, sizeof(edit_file), "%s.cf-edit", passwd_file);
+    xsnprintf(edit_file, sizeof(edit_file), "%s.cf-edit", passwd_file);
     unlink(edit_file);
 
     if (!CopyRegularFileDisk(passwd_file, backup_file))
@@ -403,11 +403,13 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
         *field_end = '\0';
         if (strcmp(line, puser) == 0)
         {
-            sprintf(new_line, "%s:%s:%s\n", line, password, field_end + 1);
+            xsnprintf(new_line, sizeof(new_line), "%s:%s:%s\n",
+                     line, password, field_end + 1);
         }
         else
         {
-            sprintf(new_line, "%s:%s:%s\n", line, field_start + 1, field_end + 1);
+            xsnprintf(new_line, sizeof(new_line), "%s:%s:%s\n",
+                     line, field_start + 1, field_end + 1);
         }
 
         free(line);
@@ -533,7 +535,7 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
         if (hash[0] != '!')
         {
             char new_hash[strlen(hash) + 2];
-            sprintf(new_hash, "!%s", hash);
+            xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
             if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
             {
                 return false;
@@ -830,7 +832,7 @@ static bool SupportsOption(const char *cmd, const char *option)
     bool supports_option = false;
     char help_argument[] = " --help";
     char help_command[strlen(cmd) + sizeof(help_argument)];
-    snprintf(help_command, sizeof(help_command), "%s%s", cmd, help_argument);
+    xsnprintf(help_command, sizeof(help_command), "%s%s", cmd, help_argument);
 
     FILE *fptr = cf_popen(help_command, "r", true);
     char *buf = NULL;

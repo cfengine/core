@@ -80,8 +80,7 @@ static int GetFileGrowth(const char *filename, enum observables index)
 
     q = statbuf.st_size;
 
-    Log(LOG_LEVEL_VERBOSE, "GetFileGrowth(%s) = %llu",
-        filename, (unsigned long long)q);
+    Log(LOG_LEVEL_VERBOSE, "GetFileGrowth(%s) = %zu", filename, q);
 
     dq = (double) q - LASTQ[index];
 

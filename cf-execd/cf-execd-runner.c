@@ -614,7 +614,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         goto mail_err;
     }
 
-    sprintf(vbuff, "HELO %s\r\n", config->fq_name);
+    snprintf(vbuff, sizeof(vbuff), "HELO %s\r\n", config->fq_name);
     Log(LOG_LEVEL_DEBUG, "%s", vbuff);
 
     if (!Dialogue(sd, vbuff))
@@ -624,12 +624,14 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if (strlen(config->mail_from_address) == 0)
     {
-        sprintf(vbuff, "MAIL FROM: <cfengine@%s>\r\n", config->fq_name);
+        snprintf(vbuff, sizeof(vbuff), "MAIL FROM: <cfengine@%s>\r\n",
+                 config->fq_name);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
     else
     {
-        sprintf(vbuff, "MAIL FROM: <%s>\r\n", config->mail_from_address);
+        snprintf(vbuff, sizeof(vbuff), "MAIL FROM: <%s>\r\n",
+                 config->mail_from_address);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
 
@@ -638,7 +640,8 @@ static void MailResult(const ExecConfig *config, const char *file)
         goto mail_err;
     }
 
-    sprintf(vbuff, "RCPT TO: <%s>\r\n", config->mail_to_address);
+    snprintf(vbuff, sizeof(vbuff), "RCPT TO: <%s>\r\n",
+             config->mail_to_address);
     Log(LOG_LEVEL_DEBUG, "%s", vbuff);
 
     if (!Dialogue(sd, vbuff))
@@ -678,15 +681,16 @@ static void MailResult(const ExecConfig *config, const char *file)
     if (SafeStringLength(config->mail_subject) > 0)
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
-        char buffer[EVP_MAX_MD_SIZE * 4];
+        char buffer[CF_HOSTKEY_STRING_SIZE];
 
         char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
 
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
 
-        snprintf(vbuff, sizeof(vbuff), "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
+        snprintf(vbuff, sizeof(vbuff),
+                 "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
                  VFQNAME, config->ip_addresses, existing_policy_server,
-                 HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
+                 HashPrintSafe(buffer, sizeof(buffer), digest, CF_DEFAULT_DIGEST, true));
 
         send(sd, vbuff, strlen(vbuff), 0);
         free(existing_policy_server);
@@ -699,18 +703,20 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if (strlen(config->mail_from_address) == 0)
     {
-        sprintf(vbuff, "From: cfengine@%s\r\n", config->fq_name);
+        snprintf(vbuff, sizeof(vbuff), "From: cfengine@%s\r\n",
+                 config->fq_name);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
     else
     {
-        sprintf(vbuff, "From: %s\r\n", config->mail_from_address);
+        snprintf(vbuff, sizeof(vbuff), "From: %s\r\n",
+                 config->mail_from_address);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
 
     send(sd, vbuff, strlen(vbuff), 0);
 
-    sprintf(vbuff, "To: %s\r\n\r\n", config->mail_to_address);
+    snprintf(vbuff, sizeof(vbuff), "To: %s\r\n\r\n", config->mail_to_address);
     Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     send(sd, vbuff, strlen(vbuff), 0);
 
@@ -735,7 +741,9 @@ static void MailResult(const ExecConfig *config, const char *file)
 
         if ((config->mail_max_lines != INF_LINES) && (count > config->mail_max_lines))
         {
-            sprintf(vbuff, "\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n", file, config->fq_name);
+            snprintf(vbuff, sizeof(vbuff),
+                     "\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n",
+                     file, config->fq_name);
             send(sd, vbuff, strlen(vbuff), 0);
             break;
         }

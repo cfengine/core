@@ -14,21 +14,21 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 static void tests_setup(void)
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_test.XXXXXX");
+    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_test.XXXXXX");
     mkdtemp(CFWORKDIR);
 }
 
 static void setup(void)
 {
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
     system(cmd);
 }
 
 static void tests_teardown(void)
 {
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
     system(cmd);
 }
 
@@ -91,7 +91,7 @@ static void test_reverse_missing(void)
 
     /* Check that resolution return false */
     char result[CF_BUFSIZE];
-    assert_int_equal(Address2Hostkey("127.0.0.64", result), false);
+    assert_int_equal(Address2Hostkey(result, sizeof(result), "127.0.0.64"), false);
 }
 
 static void test_reverse_conflict(void)
@@ -107,7 +107,7 @@ static void test_reverse_conflict(void)
 
     /* Check that resolution return false */
     char result[CF_BUFSIZE];
-    assert_int_equal(Address2Hostkey("127.0.0.64", result), false);
+    assert_int_equal(Address2Hostkey(result, sizeof(result), "127.0.0.64"), false);
 
     /* Check that entry is removed */
     assert_int_equal(HasKeyDB(db, "a127.0.0.64", strlen("a127.0.0.64") + 1), false);
@@ -128,7 +128,7 @@ static void test_reverse_missing_forward(void)
 
     /* Check that resolution return false */
     char result[CF_BUFSIZE];
-    assert_int_equal(Address2Hostkey("127.0.0.64", result), false);
+    assert_int_equal(Address2Hostkey(result, sizeof(result), "127.0.0.64"), false);
 
     /* Check that entry is removed */
     assert_int_equal(HasKeyDB(db, "a127.0.0.64", strlen("a127.0.0.64") + 1), false);
@@ -221,7 +221,8 @@ char *MapAddress(char *addr)
     fail();
 }
 
-char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
+char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
+                    HashMethod type, bool use_prefix)
 {
     fail();
 }

@@ -36,7 +36,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Prom
     {
         int matched = false;
         char retcodeStr[PRINTSIZE(retcode)];
-        sprintf(retcodeStr, "%d", retcode);
+        xsnprintf(retcodeStr, sizeof(retcodeStr), "%d", retcode);
 
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {

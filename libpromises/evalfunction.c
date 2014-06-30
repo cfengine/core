@@ -411,8 +411,8 @@ static bool CallHostsSeenCallback(const char *hostkey, const char *address,
         return true;
     }
 
-    char buf[CF_BUFSIZE];
-    snprintf(buf, sizeof(buf), "%ju", (uintmax_t)quality->lastseen);
+    char buf[PRINTSIZE(uintmax_t)];
+    xsnprintf(buf, sizeof(buf), "%ju", (uintmax_t) quality->lastseen);
 
     PrependItem(addresses, address, buf);
 
@@ -720,10 +720,11 @@ static FnCallResult FnCallHandlerHash(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         HashString(string_or_filename, strlen(string_or_filename), digest, type);
     }
 
-    char hashbuffer[EVP_MAX_MD_SIZE * 4];
+    char hashbuffer[CF_HOSTKEY_STRING_SIZE];
 
     snprintf(buffer, CF_BUFSIZE - 1, "%s",
-             HashPrintSafe(type, true, digest, hashbuffer));
+             HashPrintSafe(hashbuffer, sizeof(hashbuffer),
+                           digest, type, true));
     return FnReturn(SkipHashType(buffer));
 }
 
@@ -747,9 +748,10 @@ static FnCallResult FnCallHashMatch(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     type = HashIdFromName(typestring);
     HashFile(string, digest, type);
 
-    char hashbuffer[EVP_MAX_MD_SIZE * 4];
+    char hashbuffer[CF_HOSTKEY_STRING_SIZE];
     snprintf(buffer, CF_BUFSIZE - 1, "%s",
-             HashPrintSafe(type, true, digest, hashbuffer));
+             HashPrintSafe(hashbuffer, sizeof(hashbuffer),
+                           digest, type, true));
     Log(LOG_LEVEL_VERBOSE, "File '%s' hashes to '%s', compare to '%s'", string, buffer, compare);
 
     return FnReturnContext(strcmp(buffer + 4, compare) == 0);
@@ -1423,14 +1425,15 @@ static FnCallResult FnCallCanonify(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
     if (!strcmp(fp->name, "canonifyuniquely"))
     {
-        char hashbuffer[EVP_MAX_MD_SIZE * 4];
+        char hashbuffer[CF_HOSTKEY_STRING_SIZE];
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
         HashMethod type;
 
         type = HashIdFromName("sha1");
         HashString(string, strlen(string), digest, type);
         snprintf(buf, CF_BUFSIZE, "%s_%s", string,
-                 SkipHashType(HashPrintSafe(type, true, digest, hashbuffer)));
+                 SkipHashType(HashPrintSafe(hashbuffer, sizeof(hashbuffer),
+                                            digest, type, true)));
     }
     else
     {
@@ -1480,7 +1483,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_length"))
     {
-        sprintf(buf, "%d", len);
+        xsnprintf(buf, sizeof(buf), "%d", len);
     }
     else if (!strcmp(fp->name, "string_head"))
     {
@@ -3716,7 +3719,7 @@ static FnCallResult FnCallLength(EvalContext *ctx, ARG_UNUSED const Policy *poli
             }
         }
     case RVAL_TYPE_CONTAINER:
-        return FnReturnF("%llu", (unsigned long long)JsonLength(value));
+        return FnReturnF("%zd", JsonLength(value));
     default:
         Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
             fp->name, name, DataTypeToString(type));
@@ -5273,7 +5276,7 @@ bool PortablyFormatTime(char *buffer, size_t bufsiz,
 
 #ifdef STRFTIME_s_HACK /* %s: seconds since epoch */
     char epoch[PRINTSIZE(when)];
-    sprintf(epoch, "%" PRIdMAX, (intmax_t)when);
+    xsnprintf(epoch, sizeof(epoch), "%j", (intmax_t) when);
 #endif /* STRFTIME_s_HACK */
 
     typedef char * SearchReplacePair[2];

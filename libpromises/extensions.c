@@ -105,7 +105,7 @@ void *extension_library_open(const char *name)
     for (int i = 0; dirs_to_try[i]; i++)
     {
         char path[strlen(dirs_to_try[i]) + strlen(lib) + strlen(name) + 2];
-        sprintf(path, "%s%s/%s", dirs_to_try[i], lib, name);
+        xsnprintf(path, sizeof(path), "%s%s/%s", dirs_to_try[i], lib, name);
 
         Log(LOG_LEVEL_DEBUG, "Trying to shlib_open extension plugin '%s' from '%s'", name, path);
 

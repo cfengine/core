@@ -10,7 +10,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 int main()
 {
-    snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
+    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
     mkdtemp(CFWORKDIR);
 
     for (int i = 0; i < 1000000; ++i)
@@ -22,16 +22,16 @@ int main()
         }
 
         char hostkey[50];
-        snprintf(hostkey, 50, "SHA-%040d", i);
+        xsnprintf(hostkey, 50, "SHA-%040d", i);
         char ip[50];
-        snprintf(ip, 50, "250.%03d.%03d.%03d", i / (256*256), (i / 256) % 256, i % 256);
+        xsnprintf(ip, 50, "250.%03d.%03d.%03d", i / (256*256), (i / 256) % 256, i % 256);
 
         UpdateLastSawHost(hostkey, ip, false, i);
         UpdateLastSawHost(hostkey, ip, true, 2000000 - i);
     }
 
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
     system(cmd);
 
     return 0;
@@ -75,7 +75,8 @@ char *MapAddress(char *addr)
     exit(42);
 }
 
-char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
+char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
+                    HashMethod type, bool use_prefix)
 {
     exit(42);
 }

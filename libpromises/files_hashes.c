@@ -30,6 +30,9 @@
 #include <files_lib.h>
 #include <rlist.h>
 #include <policy.h>
+#include <string_lib.h>                                 /* StringBytesToHex */
+#include <misc_lib.h>                                   /* UnexpectedError */
+
 
 void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
@@ -167,33 +170,50 @@ int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
     return true;
 }
 
-char *HashPrintSafe(HashMethod type, bool use_prefix, const unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
+/* TODO rewrite this ugliness, currently it's not safe, it truncates! */
+/**
+ * @WARNING #dst must have enough space to hold the result!
+ */
+char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
+                    HashMethod type, bool use_prefix)
 {
-    unsigned int i;
+    const char *prefix;
 
     if (use_prefix)
     {
         switch (type)
         {
         case HASH_METHOD_MD5:
-            strcpy(buffer, "MD5=");
+            prefix = "MD5=";
             break;
         default:
-            strcpy(buffer, "SHA=");
+            prefix = "SHA=";
             break;
         }
     }
-
-    const size_t prefix_offset = use_prefix ? 4 : 0;
-
-    for (i = 0; i < HashSizeFromId(type); i++)
+    else
     {
-        sprintf((char *) (buffer + prefix_offset + 2 * i), "%02x", digest[i]);
+        prefix = "";
     }
 
-    buffer[prefix_offset + 2*HashSizeFromId(type)] = '\0';
+    size_t dst_len = MIN(dst_size - 1, strlen(prefix));
+    memcpy(dst, prefix, dst_len);
 
-    return buffer;
+    size_t digest_len = HashSizeFromId(type);
+    assert(dst_size >= strlen(prefix) + digest_len*2 + 1);
+
+    size_t ret = StringBytesToHex(&dst[dst_len], dst_size - dst_len,
+                                  digest, digest_len);
+    assert(ret == 2 * digest_len);
+
+#if 0         /* TODO return proper exit status and check it in the callers */
+    if (ret < 2 * digest_len)
+    {
+        return NULL;
+    }
+#endif
+
+    return dst;
 }
 
 

@@ -89,6 +89,22 @@ AC_DEFUN([HW_FUNC___VA_COPY],
 AC_DEFUN([HW_FUNC_VSNPRINTF],
 [
   AC_REQUIRE([HW_HEADER_STDARG_H])dnl Our check evaluates HAVE_STDARG_H.
+
+  dnl The folowing checks are not *required* to HAVE_VSNPRINTF, but they
+  dnl should be checked (and pass!) for the test in snprintf.c to pass.
+  AC_CHECK_HEADERS([inttypes.h locale.h stddef.h stdint.h])
+  AC_CHECK_MEMBERS([struct lconv.decimal_point, struct lconv.thousands_sep],
+    [], [], [#include <locale.h>])
+  AC_TYPE_LONG_DOUBLE
+  AC_TYPE_LONG_LONG_INT
+  AC_TYPE_UNSIGNED_LONG_LONG_INT
+  AC_TYPE_SIZE_T
+  AC_TYPE_INTMAX_T
+  AC_TYPE_UINTMAX_T
+  AC_TYPE_UINTPTR_T
+  AC_CHECK_TYPES([ptrdiff_t])
+  AC_CHECK_FUNCS([localeconv])
+
   AC_CHECK_FUNC([vsnprintf],
     [hw_cv_func_vsnprintf=yes],
     [hw_cv_func_vsnprintf=no])
@@ -113,30 +129,27 @@ AC_DEFUN([HW_FUNC_VSNPRINTF],
           [[char buf[43];
           if (testprintf(buf, 4, "The answer is %27.2g.", 42.0) != 42 ||
               testprintf(buf, 0, "No, it's %32zu.", (size_t)42) != 42 ||
-              buf[0] != 'T' || buf[3] != '\0')
+              buf[0] != 'T' || buf[3] != '\0' ||
+	      testprintf(NULL, 0, "") != 0 ||   /* POSSIBLE SEGFAULT ON NON-C99 LIBCs!!! */
+	      testprintf(NULL, 0, "Some actual %18s formatting.\nblah %d.\n", "42", 1) != 51)
             return 1;]])],
         [hw_cv_func_vsnprintf_c99=yes],
         [hw_cv_func_vsnprintf_c99=no],
         [hw_cv_func_vsnprintf_c99=no])])],
     [hw_cv_func_snprintf_c99=no])
-  AS_IF([test "$hw_cv_func_vsnprintf_c99" = yes],
+  AS_IF(
+    [test "$hw_cv_func_vsnprintf_c99" = yes],
     [AC_DEFINE([HAVE_VSNPRINTF], [1],
       [Define to 1 if you have a C99 compliant `vsnprintf' function.])],
-    [AC_DEFINE([vsnprintf], [rpl_vsnprintf],
-      [Define to rpl_vsnprintf if the replacement function should be used.])
-    AC_CHECK_HEADERS([inttypes.h locale.h stddef.h stdint.h])
-    AC_CHECK_MEMBERS([struct lconv.decimal_point, struct lconv.thousands_sep],
-      [], [], [#include <locale.h>])
-    AC_TYPE_LONG_DOUBLE
-    AC_TYPE_LONG_LONG_INT
-    AC_TYPE_UNSIGNED_LONG_LONG_INT
-    AC_TYPE_SIZE_T
-    AC_TYPE_INTMAX_T
-    AC_TYPE_UINTMAX_T
-    AC_TYPE_UINTPTR_T
-    AC_CHECK_TYPES([ptrdiff_t])
-    AC_CHECK_FUNCS([localeconv])
-    _HW_FUNC_XPRINTF_REPLACE])
+    [
+      AC_DEFINE([vsnprintf], [rpl_vsnprintf],
+        [Define to rpl_vsnprintf if the replacement function should be used.])
+      AC_DEFINE([vprintf], [rpl_vprintf],
+        [Define to rpl_vprintf if the replacement function should be used.])
+      AC_DEFINE([vfprintf], [rpl_vfprintf],
+        [Define to rpl_vfprintf if the replacement function should be used.])
+      _HW_FUNC_XPRINTF_REPLACE
+    ])
 ])# HW_FUNC_VSNPRINTF
 
 # HW_FUNC_SNPRINTF
@@ -159,18 +172,27 @@ AC_DEFUN([HW_FUNC_SNPRINTF],
           [[char buf[43];
           if (snprintf(buf, 4, "The answer is %27.2g.", 42.0) != 42 ||
               snprintf(buf, 0, "No, it's %32zu.", (size_t)42) != 42 ||
-              buf[0] != 'T' || buf[3] != '\0')
+              buf[0] != 'T' || buf[3] != '\0' ||
+	      snprintf(NULL, 0, "") != 0 ||     /* POSSIBLE SEGFAULT ON NON-C99 LIBCs!!! */
+	      snprintf(NULL, 0, "Some actual %18s formatting.\nblah %d.\n", "42", 1) != 51)
             return 1;]])],
         [hw_cv_func_snprintf_c99=yes],
         [hw_cv_func_snprintf_c99=no],
         [hw_cv_func_snprintf_c99=no])])],
     [hw_cv_func_snprintf_c99=no])
-  AS_IF([test "$hw_cv_func_snprintf_c99" = yes],
+  AS_IF(
+    [test "$hw_cv_func_snprintf_c99" = yes],
     [AC_DEFINE([HAVE_SNPRINTF], [1],
       [Define to 1 if you have a C99 compliant `snprintf' function.])],
-    [AC_DEFINE([snprintf], [rpl_snprintf],
-      [Define to rpl_snprintf if the replacement function should be used.])
-    _HW_FUNC_XPRINTF_REPLACE])
+    [
+      AC_DEFINE([snprintf], [rpl_snprintf],
+        [Define to rpl_snprintf if the replacement function should be used.])
+      AC_DEFINE([printf], [rpl_printf],
+        [Define to rpl_printf if the replacement function should be used.])
+      AC_DEFINE([fprintf], [rpl_fprintf],
+        [Define to rpl_fprintf if the replacement function should be used.])
+      _HW_FUNC_XPRINTF_REPLACE
+    ])
 ])# HW_FUNC_SNPRINTF
 
 # HW_FUNC_VASPRINTF

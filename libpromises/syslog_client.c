@@ -70,7 +70,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
 
     struct addrinfo query = { 0 }, *response;
     char strport[PRINTSIZE(unsigned)];
-    sprintf(strport, "%u", (unsigned) SYSLOG_PORT);
+    xsnprintf(strport, sizeof(strport), "%u", (unsigned) SYSLOG_PORT);
 
     query.ai_family = AF_UNSPEC;
     query.ai_socktype = SOCK_DGRAM;

@@ -87,7 +87,7 @@ void LastSaw1(const char *ipaddress, const char *hashstr,
 
 void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role)
 {
-    char databuf[EVP_MAX_MD_SIZE * 4];
+    char databuf[CF_HOSTKEY_STRING_SIZE];
 
     if (strlen(ipaddress) == 0)
     {
@@ -95,7 +95,7 @@ void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role)
         return;
     }
 
-    HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, databuf);
+    HashPrintSafe(databuf, sizeof(databuf), digest, CF_DEFAULT_DIGEST, true);
 
     const char *mapip = MapAddress(ipaddress);
 
@@ -190,16 +190,19 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
 
 /*****************************************************************************/
 
-bool Address2Hostkey(const char *address, char *result)
+bool Address2Hostkey(char *dst, size_t dst_size, const char *address)
 {
-    result[0] = '\0';
-    if ((strcmp(address, "127.0.0.1") == 0) || (strcmp(address, "::1") == 0) || (strcmp(address, VIPADDRESS) == 0))
+    dst[0] = '\0';
+    if ((strcmp(address, "127.0.0.1") == 0) ||
+        (strcmp(address, "::1") == 0) ||
+        (strcmp(address, VIPADDRESS) == 0))
     {
         if (PUBKEY)
         {
             unsigned char digest[EVP_MAX_MD_SIZE + 1];
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-            HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, result);
+            HashPrintSafe(dst, dst_size, digest,
+                          CF_DEFAULT_DIGEST, true);
             return true;
         }
         else
@@ -214,7 +217,7 @@ bool Address2Hostkey(const char *address, char *result)
         return false;
     }
 
-    bool ret = Address2HostkeyInDB(db, address, result);
+    bool ret = Address2HostkeyInDB(db, address, dst);
     CloseDB(db);
     return ret;
 }

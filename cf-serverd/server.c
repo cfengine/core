@@ -149,7 +149,7 @@ void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info
     }
 
     char intime[PRINTSIZE(now)];
-    snprintf(intime, sizeof(intime), "%jd", (intmax_t) now);
+    xsnprintf(intime, sizeof(intime), "%jd", (intmax_t) now);
 
     if (!ThreadLock(cft_count))
     {

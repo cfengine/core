@@ -86,6 +86,8 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     free(fmt);
 }
 
+
+
 void xclock_gettime(clockid_t clk_id, struct timespec *ts)
 {
     int ret = clock_gettime(clk_id, ts);
@@ -95,5 +97,39 @@ void xclock_gettime(clockid_t clk_id, struct timespec *ts)
             "clock_gettime() failed (%s), falling back to time()",
             GetErrorStr());
         *ts = (struct timespec) { .tv_sec = time(NULL) };
+    }
+}
+
+/**
+ * Unchecked version of snprintf(). For when you're *sure* the result fits in
+ * the buffer, and you don't want to check it. In other words, NO PART OF THE
+ * OUTPUT SHOULD BE DEPENDENT ON USER DATA!
+ *
+ * Only exception is usage in the unit tests, where we use it all over the
+ * place in order to flag stupid programming mistakes.
+ */
+void xsnprintf(char *str, size_t str_size, const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    int ret = vsnprintf(str, str_size, format, ap);
+    va_end(ap);
+
+    if (ret < 0)                                                /* error */
+    {
+        *str = '\0';
+        Log(LOG_LEVEL_WARNING, "Unexpected failure from snprint(\"%s\"): %s",
+            format, GetErrorStr());
+    }
+    else if (ret >= str_size)                           /* output truncated */
+    {
+#ifdef NDEBUG
+        UnexpectedError("Result of snprintf(\"%s\") truncated at %zu chars",
+                        format, str_size);
+#else
+        ProgrammingError("Result of snprintf(\"%s\") truncated at %zu chars",
+                         format, str_size);
+#endif
     }
 }

@@ -439,7 +439,7 @@ static int OpenReceiverChannel(void)
     }
 
     char servname[PRINTSIZE(CFENGINE_PORT)];
-    sprintf(servname, "%d", CFENGINE_PORT);
+    xsnprintf(servname, sizeof(servname), "%d", CFENGINE_PORT);
 
     /* Resolve listening interface. */
     int gres;

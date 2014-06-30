@@ -22,42 +22,25 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_COMPILER_H
-#define CFENGINE_COMPILER_H
-
-/* Compiler-specific options/defines */
+#ifndef CFENGINE_DEPRECATED_H
+#define CFENGINE_DEPRECATED_H
 
 
-#if defined(__GNUC__) && (__GNUC__ >= 3)
+#include <platform.h>
+#include <compiler.h>
 
 
-#  define FUNC_ATTR_NORETURN  __attribute__((noreturn))
-#  define FUNC_ATTR_PRINTF(string_index, first_to_check) \
-     __attribute__((format(__printf__, string_index, first_to_check)))
-#  define FUNC_UNUSED __attribute__((unused))
-#  define ARG_UNUSED __attribute__((unused))
-#  define FUNC_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-
-#  if (__GNUC__ >= 4) && (__GNUC_MINOR__ >=5)
-#    define FUNC_DEPRECATED(msg) __attribute__((deprecated(msg)))
-#  else
-#    define FUNC_DEPRECATED(msg) __attribute__((deprecated))
-#  endif
+/* Mark specific functions as deprecated so that we don't use them. Since the
+ * signature of the functions has to be exactly the same as in libc, we only
+ * do that for Linux, where main development happens. */
 
 
-#else /* not gcc >= 3.0 */
+#if defined(__linux__) && defined(__GLIBC__)
+
+int sprintf(char *str, const char *format, ...) \
+    FUNC_DEPRECATED("Better use snprintf() or xsnprintf()");
+
+#endif  /* __linux__ && __GLIBC__ */
 
 
-#  define FUNC_ATTR_NORETURN
-#  define FUNC_ATTR_PRINTF(string_index, first_to_check)
-#  define FUNC_UNUSED
-#  define ARG_UNUSED
-#  define FUNC_WARN_UNUSED_RESULT
-
-#  define FUNC_DEPRECATED(msg)
-
-
-#endif  /* gcc >= 3.0 */
-
-
-#endif  /* CFENGINE_COMPILER_H */
+#endif  /* CFENGINE_DEPRECATED_H */

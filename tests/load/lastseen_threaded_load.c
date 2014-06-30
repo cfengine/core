@@ -126,9 +126,9 @@ void *lastsaw_worker_thread(void *arg)
     while (!DONE)
     {
         char hostkey[50];
-        snprintf(hostkey, sizeof(hostkey), "SHA-%040zx", i);
+        xsnprintf(hostkey, sizeof(hostkey), "SHA-%040zx", i);
         char ip[50];
-        snprintf(ip, sizeof(ip), "250.%03zu.%03zu.%03zu",
+        xsnprintf(ip, sizeof(ip), "250.%03zu.%03zu.%03zu",
                  i / (256*256), (i / 256) % 256, i % 256);
 
         UpdateLastSawHost(hostkey, ip,
@@ -252,9 +252,9 @@ void worker_process()
         else
         {
             char hostkey[50];
-            snprintf(hostkey, sizeof(hostkey), "SHA-%040lx", child_COUNTER);
+            xsnprintf(hostkey, sizeof(hostkey), "SHA-%040lx", child_COUNTER);
             char ip[50];
-            snprintf(ip, sizeof(ip), "250.%03lu.%03lu.%03lu",
+            xsnprintf(ip, sizeof(ip), "250.%03lu.%03lu.%03lu",
                       child_COUNTER / (256*256),
                      (child_COUNTER / 256) % 256,
                       child_COUNTER % 256);
@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
         lastsaw_num_threads + keycount_num_threads + scanlastseen_num_threads;
 
 
-    snprintf(CFWORKDIR, sizeof(CFWORKDIR),
+    xsnprintf(CFWORKDIR, sizeof(CFWORKDIR),
              "/tmp/lastseen_threaded_load.XXXXXX");
     char *retp = mkdtemp(CFWORKDIR);
     if (retp == NULL)
@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
     }
 
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
     system(cmd);
 
     return retval;

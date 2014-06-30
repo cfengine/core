@@ -571,15 +571,28 @@ char *StringEncodeBase64(const char *str, size_t len)
     return out;
 }
 
-void StringBytesToHex(const unsigned char *bytes, size_t num_bytes, char out[(num_bytes * 2) + 1])
+/**
+ * @NOTE this function always '\0'-terminates the destination string #dst.
+ * @return length of written string #dst.
+ */
+size_t StringBytesToHex(char *dst, size_t dst_size,
+                        const unsigned char *src_bytes, size_t src_len)
 {
     static const char *const hex_chars = "0123456789abcdef";
-    for (size_t i = 0; i < num_bytes; i++)
+
+    size_t i = 0;
+    while ((i < src_len) &&
+           (i*2 + 2 < dst_size))               /* room for 2 more hex chars */
     {
-        out[(2 * i)] = hex_chars[(bytes[i] >> 4) & 0xf];
-        out[(2 * i) + 1] = hex_chars[bytes[i] & 0xf];
+        dst[2*i]     = hex_chars[(src_bytes[i] >> 4) & 0xf];
+        dst[2*i + 1] = hex_chars[src_bytes[i] & 0xf];
+        i++;
     }
-    out[num_bytes * 2] = '\0';
+
+    assert(2*i < dst_size);
+    dst[2*i] = '\0';
+
+    return 2*i;
 }
 
 bool IsStrIn(const char *str, const char *const strs[])

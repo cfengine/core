@@ -15,14 +15,14 @@ void tests_setup(void)
     putenv(env);
 
     char state_dir[PATH_MAX];
-    snprintf(state_dir, PATH_MAX, "%s/state", workdir);
+    xsnprintf(state_dir, PATH_MAX, "%s/state", workdir);
     mkdir(state_dir, 0766);
 }
 
 void tests_teardown(void)
 {
     char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
     system(cmd);
 }
 

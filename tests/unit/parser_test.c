@@ -5,8 +5,8 @@
 
 static Policy *TestParsePolicy(const char *filename)
 {
-    char path[1024];
-    sprintf(path, "%s/%s", TESTDATADIR, filename);
+    char path[PATH_MAX];
+    xsnprintf(path, sizeof(path), "%s/%s", TESTDATADIR, filename);
 
     return ParserParseFile(AGENT_TYPE_COMMON, path, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 }

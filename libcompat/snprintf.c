@@ -23,6 +23,12 @@
 /*
  * History
  *
+ * 2014-04-03 Dimitrios Apostolou <jimis@gmx.net>:
+ *
+ *      Provided replacement functions for [v][f]printf().
+ *      Fixed snprintf.m4 to always check for locale.h and other header files
+ *      so that the tests in this file run correctly.
+ *
  * 2008-01-20 Holger Weiss <holger@jhweiss.de> for C99-snprintf 1.1:
  *
  * 	Fixed the detection of infinite floating point values on IRIX (and
@@ -269,6 +275,7 @@
 #define HAVE___VA_COPY 1
 #endif	/* !defined(HAVE___VA_COPY) */
 #endif	/* HAVE_CONFIG_H */
+
 #define snprintf rpl_snprintf
 #define vsnprintf rpl_vsnprintf
 #define asprintf rpl_asprintf
@@ -1551,13 +1558,104 @@ rpl_asprintf(va_alist) va_dcl
 	return len;
 }
 #endif	/* !HAVE_ASPRINTF */
+
+
+/* If [v]snprintf() does not exist or is not C99 compatible, then we assume
+ * that [v]printf() and [v]fprintf() need to be provided as well. */
+
+#if !HAVE_VSNPRINTF
+int rpl_vfprintf(FILE *stream, const char *format, va_list ap)
+{
+    va_list ap2;
+    char staticbuf[1024];
+    char *buf = staticbuf;
+
+    /* Try to write to staticbuf. */
+    va_copy(ap2, ap);
+    int len = vsnprintf(staticbuf, sizeof(staticbuf), format, ap2);
+    va_end(ap2);
+
+    /* Was the output truncated? */
+    if (len >= sizeof(staticbuf))
+    {
+        size_t buf_size = len + 1;
+        buf = malloc(buf_size);
+        if (buf == NULL)
+        {
+            return -1;
+        }
+
+        /* Write to the allocated buffer. */
+        va_copy(ap2, ap);
+        len = vsnprintf(buf, buf_size, format, ap2);
+        va_end(ap2);
+
+        /* Truncated again! Should never happen! */
+        if (len >= buf_size)
+        {
+            len = -1;
+        }
+    }
+
+    /* Finally write to the stream. */
+    if (len > 0)
+    {
+        len = fwrite(buf, 1, len, stream);
+    }
+
+    if (buf != staticbuf)
+    {
+        free(buf);
+    }
+
+    return len;
+}
+int rpl_vprintf(const char *format, va_list ap)
+{
+    va_list ap2;
+
+    va_copy(ap2, ap);
+    int len = vfprintf(stdout, format, ap);
+    va_end(ap2);
+
+    return len;
+}
+#endif
+
+
+#if !HAVE_SNPRINTF
+int rpl_fprintf(FILE *stream, const char *format, ...)
+{
+    va_list ap;
+    int len;
+
+    va_start(ap, format);
+    len = vfprintf(stream, format, ap);
+    va_end(ap);
+
+    return len;
+}
+int rpl_printf(const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    int len = vprintf(format, ap);
+    va_end(ap);
+
+    return len;
+}
+#endif
+
+
+
+
 #else	/* Dummy declaration to avoid empty translation unit warnings. */
 int main(void);
 #endif	/* !HAVE_SNPRINTF || !HAVE_VSNPRINTF || !HAVE_ASPRINTF || [...] */
 
 #if TEST_SNPRINTF
-int
-main(void)
+static int snprintf_rigorous_test(void)
 {
 	const char *float_fmt[] = {
 		/* "%E" and "%e" formats. */
@@ -2069,7 +2167,7 @@ do {                                                                           \
 	(void)setlocale(LC_ALL, "");
 #endif	/* HAVE_LOCALE_H */
 
-	(void)puts("Testing our snprintf(3) against your system's sprintf(3).");
+	(void)puts("=== Testing our snprintf(3) against your system's sprintf(3). ===\n");
 	TEST(float_fmt, float_val);
 	TEST(long_fmt, long_val);
 	TEST(ulong_fmt, ulong_val);

@@ -124,12 +124,12 @@ void xsnprintf(char *str, size_t str_size, const char *format, ...)
     }
     else if (ret >= str_size)                           /* output truncated */
     {
-        #ifdef NDEBUG
+#ifdef NDEBUG
         UnexpectedError("Result of snprintf(\"%s\") truncated at %zu chars",
                         format, str_size);
-        #else
+#else
         ProgrammingError("Result of snprintf(\"%s\") truncated at %zu chars",
                          format, str_size);
-        #endif
+#endif
     }
 }

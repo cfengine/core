@@ -1,6 +1,7 @@
 #include <test.h>
 
 #include <item_lib.h>
+#include <misc_lib.h>                                          /* xsnprintf */
 #include <server.h>
 #include <server_common.h>
 

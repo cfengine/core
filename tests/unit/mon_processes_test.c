@@ -3,6 +3,8 @@
 #include "generic_agent.h"
 #include "item_lib.h"
 #include "mon.h"
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 static void tests_setup(void)
 {

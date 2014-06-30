@@ -2,6 +2,8 @@
 
 #include <cf3.defs.h>
 #include <dbm_api.h>
+#include <misc_lib.h>                                          /* xsnprintf */
+
 
 char CFWORKDIR[CF_BUFSIZE];
 

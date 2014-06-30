@@ -7,6 +7,10 @@
 #include <cmockery.h>
 #include <stdio.h>
 
+/* For xsnprintf() used all over the place. */
+#include <misc_lib.h>
+
+
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
 char *file_read_string(FILE *in);

@@ -57,6 +57,13 @@ LogLevel CryptoGetMissingKeyLogLevel();
 
 static bool crypto_initialized = false; /* GLOBAL_X */
 
+
+const char *CryptoLastErrorString()
+{
+    const char *errmsg = ERR_reason_error_string(ERR_get_error());
+    return (errmsg != NULL) ? errmsg : "no error message";
+}
+
 void CryptoInitialize()
 {
     if (!crypto_initialized)
@@ -135,10 +142,9 @@ bool LoadSecretKeys(void)
         if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL,
                                               (void *)priv_passphrase)) == NULL)
         {
-            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Error reading private key. (PEM_read_RSAPrivateKey: %s)",
-                (errmsg != NULL) ? errmsg : "no error message");
+                CryptoLastErrorString());
             PRIVKEY = NULL;
             fclose(fp);
             return false;
@@ -164,10 +170,9 @@ bool LoadSecretKeys(void)
         PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, (void *)priv_passphrase);
         if (NULL == PUBKEY)
         {
-            const char *errmsg = ERR_reason_error_string(ERR_get_error());
             Log(LOG_LEVEL_ERR,
                 "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
-                pubkeyfile, (errmsg != NULL) ? errmsg : "no error message");
+                pubkeyfile, CryptoLastErrorString());
             fclose(fp);
             free(pubkeyfile);
             return false;
@@ -316,10 +321,9 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
     if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL,
                                         (void *)pub_passphrase)) == NULL)
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
         Log(LOG_LEVEL_ERR,
             "Error reading public key. (PEM_read_RSAPublicKey: %s)",
-            (errmsg != NULL) ? errmsg : "no error message");
+            CryptoLastErrorString());
         fclose(fp);
         return NULL;
     }
@@ -377,10 +381,9 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
 
     if (!PEM_write_RSAPublicKey(fp, key))
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
         Log(LOG_LEVEL_ERR,
             "Error saving public key to '%s'. (PEM_write_RSAPublicKey: %s)",
-            filename, (errmsg != NULL) ? errmsg : "no error message");
+            filename, CryptoLastErrorString());
     }
 
     fclose(fp);

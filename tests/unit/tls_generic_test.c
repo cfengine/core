@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <openssl/bn.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <string.h>
@@ -18,256 +19,20 @@
 #include <tls_client.h>
 #include <connection_info.h>
 
-/*
- * We create the appropriate SSL structures before starting the tests.
- * We delete them afterwards
- */
+
 static SSL_CTX *SSLSERVERCONTEXT = NULL;
 static X509 *SSLSERVERCERT = NULL;
 static SSL_CTX *SSLCLIENTCONTEXT = NULL;
 static X509 *SSLCLIENTCERT = NULL;
-static bool correctly_initialized = false;
-static pid_t pid = -1;
+static pid_t CHILD_PID = -1;
 static int server_public_key_file = -1;
 static int certificate_file = -1;
-static char temporary_folder[] = "/tmp/tls_test_XXXXXX";
+static char TESTDIR[] = "/tmp/tls_test_XXXXXX";
 static char server_name_template_public[128];
 static char server_certificate_template_public[128];
-/*
- * Helper functions, used to start a server and a client.
- * Notice that the child is the server, not the other way around.
- */
-int ssl_server_init();
-void ssl_client_init();
 
-void child_cycle(int channel)
-{
-    int message = 0;
-    int result = 0;
-    int local_socket = 0;
-    int remote_socket = 0;
-    struct sockaddr_in my_addr, peer_addr;
-    socklen_t peer_addr_size = 0;
 
-    memset(&my_addr, 0, sizeof(struct sockaddr_in));
-    memset(&peer_addr, 0, sizeof(struct sockaddr_in));
-    /*
-     * Do the TLS initialization dance.
-     */
-    result = ssl_server_init();
-    if (result < 0)
-    {
-        message = -1;
-        result = write(channel, &message, sizeof(int));
-        exit(EXIT_SUCCESS);
-    }
-    /*
-     * Create a unix socket
-     */
-    local_socket = socket(AF_INET, SOCK_STREAM, 0);
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_addr.s_addr = INADDR_ANY;
-    my_addr.sin_port = htons(8035);
-    /* Avoid spurious failures when rerunning the test due to socket not yet
-     * being released. */
-    int opt = 1;
-    setsockopt(local_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    /*
-     * Bind it
-     */
-    result = bind(local_socket, (struct sockaddr *)&my_addr, sizeof(struct sockaddr_in));
-    if (result < 0)
-    {
-        message = -1;
-        result = write(channel, &message, sizeof(int));
-        exit(EXIT_SUCCESS);
-    }
-    /*
-     * Start listening for connections
-     */
-    result = listen(local_socket, 5);
-    if (result < 0)
-    {
-        message = -1;
-        result = write(channel, &message, sizeof(int));
-        exit(EXIT_SUCCESS);
-    }
-    /*
-     * Signal the parent that we are ok.
-     */
-    result = write(channel, &message, sizeof(int));
-    /*
-     * If this did not work, then we abort.
-     */
-    if (result < 0)
-    {
-        exit(EXIT_SUCCESS);
-    }
-    /*
-     * Send the name of the public key file.
-     */
-    result = write(channel, server_name_template_public, strlen(server_name_template_public));
-    if (result < 0)
-    {
-        exit(EXIT_SUCCESS);
-    }
-    /*
-     * Send the name of the certificate file.
-     */
-    result = write(channel, server_certificate_template_public, strlen(server_certificate_template_public));
-    if (result < 0)
-    {
-        exit(EXIT_SUCCESS);
-    }
-    /*
-     * Now wait until somebody calls.
-     */
-    peer_addr_size = sizeof(struct sockaddr_in);
-    while (true)
-    {
-        remote_socket = accept(local_socket, (struct sockaddr *)&peer_addr, &peer_addr_size);
-        if (remote_socket < 0)
-        {
-            Log (LOG_LEVEL_CRIT, "Could not accept connection");
-            continue;
-        }
-        /*
-         * We are not testing the server, we are testing the functions to send and receive data
-         * over TLS. We do not need a full fletched server for that, we just need to send and
-         * receive data and try the error conditions.
-         */
-        SSL *ssl = SSL_new(SSLSERVERCONTEXT);
-        if (!ssl)
-        {
-            Log(LOG_LEVEL_CRIT, "Could not create SSL structure on the server side");
-            SSL_free(ssl);
-            close (remote_socket);
-            remote_socket = -1;
-            continue;
-        }
-        SSL_set_fd(ssl, remote_socket);
-        result = SSL_accept(ssl);
-        if (result < 0)
-        {
-            Log(LOG_LEVEL_CRIT, "Could not accept a TLS connection");
-            close (remote_socket);
-            remote_socket = -1;
-            continue;
-        }
-        /*
-         * Our mission is pretty simple, receive data and send it back.
-         */
-        int received = 0;
-        int sent = 0;
-        char buffer[4096];
-        do {
-            received = SSL_read(ssl, buffer, 4096);
-            if (received < 0)
-            {
-                Log(LOG_LEVEL_CRIT, "Failure while receiving data over TLS");
-                break;
-            }
-            sent = SSL_write(ssl, buffer, received);
-            if (sent < 0)
-            {
-                Log(LOG_LEVEL_CRIT, "Failure while sending data over TLS");
-                break;
-            }
-        } while (received > 0);
-        /*
-         * Mission completed, start again.
-         */
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
-        remote_socket = -1;
-    }
-    exit(EXIT_SUCCESS);
-}
-
-int start_child_process()
-{
-    int result = 0;
-    int channel[2];
-
-    result = pipe(channel);
-    if (result < 0)
-    {
-        return -1;
-    }
-    pid = fork();
-    if (pid < 0)
-    {
-        return -1;
-    }
-    else if (pid == 0)
-    {
-        /*
-         * Child
-         * The child process is the one running the server.
-         */
-        close (channel[0]);
-        child_cycle(channel[1]);
-    }
-    else
-    {
-        /*
-         * Parent
-         * The parent process is the process runing the test.
-         */
-        close (channel[1]);
-        int message = 0;
-        result = read(channel[0], &message, sizeof(int));
-        if ((result < 0) || (message < 0))
-        {
-            close (channel[0]);
-            if (result < 0)
-            {
-                perror("Failed to read() from child");
-            }
-            if (message < 0)
-            {
-                Log(LOG_LEVEL_ERR, "Child responded with -1!");
-            }
-            /*
-             * Wait for child process
-             */
-            wait(NULL);
-            pid = -1;
-            return -1;
-        }
-        /*
-         * Get the name of the public key file
-         */
-        result = read(channel[0], server_name_template_public, strlen(server_name_template_public));
-        if (result < 0)
-        {
-            close (channel[0]);
-            /*
-             * Wait for child process
-             */
-            wait(NULL);
-            pid = -1;
-            return -1;
-        }
-        server_name_template_public[result] = '\0';
-        /*
-         * Get the name of the certificate file
-         */
-        result = read(channel[0], server_certificate_template_public, strlen(server_certificate_template_public));
-        if (result < 0)
-        {
-            close (channel[0]);
-            /*
-             * Wait for child process
-             */
-            wait(NULL);
-            pid = -1;
-            return -1;
-        }
-        server_certificate_template_public[result] = '\0';
-    }
-    return 0;
-}
+/***************** CHILD PROCESS a.k.a. server ******************************/
 
 static int always_true(X509_STORE_CTX *store_ctx ARG_UNUSED,
                        void *arg ARG_UNUSED)
@@ -275,26 +40,28 @@ static int always_true(X509_STORE_CTX *store_ctx ARG_UNUSED,
     return 1;
 }
 
-int ssl_server_init()
+/* Child process is the server-side in this test. */
+static bool init_test_server()
 {
-    int ret;
     /*
      * This is twisted. We can generate the required keys by calling RSA_generate_key,
      * however we cannot put the private part and the public part in the two containers.
      * For that we need to save each part to a file and then load each part from
      * the respective file.
      */
-    RSA *key = NULL;
-    key = RSA_generate_key(1024, 17, NULL, NULL);
-    if (!key)
+    int ret;
+    RSA *key = RSA_new();
+    BIGNUM *bignum = BN_new();
+    BN_set_word(bignum, 17);
+    ret = RSA_generate_key_ex(key, 1024, bignum, NULL);
+    if (!ret)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
 
     char name_template_private[128];
     ret = snprintf(name_template_private, sizeof(name_template_private), "%s/%s",
-                   temporary_folder, "name_template_private.XXXXXX");
+                   TESTDIR, "name_template_private.XXXXXX");
     assert(ret > 0 && ret < sizeof(name_template_private));
 
     int private_key_file = 0;
@@ -303,41 +70,35 @@ int ssl_server_init()
     private_key_file = mkstemp(name_template_private);
     if (private_key_file < 0)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
     private_key_stream = fdopen(private_key_file, "w+");
     if (!private_key_stream)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
     ret = PEM_write_RSAPrivateKey(private_key_stream, key, NULL, NULL, 0, 0, NULL);
     if (ret == 0)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
     fseek(private_key_stream, 0L, SEEK_SET);
     PRIVKEY = PEM_read_RSAPrivateKey(private_key_stream, (RSA **)NULL, NULL, NULL);
     if (!PRIVKEY)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
     fclose(private_key_stream);
 
     FILE *public_key_stream = fdopen(server_public_key_file, "w+");
     if (!public_key_stream)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
     ret = PEM_write_RSAPublicKey(public_key_stream, key);
     if (ret == 0)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
     fflush(public_key_stream);
 
@@ -345,8 +106,7 @@ int ssl_server_init()
     PUBKEY = PEM_read_RSAPublicKey(public_key_stream, (RSA **)NULL, NULL, NULL);
     if (!PUBKEY)
     {
-        correctly_initialized = false;
-        return -1;
+        return false;
     }
     RSA_free(key);
 
@@ -355,7 +115,7 @@ int ssl_server_init()
     if (SSLSERVERCONTEXT == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err1;
     }
 
@@ -395,8 +155,7 @@ int ssl_server_init()
         {
             Log(LOG_LEVEL_ERR, "Uknown digest algorithm %s",
                 "sha384");
-            correctly_initialized = false;
-            return -1;
+            return false;
         }
         ret = X509_sign(x509, pkey, md);
 
@@ -407,15 +166,14 @@ int ssl_server_init()
         {
             Log(LOG_LEVEL_ERR,
                 "Couldn't sign the public key for the TLS handshake: %s",
-                ERR_reason_error_string(ERR_get_error()));
+                TLSErrorString(ERR_get_error()));
             goto err3;
         }
 
         FILE *certificate_stream = fdopen(certificate_file, "w+");
         if (!certificate_stream)
         {
-            correctly_initialized = false;
-            return -1;
+            return false;
         }
         PEM_write_X509(certificate_stream, x509);
         fflush(certificate_stream);
@@ -427,7 +185,7 @@ int ssl_server_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -436,12 +194,12 @@ int ssl_server_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
-    correctly_initialized = true;
-    return 0;
+    return true;
+
   err3:
     X509_free(SSLSERVERCERT);
     SSLSERVERCERT = NULL;
@@ -449,11 +207,237 @@ int ssl_server_init()
     SSL_CTX_free(SSLSERVERCONTEXT);
     SSLSERVERCONTEXT = NULL;
   err1:
-    correctly_initialized = false;
-    return -1;
+    return false;
 }
 
-void ssl_client_init()
+static void child_mainloop(int channel)
+{
+    int message = 0;
+    int result = 0;
+    int local_socket = 0;
+    int remote_socket = 0;
+    struct sockaddr_in my_addr, peer_addr;
+    socklen_t peer_addr_size = 0;
+
+    memset(&my_addr, 0, sizeof(struct sockaddr_in));
+    memset(&peer_addr, 0, sizeof(struct sockaddr_in));
+
+    if (!init_test_server())
+    {
+        message = -1;
+        result = write(channel, &message, sizeof(int));
+        exit(EXIT_FAILURE);
+    }
+
+    /* Create a unix socket. */
+    local_socket = socket(AF_INET, SOCK_STREAM, 0);
+    my_addr.sin_family = AF_INET;
+    my_addr.sin_addr.s_addr = INADDR_ANY;
+    my_addr.sin_port = htons(8035);
+    /* Avoid spurious failures when rerunning the test due to socket not yet
+     * being released. */
+    int opt = 1;
+    setsockopt(local_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    /*
+     * Bind it
+     */
+    result = bind(local_socket, (struct sockaddr *)&my_addr, sizeof(struct sockaddr_in));
+    if (result < 0)
+    {
+        message = -1;
+        result = write(channel, &message, sizeof(int));
+        exit(EXIT_FAILURE);
+    }
+    /*
+     * Start listening for connections
+     */
+    result = listen(local_socket, 5);
+    if (result < 0)
+    {
+        message = -1;
+        result = write(channel, &message, sizeof(int));
+        exit(EXIT_FAILURE);
+    }
+    /*
+     * Signal the parent that we are ok.
+     */
+    result = write(channel, &message, sizeof(int));
+    /*
+     * If this did not work, then we abort.
+     */
+    if (result < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    /*
+     * Send the name of the public key file.
+     */
+    result = write(channel, server_name_template_public, strlen(server_name_template_public));
+    if (result < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    /*
+     * Send the name of the certificate file.
+     */
+    result = write(channel, server_certificate_template_public, strlen(server_certificate_template_public));
+    if (result < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    /*
+     * Now wait until somebody calls.
+     */
+    peer_addr_size = sizeof(struct sockaddr_in);
+    while (true)
+    {
+        remote_socket = accept(local_socket, (struct sockaddr *)&peer_addr, &peer_addr_size);
+        if (remote_socket < 0)
+        {
+            Log (LOG_LEVEL_CRIT, "Could not accept connection");
+            exit(EXIT_FAILURE);
+        }
+        /*
+         * We are not testing the server, we are testing the functions to send and receive data
+         * over TLS. We do not need a full fletched server for that, we just need to send and
+         * receive data and try the error conditions.
+         */
+        SSL *ssl = SSL_new(SSLSERVERCONTEXT);
+        if (!ssl)
+        {
+            Log(LOG_LEVEL_CRIT, "Could not create SSL structure on the server side");
+            SSL_free(ssl);
+            close (remote_socket);
+            remote_socket = -1;
+            exit(EXIT_FAILURE);
+        }
+        SSL_set_fd(ssl, remote_socket);
+        result = SSL_accept(ssl);
+        if (result < 0)
+        {
+            Log(LOG_LEVEL_CRIT, "Could not accept a TLS connection");
+            close (remote_socket);
+            remote_socket = -1;
+            exit(EXIT_FAILURE);
+        }
+        /*
+         * Our mission is pretty simple, receive data and send it back.
+         */
+        int received = 0;
+        int sent = 0;
+        char buffer[4096];
+        do {
+            received = SSL_read(ssl, buffer, 4096);
+            if (received < 0)
+            {
+                Log(LOG_LEVEL_CRIT, "Failure while receiving data over TLS");
+                exit(EXIT_FAILURE);
+            }
+            sent = SSL_write(ssl, buffer, received);
+            if (sent < 0)
+            {
+                Log(LOG_LEVEL_CRIT, "Failure while sending data over TLS");
+                exit(EXIT_FAILURE);
+            }
+        } while (received > 0);
+        /*
+         * Mission completed, start again.
+         */
+        SSL_shutdown(ssl);
+        SSL_free(ssl);
+        remote_socket = -1;
+    }
+
+    ServerTLSDeInitialize();
+    exit(EXIT_SUCCESS);
+}
+
+static bool start_child_process()
+{
+    int result = 0;
+    int channel[2];
+
+    result = pipe(channel);
+    if (result < 0)
+    {
+        return false;
+    }
+    CHILD_PID = fork();
+    if (CHILD_PID < 0)
+    {
+        return false;
+    }
+    else if (CHILD_PID == 0)                         /* CHILD a.k.a server */
+    {
+        close (channel[0]);
+        child_mainloop(channel[1]);
+    }
+    else                                             /* PARENT a.k.a client */
+    {
+        close (channel[1]);
+        int message = 0;
+        result = read(channel[0], &message, sizeof(int));
+        if ((result < 0) || (message < 0))
+        {
+            close (channel[0]);
+            if (result < 0)
+            {
+                perror("Failed to read() from child");
+            }
+            if (message < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Child responded with -1!");
+            }
+            /*
+             * Wait for child process
+             */
+            wait(NULL);
+            CHILD_PID = -1;
+            return false;
+        }
+        /*
+         * Get the name of the public key file
+         */
+        result = read(channel[0], server_name_template_public,
+                      strlen(server_name_template_public));
+        if (result < 0)
+        {
+            close (channel[0]);
+            /*
+             * Wait for child process
+             */
+            wait(NULL);
+            CHILD_PID = -1;
+            return false;
+        }
+        server_name_template_public[result] = '\0';
+        /*
+         * Get the name of the certificate file
+         */
+        result = read(channel[0], server_certificate_template_public,
+                      strlen(server_certificate_template_public));
+        if (result < 0)
+        {
+            close (channel[0]);
+            /*
+             * Wait for child process
+             */
+            wait(NULL);
+            CHILD_PID = -1;
+            return false;
+        }
+        server_certificate_template_public[result] = '\0';
+    }
+
+    return true;
+}
+
+/************* END CHILD PROCESS ********************************************/
+
+
+
+/* Parent process is the client-side in this test. */
+static bool init_test_client()
 {
     /*
      * This is twisted. We can generate the required keys by calling RSA_generate_key,
@@ -461,81 +445,75 @@ void ssl_client_init()
      * For that we need to save each part to a file and then load each part from
      * the respective file.
      */
-    RSA *key = NULL;
-    key = RSA_generate_key(1024, 17, NULL, NULL);
-    if (!key)
+    int ret;
+    RSA *key = RSA_new();
+    BIGNUM *bignum = BN_new();
+    BN_set_word(bignum, 17);
+    ret = RSA_generate_key_ex(key, 1024, bignum, NULL);
+    if (!ret)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
+
     char name_template_private[128];
     char name_template_public[128];
-    int ret;
 
     ret = snprintf(name_template_private,
                    sizeof(name_template_private),
                    "%s/%s",
-                   temporary_folder, "name_template_private.XXXXXX");
+                   TESTDIR, "name_template_private.XXXXXX");
     assert(ret > 0 && ret < sizeof(name_template_private));
 
     int private_key_file = mkstemp(name_template_private);
     if (private_key_file < 0)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
     FILE *private_key_stream = fdopen(private_key_file, "w+");
     if (!private_key_stream)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
     ret = PEM_write_RSAPrivateKey(private_key_stream, key, NULL, NULL, 0, 0, NULL);
     if (ret == 0)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
     fseek(private_key_stream, 0L, SEEK_SET);
     PRIVKEY = PEM_read_RSAPrivateKey(private_key_stream, (RSA **)NULL, NULL, NULL);
     if (!PRIVKEY)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
     fclose(private_key_stream);
 
     ret = snprintf(name_template_public,
                    sizeof(name_template_public),
                    "%s/%s",
-                   temporary_folder, "name_template_public.XXXXXX");
+                   TESTDIR, "name_template_public.XXXXXX");
     assert(ret > 0 && ret < sizeof(name_template_public));
 
     int public_key_file = mkstemp(name_template_public);
     if (public_key_file < 0)
     {
         perror("mkstemp");
-        correctly_initialized = false;
-        return;
+        return false;
     }
     FILE *public_key_stream = fdopen(public_key_file, "w+");
     if (!public_key_stream)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
     ret = PEM_write_RSAPublicKey(public_key_stream, key);
     if (ret == 0)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
     fseek(public_key_stream, 0L, SEEK_SET);
     PUBKEY = PEM_read_RSAPublicKey(public_key_stream, (RSA **)NULL, NULL, NULL);
     if (!PUBKEY)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
     fclose(public_key_stream);
     RSA_free(key);
@@ -544,7 +522,7 @@ void ssl_client_init()
     if (SSLCLIENTCONTEXT == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err1;
     }
 
@@ -556,8 +534,7 @@ void ssl_client_init()
 
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
 
     /* Generate self-signed cert valid from now to 50 years later. */
@@ -577,8 +554,7 @@ void ssl_client_init()
         const EVP_MD *md = EVP_get_digestbyname("sha384");
         if (md == NULL)
         {
-            correctly_initialized = false;
-            return;
+            return false;
         }
         ret = X509_sign(x509, pkey, md);
 
@@ -589,7 +565,7 @@ void ssl_client_init()
         {
             Log(LOG_LEVEL_ERR,
                 "Couldn't sign the public key for the TLS handshake: %s",
-                ERR_reason_error_string(ERR_get_error()));
+                TLSErrorString(ERR_get_error()));
             goto err3;
         }
     }
@@ -600,7 +576,7 @@ void ssl_client_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -609,12 +585,11 @@ void ssl_client_init()
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
-    correctly_initialized = true;
-    return;
+    return true;
 
   err3:
     X509_free(SSLCLIENTCERT);
@@ -622,14 +597,13 @@ void ssl_client_init()
     SSL_CTX_free(SSLCLIENTCONTEXT);
     SSLCLIENTCONTEXT = NULL;
   err1:
-    correctly_initialized = false;
-    return;
+    return false;
 }
 
 static bool create_temps()
 {
     int ret;
-    char *retp = mkdtemp(temporary_folder);
+    char *retp = mkdtemp(TESTDIR);
     if (retp == NULL)
     {
         perror("mkdtemp");
@@ -639,7 +613,7 @@ static bool create_temps()
     ret = snprintf(server_name_template_public,
                    sizeof(server_name_template_public),
                    "%s/%s",
-                   temporary_folder, "server_name_template_public.XXXXXX");
+                   TESTDIR, "server_name_template_public.XXXXXX");
     assert(ret > 0 && ret < sizeof(server_name_template_public));
 
     server_public_key_file = mkstemp(server_name_template_public);
@@ -652,7 +626,7 @@ static bool create_temps()
     ret = snprintf(server_certificate_template_public,
                    sizeof(server_certificate_template_public),
                    "%s/%s",
-                   temporary_folder, "server_certificate_template_public.XXXXXX");
+                   TESTDIR, "server_certificate_template_public.XXXXXX");
     assert(ret > 0 && ret < sizeof(server_certificate_template_public));
 
     certificate_file = mkstemp(server_certificate_template_public);
@@ -665,73 +639,54 @@ static bool create_temps()
     return true;
 }
 
-void tests_setup(void)
+static bool tests_setup(void)
 {
-    int ret = 0;
+    CryptoInitialize();
 
-    TLSGenericInitialize();
+    if (!TLSGenericInitialize())
+    {
+        return false;
+    }
 
     if (!create_temps())
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
 
-    /*
-     * First we start a new process to have a server for our tests.
-     */
-    ret = start_child_process();
-    if (ret < 0)
+    /* First we start a new process to have a server for our tests. */
+    if (!start_child_process())
     {
-        correctly_initialized = false;
-        return;
+        return false;
     }
-    /*
-     * If the initialization went without problems, then at this point
-     * there is a second process waiting for connections.
-     */
-    ssl_client_init();
+
+    /* If the initialization went without problems, then at this point there
+     * is a second process waiting for connections. */
+    if (!init_test_client())
+    {
+        return false;
+    }
+
+    return true;
 }
 
-void tests_teardown(void)
+static void tests_teardown(void)
 {
-    if (SSLSERVERCERT)
-    {
-        X509_free(SSLSERVERCERT);
-        SSLSERVERCERT = NULL;
-    }
-    if (SSLSERVERCONTEXT)
-    {
-        SSL_CTX_free(SSLSERVERCONTEXT);
-        SSLSERVERCONTEXT = NULL;
-    }
-    if (PRIVKEY)
-    {
-        RSA_free(PRIVKEY);
-        PRIVKEY = NULL;
-    }
-    if (PUBKEY)
-    {
-        RSA_free(PUBKEY);
-        PUBKEY = NULL;
-    }
+    TLSDeInitialize();
+
     if (server_public_key_file != -1)
     {
-        close (server_public_key_file);
+        close(server_public_key_file);
     }
     if (certificate_file != -1)
     {
-        close (server_public_key_file);
+        close(server_public_key_file);
     }
-    if (pid > 0)
+    if (CHILD_PID > 0)                                        /* kill child */
     {
-        /*
-         * Kill child process
-         */
-        kill(pid, SIGKILL);
+        kill(CHILD_PID, SIGTERM);
     }
     /* Delete temporary folder and files */
-    DIR *folder = opendir(temporary_folder);
+    DIR *folder = opendir(TESTDIR);
     if (folder)
     {
         struct dirent *entry = NULL;
@@ -742,13 +697,14 @@ void tests_teardown(void)
                 /* Skip . and .. */
                 continue;
             }
-            char *name = (char *)xmalloc (strlen(temporary_folder) + strlen(entry->d_name) + 2);
-            sprintf(name, "%s/%s", temporary_folder, entry->d_name);
+
+            char *name;
+            xasprintf(&name, "%s/%s", TESTDIR, entry->d_name);
             unlink(name);
             free (name);
         }
         closedir(folder);
-        rmdir(temporary_folder);
+        rmdir(TESTDIR);
     }
 }
 
@@ -974,7 +930,9 @@ RSA *original_HavePublicKey(const char *username, const char *ipaddress, const c
     if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR,
+            "Error reading public key. (PEM_read_RSAPublicKey: %s)",
+            TLSErrorString(err));
         fclose(fp);
         return NULL;
     }
@@ -1091,21 +1049,19 @@ int EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
  * int TLSRecv(SSL *ssl, char *buffer, int length);
  * int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
  */
-#define ASSERT_INITIALIZED assert_true(correctly_initialized)
 
 
-static void test_TLSVerifyCallback(void)
+/*static void test_TLSVerifyCallback(void)
 {
-    ASSERT_INITIALIZED;
-
     RESET_STATUS;
-    /*
-     * TODO test that TLSVerifyCallback returns 0 in case certificate changes
-     * during renegotiation. Must initialise a connection, and then trigger
-     * renegotiation with and without the certificate changing.
-     */
+
+//    TODO test that TLSVerifyCallback returns 0 in case certificate changes
+//    during renegotiation. Must initialise a connection, and then trigger
+//    renegotiation with and without the certificate changing.
+
     RESET_STATUS;
 }
+*/
 
 #define REREAD_CERTIFICATE(f, c) \
     rewind(f); \
@@ -1118,7 +1074,6 @@ static void test_TLSVerifyCallback(void)
 
 static void test_TLSVerifyPeer(void)
 {
-    ASSERT_INITIALIZED;
     RESET_STATUS;
 
     SSL *ssl = NULL;
@@ -1288,7 +1243,6 @@ static void test_TLSVerifyPeer(void)
  */
 static void test_TLSBasicIO(void)
 {
-    ASSERT_INITIALIZED;
     RESET_STATUS;
     SSL *ssl = NULL;
     char output_buffer[] = "this is a buffer";
@@ -1415,7 +1369,14 @@ static void test_TLSBasicIO(void)
 int main()
 {
     PRINT_TEST_BANNER();
-    tests_setup();
+
+    if (!tests_setup())
+    {
+        fprintf(stderr, "Test failed to initialise!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    atexit(tests_teardown);
 
     const UnitTest tests[] =
     {
@@ -1425,6 +1386,6 @@ int main()
     };
 
     int result = run_tests(tests);
-    tests_teardown();
+
     return result;
 }

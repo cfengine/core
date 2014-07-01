@@ -283,6 +283,25 @@ bundle agent user_is_unlocked(user, true_class, false_class)
         scope => "namespace";
 }
 
+# Some platforms add a flag that forces the user to change the password.
+bundle agent user_does_not_need_password_update(user, true_class, false_class)
+{
+  vars:
+    aix::
+      "flags" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl flags $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" not => regcmp(".*ADMCHG.*", "$(flags)"),
+        scope => "namespace";
+      "$(false_class)" expression => regcmp(".*ADMCHG.*", "$(flags)"),
+        scope => "namespace";
+
+    !aix::
+      "$(true_class)" expression => "any",
+        scope => "namespace";
+}
+
 body classes on_success(true_class, false_class)
 {
   promise_repaired => { "$(true_class)" };

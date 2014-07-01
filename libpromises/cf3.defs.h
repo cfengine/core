@@ -278,32 +278,6 @@ typedef enum
 
 /*******************************************************************/
 
-typedef enum
-{
-    PLATFORM_CONTEXT_UNKNOWN,
-    PLATFORM_CONTEXT_OPENVZ,
-    PLATFORM_CONTEXT_HP,
-    PLATFORM_CONTEXT_AIX,
-    PLATFORM_CONTEXT_LINUX,
-    PLATFORM_CONTEXT_SOLARIS,
-    PLATFORM_CONTEXT_FREEBSD,
-    PLATFORM_CONTEXT_NETBSD,
-    PLATFORM_CONTEXT_CRAYOS,
-    PLATFORM_CONTEXT_WINDOWS_NT,
-    PLATFORM_CONTEXT_SYSTEMV,
-    PLATFORM_CONTEXT_OPENBSD,
-    PLATFORM_CONTEXT_CFSCO,
-    PLATFORM_CONTEXT_DARWIN,
-    PLATFORM_CONTEXT_QNX,
-    PLATFORM_CONTEXT_DRAGONFLY,
-    PLATFORM_CONTEXT_MINGW,
-    PLATFORM_CONTEXT_VMWARE,
-    PLATFORM_CONTEXT_ANDROID,
-    PLATFORM_CONTEXT_MAX
-} PlatformContext;
-
-/*******************************************************************/
-
 typedef struct UidList_ UidList;
 
 // TODO: why do UIDs have their own list type? Clean up.

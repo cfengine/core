@@ -33,6 +33,7 @@
 #include <conversion.h>
 #include <match_scope.h>
 #include <string_lib.h>
+#include <systype.h>
 #include <pipes.h>
 #include <nfs.h>
 #include <misc_lib.h>
@@ -53,70 +54,73 @@ static void DeleteThisItem(Item **liststart, Item *entry);
 static const char *const VMOUNTCOMM[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
-    [PLATFORM_CONTEXT_OPENVZ] = "/bin/mount -va",           /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "/sbin/mount -ea",          /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "/usr/sbin/mount -t nfs",   /* aix */
+    [PLATFORM_CONTEXT_OPENVZ] = "/bin/mount -va",          /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/sbin/mount -ea",             /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/usr/sbin/mount -t nfs",     /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/bin/mount -va",           /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/usr/sbin/mount -a",       /* solaris */
-    [PLATFORM_CONTEXT_FREEBSD] = "/sbin/mount -va",          /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "/sbin/mount -a",           /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "/etc/mount -va",           /* cray */
-    [PLATFORM_CONTEXT_WINDOWS_NT] = "/bin/sh /etc/fstab",       /* NT - possible security issue */
-    [PLATFORM_CONTEXT_SYSTEMV] = "/sbin/mountall",           /* Unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "/sbin/mount",              /* openbsd */
+    [PLATFORM_CONTEXT_SOLARIS] = "/usr/sbin/mount -a",     /* solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/sbin/mount -a", /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/sbin/mount -va",        /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/sbin/mount -a",          /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/mount -va",          /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/bin/sh /etc/fstab",  /* NT - possible security issue */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/sbin/mountall",         /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/sbin/mount",            /* openbsd */
     [PLATFORM_CONTEXT_CFSCO] = "/etc/mountall",            /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "/sbin/mount -va",          /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "/bin/mount -v",            /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "/sbin/mount -va",          /* dragonfly */
+    [PLATFORM_CONTEXT_DARWIN] = "/sbin/mount -va",         /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/bin/mount -v",              /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/sbin/mount -va",      /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
-    [PLATFORM_CONTEXT_VMWARE] = "/bin/mount -a",            /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "",                        /* android */
+    [PLATFORM_CONTEXT_VMWARE] = "/bin/mount -a",           /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                       /* android */
 };
 
 static const char *const VUNMOUNTCOMM[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
-    [PLATFORM_CONTEXT_OPENVZ] = "/bin/umount",              /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_OPENVZ] = "/bin/umount",          /* virt_host_vz_vzps */
     [PLATFORM_CONTEXT_HP] = "/sbin/umount",             /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "/usr/sbin/umount",         /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "/bin/umount",              /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/etc/umount",              /* solaris */
-    [PLATFORM_CONTEXT_FREEBSD] = "/sbin/umount",             /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "/sbin/umount",             /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "/etc/umount",              /* cray */
-    [PLATFORM_CONTEXT_WINDOWS_NT] = "/bin/umount",              /* NT */
-    [PLATFORM_CONTEXT_SYSTEMV] = "/sbin/umount",             /* Unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "/sbin/umount",             /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "/etc/umount",              /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "/sbin/umount",             /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "/bin/umount",              /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "/sbin/umount",             /* dragonfly */
-    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
-    [PLATFORM_CONTEXT_VMWARE] = "/bin/umount",              /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/umount",     /* android */
+    [PLATFORM_CONTEXT_AIX] = "/usr/sbin/umount",        /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/bin/umount",           /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/umount",         /* solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/etc/umount",     /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/sbin/umount",        /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/sbin/umount",         /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/umount",          /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/bin/umount",      /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/sbin/umount",        /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/sbin/umount",        /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/etc/umount",           /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/sbin/umount",         /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/bin/umount",             /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/sbin/umount",      /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/bin/umount",          /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/umount", /* android */
 };
 
 static const char *const VMOUNTOPTS[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
-    [PLATFORM_CONTEXT_OPENVZ] = "defaults",                 /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "bg,hard,intr",             /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "bg,hard,intr",             /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "defaults",                 /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "bg,hard,intr",             /* solaris */
-    [PLATFORM_CONTEXT_FREEBSD] = "bg,intr",                  /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "-i,-b",                    /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "bg,hard,intr",             /* cray */
-    [PLATFORM_CONTEXT_WINDOWS_NT] = "",                         /* NT */
-    [PLATFORM_CONTEXT_SYSTEMV] = "bg,hard,intr",             /* Unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "-i,-b",                    /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "bg,hard,intr",             /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "-i,-b",                    /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "bg,hard,intr",             /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "bg,intr",                  /* dragonfly */
-    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
-    [PLATFORM_CONTEXT_VMWARE] = "defaults",                 /* vmstate */
-    [PLATFORM_CONTEXT_ANDROID] = "defaults",                 /* android */
+    [PLATFORM_CONTEXT_OPENVZ] = "defaults",          /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "bg,hard,intr",          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "bg,hard,intr",         /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "defaults",           /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "bg,hard,intr",     /* solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "bg,hard,intr", /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "bg,intr",          /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "-i,-b",             /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "bg,hard,intr",      /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "",              /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "bg,hard,intr",     /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "-i,-b",            /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "bg,hard,intr",       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "-i,-b",             /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "bg,hard,intr",         /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "bg,intr",        /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",      /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "defaults",          /* vmstate */
+    [PLATFORM_CONTEXT_ANDROID] = "defaults",         /* android */
 };
 
 bool LoadMountInfo(Seq *list)

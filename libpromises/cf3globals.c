@@ -153,11 +153,3 @@ char BINDINTERFACE[CF_MAXVARSIZE]; /* GLOBAL_P */
     - GenericAgentLoadPolicy (ReadPolicyValidatedFile)
 */
 bool MINUSF = false; /* GLOBAL_A */
-
-/* Set in libenv/sysinfo.c::DetectEnvironment (called every time environment
-   reload is performed).
-
-   Utilized all over the place, usually to look up OS-specific command/option to
-   call external utility
-*/
-PlatformContext VSYSTEMHARDCLASS; /* GLOBAL_E?, initialized_later */

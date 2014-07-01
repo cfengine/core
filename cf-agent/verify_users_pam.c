@@ -741,9 +741,11 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
         group_info = fgetgrent(fptr);
         if (!group_info)
         {
-            // Documentation among Unices is conflicting on return codes, but at
-            // least Linux returns ENOENT when there are no more entries.
-            if (errno && errno != ENOENT)
+            // Documentation among Unices is conflicting on return codes. When there
+            // are no more entries, this happens:
+            // Linux = ENOENT
+            // AIX = ESRCH
+            if (errno && errno != ENOENT && errno != ESRCH)
             {
                 Log(LOG_LEVEL_ERR, "Error while getting group list. (fgetgrent: '%s')", GetErrorStr());
                 ret = false;

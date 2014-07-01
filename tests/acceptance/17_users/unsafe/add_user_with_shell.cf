@@ -31,10 +31,17 @@ bundle agent init
 
 bundle agent test
 {
+  vars:
+    aix::
+      # AIX only allows certain shells.
+      "shell" string => "/bin/csh";
+    !aix::
+      "shell" string => "$(G.cat)";
+
   users:
     "johndoe"
       policy => "present",
-      shell => "$(G.cat)";
+      shell => "$(shell)";
 }
 
 #######################################################
@@ -45,8 +52,17 @@ bundle agent check
     "currentdir" string => dirname("$(this.promise_filename)");
 
   classes:
-    !windows::
+    !windows.!aix::
       "ok" expression => regcmp(".*Succeeded.*", execresult("sudo su johndoe $(currentdir)$(const.dirsep)add_user_with_shell.txt", "useshell"));
+
+  methods:
+    aix::
+      "any" usebundle => user_has_shell("johndoe", "$(test.shell)", "shell_success", "shell_failure"),
+        classes => always("shell_methods_run");
+
+  classes:
+    aix::
+      "ok" and => { "shell_success", "!shell_failure" };
 
   reports:
     ok|windows::

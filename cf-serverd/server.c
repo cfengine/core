@@ -276,85 +276,23 @@ static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, con
 /* TRIES: counts the number of consecutive connections dropped. */
 static int TRIES = 0;
 
-static void *HandleConnection(void *c)
+static void HandleDialogue(ServerConnectionState *conn)
 {
-    ServerConnectionState *conn = c;
-    int ret;
-
-    /* Set logging prefix to be the IP address for all of thread's lifetime. */
-
-    /* This stack-allocated struct should be valid for all the lifetime of the
-     * thread. Just make sure that after calling DeleteConn() (which frees
-     * ipaddr), you exit the thread right away. */
-    LoggingPrivContext log_ctx = {
-        .log_hook = LogHook,
-        .param = conn->ipaddr
-    };
-    LoggingPrivSetContext(&log_ctx);
-
-    Log(LOG_LEVEL_INFO, "Accepting connection");
-
-    /* We test if number of active threads is greater than max, if so we deny
-       connection, if it happened too many times within a short timeframe then we
-       kill ourself.TODO this test should be done *before* spawning the thread. */
-    ret = ThreadLock(cft_server_children);
-    if (!ret)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
-        goto conndone;
-    }
-    else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
-    {
-        if (TRIES > MAXTRIES)
-        {
-            /* This happens when no thread was freed while we had to drop 5
-             * (or maxconnections/3) consecutive connections, because none of
-             * the existing threads finished. */
-            Log(LOG_LEVEL_CRIT,
-                "Server seems to be paralyzed. DOS attack? "
-                "Committing apoptosis...");
-            ThreadUnlock(cft_server_children);
-            FatalError(conn->ctx, "Terminating");
-        }
-
-        TRIES++;
-        Log(LOG_LEVEL_ERR,
-            "Too many threads (%d > %d), dropping connection! "
-            "Increase server maxconnections?",
-            ACTIVE_THREADS, CFD_MAXPROCESSES);
-
-        ThreadUnlock(cft_server_children);
-        goto conndone;
-    }
-
-    ACTIVE_THREADS++;
-    TRIES = 0;
-    ThreadUnlock(cft_server_children);
-
-    DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
-
-    /* 20 times the connect() timeout should be enough to avoid MD5
-     * computation timeouts on big files on old slow Solaris 8 machines. */
-    SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info),
-                      CONNTIMEOUT * 20 * 1000);
-
     if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         /* Decide the protocol used. */
-        ret = ServerTLSPeek(conn->conn_info);
-        if (ret == -1)
+        if (ServerTLSPeek(conn->conn_info) == -1)
         {
-            goto dethread;
+            return;
         }
     }
 
     ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
     if (protocol_version == CF_PROTOCOL_LATEST)
     {
-        ret = ServerTLSSessionEstablish(conn);
-        if (ret == -1)
+        if (ServerTLSSessionEstablish(conn) == -1)
         {
-            goto dethread;
+            return;
         }
     }
     else if (protocol_version < CF_PROTOCOL_LATEST &&
@@ -366,14 +304,14 @@ static void *HandleConnection(void *c)
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");
-            goto dethread;
+            return;
         }
     }
     else
     {
         UnexpectedError("HandleConnection: ProtocolVersion %d!",
                         ConnectionInfoProtocolVersion(conn->conn_info));
-        goto dethread;
+        return;
     }
 
 
@@ -384,10 +322,10 @@ static void *HandleConnection(void *c)
          * IP address, to check hostname access_rules. */
         if (NEED_REVERSE_LOOKUP)
         {
-            ret = getnameinfo((const struct sockaddr *) &conn->conn_info->ss,
-                              conn->conn_info->ss_len,
-                              conn->revdns, sizeof(conn->revdns),
-                              NULL, 0, NI_NAMEREQD);
+            int ret = getnameinfo((const struct sockaddr *) &conn->conn_info->ss,
+                                  conn->conn_info->ss_len,
+                                  conn->revdns, sizeof(conn->revdns),
+                                  NULL, 0, NI_NAMEREQD);
             if (ret != 0)
             {
                 Log(LOG_LEVEL_INFO,
@@ -418,14 +356,75 @@ static void *HandleConnection(void *c)
     }
     /* ============================================================ */
 
-    Log(LOG_LEVEL_INFO, "Closing connection, terminating thread");
+    Log(LOG_LEVEL_INFO, "Handled connection: closing it and terminating thread");
+}
 
-  dethread:
-    ThreadLock(cft_server_children);
-    ACTIVE_THREADS--;
-    ThreadUnlock(cft_server_children);
+static void *HandleConnection(void *c)
+{
+    ServerConnectionState *conn = c;
 
-  conndone:
+    /* Set logging prefix to be the IP address for all of thread's lifetime. */
+
+    /* This stack-allocated struct should be valid for all the lifetime of the
+     * thread. Just make sure that after calling DeleteConn() (which frees
+     * ipaddr), you exit the thread right away. */
+    LoggingPrivContext log_ctx = {
+        .log_hook = LogHook,
+        .param = conn->ipaddr
+    };
+    LoggingPrivSetContext(&log_ctx);
+
+    Log(LOG_LEVEL_INFO, "Accepting connection");
+
+    /* We test if number of active threads is greater than max, if so we deny
+       connection, if it happened too many times within a short timeframe then we
+       kill ourself. TODO this test should be done *before* spawning the thread. */
+    if (!ThreadLock(cft_server_children))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
+    }
+    else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
+    {
+        if (TRIES > MAXTRIES)
+        {
+            /* This happens when no thread was freed while we had to drop 5
+             * (or maxconnections/3) consecutive connections, because none of
+             * the existing threads finished. */
+            Log(LOG_LEVEL_CRIT,
+                "Server seems to be paralyzed. DOS attack? "
+                "Committing apoptosis...");
+            ThreadUnlock(cft_server_children);
+            FatalError(conn->ctx, "Terminating");
+        }
+
+        TRIES++;
+        Log(LOG_LEVEL_ERR,
+            "Too many threads (%d > %d), dropping connection! "
+            "Increase server maxconnections?",
+            ACTIVE_THREADS, CFD_MAXPROCESSES);
+
+        ThreadUnlock(cft_server_children);
+    }
+    else
+    {
+        ACTIVE_THREADS++;
+        TRIES = 0;
+        ThreadUnlock(cft_server_children);
+
+        DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
+
+        /* 20 times the connect() timeout should be enough to avoid MD5
+         * computation timeouts on big files on old slow Solaris 8 machines. */
+        SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info),
+                          CONNTIMEOUT * 20 * 1000);
+
+        HandleDialogue(conn);
+
+        ThreadLock(cft_server_children);
+        ACTIVE_THREADS--;
+        ThreadUnlock(cft_server_children);
+    }
+
     if (conn->conn_info->is_call_collect)
     {
         CollectCallMarkProcessed();

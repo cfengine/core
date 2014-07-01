@@ -767,7 +767,7 @@ int PrependZoneInfoSolaris(char **vbuff, int *max_size)
             return -1;
         }
         *vbuff = new_buf;
-        *max_size = len
+        *max_size = len;
     }
 
     memmove(*vbuff + MAX_ZONENAME_SIZE + 1, *vbuff, strlen(*vbuff) + 1);

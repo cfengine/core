@@ -302,7 +302,7 @@ static void *HandleConnection(void *c)
     if (!ret)
     {
         Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
-        goto ret2;
+        goto conndone;
     }
     else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
     {
@@ -325,7 +325,7 @@ static void *HandleConnection(void *c)
             ACTIVE_THREADS, CFD_MAXPROCESSES);
 
         ThreadUnlock(cft_server_children);
-        goto ret2;
+        goto conndone;
     }
 
     ACTIVE_THREADS++;
@@ -345,7 +345,7 @@ static void *HandleConnection(void *c)
         ret = ServerTLSPeek(conn->conn_info);
         if (ret == -1)
         {
-            goto ret1;
+            goto dethread;
         }
     }
 
@@ -355,7 +355,7 @@ static void *HandleConnection(void *c)
         ret = ServerTLSSessionEstablish(conn);
         if (ret == -1)
         {
-            goto ret1;
+            goto dethread;
         }
     }
     else if (protocol_version < CF_PROTOCOL_LATEST &&
@@ -367,14 +367,14 @@ static void *HandleConnection(void *c)
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");
-            goto ret1;
+            goto dethread;
         }
     }
     else
     {
         UnexpectedError("HandleConnection: ProtocolVersion %d!",
                         ConnectionInfoProtocolVersion(conn->conn_info));
-        goto ret1;
+        goto dethread;
     }
 
 
@@ -422,12 +422,12 @@ static void *HandleConnection(void *c)
 
     Log(LOG_LEVEL_INFO, "Closed connection, terminating thread");
 
-  ret1:
+  dethread:
     ThreadLock(cft_server_children);
     ACTIVE_THREADS--;
     ThreadUnlock(cft_server_children);
 
-  ret2:
+  conndone:
     if (conn->conn_info->is_call_collect)
     {
         CollectCallMarkProcessed();

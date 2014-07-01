@@ -550,6 +550,7 @@ static int InitServer(size_t queue_size)
     if (listen(sd, queue_size) == -1)
     {
         Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
+        cf_closesocket(sd);
         exit(EXIT_FAILURE);
     }
 

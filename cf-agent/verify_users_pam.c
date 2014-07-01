@@ -106,6 +106,103 @@ static int PasswordSupplier(int num_msg, const struct pam_message **msg,
     return PAM_SUCCESS;
 }
 
+#ifdef _AIX
+/*
+ * Format of passwd file on AIX is:
+ *
+ * user1:
+ *         password = hash
+ *         lastupdate = 12783612
+ * user2:
+ *         password = hash
+ *         lastupdate = 12783612
+ *         <...>
+ */
+static bool GetAIXShadowHash(const char *puser, const char **result)
+{
+    FILE *fptr = fopen("/etc/security/passwd", "r");
+    if (fptr == NULL)
+    {
+        return false;
+    }
+
+    // Not super pretty with a static variable, but it is how POSIX functions
+    // getspnam() and friends do it.
+    static char hash_buf[CF_BUFSIZE];
+
+    bool ret = false;
+    char *buf = NULL;
+    size_t bufsize = 0;
+    size_t puser_len = strlen(puser);
+    char name_regex_str[strlen(puser) + 3];
+
+    pcre *name_regex = CompileRegex("^(\\S+):");
+    pcre *hash_regex = CompileRegex("^\\s+password *= *(\\S+)");
+    bool in_user_section = false;
+
+    while (true)
+    {
+        ssize_t read_result = CfReadLine(&buf, &bufsize, fptr);
+        if (read_result < 0)
+        {
+            if (feof(fptr))
+            {
+                errno = 0;
+            }
+            goto end;
+        }
+
+        int submatch_vec[6];
+
+        int pcre_result = pcre_exec(name_regex, NULL, buf, strlen(buf), 0, 0, submatch_vec, 6);
+        if (pcre_result >= 0)
+        {
+            if (submatch_vec[3] - submatch_vec[2] == puser_len
+                && strncmp(buf + submatch_vec[2], puser, puser_len) == 0)
+            {
+                in_user_section = true;
+            }
+            else
+            {
+                in_user_section = false;
+            }
+            continue;
+        }
+        else if (pcre_result != PCRE_ERROR_NOMATCH)
+        {
+            errno = EINVAL;
+            goto end;
+        }
+
+        if (!in_user_section)
+        {
+            continue;
+        }
+
+        pcre_result = pcre_exec(hash_regex, NULL, buf, strlen(buf), 0, 0, submatch_vec, 6);
+        if (pcre_result >= 0)
+        {
+            memcpy(hash_buf, buf + submatch_vec[2], submatch_vec[3] - submatch_vec[2]);
+            *result = hash_buf;
+            ret = true;
+            goto end;
+        }
+        else if (pcre_result != PCRE_ERROR_NOMATCH)
+        {
+            errno = EINVAL;
+            goto end;
+        }
+    }
+
+end:
+    pcre_free(name_regex);
+    pcre_free(hash_regex);
+    free(buf);
+    fclose(fptr);
+    return ret;
+}
+#endif // _AIX
+
 #if HAVE_FGETSPENT
 // Uses fgetspent() instead of getspnam(), to guarantee that the returned user
 // is a local user, and not for example from LDAP.
@@ -151,10 +248,10 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
     // Silence warning.
     (void)puser;
 
-#ifdef HAVE_FGETSPENT
     // If the hash is very short, it's probably a stub. Try getting the shadow password instead.
     if (strlen(passwd_info->pw_passwd) <= 4)
     {
+#ifdef HAVE_FGETSPENT
         Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from shadow database.", puser);
 
         struct spwd *spwd_info;
@@ -178,8 +275,17 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
             *result = spwd_info->sp_pwdp;
             return true;
         }
+
+#elif defined(_AIX)
+        if (!GetAIXShadowHash(puser, result))
+        {
+            Log(LOG_LEVEL_ERR, "Could not get information from user shadow database: %s", GetErrorStr());
+            return false;
+        }
+        return true;
+
+#endif
     }
-#endif // HAVE_FGETSPENT
 
     Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from passwd database.", puser);
     *result = passwd_info->pw_passwd;

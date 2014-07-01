@@ -196,62 +196,61 @@ static void PurgeOldConnections(Item **list, time_t now)
 
 static void SpawnConnection(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info)
 {
-    ServerConnectionState *conn = NULL;
-    int ret;
-    pthread_t tid;
-    pthread_attr_t threadattrs;
-
-    conn = NewConn(ctx, info);                 /* freed in HandleConnection */
-    int sd_accepted = ConnectionInfoSocket(info);
+    ServerConnectionState *conn = NewConn(ctx, info); /* freed in HandleConnection */
     strlcpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN );
 
     Log(LOG_LEVEL_VERBOSE,
         "New connection (from %s, sd %d), spawning new thread...",
-        conn->ipaddr, sd_accepted);
+        conn->ipaddr, ConnectionInfoSocket(info));
 
-    ret = pthread_attr_init(&threadattrs);
-    if (ret != 0)
+    /* Prepare thread attributes: */
+    pthread_attr_t threadattrs;
+    if (0 == pthread_attr_init(&threadattrs))
+    {
+        int ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "SpawnConnection: Unable to set thread to detached state (%s).",
+                GetErrorStr());
+        }
+        else
+        {
+            if (0 != pthread_attr_setstacksize(&threadattrs, 1024 * 1024))
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "SpawnConnection: Unable to set thread stack size (%s).",
+                    GetErrorStr());
+                /* Continue with default thread stack size. */
+            }
+
+            pthread_t tid;
+            ret = pthread_create(&tid, &threadattrs, HandleConnection, conn);
+            if (ret != 0)
+            {
+                errno = ret; /* For GetErrorStr()'s sake. */
+                Log(LOG_LEVEL_ERR,
+                    "Unable to spawn worker thread. (pthread_create: %s)",
+                    GetErrorStr());
+            }
+        }
+        pthread_attr_destroy(&threadattrs);
+
+        if (ret == 0) /* Success. */
+        {
+            return;
+        }
+        /* ... else: tidy up. */
+    }
+    else
     {
         Log(LOG_LEVEL_ERR,
             "SpawnConnection: Unable to initialize thread attributes (%s)",
             GetErrorStr());
-        goto err;
-    }
-    ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_ERR,
-            "SpawnConnection: Unable to set thread to detached state (%s).",
-            GetErrorStr());
-        goto cleanup;
-    }
-    ret = pthread_attr_setstacksize(&threadattrs, 1024 * 1024);
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_WARNING,
-            "SpawnConnection: Unable to set thread stack size (%s).",
-            GetErrorStr());
-        /* Continue with default thread stack size. */
     }
 
-    ret = pthread_create(&tid, &threadattrs, HandleConnection, conn);
-    if (ret != 0)
-    {
-        errno = ret;
-        Log(LOG_LEVEL_ERR,
-            "Unable to spawn worker thread. (pthread_create: %s)",
-            GetErrorStr());
-        goto cleanup;
-    }
-
-  cleanup:
-    pthread_attr_destroy(&threadattrs);
-  err:
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
-        HandleConnection(conn);
-    }
+    Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
+    HandleConnection(conn);
 }
 
 /*********************************************************************/

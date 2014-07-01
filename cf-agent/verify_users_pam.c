@@ -440,7 +440,7 @@ static bool ChangePasswordHashUsingChpasswd(const char *puser, const char *passw
         return false;
     }
 
-    return ClearPasswordAdministrationFlags(puser);
+    return true;
 }
 #endif // HAVE_CHPASSWD
 
@@ -617,37 +617,48 @@ unlock_passwd:
 
 static bool ChangePassword(const char *puser, const char *password, PasswordFormat format)
 {
+    assert(format == PASSWORD_FORMAT_PLAINTEXT || format == PASSWORD_FORMAT_HASH);
+
+    bool successful = false;
+
     if (format == PASSWORD_FORMAT_PLAINTEXT)
     {
-        return ChangePlaintextPasswordUsingLibPam(puser, password);
-    }
-
-    assert(format == PASSWORD_FORMAT_HASH);
-
-#ifdef HAVE_CHPASSWD
-    struct stat statbuf;
-    if (stat(CHPASSWD, &statbuf) != -1 && SupportsOption(CHPASSWD, "-e"))
-    {
-        return ChangePasswordHashUsingChpasswd(puser, password);
+        successful = ChangePlaintextPasswordUsingLibPam(puser, password);
     }
     else
+    {
+#ifdef HAVE_CHPASSWD
+        struct stat statbuf;
+        if (stat(CHPASSWD, &statbuf) != -1 && SupportsOption(CHPASSWD, "-e"))
+        {
+            successful = ChangePasswordHashUsingChpasswd(puser, password);
+        }
+        else
 #endif
 #if defined(HAVE_LCKPWDF) && defined(HAVE_ULCKPWDF)
-    {
-        return ChangePasswordHashUsingLckpwdf(puser, password);
-    }
+        {
+            successful = ChangePasswordHashUsingLckpwdf(puser, password);
+        }
 #elif defined(HAVE_CHPASSWD)
-    {
-        Log(LOG_LEVEL_ERR, "No means to set password for user '%s' was found. Tried using the '%s' tool with no luck.",
-            puser, CHPASSWD);
-        return false;
-    }
+        {
+            Log(LOG_LEVEL_ERR, "No means to set password for user '%s' was found. Tried using the '%s' tool with no luck.",
+                puser, CHPASSWD);
+            successful = false;
+        }
 #else
-    {
-        Log(LOG_LEVEL_WARNING, "Setting hashed password or locking user '%s' not supported on this platform.", puser);
-        return false;
-    }
+        {
+            Log(LOG_LEVEL_WARNING, "Setting hashed password or locking user '%s' not supported on this platform.", puser);
+            successful = false;
+        }
 #endif
+    }
+
+    if (successful)
+    {
+        successful = ClearPasswordAdministrationFlags(puser);
+    }
+
+    return successful;
 }
 
 static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)

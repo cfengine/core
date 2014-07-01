@@ -754,6 +754,7 @@ static int ExtractPid(char *psentry, char **names, int *end)
 }
 
 #ifndef __MINGW32__
+# ifdef HAVE_GETZONEID
 int PrependZoneInfoSolaris(char **vbuff, int *max_size)
 {
     size_t len = strlen(*vbuff) + MAX_ZONENAME_SIZE + 2;
@@ -789,6 +790,7 @@ int PrependZoneInfoSolaris(char **vbuff, int *max_size)
     (*vbuff)[MAX_ZONENAME_SIZE] = ' ';
     return 0;
 }
+# endif
 int LoadProcessTable(Item **procdata)
 {
     FILE *prp;

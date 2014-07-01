@@ -1,5 +1,5 @@
 #include "test.h"
-
+#include "systype.h"
 #include "generic_agent.h"
 #include "item_lib.h"
 #include "mon.h"

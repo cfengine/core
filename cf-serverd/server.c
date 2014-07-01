@@ -419,8 +419,7 @@ static void *HandleConnection(void *c)
     }
     /* ============================================================ */
 
-
-    Log(LOG_LEVEL_INFO, "Closed connection, terminating thread");
+    Log(LOG_LEVEL_INFO, "Closing connection, terminating thread");
 
   dethread:
     ThreadLock(cft_server_children);

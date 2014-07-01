@@ -444,11 +444,17 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     fi
   fi
 
-  if [ "$RESULT" != Wait ]; then
+
+  if [ "$RESULT" = "XFAIL" ]; then
+    echo "    <testcase name=\"$(basename $TEST)\"" >> "$XMLTMP"
+    echo "              classname=\"$TEST $RESULT_MSG\"" >> "$XMLTMP"
+    echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">" >> "$XMLTMP"
+  elif [ "$RESULT" != Wait ]; then
     echo "    <testcase name=\"$(basename $TEST)\"" >> "$XMLTMP"
     echo "              classname=\"$TEST\"" >> "$XMLTMP"
     echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">" >> "$XMLTMP"
   fi
+  
 
   case "$RESULT" in
     Pass)

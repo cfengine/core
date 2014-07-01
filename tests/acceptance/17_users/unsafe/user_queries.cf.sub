@@ -17,6 +17,10 @@ bundle agent remove_stale_groups
   # When we create a user and change its primary GID afterwards, its original
   # group may linger and cause problems later.
   commands:
+    aix::
+      "rmgroup johndoe"
+        contain => in_shell;
+    !aix::
       "groupdel johndoe"
         contain => in_shell;
 }

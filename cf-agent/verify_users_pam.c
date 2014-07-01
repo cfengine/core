@@ -1133,7 +1133,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
 
         if (u.policy == USER_STATE_LOCKED)
         {
-            if (!SetAccountLocked(puser, "", true))
+            if (!SetAccountLocked(puser, "x", true))
             {
                 return false;
             }

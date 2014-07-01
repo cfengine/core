@@ -28,6 +28,7 @@
 #include <item_lib.h>
 #include <files_interfaces.h>
 #include <pipes.h>
+#include <systype.h>
 
 #include <cf-windows-functions.h>
 

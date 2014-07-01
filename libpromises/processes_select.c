@@ -28,13 +28,19 @@
 #include <files_names.h>
 #include <conversion.h>
 #include <matching.h>
+#include <systype.h>
 #include <string_lib.h>
+#include <string.h>
 #include <item_lib.h>
 #include <pipes.h>
 #include <files_interfaces.h>
 #include <rlist.h>
 #include <policy.h>
 #include <zones.h>
+
+# ifdef HAVE_GETZONEID
+#define MAX_ZONENAME_SIZE 64
+# endif
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
@@ -688,13 +694,6 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
 #ifndef __MINGW32__
 static const char *GetProcessOptions(void)
 {
-    static char psopts[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
-
-    if (IsGlobalZone())
-    {
-        snprintf(psopts, CF_BUFSIZE, "%s,zone", VPSOPTS[VSYSTEMHARDCLASS]);
-        return psopts;
-    }
 
 # ifdef __linux__
     if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
@@ -755,6 +754,41 @@ static int ExtractPid(char *psentry, char **names, int *end)
 }
 
 #ifndef __MINGW32__
+int PrependZoneInfoSolaris(char **vbuff, int *max_size)
+{
+    size_t len = strlen(*vbuff) + MAX_ZONENAME_SIZE + 2;
+    if (len > *max_size)
+    {
+        char * new_buf = realloc(*vbuff, len);
+        if (!new_buf)
+        {
+            Log(LOG_LEVEL_ERR, "AppendZoneInfoSolaris(char **vbuff, int *max_size): Unable to reallocate vbuff.");
+            return -1;
+        }
+        *vbuff = new_buf;
+        *max_size = len
+    }
+
+    memmove(*vbuff + MAX_ZONENAME_SIZE + 1, *vbuff, strlen(*vbuff) + 1);
+
+    if (strstr(*vbuff, "PID"))
+    {
+        sprintf(*vbuff, "%-*s", MAX_ZONENAME_SIZE, "ZONE");
+    }
+    else
+    {
+        char zone[MAX_ZONENAME_SIZE];
+        if (CurrentZoneName(zone) < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to obtain zone name.");
+            return -1;
+        }
+        sprintf(*vbuff, "%-*s", MAX_ZONENAME_SIZE, zone);
+    }
+
+    (*vbuff)[MAX_ZONENAME_SIZE] = ' ';
+    return 0;
+}
 int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
@@ -800,15 +834,24 @@ int LoadProcessTable(Item **procdata)
                 break;
             }
         }
-
-        for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
+# ifdef HAVE_GETZONEID
+        if (IsGlobalZone())
         {
-            *sp = '\0';
+            if (PrependZoneInfoSolaris(&vbuff, &vbuff_size) < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Unable to prepend Solaris Zone info");
+                return -1;
+            }
         }
 
         if (ForeignZone(vbuff))
         {
             continue;
+        }
+# endif
+        for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
+        {
+            *sp = '\0';
         }
 
         AppendItem(procdata, vbuff, "");

@@ -245,7 +245,7 @@ int RunUpdate(const Configuration *configuration)
         /* run the upgrade process */
         const char *command = ConfigurationCommand(configuration);
         char *args[CF_UPGRADE_MAX_ARGUMENTS + 1];
-        char *envp[] = { NULL };
+
         int i = 0;
         int total = ConfigurationNumberOfArguments(configuration);
         for (i = 0; i < total; ++i)
@@ -253,7 +253,7 @@ int RunUpdate(const Configuration *configuration)
             args[i] = xstrdup(ConfigurationArgument(configuration, i));
         }
         args[total] = NULL;
-        result = run_process_wait(command, args, envp);
+        result = run_process_wait(command, args, environ);
         /* Check that everything went according to plan */
         if (result != 0)
         {

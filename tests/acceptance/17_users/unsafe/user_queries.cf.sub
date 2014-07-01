@@ -181,10 +181,20 @@ bundle agent user_has_password(user, password, true_class, false_class)
 bundle agent user_has_password_hash(user, hash, true_class, false_class)
 {
   vars:
-    "escaped_hash" string => escape("$(hash)");
+    !aix::
+      "escaped_hash" string => escape("$(hash)");
+    aix::
+      "user_hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" expression => strcmp($(hash), $(user_hash)),
+        scope => "namespace";
+      "$(false_class)" not => strcmp($(hash), $(user_hash)),
+        scope => "namespace";
 
   commands:
-    !windows::
+    !windows.!aix::
       "$(G.grep) '^$(user):$(escaped_hash):' /etc/shadow"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
@@ -197,8 +207,10 @@ bundle agent user_has_password_hash(user, hash, true_class, false_class)
 bundle agent user_get_password_hash(user)
 {
   vars:
-    !windows::
+    !windows.!aix::
       "hash" string => execresult("$(G.grep) '^$(user):' /etc/shadow | $(G.sed) -e 's/[^:]*:\([^:]*\):.*/\1/'", "useshell");
+    aix::
+      "hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
 
   reports:
     windows::
@@ -207,8 +219,19 @@ bundle agent user_get_password_hash(user)
 
 bundle agent user_is_locked(user, true_class, false_class)
 {
+  vars:
+    aix::
+      "user_hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" expression => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+      "$(false_class)" not => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+
   commands:
-    !windows::
+    !windows.!aix::
       # Notice the [^:] without * at the end. That field (expiry) should be *something*.
       "$(G.grep) '^$(user):![^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:][^:]*:' /etc/shadow"
         contain => no_output_shell,
@@ -227,8 +250,19 @@ bundle agent user_is_locked(user, true_class, false_class)
 
 bundle agent user_is_unlocked(user, true_class, false_class)
 {
+  vars:
+    aix::
+      "user_hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" not => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+      "$(false_class)" expression => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+
   commands:
-    !windows::
+    !windows.!aix::
       # Notice the field at the end. That field (expiry) should be gone or zero.
       "$(G.egrep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:(|0):' /etc/shadow"
         contain => no_output_shell,

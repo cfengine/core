@@ -38,6 +38,12 @@
 int CONNECTIONINFO_SSL_IDX = -1;
 
 
+const char *TLSErrorString(intmax_t errcode)
+{
+    const char *errmsg = ERR_reason_error_string((unsigned long) errcode);
+    return (errmsg != NULL) ? errmsg : "no error message";
+}
+
 bool TLSGenericInitialize()
 {
     static bool is_initialised = false;
@@ -75,7 +81,7 @@ static int CompareCertToRSA(X509 *cert, RSA *rsa_key)
     if (cert_pkey == NULL)
     {
         Log(LOG_LEVEL_ERR, "X509_get_pubkey: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto ret1;
     }
     if (EVP_PKEY_type(cert_pkey->type) != EVP_PKEY_RSA)
@@ -121,9 +127,8 @@ static int CompareCertToRSA(X509 *cert, RSA *rsa_key)
     }
     else
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
         Log(LOG_LEVEL_ERR, "OpenSSL EVP_PKEY_cmp: %d %s",
-            ret, errmsg ? errmsg : "");
+            ret, TLSErrorString(ERR_get_error()));
     }
 
   ret4:
@@ -278,7 +283,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     {
         Log(LOG_LEVEL_ERR,
             "No certificate presented by remote peer (openssl: %s)",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         retval = -1;
         goto ret1;
     }
@@ -287,7 +292,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     if (received_pubkey == NULL)
     {
         Log(LOG_LEVEL_ERR, "X509_get_pubkey: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         retval = -1;
         goto ret2;
     }
@@ -356,9 +361,8 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     }
     else
     {
-        const char *errmsg = ERR_reason_error_string(ERR_get_error());
         Log(LOG_LEVEL_ERR, "OpenSSL EVP_PKEY_cmp: %d %s",
-            ret, errmsg ? errmsg : "");
+            ret, TLSErrorString(ERR_get_error()));
         retval = -1;
         goto ret6;
     }
@@ -396,7 +400,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     if (x509 == NULL)
     {
         Log(LOG_LEVEL_ERR, "X509_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err1;
     }
 
@@ -405,7 +409,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     if (t1 == NULL || t2 == NULL)
     {
         Log(LOG_LEVEL_ERR, "X509_gmtime_adj: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err2;
     }
 
@@ -413,7 +417,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     if (pkey == NULL)
     {
         Log(LOG_LEVEL_ERR, "EVP_PKEY_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err2;
     }
 
@@ -421,7 +425,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "EVP_PKEY_set1_RSA: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -429,7 +433,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     if (name == NULL)
     {
         Log(LOG_LEVEL_ERR, "X509_get_subject_name: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -442,7 +446,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     if (ret < 3)
     {
         Log(LOG_LEVEL_ERR, "Failed to set certificate details: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -466,7 +470,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     if (ret == 0)
     {
         Log(LOG_LEVEL_ERR, "X509_sign: %s",
-            ERR_reason_error_string(ERR_get_error()));
+            TLSErrorString(ERR_get_error()));
         goto err3;
     }
 
@@ -510,11 +514,6 @@ static const char *TLSPrimarySSLError(int code)
     return "Unknown OpenSSL error code!";
 }
 
-static const char *TLSSecondarySSLError(int code ARG_UNUSED)
-{
-    return ERR_reason_error_string(ERR_get_error());
-}
-
 /**
  * @brief OpenSSL is missing an SSL_reason_error_string() like
  *        ERR_reason_error_string().  Provide missing functionality here,
@@ -532,9 +531,9 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
     const char *syserr = (errno != 0) ? GetErrorStr() : "";
     int errcode         = SSL_get_error(ssl, code);
     const char *errstr1 = TLSPrimarySSLError(errcode);
-    /* The following is only logged for completeness reasons, it's not useful
-     * for SSL_read() and SSL_write(). */
-    const char *errstr2 = TLSSecondarySSLError(code);
+    /* For SSL_ERROR_SSL, SSL_ERROR_SYSCALL (man SSL_get_error). It's not
+     * useful for SSL_read() and SSL_write(). */
+    const char *errstr2 = ERR_reason_error_string(ERR_get_error());
 
     /* We know the socket is always blocking. However our blocking sockets
      * have a timeout set via means of setsockopt(SO_RCVTIMEO), so internally

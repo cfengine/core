@@ -590,7 +590,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     unsigned int crypt_len, nonce_len = 0, encrypted_len = 0;
     char sauth[10], iscrypt = 'n', enterprise_field = 'c';
     int len_n = 0, len_e = 0, keylen, session_size;
-    unsigned long err;
     RSA *newkey;
     int digestLen = 0;
     HashMethod digestType;
@@ -658,14 +657,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (iscrypt == 'y')
     {
-        if (RSA_private_decrypt
-            (crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET, decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
+        if (RSA_private_decrypt(crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET,
+                                decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING)
+            <= 0)
         {
-            err = ERR_get_error();
-
             Log(LOG_LEVEL_ERR,
                 "Private decrypt failed = '%s'. Probably the client has the wrong public key for this server",
-                ERR_reason_error_string(err));
+                CryptoLastErrorString());
             free(decrypted_nonce);
             return false;
         }
@@ -708,8 +706,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
+            CryptoLastErrorString());
         RSA_free(newkey);
         return false;
     }
@@ -732,8 +730,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if ((newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
+            CryptoLastErrorString());
         RSA_free(newkey);
         return false;
     }
@@ -780,8 +778,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (RSA_public_encrypt(nonce_len, in, out, newkey, RSA_PKCS1_PADDING) <= 0)
     {
-        err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Public encryption failed = %s", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Public encryption failed = %s",
+            CryptoLastErrorString());
         free(out);
         return false;
     }
@@ -867,8 +865,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
         if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
-            err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
+                CryptoLastErrorString());
             BN_free(counter_challenge);
             free(out);
             return false;

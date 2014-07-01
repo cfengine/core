@@ -440,31 +440,33 @@ static void *HandleConnection(void *c)
 
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 {
-    ServerConnectionState *conn = NULL;
+#if 1
+    /* TODO: why do we do this ?  We fail if getsockname() fails, but
+     * don't use the information it returned.  Was the intent to use
+     * it to fill in conn->ipaddr ? */
     struct sockaddr_storage addr;
     socklen_t size = sizeof(addr);
 
     if (getsockname(ConnectionInfoSocket(info), (struct sockaddr *)&addr, &size) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not obtain socket address. (getsockname: '%s')", GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Could not obtain socket address. (getsockname: '%s')",
+            GetErrorStr());
         return NULL;
     }
+#endif
 
-    conn = xcalloc(1, sizeof(*conn));
+    ServerConnectionState *conn = xcalloc(1, sizeof(*conn));
     conn->ctx = ctx;
     conn->conn_info = info;
-    conn->user_data_set = false;
-    conn->rsa_auth = false;
-    conn->hostname[0] = '\0';
-    conn->ipaddr[0] = '\0';
-    conn->username[0] = '\0';
-    conn->revdns[0] = '\0';
-    conn->session_key = NULL;
     conn->encryption_type = 'c';
     /* Only public files (chmod o+r) accessible to non-root */
-    conn->maproot = false;
     conn->uid = CF_UNKNOWN_OWNER;                    /* Careful, 0 is root! */
+    /* conn->maproot is false: only public files (chmod o+r) are accessible */
 
+    Log(LOG_LEVEL_DEBUG,
+        "New connection (socket %d).",
+        ConnectionInfoSocket(info));
     return conn;
 }
 
@@ -474,22 +476,19 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 static void DeleteConn(ServerConnectionState *conn)
 {
     int sd = ConnectionInfoSocket(conn->conn_info);
-    if (sd >= 0)
+    if (sd != SOCKET_INVALID)
     {
         cf_closesocket(sd);
     }
     ConnectionInfoDestroy(&conn->conn_info);
 
-    free(conn->session_key);
-
-    if (conn->ipaddr != NULL)
+    if (conn->ipaddr[0] != '\0' &&
+        ThreadLock(cft_count))
     {
-        if (ThreadLock(cft_count))
-        {
-            DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
-            ThreadUnlock(cft_count);
-        }
+        DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
+        ThreadUnlock(cft_count);
     }
 
+    free(conn->session_key);
     free(conn);
 }

@@ -386,7 +386,8 @@ static void test_expand_list_nested(void **state)
     RlistDestroy(expanded);
 }
 
-static PromiseResult actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
+static PromiseResult actuator_expand_promise_array_with_scalar_arg(
+    ARG_UNUSED EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert_string_equal("first", pp->promiser);
     return PROMISE_RESULT_NOOP;
@@ -423,7 +424,8 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
 
 static int actuator_state = 0;
 
-static PromiseResult actuator_expand_promise_slist(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
+static PromiseResult actuator_expand_promise_slist(
+    ARG_UNUSED EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     if (strcmp("a", pp->promiser) == 0)
     {
@@ -477,7 +479,8 @@ static void test_expand_promise_slist(void **state)
 }
 
 
-static PromiseResult actuator_expand_promise_array_with_slist_arg(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
+static PromiseResult actuator_expand_promise_array_with_slist_arg(
+    ARG_UNUSED EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     if (strcmp("first", pp->promiser) == 0)
     {

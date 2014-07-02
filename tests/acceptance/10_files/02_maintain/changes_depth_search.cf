@@ -91,7 +91,7 @@ bundle agent test
 {
   meta:
       "test_suppress_fail" string => "sunos_5_10",
-       meta => { "redmine6220" }
+       meta => { "redmine6220" };
       
   commands:
       "$(sys.cf_agent) -Dpass1 -Kf $(this.promise_filename).sub";

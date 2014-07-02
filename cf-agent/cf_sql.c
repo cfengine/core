@@ -23,6 +23,7 @@
 */
 
 #include <cf_sql.h>
+#include <file_lib.h>
 
 #ifdef HAVE_MYSQL_H
 # include <mysql.h>

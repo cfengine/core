@@ -13,7 +13,7 @@ static const char *filecontents[2] = {
 
 static int filepos[2];
 
-int open(const char *filename, int flags, ...)
+int open(const char *filename, ARG_UNUSED int flags, ...)
 {
     if (!strcmp(filename, "/proc/1/stat"))
     {
@@ -45,7 +45,7 @@ int open(const char *filename, int flags, ...)
     }
 }
 
-ssize_t read(int fd, void *buffer, size_t buf_size)
+ssize_t read(int fd, void *buffer, ARG_UNUSED size_t buf_size)
 {
     if (fd == 0)
     {
@@ -92,7 +92,7 @@ ssize_t read(int fd, void *buffer, size_t buf_size)
     return -1;
 }
 
-int close(int fd)
+int close(ARG_UNUSED int fd)
 {
     return 0;
 }

@@ -241,7 +241,7 @@ int main()
 
 /* STUBS */
 
-void FatalError(char *s, ...)
+void FatalError(ARG_UNUSED char *s, ...)
 {
     fail();
     exit(42);
@@ -253,18 +253,21 @@ char VIPADDRESS[CF_MAX_IP_LEN];
 RSA *PUBKEY;
 bool MINUSF;
 
-char *MapAddress(char *addr)
+char *MapAddress(ARG_UNUSED char *addr)
 {
     fail();
 }
 
-char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
-                    HashMethod type, bool use_prefix)
+char *HashPrintSafe(ARG_UNUSED char *dst, ARG_UNUSED size_t dst_size,
+                    ARG_UNUSED const unsigned char *digest,
+                    ARG_UNUSED HashMethod type, ARG_UNUSED bool use_prefix)
 {
     fail();
 }
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void HashPubKey(ARG_UNUSED RSA *key,
+                ARG_UNUSED unsigned char digest[EVP_MAX_MD_SIZE + 1],
+                ARG_UNUSED HashMethod type)
 {
     fail();
 }

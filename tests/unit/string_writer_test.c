@@ -94,7 +94,9 @@ int main()
 
 // STUBS
 
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+void __ProgrammingError(ARG_UNUSED const char *file,
+                        ARG_UNUSED int lineno,
+                        ARG_UNUSED const char *format, ...)
 {
     fail();
     exit(42);

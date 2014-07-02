@@ -601,19 +601,21 @@ int main()
 
 /* Stub out functions we do not use in test */
 
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+void __ProgrammingError(ARG_UNUSED const char *file,
+                        ARG_UNUSED int lineno,
+                        ARG_UNUSED const char *format, ...)
 {
     fail();
     exit(42);
 }
 
-void FatalError(char *s, ...)
+void FatalError(ARG_UNUSED char *s, ...)
 {
     fail();
     exit(42);
 }
 
-void Log(LogLevel level, const char *fmt, ...)
+void Log(ARG_UNUSED LogLevel level, ARG_UNUSED const char *fmt, ...)
 {
     fail();
 }

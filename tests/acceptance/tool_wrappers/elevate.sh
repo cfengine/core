@@ -7,4 +7,6 @@
 
 $(dirname $0)/../elevate.exe -wait "$(dirname $0)\template.bat" "cd '`pwd`'; export PATH='$PATH'; $(dirname $0)/store-return-code.sh $@"
 # Elevate does not preserve return code, so use the return code we stored above.
-exit `cat return-code.txt`
+return_code=`cat return-code.txt`
+rm -f return-code.txt
+exit $return_code

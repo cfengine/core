@@ -115,11 +115,6 @@ CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
 dnl ######################################################################
-dnl Check for getloadavg()
-dnl ######################################################################
-AC_FUNC_GETLOADAVG
-
-dnl ######################################################################
 dnl Whether to build extensions as builtin extensions or a separate
 dnl plugin. The default is plugin.
 dnl --enable-builtin-extensions is the default on Windows, and can be
@@ -628,9 +623,15 @@ AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 
 AC_CHECK_DECLS(fgetgrent, [], [], [[#include <grp.h>]])
+
+AC_CHECK_DECLS(isfinite, [], [], [[#include <math.h>]])
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
+
+AC_CHECK_DECLS(getloadavg)
+AC_FUNC_GETLOADAVG
 
 CF3_PATH_ROOT_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$CHPASSWD" != "x"],
@@ -944,6 +945,10 @@ AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
 
 dnl Solaris uses kstat.h to get time-of-boot
 AC_CHECK_HEADERS(kstat.h)
+dnl SystemV way to get uptime, highly portable
+AC_CHECK_HEADERS(utmp.h)
+dnl POSIX way to get uptime
+AC_CHECK_HEADERS(utmpx.h)
 
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry

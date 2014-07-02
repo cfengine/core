@@ -1,9 +1,10 @@
 #include <test.h>
+
 #include <unistd.h>
 #include <string.h>
 #include <hash.h>
 #include <openssl/rsa.h>
- #include <openssl/evp.h>
+#include <openssl/evp.h>
 
 /*
  * To test the hash implementation we need three things:

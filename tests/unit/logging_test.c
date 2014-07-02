@@ -11,21 +11,12 @@ char VPREFIX[CF_MAXVARSIZE];
 static struct sockaddr *got_address;
 
 #if SENDTO_RETURNS_SSIZE_T > 0
-ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
+               const struct sockaddr *dest_addr, socklen_t addrlen)
 {
     got_address = xmemdup(dest_addr, sizeof(struct sockaddr_in));
     return len;
 }
-/*
- * Solaris people in their infinite wisdom decided to play trickery with the symbols,
- * therefore we need to have a second stub for the case when the other name is used.
- */
-ssize_t __xnet_sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
-{
-    got_address = xmemdup(dest_addr, sizeof(struct sockaddr_in));
-    return len;
-}
-
 #else
 /*
  * We might be naives by thinking that size_t, socklen_t and such are the same size as int.

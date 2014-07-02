@@ -1,10 +1,9 @@
+#include <test.h>
+
 #include <cf3.defs.h>
 #include <sort.h>
-
 #include <rlist.h>
 #include <item_lib.h>
-
-#include <test.h>
 
 /*
  * Those testcases only perform smoke testing of sorting functionality.

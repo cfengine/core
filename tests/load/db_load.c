@@ -30,7 +30,7 @@ static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
 
-void *contend(void *param)
+static void *contend(ARG_UNUSED void *param)
 {
     CF_DB *db;
 
@@ -247,7 +247,7 @@ static void DBWriteTestData(CF_DB *db)
 
 /* Stub out */
 
-void FatalError(const EvalContext *ctx, char *fmt, ...)
+void FatalError(ARG_UNUSED const EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)
     {

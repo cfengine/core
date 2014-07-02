@@ -10,7 +10,7 @@
 
 /* Stubs */
 
-void FatalError(char *s, ...)
+void FatalError(ARG_UNUSED char *s, ...)
 {
     mock_assert(0, "0", __FILE__, __LINE__);
     abort();
@@ -695,7 +695,12 @@ int main()
     return run_tests(tests);
 }
 
-/* Stub out functionality we don't really use */
+/* ===== Stub out functionality we don't really use. ===== */
+
+/* Silence all "unused parameter" warnings. */
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+
 
 char CONTEXTID[32];
 

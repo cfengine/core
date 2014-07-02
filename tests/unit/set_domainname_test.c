@@ -18,9 +18,9 @@ static struct hostent h = {
 };
 
 #ifdef SOLARIS
-int gethostname(char *name, int len)
+int gethostname(char *name, ARG_UNUSED int len)
 #else
-int gethostname(char *name, size_t len)
+int gethostname(char *name, ARG_UNUSED size_t len)
 #endif
 {
     strcpy(name, "laptop.intra");

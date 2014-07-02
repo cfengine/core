@@ -22,11 +22,11 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <sysinfo.h>
 #include <sysinfo_priv.h>
-
 #include <cf3.extern.h>
-
 #include <eval_context.h>
 #include <files_names.h>
 #include <files_interfaces.h>
@@ -46,10 +46,7 @@
 #include <unix_iface.h>
 #include <files_lib.h>
 #include <printsize.h>
-
 #include <cf-windows-functions.h>
-
-#include <inttypes.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -60,53 +57,74 @@
 # include <sys/mpctl.h>
 #endif
 
+
 /*****************************************************/
-// Uptime calculation settings for GetUptimeMinutes() - Mantis #1134
+// Uptime calculation settings for GetUptimeSeconds() - Mantis #1134
+
+/* Listed here in priority order, i.e. first come the platform-specific
+ * ways. If nothing works, one of the last, most generic ways should. */
+
+#ifndef __MINGW32__                 /* Windows is implemented in Enterprise */
+
 // HP-UX: pstat_getproc(2) on init (pid 1)
-#ifdef __hpux
-#define _PSTAT64
-#include <sys/param.h>
-#include <sys/pstat.h>
-#define BOOT_TIME_WITH_PSTAT_GETPROC
-#endif
+#if defined(__hpux)
+# define _PSTAT64
+# include <sys/param.h>
+# include <sys/pstat.h>
+# define BOOT_TIME_WITH_PSTAT_GETPROC
 
+// Solaris: kstat() for kernel statistics
+// See http://dsc.sun.com/solaris/articles/kstatc.html
+// BSD also has a kstat.h (albeit in sys), so check __sun just to be paranoid
 
-// required to determine system uptime for Solaris
-#if defined(__sun) 
-#include <utmpx.h>
-#endif
+/**
+ * @WARNING: Commented out because inside a Solaris 10 zone this gives the
+ *           uptime of the host machine (the hypervisor). We thus choose to
+ *           use UTMP for Solaris.
+ */
+/*
+#elif defined(__sun) && defined(HAVE_KSTAT_H)
+# include <kstat.h>
+# define BOOT_TIME_WITH_KSTAT
+*/
 
 // BSD: sysctl(3) to get kern.boottime, CPU count, etc.
 // See http://www.unix.com/man-page/FreeBSD/3/sysctl/
 // Linux also has sys/sysctl.h, so we check KERN_BOOTTIME to make sure it's BSD
-#ifdef HAVE_SYS_SYSCTL_H
-#include <sys/param.h>
-#include <sys/sysctl.h>
-#ifdef KERN_BOOTTIME
-#define BOOT_TIME_WITH_SYSCTL
-#endif
-#endif
+#elif defined(HAVE_SYS_SYSCTL_H) && defined(KERN_BOOTTIME)
+# include <sys/param.h>
+# include <sys/sysctl.h>
+# define BOOT_TIME_WITH_SYSCTL
 
 // GNU/Linux: struct sysinfo.uptime
-#ifdef HAVE_STRUCT_SYSINFO_UPTIME
-#include <sys/sysinfo.h>
-#define BOOT_TIME_WITH_SYSINFO
-#endif
+#elif defined(HAVE_STRUCT_SYSINFO_UPTIME)
+# include <sys/sysinfo.h>
+# define BOOT_TIME_WITH_SYSINFO
 
-// For anything else except Windows, try {stat("/proc/1")}.st_ctime
-#if !defined(__MINGW32__) && !defined(NT)
+/* Generic System V way, available in most platforms. */
+#elif defined(HAVE_UTMP_H)
+# include <utmp.h>
+# define BOOT_TIME_WITH_UTMP
+
+/* POSIX alternative (utmp.h does not exist on BSDs). */
+#elif defined(HAVE_UTMPX_H)
+# include <utmpx.h>
+# define BOOT_TIME_WITH_UTMPX
+
+#else
+// Most generic way: {stat("/proc/1")}.st_ctime
+// TODO in Solaris zones init is not guaranteed to be PID 1!
 #define BOOT_TIME_WITH_PROCFS
+
 #endif
 
-#if defined(BOOT_TIME_WITH_SYSINFO) || defined(BOOT_TIME_WITH_SYSCTL) || \
-    defined(BOOT_TIME_WITH_KSTAT) || defined(BOOT_TIME_WITH_PSTAT_GETPROC) || \
-    defined(BOOT_TIME_WITH_PROCFS)
-#define CF_SYS_UPTIME_IMPLEMENTED
-static time_t GetBootTimeFromUptimeCommand(time_t); // Last resort
-#ifdef HAVE_PCRE_H
-# include <pcre.h>
-#endif
-#endif
+
+/* Fallback uptime calculation: Parse the "uptime" command in case the
+ * platform-specific way fails or returns absurd number. */
+static time_t GetBootTimeFromUptimeCommand(time_t now);
+
+
+#endif  /* ifndef __MINGW32__ */
 
 /*****************************************************/
 
@@ -2503,65 +2521,99 @@ static void GetCPUInfo(EvalContext *ctx)
 
 // Implemented in Windows specific section.
 #ifndef __MINGW32__
+
+/**
+   Return the number of seconds the system has been online given the current
+   time() as an argument, or return -1 if unavailable or unimplemented.
+*/
 int GetUptimeSeconds(time_t now)
-// Return the number of seconds the system has been online given the current
-// time() as an argument, or return -1 if unavailable or unimplemented.
 {
-#ifdef CF_SYS_UPTIME_IMPLEMENTED
     time_t boot_time = 0;
     errno = 0;
-#endif
 
 #if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
-    struct sysinfo s;
 
+    struct sysinfo s;
     if (sysinfo(&s) == 0)
     {
        // Don't return yet, sanity checking below
        boot_time = now - s.uptime;
     }
-#elif defined(__sun)         // Solaris platform
-    struct utmpx * ent;
 
-    while (NULL != (ent = getutxent()))
+#elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
+
+    /* From command line you can get this with:
+       kstat -p unix:0:system_misc:boot_time */
+    kstat_ctl_t *kc = kstat_open();
+    if(kc != 0)
     {
-        if (strcmp("system boot", ent->ut_line) == 0)
+        kstat_t *kp = kstat_lookup(kc, "unix", 0, "system_misc");
+        if(kp != 0)
         {
-            boot_time = ent->ut_tv.tv_sec;
+            if (kstat_read(kc, kp, NULL) != -1)
+            {
+                kstat_named_t *knp = kstat_data_lookup(kp, "boot_time");
+                if (knp != NULL)
+                {
+                    boot_time = knp->value.ui32;
+                }
+            }
         }
+        kstat_close(kc);
     }
 
-    return boot_time > 0 ? now - boot_time : -1;
 #elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
-    struct pst_status p;
 
+    struct pst_status p;
     if (pstat_getproc(&p, sizeof(p), 0, 1) == 1)
     {
         boot_time = (time_t)p.pst_start;
     }
 
 #elif defined(BOOT_TIME_WITH_SYSCTL)        // BSD-derived platforms
+
     int mib[2] = { CTL_KERN, KERN_BOOTTIME };
     struct timeval boot;
-    size_t len;
-
-    len = sizeof(boot);
+    size_t len = sizeof(boot);
     if (sysctl(mib, 2, &boot, &len, NULL, 0) == 0)
     {
         boot_time = boot.tv_sec;
     }
 
-#elif defined(BOOT_TIME_WITH_PROCFS)        // Second-to-last resort: procfs
-    struct stat p;
+#elif defined(BOOT_TIME_WITH_PROCFS)
 
+    struct stat p;
     if (stat("/proc/1", &p) == 0)
     {
         boot_time = p.st_ctime;
     }
 
+#elif defined(BOOT_TIME_WITH_UTMP)          /* SystemV, highly portable way */
+
+    struct utmp query = { .ut_type = BOOT_TIME };
+    struct utmp *result;
+    setutent();
+    result = getutid(&query);
+    if (result != NULL)
+    {
+        boot_time = result->ut_time;
+    }
+    endutent();
+
+#elif defined(BOOT_TIME_WITH_UTMPX)                            /* POSIX way */
+
+    struct utmpx query = { .ut_type = BOOT_TIME };
+    struct utmpx *result;
+    setutxent();
+    result = getutxid(&query);
+    if (result != NULL)
+    {
+        boot_time = result->ut_tv.tv_sec;
+    }
+    endutxent();
+
 #endif
 
-#ifdef CF_SYS_UPTIME_IMPLEMENTED
     if(errno)
     {
         Log(LOG_LEVEL_VERBOSE, "boot time discovery error: %s", GetErrorStr());
@@ -2574,9 +2626,6 @@ int GetUptimeSeconds(time_t now)
     }
 
     return boot_time > 0 ? now - boot_time : -1;
-#else
-#error uptime is not implemented on this platform.
-#endif
 }
 #endif // !__MINGW32__
 
@@ -2587,12 +2636,11 @@ int GetUptimeMinutes(time_t now)
 
 /******************************************************************/
 
-#ifdef CF_SYS_UPTIME_IMPLEMENTED
 // Last resort: parse the output of the uptime command with a PCRE regexp
 // and convert the uptime to boot time using "now" argument.
 //
 // The regexp needs to match all variants of the uptime command's output.
-// Solaris 8:     10:45am up 109 day(s), 19:56, 1 user, load average:
+// Solaris 8/9/10:  10:45am up 109 day(s), 19:56, 1 user, load average:
 // HP-UX 11.11:   9:24am  up 1 min,  1 user,  load average:
 //                8:23am  up 23 hrs,  0 users,  load average:
 //                9:33am  up 2 days, 10 mins,  0 users,  load average:
@@ -2679,7 +2727,6 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     Log(LOG_LEVEL_VERBOSE, "Reading boot time from uptime command successful.");
     return(uptime ? (now - uptime) : -1);
 }
-#endif
 
 void DetectEnvironment(EvalContext *ctx)
 {

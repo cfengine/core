@@ -1,6 +1,5 @@
-#include <platform.h>
-
 #include <test.h>
+
 #include <alloc.h>
 #include <addr_lib.h>
 

@@ -1,9 +1,10 @@
+#include <test.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 
 #include <enterprise_extension.h>
 
-#include <test.h>
 
 ENTERPRISE_FUNC_2ARG_DECLARE(int64_t, extension_function, int32_t, short_int, int64_t, long_int);
 ENTERPRISE_FUNC_2ARG_DECLARE(int64_t, extension_function_broken, int32_t, short_int, int64_t, long_int);

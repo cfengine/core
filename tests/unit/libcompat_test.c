@@ -1,6 +1,8 @@
 #include <test.h>
+
 #include <cmockery.h>
 #include <string.h>
+
 
 /* Include the tested functions directly from libcompat! */
 #include <memmem.c>

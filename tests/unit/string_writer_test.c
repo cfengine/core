@@ -1,7 +1,6 @@
-#include <cf3.defs.h>
-
 #include <test.h>
 
+#include <cf3.defs.h>
 #include <writer.h>
 
 void test_empty_string_buffer(void)

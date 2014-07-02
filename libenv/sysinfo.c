@@ -57,6 +57,13 @@
 # include <sys/mpctl.h>
 #endif
 
+/* BSD, MAC OS X uptime calculation use KERN_BOOTTIME sysctl. */
+#ifdef HAVE_SYS_SYSCTL_H
+# ifdef HAVE_SYS_PARAM_H
+#  include <sys/param.h>
+# endif
+# include <sys/sysctl.h>
+#endif
 
 /*****************************************************/
 // Uptime calculation settings for GetUptimeSeconds() - Mantis #1134
@@ -92,8 +99,6 @@
 // See http://www.unix.com/man-page/FreeBSD/3/sysctl/
 // Linux also has sys/sysctl.h, so we check KERN_BOOTTIME to make sure it's BSD
 #elif defined(HAVE_SYS_SYSCTL_H) && defined(KERN_BOOTTIME)
-# include <sys/param.h>
-# include <sys/sysctl.h>
 # define BOOT_TIME_WITH_SYSCTL
 
 // GNU/Linux: struct sysinfo.uptime

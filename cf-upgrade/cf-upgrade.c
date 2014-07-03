@@ -71,5 +71,6 @@ int main(int argc, char **argv)
     result = RunUpdate(configuration);
     log_entry(LogDebug, "Shutting down");
     logFinish();
-    return result;
+
+    return (result == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

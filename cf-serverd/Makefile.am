@@ -18,7 +18,7 @@ libcf_serverd_la_SOURCES = \
 	server.c server.h \
 	server_transform.c server_transform.h \
 	server_classic.c server_classic.h \
-	tls_server.c tls_server.h \
+	server_tls.c server_tls.h \
 	server_access.c server_access.h \
 	strlist.c strlist.h
 

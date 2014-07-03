@@ -167,15 +167,22 @@ under_scored.
 https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README It
 contains many good practices not only suitable for library writers.
 
-* C99 is encouraged, use it. Only exception is for libc functions that
-  we don't provide wrappers in libcompat. Current cases you should stick
-  to ANSI C (or even better submit a libcompat patch):
+* C99 is encouraged in the language, use it.
+
+* As for using C99-specific libc functions, you can mostly use them,
+  because we provide replacement functions in libcompat, since many old
+  Unix platforms are missing those. If there is no replacement for a
+  C99-specific function, then either stick to C89, or write the
+  libcompat replacement.
+
+  Current functions known to be missing from libcompat (so stick to
+  C89):
 
   * [s]scanf
 
 * Control statements need to have braces, no matter how simple they are.
 
-* Spaces, not tabs.
+* 4 spaces indentation level, no tabs.
 
 * Always use typedefs, no "struct X", or "enum Y" are allowed. Types
   defined with typedef should be in camelcase and no trailing "_t",

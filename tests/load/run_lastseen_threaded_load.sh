@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./lastseen_threaded_load 4 1 1
+./lastseen_threaded_load -c 1   4 1 1

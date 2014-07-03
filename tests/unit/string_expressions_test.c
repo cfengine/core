@@ -5,22 +5,29 @@
 #include <string_expressions.h>
 #include <string_lib.h>
 
-static char *ForbiddenVarRefEval(const char *varname, VarRefType type, void *param)
+static char *ForbiddenVarRefEval(ARG_UNUSED const char *varname,
+                                 ARG_UNUSED VarRefType type,
+                                 ARG_UNUSED void *param)
 {
     fail();
 }
 
-static char *IdentityVarRefEval(const char *varname, VarRefType type, void *param)
+static char *IdentityVarRefEval(const char *varname,
+                                ARG_UNUSED VarRefType type,
+                                ARG_UNUSED void *param)
 {
     return xstrdup(varname);
 }
 
-static char *AppendAVarRefEval(const char *varname, VarRefType type, void *param)
+static char *AppendAVarRefEval(const char *varname,
+                               ARG_UNUSED VarRefType type,
+                               ARG_UNUSED void *param)
 {
     return StringConcatenate(2, "a", varname);
 }
 
-static char *DiscriminateVarTypesVarRefEval(const char *varname, VarRefType type, void *param)
+static char *DiscriminateVarTypesVarRefEval(const char *varname, VarRefType type,
+                                            ARG_UNUSED void *param)
 {
     if (type == VAR_REF_TYPE_SCALAR)
     {

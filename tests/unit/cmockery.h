@@ -48,8 +48,10 @@
 # ifndef LargestIntegralTypePrintfFormat
 #  ifdef _WIN32
 #   define LargestIntegralTypePrintfFormat "%I64x"
+#   define LargestIntegralTypePrintfDecimal "%I64d"
 #  else
 #   define LargestIntegralTypePrintfFormat "%llx"
+#   define LargestIntegralTypePrintfDecimal "%lld"
 #  endif
        // _WIN32
 # endif// LargestIntegralTypePrintfFormat

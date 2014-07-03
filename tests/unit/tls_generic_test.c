@@ -15,7 +15,7 @@
 #include <server_common.h>
 #include <crypto.h>
 #include <tls_generic.h>
-#include <tls_server.h>
+#include <server_tls.h>
 #include <tls_client.h>
 #include <connection_info.h>
 

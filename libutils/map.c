@@ -266,6 +266,22 @@ bool MapContainsSameKeys(const Map *map1, const Map *map2)
     return (count == MapSize(map2));
 }
 
+void MapPrintStats(const Map *map, FILE *f)
+{
+    fprintf(f, "================ Map statistics ================\n");
+
+    if (IsArrayMap(map))
+    {
+        fprintf(f, "Map is too small, fits in a small array.\n");
+    }
+    else
+    {
+        HashMapPrintStats(map->hashmap, f);
+    }
+
+    fprintf(f, "================================================\n");
+}
+
 /******************************************************************************/
 
 MapIterator MapIteratorInit(Map *map)

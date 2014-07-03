@@ -435,7 +435,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         {
             Log(LOG_LEVEL_ERR,
                 "Private key decrypt failed. (BN_mpi2bn: %s)",
-            CryptoLastErrorString());
+                CryptoLastErrorString());
             RSA_free(newkey);
             return false;
         }
@@ -454,7 +454,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         {
             Log(LOG_LEVEL_ERR,
                 "Public key decrypt failed. (BN_mpi2bn: %s)",
-            CryptoLastErrorString());
+                CryptoLastErrorString());
             RSA_free(newkey);
             return false;
         }

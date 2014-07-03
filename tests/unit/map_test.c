@@ -7,8 +7,9 @@
 
 #include <alloc.h>
 
-static unsigned int ConstHash(const void *key, unsigned int seed,
-                              unsigned int max)
+static unsigned int ConstHash(ARG_UNUSED const void *key,
+                              ARG_UNUSED unsigned int seed,
+                              ARG_UNUSED unsigned int max)
 {
     return 0;
 }
@@ -47,30 +48,34 @@ static void test_insert(void)
     StringMapDestroy(map);
 }
 
-static char *StringTimes(char *str, size_t times)
+static char *CharTimes(char c, size_t times)
 {
-    size_t len = strlen(str);
-    char *res = xmalloc((sizeof(char) * len * times) + 1);
-    for (size_t i = 0; i < (len * times); i += len)
-    {
-        memcpy(res + i, str, len);
-    }
-    res[len*times] = '\0';
+    char *res = xmalloc(times + 1);
+    memset(res, c, times);
+    res[times] = '\0';
     return res;
 }
 
+static StringMap *jumbo_map;
+
 static void test_insert_jumbo(void)
 {
-    StringMap *map = StringMapNew();
+    jumbo_map = StringMapNew();
+
     for (int i = 0; i < 10000; i++)
     {
-        char *s = StringTimes("a", i);
-        assert_false(StringMapHasKey(map, s));
-        StringMapInsert(map, StringTimes("a", i), NULL);
-        assert_true(StringMapHasKey(map, s));
-        free(s);
+        /* char *s = CharTimes('a', i); */
+        char s[i+1];
+        memset(s, 'a', i);
+        s[i] = '\0';
+
+        assert_false(StringMapHasKey(jumbo_map, s));
+        StringMapInsert(jumbo_map, xstrdup(s), xstrdup(s));
+        assert_true(StringMapHasKey(jumbo_map, s));
+        /* free(s); */
     }
-    StringMapDestroy(map);
+
+    StringMapPrintStats(jumbo_map, stdout);
 }
 
 static void test_remove(void)
@@ -144,21 +149,11 @@ static void test_soft_destroy(void)
     free(value);
 }
 
-static void test_iterate(void)
+static void test_iterate_jumbo(void)
 {
-    StringMap *map = StringMapNew();
+    size_t size = StringMapSize(jumbo_map);
 
-    for (int i = 0; i < 10000; i++)
-    {
-        char *s = StringTimes("a", i);
-        assert_false(StringMapHasKey(map, s));
-        StringMapInsert(map, xstrdup(s), xstrdup(s));
-        assert_true(StringMapHasKey(map, s));
-        free(s);
-    }
-    size_t size = StringMapSize(map);
-
-    MapIterator it = MapIteratorInit(map->impl);
+    MapIterator it = MapIteratorInit(jumbo_map->impl);
     MapKeyValue *item = NULL;
     int count = 0;
     int sum_len = 0;
@@ -175,7 +170,7 @@ static void test_iterate(void)
     assert_int_equal(count, size);
     assert_int_equal(sum_len, 10000*9999/2);
 
-    StringMapDestroy(map);
+    StringMapDestroy(jumbo_map);
 }
 
 static void test_hashmap_new_destroy(void)
@@ -190,7 +185,7 @@ static void test_hashmap_degenerate_hash_fn(void)
 
     for (int i = 0; i < 100; i++)
     {
-        HashMapInsert(hashmap, StringTimes("a", i), StringTimes("a", i));
+        HashMapInsert(hashmap, CharTimes('a', i), CharTimes('a', i));
     }
 
     MapKeyValue *item = HashMapGet(hashmap, "aaaa");
@@ -216,7 +211,7 @@ int main()
         unit_test(test_has_key),
         unit_test(test_clear),
         unit_test(test_soft_destroy),
-        unit_test(test_iterate),
+        unit_test(test_iterate_jumbo),
         unit_test(test_hashmap_new_destroy),
         unit_test(test_hashmap_degenerate_hash_fn),
     };

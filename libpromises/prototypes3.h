@@ -84,6 +84,8 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ShowPromise, const Promise *, pp);
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, GetObservable, int, i, char *, name, char *, desc);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, SetMeasurementPromises, Item **, classlist);
 
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, CheckAndSetHAState, const char *, workdir, EvalContext *, ctx);
+
 /* manual.c */
 
 void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file);

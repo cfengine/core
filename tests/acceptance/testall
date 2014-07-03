@@ -338,24 +338,13 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       printf "gdb --args " >> "$WORKDIR/runtest"
     fi
 
-    if [ "$OSTYPE" = "msys" ]; then
-      # On Windows we need to redirect from within runtest, because processes
-      # spawned with GAINROOT do not inherit the console.
-      INNER_REDIRECT=">$OUTFILE 2>&1"
-      OUTER_REDIRECT=
-    else
-      # On Unix we need to redirect outside of runtest, to avoid the file being
-      # owned by the wrong user in case GAINROOT is sudo.
-      INNER_REDIRECT=
-      OUTER_REDIRECT=">$OUTFILE 2>&1"
-    fi
     if [ -n "$USE_VALGRIND" ] && [ x"$EXPECTED_CRASH" = "x" ]; then
       if grep libtool < "$AGENT" > /dev/null; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
       printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
     else
-      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} $INNER_REDIRECT\n" >> "$WORKDIR/runtest"
+      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
     fi
 
     chmod +x "$WORKDIR/runtest"
@@ -363,7 +352,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     if [ "$GDB" = 1 ]; then
       $GAINROOT "$WORKDIR/runtest"
     else
-      eval $GAINROOT "$WORKDIR/runtest" $OUTER_REDIRECT
+      eval $GAINROOT "$WORKDIR/runtest" >$OUTFILE 2>&1
     fi
     RETVAL=$?
     cat $OUTFILE >> "$LOG"
@@ -518,6 +507,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
   ) >> "$LOG"
 }
 
+ORIG_ARGS=
 while true; do
   case "$1" in
     -h|--help)
@@ -576,8 +566,27 @@ while true; do
     *)
       break;;
   esac
+  # Make sure spaces are preserved by escaping them.
+  ORIG_ARGS="$ORIG_ARGS $(echo "$1" | sed -e 's/ /\\ /g')"
   shift
 done
+
+if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&
+    ! whoami -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
+  # On Windows we run the entire test run under GAINROOT, because doing it for
+  # each test is horribly slow.
+  echo "export GAINROOT=" > runtests.sh
+  echo "export TESTALL_DO_NOT_RECURSE=1" >> runtests.sh
+  echo "$0 $ORIG_ARGS $@ >& output.log" >> runtests.sh
+  rm -f output.log
+  ( $GAINROOT "./runtests.sh" ; echo $? > return-code.txt ) &
+  tail -F output.log --pid=$! 2>/dev/null
+  rm -f runtests.sh
+  rm -f output.log
+  return_code=`cat return-code.txt`
+  rm -f return-code.txt
+  exit $return_code
+fi
 
 if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" ]; then
   if [ -n "$BINDIR" ]; then

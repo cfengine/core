@@ -233,3 +233,8 @@ ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, GetObservable, ARG_UNUSED int, i, AR
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, SetMeasurementPromises, ARG_UNUSED Item **, classlist)
 {
 }
+
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, CheckAndSetHAState, const char *, workdir, EvalContext *, ctx)
+{
+    Log(LOG_LEVEL_VERBOSE, "High Availability available in CFEngine Enterprise");
+}

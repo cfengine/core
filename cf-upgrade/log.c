@@ -139,6 +139,7 @@ void log_entry(LogLevel level, char *format, ...)
         write_file_log_entry(message);
         break;
     case LogNormal:
+        write_console_log_entry(message);
         write_file_log_entry(message);
         break;
     case LogDebug:

@@ -171,7 +171,7 @@ int main()
 
 /* STUBS */
 
-void FatalError(char *s, ...)
+void FatalError(ARG_UNUSED char *s, ...)
 {
     fail();
     exit(42);

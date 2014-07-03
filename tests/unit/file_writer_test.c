@@ -9,8 +9,8 @@ static bool global_w_closed;
 
 
 /* Override libc's fwrite(). */
-static size_t CFENGINE_TEST_fwrite(const void *ptr, size_t size,
-                                   size_t nmemb, FILE *stream)
+static size_t CFENGINE_TEST_fwrite(const void *ptr, size_t size, size_t nmemb,
+                                   ARG_UNUSED FILE *stream)
 {
     for (int i = 0; i < nmemb; ++i)
     {
@@ -23,7 +23,7 @@ static size_t CFENGINE_TEST_fwrite(const void *ptr, size_t size,
 }
 
 /* Override libc's fclose(). */
-static int CFENGINE_TEST_fclose(FILE *stream)
+static int CFENGINE_TEST_fclose(ARG_UNUSED FILE *stream)
 {
     global_w_closed = true;
     return 0;
@@ -109,13 +109,15 @@ int main()
 
 /* STUB */
 
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+void __ProgrammingError(ARG_UNUSED const char *file,
+                        ARG_UNUSED int lineno,
+                        ARG_UNUSED const char *format, ...)
 {
     fail();
     exit(42);
 }
 
-void FatalError(char *s, ...)
+void FatalError(ARG_UNUSED char *s, ...)
 {
     fail();
     exit(42);

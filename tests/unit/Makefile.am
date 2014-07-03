@@ -183,7 +183,7 @@ ipaddress_test_SOURCES = ipaddress_test.c
 
 protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/server_common.c \
-	../../cf-serverd/tls_server.c \
+	../../cf-serverd/server_tls.c \
 	../../cf-serverd/server.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c \
 	../../cf-serverd/server_transform.c \
@@ -199,7 +199,7 @@ findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/lo
 
 avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server_common.c \
-	../../cf-serverd/tls_server.c \
+	../../cf-serverd/server_tls.c \
 	../../cf-serverd/server.c \
 	../../cf-serverd/server_transform.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c \
@@ -257,7 +257,7 @@ logging_test_LDADD = libtest.la ../../libutils/libutils.la
 logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging.h
 logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
 
-connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/tls_server.c
+connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \

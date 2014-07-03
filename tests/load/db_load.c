@@ -246,9 +246,8 @@ static void DBWriteTestData(CF_DB *db)
 }
 
 /* Stub out */
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 
-void FatalError(const EvalContext *ctx, char *fmt, ...)
+void FatalError(ARG_UNUSED const EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)
     {

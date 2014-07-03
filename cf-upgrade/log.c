@@ -34,10 +34,12 @@
 #include <fcntl.h>
 #include <stdarg.h>
 
+
 #define MAX_LOG_ENTRY_SIZE  4096
 
-static FILE *log_stream = NULL;
-static LogLevel current_level = LogNormal;
+static FILE *LOG_STREAM = NULL;
+static LogLevel CURRENT_LEVEL = LogNormal;
+
 
 static char *prepare_message(char *format, va_list args)
 {
@@ -63,10 +65,10 @@ static void write_console_log_entry(const char *message)
 
 static void write_file_log_entry(const char *message)
 {
-    if (log_stream)
+    if (LOG_STREAM)
     {
-        fputs(message, log_stream);
-        fputs("\n", log_stream);
+        fputs(message, LOG_STREAM);
+        fputs("\n", LOG_STREAM);
     }
 }
 
@@ -106,7 +108,7 @@ static void private_log_init()
     }
 #endif
 
-    log_stream = fdopen(log_fd, "a");
+    LOG_STREAM = fdopen(log_fd, "a");
 }
 
 void logInit()
@@ -116,15 +118,15 @@ void logInit()
 
 void logFinish()
 {
-    if (log_stream)
+    if (LOG_STREAM)
     {
-        fclose(log_stream);
+        fclose(LOG_STREAM);
     }
 }
 
 void log_entry(LogLevel level, char *format, ...)
 {
-    if (level > current_level)
+    if (level > CURRENT_LEVEL)
     {
         return;
     }

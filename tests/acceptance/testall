@@ -62,6 +62,7 @@ LOG=test.log
 SUMMARY=summary.log
 XML=test.xml
 XMLTMP=xml.tmp
+WHOAMI=/c/Windows/System32/whoami.exe
 BASE_WORKDIR="$(pwd)/workdir"
 QUIET=
 TIMED_TESTS=${TIMED_TESTS:-1}
@@ -89,7 +90,7 @@ TESTS_TIMED_REMAINING=0
 
 case "$OSTYPE" in
   msys)
-    if whoami -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
+    if "$WHOAMI" -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
       # Don't use elevate if we already have the privileges. It is slower and
       # pops up a flashing window for every single test.
       DEFAULT_GAINROOT=
@@ -572,7 +573,7 @@ while true; do
 done
 
 if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&
-    ! whoami -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
+    ! "$WHOAMI" -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
   # On Windows we run the entire test run under GAINROOT, because doing it for
   # each test is horribly slow.
   echo "export GAINROOT=" > runtests.sh

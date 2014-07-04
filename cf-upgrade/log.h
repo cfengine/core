@@ -30,6 +30,7 @@
 typedef enum {
     LogCritical,
     LogNormal,
+    LogVerbose,
     LogDebug
 } LogLevel;
 

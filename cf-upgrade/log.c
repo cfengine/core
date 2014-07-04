@@ -38,7 +38,7 @@
 #define MAX_LOG_ENTRY_SIZE  4096
 
 static FILE *LOG_STREAM = NULL;
-static LogLevel CURRENT_LEVEL = LogNormal;
+static LogLevel CURRENT_LEVEL = LogVerbose;
 
 
 static char *prepare_message(char *format, va_list args)
@@ -65,22 +65,22 @@ static void write_console_log_entry(const char *message)
 
 static void write_file_log_entry(const char *message)
 {
-    if (LOG_STREAM)
+    if (LOG_STREAM != NULL)
     {
         fputs(message, LOG_STREAM);
         fputs("\n", LOG_STREAM);
+        fflush(LOG_STREAM);
     }
 }
 
 static void private_log_init()
 {
     char path[] = "cf-upgrade-YYYYMMDD-HHMMSS.log";
-    int path_size = sizeof(path);
     time_t now_seconds = time(NULL);
     struct tm *now_tm = gmtime(&now_seconds);
     int log_fd = -1;
 
-    strftime(path, path_size, "cf-upgrade-%Y%m%d-%H%M%S.log", now_tm);
+    strftime(path, sizeof(path), "cf-upgrade-%Y%m%d-%H%M%S.log", now_tm);
     log_fd = open(path, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
     if (log_fd < 0)
     {
@@ -130,17 +130,17 @@ void log_entry(LogLevel level, char *format, ...)
     {
         return;
     }
+
     va_list ap;
     va_start(ap, format);
     char *message = prepare_message(format, ap);
     va_end(ap);
+
     switch (level)
     {
     case LogCritical:
-        write_console_log_entry(message);
-        write_file_log_entry(message);
-        break;
     case LogNormal:
+    case LogVerbose:
         write_console_log_entry(message);
         write_file_log_entry(message);
         break;
@@ -148,5 +148,6 @@ void log_entry(LogLevel level, char *format, ...)
         write_file_log_entry(message);
         break;
     }
+
     free(message);
 }

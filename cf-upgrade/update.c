@@ -236,6 +236,9 @@ int RunUpdate(const Configuration *configuration)
         const char *backup_tool = ConfigurationBackupTool(configuration);
         const char *cfengine = ConfigurationCFEnginePath(configuration);
 
+        log_entry(LogVerbose, "Performing backup of '%s' to '%s' using '%s'",
+                  cfengine, backup_path, backup_tool);
+
         result = perform_backup(backup_tool, backup_path, cfengine);
         if (result != 0)
         {
@@ -243,6 +246,8 @@ int RunUpdate(const Configuration *configuration)
                       cfengine, backup_path, backup_tool);
             return -1;
         }
+
+        log_entry(LogVerbose, "Backup successful");
 
         /* run the upgrade process */
         const char *command = ConfigurationCommand(configuration);
@@ -256,6 +261,8 @@ int RunUpdate(const Configuration *configuration)
         }
         args[total] = NULL;
 
+        log_entry(LogVerbose, "Running upgrade command: %s", command);
+
         result = run_process_wait(command, args, environ);
         /* Check that everything went according to plan */
         if (result == 0)
@@ -265,7 +272,7 @@ int RunUpdate(const Configuration *configuration)
         }
         else
         {
-            log_entry(LogNormal, "Upgrade failed! Performing restore...");
+            log_entry(LogCritical, "Upgrade failed! Performing restore...");
             /* Well, that is why we have a backup */
             result = perform_restore(backup_tool, backup_path, cfengine);
             if (result == 0)
@@ -289,6 +296,8 @@ int RunUpdate(const Configuration *configuration)
         /* Copy and run the copy */
         const char *copy = ConfigurationCopy(configuration);
         const char *current = ConfigurationCFUpgrade(configuration);
+
+        log_entry(LogVerbose, "Copying '%s' to '%s'", current, copy);
 
         result = copy_to_temporary_location(current, copy);
         if (result < 0)
@@ -317,6 +326,9 @@ int RunUpdate(const Configuration *configuration)
         }
         /* Replace current process with the copy. */
         args[counter + total] = NULL;
+
+        log_entry(LogVerbose, "Reexecuting cf-upgrade from the copy: %s",
+                  copy);
 
         /* Effectively this does execvp(), i.e. preserves
            current environment. */

@@ -22,8 +22,6 @@
   included file COSL.txt.
 */
 
-#include <platform.h>
-
 #include <log.h>
 #include <alloc-mini.h>
 #include <time.h>
@@ -83,7 +81,11 @@ static void private_log_init()
     int log_fd = -1;
 
     strftime(path, sizeof(path), "cf-upgrade-%Y%m%d-%H%M%S.log", now_tm);
+#ifndef __MINGW32__
     log_fd = open(path, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+#else
+    log_fd = open(path, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
+#endif
     if (log_fd < 0)
     {
         puts("Could not initialize log file, only console messages will be printed");

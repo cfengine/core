@@ -80,7 +80,7 @@ unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
 
 char ToLower(char ch)
 {
-    if (isupper((int) ch))
+    if (isupper((unsigned char) ch))
     {
         return (ch - 'A' + 'a');
     }
@@ -94,12 +94,12 @@ char ToLower(char ch)
 
 char ToUpper(char ch)
 {
-    if ((isdigit((int) ch)) || (ispunct((int) ch)))
+    if ((isdigit((unsigned char) ch)) || (ispunct((unsigned char) ch)))
     {
         return (ch);
     }
 
-    if (isupper((int) ch))
+    if (isupper((unsigned char) ch))
     {
         return (ch);
     }
@@ -307,7 +307,7 @@ bool StringIsNumeric(const char *s)
 {
     for (; *s; s++)
     {
-        if (!isdigit((int)*s))
+        if (!isdigit((unsigned char)*s))
         {
             return false;
         }
@@ -320,7 +320,7 @@ bool StringIsPrintable(const char *s)
 {
     for (; *s; s++)
     {
-        if (!isprint((int)*s))
+        if (!isprint((unsigned char)*s))
         {
             return false;
         }
@@ -335,7 +335,7 @@ bool EmptyString(const char *s)
 
     for (sp = s; *sp != '\0'; sp++)
     {
-        if (!isspace((int)*sp))
+        if (!isspace((unsigned char)*sp))
         {
             return false;
         }
@@ -811,11 +811,11 @@ int Chop(char *str, size_t max_length)
             return -1;
         }
 
-        while (i > 0 && isspace(str[i-1]))
+        while (i > 0 && isspace((unsigned char)str[i-1]))
         {
             i--;
         }
-        assert(str[i] == '\0' || isspace(str[i]));
+        assert(str[i] == '\0' || isspace((unsigned char)str[i]));
         str[i] = '\0';
     }
     return 0;

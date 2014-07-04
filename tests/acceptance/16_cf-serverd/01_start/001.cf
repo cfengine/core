@@ -9,9 +9,9 @@ body common control
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "windows|sunos_5_10",
+      "test_suppress_fail" string => "windows",
         meta => { "redmine4822" };
-
+        
   methods:
       "any" usebundle => dcs_fini("$(G.testdir)/destination_file");
       "any" usebundle => file_make("$(G.testdir)/source_file",

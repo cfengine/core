@@ -65,6 +65,11 @@ LogLevel LogGetGlobalLevel(void);
 void LoggingSetColor(bool enabled);
 
 /*
+ * Portable syslog()
+ */
+void LogToSystemLog(const char *msg, LogLevel level);
+
+/*
  * Portable strerror(errno)
  */
 const char *GetErrorStr(void);

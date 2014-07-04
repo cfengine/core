@@ -43,8 +43,6 @@ typedef struct
 
 static LogLevel global_level = LOG_LEVEL_NOTICE; /* GLOBAL_X */
 
-static void LogToSystemLog(const char *msg, LogLevel level);
-
 static pthread_once_t log_context_init_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 static pthread_key_t log_context_key; /* GLOBAL_T, initialized by pthread_key_create */
 
@@ -209,7 +207,7 @@ static int LogLevelToSyslogPriority(LogLevel level)
 
 }
 
-static void LogToSystemLog(const char *msg, LogLevel level)
+void LogToSystemLog(const char *msg, LogLevel level)
 {
     syslog(LogLevelToSyslogPriority(level), "%s", msg);
 }

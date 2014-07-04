@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <log.h>
 #include <alloc-mini.h>
 #include <time.h>

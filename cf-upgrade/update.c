@@ -235,13 +235,20 @@ int RunUpdate(const Configuration *configuration)
         const char *backup_path = ConfigurationBackupPath(configuration);
         const char *backup_tool = ConfigurationBackupTool(configuration);
         const char *cfengine = ConfigurationCFEnginePath(configuration);
+
+        log_entry(LogVerbose, "Performing backup of '%s' to '%s' using '%s'",
+                  cfengine, backup_path, backup_tool);
+
         result = perform_backup(backup_tool, backup_path, cfengine);
         if (result != 0)
         {
-            log_entry(LogCritical, "Could not run %s to backup %s at %s", backup_tool,
-                cfengine, backup_path);
+            log_entry(LogCritical, "Failed to backup %s to %s using %s",
+                      cfengine, backup_path, backup_tool);
             return -1;
         }
+
+        log_entry(LogVerbose, "Backup successful");
+
         /* run the upgrade process */
         const char *command = ConfigurationCommand(configuration);
         char *args[CF_UPGRADE_MAX_ARGUMENTS + 1];
@@ -253,27 +260,45 @@ int RunUpdate(const Configuration *configuration)
             args[i] = xstrdup(ConfigurationArgument(configuration, i));
         }
         args[total] = NULL;
+
+        log_entry(LogVerbose, "Running upgrade command: %s", command);
+
         result = run_process_wait(command, args, environ);
         /* Check that everything went according to plan */
-        if (result != 0)
+        if (result == 0)
         {
+            log_entry(LogNormal, "Upgrade succeeded!");
+            return 0;
+        }
+        else
+        {
+            log_entry(LogCritical, "Upgrade failed! Performing restore...");
             /* Well, that is why we have a backup */
             result = perform_restore(backup_tool, backup_path, cfengine);
-            if (result != 0)
+            if (result == 0)
             {
-                log_entry(LogCritical, "Could not restore %s from %s using %s. "
-                          "Your CFEngine installation might be damaged now.",
-                    cfengine, backup_path, backup_tool);
+                log_entry(LogNormal, "Restore successful. "
+                          "CFEngine has been successfully reverted to the previous version.");
                 return -1;
             }
+            else
+            {
+                log_entry(LogCritical,
+                          "Failed to restore %s from %s using %s. "
+                          "Your CFEngine installation might be damaged now.",
+                          cfengine, backup_path, backup_tool);
+                return -2;
+            }
         }
-        log_entry(LogNormal, "Upgrade succeeded!");
     }
     else
     {
         /* Copy and run the copy */
         const char *copy = ConfigurationCopy(configuration);
         const char *current = ConfigurationCFUpgrade(configuration);
+
+        log_entry(LogVerbose, "Copying '%s' to '%s'", current, copy);
+
         result = copy_to_temporary_location(current, copy);
         if (result < 0)
         {
@@ -302,11 +327,14 @@ int RunUpdate(const Configuration *configuration)
         /* Replace current process with the copy. */
         args[counter + total] = NULL;
 
+        log_entry(LogVerbose, "Reexecuting cf-upgrade from the copy: %s",
+                  copy);
+
         /* Effectively this does execvp(), i.e. preserves
            current environment. */
         result = run_process_replace(copy, args, environ);
-
-        assert(false);
     }
-    return 0;
+
+    assert(false);                                           /* unreachable */
+    return -1;
 }

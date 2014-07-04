@@ -397,7 +397,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
           RESULT=FAIL
           RESULT_MSG="${COLOR_FAILURE}FAIL (Test tried to wait but is not in \"timed\" directory)${COLOR_NORMAL}"
         else
-          WAIT_TIME=$(egrep -e "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -r -e 's,.*Wait/([0-9]+).*,\1,')
+          WAIT_TIME=$(egrep -e "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -e 's,.*Wait/\([0-9]\+\).*,\1,')
           eval $NEXT_TIMEOUT_VAR=$(($TEST_END_TIME+$WAIT_TIME))
           RESULT=Wait
           RESULT_MSG="Awaiting ($WAIT_TIME seconds)..."

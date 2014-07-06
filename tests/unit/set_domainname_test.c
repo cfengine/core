@@ -13,6 +13,10 @@ char VFQNAME[CF_MAXVARSIZE];
 char VUQNAME[CF_MAXVARSIZE];
 char VDOMAIN[CF_MAXVARSIZE];
 
+#if defined(_AIX)
+return;
+#endif
+
 static struct hostent h = {
     .h_name = "laptop.intra.cfengine.com"
 };

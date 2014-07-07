@@ -5,6 +5,10 @@
 
 static bool netgroup_more = false;
 
+#if defined(_AIX)
+return;
+#endif
+
 #if SETNETGRENT_RETURNS_INT
 int
 #else

@@ -88,7 +88,7 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     if (a.transaction.action == cfa_warn)
     {

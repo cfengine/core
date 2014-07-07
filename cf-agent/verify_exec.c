@@ -82,7 +82,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     /* See VerifyCommandRetcode for interpretation of return codes.

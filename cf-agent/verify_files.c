@@ -504,7 +504,6 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
     Bundle *bp = NULL;
     if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp, &result)))
     {
-        BannerSubBundle(bp, bundle_args);
         a.haveeditline = true;
 
         EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit);
@@ -681,8 +680,6 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_line");
         if (bp)
         {
-            BannerSubBundle(bp, args);
-
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
 
             BundleResolve(ctx, bp);
@@ -721,8 +718,6 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_xml");
         if (bp)
         {
-            BannerSubBundle(bp, args);
-
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
             BundleResolve(ctx, bp);
 
@@ -759,7 +754,7 @@ exit:
 
 PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp)
 {
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
     return FindFilePromiserObjects(ctx, pp);
 }
 

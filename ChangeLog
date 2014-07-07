@@ -1,3 +1,7 @@
+Cfengine Propulsion Lab
+        - Fix error messages/ hanndling in process signalling which no longer allowed any signals to fail silently
+        - Fix output format
+
 3.6.1
         New features:
         - Introduced Solaris and AIX support into the 3.6 series, with many associated build and

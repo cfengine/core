@@ -247,7 +247,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
 
         case 'l':
-            LEGACY_OUTPUT = true;
+            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
             break;
 
         case 'c':

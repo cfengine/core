@@ -63,7 +63,7 @@ static int CheckRegistrySanity(Attributes a, const Promise *pp);
 
 PromiseResult VerifyDatabasePromises(EvalContext *ctx, const Promise *pp)
 {
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     Attributes a = GetDatabaseAttributes(ctx, pp);
 

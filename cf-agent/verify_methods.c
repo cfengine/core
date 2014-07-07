@@ -84,6 +84,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
             const FnCall *fp = RvalFnCallValue(call);
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
             args = fp->args;
+            EvalContextSetBundleArgs(ctx, args);
         }
         break;
 
@@ -102,6 +103,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
 
     char lockname[CF_BUFSIZE];
     GetLockName(lockname, "method", pp->promiser, args);
+
     CfLock thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     if (thislock.lock == NULL)
     {
@@ -109,15 +111,17 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     const Bundle *bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "agent");
+
     if (!bp)
     {
         bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "common");
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
+
     if (bp)
     {
         if (a.transaction.action == cfa_warn) // don't skip for dry-runs (ie ignore DONTDO)
@@ -127,7 +131,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
         }
         else
         {
-            BannerSubBundle(bp, args);
+            BundleBanner(bp, args);
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
             BundleResolve(ctx, bp);
@@ -192,6 +196,8 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
 
     YieldCurrentLock(thislock);
     BufferDestroy(method_name);
+    EndBundleBanner(bp);
+
     return result;
 }
 

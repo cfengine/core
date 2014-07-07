@@ -123,7 +123,7 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promi
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
     PromiseResult result = VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
 
     YieldCurrentLock(thislock);

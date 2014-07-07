@@ -256,7 +256,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'l':
-            LEGACY_OUTPUT = true;
+            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
             break;
 
         case 'f':
@@ -492,18 +492,10 @@ static int HailServer(EvalContext *ctx, char *host)
     else
 #endif
     {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_INFO, "...........................................................................");
-            Log(LOG_LEVEL_INFO, " * Hailing %s : %s, with options \"%s\" (serial)", hostname, port,
-                  REMOTE_AGENT_OPTIONS);
-            Log(LOG_LEVEL_INFO, "...........................................................................");
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "Hailing '%s' : %s, with options '%s' (serial)", hostname, port,
-                  REMOTE_AGENT_OPTIONS);
-        }
+        Log(LOG_LEVEL_INFO, "...........................................................................");
+        Log(LOG_LEVEL_INFO, " * Hailing %s : %s, with options \"%s\" (serial)", hostname, port,
+            REMOTE_AGENT_OPTIONS);
+        Log(LOG_LEVEL_INFO, "...........................................................................");
     }
 
     const char *s =

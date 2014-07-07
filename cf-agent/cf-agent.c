@@ -195,7 +195,7 @@ static const struct option OPTIONS[] =
     {"no-lock", no_argument, 0, 'K'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
-    {"legacy-output", no_argument, 0, 'l'},
+    {"log-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {NULL, 0, 0, '\0'}
@@ -216,7 +216,7 @@ static const char *const HINTS[] =
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
-    "Use legacy output format",
+    "Use line-based log output format on console",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     NULL
@@ -325,7 +325,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'l':
-            LEGACY_OUTPUT = true;
+            MACHINE_OUTPUT = true;
             break;
 
         case 'f':
@@ -1056,6 +1056,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     Rlist *bundlesequence = NULL;
+
+    Banner("Begin policy/promise schedule");
+
     if (config->bundlesequence)
     {
         Log(LOG_LEVEL_INFO, "Using command line specified bundlesequence");
@@ -1119,21 +1122,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         FatalError(ctx, "Errors in agent bundles");
     }
 
-    if (LEGACY_OUTPUT)
-    {
-        Writer *w = StringWriter();
-        RlistWrite(w, bundlesequence);
-        Log(LOG_LEVEL_VERBOSE, " -> Bundlesequence => %s", StringWriterData(w));
-        WriterClose(w);
-    }
-    else
-    {
-        Writer *w = StringWriter();
-        WriterWrite(w, "Using bundlesequence => ");
-        RlistWrite(w, bundlesequence);
-        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        WriterClose(w);
-    }
+    Writer *w = StringWriter();
+    WriterWrite(w, "Using bundlesequence => ");
+    RlistWrite(w, bundlesequence);
+    Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+    WriterClose(w);
 
 /* If all is okay, go ahead and evaluate */
 
@@ -1154,6 +1147,8 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             break;
         }
 
+        EvalContextSetBundleArgs(ctx, args);
+
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, name, "agent");
         if (!bp)
         {
@@ -1162,10 +1157,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 
         if (bp)
         {
-            BannerBundle(bp, args);
+            BundleBanner(bp,args);
             EvalContextStackPushBundleFrame(ctx, bp, args, false);
             ScheduleAgentOperations(ctx, bp);
             EvalContextStackPopFrame(ctx);
+            EndBundleBanner(bp);
         }
         else
         {
@@ -1224,8 +1220,6 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        Log(LOG_LEVEL_VERBOSE, "Evaluating bundle pass %d", pass);
-
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(ctx, type);
@@ -1237,8 +1231,6 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 continue;
             }
 
-            BannerPromiseType(bp->name, sp->name, pass);
-
             if (!NewTypeContext(type))
             {
                 continue;
@@ -1248,6 +1240,8 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
+
+                EvalContextSetPass(ctx, pass);
 
                 PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
                 result = PromiseResultUpdate(result, promise_result);
@@ -1490,7 +1484,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     }
 
     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
-
     return result;
 }
 
@@ -1577,41 +1570,13 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
         return;
     }
 
-    if (LEGACY_OUTPUT)
+    ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+    Class *cls = NULL;
+    while ((cls = ClassTableIteratorNext(iter)))
     {
-        Log(LOG_LEVEL_VERBOSE, "     +  Private classes augmented:");
-
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            Log(LOG_LEVEL_VERBOSE, "     +       %s", cls->name);
-        }
-        ClassTableIteratorDestroy(iter);
+        Log(LOG_LEVEL_VERBOSE, "     +  Private class: %s ", cls->name);
     }
-    else
-    {
-        bool have_classes = false;
-        Writer *w = StringWriter();
-
-        WriterWrite(w, "Private classes augmented:");
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            WriterWriteChar(w, ' ');
-            WriterWrite(w, cls->name);
-            have_classes = true;
-        }
-        ClassTableIteratorDestroy(iter);
-
-        if (have_classes)
-        {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        }
-
-        WriterClose(w);
-    }
+    ClassTableIteratorDestroy(iter);
 }
 
 /**************************************************************/
@@ -1728,21 +1693,31 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "S: ...................................................");
+    Log(LOG_LEVEL_VERBOSE, "S: Bundle Accounting Summary for '%s' in namespace %s", bundle->name, bundle->ns);
+
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Zero promises executed for bundle '%s'", bundle->name);
+        Log(LOG_LEVEL_VERBOSE, "S: Zero promises executed for bundle '%s'", bundle->name);
+        Log(LOG_LEVEL_VERBOSE, "S: ...................................................");
+        Log(LOG_LEVEL_VERBOSE, "\n");
         return PROMISE_RESULT_NOOP;
     }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "S: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
+        Log(LOG_LEVEL_VERBOSE, "S: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
+        Log(LOG_LEVEL_VERBOSE, "S: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
 
-    Log(LOG_LEVEL_VERBOSE, "Bundle Accounting Summary for '%s'", bundle->name);
-    Log(LOG_LEVEL_VERBOSE, "Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
-    Log(LOG_LEVEL_VERBOSE, "Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
-    Log(LOG_LEVEL_VERBOSE, "Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
-    
-    bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
+        bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-    Log(LOG_LEVEL_VERBOSE, "Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
-          bundle->name, bundle_compliance * 100.0);
+        Log(LOG_LEVEL_VERBOSE, "S: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
+            bundle->name, bundle_compliance * 100.0);
+        Log(LOG_LEVEL_VERBOSE, "S: ...................................................");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+    }
+
     LastSawBundle(bundle, bundle_compliance);
 
     // return the worst case for the bundle status

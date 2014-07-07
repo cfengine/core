@@ -173,8 +173,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, 
                 continue;
             }
 
-            BannerSubPromiseType(ctx, bp->name, sp->name);
-
             EvalContextStackPushPromiseTypeFrame(ctx, sp);
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -204,7 +202,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, 
 static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
                                         ARG_UNUSED void *param)
 {
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {

@@ -38,7 +38,7 @@ static bool CheckMeasureSanity(Measurement m, const Promise *pp);
 
 PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp)
 {
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     Attributes a = GetMeasurementAttributes(ctx, pp);
 

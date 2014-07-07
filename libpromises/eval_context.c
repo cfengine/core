@@ -58,7 +58,6 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
-
 struct EvalContext_
 {
     int eval_options;
@@ -66,6 +65,9 @@ struct EvalContext_
     bool checksum_updates_default;
     Item *ip_addresses;
     bool ignore_locks;
+
+    int pass;
+    Rlist *args;
 
     Item *heap_abort;
     Item *heap_abort_current_bundle;
@@ -525,7 +527,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 {
     time_t now = time(NULL);
 
-    Banner("Loading persistent classes");
+    Log(LOG_LEVEL_VERBOSE, "Loading persistent classes");
 
     CF_DB *dbp;
     if (!OpenDB(&dbp, dbid_state))
@@ -587,8 +589,6 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
     DeleteDBCursor(dbcp);
     CloseDB(dbp);
-
-    Banner("Loaded persistent memory");
 }
 
 bool Abort(EvalContext *ctx)
@@ -652,20 +652,8 @@ bool MissingDependencies(EvalContext *ctx, const Promise *pp)
 
         if (!StringSetContains(ctx->dependency_handles, RlistScalarValue(rp)))
         {
-            if (LEGACY_OUTPUT)
-            {
-                Log(LOG_LEVEL_VERBOSE, "\n");
-                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as promise dependency %s has not yet been kept",
-                    pp->promiser, RlistScalarValue(rp));
-                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as promise dependency '%s' has not yet been kept",
-                    pp->promiser, RlistScalarValue(rp));
-            }
-
+            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', as promise dependency '%s' has not yet been kept",
+                pp->promiser, RlistScalarValue(rp));
             return true;
         }
     }
@@ -738,6 +726,7 @@ EvalContext *EvalContextNew(void)
     ctx->checksum_updates_default = false;
     ctx->ip_addresses = NULL;
     ctx->ignore_locks = false;
+    ctx->args = NULL;
 
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
@@ -797,6 +786,8 @@ void EvalContextDestroy(EvalContext *ctx)
 
         DeleteItemList(ctx->heap_abort);
         DeleteItemList(ctx->heap_abort_current_bundle);
+
+        RlistDestroy(ctx->args);
 
         SeqDestroy(ctx->stack);
 
@@ -894,6 +885,31 @@ void EvalContextClear(EvalContext *ctx)
         RBTreeClear(ctx->function_cache);
     }
 
+}
+
+void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args)
+{
+    if (ctx->args)
+    {
+        RlistDestroy(ctx->args);
+    }
+
+    ctx->args = RlistCopy(args);
+}
+
+Rlist *EvalContextGetBundleArgs(EvalContext *ctx)
+{
+    return (Rlist *) ctx->args;
+}
+
+void EvalContextSetPass(EvalContext *ctx, int pass)
+{
+    ctx->pass = pass;
+}
+
+int EvalContextGetPass(EvalContext *ctx)
+{
+    return ctx->pass;
 }
 
 static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)

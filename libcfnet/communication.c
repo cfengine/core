@@ -33,7 +33,7 @@ AgentConnection *NewAgentConn(const char *server_name)
     AgentConnection *conn = xcalloc(1, sizeof(AgentConnection));
 
     conn->sd = SOCKET_INVALID;
-    conn->family = AF_INET;
+    conn->family = AF_UNSPEC;
     conn->trust = false;
     conn->encryption_type = 'c';
     conn->this_server = xstrdup(server_name);

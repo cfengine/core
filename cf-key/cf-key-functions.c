@@ -21,6 +21,7 @@
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
+#include <assert.h>
 
 #include "generic_agent.h"
 
@@ -36,6 +37,9 @@
 #include "env_context.h"
 #include "crypto.h"
 #include "file_lib.h"
+#ifndef __MINGW32__
+# include "sysinfo.h"
+#endif
 
 #include "cf-key-functions.h"
 
@@ -84,13 +88,13 @@ RSA* LoadPublicKey(const char* filename)
 
 /** Return a string with the printed digest of the given key file,
     or NULL if an error occurred. */
-char* GetPubkeyDigest(const char* pubkey)
+char* LoadPubkeyDigest(const char* filename)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     RSA* key = NULL;
     char* buffer = xmalloc(EVP_MAX_MD_SIZE * 4);
 
-    key = LoadPublicKey(pubkey);
+    key = LoadPublicKey(filename);
     if (NULL == key)
     {
         return NULL;
@@ -101,13 +105,26 @@ char* GetPubkeyDigest(const char* pubkey)
     return buffer;
 }
 
+/** Return a string with the printed digest of the given key file. */
+char* GetPubkeyDigest(RSA* pubkey)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    char* buffer = xmalloc(EVP_MAX_MD_SIZE * 4);
+
+    assert(NULL != pubkey);
+
+    HashPubKey(pubkey, digest, CF_DEFAULT_DIGEST);
+    HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer);
+    return buffer;
+}
+
 /*****************************************************************************/
 
 /** Print digest of the specified public key file.
     Return 0 on success and 1 on error. */
 int PrintDigest(const char* pubkey)
 {
-    char *digeststr = GetPubkeyDigest(pubkey);
+    char *digeststr = LoadPubkeyDigest(pubkey);
 
     if (NULL == digeststr)
     {
@@ -119,21 +136,91 @@ int PrintDigest(const char* pubkey)
     return 0; /* OK exitcode */
 }
 
-int TrustKey(const char* pubkey)
+/** Split a "key" argument of the form "user@address:filename" into
+ * components (public) key file name, IP address, and (remote) user
+ * name.  Pointers to the corresponding segments of the @c keyarg
+ * string will be written into the three output arguments @c filename,
+ * @c ipaddr, and @c username. (Hence, the three output string have
+ * the same lifetime/scope as the @c keyarg string.)
+ *
+ * The only required component is the file name.  If IP address is
+ * missing, @c NULL is written into the @c ipaddr pointer.  If the
+ * username is missing, @c username will point to the constant string
+ * @c "root".
+ *
+ * NOTE: the @c keyarg argument is modified by this function!
+ */
+void ParseKeyArg(char* keyarg, char** filename, char** ipaddr, char** username)
 {
-    char *digeststr = GetPubkeyDigest(pubkey);
-    char outfilename[CF_BUFSIZE];
-    bool ok;
+    char *s;
 
-    if (NULL == digeststr)
+    /* set defaults */
+    *ipaddr = NULL;
+    *username = "root";
+
+    /* use rightmost colon so we can cope with IPv6 addresses */
+    s = strrchr(keyarg, ':');
+    if (NULL == s)
+    {
+        /* no colon, entire argument is a filename */
+        *filename = keyarg;
+        return;
+    }
+
+    *s = '\0'; /* split string */
+    *filename = s+1; /* `filename` starts at 1st character after ':' */
+
+    s = strchr(keyarg, '@');
+    if (NULL == s)
+    {
+        /* no username given, use default */
+        *ipaddr = keyarg;
+        return;
+    }
+
+    *s = '\0';
+    *ipaddr = s+1;
+    *username = keyarg;
+
+    /* special case: if we got user@:/path/to/file
+       then reset `ipaddr` to NULL instead of empty string */
+    if ('\0' == **ipaddr)
+    {
+        *ipaddr = NULL;
+    }
+
+    return;
+}
+
+/** Trust the given key.  If @c ipaddress is not @c NULL, then also
+ * update the "last seen" database.  The IP address is required for
+ * trusting a server key (on the client); it is -currently- optional
+ * for trusting a client key (on the server). */
+int TrustKey(const char* filename, const char* ipaddress, const char* username)
+{
+    RSA* key;
+    char *digest;
+
+    key = LoadPublicKey(filename);
+    if (NULL == key)
+    {
         return 1; /* ERROR exitcode */
+    }
 
-    snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
-    free(digeststr);
+    digest = GetPubkeyDigest(key);
+    if (NULL == digest)
+    {
+        return 1; /* ERROR exitcode */
+    }
 
-    ok = CopyRegularFileDisk(pubkey, outfilename);
+    if (NULL != ipaddress)
+    {
+        LastSaw(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
+    }
+    SavePublicKey(username, digest, key);
 
-    return (ok? 0 : 1);
+    free(digest);
+    return 0; /* OK exitcode */
 }
 
 bool ShowHost(const char *hostkey, const char *address, bool incoming,
@@ -177,7 +264,7 @@ int RemoveKeys(const char *host)
 
     if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
     {
-        Log(LOG_LEVEL_ERR, 
+        Log(LOG_LEVEL_ERR,
             "ERROR, could not resolve '%s', not removing", host);
         return 255;
     }

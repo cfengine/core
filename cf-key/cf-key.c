@@ -45,7 +45,8 @@ bool LICENSE_INSTALL = false;
 char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 static char *print_digest_arg = NULL;
-static char *trust_key_arg = NULL;
+static char *trust_server_key_arg = NULL;
+static char *trust_client_key_arg = NULL;
 static char *KEY_PATH;
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -69,7 +70,8 @@ static const struct option OPTIONS[17] =
     {"remove-keys", required_argument, 0, 'r'},
     {"install-license", required_argument, 0, 'l'},
     {"print-digest", required_argument, 0, 'p'},
-    {"trust-key", required_argument, 0, 't'},
+    {"trust-client-key", required_argument, 0, 't'},
+    {"trust-server-key", required_argument, 0, 'T'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -84,7 +86,8 @@ static const char *HINTS[17] =
     "Remove keys for specified hostname/IP",
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
-    "Make cf-serverd/cf-agent trust the specified public key",
+    "Make cf-serverd trust the specified public key. Argument value is file name of the public key to trust.",
+    "Make cf-agent trust the specified public key for connecting to a specified IP address. Argument value has the form [USER@]IP_ADDR:FILENAME.",
     NULL
 };
 
@@ -121,9 +124,24 @@ int main(int argc, char *argv[])
         return success ? 0 : 1;
     }
 
-    if (trust_key_arg)
+    if (trust_client_key_arg)
     {
-        return TrustKey(trust_key_arg);
+        char *filename, *ipaddr, *username;
+        ParseKeyArg(trust_client_key_arg, &filename, &ipaddr, &username);
+        /* TrustKey assumes we're trusting a server if the IP address is given. */
+        return TrustKey(trust_client_key_arg, NULL, username);
+    }
+
+    if (trust_server_key_arg)
+    {
+        char *filename, *ipaddr, *username;
+        ParseKeyArg(trust_server_key_arg, &filename, &ipaddr, &username);
+        /* Server IP address required to trust key on the client side */
+        if (NULL == ipaddr)
+        {
+            return 1; /* ERROR */
+        }
+        return TrustKey(filename, ipaddr, username);
     }
 
     char *public_key_file, *private_key_file;
@@ -160,7 +178,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:T:hl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -199,7 +217,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 't':
-            trust_key_arg = optarg;
+            trust_client_key_arg = optarg;
+            break;
+
+        case 'T':
+            trust_server_key_arg = optarg;
             break;
 
         case 'h':

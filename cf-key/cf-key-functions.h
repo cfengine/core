@@ -42,9 +42,11 @@
 #endif
 
 RSA* LoadPublicKey(const char* filename);
-char* GetPubkeyDigest(const char* pubkey);
+char* LoadPubkeyDigest(const char* pubkey);
+char* GetPubkeyDigest(RSA* pubkey);
 int PrintDigest(const char* pubkey);
-int TrustKey(const char* pubkey);
+void ParseKeyArg(char* keyarg, char** filename, char** ipaddr, char** username);
+int TrustKey(const char* pubkey, const char* ipaddress, const char* username);
 bool ShowHost(const char *hostkey, const char *address, bool incoming, const KeyHostSeen *quality, void *ctx);
 void ShowLastSeenHosts();
 int RemoveKeys(const char *host);

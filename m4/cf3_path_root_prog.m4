@@ -17,7 +17,7 @@ AC_DEFUN([CF3_PATH_ROOT_PROG],
   ])
   AS_ECHO_N(["checking for $2... "])
   for i in $(echo $path | sed -e 's/:/ /g'); do
-    AS_IF([test -e $i/$2 && ls -ld $i/$2 | grep ['^[^ ][^ ][^ ]x[^ ][^ ][^ ][^ ][^ ][^ ]'] > /dev/null], [
+    AS_IF([test -e $i/$2 && ls -ld $i/$2 | grep ['^[^ ][^ ][^ ][xs][^ ][^ ][^ ][^ ][^ ][^ ]'] > /dev/null], [
       $1=$i/$2
       found=1
       break

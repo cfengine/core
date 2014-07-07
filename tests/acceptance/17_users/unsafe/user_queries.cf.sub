@@ -17,6 +17,10 @@ bundle agent remove_stale_groups
   # When we create a user and change its primary GID afterwards, its original
   # group may linger and cause problems later.
   commands:
+    aix::
+      "rmgroup johndoe"
+        contain => in_shell;
+    !aix::
       "groupdel johndoe"
         contain => in_shell;
 }
@@ -181,10 +185,20 @@ bundle agent user_has_password(user, password, true_class, false_class)
 bundle agent user_has_password_hash(user, hash, true_class, false_class)
 {
   vars:
-    "escaped_hash" string => escape("$(hash)");
+    !aix::
+      "escaped_hash" string => escape("$(hash)");
+    aix::
+      "user_hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" expression => strcmp($(hash), $(user_hash)),
+        scope => "namespace";
+      "$(false_class)" not => strcmp($(hash), $(user_hash)),
+        scope => "namespace";
 
   commands:
-    !windows::
+    !windows.!aix::
       "$(G.grep) '^$(user):$(escaped_hash):' /etc/shadow"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
@@ -197,8 +211,10 @@ bundle agent user_has_password_hash(user, hash, true_class, false_class)
 bundle agent user_get_password_hash(user)
 {
   vars:
-    !windows::
+    !windows.!aix::
       "hash" string => execresult("$(G.grep) '^$(user):' /etc/shadow | $(G.sed) -e 's/[^:]*:\([^:]*\):.*/\1/'", "useshell");
+    aix::
+      "hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
 
   reports:
     windows::
@@ -207,10 +223,27 @@ bundle agent user_get_password_hash(user)
 
 bundle agent user_is_locked(user, true_class, false_class)
 {
+  vars:
+    solaris::
+      # Solaris doesn't support expiry date properly (see users promise code).
+      "expiry_date" string => "";
+    !solaris::
+      # Expiry date should be something non-empty.
+      "expiry_date" string => "[^:]";
+    aix::
+      "user_hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" expression => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+      "$(false_class)" not => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+
   commands:
-    !windows::
+    !windows.!aix::
       # Notice the [^:] without * at the end. That field (expiry) should be *something*.
-      "$(G.grep) '^$(user):![^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:][^:]*:' /etc/shadow"
+      "$(G.grep) '^$(user):![^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:$(expiry_date)[^:]*:' /etc/shadow"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 
@@ -227,10 +260,21 @@ bundle agent user_is_locked(user, true_class, false_class)
 
 bundle agent user_is_unlocked(user, true_class, false_class)
 {
+  vars:
+    aix::
+      "user_hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" not => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+      "$(false_class)" expression => regcmp("!.*", $(user_hash)),
+        scope => "namespace";
+
   commands:
-    !windows::
+    !windows.!aix::
       # Notice the field at the end. That field (expiry) should be gone or zero.
-      "$(G.egrep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:(|0):' /etc/shadow"
+      "$(G.egrep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:(:|0:)' /etc/shadow"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 
@@ -242,6 +286,25 @@ bundle agent user_is_unlocked(user, true_class, false_class)
       "$(true_class)" expression => regcmp(".*Account active *Yes.*", "$(output)"),
         scope => "namespace";
       "$(false_class)" not => regcmp(".*Account active *Yes.*", "$(output)"),
+        scope => "namespace";
+}
+
+# Some platforms add a flag that forces the user to change the password.
+bundle agent user_does_not_need_password_update(user, true_class, false_class)
+{
+  vars:
+    aix::
+      "flags" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl flags $(user)", "useshell");
+
+  classes:
+    aix::
+      "$(true_class)" not => regcmp(".*ADMCHG.*", "$(flags)"),
+        scope => "namespace";
+      "$(false_class)" expression => regcmp(".*ADMCHG.*", "$(flags)"),
+        scope => "namespace";
+
+    !aix::
+      "$(true_class)" expression => "any",
         scope => "namespace";
 }
 

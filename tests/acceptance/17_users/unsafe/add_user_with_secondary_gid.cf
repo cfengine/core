@@ -23,6 +23,11 @@ body perms init_perms_body
 
 bundle agent init
 {
+  # AIX useradd/usermod commands do not support numerical group arguments.
+  meta:
+      "test_suppress_fail" string => "aix",
+        meta => { "redmine6285" };
+
   # Remove him first, should he already be present.
   users:
     "johndoe"

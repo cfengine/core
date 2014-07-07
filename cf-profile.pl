@@ -87,7 +87,7 @@ if(defined($opts{t}) or defined($opts{a})){
 	#	my $tab = "      "x$data{bundles}{$b}{level};
 		my $header = "$branch"x$data{bundles}{$b}{level};
 	#	my $header = "-----"x$data{bundles}{$b}{level};
-		print "|$header> $b\n";
+		print "|$header> Bundle $b\n";
 		print "|$tab"."$tab"."Start: $data{bundles}{$b}{start} s\n" if defined($opts{v});
 		print "|$tab"."$tab"."Stop: $data{bundles}{$b}{stop} s\n" if defined($opts{v});
 		print "|$tab"."$tab"."Elapsed: $elapsed s\n";
@@ -97,7 +97,8 @@ if(defined($opts{t}) or defined($opts{a})){
 		if(defined($opts{v})){
 			foreach my $p(@{$data{bundles}{$b}{prtype}}) {
 				my $t = ($data{bundles}{$b}{promise_types}{$p}{start})? $data{bundles}{$b}{promise_types}{$p}{start} : "NAN";
-				print "|$tab"."$tab"."$tab"."$p\n";
+				my ($pt,$pass) = split(/:/,$p);
+				print "|$tab"."$tab"."$tab"."Promise type $pt: pass $pass\n";
 				print "|$tab"."$tab"."$tab"."$tab"."Start: $t s\n";
 				if(defined($data{bundles}{$b}{promise_types}{$p}{classes})) {
 					print "|$tab"."$tab"."$tab"."$tab"."$tab".join("\n|$tab"."$tab"."$tab"."$tab"."$tab", @{$data{bundles}{$b}{promise_types}{$p}{classes}});

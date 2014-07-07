@@ -102,7 +102,7 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     if (!IsPrivileged())
     {

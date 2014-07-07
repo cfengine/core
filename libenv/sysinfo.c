@@ -48,6 +48,7 @@
 #include <files_lib.h>
 #include <printsize.h>
 #include <cf-windows-functions.h>
+#include <ornaments.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -530,30 +531,21 @@ static void GetNameInfo3(EvalContext *ctx)
         i = 0;
     }
 
+    Log(LOG_LEVEL_VERBOSE, "%s - ready", NameVersion());
+    Banner("Environment discovery");
+
     snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
 
-    Log(LOG_LEVEL_VERBOSE, "%s", NameVersion());
 
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
-    }
     Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VSYSNAME.nodename);
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s", VSYSNAME.machine);
     Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VSYSNAME.nodename);
     Log(LOG_LEVEL_VERBOSE, "The time is now %s", ctime(&tloc));
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
-    }
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));
-    if (Chop(workbuf, CF_EXPANDSIZE) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-    }
+    Chop(workbuf, CF_EXPANDSIZE);
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "date", workbuf, CF_DATA_TYPE_STRING, "time_based,source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cdate", CanonifyName(workbuf), CF_DATA_TYPE_STRING, "time_based,source=agent");

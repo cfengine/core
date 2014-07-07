@@ -49,10 +49,10 @@ static const char *const CF_PROMISES_SHORT_DESCRIPTION =
     "validate and analyze CFEngine policy code";
 
 static const char *const CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
-        "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
-        "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
-        "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
-        "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
+    "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
+    "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
+    "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
+    "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
 typedef enum
 {
@@ -156,30 +156,30 @@ int main(int argc, char *argv[])
     switch (config->agent_specific.common.policy_output_format)
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
-        {
-            Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
-                                                    config->agent_specific.common.parser_warnings,
-                                                    config->agent_specific.common.parser_warnings_error);
-            Writer *writer = FileWriter(stdout);
-            PolicyToString(policy, writer);
-            WriterClose(writer);
-            PolicyDestroy(output_policy);
-        }
-        break;
+    {
+        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
+                                                config->agent_specific.common.parser_warnings,
+                                                config->agent_specific.common.parser_warnings_error);
+        Writer *writer = FileWriter(stdout);
+        PolicyToString(policy, writer);
+        WriterClose(writer);
+        PolicyDestroy(output_policy);
+    }
+    break;
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
-        {
-            Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
-                                                    config->agent_specific.common.parser_warnings,
-                                                    config->agent_specific.common.parser_warnings_error);
-            JsonElement *json_policy = PolicyToJson(output_policy);
-            Writer *writer = FileWriter(stdout);
-            JsonWrite(writer, json_policy, 2);
-            WriterClose(writer);
-            JsonDestroy(json_policy);
-            PolicyDestroy(output_policy);
-        }
-        break;
+    {
+        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
+                                                config->agent_specific.common.parser_warnings,
+                                                config->agent_specific.common.parser_warnings_error);
+        JsonElement *json_policy = PolicyToJson(output_policy);
+        Writer *writer = FileWriter(stdout);
+        JsonWrite(writer, json_policy, 2);
+        WriterClose(writer);
+        JsonDestroy(json_policy);
+        PolicyDestroy(output_policy);
+    }
+    break;
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
         break;
@@ -247,7 +247,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
 
         case 'l':
-            LEGACY_OUTPUT = true;
+            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
             break;
 
         case 'c':
@@ -339,32 +339,32 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteVersion(w);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_SUCCESS);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteVersion(w);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_SUCCESS);
 
         case 'h':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_SUCCESS);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_SUCCESS);
 
         case 'M':
-            {
-                Writer *out = FileWriter(stdout);
-                ManPageWrite(out, "cf-promises", time(NULL),
-                             CF_PROMISES_SHORT_DESCRIPTION,
-                             CF_PROMISES_MANPAGE_LONG_DESCRIPTION,
-                             OPTIONS, HINTS,
-                             true);
-                FileWriterDetach(out);
-                exit(EXIT_SUCCESS);
-            }
+        {
+            Writer *out = FileWriter(stdout);
+            ManPageWrite(out, "cf-promises", time(NULL),
+                         CF_PROMISES_SHORT_DESCRIPTION,
+                         CF_PROMISES_MANPAGE_LONG_DESCRIPTION,
+                         OPTIONS, HINTS,
+                         true);
+            FileWriterDetach(out);
+            exit(EXIT_SUCCESS);
+        }
 
         case 'r':
             SHOWREPORTS = true;
@@ -396,12 +396,12 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         default:
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_FAILURE);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_FAILURE);
 
         }
     }

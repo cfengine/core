@@ -5225,6 +5225,7 @@ static FnCallResult FnCallNow(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Poli
 /*********************************************************************/
 
 #ifdef __sun /* Lacks %P and */
+#define STRFTIME_F_HACK
 #define STRFTIME_s_HACK
 #define STRFTIME_R_HACK
 #endif /* http://www.unix.com/man-page/opensolaris/3c/strftime/ */

@@ -38,7 +38,7 @@ body password init_password
 bundle agent test
 {
   vars:
-    "hash" string => "$1$vUsR5eoG$cci6C2jKvoYNuyjL5macS1";
+    "hash" string => "dTloMVpjYt1w2";
     "desc_string" string => "This description should make the CFEngine test pass";
 
   users:

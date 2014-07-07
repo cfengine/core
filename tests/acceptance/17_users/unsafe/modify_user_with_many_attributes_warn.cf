@@ -15,7 +15,7 @@ body common control
 bundle agent init
 {
   vars:
-    "hash" string => "$1$vUsR5eoG$cci6C2jKvoYNuyjL5macS1";
+    "hash" string => "dTloMVpjYt1w2";
 
   # Start out with other attributes.
   users:

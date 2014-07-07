@@ -236,5 +236,4 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, SetMeasurementPromises, ARG_UNUSED I
 
 ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, CheckAndSetHAState, const char *, workdir, EvalContext *, ctx)
 {
-    Log(LOG_LEVEL_VERBOSE, "High Availability available in CFEngine Enterprise");
 }

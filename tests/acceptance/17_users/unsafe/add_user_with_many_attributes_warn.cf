@@ -47,7 +47,7 @@ body action test_action
 body password test_password
 {
   format => "hash";
-  data => "$1$vUsR5eoG$cci6C2jKvoYNuyjL5macS1";
+  data => "dTloMVpjYt1w2";
 }
 
 #######################################################

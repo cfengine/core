@@ -523,39 +523,20 @@ static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
     return (system_hash[0] == '!');
 }
 
-static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
+static bool SetAccountLockExpiration(const char *puser, bool lock)
 {
-    char cmd[CF_BUFSIZE + strlen(hash)];
+    // Solaris has the concept of account expiration, but it is only possible
+    // to set a date in the future. We need to set it to a past date, so we
+    // have to skip it on that platform.
+#ifndef __sun
+    char cmd[CF_BUFSIZE + strlen(puser)];
 
     strcpy (cmd, USERMOD);
     StringAppend(cmd, " -e \"", sizeof(cmd));
-
     if (lock)
     {
-        if (hash[0] != '!')
-        {
-            char new_hash[strlen(hash) + 2];
-            xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
-            if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
-            {
-                return false;
-            }
-        }
         StringAppend(cmd, GetPlatformSpecificExpirationDate(), sizeof(cmd));
     }
-    else
-    {
-        // Important to check. Password may already have been changed if that was also
-        // specified in the policy.
-        if (hash[0] == '!')
-        {
-            if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
-            {
-                return false;
-            }
-        }
-    }
-
     StringAppend(cmd, "\" ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
 
@@ -570,8 +551,39 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
             lock ? "locking" : "unlocking", puser, cmd);
         return false;
     }
+#endif // !__sun
 
     return true;
+}
+
+static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
+{
+    if (lock)
+    {
+        if (hash[0] != '!')
+        {
+            char new_hash[strlen(hash) + 2];
+            xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
+            if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
+            {
+                return false;
+            }
+        }
+    }
+    else
+    {
+        // Important to check. Password may already have been changed if that was also
+        // specified in the policy.
+        if (hash[0] == '!')
+        {
+            if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
+            {
+                return false;
+            }
+        }
+    }
+
+    return SetAccountLockExpiration(puser, lock);
 }
 
 static bool GroupGetUserMembership (const char *user, StringSet *result)

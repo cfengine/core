@@ -1,0 +1,105 @@
+#######################################################
+#
+# Test this.promiser on files promises 
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
+}
+
+body classes promiser0_generic
+{
+    promise_repaired => { "$(this.promiser)_repaired", "$(this.promiser)_0_ok" };
+    promise_kept => { "$(this.promiser)_kept", "$(this.promiser)_0_ok" };
+}
+
+body classes promiser1_generic
+{
+    promise_repaired => { "$(this.promiser)_repaired", "$(this.promiser)_1_ok" };
+    promise_kept => { "$(this.promiser)_kept", "$(this.promiser)_1_ok" };
+}
+
+body classes promiser2_generic
+{
+    promise_repaired => { "$(this.promiser)_repaired", "$(this.promiser)_2_ok" };
+    promise_kept => { "$(this.promiser)_kept", "$(this.promiser)_2_ok" };
+}
+
+body classes promiser3_generic
+{
+    promise_repaired => { "$(this.promiser)_repaired", "$(this.promiser)_3_ok" };
+    promise_kept => { "$(this.promiser)_kept", "$(this.promiser)_3_ok" };
+}
+
+bundle agent init
+{
+  vars:
+      "files" slist => { "aa", "ab", "ac", "ba", "bb", "bc" };
+}
+
+#######################################################
+
+bundle agent test
+{
+  commands:
+    "$(G.true)"
+      classes => promiser0_generic;
+  files:
+    # 6 promisers
+    "$(G.testdir)/$(init.files)"
+      create => "true",
+      classes => promiser1_generic;
+
+    # 3 promisers
+    "$(G.testdir)/a.*"
+      perms => m("666"),
+      classes => promiser2_generic;
+
+    # 6 promisers
+    "$(G.testdir)"
+      file_select => test_plain,
+      depth_search => test_recurse,
+      delete => tidyfiles,
+      classes => promiser3_generic;
+}
+
+body delete tidyfiles
+{
+     dirlinks => "delete";
+     rmdirs   => "true";
+}
+
+body file_select test_plain
+{
+      file_types => { "plain" };
+      file_result => "file_types";
+}
+
+body depth_search test_recurse
+{
+      depth => "inf";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "ok_promisers" slist => classesmatching(".*_ok");
+
+  classes:
+      "ok" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

@@ -282,7 +282,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         }
 
 #ifndef __MINGW32__
-        Log(LOG_LEVEL_VERBOSE, "(Setting umask to %jo)", (uintmax_t)a.contain.umask);
+        Log(LOG_LEVEL_VERBOSE, "Setting umask to %jo", (uintmax_t)a.contain.umask);
         maskval = umask(a.contain.umask);
 
         if (a.contain.umask == 0)

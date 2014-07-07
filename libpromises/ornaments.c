@@ -61,12 +61,12 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
     {
         Writer *w = StringWriter();
         RlistWrite(w, params);
-        Log(LOG_LEVEL_VERBOSE, "P:    From bundle: %s(%s)", PromiseGetBundle(pp)->name, StringWriterData(w));
+        Log(LOG_LEVEL_VERBOSE, "P:    From parameterized bundle: %s(%s)", PromiseGetBundle(pp)->name, StringWriterData(w));
         WriterClose(w);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "P:    From bundle: %s", PromiseGetBundle(pp)->name);
+        Log(LOG_LEVEL_VERBOSE, "P:    Part of bundle: %s", PromiseGetBundle(pp)->name);
     }
 
     LoggingContext *lctx = GetCurrentThreadContext();

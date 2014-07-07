@@ -82,7 +82,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx,pp);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     /* See VerifyCommandRetcode for interpretation of return codes.
@@ -297,7 +297,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 #ifdef __MINGW32__
             pfp =
                 cf_popen_powershell_setuid(cmdline, open_mode, a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
-                                  a.transaction.background);
+                                           a.transaction.background);
 #else // !__MINGW32__
             Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
             return ACTION_RESULT_FAILED;
@@ -457,14 +457,14 @@ void PreviewProtocolLine(char *line, char *comm)
      */
 
     char *prefixes[] =
-    {
-        ":silent:",
-        ":inform:",
-        ":verbose:",
-        ":editverbose:",
-        ":error:",
-        ":logonly:",
-    };
+        {
+            ":silent:",
+            ":inform:",
+            ":verbose:",
+            ":editverbose:",
+            ":error:",
+            ":logonly:",
+        };
 
     int precount = sizeof(prefixes) / sizeof(char *);
 

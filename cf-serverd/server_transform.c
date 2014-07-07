@@ -559,8 +559,6 @@ static void KeepContextBundles(EvalContext *ctx, const Policy *policy)
                 continue;
             }
 
-            BannerBundle(bp, NULL);
-
             EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
@@ -570,8 +568,6 @@ static void KeepContextBundles(EvalContext *ctx, const Policy *policy)
                 {
                     continue;
                 }
-
-                BannerPromiseType(bp->name, sp->name, 0);
 
                 EvalContextStackPushPromiseTypeFrame(ctx, sp);
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -607,8 +603,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
                 continue;
             }
 
-            BannerBundle(bp, NULL);
-
             EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
@@ -618,8 +612,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
                 {
                     continue;
                 }
-
-                BannerPromiseType(bp->name, sp->name, 0);
 
                 EvalContextStackPushPromiseTypeFrame(ctx, sp);
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -637,6 +629,7 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
 static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(!param);
+    PromiseBanner(ctx, pp);
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {

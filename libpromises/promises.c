@@ -344,18 +344,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
                 if (final.type == RVAL_TYPE_SCALAR && !IsDefinedClass(ctx, RvalScalarValue(final)))
                 {
-                    if (LEGACY_OUTPUT)
-                    {
-                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as if/ifvarclass %s is not relevant",
-                            pp->promiser, RvalScalarValue(final));
-                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant",
-                            pp->promiser, RvalScalarValue(final));
-                    }
+                    //Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for if/ifvarclass '%s' is not in scope", pp->promiser, RvalScalarValue(final));
 
                     if (excluded)
                     {
@@ -382,16 +371,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
                 if (final.type == RVAL_TYPE_SCALAR && IsDefinedClass(ctx, RvalScalarValue(final)))
                 {
-                    if (LEGACY_OUTPUT)
-                    {
-                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant", pp->promiser, RvalScalarValue(final));
-                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant", pp->promiser, RvalScalarValue(final));
-                    }
+                    //Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for if/ifvarclass '%s' is not in scope", pp->promiser, RvalScalarValue(final));
 
                     if (excluded)
                     {

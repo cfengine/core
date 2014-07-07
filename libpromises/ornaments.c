@@ -24,10 +24,13 @@
 
 #include <ornaments.h>
 #include <rlist.h>
+#include <logging.h>
 
-void PromiseBanner(const Promise *pp)
+/****************************************************************************************/
+
+void PromiseBanner(EvalContext *ctx, const Promise *pp)
 {
-    if (!LEGACY_OUTPUT)
+    if (MACHINE_OUTPUT)
     {
         if (pp->comment)
         {
@@ -45,117 +48,97 @@ void PromiseBanner(const Promise *pp)
     }
     else
     {
-        strcpy(handle, "(enterprise only)");
+        strcpy(handle, "");
     }
 
-    Log(LOG_LEVEL_VERBOSE, "    .........................................................");
-    Log(LOG_LEVEL_VERBOSE, "     Promise's handle: '%s'", handle);
-    Log(LOG_LEVEL_VERBOSE, "     Promise made by: '%s'", pp->promiser);
+    Log(LOG_LEVEL_VERBOSE, "P: .........................................................");
+    Log(LOG_LEVEL_VERBOSE, "P: BEGIN promise of type \"%s\" (pass %d)", pp->parent_promise_type->name, EvalContextGetPass(ctx));
+    Log(LOG_LEVEL_VERBOSE, "P:    Promiser/affected object: '%s'", pp->promiser);
+
+    Rlist *params = NULL;
+
+    if ((params = EvalContextGetBundleArgs(ctx)))
+    {
+        Writer *w = StringWriter();
+        RlistWrite(w, params);
+        Log(LOG_LEVEL_VERBOSE, "P:    From bundle: %s(%s)", PromiseGetBundle(pp)->name, StringWriterData(w));
+        WriterClose(w);
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "P:    From bundle: %s", PromiseGetBundle(pp)->name);
+    }
+
+    LoggingContext *lctx = GetCurrentThreadContext();
+    Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", lctx->pctx->log_hook(lctx->pctx, EvalContextGetPass(ctx), ""));
+
+
+    if (strlen(handle) > 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "P:    Promise's handle: '%s'", handle);
+    }
 
     if (pp->comment)
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, "    Comment:  %s", pp->comment);
+        Log(LOG_LEVEL_VERBOSE, "P:\n");
+        Log(LOG_LEVEL_VERBOSE, "P:    Comment:  %s", pp->comment);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "    .........................................................");
+    Log(LOG_LEVEL_VERBOSE, "P: .........................................................");
     Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
-void BannerSubBundle(const Bundle *bp, const Rlist *params)
-{
-    if (!LEGACY_OUTPUT)
-    {
-        return;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
-    Log(LOG_LEVEL_VERBOSE, "       BUNDLE %s", bp->name);
-
-    if (params)
-    {
-        Writer *w = StringWriter();
-        RlistWrite(w, params);
-        Log(LOG_LEVEL_VERBOSE, "(%s)", StringWriterData(w));
-        WriterClose(w);
-    }
-    Log(LOG_LEVEL_VERBOSE, "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
-}
+/****************************************************************************************/
 
 void Banner(const char *s)
 {
-    if (!LEGACY_OUTPUT)
+    if (MACHINE_OUTPUT)
     {
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "***********************************************************");
-    Log(LOG_LEVEL_VERBOSE, " %s ", s);
-    Log(LOG_LEVEL_VERBOSE, "***********************************************************");
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, " CFE %s ", s);
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+
 }
 
-void BannerPromiseType(const char *bundlename, const char *type, int pass)
+/****************************************************************************************/
+
+void BundleBanner(const Bundle *bp, const Rlist *params)
 {
-    if (!LEGACY_OUTPUT)
+    if (MACHINE_OUTPUT)
     {
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "\n");
-    Log(LOG_LEVEL_VERBOSE, "   =========================================================");
-    Log(LOG_LEVEL_VERBOSE, "   %s in bundle %s (%d)", type, bundlename, pass);
-    Log(LOG_LEVEL_VERBOSE, "   =========================================================");
-    Log(LOG_LEVEL_VERBOSE, "\n");
-}
-
-void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const char *type)
-{
-    if (!LEGACY_OUTPUT)
-    {
-        return;
-    }
-
-    if (strcmp(type, "processes") == 0)
-    {
-        {
-            Log(LOG_LEVEL_VERBOSE, "     ??? Local class context: ");
-
-            ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-            Class *cls = NULL;
-            while ((cls = ClassTableIteratorNext(iter)))
-            {
-                Log(LOG_LEVEL_VERBOSE, "       %s", cls->name);
-            }
-            ClassTableIteratorDestroy(iter);
-
-            Log(LOG_LEVEL_VERBOSE, "\n");
-        }
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "\n");
-    Log(LOG_LEVEL_VERBOSE, "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = ");
-    Log(LOG_LEVEL_VERBOSE, "      %s in bundle %s", type, bundlename);
-    Log(LOG_LEVEL_VERBOSE, "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = ");
-    Log(LOG_LEVEL_VERBOSE, "\n");
-}
-
-void BannerBundle(const Bundle *bp, const Rlist *params)
-{
-    if (!LEGACY_OUTPUT)
-    {
-        return;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "*****************************************************************");
-    Log(LOG_LEVEL_VERBOSE, "BUNDLE %s", bp->name);
+    Log(LOG_LEVEL_VERBOSE, "B:*****************************************************************");
 
     if (params)
     {
         Writer *w = StringWriter();
         RlistWrite(w, params);
-        Log(LOG_LEVEL_VERBOSE, "(%s)", StringWriterData(w));
+        Log(LOG_LEVEL_VERBOSE, "B: BEGIN BUNDLE %s(%s)", bp->name, StringWriterData(w));
         WriterClose(w);
     }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "B: BEGIN BUNDLE %s", bp->name);
+    }
 
-    Log(LOG_LEVEL_VERBOSE, "*****************************************************************");
+    Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
+}
+
+/****************************************************************************************/
+
+void EndBundleBanner(const Bundle *bp)
+{
+    if (MACHINE_OUTPUT || bp == NULL)
+    {
+        return;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
+    Log(LOG_LEVEL_VERBOSE, "B: END BUNDLE %s", bp->name);
+    Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
 }

@@ -65,7 +65,7 @@ static void ParseRow(EvalContext *ctx, char *row, Item **targets, Item **where, 
 
 PromiseResult VerifyDatabasePromises(EvalContext *ctx, const Promise *pp)
 {
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     Attributes a = GetDatabaseAttributes(ctx, pp);
 

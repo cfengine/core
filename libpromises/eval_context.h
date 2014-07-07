@@ -137,6 +137,10 @@ void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *o
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
 void EvalContextStackPopFrame(EvalContext *ctx);
+void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args);
+void EvalContextSetPass(EvalContext *ctx, int pass);
+Rlist *EvalContextGetBundleArgs(EvalContext *ctx);
+int EvalContextGetPass(EvalContext *ctx);
 
 char *EvalContextStackPath(const EvalContext *ctx);
 StringSet *EvalContextStackPromisees(const EvalContext *ctx);
@@ -168,7 +172,7 @@ const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonC
  *        but we have a few special rules around edit_line and so on.
  */
 const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const Policy *policy,
-                                               const char *callee_reference, const char *callee_type);
+                                                 const char *callee_reference, const char *callee_type);
 const Body *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
                                              const char *callee_reference, const char *callee_type);
 

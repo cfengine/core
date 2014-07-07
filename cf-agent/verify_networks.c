@@ -63,7 +63,7 @@ PromiseResult VerifyRoutePromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     snprintf(lockname, CF_BUFSIZE - 1, "route-%s", pp->promiser);
 
@@ -263,7 +263,7 @@ PromiseResult VerifyArpPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     snprintf(lockname, CF_BUFSIZE - 1, "arp-%s", pp->promiser);
 

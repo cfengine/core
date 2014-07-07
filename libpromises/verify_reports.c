@@ -82,13 +82,13 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
         }
         return PROMISE_RESULT_NOOP;
     }
-    
+
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     if (a.transaction.action == cfa_warn)
     {

@@ -168,7 +168,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     PromiseResult result = PROMISE_RESULT_SKIPPED;
     if (strcmp(a.service.service_type, "windows") == 0)

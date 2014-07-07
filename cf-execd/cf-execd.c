@@ -71,10 +71,10 @@ static const char *const CF_EXECD_SHORT_DESCRIPTION =
     "scheduling daemon for cf-agent";
 
 static const char *const CF_EXECD_MANPAGE_LONG_DESCRIPTION =
-        "cf-execd is the scheduling daemon for cf-agent. It runs cf-agent locally according to a schedule specified in "
-        "policy code (executor control body). After a cf-agent run is completed, cf-execd gathers output from cf-agent, "
-        "and may be configured to email the output to a specified address. It may also be configured to splay (randomize) the "
-        "execution schedule to prevent synchronized cf-agent runs across a network.";
+    "cf-execd is the scheduling daemon for cf-agent. It runs cf-agent locally according to a schedule specified in "
+    "policy code (executor control body). After a cf-agent run is completed, cf-execd gathers output from cf-agent, "
+    "and may be configured to email the output to a specified address. It may also be configured to splay (randomize) the "
+    "execution schedule to prevent synchronized cf-agent runs across a network.";
 
 static const struct option OPTIONS[] =
 {
@@ -188,7 +188,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'l':
-            LEGACY_OUTPUT = true;
+            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
             break;
 
         case 'f':
@@ -245,32 +245,32 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteVersion(w);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_SUCCESS);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteVersion(w);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_SUCCESS);
 
         case 'h':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_SUCCESS);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_SUCCESS);
 
         case 'M':
-            {
-                Writer *out = FileWriter(stdout);
-                ManPageWrite(out, "cf-execd", time(NULL),
-                             CF_EXECD_SHORT_DESCRIPTION,
-                             CF_EXECD_MANPAGE_LONG_DESCRIPTION,
-                             OPTIONS, HINTS,
-                             true);
-                FileWriterDetach(out);
-                exit(EXIT_SUCCESS);
-            }
+        {
+            Writer *out = FileWriter(stdout);
+            ManPageWrite(out, "cf-execd", time(NULL),
+                         CF_EXECD_SHORT_DESCRIPTION,
+                         CF_EXECD_MANPAGE_LONG_DESCRIPTION,
+                         OPTIONS, HINTS,
+                         true);
+            FileWriterDetach(out);
+            exit(EXIT_SUCCESS);
+        }
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
@@ -284,12 +284,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         default:
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_FAILURE);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_FAILURE);
 
         }
     }

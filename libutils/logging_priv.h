@@ -25,8 +25,6 @@
 #ifndef CFENGINE_LOGGING_PRIV_H
 #define CFENGINE_LOGGING_PRIV_H
 
-#include <logging.h>
-
 /*
  * This interface is private and intended only for use by logging extensions (such as one defined in libpromises).
  */

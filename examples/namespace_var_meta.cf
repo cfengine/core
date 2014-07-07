@@ -16,7 +16,7 @@ bundle agent main
 
   methods:
 
-      "bla "usebundle => fred.example;
+      "bla" usebundle => fred:example;
 
   reports:
       "remote var: $(fred:example.bundle_version)";

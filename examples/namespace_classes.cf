@@ -2,7 +2,7 @@
 body common control
 {
       bundlesequence => { "xxx:globalclass", "main" };
-      inputs => { "unit_namespace_class1.cf" };
+      inputs => { "namespace_class1.cf" };
 }
 
 

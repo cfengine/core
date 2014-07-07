@@ -359,19 +359,11 @@ void GetInterfacesInfo(EvalContext *ctx)
             continue;
         }
 
-        /* Skip virtual network interfaces for Linux, which seems to be a problem */
+        /* Skip virtual network interfaces listed in ignore_interfaces.rx */
 
         if (IgnoreInterface(ifp->ifr_name))
         {
             continue;
-        }
-
-        if (strstr(ifp->ifr_name, ":"))
-        {
-#ifdef __linux__
-            Log(LOG_LEVEL_VERBOSE, "Skipping apparent virtual interface %d: %s", j + 1, ifp->ifr_name);
-            continue;
-#endif
         }
         else
         {

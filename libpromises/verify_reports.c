@@ -124,13 +124,11 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 static void ReportToLog(const char *message)
 {
     int report_size = strlen(message) + 4;
-    char *report_message = malloc(report_size);
+    char report_message[report_size];
     xsnprintf(report_message, report_size, "R: %s", message);
 
     fprintf(stdout, "%s\n", report_message);
     LogToSystemLog(report_message, LOG_LEVEL_NOTICE);
-
-    free(report_message);
 }
 
 static void ReportToFile(const char *logfile, const char *message)

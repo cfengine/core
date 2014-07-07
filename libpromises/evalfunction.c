@@ -5268,7 +5268,7 @@ bool PortablyFormatTime(char *buffer, size_t bufsiz,
 
 #ifdef STRFTIME_s_HACK /* %s: seconds since epoch */
     char epoch[PRINTSIZE(when)];
-    xsnprintf(epoch, sizeof(epoch), "%j", (intmax_t) when);
+    xsnprintf(epoch, sizeof(epoch), "%jd", (intmax_t) when);
 #endif /* STRFTIME_s_HACK */
 
     typedef char * SearchReplacePair[2];

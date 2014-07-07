@@ -15,7 +15,7 @@ body common control
 bundle agent init
 {
   vars:
-    "hash" string => "$1$vUsR5eoG$cci6C2jKvoYNuyjL5macS1";
+    "hash" string => "dTloMVpjYt1w2";
 
   # Start out with other attributes.
   users:
@@ -26,7 +26,7 @@ bundle agent init
       group_primary => "$(user_tests.group2)",
       groups_secondary => { "$(user_tests.group1)" },
       home_dir => "/johns_old_home_dir",
-      shell => "$(G.cat)",
+      shell => "/bin/csh",
       description => "Good user";
 }
 
@@ -56,7 +56,7 @@ bundle agent test
       group_primary => "$(user_tests.group1)",
       groups_secondary => { "$(user_tests.group2)" },
       home_dir => "/johns_home_dir",
-      shell => "$(G.echo)",
+      shell => "/bin/sh",
       description => "$(desc_string)";
 }
 
@@ -94,7 +94,7 @@ bundle agent check
     "any" usebundle => user_has_home_dir("johndoe", "/johns_old_home_dir", "home_success", "home_failure"),
       classes => always("home_methods_run");
 
-    "any" usebundle => user_has_shell("johndoe", "$(G.cat)", "shell_success", "shell_failure"),
+    "any" usebundle => user_has_shell("johndoe", "/bin/csh", "shell_success", "shell_failure"),
       classes => always("shell_methods_run");
 
     "any" usebundle => user_has_description("johndoe", "Good user", "desc_success", "desc_failure"),

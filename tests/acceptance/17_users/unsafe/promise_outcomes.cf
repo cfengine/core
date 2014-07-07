@@ -14,40 +14,47 @@ body common control
 
 bundle agent init
 {
+  # AIX doesn't like long names (> 8 chars), so keep them short.
+  # a = absent
+  # p = present
+  # t = attributes
+  # w = password
+  # l = locked
+  # r = repair
   users:
-    "absent_keep"
+    "akeep"
       policy => "absent";
-    "absent_repair"
+    "arepair"
       policy => "present";
-    "present_keep"
+    "pkeep"
       policy => "present";
-    "present_repair"
+    "prepair"
       policy => "absent";
-    "attributes_keep"
+    "tkeep"
       policy => "present",
       uid => "9878",
       group_primary => "$(user_tests.group1)",
       groups_secondary => { "$(user_tests.group2)" },
-      shell => "$(G.echo)",
+      shell => "/bin/csh",
       description => "Description";
-    "attributes_repair"
+    "trepair"
       policy => "present",
       uid => "9877",
       group_primary => "$(user_tests.group1)",
       groups_secondary => { "$(user_tests.group2)" },
-      shell => "$(G.echo)",
+      shell => "/bin/csh",
       description => "Description";
-    "password_keep"
+    "wkeep"
       policy => "present",
       password => init_password;
-    "password_repair"
+    "wrepair"
       policy => "present",
       password => init_password;
-    "locked_keep"
+    "lkeep"
       policy => "locked";
-    "locked_repair_by_add"
+    "lr_byadd"
       policy => "absent";
-    "locked_repair_by_mod"
+    "lr_bymod"
       policy => "present";
 }
 
@@ -63,49 +70,49 @@ bundle agent test
 {
   users:
    !ok::
-    "absent_keep"
+    "akeep"
       classes => set_classes_kept_repaired("absent_keep", "not_absent_keep"),
       policy => "absent";
-    "absent_repair"
+    "arepair"
       classes => set_classes_kept_repaired("not_absent_repair", "absent_repair"),
       policy => "absent";
-    "present_keep"
+    "pkeep"
       classes => set_classes_kept_repaired("present_keep", "not_present_keep"),
       policy => "present";
-    "present_repair"
+    "prepair"
       classes => set_classes_kept_repaired("not_present_repair", "present_repair"),
       policy => "present";
-    "attributes_keep"
+    "tkeep"
       classes => set_classes_kept_repaired("attributes_keep", "not_attributes_keep"),
       policy => "present",
       uid => "9878",
       group_primary => "$(user_tests.group1)",
       groups_secondary => { "$(user_tests.group2)" },
-      shell => "$(G.echo)",
+      shell => "/bin/csh",
       description => "Description";
-    "attributes_repair"
+    "trepair"
       classes => set_classes_kept_repaired("not_attributes_repair", "attributes_repair"),
       policy => "present",
       uid => "9877",
       group_primary => "$(user_tests.group1)",
       groups_secondary => {  },
-      shell => "$(G.cat)",
+      shell => "/bin/ksh",
       description => "Description";
-    "password_keep"
+    "wkeep"
       classes => set_classes_kept_repaired("password_keep", "not_password_keep"),
       policy => "present",
       password => init_password;
-    "password_repair"
+    "wrepair"
       classes => set_classes_kept_repaired("not_password_repair", "password_repair"),
       policy => "present",
       password => test_password;
-    "locked_keep"
+    "lkeep"
       classes => set_classes_kept_repaired("locked_keep", "not_locked_keep"),
       policy => "locked";
-    "locked_repair_by_add"
+    "lr_byadd"
       classes => set_classes_kept_repaired("not_locked_repair_by_add", "locked_repair_by_add"),
       policy => "locked";
-    "locked_repair_by_mod"
+    "lr_bymod"
       classes => set_classes_kept_repaired("not_locked_repair_by_mod", "locked_repair_by_mod"),
       policy => "locked";
 

@@ -23,7 +23,7 @@ bundle agent init
       group_primary => "$(user_tests.gid2)",
       groups_secondary => { "$(user_tests.group1)" },
       home_dir => "/home/johndoe",
-      shell => "$(G.cat)",
+      shell => "/bin/bash",
       description => "Wrong!";
 }
 
@@ -38,7 +38,7 @@ body password init_password
 bundle agent test
 {
   vars:
-    "hash" string => "$1$vUsR5eoG$cci6C2jKvoYNuyjL5macS1";
+    "hash" string => "dTloMVpjYt1w2";
     "desc_string" string => "This description should make the CFEngine test pass";
 
   users:
@@ -48,8 +48,8 @@ bundle agent test
       uid => "9876",
       group_primary => "$(user_tests.group1)",
       groups_secondary => { "$(user_tests.group2)" },
-      home_dir => "/user_directories/johndoe",
-      shell => "$(G.echo)",
+      home_dir => "/home/user-johndoe",
+      shell => "/bin/csh",
       description => "$(desc_string)";
 }
 
@@ -83,10 +83,10 @@ bundle agent check
     "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "not_sgroup_failure", "not_sgroup_success"),
       classes => always("not_sgroup_methods_run");
 
-    "any" usebundle => user_has_home_dir("johndoe", "/user_directories/johndoe", "home_success", "home_failure"),
+    "any" usebundle => user_has_home_dir("johndoe", "/home/user-johndoe", "home_success", "home_failure"),
       classes => always("home_methods_run");
 
-    "any" usebundle => user_has_shell("johndoe", "$(G.echo)", "shell_success", "shell_failure"),
+    "any" usebundle => user_has_shell("johndoe", "/bin/csh", "shell_success", "shell_failure"),
       classes => always("shell_methods_run");
 
     "any" usebundle => user_has_description("johndoe", "$(test.desc_string)", "desc_success", "desc_failure"),

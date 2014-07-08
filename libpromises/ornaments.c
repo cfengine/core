@@ -112,7 +112,7 @@ void BundleBanner(const Bundle *bp, const Rlist *params)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "B:*****************************************************************");
+    Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
 
     if (params)
     {

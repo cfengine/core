@@ -61,12 +61,17 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
     if (mid)
     {
         snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", mid, pp->parent_promise_type->name, pp->promiser);
-        if (Chop(id, CF_EXPANDSIZE) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-        }
+        Chop(id, CF_EXPANDSIZE);
         EndMeasure(id, start);
     }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "No measurement_class attribute set in action body");
+        EndMeasure(NULL, start);
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "END promise %.30s (trunc)\n", pp->promiser);
+    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 /***************************************************************/
@@ -82,7 +87,17 @@ void EndMeasure(char *eventname, struct timespec start)
     else
     {
         double dt = (stop.tv_sec - start.tv_sec) + (stop.tv_nsec - start.tv_nsec) / (double) CF_BILLION;
-        NotePerformance(eventname, start.tv_sec, dt);
+
+        if (eventname)
+        {
+            NotePerformance(eventname, start.tv_sec, dt);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, "M: This execution measured %lf seconds (use measurement_class to track)", dt);
+            Log(LOG_LEVEL_VERBOSE, "\n");
+        }
     }
 }
 
@@ -150,9 +165,15 @@ static void NotePerformance(char *eventname, time_t t, double value)
         Log(LOG_LEVEL_DEBUG, "Performance record '%s' expired", eventname);
         DeleteDB(dbp, eventname);
     }
-    else
+    else if (lastseen > 30) // Cutoff for multiple passes
     {
         WriteDB(dbp, eventname, &newe, sizeof(newe));
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "M: This promise event, alias '%s', measured at time %s\n", eventname, ctime(&newe.t));
+        Log(LOG_LEVEL_VERBOSE, "M:   Last measured %lf seconds ago\n", lastseen);
+        Log(LOG_LEVEL_VERBOSE, "M:   This execution measured %lf seconds\n", newe.Q.q);
+        Log(LOG_LEVEL_VERBOSE, "M:   Average execution time %lf +/- %lf seconds\n", newe.Q.expect, sqrt(newe.Q.var));
+        Log(LOG_LEVEL_VERBOSE, "\n");
     }
 
     CloseDB(dbp);

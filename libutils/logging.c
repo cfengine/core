@@ -250,7 +250,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
         }
     }
 
-    if (level <= lctx->log_level)
+    if (level <= lctx->log_level && level < LOG_LEVEL_VERBOSE)
     {
         LogToSystemLog(hooked_msg, level);
     }

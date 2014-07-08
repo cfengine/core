@@ -71,6 +71,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <stddef.h>                                     /* offsetof, size_t */
 
 /* POSIX but available in all platforms. */
 #include <strings.h>

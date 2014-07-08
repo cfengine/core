@@ -1,9 +1,6 @@
 noinst_LTLIBRARIES = libcompat.la
 
-# platform.h is in libutils/
-# and unfortunately platform.h #inludes stuff from both openssl and pcre
-AM_CPPFLAGS = -I$(top_srcdir)/libutils \
-	$(OPENSSL_CPPFLAGS) $(PCRE_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/libutils				# platform.h
 
 libcompat_la_LIBADD = $(LTLIBOBJS)
 

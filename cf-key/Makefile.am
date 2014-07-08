@@ -1,12 +1,14 @@
 noinst_LTLIBRARIES = libcf-key.la
 
-AM_CPPFLAGS = @CPPFLAGS@ \
+AM_CPPFLAGS = \
+	$(OPENSSL_CPPFLAGS) \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libpromises \
 	$(ENTERPRISE_CPPFLAGS)
 
-AM_CFLAGS = @CFLAGS@ \
+AM_CFLAGS = \
+	$(OPENSSL_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
 libcf_key_la_SOURCES = \

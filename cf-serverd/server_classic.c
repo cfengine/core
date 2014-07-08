@@ -1,5 +1,7 @@
 #include <platform.h>
 
+#include <openssl/bn.h>                                         /* BN_* */
+
 #include <cf3.defs.h>
 #include <item_lib.h>                 /* IsMatchItemIn */
 #include <matching.h>                 /* IsRegexItemIn */

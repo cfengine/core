@@ -24,6 +24,7 @@
 
 #include <cf3.defs.h>
 
+#include <pcre_include.h>
 #include <actuator.h>
 #include <eval_context.h>
 #include <promises.h>

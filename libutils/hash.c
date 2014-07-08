@@ -22,6 +22,11 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
+#include <openssl/evp.h>                                       /* EVP_* */
+#include <openssl/bn.h>                                        /* BN_bn2bin */
+
 #include <alloc.h>
 #include <logging.h>
 #include <hash.h>

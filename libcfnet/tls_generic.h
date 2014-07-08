@@ -29,6 +29,8 @@
 
 #include <cfnet.h>
 
+#include <openssl/ssl.h>
+
 #include <logging.h>                                            /* LogLevel */
 
 

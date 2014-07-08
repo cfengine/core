@@ -26,7 +26,12 @@
 #ifndef CFENGINE_UNIX_IFACE_H
 #define CFENGINE_UNIX_IFACE_H
 
-#include <cf3.defs.h>
+
+#include <platform.h>
+
+/* TODO libpromises depends on libenv, the opposite should not happen! */
+#include <eval_context.h>
+
 
 void GetInterfacesInfo(EvalContext *ctx);
 

@@ -26,6 +26,8 @@
 #include <server_tls.h>
 #include <server_common.h>
 
+#include <openssl/err.h>                                   /* ERR_get_error */
+
 #include <crypto.h>                                        /* DecryptString */
 #include <conversion.h>
 #include <signals.h>

@@ -815,16 +815,6 @@ typedef enum
 
 typedef struct
 {
-    char *name;
-    RSA *key;
-    char *address;
-    time_t timestamp;
-} KeyBinding;
-
-/*************************************************************************/
-
-typedef struct
-{
     char *last;
     char *lock;
     char *log;

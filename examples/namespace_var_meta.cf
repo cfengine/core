@@ -3,7 +3,7 @@ body common control
 {
       bundlesequence => { "main" };
       version => "0.1";
-      inputs => { "unit_namespace_var_meta2.cf"};
+      inputs => { "namespace_var_meta2.cf"};
 }
 
 bundle agent main
@@ -16,7 +16,7 @@ bundle agent main
 
   methods:
 
-      "bla "usebundle => fred.example;
+      "bla" usebundle => fred:example;
 
   reports:
       "remote var: $(fred:example.bundle_version)";

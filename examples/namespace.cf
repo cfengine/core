@@ -2,7 +2,7 @@
 body common control
 {
       bundlesequence => { "main" };
-      inputs => { "unit_namespace1.cf", "unit_namespace2.cf", "unit_namespace3.cf" };
+      inputs => { "namespace1.cf", "namespace2.cf", "namespace3.cf" };
 }
 
 
@@ -12,7 +12,7 @@ bundle agent main
 
       "alien_list" slist => { getindices("name1:mymethod.array")};
 
-      "local_list" slist => { getindices("test.array") };
+      "local_list" slist => { getindices("example.array") };
 
   files:
 
@@ -28,8 +28,8 @@ bundle agent main
 
       "namespace demo" usebundle => name2:mymethod("arg1","arg2");
 
-      "namespace demo" usebundle => test;
-      # Or "namespace demo" usebundle => default:test;
+      "namespace demo" usebundle => example;
+      # Or "namespace demo" usebundle => default:example;
 
       "namespace demo" usebundle => test_in_last_file;
 

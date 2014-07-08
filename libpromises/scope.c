@@ -130,7 +130,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
     {
         const char *lval = RlistScalarValue(rpl);
 
-        Log(LOG_LEVEL_VERBOSE, "Augment scope '%s' with variable '%s' (type: %c)", bp->name, lval, rpr->val.type);
+        Log(LOG_LEVEL_VERBOSE, "V:     +  Private parameter: '%s' in scope '%s' (type: %c)", lval, bp->name, rpr->val.type);
 
         // CheckBundleParameters() already checked that there is no namespace collision
         // By this stage all functions should have been expanded, so we only have scalars left
@@ -139,7 +139,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
         {
 
             char naked[CF_BUFSIZE];
-            
+
             GetNaked(naked, RlistScalarValue(rpr));
 
             DataType value_type = CF_DATA_TYPE_NONE;
@@ -162,27 +162,27 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case CF_DATA_TYPE_STRING_LIST:
             case CF_DATA_TYPE_INT_LIST:
             case CF_DATA_TYPE_REAL_LIST:
-                {
-                    VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING_LIST, "source=promise");
-                    VarRefDestroy(ref);
-                }
-                break;
+            {
+                VarRef *ref = VarRefParseFromBundle(lval, bp);
+                EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING_LIST, "source=promise");
+                VarRefDestroy(ref);
+            }
+            break;
             case CF_DATA_TYPE_CONTAINER:
-                {
-                    VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_CONTAINER, "source=promise");
-                    VarRefDestroy(ref);
-                }
-                break;
+            {
+                VarRef *ref = VarRefParseFromBundle(lval, bp);
+                EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_CONTAINER, "source=promise");
+                VarRefDestroy(ref);
+            }
+            break;
             default:
-                {
-                    Log(LOG_LEVEL_ERR, "List or container parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
-                    VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, RlistScalarValue(rpr), CF_DATA_TYPE_STRING, "source=promise");
-                    VarRefDestroy(ref);
-                }
-                break;
+            {
+                Log(LOG_LEVEL_ERR, "List or container parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
+                VarRef *ref = VarRefParseFromBundle(lval, bp);
+                EvalContextVariablePut(ctx, ref, RlistScalarValue(rpr), CF_DATA_TYPE_STRING, "source=promise");
+                VarRefDestroy(ref);
+            }
+            break;
             }
         }
         else
@@ -190,30 +190,30 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             switch(rpr->val.type)
             {
             case RVAL_TYPE_SCALAR:
-                {
-                    VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, RvalScalarValue(rpr->val), CF_DATA_TYPE_STRING, "source=promise");
-                    VarRefDestroy(ref);
-                }
-                break;
+            {
+                VarRef *ref = VarRefParseFromBundle(lval, bp);
+                EvalContextVariablePut(ctx, ref, RvalScalarValue(rpr->val), CF_DATA_TYPE_STRING, "source=promise");
+                VarRefDestroy(ref);
+            }
+            break;
 
             case RVAL_TYPE_FNCALL:
+            {
+                FnCall *subfp = RlistFnCallValue(rpr);
+                Rval rval = FnCallEvaluate(ctx, PromiseGetPolicy(pp), subfp, pp).rval;
+                if (rval.type == RVAL_TYPE_SCALAR)
                 {
-                    FnCall *subfp = RlistFnCallValue(rpr);
-                    Rval rval = FnCallEvaluate(ctx, PromiseGetPolicy(pp), subfp, pp).rval;
-                    if (rval.type == RVAL_TYPE_SCALAR)
-                    {
-                        VarRef *ref = VarRefParseFromBundle(lval, bp);
-                        EvalContextVariablePut(ctx, ref, RvalScalarValue(rval), CF_DATA_TYPE_STRING, "source=promise");
-                        VarRefDestroy(ref);
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "Only functions returning scalars can be used as arguments");
-                    }
-                    RvalDestroy(rval);
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, RvalScalarValue(rval), CF_DATA_TYPE_STRING, "source=promise");
+                    VarRefDestroy(ref);
                 }
-                break;
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Only functions returning scalars can be used as arguments");
+                }
+                RvalDestroy(rval);
+            }
+            break;
             default:
                 ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
             }
@@ -241,16 +241,16 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
             break;
 
         case RVAL_TYPE_FNCALL:
+        {
+            const FnCallType *fn = FnCallTypeGet(RlistFnCallValue(arg)->name);
+            if (!fn)
             {
-                const FnCallType *fn = FnCallTypeGet(RlistFnCallValue(arg)->name);
-                if (!fn)
-                {
-                    FatalError(ctx, "Argument '%s' given to body '%s' is not a valid function",
-                               RlistFnCallValue(arg)->name, body->name);
-                }
-                arg_type = fn->dtype;
+                FatalError(ctx, "Argument '%s' given to body '%s' is not a valid function",
+                           RlistFnCallValue(arg)->name, body->name);
             }
-            break;
+            arg_type = fn->dtype;
+        }
+        break;
 
         default:
             FatalError(ctx, "Cannot derive data type from Rval type %c", arg->val.type);
@@ -259,56 +259,56 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
         switch (arg->val.type)
         {
         case RVAL_TYPE_SCALAR:
-            {
-                const char *lval = RlistScalarValue(param);
-                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, RvalScalarValue(arg->val), arg_type, "source=body");
-                VarRefDestroy(ref);
-            }
-            break;
+        {
+            const char *lval = RlistScalarValue(param);
+            VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
+            EvalContextVariablePut(ctx, ref, RvalScalarValue(arg->val), arg_type, "source=body");
+            VarRefDestroy(ref);
+        }
+        break;
 
         case RVAL_TYPE_LIST:
-            {
-                const char *lval = RlistScalarValue(param);
-                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, RvalRlistValue(arg->val), arg_type, "source=body");
-                VarRefDestroy(ref);
-            }
-            break;
+        {
+            const char *lval = RlistScalarValue(param);
+            VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
+            EvalContextVariablePut(ctx, ref, RvalRlistValue(arg->val), arg_type, "source=body");
+            VarRefDestroy(ref);
+        }
+        break;
 
         case RVAL_TYPE_FNCALL:
+        {
+            FnCall *fp = RlistFnCallValue(arg);
+            arg_type = CF_DATA_TYPE_NONE;
             {
-                FnCall *fp = RlistFnCallValue(arg);
-                arg_type = CF_DATA_TYPE_NONE;
+                const FnCallType *fncall_type = FnCallTypeGet(fp->name);
+                if (fncall_type)
                 {
-                    const FnCallType *fncall_type = FnCallTypeGet(fp->name);
-                    if (fncall_type)
-                    {
-                        arg_type = fncall_type->dtype;
-                    }
+                    arg_type = fncall_type->dtype;
                 }
-
-                FnCallResult res = FnCallEvaluate(ctx, body->parent_policy, fp, NULL);
-
-                if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Embedded function argument does not resolve to a name - probably too many evaluation levels for '%s'",
-                        fp->name);
-                }
-                else
-                {
-                    const char *lval = RlistScalarValue(param);
-                    void *rval = res.rval.item;
-
-                    VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                    EvalContextVariablePut(ctx, ref, rval, arg_type, "source=body");
-                    VarRefDestroy(ref);
-                }
-
-                RvalDestroy(res.rval);
             }
 
-            break;
+            FnCallResult res = FnCallEvaluate(ctx, body->parent_policy, fp, NULL);
+
+            if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Embedded function argument does not resolve to a name - probably too many evaluation levels for '%s'",
+                    fp->name);
+            }
+            else
+            {
+                const char *lval = RlistScalarValue(param);
+                void *rval = res.rval.item;
+
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, rval, arg_type, "source=body");
+                VarRefDestroy(ref);
+            }
+
+            RvalDestroy(res.rval);
+        }
+
+        break;
 
         default:
             /* Nothing else should happen */

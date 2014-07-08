@@ -165,7 +165,6 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
 static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
-static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
@@ -1230,8 +1229,6 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
     {
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
-            ClassBanner(ctx, type);
-
             const PromiseType *sp = BundleGetPromiseType((Bundle *)bp, AGENT_TYPESEQUENCE[type]);
 
             if (!sp || SeqLength(sp->promises) == 0)
@@ -1245,6 +1242,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             }
 
             EvalContextStackPushPromiseTypeFrame(ctx, sp);
+
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
@@ -1594,24 +1592,6 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
     default:
         break;
     }
-}
-
-/**************************************************************/
-
-static void ClassBanner(EvalContext *ctx, TypeSequence type)
-{
-    if (type != TYPE_SEQUENCE_INTERFACES)  /* Just parsed all local classes */
-    {
-        return;
-    }
-
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-        Log(LOG_LEVEL_VERBOSE, "     +  Private class: %s ", cls->name);
-        }
-        ClassTableIteratorDestroy(iter);
 }
 
 /**************************************************************/

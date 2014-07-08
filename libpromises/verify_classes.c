@@ -98,19 +98,18 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                 (a.context.scope == CONTEXT_SCOPE_NONE &&
                  0 == strcmp(PromiseGetBundle(pp)->type, "common")))
             {
-                Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "C:     +  Global class: %s ", pp->promiser);
                 EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_NAMESPACE, tags);
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "C:     +  Private class: %s ", pp->promiser);
                 EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_BUNDLE, tags);
             }
 
             if (a.context.persistent > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s'. (%d minutes)", pp->promiser,
-                      a.context.persistent);
+                Log(LOG_LEVEL_VERBOSE, "C:     +  Persistent class: '%s'. (%d minutes)", pp->promiser, a.context.persistent);
                 EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent,
                                               CONTEXT_STATE_POLICY_RESET, tags);
             }

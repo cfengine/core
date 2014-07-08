@@ -57,6 +57,13 @@
 # include <sys/mpctl.h>
 #endif
 
+/* Linux.
+   WARNING keep this before the #include <sys/sysctl.h> because of glibc bug:
+   https://sourceware.org/bugzilla/show_bug.cgi?id=140 */
+#ifdef HAVE_STRUCT_SYSINFO_UPTIME
+# include <sys/sysinfo.h>
+#endif
+
 /* BSD, MAC OS X uptime calculation use KERN_BOOTTIME sysctl. */
 #ifdef HAVE_SYS_SYSCTL_H
 # ifdef HAVE_SYS_PARAM_H
@@ -64,6 +71,7 @@
 # endif
 # include <sys/sysctl.h>
 #endif
+
 
 /*****************************************************/
 // Uptime calculation settings for GetUptimeSeconds() - Mantis #1134
@@ -103,7 +111,6 @@
 
 // GNU/Linux: struct sysinfo.uptime
 #elif defined(HAVE_STRUCT_SYSINFO_UPTIME)
-# include <sys/sysinfo.h>
 # define BOOT_TIME_WITH_SYSINFO
 
 /* Generic System V way, available in most platforms. */

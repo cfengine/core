@@ -24,6 +24,8 @@
 
 #include <client_protocol.h>
 
+#include <openssl/bn.h>                                         /* BN_* */
+
 #include <communication.h>
 #include <net.h>
 

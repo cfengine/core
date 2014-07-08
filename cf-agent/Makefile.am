@@ -3,6 +3,8 @@ noinst_LTLIBRARIES = libcf-agent.la
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	$(ENTERPRISE_CPPFLAGS) \
+	$(OPENSSL_CPPFLAGS) \
+	$(PCRE_CPPFLAGS) \
 	$(LIBVIRT_CPPFLAGS) \
 	$(POSTGRESQL_CPPFLAGS) \
 	$(MYSQL_CPPFLAGS) \
@@ -11,6 +13,8 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 
 AM_CFLAGS = \
 	$(ENTERPRISE_CFLAGS) \
+	$(OPENSSL_CFLAGS) \
+	$(PCRE_CFLAGS) \
 	$(LIBVIRT_CFLAGS) \
 	$(POSTGRESQL_CFLAGS) \
 	$(MYSQL_CFLAGS) \
@@ -18,6 +22,8 @@ AM_CFLAGS = \
 	$(PAM_CFLAGS)
 
 AM_LDFLAGS = \
+	$(OPENSSL_LDFLAGS) \
+	$(PCRE_LDFLAGS) \
 	$(LIBVIRT_LDFLAGS) \
 	$(POSTGRESQL_LDFLAGS) \
 	$(MYSQL_LDFLAGS) \
@@ -25,6 +31,8 @@ AM_LDFLAGS = \
 	$(PAM_LDFLAGS)
 
 libcf_agent_la_LIBADD = ../libutils/libutils.la ../libpromises/libpromises.la \
+	$(OPENSSL_LIBS) \
+	$(PCRE_LIBS) \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \

@@ -27,6 +27,8 @@
 
 #include <generic_agent.h>
 
+#include <openssl/rsa.h>
+
 #include <lastseen.h>
 #include <dir.h>
 #include <scope.h>

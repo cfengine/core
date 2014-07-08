@@ -1,16 +1,18 @@
 noinst_LTLIBRARIES = libcf-execd.la
 
-AM_CPPFLAGS = @CPPFLAGS@ \
+AM_CPPFLAGS = \
+	$(OPENSSL_CPPFLAGS) \
 	-I$(srcdir)/../libpromises \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	$(ENTERPRISE_CPPFLAGS)
 
-AM_CFLAGS = @CFLAGS@ \
+AM_CFLAGS = \
+	$(OPENSSL_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
-libcf_execd_la_LIBADD = ../libpromises/libpromises.la
+libcf_execd_la_LIBADD = ../libutils/libutils.la ../libpromises/libpromises.la
 
 libcf_execd_la_SOURCES = \
         cf-execd.c cf-execd.h \

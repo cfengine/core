@@ -24,6 +24,10 @@
 
 #include <crypto.h>
 
+#include <openssl/err.h>                                        /* ERR_* */
+#include <openssl/rand.h>                                       /* RAND_* */
+#include <openssl/bn.h>                                         /* BN_* */
+
 #include <cf3.defs.h>
 #include <lastseen.h>
 #include <files_interfaces.h>

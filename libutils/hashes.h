@@ -27,6 +27,9 @@
 
 #include <platform.h>
 
+#include <openssl/evp.h>
+
+
 int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 
 #endif

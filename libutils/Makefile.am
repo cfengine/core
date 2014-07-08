@@ -66,10 +66,3 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # "configure; make; make install"
 #
 MAINTAINERCLEANFILES = config.h.in
-
-# libcompat dependency
-
-.PRECIOUS: ../libcompat/libcompat.la
-
-../libcompat/libcompat.la:
-	$(MAKE) -C ../libcompat $(AM_MAKEFLAGS) libcompat.la

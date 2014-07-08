@@ -940,7 +940,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     /* This MUST be exactly second command client using classic protocol is sending.
        This is where key agreement takes place. */
     case PROTOCOL_COMMAND_AUTH_SECURE:
-        /* First command was ommited by client; this is protocol violation. */
+        /* First command was omitted by client; this is protocol violation. */
         if (!conn->user_data_set)
         {
             Log(LOG_LEVEL_INFO, "Client is not verified; rejecting connection");

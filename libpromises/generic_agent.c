@@ -194,7 +194,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped");
+            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped - can't find policy_server.dat in %s", GetWorkDir());
             return;
         }
 
@@ -994,7 +994,7 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
         }
         else if (sb.st_mtime > validated_at)
         {
-            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt", config->input_file);
+            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt (file is newer than previous)", config->input_file);
             return true;
         }
     }

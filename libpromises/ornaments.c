@@ -25,6 +25,25 @@
 #include <ornaments.h>
 #include <rlist.h>
 #include <logging.h>
+#include <fncall.h>
+
+/****************************************************************************************/
+
+void SpecialTypeBanner(TypeSequence type, int pass)
+{
+    if (type == TYPE_SEQUENCE_CONTEXTS)
+    {
+        Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
+        Log(LOG_LEVEL_VERBOSE, "C: BEGIN classes / conditions (pass %d)", pass);
+        Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
+    }
+    if (type == TYPE_SEQUENCE_VARS)
+    {
+        Log(LOG_LEVEL_VERBOSE, "V: .........................................................");
+        Log(LOG_LEVEL_VERBOSE, "V: BEGIN variables (pass %d)", pass);
+        Log(LOG_LEVEL_VERBOSE, "V: .........................................................");
+    }
+}
 
 /****************************************************************************************/
 
@@ -56,6 +75,8 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
     Log(LOG_LEVEL_VERBOSE, "P:    Promiser/affected object: '%s'", pp->promiser);
 
     Rlist *params = NULL;
+    char *varclass;
+    FnCall *fp;
 
     if ((params = EvalContextGetBundleArgs(ctx)))
     {
@@ -69,9 +90,32 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
         Log(LOG_LEVEL_VERBOSE, "P:    Part of bundle: %s", PromiseGetBundle(pp)->name);
     }
 
+    Log(LOG_LEVEL_VERBOSE, "P:    Base context class: %s", pp->classes);
+
+    if ((varclass = PromiseGetConstraintAsRval(pp, "if", RVAL_TYPE_SCALAR)) || (varclass = PromiseGetConstraintAsRval(pp, "ifvarclass", RVAL_TYPE_SCALAR)))
+    {
+        Log(LOG_LEVEL_VERBOSE, "P:    \"if\" class condition: %s", varclass);
+    }
+    else if ((fp = (FnCall *)PromiseGetConstraintAsRval(pp, "if", RVAL_TYPE_FNCALL)) || (fp = (FnCall *)PromiseGetConstraintAsRval(pp, "ifvarclass", RVAL_TYPE_FNCALL)))
+    {
+        Writer *w = StringWriter();
+        FnCallWrite(w, fp);
+        Log(LOG_LEVEL_VERBOSE, "P:    \"if\" class condition: %s", StringWriterData(w));
+    }
+    else if ((varclass = PromiseGetConstraintAsRval(pp, "unless", RVAL_TYPE_SCALAR)))
+    {
+        Log(LOG_LEVEL_VERBOSE, "P:    \"unless\" class condition: %s", varclass);
+    }
+    else if ((fp = (FnCall *)PromiseGetConstraintAsRval(pp, "unless", RVAL_TYPE_FNCALL)))
+    {
+        Writer *w = StringWriter();
+        FnCallWrite(w, fp);
+        Log(LOG_LEVEL_VERBOSE, "P:    \"unless\" class condition: %s", StringWriterData(w));
+    }
+
+
     LoggingContext *lctx = GetCurrentThreadContext();
     Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", lctx->pctx->log_hook(lctx->pctx, EvalContextGetPass(ctx), ""));
-
 
     if (strlen(handle) > 0)
     {

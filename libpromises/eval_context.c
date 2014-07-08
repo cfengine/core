@@ -2024,6 +2024,12 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int persistence_ttl,
                           PersistentClassPolicy policy, ContextScope context_scope)
 {
+
+    if (list)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\n");
+    }
+
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         char *classname = xstrdup(RlistScalarValue(rp));
@@ -2047,13 +2053,13 @@ static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int pers
                 Log(LOG_LEVEL_INFO, "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
+            Log(LOG_LEVEL_VERBOSE, "C:    + persistent outcome class '%s'", classname);
             EvalContextHeapPersistentSave(ctx, classname, persistence_ttl, policy, "");
             EvalContextClassPutSoft(ctx, classname, CONTEXT_SCOPE_NAMESPACE, "");
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Defining promise result class '%s'", classname);
+            Log(LOG_LEVEL_VERBOSE, "C:    + promise outcome class '%s'", classname);
 
             switch (context_scope)
             {
@@ -2073,6 +2079,12 @@ static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int pers
         }
         free(classname);
     }
+
+    if (list)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\n");
+    }
+
 }
 
 static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)

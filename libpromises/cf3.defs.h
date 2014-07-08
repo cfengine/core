@@ -477,6 +477,30 @@ typedef enum
     EDIT_ORDER_AFTER
 } EditOrder;
 
+
+/*************************************************************************/
+
+typedef enum
+{
+    TYPE_SEQUENCE_META,
+    TYPE_SEQUENCE_VARS,
+    TYPE_SEQUENCE_DEFAULTS,
+    TYPE_SEQUENCE_CONTEXTS,
+    TYPE_SEQUENCE_INTERFACES,
+    TYPE_SEQUENCE_USERS,
+    TYPE_SEQUENCE_FILES,
+    TYPE_SEQUENCE_PACKAGES,
+    TYPE_SEQUENCE_ENVIRONMENTS,
+    TYPE_SEQUENCE_METHODS,
+    TYPE_SEQUENCE_PROCESSES,
+    TYPE_SEQUENCE_SERVICES,
+    TYPE_SEQUENCE_COMMANDS,
+    TYPE_SEQUENCE_STORAGE,
+    TYPE_SEQUENCE_DATABASES,
+    TYPE_SEQUENCE_REPORTS,
+    TYPE_SEQUENCE_NONE
+} TypeSequence;
+
 /*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/

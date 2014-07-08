@@ -54,7 +54,6 @@ dnl Save environment CFLAGS before autoconf starts messing with it.
 dnl It is restored later.
 dnl
 ENV_CFLAGS="$CFLAGS"
-CFLAGS=
 
 dnl ######################################################################
 dnl Checks for programs.
@@ -106,14 +105,14 @@ AC_ARG_WITH([pthreads],
 
 if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
    LIBS="$LIBS -L$with_pthreads/lib"
-   CFLAGS="$CFLAGS -I$with_pthreads/include"
+   CPPFLAGS="-I$with_pthreads/include $CPPFLAGS"
 fi
 
 ACX_PTHREAD([],
             [AC_MSG_ERROR(pthread-compatible library is required to build CFEngine)])
 
 CC="$PTHREAD_CC"
-CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
 dnl ######################################################################
@@ -196,6 +195,11 @@ AC_ARG_ENABLE(debug,
               [debug=no])
 AM_CONDITIONAL([NDEBUG], [test x"$debug" = x"no"])
 
+dnl Even though CFLAGS should contain the command-line CFLAGS
+dnl as last, some macro seem to messes the order up and insert
+dnl its own optimisation flags as well. So we append ENV_CFLAGS
+dnl at the end manually, causing a bit of flag duplication.
+
 if test x"$debug" = x"yes"; then
    CFLAGS="$CFLAGS -g3 -O0 $ENV_CFLAGS"
 else
@@ -230,7 +234,7 @@ if test "x$with_postgresql" != "xno"; then
       if test x`which $PG_CONFIG` != x ; then
          pg_include_dir=`$PG_CONFIG --includedir`
          if test -n "$pg_include_dir"; then
-            CPPFLAGS="$CPPFLAGS -I$pg_include_dir"
+            CPPFLAGS="-I$pg_include_dir $CPPFLAGS"
          fi
       fi
    fi
@@ -260,7 +264,7 @@ if test "x$with_mysql" != "xno"; then
       if test x`which $MYSQL_CONFIG` != x ; then
          mysql_include_dir=`$MYSQL_CONFIG --include`
          if test -n "$mysql_include_dir"; then
-            CPPFLAGS="$CPPFLAGS $mysql_include_dir"
+            CPPFLAGS="$mysql_include_dir $CPPFLAGS"
          fi
       fi
    fi
@@ -425,7 +429,7 @@ if test "x$with_libxml2" != xno; then
       if test x`which $XML2_CONFIG` != x ; then
          xml2_include_dir=`$XML2_CONFIG --cflags`
          if test -n "$xml2_include_dir"; then
-            CPPFLAGS="$CPPFLAGS $xml2_include_dir"
+            CPPFLAGS="$xml2_include_dir $CPPFLAGS"
          fi
       fi
    fi
@@ -532,7 +536,7 @@ AC_TYPE_OFF_T
 # off_t, which causes a conflict.
 #
 if test "x$ac_cv_sys_large_files" = x1; then
-  CPPFLAGS="$CPPFLAGS -D_LARGE_FILES=1"
+  CPPFLAGS="-D_LARGE_FILES=1 $CPPFLAGS"
 fi
 
 dnl ######################################################################
@@ -995,10 +999,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CORE_CPPFLAGS="$CPPFLAGS $LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
-CORE_CFLAGS="$CFLAGS $LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
-CORE_LDFLAGS="$LDFLAGS $LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
-CORE_LIBS="$LIBS $LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $CPPFLAGS"
+CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $CFLAGS"
+CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LDFLAGS"
+CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBS"
 
 dnl ######################################################################
 dnl Make them available to subprojects.

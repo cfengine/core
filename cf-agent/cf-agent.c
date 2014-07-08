@@ -81,29 +81,6 @@
 #include <mod_common.h>
 #include <routing_services.h>
 
-typedef enum
-{
-    TYPE_SEQUENCE_META,
-    TYPE_SEQUENCE_VARS,
-    TYPE_SEQUENCE_DEFAULTS,
-    TYPE_SEQUENCE_CONTEXTS,
-    TYPE_SEQUENCE_INTERFACES,
-    TYPE_SEQUENCE_NETWORKS,
-    TYPE_SEQUENCE_ADDRESSES,
-    TYPE_SEQUENCE_USERS,
-    TYPE_SEQUENCE_FILES,
-    TYPE_SEQUENCE_PACKAGES,
-    TYPE_SEQUENCE_ENVIRONMENTS,
-    TYPE_SEQUENCE_METHODS,
-    TYPE_SEQUENCE_PROCESSES,
-    TYPE_SEQUENCE_SERVICES,
-    TYPE_SEQUENCE_COMMANDS,
-    TYPE_SEQUENCE_STORAGE,
-    TYPE_SEQUENCE_DATABASES,
-    TYPE_SEQUENCE_REPORTS,
-    TYPE_SEQUENCE_NONE
-} TypeSequence;
-
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
 #include <findhub.h>
@@ -1241,6 +1218,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 continue;
             }
 
+            SpecialTypeBanner(type, pass);
             EvalContextStackPushPromiseTypeFrame(ctx, sp);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -1418,6 +1396,10 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
     {
         result = VerifyVarPromise(ctx, pp, true);
+        if (result != PROMISE_RESULT_FAIL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "V:     Converging value of \"%s\"", pp->promiser);
+        }
     }
     else if (strcmp("defaults", pp->parent_promise_type->name) == 0)
     {
@@ -1430,64 +1412,107 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     else if (strcmp("interfaces", pp->parent_promise_type->name) == 0)
     {
         result = VerifyInterfacePromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("routes", pp->parent_promise_type->name) == 0)
     {
         result = VerifyRoutePromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("addresses", pp->parent_promise_type->name) == 0)
     {
         result = VerifyArpPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
         result = VerifyProcessesPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {
         result = FindAndVerifyStoragePromises(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("packages", pp->parent_promise_type->name) == 0)
     {
         result = VerifyPackagesPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("users", pp->parent_promise_type->name) == 0)
     {
         result = VerifyUsersPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
 
     else if (strcmp("files", pp->parent_promise_type->name) == 0)
     {
         result = ParallelFindAndVerifyFilesPromises(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("commands", pp->parent_promise_type->name) == 0)
     {
         result = VerifyExecPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("databases", pp->parent_promise_type->name) == 0)
     {
         result = VerifyDatabasePromises(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("methods", pp->parent_promise_type->name) == 0)
     {
         result = VerifyMethodsPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
         result = VerifyServicesPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
         result = VerifyEnvironmentsPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
         EndMeasurePromise(start, pp);
+    }
     }
     else if (strcmp("reports", pp->parent_promise_type->name) == 0)
     {

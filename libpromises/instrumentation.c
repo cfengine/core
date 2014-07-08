@@ -56,6 +56,10 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "M: .........................................................");
+    Log(LOG_LEVEL_VERBOSE, "M: Promise accounting summary for %s", pp->promiser);
+
     mid = PromiseGetConstraintAsRval(pp, "measurement_class", RVAL_TYPE_SCALAR);
 
     if (mid)
@@ -66,11 +70,13 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "No measurement_class attribute set in action body");
+        Log(LOG_LEVEL_VERBOSE, "M: No measurement_class attribute set in action body");
         EndMeasure(NULL, start);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "END promise %.30s (trunc)\n", pp->promiser);
+    Log(LOG_LEVEL_VERBOSE, "M: .........................................................");
+
+    Log(LOG_LEVEL_VERBOSE, "P: END promise %.30s (trunc)\n", pp->promiser);
     Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
@@ -94,9 +100,7 @@ void EndMeasure(char *eventname, struct timespec start)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "\n");
             Log(LOG_LEVEL_VERBOSE, "M: This execution measured %lf seconds (use measurement_class to track)", dt);
-            Log(LOG_LEVEL_VERBOSE, "\n");
         }
     }
 }
@@ -165,17 +169,15 @@ static void NotePerformance(char *eventname, time_t t, double value)
         Log(LOG_LEVEL_DEBUG, "Performance record '%s' expired", eventname);
         DeleteDB(dbp, eventname);
     }
-    else if (lastseen > 30) // Cutoff for multiple passes
+    else //if (lastseen > 30) // Cutoff for multiple passes
     {
         WriteDB(dbp, eventname, &newe, sizeof(newe));
-        Log(LOG_LEVEL_VERBOSE, "\n");
+
         Log(LOG_LEVEL_VERBOSE, "M: This promise event, alias '%s', measured at time %s\n", eventname, ctime(&newe.t));
         Log(LOG_LEVEL_VERBOSE, "M:   Last measured %lf seconds ago\n", lastseen);
         Log(LOG_LEVEL_VERBOSE, "M:   This execution measured %lf seconds\n", newe.Q.q);
         Log(LOG_LEVEL_VERBOSE, "M:   Average execution time %lf +/- %lf seconds\n", newe.Q.expect, sqrt(newe.Q.var));
-        Log(LOG_LEVEL_VERBOSE, "\n");
     }
 
     CloseDB(dbp);
 }
-

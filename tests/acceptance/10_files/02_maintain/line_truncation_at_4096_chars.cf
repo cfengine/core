@@ -58,9 +58,14 @@ bundle agent check
 {
 
   classes:
+    !solaris::
       # ok is defined if the file still contains ENDMARK, meaning the end of the sample very
       # long line did not get truncated during file editing
       "ok" expression => returnszero("${G.grep} ENDMARK ${G.testfile}", "noshell");
+    solaris::
+      # Bug in xpg4 version of Solaris. grep internally has a limit of 4096 chars per line,
+      # which is the very thing we're testing. Use /bin/grep.
+      "ok" expression => returnszero("/bin/grep ENDMARK ${G.testfile}", "noshell");
 
   reports:
     DEBUG.!ok::

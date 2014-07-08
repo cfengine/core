@@ -34,7 +34,7 @@ bundle agent test
 {
   meta:
       "test_skip_unsupported" string => "windows";
-      "test_suppress_fail" string => "sunos_5_10",
+      "test_suppress_fail" string => "solaris",
        meta => { "redmine6225" };
 
   vars:

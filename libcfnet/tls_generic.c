@@ -25,6 +25,10 @@
 
 #include <cfnet.h>
 
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <openssl/ssl.h>
+
 #include <logging.h>                                            /* LogLevel */
 #include <misc_lib.h>
 

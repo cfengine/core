@@ -22,9 +22,13 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <string_lib.h>
 
-#include <platform.h>
+#include <openssl/buffer.h>                                 /* BUF_MEM */
+#include <openssl/bio.h>                                    /* BIO_* */
+#include <openssl/evp.h>                                    /* BIO_f_base64 */
+
 #include <alloc.h>
 #include <writer.h>
 #include <misc_lib.h>

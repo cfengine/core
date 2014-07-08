@@ -28,6 +28,8 @@
 #include <platform.h>
 #include <compiler.h>
 #include <sequence.h>
+#include <pcre_include.h>
+
 
 typedef struct
 {

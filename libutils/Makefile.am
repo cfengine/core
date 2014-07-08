@@ -13,7 +13,7 @@ libutils_la_SOURCES = \
 	atexit.c atexit.h \
 	compiler.h \
 	dir.h dir_priv.h \
-	hashes.c hashes.h \
+	hashes.c hashes.h hash_method.h \
 	sequence.c sequence.h \
 	set.c set.h \
 	statistics.c statistics.h \
@@ -24,7 +24,7 @@ libutils_la_SOURCES = \
 	json.c json.h \
 	refcount.c refcount.h \
 	list.c list.h \
-	logging.c logging.h logging_priv.h\
+	logging.c logging.h logging_priv.h \
 	buffer.c buffer.h \
 	ip_address.c ip_address.h \
 	map.c map.h map_common.h \

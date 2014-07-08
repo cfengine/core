@@ -25,6 +25,10 @@
 
 #include <cfnet.h>
 
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <openssl/ssl.h>
+
 #include <logging.h>
 #include <misc_lib.h>
 
@@ -32,8 +36,10 @@
 #include <tls_generic.h>
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
 /* TODO move crypto.h to libutils */
-#include <crypto.h>                        /* PRIVKEY,PUBKEY,LoadSecretKeys */
-#include <bootstrap.h>                     /* ReadPolicyServerFile */
+#include <crypto.h>                                       /* LoadSecretKeys */
+
+
+extern RSA *PRIVKEY, *PUBKEY;
 extern char CFWORKDIR[];
 
 

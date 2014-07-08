@@ -313,9 +313,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     {
         if (IsDefinedClass(ctx, pcopy->promiser))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
-                pcopy->promiser);
-
             if (excluded)
             {
                 *excluded = true;

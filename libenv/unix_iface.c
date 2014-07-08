@@ -359,7 +359,7 @@ void GetInterfacesInfo(EvalContext *ctx)
             continue;
         }
 
-        /* Skip virtual network interfaces listed in ignore_interfaces.rx */
+        /* Skip network interfaces listed in ignore_interfaces.rx */
 
         if (IgnoreInterface(ifp->ifr_name))
         {

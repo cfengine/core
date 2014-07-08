@@ -35,7 +35,7 @@ bundle agent test
       group_primary => "$(user_tests.gid1)",
       groups_secondary => { "$(user_tests.group2)" },
       password => test_password,
-      shell => "$(G.echo)",
+      shell => "/bin/csh",
       description => "$(desc_string)";
 }
 
@@ -47,7 +47,7 @@ body action test_action
 body password test_password
 {
   format => "hash";
-  data => "$1$vUsR5eoG$cci6C2jKvoYNuyjL5macS1";
+  data => "dTloMVpjYt1w2";
 }
 
 #######################################################

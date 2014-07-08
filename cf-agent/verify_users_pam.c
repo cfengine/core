@@ -106,25 +106,162 @@ static int PasswordSupplier(int num_msg, const struct pam_message **msg,
     return PAM_SUCCESS;
 }
 
+#ifdef _AIX
+/*
+ * Format of passwd file on AIX is:
+ *
+ * user1:
+ *         password = hash
+ *         lastupdate = 12783612
+ * user2:
+ *         password = hash
+ *         lastupdate = 12783612
+ *         <...>
+ */
+static bool GetAIXShadowHash(const char *puser, const char **result)
+{
+    FILE *fptr = fopen("/etc/security/passwd", "r");
+    if (fptr == NULL)
+    {
+        return false;
+    }
+
+    // Not super pretty with a static variable, but it is how POSIX functions
+    // getspnam() and friends do it.
+    static char hash_buf[CF_BUFSIZE];
+
+    bool ret = false;
+    char *buf = NULL;
+    size_t bufsize = 0;
+    size_t puser_len = strlen(puser);
+    char name_regex_str[strlen(puser) + 3];
+
+    pcre *name_regex = CompileRegex("^(\\S+):");
+    pcre *hash_regex = CompileRegex("^\\s+password *= *(\\S+)");
+    bool in_user_section = false;
+
+    while (true)
+    {
+        ssize_t read_result = CfReadLine(&buf, &bufsize, fptr);
+        if (read_result < 0)
+        {
+            if (feof(fptr))
+            {
+                errno = 0;
+            }
+            goto end;
+        }
+
+        int submatch_vec[6];
+
+        int pcre_result = pcre_exec(name_regex, NULL, buf, strlen(buf), 0, 0, submatch_vec, 6);
+        if (pcre_result >= 0)
+        {
+            if (submatch_vec[3] - submatch_vec[2] == puser_len
+                && strncmp(buf + submatch_vec[2], puser, puser_len) == 0)
+            {
+                in_user_section = true;
+            }
+            else
+            {
+                in_user_section = false;
+            }
+            continue;
+        }
+        else if (pcre_result != PCRE_ERROR_NOMATCH)
+        {
+            errno = EINVAL;
+            goto end;
+        }
+
+        if (!in_user_section)
+        {
+            continue;
+        }
+
+        pcre_result = pcre_exec(hash_regex, NULL, buf, strlen(buf), 0, 0, submatch_vec, 6);
+        if (pcre_result >= 0)
+        {
+            memcpy(hash_buf, buf + submatch_vec[2], submatch_vec[3] - submatch_vec[2]);
+            *result = hash_buf;
+            ret = true;
+            goto end;
+        }
+        else if (pcre_result != PCRE_ERROR_NOMATCH)
+        {
+            errno = EINVAL;
+            goto end;
+        }
+    }
+
+end:
+    pcre_free(name_regex);
+    pcre_free(hash_regex);
+    free(buf);
+    fclose(fptr);
+    return ret;
+}
+#endif // _AIX
+
+#if HAVE_FGETSPENT
+// Uses fgetspent() instead of getspnam(), to guarantee that the returned user
+// is a local user, and not for example from LDAP.
+static struct spwd *GetSpEntry(const char *puser)
+{
+    FILE *fptr = fopen("/etc/shadow", "r");
+    if (!fptr)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '/etc/shadow': %s", GetErrorStr());
+        return NULL;
+    }
+
+    struct spwd *spwd_info;
+    bool found = false;
+    while ((spwd_info = fgetspent(fptr)))
+    {
+        if (strcmp(puser, spwd_info->sp_namp) == 0)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fptr);
+
+    if (found)
+    {
+        return spwd_info;
+    }
+    else
+    {
+        // Failure to find the user means we just set errno to zero.
+        // Perhaps not optimal, but we cannot pass ENOENT, because the fopen might
+        // fail for this reason, and that should not be treated the same.
+        errno = 0;
+        return NULL;
+    }
+}
+#endif // HAVE_FGETSPENT
+
 static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info, const char **result)
 {
     // Silence warning.
     (void)puser;
 
-#ifdef HAVE_GETSPNAM
     // If the hash is very short, it's probably a stub. Try getting the shadow password instead.
     if (strlen(passwd_info->pw_passwd) <= 4)
     {
+#ifdef HAVE_FGETSPENT
         Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from shadow database.", puser);
 
         struct spwd *spwd_info;
         errno = 0;
-        spwd_info = getspnam(puser);
+        spwd_info = GetSpEntry(puser);
         if (!spwd_info)
         {
             if (errno)
             {
-                Log(LOG_LEVEL_ERR, "Could not get information from user shadow database. (getspnam: '%s')", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Could not get information from user shadow database: %s", GetErrorStr());
                 return false;
             }
             else
@@ -138,8 +275,18 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
             *result = spwd_info->sp_pwdp;
             return true;
         }
+
+#elif defined(_AIX)
+        if (!GetAIXShadowHash(puser, result))
+        {
+            Log(LOG_LEVEL_ERR, "Could not get information from user shadow database: %s", GetErrorStr());
+            return false;
+        }
+        return true;
+
+#endif
     }
-#endif // HAVE_GETSPNAM
+
     Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from passwd database.", puser);
     *result = passwd_info->pw_passwd;
     return true;
@@ -293,7 +440,7 @@ static bool ChangePasswordHashUsingChpasswd(const char *puser, const char *passw
         return false;
     }
 
-    return ClearPasswordAdministrationFlags(puser);
+    return true;
 }
 #endif // HAVE_CHPASSWD
 
@@ -472,37 +619,48 @@ unlock_passwd:
 
 static bool ChangePassword(const char *puser, const char *password, PasswordFormat format)
 {
+    assert(format == PASSWORD_FORMAT_PLAINTEXT || format == PASSWORD_FORMAT_HASH);
+
+    bool successful = false;
+
     if (format == PASSWORD_FORMAT_PLAINTEXT)
     {
-        return ChangePlaintextPasswordUsingLibPam(puser, password);
-    }
-
-    assert(format == PASSWORD_FORMAT_HASH);
-
-#ifdef HAVE_CHPASSWD
-    struct stat statbuf;
-    if (stat(CHPASSWD, &statbuf) != -1 && SupportsOption(CHPASSWD, "-e"))
-    {
-        return ChangePasswordHashUsingChpasswd(puser, password);
+        successful = ChangePlaintextPasswordUsingLibPam(puser, password);
     }
     else
+    {
+#ifdef HAVE_CHPASSWD
+        struct stat statbuf;
+        if (stat(CHPASSWD, &statbuf) != -1 && SupportsOption(CHPASSWD, "-e"))
+        {
+            successful = ChangePasswordHashUsingChpasswd(puser, password);
+        }
+        else
 #endif
 #if defined(HAVE_LCKPWDF) && defined(HAVE_ULCKPWDF)
-    {
-        return ChangePasswordHashUsingLckpwdf(puser, password);
-    }
+        {
+            successful = ChangePasswordHashUsingLckpwdf(puser, password);
+        }
 #elif defined(HAVE_CHPASSWD)
-    {
-        Log(LOG_LEVEL_ERR, "No means to set password for user '%s' was found. Tried using the '%s' tool with no luck.",
-            puser, CHPASSWD);
-        return false;
-    }
+        {
+            Log(LOG_LEVEL_ERR, "No means to set password for user '%s' was found. Tried using the '%s' tool with no luck.",
+                puser, CHPASSWD);
+            successful = false;
+        }
 #else
-    {
-        Log(LOG_LEVEL_WARNING, "Setting hashed password or locking user '%s' not supported on this platform.", puser);
-        return false;
-    }
+        {
+            Log(LOG_LEVEL_WARNING, "Setting hashed password or locking user '%s' not supported on this platform.", puser);
+            successful = false;
+        }
 #endif
+    }
+
+    if (successful)
+    {
+        successful = ClearPasswordAdministrationFlags(puser);
+    }
+
+    return successful;
 }
 
 static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
@@ -523,39 +681,20 @@ static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
     return (system_hash[0] == '!');
 }
 
-static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
+static bool SetAccountLockExpiration(const char *puser, bool lock)
 {
-    char cmd[CF_BUFSIZE + strlen(hash)];
+    // Solaris has the concept of account expiration, but it is only possible
+    // to set a date in the future. We need to set it to a past date, so we
+    // have to skip it on that platform.
+#ifndef __sun
+    char cmd[CF_BUFSIZE + strlen(puser)];
 
     strcpy (cmd, USERMOD);
     StringAppend(cmd, " -e \"", sizeof(cmd));
-
     if (lock)
     {
-        if (hash[0] != '!')
-        {
-            char new_hash[strlen(hash) + 2];
-            xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
-            if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
-            {
-                return false;
-            }
-        }
         StringAppend(cmd, GetPlatformSpecificExpirationDate(), sizeof(cmd));
     }
-    else
-    {
-        // Important to check. Password may already have been changed if that was also
-        // specified in the policy.
-        if (hash[0] == '!')
-        {
-            if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
-            {
-                return false;
-            }
-        }
-    }
-
     StringAppend(cmd, "\" ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
 
@@ -570,8 +709,39 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
             lock ? "locking" : "unlocking", puser, cmd);
         return false;
     }
+#endif // !__sun
 
     return true;
+}
+
+static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
+{
+    if (lock)
+    {
+        if (hash[0] != '!')
+        {
+            char new_hash[strlen(hash) + 2];
+            xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
+            if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
+            {
+                return false;
+            }
+        }
+    }
+    else
+    {
+        // Important to check. Password may already have been changed if that was also
+        // specified in the policy.
+        if (hash[0] == '!')
+        {
+            if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
+            {
+                return false;
+            }
+        }
+    }
+
+    return SetAccountLockExpiration(puser, lock);
 }
 
 static bool GroupGetUserMembership (const char *user, StringSet *result)
@@ -594,9 +764,11 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
         group_info = fgetgrent(fptr);
         if (!group_info)
         {
-            // Documentation among Unices is conflicting on return codes, but at
-            // least Linux returns ENOENT when there are no more entries.
-            if (errno && errno != ENOENT)
+            // Documentation among Unices is conflicting on return codes. When there
+            // are no more entries, this happens:
+            // Linux = ENOENT
+            // AIX = ESRCH
+            if (errno && errno != ENOENT && errno != ESRCH)
             {
                 Log(LOG_LEVEL_ERR, "Error while getting group list. (fgetgrent: '%s')", GetErrorStr());
                 ret = false;
@@ -975,7 +1147,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
 
         if (u.policy == USER_STATE_LOCKED)
         {
-            if (!SetAccountLocked(puser, "", true))
+            if (!SetAccountLocked(puser, "x", true))
             {
                 return false;
             }

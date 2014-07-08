@@ -38,12 +38,18 @@ bundle agent test
 bundle agent check
 {
   methods:
-    any::
-    "any" usebundle => user_is_in_any_secondary_group("johndoe", "sgroup_failure", "sgroup_success"),
-      classes => always("sgroup_methods_run");
+    aix::
+      # AIX forcibly puts a user in the staff group, even if no group is specified.
+      "any" usebundle => user_is_in_secondary_group("johndoe", "staff", "sgroup_success", "sgroup_failure"),
+        classes => always("sgroup_methods_run");
 
-    "any" usebundle => user_has_description("johndoe", "", "desc_success", "desc_failure"),
-      classes => always("desc_methods_run");
+    !aix::
+      "any" usebundle => user_is_in_any_secondary_group("johndoe", "sgroup_failure", "sgroup_success"),
+        classes => always("sgroup_methods_run");
+
+    any::
+      "any" usebundle => user_has_description("johndoe", "", "desc_success", "desc_failure"),
+        classes => always("desc_methods_run");
 
   classes:
       "ready" and => { "sgroup_methods_run", "desc_methods_run" };

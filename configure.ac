@@ -1012,16 +1012,6 @@ AC_SUBST([CORE_LIBS])
 AC_CONFIG_FILES([configure_flags.env])
 
 dnl ######################################################################
-dnl TODO do not set all main flags here, but use them as needed in
-dnl subdirectories
-dnl ######################################################################
-
-CPPFLAGS="$CORE_CPPFLAGS"
-CFLAGS="$CORE_CFLAGS"
-LDFLAGS="$CORE_LDFLAGS"
-LIBS="$CORE_LIBS"
-
-dnl ######################################################################
 dnl OS specific stuff
 dnl ######################################################################
 

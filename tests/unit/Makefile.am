@@ -1,10 +1,28 @@
 # Just recursively include in dist tarball all data we need for unit tests
 EXTRA_DIST = data
 
-AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libenv -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils -I$(srcdir)/../../cf-monitord \
-	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd -I$(srcdir)/../../cf-key
+AM_CPPFLAGS = $(CORE_CPPFLAGS) \
+	$(ENTERPRISE_CFLAGS) \
+	-I$(srcdir)/../../libcfnet \
+	-I$(srcdir)/../../libenv \
+	-I$(srcdir)/../../libpromises \
+	-I$(srcdir)/../../libutils \
+	-I$(srcdir)/../../cf-monitord \
+	-I$(srcdir)/../../cf-serverd \
+	-I$(srcdir)/../../cf-agent \
+	-I$(srcdir)/../../cf-execd \
+	-I$(srcdir)/../../cf-key \
+	-DTESTDATADIR='"$(srcdir)/data"'
 
 LDADD = ../../libpromises/libpromises.la libtest.la
+
+# automake does not support "maude_LIBS" variables. We can only alter
+# the generic LIBS one. In case the functions are mocked in the test
+# implementation, then we are pretty sure that they will be overriden by
+# our local implementation. So we include *everything*...
+LIBS = $(CORE_LIBS)
+AM_LDFLAGS = $(CORE_LDFLAGS)
+
 
 check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
@@ -39,7 +57,9 @@ if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
 libdb_la_LIBADD = libstr.la ../../libutils/libutils.la
-libdb_la_CPPFLAGS = $(AM_CPPFLAGS)
+#libdb_la_CPPFLAGS = $(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS)
+# Make sure that source files are compiled to separate object files libdb_la-file.o
+libdb_la_CFLAGS = $(AM_CFLAGS)
 
 check_PROGRAMS = \
 	arg_split_test \
@@ -152,8 +172,8 @@ if !BUILTIN_EXTENSIONS
 
     check_LTLIBRARIES += cfengine-enterprise.la
     cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
-    cfengine_enterprise_la_LDFLAGS = -avoid-version -module -shared -export-dynamic -rpath /
-
+    cfengine_enterprise_la_LDFLAGS = $(AM_LDFLAGS) \
+	-avoid-version -module -shared -export-dynamic -rpath /
     EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
 endif
 
@@ -211,30 +231,35 @@ avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 endif
 endif
 
-file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
+#file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
 
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la
 
 db_concurrent_test_SOURCES = db_concurrent_test.c
+#db_concurrent_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 db_concurrent_test_LDADD = libdb.la
 
-lastseen_test_SOURCES = lastseen_test.c ../../libpromises/item_lib.c  ../../libpromises/lastseen.c ../../libutils/statistics.c
+lastseen_test_SOURCES = lastseen_test.c \
+	../../libpromises/item_lib.c  ../../libpromises/lastseen.c ../../libutils/statistics.c
+#lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
-lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c ../../libpromises/item_lib.c 
+lastseen_migration_test_SOURCES = lastseen_migration_test.c \
+	../../libpromises/lastseen.c ../../libutils/statistics.c ../../libpromises/item_lib.c
+#lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c
 dbm_migration_bundles_test_LDADD = libdb.la
-
+#dbm_migration_bundles_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
 package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c ../../cf-agent/match_scope.c
 
-package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
+#package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 file_lib_test_SOURCES = file_lib_test.c \

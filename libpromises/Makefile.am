@@ -181,16 +181,5 @@ CLEANFILES = *.gcno *.gcda $(BUILT_SOURCES)
 #
 MOSTLYCLEANFILES = *~ *.orig *.rej
 
-# libutils dependency
-
-# Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la \
-	../libenv/libenv.la $(ENTERPRISE_LDADD)
-
-.PRECIOUS: ../libutils/libutils.la
-
-../libutils/libutils.la:
-	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
-
 bootstrap.inc:
 	perl ./text2cstring.pl failsafe.cf > bootstrap.inc

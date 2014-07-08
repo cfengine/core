@@ -78,8 +78,6 @@ int private_run_process_replace(const char *command, char **args, char **envp)
  */
 int private_run_process_wait(const char *command, char **args, char **envp)
 {
-    /* Redirect the output */
-    int fd = -1;
     char *filename = basename(xstrdup(command));
     time_t now_seconds = time(NULL);
     struct tm *now_tm = gmtime(&now_seconds);
@@ -89,25 +87,16 @@ int private_run_process_wait(const char *command, char **args, char **envp)
     sprintf(filenamelog, "%s-%04d%02d%02d-%02d%02d%02d.log", filename,
             now_tm->tm_year + 1900, now_tm->tm_mon, now_tm->tm_mday,
             now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
-    fd = open(filenamelog, O_CREAT, S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH);
-    if (fd < 0)
-    {
-        return RUN_PROCESS_FAILURE_VALUE;
-    }
+
     int exit_status = 0;
     pid_t child = fork();
     if (child < 0)
     {
-        close (fd);
-        unlink (filenamelog);
         log_entry(LogCritical, "Could not fork child process: %s", command);
         return RUN_PROCESS_FAILURE_VALUE;
     }
     else if (child == 0)
     {
-        /* Child */
-        dup2(fd, STDOUT_FILENO);
-        /* Finally execute the command */
         execve(command, args, envp);
         /* If we reach here, the we failed */
         log_entry(LogCritical, "Could not execute helper process %s", command);
@@ -123,7 +112,6 @@ int private_run_process_wait(const char *command, char **args, char **envp)
         {
             exit_status = WEXITSTATUS(status);
         }
-        close (fd);
     }
     return exit_status;
 }

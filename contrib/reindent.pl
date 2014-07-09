@@ -53,6 +53,8 @@ foreach my $f (@ARGV)
                '--visit' => $f,
                '--eval' => "($mode)",
                @extra,
+               '--eval' => "(set-variable 'indent-tabs-mode nil)",
+               # '--eval' => '(untabify (point-min) (point-max))',
                '--eval' => '(indent-region (point-min) (point-max) nil)',
                '--eval' => '(save-some-buffers t)');
     }

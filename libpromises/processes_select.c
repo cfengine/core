@@ -755,7 +755,7 @@ static int ExtractPid(char *psentry, char **names, int *end)
     return pid;
 }
 
-#ifndef __MINGW32__
+# ifndef __MINGW32__
 # ifdef HAVE_GETZONEID
 /* ListLookup with the following return semantics
  * -1 if the first argument is smaller than the second
@@ -794,7 +794,7 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
     FILE *psf = cf_popen(pscmd, "r", false);
     if (psf == NULL)
     {
-        Log(LOG_LEVEL_ERR, "ZLoadProcesstable(Item **zprocdata): Couldn't open the process list with command %s.", pscmd);
+        Log(LOG_LEVEL_ERR, "ZLoadProcesstable: Couldn't open the process list with command %s.", pscmd);
         return false;
     }
 
@@ -850,7 +850,7 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
     free(pbuff);
     return true;
 }
-bool ContainsSequenceItem(Seq *list, int pid)
+bool PidInSeq(Seq *list, int pid)
 {
     void *res = SeqLookup(list, (void *)(intptr_t)pid, PidListCompare);
     int result = (intptr_t)(void*)res;
@@ -865,7 +865,7 @@ bool ContainsSequenceItem(Seq *list, int pid)
  * pid is in the global zone */
 int IsGlobalProcess(int pid, Seq *pidlist, Seq *rootpidlist)
 {
-    if (ContainsSequenceItem(pidlist, pid) || ContainsSequenceItem(rootpidlist, pid))
+    if (PidInSeq(pidlist, pid) || PidInSeq(rootpidlist, pid))
     {
        return true;
     }
@@ -878,12 +878,12 @@ void ZCopyProcessList(Item **dest, const Item *source, Seq *pidlist, char **name
 {
     int gpid = ExtractPid(source->name, names, end);
 
-    if (ContainsSequenceItem(pidlist, gpid))
+    if (PidInSeq(pidlist, gpid))
     {
-        AppendItem(dest, source->name, "");
+        PrependItem(dest, source->name, "");
     }
 }
-# endif
+# endif /* HAVE_GETZONEID */
 int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
@@ -920,8 +920,9 @@ int LoadProcessTable(Item **procdata)
     int end[CF_PROCCOLS];
     Seq *pidlist = SeqNew(1, NULL);
     Seq *rootpidlist = SeqNew(1, NULL);
+    bool global_zone = IsGlobalZone();
 
-    if (IsGlobalZone())
+    if (global_zone)
     {
         int res = ZLoadProcesstable(pidlist, rootpidlist);
 
@@ -955,7 +956,7 @@ int LoadProcessTable(Item **procdata)
 
 # ifdef HAVE_GETZONEID
 
-        if (IsGlobalZone())
+        if (global_zone)
         {
             if (strstr(vbuff, "PID") != NULL)
             {   /* this is the banner so get the column header names for later use*/
@@ -983,32 +984,38 @@ int LoadProcessTable(Item **procdata)
     snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_procs", CFWORKDIR);
     RawSaveItemList(*procdata, vbuff, NewLineMode_Unix);
 
-# ifndef HAVE_GETZONEID
-    CopyList(&rootprocs, *procdata);
-    CopyList(&otherprocs, *procdata);
-
-    while (DeleteItemNotContaining(&rootprocs, "root"))
+# ifdef HAVE_GETZONEID
+    if (global_zone) /* pidlist and rootpidlist are empty if we're not in the global zone */
     {
+        Item *ip = *procdata;
+        while (ip != NULL)
+        {
+            ZCopyProcessList(&rootprocs, ip, rootpidlist, names, end);
+            ip = ip->next;
+        }
+        ReverseItemList(rootprocs);
+        ip = *procdata;
+        while (ip != NULL)
+        {
+            ZCopyProcessList(&otherprocs, ip, pidlist, names, end);
+            ip = ip->next;
+        }
+        ReverseItemList(otherprocs);
     }
-
-    while (DeleteItemContaining(&otherprocs, "root"))
-    {
-    }
-
-# else
-    Item *ip = *procdata;
-    while (ip != NULL)
-    {
-        ZCopyProcessList(&rootprocs, ip, rootpidlist, names, end);
-        ip = ip->next;
-    }
-    ip = *procdata;
-    while (ip != NULL)
-    {
-        ZCopyProcessList(&otherprocs, ip, pidlist, names, end);
-        ip = ip->next;
-    }
+    else
 # endif
+    {
+        CopyList(&rootprocs, *procdata);
+        CopyList(&otherprocs, *procdata);
+
+        while (DeleteItemNotContaining(&rootprocs, "root"))
+        {
+        }
+
+        while (DeleteItemContaining(&otherprocs, "root"))
+        {
+        }
+    }
     if (otherprocs)
     {
         PrependItem(&rootprocs, otherprocs->name, NULL);
@@ -1024,4 +1031,4 @@ int LoadProcessTable(Item **procdata)
     free(vbuff);
     return true;
 }
-#endif
+# endif

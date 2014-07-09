@@ -420,17 +420,17 @@ static int SelectPathRegexMatch(EvalContext *ctx, char *filename, char *crit)
 
 static bool SelectExecRegexMatch(EvalContext *ctx, char *filename, char *crit, char *prog)
 {
-    FILE *pp;
-    char buf[CF_MAXVARSIZE];
+    // insert real value of $(this.promiser) in command
 
-// insert real value of $(this.promiser) in command
+    char *buf_tmp = SearchAndReplace(prog, "$(this.promiser)", filename);
+    char *buf = SearchAndReplace(buf_tmp, "${this.promiser}", filename);
+    free(buf_tmp);
 
-    ReplaceStr(prog, buf, sizeof(buf), "$(this.promiser)", filename);
-    ReplaceStr(prog, buf, sizeof(buf), "${this.promiser}", filename);
-
-    if ((pp = cf_popen(buf, "r", true)) == NULL)
+    FILE *pp = cf_popen(buf, "r", true);
+    if (pp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open pipe to command '%s'. (cf_popen: %s)", buf, GetErrorStr());
+        free(buf);
         return false;
     }
 
@@ -448,6 +448,7 @@ static bool SelectExecRegexMatch(EvalContext *ctx, char *filename, char *crit, c
             }
             cf_pclose(pp);
             free(line);
+            free(buf);
             return false;
         }
 
@@ -455,12 +456,14 @@ static bool SelectExecRegexMatch(EvalContext *ctx, char *filename, char *crit, c
         {
             cf_pclose(pp);
             free(line);
+            free(buf);
             return true;
         }
     }
 
     cf_pclose(pp);
     free(line);
+    free(buf);
     return false;
 }
 
@@ -513,20 +516,23 @@ static int SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit)
 static int SelectExecProgram(char *filename, char *command)
   /* command can include $(this.promiser) for the name of the file */
 {
-    char buf[CF_MAXVARSIZE];
-
 // insert real value of $(this.promiser) in command
 
-    ReplaceStr(command, buf, sizeof(buf), "$(this.promiser)", filename);
-    ReplaceStr(command, buf, sizeof(buf), "${this.promiser}", filename);
+    char *buf_tmp = SearchAndReplace(command, "$(this.promiser)", filename);
+    char *buf = SearchAndReplace(buf_tmp, "${this.promiser}", filename);
+    free(buf_tmp);
 
-    if (ShellCommandReturnsZero(buf, SHELL_TYPE_NONE))
+    bool returns_zero = ShellCommandReturnsZero(buf, SHELL_TYPE_NONE);
+
+    if (returns_zero)
     {
         Log(LOG_LEVEL_DEBUG, "Select ExecProgram match for '%s'", buf);
+        free(buf);
         return true;
     }
     else
     {
+        free(buf);
         return false;
     }
 }

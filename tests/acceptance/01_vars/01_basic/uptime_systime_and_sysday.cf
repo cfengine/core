@@ -18,16 +18,6 @@ bundle agent init
 
 #######################################################
 
-bundle agent test
-{
-  meta:
-      "test_suppress_fail" string => "aix",
-        meta => { "redmine5148", "redmine5206" };
-
-}
-
-#######################################################
-
 bundle agent check
 {
   classes:

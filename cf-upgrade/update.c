@@ -108,48 +108,69 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
     int source_fd = -1;
     int destination_fd = -1;
 
-    source_fd = open(source, O_RDONLY);
+    source_fd = open(source, O_BINARY|O_RDONLY);
     if (source_fd < 0)
     {
         goto bad_nofd;
     }
     result = fstat(source_fd, &source_stat);
     unlink (destination);
-    destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU);
+    destination_fd = open(destination, O_BINARY|O_WRONLY|O_CREAT|O_EXCL, S_IRWXU);
     if (destination_fd < 0)
     {
         goto bad_onefd;
     }
+
     char buffer[1024];
     int so_far = 0;
-    do {
-        int this_read = 0;
-        int this_write = 0;
+    int this_read;
+    do
+    {
         this_read = read(source_fd, buffer, sizeof(buffer));
         if (this_read < 0)
         {
             log_entry(LogCritical, "Failed to read from %s (read so far: %d)",
-                source, so_far);
+                      source, so_far);
             goto bad_twofd;
         }
-        this_write = write(destination_fd, buffer, this_read);
-        if (this_write < 0)
+        else if (this_read > 0)                        /* Successful read() */
         {
-            log_entry(LogCritical, "Failed to write to %s (written so far: %d)",
-                destination, so_far);
-            goto bad_twofd;
+            so_far += this_read;
+            int this_write = write(destination_fd, buffer, this_read);
+            if (this_write < 0)
+            {
+                log_entry(LogCritical,
+                          "Failed to write to %s (written so far: %d)",
+                          destination, so_far);
+                goto bad_twofd;
+            }
+            else if (this_write != this_read)
+            {
+                log_entry(LogCritical,
+                          "Short write: read: %d, written: %d (prior progress: %d)",
+                          this_read, this_write, so_far);
+                goto bad_twofd;
+            }
         }
-        if (this_write != this_read)
-        {
-            log_entry(LogCritical, "Short write: read: %d, written: %d (prior progress: %d)",
-                this_read, this_write, so_far);
-            goto bad_twofd;
-        }
-        so_far += this_read;
-    } while (so_far < source_stat.st_size);
+    }
+    while (this_read > 0 && so_far < source_stat.st_size);
+
+    /* Both of the loop termination conditions must be true at the same time,
+     * else something is wrong. */
+    if (this_read != 0 || so_far != source_stat.st_size)
+    {
+        log_entry(LogCritical,
+                  "Unexpected, file %s at EOF while %d out of %d bytes have been read",
+                  (this_read == 0) ? "is" : "is not",
+                  so_far, source_stat.st_size);
+        log_entry(LogCritical,
+                  "trying to continue, maybe it changed size while reading");
+    }
+
     close(source_fd);
     close(destination_fd);
     return 0;
+
 bad_twofd:
     close(destination_fd);
     unlink(destination);

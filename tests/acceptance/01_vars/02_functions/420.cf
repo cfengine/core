@@ -46,10 +46,6 @@ body delete init_delete
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "aix",
-        meta => { "redmine5207" };
-
   vars:
       "teststr" string => readfile("$(G.testfile)",1000);
       "cnt" int => parsestringarray("ary", "$(teststr)","NoComment",":",10,1000);

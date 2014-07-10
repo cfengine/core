@@ -258,7 +258,7 @@ runtest() {
     printf "$TEST "
   fi
 
-  if echo "$TEST" | grep -F -e .x.cf > /dev/null; then
+  if echo "$TEST" | fgrep -e .x.cf > /dev/null; then
     EXPECTED_CRASH=1
   else
     EXPECTED_CRASH=
@@ -267,16 +267,16 @@ runtest() {
   if [ "x$CRASHING_TESTS" = "x0" ] && [ "x$EXPECTED_CRASH" = "x1" ]; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Crashing tests are disabled${COLOR_NORMAL}"
-  elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -e '/staging/' > /dev/null; then
+  elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep '/staging/' > /dev/null; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Staging tests are disabled${COLOR_NORMAL}"
-  elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep -e '/unsafe/' > /dev/null; then
+  elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep '/unsafe/' > /dev/null; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Unsafe tests are disabled${COLOR_NORMAL}"
-  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -e '/network/' > /dev/null; then
+  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep '/network/' > /dev/null; then
     SKIP=1
     SKIPREASON="${COLOR_WARNING}Network-dependent tests are disabled${COLOR_NORMAL}"
-  elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep -e '/11_xml_edits/' > /dev/null; then
+  elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep '/11_xml_edits/' > /dev/null; then
     SKIP=1
     SKIPREASON="XML file editing tests are disabled"
   else
@@ -661,7 +661,7 @@ else
 fi
 
 for addtest in $ADDTESTS; do
-  if echo "$addtest" | grep -F "/timed/" > /dev/null; then
+  if echo "$addtest" | fgrep "/timed/" > /dev/null; then
     if [ "$TIMED_TESTS" = 1 ]; then
       eval TESTS_TIMED_$TEST_TIMED_INDEX="$addtest"
       eval TESTS_TIMEOUT_$TEST_TIMED_INDEX=0

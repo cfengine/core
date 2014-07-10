@@ -239,11 +239,9 @@ AC_DEFUN([HW_FUNC_ASPRINTF],
 # functions provided by snprintf.c are needed.
 AC_DEFUN([_HW_FUNC_XPRINTF_REPLACE],
 [
-  AS_IF([test "x$_hw_cv_func_xprintf_replace_done" != xyes],
-    [AC_C_CONST
-    HW_HEADER_STDARG_H
-    AC_LIBOBJ([snprintf])
-    _hw_cv_func_xprintf_replace_done=yes])
+  AC_C_CONST
+  HW_HEADER_STDARG_H
+  AC_LIBOBJ([snprintf])
 ])# _HW_FUNC_XPRINTF_REPLACE
 
 dnl vim: set joinspaces textwidth=80:

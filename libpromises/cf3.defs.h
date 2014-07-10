@@ -33,7 +33,7 @@
 #include <libxml/xpathInternals.h>
 #endif
 
-#include <hash.h> /* Required for HashMethod */
+#include <hash_method.h>                                      /* HashMethod */
 #include <sequence.h>
 #include <logging.h>
 

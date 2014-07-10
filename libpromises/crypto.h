@@ -26,6 +26,9 @@
 #define CFENGINE_CRYPTO_H
 
 #include <platform.h>
+
+#include <openssl/rsa.h>
+
 #include <logging.h>
 
 

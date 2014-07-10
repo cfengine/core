@@ -22,40 +22,17 @@
   included file COSL.txt.
 */
 
-#ifndef HASH_H
-#define HASH_H
+#ifndef CFENGINE_HASH_H
+#define CFENGINE_HASH_H
 
 /**
   @brief Hash implementations
   */
 
 #include <openssl/rsa.h>
-typedef enum
-{
-    HASH_METHOD_MD5,
-    HASH_METHOD_SHA224,
-    HASH_METHOD_SHA256,
-    HASH_METHOD_SHA384,
-    HASH_METHOD_SHA512,
-    HASH_METHOD_SHA1,
-    HASH_METHOD_SHA,
-    HASH_METHOD_BEST,
-    HASH_METHOD_CRYPT,
-    HASH_METHOD_NONE
-} HashMethod;
 
-typedef enum {
-    CF_MD5_LEN = 16,
-    CF_SHA224_LEN = 28,
-    CF_SHA256_LEN = 32,
-    CF_SHA384_LEN = 48,
-    CF_SHA512_LEN = 64,
-    CF_SHA1_LEN = 20,
-    CF_SHA_LEN = 20,
-    CF_BEST_LEN = 0,
-    CF_CRYPT_LEN = 64,
-    CF_NO_HASH = 0
-} HashSize;
+#include <hash_method.h>                            /* HashMethod, HashSize */
+
 
 typedef struct Hash Hash;
 
@@ -157,4 +134,4 @@ const char *HashNameFromId(HashMethod hash_id);
   */
 HashSize HashSizeFromId(HashMethod hash_id);
 
-#endif // HASH_H
+#endif // CFENGINE_HASH_H

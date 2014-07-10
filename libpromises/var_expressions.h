@@ -25,9 +25,9 @@
 #ifndef CFENGINE_VAR_EXPRESSIONS_H
 #define CFENGINE_VAR_EXPRESSIONS_H
 
-#include <string_expressions.h>
-
 #include <platform.h>
+
+#include <string_expressions.h>
 #include <policy.h>
 
 typedef struct

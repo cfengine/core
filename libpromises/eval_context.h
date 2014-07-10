@@ -25,7 +25,7 @@
 #ifndef CFENGINE_EVAL_CONTEXT_H
 #define CFENGINE_EVAL_CONTEXT_H
 
-#include <cf3.defs.h>
+#include <platform.h>
 
 #include <writer.h>
 #include <set.h>

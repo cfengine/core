@@ -24,6 +24,9 @@
 
 #include <files_hashes.h>
 
+#include <openssl/bn.h>                                         /* BN_* */
+#include <openssl/evp.h>                                        /* EVP_* */
+
 #include <dbm_api.h>
 #include <files_interfaces.h>
 #include <client_code.h>

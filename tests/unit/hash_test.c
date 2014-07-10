@@ -5,6 +5,8 @@
 #include <hash.h>
 #include <openssl/rsa.h>
 #include <openssl/evp.h>
+#include <openssl/bn.h>
+
 
 /*
  * To test the hash implementation we need three things:

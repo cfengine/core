@@ -25,6 +25,7 @@
 #include <verify_files_utils.h>
 
 #include <actuator.h>
+#include <attributes.h>
 #include <dir.h>
 #include <files_names.h>
 #include <files_links.h>
@@ -106,6 +107,9 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, co
 static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr, const Promise *pp);
 static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Attributes attr, const Promise *pp);
 
+extern Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attributes *attr);
+extern void ClearExpandedAttributes(Attributes *a);
+
 void SetFileAutoDefineList(const Rlist *auto_define_list)
 {
     AUTO_DEFINE_LIST = auto_define_list;
@@ -117,9 +121,11 @@ void VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes at
 
     Log(LOG_LEVEL_VERBOSE, "Handling file existence constraints on '%s'", path);
 
-/* We still need to augment the scope of context "this" for commands */
+    /* Update this.promiser again, and overwrite common attributes (classes, action) accordingly */
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, CF_DATA_TYPE_STRING, "source=promise");        // Parameters may only be scalars
+    Attributes org_attr = GetFilesAttributes(ctx, pp);
+    attr = GetExpandedAttributes(ctx, pp, &org_attr); 
 
     if (attr.transformer != NULL)
     {
@@ -158,6 +164,7 @@ void VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes at
             *result = PromiseResultUpdate(*result, VerifyFileAttributes(ctx, path, sb, attr, pp));
         }
     }
+    ClearExpandedAttributes(&attr);
 }
 
 /* Checks whether item matches a list of wildcards */

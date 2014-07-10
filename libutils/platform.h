@@ -579,7 +579,7 @@ int rpl_asprintf(char **, const char *, ...);
 #endif /* HAVE_STDARG_H */
 
 /* For example Solaris, does not have isfinite() in <math.h>. */
-#if !HAVE_DECL_ISFINITE
+#if !HAVE_DECL_ISFINITE && defined(HAVE_IEEEFP_H)
 # include <ieeefp.h>
 # define isfinite(x) finite(x)
 #endif

@@ -25,9 +25,13 @@
  *
  * 2014-04-03 Dimitrios Apostolou <jimis@gmx.net>:
  *
- *      Provided replacement functions for [v][f]printf().
- *      Fixed snprintf.m4 to always check for locale.h and other header files
- *      so that the tests in this file run correctly.
+ * 	snprintf.c: Provided replacement functions for [v][f]printf().
+ * 	snprintf.m4: Always check for locale.h and other header files
+ * 		so that the tests in this file run correctly.
+ * 	snprintf.m4: _HW_FUNC_XPRINTF_REPLACE was being skipped when configure
+ * 		was being re-run with cache enabled (-C). Now
+ * 		AC_LIBOBJ(snprintf) might be called multiple times but
+ * 		shouldn't matter.
  *
  * 2008-01-20 Holger Weiss <holger@jhweiss.de> for C99-snprintf 1.1:
  *

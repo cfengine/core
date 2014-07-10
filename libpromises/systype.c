@@ -90,12 +90,12 @@ const char *const VPSOPTS[] =
     [PLATFORM_CONTEXT_UNKNOWN] = "",
     [PLATFORM_CONTEXT_OPENVZ] = "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
     [PLATFORM_CONTEXT_HP] = "-ef",                    /* hpux */
-    [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",    /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",     /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "auxlww",     /* solaris >= 11 */
-    [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxlww", /* solaris < 11 */
+    [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",       /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",        /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "auxww",     /* solaris >= 11 */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxww", /* solaris < 11 */
     [PLATFORM_CONTEXT_FREEBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* netbsd */
+    [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",   /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "-elyf",              /* cray */
     [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",            /* NT */
     [PLATFORM_CONTEXT_SYSTEMV] = "-ef",               /* Unixware */

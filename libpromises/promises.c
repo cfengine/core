@@ -384,7 +384,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
                     if (LEGACY_OUTPUT)
                     {
                         Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as if/ifvarclass %s is not relevant",
+                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as if/ifvarclass '%s' is not relevant",
                             pp->promiser, RvalScalarValue(final));
                         Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
                     }

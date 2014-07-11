@@ -23,7 +23,10 @@ bundle agent init
 
 bundle agent test
 {
-  
+  meta:
+      "test_suppress_fail" string => "sunos_5_11|sunos_5_10|sunos_5_9",
+        meta => { "redmine6342" };
+        
   processes:
       "-agent"
       process_count => test_no_such;

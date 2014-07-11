@@ -1,3 +1,6 @@
+Cfengine Propulsion Lab
+        - services/methods get a default bundle name -> method|service_Canonify($(this.promiser))
+
 3.6.1
         New features:
         - Introduced Solaris and AIX support into the 3.6 series, with many associated build and

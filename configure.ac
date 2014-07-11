@@ -195,10 +195,15 @@ AC_ARG_ENABLE(debug,
               [debug=no])
 AM_CONDITIONAL([NDEBUG], [test x"$debug" = x"no"])
 
+dnl Even though CFLAGS should contain the command-line CFLAGS
+dnl as last, some macro seem to messes the order up and insert
+dnl its own optimisation flags as well. So we append ENV_CFLAGS
+dnl at the end manually, causing a bit of flag duplication.
+
 if test x"$debug" = x"yes"; then
-   CFLAGS="-g3 -O0 $CFLAGS"
+   CFLAGS="$CFLAGS -g3 -O0 $ENV_CFLAGS"
 else
-   CFLAGS="-O2 -DNDEBUG $CFLAGS"
+   CFLAGS="$CFLAGS -O2 -DNDEBUG $ENV_CFLAGS"
 fi
 
 dnl ######################################################################

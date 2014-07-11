@@ -78,10 +78,6 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
 
 void test_processes_monitor(void)
 {
-#if defined(__sun)
-    // Redmine #6316.
-    return;
-#endif
 
     double cf_this[100] = { 0.0 };
     MonProcessesGatherData(cf_this);

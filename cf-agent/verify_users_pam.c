@@ -1062,6 +1062,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
                          EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     char cmd[CF_BUFSIZE];
+    char sec_group_args[CF_BUFSIZE];
     if (puser == NULL || !strcmp (puser, ""))
     {
         return false;
@@ -1092,18 +1093,19 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
     if (u.groups_secondary != NULL)
     {
         // TODO: Should check that groups exist
-        StringAppend(cmd, " -G \"", sizeof(cmd));
+        strlcpy(sec_group_args, " -G \"", sizeof(sec_group_args));
         char sep[2] = { '\0', '\0' };
         for (Rlist *i = u.groups_secondary; i; i = i->next)
         {
             if (strcmp(RvalScalarValue(i->val), CF_NULL_VALUE) != 0)
             {
-                StringAppend(cmd, sep, sizeof(cmd));
-                StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
+                StringAppend(sec_group_args, sep, sizeof(sec_group_args));
+                StringAppend(sec_group_args, RvalScalarValue(i->val), sizeof(sec_group_args));
                 sep[0] = ',';
             }
         }
-        StringAppend(cmd, "\"", sizeof(cmd));
+        StringAppend(sec_group_args, "\"", sizeof(sec_group_args));
+        StringAppend(cmd, sec_group_args, sizeof(cmd));
     }
     if (u.home_dir != NULL && strcmp (u.home_dir, ""))
     {
@@ -1136,6 +1138,21 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "creating", "Creating"))
         {
             return false;
+        }
+
+        if (u.groups_secondary != NULL)
+        {
+            // Work around issue on AIX. Always set secondary groups a second time, because AIX
+            // likes to assign the primary group as the secondary group as well, even if we didn't
+            // ask for it.
+            strlcpy(cmd, USERMOD, sizeof(cmd));
+            StringAppend(cmd, sec_group_args, sizeof(cmd));
+            StringAppend(cmd, " ", sizeof(cmd));
+            StringAppend(cmd, puser, sizeof(cmd));
+            if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
+            {
+                return false;
+            }
         }
 
         // Initially, "useradd" may set the password to '!', which confuses our detection for

@@ -238,6 +238,7 @@ Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attr
     a.transaction.measure_id = ExpandThisPromiserScalar(ctx, namespace, scope, attr->transaction.measure_id);
 
     // a.transformer = ExpandThisPromiserScalar(ctx, namespace, scope, attr->transformer);
+    a.edit_template = ExpandThisPromiserScalar(ctx, namespace, scope, attr->edit_template);
 
     return a;
 }
@@ -254,6 +255,8 @@ void ClearExpandedAttributes(Attributes *a)
     a->transaction.log_failed = NULL;
     free(a->transaction.measure_id);
     a->transaction.measure_id = NULL;
+    free(a->edit_template);
+    a->edit_template = NULL;
 
     ClearFilesAttributes(a);
 }
@@ -732,6 +735,8 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     
     if (a.edit_template)
     {
+        Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
+            filename, a.edit_template, a.template_method ? a.template_method : "cfengine");
         if (!a.template_method || strcmp("cfengine", a.template_method) == 0)
         {
             PromiseResult render_result = RenderTemplateCFEngine(ctx, pp, args, a, edcontext);

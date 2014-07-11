@@ -9,7 +9,7 @@ body common control
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "freebsd|windows",
+      "test_suppress_fail" string => "freebsd|windows|sunos_5_11|sunos_5_10|sunos_5_9",
         meta => { "redmine5224", "redmine4822" };
 
   methods:

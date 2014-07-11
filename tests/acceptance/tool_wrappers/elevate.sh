@@ -6,10 +6,19 @@
 # or spaces in pathnames.
 
 touch output.$$
+
 $(dirname $0)/../elevate.exe -wait "$(dirname $0)\template.bat" "cd '`pwd`'; export PATH='$PATH'; $(dirname $0)/preserve-output-and-status.sh $$ $@" &
-tail -F output.$$ --pid=$! 2>/dev/null
+
+trap '$0 kill `cat pid.$$`' INT
+trap '$0 kill `cat pid.$$`' TERM
+# Traps do not fire during commands, but *do* fire during wait.
+tail -F output.$$ --pid=$! 2>/dev/null &
+wait $!
+
+# All these are written by "preserve-output-and-status.sh", because none of
+# them can be preserved across elevate.exe.
+rm -f pid.$$
 rm -f output.$$
-# Elevate does not preserve return code, so use the return code we stored above.
 return_code=`cat return-code.$$`
 rm -f return-code.$$
 exit $return_code

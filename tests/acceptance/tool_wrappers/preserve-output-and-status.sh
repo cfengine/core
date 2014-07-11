@@ -5,7 +5,11 @@
 PID=$1
 shift
 CWD=`pwd`
-$@ >& output.$PID
+
+$@ >& output.$PID &
+echo $! > pid.$PID
+wait $!
+
 RETURN_CODE=$?
 cd $CWD
 echo $RETURN_CODE > return-code.$PID

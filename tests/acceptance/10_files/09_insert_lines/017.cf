@@ -14,16 +14,11 @@ body common control
 #######################################################
 
 
-bundle agent init
-{
-  vars:
-      "dummy" string => "1";
-}
-
-
-#######################################################
-
 bundle agent test {
+  meta:
+      "test_suppress_fail" string => "aix",
+        meta => { "redmine6336" };
+
   files:
       "$(G.testfile)"
       edit_line => insert_dir,

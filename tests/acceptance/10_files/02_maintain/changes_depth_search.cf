@@ -89,7 +89,9 @@ subfile.same,N,New file found");
 
 bundle agent test
 {
-        
+  meta:
+      "test_suppress_fail" string => "sunos_5_11",
+        meta => { "redmine6344" };  
   commands:
       "$(sys.cf_agent) -Dpass1 -Kf $(this.promise_filename).sub";
       "$(sys.cf_agent) -Dpass2 -Kf $(this.promise_filename).sub";

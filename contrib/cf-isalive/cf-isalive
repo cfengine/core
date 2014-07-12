@@ -66,7 +66,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
 import time
-
+import argparse
 
 # The location of the promise summary log file
 CF_PROMISE_SUMMARY_FILE = u'/var/cfengine/promise_summary.log'
@@ -89,9 +89,9 @@ def get_last_line_of_file(filepath):
     assert isinstance(filepath, basestring)
 
     try:
-        logfile = open(CF_PROMISE_SUMMARY_FILE, 'r')
+        logfile = open(filepath, 'r')
     except IOError:
-        exit('Unable to open {}'.format(CF_PROMISE_SUMMARY_FILE))
+        exit('Unable to open {}'.format(filepath))
 
     last_line = ''
 
@@ -109,7 +109,12 @@ def get_last_line_of_file(filepath):
     return last_line
 
 
-def main():
+def main(max_second_late):
+    """
+    Args:
+        max_second_late (int)
+    """
+    assert isinstance(max_second_late, int)
     last_line = get_last_line_of_file(CF_PROMISE_SUMMARY_FILE)
     # print last_line
     # 1337377540,1337377541: Outcome of version Percolate Promises.cf 1.0.0
@@ -139,10 +144,18 @@ def main():
 
     # Since when this instance has not scheduled a CFEngine run ?
     sec_late = int(time.time() - float(end_time))
-    if sec_late > MAX_SECOND_LATE:
+    if sec_late > max_second_late:
         exit("I'm late ! CFEngine did not run for {} seconds ! Check me !\n"
              "Last {} line:\n{}"
              .format(sec_late, CF_PROMISE_SUMMARY_FILE, last_line))
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s',
+                        '--max-seconds',
+                        action='store',
+                        dest='max_seconds',
+                        type=int,
+                        default=MAX_SECOND_LATE)
+    args = parser.parse_args()
+    main(args.max_seconds)

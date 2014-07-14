@@ -36,6 +36,7 @@
 #include <item_lib.h>
 #include <ip_address.h>
 #include <string_lib.h>
+#include <routing_services.h>
 
 #define CF_LINUX_IP_COMM "/sbin/ip"
 

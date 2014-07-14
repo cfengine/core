@@ -45,9 +45,6 @@ AgentType THIS_AGENT_TYPE; /* GLOBAL_C, initialized later */
 
 Item *PROCESSTABLE = NULL; /* GLOBAL_X */
 
-CommonRouting *ROUTING_ACTIVE = NULL;
-CommonRouting *ROUTING_POLICY = NULL;
-
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/

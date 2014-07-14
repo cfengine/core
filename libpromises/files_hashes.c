@@ -202,8 +202,11 @@ char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
     size_t digest_len = HashSizeFromId(type);
     assert(dst_size >= strlen(prefix) + digest_len*2 + 1);
 
-    size_t ret = StringBytesToHex(&dst[dst_len], dst_size - dst_len,
-                                  digest, digest_len);
+#ifndef NDEBUG // Avoids warning.
+    size_t ret =
+#endif
+        StringBytesToHex(&dst[dst_len], dst_size - dst_len,
+                         digest, digest_len);
     assert(ret == 2 * digest_len);
 
 #if 0         /* TODO return proper exit status and check it in the callers */

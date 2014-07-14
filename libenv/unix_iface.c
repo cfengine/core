@@ -334,11 +334,13 @@ void GetInterfacesInfo(EvalContext *ctx)
     list.ifc_len = sizeof(ifbuf);
     list.ifc_req = ifbuf;
 
-# ifdef SIOCGIFCONF
-    if (ioctl(fd, SIOCGIFCONF, &list) == -1 || (list.ifc_len < (sizeof(struct ifreq))))
-# else
-    if ((ioctl(fd, OSIOCGIFCONF, &list) == -1) || (list.ifc_len < (sizeof(struct ifreq))))
-# endif
+#ifdef SIOCGIFCONF
+    const int request = SIOCGIFCONF;
+#else
+    const int request = OSIOCGIFCONF;
+#endif
+    if (ioctl(fd, request, &list) == -1 ||
+        list.ifc_len < sizeof(struct ifreq))
     {
         Log(LOG_LEVEL_ERR, "Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024. (ioctl: %s)", GetErrorStr());
         exit(EXIT_FAILURE);

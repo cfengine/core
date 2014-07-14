@@ -578,15 +578,14 @@ if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&
   # each test is horribly slow.
   echo "export GAINROOT=" > runtests.sh
   echo "export TESTALL_DO_NOT_RECURSE=1" >> runtests.sh
-  echo "$0 $ORIG_ARGS $@ >& output.log" >> runtests.sh
-  rm -f output.log
-  ( $GAINROOT "./runtests.sh" ; echo $? > return-code.txt ) &
-  tail -F output.log --pid=$! 2>/dev/null
-  rm -f runtests.sh
-  rm -f output.log
-  return_code=`cat return-code.txt`
-  rm -f return-code.txt
-  exit $return_code
+  echo "$0 $ORIG_ARGS $@ &" >> runtests.sh
+  # Note quote change. We want to keep below variables unexpanded.
+  echo 'trap "kill $!" INT' >> runtests.sh
+  echo 'trap "kill $!" TERM' >> runtests.sh
+  # Traps do not fire during commands, but *do* fire during wait.
+  echo 'wait $!' >> runtests.sh
+  $GAINROOT "./runtests.sh"
+  exit $?
 fi
 
 if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" ]; then

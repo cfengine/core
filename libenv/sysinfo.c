@@ -816,7 +816,6 @@ static void GetNameInfo3(EvalContext *ctx)
 static void Get3Environment(EvalContext *ctx)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
-    FILE *fp;
     struct stat statbuf;
     time_t now = time(NULL);
 
@@ -848,7 +847,8 @@ static void Get3Environment(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
 
-    if ((fp = fopen(env, "r")) == NULL)
+    FILE *fp = fopen(env, "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "\nUnable to detect environment from cf-monitord");
         return;
@@ -1977,17 +1977,16 @@ static int LinuxDebianSanitizeIssue(char *buffer)
 
 static int Linux_Misc_Version(EvalContext *ctx)
 {
-    FILE *fp;
     char flavour[CF_MAXVARSIZE];
     char version[CF_MAXVARSIZE];
     char os[CF_MAXVARSIZE];
-    char *sp;
     char buffer[CF_BUFSIZE];
 
     *os = '\0';
     *version = '\0';
 
-    if ((fp = fopen(LSB_RELEASE_FILENAME, "r")) != NULL)
+    FILE *fp = fopen(LSB_RELEASE_FILENAME, "r");
+    if (fp != NULL)
     {
         while (!feof(fp))
         {
@@ -2002,7 +2001,8 @@ static int Linux_Misc_Version(EvalContext *ctx)
                 strcpy(os, "cumulus");
             }
 
-            if ((sp = strstr(buffer, "DISTRIB_RELEASE=")))
+            char *sp = strstr(buffer, "DISTRIB_RELEASE=");
+            if (sp)
             {
                 version[0] = '\0';
                 sscanf(sp+strlen("DISTRIB_RELEASE="), "%[^\n]", version);
@@ -2348,7 +2348,6 @@ static int VM_Version(EvalContext *ctx)
 
 static int Xen_Domain(EvalContext *ctx)
 {
-    FILE *fp;
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.");
@@ -2356,7 +2355,8 @@ static int Xen_Domain(EvalContext *ctx)
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
-    if ((fp = fopen("/proc/xen/capabilities", "r")) != NULL)
+    FILE *fp = fopen("/proc/xen/capabilities", "r");
+    if (fp != NULL)
     {
         size_t buffer_size = CF_BUFSIZE;
         char *buffer = xmalloc(buffer_size);

@@ -589,7 +589,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
     unsigned int crypt_len, nonce_len = 0, encrypted_len = 0;
     char sauth[10], iscrypt = 'n', enterprise_field = 'c';
-    int len_n = 0, len_e = 0, keylen, session_size;
+    int len_n = 0, len_e = 0;
     RSA *newkey;
     int digestLen = 0;
     HashMethod digestType;
@@ -653,7 +653,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     Log(LOG_LEVEL_DEBUG, "Challenge encryption = %c, nonce = %d, buf = %d", iscrypt, nonce_len, crypt_len);
 
 
-    decrypted_nonce = xmalloc(crypt_len);
+    decrypted_nonce = xcalloc(crypt_len, 1);
 
     if (iscrypt == 'y')
     {
@@ -754,6 +754,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
 /* proposition S2 */
 
+    Log(LOG_LEVEL_DEBUG, "Sending challenge response");
     SendTransaction(conn->conn_info, digest, digestLen, CF_DONE);
 
 /* Send counter challenge to be sure this is a live session */
@@ -761,22 +762,24 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     counter_challenge = BN_new();
     if (counter_challenge == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Cannot allocate BIGNUM structure for counter challenge");
+        Log(LOG_LEVEL_ERR, "Cannot allocate BIGNUM structure for counter-challenge");
         return false;
     }
 
     BN_rand(counter_challenge, CF_NONCELEN, 0, 0);
-    nonce_len = BN_bn2mpi(counter_challenge, in);
+    int counter_challenge_len = BN_bn2mpi(counter_challenge, in);
 
-// hash the challenge from the client
+    /* Compute counter-challenge digest. */
+    HashString(in, counter_challenge_len, digest, digestType);
 
-    HashString(in, nonce_len, digest, digestType);
+    /* Encryption buffer is always RSA_size and buffer needs 11 bytes, see
+     * RSA_public_encrypt manual. */
+    encrypted_len = RSA_size(newkey);
+    out = xcalloc(encrypted_len + 1, 1);
+    assert(counter_challenge_len < encrypted_len - 11);
 
-    encrypted_len = RSA_size(newkey);   /* encryption buffer is always the same size as n */
-
-    out = xmalloc(encrypted_len + 1);
-
-    if (RSA_public_encrypt(nonce_len, in, out, newkey, RSA_PKCS1_PADDING) <= 0)
+    if (RSA_public_encrypt(counter_challenge_len, in,
+                           out, newkey, RSA_PKCS1_PADDING) <= 0)
     {
         Log(LOG_LEVEL_ERR, "Public encryption failed = %s",
             CryptoLastErrorString());
@@ -784,13 +787,17 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         return false;
     }
 
-/* proposition S3 */
+/* proposition S3 - send counter-challenge */
+
+    Log(LOG_LEVEL_DEBUG, "Sending counter-challenge");
     SendTransaction(conn->conn_info, out, encrypted_len, CF_DONE);
 
 /* if the client doesn't have our public key, send it */
 
     if (iscrypt != 'y')
     {
+        Log(LOG_LEVEL_DEBUG, "Sending server's public key");
+
         /* proposition S4  - conditional */
         memset(in, 0, CF_BUFSIZE);
         len_n = BN_bn2mpi(PUBKEY->n, in);
@@ -802,58 +809,86 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         SendTransaction(conn->conn_info, in, len_e, CF_DONE);
     }
 
-/* Receive reply to counter_challenge */
+/* Receive counter-challenge response */
 
 /* proposition C4 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
+    int ret = ReceiveTransaction(conn->conn_info, in, NULL);
+    if (ret < digestLen)
     {
+        if (ret < 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Error receiving counter-challenge response!");
+        }
+        else if (ret == 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Error receiving counter-challenge response: connection was closed!");
+        }
+        else                                      /* 0 < ret < expected_len */
+        {
+            Log(LOG_LEVEL_ERR,
+                "Error receiving counter-challenge response: Only got %d out of %d bytes!",
+                ret, digestLen);
+        }
         BN_free(counter_challenge);
         free(out);
         return false;
     }
 
-    if (HashesMatch(digest, in, digestType))    /* replay / piggy in the middle attack ? */
+    if (HashesMatch(digest, in, digestType))
     {
-        Log(LOG_LEVEL_VERBOSE, "Authentication of client %s/%s achieved", conn->hostname, conn->ipaddr);
+        Log(LOG_LEVEL_VERBOSE,
+            "Authentication of client %s/%s achieved",
+            conn->hostname, conn->ipaddr);
     }
     else
     {
         BN_free(counter_challenge);
         free(out);
-        Log(LOG_LEVEL_INFO, "Challenge response from client %s was incorrect - ID false?", conn->ipaddr);
+        Log(LOG_LEVEL_ERR,
+            "Counter-challenge response was incorrect");
         return false;
     }
 
-/* Receive random session key,... */
+/* proposition C5 - Receive session key */
 
-/* proposition C5 */
+    Log(LOG_LEVEL_DEBUG, "Receiving session key from client...");
+
+    int session_size = CfSessionKeySize(enterprise_field);
 
     memset(in, 0, CF_BUFSIZE);
+    int keylen = ReceiveTransaction(conn->conn_info, in, NULL);
+    Log(LOG_LEVEL_DEBUG,
+        "Received encrypted session key of %d bytes, should decrypt to %d bytes",
+        keylen, session_size);
 
-    if ((keylen = ReceiveTransaction(conn->conn_info, in, NULL)) == -1)
+    if ((keylen <= 0) || (keylen > CF_BUFSIZE / 2))
     {
+        if (keylen == 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Error receiving session key, connection was closed!");
+        }
+        else if (keylen > CF_BUFSIZE / 2)
+        {
+            Log(LOG_LEVEL_ERR, "Session key received is too long: %d bytes",
+                keylen);
+        }
+        else                                                  /* keylen < 0 */
+        {
+            Log(LOG_LEVEL_ERR, "Error receiving session key");
+        }
+
         BN_free(counter_challenge);
         free(out);
         return false;
     }
 
-    if (keylen > CF_BUFSIZE / 2)
-    {
-        BN_free(counter_challenge);
-        free(out);
-        Log(LOG_LEVEL_INFO, "Session key length received from %s is too long", conn->ipaddr);
-        return false;
-    }
-
-    session_size = CfSessionKeySize(enterprise_field);
-    conn->session_key = xmalloc(session_size);
+    conn->session_key = xcalloc(session_size, 1);
     conn->encryption_type = enterprise_field;
-
-    Log(LOG_LEVEL_VERBOSE, "Receiving session key from client (size=%d)...", keylen);
-
-    Log(LOG_LEVEL_DEBUG, "keylen = %d, session_size = %d", keylen, session_size);
 
     if (keylen == CF_BLOWFISHSIZE)      /* Support the old non-ecnrypted for upgrade */
     {
@@ -863,10 +898,20 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         /* New protocol encrypted */
 
-        if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
+        int ret = RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING);
+        if (ret != session_size)
         {
-            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
-                CryptoLastErrorString());
+            if (ret < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Private decrypt of session key failed (%s)",
+                    CryptoLastErrorString());
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Session key decrypts to invalid size, expected %d but got %d bytes!",
+                    session_size, ret);
+            }
             BN_free(counter_challenge);
             free(out);
             return false;

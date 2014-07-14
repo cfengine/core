@@ -469,6 +469,7 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
     if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
     {
+        Legend();
         ShowContext(ctx);
     }
 

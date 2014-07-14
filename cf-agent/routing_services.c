@@ -50,6 +50,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
+CommonRouting *ROUTING_ACTIVE = NULL;
+CommonRouting *ROUTING_POLICY = NULL;
+
 #define VTYSH_FILENAME "/usr/bin/vtysh"
 
 static void HandleOSPFServiceConfig(EvalContext *ctx, CommonRouting *ospfp, char *line);

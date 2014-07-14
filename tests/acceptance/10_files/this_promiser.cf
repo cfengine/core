@@ -35,6 +35,12 @@ body classes promiser3_generic
     promise_kept => { "$(this.promiser)_kept", "$(this.promiser)_3_ok" };
 }
 
+body classes promiser4_generic
+{
+    promise_repaired => { "$(this.promiser)_repaired", "$(this.promiser)_4_ok" };
+    promise_kept => { "$(this.promiser)_kept", "$(this.promiser)_4_ok" };
+}
+
 bundle agent init
 {
   vars:
@@ -72,6 +78,54 @@ bundle agent test
       depth_search => test_recurse,
       delete => tidyfiles,
       classes => promiser3_generic;
+
+  methods:
+    "template_test" usebundle => template_test;
+}
+
+bundle agent template_test
+{
+  vars:
+    "testdir" string => "$(G.testdir)/template_test";
+    "cfe_files" slist => { "cfe_file1", "cfe_file2" };
+    "mustache_files" slist => { "mustache_file1", "mustache_file2" };
+
+  files:
+    # create empty files so that we can test pattern and file_select cases
+    "$(testdir)/."
+      create => "true";
+
+    "$(testdir)/$(cfe_files)"
+      create => "true";
+    "$(testdir)/$(mustache_files)"
+      create => "true";
+
+    "$(testdir)/$(cfe_files).cf-template"
+      create => "true",
+      edit_line => insert_lines("Just a cfengine line for $(this.promiser).");
+
+    "$(testdir)/$(mustache_files).mustache"
+      create => "true",
+      edit_line => insert_lines("Just a mustache line for $(this.promiser).");
+
+    "$(testdir)/cfe_file[1,2]"
+      perms => m("666"),
+      template_method => "cfengine",
+      edit_template => "$(this.promiser).cf-template",
+      classes => promiser4_generic;
+
+    "$(testdir)/mustache_.*"
+      file_select => mustache_files,
+      perms => m("666"),
+      template_method => "mustache",
+      edit_template => "$(this.promiser).mustache",
+      classes => promiser4_generic;
+}
+
+body file_select mustache_files
+{
+     leaf_name => { "@(template_test.mustache_files)" };
+     file_result => "leaf_name";   
 }
 
 body delete tidyfiles
@@ -110,6 +164,7 @@ bundle agent check
       "ok_1_count" int => countclassesmatching(".*_1_ok");
       "ok_2_count" int => countclassesmatching(".*_2_ok");
       "ok_3_count" int => countclassesmatching(".*_3_ok");
+      "ok_4_count" int => countclassesmatching(".*_4_ok");
 
   classes:
       "ok" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
@@ -117,17 +172,20 @@ bundle agent check
       "ok1" expression => strcmp("$(ok_1_count)", 6);
       "ok2" expression => strcmp("$(ok_2_count)", 5);
       "ok3" expression => strcmp("$(ok_3_count)", 7);
+      "ok4" expression => strcmp("$(ok_4_count)", 4);
 
   reports:
-    debug::
+    DEBUG::
+      "$(ok_promisers)";
       "0: $(ok_0_count)";
       "1: $(ok_1_count)";
       "2: $(ok_2_count)";
       "3: $(ok_3_count)";
+      "4: $(ok_4_count)";
 
-    ok.ok0.ok1.ok2.ok3::
+    ok.ok0.ok1.ok2.ok3.ok4::
       "$(this.promise_filename) Pass";
-    !ok|!ok0|!ok1|!ok2|!ok3::
+    !ok|!ok0|!ok1|!ok2|!ok3|!ok4::
       "$(this.promise_filename) FAIL";
 }
 ### PROJECT_ID: core

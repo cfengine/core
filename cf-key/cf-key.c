@@ -89,7 +89,7 @@ static const char *const HINTS[] =
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",
     "Force removal of keys (USE AT YOUR OWN RISK)",
-    "Install license without boostrapping (CFEngine Enterprise only)",
+    "Install license file on Enterprise server (CFEngine Enterprise Only)",
     "Print digest of the specified public key",
     "Make cf-serverd/cf-agent trust the specified public key",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",

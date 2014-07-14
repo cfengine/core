@@ -1042,8 +1042,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 
     Banner("Begin policy/promise evaluation");
 
-    Legend();
-
     if (config->bundlesequence)
     {
         Log(LOG_LEVEL_INFO, "Using command line specified bundlesequence");

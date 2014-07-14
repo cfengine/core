@@ -834,16 +834,8 @@ static void TryLLDPDiscovery(EvalContext *ctx, char *interface)
 
     char *offset = line + strlen(cmp);
 
-    while (!feof(pfp))
+    while (CfReadLine(&line, &line_size, pfp) != -1)
     {
-        *line = '\0';
-        CfReadLine(&line, &line_size, pfp);
-
-        if (feof(pfp))
-        {
-            break;
-        }
-
         /* output format
            lldp.eth1.via=LLDP
            lldp.eth1.rid=1

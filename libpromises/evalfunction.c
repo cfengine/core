@@ -2635,8 +2635,9 @@ static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy 
     Rlist *newlist = NULL;
     const char *template = RlistScalarValue(finalargs);
     char *step = RlistScalarValue(finalargs->next);
+    size_t template_size = strlen(template) + 1;
     char *before = xstrdup(template);
-    char *after = xcalloc(strlen(template), 1);
+    char *after = xcalloc(template_size, 1);
     char *work = xstrdup(template);
     int from = CF_NOINT, to = CF_NOINT, step_size = atoi(step);
 
@@ -2664,7 +2665,7 @@ static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy 
     {
         for (int i = from; i >= to; i -= step_size)
         {
-            sprintf(work, "%s%d%s",before,i,after);;
+            xsnprintf(work, template_size, "%s%d%s",before,i,after);;
             RlistAppendScalar(&newlist, work);
         }
     }
@@ -2672,7 +2673,7 @@ static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy 
     {
         for (int i = from; i <= to; i += step_size)
         {
-            sprintf(work, "%s%d%s",before,i,after);;
+            xsnprintf(work, template_size, "%s%d%s",before,i,after);;
             RlistAppendScalar(&newlist, work);
         }
     }

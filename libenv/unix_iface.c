@@ -806,6 +806,7 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
 
 static void TryLLDPDiscovery(EvalContext *ctx, char *interface)
 {
+#ifdef CF_LLDP_TOOL
     struct stat sb;
     char cmd[CF_BUFSIZE];
     char data[CF_MAXVARSIZE];
@@ -899,4 +900,5 @@ static void TryLLDPDiscovery(EvalContext *ctx, char *interface)
 
     free(line);
     cf_pclose(pfp);
+#endif
 }

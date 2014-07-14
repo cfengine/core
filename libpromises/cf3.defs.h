@@ -39,6 +39,14 @@
 #include <cfnet.h>                       /* ProtocolVersion, CF_BUFSIZE etc */
 #include <misc_lib.h>                    /* xsnprintf, ProgrammingError etc */
 
+/*******************************************************************/
+/* Undef platform specific defines that pollute our namespace      */
+/*******************************************************************/
+
+#ifdef interface
+#undef interface
+#endif
+
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */

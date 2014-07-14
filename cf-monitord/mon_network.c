@@ -34,6 +34,8 @@
 
 /* Globals */
 
+#define ATTR        22
+
 Item *ALL_INCOMING = NULL;
 Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL, *MON_RAW4 = NULL, *MON_RAW6 = NULL;
 

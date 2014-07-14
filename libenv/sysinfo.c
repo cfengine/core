@@ -1992,6 +1992,10 @@ static int Linux_Misc_Version(EvalContext *ctx)
         {
             if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
             {
+                if (ferror(fp))
+                {
+                    break;
+                }
                 continue;
             }
 
@@ -2005,7 +2009,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
             if (sp)
             {
                 version[0] = '\0';
-                sscanf(sp+strlen("DISTRIB_RELEASE="), "%[^\n]", version);
+                sscanf(sp + strlen("DISTRIB_RELEASE="), "%[^\n]", version);
                 CanonifyNameInPlace(version);
             }
         }

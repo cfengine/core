@@ -754,7 +754,7 @@ static bool MissingInputFile(const char *input_file)
 }
 
 // Git only.
-static bool GeneratePolicyReleaseIDFromGit(char *release_id_out, size_t out_size,
+static bool GeneratePolicyReleaseIDFromGit(char *release_id_out, ARG_UNUSED size_t out_size,
                                            const char *policy_dir)
 {
     char git_filename[PATH_MAX + 1];

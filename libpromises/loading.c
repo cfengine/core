@@ -170,6 +170,11 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
 // TODO: should be replaced by something not complected with loading
 static void ShowContext(EvalContext *ctx)
 {
+    if (MACHINE_OUTPUT)
+    {
+        return;
+    }
+
     Seq *hard_contexts = SeqNew(1000, NULL);
     Seq *soft_contexts = SeqNew(1000, NULL);
 
@@ -194,37 +199,44 @@ static void ShowContext(EvalContext *ctx)
     SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
     SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
 
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
 
     {
         Writer *w = NULL;
         w = StringWriter();
-        WriterWrite(w, "Discovered hard classes:");
+        WriterWrite(w, "BEGIN Discovered hard classes:\n");
 
         for (size_t i = 0; i < SeqLength(hard_contexts); i++)
         {
             const char *context = SeqAt(hard_contexts, i);
-            WriterWriteF(w, " %s", context);
+            WriterWriteF(w, "%s C: %s\n", VPREFIX, context);
         }
 
+        WriterWriteF(w, "%s END Discovered hard classes", VPREFIX);
         Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
         WriterClose(w);
     }
 
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+
     {
         Writer *w = NULL;
         w = StringWriter();
-        WriterWrite(w, "Additional classes:");
+        WriterWrite(w, "BEGIN initial soft classes:\n");
 
         for (size_t i = 0; i < SeqLength(soft_contexts); i++)
         {
             const char *context = SeqAt(soft_contexts, i);
-            WriterWriteF(w, " %s", context);
+            WriterWriteF(w, "%s C: %s\n", VPREFIX, context);
         }
+
+        WriterWriteF(w, "%s END initial soft classes", VPREFIX);
 
         if (SeqLength(soft_contexts) > 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            Log(LOG_LEVEL_VERBOSE, "%s\n", StringWriterData(w));
         }
+
         WriterClose(w);
     }
 

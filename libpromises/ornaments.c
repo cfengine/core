@@ -31,6 +31,11 @@
 
 void SpecialTypeBanner(TypeSequence type, int pass)
 {
+    if (MACHINE_OUTPUT)
+    {
+        return;
+    }
+
     if (type == TYPE_SEQUENCE_CONTEXTS)
     {
         Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
@@ -71,7 +76,18 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
     }
 
     Log(LOG_LEVEL_VERBOSE, "P: .........................................................");
-    Log(LOG_LEVEL_VERBOSE, "P: BEGIN promise of type \"%s\" (pass %d)", pp->parent_promise_type->name, EvalContextGetPass(ctx));
+
+    if (strlen(handle) > 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "P: BEGIN promise '%s' of type \"%s\" (pass %d)", handle, pp->parent_promise_type->name, EvalContextGetPass(ctx));
+        Log(LOG_LEVEL_VERBOSE, "P:    Promise's handle: '%s'", handle);
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "P: BEGIN un-named promise of type \"%s\" (pass %d)", pp->parent_promise_type->name, EvalContextGetPass(ctx));
+    }
+
+
     Log(LOG_LEVEL_VERBOSE, "P:    Promiser/affected object: '%s'", pp->promiser);
 
     Rlist *params = NULL;
@@ -117,11 +133,6 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
     LoggingContext *lctx = GetCurrentThreadContext();
     Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", lctx->pctx->log_hook(lctx->pctx, EvalContextGetPass(ctx), ""));
 
-    if (strlen(handle) > 0)
-    {
-        Log(LOG_LEVEL_VERBOSE, "P:    Promise's handle: '%s'", handle);
-    }
-
     if (pp->comment)
     {
         Log(LOG_LEVEL_VERBOSE, "P:\n");
@@ -134,6 +145,26 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
 
 /****************************************************************************************/
 
+void Legend()
+{
+    if (MACHINE_OUTPUT)
+    {
+        return;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, "PREFIX LEGEND:");
+    Log(LOG_LEVEL_VERBOSE, " C: class/context new definition ");
+    Log(LOG_LEVEL_VERBOSE, " V: variable or paramter new definition in scope");
+    Log(LOG_LEVEL_VERBOSE, " P: promise execution output ");
+    Log(LOG_LEVEL_VERBOSE, " B: bundle start/end execution marker");
+    Log(LOG_LEVEL_VERBOSE, " A: accounting output ");
+    Log(LOG_LEVEL_VERBOSE, " T: time measurement for stated object (promise or bundle)");
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+}
+
+/****************************************************************************************/
+
 void Banner(const char *s)
 {
     if (MACHINE_OUTPUT)
@@ -142,7 +173,7 @@ void Banner(const char *s)
     }
 
     Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
-    Log(LOG_LEVEL_VERBOSE, " CFE %s ", s);
+    Log(LOG_LEVEL_VERBOSE, " %s ", s);
     Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
 
 }
@@ -162,12 +193,12 @@ void BundleBanner(const Bundle *bp, const Rlist *params)
     {
         Writer *w = StringWriter();
         RlistWrite(w, params);
-        Log(LOG_LEVEL_VERBOSE, "B: BEGIN BUNDLE %s(%s)", bp->name, StringWriterData(w));
+        Log(LOG_LEVEL_VERBOSE, "B: BEGIN bundle %s(%s)", bp->name, StringWriterData(w));
         WriterClose(w);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "B: BEGIN BUNDLE %s", bp->name);
+        Log(LOG_LEVEL_VERBOSE, "B: BEGIN bundle %s", bp->name);
     }
 
     Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
@@ -183,6 +214,6 @@ void EndBundleBanner(const Bundle *bp)
     }
 
     Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
-    Log(LOG_LEVEL_VERBOSE, "B: END BUNDLE %s", bp->name);
+    Log(LOG_LEVEL_VERBOSE, "B: END bundle %s", bp->name);
     Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
 }

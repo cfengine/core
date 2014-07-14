@@ -36,6 +36,7 @@
 void SpecialTypeBanner(TypeSequence type, int pass);
 void PromiseBanner(EvalContext *ctx, const Promise *pp);
 void Banner(const char *s);
+void Legend();
 void BundleBanner(const Bundle *bp, const Rlist *params);
 void EndBundleBanner(const Bundle *bp);
 #endif

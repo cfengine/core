@@ -140,7 +140,7 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const 
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
-static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept, struct timespec start);
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
@@ -620,7 +620,6 @@ static void ThisAgentInit(void)
     char filename[CF_BUFSIZE];
 
 #ifdef HAVE_SETSID
-    Log(LOG_LEVEL_VERBOSE, "Setting session ID, becoming process group leader");
     setsid();
 #endif
 
@@ -1035,7 +1034,9 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 {
     Rlist *bundlesequence = NULL;
 
-    Banner("Begin policy/promise schedule");
+    Banner("Begin policy/promise evaluation");
+
+    Legend();
 
     if (config->bundlesequence)
     {
@@ -1187,6 +1188,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
+    struct timespec start = BeginMeasure();
 
     if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
@@ -1228,7 +1230,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 {
                     DeleteTypeContext(ctx, type);
                     EvalContextStackPopFrame(ctx);
-                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
+                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
                     return result;
                 }
             }
@@ -1243,7 +1245,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
         }
     }
 
-    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
+    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
     return result;
 }
 
@@ -1679,37 +1681,47 @@ static bool VerifyBootstrap(void)
 /* Compliance comp                                            */
 /**************************************************************/
 
-static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
+static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept, struct timespec start)
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance = 0.0;
-        
+
+    if (MACHINE_OUTPUT)
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+
     delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
     Log(LOG_LEVEL_VERBOSE, "\n");
-    Log(LOG_LEVEL_VERBOSE, "S: ...................................................");
-    Log(LOG_LEVEL_VERBOSE, "S: Bundle Accounting Summary for '%s' in namespace %s", bundle->name, bundle->ns);
+    Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
+    Log(LOG_LEVEL_VERBOSE, "A: Bundle Accounting Summary for '%s' in namespace %s", bundle->name, bundle->ns);
 
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "S: Zero promises executed for bundle '%s'", bundle->name);
-        Log(LOG_LEVEL_VERBOSE, "S: ...................................................");
+        Log(LOG_LEVEL_VERBOSE, "A: Zero promises executed for bundle '%s'", bundle->name);
+        Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
         Log(LOG_LEVEL_VERBOSE, "\n");
         return PROMISE_RESULT_NOOP;
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "S: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
-        Log(LOG_LEVEL_VERBOSE, "S: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
-        Log(LOG_LEVEL_VERBOSE, "S: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
+        Log(LOG_LEVEL_VERBOSE, "A: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
+        Log(LOG_LEVEL_VERBOSE, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
+        Log(LOG_LEVEL_VERBOSE, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
 
         bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-        Log(LOG_LEVEL_VERBOSE, "S: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
+        Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
             bundle->name, bundle_compliance * 100.0);
-        Log(LOG_LEVEL_VERBOSE, "S: ...................................................");
+
+        char name[CF_MAXVARSIZE];
+        snprintf(name, CF_MAXVARSIZE, "%s:%s", bundle->ns, bundle->name);
+
+        EndMeasure(name, start);
+        Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
         Log(LOG_LEVEL_VERBOSE, "\n");
     }
 

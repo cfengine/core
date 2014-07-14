@@ -316,7 +316,7 @@ static void AssessArpPromise(char *promiser, PromiseResult *result, EvalContext 
     }
 
     DataType type = CF_DATA_TYPE_NONE;
-    snprintf(ivar, CF_MAXVARSIZE, "sys.interface");
+    xsnprintf(ivar, sizeof(ivar), "sys.interface");
     VarRef *ref = VarRefParse(ivar);
     const void *default_interface = EvalContextVariableGet(ctx, ref, &type);
     VarRefDestroy(ref);

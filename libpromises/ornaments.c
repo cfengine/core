@@ -154,10 +154,10 @@ void Legend()
 
     Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
     Log(LOG_LEVEL_VERBOSE, "PREFIX LEGEND:");
-    Log(LOG_LEVEL_VERBOSE, " C: class/context new definition ");
     Log(LOG_LEVEL_VERBOSE, " V: variable or paramter new definition in scope");
-    Log(LOG_LEVEL_VERBOSE, " P: promise execution output ");
+    Log(LOG_LEVEL_VERBOSE, " C: class/context new definition ");
     Log(LOG_LEVEL_VERBOSE, " B: bundle start/end execution marker");
+    Log(LOG_LEVEL_VERBOSE, " P: promise execution output ");
     Log(LOG_LEVEL_VERBOSE, " A: accounting output ");
     Log(LOG_LEVEL_VERBOSE, " T: time measurement for stated object (promise or bundle)");
     Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");

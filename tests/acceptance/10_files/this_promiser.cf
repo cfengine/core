@@ -45,6 +45,10 @@ bundle agent init
 {
   vars:
       "files" slist => { "aa", "ab", "ac", "ba", "bb", "bc" };
+
+  files:
+      "$(G.testdir)/copy_me_source"
+        create => "true";
 }
 
 #######################################################
@@ -78,6 +82,9 @@ bundle agent test
       depth_search => test_recurse,
       delete => tidyfiles,
       classes => promiser3_generic;
+
+    "$(G.testdir)/copy_me"
+      copy_from => local_cp("$(this.promiser)_source");
 
   methods:
     "template_test" usebundle => template_test;
@@ -136,8 +143,9 @@ body delete tidyfiles
 
 body file_select test_plain
 {
+      leaf_name => { "[a,b][a,b,c]" };
       file_types => { "plain" };
-      file_result => "file_types";
+      file_result => "file_types.leaf_name";
 }
 
 body file_select by_exec_cmd
@@ -167,13 +175,15 @@ bundle agent check
       "ok_4_count" int => countclassesmatching(".*_4_ok");
 
   classes:
-      "ok" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
+      "ok_expand" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
       "ok0" expression => strcmp("$(ok_0_count)", 1);
       "ok1" expression => strcmp("$(ok_1_count)", 6);
       "ok2" expression => strcmp("$(ok_2_count)", 5);
       "ok3" expression => strcmp("$(ok_3_count)", 7);
       "ok4" expression => strcmp("$(ok_4_count)", 4);
+      "ok5" expression => fileexists("$(G.testdir)/copy_me");
 
+      "ok" and => { "ok_expand", "ok0", "ok1", "ok2", "ok3", "ok4", "ok5" };
   reports:
     DEBUG::
       "$(ok_promisers)";
@@ -182,10 +192,12 @@ bundle agent check
       "2: $(ok_2_count)";
       "3: $(ok_3_count)";
       "4: $(ok_4_count)";
+    DEBUG.!ok5::
+      "5: file not copied";
 
-    ok.ok0.ok1.ok2.ok3.ok4::
+    ok::
       "$(this.promise_filename) Pass";
-    !ok|!ok0|!ok1|!ok2|!ok3|!ok4::
+    !ok::
       "$(this.promise_filename) FAIL";
 }
 ### PROJECT_ID: core

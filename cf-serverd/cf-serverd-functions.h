@@ -49,7 +49,7 @@ typedef int (*InitServerFunction)(size_t queue_size);
 
 
 GenericAgentConfig *CheckOpts(int argc, char **argv);
-void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
+int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
 
 
 #endif

@@ -59,9 +59,9 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
     int already, got;
 
-    if (toget > CF_BUFSIZE - 1)
+    if (toget > CF_BUFSIZE - 1 || toget < 0)
     {
-        Log(LOG_LEVEL_ERR, "Bad software request for overfull buffer");
+        Log(LOG_LEVEL_ERR, "Bad software request to receive %d bytes", toget);
         return -1;
     }
 
@@ -103,6 +103,13 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 int SendSocketStream(int sd, const char buffer[CF_BUFSIZE], int tosend)
 {
     int sent, already = 0;
+
+    if (tosend <= 0)
+    {
+        Log(LOG_LEVEL_ERR, "Bad software request to send %d bytes",
+            tosend);
+        return -1;
+    }
 
     do
     {

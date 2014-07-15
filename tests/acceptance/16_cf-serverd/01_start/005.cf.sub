@@ -34,7 +34,8 @@ body copy_from copy_src_file
 
 {
       source      => "$(G.testdir)/source_file";
-      servers     => { @(sys.ip_addresses) }; # localhost is always granted
+      # localhost comes first but will be denied
+      servers     => { @(sys.ip_addresses) };
       compare     => "mtime";
       copy_backup => "false";
 

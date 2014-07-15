@@ -1395,7 +1395,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         result = VerifyVarPromise(ctx, pp, true);
         if (result != PROMISE_RESULT_FAIL)
         {
-            Log(LOG_LEVEL_VERBOSE, "V:     Converging value of \"%s\"", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "V:     Computing value of \"%s\"", pp->promiser);
         }
     }
     else if (strcmp("defaults", pp->parent_promise_type->name) == 0)

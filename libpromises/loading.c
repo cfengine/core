@@ -209,7 +209,7 @@ static void ShowContext(EvalContext *ctx)
         for (size_t i = 0; i < SeqLength(hard_contexts); i++)
         {
             const char *context = SeqAt(hard_contexts, i);
-            WriterWriteF(w, "%s C: %s\n", VPREFIX, context);
+            WriterWriteF(w, "%s C: discovered hard class %s\n", VPREFIX, context);
         }
 
         WriterWriteF(w, "%s END Discovered hard classes", VPREFIX);
@@ -227,7 +227,7 @@ static void ShowContext(EvalContext *ctx)
         for (size_t i = 0; i < SeqLength(soft_contexts); i++)
         {
             const char *context = SeqAt(soft_contexts, i);
-            WriterWriteF(w, "%s C: %s\n", VPREFIX, context);
+            WriterWriteF(w, "%s C: added soft class %s\n", VPREFIX, context);
         }
 
         WriterWriteF(w, "%s END initial soft classes", VPREFIX);

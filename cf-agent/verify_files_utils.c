@@ -2454,6 +2454,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "No authenticated source '%s' in files.copy_from promise",
              BufferData(source));
+        BufferDestroy(source);
         return PROMISE_RESULT_FAIL;
     }
 

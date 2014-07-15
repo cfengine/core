@@ -19,10 +19,13 @@ bundle common G
       "exeext" string => "";
 
     any::
+      # General commands.
       "cmds" slist => { "date", "diff", "cat", "colordiff", "echo", "egrep", "env", "false", "grep",
                         "gzip", "hexdump", "ln", "mkdir", "mock_package_manager", "od", "perl",
                         "printf", "psexec", "pwd", "rm", "sed", "seq", "sort", "touch", "true",
                         "wc", };
+      # Special cases.
+      "make_cmds" slist => { "gmake", "make" };
 
     any::
       "paths[tests]" string                  => "$(this.promise_dirname)";
@@ -46,16 +49,30 @@ bundle common G
       "paths_indices" slist => getindices("paths");
 
   classes:
+      # General commands.
       "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)");
       "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)"),
+      scope => "namespace";
+
+      # Special cases.
+      "$(paths_indices)_$(make_cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)");
+      "has_make"                          expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)"),
       scope => "namespace";
 
       "want_color" expression => strcmp(getenv("CFENGINE_COLOR", 4k), "1");
       "have_colordiff" expression => fileexists($(colordiff));
 
   vars:
+      # General commands.
       "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
       ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
+
+      # Special cases.
+      # gmake has higher priority, so should come last.
+      "make" string => "$(paths[$(paths_indices)])$(const.dirsep)make$(exeext)",
+      ifvarclass => canonify("$(paths_indices)_make$(exeext)");
+      "make" string => "$(paths[$(paths_indices)])$(const.dirsep)gmake$(exeext)",
+      ifvarclass => canonify("$(paths_indices)_gmake$(exeext)");
 
     want_color.have_colordiff::
       "diff_maybecolor" string => $(colordiff);

@@ -549,7 +549,12 @@ static int InitServer(size_t queue_size)
     return sd;
 }
 
-void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
+/**
+ *  @retval >0 Number of threads still working
+ *  @retval 0  All threads are done
+ *  @retval -1 Server didn't run
+ */
+int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     int sd = -1;
     CfLock thislock;
@@ -592,7 +597,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         {
             cf_closesocket(sd);
         }
-        return;
+        return -1;
     }
 
     if (sd != -1)
@@ -730,24 +735,55 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         }
     }
 
+    Log(LOG_LEVEL_NOTICE, "Cleaning up and exiting...");
+
     CollectCallStop();
 
     if (sd != -1)
     {
+        Log(LOG_LEVEL_VERBOSE, "Closing listening socket");
         cf_closesocket(sd);                       /* Close listening socket */
     }
 
-    /* Clean up various allocations, if threads are not still lingering. */
-    if (ThreadLock(cft_server_children))
+    /* This is a graceful exit, give 2 seconds chance to threads. */
+    int threads_left = 1;
+    for (int i = 2; i > 0; i--)
     {
-        if (ACTIVE_THREADS == 0)
+        if (ThreadLock(cft_server_children))
         {
-            ClearAuthAndACLs();
-            PolicyDestroy(server_cfengine_policy);
-            ServerTLSDeInitialize();
+            threads_left = ACTIVE_THREADS;
+            ThreadUnlock(cft_server_children);
         }
-        ThreadUnlock(cft_server_children);
+
+        if (threads_left == 0)
+        {
+            break;
+        }
+
+        Log(LOG_LEVEL_VERBOSE,
+            "Waiting %ds for %d connection threads to finish",
+            i, threads_left);
+
+        sleep(1);
+    }
+
+    if (threads_left > 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "There are %d connection threads left, exiting anyway",
+            threads_left);
+    }
+    else
+    {
+        assert(threads_left == 0);
+        Log(LOG_LEVEL_VERBOSE,
+            "All threads are done, cleaning up allocations");
+        ClearAuthAndACLs();
+        PolicyDestroy(server_cfengine_policy);
+        ServerTLSDeInitialize();
     }
 
     YieldCurrentLock(thislock);
+
+    return threads_left;
 }

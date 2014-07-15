@@ -23,9 +23,6 @@ bundle agent init
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "sunos_5_10",
-        meta => { "redmine5222" };
 
   vars:
       # Neither of these are likely to change...

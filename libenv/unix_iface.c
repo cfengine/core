@@ -675,6 +675,9 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                     char name[CF_MAXVARSIZE];
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
                     EvalContextAddIpAddress(ctx, ip->name);
+                    /* "ipv6_" prefix is the official way, but keep
+                     * unprefixed version for backwards compatibility. */
+                    EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
                     snprintf(name, sizeof(name), "ipv6_%s", CanonifyName(ip->name));
                     EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
 

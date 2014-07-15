@@ -464,8 +464,6 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     conn->maproot = false;      /* Only public files (chmod o+r) accessible */
     conn->revdns[0] = '\0';
 
-    Log(LOG_LEVEL_DEBUG, "New socket %d", ConnectionInfoSocket(info));
-
     return conn;
 }
 

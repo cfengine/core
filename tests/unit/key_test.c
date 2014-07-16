@@ -5,6 +5,7 @@
 #include <key.h>
 #include <openssl/rsa.h>
 #include <openssl/evp.h>
+#include <openssl/bn.h>
 
 /*
  * Initialization

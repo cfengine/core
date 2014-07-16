@@ -1,19 +1,30 @@
 if !BUILTIN_EXTENSIONS
  projlib_LTLIBRARIES = libpromises.la
- libpromises_la_LDFLAGS = -version-info 3:6:0 -no-undefined
+ AM_LDFLAGS = -version-info 3:6:0 -no-undefined
 else
  noinst_LTLIBRARIES = libpromises.la
+ AM_LDFLAGS =
 endif
+
+AM_LDFLAGS += $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDFLAGS) \
+	$(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS) $(SQLITE3_LDFLAGS) $(LIBACL_LDFLAGS)
 
 EXTRA_DIST = extensions_template.c extensions_template.h enterprise_extension.sed math.pc
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
-	-I$(srcdir)/../libenv $(ENTERPRISE_CPPFLAGS)
+AM_CPPFLAGS = \
+	-I$(srcdir)/../libutils -I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libenv $(ENTERPRISE_CPPFLAGS) \
+	$(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS) \
+	$(PCRE_CPPFLAGS) $(OPENSSL_CPPFLAGS) $(SQLITE3_CPPFLAGS) $(LIBACL_CPPFLAGS)
 
-AM_CFLAGS = @CFLAGS@ \
-	$(ENTERPRISE_CFLAGS)
+AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
+	$(LMDB_CFLAGS) $(TOKYOCABINET_CFLAGS) $(QDBM_CFLAGS) \
+	$(PCRE_CFLAGS) $(OPENSSL_CFLAGS) $(SQLITE3_CFLAGS) $(LIBACL_CFLAGS)
 
 AM_YFLAGS = -d
+
+LIBS = $(LMDB_LIBS) $(TOKYOCABINET_LIBS) $(QDBM_LIBS) \
+	$(PCRE_LIBS) $(OPENSSL_LIBS) $(SQLITE3_LIBS) $(LIBACL_LIBS)
 
 libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la \
 	../libenv/libenv.la $(ENTERPRISE_LDADD)
@@ -169,17 +180,6 @@ CLEANFILES = *.gcno *.gcda $(BUILT_SOURCES)
 # Some basic clean ups
 #
 MOSTLYCLEANFILES = *~ *.orig *.rej
-
-# libutils dependency
-
-# Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la \
-	../libenv/libenv.la $(ENTERPRISE_LDADD)
-
-.PRECIOUS: ../libutils/libutils.la
-
-../libutils/libutils.la:
-	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
 
 bootstrap.inc:
 	perl ./text2cstring.pl failsafe.cf > bootstrap.inc

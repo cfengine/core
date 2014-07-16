@@ -22,7 +22,11 @@
   included file COSL.txt.
 */
 
-#include <generic_agent.h>
+#include <platform.h>
+#include <cf-key-functions.h>
+
+#include <openssl/bn.h>                                     /* BN_*, BIGNUM */
+#include <openssl/rand.h>                                   /* RAND_* */
 
 #include <lastseen.h>
 #include <dir.h>
@@ -36,7 +40,6 @@
 #include <crypto.h>
 #include <file_lib.h>
 
-#include <cf-key-functions.h>
 
 static const char *const passphrase = "Cfengine passphrase";
 

@@ -25,7 +25,10 @@
 #ifndef CFENGINE_CONSTANTS_H
 #define CFENGINE_CONSTANTS_H
 
-#include <cf3.defs.h>
+
+/* TODO libpromises depends on libenv, the opposite should not happen! */
+typedef struct EvalContext_ EvalContext;
+
 
 void LoadSystemConstants(EvalContext *ctx);
 

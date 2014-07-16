@@ -53,7 +53,7 @@ VarRef *VarRefParse(const char *var_ref_string);
 VarRef *VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle);
 VarRef *VarRefParseFromScope(const char *var_ref_string, const char *scope);
 VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator);
-const VarRef VarRefConst(const char *ns, const char *scope, const char *lval);
+VarRef VarRefConst(const char *ns, const char *scope, const char *lval);
 
 void VarRefDestroy(VarRef *ref);
 

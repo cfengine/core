@@ -714,7 +714,7 @@ char iscrypt, enterprise_field;
         {
             Log(LOG_LEVEL_ERR,
                 "Authentication failure: peer sent illegal challenge "
-                "(challenge_len %u > crypt_len %u)",
+                "(challenge_len %u != crypt_len %u)",
                 challenge_len, crypt_len);
             return false;
         }

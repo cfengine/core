@@ -5,12 +5,25 @@
 # Be careful what you pass into this script. It cannot handle any redirection
 # or spaces in pathnames.
 
+kill_all_subprocesses() {
+  SUB_PID="$(cat pid.$$)"
+  # Extract sub process group ID.
+  SUB_PGID="$(ps -W | egrep "^ *$SUB_PID " | sed -e 's/^ *[0-9]\+ \+[0-9]\+ \+\([0-9]\+\).*/\1/')"
+  # Extract list of all processes with that PGID.
+  # Note: We extract WINPID, not PID, for use in native Windows command.
+  WINPID_LIST="$(ps -W | egrep "^ *[0-9]+ +[0-9]+ +$SUB_PGID " | sed -e 's/^ *[0-9]\+ \+[0-9]\+ \+[0-9]\+ \+\([0-9]\+\).*/\1/')"
+  # Kill them all.
+  for i in $WINPID_LIST; do
+    $0 taskkill -f -t -pid $i
+  done
+}
+
 touch output.$$
 
 $(dirname $0)/../elevate.exe -wait "$(dirname $0)\template.bat" "cd '`pwd`'; export PATH='$PATH'; $(dirname $0)/preserve-output-and-status.sh $$ $@" &
 
-trap '$0 kill `cat pid.$$`' INT
-trap '$0 kill `cat pid.$$`' TERM
+trap kill_all_subprocesses INT
+trap kill_all_subprocesses TERM
 # Traps do not fire during commands, but *do* fire during wait.
 tail -F output.$$ --pid=$! 2>/dev/null &
 wait $!

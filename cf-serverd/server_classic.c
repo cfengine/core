@@ -1033,6 +1033,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     /* Don't process request if we're signalled to exit. */
     if (IsPendingTermination())
     {
+        Log(LOG_LEVEL_VERBOSE, "Server must exit, closing connection");
         return false;
     }
 
@@ -1542,7 +1543,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
     strcpy(sendbuffer, "BAD: Request denied");
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
-    Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
+    Log(LOG_LEVEL_INFO, "Closing connection due to request: %s", recvbuffer);
     return false;
 }
 

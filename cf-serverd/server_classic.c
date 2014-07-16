@@ -963,7 +963,7 @@ RSA *newkey = RSA_new();
         return false;
     }
 
-    conn->session_key = malloc(session_key_size);
+    conn->session_key = xmalloc(session_key_size);
     conn->encryption_type = enterprise_field;
 
     if (keylen == CF_BLOWFISHSIZE)      /* Support the old non-ecnrypted for upgrade */

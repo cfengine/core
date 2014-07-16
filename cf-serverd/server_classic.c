@@ -832,6 +832,7 @@ RSA *newkey = RSA_new();
 
     char counter_challenge[CF_BUFSIZE];
     int counter_challenge_len = BN_bn2mpi(counter_challenge_BN, counter_challenge);
+    BN_free(counter_challenge_BN);
 
     /* Compute counter-challenge digest. */
     HashString(counter_challenge, counter_challenge_len, digest, digestType);
@@ -860,10 +861,8 @@ RSA *newkey = RSA_new();
                 "(result length %d but should be %d)",
                 ret, encrypted_len);
         }
-        BN_free(counter_challenge_BN);
         return false;
     }
-    BN_free(counter_challenge_BN);
 
     Log(LOG_LEVEL_DEBUG, "Sending counter-challenge");
     SendTransaction(conn->conn_info, encrypted_counter_challenge,

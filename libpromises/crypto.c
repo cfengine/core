@@ -124,6 +124,12 @@ static void RandomSeed(void)
         RAND_seed(VFQNAME, strlen(VFQNAME));
         time_t now = time(NULL);
         RAND_seed(&now, sizeof(time_t));
+
+        if (RAND_status() != 1)
+        {
+            UnexpectedError("Low entropy! "
+                            "Please report which platform you are using.");
+        }
     }
 }
 

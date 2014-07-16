@@ -137,7 +137,7 @@ static bool GetAIXShadowHash(const char *puser, const char **result)
     char name_regex_str[strlen(puser) + 3];
 
     pcre *name_regex = CompileRegex("^(\\S+):");
-    pcre *hash_regex = CompileRegex("^\\s+password *= *(\\S+)");
+    pcre *hash_regex = CompileRegex("^\\s+password\\s*=\\s*(\\S+)");
     bool in_user_section = false;
 
     while (true)

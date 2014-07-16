@@ -144,6 +144,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
+static void BannerStatus(PromiseResult status, char *type, char *name);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -174,6 +175,7 @@ static const struct option OPTIONS[] =
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {"log-output", no_argument, 0, 'l'},
+    {"timing-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {NULL, 0, 0, '\0'}
@@ -298,12 +300,16 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
      */
     bool cfruncommand = false;
 
-    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hlC::E", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hlC::E", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
         case 'l':
             MACHINE_OUTPUT = true;
+            break;
+
+        case 't':
+            TIMING = true;
             break;
 
         case 'f':
@@ -1496,8 +1502,53 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         result = PROMISE_RESULT_NOOP;
     }
 
+    BannerStatus(result, pp->parent_promise_type->name, pp->promiser);
     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
     return result;
+}
+
+
+static void BannerStatus(PromiseResult status, char *type, char *name)
+{
+    if (MACHINE_OUTPUT)
+    {
+        return;
+    }
+
+    if ((strcmp(type, "vars") == 0) || (strcmp(type, "classes") == 0))
+    {
+        return;
+    }
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise REPAIRED");
+        break;
+
+    case PROMISE_RESULT_TIMEOUT:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise TIMED-OUT");
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_INTERRUPTED:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise NOT KEPT!");
+        break;
+
+    case PROMISE_RESULT_DENIED:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise NOT KEPT - denied");
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise was KEPT");
+        break;
+    default:
+        return;
+        break;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "P: END %s promise (%.30s...)\n", type, name);
 }
 
 /*********************************************************************/

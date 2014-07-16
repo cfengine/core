@@ -36,6 +36,8 @@ static void NotePerformance(char *eventname, time_t t, double value);
 
 /* Alter this code at your peril. Berkeley DB is very sensitive to errors. */
 
+bool TIMING = false;
+
 /***************************************************************/
 
 struct timespec BeginMeasure()
@@ -61,9 +63,12 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "\n");
-    Log(LOG_LEVEL_VERBOSE, "T: .........................................................");
-    Log(LOG_LEVEL_VERBOSE, "T: Promise accounting summary for %s", pp->promiser);
+    if (TIMING)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "T: .........................................................");
+        Log(LOG_LEVEL_VERBOSE, "T: Promise timing summary for %s", pp->promiser);
+    }
 
     mid = PromiseGetConstraintAsRval(pp, "measurement_class", RVAL_TYPE_SCALAR);
 
@@ -75,14 +80,17 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "T: No measurement_class attribute set in action body");
+        if (TIMING)
+        {
+            Log(LOG_LEVEL_VERBOSE, "T: No measurement_class attribute set in action body");
+        }
         EndMeasure(NULL, start);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "T: .........................................................");
-
-    Log(LOG_LEVEL_VERBOSE, "P: END promise %.30s (trunc)\n", pp->promiser);
-    Log(LOG_LEVEL_VERBOSE, "\n");
+    if (TIMING)
+    {
+        Log(LOG_LEVEL_VERBOSE, "T: .........................................................");
+    }
 }
 
 /***************************************************************/
@@ -103,7 +111,7 @@ void EndMeasure(char *eventname, struct timespec start)
         {
             NotePerformance(eventname, start.tv_sec, dt);
         }
-        else
+        else if (TIMING)
         {
             Log(LOG_LEVEL_VERBOSE, "T: This execution measured %lf seconds (use measurement_class to track)", dt);
         }
@@ -178,10 +186,13 @@ static void NotePerformance(char *eventname, time_t t, double value)
     {
         WriteDB(dbp, eventname, &newe, sizeof(newe));
 
-        Log(LOG_LEVEL_VERBOSE, "T: This measurement event, alias '%s', measured at time %s\n", eventname, ctime(&newe.t));
-        Log(LOG_LEVEL_VERBOSE, "T:   Last measured %lf seconds ago\n", lastseen);
-        Log(LOG_LEVEL_VERBOSE, "T:   This execution measured %lf seconds\n", newe.Q.q);
-        Log(LOG_LEVEL_VERBOSE, "T:   Average execution time %lf +/- %lf seconds\n", newe.Q.expect, sqrt(newe.Q.var));
+        if (TIMING)
+        {
+            Log(LOG_LEVEL_VERBOSE, "T: This measurement event, alias '%s', measured at time %s\n", eventname, ctime(&newe.t));
+            Log(LOG_LEVEL_VERBOSE, "T:   Last measured %lf seconds ago\n", lastseen);
+            Log(LOG_LEVEL_VERBOSE, "T:   This execution measured %lf seconds\n", newe.Q.q);
+            Log(LOG_LEVEL_VERBOSE, "T:   Average execution time %lf +/- %lf seconds\n", newe.Q.expect, sqrt(newe.Q.var));
+        }
     }
 
     CloseDB(dbp);

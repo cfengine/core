@@ -80,7 +80,6 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
     if (strlen(handle) > 0)
     {
         Log(LOG_LEVEL_VERBOSE, "P: BEGIN promise '%s' of type \"%s\" (pass %d)", handle, pp->parent_promise_type->name, EvalContextGetPass(ctx));
-        Log(LOG_LEVEL_VERBOSE, "P:    Promise's handle: '%s'", handle);
     }
     else
     {

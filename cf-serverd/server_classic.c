@@ -812,7 +812,7 @@ RSA *newkey = RSA_new();
     }
 }
 
-/* Proposition S2 - Reply with digest of challenge. */
+/* proposition S2 - reply with digest of challenge. */
 {
     Log(LOG_LEVEL_DEBUG, "Sending challenge response");
     SendTransaction(conn->conn_info, digest, digestLen, CF_DONE);

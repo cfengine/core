@@ -908,7 +908,7 @@ RSA *newkey = RSA_new();
         {
             Log(LOG_LEVEL_ERR, "Authentication failure: "
                 "error receiving counter-challenge response, "
-                "Only got %d out of %d bytes",
+                "only got %d out of %d bytes",
                 recv_len, digestLen);
         }
         return false;

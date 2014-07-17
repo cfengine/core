@@ -1,7 +1,7 @@
 #include <test.h>
 
 #include <syntax.h>
-#include <string_lib.h>
+#include <regex.h>                                       /* StringMatchFull */
 
 static void test_lookup_promise_type_agent_vars(void)
 {

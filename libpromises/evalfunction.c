@@ -44,6 +44,7 @@
 #include <hashes.h>
 #include <unix.h>
 #include <string_lib.h>
+#include <regex.h>          /* CompileRegex,StringMatchWithPrecompiledRegex */
 #include <net.h>                                           /* SocketConnect */
 #include <communication.h>
 #include <classic.h>                                    /* SendSocketStream */

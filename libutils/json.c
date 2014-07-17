@@ -28,6 +28,7 @@
 #include <string_lib.h>
 #include <file_lib.h>
 #include <printsize.h>
+#include <regex.h>
 
 #include <json.h>
 

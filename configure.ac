@@ -79,21 +79,6 @@ AC_CONFIG_LIBOBJ_DIR(libcompat)
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
-#
-# Add to the default list of places in CPPFLAGS to match LDFLAGS above
-# Don't add if cross-compiling (setting host), to avoid using native libs.
-#
-if test "x$cross_compiling" = "xno"; then
-  for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include
-  do
-    if test -d "$x"; then
-      y=`expr " $CPPFLAGS " : ".* -I$x "`
-      if test $y -eq 0; then
-        CPPFLAGS="$CPPFLAGS -I$x"
-      fi
-    fi
-  done
-fi
 
 dnl ######################################################################
 dnl Use pthreads if available

@@ -134,7 +134,7 @@ static void args_to_command_line(char **args, char *command_line)
     for (i = 0, p = args[0]; p; p = args[++i])
     {
         int j;
-        for (j = 0; j != '\0'; ++j)
+        for (j = 0; p[j] != '\0'; ++j)
         {
             command_line[current++] = p[j];
         }

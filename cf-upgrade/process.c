@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <alloc-mini.h>
 #include <process.h>
 #include <log.h>
@@ -81,12 +83,14 @@ int private_run_process_wait(const char *command, char **args, char **envp)
     char *filename = basename(xstrdup(command));
     time_t now_seconds = time(NULL);
     struct tm *now_tm = gmtime(&now_seconds);
-    char *filenamelog = xmalloc(strlen(filename) +
-                                strlen("-YYYYMMDD-HHMMSS") +
-                                strlen(".log") + 1);
-    sprintf(filenamelog, "%s-%04d%02d%02d-%02d%02d%02d.log", filename,
-            now_tm->tm_year + 1900, now_tm->tm_mon, now_tm->tm_mday,
-            now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
+    size_t filenamelog_size = (strlen(filename) +
+                               strlen("-YYYYMMDD-HHMMSS") +
+                               strlen(".log") + 1);
+    char *filenamelog = xmalloc(filenamelog_size);
+    snprintf(filenamelog, filenamelog_size,
+              "%s-%04d%02d%02d-%02d%02d%02d.log", filename,
+              now_tm->tm_year + 1900, now_tm->tm_mon, now_tm->tm_mday,
+              now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
 
     int exit_status = 0;
     pid_t child = fork();

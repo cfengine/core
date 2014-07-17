@@ -84,7 +84,7 @@ static size_t VarRefHash(const VarRef *ref)
     return (h & (INT_MAX - 1));
 }
 
-const VarRef VarRefConst(const char *ns, const char *scope, const char *lval)
+VarRef VarRefConst(const char *ns, const char *scope, const char *lval)
 {
     VarRef ref;
 

@@ -71,6 +71,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <stddef.h>                                     /* offsetof, size_t */
 
 /* POSIX but available in all platforms. */
 #include <strings.h>
@@ -143,21 +144,7 @@ struct utsname
 
 #include <bool.h>
 
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/evp.h>
-#include <openssl/rsa.h>
-#include <openssl/rand.h>
-#include <openssl/bn.h>
 #include <errno.h>
-
-#ifdef HAVE_PCRE_H
-# include <pcre.h>
-#endif
-
-#ifdef HAVE_PCRE_PCRE_H
-# include <pcre/pcre.h>
-#endif
 
 #ifdef HAVE_DIRENT_H
 # include <dirent.h>

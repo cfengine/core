@@ -1,7 +1,11 @@
-AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
+AM_CPPFLAGS = $(ENTERPRISE_CFLAGS) \
 	-I$(top_srcdir)/libpromises \
 	-I$(top_srcdir)/libutils \
-	-I$(top_srcdir)/libcfnet
+	-I$(top_srcdir)/libcfnet \
+	$(OPENSSL_CPPFLAGS)
+
+AM_CFLAGS = \
+	$(OPENSSL_CFLAGS)
 
 noinst_PROGRAMS =
 
@@ -17,13 +21,17 @@ mock_package_manager_LDADD = libmock_package_manager.la
 endif # !BUILTIN_EXTENSIONS
 
 if HAVE_LIBXML2
-noinst_PROGRAMS += xml-c14nize
+  noinst_PROGRAMS += xml-c14nize
 
-xml_c14nize_CPPFLAGS = $(LIBXML2_CPPFLAGS)
-xml_c14nize_CFLAGS = -I$(top_srcdir)/libpromises -I$(srcdir)/../../libutils \
-    $(LIBXML2_CFLAGS)
-xml_c14nize_LDADD = ../../libutils/libutils.la \
-    $(LIBXML2_LIBS)
+  xml_c14nize_CPPFLAGS = \
+	-I$(top_srcdir)/libpromises \
+	-I$(srcdir)/../../libutils \
+	$(LIBXML2_CPPFLAGS)
+
+  xml_c14nize_CFLAGS  = $(LIBXML2_CFLAGS)
+  xml_c14nize_LDFLAGS = $(LIBXML2_LDFLAGS)
+  xml_c14nize_LDADD = ../../libutils/libutils.la \
+	$(LIBXML2_LIBS)
 endif
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub testall dummy_etc

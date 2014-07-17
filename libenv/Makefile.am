@@ -11,7 +11,8 @@ if SOLARIS
 libenv_la_LIBADD = -lkstat
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir)/libutils
+AM_CPPFLAGS  = -I$(top_srcdir)/libutils
+AM_CPPFLAGS += $(OPENSSL_CPPFLAGS)	     # because libutils needs it
 
 # Those dependencies are ought to go away ASAP
 AM_CPPFLAGS += -I$(top_srcdir)/libcfnet

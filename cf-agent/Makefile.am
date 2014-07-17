@@ -1,27 +1,38 @@
 noinst_LTLIBRARIES = libcf-agent.la
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	$(ENTERPRISE_CPPFLAGS) \
+	$(OPENSSL_CPPFLAGS) \
+	$(PCRE_CPPFLAGS) \
 	$(LIBVIRT_CPPFLAGS) \
 	$(POSTGRESQL_CPPFLAGS) \
 	$(MYSQL_CPPFLAGS) \
-	$(LIBXML2_CPPFLAGS)
+	$(LIBXML2_CPPFLAGS) \
+	$(PAM_CPPFLAGS)
 
-AM_CFLAGS = @CFLAGS@ \
+AM_CFLAGS = \
 	$(ENTERPRISE_CFLAGS) \
+	$(OPENSSL_CFLAGS) \
+	$(PCRE_CFLAGS) \
 	$(LIBVIRT_CFLAGS) \
 	$(POSTGRESQL_CFLAGS) \
 	$(MYSQL_CFLAGS) \
-	$(LIBXML2_CFLAGS)
+	$(LIBXML2_CFLAGS) \
+	$(PAM_CFLAGS)
 
 AM_LDFLAGS = \
+	$(OPENSSL_LDFLAGS) \
+	$(PCRE_LDFLAGS) \
 	$(LIBVIRT_LDFLAGS) \
 	$(POSTGRESQL_LDFLAGS) \
 	$(MYSQL_LDFLAGS) \
-	$(LIBXML2_LDFLAGS)
+	$(LIBXML2_LDFLAGS) \
+	$(PAM_LDFLAGS)
 
-libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
+libcf_agent_la_LIBADD = ../libutils/libutils.la ../libpromises/libpromises.la \
+	$(OPENSSL_LIBS) \
+	$(PCRE_LIBS) \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
@@ -85,10 +96,12 @@ endif
 endif
 
 if !BUILTIN_EXTENSIONS
- sbin_PROGRAMS = cf-agent
- # Workaround for automake madness (try removing it if you want to know why).
- cf_agent_CFLAGS = $(AM_CFLAGS)
- cf_agent_LDADD = libcf-agent.la
+  sbin_PROGRAMS = cf-agent
+  # Build both a libcf-agent.la library, and a cf-agent executable
+  # https://www.gnu.org/software/automake/manual/html_node/Objects-created-both-with-libtool-and-without.html
+  cf_agent_SOURCES = $(libcf_agent_la_SOURCES)
+  cf_agent_CFLAGS = $(AM_CFLAGS)
+  cf_agent_LDADD = libcf-agent.la $(libcf_agent_la_LIBADD)
 endif
 
 CLEANFILES = *.gcno *.gcda

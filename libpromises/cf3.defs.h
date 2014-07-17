@@ -25,9 +25,13 @@
 #ifndef CFENGINE_CF3_DEFS_H
 #define CFENGINE_CF3_DEFS_H
 
-#include <platform.h>
-#include <compiler.h>
 
+/* ALWAYS INCLUDE EITHER THIS FILE OR platform.h FIRST */
+
+
+#include <platform.h>
+
+#include <compiler.h>
 #include <hash_method.h>                                      /* HashMethod */
 #include <sequence.h>
 #include <logging.h>

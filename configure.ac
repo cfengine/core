@@ -381,6 +381,11 @@ if test "x$with_libxml2" != xno; then
          if test -n "$xml2_include_dir"; then
             CPPFLAGS="$xml2_include_dir $CPPFLAGS"
          fi
+        else                # xml2-config not found
+            # if a path, e.g. /var/cfengine was given, then we
+            # must take into account that libxml2 includes are in
+            # /var/cfengine/include/libxml2
+            LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
       fi
    fi
 

@@ -28,11 +28,6 @@
 #include <platform.h>
 #include <compiler.h>
 
-#ifdef HAVE_LIBXML2
-#include <libxml/parser.h>
-#include <libxml/xpathInternals.h>
-#endif
-
 #include <hash_method.h>                                      /* HashMethod */
 #include <sequence.h>
 #include <logging.h>

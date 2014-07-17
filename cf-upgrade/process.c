@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <alloc-mini.h>
 #include <process.h>
 #include <log.h>
@@ -81,12 +83,14 @@ int private_run_process_wait(const char *command, char **args, char **envp)
     char *filename = basename(xstrdup(command));
     time_t now_seconds = time(NULL);
     struct tm *now_tm = gmtime(&now_seconds);
-    char *filenamelog = xmalloc(strlen(filename) +
-                                strlen("-YYYYMMDD-HHMMSS") +
-                                strlen(".log") + 1);
-    sprintf(filenamelog, "%s-%04d%02d%02d-%02d%02d%02d.log", filename,
-            now_tm->tm_year + 1900, now_tm->tm_mon, now_tm->tm_mday,
-            now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
+    size_t filenamelog_size = (strlen(filename) +
+                               strlen("-YYYYMMDD-HHMMSS") +
+                               strlen(".log") + 1);
+    char *filenamelog = xmalloc(filenamelog_size);
+    snprintf(filenamelog, filenamelog_size,
+              "%s-%04d%02d%02d-%02d%02d%02d.log", filename,
+              now_tm->tm_year + 1900, now_tm->tm_mon, now_tm->tm_mday,
+              now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
 
     int exit_status = 0;
     pid_t child = fork();
@@ -121,31 +125,24 @@ int private_run_process_wait(const char *command, char **args, char **envp)
  * The Windows implementations were taken from Microsoft's documentation and
  * modified accordingly to fit our purposes.
  */
-static void args_to_command_line(char **args, char *command_line)
+static void args_to_command_line(char *command_line, char **args,
+                                 unsigned long command_line_size)
 {
     /*
      * Windows does not use an array for the command line arguments, but
      * a string. Therefore we need to revert the parsing we did before and
      * build the string.
      */
-    char *p;
-    int i;
-    int current = 0;
-    for (i = 0, p = args[0]; p; p = args[++i])
+    command_line[0] = '\0';
+    char *arg;
+    while ((arg = *args) != NULL)
     {
-        int j;
-        for (j = 0; p[j] != '\0'; ++j)
-        {
-            command_line[current++] = p[j];
-        }
+        strlcat(command_line, arg, command_line_size);
         /* Add a space before the next argument */
-        command_line[current++] = ' ';
+        strlcat(command_line, " ", command_line_size);
+
+        args++;
     }
-    /* We roll back to the last space that was added */
-    current--;
-    /* Make sure the command line is '\0' terminated */
-    command_line[current] = '\0';
-    return 0;
 }
 
 int private_run_process_replace(const char *command, char **args, char **envp)
@@ -159,7 +156,9 @@ int private_run_process_replace(const char *command, char **args, char **envp)
     ZeroMemory( &pi, sizeof(pi) );
     ZeroMemory( command_line, sizeof(command_line) );
 
-    args_to_command_line(args, command_line);
+    args_to_command_line(command_line, args, sizeof(command_line));
+
+    log_entry(LogDebug, "Re-execute: %s", command_line);
 
     // Start the child process.
     if( !CreateProcess( command,   // No module name (use command line)
@@ -204,7 +203,7 @@ int private_run_process_wait(const char *command, char **args, char **envp)
     ZeroMemory( &pi, sizeof(pi) );
     ZeroMemory( command_line, sizeof(command_line) );
 
-    args_to_command_line(args, command_line);
+    args_to_command_line(command_line, args, sizeof(command_line));
 
     // Start the child process.
     if( !CreateProcess( command,   // No module name (use command line)

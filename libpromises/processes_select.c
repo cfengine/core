@@ -279,32 +279,46 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
 
 static long TimeCounter2Int(const char *s)
 {
-    long d = 0, h = 0, m = 0;
-    char output[CF_BUFSIZE];
+    long days, hours, minutes, seconds;
 
     if (s == NULL)
     {
         return CF_NOINT;
     }
 
-    if (strchr(s, '-'))
+    /* If we match dd-hh:mm[:ss], believe it: */
+    int got = sscanf(s, "%ld-%ld:%ld:%ld", &days, &hours, &minutes, &seconds);
+    if (got > 2)
     {
-        if (sscanf(s, "%ld-%ld:%ld", &d, &h, &m) != 3)
-        {
-            snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected dd-hh:mm, got '%s'", s);
-            return CF_NOINT;
-        }
+        /* All but perhaps seconds set */
+    }
+    /* Failing that, try matching hh:mm[:ss] */
+    else if (1 < (got = sscanf(s, "%ld:%ld:%ld", &hours, &minutes, &seconds)))
+    {
+        /* All but days and perhaps seconds set */
+        days = 0;
+        got++;
     }
     else
     {
-        if (sscanf(s, "%ld:%ld", &h, &m) != 2)
-        {
-            snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected hH:mm, got '%s'", s);
-            return CF_NOINT;
-        }
+        Log(LOG_LEVEL_ERR,
+            "Unable to parse elapsed time 'ps' field as [dd-]hh:mm[:ss], got '%s'",
+            s);
+        return CF_NOINT;
+    }
+    assert(got > 2); /* i.e. all but maybe seconds have been set */
+    /* Clear seconds if unset: */
+    if (got < 4)
+    {
+        seconds = 0;
     }
 
-    return 60 * (m + 60 * (h + 24 * d));
+    Log(LOG_LEVEL_DEBUG,
+        "TimeCounter2Int: Parsed '%s' as elapsed time '%ld-%02ld:%02ld:%02ld'",
+        s, days, hours, minutes, seconds);
+
+    /* Convert to seconds: */
+    return ((days * 24 + hours) * 60 + minutes) * 60 + seconds;
 }
 
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
@@ -359,28 +373,58 @@ static time_t TimeAbs2Int(const char *s)
     tm.tm_sec = 0;
     tm.tm_isdst = -1;
 
-    if (strstr(s, ":"))         /* Hr:Min */
+    /* Try various ways to parse s: */
+    char word[4]; /* Abbreviated month name */
+    long ns[3]; /* Miscellaneous numbers, diverse readings */
+    int got = sscanf(s, "%2ld:%2ld:%2ld", ns, ns + 1, ns + 2);
+    if (1 < got) /* Hr:Min[:Sec] */
     {
-        char h[3], m[3];
-        sscanf(s, "%2[^:]:%2[^:]:", h, m);
-        tm.tm_hour = IntFromString(h);
-        tm.tm_min = IntFromString(m);
+        tm.tm_hour = ns[0];
+        tm.tm_min = ns[1];
+        if (got == 3)
+        {
+            tm.tm_sec = ns[2];
+        }
     }
-    else                        /* Month day */
+    /* or MMM dd (the %ld shall ignore any leading space) */
+    else if (2 == sscanf(s, "%3[a-zA-Z]%ld", word, ns) &&
+             /* Only match if word is a valid month text: */
+             0 < (ns[1] = Month2Int(word)))
     {
-        char mon[4];
-        long day;
-        sscanf(s, "%3[a-zA-Z] %ld", mon, &day);
-        int month = Month2Int(mon);
-        if (tm.tm_mon < month - 1)
+        int month = ns[1] - 1;
+        if (tm.tm_mon < month)
         {
             /* Wrapped around */
             tm.tm_year--;
         }
-        tm.tm_mon = month - 1;
-        tm.tm_mday = day;
+        tm.tm_mon = month;
+        tm.tm_mday = ns[0];
         tm.tm_hour = 0;
         tm.tm_min = 0;
+    }
+    /* or just year, or seconds since 1970 */
+    else if (1 == sscanf(s, "%ld", ns))
+    {
+        if (ns[0] > 9999)
+        {
+            /* Seconds since 1970.
+             *
+             * This is the amended value SplitProcLine() replaces
+             * start time with if it's imprecise and a better value
+             * can be calculated from elapsed time.
+             */
+            return (time_t)ns[0];
+        }
+        /* else year, at most four digits; either 4-digit CE or
+         * already relative to 1900. */
+
+        memset(&tm, 0, sizeof(tm));
+        tm.tm_year = ns[0] < 999 ? ns[0] : ns[0] - 1900;
+        tm.tm_isdst = -1;
+    }
+    else
+    {
+        return CF_NOINT;
     }
 
     return mktime(&tm);
@@ -662,6 +706,32 @@ static int SplitProcLine(const char *proc,
         /* Fall back on word if column got an empty answer: */
         line[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(proc + s, 1 + e - s);
         sp = ep;
+    }
+
+    /* Since start times can be very imprecise (e.g. just a past day's
+     * date, or a past year), calculate a better value from elapsed
+     * time, if available: */
+    int k = GetProcColumnIndex("ELAPSED", "ELAPSED", names);
+    if (k != -1)
+    {
+        const long elapsed = TimeCounter2Int(line[k]);
+        if (elapsed != CF_NOINT) /* Only use if parsed successfully ! */
+        {
+            int j = GetProcColumnIndex("STIME", "START", names), ns[3];
+            /* Trust the reported value if it matches hh:mm[:ss], though: */
+            if (sscanf(line[j], "%d:%d:%d", ns, ns + 1, ns + 2) < 2)
+            {
+                /* TODO: use time of ps-run, not time(NULL), which may be later. */
+                time_t value = time(NULL) - (time_t) elapsed;
+
+                Log(LOG_LEVEL_DEBUG,
+                    "SplitProcLine: Replacing parsed start time %s with %s",
+                    line[j], ctime(&value));
+
+                free(line[j]);
+                xasprintf(line + j, "%ld", value);
+            }
+        }
     }
 
     return true;

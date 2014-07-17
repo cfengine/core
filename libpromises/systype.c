@@ -91,7 +91,7 @@ const char *const VPSOPTS[] =
     [PLATFORM_CONTEXT_OPENVZ] = "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
     [PLATFORM_CONTEXT_HP] = "-ef",                    /* hpux */
     [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",       /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss:9,nlwp,stime,time,args",        /* linux */
+    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss:9,nlwp,stime,etime,time,args",/* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "auxww",     /* solaris >= 11 */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxww", /* solaris < 11 */
     [PLATFORM_CONTEXT_FREEBSD] = "auxw",  /* freebsd */

@@ -28,7 +28,7 @@
 #include <addr_lib.h>
 #include <matching.h>
 #include <misc_lib.h>
-#include <string_lib.h>
+#include <regex.h> /* StringMatchFull,CompileRegex,StringMatchWithPrecompiledRegex */
 #include <file_lib.h>
 #include <files_interfaces.h>
 

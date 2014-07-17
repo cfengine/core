@@ -30,6 +30,7 @@
 #include <misc_lib.h>
 #include <communication.h>
 #include <string_lib.h>
+#include <regex.h>                                       /* StringMatchFull */
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>

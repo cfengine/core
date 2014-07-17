@@ -33,7 +33,7 @@
 #include <libxml/xpathInternals.h>
 #endif
 
-#include <hash.h> /* Required for HashMethod */
+#include <hash_method.h>                                      /* HashMethod */
 #include <sequence.h>
 #include <logging.h>
 
@@ -812,16 +812,6 @@ typedef enum
 #define OVECCOUNT 30
 
 /*******************************************************************/
-
-typedef struct
-{
-    char *name;
-    RSA *key;
-    char *address;
-    time_t timestamp;
-} KeyBinding;
-
-/*************************************************************************/
 
 typedef struct
 {

@@ -1,13 +1,19 @@
 noinst_LTLIBRARIES = libutils.la
 
+# TODO remove the openssl dependency! It's only there for base64 encoding.
+AM_CFLAGS   = $(PCRE_CFLAGS) $(OPENSSL_CFLAGS)
+AM_CPPFLAGS = $(PCRE_CPPFLAGS) $(OPENSSL_CPPFLAGS)
+AM_LDFLAGS  = $(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS)
+
 libutils_la_LIBADD = ../libcompat/libcompat.la
+libutils_la_LIBS     = $(PCRE_LIBS) $(OPENSSL_LIBS)
 
 libutils_la_SOURCES = \
 	alloc.c alloc.h \
 	atexit.c atexit.h \
 	compiler.h \
 	dir.h dir_priv.h \
-	hashes.c hashes.h \
+	hashes.c hashes.h hash_method.h \
 	sequence.c sequence.h \
 	set.c set.h \
 	statistics.c statistics.h \
@@ -18,7 +24,7 @@ libutils_la_SOURCES = \
 	json.c json.h \
 	refcount.c refcount.h \
 	list.c list.h \
-	logging.c logging.h logging_priv.h\
+	logging.c logging.h logging_priv.h \
 	buffer.c buffer.h \
 	ip_address.c ip_address.h \
 	map.c map.h map_common.h \
@@ -41,12 +47,10 @@ libutils_la_SOURCES = \
 	printsize.h
 
 if !NT
-libutils_la_SOURCES += \
-        unix_dir.c
+  libutils_la_SOURCES += unix_dir.c
 endif
 if CYGWIN
-libutils_la_SOURCES += \
-        unix_dir.c
+  libutils_la_SOURCES += unix_dir.c
 endif
 
 CLEANFILES = *.gcno *.gcda
@@ -62,10 +66,3 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # "configure; make; make install"
 #
 MAINTAINERCLEANFILES = config.h.in
-
-# libcompat dependency
-
-.PRECIOUS: ../libcompat/libcompat.la
-
-../libcompat/libcompat.la:
-	$(MAKE) -C ../libcompat $(AM_MAKEFLAGS) libcompat.la

@@ -33,7 +33,8 @@
 #include <promises.h>
 #include <conversion.h>
 #include <logic_expressions.h>
-#include <string_lib.h>
+#include <string_lib.h>                                  /* StringHash */
+#include <regex.h>                                       /* StringMatchFull */
 
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp);

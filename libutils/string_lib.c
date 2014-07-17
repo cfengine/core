@@ -78,9 +78,6 @@ unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
 }
 
 
-#define STRING_MATCH_OVECCOUNT 30
-#define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
-
 char ToLower(char ch)
 {
     if (isupper((int) ch))
@@ -397,148 +394,6 @@ char *NULLStringToEmpty(char *str)
     }
 
     return str;
-}
-
-pcre *CompileRegex(const char *regex)
-{
-    const char *errorstr;
-    int erroffset;
-
-    pcre *rx = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
-
-    if (!rx)
-    {
-        Log(LOG_LEVEL_ERR, "Regular expression error: pcre_compile() '%s' in expression '%s' (offset: %d)",
-            errorstr, regex, erroffset);
-    }
-
-    return rx;
-}
-
-bool StringMatchWithPrecompiledRegex(pcre *regex, const char *str, int *start, int *end)
-{
-    assert(regex);
-    assert(str);
-
-    int ovector[STRING_MATCH_OVECCOUNT] = { 0 };
-    int result = pcre_exec(regex, NULL, str, strlen(str), 0, 0, ovector, STRING_MATCH_OVECCOUNT);
-
-    if (result)
-    {
-        if (start)
-        {
-            *start = ovector[0];
-        }
-        if (end)
-        {
-            *end = ovector[1];
-        }
-    }
-    else
-    {
-        if (start)
-        {
-            *start = 0;
-        }
-        if (end)
-        {
-            *end = 0;
-        }
-    }
-
-    return result >= 0;
-}
-
-bool StringMatch(const char *regex, const char *str, int *start, int *end)
-{
-    pcre *pattern = CompileRegex(regex);
-
-    if (pattern == NULL)
-    {
-        return false;
-    }
-
-    bool ret = StringMatchWithPrecompiledRegex(pattern, str, start, end);
-
-    pcre_free(pattern);
-    return ret;
-
-}
-
-bool StringMatchFull(const char *regex, const char *str)
-{
-    pcre *pattern = CompileRegex(regex);
-
-    if (pattern == NULL)
-    {
-        return false;
-    }
-
-    bool ret = StringMatchFullWithPrecompiledRegex(pattern, str);
-
-    pcre_free(pattern);
-    return ret;
-}
-
-bool StringMatchFullWithPrecompiledRegex(pcre *pattern, const char *str)
-{
-    int start = 0, end = 0;
-
-    if (StringMatchWithPrecompiledRegex(pattern, str, &start, &end))
-    {
-        return (start == 0) && (end == strlen(str));
-    }
-    else
-    {
-        return false;
-    }
-}
-
-Seq *StringMatchCaptures(const char *regex, const char *str)
-{
-    assert(regex);
-    assert(str);
-
-    pcre *pattern = NULL;
-    {
-        const char *errorstr;
-        int erroffset;
-        pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
-    }
-    assert(pattern);
-
-    if (pattern == NULL)
-    {
-        return NULL;
-    }
-
-    int captures;
-    int res = pcre_fullinfo(pattern, NULL, PCRE_INFO_CAPTURECOUNT, &captures);
-    if (res != 0)
-    {
-        pcre_free(pattern);
-        return NULL;
-    }
-
-    int *ovector = xmalloc(sizeof(int) * (captures + 1) * 3);
-
-    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, (captures + 1) * 3);
-
-    if (result <= 0)
-    {
-        free(ovector);
-        pcre_free(pattern);
-        return NULL;
-    }
-
-    Seq *ret = SeqNew(captures + 1, free);
-    for (int i = 0; i <= captures; ++i)
-    {
-        SeqAppend(ret, xstrndup(str + ovector[2*i], ovector[2*i + 1] - ovector[2 * i]));
-    }
-    free(ovector);
-    pcre_free(pattern);
-    return ret;
 }
 
 char *StringEncodeBase64(const char *str, size_t len)
@@ -1054,25 +909,7 @@ void *MemSpanInverse(const void *mem, char c, size_t n)
     return (char *)mem;
 }
 
-bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex)
-{
-    if (regex)
-    {
-        if (!NULL_OR_EMPTY(compareTo) && !StringMatchFull(compareTo, value))
-        {
-            return false;
-        }
-    }
-    else
-    {
-        if (!NULL_OR_EMPTY(compareTo)  && strcmp(compareTo, value) != 0)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-/* 
+/*
  * @brief extract info from input string given two types of constraints:
  *        - length of the extracted string is bounded
  *        - extracted string should stop at first element of an exclude list
@@ -1083,7 +920,7 @@ bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex)
  * @param[out] obuf   : the output buffer
  * @retval    true if string was capped, false if not
  */
-bool StringNotMatchingSetCapped(const char *isp, int limit, 
+bool StringNotMatchingSetCapped(const char *isp, int limit,
                       const char *exclude, char *obuf)
 {
     size_t l = strcspn(isp, exclude);

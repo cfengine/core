@@ -33,7 +33,8 @@
 #include <matching.h>
 #include <scope.h>
 #include <fncall.h>
-#include <string_lib.h>
+#include <string_lib.h>                                  /* IsStrIn */
+#include <regex.h>                                       /* StringMatchFull */
 #include <misc_lib.h>
 #include <rlist.h>
 #include <vars.h>

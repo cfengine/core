@@ -30,6 +30,7 @@ static const int CF_NOSIZE = -1;
 
 #include <item_lib.h>                                 /* ItemList2CSV_bound */
 #include <string_lib.h>                               /* ToLower */
+#include <regex.h>                                    /* StringMatchFull */
 #include <crypto.h>                                   /* EncryptString */
 #include <files_names.h>
 #include <files_interfaces.h>

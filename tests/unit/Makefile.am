@@ -38,7 +38,9 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c ../../libutils/sequence.c
+libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/regex.c \
+	../../libutils/encode.c ../../libutils/writer.c \
+	../../libutils/sequence.c
 libstr_la_LIBADD = libtest.la
 
 

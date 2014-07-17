@@ -25,8 +25,9 @@
 #ifndef CFENGINE_MISC_LIB_H
 #define CFENGINE_MISC_LIB_H
 
-#include <compiler.h>
 #include <platform.h>
+
+#include <compiler.h>
 
 
 #define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)

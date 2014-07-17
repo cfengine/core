@@ -433,34 +433,30 @@ static time_t TimeAbs2Int(const char *s)
 
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {
-    int i;
-    time_t value;
-
-    if ((min == CF_NOINT) || (max == CF_NOINT))
+    if (min == CF_NOINT || max == CF_NOINT)
     {
         return false;
     }
 
-    if ((i = GetProcColumnIndex(name1, name2, names)) != -1)
+    int i = GetProcColumnIndex(name1, name2, names);
+    if (i != -1)
     {
-        value = TimeAbs2Int(line[i]);
+        time_t value = TimeAbs2Int(line[i]);
 
         if (value == CF_NOINT)
         {
-            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %c => '%s' in process list", name1[i],
-                  line[i]);
-            return false;
+            Log(LOG_LEVEL_INFO,
+                "Failed to extract a valid integer from %c => '%s' in process list",
+                name1[i], line[i]);
         }
+        else if (min <= value && value <= max)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Selection filter matched absolute '%s/%s' = '%s(%jd)' in [%jd,%jd]",
+                name1, name2, line[i],
+                (intmax_t)value, (intmax_t)min, (intmax_t)max);
 
-        if ((min <= value) && (value <= max))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute '%s/%s' = '%s(%jd)' in [%jd,%jd]", name1, name2, line[i], (intmax_t)value,
-                  (intmax_t)min, (intmax_t)max);
             return true;
-        }
-        else
-        {
-            return false;
         }
     }
 
@@ -472,23 +468,12 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 static bool SelectProcRegexMatch(const char *name1, const char *name2,
                                  const char *regex, char **colNames, char **line)
 {
-    int i;
-
-    if (regex == NULL)
+    if (regex != NULL)
     {
-        return false;
-    }
-
-    if ((i = GetProcColumnIndex(name1, name2, colNames)) != -1)
-    {
-
-        if (StringMatchFull(regex, line[i]))
+        int i = GetProcColumnIndex(name1, name2, colNames);
+        if (i != -1 && StringMatchFull(regex, line[i]))
         {
             return true;
-        }
-        else
-        {
-            return false;
         }
     }
 

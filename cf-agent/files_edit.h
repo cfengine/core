@@ -28,6 +28,13 @@
 #include <cf3.defs.h>
 #include <file_lib.h>
 
+#ifdef HAVE_LIBXML2
+#include <libxml/parser.h>
+#include <libxml/xpathInternals.h>
+#endif
+
+
+
 #define CF_EDIT_IFELAPSED 1     /* NOTE: If doing copy template then edit working copy,
                                    the edit ifelapsed must not be higher than
                                    the copy ifelapsed. This will make the working
@@ -47,12 +54,14 @@ typedef struct
 
 // filename must not be freed until FinishEditContext.
 EditContext *NewEditContext(char *filename, Attributes a);
-void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp,
+void FinishEditContext(EvalContext *ctx, EditContext *ec,
+                       Attributes a, const Promise *pp,
                        PromiseResult *result);
 
 #ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed);
-bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode);
+bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file,
+                      Attributes a, NewLineMode new_line_mode);
 #endif
 
 #endif

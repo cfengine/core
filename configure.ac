@@ -235,7 +235,7 @@ then
             pg_include_dir=`$PG_CONFIG --includedir`
             if test -n "$pg_include_dir"
             then
-                CPPFLAGS="-I$pg_include_dir $CPPFLAGS"
+                POSTGRESQL_CPPFLAGS="-I$pg_include_dir"
             fi
         fi
     fi
@@ -282,7 +282,7 @@ then
             mysql_include_dir=`$MYSQL_CONFIG --include`
             if test -n "$mysql_include_dir"
             then
-                CPPFLAGS="$mysql_include_dir $CPPFLAGS"
+                MYSQL_CPPFLAGS="$mysql_include_dir"
             fi
         fi
     fi
@@ -468,7 +468,7 @@ then
             xml2_include_dir=`$XML2_CONFIG --cflags`
             if test -n "$xml2_include_dir"
             then
-                CPPFLAGS="$xml2_include_dir $CPPFLAGS"
+                LIBXML2_CPPFLAGS="$xml2_include_dir"
             fi
         else                # xml2-config not found
             # if a path, e.g. /var/cfengine was given, then we
@@ -1059,10 +1059,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $CPPFLAGS"
-CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $CFLAGS"
-CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LDFLAGS"
-CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBS"
+CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
+CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
+CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
+CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
 
 dnl ######################################################################
 dnl Make them available to subprojects.

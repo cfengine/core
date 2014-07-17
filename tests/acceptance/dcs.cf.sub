@@ -37,6 +37,7 @@ bundle common G
                         "od",
                         "perl",
                         "printf",
+                        "ps",
                         "psexec",
                         "pwd",
                         "rm",

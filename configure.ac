@@ -205,8 +205,7 @@ AC_ARG_WITH([sql],
         --with[[out]]-postgresql and --with[[out]]-mysql instead)])
     ],
     [with_postgresql=$with_sql; with_mysql=$with_sql],
-    []
-)
+    [])
 
 dnl PostgreSQL
 
@@ -215,8 +214,7 @@ AC_ARG_WITH([postgresql],
         [Enable PostgreSQL connector])
     ],
     [],
-    [with_postgresql=check]
-)
+    [with_postgresql=check])
 
 if test "x$with_postgresql" != "xno"
 then
@@ -261,8 +259,7 @@ AC_ARG_WITH([mysql],
         [Enable MySQL connector])
     ],
     [],
-    [with_mysql=check]
-)
+    [with_mysql=check])
 
 if test "x$with_mysql" != "xno"
 then
@@ -447,8 +444,7 @@ AC_ARG_WITH([libxml2],
         [Specify libxml2 path])
     ],
     [],
-    [with_libxml2=check]
-)
+    [with_libxml2=check])
 
 if test "x$with_libxml2" != xno
 then

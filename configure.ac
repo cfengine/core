@@ -171,6 +171,16 @@ AS_IF([test x"$enable_fhs" = xyes], [
 AC_SUBST(projlibdir)
 
 dnl ######################################################################
+dnl Platform specific compiler flags.
+dnl ######################################################################
+
+AS_CASE([${target_os}],
+  [mingw*],
+    # Disable printf format warnings, because our wrapper supports more
+    # flags than vanilla Windows version, so they are false positives.
+    [CFLAGS="$CFLAGS -Wno-format"])
+
+dnl ######################################################################
 dnl Enable debugging
 dnl ######################################################################
 

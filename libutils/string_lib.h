@@ -54,7 +54,6 @@ bool StringIsNumeric(const char *name);
 bool StringIsPrintable(const char *name);
 bool EmptyString(const char *s);
 
-char *StringEncodeBase64(const char *str, size_t len);
 size_t StringBytesToHex(char *dst, size_t dst_size,
                         const unsigned char *src_bytes, size_t src_len);
 
@@ -68,14 +67,6 @@ char *StringSubstring(const char *source, size_t source_len, int start, int len)
 
 /* Allocates the result */
 char *SearchAndReplace(const char *source, const char *search, const char *replace);
-
-/* Instead of using below in a loop use CompileRegex() and StringMatchWithPrecompiledRegex(). */
-pcre *CompileRegex(const char *regex);
-bool StringMatch(const char *regex, const char *str, int *start, int *end);
-bool StringMatchWithPrecompiledRegex(pcre *regex, const char *str, int *start, int *end);
-bool StringMatchFull(const char *regex, const char *str);
-bool StringMatchFullWithPrecompiledRegex(pcre *regex, const char *str);
-Seq *StringMatchCaptures(const char *regex, const char *str);
 
 bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const char *to);
 
@@ -159,8 +150,7 @@ void *MemSpan(const void *mem, char c, size_t n);
  */
 void *MemSpanInverse(const void *mem, char c, size_t n);
 
-bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex);
-bool StringNotMatchingSetCapped(const char *isp, int limit, 
+bool StringNotMatchingSetCapped(const char *isp, int limit,
                       const char *exclude, char *obuf);
 
 /**

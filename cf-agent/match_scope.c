@@ -26,7 +26,9 @@
 
 #include <matching.h>
 #include <eval_context.h>
-#include <string_lib.h>
+#include <string_lib.h>                                   /* StringFromLong */
+#include <regex.h>                                        /* CompileRegex */
+
 
 /* Sets variables */
 static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststring, int *start, int *end)

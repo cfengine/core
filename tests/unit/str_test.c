@@ -1,5 +1,7 @@
 #include <cf3.defs.h>
 #include <string_lib.h>
+#include <regex.h>
+#include <encode.h>
 
 #include <conversion.h>
 

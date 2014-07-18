@@ -30,7 +30,8 @@
 #include <matching.h>
 #include <scope.h>
 #include <fncall.h>
-#include <string_lib.h>
+#include <string_lib.h>                                       /* StringHash */
+#include <regex.h>          /* StringMatchWithPrecompiledRegex,CompileRegex */
 #include <mutex.h>
 #include <misc_lib.h>
 #include <assoc.h>

@@ -43,7 +43,7 @@ void ProcessSignalTerminate(pid_t pid)
 
     if(kill(pid, SIGINT) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not send SIGINT to pid '%" PRIdMAX "'. (kill: %s)",
+        Log(LOG_LEVEL_ERR, "Could not send SIGINT to pid '%jd'. (kill: %s)",
             (intmax_t)pid, GetErrorStr());
     }
 
@@ -52,7 +52,7 @@ void ProcessSignalTerminate(pid_t pid)
 
     if(kill(pid, SIGTERM) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not send SIGTERM to pid '%" PRIdMAX "'. (kill: %s)",
+        Log(LOG_LEVEL_ERR, "Could not send SIGTERM to pid '%jd'. (kill: %s)",
             (intmax_t)pid, GetErrorStr());
     }
 
@@ -61,7 +61,7 @@ void ProcessSignalTerminate(pid_t pid)
 
     if(kill(pid, SIGKILL) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not send SIGKILL to pid '%" PRIdMAX "'. (kill: %s)",
+        Log(LOG_LEVEL_ERR, "Could not send SIGKILL to pid '%jd'. (kill: %s)",
             (intmax_t)pid, GetErrorStr());
     }
 

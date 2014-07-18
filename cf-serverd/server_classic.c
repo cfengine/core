@@ -587,21 +587,18 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 
 static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen)
 {
-    char in[CF_BUFSIZE], *out, *decrypted_nonce;
-    BIGNUM *counter_challenge = NULL;
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    unsigned int crypt_len, nonce_len = 0, encrypted_len = 0;
-    char sauth[10], iscrypt = 'n', enterprise_field = 'c';
-    int len_n = 0, len_e = 0, keylen, session_size;
-    RSA *newkey;
-    int digestLen = 0;
-    HashMethod digestType;
 
     if ((PRIVKEY == NULL) || (PUBKEY == NULL))
     {
-        Log(LOG_LEVEL_ERR, "No public/private key pair exists, create one with cf-key");
+        Log(LOG_LEVEL_ERR,
+            "No public/private key pair exists, create one with cf-key");
         return false;
     }
+
+    int PRIVKEY_size = RSA_size(PRIVKEY);
+    int digestLen;
+    HashMethod digestType;
 
     if (FIPS_MODE)
     {
@@ -614,273 +611,397 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         digestLen = CF_MD5_LEN;
     }
 
-/* proposition C1 */
-/* Opening string is a challenge from the client (some agent) */
+/* parameters received in SAUTH command */
+char iscrypt, enterprise_field;
 
-    sauth[0] = '\0';
+/* proposition C1 - SAUTH command */
+{
+    char sauth[10] = { 0 };
+    unsigned int crypt_len;          /* received encrypted challenge length */
+    unsigned int challenge_len;        /* challenge length after decryption */
 
-    sscanf(recvbuffer, "%s %c %u %u %c", sauth, &iscrypt, &crypt_len, &nonce_len, &enterprise_field);
+    int nparam = sscanf(recvbuffer, "%9s %c %u %u %c",
+                        sauth, &iscrypt, &crypt_len,
+                        &challenge_len, &enterprise_field);
 
-    if ((crypt_len == 0) || (nonce_len == 0) || (strlen(sauth) == 0))
+    if (nparam != 5)
     {
-        Log(LOG_LEVEL_INFO, "Protocol format error in authentation from IP %s", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "peer sent only %d out of 5 expected parameters",
+            nparam);
+
+        if (nparam >= 1 && strcmp(sauth, "SAUTH") != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "was expecting SAUTH command but got '%s'",
+                sauth);
+        }
+
         return false;
     }
 
-    if (nonce_len > CF_NONCELEN * 2)
+    if (strcmp(sauth, "SAUTH") != 0)
     {
-        Log(LOG_LEVEL_INFO, "Protocol deviant authentication nonce from %s", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "was expecting SAUTH command but got: %s",
+            sauth);
         return false;
     }
 
-    if (crypt_len > 2 * CF_NONCELEN)
+    if ((challenge_len == 0) || (crypt_len == 0))
     {
-        Log(LOG_LEVEL_INFO, "Protocol abuse in unlikely cipher from %s", conn->hostname);
+        Log(LOG_LEVEL_ERR,
+            "Authentication failure: received unexpected challenge length "
+            "(%u that decrypts to %u bytes)",
+            challenge_len, crypt_len);
         return false;
     }
 
-/* Check there is no attempt to read past the end of the received input */
-
-    if (recvbuffer + CF_RSA_PROTO_OFFSET + nonce_len > recvbuffer + recvlen)
+    if (crypt_len > CF_NONCELEN * 2)
     {
-        Log(LOG_LEVEL_INFO, "Protocol consistency error in authentication from %s", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "received encrypted challenge is too long "
+            "(%d bytes)", crypt_len);
         return false;
     }
 
-    if ((strcmp(sauth, "SAUTH") != 0) || (nonce_len == 0) || (crypt_len == 0))
+    if (challenge_len > CF_NONCELEN * 2)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error in RSA authentication from IP '%s'", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "received challenge is too long (%u bytes)",
+            challenge_len);
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Challenge encryption = %c, nonce = %d, buf = %d", iscrypt, nonce_len, crypt_len);
+    Log(LOG_LEVEL_DEBUG,
+        "Challenge encryption = %c, challenge_len = %u, crypt_len = %u",
+        iscrypt, challenge_len, crypt_len);
 
+    char *challenge;
+    char decrypted_challenge[PRIVKEY_size];
 
-    decrypted_nonce = xmalloc(crypt_len);
-
-    if (iscrypt == 'y')
+    if (iscrypt == 'y')                         /* challenge came encrypted */
     {
-        if (RSA_private_decrypt(crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET,
-                                decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING)
-            <= 0)
+        if (recvlen < CF_RSA_PROTO_OFFSET + crypt_len)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: peer sent only %d "
+                "bytes as encrypted challenge but claims to have sent %u bytes",
+                recvlen - CF_RSA_PROTO_OFFSET, crypt_len);
+        }
+
+        int ret = RSA_private_decrypt(crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET,
+                                      decrypted_challenge, PRIVKEY, RSA_PKCS1_PADDING);
+        if (ret < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "private decrypt of received challenge failed (%s)",
+                CryptoLastErrorString());
+            Log(LOG_LEVEL_ERR,
+                "Probably the client has wrong public key for this server");
+            return false;
+        }
+        if (ret != challenge_len)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "private decrypt of received challenge (%u bytes) "
+                "resulted in %d bytes instead of promised %u bytes",
+                crypt_len, ret, challenge_len);
+            return false;
+        }
+
+        challenge = decrypted_challenge;
+    }
+    else                                      /* challenge came unencrypted */
+    {
+        if (challenge_len != crypt_len)
         {
             Log(LOG_LEVEL_ERR,
-                "Private decrypt failed = '%s'. Probably the client has the wrong public key for this server",
-                CryptoLastErrorString());
-            free(decrypted_nonce);
-            return false;
-        }
-    }
-    else
-    {
-        if (nonce_len > crypt_len)
-        {
-            Log(LOG_LEVEL_ERR, "Illegal challenge");
-            free(decrypted_nonce);
+                "Authentication failure: peer sent illegal challenge "
+                "(challenge_len %u != crypt_len %u)",
+                challenge_len, crypt_len);
             return false;
         }
 
-        memcpy(decrypted_nonce, recvbuffer + CF_RSA_PROTO_OFFSET, nonce_len);
+        if (recvlen < CF_RSA_PROTO_OFFSET + challenge_len)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Authentication failure: peer sent only %d "
+                "bytes as challenge but claims to have sent %u bytes",
+                recvlen - CF_RSA_PROTO_OFFSET, challenge_len);
+            return false;
+        }
+
+        challenge = &recvbuffer[CF_RSA_PROTO_OFFSET];
     }
 
 /* Client's ID is now established by key or trusted, reply with digest */
+    HashString(challenge, challenge_len, digest, digestType);
+}
 
-    HashString(decrypted_nonce, nonce_len, digest, digestType);
+/* proposition C2 - Receive client's public key modulus */
+RSA *newkey = RSA_new();
+{
 
-    free(decrypted_nonce);
-
-/* Get the public key from the client */
-    newkey = RSA_new();
-
-/* proposition C2 */
-    if ((len_n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
+    int len_n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
+    if (len_n == -1)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 1 in RSA authentation from IP %s", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "error while receiving public key modulus");
         RSA_free(newkey);
         return false;
     }
 
     if (len_n == 0)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 2 in RSA authentation from IP %s", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "connection was closed while receiving public key modulus");
         RSA_free(newkey);
         return false;
     }
 
     if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
-            CryptoLastErrorString());
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "private decrypt of received public key modulus failed "
+            "(%s)", CryptoLastErrorString());
         RSA_free(newkey);
         return false;
     }
+}
 
-/* proposition C3 */
-
-    if ((len_e = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
+/* proposition C3 - Receive client's public key exponent. */
+{
+    int len_e = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
+    if (len_e == -1)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 3 in RSA authentation from IP %s", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "error while receiving public key exponent");
         RSA_free(newkey);
         return false;
     }
-
     if (len_e == 0)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 4 in RSA authentation from IP %s", conn->hostname);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "connection was closed while receiving public key exponent");
         RSA_free(newkey);
         return false;
     }
 
     if ((newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
-            CryptoLastErrorString());
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "private decrypt of received public key exponent failed "
+            "(%s)", CryptoLastErrorString());
         RSA_free(newkey);
         return false;
     }
+}
 
-    /* Compute and store hash of the client's public key. */
+/* Compute and store hash of the client's public key. */
+{
     Key *key = KeyNew(newkey, CF_DEFAULT_DIGEST);
-    ConnectionInfoSetKey(conn->conn_info, key);
-    Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'",
-        conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+    conn->conn_info->remote_key = key;
 
-    LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+    Log(LOG_LEVEL_VERBOSE, "Peer's identity is: %s",
+        KeyPrintableHash(key));
+
+    LastSaw1(conn->ipaddr, KeyPrintableHash(key),
              LAST_SEEN_ROLE_ACCEPT);
 
+    /* Do we want to trust the received key? */
     if (!CheckStoreKey(conn, newkey))   /* conceals proposition S1 */
     {
         return false;
     }
+}
 
-/* Reply with digest of original challenge */
-
-/* proposition S2 */
-
+/* proposition S2 - reply with digest of challenge. */
+{
+    Log(LOG_LEVEL_DEBUG, "Sending challenge response");
     SendTransaction(conn->conn_info, digest, digestLen, CF_DONE);
+}
 
-/* Send counter challenge to be sure this is a live session */
-
-    counter_challenge = BN_new();
-    if (counter_challenge == NULL)
+/* proposition S3 - send counter-challenge */
+{
+    BIGNUM *counter_challenge_BN = BN_new();
+    if (counter_challenge_BN == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Cannot allocate BIGNUM structure for counter challenge");
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "cannot allocate BIGNUM structure for counter-challenge");
         return false;
     }
 
-    BN_rand(counter_challenge, CF_NONCELEN, 0, 0);
-    nonce_len = BN_bn2mpi(counter_challenge, in);
+    BN_rand(counter_challenge_BN, CF_NONCELEN, 0, 0);
 
-// hash the challenge from the client
+    char counter_challenge[CF_BUFSIZE];
+    int counter_challenge_len = BN_bn2mpi(counter_challenge_BN, counter_challenge);
+    BN_free(counter_challenge_BN);
 
-    HashString(in, nonce_len, digest, digestType);
+    /* Compute counter-challenge digest. */
+    HashString(counter_challenge, counter_challenge_len, digest, digestType);
 
-    encrypted_len = RSA_size(newkey);   /* encryption buffer is always the same size as n */
+    /* Encryption buffer is always RSA_size(key) and buffer needs 11 bytes,
+     * see RSA_public_encrypt manual. */
+    int encrypted_len = RSA_size(newkey);
+    char encrypted_counter_challenge[encrypted_len];
+    assert(counter_challenge_len < encrypted_len - 11);
 
-    out = xmalloc(encrypted_len + 1);
-
-    if (RSA_public_encrypt(nonce_len, in, out, newkey, RSA_PKCS1_PADDING) <= 0)
+    int ret = RSA_public_encrypt(counter_challenge_len, counter_challenge,
+                                 encrypted_counter_challenge, newkey,
+                                 RSA_PKCS1_PADDING);
+    if (ret != encrypted_len)
     {
-        Log(LOG_LEVEL_ERR, "Public encryption failed = %s",
-            CryptoLastErrorString());
-        free(out);
+        if (ret == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "public encryption of counter-challenge failed "
+                "(%s)", CryptoLastErrorString());
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "public encryption of counter-challenge failed "
+                "(result length %d but should be %d)",
+                ret, encrypted_len);
+        }
         return false;
     }
 
-/* proposition S3 */
-    SendTransaction(conn->conn_info, out, encrypted_len, CF_DONE);
+    Log(LOG_LEVEL_DEBUG, "Sending counter-challenge");
+    SendTransaction(conn->conn_info, encrypted_counter_challenge,
+                    encrypted_len, CF_DONE);
+}
 
-/* if the client doesn't have our public key, send it */
-
+/* proposition S4, S5 - If the client doesn't have our public key, send it. */
+{
     if (iscrypt != 'y')
     {
+        Log(LOG_LEVEL_DEBUG, "Sending server's public key");
+
+        char bignum_buf[CF_BUFSIZE] = { 0 };
+
         /* proposition S4  - conditional */
-        memset(in, 0, CF_BUFSIZE);
-        len_n = BN_bn2mpi(PUBKEY->n, in);
-        SendTransaction(conn->conn_info, in, len_n, CF_DONE);
+        int len_n = BN_bn2mpi(PUBKEY->n, bignum_buf);
+        SendTransaction(conn->conn_info, bignum_buf, len_n, CF_DONE);
 
         /* proposition S5  - conditional */
-        memset(in, 0, CF_BUFSIZE);
-        len_e = BN_bn2mpi(PUBKEY->e, in);
-        SendTransaction(conn->conn_info, in, len_e, CF_DONE);
+        int len_e = BN_bn2mpi(PUBKEY->e, bignum_buf);
+        SendTransaction(conn->conn_info, bignum_buf, len_e, CF_DONE);
     }
+}
 
-/* Receive reply to counter_challenge */
+/* proposition C4 - Receive counter-challenge response. */
+{
+    char recv_buf[CF_BUFSIZE] = { 0 };
 
-/* proposition C4 */
-    memset(in, 0, CF_BUFSIZE);
-
-    if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
+    int recv_len = ReceiveTransaction(conn->conn_info, recv_buf, NULL);
+    if (recv_len < digestLen)
     {
-        BN_free(counter_challenge);
-        free(out);
+        if (recv_len < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "error receiving counter-challenge response");
+        }
+        else if (recv_len == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "connection was closed while receiving counter-challenge response");
+        }
+        else                                      /* 0 < recv_len < expected_len */
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "error receiving counter-challenge response, "
+                "only got %d out of %d bytes",
+                recv_len, digestLen);
+        }
         return false;
     }
 
-    if (HashesMatch(digest, in, digestType))    /* replay / piggy in the middle attack ? */
+    if (HashesMatch(digest, recv_buf, digestType))
     {
-        Log(LOG_LEVEL_VERBOSE, "Authentication of client %s/%s achieved", conn->hostname, conn->ipaddr);
+        Log(LOG_LEVEL_VERBOSE,
+            "Authentication of client %s/%s achieved",
+            conn->hostname, conn->ipaddr);
     }
     else
     {
-        BN_free(counter_challenge);
-        free(out);
-        Log(LOG_LEVEL_INFO, "Challenge response from client %s was incorrect - ID false?", conn->ipaddr);
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "counter-challenge response was incorrect");
         return false;
     }
+}
 
-/* Receive random session key,... */
+/* proposition C5 - Receive session key */
+{
+    Log(LOG_LEVEL_DEBUG, "Receiving session key from client...");
 
-/* proposition C5 */
+    char session_key[CF_BUFSIZE] = { 0 };
+    int  session_key_size = CfSessionKeySize(enterprise_field);
+    int keylen = ReceiveTransaction(conn->conn_info, session_key, NULL);
 
-    memset(in, 0, CF_BUFSIZE);
+    Log(LOG_LEVEL_DEBUG,
+        "Received encrypted session key of %d bytes, "
+        "should decrypt to %d bytes",
+        keylen, session_key_size);
 
-    if ((keylen = ReceiveTransaction(conn->conn_info, in, NULL)) == -1)
+    if ((keylen <= 0) || (keylen > CF_BUFSIZE / 2))
     {
-        BN_free(counter_challenge);
-        free(out);
+        if (keylen == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "connection was closed while receiving session key");
+        }
+        else if (keylen > CF_BUFSIZE / 2)
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "session key received is too long (%d bytes)",
+                keylen);
+        }
+        else                                                  /* keylen < 0 */
+        {
+            Log(LOG_LEVEL_ERR, "Authentication failure: "
+                "error receiving session key");
+        }
+
         return false;
     }
 
-    if (keylen > CF_BUFSIZE / 2)
-    {
-        BN_free(counter_challenge);
-        free(out);
-        Log(LOG_LEVEL_INFO, "Session key length received from %s is too long", conn->ipaddr);
-        return false;
-    }
-
-    session_size = CfSessionKeySize(enterprise_field);
-    conn->session_key = xmalloc(session_size);
+    conn->session_key = xmalloc(session_key_size);
     conn->encryption_type = enterprise_field;
-
-    Log(LOG_LEVEL_VERBOSE, "Receiving session key from client (size=%d)...", keylen);
-
-    Log(LOG_LEVEL_DEBUG, "keylen = %d, session_size = %d", keylen, session_size);
 
     if (keylen == CF_BLOWFISHSIZE)      /* Support the old non-ecnrypted for upgrade */
     {
-        memcpy(conn->session_key, in, session_size);
+        memcpy(conn->session_key, session_key, session_key_size);
     }
     else
     {
-        /* New protocol encrypted */
-
-        if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
+        char decrypted_session_key[PRIVKEY_size];
+        int ret = RSA_private_decrypt(keylen, session_key,
+                                      decrypted_session_key, PRIVKEY,
+                                      RSA_PKCS1_PADDING);
+        if (ret != session_key_size)
         {
-            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s",
-                CryptoLastErrorString());
-            BN_free(counter_challenge);
-            free(out);
+            if (ret < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Authentication failure: "
+                    "private decrypt of session key failed "
+                    "(%s)", CryptoLastErrorString());
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Authentication failure: "
+                    "session key decrypts to invalid size, "
+                    "expected %d but got %d bytes",
+                    session_key_size, ret);
+            }
             return false;
         }
 
-        memcpy(conn->session_key, out, session_size);
+        memcpy(conn->session_key, decrypted_session_key, session_key_size);
     }
+}
 
-    BN_free(counter_challenge);
-    free(out);
-    return true;
+return true;
 }
 
 
@@ -915,6 +1036,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     /* Don't process request if we're signalled to exit. */
     if (IsPendingTermination())
     {
+        Log(LOG_LEVEL_VERBOSE, "Server must exit, closing connection");
         return false;
     }
 
@@ -927,9 +1049,10 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_AUTH_PLAIN:
         SetConnectionData(conn, (char *) (recvbuffer + strlen("CAUTH ")));
 
-        if (conn->username == NULL || IsUserNameValid(conn->username) == false)
+        if (conn->username == NULL || !IsUserNameValid(conn->username))
         {
-            Log(LOG_LEVEL_INFO, "Client is sending wrong username: '%s'", conn->username);
+            Log(LOG_LEVEL_INFO, "Client is sending wrong username: %s",
+                conn->username);
             RefuseAccess(conn, recvbuffer);
             return false;
         }
@@ -940,13 +1063,14 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         return true;
 
-    /* This MUST be exactly second command client using classic protocol is sending.
-       This is where key agreement takes place. */
+    /* This MUST be exactly second command client using classic protocol is
+       sending.  This is where key agreement takes place. */
     case PROTOCOL_COMMAND_AUTH_SECURE:
         /* First command was omitted by client; this is protocol violation. */
         if (!conn->user_data_set)
         {
-            Log(LOG_LEVEL_INFO, "Client is not verified; rejecting connection");
+            Log(LOG_LEVEL_INFO,
+                "Client is not verified; rejecting connection");
             RefuseAccess(conn, recvbuffer);
             return false;
         }
@@ -960,15 +1084,19 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         return true;
+
     default:
         break;
     }
 
-    /* At this point we should have both user_data_set and rsa_auth set to perform any operation.
-       We can check only for second one as without first it won't be set up. */
+    /* At this point we should have both user_data_set and rsa_auth set to
+       perform any operation.  We can check only for second one as without
+       first it won't be set up. */
     if (!conn->rsa_auth)
     {
-        Log(LOG_LEVEL_INFO, "Server refusal due to no RSA authentication [command: %d]", command);
+        Log(LOG_LEVEL_INFO,
+            "REFUSAL due to no RSA authentication (command: %d)",
+            command);
         RefuseAccess(conn, recvbuffer);
         return false;
     }
@@ -976,7 +1104,8 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     /* We have to have key at this point. */
     assert(conn->session_key);
 
-    /* At this point we can safely do next switch and make sure user is authenticated. */
+    /* At this point we can safely do next switch and make sure user is
+     * authenticated. */
     switch (command)
     {
     case PROTOCOL_COMMAND_EXEC:
@@ -985,21 +1114,23 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!AllowedUser(conn->username))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to non-allowed user");
+            Log(LOG_LEVEL_INFO, "REFUSAL due to non-allowed user");
             RefuseAccess(conn, recvbuffer);
             return false;
         }
 
         if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to denied access to requested object");
+            Log(LOG_LEVEL_INFO,
+                "REFUSAL due to denied access to requested object");
             RefuseAccess(conn, recvbuffer);
             return false;
         }
 
         if (!MatchClasses(ctx, conn))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to failed class/context match");
+            Log(LOG_LEVEL_INFO,
+                "REFUSAL due to failed class/context match");
             Terminate(conn->conn_info);
             return false;
         }
@@ -1415,7 +1546,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
     strcpy(sendbuffer, "BAD: Request denied");
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
-    Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
+    Log(LOG_LEVEL_INFO, "Closing connection due to request: %s", recvbuffer);
     return false;
 }
 

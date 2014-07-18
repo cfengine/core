@@ -39,8 +39,11 @@
  * @param len is the number of bytes to send, or 0 if buffer is a
  *        '\0'-terminated string so strlen(buffer) can used.
  */
-int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len, char status)
+int SendTransaction(const ConnectionInfo *conn_info,
+                    const char *buffer, int len, char status)
 {
+    assert(status == CF_MORE || status == CF_DONE);
+
     char work[CF_BUFSIZE] = { 0 };
     int ret;
 
@@ -124,20 +127,34 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
             "ReceiveTransaction: Bad packet -- bogus header: %s", proto);
         return -1;
     }
-
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: Bad packet -- too long (len=%d)", len);
         return -1;
     }
+    if (status != CF_MORE && status != CF_DONE)
+    {
+        Log(LOG_LEVEL_ERR,
+            "ReceiveTransaction: Bad packet -- bogus header (more='%c')",
+            status);
+        return -1;
+    }
 
     if (more != NULL)
     {
-        if (status == 'm')
-            *more = true;
-        else
-            *more = false;
+        switch (status)
+        {
+        case CF_MORE:
+                *more = true;
+                break;
+        case CF_DONE:
+                *more = false;
+                break;
+        default:
+            ProgrammingError("Unreachable, "
+                             "bogus headers have already been checked!");
+        }
     }
 
     /* Get data. */

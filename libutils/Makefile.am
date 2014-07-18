@@ -45,6 +45,7 @@ libutils_la_SOURCES = \
 	queue.c queue.h \
 	ring_buffer.c ring_buffer.h \
 	regex.c regex.h \
+	encode.c encode.h \
 	printsize.h
 
 if !NT

@@ -54,7 +54,6 @@ bool StringIsNumeric(const char *name);
 bool StringIsPrintable(const char *name);
 bool EmptyString(const char *s);
 
-char *StringEncodeBase64(const char *str, size_t len);
 size_t StringBytesToHex(char *dst, size_t dst_size,
                         const unsigned char *src_bytes, size_t src_len);
 

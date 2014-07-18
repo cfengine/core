@@ -1,3 +1,6 @@
+        Changes:
+        - sys.ip_addresses does not contain loopback '127.0.0.1' any more
+
 3.6.0
 
         Changes:

@@ -796,7 +796,7 @@ AC_EGREP_CPP([primacros_found],
   ],
   [AC_MSG_RESULT(yes)],
   [AC_MSG_RESULT(no)
-   AC_MSG_RESULT(Unable to find out how to print intmax_t/uintmax_t types)])
+   AC_MSG_RESULT(Unable to find out how to scan intmax_t/uintmax_t types)])
 
 HW_FUNC_VSNPRINTF
 HW_FUNC_SNPRINTF

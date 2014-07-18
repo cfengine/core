@@ -535,7 +535,7 @@ static int cf_pwait(pid_t pid)
 {
     int status;
 
-    Log(LOG_LEVEL_DEBUG, "cf_pwait - Waiting for process %" PRIdMAX, (intmax_t)pid);
+    Log(LOG_LEVEL_DEBUG, "cf_pwait - Waiting for process %jd", (intmax_t)pid);
 
     while (waitpid(pid, &status, 0) < 0)
     {

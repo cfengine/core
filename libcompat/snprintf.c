@@ -2167,6 +2167,11 @@ do {                                                                           \
 		}                                                              \
 } while (/* CONSTCOND */ 0)
 
+/* sprintf() is marked as deprecated in CFEngine, but here we use it on
+ * purpose to compare this snprintf() implementation to the system's
+ * implementation. So avoid emitting the warning. */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 #if HAVE_LOCALE_H
 	(void)setlocale(LC_ALL, "");
 #endif	/* HAVE_LOCALE_H */

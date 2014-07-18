@@ -120,7 +120,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LogTotalCompliance, const char *, ve
     }
     else
     {
-        fprintf(fout, "%" PRIdMAX ",%" PRIdMAX ": %s\n", (intmax_t)CFSTARTTIME, (intmax_t)time(NULL), string);
+        fprintf(fout, "%jd,%jd: %s\n", (intmax_t)CFSTARTTIME, (intmax_t)time(NULL), string);
         fclose(fout);
     }
 }

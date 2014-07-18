@@ -171,6 +171,16 @@ AS_IF([test x"$enable_fhs" = xyes], [
 AC_SUBST(projlibdir)
 
 dnl ######################################################################
+dnl Platform specific compiler flags.
+dnl ######################################################################
+
+AS_CASE([${target_os}],
+  [mingw*],
+    # Disable printf format warnings, because our wrapper supports more
+    # flags than vanilla Windows version, so they are false positives.
+    [CFLAGS="$CFLAGS -Wno-format"])
+
+dnl ######################################################################
 dnl Enable debugging
 dnl ######################################################################
 
@@ -855,7 +865,7 @@ AC_EGREP_CPP([primacros_found],
   ],
   [AC_MSG_RESULT(yes)],
   [AC_MSG_RESULT(no)
-   AC_MSG_RESULT(Unable to find out how to print intmax_t/uintmax_t types)])
+   AC_MSG_RESULT(Unable to find out how to scan intmax_t/uintmax_t types)])
 
 HW_FUNC_VSNPRINTF
 HW_FUNC_SNPRINTF

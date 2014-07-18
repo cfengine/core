@@ -7,8 +7,9 @@
 
 #include <platform.h>
 
-#include <map.h>                                          /* StringMap */
-#include "strlist.h"                                      /* StrList */
+#include <map.h>                                         /* StringMap */
+#include <regex.h>                                       /* StringMatchFull */
+#include "strlist.h"                                     /* StrList */
 
 
 /**

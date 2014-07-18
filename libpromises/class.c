@@ -2,8 +2,10 @@
 
 #include <rb-tree.h>
 #include <alloc.h>
-#include <string_lib.h>
+#include <string_lib.h> /* StringHash,StringConcatenate */
+#include <regex.h>      /* CompileRegex,StringMatchFullWithPrecompiledRegex */
 #include <files_names.h>
+
 
 struct ClassTable_
 {

@@ -37,6 +37,7 @@
 #include <systype.h>
 #include <unix.h>
 #include <string_lib.h>
+#include <regex.h>                                       /* StringMatchFull */
 #include <misc_lib.h>
 #include <file_lib.h>
 #include <rlist.h>

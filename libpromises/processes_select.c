@@ -24,13 +24,15 @@
 
 #include <processes_select.h>
 
+#include <string.h>
+
 #include <eval_context.h>
 #include <files_names.h>
 #include <conversion.h>
 #include <matching.h>
 #include <systype.h>
-#include <string_lib.h>
-#include <string.h>
+#include <string_lib.h>                                         /* Chop */
+#include <regex.h> /* CompileRegex,StringMatchWithPrecompiledRegex,StringMatchFull */
 #include <item_lib.h>
 #include <pipes.h>
 #include <files_interfaces.h>

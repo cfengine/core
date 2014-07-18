@@ -26,7 +26,7 @@
 
 #include <actuator.h>
 #include <attributes.h>
-#include <string_lib.h>
+#include <regex.h>      /* CompileRegex,StringMatchFullWithPrecompiledRegex */
 #include <buffer.h>
 #include <misc_lib.h>
 #include <fncall.h>

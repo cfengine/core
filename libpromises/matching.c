@@ -32,7 +32,7 @@
 #include <scope.h>
 #include <misc_lib.h>
 #include <rlist.h>
-#include <string_lib.h>
+#include <regex.h>                          /* CompileRegex,StringMatchFull */
 
 /* Pure, non-thread-safe */
 static char *FirstBackReference(pcre *rx, const char *teststring)

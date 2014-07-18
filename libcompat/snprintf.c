@@ -1658,7 +1658,15 @@ int rpl_printf(const char *format, ...)
 int main(void);
 #endif	/* !HAVE_SNPRINTF || !HAVE_VSNPRINTF || !HAVE_ASPRINTF || [...] */
 
+
 #if TEST_SNPRINTF
+
+/* sprintf() is marked as deprecated in CFEngine, but here we use it on
+ * purpose to compare this snprintf() implementation to the system's
+ * implementation. So avoid emitting the warning. */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+
 static int snprintf_rigorous_test(void)
 {
 	const char *float_fmt[] = {
@@ -2166,11 +2174,6 @@ do {                                                                           \
 			num++;                                                 \
 		}                                                              \
 } while (/* CONSTCOND */ 0)
-
-/* sprintf() is marked as deprecated in CFEngine, but here we use it on
- * purpose to compare this snprintf() implementation to the system's
- * implementation. So avoid emitting the warning. */
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 #if HAVE_LOCALE_H
 	(void)setlocale(LC_ALL, "");

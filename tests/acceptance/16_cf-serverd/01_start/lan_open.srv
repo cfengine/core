@@ -1,3 +1,4 @@
+# Deny localhost, admit other interface IPs
 
 body common control
 {
@@ -15,6 +16,7 @@ body server control
 {
       port => "9878";
 
+      denyconnects          => { "127.0.0.1" };
       allowconnects         => { @(sys.ip_addresses) };
       allowallconnects      => { @(sys.ip_addresses) };
       trustkeysfrom         => { @(sys.ip_addresses) };

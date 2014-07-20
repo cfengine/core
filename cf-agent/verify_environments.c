@@ -197,24 +197,15 @@ static int EnvironmentsSanityChecks(Attributes a, const Promise *pp)
         }
     }
 
-    if (a.env.host == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "No environment_host defined for environment promise");
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
-    }
-
     switch (Str2Hypervisors(a.env.type))
     {
     case cfv_virt_xen_net:
     case cfv_virt_kvm_net:
     case cfv_virt_esx_net:
     case cfv_virt_test_net:
-        if (a.env.cpus != CF_NOINT || a.env.memory != CF_NOINT || a.env.disk != CF_NOINT || a.env.name
-            || a.env.addresses)
+        if (a.env.cpus != CF_NOINT || a.env.memory != CF_NOINT || a.env.disk != CF_NOINT || a.env.addresses)
         {
-            Log(LOG_LEVEL_ERR, "Network environment promises computational resources (%d,%d,%d,%s)", a.env.cpus,
-                a.env.memory, a.env.disk, a.env.name);
+            Log(LOG_LEVEL_ERR, "Network environment promises computational resources (%d,%d,%d,%s)", a.env.cpus, a.env.memory, a.env.disk, pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
         }
         break;
@@ -282,25 +273,6 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Pr
     }
 
     Log(LOG_LEVEL_VERBOSE, "Selecting environment type '%s' '%s'", a.env.type, hyper_uri);
-
-    ClassRef environment_host_ref = ClassRefParse(a.env.host);
-    if (!EvalContextClassGet(ctx, environment_host_ref.ns, environment_host_ref.name))
-    {
-        switch (a.env.state)
-        {
-        case ENVIRONMENT_STATE_CREATE:
-        case ENVIRONMENT_STATE_RUNNING:
-            Log(LOG_LEVEL_VERBOSE,
-                "This host ''%s' is not the promised host for the environment '%s', so setting its intended state to 'down'",
-                VFQNAME, a.env.host);
-            a.env.state = ENVIRONMENT_STATE_DOWN;
-            break;
-        default:
-            Log(LOG_LEVEL_VERBOSE,
-                "This is not the promised host for the environment, but it does not promise a run state, so take promise as valid");
-        }
-    }
-    ClassRefDestroy(environment_host_ref);
 
     virInitialize();
 

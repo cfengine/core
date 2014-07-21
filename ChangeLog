@@ -1,3 +1,18 @@
+3.6.1
+	Changes:
+        - Short-circut evaluation of classes promises if class is already set (Redmine #5241)
+        - fix to assume all non-specified return codes are failed in commands promises (Redmine #5986)
+
+	Bug fixes:
+        - $(this.promiser) expands in files promises for `transformer`, `edit_template`,
+          `copy_from.source`, `file_select.exec_program`, `classes` and `action` bodies
+          (Redmine #1554, #1496, #3530, #1563)
+        - `body changes` notifies about disappeared files in file monitoring (Redmine #2917)
+        - fix cfengine template producing a zero sized file (Redmine #6088)
+        - add 0-9 A-Z _ to allowed context of module protocol (Redmine #6063)
+        - extend ps command column width and prepend zone name on Solaris
+        - various build and bug fixes for Solaris and AIX
+
 3.6.0
 
         Changes:

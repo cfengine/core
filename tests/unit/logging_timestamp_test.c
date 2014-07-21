@@ -17,6 +17,7 @@ static void test_timestamp_regex(void)
     // Make stderr point to the pipe.
     assert_int_equal(dup2(pipe_fd[1], 2), 2);
     Log(LOG_LEVEL_ERR, "Test string");
+    fputc('\n', stderr); /* Make sure fgets() doesn't hang. */
     fflush(stderr);
     fflush(stdout);
     // Restore stdout.

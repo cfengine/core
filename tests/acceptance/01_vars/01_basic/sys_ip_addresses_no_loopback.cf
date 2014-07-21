@@ -1,0 +1,44 @@
+#######################################################
+#
+# Test that loopback address is not part of sys.ip_addresses
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+
+      "ok" not => reglist(@(sys.ip_addresses), "127\.0\.0\.1");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

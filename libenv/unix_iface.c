@@ -71,6 +71,7 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6]);
 #include <solaris_ifaddrs.h>
 #endif
 
+static void RemoveIPv4LoopbackAddress(Rlist **ips_p);
 static void FindV6InterfacesInfo(EvalContext *ctx);
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
@@ -558,6 +559,7 @@ void GetInterfacesInfo(EvalContext *ctx)
     }
     if (ips)
     {
+        RemoveIPv4LoopbackAddress(&ips);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, CF_DATA_TYPE_STRING_LIST,
                                       "inventory,source=agent,attribute_name=IPv4 addresses");
     }
@@ -568,6 +570,19 @@ void GetInterfacesInfo(EvalContext *ctx)
     RlistDestroy(ips);
 
     FindV6InterfacesInfo(ctx);
+}
+
+
+static void RemoveIPv4LoopbackAddress(Rlist **ips_p)
+{
+  for(Rlist *rp = *ips_p; rp != NULL; rp = rp->next)
+    {
+      if(strcmp(RlistScalarValue(rp), "127.0.0.1") == 0)
+	{
+	  RlistDestroyEntry(ips_p, rp);
+	  break;  // unsafe to iterate over modified list
+	}
+    }
 }
 
 /*******************************************************************/

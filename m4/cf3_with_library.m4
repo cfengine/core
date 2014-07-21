@@ -17,11 +17,11 @@ AC_DEFUN([CF3_WITH_LIBRARY],
   # Populate ${LIBRARY}_{PATH,CFLAGS,LDFLAGS} according to arguments
   #
   if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck && test "x$with_[$1]" != x; then
-    test -z $ULN[]_PATH && ULN[]_PATH="$with_[$1]"
+    test -z "$ULN[]_PATH" && ULN[]_PATH="$with_[$1]"
     if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
-      test -z $ULN[]_CFLAGS && ULN[]_CFLAGS=""
-      test -z $ULN[]_CPPFLAGS && ULN[]_CPPFLAGS="-I$with_[$1]/include"
-      test -z $ULN[]_LDFLAGS && ULN[]_LDFLAGS="-L$with_[$1]/lib"
+      test -z "$ULN[]_CFLAGS" && ULN[]_CFLAGS=""
+      test -z "$ULN[]_CPPFLAGS" && ULN[]_CPPFLAGS="-I$with_[$1]/include"
+      test -z "$ULN[]_LDFLAGS" && ULN[]_LDFLAGS="-L$with_[$1]/lib"
     fi
   else
     ULN[]_PATH="default path"
@@ -47,7 +47,7 @@ AC_DEFUN([CF3_WITH_LIBRARY],
   #
   # Pick up any libraries added by tests
   #
-  test -z $ULN[]_LIBS && ULN[]_LIBS="$LIBS"
+  test -z "$ULN[]_LIBS" && ULN[]_LIBS="$LIBS"
 
   #
   # libtool understands -R$path, but we are not using libtool in configure

@@ -538,21 +538,18 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
     cf_pclose(pp);
 }
 
-/* TODO don't pass "args" just the things we actually check:
-   sid, username, maproot, uid. */
-static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb)
+static int TransferRights(const ServerConnectionState *conn,
+                          const char *filename, const struct stat *sb)
 {
-    uid_t conn_uid = args->connect->uid;
-
     Log(LOG_LEVEL_DEBUG, "Checking ownership of file: %s", filename);
 
     /* Don't do any check if connected user claims to be "root" or if
      * "maproot" in access_rules contains the connecting IP address. */
-    if ((conn_uid == 0) || (args->connect->maproot))
+    if ((conn->uid == 0) || (conn->maproot))
     {
         Log(LOG_LEVEL_DEBUG, "Access granted because %s",
-            (conn_uid == 0) ? "remote user is root"
-                            : "of maproot");
+            (conn->uid == 0) ? "remote user is root"
+                             : "of maproot");
         return true;                                      /* access granted */
     }
 
@@ -575,33 +572,33 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
 
     LocalFree(secDesc);
 
-    if (!IsValidSid(args->connect->sid) ||
-        !EqualSid(ownerSid, args->connect->sid))
+    if (!IsValidSid(conn->sid) ||
+        !EqualSid(ownerSid, conn->sid))
     {
         /* If "maproot" we've already granted access. */
-        assert(!args->connect->maproot);
+        assert(!conn->maproot);
 
         Log(LOG_LEVEL_VERBOSE,
             "Remote user '%s' is not the owner of the file, access denied, "
-            "consider maproot", args->connect->username);
+            "consider maproot", conn->username);
 
         return false;
     }
 
     Log(LOG_LEVEL_DEBUG,
         "User '%s' is the owner of the file, access granted",
-        args->connect->username);
+        conn->username);
 
 #else                                         /* UNIX systems - common path */
 
-    if (sb->st_uid != conn_uid)                    /* does not own the file */
+    if (sb->st_uid != conn->uid)                   /* does not own the file */
     {
         if (!(sb->st_mode & S_IROTH))            /* file not world readable */
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Remote user '%s' is not owner of the file, access denied, "
                 "consider maproot or making file world-readable",
-                args->connect->username);
+                conn->username);
             return false;
         }
         else
@@ -609,14 +606,14 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
             Log(LOG_LEVEL_DEBUG,
                 "Remote user '%s' is not the owner of the file, "
                 "but file is world readable, access granted",
-                args->connect->username);                 /* access granted */
+                conn->username);                 /* access granted */
         }
     }
     else
     {
         Log(LOG_LEVEL_DEBUG,
             "User '%s' is the owner of the file, access granted",
-            args->connect->username);                     /* access granted */
+            conn->username);                     /* access granted */
     }
 
     /* ADMIT ACCESS, to summarise the following condition is now true: */
@@ -624,12 +621,12 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
     /* Remote user is root, where "user" is just a string in the protocol, he
      * might claim whatever he wants but will be able to login only if the
      * user-key.pub key is found, */
-    assert((conn_uid == 0) ||
+    assert((conn->uid == 0) ||
     /* OR remote IP has maproot in the file's access_rules, */
-           (args->connect->maproot == true) ||
+           (conn->maproot == true) ||
     /* OR file is owned by the same username the user claimed - useless or
      * even dangerous outside NIS, KERBEROS or LDAP authenticated domains,  */
-           (sb->st_uid == conn_uid) ||
+           (sb->st_uid == conn->uid) ||
     /* file is readable by everyone */
            (sb->st_mode & S_IROTH));
 
@@ -676,7 +673,7 @@ void CfGetFile(ServerFileGetState *args)
     struct stat sb;
     int blocksize = 2048;
 
-    ConnectionInfo *conn_info = (args->connect)->conn_info;
+    ConnectionInfo *conn_info = args->conn->conn_info;
 
     TranslatePath(filename, args->replyfile);
 
@@ -687,9 +684,9 @@ void CfGetFile(ServerFileGetState *args)
 
 /* Now check to see if we have remote permission */
 
-    if (!TransferRights(filename, args, &sb))
+    if (!TransferRights(args->conn, filename, &sb))
     {
-        RefuseAccess(args->connect, args->replyfile);
+        RefuseAccess(args->conn, args->replyfile);
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
         if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
         {
@@ -832,10 +829,10 @@ void CfEncryptGetFile(ServerFileGetState *args)
     EVP_CIPHER_CTX ctx;
     char *key, enctype;
     struct stat sb;
-    ConnectionInfo *conn_info = args->connect->conn_info;
+    ConnectionInfo *conn_info = args->conn->conn_info;
 
-    key = (args->connect)->session_key;
-    enctype = (args->connect)->encryption_type;
+    key = args->conn->session_key;
+    enctype = args->conn->encryption_type;
 
     TranslatePath(filename, args->replyfile);
 
@@ -846,9 +843,9 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
 /* Now check to see if we have remote permission */
 
-    if (!TransferRights(filename, args, &sb))
+    if (!TransferRights(args->conn, filename, &sb))
     {
-        RefuseAccess(args->connect, args->replyfile);
+        RefuseAccess(args->conn, args->replyfile);
         FailedTransfer(conn_info);
     }
 

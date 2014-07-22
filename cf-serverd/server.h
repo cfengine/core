@@ -125,7 +125,7 @@ struct ServerConnectionState_
 
 typedef struct
 {
-    ServerConnectionState *connect;
+    ServerConnectionState *conn;
     int encrypt;
     int buf_size;
     char *replybuff;

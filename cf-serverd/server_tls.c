@@ -704,7 +704,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         /* TODO eliminate! */
-        get_args.connect = conn;
+        get_args.conn = conn;
         get_args.encrypt = false;
         get_args.replybuff = sendbuffer;
         get_args.replyfile = filename;

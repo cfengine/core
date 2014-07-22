@@ -246,14 +246,14 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
     if (DONTDO && (!a.contain.preview))
     {
-        Log(LOG_LEVEL_ERR, "Would execute script '%s'", cmdline);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Would execute script '%s'", cmdline);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }
 
     if (a.transaction.action != cfa_fix)
     {
-        Log(LOG_LEVEL_ERR, "Command '%s' needs to be executed, but only warning was promised", cmdline);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Command '%s' needs to be executed, but only warning was promised", cmdline);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }

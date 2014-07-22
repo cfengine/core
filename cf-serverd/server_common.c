@@ -47,7 +47,8 @@ static const int CF_NOSIZE = -1;
 #include <rlist.h>
 #include <cf-serverd-enterprise-stubs.h>
 #include <connection_info.h>
-#include <misc_lib.h>                                    /* UnexpectedError */
+#include <misc_lib.h>                              /* UnexpectedError */
+#include <cf-windows-functions.h>                  /* NovaWin_UserNameToSid */
 
 
 void RefuseAccess(ServerConnectionState *conn, char *errmesg)
@@ -1710,3 +1711,47 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
     return reqpath_len;
 }
 
+
+/**
+ * Set conn->uid (and conn->sid on Windows).
+ */
+void SetConnIdentity(ServerConnectionState *conn, const char *username)
+{
+    conn->username[0] = '\0';
+    size_t username_len = strlen(username);
+
+    if (username_len < sizeof(conn->username))
+    {
+        memcpy(conn->username, username, username_len + 1);
+    }
+
+#ifdef __MINGW32__            /* NT uses security identifier instead of uid */
+
+    if (!NovaWin_UserNameToSid(conn->username, (SID *) conn->sid,
+                               CF_MAXSIDSIZE, false))
+    {
+        Log(LOG_LEVEL_DEBUG, "");
+        memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
+    }
+
+    if (strcmp(conn->username, "root") == 0)
+    {
+        /* It the remote user identifies himself as root, even on Windows
+         * cf-serverd must grant access to all files. uid==0 is checked later
+         * in TranferRights() for that. */
+        conn->uid = 0;
+    }
+
+#else  /* !__MINGW32__ */
+
+    struct passwd *pw;
+    if ((pw = getpwnam(conn->username)) == NULL)   /* TODO Keep this inside mutex */
+    {
+        conn->uid = -2;
+    }
+    else
+    {
+        conn->uid = pw->pw_uid;
+    }
+#endif  /* !__MINGW32__ */
+}

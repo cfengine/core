@@ -421,8 +421,8 @@ bundle agent dcs_if_diff_expected(file1, file2, expected_difference, pass_class,
 {
   vars:
     DEBUG.check_ready.!no_difference::
-      "file1r" string => readfile("$(file1)", "99999999");
-      "file2r" string => readfile("$(file2)", "99999999");
+      "file1r" string => readfile("$(file1)", "4096");
+      "file2r" string => readfile("$(file2)", "4096");
 
     (EXTRA|DEBUG_HEXDUMP).check_ready.!no_difference.has_hexdump::
       "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");

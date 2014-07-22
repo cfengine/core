@@ -1206,7 +1206,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             get_args.buf_size = 2048;
         }
 
-        get_args.connect = conn;
+        get_args.conn = conn;
         get_args.encrypt = false;
         get_args.replybuff = sendbuffer;
         get_args.replyfile = filename;
@@ -1261,7 +1261,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         memset(sendbuffer, 0, sizeof(sendbuffer));
 
-        get_args.connect = conn;
+        get_args.conn = conn;
         get_args.encrypt = true;
         get_args.replybuff = sendbuffer;
         get_args.replyfile = filename;

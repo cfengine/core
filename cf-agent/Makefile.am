@@ -97,11 +97,12 @@ endif
 
 if !BUILTIN_EXTENSIONS
   sbin_PROGRAMS = cf-agent
-  # Build both a libcf-agent.la library, and a cf-agent executable
-  # https://www.gnu.org/software/automake/manual/html_node/Objects-created-both-with-libtool-and-without.html
-  cf_agent_SOURCES = $(libcf_agent_la_SOURCES)
+
+  # Workaround for automake madness (try removing it if you want to know why).
   cf_agent_CFLAGS = $(AM_CFLAGS)
-  cf_agent_LDADD = libcf-agent.la $(libcf_agent_la_LIBADD)
+
+  # Build both a libcf-agent.la library, and a cf-agent executable
+  cf_agent_LDADD = libcf-agent.la
 endif
 
 CLEANFILES = *.gcno *.gcda

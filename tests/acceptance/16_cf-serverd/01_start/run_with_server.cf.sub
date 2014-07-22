@@ -50,7 +50,7 @@ bundle agent start_server(server_name)
 
     debug_server|windows::
       # Sleep 3 seconds since cf-serverd takes some time to start in background mode.
-      "sleep 3"
+      "$(G.sleep) 3"
       depends_on => { "run_debug_server" },
       contain => run_under_shell;
 

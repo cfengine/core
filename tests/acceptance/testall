@@ -578,6 +578,7 @@ if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&
   # each test is horribly slow.
   echo "export GAINROOT=" > runtests.sh
   echo "export TESTALL_DO_NOT_RECURSE=1" >> runtests.sh
+  echo "export VERBOSE='$VERBOSE'" >> runtests.sh
   echo "$0 $ORIG_ARGS $@ &" >> runtests.sh
   # Note quote change. We want to keep below variables unexpanded.
   echo 'trap "kill $!" INT' >> runtests.sh

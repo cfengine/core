@@ -13,7 +13,6 @@
 #include <files_hashes.h>                             /* HashString */
 #include <crypto.h>                                   /* HavePublicKey */
 #include <cf-serverd-enterprise-stubs.h>              /* ReceiveCollectCall */
-#include <cf-windows-functions.h>
 
 #include "server.h"                                /* ServerConnectionState */
 #include "server_common.h"                         /* ListPersistentClasses */
@@ -541,35 +540,8 @@ static void SetConnectionData(ServerConnectionState *conn, char *buf)
     ToLowerStrInplace(fqname);
 
     strlcpy(conn->hostname, fqname, CF_MAXVARSIZE);
-    strlcpy(conn->username, username, CF_MAXVARSIZE);
 
-#ifdef __MINGW32__            /* NT uses security identifier instead of uid */
-    if (!NovaWin_UserNameToSid(username, (SID *) conn->sid,
-                               CF_MAXSIDSIZE, false))
-    {
-        Log(LOG_LEVEL_DEBUG, "");
-        memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
-    }
-
-    if (strcmp(username, "root") == 0)
-    {
-        /* It the remote user identifies himself as root, even the windows
-         * server must grant access to all files. uid==0 is checked later in
-         * TranferRights() for that. */
-        conn->uid = 0;
-    }
-
-#else  /* !__MINGW32__ */
-    struct passwd *pw;
-    if ((pw = getpwnam(username)) == NULL)        /* Keep this inside mutex */
-    {
-        conn->uid = -2;
-    }
-    else
-    {
-        conn->uid = pw->pw_uid;
-    }
-#endif  /* !__MINGW32__ */
+    SetConnIdentity(conn, username);
 }
 
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key)

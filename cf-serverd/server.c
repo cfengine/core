@@ -469,8 +469,6 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     return conn;
 }
 
-/***************************************************************/
-
 /**
  * @note This function is thread-safe. Do NOT wrap it with mutex!
  */

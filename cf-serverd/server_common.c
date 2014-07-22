@@ -542,97 +542,94 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
    sid, username, maproot, uid. */
 static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb)
 {
+    uid_t conn_uid = args->connect->uid;
+
+    Log(LOG_LEVEL_DEBUG, "Checking ownership of file: %s", filename);
+
+    /* Don't do any check if connected user claims to be "root" or if
+     * "maproot" in access_rules contains the connecting IP address. */
+    if ((conn_uid == 0) || (args->connect->maproot))
+    {
+        Log(LOG_LEVEL_DEBUG, "Access granted because %s",
+            (conn_uid == 0) ? "remote user is root"
+                            : "of maproot");
+        return true;                                      /* access granted */
+    }
+
 #ifdef __MINGW32__
+
     SECURITY_DESCRIPTOR *secDesc;
     SID *ownerSid;
 
     if (GetNamedSecurityInfo(
             filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,
             (PSID *) &ownerSid, NULL, NULL, NULL, (void **) &secDesc)
-        == ERROR_SUCCESS)
-    {
-        if (IsValidSid((args->connect->sid) &&
-            EqualSid(ownerSid, args->connect->sid))
-        {
-            Log(LOG_LEVEL_DEBUG,
-                "Caller '%s' is the owner of the file",
-                args->connect->username);
-        }
-        else
-        {
-            // If the process doesn't own the file, we can access if we are
-            // root AND granted root map
-
-            LocalFree(secDesc);
-
-            if (args->connect->maproot)
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "Caller '%s' not owner of '%s', but mapping privilege",
-                    args->connect->username, filename);
-                return true;
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "Remote user denied right to file '%s' (consider maproot?)",
-                    filename);
-                return false;
-            }
-        }
-
-        LocalFree(secDesc);
-    }
-    else
+        != ERROR_SUCCESS)
     {
         Log(LOG_LEVEL_ERR,
-            "Could not retreive existing owner of '%s'. (GetNamedSecurityInfo)",
-            filename);
+            "Could not retrieve owner of file '%s' "
+            "(GetNamedSecurityInfo: %s)",
+            filename, GetErrorStr());
         return false;
     }
 
-#else
+    LocalFree(secDesc);
 
-    uid_t uid = (args->connect)->uid;
-
-    if ((uid != 0) && (!args->connect->maproot))
+    if (!IsValidSid(args->connect->sid) ||
+        !EqualSid(ownerSid, args->connect->sid))
     {
-        if (sb->st_uid == uid)
+        /* If "maproot" we've already granted access. */
+        assert(!args->connect->maproot);
+
+        Log(LOG_LEVEL_VERBOSE,
+            "Remote user '%s' is not the owner of the file, access denied, "
+            "consider maproot", args->connect->username);
+
+        return false;
+    }
+
+    Log(LOG_LEVEL_DEBUG,
+        "User '%s' is the owner of the file, access granted",
+        args->connect->username);
+
+#else                                         /* UNIX systems - common path */
+
+    if (sb->st_uid != conn_uid)                    /* does not own the file */
+    {
+        if (!(sb->st_mode & S_IROTH))            /* file not world readable */
         {
-            Log(LOG_LEVEL_DEBUG,
-                "Caller '%s' is the owner of the file",
-                (args->connect)->username);
+            Log(LOG_LEVEL_VERBOSE,
+                "Remote user '%s' is not owner of the file, access denied, "
+                "consider maproot or making file world-readable",
+                args->connect->username);
+            return false;
         }
         else
         {
-            if (sb->st_mode & S_IROTH)
-            {
-                Log(LOG_LEVEL_DEBUG,
-                    "Caller %s not owner of the file but permission granted",
-                    args->connect->username);
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "Remote user '%s' not owner of file, "
-                    "denied right to file '%s' (consider maproot?)",
-                    args->connect->username, filename);
-                return false;
-            }
+            Log(LOG_LEVEL_DEBUG,
+                "Remote user '%s' is not the owner of the file, "
+                "but file is world readable, access granted",
+                args->connect->username);                 /* access granted */
         }
     }
+    else
+    {
+        Log(LOG_LEVEL_DEBUG,
+            "User '%s' is the owner of the file, access granted",
+            args->connect->username);                     /* access granted */
+    }
 
-    /* Return true if one of the following is true: */
+    /* ADMIT ACCESS, to summarise the following condition is now true: */
 
     /* Remote user is root, where "user" is just a string in the protocol, he
      * might claim whatever he wants but will be able to login only if the
      * user-key.pub key is found, */
-    assert((args->connect->uid == 0) ||
+    assert((conn_uid == 0) ||
     /* OR remote IP has maproot in the file's access_rules, */
            (args->connect->maproot == true) ||
     /* OR file is owned by the same username the user claimed - useless or
      * even dangerous outside NIS, KERBEROS or LDAP authenticated domains,  */
-           (sb->st_uid == uid) ||
+           (sb->st_uid == conn_uid) ||
     /* file is readable by everyone */
            (sb->st_mode & S_IROTH));
 

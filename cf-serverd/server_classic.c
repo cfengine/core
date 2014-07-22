@@ -551,6 +551,14 @@ static void SetConnectionData(ServerConnectionState *conn, char *buf)
         memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
     }
 
+    if (strcmp(username, "root") == 0)
+    {
+        /* It the remote user identifies himself as root, even the windows
+         * server must grant access to all files. uid==0 is checked later in
+         * TranferRights() for that. */
+        conn->uid = 0;
+    }
+
 #else  /* !__MINGW32__ */
     struct passwd *pw;
     if ((pw = getpwnam(username)) == NULL)        /* Keep this inside mutex */

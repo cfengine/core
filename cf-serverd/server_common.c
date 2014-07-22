@@ -417,7 +417,9 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         if ((*sp == ';') || (*sp == '&') || (*sp == '|'))
         {
             char sendbuffer[CF_BUFSIZE];
-            snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
+            snprintf(sendbuffer, CF_BUFSIZE,
+                     "You are not authorized to activate these classes/roles on host %s\n",
+                     VFQNAME);
             SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
             return;
         }
@@ -448,7 +450,9 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
             if (!AuthorizeRoles(ctx, conn, sp))
             {
                 char sendbuffer[CF_BUFSIZE];
-                snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
+                snprintf(sendbuffer, CF_BUFSIZE,
+                         "You are not authorized to activate these classes/roles on host %s\n",
+                         VFQNAME);
                 SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
                 return;
             }
@@ -460,7 +464,8 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
     if (strlen(ebuff) + strlen(args) + 6 > CF_BUFSIZE)
     {
         char sendbuffer[CF_BUFSIZE];
-        snprintf(sendbuffer, CF_BUFSIZE, "Command line too long with args: %s\n", ebuff);
+        snprintf(sendbuffer, CF_BUFSIZE,
+                 "Command line too long with args: %s\n", ebuff);
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return;
     }
@@ -471,7 +476,8 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
             char sendbuffer[CF_BUFSIZE];
             strcat(ebuff, " ");
             strncat(ebuff, args, CF_BUFSIZE - strlen(ebuff));
-            snprintf(sendbuffer, CF_BUFSIZE, "cf-serverd Executing %s\n", ebuff);
+            snprintf(sendbuffer, CF_BUFSIZE,
+                     "cf-serverd Executing %s\n", ebuff);
             SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         }
     }
@@ -480,7 +486,9 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 
     if ((pp = cf_popen_sh(ebuff, "r")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't open pipe to command '%s'. (pipe: %s)", ebuff, GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Couldn't open pipe to command '%s'. (pipe: %s)",
+            ebuff, GetErrorStr());
         char sendbuffer[CF_BUFSIZE];
         snprintf(sendbuffer, CF_BUFSIZE, "Unable to run %s\n", ebuff);
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
@@ -519,7 +527,8 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
             snprintf(sendbuffer, CF_BUFSIZE, "%s\n", line);
             if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
             {
-                Log(LOG_LEVEL_ERR, "Sending failed, aborting. (send: %s)", GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Sending failed, aborting. (send: %s)", GetErrorStr());
                 break;
             }
         }
@@ -529,20 +538,25 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
     cf_pclose(pp);
 }
 
-/* TODO don't pass "args" just the things we actually check: sid, username, maproot, uid */
+/* TODO don't pass "args" just the things we actually check:
+   sid, username, maproot, uid. */
 static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb)
 {
 #ifdef __MINGW32__
     SECURITY_DESCRIPTOR *secDesc;
     SID *ownerSid;
 
-    if (GetNamedSecurityInfo
-        (filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, (PSID *) & ownerSid, NULL, NULL, NULL,
-         (void **)&secDesc) == ERROR_SUCCESS)
+    if (GetNamedSecurityInfo(
+            filename, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION,
+            (PSID *) &ownerSid, NULL, NULL, NULL, (void **) &secDesc)
+        == ERROR_SUCCESS)
     {
-        if (IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
+        if (IsValidSid((args->connect->sid) &&
+            EqualSid(ownerSid, args->connect->sid))
         {
-            Log(LOG_LEVEL_DEBUG, "Caller '%s' is the owner of the file", (args->connect)->username);
+            Log(LOG_LEVEL_DEBUG,
+                "Caller '%s' is the owner of the file",
+                args->connect->username);
         }
         else
         {
@@ -553,13 +567,16 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
 
             if (args->connect->maproot)
             {
-                Log(LOG_LEVEL_VERBOSE, "Caller '%s' not owner of '%s', but mapping privilege",
-                      (args->connect)->username, filename);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Caller '%s' not owner of '%s', but mapping privilege",
+                    args->connect->username, filename);
                 return true;
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Remote user denied right to file '%s' (consider maproot?)", filename);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Remote user denied right to file '%s' (consider maproot?)",
+                    filename);
                 return false;
             }
         }
@@ -568,7 +585,9 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Could not retreive existing owner of '%s'. (GetNamedSecurityInfo)", filename);
+        Log(LOG_LEVEL_ERR,
+            "Could not retreive existing owner of '%s'. (GetNamedSecurityInfo)",
+            filename);
         return false;
     }
 
@@ -576,22 +595,28 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
 
     uid_t uid = (args->connect)->uid;
 
-    if ((uid != 0) && (!args->connect->maproot))    /* should remote root be local root */
+    if ((uid != 0) && (!args->connect->maproot))
     {
         if (sb->st_uid == uid)
         {
-            Log(LOG_LEVEL_DEBUG, "Caller '%s' is the owner of the file", (args->connect)->username);
+            Log(LOG_LEVEL_DEBUG,
+                "Caller '%s' is the owner of the file",
+                (args->connect)->username);
         }
         else
         {
             if (sb->st_mode & S_IROTH)
             {
-                Log(LOG_LEVEL_DEBUG, "Caller %s not owner of the file but permission granted", (args->connect)->username);
+                Log(LOG_LEVEL_DEBUG,
+                    "Caller %s not owner of the file but permission granted",
+                    args->connect->username);
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "Caller '%s' is not the owner of the file", (args->connect)->username);
-                Log(LOG_LEVEL_VERBOSE, "Remote user denied right to file '%s' (consider maproot?)", filename);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Remote user '%s' not owner of file, "
+                    "denied right to file '%s' (consider maproot?)",
+                    args->connect->username, filename);
                 return false;
             }
         }
@@ -621,11 +646,13 @@ static void AbortTransfer(ConnectionInfo *connection, char *filename)
     Log(LOG_LEVEL_VERBOSE, "Aborting transfer of file due to source changes");
 
     char sendbuffer[CF_BUFSIZE];
-    snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
+    snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s",
+             CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
 
     if (SendTransaction(connection, sendbuffer, 0, CF_DONE) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)",
+            GetErrorStr());
     }
 }
 
@@ -639,7 +666,8 @@ static void FailedTransfer(ConnectionInfo *connection)
 
     if (SendTransaction(connection, sendbuffer, 0, CF_DONE) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)",
+            GetErrorStr());
     }
 }
 

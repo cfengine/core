@@ -1648,9 +1648,10 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     bool retval = false;
     char buf[CF_EXPANDSIZE];
     char *sp;
-    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_all_lines") == 0 || strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
+    int preserve_all_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
+    int preserve_block = a.sourcetype && (preserve_all_lines || strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
-    if (!preserve_block && MatchRegion(ctx, chunk, location, NULL, false))
+    if (!preserve_all_lines && MatchRegion(ctx, chunk, location, NULL, false))
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
         return false;

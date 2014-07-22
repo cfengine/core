@@ -44,6 +44,7 @@ bundle common G
                         "seq",
                         "sleep",
                         "sort",
+                        "tee",
                         "touch",
                         "true",
                         "wc",

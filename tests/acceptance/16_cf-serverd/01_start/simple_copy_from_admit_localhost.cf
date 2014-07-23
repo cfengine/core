@@ -10,7 +10,7 @@ bundle agent test
 {
   meta:
       "test_suppress_fail" string => "windows|sunos_5_11|sunos_5_10|sunos_5_9",
-        meta => { "redmine4822" };
+        meta => { "redmine6405", "redmine6406" };
 
   methods:
       "any" usebundle => dcs_fini("$(G.testdir)/dest_file_classic");

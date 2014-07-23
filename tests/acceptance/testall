@@ -312,7 +312,7 @@ runtest() {
     if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]; then
       # Don't reset workdir if this is a subsequent pass.
       $GAINROOT rm -rf "$WORKDIR"
-      mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
+      mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp" 2> /dev/null
       chmod ugo+rwxt "$WORKDIR/tmp"
       if [ -n "$BINDIR" ]; then
         # Copy everything, because Windows depends on DLLs.
@@ -698,6 +698,7 @@ fi
 
 if [ -n "$USE_INOTIFYWATCH" ]; then
   if which inotifywatch 2>&1 > /dev/null; then
+    mkdir -p "$BASE_WORKDIR" 2> /dev/null
     inotifywatch ${INOTIFYWATCH_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWATCH_LOG} &
     INOTIFYWATCH_PID=$!
   else
@@ -708,6 +709,7 @@ fi
 
 if [ -n "$USE_INOTIFYWAIT" ]; then
   if which inotifywait 2>&1 > /dev/null; then
+    mkdir -p "$BASE_WORKDIR" 2> /dev/null
     inotifywait ${INOTIFYWAIT_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWAIT_LOG} &
     INOTIFYWAIT_PID=$!
   else

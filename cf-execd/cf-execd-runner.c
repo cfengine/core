@@ -485,7 +485,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
-    Log(LOG_LEVEL_VERBOSE, "Mail result...");
+    Log(LOG_LEVEL_VERBOSE, "Mail report: sending result...");
 
     {
         struct stat statbuf;
@@ -497,7 +497,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         if (statbuf.st_size == 0)
         {
             unlink(file);
-            Log(LOG_LEVEL_DEBUG, "Nothing to report in file '%s'", file);
+            Log(LOG_LEVEL_DEBUG, "Mail report: nothing to report in file '%s'", file);
             return;
         }
     }
@@ -509,7 +509,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
         if (CompareResult(file, prev_file) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Previous output is the same as current so do not mail it");
+            Log(LOG_LEVEL_VERBOSE, "Mail report: previous output is the same as current so do not mail it");
             return;
         }
     }
@@ -517,24 +517,24 @@ static void MailResult(const ExecConfig *config, const char *file)
     if ((strlen(config->mail_server) == 0) || (strlen(config->mail_to_address) == 0))
     {
         /* Syslog should have done this */
-        Log(LOG_LEVEL_VERBOSE, "Empty mail server or address - skipping");
+        Log(LOG_LEVEL_VERBOSE, "Mail report: empty mail server or address - skipping");
         return;
     }
 
     if (config->mail_max_lines == 0)
     {
-        Log(LOG_LEVEL_DEBUG, "Not mailing: EmailMaxLines was zero");
+        Log(LOG_LEVEL_DEBUG, "Mail report: not mailing because EmailMaxLines was zero");
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Mailing results of '%s' to '%s'", file, config->mail_to_address);
+    Log(LOG_LEVEL_DEBUG, "Mail report: mailing results of '%s' to '%s'", file, config->mail_to_address);
 
 /* Check first for anomalies - for subject header */
 
     FILE *fp = fopen(file, "r");
     if (!fp)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
     }
 
@@ -560,15 +560,15 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
     }
 
     struct hostent *hp = gethostbyname(config->mail_server);
     if (!hp)
     {
-        Log(LOG_LEVEL_ERR, "While mailing agent output, unknown host '%s'. Make sure that fully qualified names can be looked up at your site.",
-            config->mail_server);
+        Log(LOG_LEVEL_ERR, "Mail report: unknown host '%s' ('smtpserver' in body executor control). Make sure that fully qualified names can be looked up at your site.",
+                config->mail_server);
         fclose(fp);
         return;
     }
@@ -576,7 +576,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     struct servent *server = getservbyname("smtp", "tcp");
     if (!server)
     {
-        Log(LOG_LEVEL_INFO, "Unable to lookup smtp service. (getservbyname: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Mail report: unable to lookup smtp service. (getservbyname: %s)", GetErrorStr());
         fclose(fp);
         return;
     }
@@ -588,19 +588,19 @@ static void MailResult(const ExecConfig *config, const char *file)
     raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
     raddr.sin_family = AF_INET;
 
-    Log(LOG_LEVEL_DEBUG, "Connecting...");
+    Log(LOG_LEVEL_DEBUG, "Mail report: connecting...");
 
     int sd = socket(AF_INET, SOCK_STREAM, 0);
     if (sd == -1)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't open a socket. (socket: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Mail report: couldn't open a socket. (socket: %s)", GetErrorStr());
         fclose(fp);
         return;
     }
 
     if (connect(sd, (void *) &raddr, sizeof(raddr)) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't connect to host '%s'. (connect: %s)",
+        Log(LOG_LEVEL_ERR, "Mail report: couldn't connect to host '%s'. (connect: %s)",
             config->mail_server, GetErrorStr());
         fclose(fp);
         cf_closesocket(sd);
@@ -615,7 +615,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     }
 
     snprintf(vbuff, sizeof(vbuff), "HELO %s\r\n", config->fq_name);
-    Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+    Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
 
     if (!Dialogue(sd, vbuff))
     {
@@ -626,13 +626,13 @@ static void MailResult(const ExecConfig *config, const char *file)
     {
         snprintf(vbuff, sizeof(vbuff), "MAIL FROM: <cfengine@%s>\r\n",
                  config->fq_name);
-        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
     else
     {
         snprintf(vbuff, sizeof(vbuff), "MAIL FROM: <%s>\r\n",
                  config->mail_from_address);
-        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
 
     if (!Dialogue(sd, vbuff))
@@ -642,7 +642,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     snprintf(vbuff, sizeof(vbuff), "RCPT TO: <%s>\r\n",
              config->mail_to_address);
-    Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+    Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
 
     if (!Dialogue(sd, vbuff))
     {
@@ -667,12 +667,12 @@ static void MailResult(const ExecConfig *config, const char *file)
     if (SafeStringLength(config->mail_subject) == 0)
     {
         snprintf(vbuff, sizeof(vbuff), "Subject: %s[%s/%s]\r\n", mailsubject_anomaly_prefix, config->fq_name, config->ip_address);
-        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
     else
     {
         snprintf(vbuff, sizeof(vbuff), "Subject: %s%s\r\n", mailsubject_anomaly_prefix, config->mail_subject);
-        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
 
     send(sd, vbuff, strlen(vbuff), 0);
@@ -702,19 +702,19 @@ static void MailResult(const ExecConfig *config, const char *file)
     {
         snprintf(vbuff, sizeof(vbuff), "From: cfengine@%s\r\n",
                  config->fq_name);
-        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
     else
     {
         snprintf(vbuff, sizeof(vbuff), "From: %s\r\n",
                  config->mail_from_address);
-        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
 
     send(sd, vbuff, strlen(vbuff), 0);
 
     snprintf(vbuff, sizeof(vbuff), "To: %s\r\n\r\n", config->mail_to_address);
-    Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+    Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     send(sd, vbuff, strlen(vbuff), 0);
 
     int count = 0;
@@ -726,7 +726,7 @@ static void MailResult(const ExecConfig *config, const char *file)
             break;
         }
 
-        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
 
         if (strlen(vbuff) > 0)
         {
@@ -739,7 +739,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         if ((config->mail_max_lines != INF_LINES) && (count > config->mail_max_lines))
         {
             snprintf(vbuff, sizeof(vbuff),
-                     "\r\n[Mail truncated by cfengine. File is at %s on %s]\r\n",
+                     "\r\n[Mail truncated by CFEngine. File is at %s on %s]\r\n",
                      file, config->fq_name);
             send(sd, vbuff, strlen(vbuff), 0);
             break;
@@ -748,12 +748,12 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if (!Dialogue(sd, ".\r\n"))
     {
-        Log(LOG_LEVEL_DEBUG, "mail_err\n");
+        Log(LOG_LEVEL_DEBUG, "Mail report: mail_err\n");
         goto mail_err;
     }
 
     Dialogue(sd, "QUIT\r\n");
-    Log(LOG_LEVEL_DEBUG, "Done sending mail");
+    Log(LOG_LEVEL_DEBUG, "Mail report: done sending mail");
     fclose(fp);
     cf_closesocket(sd);
     return;
@@ -762,7 +762,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     fclose(fp);
     cf_closesocket(sd);
-    Log(LOG_LEVEL_INFO, "Cannot mail to %s.", config->mail_to_address);
+    Log(LOG_LEVEL_ERR, "Mail report: cannot mail to %s.", config->mail_to_address);
 }
 
 static int Dialogue(int sd, const char *s)

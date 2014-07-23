@@ -63,7 +63,7 @@ static size_t CURRENT_PROMISER_LINE = 0;
 
 #define YYMALLOC xmalloc
 
-#define ParserDebug if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG) printf
+#define ParserDebug(...) if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG2) printf(__VA_ARGS__)
 
 %}
 

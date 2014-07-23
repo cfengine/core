@@ -159,7 +159,15 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
+            if (LogGetGlobalLevel() < LOG_LEVEL_DEBUG)
+            {
+                LogSetGlobalLevel(LOG_LEVEL_DEBUG);
+            }
+            else
+            {
+                LogSetGlobalLevel(LOG_LEVEL_DEBUG2);
+            }
+
             NO_FORK = true;
             break;
 

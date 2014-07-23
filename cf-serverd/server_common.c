@@ -49,6 +49,7 @@ static const int CF_NOSIZE = -1;
 #include <connection_info.h>
 #include <misc_lib.h>                              /* UnexpectedError */
 #include <cf-windows-functions.h>                  /* NovaWin_UserNameToSid */
+#include <mutex.h>                                 /* ThreadLock */
 
 
 void RefuseAccess(ServerConnectionState *conn, char *errmesg)
@@ -1717,8 +1718,10 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
  */
 void SetConnIdentity(ServerConnectionState *conn, const char *username)
 {
-    conn->username[0] = '\0';
     size_t username_len = strlen(username);
+
+    conn->uid = CF_UNKNOWN_OWNER;
+    conn->username[0] = '\0';
 
     if (username_len < sizeof(conn->username))
     {
@@ -1742,16 +1745,20 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
         conn->uid = 0;
     }
 
-#else  /* !__MINGW32__ */
+#else                                                 /* UNIX - common path */
 
-    struct passwd *pw;
-    if ((pw = getpwnam(conn->username)) == NULL)   /* TODO Keep this inside mutex */
+    static pthread_mutex_t pwnam_mtx = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+    struct passwd *pw = NULL;
+
+    if (ThreadLock(&pwnam_mtx))
     {
-        conn->uid = CF_UNKNOWN_OWNER;
+        pw = getpwnam(conn->username);
+        if (pw != NULL)
+        {
+            conn->uid = pw->pw_uid;
+        }
+        ThreadUnlock(&pwnam_mtx);
     }
-    else
-    {
-        conn->uid = pw->pw_uid;
-    }
-#endif  /* !__MINGW32__ */
+
+#endif
 }

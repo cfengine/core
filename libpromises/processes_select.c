@@ -451,34 +451,33 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
 }
 
 /*******************************************************************/
+/* line must be char *line[CF_PROCCOLS] in fact. */
 
 static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line)
 {
-    int i, s, e;
-
-    char *sp = NULL;
-    char cols1[CF_PROCCOLS][CF_SMALLBUF] = { "" };
-    char cols2[CF_PROCCOLS][CF_SMALLBUF] = { "" };
-
-    if ((proc == NULL) || (strlen(proc) == 0))
+    if (proc == NULL || proc[0] == '\0')
     {
         return false;
     }
 
     memset(line, 0, sizeof(char *) * CF_PROCCOLS);
 
-// First try looking at all the separable items
+    char *sp = proc;
+    int i, s, e;
 
-    sp = proc;
+    char cols1[CF_PROCCOLS][CF_SMALLBUF] = { "" };
+    char cols2[CF_PROCCOLS][CF_SMALLBUF];
 
-    for (i = 0; (i < CF_PROCCOLS) && (names[i] != NULL); i++)
+    // First try looking at all the separable items
+    for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
     {
         while (*sp == ' ')
         {
             sp++;
         }
 
-        if ((strcmp(names[i], "CMD") == 0) || (strcmp(names[i], "COMMAND") == 0))
+        if (strcmp(names[i], "CMD") == 0 ||
+            strcmp(names[i], "COMMAND") == 0)
         {
             sscanf(sp, "%127[^\n]", cols1[i]);
             sp += strlen(cols1[i]);
@@ -490,7 +489,8 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
         }
 
         // Some ps stimes may contain spaces, e.g. "Jan 25"
-        if ((strcmp(names[i], "STIME") == 0) && (strlen(cols1[i]) == 3))
+        if (strcmp(names[i], "STIME") == 0 &&
+            strlen(cols1[i]) == 3)
         {
             char s[CF_SMALLBUF] = { 0 };
             sscanf(sp, "%127s", s);
@@ -500,60 +500,51 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
         }
     }
 
-// Now try looking at columne alignment
+    // Now try looking at columne alignment
 
-    for (i = 0; (i < CF_PROCCOLS) && (names[i] != NULL); i++)
+    for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
     {
         // Start from the header/column tab marker and count backwards until we find 0 or space
-        for (s = start[i]; (s >= 0) && (!isspace((int) *(proc + s))); s--)
+        for (s = start[i]; s > 0 && !isspace((unsigned char) proc[s]); s--)
         {
-        }
-
-        if (s < 0)
-        {
-            s = 0;
         }
 
         // Make sure to strip off leading spaces
-        while (isspace((int) proc[s]))
+        while (isspace((unsigned char) proc[s]))
         {
             s++;
         }
 
-        if ((strcmp(names[i], "CMD") == 0) || (strcmp(names[i], "COMMAND") == 0))
+        if (strcmp(names[i], "CMD") == 0 ||
+            strcmp(names[i], "COMMAND") == 0)
         {
+            assert(i == CF_PROCCOLS - 1 || names[i + 1] == NULL);
             e = strlen(proc);
         }
         else
         {
-            for (e = end[i]; (e <= end[i] + 10) && (!isspace((int) *(proc + e))); e++)
+            for (e = end[i]; e <= end[i] + 10 && !isspace((unsigned char) proc[e]); e++)
             {
             }
 
-            while (isspace((int) proc[e]))
+            while (e > 0 && isspace((unsigned char) proc[e]))
             {
-                if (e > 0)
-                {
-                    e--;
-                }
-
-                if(e == 0)
-                {
-                    break;
-                }
+                e--;
             }
         }
 
         if (s <= e)
         {
-            strncpy(cols2[i], (char *) (proc + s), MIN(CF_SMALLBUF - 1, (e - s + 1)));
+            size_t len = MIN(1 + e - s, CF_SMALLBUF - 1);
+            memcpy(cols2[i], proc + s, len);
+            cols2[i][len] = '\0';
         }
         else
         {
             cols2[i][0] = '\0';
         }
 
-        if (Chop(cols2[i], CF_EXPANDSIZE) == -1)
+        if (Chop(cols2[i], CF_SMALLBUF) == -1)
         {
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
@@ -574,17 +565,19 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names)
 {
-    int i;
-
-    for (i = 0; names[i] != NULL; i++)
+    for (int i = 0; names[i] != NULL; i++)
     {
-        if ((strcmp(names[i], name1) == 0) || (strcmp(names[i], name2) == 0))
+        if (strcmp(names[i], name1) == 0 ||
+            strcmp(names[i], name2) == 0)
         {
             return i;
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, " INFO - process column %s/%s was not supported on this system", name1, name2);
+    Log(LOG_LEVEL_VERBOSE,
+        "Process column %s/%s was not supported on this system",
+        name1, name2);
+
     return -1;
 }
 
@@ -593,7 +586,6 @@ static int GetProcColumnIndex(const char *name1, const char *name2, char **names
 bool IsProcessNameRunning(char *procNameRegex)
 {
     char *colHeaders[CF_PROCCOLS];
-    Item *ip;
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     bool matched = false;
@@ -607,7 +599,7 @@ bool IsProcessNameRunning(char *procNameRegex)
 
     GetProcessColumnNames(PROCESSTABLE->name, (char **) colHeaders, start, end);
 
-    for (ip = PROCESSTABLE->next; !matched && ip != NULL; ip = ip->next) // iterate over ps lines
+    for (const Item *ip = PROCESSTABLE->next; !matched && ip != NULL; ip = ip->next) // iterate over ps lines
     {
         char *lineSplit[CF_PROCCOLS];
 
@@ -627,19 +619,15 @@ bool IsProcessNameRunning(char *procNameRegex)
             matched = true;
         }
 
-        i = 0;
-        while (lineSplit[i] != NULL)
+        for (i = 0; lineSplit[i] != NULL; i++)
         {
             free(lineSplit[i]);
-            i++;
         }
     }
 
-    i = 0;
-    while (colHeaders[i] != NULL)
+    for (i = 0; colHeaders[i] != NULL; i++)
     {
         free(colHeaders[i]);
-        i++;
     }
 
     return matched;
@@ -663,7 +651,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
     {
         offset = sp - proc;
 
-        if (isspace((int) *sp))
+        if (isspace((unsigned char) *sp))
         {
             if (start[col] != -1)
             {
@@ -675,9 +663,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
                     break;
                 }
             }
-            continue;
         }
-
         else if (start[col] == -1)
         {
             start[col] = offset;
@@ -705,7 +691,6 @@ static const char *GetProcessOptions(void)
         // No threads on 2.4 kernels
         return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
     }
-
 # endif
 
     return VPSOPTS[VSYSTEMHARDCLASS];
@@ -714,10 +699,9 @@ static const char *GetProcessOptions(void)
 
 static int ExtractPid(char *psentry, char **names, int *end)
 {
-    char *sp;
-    int col, pid = -1, offset = 0;
+    int offset = 0;
 
-    for (col = 0; col < CF_PROCCOLS; col++)
+    for (int col = 0; col < CF_PROCCOLS; col++)
     {
         if (strcmp(names[col], "PID") == 0)
         {
@@ -729,32 +713,31 @@ static int ExtractPid(char *psentry, char **names, int *end)
         }
     }
 
-    for (sp = psentry + offset; *sp != '\0'; sp++)      /* if first field contains alpha, skip */
+    for (const char *sp = psentry + offset; *sp != '\0'; sp++) /* if first field contains alpha, skip */
     {
         /* If start with alphanum then skip it till the first space */
 
-        if (isalnum((int) *sp))
+        if (isalnum((unsigned char) *sp))
         {
-            while ((*sp != ' ') && (*sp != '\0'))
+            while (*sp != ' ' && *sp != '\0')
             {
                 sp++;
             }
         }
 
-        while ((*sp == ' ') && (*sp == '\t'))
+        while (*sp == ' ' || *sp == '\t')
         {
             sp++;
         }
 
-        sscanf(sp, "%d", &pid);
-
-        if (pid != -1)
+        int pid;
+        if (sscanf(sp, "%d", &pid) == 1 && pid != -1)
         {
-            break;
+            return pid;
         }
     }
 
-    return pid;
+    return -1;
 }
 
 # ifndef __MINGW32__

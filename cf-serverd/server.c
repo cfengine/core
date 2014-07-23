@@ -464,7 +464,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     conn->encryption_type = 'c';
     /* Only public files (chmod o+r) accessible to non-root */
     conn->maproot = false;
-    conn->uid = (uid_t) -1;          /* some invalid uid, because 0 is root */
+    conn->uid = CF_UNKNOWN_OWNER;                    /* Careful, 0 is root! */
 
     return conn;
 }

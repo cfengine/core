@@ -133,6 +133,8 @@ static void args_to_command_line(char *command_line, char **args,
      * a string. Therefore we need to revert the parsing we did before and
      * build the string.
      */
+
+    /* TODO put arguments in quotes! */
     command_line[0] = '\0';
     char *arg;
     while ((arg = *args) != NULL)
@@ -158,7 +160,8 @@ int private_run_process_replace(const char *command, char **args, char **envp)
 
     args_to_command_line(command_line, args, sizeof(command_line));
 
-    log_entry(LogDebug, "Re-execute: %s", command_line);
+    log_entry(LogVerbose,
+              "Creating process with command line: %s", command_line);
 
     // Start the child process.
     if( !CreateProcess( command,   // No module name (use command line)
@@ -205,17 +208,20 @@ int private_run_process_wait(const char *command, char **args, char **envp)
 
     args_to_command_line(command_line, args, sizeof(command_line));
 
+    log_entry(LogVerbose,
+              "Creating process with command line: %s", command_line);
+
     // Start the child process.
     if( !CreateProcess( command,   // No module name (use command line)
-        command_line,        // Command line
-        NULL,           // Process handle not inheritable
-        NULL,           // Thread handle not inheritable
-        FALSE,          // Set handle inheritance to FALSE
-        0,              // No creation flags
-        NULL,           // Use parent's environment block
-        NULL,           // Use parent's starting directory
-        &si,            // Pointer to STARTUPINFO structure
-        &pi )           // Pointer to PROCESS_INFORMATION structure
+                        command_line,        // Command line
+                        NULL,           // Process handle not inheritable
+                        NULL,           // Thread handle not inheritable
+                        FALSE,          // Set handle inheritance to FALSE
+                        0,              // No creation flags
+                        NULL,           // Use parent's environment block
+                        NULL,           // Use parent's starting directory
+                        &si,            // Pointer to STARTUPINFO structure
+                        &pi )           // Pointer to PROCESS_INFORMATION structure
     )
     {
         log_entry(LogCritical, "Could not create child process: %s", command);

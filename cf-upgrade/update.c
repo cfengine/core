@@ -153,18 +153,16 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
             }
         }
     }
-    while (this_read > 0 && so_far < source_stat.st_size);
+    while (this_read > 0);
 
-    /* Both of the loop termination conditions must be true at the same time,
-     * else something is wrong. */
-    if (this_read != 0 || so_far != source_stat.st_size)
+    assert(this_read == 0);
+    if (so_far != source_stat.st_size)
     {
         log_entry(LogCritical,
-                  "Unexpected, file %s at EOF while %d out of %d bytes have been read",
-                  (this_read == 0) ? "is" : "is not",
+                  "Unexpected, file is at EOF while %d out of %d bytes have been read",
                   so_far, source_stat.st_size);
         log_entry(LogCritical,
-                  "trying to continue, maybe it changed size while reading");
+                  "Trying to continue, maybe it changed size while reading");
     }
 
     close(source_fd);

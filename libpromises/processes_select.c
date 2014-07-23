@@ -607,7 +607,7 @@ bool IsProcessNameRunning(char *procNameRegex)
 
     GetProcessColumnNames(PROCESSTABLE->name, (char **) colHeaders, start, end);
 
-    for (ip = PROCESSTABLE->next; ip != NULL; ip = ip->next)    // iterate over ps lines
+    for (ip = PROCESSTABLE->next; !matched && ip != NULL; ip = ip->next) // iterate over ps lines
     {
         char *lineSplit[CF_PROCCOLS];
 
@@ -625,7 +625,6 @@ bool IsProcessNameRunning(char *procNameRegex)
         if (SelectProcRegexMatch("CMD", "COMMAND", procNameRegex, colHeaders, lineSplit))
         {
             matched = true;
-            break;
         }
 
         i = 0;

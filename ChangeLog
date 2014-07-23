@@ -3,12 +3,12 @@
         - Introduced Solaris and AIX support into the 3.6 series, with many associated build and
           bug fixes.
 
-	Changes:
-        - Short-circut evaluation of classes promises if class is already set (Redmine #5241)
+        Changes:
+        - Short-circuit evaluation of classes promises if class is already set (Redmine #5241)
         - fix to assume all non-specified return codes are failed in commands promises (Redmine #5986)
         - cf-serverd logs reconfiguration message to NOTICE (was INFO) so that it's always logged in syslog
 
-	Bug fixes:
+        Bug fixes:
         - File monitoring has been completely rewritten (changes attribute in files promise), which
           eliminates many bugs, particularly regarding files that are deleted. Upgrading will keep
           all monitoring data, but downgrading again will reinitialize the DB, so all files will be
@@ -18,9 +18,10 @@
           (Redmine #1554, #1496, #3530, #1563)
         - 'body changes' notifies about disappeared files in file monitoring (Redmine #2917)
         - Set not-kept classes when files or commands promise should be repaired, but is warn-only (Redmine #2359)
-        - Fixed CFEngine template producing a zero sized file (Redmine #6088)
+        - Fixed CFEngine template producing a zero-sized file (Redmine #6088)
         - Add 0-9 A-Z _ to allowed context of module protocol (Redmine #6063)
-        - Extend ps command column width and prepend zone name on Solaris
+        - Extend ps command column width on Solaris and filter on zone
+          rather than adding it to the ps output.
         - Fixed strftime() function on Solaris when called with certain specifiers.
         - Fixed users promise bug regarding password hashes in a NIS/NSS setup.
         - Fixed $(sys.uptime), $(sys.systime) and $(sys.sysday) in AIX. (Redmine #5148, #5206)
@@ -47,7 +48,7 @@
         - port argument in readtcp() and selectservers() may be a
           service name (e.g. "http", "pop3").
         - Enable source file in agent copy_from promises to be a relative path.
-	    - file "changes" reporting now reports with log level "notice", instead of "error".
+            - file "changes" reporting now reports with log level "notice", instead of "error".
         - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
         - interface is now canonified in sys.hardware_mac[interface] to align with
           sys.ipv4[interface] (Redmine #3418)

@@ -1733,7 +1733,6 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
     if (!NovaWin_UserNameToSid(conn->username, (SID *) conn->sid,
                                CF_MAXSIDSIZE, false))
     {
-        Log(LOG_LEVEL_DEBUG, "");
         memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
     }
 

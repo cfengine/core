@@ -1747,7 +1747,7 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
     struct passwd *pw;
     if ((pw = getpwnam(conn->username)) == NULL)   /* TODO Keep this inside mutex */
     {
-        conn->uid = -2;
+        conn->uid = CF_UNKNOWN_OWNER;
     }
     else
     {

@@ -12,10 +12,6 @@ body common control
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4822" };
-
   reports:
       "$(this.promise_filename) Pass";
 }

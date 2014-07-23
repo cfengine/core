@@ -677,24 +677,21 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     send(sd, vbuff, strlen(vbuff), 0);
 
-    /* send X-CFEngine SMTP header if mailsubject set */
-    if (SafeStringLength(config->mail_subject) > 0)
-    {
-        unsigned char digest[EVP_MAX_MD_SIZE + 1];
-        char buffer[CF_HOSTKEY_STRING_SIZE];
+    /* Send X-CFEngine SMTP header */
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    char buffer[CF_HOSTKEY_STRING_SIZE];
 
-        char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+    char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
 
-        HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
+    HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
 
-        snprintf(vbuff, sizeof(vbuff),
-                 "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
-                 VFQNAME, config->ip_addresses, existing_policy_server,
-                 HashPrintSafe(buffer, sizeof(buffer), digest, CF_DEFAULT_DIGEST, true));
+    snprintf(vbuff, sizeof(vbuff),
+             "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
+             VFQNAME, config->ip_addresses, existing_policy_server,
+             HashPrintSafe(buffer, sizeof(buffer), digest, CF_DEFAULT_DIGEST, true));
 
-        send(sd, vbuff, strlen(vbuff), 0);
-        free(existing_policy_server);
-    }
+    send(sd, vbuff, strlen(vbuff), 0);
+    free(existing_policy_server);
 
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     strftime(vbuff, CF_BUFSIZE, "Date: %a, %d %b %Y %H:%M:%S %z\r\n", localtime(&now));

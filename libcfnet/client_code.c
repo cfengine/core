@@ -56,10 +56,7 @@ typedef struct
 
 #define CF_COULD_NOT_CONNECT -2
 
-/* With this lock we ensure we read the list head atomically, but we don't
- * guarantee anything about the queue's contents. It should be OK since we
- * never remove elements from the queue, only prepend to the head.*/
-static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP; /* GLOBAL_T */
+static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
 static void NewClientCache(Stat *data, AgentConnection *conn);
 static void FlushFileStream(int sd, int toget);

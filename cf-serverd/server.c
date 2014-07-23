@@ -459,15 +459,15 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     conn->hostname[0] = '\0';
     conn->ipaddr[0] = '\0';
     conn->username[0] = '\0';
+    conn->revdns[0] = '\0';
     conn->session_key = NULL;
     conn->encryption_type = 'c';
-    conn->maproot = false;      /* Only public files (chmod o+r) accessible */
-    conn->revdns[0] = '\0';
+    /* Only public files (chmod o+r) accessible to non-root */
+    conn->maproot = false;
+    conn->uid = CF_UNKNOWN_OWNER;                    /* Careful, 0 is root! */
 
     return conn;
 }
-
-/***************************************************************/
 
 /**
  * @note This function is thread-safe. Do NOT wrap it with mutex!

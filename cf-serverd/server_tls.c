@@ -433,9 +433,10 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
         Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
         /* Send/Receive "CFE_v%d" version string, agree on version, receive
-           identity of peer. */
-        bool b = ServerIdentificationDialog(conn->conn_info, conn->username,
-                                            sizeof(conn->username));
+           identity (username) of peer. */
+        char username[sizeof(conn->username)] = "";
+        bool b = ServerIdentificationDialog(conn->conn_info,
+                                            username, sizeof(username));
         if (b != true)
         {
             return -1;
@@ -445,7 +446,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
          * the TLS handshake, since we need the username to do so. TODO in the
          * future store keys irrelevant of username, so that we can match them
          * before IDENTIFY. */
-        ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, conn->username);
+        ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, username);
         if (ret == -1)                                      /* error */
         {
             return -1;
@@ -468,7 +469,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
                     KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
-                SavePublicKey(conn->username, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+                SavePublicKey(username, KeyPrintableHash(conn->conn_info->remote_key),
                               KeyRSA(ConnectionInfoKey(conn->conn_info)));
             }
             else
@@ -481,10 +482,14 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             }
         }
 
-        /* skipping CAUTH */
+        /* All checks succeeded, set conn->uid (conn->sid for Windows)
+         * according to the received USERNAME identity. */
+        SetConnIdentity(conn, username);
+
+        /* No CAUTH, SAUTH in non-classic protocol. */
         conn->user_data_set = 1;
-        /* skipping SAUTH, allow access to read-only files */
         conn->rsa_auth = 1;
+
         LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
                  LAST_SEEN_ROLE_ACCEPT);
 
@@ -704,7 +709,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         /* TODO eliminate! */
-        get_args.connect = conn;
+        get_args.conn = conn;
         get_args.encrypt = false;
         get_args.replybuff = sendbuffer;
         get_args.replyfile = filename;

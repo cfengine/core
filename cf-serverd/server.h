@@ -99,13 +99,14 @@ struct ServerConnectionState_
     /* TODO sockaddr_storage, even though we can keep the text as cache. */
     char ipaddr[CF_MAX_IP_LEN];
     char revdns[MAXHOSTNAMELEN];
+
 #ifdef __MINGW32__
     /* We avoid dynamically allocated buffers due to potential memory leaks,
      * but this is still too big at 2K! */
     char sid[CF_MAXSIDSIZE];
-#else
-    uid_t uid;
 #endif
+    uid_t uid;
+
     /* TODO move username, hostname etc to a new struct identity. */
     char username[CF_MAXVARSIZE];
 
@@ -124,7 +125,7 @@ struct ServerConnectionState_
 
 typedef struct
 {
-    ServerConnectionState *connect;
+    ServerConnectionState *conn;
     int encrypt;
     int buf_size;
     char *replybuff;

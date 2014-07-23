@@ -15,10 +15,6 @@ bundle agent init
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4822" };
-
   methods:
       "any" usebundle => file_make("$(G.testdir)/127.0.0.1_DIR1/ADMIT_FILE",
                                    "ADMIT_FILE A CONTENTS");

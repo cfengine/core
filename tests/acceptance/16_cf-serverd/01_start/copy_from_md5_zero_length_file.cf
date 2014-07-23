@@ -9,8 +9,8 @@ body common control
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "freebsd|windows",
-        meta => { "redmine5224", "redmine4822" };
+      "test_suppress_fail" string => "freebsd",
+        meta => { "redmine6406" };
 
   methods:
       "any" usebundle => dcs_fini("$(G.testdir)/destination_file");

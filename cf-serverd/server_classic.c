@@ -13,7 +13,6 @@
 #include <files_hashes.h>                             /* HashString */
 #include <crypto.h>                                   /* HavePublicKey */
 #include <cf-serverd-enterprise-stubs.h>              /* ReceiveCollectCall */
-#include <cf-windows-functions.h>
 
 #include "server.h"                                /* ServerConnectionState */
 #include "server_common.h"                         /* ListPersistentClasses */
@@ -407,12 +406,15 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                 /* Does the class match any of the regex in ACLs? */
                 if (StringMatchFull(ap->path, ip->name))
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", ip->name, ap->path);
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Found a matching rule in access list (%s in %s)",
+                        ip->name, ap->path);
 
                     if (ap->classpattern == false)
                     {
                         Log(LOG_LEVEL_ERR,
-                            "Context %s requires a literal server item...cannot set variable directly by path",
+                            "Context %s requires a literal server item... "
+                            "cannot set variable directly by path",
                             ap->path);
                         access = false;
                         continue;
@@ -420,30 +422,37 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
                     if ((!encrypt) && (ap->encrypt == true))
                     {
-                        Log(LOG_LEVEL_ERR, "Context %s requires encrypt connection...will not serve", ip->name);
+                        Log(LOG_LEVEL_ERR,
+                            "Context %s requires encrypt connection... "
+                            "will not serve",
+                            ip->name);
                         access = false;
                         break;
                     }
                     else
                     {
-                        Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
+                        Log(LOG_LEVEL_DEBUG,
+                            "Checking whether to map root privileges");
 
                         if ((IsMatchItemIn(ap->maproot, conn->ipaddr))
                             || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                         {
                             conn->maproot = true;
-                            Log(LOG_LEVEL_VERBOSE, "Mapping root privileges");
+                            Log(LOG_LEVEL_VERBOSE,
+                                "Mapping root privileges");
                         }
                         else
                         {
-                            Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
+                            Log(LOG_LEVEL_VERBOSE,
+                                "No root privileges granted");
                         }
 
                         if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
                             || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                         {
                             access = true;
-                            Log(LOG_LEVEL_DEBUG, "Access privileges - match found");
+                            Log(LOG_LEVEL_DEBUG,
+                                "Access privileges - match found");
                         }
                     }
                 }
@@ -457,7 +466,9 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = false;
-                        Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to context %s", conn->hostname, ip->name);
+                        Log(LOG_LEVEL_VERBOSE,
+                            "Host %s explicitly denied access to context %s",
+                            conn->hostname, ip->name);
                         break;
                     }
                 }
@@ -465,18 +476,24 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
             if (access)
             {
-                Log(LOG_LEVEL_VERBOSE, "Host %s granted access to context '%s'", conn->hostname, ip->name);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Host %s granted access to context '%s'",
+                    conn->hostname, ip->name);
                 AppendItem(&matches, ip->name, NULL);
 
                 if (encrypt && LOGENCRYPT)
                 {
                     /* Log files that were marked as requiring encryption */
-                    Log(LOG_LEVEL_INFO, "Host %s granted access to context '%s'", conn->hostname, ip->name);
+                    Log(LOG_LEVEL_INFO,
+                        "Host %s granted access to context '%s'",
+                        conn->hostname, ip->name);
                 }
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Host %s denied access to context '%s'", conn->hostname, ip->name);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Host %s denied access to context '%s'",
+                    conn->hostname, ip->name);
             }
         }
     }
@@ -523,26 +540,8 @@ static void SetConnectionData(ServerConnectionState *conn, char *buf)
     ToLowerStrInplace(fqname);
 
     strlcpy(conn->hostname, fqname, CF_MAXVARSIZE);
-    strlcpy(conn->username, username, CF_MAXVARSIZE);
 
-#ifdef __MINGW32__                   /* NT uses security identifier instead of uid */
-    if (!NovaWin_UserNameToSid(username, (SID *) conn->sid,
-                               CF_MAXSIDSIZE, false))
-    {
-        memset(conn->sid, 0, CF_MAXSIDSIZE);    /* is invalid sid - discarded */
-    }
-
-#else  /* !__MINGW32__ */
-    struct passwd *pw;
-    if ((pw = getpwnam(username)) == NULL)      /* Keep this inside mutex */
-    {
-        conn->uid = -2;
-    }
-    else
-    {
-        conn->uid = pw->pw_uid;
-    }
-#endif  /* !__MINGW32__ */
+    SetConnIdentity(conn, username);
 }
 
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
@@ -554,12 +553,15 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 
     if ((savedkey = HavePublicKey(conn->username, conn->ipaddr, udigest)))
     {
-        Log(LOG_LEVEL_VERBOSE, "A public key was already known from %s/%s - no trust required", conn->hostname,
-              conn->ipaddr);
+        Log(LOG_LEVEL_VERBOSE,
+            "A public key was already known from %s/%s - no trust required",
+            conn->hostname, conn->ipaddr);
 
         if ((BN_cmp(savedkey->e, key->e) == 0) && (BN_cmp(savedkey->n, key->n) == 0))
         {
-            Log(LOG_LEVEL_VERBOSE, "The public key identity was confirmed as %s@%s", conn->username, conn->hostname);
+            Log(LOG_LEVEL_VERBOSE,
+                "The public key identity was confirmed as %s@%s",
+                conn->username, conn->hostname);
             SendTransaction(conn->conn_info, "OK: key accepted", 0, CF_DONE);
             RSA_free(savedkey);
             return true;
@@ -570,17 +572,24 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
      * directory): Allow access only if host is listed in "trustkeysfrom" body
      * server control option. */
 
-    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
+    if ((SV.trustkeylist != NULL) &&
+        (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust", conn->hostname, conn->ipaddr);
-        SendTransaction(conn->conn_info, "OK: unknown key was accepted on trust", 0, CF_DONE);
+        Log(LOG_LEVEL_VERBOSE,
+            "Host %s/%s was found in the list of hosts to trust",
+            conn->hostname, conn->ipaddr);
+        SendTransaction(conn->conn_info,
+                        "OK: unknown key was accepted on trust", 0, CF_DONE);
         SavePublicKey(conn->username, udigest, key);
         return true;
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "No previous key found, and unable to accept this one on trust");
-        SendTransaction(conn->conn_info, "BAD: key could not be accepted on trust", 0, CF_DONE);
+        Log(LOG_LEVEL_VERBOSE,
+            "No previous key found, and unable to accept this one on trust");
+        SendTransaction(conn->conn_info,
+                        "BAD: key could not be accepted on trust",
+                        0, CF_DONE);
         return false;
     }
 }
@@ -1169,7 +1178,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             get_args.buf_size = 2048;
         }
 
-        get_args.connect = conn;
+        get_args.conn = conn;
         get_args.encrypt = false;
         get_args.replybuff = sendbuffer;
         get_args.replyfile = filename;
@@ -1224,7 +1233,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         memset(sendbuffer, 0, sizeof(sendbuffer));
 
-        get_args.connect = conn;
+        get_args.conn = conn;
         get_args.encrypt = true;
         get_args.replybuff = sendbuffer;
         get_args.replyfile = filename;

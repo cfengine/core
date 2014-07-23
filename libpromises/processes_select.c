@@ -563,7 +563,8 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
             Log(LOG_LEVEL_INFO, "Unacceptable model uncertainty examining process(%s): '%s' != '%s'", proc, cols1[i], cols2[i]);
         }
 
-        line[i] = xstrdup(cols1[i]);
+        /* Fall back on cols1 if cols2 got an empty answer: */
+        line[i] = xstrdup(cols2[i][0] ? cols2[i] : cols1[i]);
     }
 
     return true;

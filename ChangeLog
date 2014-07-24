@@ -28,6 +28,7 @@
         - Fixed processes_select complaining about "Unacceptable model uncertainty examining processes" (Redmine #6337)
         - ps command for linux has been changed to cope with big rss values (Redmine #6337)
         - Address ps -axo shift on FreeBSD 10 and later (Redmine #5667)
+        - methods and services promises respect action_policy => "warn" (Redmine #5924)
 
 3.6.0
 

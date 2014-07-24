@@ -504,49 +504,122 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
     for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
     {
-        // Start from the header/column tab marker and count backwards until we find 0 or space
-        for (s = start[i]; s > 0 && !isspace((unsigned char) proc[s]); s--)
+        /* Start with the column header's position; we may then need to
+         * grow outwards. */
+        s = start[i];
+        if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
         {
+            e = strlen(proc) - 1;
+        }
+        else
+        {
+            e = end[i];
         }
 
-        // Make sure to strip off leading spaces
+        /* Numeric columns, including times, are apt to grow leftwards
+         * and be right-aligned; identify candidates for this by
+         * proc[e] being a digit.  Text columns are typically
+         * left-aligned and may grow rightwards; identify candidates
+         * for this by proc[s] being alphabetic.  Some columns shall
+         * match both (e.g. STIME).  Some numeric columns may grow
+         * left even as far as under the heading of the next column
+         * (seen with ps -fel's SZ spilling left into ADDR's space on
+         * Linux).  While widening, it's OK to include a stray space;
+         * we'll trim that afterwards. */
+
+        /* Move s left until we run outside the field or find space. */
+        if (isdigit((unsigned char)proc[e]))
+        {
+            /* Numeric fields may include punctuators: */
+#define IsNumberish(c) (isdigit((unsigned char)(c)) || ispunct((unsigned char)(c)))
+
+            int outer = i ? end[i - 1] + 1 : 0;
+            bool number = i > 0; /* Should we check for under-spill ? */
+            while (s >= outer && !isspace((unsigned char) proc[s]))
+            {
+                if (number && !IsNumberish(proc[s]))
+                {
+                    number = false;
+                }
+                s--;
+            }
+
+            /* Numeric field might overspill under previous header: */
+            if (s < outer)
+            {
+                int spill = s;
+                s = outer; /* By default, don't overlap previous column. */
+
+                if (number && IsNumberish(proc[spill]))
+                {
+                    outer = start[i - 1];
+                    /* Explore all the way to the start-column of the
+                     * previous field's header.  If we get there, in
+                     * digits-and-punctuation, we've got two numeric
+                     * fields that abut; we can't do better than assume
+                     * the boundary is under the right end of the previous
+                     * column label (which is what our parsing of the
+                     * previous column assumed).  So leave s where it is,
+                     * just after the previous field's header's
+                     * end-column. */
+
+                    while (spill > outer)
+                    {
+                        spill--;
+                        if (!IsNumberish(proc[spill]))
+                        {
+                            s = spill + 1; /* Confirmed overlap. */
+                            break;
+                        }
+                    }
+                }
+            }
+#undef IsNumberish
+        }
+
+        /* Move e right likewise (but never under next heading): */
+        if (isalpha((unsigned char)proc[s]))
+        {
+            int outer;
+            if (i + 1 < CF_PROCCOLS && names[i + 1])
+            {
+                outer = start[i + 1];
+            }
+            else
+            {
+                outer = strlen(proc);
+            }
+            /* Simplify loop condition; we want e to end *before* next
+             * field, not on its first byte (or the terminator): */
+            outer--;
+
+            while (e < outer && !isspace((unsigned char) proc[e]))
+            {
+                e++;
+            }
+        }
+
+        /* Strip off any leading and trailing spaces: */
         while (isspace((unsigned char) proc[s]))
         {
             s++;
         }
-
-        if (strcmp(names[i], "CMD") == 0 ||
-            strcmp(names[i], "COMMAND") == 0)
+        /* ... but stop if the field is empty ! */
+        while (s <= e && isspace((unsigned char) proc[e]))
         {
-            assert(i == CF_PROCCOLS - 1 || names[i + 1] == NULL);
-            e = strlen(proc);
-        }
-        else
-        {
-            for (e = end[i]; e <= end[i] + 10 && !isspace((unsigned char) proc[e]); e++)
-            {
-            }
-
-            while (e > 0 && isspace((unsigned char) proc[e]))
-            {
-                e--;
-            }
+            e--;
         }
 
         if (s <= e)
         {
-            size_t len = MIN(1 + e - s, CF_SMALLBUF - 1);
+            /* Copy proc[s through e] inclusive:  */
+            size_t len = min(1 + e - s, CF_SMALLBUF - 1);
             memcpy(cols2[i], proc + s, len);
             cols2[i][len] = '\0';
         }
         else
         {
             cols2[i][0] = '\0';
-        }
-
-        if (Chop(cols2[i], CF_SMALLBUF) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
         if (strcmp(cols2[i], cols1[i]) != 0)

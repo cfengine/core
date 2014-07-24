@@ -48,7 +48,7 @@
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
-static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line);
+static int SplitProcLine(const char *proc, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
@@ -453,7 +453,9 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
 /*******************************************************************/
 /* line must be char *line[CF_PROCCOLS] in fact. */
 
-static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line)
+static int SplitProcLine(const char *proc,
+                         char **names, int *start, int *end,
+                         char **line)
 {
     if (proc == NULL || proc[0] == '\0')
     {
@@ -462,58 +464,65 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
     memset(line, 0, sizeof(char *) * CF_PROCCOLS);
 
-    char *sp = proc;
-    int i, s, e;
+    const char *sp = proc;
+    /* Scan in parallel for two heuristics: space-delimited fields
+     * found using sp, and ones inferred from the column headers. */
 
-    char cols1[CF_PROCCOLS][CF_SMALLBUF] = { "" };
-    char cols2[CF_PROCCOLS][CF_SMALLBUF];
-
-    // First try looking at all the separable items
-    for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
+    for (int i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
     {
+        /* Space-delimited, from sp to ep: */
+        const char *ep;
         while (*sp == ' ')
         {
             sp++;
         }
+        ep = sp;
 
-        if (strcmp(names[i], "CMD") == 0 ||
-            strcmp(names[i], "COMMAND") == 0)
-        {
-            sscanf(sp, "%127[^\n]", cols1[i]);
-            sp += strlen(cols1[i]);
-        }
-        else
-        {
-            sscanf(sp, "%127s", cols1[i]);
-            sp += strlen(cols1[i]);
-        }
-
-        // Some ps stimes may contain spaces, e.g. "Jan 25"
-        if (strcmp(names[i], "STIME") == 0 &&
-            strlen(cols1[i]) == 3)
-        {
-            char s[CF_SMALLBUF] = { 0 };
-            sscanf(sp, "%127s", s);
-            strcat(cols1[i], " ");
-            strcat(cols1[i], s);
-            sp += strlen(s) + 1;
-        }
-    }
-
-    // Now try looking at columne alignment
-
-    for (i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
-    {
         /* Start with the column header's position; we may then need to
          * grow outwards. */
-        s = start[i];
+        int s = start[i], e;
         if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
         {
             e = strlen(proc) - 1;
+            while (ep[1] && ep[1] != '\n')
+            {
+                ep++;
+            }
+            /* But trim trailing hspace: */
+            while (isspace((unsigned char)ep[-1]))
+            {
+                ep--;
+            }
         }
         else
         {
             e = end[i];
+            while (ep[1] && !isspace((unsigned char)ep[1]))
+            {
+                ep++;
+            }
+        }
+        /* ep points at the space (or '\0') *following* the word or
+         * final field */
+
+        /* Some ps stimes may contain spaces, e.g. "Jan 25" */
+        if (strcmp(names[i], "STIME") == 0 &&
+            ep - sp == 3)
+        {
+            const char *np = ep;
+            while (isspace((unsigned char)*np))
+            {
+                np++;
+            }
+            if (isdigit((unsigned char)*np))
+            {
+                do
+                {
+                    np++;
+                }
+                while (isdigit((unsigned char)*np));
+                ep = np;
+            }
         }
 
         /* Numeric columns, including times, are apt to grow leftwards
@@ -533,8 +542,8 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
             /* Numeric fields may include punctuators: */
 #define IsNumberish(c) (isdigit((unsigned char)(c)) || ispunct((unsigned char)(c)))
 
-            int outer = i ? end[i - 1] + 1 : 0;
             bool number = i > 0; /* Should we check for under-spill ? */
+            int outer = number ? end[i - 1] + 1 : 0;
             while (s >= outer && !isspace((unsigned char) proc[s]))
             {
                 if (number && !IsNumberish(proc[s]))
@@ -610,25 +619,39 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
             e--;
         }
 
-        if (s <= e)
+        /* Grumble if the two heuristics don't agree: */
+        size_t wordlen = ep - sp;
+        if (e < s ? ep > sp : (sp != proc + s || ep != proc + e + 1))
         {
-            /* Copy proc[s through e] inclusive:  */
-            size_t len = min(1 + e - s, CF_SMALLBUF - 1);
-            memcpy(cols2[i], proc + s, len);
-            cols2[i][len] = '\0';
-        }
-        else
-        {
-            cols2[i][0] = '\0';
+            char word[CF_SMALLBUF];
+            if (wordlen >= CF_SMALLBUF)
+            {
+                wordlen = CF_SMALLBUF - 1;
+            }
+            memcpy(word, sp, wordlen);
+            word[wordlen] = '\0';
+
+            char column[CF_SMALLBUF];
+            if (s <= e)
+            {
+                /* Copy proc[s through e] inclusive:  */
+                const size_t len = MIN(1 + e - s, CF_SMALLBUF - 1);
+                memcpy(column, proc + s, len);
+                column[len] = '\0';
+            }
+            else
+            {
+                column[0] = '\0';
+            }
+
+            Log(LOG_LEVEL_INFO,
+                "Unacceptable model uncertainty examining process(%s): '%s' != '%s'",
+                proc, word, column);
         }
 
-        if (strcmp(cols2[i], cols1[i]) != 0)
-        {
-            Log(LOG_LEVEL_INFO, "Unacceptable model uncertainty examining process(%s): '%s' != '%s'", proc, cols1[i], cols2[i]);
-        }
-
-        /* Fall back on cols1 if cols2 got an empty answer: */
-        line[i] = xstrdup(cols2[i][0] ? cols2[i] : cols1[i]);
+        /* Fall back on word if column got an empty answer: */
+        line[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(proc + s, 1 + e - s);
+        sp = ep;
     }
 
     return true;

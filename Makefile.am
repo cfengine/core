@@ -21,7 +21,7 @@ DIST_COMMON = README.md Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
 	m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 m4/cf3_with_library.m4 \
 	m4/snprintf.m4 m4/old-autoconf.m4 m4/adl_recursive_eval.m4 \
 	m4/cf3_check_proper_func.m4 m4/cf3_platforms.m4 m4/cf3_gcc_flags.m4 \
-	m4/cf3_path_root_prog.m4 configure.ac autogen.sh compile configure_flags.env.in
+	m4/cf3_path_root_prog.m4 configure.ac autogen.sh configure_flags.env.in
 
 EXTRA_DIST = ChangeLog INSTALL README.md LICENSE
 

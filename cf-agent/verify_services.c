@@ -264,10 +264,7 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!DONTDO)
-    {
-        result = PromiseResultUpdate(result, VerifyMethod(ctx, call, a, pp));  // Send list of classes to set privately?
-    }
+    result = PromiseResultUpdate(result, VerifyMethod(ctx, call, a, pp));  // Send list of classes to set privately?
 
     RvalDestroy(call);
 

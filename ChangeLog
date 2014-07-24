@@ -3,12 +3,12 @@
         - Introduced Solaris and AIX support into the 3.6 series, with many associated build and
           bug fixes.
 
-	Changes:
+        Changes:
         - Short-circut evaluation of classes promises if class is already set (Redmine #5241)
         - fix to assume all non-specified return codes are failed in commands promises (Redmine #5986)
         - cf-serverd logs reconfiguration message to NOTICE (was INFO) so that it's always logged in syslog
 
-	Bug fixes:
+        Bug fixes:
         - File monitoring has been completely rewritten (changes attribute in files promise), which
           eliminates many bugs, particularly regarding files that are deleted. Upgrading will keep
           all monitoring data, but downgrading again will reinitialize the DB, so all files will be
@@ -24,6 +24,7 @@
         - Fixed users promise bug regarding password hashes in a NIS/NSS setup.
         - Fixed $(sys.uptime), $(sys.systime) and $(sys.sysday) in AIX. (Redmine #5148, #5206)
         - Fixed processes_select complaining about "Unacceptable model uncertainty examining processes" (Redmine #6337)
+        - ps command for linux has been changed to adopt for big rss values (Redmine #6337)
         - Address ps -axo shift on FreeBSD 10 and later (Redmine #5667)
 
 3.6.0

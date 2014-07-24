@@ -1,0 +1,48 @@
+#######################################################
+#
+# Redmine#4852: test kept methods reporting
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+body action warnonly
+{
+    action_policy => "warn";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "verify"
+        usebundle => test_method,
+        action => warnonly,
+        classes => if_else("method_kept", "method_notkept");
+}
+
+bundle agent test_method
+{
+  reports:
+      "unwanted sideeffect!" classes => if_else("report_kept", "report_notkept");
+}
+
+bundle agent check
+{
+  classes:
+    "ok" expression => "method_notkept.!report_kept.!report_notkept";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

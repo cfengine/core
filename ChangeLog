@@ -26,6 +26,7 @@
         - Fixed users promise bug regarding password hashes in a NIS/NSS setup.
         - Fixed $(sys.uptime), $(sys.systime) and $(sys.sysday) in AIX. (Redmine #5148, #5206)
         - Fixed processes_select complaining about "Unacceptable model uncertainty examining processes" (Redmine #6337)
+        - ps command for linux has been changed to cope with big rss values (Redmine #6337)
         - Address ps -axo shift on FreeBSD 10 and later (Redmine #5667)
 
 3.6.0

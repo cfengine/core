@@ -120,45 +120,52 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (bp)
     {
-        BannerSubBundle(bp, args);
-
-        EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
-        BundleResolve(ctx, bp);
-
-        result = ScheduleAgentOperations(ctx, bp);
-
-        GetReturnValue(ctx, bp, pp);
-
-        EvalContextStackPopFrame(ctx);
-
-        switch (result)
+        if (a.transaction.action == cfa_warn) // don't skip for dry-runs (ie ignore DONTDO)
         {
-        case PROMISE_RESULT_SKIPPED:
-            // if a bundle returns 'skipped', meaning that all promises were locked in the bundle,
-            // we explicitly consider the method 'kept'
-            result = PROMISE_RESULT_NOOP;
-            // intentional fallthru
+            result = PROMISE_RESULT_WARN;
+            cfPS(ctx, LOG_LEVEL_ERR, result, pp, a, "Bundle '%s' should be invoked, but only a warning was promised!", BufferData(method_name));
+        }
+        else
+        {
+            BannerSubBundle(bp, args);
 
-        case PROMISE_RESULT_NOOP:
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method '%s' verified", bp->name);
-            break;
+            EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
+            BundleResolve(ctx, bp);
 
-        case PROMISE_RESULT_WARN:
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Method '%s' invoked repairs, but only warnings promised", bp->name);
-            break;
+            result = ScheduleAgentOperations(ctx, bp);
 
-        case PROMISE_RESULT_CHANGE:
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
-            break;
+            GetReturnValue(ctx, bp, pp);
 
-        case PROMISE_RESULT_FAIL:
-        case PROMISE_RESULT_DENIED:
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs", bp->name);
-            break;
+            EvalContextStackPopFrame(ctx);
+            switch (result)
+            {
+            case PROMISE_RESULT_SKIPPED:
+                // if a bundle returns 'skipped', meaning that all promises were locked in the bundle,
+                // we explicitly consider the method 'kept'
+                result = PROMISE_RESULT_NOOP;
+                // intentional fallthru
 
-        default: // PROMISE_RESULT_INTERRUPTED, TIMEOUT
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method '%s' aborted in some repairs", bp->name);
-            break;
+            case PROMISE_RESULT_NOOP:
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method '%s' verified", bp->name);
+                break;
+
+            case PROMISE_RESULT_WARN:
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Method '%s' invoked repairs, but only warnings promised", bp->name);
+                break;
+
+            case PROMISE_RESULT_CHANGE:
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
+                break;
+
+            case PROMISE_RESULT_FAIL:
+            case PROMISE_RESULT_DENIED:
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs", bp->name);
+                break;
+
+            default: // PROMISE_RESULT_INTERRUPTED, TIMEOUT
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method '%s' aborted in some repairs", bp->name);
+                break;
+            }
         }
 
         for (const Rlist *rp = bp->args; rp; rp = rp->next)

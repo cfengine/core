@@ -27,6 +27,9 @@
         - ps command for linux has been changed to cope with big rss values (Redmine #6337)
         - Address ps -axo shift on FreeBSD 10 and later (Redmine #5667)
         - methods and services promises respect action_policy => "warn" (Redmine #5924)
+        - LMDB should no longer deadlock if an agent is killed on the hub while holding the DB lock.
+          Note that the change only affects binary packages shipped by CFEngine, since the upstream
+          LMDB project has not yet integrated the change. (Redmine #6013)
 
 3.6.0
 

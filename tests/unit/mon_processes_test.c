@@ -78,7 +78,9 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
 
 void test_processes_monitor(void)
 {
-
+# ifdef __sun
+  return; //redmine 6316
+# endif
     double cf_this[100] = { 0.0 };
     MonProcessesGatherData(cf_this);
     MonProcessesGatherData(cf_this);

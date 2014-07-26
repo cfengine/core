@@ -482,7 +482,7 @@ void KeepOSPFLinkServiceControlPromises(CommonRouting *policy, CommonRouting *st
 
     if (policy == NULL || state == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE,"OSPF not running, skipping setup");
+        Log(LOG_LEVEL_VERBOSE,"OSPF not promised, skipping setup");
         return;
     }
 
@@ -1358,7 +1358,7 @@ void KeepBGPLinkServiceControlPromises(CommonRouting *policy, CommonRouting *sta
 
     if (policy == NULL || state == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE,"BGP not running, skipping setup");
+        Log(LOG_LEVEL_VERBOSE,"BGP not promised, skipping setup");
         return;
     }
 

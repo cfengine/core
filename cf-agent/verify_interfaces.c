@@ -413,7 +413,14 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
 
     if (a->havelinkservices && QueryOSPFInterfaceState(ctx, a, pp, ospfp))
     {
-        KeepOSPFInterfacePromises(ctx, a, pp, result, ospfp);
+        if (a->interface.ospf_area != CF_NOINT)
+        {
+            KeepOSPFInterfacePromises(ctx, a, pp, result, ospfp);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "No ospf promise by this interface");
+        }
     }
 
     free(ospfp);
@@ -422,7 +429,14 @@ static void AssessLinuxInterfacePromise(char *promiser, PromiseResult *result, E
 
     if (a->havelinkservices && QueryBGPInterfaceState(ctx, a, pp, bgpp))
     {
-        KeepBGPInterfacePromises(ctx, a, pp, result, bgpp);
+        if (a->interface.bgp_remote_as)
+        {
+            KeepBGPInterfacePromises(ctx, a, pp, result, bgpp);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "No bgp promise by this interface");
+        }
     }
 
     free(bgpp);

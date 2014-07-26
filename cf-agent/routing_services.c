@@ -1041,6 +1041,17 @@ void KeepBGPInterfacePromises(EvalContext *ctx, const Attributes *a, const Promi
     bool am_unnumbered = false;
     Item *address_families = NULL;
 
+    if (bgpp && !ROUTING_POLICY)
+    {
+        Log(LOG_LEVEL_ERR, "Found BGP link service promises for interface %s, but no routing services control body", pp->promiser);
+    }
+
+    if (!ROUTING_POLICY)
+    {
+        Log(LOG_LEVEL_VERBOSE,"Skipping BGP interface promises as routing services control body is missing\n");
+        return;
+    }
+
     Log(LOG_LEVEL_VERBOSE, "Verifying BGP link service promises for interface %s", pp->promiser);
     Log(LOG_LEVEL_VERBOSE, "Interface %s belongs to ASN %d", pp->promiser, bgpp->bgp_local_as);
 

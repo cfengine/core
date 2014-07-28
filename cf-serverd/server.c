@@ -419,6 +419,10 @@ static void *HandleConnection(void *c)
         {
         }
     }
+    else
+    {
+        assert(!"Bogus protocol version - but we checked that already !");
+    }
     /* ============================================================ */
 
 

@@ -45,6 +45,7 @@ int IsAbsPath(const char *path);
 void AddSlash(char *str);
 char *GetParentDirectoryCopy(const char *path);
 void DeleteSlash(char *str);
+void DeleteRedundantSlashes(char *str);
 const char *FirstFileSeparator(const char *str);
 const char *LastFileSeparator(const char *str);
 bool ChopLastNode(char *str);

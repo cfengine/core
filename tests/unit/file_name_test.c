@@ -7,21 +7,22 @@ static void test_first_file_separator(void)
 {
     const char *out;
 
-    char *in1 = "/tmp/myfile";
-    out = FirstFileSeparator(in1);
-    assert_true(out == in1);
+    const char *in = "/tmp/myfile";
+    out = FirstFileSeparator(in);
+    assert_true(out == in);
 
-    char *in2 = "/tmp/myfile";
-    out = FirstFileSeparator(in2);
-    assert_true(out == in2);
+    in = "tmp/myfile";
+    out = FirstFileSeparator(in);
+    assert_true(out == in + 3);
 
-    char *in3 = "c:\\tmp\\myfile";
-    out = FirstFileSeparator(in3);
-    assert_true(out == in3 + 2);
+    in = "c:/tmp/myfile";
+    out = FirstFileSeparator(in);
+    assert_true(out == in + 2);
 
-    char *in4 = "\\\\my\\windows\\share";
-    out = FirstFileSeparator(in4);
-    assert_true(out == in4 + 1);
+    in = "\\\\my\\windows\\share";
+    out = FirstFileSeparator(in);
+    assert_true(out == in + 1);
+
 }
 
 static void test_get_parent_directory_copy(void)
@@ -71,6 +72,69 @@ static void test_get_parent_directory_copy(void)
 #endif  /* _WIN32 */
 }
 
+static void test_delete_redundant_slashes(void)
+{
+    {
+        char str[] = "///a//b////c/";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "/a/b/c/");
+    }
+
+    {
+        char str[] = "a//b////c/";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "a/b/c/");
+    }
+
+    {
+        char str[] = "/a/b/c/";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "/a/b/c/");
+    }
+
+    {
+        char str[] = "a///b////c///";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "a/b/c/");
+    }
+
+    {
+        char str[] = "a///b////c";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "a/b/c");
+    }
+
+    {
+        char str[] = "a///b/c";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "a/b/c");
+    }
+
+    {
+        char str[] = "alpha///beta/charlie///zeta";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "alpha/beta/charlie/zeta");
+    }
+
+    {
+        char str[] = "////alpha///beta/charlie///zeta///";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "/alpha/beta/charlie/zeta/");
+    }
+
+    {
+        char str[] = "/a";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "/a");
+    }
+
+    {
+        char str[] = "/alpha";
+        DeleteRedundantSlashes(str);
+        assert_string_equal(str, "/alpha");
+    }
+}
+
 
 int main()
 {
@@ -78,7 +142,8 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_first_file_separator),
-        unit_test(test_get_parent_directory_copy)
+        unit_test(test_get_parent_directory_copy),
+        unit_test(test_delete_redundant_slashes)
     };
 
     return run_tests(tests);

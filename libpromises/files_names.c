@@ -216,12 +216,9 @@ void AddSlash(char *str)
         return;
     }
 
-// add root slash on Unix systems
     if (strlen(str) == 0)
     {
-#if !defined(_WIN32)
-        strcpy(str, "/");
-#endif
+        strcpy(str, sep);
         return;
     }
 
@@ -298,22 +295,58 @@ char *GetParentDirectoryCopy(const char *path)
 
 /*********************************************************************/
 
+// Can remove several slashes if they are redundant.
 void DeleteSlash(char *str)
 {
-    if ((strlen(str) == 0) || (str == NULL))
+    int size = strlen(str);
+    if ((size == 0) || (str == NULL))
     {
         return;
     }
 
-    if (strcmp(str, "/") == 0)
+    int root = RootDirLength(str);
+    while (IsFileSep(str[size - 1]) && size - 1 > root)
     {
-        return;
+        size--;
+    }
+    str[size] = '\0'; /* no-op if we didn't change size */
+}
+
+/*********************************************************************/
+
+void DeleteRedundantSlashes(char *str)
+{
+    int move_from;
+    // Invariant: newpos <= oldpos
+    int oldpos = RootDirLength(str);
+    int newpos = oldpos;
+    while (str[oldpos] != '\0')
+    {
+        // Skip over subsequent separators.
+        while (IsFileSep(str[oldpos]))
+        {
+            oldpos++;
+        }
+        move_from = oldpos;
+
+        // And then skip over the next path component.
+        while (str[oldpos] != '\0' && !IsFileSep(str[oldpos]))
+        {
+            oldpos++;
+        }
+
+        // If next character is file separator, move past it, since we want to keep one.
+        if (IsFileSep(str[oldpos]))
+        {
+            oldpos++;
+        }
+
+        int move_len = oldpos - move_from;
+        memmove(&str[newpos], &str[move_from], move_len);
+        newpos += move_len;
     }
 
-    if (IsFileSep(str[strlen(str) - 1]))
-    {
-        str[strlen(str) - 1] = '\0';
-    }
+    str[newpos] = '\0';
 }
 
 /*********************************************************************/
@@ -323,21 +356,14 @@ const char *FirstFileSeparator(const char *str)
     assert(str);
     assert(strlen(str) > 0);
 
-    if(*str == '/')
-    {
-        return str;
-    }
-
     if(strncmp(str, "\\\\", 2) == 0)  // windows share
     {
         return str + 1;
     }
 
-    const char *pos;
-
-    for(pos = str; *pos != '\0'; pos++)  // windows "X:\file" path
+    for(const char *pos = str; *pos != '\0'; pos++)
     {
-        if(*pos == '\\')
+        if(IsFileSep(*pos))
         {
             return pos;
         }
@@ -376,25 +402,42 @@ bool ChopLastNode(char *str)
   /* Chop off trailing node name (possible blank) starting from
      last character and removing up to the first / encountered 
      e.g. /a/b/c -> /a/b
-     /a/b/ -> /a/b                                        */
+     /a/b/ -> /a/b
+     Will also collapse redundant/repeating path separators.
+  */
 {
     char *sp;
     int ret;
 
+    DeleteRedundantSlashes(str);
+
 /* Here cast is necessary and harmless, str is modifiable */
     if ((sp = (char *) LastFileSeparator(str)) == NULL)
     {
-        ret = false;
+        int pos = RootDirLength(str);
+        if (str[pos] == '\0')
+        {
+            ret = false;
+        }
+        else
+        {
+            str[pos] = '.';
+            str[pos + 1] = '\0';
+            ret = true;
+        }
     }
     else
     {
-        *sp = '\0';
+        // Don't chop the root slash in an absolute path.
+        if (IsAbsoluteFileName(str) && FirstFileSeparator(str) == sp)
+        {
+            *(++sp) = '\0';
+        }
+        else
+        {
+            *sp = '\0';
+        }
         ret = true;
-    }
-
-    if (strlen(str) == 0)
-    {
-        AddSlash(str);
     }
 
     return ret;
@@ -602,12 +645,12 @@ static int NTRootDirLength(const char *f)
 {
     int len;
 
-    if (IsFileSep(f[0]) && IsFileSep(f[1]))
+    if (f[0] == '\\' && f[1] == '\\')
     {
         /* UNC style path */
 
         /* Skip over host name */
-        for (len = 2; !IsFileSep(f[len]); len++)
+        for (len = 2; f[len] != '\\'; len++)
         {
             if (f[len] == '\0')
             {
@@ -617,7 +660,7 @@ static int NTRootDirLength(const char *f)
 
         /* Skip over share name */
 
-        for (len++; !IsFileSep(f[len]); len++)
+        for (len++; f[len] != '\\'; len++)
         {
             if (f[len] == '\0')
             {

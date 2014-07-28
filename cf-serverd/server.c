@@ -150,6 +150,10 @@ void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info
     }
     /* Tidy up on failure: */
 
+    if (info->is_call_collect)
+    {
+        CollectCallMarkProcessed();
+    }
     cf_closesocket(ConnectionInfoSocket(info));
     ConnectionInfoDestroy(&info);
 }
@@ -424,6 +428,10 @@ static void *HandleConnection(void *c)
     ThreadUnlock(cft_server_children);
 
   ret2:
+    if (conn->conn_info->is_call_collect)
+    {
+        CollectCallMarkProcessed();
+    }
     DeleteConn(conn);
     return NULL;
 }

@@ -653,8 +653,8 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                 assert(info);
 
                 ConnectionInfoSetSocket(info, new_client);
+                info->is_call_collect = true; /* Mark processed when done. */
                 ServerEntryPoint(ctx, POLICY_SERVER, info);
-                CollectCallMarkProcessed();
             }
         }
 

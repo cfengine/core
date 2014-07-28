@@ -54,6 +54,7 @@ struct ConnectionInfo {
     Key *remote_key;
     socklen_t ss_len;
     struct sockaddr_storage ss;
+    bool is_call_collect;       /* Maybe replace with a bitfield later ... */
 };
 
 typedef struct ConnectionInfo ConnectionInfo;

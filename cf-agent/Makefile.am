@@ -30,7 +30,7 @@ AM_LDFLAGS = \
 	$(LIBXML2_LDFLAGS) \
 	$(PAM_LDFLAGS)
 
-libcf_agent_la_LIBADD = ../libutils/libutils.la ../libpromises/libpromises.la \
+libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 	$(OPENSSL_LIBS) \
 	$(PCRE_LIBS) \
 	$(LIBVIRT_LIBS) \

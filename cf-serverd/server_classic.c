@@ -1519,7 +1519,6 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Decrypt error CALL_ME_BACK");
-            RefuseAccess(conn, "decrypt error CALL_ME_BACK");
             return true;
         }
 
@@ -1529,14 +1528,12 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {
             Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect");
-            RefuseAccess(conn, "decryption failure");
             return false;
         }
 
         if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
         {
             Log(LOG_LEVEL_INFO, "Query access failure");
-            RefuseAccess(conn, recvbuffer);
             return false;
         }
 

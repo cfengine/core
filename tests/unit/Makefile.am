@@ -152,7 +152,10 @@ check_PROGRAMS += \
 endif
 endif
 
-TESTS = $(check_PROGRAMS)
+check_SCRIPTS = \
+	dynamic_dependency_test.sh
+
+TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 #
 # OS X uses real system calls instead of our stubs unless this option is used

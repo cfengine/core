@@ -1029,7 +1029,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             Log(LOG_LEVEL_INFO,
                 "access denied to Call-Collect, check the ACL for class: collect_calls");
-            RefuseAccess(conn, recvbuffer);
             return false;
         }
 

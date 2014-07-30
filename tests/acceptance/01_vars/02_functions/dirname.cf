@@ -1,0 +1,160 @@
+#######################################################
+#
+# Test dirname()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      # The tests starting with template will be tested with both types of
+      # directory separators on Windows.
+
+      "template_input[root]" string => "/";
+      "template_expected[root]" string => "/";
+
+      "template_input[simple]" string => "/foo/bar";
+      "template_expected[simple]" string => "/foo";
+
+      "template_input[slash]" string => "/foo/bar/";
+      "template_expected[slash]" string => "/foo";
+
+      "template_input[sub]" string => "/foo";
+      "template_expected[sub]" string => "/";
+
+      "template_input[subslash]" string => "/foo/";
+      "template_expected[subslash]" string => "/";
+
+      "template_input[dot]" string => "/foo/.";
+      "template_expected[dot]" string => "/foo";
+
+      "template_input[dot_subslash]" string => "/foo/./";
+      "template_expected[dot_subslash]" string => "/foo";
+
+      "template_input[multi]" string => "/foo/bar/baz";
+      "template_expected[multi]" string => "/foo/bar";
+
+      "template_input[multislash]" string => "/foo/bar/baz/";
+      "template_expected[multislash]" string => "/foo/bar";
+
+      "template_input[more]" string => "/a/b/c/d/e/f/g/h/i";
+      "template_expected[more]" string => "/a/b/c/d/e/f/g/h";
+
+      "template_input[multislash]" string => "/a///b////c///";
+      "template_expected[multislash]" string => "/a/b";
+
+      # Note: no template, because backslashes will be interpreted as UNC path on Windows.
+      "input[multislash_start]" string => "//a///b////c///";
+      "expected[multislash_start]" string => "/a/b";
+
+      "template_input[rel_one]" string => "foo";
+      "template_expected[rel_one]" string => ".";
+
+      "template_input[rel_more]" string => "foo/bar";
+      "template_expected[rel_more]" string => "foo";
+
+      "template_input[rel_one_subslash]" string => "foo/";
+      "template_expected[rel_one_subslash]" string => ".";
+
+      "template_input[rel_more_subslash]" string => "foo/bar/";
+      "template_expected[rel_more_subslash]" string => "foo";
+
+      "template_input[rel_dot]" string => "foo/.";
+      "template_expected[rel_dot]" string => "foo";
+
+      "template_input[rel_only_dot]" string => "./";
+      "template_expected[rel_only_dot]" string => ".";
+
+      "template_input[rel_multislash]" string => "a///b////c///";
+      "template_expected[rel_multislash]" string => "a/b";
+
+      "template_input[noop]" string => "";
+      "template_expected[noop]" string => "";
+
+      "template_keys" slist => getindices("template_input");
+
+    windows::
+      "template_input[full_root]" string => "C:/";
+      "template_expected[full_root]" string => "C:/";
+
+      "template_input[full_root_file]" string => "C:/foo";
+      "template_expected[full_root_file]" string => "C:/";
+
+      "template_input[full_root_file_subslash]" string => "C:/foo/";
+      "template_expected[full_root_file_subslash]" string => "C:/";
+
+      "template_input[full_file]" string => "C:/foo/bar";
+      "template_expected[full_file]" string => "C:/foo";
+
+      "template_input[full_file_subslash]" string => "C:/foo/bar/";
+      "template_expected[full_file_subslash]" string => "C:/foo";
+
+      "template_input[dir]" string => "C:foo";
+      "template_expected[dir]" string => "C:.";
+
+      "template_input[two_dirs]" string => "C:foo/bar";
+      "template_expected[two_dirs]" string => "C:foo";
+
+      "template_input[dir_subslash]" string => "C:foo/";
+      "template_expected[dir_subslash]" string => "C:.";
+
+      "template_input[two_dirs_subslash]" string => "C:foo/bar/";
+      "template_expected[two_dirs_subslash]" string => "C:foo";
+
+      # UNC paths don't have forward slash equivalents.
+      "input[native_unc_one]" string => "\\\\foo";
+      "expected[native_unc_one]" string => "\\\\";
+
+      "input[native_unc_two]" string => "\\\\foo\\bar";
+      "expected[native_unc_two]" string => "\\\\foo";
+
+      "input[native_unc_three]" string => "\\\\foo\\bar\\charlie\\";
+      "expected[native_unc_three]" string => "\\\\foo\\bar";
+
+
+      "input[unix_$(template_keys)]" string => "$(template_input[$(template_keys)])";
+      "input[native_$(template_keys)]" string => translatepath("$(template_input[$(template_keys)])");
+      "expected[unix_$(template_keys)]" string => "$(template_expected[$(template_keys)])";
+      "expected[native_$(template_keys)]" string => translatepath("$(template_expected[$(template_keys)])");
+    !windows::
+      "input[native_$(template_keys)]" string => "$(template_input[$(template_keys)])";
+      "expected[native_$(template_keys)]" string => "$(template_expected[$(template_keys)])";
+
+    any::
+      "keys" slist => getindices("input");
+
+      "actual[$(keys)]" string => dirname("$(input[$(keys)])");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "keys" slist => { @(test.keys) };
+
+  classes:
+      "failed_cmp_$(keys)" not => strcmp(dirname("$(test.input[$(keys)])"), "$(test.expected[$(keys)])");
+      "ok" not => classmatch("failed_cmp_.*");
+
+  reports:
+    DEBUG::
+      "'dirname($(test.input[$(keys)]))' = '$(test.actual[$(keys)])' != '$(test.expected[$(keys)])'"
+        ifvarclass => "failed_cmp_$(keys)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+

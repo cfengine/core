@@ -190,7 +190,7 @@ bool IsAbsoluteFileName(const char *f)
         return true;
     }
 #endif
-    if (f[off] == '/')
+    if (IsFileSep(f[off]))
     {
         return true;
     }

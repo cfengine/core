@@ -122,6 +122,27 @@ static bool ResolveFilename(const char *req_path, char *res_path)
     return true;
 }
 
+static bool PathMatch(const char *stem, const char *request)
+{
+    const size_t stemlen = strlen(stem);
+    if (strcmp(stem, FILE_SEPARATOR_STR) == 0)
+    {
+        /* Matches everything: */
+        return true;
+    }
+
+    if (strcmp(stem, request) == 0)
+    {
+        /* An exact match is a match: */
+        return true;
+    }
+
+    /* Otherwise, match only if stem names a parent directory of request: */
+    return (strlen(request) > stemlen &&
+            request[stemlen] == FILE_SEPARATOR &&
+            strncmp(stem, request, stemlen) == 0);
+}
+
 static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
 {
     int access = false;
@@ -170,35 +191,13 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     for (Auth *ap = SV.admit; ap != NULL; ap = ap->next)
     {
-        int res = false;
-
         Log(LOG_LEVEL_DEBUG, "Examining rule in access list (%s,%s)", transrequest, ap->path);
 
         /* TODO MapName when constructing this list. */
         strlcpy(transpath, ap->path, CF_BUFSIZE);
         MapName(transpath);
 
-        /* If everything is allowed */
-        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
-            ||
-            /* or if transpath is a parent directory of transrequest */
-            (strlen(transrequest) > strlen(transpath)
-            && strncmp(transpath, transrequest, strlen(transpath)) == 0
-            && transrequest[strlen(transpath)] == FILE_SEPARATOR)
-            ||
-            /* or if it's an exact match */
-            (strcmp(transpath, transrequest) == 0))
-        {
-            res = true;
-        }
-
-        /* Exact match means single file to admit */
-        if (strcmp(transpath, transrequest) == 0)
-        {
-            res = true;
-        }
-
-        if (res)
+        if (PathMatch(transpath, transrequest))
         {
             Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", transrequest, transpath);
 
@@ -242,16 +241,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         strlcpy(transpath, dp->path, CF_BUFSIZE);
         MapName(transpath);
 
-        /* If everything is denied */
-        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
-            ||
-            /* or if transpath is a parent directory of transrequest */
-            (strlen(transrequest) > strlen(transpath) &&
-             strncmp(transpath, transrequest, strlen(transpath)) == 0 &&
-             transrequest[strlen(transpath)] == FILE_SEPARATOR)
-            ||
-            /* or if it's an exact match */
-            (strcmp(transpath, transrequest) == 0))
+        if (PathMatch(transpath, transrequest))
         {
             if ((IsMatchItemIn(dp->accesslist, conn->ipaddr)) ||
                 (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))

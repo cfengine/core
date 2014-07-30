@@ -957,7 +957,7 @@ static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
     EvalContextClassPutHard(ctx, flavour, "inventory,attribute_name=none,source=agent,derived-from=sys.flavor");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, CF_DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=OS");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
 }
 
 static void OSClasses(EvalContext *ctx)

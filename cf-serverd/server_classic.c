@@ -227,12 +227,12 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             if (stat(transpath, &statbuf) == -1)
             {
                 Log(LOG_LEVEL_INFO,
-                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
-                      transpath);
+                    "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
+                    transpath);
                 continue;
             }
 
-            if ((!encrypt) && (ap->encrypt == true))
+            if (!encrypt && ap->encrypt)
             {
                 Log(LOG_LEVEL_ERR, "File %s requires encrypt connection...will not serve", transpath);
                 access = false;
@@ -241,15 +241,15 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..");
 
-                if ((IsMatchItemIn(ap->maproot, conn->ipaddr)) ||
-                    (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
+                if (IsMatchItemIn(ap->maproot, conn->ipaddr) ||
+                    IsRegexItemIn(ctx, ap->maproot, conn->hostname))
                 {
                     conn->maproot = true;
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
-                if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
-                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
+                if (IsMatchItemIn(ap->accesslist, conn->ipaddr) ||
+                    IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
                 {
                     access = true;
                     Log(LOG_LEVEL_DEBUG, "Access granted to host: %s", conn->ipaddr);
@@ -270,8 +270,9 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
                 (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))
             {
                 access = false;
-                Log(LOG_LEVEL_INFO, "Host '%s' in deny list, explicitly denying access to '%s'",
-                    conn->ipaddr, transrequest);
+                Log(LOG_LEVEL_INFO,
+                    "Host '%s' in deny list, explicitly denying access to '%s' in '%s'",
+                    conn->ipaddr, transrequest, transpath);
                 break;
             }
         }
@@ -336,7 +337,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                 break;
             }
 
-            if ((!encrypt) && (ap->encrypt == true))
+            if (!encrypt && ap->encrypt)
             {
                 Log(LOG_LEVEL_ERR, "Variable %s requires encrypt connection...will not serve", name);
                 access = false;
@@ -428,7 +429,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         "Found a matching rule in access list (%s in %s)",
                         ip->name, ap->path);
 
-                    if (ap->classpattern == false)
+                    if (!ap->classpattern)
                     {
                         Log(LOG_LEVEL_ERR,
                             "Context %s requires a literal server item... "
@@ -438,7 +439,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         continue;
                     }
 
-                    if ((!encrypt) && (ap->encrypt == true))
+                    if (!encrypt && ap->encrypt)
                     {
                         Log(LOG_LEVEL_ERR,
                             "Context %s requires encrypt connection... "

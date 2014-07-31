@@ -128,6 +128,8 @@ static void RandomSeed(void)
         RAND_seed(VFQNAME, strlen(VFQNAME));
         time_t now = time(NULL);
         RAND_seed(&now, sizeof(time_t));
+        char uninitbuffer[100];
+        RAND_seed(uninitbuffer, sizeof(uninitbuffer));
 
         if (RAND_status() != 1)
         {

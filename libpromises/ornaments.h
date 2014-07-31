@@ -33,11 +33,10 @@
 #include <policy.h>
 #include <eval_context.h>
 
-void PromiseBanner(const Promise *pp);
-void BannerSubBundle(const Bundle *bp, const Rlist *params);
-void BannerPromiseType(const char *bundlename, const char *type, int p);
-void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const char *type);
+void SpecialTypeBanner(TypeSequence type, int pass);
+void PromiseBanner(EvalContext *ctx, const Promise *pp);
 void Banner(const char *s);
-void BannerBundle(const Bundle *bp, const Rlist *params);
-
+void Legend();
+void BundleBanner(const Bundle *bp, const Rlist *params);
+void EndBundleBanner(const Bundle *bp);
 #endif

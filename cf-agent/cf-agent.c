@@ -77,27 +77,6 @@
 
 #include <mod_common.h>
 
-typedef enum
-{
-    TYPE_SEQUENCE_META,
-    TYPE_SEQUENCE_VARS,
-    TYPE_SEQUENCE_DEFAULTS,
-    TYPE_SEQUENCE_CONTEXTS,
-    TYPE_SEQUENCE_INTERFACES,
-    TYPE_SEQUENCE_USERS,
-    TYPE_SEQUENCE_FILES,
-    TYPE_SEQUENCE_PACKAGES,
-    TYPE_SEQUENCE_ENVIRONMENTS,
-    TYPE_SEQUENCE_METHODS,
-    TYPE_SEQUENCE_PROCESSES,
-    TYPE_SEQUENCE_SERVICES,
-    TYPE_SEQUENCE_COMMANDS,
-    TYPE_SEQUENCE_STORAGE,
-    TYPE_SEQUENCE_DATABASES,
-    TYPE_SEQUENCE_REPORTS,
-    TYPE_SEQUENCE_NONE
-} TypeSequence;
-
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
 #include <findhub.h>
@@ -157,15 +136,15 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
 static int NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
-static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
-static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept, struct timespec start);
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
+static void BannerStatus(PromiseResult status, char *type, char *name);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -195,7 +174,8 @@ static const struct option OPTIONS[] =
     {"no-lock", no_argument, 0, 'K'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
-    {"legacy-output", no_argument, 0, 'l'},
+    {"log-output", no_argument, 0, 'l'},
+    {"timing-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {NULL, 0, 0, '\0'}
@@ -216,7 +196,7 @@ static const char *const HINTS[] =
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
-    "Use legacy output format",
+    "Use line-based log output format on console",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     NULL
@@ -320,12 +300,16 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
      */
     bool cfruncommand = false;
 
-    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hlC::E", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hlC::E", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
         case 'l':
-            LEGACY_OUTPUT = true;
+            MACHINE_OUTPUT = true;
+            break;
+
+        case 't':
+            TIMING = true;
             break;
 
         case 'f':
@@ -642,7 +626,6 @@ static void ThisAgentInit(void)
     char filename[CF_BUFSIZE];
 
 #ifdef HAVE_SETSID
-    Log(LOG_LEVEL_VERBOSE, "Setting session ID, becoming process group leader");
     setsid();
 #endif
 
@@ -1056,6 +1039,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     Rlist *bundlesequence = NULL;
+
+    Banner("Begin policy/promise evaluation");
+
     if (config->bundlesequence)
     {
         Log(LOG_LEVEL_INFO, "Using command line specified bundlesequence");
@@ -1119,21 +1105,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         FatalError(ctx, "Errors in agent bundles");
     }
 
-    if (LEGACY_OUTPUT)
-    {
-        Writer *w = StringWriter();
-        RlistWrite(w, bundlesequence);
-        Log(LOG_LEVEL_VERBOSE, " -> Bundlesequence => %s", StringWriterData(w));
-        WriterClose(w);
-    }
-    else
-    {
-        Writer *w = StringWriter();
-        WriterWrite(w, "Using bundlesequence => ");
-        RlistWrite(w, bundlesequence);
-        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        WriterClose(w);
-    }
+    Writer *w = StringWriter();
+    WriterWrite(w, "Using bundlesequence => ");
+    RlistWrite(w, bundlesequence);
+    Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+    WriterClose(w);
 
 /* If all is okay, go ahead and evaluate */
 
@@ -1154,6 +1130,8 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             break;
         }
 
+        EvalContextSetBundleArgs(ctx, args);
+
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, name, "agent");
         if (!bp)
         {
@@ -1162,10 +1140,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 
         if (bp)
         {
-            BannerBundle(bp, args);
+            BundleBanner(bp,args);
             EvalContextStackPushBundleFrame(ctx, bp, args, false);
             ScheduleAgentOperations(ctx, bp);
             EvalContextStackPopFrame(ctx);
+            EndBundleBanner(bp);
         }
         else
         {
@@ -1213,6 +1192,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
+    struct timespec start = BeginMeasure();
 
     if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
@@ -1224,12 +1204,8 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        Log(LOG_LEVEL_VERBOSE, "Evaluating bundle pass %d", pass);
-
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
-            ClassBanner(ctx, type);
-
             const PromiseType *sp = BundleGetPromiseType((Bundle *)bp, AGENT_TYPESEQUENCE[type]);
 
             if (!sp || SeqLength(sp->promises) == 0)
@@ -1237,17 +1213,19 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 continue;
             }
 
-            BannerPromiseType(bp->name, sp->name, pass);
-
             if (!NewTypeContext(type))
             {
                 continue;
             }
 
+            SpecialTypeBanner(type, pass);
             EvalContextStackPushPromiseTypeFrame(ctx, sp);
+
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
+
+                EvalContextSetPass(ctx, pass);
 
                 PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
                 result = PromiseResultUpdate(result, promise_result);
@@ -1256,7 +1234,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 {
                     DeleteTypeContext(ctx, type);
                     EvalContextStackPopFrame(ctx);
-                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
+                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
                     return result;
                 }
             }
@@ -1271,7 +1249,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
         }
     }
 
-    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
+    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
     return result;
 }
 
@@ -1421,6 +1399,10 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
     {
         result = VerifyVarPromise(ctx, pp, true);
+        if (result != PROMISE_RESULT_FAIL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "V:     Computing value of \"%s\"", pp->promiser);
+        }
     }
     else if (strcmp("defaults", pp->parent_promise_type->name) == 0)
     {
@@ -1433,52 +1415,83 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
         result = VerifyProcessesPromise(ctx, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {
         result = FindAndVerifyStoragePromises(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("packages", pp->parent_promise_type->name) == 0)
     {
         result = VerifyPackagesPromise(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("users", pp->parent_promise_type->name) == 0)
     {
         result = VerifyUsersPromise(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
 
     else if (strcmp("files", pp->parent_promise_type->name) == 0)
     {
         result = ParallelFindAndVerifyFilesPromises(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("commands", pp->parent_promise_type->name) == 0)
     {
         result = VerifyExecPromise(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("databases", pp->parent_promise_type->name) == 0)
     {
         result = VerifyDatabasePromises(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("methods", pp->parent_promise_type->name) == 0)
     {
         result = VerifyMethodsPromise(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
         result = VerifyServicesPromise(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
         result = VerifyEnvironmentsPromise(ctx, pp);
-        EndMeasurePromise(start, pp);
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("reports", pp->parent_promise_type->name) == 0)
     {
@@ -1489,9 +1502,53 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         result = PROMISE_RESULT_NOOP;
     }
 
+    BannerStatus(result, pp->parent_promise_type->name, pp->promiser);
     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
-
     return result;
+}
+
+
+static void BannerStatus(PromiseResult status, char *type, char *name)
+{
+    if (MACHINE_OUTPUT)
+    {
+        return;
+    }
+
+    if ((strcmp(type, "vars") == 0) || (strcmp(type, "classes") == 0))
+    {
+        return;
+    }
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise REPAIRED");
+        break;
+
+    case PROMISE_RESULT_TIMEOUT:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise TIMED-OUT");
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_INTERRUPTED:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise NOT KEPT!");
+        break;
+
+    case PROMISE_RESULT_DENIED:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise NOT KEPT - denied");
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        Log(LOG_LEVEL_VERBOSE, "A: Promise was KEPT");
+        break;
+    default:
+        return;
+        break;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "P: END %s promise (%.30s...)\n", type, name);
 }
 
 /*********************************************************************/
@@ -1565,52 +1622,6 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
 
     default:
         break;
-    }
-}
-
-/**************************************************************/
-
-static void ClassBanner(EvalContext *ctx, TypeSequence type)
-{
-    if (type != TYPE_SEQUENCE_INTERFACES)  /* Just parsed all local classes */
-    {
-        return;
-    }
-
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_VERBOSE, "     +  Private classes augmented:");
-
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            Log(LOG_LEVEL_VERBOSE, "     +       %s", cls->name);
-        }
-        ClassTableIteratorDestroy(iter);
-    }
-    else
-    {
-        bool have_classes = false;
-        Writer *w = StringWriter();
-
-        WriterWrite(w, "Private classes augmented:");
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            WriterWriteChar(w, ' ');
-            WriterWrite(w, cls->name);
-            have_classes = true;
-        }
-        ClassTableIteratorDestroy(iter);
-
-        if (have_classes)
-        {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        }
-
-        WriterClose(w);
     }
 }
 
@@ -1719,30 +1730,50 @@ static bool VerifyBootstrap(void)
 /* Compliance comp                                            */
 /**************************************************************/
 
-static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept)
+static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept, struct timespec start)
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance = 0.0;
-        
+
+    if (MACHINE_OUTPUT)
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+
     delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
+    Log(LOG_LEVEL_VERBOSE, "A: Bundle Accounting Summary for '%s' in namespace %s", bundle->name, bundle->ns);
+
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Zero promises executed for bundle '%s'", bundle->name);
+        Log(LOG_LEVEL_VERBOSE, "A: Zero promises executed for bundle '%s'", bundle->name);
+        Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
+        Log(LOG_LEVEL_VERBOSE, "\n");
         return PROMISE_RESULT_NOOP;
     }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "A: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
+        Log(LOG_LEVEL_VERBOSE, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
+        Log(LOG_LEVEL_VERBOSE, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
 
-    Log(LOG_LEVEL_VERBOSE, "Bundle Accounting Summary for '%s'", bundle->name);
-    Log(LOG_LEVEL_VERBOSE, "Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
-    Log(LOG_LEVEL_VERBOSE, "Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
-    Log(LOG_LEVEL_VERBOSE, "Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
-    
-    bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
+        bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-    Log(LOG_LEVEL_VERBOSE, "Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
-          bundle->name, bundle_compliance * 100.0);
+        Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
+            bundle->name, bundle_compliance * 100.0);
+
+        char name[CF_MAXVARSIZE];
+        snprintf(name, CF_MAXVARSIZE, "%s:%s", bundle->ns, bundle->name);
+
+        EndMeasure(name, start);
+        Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+    }
+
     LastSawBundle(bundle, bundle_compliance);
 
     // return the worst case for the bundle status

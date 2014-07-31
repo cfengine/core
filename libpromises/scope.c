@@ -130,7 +130,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
     {
         const char *lval = RlistScalarValue(rpl);
 
-        Log(LOG_LEVEL_VERBOSE, "Augment scope '%s' with variable '%s' (type: %c)", bp->name, lval, rpr->val.type);
+        Log(LOG_LEVEL_VERBOSE, "V:     +  Private parameter: '%s' in scope '%s' (type: %c) in pass %d", lval, bp->name, rpr->val.type, EvalContextGetPass(ctx));
 
         // CheckBundleParameters() already checked that there is no namespace collision
         // By this stage all functions should have been expanded, so we only have scalars left

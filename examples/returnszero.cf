@@ -43,10 +43,10 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-02-10T17:43:55-0500    error: /default/example/classes: Proposed executable file '/usr/local/bin/mycommand' doesn't exist
-#@ 2014-02-10T17:43:55-0500    error: /default/example/classes: returnszero '/usr/local/bin/mycommand' is assumed to be executable but isn't
-#@ 2014-02-10T17:43:55-0500    error: /default/example/classes: Proposed executable file '/usr/local/bin/mycommand' doesn't exist
-#@ 2014-02-10T17:43:55-0500    error: /default/example/classes: returnszero '/usr/local/bin/mycommand' is assumed to be executable but isn't
+#@ Proposed executable file '/usr/local/bin/mycommand' doesn't exist
+#@ returnszero '/usr/local/bin/mycommand' is assumed to be executable but isn't
+#@ Proposed executable file '/usr/local/bin/mycommand' doesn't exist
+#@ returnszero '/usr/local/bin/mycommand' is assumed to be executable but isn't
 #@ R: Command failed
 #@ ```
 #+end_src

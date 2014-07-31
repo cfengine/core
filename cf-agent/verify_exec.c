@@ -82,7 +82,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     /* See VerifyCommandRetcode for interpretation of return codes.
@@ -282,7 +282,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         }
 
 #ifndef __MINGW32__
-        Log(LOG_LEVEL_VERBOSE, "(Setting umask to %jo)", (uintmax_t)a.contain.umask);
+        Log(LOG_LEVEL_VERBOSE, "Setting umask to %jo", (uintmax_t)a.contain.umask);
         maskval = umask(a.contain.umask);
 
         if (a.contain.umask == 0)

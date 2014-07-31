@@ -60,7 +60,7 @@
 #include <time_classes.h>
 #include <unix_iface.h>
 #include <constants.h>
-
+#include <ornaments.h>
 #include <cf-windows-functions.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
@@ -107,8 +107,12 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMe
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
-    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
+    strcpy(VPREFIX, "cf>");
 
+    Log(LOG_LEVEL_VERBOSE, " %s", NameVersion());
+    Banner("Initialization preamble");
+
+    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
     GenericAgentInitialize(ctx, config);
 
     time_t t = SetReferenceTime();
@@ -190,7 +194,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped");
+            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped - can't find policy_server.dat in %s", GetWorkDir());
             return;
         }
 
@@ -578,8 +582,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextClassPutHard(ctx, "any", "source=agent");
 
     GenericAgentAddEditionClasses(ctx);
-
-    strcpy(VPREFIX, GetConsolePrefix());
 
 /* Define trusted directories */
 
@@ -992,7 +994,7 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
         }
         else if (sb.st_mtime > validated_at)
         {
-            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt", config->input_file);
+            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt (file is newer than previous)", config->input_file);
             return true;
         }
     }

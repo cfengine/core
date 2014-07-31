@@ -23,23 +23,13 @@
 */
 
 #include <logging.h>
-#include <logging_priv.h>
 
 #include <alloc.h>
 #include <string_lib.h>
 #include <misc_lib.h>
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
-bool LEGACY_OUTPUT = false; /* GLOBAL_A */
-
-typedef struct
-{
-    LogLevel log_level;
-    LogLevel report_level;
-    bool color;
-
-    LoggingPrivContext *pctx;
-} LoggingContext;
+bool MACHINE_OUTPUT = false; /* GLOBAL_A */
 
 static LogLevel global_level = LOG_LEVEL_NOTICE; /* GLOBAL_X */
 
@@ -59,7 +49,7 @@ static void LoggingInitializeOnce(void)
     }
 }
 
-static LoggingContext *GetCurrentThreadContext(void)
+LoggingContext *GetCurrentThreadContext(void)
 {
     pthread_once(&log_context_init_once, &LoggingInitializeOnce);
     LoggingContext *lctx = pthread_getspecific(log_context_key);
@@ -154,18 +144,7 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
 {
     FILE *output_file = (level <= LOG_LEVEL_WARNING) ? stderr : stdout;
 
-    if (LEGACY_OUTPUT)
-    {
-        if (level >= LOG_LEVEL_VERBOSE)
-        {
-            fprintf(stdout, "%s> %s\n", VPREFIX, msg);
-        }
-        else
-        {
-            fprintf(stdout, "%s\n", msg);
-        }
-    }
-    else
+    if (MACHINE_OUTPUT)
     {
         struct tm now;
         time_t now_seconds = time(NULL);
@@ -184,6 +163,17 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
         else
         {
             fprintf(output_file, "%s %8s: %s\n", formatted_timestamp, string_level, msg);
+        }
+    }
+    else
+    {
+        if (level >= LOG_LEVEL_INFO)
+        {
+            fprintf(stdout, "%s %s\n", VPREFIX, msg);
+        }
+        else
+        {
+            fprintf(stdout, "%s\n", msg);
         }
     }
 }
@@ -230,6 +220,15 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     char *msg = StringVFormat(fmt, ap);
     char *hooked_msg = NULL;
 
+    for (char *sp = msg; *sp != '\0'; sp++)
+    {
+        if (*sp == '\n' && *(sp+1) == '\0')
+        {
+            *sp = '\0';
+            break;
+        }
+    }
+
     if (lctx->pctx && lctx->pctx->log_hook)
     {
         hooked_msg = lctx->pctx->log_hook(lctx->pctx, level, msg);
@@ -241,10 +240,17 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
 
     if (level <= lctx->report_level)
     {
-        LogToConsole(hooked_msg, level, lctx->color);
+        if (MACHINE_OUTPUT)
+        {
+            LogToConsole(hooked_msg, level, lctx->color);
+        }
+        else
+        {
+            LogToConsole(msg, level, lctx->color);
+        }
     }
 
-    if (level <= lctx->log_level)
+    if (level <= lctx->log_level && level < LOG_LEVEL_VERBOSE)
     {
         LogToSystemLog(hooked_msg, level);
     }

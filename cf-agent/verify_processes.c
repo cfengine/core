@@ -123,7 +123,7 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promi
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
     PromiseResult result = VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
 
     YieldCurrentLock(thislock);
@@ -261,6 +261,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
     Rlist *rp;
     pid_t pid;
     int killed = false;
+    bool failure = false;
 
     if (siglist == NULL)
     {
@@ -290,16 +291,17 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
 
                 if (kill((pid_t) pid, signal) < 0)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
                          "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)", RlistScalarValue(rp),
                          signal, (intmax_t)pid, GetErrorStr());
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                    failure = true;
                 }
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Signalled '%s' (%d) to process %jd (%s)",
                          RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                    failure = false;
                 }
             }
             else
@@ -308,6 +310,11 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
                       RlistScalarValue(rp), ip->name);
             }
         }
+    }
+
+    if (failure)
+    {
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     }
 
     return killed;

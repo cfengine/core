@@ -135,7 +135,7 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
             return PROMISE_RESULT_NOOP;
         }
 
-        PromiseBanner(pp);
+        PromiseBanner(ctx, pp);
 
         bool excluded = false;
         Promise *pexp = ExpandDeRefPromise(ctx, pp, &excluded);

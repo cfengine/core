@@ -577,7 +577,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Reading package list from '%s'", CommandArg0(a.packages.package_list_command));
+        Log(LOG_LEVEL_VERBOSE, "Reading package list from '%s'", a.packages.package_list_command);
     }
 
     FILE *fin;

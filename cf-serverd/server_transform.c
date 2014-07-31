@@ -836,21 +836,25 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITIPS].lval) == 0)
                 {
                     ret = StrList_Append(&racl->admit.ips, RlistScalarValue(rp));
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYIPS].lval) == 0)
                 {
                     ret = StrList_Append(&racl->deny.ips, RlistScalarValue(rp));
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITHOSTNAMES].lval) == 0)
                 {
                     ret = StrList_Append(&racl->admit.hostnames, RlistScalarValue(rp));
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYHOSTNAMES].lval) == 0)
                 {
                     ret = StrList_Append(&racl->deny.hostnames, RlistScalarValue(rp));
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITKEYS].lval) == 0)

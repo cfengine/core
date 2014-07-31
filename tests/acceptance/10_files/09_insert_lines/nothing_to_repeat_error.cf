@@ -15,6 +15,9 @@ body common control
 
 bundle agent check
 {
+  meta:
+      "test_suppress_fail" string => "sunos_5_10",
+        meta => { "redmine6470"};
   methods:
       "" usebundle => dcs_passif_output("",
                                         ".*nothing to repeat.*",

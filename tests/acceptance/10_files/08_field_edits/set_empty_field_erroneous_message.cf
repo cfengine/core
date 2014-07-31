@@ -15,6 +15,10 @@ body common control
 
 bundle agent check
 {
+  meta:
+      "test_suppress_fail" string => "sunos_5_10",
+        meta => { "redmine6469" };
+        
   methods:
       "" usebundle => file_make($(G.testfile), "root:sikrt:16104::::::");
       "" usebundle => dcs_passif_output("",

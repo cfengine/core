@@ -818,7 +818,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
             }
         }
         ++linenumber;
-        int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, mgr);
+        int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\r\n]", name, version, arch, mgr);
         if (scancount != 4)
         {
             Log(LOG_LEVEL_VERBOSE, "Could only read %d values from line %d in '%s'", scancount, linenumber, name);

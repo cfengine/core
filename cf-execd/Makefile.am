@@ -6,6 +6,7 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
+	$(PCRE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = \

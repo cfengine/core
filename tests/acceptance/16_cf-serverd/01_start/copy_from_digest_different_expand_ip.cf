@@ -8,6 +8,9 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "sunos_5_10",
+       meta => { "redmine6476" };
   methods:
       "any" usebundle => file_make("$(G.testdir)/127.0.0.1.txt",
                                    "Source and Destination are different_A");

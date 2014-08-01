@@ -103,40 +103,25 @@ static void RandomSeed(void)
 {
     char vbuff[CF_BUFSIZE];
 
-    /* randseed file is written by cf-key. */
+/* Use the system database as the entropy source for random numbers */
+    Log(LOG_LEVEL_DEBUG, "RandomSeed() work directory is '%s'", CFWORKDIR);
+
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
+
     Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'", vbuff);
 
     if (!RAND_load_file(vbuff, -1))
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Could not read sufficient randomness from '%s'", vbuff);
+        Log(LOG_LEVEL_VERBOSE, "Could not read sufficient randomness from '%s'", vbuff);
     }
 
-#ifndef __MINGW32__                                     /* windows may hang */
-    RAND_poll();
-#else
-    RAND_screen();
-#endif
-
-    /* We should have had enough entropy by now. */
-    if (RAND_status() != 1)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "PRNG hasn't been seeded enough! Using some system data for seed");
-        RAND_seed(&CFSTARTTIME, sizeof(time_t));
-        RAND_seed(VFQNAME, strlen(VFQNAME));
-        time_t now = time(NULL);
-        RAND_seed(&now, sizeof(time_t));
-        char uninitbuffer[100];
-        RAND_seed(uninitbuffer, sizeof(uninitbuffer));
-
-        if (RAND_status() != 1)
-        {
-            UnexpectedError("Low entropy! "
-                            "Please report which platform you are using.");
-        }
-    }
+    /* Submit some random data to random pool */
+    RAND_seed(&CFSTARTTIME, sizeof(time_t));
+    RAND_seed(VFQNAME, strlen(VFQNAME));
+    time_t now = time(NULL);
+    RAND_seed(&now, sizeof(time_t));
+    char uninitbuffer[100];
+    RAND_seed(uninitbuffer, sizeof(uninitbuffer));
 }
 
 static const char *const priv_passphrase = "Cfengine passphrase";

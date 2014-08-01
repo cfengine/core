@@ -124,7 +124,7 @@ bundle agent check
       "e" string => '{"name":"bfoobar","version":"1","arch":"besm6","method":"printf"}';
   methods:
       "" usebundle => dcs_check_strcmp($(test.all_string),
-                                       'packages = [$(e),$(e),$(e)]',
+                                       'packages = [$(e)]',
                                        $(this.promise_filename),
                                        "no");
 }

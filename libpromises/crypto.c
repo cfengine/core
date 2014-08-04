@@ -133,8 +133,14 @@ static void RandomSeed(void)
 
         if (RAND_status() != 1)
         {
+#if 0 /* FIXME: We really are in trouble here !  But aborting is too drastic. */
             UnexpectedError("Low entropy! "
                             "Please report which platform you are using.");
+#else
+            Log(LOG_LEVEL_ERR,
+                "Failed to scavenge enough entropy! "
+                "Please report which platform you are using.");
+#endif
         }
     }
 }

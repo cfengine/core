@@ -800,7 +800,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
 
 /* Max 2016 entries - at least a week */
 
-    snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(CommandArg0(manager->manager)));
+    snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(RealPackageManager(manager->manager)));
 
     int linenumber = 0;
     for(;;)

@@ -4,6 +4,7 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	$(OPENSSL_CPPFLAGS) \
+	$(PCRE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = \

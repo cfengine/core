@@ -59,7 +59,7 @@ AC_ARG_WITH([pthreads],
 
 if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$with_pthreads" != "xno"; then
    LIBS="$LIBS -L$with_pthreads/lib"
-   CFLAGS="$CFLAGS -I$with_pthreads/include"
+   CPPFLAGS="-I$with_pthreads/include $CPPFLAGS"
 fi
 
 ACX_PTHREAD([],
@@ -191,7 +191,10 @@ if test "x$with_postgresql" != "xno"; then
    # pg_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $PG_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS -I`$PG_CONFIG --includedir`"
+         pg_include_dir=`$PG_CONFIG --includedir`
+         if test -n "$pg_include_dir"; then
+            POSTGRESQL_CPPFLAGS="-I$pg_include_dir"
+         fi
       fi
    fi
 
@@ -218,7 +221,10 @@ if test "x$with_mysql" != "xno"; then
    # mysql_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $MYSQL_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS `$MYSQL_CONFIG --include`"
+         mysql_include_dir=`$MYSQL_CONFIG --include`
+         if test -n "$mysql_include_dir"; then
+            MYSQL_CPPFLAGS="$mysql_include_dir"
+         fi
       fi
    fi
 
@@ -369,10 +375,16 @@ if test "x$with_libxml2" != xno; then
    fi
 
    # xml2-config is only for native builds
-   if test "x$cross_compiling" = "xno"; then
-      if test x`which $XML2_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS `$XML2_CONFIG --cflags`"
-      fi
+   if test "x$cross_compiling" = "xno" && test x`which $XML2_CONFIG` != x ; then
+     xml2_include_dir=`$XML2_CONFIG --cflags`
+     if test -n "$xml2_include_dir"; then
+        LIBXML2_CPPFLAGS="$xml2_include_dir"
+     fi
+   else                # xml2-config not found
+        # if a path, e.g. /var/cfengine was given, then we
+        # must take into account that libxml2 includes are in
+        # /var/cfengine/include/libxml2
+        LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
    fi
 
     CF3_WITH_LIBRARY(libxml2, [
@@ -475,7 +487,7 @@ AC_TYPE_OFF_T
 # off_t, which causes a conflict.
 #
 if test "x$ac_cv_sys_large_files" = x1; then
-  CPPFLAGS="$CPPFLAGS -D_LARGE_FILES=1"
+  CPPFLAGS="-D_LARGE_FILES=1 $CPPFLAGS"
 fi
 
 dnl ######################################################################
@@ -822,10 +834,29 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
-CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
-LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
-LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+CORE_CPPFLAGS="$TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
+CORE_CFLAGS="$TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
+CORE_LDFLAGS="$TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
+CORE_LIBS="$TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
+
+dnl ######################################################################
+dnl Make them available to subprojects.
+dnl ######################################################################
+
+AC_SUBST([CORE_CPPFLAGS])
+AC_SUBST([CORE_CFLAGS])
+AC_SUBST([CORE_LDFLAGS])
+AC_SUBST([CORE_LIBS])
+AC_CONFIG_FILES([configure_flags.env])
+
+dnl ######################################################################
+dnl And then use them.
+dnl ######################################################################
+
+CPPFLAGS="$CORE_CPPFLAGS"
+CFLAGS="$CORE_CFLAGS"
+LDFLAGS="$CORE_LDFLAGS"
+LIBS="$CORE_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff

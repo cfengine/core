@@ -7,10 +7,7 @@ body common control
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "sunos_5_10",
-      meta => { "redmine6224" };
-      
+        
   methods:
       "any" usebundle => dcs_fini("$(G.testdir)/destination_file1");
       "any" usebundle => dcs_fini("$(G.testdir)/destination_file2");

@@ -1537,10 +1537,11 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (ReceiveCollectCall(conn))
-        {
-            return true;
-        }
+        ReceiveCollectCall(conn);
+        /* On success that returned true; otherwise, it did all
+         * relevant Log()ging.  Either way, it closed the connection,
+         * so we're no longer busy with it: */
+        return false;
 
     case PROTOCOL_COMMAND_AUTH_PLAIN:
     case PROTOCOL_COMMAND_AUTH_SECURE:
@@ -1555,4 +1556,3 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     Log(LOG_LEVEL_INFO, "Closing connection due to request: %s", recvbuffer);
     return false;
 }
-

@@ -187,8 +187,10 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
 
     char buf[peek_size];
     ssize_t got = recv(ConnectionInfoSocket(conn_info), buf, sizeof(buf), MSG_PEEK);
-    if (got == -1)
+    assert(got <= peek_size);
+    if (got < 0)
     {
+        assert(got == -1);
         Log(LOG_LEVEL_ERR, "TCP receive error: %s", GetErrorStr());
         return -1;
     }
@@ -205,8 +207,7 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
             got);
         ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_CLASSIC);
     }
-    else if (got == peek_size &&
-             memcmp(&buf[CF_INBAND_OFFSET], "CAUTH", strlen("CAUTH")) == 0)
+    else if (memcmp(&buf[CF_INBAND_OFFSET], "CAUTH", strlen("CAUTH")) == 0)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Peeked CAUTH in TCP stream, considering the protocol as Classic");
@@ -216,9 +217,9 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Peeked nothing important in TCP stream, considering the protocol as TLS");
-        LogRaw(LOG_LEVEL_DEBUG, "Peeked data: ", buf, sizeof(buf));
         ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_TLS);
     }
+    LogRaw(LOG_LEVEL_DEBUG, "Peeked data: ", buf, got);
 
     return 1;
 }
@@ -404,6 +405,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 
     if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
     {
+        assert(ConnectionInfoSSL(conn->conn_info) == NULL);
         SSL *ssl = SSL_new(SSLSERVERCONTEXT);
         if (ssl == NULL)
         {
@@ -1032,8 +1034,11 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        return ReceiveCollectCall(conn);
-
+        ReceiveCollectCall(conn);
+        /* On success that returned true; otherwise, it did all
+         * relevant Log()ging.  Either way, it closed the connection,
+         * so we're no longer busy with it: */
+        return false;
 
     case PROTOCOL_COMMAND_BAD:
 

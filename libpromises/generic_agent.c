@@ -105,6 +105,14 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMe
     *digest_len = CF_MD5_LEN;
 }
 
+void MarkAsPolicyServer(EvalContext *ctx)
+{
+    EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap,deprecated,alias=policy_server");
+    Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
+    EvalContextClassPutHard(ctx, "policy_server", "inventory,attribute_name=CFEngine roles,source=bootstrap");
+    Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
+}
+
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
     GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
@@ -150,7 +158,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             if (am_policy_server)
             {
                 Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s", GetMasterDir());
-                EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap");
+                MarkAsPolicyServer(ctx);
 
                 if (!MasterfileExists(GetMasterDir()))
                 {
@@ -196,11 +204,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         if (GetAmPolicyHub(GetWorkDir()))
         {
-            EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap,deprecated,alias=policy_server");
-            Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
-            EvalContextClassPutHard(ctx, "policy_server", "inventory,attribute_name=CFEngine roles,source=bootstrap");
-            Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
+            MarkAsPolicyServer(ctx);
 
+            /* Should this go in MarkAsPolicyServer() ? */
             CheckAndSetHAState(GetWorkDir(), ctx);
         }
     }

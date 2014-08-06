@@ -90,78 +90,72 @@ static void DeleteConn(ServerConnectionState *conn);
 
 void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info)
 {
-    time_t now;
-
     Log(LOG_LEVEL_VERBOSE,
         "Obtained IP address of '%s' on socket %d from accept",
         ipaddr, ConnectionInfoSocket(info));
 
     /* TODO change nonattackerlist, attackerlist and especially connectionlist
      *      to binary searched lists, or remove them from the main thread! */
-    if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, ipaddr)))
+    if (SV.nonattackerlist && !IsMatchItemIn(SV.nonattackerlist, ipaddr))
     {
         Log(LOG_LEVEL_ERR,
             "Remote host '%s' not in allowconnects, denying connection",
             ipaddr);
-        cf_closesocket(ConnectionInfoSocket(info));
-        ConnectionInfoDestroy(&info);
-        return;
     }
-
-    if (IsMatchItemIn(SV.attackerlist, ipaddr))
+    else if (IsMatchItemIn(SV.attackerlist, ipaddr))
     {
         Log(LOG_LEVEL_ERR,
             "Remote host '%s' is in denyconnects, denying connection",
             ipaddr);
-        cf_closesocket(ConnectionInfoSocket(info));
-        ConnectionInfoDestroy(&info);
-        return;
     }
-
-    if ((now = time(NULL)) == -1)
+    else
     {
-       now = 0;
-    }
-
-    PurgeOldConnections(&SV.connectionlist, now);
-
-    if (!IsMatchItemIn(SV.multiconnlist, ipaddr))
-    {
-        if (!ThreadLock(cft_count))
+        time_t now = time(NULL);
+        if (now == -1)
         {
-            cf_closesocket(ConnectionInfoSocket(info));
-            ConnectionInfoDestroy(&info);
-            return;
+            now = 0;
         }
 
-        if (IsItemIn(SV.connectionlist, ipaddr))
+        PurgeOldConnections(&SV.connectionlist, now);
+
+        bool allow = IsMatchItemIn(SV.multiconnlist, ipaddr);
+        if (!allow && ThreadLock(cft_count))
         {
+            /* At most one connection allowed for this host: */
+            allow = !IsItemIn(SV.connectionlist, ipaddr);
             ThreadUnlock(cft_count);
-            Log(LOG_LEVEL_ERR,
-                "Remote host '%s' is not in allowallconnects, denying second simultaneous connection",
-                ipaddr);
-            cf_closesocket(ConnectionInfoSocket(info));
-            ConnectionInfoDestroy(&info);
-            return;
+
+            if (!allow) /* Duplicate. */
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Remote host '%s' is not in allowallconnects, denying second simultaneous connection",
+                    ipaddr);
+            }
         }
 
-        ThreadUnlock(cft_count);
+        if (allow)
+        {
+            char intime[PRINTSIZE(now)];
+            xsnprintf(intime, sizeof(intime), "%jd", (intmax_t) now);
+
+            if (ThreadLock(cft_count))
+            {
+                PrependItem(&SV.connectionlist, ipaddr, intime);
+                ThreadUnlock(cft_count);
+
+                SpawnConnection(ctx, ipaddr, info);
+                return; /* Success */
+            }
+        }
     }
+    /* Tidy up on failure: */
 
-    char intime[PRINTSIZE(now)];
-    xsnprintf(intime, sizeof(intime), "%jd", (intmax_t) now);
-
-    if (!ThreadLock(cft_count))
+    if (info->is_call_collect)
     {
-        cf_closesocket(ConnectionInfoSocket(info));
-        ConnectionInfoDestroy(&info);
-        return;
+        CollectCallMarkProcessed();
     }
-
-    PrependItem(&SV.connectionlist, ipaddr, intime);
-    ThreadUnlock(cft_count);
-
-    SpawnConnection(ctx, ipaddr, info);
+    cf_closesocket(ConnectionInfoSocket(info));
+    ConnectionInfoDestroy(&info);
 }
 
 /**********************************************************************/
@@ -419,6 +413,10 @@ static void *HandleConnection(void *c)
         {
         }
     }
+    else
+    {
+        assert(!"Bogus protocol version - but we checked that already !");
+    }
     /* ============================================================ */
 
 
@@ -430,6 +428,10 @@ static void *HandleConnection(void *c)
     ThreadUnlock(cft_server_children);
 
   ret2:
+    if (conn->conn_info->is_call_collect)
+    {
+        CollectCallMarkProcessed();
+    }
     DeleteConn(conn);
     return NULL;
 }

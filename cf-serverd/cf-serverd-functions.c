@@ -305,11 +305,11 @@ static void KeepHardClasses(EvalContext *ctx)
         char *existing_policy_server = ReadPolicyServerFile(CFWORKDIR);
         if (existing_policy_server)
         {
+            free(existing_policy_server);
             if (GetAmPolicyHub(CFWORKDIR))
             {
-                EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap");
+                MarkAsPolicyServer(ctx);
             }
-            free(existing_policy_server);
         }
     }
 
@@ -653,8 +653,8 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                 assert(info);
 
                 ConnectionInfoSetSocket(info, new_client);
+                info->is_call_collect = true; /* Mark processed when done. */
                 ServerEntryPoint(ctx, POLICY_SERVER, info);
-                CollectCallMarkProcessed();
             }
         }
 

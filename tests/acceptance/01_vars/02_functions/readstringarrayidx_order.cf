@@ -1,0 +1,113 @@
+#######################################################
+#
+# Acceptance test for RedMine 6466.
+#
+# Order and duplication in data should be preserved.
+# Based on an initial test by Neil Watson.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      # Note: order is deliberately one unlikely to happen
+      # automatically; and there are duplicates.
+      "file" slist => { "1 ;; other field 1",
+                        "2 ;; other field 2",
+                        "4 ;; other field 4",
+                        "8 ;; other field 8",
+                        "16 ;; other field 16",
+                        "2 ;; other field 2",
+                        "3 ;; other field 3",
+                        "6 ;; other field 6",
+                        "12 ;; other field 12",
+                        "9 ;; other field 9",
+                        "18 ;; other field 18",
+                        "3 ;; other field 3",
+                        "5 ;; other field 5",
+                        "10 ;; other field 10",
+                        "15 ;; other field 15",
+                        "5 ;; other field 5",
+                        "7 ;; other field 7",
+                        "14 ;; other field 14",
+                        "7 ;; other field 7",
+                        "0 ;; other field 0" };
+
+  files:
+      "$(G.testfile).orig.txt"
+        create        => 'true',
+        edit_defaults => empty,
+        edit_line     => insert_all_lines( "@{file}" );
+}
+
+#######################################################
+# Insert lines, preserving duplicates:
+
+bundle edit_line insert_all_lines(lines)
+{
+  vars:
+      "whole" string => join("
+", "lines");
+
+  insert_lines:
+      "$(whole)"
+      insert_type => "preserve_block";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "num" int => readstringarrayidx("mylines",
+                                      "$(G.testfile).orig.txt",
+                                      "\s*#[^\n]*",
+                                      "\s*;;\s*",
+                                      50, 9999);
+
+      "file" slist => { "${mylines[0][0]} ;; ${mylines[0][1]}",
+                        "${mylines[1][0]} ;; ${mylines[1][1]}",
+                        "${mylines[2][0]} ;; ${mylines[2][1]}",
+                        "${mylines[3][0]} ;; ${mylines[3][1]}",
+                        "${mylines[4][0]} ;; ${mylines[4][1]}",
+                        "${mylines[5][0]} ;; ${mylines[5][1]}",
+                        "${mylines[6][0]} ;; ${mylines[6][1]}",
+                        "${mylines[7][0]} ;; ${mylines[7][1]}",
+                        "${mylines[8][0]} ;; ${mylines[8][1]}",
+                        "${mylines[9][0]} ;; ${mylines[9][1]}",
+                        "${mylines[10][0]} ;; ${mylines[10][1]}",
+                        "${mylines[11][0]} ;; ${mylines[11][1]}",
+                        "${mylines[12][0]} ;; ${mylines[12][1]}",
+                        "${mylines[13][0]} ;; ${mylines[13][1]}",
+                        "${mylines[14][0]} ;; ${mylines[14][1]}",
+                        "${mylines[15][0]} ;; ${mylines[15][1]}",
+                        "${mylines[16][0]} ;; ${mylines[16][1]}",
+                        "${mylines[17][0]} ;; ${mylines[17][1]}",
+                        "${mylines[18][0]} ;; ${mylines[18][1]}",
+                        "${mylines[19][0]} ;; ${mylines[19][1]}" };
+
+  files:
+      "$(G.testfile).copy.txt"
+        create        => 'true',
+        edit_defaults => empty,
+        edit_line     => insert_all_lines( "@{file}" );
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile).copy.txt",
+                                        "$(G.testfile).orig.txt",
+                                        "$(this.promise_filename)");
+}

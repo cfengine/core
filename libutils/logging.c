@@ -23,10 +23,32 @@
 */
 
 #include <logging.h>
-
 #include <alloc.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+
+/* These things should not be here, but why have we made it so *** hard to share these data??? */
+
+typedef enum
+{
+    AGENT_TYPE_COMMON,
+    AGENT_TYPE_AGENT,
+    AGENT_TYPE_SERVER,
+    AGENT_TYPE_MONITOR,
+    AGENT_TYPE_EXECUTOR,
+    AGENT_TYPE_RUNAGENT,
+    AGENT_TYPE_KEYGEN,
+    AGENT_TYPE_HUB,
+    AGENT_TYPE_FILE,
+    AGENT_TYPE_ROUTING,
+    AGENT_TYPE_NOAGENT
+} AgentType;
+
+extern const char *const CF_AGENTTYPES[];
+extern AgentType THIS_AGENT_TYPE;
+#define CF_BUFSIZE 4096
+
+/* end comment */
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
 bool MACHINE_OUTPUT = false; /* GLOBAL_A */
@@ -142,17 +164,16 @@ bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp)
 
 static void LogToConsole(const char *msg, LogLevel level, bool color)
 {
-    FILE *output_file = (level <= LOG_LEVEL_WARNING) ? stderr : stdout;
+    FILE *output_file = stdout; // Messages should ALL go to stdout else they are disordered
+    struct tm now;
+    time_t now_seconds = time(NULL);
+    localtime_r(&now_seconds, &now);
+
+    char formatted_timestamp[64];
+    LoggingFormatTimestamp(formatted_timestamp, 64, &now);
 
     if (MACHINE_OUTPUT)
     {
-        struct tm now;
-        time_t now_seconds = time(NULL);
-        localtime_r(&now_seconds, &now);
-
-        char formatted_timestamp[64];
-        LoggingFormatTimestamp(formatted_timestamp, 64, &now);
-
         const char *string_level = LogLevelToString(level);
 
         if (color)
@@ -169,7 +190,17 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     {
         if (level >= LOG_LEVEL_INFO)
         {
-            fprintf(stdout, "%s %s\n", VPREFIX, msg);
+            fprintf(stdout, "%s", VPREFIX);
+        }
+
+        if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
+        {
+            fprintf(stdout, " %s ", formatted_timestamp);
+        }
+
+        if (level <= LOG_LEVEL_INFO)
+        {
+            fprintf(stdout, "%s %s\n", LogLevelToString(level), msg);
         }
         else
         {
@@ -199,7 +230,9 @@ static int LogLevelToSyslogPriority(LogLevel level)
 
 void LogToSystemLog(const char *msg, LogLevel level)
 {
-    syslog(LogLevelToSyslogPriority(level), "%s", msg);
+    char logmsg[CF_BUFSIZE];
+    snprintf(logmsg, CF_BUFSIZE, "CFEngine(%s) %s %s\n", CF_AGENTTYPES[THIS_AGENT_TYPE], VPREFIX, msg);
+    syslog(LogLevelToSyslogPriority(level), "%s", logmsg);
 }
 
 const char *GetErrorStrFromCode(int error_code)

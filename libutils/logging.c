@@ -27,31 +27,11 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 
-/* These things should not be here, but why have we made it so *** hard to share these data??? */
-
-typedef enum
-{
-    AGENT_TYPE_COMMON,
-    AGENT_TYPE_AGENT,
-    AGENT_TYPE_SERVER,
-    AGENT_TYPE_MONITOR,
-    AGENT_TYPE_EXECUTOR,
-    AGENT_TYPE_RUNAGENT,
-    AGENT_TYPE_KEYGEN,
-    AGENT_TYPE_HUB,
-    AGENT_TYPE_FILE,
-    AGENT_TYPE_ROUTING,
-    AGENT_TYPE_NOAGENT
-} AgentType;
-
-extern const char *const CF_AGENTTYPES[];
-extern AgentType THIS_AGENT_TYPE;
-#define CF_BUFSIZE 4096
-
-/* end comment */
-
 char VPREFIX[1024] = ""; /* GLOBAL_C */
 bool MACHINE_OUTPUT = false; /* GLOBAL_A */
+
+static char AgentType[80] = "generic";
+static bool BePretty;
 
 static LogLevel global_level = LOG_LEVEL_NOTICE; /* GLOBAL_X */
 
@@ -83,6 +63,12 @@ LoggingContext *GetCurrentThreadContext(void)
         pthread_setspecific(log_context_key, lctx);
     }
     return lctx;
+}
+
+void LoggingSetAgentType(const char *type, bool pretty)
+{
+    strlcpy(AgentType, type, sizeof(AgentType));
+    BePretty = pretty;
 }
 
 void LoggingPrivSetContext(LoggingPrivContext *pctx)
@@ -188,14 +174,14 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     }
     else
     {
-        if (level >= LOG_LEVEL_INFO)
+        if (level >= LOG_LEVEL_INFO && VPREFIX[0])
         {
-            fprintf(stdout, "%s", VPREFIX);
+            fprintf(stdout, "%s ", VPREFIX);
         }
 
-        if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
+        if (!BePretty)
         {
-            fprintf(stdout, " %s ", formatted_timestamp);
+            fprintf(stdout, "%s ", formatted_timestamp);
         }
 
         if (level <= LOG_LEVEL_INFO)
@@ -230,8 +216,8 @@ static int LogLevelToSyslogPriority(LogLevel level)
 
 void LogToSystemLog(const char *msg, LogLevel level)
 {
-    char logmsg[CF_BUFSIZE];
-    snprintf(logmsg, CF_BUFSIZE, "CFEngine(%s) %s %s\n", CF_AGENTTYPES[THIS_AGENT_TYPE], VPREFIX, msg);
+    char logmsg[4096];
+    snprintf(logmsg, sizeof(logmsg), "CFEngine(%s) %s %s\n", AgentType, VPREFIX, msg);
     syslog(LogLevelToSyslogPriority(level), "%s", logmsg);
 }
 

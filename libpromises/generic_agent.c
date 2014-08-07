@@ -115,7 +115,7 @@ void MarkAsPolicyServer(EvalContext *ctx)
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
-    strcpy(VPREFIX, "cf>");
+    strcpy(VPREFIX, "");
 
     Log(LOG_LEVEL_VERBOSE, " %s", NameVersion());
     Banner("Initialization preamble");

@@ -34,5 +34,5 @@ struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
 int EndMeasureValueMs(struct timespec start);
 void EndMeasurePromise(struct timespec start, const Promise *pp);
-
+extern bool TIMING;
 #endif

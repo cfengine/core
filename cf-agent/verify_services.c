@@ -82,7 +82,7 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
         {
             Log(LOG_LEVEL_ERR,
                 "!! Autostart policy of service promiser '%s' needs to be 'none' when service policy is not 'start', but is '%s'",
-                  pp->promiser, a.service.service_autostart_policy);
+                pp->promiser, a.service.service_autostart_policy);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -116,7 +116,7 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
     if (strcmp(a.service.service_type, "windows") != 0)
     {
         Log(LOG_LEVEL_ERR, "Service type for promiser '%s' must be 'windows' on this system, but is '%s'",
-              pp->promiser, a.service.service_type);
+            pp->promiser, a.service.service_type);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -168,7 +168,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     PromiseResult result = PROMISE_RESULT_SKIPPED;
     if (strcmp(a.service.service_type, "windows") == 0)
@@ -196,6 +196,8 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
 static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service_policy)
 {
     Rlist *args = NULL;
+    FnCall *call = NULL;
+
     switch (service_policy)
     {
     case SERVICE_POLICY_START:
@@ -221,7 +223,17 @@ static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service
         break;
     }
 
-    FnCall *call = FnCallNew("standard_services", args);
+    Rval name = DefaultBundleConstraint(pp, "service");
+
+    if (PolicyGetBundle(PolicyFromPromise(pp), PromiseGetBundle(pp)->ns, "agent", (char *)name.item))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Found service special bundle %s in ns %s\n", (char *)name.item, PromiseGetBundle(pp)->ns);
+        call = FnCallNew(name.item, args);
+    }
+    else
+    {
+        call = FnCallNew("standard_services", args);
+    }
 
     return call;
 }
@@ -255,7 +267,7 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
     case SERVICE_POLICY_RELOAD:
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "reload", CF_DATA_TYPE_STRING, "source=promise");
         break;
-        
+
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
@@ -270,4 +282,3 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
 
     return result;
 }
-

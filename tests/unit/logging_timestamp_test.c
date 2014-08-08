@@ -7,21 +7,23 @@
 
 static void test_timestamp_regex(void)
 {
+    LoggingSetAgentType("test", false);
+    LoggingSetColor(false);
     fflush(stderr);
     fflush(stdout);
     int pipe_fd[2];
     assert_int_equal(pipe(pipe_fd), 0);
-    // Duplicate stderr.
-    int duplicate_stderr = dup(2);
-    assert_true(duplicate_stderr >= 0);
+    // Duplicate stdout.
+    int duplicate_stdout = dup(1);
+    assert_true(duplicate_stdout >= 0);
     // Make stderr point to the pipe.
-    assert_int_equal(dup2(pipe_fd[1], 2), 2);
+    assert_int_equal(dup2(pipe_fd[1], 1), 1);
     Log(LOG_LEVEL_ERR, "Test string");
-    fputc('\n', stderr); /* Make sure fgets() doesn't hang. */
+    fputc('\n', stdout); /* Make sure fgets() doesn't hang. */
     fflush(stderr);
     fflush(stdout);
     // Restore stdout.
-    assert_int_equal(dup2(duplicate_stderr, 2), 2);
+    assert_int_equal(dup2(duplicate_stdout, 1), 1);
 
     char buf[CF_BUFSIZE];
     FILE *pipe_read_end = fdopen(pipe_fd[0], "r");
@@ -37,7 +39,7 @@ static void test_timestamp_regex(void)
     fclose(pipe_read_end);
     close(pipe_fd[0]);
     close(pipe_fd[1]);
-    close(duplicate_stderr);
+    close(duplicate_stdout);
     pcre_free(regex);
 }
 

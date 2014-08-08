@@ -229,14 +229,14 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     switch (rval.type)
                     {
                     case RVAL_TYPE_SCALAR:
-                        Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar '%s', was '%s' now '%s'",
+                        Log(LOG_LEVEL_VERBOSE, "V: Redefinition of a constant scalar '%s', was '%s' now '%s'",
                             pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
                         PromiseRef(LOG_LEVEL_VERBOSE, pp);
                         break;
 
                     case RVAL_TYPE_LIST:
                         {
-                            Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list '%s'", pp->promiser);
+                            Log(LOG_LEVEL_VERBOSE, "V: Redefinition of a constant list '%s'", pp->promiser);
                             Writer *w = StringWriter();
                             RlistWrite(w, existing_value);
                             char *oldstr = StringWriterClose(w);
@@ -246,7 +246,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                             w = StringWriter();
                             RlistWrite(w, rval.item);
                             char *newstr = StringWriterClose(w);
-                            Log(LOG_LEVEL_VERBOSE, " New value '%s'", newstr);
+                            Log(LOG_LEVEL_VERBOSE, "V: New value '%s'", newstr);
                             free(newstr);
                             PromiseRef(LOG_LEVEL_VERBOSE, pp);
                         }
@@ -587,6 +587,52 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
         if (cp->rval.item == NULL)
         {
+            continue;
+        }
+
+        if (strcmp(cp->lval, "ifvarclass") == 0 || strcmp(cp->lval, "if") == 0)
+        {
+            switch (cp->rval.type)
+            {
+            case RVAL_TYPE_SCALAR:
+                if (!IsDefinedClass(ctx, cp->rval.item))
+                {
+                    return opts;
+                }
+
+                break;
+
+            case RVAL_TYPE_FNCALL:
+            {
+                bool excluded = false;
+
+                /* eval it: e.g. ifvarclass => not("a_class") */
+
+                Rval res = FnCallEvaluate(ctx, PromiseGetPolicy(pp), cp->rval.item, pp).rval;
+
+                /* Don't continue unless function was evaluated properly */
+                if (res.type != RVAL_TYPE_SCALAR)
+                {
+                    RvalDestroy(res);
+                    return opts;
+                }
+
+                excluded = !IsDefinedClass(ctx, res.item);
+
+                RvalDestroy(res);
+
+                if (excluded)
+                {
+                    return opts;
+                }
+            }
+            break;
+
+            default:
+                Log(LOG_LEVEL_ERR, "Invalid if/ifvarclass type '%c': should be string or function", cp->rval.type);
+                continue;
+            }
+
             continue;
         }
 

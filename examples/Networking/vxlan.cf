@@ -1,0 +1,82 @@
+
+bundle common my
+{
+  vars:
+
+      # LAN RouterIDs/Loopback addresses
+
+      "router_id[switch1]"    string => "172.10.1.1";
+      "router_id[switch1]"    string => "172.20.1.1";
+      "router_id[cflu-10004]" string => "172.30.1.1";
+      "router_id[switch4]"    string => "172.30.1.1";
+
+      # VxLAN tunnel needs this manual set-up - L2 shortcut, bootstrapped over L3
+
+      # Tunnel        Loopback                      MAC TABLE
+      "vxlan1000_mac[172.10.1.1]" slist => { "00:00:10:00:00:0A", "00:00:10:00:00:0B" };
+      "vxlan1000_mac[172.20.1.1]" slist => { "00:00:10:00:00:0C" };
+      "vxlan1000_mac[172.30.1.1]" slist => { "00:00:10:00:00:0D", "00:00:10:00:00:0E" };
+      "vxlan1000_mac[172.40.1.1]" slist => { "00:00:10:00:00:0F" };
+
+      # if AM associated with switch1, choose these MAC addresses
+
+      #     LAN IP  LOCATION                  LAN MAC BINDING
+      "arp[10.1.1.1][switch1]"    string => "00:00:10:00:00:0A";
+      "arp[10.1.1.2][switch1]"    string => "00:00:10:00:00:0B";
+      "arp[10.1.1.3][switch2]"    string => "00:00:10:00:00:0C";
+      "arp[10.1.1.4][cflu-10004]" string => "00:00:10:00:00:0D";
+      "arp[10.1.1.5][cflu-10004]" string => "00:00:10:00:00:0E";
+      "arp[10.1.1.6][switch4]"    string => "00:00:10:00:00:0F";
+}
+
+##############################################################
+
+bundle agent main()
+{
+  vars:
+      "ip_address" slist => getindices("my.arp");
+
+  interfaces:
+
+      "vtep1000"
+      ipv4_addresses => { "192.1.2.3/24" },
+      tunnel => vxlan("1000","$(my.router_id[$(sys.uqhost)])", "my.vxlan1000_mac");
+
+  addresses:
+
+      # Host ARP bindings
+
+      "$(ip_address)"
+      comment => "Teleport a static ARP binding for the VxLAN",
+      link_address => "$(my.arp[$(ip_address)][$(sys.uqhost)])",
+      interface => "eth0",
+      ifvarclass => isvariable("my.arp[$(ip_address)][$(sys.uqhost)]");
+
+  reports:
+
+      "Add ARP for $(ip_address) and $(my.arp[$(ip_address)][$(sys.uqhost)])"
+      ifvarclass => isvariable("my.arp[$(ip_address)][$(sys.uqhost)]");
+}
+
+##############################################################
+
+body tunnel vxlan(id,vtep_ip,alien_mac_table)
+{
+      tunnel_id => "$(id)";
+      tunnel_address => "$(vtep_ip)";
+      tunnel_multicast_group => "239.1.1.1";
+      tunnel_interface => "eth0";
+      tunnel_alien_addresses => "$(alien_mac_table)";
+}
+
+body link_state up
+{
+      state => "up";
+}
+
+##############################################################
+
+body common control
+{
+      bundlesequence => { "main" };
+}

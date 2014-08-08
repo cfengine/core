@@ -72,6 +72,8 @@ const char *const CF_AGENTTYPES[] =   /* see enum cfagenttype */
     CF_RUNC,
     CF_KEYGEN,
     CF_HUBC,
+    CF_FILEC,
+    CF_ROUTEC,
     "<notype>",
 };
 
@@ -150,10 +152,10 @@ const char *const OBS[CF_OBSERVABLES][2] =
     {"postgres_out", "PostgreSQL database client sessions (out)"},
     {"ipp_in", "Internet Printer Protocol (in)"},
     {"ipp_out", "Internet Printer Protocol (out)"},
-    {"spare", "unused"},
-    {"spare", "unused"},
-    {"spare", "unused"},
-    {"spare", "unused"},
+    {"ospf_in", "RAW IP socket for OSPF daemons (in)"},
+    {"ospf_out", "RAW IP socket for OSPF daemons (out)"},
+    {"bgp_in", "Incoming BGP sessions"},
+    {"bgp_out", "Outgoing BGP sessions"},
     {"spare", "unused"},
     {"spare", "unused"},
     {"spare", "unused"},

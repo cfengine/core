@@ -13,26 +13,42 @@ bundle agent databases
 {
   databases:
 
-      "cfengine_db/users"
+      "cfengine.db/brand_new"
 
-      database_operation => "create",
-      database_type => "sql",
-      database_columns => { 
-                            "username,varchar,50",
-                            "password,varchar,80",
-                            "email,varchar,20",
+      # These are the defaults
+      # database_type => "sql",
+      # database_operation => "create",
+
+      database_columns => {
+                            "mighty varchar(50)",
+                            "killer varchar(80)",
+                            "batman varchar(20)",
+                            "rating integer",
       },
-      database_server => local_mysql("root", "");
+      database_rows => {
+                         "mighty='mouse', killer='cheeses', batman => 'yes', rating=>'5' ",
+                         "mighty='gort', killer=>'raygun', batman => 'yes', rating=>'10' ",
+                         "mighty='fred', killer='queen', batman => 'no', rating=>'10' ",
+      },
+
+      database_server => sqlite;
 }
 
 
-body database_server local_mysql(username, password) 
+body database_server sqlite
+{
+      db_server_type => "sqlite";
+      db_embedded_directory_path => "/tmp";
+}
+
+body database_server local_mysql(username, password)
 {
       db_server_owner => "$(username)";
       db_server_password => "$(password)";
       db_server_host => "localhost";
       db_server_type => "mysql";
       db_server_connection_db => "mysql";
+
 }
 
 

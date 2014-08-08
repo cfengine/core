@@ -71,7 +71,7 @@ Seq *GetGlobalMountedFSList(void)
 
 PromiseResult FindAndVerifyStoragePromises(EvalContext *ctx, const Promise *pp)
 {
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
     return FindStoragePromiserObjects(ctx, pp);
 }
 

@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
             if (BACKGROUND)
             {
                 Log(LOG_LEVEL_VERBOSE,
-                      "Windows does not support starting processes in the background - starting in foreground");
+                    "Windows does not support starting processes in the background - starting in foreground");
                 BACKGROUND = false;
             }
 #else
@@ -256,7 +256,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'l':
-            LEGACY_OUTPUT = true;
+            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
             break;
 
         case 'f':
@@ -330,32 +330,32 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteVersion(w);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_SUCCESS);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteVersion(w);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_SUCCESS);
 
         case 'h':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_SUCCESS);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_SUCCESS);
 
         case 'M':
-            {
-                Writer *out = FileWriter(stdout);
-                ManPageWrite(out, "cf-runagent", time(NULL),
-                             CF_RUNAGENT_SHORT_DESCRIPTION,
-                             CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION,
-                             OPTIONS, HINTS,
-                             true);
-                FileWriterDetach(out);
-                exit(EXIT_SUCCESS);
-            }
+        {
+            Writer *out = FileWriter(stdout);
+            ManPageWrite(out, "cf-runagent", time(NULL),
+                         CF_RUNAGENT_SHORT_DESCRIPTION,
+                         CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION,
+                         OPTIONS, HINTS,
+                         true);
+            FileWriterDetach(out);
+            exit(EXIT_SUCCESS);
+        }
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
@@ -369,12 +369,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         default:
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
-                FileWriterDetach(w);
-            }
-            exit(EXIT_FAILURE);
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
+            FileWriterDetach(w);
+        }
+        exit(EXIT_FAILURE);
 
         }
     }
@@ -397,7 +397,7 @@ static void ThisAgentInit(void)
     if (strstr(REMOTE_AGENT_OPTIONS, "--file") || strstr(REMOTE_AGENT_OPTIONS, "-f"))
     {
         Log(LOG_LEVEL_ERR,
-              "The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.");
+            "The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.");
         exit(EXIT_FAILURE);
     }
 }
@@ -487,23 +487,15 @@ static int HailServer(EvalContext *ctx, char *host)
     if (BACKGROUND)
     {
         Log(LOG_LEVEL_INFO, "Hailing '%s' : %s, with options '%s' (parallel)", hostname, port,
-              REMOTE_AGENT_OPTIONS);
+            REMOTE_AGENT_OPTIONS);
     }
     else
 #endif
     {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_INFO, "...........................................................................");
-            Log(LOG_LEVEL_INFO, " * Hailing %s : %s, with options \"%s\" (serial)", hostname, port,
-                  REMOTE_AGENT_OPTIONS);
-            Log(LOG_LEVEL_INFO, "...........................................................................");
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "Hailing '%s' : %s, with options '%s' (serial)", hostname, port,
-                  REMOTE_AGENT_OPTIONS);
-        }
+        Log(LOG_LEVEL_INFO, "...........................................................................");
+        Log(LOG_LEVEL_INFO, " * Hailing %s : %s, with options \"%s\" (serial)", hostname, port,
+            REMOTE_AGENT_OPTIONS);
+        Log(LOG_LEVEL_INFO, "...........................................................................");
     }
 
     const char *s =
@@ -585,7 +577,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 if (BACKGROUND || INTERACTIVE)
                 {
                     Log(LOG_LEVEL_WARNING,
-                          "'background_children' setting from 'body runagent control' is overridden by command-line option.");
+                        "'background_children' setting from 'body runagent control' is overridden by command-line option.");
                 }
                 else
                 {

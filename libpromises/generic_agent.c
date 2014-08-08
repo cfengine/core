@@ -60,7 +60,7 @@
 #include <time_classes.h>
 #include <unix_iface.h>
 #include <constants.h>
-
+#include <ornaments.h>
 #include <cf-windows-functions.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
@@ -115,8 +115,12 @@ void MarkAsPolicyServer(EvalContext *ctx)
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
-    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
+    strcpy(VPREFIX, "");
 
+    Log(LOG_LEVEL_VERBOSE, " %s", NameVersion());
+    Banner("Initialization preamble");
+
+    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
     GenericAgentInitialize(ctx, config);
 
     time_t t = SetReferenceTime();
@@ -124,6 +128,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
+    LoggingSetAgentType(CF_AGENTTYPES[config->agent_type],
+                        config->agent_type == AGENT_TYPE_AGENT);
     EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");
 
     DetectEnvironment(ctx);
@@ -198,7 +204,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped");
+            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped - can't find policy_server.dat in %s", GetWorkDir());
             return;
         }
 
@@ -584,8 +590,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextClassPutHard(ctx, "any", "source=agent");
 
     GenericAgentAddEditionClasses(ctx);
-
-    strcpy(VPREFIX, GetConsolePrefix());
 
 /* Define trusted directories */
 
@@ -998,7 +1002,7 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
         }
         else if (sb.st_mtime > validated_at)
         {
-            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt", config->input_file);
+            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt (file is newer than previous)", config->input_file);
             return true;
         }
     }
@@ -1409,6 +1413,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
 
+    LoggingSetAgentType(CF_AGENTTYPES[agent_type], agent_type == AGENT_TYPE_AGENT);
     config->agent_type = agent_type;
 
     // TODO: system state, perhaps pull out as param

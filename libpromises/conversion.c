@@ -38,6 +38,24 @@ static int IsSpace(char *remainder);
 
 /***************************************************************/
 
+int GetBondingMode(char *s)
+{
+    char *opts[8] = { "balance-rr", "active-backup" ,"balance-xor", "broadcast", "802.3ad", "balance-tlb", "balance-alb", NULL};
+    int i = CF_NOINT;
+
+    for (i = 0; opts[i] != NULL; i++)
+    {
+        if (s && strcmp(s, opts[i]) == 0)
+        {
+            return i;
+        }
+    }
+
+    return CF_NOINT;
+}
+
+/***************************************************************/
+
 const char *MapAddress(const char *unspec_address)
 {                               /* Is the address a mapped ipv4 over ipv6 address */
 
@@ -97,8 +115,8 @@ InsertMatchType InsertMatchTypeFromString(const char *s)
 int SyslogPriorityFromString(const char *s)
 {
     static const char *const SYSLOG_PRIORITY_TYPES[] =
-    { "emergency", "alert", "critical", "error", "warning", "notice",
-      "info", "debug", NULL };
+        { "emergency", "alert", "critical", "error", "warning", "notice",
+          "info", "debug", NULL };
 
     return FindTypeInArray(SYSLOG_PRIORITY_TYPES, s, 3, 3);
 }
@@ -150,7 +168,7 @@ ShellType ShellTypeFromString(const char *string)
 
 DatabaseType DatabaseTypeFromString(const char *s)
 {
-    static const char *const DB_TYPES[] = { "mysql", "postgres", NULL };
+    static const char *const DB_TYPES[] = { "mysql", "postgres", "sqlite", NULL };
 
     return FindTypeInArray(DB_TYPES, s, DATABASE_TYPE_NONE, DATABASE_TYPE_NONE);
 }
@@ -173,8 +191,8 @@ PasswordFormat PasswordFormatFromString(const char *s)
 PackageAction PackageActionFromString(const char *s)
 {
     static const char *const PACKAGE_ACTION_TYPES[] =
-    { "add", "delete", "reinstall", "update", "addupdate", "patch",
-      "verify", NULL };
+        { "add", "delete", "reinstall", "update", "addupdate", "patch",
+          "verify", NULL };
 
     return FindTypeInArray(PACKAGE_ACTION_TYPES, s, PACKAGE_ACTION_NONE, PACKAGE_ACTION_NONE);
 }
@@ -290,7 +308,7 @@ FileLinkType FileLinkTypeFromString(const char *s)
 FileComparator FileComparatorFromString(const char *s)
 {
     static const char *const FILE_COMPARISON_TYPES[] =
-    { "atime", "mtime", "ctime", "digest", "hash", "binary", "exists", NULL };
+        { "atime", "mtime", "ctime", "digest", "hash", "binary", "exists", NULL };
 
     return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
@@ -411,7 +429,7 @@ long IntFromString(const char *s)
     if ((a == CF_NOINT) || (!IsSpace(remainder)))
     {
         Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%s'",
-              s, remainder);
+            s, remainder);
         if (strchr(s, '$'))
         {
             Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");

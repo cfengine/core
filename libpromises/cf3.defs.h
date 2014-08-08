@@ -39,6 +39,14 @@
 #include <cfnet.h>                       /* ProtocolVersion, CF_BUFSIZE etc */
 #include <misc_lib.h>                    /* xsnprintf, ProgrammingError etc */
 
+/*******************************************************************/
+/* Undef platform specific defines that pollute our namespace      */
+/*******************************************************************/
+
+#ifdef interface
+#undef interface
+#endif
+
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */
@@ -136,7 +144,6 @@ typedef enum
 #define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
-#define ATTR        20
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)
@@ -217,6 +224,10 @@ enum observables
     ob_postgresql_out,
     ob_ipp_in,
     ob_ipp_out,
+    ob_ospf_in,
+    ob_ospf_out,
+    ob_bgp_in,
+    ob_bgp_out,
     ob_spare
 };
 
@@ -366,6 +377,8 @@ typedef enum
 #define CF_RUNC     "runagent"
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
+#define CF_FILEC    "file"
+#define CF_ROUTEC    "routing_services"
 
 typedef enum
 {
@@ -377,6 +390,8 @@ typedef enum
     AGENT_TYPE_RUNAGENT,
     AGENT_TYPE_KEYGEN,
     AGENT_TYPE_HUB,
+    AGENT_TYPE_FILE,
+    AGENT_TYPE_ROUTING,
     AGENT_TYPE_NOAGENT
 } AgentType;
 
@@ -477,6 +492,32 @@ typedef enum
     EDIT_ORDER_AFTER
 } EditOrder;
 
+
+/*************************************************************************/
+
+typedef enum
+{
+    TYPE_SEQUENCE_META,
+    TYPE_SEQUENCE_VARS,
+    TYPE_SEQUENCE_DEFAULTS,
+    TYPE_SEQUENCE_CONTEXTS,
+    TYPE_SEQUENCE_INTERFACES,
+    TYPE_SEQUENCE_NETWORKS,
+    TYPE_SEQUENCE_ADDRESSES,
+    TYPE_SEQUENCE_USERS,
+    TYPE_SEQUENCE_FILES,
+    TYPE_SEQUENCE_PACKAGES,
+    TYPE_SEQUENCE_ENVIRONMENTS,
+    TYPE_SEQUENCE_METHODS,
+    TYPE_SEQUENCE_PROCESSES,
+    TYPE_SEQUENCE_SERVICES,
+    TYPE_SEQUENCE_COMMANDS,
+    TYPE_SEQUENCE_STORAGE,
+    TYPE_SEQUENCE_DATABASES,
+    TYPE_SEQUENCE_REPORTS,
+    TYPE_SEQUENCE_NONE
+} TypeSequence;
+
 /*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
 /*************************************************************************/
@@ -502,9 +543,9 @@ typedef enum
 #define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+"
 #define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].:]+"
 #define CF_USERRANGE   "[a-zA-Z0-9_$.-]+"
-#define CF_IPRANGE     "[a-zA-Z0-9_$(){}.:-]+"
+#define CF_IPRANGE     "[a-zA-Z0-9_$(){}/.:-]+"
 #define CF_FNCALLRANGE "[a-zA-Z0-9_(){}.$@]+"
-#define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
+#define CF_NAKEDLRANGE "@[(][a-zA-Z0-9_$(){}\\[\\].:]+[)]"
 #define CF_ANYSTRING   ".*"
 
 #define CF_KEYSTRING   "^(SHA|MD5)=[0123456789abcdef]*$"
@@ -898,6 +939,7 @@ typedef enum
 {
     DATABASE_TYPE_MYSQL,
     DATABASE_TYPE_POSTGRES,
+    DATABASE_TYPE_SQLITE,
     DATABASE_TYPE_NONE
 } DatabaseType;
 
@@ -930,6 +972,22 @@ struct PackageItem_
     PackageItem *next;
 };
 
+/*************************************************************************/
+
+#define DOCKER_COMMAND "/usr/bin/docker"
+
+typedef struct DockerPS_ DockerPS;
+
+struct DockerPS_
+{
+    char *id;
+    char *image;
+    char *name;
+    char *ip;
+    DockerPS *next;
+};
+
+/*************************************************************************/
 
 typedef struct
 {
@@ -1279,6 +1337,7 @@ typedef struct
     char *db_server_password;
     char *db_server_host;
     char *db_connect_db;
+    char *db_directory;
     DatabaseType db_server_type;
     char *server;
     char *type;
@@ -1342,6 +1401,75 @@ typedef struct
 
 /*************************************************************************/
 
+typedef struct
+{
+    bool delete;
+
+    // XOR
+
+    char *untagged_vlan;
+    Rlist *tagged_vlans;
+    Rlist *bridge_interfaces;
+    Rlist *bond_interfaces;
+    Rlist *v6_addresses;
+    Rlist *v4_addresses;
+    char *state;
+    int mtu;
+    int speed;
+    int purge;
+    char *duplex;
+    char *spanning;
+    char *manager;
+    int bonding;
+    bool autoneg;
+    int min_bonding;
+    // ospf
+    int ospf_hello_interval;
+    int ospf_priority;
+    char *ospf_link_type;
+    char *ospf_authentication_digest;
+    bool ospf_passive_interface;
+    bool ospf_abr_summarization; // Not "no-summary"
+    char ospf_area_type; // stub, nssa etc
+    int ospf_area;
+    int tunnel_id;
+    char *tunnel_loopback;
+    char *tunnel_multicast_group;
+    char *tunnel_interface;
+    char *tunnel_alien_arp;
+    // bgp
+    int bgp_remote_as;
+    char *bgp_neighbour;
+    bool bgp_reflector; // i.e. we are the server
+    int bgp_ttl_security;
+    int bgp_advert_interval;
+    bool bgp_next_hop_self;
+    Rlist *bgp_families;
+    int bgp_maximum_paths;
+    char *bgp_ipv6_neighbor_discovery_route_advertisement;
+
+} Interfaces;
+
+/*************************************************************************/
+
+typedef struct
+{
+    char *gateway_interface;
+    char *gateway_ip;
+    bool delete_route;
+} Networks;
+
+/*************************************************************************/
+
+typedef struct
+{
+    char *link_address;
+    char *interface;
+    bool delete_link;
+} Arp;
+
+/*************************************************************************/
+
 typedef enum
 {
     ENVIRONMENT_STATE_CREATE,
@@ -1357,7 +1485,8 @@ typedef struct
     int cpus;
     int memory;
     int disk;
-    char *baseline;
+    char *image_path;
+    char *image_name;
     char *spec;
     Rlist *addresses;
     char *name;
@@ -1401,6 +1530,9 @@ typedef struct
 
 typedef struct
 {
+    Interfaces interface;
+    Arp arp;
+    Networks networks;
     FileSelect select;
     FilePerms perms;
     FileCopy copy;
@@ -1465,6 +1597,18 @@ typedef struct
     int havevolume;
     int havebundle;
     int havepackages;
+    int havebridge;
+    int havebond;
+    int haveipv4;
+    int haveipv6;
+    int haveuvlan;
+    int havetvlan;
+    int haveroutedto;
+    int haveadvertisedby;
+    int havebalance;
+    int havelinkstate;
+    int havelinkservices;
+    int havetunnel;
 
     /* editline */
 
@@ -1513,4 +1657,3 @@ extern const ConstraintSyntax CFEX_CONTROLBODY[];
 typedef struct ServerConnectionState_ ServerConnectionState;
 
 #endif
-

@@ -39,6 +39,7 @@
 #include <promises.h>
 #include <item_lib.h>
 #include <files_hashes.h>
+#include <files_names.h>
 #include <audit.h>
 #include <logging.h>
 #include <expand.h>
@@ -80,11 +81,23 @@ static void BodyDestroy(Body *body);
 static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp);
 static bool PromiseCheck(const Promise *pp, Seq *errors);
 
+/*************************************************************************/
+
+const Rval DefaultBundleConstraint(const Promise *pp, char *promisetype)
+{
+    static char name[CF_BUFSIZE];
+    snprintf(name, CF_BUFSIZE, "%s_%s", promisetype, CanonifyName(pp->promiser));
+    return (Rval) { name, RVAL_TYPE_SCALAR };
+}
+
+/*************************************************************************/
 
 const char *NamespaceDefault(void)
 {
     return "default";
 }
+
+/*************************************************************************/
 
 Policy *PolicyNew(void)
 {
@@ -97,10 +110,14 @@ Policy *PolicyNew(void)
     return policy;
 }
 
+/*************************************************************************/
+
 int PolicyCompare(const void *a, const void *b)
 {
     return a - b;
 }
+
+/*************************************************************************/
 
 void PolicyDestroy(Policy *policy)
 {
@@ -114,6 +131,8 @@ void PolicyDestroy(Policy *policy)
     }
 }
 
+/*************************************************************************/
+
 static unsigned ConstraintHash(const Constraint *cp, unsigned seed, unsigned max)
 {
     unsigned hash = seed;
@@ -124,6 +143,8 @@ static unsigned ConstraintHash(const Constraint *cp, unsigned seed, unsigned max
 
     return hash;
 }
+
+/*************************************************************************/
 
 static unsigned BodyHash(const Body *body, unsigned seed, unsigned max)
 {
@@ -136,6 +157,7 @@ static unsigned BodyHash(const Body *body, unsigned seed, unsigned max)
 
     return hash;
 }
+/*************************************************************************/
 
 static unsigned PromiseHash(const Promise *pp, unsigned seed, unsigned max)
 {
@@ -153,6 +175,8 @@ static unsigned PromiseHash(const Promise *pp, unsigned seed, unsigned max)
     return hash;
 }
 
+/*************************************************************************/
+
 static unsigned PromiseTypeHash(const PromiseType *pt, unsigned seed, unsigned max)
 {
     unsigned hash = seed;
@@ -166,6 +190,8 @@ static unsigned PromiseTypeHash(const PromiseType *pt, unsigned seed, unsigned m
 
     return hash;
 }
+
+/*************************************************************************/
 
 static unsigned BundleHash(const Bundle *bundle, unsigned seed, unsigned max)
 {
@@ -184,6 +210,8 @@ static unsigned BundleHash(const Bundle *bundle, unsigned seed, unsigned max)
 
     return hash;
 }
+
+/*************************************************************************/
 
 unsigned PolicyHash(const Policy *policy)
 {
@@ -204,6 +232,8 @@ unsigned PolicyHash(const Policy *policy)
 
     return hash;
 }
+
+/*************************************************************************/
 
 StringSet *PolicySourceFiles(const Policy *policy)
 {
@@ -230,6 +260,8 @@ StringSet *PolicySourceFiles(const Policy *policy)
     return files;
 }
 
+/*************************************************************************/
+
 static char *StripNamespace(const char *full_symbol)
 {
     char *sep = strchr(full_symbol, CF_NS);
@@ -242,6 +274,8 @@ static char *StripNamespace(const char *full_symbol)
         return xstrdup(full_symbol);
     }
 }
+
+/*************************************************************************/
 
 Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name)
 {
@@ -270,6 +304,8 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
     return NULL;
 }
 
+/*************************************************************************/
+
 Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, const char *name)
 {
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -297,10 +333,14 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
     return NULL;
 }
 
+/*************************************************************************/
+
 bool PolicyIsRunnable(const Policy *policy)
 {
     return PolicyGetBody(policy, NULL, "common", "control") != NULL;
 }
+
+/*************************************************************************/
 
 Policy *PolicyMerge(Policy *a, Policy *b)
 {
@@ -336,6 +376,8 @@ Policy *PolicyMerge(Policy *a, Policy *b)
 
     return result;
 }
+
+/*************************************************************************/
 
 const char *ConstraintGetNamespace(const Constraint *cp)
 {

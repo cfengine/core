@@ -57,14 +57,21 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetMethodAttributes(ctx, pp);
 
-    const Constraint *cp = PromiseGetConstraint(pp, "usebundle");
-    if (!cp)
+    const Constraint *cp;
+    Rval method_name;
+
+    if ((cp = PromiseGetConstraint(pp, "usebundle")))
     {
-        Log(LOG_LEVEL_VERBOSE, "Promise had no attribute 'usebundle', cannot call method");
-        return PROMISE_RESULT_FAIL;
+        method_name = cp->rval;
+    }
+    else
+    {
+        method_name = DefaultBundleConstraint(pp, "method");
     }
 
-    PromiseResult result = VerifyMethod(ctx, cp->rval, a, pp);
+    Log(LOG_LEVEL_VERBOSE, "Looking for a method called %s", (char *)method_name.item);
+
+    PromiseResult result = VerifyMethod(ctx, method_name, a, pp);
 
     return result;
 }

@@ -931,6 +931,21 @@ struct PackageItem_
 };
 
 
+#define DOCKER_COMMAND "/usr/bin/docker"
+
+typedef struct DockerPS_ DockerPS;
+
+struct DockerPS_
+{
+    char *id;
+    char *image;
+    char *name;
+    char *ip;
+    DockerPS *next;
+};
+
+/*************************************************************************/
+
 typedef struct
 {
     unsigned int expires;
@@ -1357,7 +1372,8 @@ typedef struct
     int cpus;
     int memory;
     int disk;
-    char *baseline;
+    char *image_path;
+    char *image_name;
     char *spec;
     Rlist *addresses;
     char *name;

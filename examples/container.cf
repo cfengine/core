@@ -1,0 +1,152 @@
+#################################
+#
+# Orchestration of containers
+#
+#################################
+
+bundle common my
+{
+  vars:
+
+      "parent_address" string => "172.17.42.1";
+      "my_name"        string => "$(sys.uqhost)";
+
+      "buds" slist => {
+                        "bud_container_1",
+                        "bud_container_2",
+                        "bud_container_3"
+      };
+  classes:
+
+      "bud_containers" or => { @(buds) };
+}
+
+#################################################################################
+
+bundle agent main
+{
+  methods:
+
+    parent::
+
+      "plant continuous delivery seeds" comment => "The files where people make changes";
+      "pick the flowers"                comment => "Reap the harvest";
+      "package for delivery"            comment => "Tie it with a bow";
+
+    bud_containers::
+
+      "feed from the parent" comment => "pick up files and build something";
+
+  services:
+    parent::
+      "budding children" comment => "Spawn some fledgings";
+}
+
+###################################################################################
+# Methods
+###################################################################################
+
+bundle agent method_plant_continuous_delivery_seeds
+{
+  files:
+
+      # Make one task for each bud
+
+      "/tmp/feeds/$(my.buds)_feed.txt"
+      create => "true",
+      edit_line => append_if_no_line("This is for $(my.buds) from $(sys.uqhost)");
+}
+
+###################################################################################
+
+bundle agent method_pick_the_flowers
+{
+  files:
+
+      "/tmp/assembly/from_$(my.buds)"
+      comment => "Pick up the latest on the pipeline",
+      copy_from => secure_cp("/tmp/feeds/$(my.buds)_feed.txt","$(docker_guest_ip[$(my.buds)])");
+}
+
+###################################################################################
+
+bundle agent method_package_for_delivery
+{
+  commands:
+
+    repackage::
+
+      "/usr/bin/tar zcf package_ready_$(sys.cdate).tgz /tmp/assembly"
+
+      contain => in_dir("/tmp/assembly"),
+
+      if => makerule("package_ready_$(sys.cdate).tgz", "/tmp/assembly");
+
+}
+
+###################################################################################
+
+bundle agent service_budding_children(state)
+{
+  guest_environments:
+
+    parent::
+
+      "$(my.buds)"
+
+      guest_details => stem_cell,
+      guest_state   => "create";
+}
+
+####################################################################################
+
+body guest_details stem_cell
+{
+      guest_type => "docker";
+      guest_image_name => "cf-stem-cell";
+}
+
+###################################################################################
+# Containers
+###################################################################################
+
+bundle agent method_feed_from_the_parent
+{
+  services:
+
+      "ssh" comment => "So we can log in and inspect the containers";
+
+  files:
+
+      "/tmp/received"
+      comment => "Pick up the latest on the pipeline",
+      copy_from => secure_cp("$(my_name)_feed.txt","$(my.parent_address)");
+
+      "/tmp/result_for_pickup"
+      comment => "Do my part and deliver the result for pickup",
+      edit_line => append_if_no_line("A postcard from $(sys.ip_address) - Thanks, with love $(my.name)");
+}
+
+####################################################################################
+# Misc
+####################################################################################
+
+body common control
+{
+      inputs => {"cfengine_stdlib.cf"};
+}
+
+bundle server access_control
+{
+  access:
+
+      "/tmp"
+      admit => { ".*" };
+}
+
+body server control
+{
+      allowconnects         => { ".*" };
+      allowallconnects      => { ".*" };
+      trustkeysfrom         => { ".*" };
+}

@@ -1,0 +1,26 @@
+
+bundle agent main()
+{
+  interfaces:
+
+      "swp48"
+      tagged_vlans => { "200", "201", "202" },
+      untagged_vlan => "1",
+      link_state => up,
+      comment => "Numerical VLAN";
+
+}
+
+##
+
+body link_state up
+{
+      state => "up";
+}
+
+##
+
+body common control
+{
+      bundlesequence => { "main" };
+}

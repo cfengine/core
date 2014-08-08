@@ -38,6 +38,24 @@ static int IsSpace(char *remainder);
 
 /***************************************************************/
 
+int GetBondingMode(char *s)
+{
+    char *opts[8] = { "balance-rr", "active-backup" ,"balance-xor", "broadcast", "802.3ad", "balance-tlb", "balance-alb", NULL};
+    int i = CF_NOINT;
+
+    for (i = 0; opts[i] != NULL; i++)
+    {
+        if (s && strcmp(s, opts[i]) == 0)
+        {
+            return i;
+        }
+    }
+
+    return CF_NOINT;
+}
+
+/***************************************************************/
+
 const char *MapAddress(const char *unspec_address)
 {                               /* Is the address a mapped ipv4 over ipv6 address */
 

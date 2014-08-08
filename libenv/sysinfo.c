@@ -131,13 +131,16 @@
 
 #endif
 
-
 /* Fallback uptime calculation: Parse the "uptime" command in case the
  * platform-specific way fails or returns absurd number. */
 static time_t GetBootTimeFromUptimeCommand(time_t now);
 
-
 #endif  /* ifndef __MINGW32__ */
+
+#define LSB_RELEASE_FILENAME "/etc/lsb-release"
+#define DEBIAN_VERSION_FILENAME "/etc/debian_version"
+#define DEBIAN_ISSUE_FILENAME "/etc/issue"
+
 
 /*****************************************************/
 
@@ -151,6 +154,7 @@ static void Linux_Oracle_Version(EvalContext *ctx);
 static int Linux_Suse_Version(EvalContext *ctx);
 static int Linux_Slackware_Version(EvalContext *ctx, char *filename);
 static int Linux_Debian_Version(EvalContext *ctx);
+static int Linux_Misc_Version(EvalContext *ctx);
 static int Linux_Mandrake_Version(EvalContext *ctx);
 static int Linux_Mandriva_Version(EvalContext *ctx);
 static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *relstring, char *vendor);
@@ -812,7 +816,6 @@ static void GetNameInfo3(EvalContext *ctx)
 static void Get3Environment(EvalContext *ctx)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
-    FILE *fp;
     struct stat statbuf;
     time_t now = time(NULL);
 
@@ -844,7 +847,8 @@ static void Get3Environment(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
 
-    if ((fp = fopen(env, "r")) == NULL)
+    FILE *fp = fopen(env, "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "\nUnable to detect environment from cf-monitord");
         return;
@@ -1019,9 +1023,14 @@ static void OSClasses(EvalContext *ctx)
         Linux_Slackware_Version(ctx, SLACKWARE_ANCIENT_VERSION_FILENAME);
     }
 
-    if (stat("/etc/debian_version", &statbuf) != -1)
+    if (stat(DEBIAN_VERSION_FILENAME, &statbuf) != -1)
     {
         Linux_Debian_Version(ctx);
+    }
+
+    if (stat(LSB_RELEASE_FILENAME, &statbuf) != -1)
+    {
+        Linux_Misc_Version(ctx);
     }
 
     if (stat("/usr/bin/aptitude", &statbuf) != -1)
@@ -1965,10 +1974,62 @@ static int LinuxDebianSanitizeIssue(char *buffer)
 }
 
 /******************************************************************/
+
+static int Linux_Misc_Version(EvalContext *ctx)
+{
+    char flavour[CF_MAXVARSIZE];
+    char version[CF_MAXVARSIZE];
+    char os[CF_MAXVARSIZE];
+    char buffer[CF_BUFSIZE];
+
+    *os = '\0';
+    *version = '\0';
+
+    FILE *fp = fopen(LSB_RELEASE_FILENAME, "r");
+    if (fp != NULL)
+    {
+        while (!feof(fp))
+        {
+            if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+            {
+                if (ferror(fp))
+                {
+                    break;
+                }
+                continue;
+            }
+
+            if (strstr(buffer, "Cumulus"))
+            {
+                EvalContextClassPutHard(ctx, "cumulus", "inventory,attribute_name=none,source=agent");
+                strcpy(os, "cumulus");
+            }
+
+            char *sp = strstr(buffer, "DISTRIB_RELEASE=");
+            if (sp)
+            {
+                version[0] = '\0';
+                sscanf(sp + strlen("DISTRIB_RELEASE="), "%[^\n]", version);
+                CanonifyNameInPlace(version);
+            }
+        }
+        fclose(fp);
+    }
+
+    if (*os && *version)
+    {
+        snprintf(flavour, CF_MAXVARSIZE, "%s_%s", os, version);
+        SetFlavour(ctx, flavour);
+        return 1;
+    }
+
+    return 0;
+}
+
+/******************************************************************/
+
 static int Linux_Debian_Version(EvalContext *ctx)
 {
-#define DEBIAN_VERSION_FILENAME "/etc/debian_version"
-#define DEBIAN_ISSUE_FILENAME "/etc/issue"
     int major = -1;
     int release = -1;
     int result;
@@ -2291,7 +2352,6 @@ static int VM_Version(EvalContext *ctx)
 
 static int Xen_Domain(EvalContext *ctx)
 {
-    FILE *fp;
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.");
@@ -2299,7 +2359,8 @@ static int Xen_Domain(EvalContext *ctx)
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
-    if ((fp = fopen("/proc/xen/capabilities", "r")) != NULL)
+    FILE *fp = fopen("/proc/xen/capabilities", "r");
+    if (fp != NULL)
     {
         size_t buffer_size = CF_BUFSIZE;
         char *buffer = xmalloc(buffer_size);
@@ -2740,6 +2801,8 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     Log(LOG_LEVEL_VERBOSE, "Reading boot time from uptime command successful.");
     return(uptime ? (now - uptime) : -1);
 }
+
+/*****************************************************************************/
 
 void DetectEnvironment(EvalContext *ctx)
 {

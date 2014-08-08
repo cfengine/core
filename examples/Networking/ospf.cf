@@ -1,0 +1,68 @@
+bundle agent main()
+{
+  vars:
+
+      "logfile" string => "/var/run/log/quagga/ospfd.log";
+
+  interfaces:
+
+      "lo"
+      comment => "Tradition holds that the router is the loopback",
+      ipv4_addresses => { "10.10.10.10/24" };
+
+      "eth0"
+      ipv4_addresses => { "172.16.2.5/24" },
+      link_services =>  ospf_area("1", "stub");
+
+      "eth1"
+      ipv4_addresses => { "172.16.1.5/24" },
+      link_services =>  ospf_area("0", "normal");
+
+  files:
+
+      "$(logfile)"
+      create => "true";
+
+  reports:
+
+      ospf_area_0::  "I am in area 0";
+      ospf_area_1::  "I am in area 1";
+      ospf_area_2::  "I am in area 2";
+}
+
+################# TEMPLATES #######################
+
+body link_services ospf_area(area, stub)
+{
+      ospf_area => "$(area)";
+      ospf_authentication_digest => "ABCDEFGHIJK";
+      ospf_area_type => "$(stub)";                   # Dinesh: This is an area-specific command
+      ospf_priority => "21";
+      ospf_passive_interface => "false";
+}
+
+################# NODE SERVICE SETTINGS #######################
+
+body routing_services control
+{
+    any::
+      routing_service_log_file => "$(logfile)";
+      routing_service_password => "x1234";
+
+      ospf_log_adjacency_changes => "detail";
+      ospf_router_id => "$(sys.ipv4[lo])";
+      ospf_log_timestamp_precision => "4";
+      ospf_redistribute => { "kernel", "static" };
+      ospf_redistribute_metric_type => "2";
+      ospf_redistribute_kernel_metric => "1";
+      ospf_redistribute_connected_metric => "0";
+      ospf_redistribute_static_metric => "1";
+      ospf_redistribute_bgp_metric => "2";
+}
+
+################# BUREAUCRACY #######################
+
+body common control
+{
+      bundlesequence => { "main" };
+}

@@ -37,6 +37,8 @@
 #include <verify_users.h>
 #include <verify_services.h>
 #include <verify_storage.h>
+#include <verify_networks.h>
+#include <verify_interfaces.h>
 #include <verify_files.h>
 #include <verify_files_utils.h>
 #include <verify_vars.h>
@@ -74,8 +76,10 @@
 #include <misc_lib.h>
 #include <buffer.h>
 #include <loading.h>
+#include <../libenv/unix_iface.h>
 
 #include <mod_common.h>
+#include <routing_services.h>
 
 typedef enum
 {
@@ -84,6 +88,8 @@ typedef enum
     TYPE_SEQUENCE_DEFAULTS,
     TYPE_SEQUENCE_CONTEXTS,
     TYPE_SEQUENCE_INTERFACES,
+    TYPE_SEQUENCE_NETWORKS,
+    TYPE_SEQUENCE_ADDRESSES,
     TYPE_SEQUENCE_USERS,
     TYPE_SEQUENCE_FILES,
     TYPE_SEQUENCE_PACKAGES,
@@ -129,6 +135,8 @@ static const char *const AGENT_TYPESEQUENCE[] =
     "defaults",
     "classes",                  /* Maelstrom order 2 */
     "interfaces",
+    "routes",
+    "addresses",
     "users",
     "files",
     "packages",
@@ -155,7 +163,7 @@ static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(const Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
-static int NewTypeContext(TypeSequence type);
+static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
@@ -1239,7 +1247,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
             BannerPromiseType(bp->name, sp->name, pass);
 
-            if (!NewTypeContext(type))
+            if (!NewTypeContext(bp->parent_policy, ctx,type))
             {
                 continue;
             }
@@ -1345,8 +1353,6 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
 
 /*********************************************************************/
 
-/**************************************************************/
-
 static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 {
     char *regex = PromiseGetConstraintAsRval(pp, "if_match_regex", RVAL_TYPE_SCALAR);
@@ -1415,7 +1421,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
 {
     assert(param == NULL);
     struct timespec start = BeginMeasure();
-
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
@@ -1429,6 +1434,18 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     else if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
         result = VerifyClassPromise(ctx, pp, NULL);
+    }
+    else if (strcmp("interfaces", pp->parent_promise_type->name) == 0)
+    {
+        result = VerifyInterfacePromise(ctx, pp);
+    }
+    else if (strcmp("routes", pp->parent_promise_type->name) == 0)
+    {
+        result = VerifyRoutePromise(ctx, pp);
+    }
+    else if (strcmp("addresses", pp->parent_promise_type->name) == 0)
+    {
+        result = VerifyArpPromise(ctx, pp);
     }
     else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
@@ -1498,7 +1515,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(TypeSequence type)
+static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence type)
 {
 // get maxconnections
 
@@ -1528,6 +1545,18 @@ static int NewTypeContext(TypeSequence type)
             SeqClear(GetGlobalMountedFSList());
         }
 #endif /* !__MINGW32__ */
+        break;
+
+    case TYPE_SEQUENCE_INTERFACES:
+
+        InitializeRoutingServices(policy, ctx);
+        ROUTING_ACTIVE = NewRoutingState();
+
+        if (QueryRoutingServiceState(ctx, ROUTING_ACTIVE))
+        {
+            KeepOSPFLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
+            KeepBGPLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
+        }
         break;
 
     default:
@@ -1561,6 +1590,12 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
     case TYPE_SEQUENCE_PACKAGES:
         ExecuteScheduledPackages(ctx);
         CleanScheduledPackages();
+        break;
+
+    case TYPE_SEQUENCE_INTERFACES:
+        WriteNativeInterfacesFile();
+        DeleteRoutingState(ROUTING_ACTIVE);
+        GetInterfacesInfo(ctx);
         break;
 
     default:

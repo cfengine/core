@@ -1,0 +1,34 @@
+
+bundle agent main()
+{
+  vars:
+
+      "int_group1" slist => {
+                              "swp10",
+                              "swp11",
+                              "swp12",
+                              expandrange("swp[13-15]", 1)
+      };
+
+  interfaces:
+
+      "$(int_group)"
+
+      tagged_vlans => { "100", "145" },
+      untagged_vlan => "1",
+      link_state => up;
+
+}
+##
+
+body link_state up
+{
+      state => "up";
+}
+
+##
+
+body common control
+{
+      bundlesequence => { "main" };
+}

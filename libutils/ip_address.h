@@ -34,6 +34,25 @@ typedef enum
     IP_ADDRESS_TYPE_IPV6
 } IPAddressVersion;
 
+struct IPV4Address
+{
+    uint8_t octets[4];
+    uint32_t mask;
+    uint16_t port;
+};
+struct IPV6Address
+{
+    uint16_t sixteen[8];
+    uint16_t port;
+    uint32_t mask;
+};
+
+struct IPAddress
+{
+    void *address;
+    int type;
+};
+
 /**
   @brief Creates a new IPAddress object from a string.
   @param source Buffer containing the string representation of the ip address.
@@ -64,11 +83,17 @@ Buffer *IPAddressGetAddress(IPAddress *address);
   */
 int IPAddressGetPort(IPAddress *address);
 /**
-  @brief Compares two IP addresses.
-  @param a IP address of the first object.
-  @param b IP address of the second object.
-  @return 1 if both addresses are equal, 0 if they are not and -1 in case of error.
-  */
+   @brief Recovers the network mask (if specified).
+   @param address IPAddress object.
+   @return The network mask (if specified).
+*/
+int IPAddressGetMask(IPAddress *address);
+/**
+   @brief Compares two IP addresses.
+   @param a IP address of the first object.
+   @param b IP address of the second object.
+   @return 1 if both addresses are equal, 0 if they are not and -1 in case of error.
+*/
 int IPAddressIsEqual(IPAddress *a, IPAddress *b);
 /**
   @brief Checks if a given string is a properly formed IP Address.
@@ -84,5 +109,21 @@ bool IPAddressIsIPAddress(Buffer *source, IPAddress **address);
   @return 1 if a < b, and 0 otherwise.
   */
 int IPAddressCompareLess(IPAddress *a, IPAddress *b);
+
+/**
+   @brief Compares two CIDR addresses for equality.
+   @param a CIDR address of the first object.
+   @param b CIDR address of the second object.
+   @return true if address and mask are equal
+*/
+
+bool CompareCIDR(char *cidr1, char *cidr2);
+
+/**
+   @brief Compares a CIDR with a list of CIDR addresses for equality.
+   @param a Rlist of CIDR address of the first object.
+   @param b IP address of the second object.
+   @return true if address and mask are equal
+*/
 
 #endif // CFENGINE_IP_ADDRESS_H

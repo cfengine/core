@@ -28,20 +28,7 @@
 #include <ctype.h>
 #include <ip_address.h>
 #include <alloc.h>
-
-struct IPV4Address {
-    uint8_t octets[4];
-    uint16_t port;
-};
-struct IPV6Address {
-    uint16_t sixteen[8];
-    uint16_t port;
-};
-
-struct IPAddress {
-    void *address;
-    int type;
-};
+#include <string_lib.h>
 
 #define Char2Dec(o, c) \
     (o * 10) + c - '0'
@@ -75,7 +62,7 @@ static int Char2Hex(int beginning, char increment)
  * This function parses the source pointer and checks if it conforms to the
  * RFC 791.
  *
- * xxx.xxx.xxx.xxx[:ppppp]
+ * xxx.xxx.xxx.xxx[:ppppp||/mm]
  *
  * If address is not NULL and the address is IPV4, then the result is copied there.
  */
@@ -87,9 +74,11 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
     int period_counter = 0;
     int port_counter = 0;
     int char_counter = 0;
+    int mask = 0;
     bool is_period = false;
     bool is_digit = false;
     bool is_port = false;
+    bool is_mask = false;
     bool has_digit = false;
 
     /*
@@ -103,6 +92,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             address->octets[i] = 0;
         }
         address->port = 0;
+        address->mask = 32;
     }
 
     /*
@@ -113,16 +103,17 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
      * States 0 to 3 are purely address parsing. State 5
      * might never be reached if there is no port.
      * State 4 is the final state if everything went ok.
-     * State 6 is reached in case of error.
-     *
-     * 0    1    2    3
-     * |d   |d   |d   |d
-     * | p  | p  | p  | done
-     * 0 -> 1 -> 2 -> 3 ->  4
-     * |    |    |    |     |
-     * 7 <--+----+----+     |
-     *     error      | ':' |
-     *               _5-----+
+     * State 6 is reached in case of a network mask. Notice that is either 6 or 5 and not one after the other.
+     * State 7 is reached in case of error.
+     *                        '/'
+     * 0    1    2    3   ------------ 6
+     * |d   |d   |d   |d /           / |\ d
+     * | p  | p  | p  | / done      /  ---
+     * 0 -> 1 -> 2 -> 3 ------> 4 <-
+     * |    |    |    |         |
+     * 7 <--+----+----+         |
+     *     error      | ':'     |
+     *               _5---------+
      *             d \| done
      */
     int state = 0;
@@ -135,6 +126,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
         is_digit = isdigit(*p);
         is_period = (*p == '.') ? 1 : 0;
         is_port = (*p == ':') ? 1 : 0;
+        is_mask = (*p == '/') ? 1 : 0;
         /*
          * Update the corresponding flags.
          */
@@ -182,6 +174,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             /*
              * This case is different from the previous ones. A period here means error.
              * xxx.xxx.xxx.XXX[:nnnnn]
+             * We can also have a mask here to indicate the "length" of the network prefix.
              */
             if (is_digit)
             {
@@ -195,6 +188,16 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
                     address->octets[state] = octet;
                 }
                 state = 5;
+                state_change = true;
+            }
+            else if (is_mask)
+            {
+                if (address)
+                {
+                    address->octets[state] = octet;
+                }
+                mask = 0;
+                state = 6;
                 state_change = true;
             }
             else
@@ -217,6 +220,16 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             }
             break;
         case 6:
+            if (is_digit)
+            {
+                mask = Char2Dec(mask, *p);
+            }
+            else
+            {
+                state = 7;
+                state_change = true;
+            }
+            break;
         default:
             return -1;
             break;
@@ -246,6 +259,10 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
         {
             return -1;
         }
+        if (mask > 32)
+        {
+            return -1;
+        }
         if (state_change)
         {
             /*
@@ -261,11 +278,13 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             char_counter = 0;
             octet = 0;
             port = 0;
+            mask = 0;
             period_counter = 0;
             port_counter = 0;
             is_period = false;
             is_digit = false;
             is_port = false;
+            is_mask = false;
             has_digit = false;
             state_change = false;
         }
@@ -314,11 +333,23 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
         }
     }
     /*
-     * If state is 6 then there was an error.
+     * If state is 6 then we need to copy the mask. Notice that the mask is initialized to 32
+     * and needs to be filled by the parser if a mask is found.
      */
     if (state == 6)
     {
-        return -1;
+        if (char_counter == 0)
+        {
+            return -1;
+        }
+        if (mask <= 0)
+        {
+            return -1;
+        }
+        if (address)
+        {
+            address->mask = mask;
+        }
     }
     return 0;
 }
@@ -348,9 +379,10 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
      * _h      _h      _h      _h      _h      _h      _h      _h              _d
      * |/ ':'  |/ ':'  |/ ':'  |/ ':'  |/ ':'  |/ ':'  |/ ':'  |/ ']'    ':'   |/ done
      * 0------>1------>2------>3------>4------>5------>6------>7------>8------>9------>11
-     * |\                                                      | done  |
-     * -'['                                                    9<------+
-     *
+     * |\                                                 '/' /| done  |\ '/'
+     * -'['                                             10---- 9<------+ ----10
+     *                                             'm' /|\-----+------------/ |\ 'm'
+     *                                                ---                     ---
      * This is a simplified state machine since I assume that we keep the square brackets inside
      * the same state as hexadecimal digits, which in practice is not true.
      */
@@ -361,12 +393,14 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
     int bracket_expected = 0;
     int port = 0;
     int char_counter = 0;
+    int mask = 0;
     bool is_start_bracket = 0;
     bool is_end_bracket = 0;
     bool is_colon = 0;
     bool is_hexdigit = 0;
     bool is_upper_hexdigit = 0;
     bool is_digit = 0;
+    bool is_mask = false;
     int zero_compression = 0;
     int already_compressed = 0;
     int state = 0;
@@ -390,6 +424,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         {
             address->sixteen[i] = 0;
         }
+        address->mask = 64;
         address->port = 0;
     }
 
@@ -403,6 +438,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         is_hexdigit = isxdigit(*p);
         is_digit = isdigit(*p);
         is_colon = (*p == ':') ? 1 : 0;
+        is_mask = (*p == '/') ? 1 : 0;
         if (is_hexdigit)
         {
             if (isalpha(*p))
@@ -576,6 +612,31 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
                     state_change = true;
                 }
             }
+            else if (is_mask)
+            {
+                if (zero_compression)
+                {
+                    /*
+                     * If zero compression is enabled, then we cannot trust the position
+                     * since we might compressed several fields. We store the value and
+                     * look at them afterwards.
+                     */
+                    unsorted_sixteen[unsorted_pointer] = sixteen;
+                    ++unsorted_pointer;
+                }
+                else
+                {
+                    /*
+                     * No zero compression, just assign the address and keep moving.
+                     */
+                    if (address)
+                    {
+                        address->sixteen[state] = sixteen;
+                    }
+                }
+                state = 10;
+                state_change = true;
+            }
             else if (is_end_bracket)
             {
                 if (bracket_expected && zero_compression)
@@ -651,6 +712,15 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
                     state_change = true;
                 }
             }
+            else if (is_mask)
+            {
+                if (address)
+                {
+                    address->sixteen[state] = sixteen;
+                }
+                state = 10;
+                state_change = true;
+            }
             else
             {
                 state = 11;
@@ -661,6 +731,11 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
             if (is_colon)
             {
                 ++state;
+                state_change = true;
+            }
+            else if (is_mask)
+            {
+                state = 10;
                 state_change = true;
             }
             else
@@ -681,6 +756,15 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
             }
             break;
         case 10:
+            if (is_digit)
+            {
+                mask = Char2Dec(mask, *p);
+            }
+            else
+            {
+                state = 11;
+                state_change = true;
+            }
             break;
         case 11:
         default:
@@ -696,6 +780,10 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         {
             return -1;
         }
+        if (mask > 64)
+        {
+            return -1;
+        }
         if (state_change)
         {
             sixteen = 0;
@@ -708,6 +796,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
             is_upper_hexdigit = false;
             is_digit = 0;
             state_change = false;
+            mask = 0;
         }
     }
     /*
@@ -849,6 +938,55 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         if (address)
         {
             address->port = port;
+        }
+    }
+    if (state == 10)
+    {
+        /*
+         * This is the final state if a network mask was specified.
+         * We check first for non-closed brackets.
+         * Then we check if there is a number that has not been added to our array.
+         * Finally we move to zero compression.
+         */
+        if (bracket_expected)
+        {
+            return -1;
+        }
+
+        if (char_counter == 0)
+        {
+            return -1;
+        }
+        if (mask <= 0)
+        {
+            return -1;
+        }
+        if (address)
+        {
+            address->mask = mask;
+        }
+        if (zero_compression)
+        {
+            /*
+             * If there is no address, then we can just return :-)
+             */
+            if (address)
+            {
+                /*
+                 * We need to find the rightful positions for those numbers.
+                 * We use a simple trick:
+                 * We know how many unsorted addresses we have from unsorted pointer,
+                 * and we know that once zero_compression is activated we do not fill
+                 * any more numbers to the address structure. Therefore the right way
+                 * to do this is to take the array of unsorted_sixteen and start assigning
+                 * numbers backwards.
+                 */
+                int i = 0;
+                for (i = 0; i < unsorted_pointer; ++i)
+                {
+                    address->sixteen[7 - i] = unsorted_sixteen[unsorted_pointer - i - 1];
+                }
+            }
         }
     }
     if (state == 11)
@@ -996,6 +1134,30 @@ int IPAddressGetPort(IPAddress *address)
         return -1;
     }
     return port;
+}
+
+int IPAddressGetMask(IPAddress *address)
+{
+    if (!address)
+    {
+        return -1;
+    }
+    int mask = 0;
+    if (address->type == IP_ADDRESS_TYPE_IPV4)
+    {
+        struct IPV4Address *ipv4 = (struct IPV4Address *)address->address;
+        mask = ipv4->mask;
+    }
+    else if (address->type == IP_ADDRESS_TYPE_IPV6)
+    {
+        struct IPV6Address *ipv6 = (struct IPV6Address *)address->address;
+        mask = ipv6->mask;
+    }
+    else
+    {
+        return -1;
+    }
+    return mask;
 }
 
 /*
@@ -1198,3 +1360,73 @@ bool IPAddressIsIPAddress(Buffer *source, IPAddress **address)
     return true;
 }
 
+/****************************************************************************/
+
+bool CompareCIDR(char *cidr1, char *cidr2)
+{
+    ToLowerStrInplace(cidr1);
+    ToLowerStrInplace(cidr2);
+
+    Buffer *one = BufferNewFrom(cidr1, strlen(cidr1));
+    Buffer *two = BufferNewFrom(cidr2, strlen(cidr2));
+
+    if (one == NULL || two == NULL)
+    {
+        return false;
+    }
+
+    IPAddress *ip1 = IPAddressNew(one);
+    IPAddress *ip2 = IPAddressNew(two);
+
+    BufferDestroy(one);
+    BufferDestroy(two);
+
+    if (ip1->type != ip2->type)
+    {
+        return false;
+    }
+
+    if (ip1->type == IP_ADDRESS_TYPE_IPV4)
+    {
+        struct IPV4Address *v4_1 = (struct IPV4Address *)ip1->address;
+        struct IPV4Address *v4_2 = (struct IPV4Address *)ip2->address;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (v4_1->octets[i] != v4_2->octets[i])
+            {
+                return false;
+            }
+        }
+
+        if (v4_1->mask != v4_2->mask)
+        {
+            return false;
+        }
+
+        /* printf("ONE: %u.%u.%u.%u/%u\n", v4_1->octets[0], v4_1->octets[1], v4_1->octets[2], v4_1->octets[3], v4_1->mask);*/
+    }
+    else if (ip1->type == IP_ADDRESS_TYPE_IPV6)
+    {
+        struct IPV6Address *v6_1 = (struct IPV6Address *)ip1->address;
+        struct IPV6Address *v6_2 = (struct IPV6Address *)ip2->address;
+
+        for (int i = 0; i < 8; i++)
+        {
+            if (v6_1->sixteen[i] != v6_2->sixteen[i])
+            {
+                return false;
+            }
+        }
+
+        if (v6_1->mask != v6_2->mask)
+        {
+            return false;
+        }
+
+        /* printf("ONE: %x:%x:%x:%x:%x:%x:%x:%x/%u\n", v6_1->sixteen[0], v6_1->sixteen[1], v6_1->sixteen[2],
+           v6_1->sixteen[3], v6_1->sixteen[4], v6_1->sixteen[5], v6_1->sixteen[6], v6_1->sixteen[7], v6_1->mask);*/
+    }
+
+    return true;
+}

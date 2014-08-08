@@ -1,0 +1,50 @@
+
+bundle agent cumulus_services
+{
+  vars:
+
+      "quagga_master"  string => "/etc/quagga/daemons";
+
+      "quagga_daemons" slist => {
+                                  "/etc/quagga/zebra.conf",
+                                  "/etc/quagga/ospfd.conf",
+                                  "/etc/quagga/bgpd.conf"
+      };
+
+      "run[zebra]"  string => "yes";
+      "run[bgpd]"   string => "yes";
+      "run[ospfd]"  string => "no";
+      "run[ospf6d]" string => "no";
+      "run[ripd]"   string => "no";
+      "run[ripngd]" string => "no";
+      "run[isisd]"  string => "no";
+      "run[babeld]" string => "no";
+
+  files:
+
+      "$(quagga_master)"
+      comment => "This file needs to be edited to ensure proper start/stop of services",
+      create => "true",
+      perms => mog("644","quagga", "quagga"),
+      edit_line => set_variable_values("cumulus_services.run");
+
+      "$(quagga_daemons)"
+      comment => "Files need to exist before services can run",
+      create => "true",
+      perms => mog("644","quagga", "quagga"),
+      edit_line => append_if_no_line("# Don't edit this file, managed by CFEngine"),
+      edit_defaults => empty;
+
+  services:
+
+      "quagga";
+
+}
+
+##################################################################
+
+body common control
+{
+      bundlesequence => { "cumulus_services" };
+      inputs => { "cfengine_stdlib.cf" };
+}

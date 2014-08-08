@@ -1,0 +1,29 @@
+
+bundle agent main()
+{
+  interfaces:
+
+    cumulus::
+
+      "eth0"
+      ipv4_addresses => { "192.168.0.77/24", "192.168.0.78/24", "192.168.0.79/24" },
+      ipv6_addresses => { "2001:0db8:0:f101::1/64", "2001:0db8:0:f102::1/64", "fe80::210:a4ff:fee3:9566/10" },
+      purge_addresses => "true",
+      link_state => up,
+      comment => "Check ip setting";
+
+}
+
+##
+
+body link_state up
+{
+      state => "up";
+}
+
+##
+
+body common control
+{
+      bundlesequence => { "main" };
+}

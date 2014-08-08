@@ -1,0 +1,21 @@
+
+bundle agent main()
+{
+  addresses:
+
+      # LAN address routes (to MAC)
+
+      "10.1.1.1"
+      comment => "Promiser IP address promises to ARP to the local MAC address",
+      link_address => "00:00:10:00:00:0A",
+      interface => "$(sys.interface)";
+
+      # Network is unreachable (must be link level connected or tunnelled)
+}
+
+#
+
+body common control
+{
+      bundlesequence => { "main" };
+}

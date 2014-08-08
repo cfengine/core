@@ -842,45 +842,51 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
 
 /*******************************************************************/
 
-/*
- * Copies from <from> to <to>, writing up to <len> bytes, stopping
- * before the first <sep>.
+/* Copies a <sep>-delimited unit from <from> into a new entry in <to>.
  *
- * \<sep> is not counted as the separator, but copied to <to> as <sep>.
- * Any other escape sequences are not supported.
+ * \<sep> is not counted as the separator, but copied to the new entry
+ * as <sep>.  No other escape sequences are supported.
  *
- * Returns the number of bytes read out of from; this may be more than
- * the number written into to (which is at most len, including the
- * terminating '\0').
+ * Returns the number of bytes read out of <from>; this may be more
+ * than the length of the new entry in <to>.  The new entry is
+ * prepended; the caller can reverse <to> once built.
  */
-static int SubStrnCopyChr(char *to, const char *from, int len, char sep)
+static size_t SubStrnCopyChr(Rlist **to, const char *from, char sep)
 {
-    char *sto = to;
-    int count = 0;
     assert(from && from[0]);
 
-    for (const char *sp = from; sto - to < len - 1 && sp[0] != '\0'; sp++)
+    const char *end = from;
+    size_t escapes = 0;
+    while (end && end[0] && end[0] != sep)
     {
-        if (sp[0] == '\\' && sp[1] == sep)
+        end = strchr(end, sep);
+        assert(end == NULL || end[0] == sep);
+        if (end && end > from && end[-1] == '\\')
         {
-            *sto++ = *++sp;
-            count += 2;
-        }
-        else if (sp[0] == sep)
-        {
-            break;
-        }
-        else
-        {
-            *sto++ = sp[0];
-            count++;
+            escapes++;
+            end++;
         }
     }
-    assert(sto - to < len);
-    *sto = '\0';
 
-    assert(count <= strlen(from));
-    return count;
+    size_t consume = (end == NULL) ? strlen(from) : (end - from);
+    assert(consume >= escapes);
+    char copy[1 + consume - escapes], *dst = copy;
+
+    for (const char *src = from; src[0] != '\0' && src[0] != sep; src++)
+    {
+        if (src[0] == '\\' && src[1] == sep)
+        {
+            src++; /* Skip over the backslash so we copy the sep */
+        }
+        dst++[0] = src[0];
+    }
+    assert(dst + 1 == copy + sizeof(copy));
+    *dst = '\0';
+
+    /* Prepend to the list and reverse when done, costing O(len),
+     * instead of appending, which costs O(len**2). */
+    RlistPrependRval(to, RvalCopyScalar((Rval) { copy, RVAL_TYPE_SCALAR }));
+    return consume;
 }
 
 Rlist *RlistFromSplitString(const char *string, char sep)
@@ -888,27 +894,24 @@ Rlist *RlistFromSplitString(const char *string, char sep)
  * separate items.  Supports escaping separators - e.g. "\," isn't a
  * separator, it contributes a simple "," in a list entry. */
 {
-    if (string == NULL)
+    if (string == NULL || string[0] == '\0')
     {
         return NULL;
     }
-
     Rlist *liststart = NULL;
-    char node[CF_MAXVARSIZE];
 
     for (const char *sp = string; *sp != '\0';)
     {
-        sp += SubStrnCopyChr(node, sp, CF_MAXVARSIZE, sep);
+        sp += SubStrnCopyChr(&liststart, sp, sep);
         assert(sp - string <= strlen(string));
         if (*sp)
         {
             assert(*sp == sep && (sp == string || sp[-1] != '\\'));
             sp++;
         }
-
-        RlistAppendScalar(&liststart, node);
     }
 
+    RlistReverse(&liststart);
     return liststart;
 }
 

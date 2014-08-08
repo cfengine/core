@@ -42,7 +42,7 @@ typedef struct
     void *data;                 /* Generic pointer to RDBMS-specific data */
 } CfdbConn;
 
-int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
+int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db, char *path);
 void CfCloseDB(CfdbConn *cfdb);
 void CfVoidQueryDB(CfdbConn *cfdb, char *query);
 void CfNewQueryDB(CfdbConn *cfdb, char *query);

@@ -898,6 +898,7 @@ typedef enum
 {
     DATABASE_TYPE_MYSQL,
     DATABASE_TYPE_POSTGRES,
+    DATABASE_TYPE_SQLITE,
     DATABASE_TYPE_NONE
 } DatabaseType;
 
@@ -1279,6 +1280,7 @@ typedef struct
     char *db_server_password;
     char *db_server_host;
     char *db_connect_db;
+    char *db_directory;
     DatabaseType db_server_type;
     char *server;
     char *type;

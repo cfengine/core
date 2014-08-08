@@ -6462,14 +6462,12 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
                           const char *split, int maxent, DataType type,
                           bool int_index)
 {
-    StringSet *lines = StringSetFromString(file_buffer, '\n');
-
-    StringSetIterator iter = StringSetIteratorInit(lines);
-    char *line;
+    Rlist *lines = RlistFromSplitString(file_buffer, '\n');
     int hcount = 0;
 
-    while ((line = StringSetIteratorNext(&iter)) && hcount < maxent)
+    for (Rlist *it = lines; it && hcount < maxent; it = it->next)
     {
+        char *line = RlistScalarValue(it);
         size_t line_len = strlen(line);
 
         if (line_len == 0 || (line_len == 1 && line[0] == '\r'))
@@ -6477,7 +6475,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
             continue;
         }
 
-        if (line[line_len - 1] ==  '\r')
+        if (line[line_len - 1] == '\r')
         {
             line[line_len - 1] = '\0';
         }
@@ -6556,7 +6554,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
         line++;
     }
 
-    StringSetDestroy(lines);
+    RlistDestroy(lines);
 
     return hcount;
 }

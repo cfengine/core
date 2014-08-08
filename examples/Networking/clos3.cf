@@ -1,0 +1,55 @@
+########################################################################
+#
+#                         2 x 5 Clos pattern
+#
+#                     spine1   spine2
+#                X     X     X     X     X
+#              leaf1 leaf2 leaf3 leaf4 leaf5
+#
+# host$ cf-agent -f ./clos3.cf -K
+#
+# R: spine1:: "swp1" link_services => ebgp("as=65001,id=1.0.0.1) ")
+# R: spine2:: "swp2" link_services => ebgp("as=65002,id=1.0.0.2) ")
+# R: leaf1::  "swp1" link_services => ebgp("as=65003,id=2.0.0.1) ")
+# R: leaf2::  "swp2" link_services => ebgp("as=65004,id=2.0.0.2) ")
+# R: leaf3::  "swp3" link_services => ebgp("as=65005,id=2.0.0.3) ")
+# R: leaf4::  "swp4" link_services => ebgp("as=65006,id=2.0.0.4) ")
+# R: leaf5::  "swp5" link_services => ebgp("as=65007,id=2.0.0.5) ")
+#
+########################################################################
+
+bundle agent Clos()
+{
+  vars:
+
+      "leaves" int => "5";
+      "spines" int => "2";
+
+      "AS_spine[1]" int => "65001";
+      "AS_spine[2]" int => "65002";
+      "AS_leaf[1]" int => "65003";
+      "AS_leaf[2]" int => "65004";
+      "AS_leaf[3]" int => "65005";
+      "AS_leaf[4]" int => "65006";
+      "AS_leaf[5]" int => "65007";
+
+      "s" slist => expandrange("[1-$(spines)]","1");
+      "l" slist => expandrange("[1-$(leaves)]","1");
+
+  reports:
+
+      # Example output to show the pattern
+
+      "spine$(s):: \"swp$(s)\" link_services => ebgp(\"as=$(AS_spine[$(s)]),id=1.0.0.$(s)) \")";
+"leaf$(l)::  \"swp$(l)\" link_services => ebgp(\"as=$(AS_leaf[$(l)]),id=2.0.0.$(l)) \")";
+
+}
+
+
+
+##
+
+body common control
+{
+      bundlesequence => { "Clos" };
+}

@@ -1,0 +1,35 @@
+
+bundle agent main()
+{
+  vars:
+
+      # Reserved array for mapping VLAN aliases (a la JunOS)
+
+      "VLAN_ALIASES[blue]"  int => "100";
+      "VLAN_ALIASES[red]"   int => "101";
+      "VLAN_ALIASES[green]" int => "102";
+      "VLAN_ALIASES[black]" int => "1";
+
+  interfaces:
+
+      "eth0"
+      tagged_vlans => { "blue", "red", "green" },
+      untagged_vlan => "black",
+      link_state => up,
+      comment => "Juniper-style vlans on Linux";
+
+}
+
+##
+
+body link_state up
+{
+      state => "up";
+}
+
+##
+
+body common control
+{
+      bundlesequence => { "main" };
+}

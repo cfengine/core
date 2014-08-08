@@ -38,7 +38,7 @@ static bool CheckMeasureSanity(Measurement m, const Promise *pp);
 
 PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp)
 {
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     Attributes a = GetMeasurementAttributes(ctx, pp);
 
@@ -60,7 +60,7 @@ static bool CheckMeasureSanity(Measurement m, const Promise *pp)
     if (!IsAbsPath(pp->promiser))
     {
         Log(LOG_LEVEL_ERR, "The promiser '%s' of a measurement was not an absolute path",
-             pp->promiser);
+            pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }

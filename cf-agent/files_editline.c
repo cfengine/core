@@ -129,8 +129,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a,
                 continue;
             }
 
-            BannerSubPromiseType(ctx, bp->name, sp->name);
-
             EvalContextStackPushPromiseTypeFrame(ctx, sp);
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -312,7 +310,7 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 {
     EditContext *edcontext = param;
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {

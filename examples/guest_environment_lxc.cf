@@ -1,0 +1,51 @@
+#
+# Management of LXC containers
+#
+
+# Need to start network first:  virsh -c lxc:/// net-start default
+
+body common control
+{
+      bundlesequence => { "lxc_create" };
+}
+
+
+bundle agent lxc_create
+{
+  guest_environments:
+
+      "test_lxc"
+
+      environment_resources => mylxc("1", "1048576"),
+      environment_type      => "lxc",
+      environment_state     => "create",
+      environment_host      => "any";
+}
+
+body environment_resources mylxc(cpu_count, mem_kb)
+{
+      env_spec =>
+
+      "<domain type='lxc'>
+  <name>$(this.promiser)</name>
+  <memory>$(mem_kb)</memory>
+  <os>
+    <type>exe</type>
+    <init>/bin/sh</init>
+  </os>
+  <vcpu>$(cpu_count)</vcpu>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <emulator>/usr/lib64/libvirt/libvirt_lxc</emulator>
+    <interface type='network'>
+      <source network='default'/>
+    </interface>
+    <console type='pty' />
+  </devices>
+</domain>";
+
+}
+

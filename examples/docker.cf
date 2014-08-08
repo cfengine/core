@@ -1,0 +1,27 @@
+
+bundle agent main
+{
+  vars:
+
+      "containers" slist => { "parent_container_1", "parent_container_2", "parent_container_3" };
+
+  guest_environments:
+
+      "$(my.containers)" -> { "application_group" }
+
+      guest_details => ubuntu_stem_cell,
+      guest_state   => "create";
+
+      # Reap garbage
+
+      "old_container.*"
+
+      guest_details => ubuntu_stem_cell,
+      guest_state   => "delete";
+}
+
+body guest_details ubuntu_stem_cell
+{
+      guest_type => "docker";
+      guest_image_name => "cf-stem-cell";
+}

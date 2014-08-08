@@ -48,6 +48,7 @@
 #include <files_lib.h>
 #include <printsize.h>
 #include <cf-windows-functions.h>
+#include <ornaments.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -131,13 +132,16 @@
 
 #endif
 
-
 /* Fallback uptime calculation: Parse the "uptime" command in case the
  * platform-specific way fails or returns absurd number. */
 static time_t GetBootTimeFromUptimeCommand(time_t now);
 
-
 #endif  /* ifndef __MINGW32__ */
+
+#define LSB_RELEASE_FILENAME "/etc/lsb-release"
+#define DEBIAN_VERSION_FILENAME "/etc/debian_version"
+#define DEBIAN_ISSUE_FILENAME "/etc/issue"
+
 
 /*****************************************************/
 
@@ -151,6 +155,7 @@ static void Linux_Oracle_Version(EvalContext *ctx);
 static int Linux_Suse_Version(EvalContext *ctx);
 static int Linux_Slackware_Version(EvalContext *ctx, char *filename);
 static int Linux_Debian_Version(EvalContext *ctx);
+static int Linux_Misc_Version(EvalContext *ctx);
 static int Linux_Mandrake_Version(EvalContext *ctx);
 static int Linux_Mandriva_Version(EvalContext *ctx);
 static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *relstring, char *vendor);
@@ -159,6 +164,7 @@ static int Xen_Domain(EvalContext *ctx);
 static int EOS_Version(EvalContext *ctx);
 static int MiscOS(EvalContext *ctx);
 static void OpenVZ_Detect(EvalContext *ctx);
+
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
@@ -525,30 +531,21 @@ static void GetNameInfo3(EvalContext *ctx)
         i = 0;
     }
 
+    Log(LOG_LEVEL_VERBOSE, "%s - ready", NameVersion());
+    Banner("Environment discovery");
+
     snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
 
-    Log(LOG_LEVEL_VERBOSE, "%s", NameVersion());
 
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
-    }
     Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VSYSNAME.nodename);
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s", VSYSNAME.machine);
     Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VSYSNAME.nodename);
     Log(LOG_LEVEL_VERBOSE, "The time is now %s", ctime(&tloc));
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
-    }
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));
-    if (Chop(workbuf, CF_EXPANDSIZE) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-    }
+    Chop(workbuf, CF_EXPANDSIZE);
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "date", workbuf, CF_DATA_TYPE_STRING, "time_based,source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cdate", CanonifyName(workbuf), CF_DATA_TYPE_STRING, "time_based,source=agent");
@@ -812,7 +809,6 @@ static void GetNameInfo3(EvalContext *ctx)
 static void Get3Environment(EvalContext *ctx)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
-    FILE *fp;
     struct stat statbuf;
     time_t now = time(NULL);
 
@@ -844,7 +840,8 @@ static void Get3Environment(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
 
-    if ((fp = fopen(env, "r")) == NULL)
+    FILE *fp = fopen(env, "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "\nUnable to detect environment from cf-monitord");
         return;
@@ -1019,9 +1016,14 @@ static void OSClasses(EvalContext *ctx)
         Linux_Slackware_Version(ctx, SLACKWARE_ANCIENT_VERSION_FILENAME);
     }
 
-    if (stat("/etc/debian_version", &statbuf) != -1)
+    if (stat(DEBIAN_VERSION_FILENAME, &statbuf) != -1)
     {
         Linux_Debian_Version(ctx);
+    }
+
+    if (stat(LSB_RELEASE_FILENAME, &statbuf) != -1)
+    {
+        Linux_Misc_Version(ctx);
     }
 
     if (stat("/usr/bin/aptitude", &statbuf) != -1)
@@ -1965,10 +1967,62 @@ static int LinuxDebianSanitizeIssue(char *buffer)
 }
 
 /******************************************************************/
+
+static int Linux_Misc_Version(EvalContext *ctx)
+{
+    char flavour[CF_MAXVARSIZE];
+    char version[CF_MAXVARSIZE];
+    char os[CF_MAXVARSIZE];
+    char buffer[CF_BUFSIZE];
+
+    *os = '\0';
+    *version = '\0';
+
+    FILE *fp = fopen(LSB_RELEASE_FILENAME, "r");
+    if (fp != NULL)
+    {
+        while (!feof(fp))
+        {
+            if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+            {
+                if (ferror(fp))
+                {
+                    break;
+                }
+                continue;
+            }
+
+            if (strstr(buffer, "Cumulus"))
+            {
+                EvalContextClassPutHard(ctx, "cumulus", "inventory,attribute_name=none,source=agent");
+                strcpy(os, "cumulus");
+            }
+
+            char *sp = strstr(buffer, "DISTRIB_RELEASE=");
+            if (sp)
+            {
+                version[0] = '\0';
+                sscanf(sp + strlen("DISTRIB_RELEASE="), "%[^\n]", version);
+                CanonifyNameInPlace(version);
+            }
+        }
+    fclose(fp);
+    }
+
+    if (*os && *version)
+    {
+        snprintf(flavour, CF_MAXVARSIZE, "%s_%s", os, version);
+        SetFlavour(ctx, flavour);
+        return 1;
+    }
+
+    return 0;
+}
+
+/******************************************************************/
+
 static int Linux_Debian_Version(EvalContext *ctx)
 {
-#define DEBIAN_VERSION_FILENAME "/etc/debian_version"
-#define DEBIAN_ISSUE_FILENAME "/etc/issue"
     int major = -1;
     int release = -1;
     int result;
@@ -2291,7 +2345,6 @@ static int VM_Version(EvalContext *ctx)
 
 static int Xen_Domain(EvalContext *ctx)
 {
-    FILE *fp;
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.");
@@ -2299,7 +2352,8 @@ static int Xen_Domain(EvalContext *ctx)
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
-    if ((fp = fopen("/proc/xen/capabilities", "r")) != NULL)
+    FILE *fp = fopen("/proc/xen/capabilities", "r");
+    if (fp != NULL)
     {
         size_t buffer_size = CF_BUFSIZE;
         char *buffer = xmalloc(buffer_size);
@@ -2741,6 +2795,8 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     return(uptime ? (now - uptime) : -1);
 }
 
+/*****************************************************************************/
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
@@ -2748,4 +2804,195 @@ void DetectEnvironment(EvalContext *ctx)
     Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);
+    DiscoverDocker(ctx);
+}
+
+
+/*****************************************************************************/
+
+void DiscoverDocker(EvalContext *ctx)
+{
+    struct stat sb;
+    char name[CF_MAXVARSIZE], value[CF_MAXVARSIZE];
+
+    if (stat(DOCKER_COMMAND, &sb) == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "No docker installation found: %s", DOCKER_COMMAND);
+        return;
+    }
+
+    DockerPS *active = QueryDockerProcessTable(&active);
+
+    for (DockerPS *ps = active; ps != NULL; ps=ps->next)
+    {
+        snprintf(name, CF_MAXVARSIZE, "docker_guest_ip[%s]", ps->name);
+        snprintf(value, CF_MAXVARSIZE, "%s", ps->ip);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, value, CF_DATA_TYPE_STRING, "inventory,docker_container,source=agent");
+    }
+
+    DeleteDockerPS(active);
+}
+
+/*****************************************************************************/
+
+DockerPS *QueryDockerProcessTable(DockerPS **containers)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char comm[CF_MAXVARSIZE], id[CF_MAXVARSIZE], image[CF_MAXVARSIZE], name[CF_MAXVARSIZE], address[CF_MAX_IP_LEN];
+    char *offset = 0;
+
+    *containers = NULL;
+
+    snprintf(comm, CF_MAXVARSIZE, "%s ps", DOCKER_COMMAND);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", DOCKER_COMMAND);
+        return NULL;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        if (strncmp(line, "Cannot connect", strlen("Cannot connect") == 0))
+        {
+            free(line);
+            cf_pclose(pfp);
+            return NULL;
+        }
+
+        if (strncmp(line, "CONTAINER", strlen("CONTAINER")) == 0)
+        {
+            offset = strstr(line, "NAME");
+
+            if (offset - line < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Output format of '%s ps' is unexpected", DOCKER_COMMAND);
+                free(line);
+                cf_pclose(pfp);
+                return NULL;
+            }
+        }
+
+        id[0] = image[0] = '\0';
+
+        if (offset > 0)
+        {
+            sscanf(line, "%s %s", id, image);
+            sscanf(offset, "%s", name);
+            GetDockerIPForContainer(name, address);
+            PrependDockerPS(containers, id, image, name, address);
+        }
+    }
+
+    free(line);
+    cf_pclose(pfp);
+    return *containers;
+}
+
+/*****************************************************************************/
+
+void PrependDockerPS(DockerPS **containers, char *id, char *image, char *name, char *address)
+{
+    DockerPS *ps;
+
+    if (id && strlen(id) == 0)
+    {
+        return;
+    }
+
+    if (image && strlen(image) == 0)
+    {
+        return;
+    }
+
+    ps = xcalloc(sizeof(DockerPS), 1);
+    ps->next = *containers;
+    ps->id = xstrdup(id);
+    ps->image = xstrdup(image);
+    ps->name = xstrdup(name);
+    ps->ip = xstrdup(address);
+    *containers = ps;
+}
+
+/*****************************************************************************/
+
+void DeleteDockerPS(DockerPS *list)
+{
+    DockerPS *next;
+
+    for (DockerPS *ps = list; ps != NULL; ps = next)
+    {
+        next = ps->next;
+        free(ps->id);
+        free(ps->image);
+        free(ps->ip);
+        free(ps->name);
+        free(ps);
+    }
+}
+
+/*****************************************************************************/
+
+void GetDockerIPForContainer(char *id, char *address)
+{
+    char comm[CF_BUFSIZE], result[CF_BUFSIZE];
+
+    snprintf(comm, CF_BUFSIZE, "%s inspect --format='{{.NetworkSettings.IPAddress}}' %s", DOCKER_COMMAND, id);
+
+    if (!ExecEnvCommand(comm, result))
+    {
+        *address = '\0';
+    }
+    else
+    {
+        snprintf(address, CF_MAX_IP_LEN, "%s", result);
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Looked for IP address for %s and got %s", id, result);
+}
+
+/*****************************************************************************/
+
+int ExecEnvCommand(char *cmd, char *buffer)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    int ret = true;
+
+    if (DONTDO)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Need to execute command '%s' for guest_environment configuration", cmd);
+        return true;
+    }
+
+    if ((pfp = cf_popen(cmd, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", cmd);
+        return false;
+    }
+
+    char *line = xmalloc(line_size);
+
+    *line = '\0';
+    CfReadLine(&line, &line_size, pfp);
+
+    if (strstr(line, "Error"))
+    {
+        ret = false;
+    }
+
+    snprintf(buffer, CF_BUFSIZE, "%s", line);
+
+    free(line);
+    cf_pclose(pfp);
+    return ret;
 }

@@ -150,7 +150,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'l':
-            LEGACY_OUTPUT = true;
             break;
 
         case 'f':

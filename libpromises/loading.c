@@ -11,6 +11,7 @@
 #include <class.h>
 #include <fncall.h>
 #include <known_dirs.h>
+#include <ornaments.h>
 
 // TODO: remove
 #include <vars.h>
@@ -60,7 +61,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
     }
 #endif
 
-    Log(LOG_LEVEL_VERBOSE, "Parsing file '%s'", input_path);
+    Log(LOG_LEVEL_VERBOSE, "Begin Parsing file '%s'", input_path);
 
     if (!FileCanOpen(input_path, "r"))
     {
@@ -103,6 +104,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
         }
     }
 
+    Log(LOG_LEVEL_VERBOSE, "End Parsing file '%s'", input_path);
     return policy;
 }
 
@@ -168,6 +170,11 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
 // TODO: should be replaced by something not complected with loading
 static void ShowContext(EvalContext *ctx)
 {
+    if (MACHINE_OUTPUT)
+    {
+        return;
+    }
+
     Seq *hard_contexts = SeqNew(1000, NULL);
     Seq *soft_contexts = SeqNew(1000, NULL);
 
@@ -192,70 +199,45 @@ static void ShowContext(EvalContext *ctx)
     SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
     SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
 
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
 
     {
         Writer *w = NULL;
-        if (LEGACY_OUTPUT)
-        {
-            w = FileWriter(stdout);
-            WriterWriteF(w, "%s>  -> Hard classes = {", VPREFIX);
-        }
-        else
-        {
-            w = StringWriter();
-            WriterWrite(w, "Discovered hard classes:");
-        }
+        w = StringWriter();
+        WriterWrite(w, "BEGIN Discovered hard classes:\n");
 
         for (size_t i = 0; i < SeqLength(hard_contexts); i++)
         {
             const char *context = SeqAt(hard_contexts, i);
-            WriterWriteF(w, " %s", context);
+            WriterWriteF(w, "%s C: discovered hard class %s\n", VPREFIX, context);
         }
 
-        if (LEGACY_OUTPUT)
-        {
-            WriterWrite(w, "}\n");
-            FileWriterDetach(w);
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-            WriterClose(w);
-        }
+        WriterWriteF(w, "%s END Discovered hard classes", VPREFIX);
+        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        WriterClose(w);
     }
+
+    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
 
     {
         Writer *w = NULL;
-        if (LEGACY_OUTPUT)
-        {
-            w = FileWriter(stdout);
-            WriterWriteF(w, "%s>  -> Additional classes = {", VPREFIX);
-        }
-        else
-        {
-            w = StringWriter();
-            WriterWrite(w, "Additional classes:");
-        }
+        w = StringWriter();
+        WriterWrite(w, "BEGIN initial soft classes:\n");
 
         for (size_t i = 0; i < SeqLength(soft_contexts); i++)
         {
             const char *context = SeqAt(soft_contexts, i);
-            WriterWriteF(w, " %s", context);
+            WriterWriteF(w, "%s C: added soft class %s\n", VPREFIX, context);
         }
 
-        if (LEGACY_OUTPUT)
+        WriterWriteF(w, "%s END initial soft classes", VPREFIX);
+
+        if (SeqLength(soft_contexts) > 0)
         {
-            WriterWrite(w, "}\n");
-            FileWriterDetach(w);
+            Log(LOG_LEVEL_VERBOSE, "%s\n", StringWriterData(w));
         }
-        else
-        {
-            if (SeqLength(soft_contexts) > 0)
-            {
-                Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-            }
-            WriterClose(w);
-        }
+
+        WriterClose(w);
     }
 
     SeqDestroy(hard_contexts);
@@ -446,6 +428,8 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
     StringSet *parsed_files_and_checksums = StringSetNew();
     StringSet *failed_files = StringSetNew();
 
+    Banner("Loading policy");
+
     Policy *policy = LoadPolicyFile(ctx, config, config->input_file, parsed_files_and_checksums, failed_files);
 
     if (StringSetSize(failed_files) > 0)
@@ -485,7 +469,13 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
     if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
     {
+        Legend();
         ShowContext(ctx);
+    }
+
+    if (config->agent_type == AGENT_TYPE_AGENT)
+    {
+        Banner("Preliminary variable/class-context convergence");
     }
 
     if (policy)

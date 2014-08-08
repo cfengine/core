@@ -2564,7 +2564,12 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
-static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+/*********************************************************************/
+
+static FnCallResult FnCallMapList(EvalContext *ctx,
+                                  ARG_UNUSED const Policy *policy,
+                                  ARG_UNUSED const FnCall *fp,
+                                  const Rlist *finalargs)
 {
     Rlist *newlist = NULL;
     DataType retype;
@@ -2622,6 +2627,64 @@ static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }
+
+/******************************************************************************/
+
+static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    Rlist *newlist = NULL;
+    const char *template = RlistScalarValue(finalargs);
+    char *step = RlistScalarValue(finalargs->next);
+    size_t template_size = strlen(template) + 1;
+    char *before = xstrdup(template);
+    char *after = xcalloc(template_size, 1);
+    char *work = xstrdup(template);
+    int from = CF_NOINT, to = CF_NOINT, step_size = atoi(step);
+
+    if (*template == '[')
+    {
+        *before = '\0';
+        sscanf(template, "[%d-%d]%[^\n]", &from, &to, after);
+    }
+    else
+    {
+        sscanf(template, "%[^[\[][%d-%d]%[^\n]", before, &from, &to, after);
+    }
+
+    if (step_size < 1 || fabs(from-to) < step_size)
+    {
+        FatalError(ctx, "EXPANDRANGE Step size cannot be less than 1 or greater than the interval");
+    }
+
+    if (from == CF_NOINT || to == CF_NOINT)
+    {
+        FatalError(ctx, "EXPANDRANGE malformed range expression");
+    }
+
+    if (from > to)
+    {
+        for (int i = from; i >= to; i -= step_size)
+        {
+            xsnprintf(work, template_size, "%s%d%s",before,i,after);;
+            RlistAppendScalar(&newlist, work);
+        }
+    }
+    else
+    {
+        for (int i = from; i <= to; i += step_size)
+        {
+            xsnprintf(work, template_size, "%s%d%s",before,i,after);;
+            RlistAppendScalar(&newlist, work);
+        }
+    }
+
+    free(before);
+    free(after);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
+}
+
+/*****************************************************************************/
 
 static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *args)
 {
@@ -6193,9 +6256,9 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
     {
         if (lstat(RvalScalarValue(rp->val), &statbuf) == -1)
         {
-            Log(LOG_LEVEL_INFO, "Function MAKERULE, source dependency %s was not readable",  RvalScalarValue(rp->val));
+            Log(LOG_LEVEL_VERBOSE, "Function MAKERULE, source dependency %s was not (yet) readable",  RvalScalarValue(rp->val));
             RlistDestroy(list);
-            return FnFailure();
+            return FnReturnContext(false);
         }
         else
         {
@@ -6208,7 +6271,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
 
     RlistDestroy(list);
 
-    return stale ? FnReturnContext(true) : FnFailure();
+    return stale ? FnReturnContext(true) : FnReturnContext(false);
 }
 
 
@@ -7270,6 +7333,13 @@ static const FnCallArg MAPLIST_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg EXPANDRANGE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String containing numerical range e.g. string[13-47]"},
+    {CF_VALRANGE, CF_DATA_TYPE_INT, "Step size of numerical increments"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg MAPARRAY_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
@@ -7768,6 +7838,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("expandrange", CF_DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallExpandRange, "Expand a name as a list of names numered according to a range",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("fileexists", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filesexist", CF_DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed",
@@ -7860,7 +7932,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("lsdir", CF_DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("makerule", CF_DATA_TYPE_CONTEXT, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
+    FnCallTypeNew("makerule", CF_DATA_TYPE_STRING, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
                       FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray, "Return a list with each element modified by a pattern based $(this.k) and $(this.v)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

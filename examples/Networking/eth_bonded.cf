@@ -1,0 +1,36 @@
+
+bundle agent main()
+{
+  vars:
+
+      "int_group" slist => { "swp1", "swp2", "swp3" };
+
+  interfaces:
+
+      "ae0"
+      bond_interfaces => { @(int_group) },
+      link_state => lacp("up", "3");   # minimum ports for up
+
+      #     "ae0"
+      #       delete => "true";
+
+}
+##
+
+body link_state lacp(a,b)
+{
+      state => "$(a)";
+      mtu => "1500";
+      speed => "100";
+      duplex => "full";
+      bonding => "802.3ad";
+      spanning_tree => "off";
+      minimum_bond_aggregation => "$(b)";
+}
+
+##
+
+body common control
+{
+      bundlesequence => { "main" };
+}

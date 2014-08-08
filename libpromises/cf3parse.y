@@ -582,7 +582,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                }
                                            }
 
-                                           if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                                           if (P.rval.type == RVAL_TYPE_SCALAR && (strcmp(P.lval, "ifvarclass") == 0 || strcmp(P.lval, "if") == 0))
                                            {
                                                ValidateClassLiteral(P.rval.item);
                                            }
@@ -751,7 +751,7 @@ selection:             selection_id                         /* BODY ONLY */
                                                yyerror(SyntaxTypeMatchToString(err));
                                            }
 
-                                           if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                                           if (P.rval.type == RVAL_TYPE_SCALAR && (strcmp(P.lval, "ifvarclass") == 0 || strcmp(P.lval, "if") == 0))
                                            {
                                                ValidateClassLiteral(P.rval.item);
                                            }

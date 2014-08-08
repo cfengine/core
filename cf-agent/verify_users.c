@@ -45,7 +45,7 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     snprintf(lockname, CF_BUFSIZE - 1, "user-%s-%d", pp->promiser, a.users.policy);
 
@@ -76,7 +76,7 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
         ProgrammingError("Unknown promise result");
         break;
     }
- 
+
 
     YieldCurrentLock(thislock);
     return result;

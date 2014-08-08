@@ -32,5 +32,11 @@ void DetectEnvironment(EvalContext *ctx);
 void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified, char *tags);
 int GetUptimeMinutes(time_t now);
 int GetUptimeSeconds(time_t now);
+void DiscoverDocker(EvalContext *ctx);
+DockerPS *QueryDockerProcessTable(DockerPS **containers);
+void PrependDockerPS(DockerPS **containers, char *id, char *image, char *name, char *address);
+void DeleteDockerPS(DockerPS *list);
+int ExecEnvCommand(char *cmd, char *buffer);
+void GetDockerIPForContainer(char *name, char *address);
 
 #endif

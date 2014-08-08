@@ -43,6 +43,17 @@ typedef enum
     LOG_LEVEL_DEBUG
 } LogLevel;
 
+#include <logging_priv.h>
+
+typedef struct
+{
+    LogLevel log_level;
+    LogLevel report_level;
+    bool color;
+
+    LoggingPrivContext *pctx;
+} LoggingContext;
+
 const char *LogLevelToString(LogLevel level);
 
 /**
@@ -54,11 +65,13 @@ const char *LogLevelToString(LogLevel level);
  */
 bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp);
 
+LoggingContext *GetCurrentThreadContext(void);
 
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void LogRaw(LogLevel level, const char *prefix, const void *buf, size_t buflen);
 void VLog(LogLevel level, const char *fmt, va_list ap);
 
+void LoggingSetAgentType(const char *type, bool pretty);
 void LogSetGlobalLevel(LogLevel level);
 LogLevel LogGetGlobalLevel(void);
 

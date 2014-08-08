@@ -889,6 +889,11 @@ static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
+            if (dt == CF_DATA_TYPE_STRING && dtype == CF_DATA_TYPE_CONTEXT)
+            {
+                return SYNTAX_TYPE_MATCH_OK;
+            }
+
             if (dt == CF_DATA_TYPE_INT && dtype == CF_DATA_TYPE_INT_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;

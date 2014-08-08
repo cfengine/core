@@ -1,0 +1,47 @@
+
+
+bundle agent Clos()
+{
+  vars:
+
+      "leaves" int => "5";
+      "pods"   int => "3";
+      "spines" int => "2";
+
+      "spine" slist => { expandrange("spine[1-$(spines)]","1") };
+      "pod" slist => { expandrange("pod[1-$(pods)]","1") };
+      "leaf" slist => { expandrange("leaf[1-$(leaves)]","1") };
+
+      "L" slist => { expandrange("[1-$(leaves)]","1") };
+      "P" slist => { expandrange("[1-$(pods)]","1") };
+      "S" slist => { expandrange("[1-$(spines)]","1") };
+
+      "l" slist => { @(L) };
+      "p" slist => { @(P) };
+      "s" slist => { @(S) };
+
+  reports:
+
+      "ADJACENCY: $(leaf) -> $(pod)";
+      "ADJACENCY: $(pod) -> $(spine)";
+      #
+
+      "NS PORT CONNECTIONS: leaf_$(L) port[$(P)] -> pods_$(P) port[$(L)]";
+      "NS PORT CONNECTIONS: pods_$(P) port[$(pods)+$(S)] -> spines_$(S) port[$(P)]";
+
+      #
+
+      "EW PORT CONNECTIONS: leaf_$(L) port[$(pods)+$(l)] -> leaf_$(l) port[$(leaves)+$(L)]";
+      "EW PORT CONNECTIONS: pods_$(P) port[$(leaves)+$(spines)+$(p)] -> pods_$(p) port[$(leaves)+$(spines)+$(P)]";
+      "EW PORT CONNECTIONS: spines_$(S) port[$(pods)+$(s)] -> spines_$(s) port[$(pods)+$(S)]";
+
+}
+
+
+##
+
+
+body common control
+{
+      bundlesequence => { "Clos" };
+}

@@ -42,7 +42,11 @@ static const ConstraintSyntax process_select_constraints[] =
     ConstraintSyntaxNewIntRange("pid", CF_VALRANGE, "Range of integers matching the process id of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("pgid", CF_VALRANGE, "Range of integers matching the parent group id of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("ppid", CF_VALRANGE, "Range of integers matching the parent process id of a process", SYNTAX_STATUS_NORMAL),
+#if defined (__FreeBSD__)
+    ConstraintSyntaxNewIntRange("priority", "-100,+155", "Range of integers matching the priority field (PRI/NI) of a process", SYNTAX_STATUS_NORMAL),
+#else
     ConstraintSyntaxNewIntRange("priority", "-20,+20", "Range of integers matching the priority field (PRI/NI) of a process", SYNTAX_STATUS_NORMAL),
+#endif
     ConstraintSyntaxNewStringList("process_owner", "", "List of regexes matching the user of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("process_result",
      "[(process_owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*",

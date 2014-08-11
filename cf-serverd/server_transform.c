@@ -755,6 +755,75 @@ static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
     return ret;
 }
 
+/* Package hostname as regex, if needed.
+ *
+ * @param old The old Auth structure to which to add.
+ * @param host The new acl_hostnames entry to add to it.
+ */
+static void NewHostToOldACL(Auth *old, const char *host)
+{
+    if (host[0] == '.') /* Domain - transform to regex: */
+    {
+        int extra = 2; /* For leading ".*" */
+        const char *dot = host;
+
+        do
+        {
+            do
+            {
+                dot++; /* Step over prior dot. */
+            }
+            while (dot[0] == '.'); /* Treat many dots as one. */
+            extra++; /* For a backslash before the dot */
+            dot = strchr(dot, '.');
+        }
+        while (dot);
+
+        char regex[strlen(host) + extra], *dst = regex;
+        dst++[0] = '.';
+        dst++[0] = '*';
+
+        dot = host;
+        do
+        {
+            /* Insert literal dot. */
+            assert(dot[0] == '.');
+            dst++[0] = '\\';
+            dst++[0] = '.';
+
+            do /* Step over prior dot(s), as before. */
+            {
+                dot++;
+            }
+            while (dot[0] == '.');
+
+            /* Identify next fragment: */
+            const char *d = strchr(dot, '.');
+            size_t len = d ? d - dot : strlen(dot);
+
+            /* Copy fragment: */
+            memcpy(dst, dot, len);
+            dst += len;
+
+            /* Advance: */
+            dot = d;
+        }
+        while (dot);
+
+        /* Terminate: */
+        assert(dst < regex + sizeof(regex));
+        dst[0] = '\0';
+
+        /* Add to list: */
+        PrependItem(&(old->accesslist), regex, NULL);
+    }
+    else
+    {
+        /* Simple host-name; just add it: */
+        PrependItem(&(old->accesslist), host, NULL);
+    }
+}
+
 /**
  * Add access rules to the given ACL #acl according to the constraints in the
  * particular access promise.
@@ -841,13 +910,13 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITHOSTNAMES].lval) == 0)
                 {
                     ret = StrList_Append(&racl->admit.hostnames, RlistScalarValue(rp));
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+                    NewHostToOldACL(ap, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYHOSTNAMES].lval) == 0)
                 {
                     ret = StrList_Append(&racl->deny.hostnames, RlistScalarValue(rp));
-                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
+                    NewHostToOldACL(dp, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITKEYS].lval) == 0)

@@ -46,6 +46,7 @@
 #include <verify_classes.h>
 #include <generic_agent.h> /* HashControls */
 #include <file_lib.h>      /* IsDirReal */
+#include <matching.h>      /* IsRegex */
 
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "server_access.h"
@@ -717,6 +718,104 @@ static enum admit_type AdmitType(const char *s)
     }
 }
 
+/* Map old-style regex-or-hostname to new-style host-or-domain.
+ *
+ * Old-style ACLs could include regexes to be matched against host
+ * names; but new-style ones only support sub-domain matching.  If the
+ * old-style host regex looks like ".*\.sub\.domain\.tld" we can take
+ * it in as ".sub.domain.tld"; otherwise, we can only really map exact
+ * match hostnames.  However, we know some old policy (including our
+ * own masterfiles) had cases of .*sub.domain.tld and it's possible
+ * that someone might include a new-style .sub.domain.tld by mistake
+ * in an (old-style) accept list; so cope with these cases, too.
+ *
+ * @param sl The string-list to which to add entries.
+ * @param host The name-or-regex to add to the ACL.
+ * @return An index at which an entry was added to the list (there may
+ * be another), or -1 if nothing added.
+ */
+static size_t DeRegexify(StrList **sl, const char *host)
+{
+    if (IsRegex(host))
+    {
+        if (host[strcspn(host, "({[|+?]})")] != '\0')
+        {
+            return -1; /* Not a regex we can sensibly massage; discard. */
+        }
+        bool skip[2] = { false, false }; /* { domain, host } passes below */
+        const char *name = host;
+        if (name[0] == '^') /* Was always implicit; but read as hint to intent. */
+        {
+            /* Default to skipping domain-form if anchored explicitly: */
+            skip[0] = true; /* Over-ridden below if followed by .* of course. */
+            name++;
+        }
+        if (StringStartsWith(name, ".*"))
+        {
+            skip[0] = false; /* Domain-form should match */
+            name += 2;
+        }
+        if (StringStartsWith(name, "\\."))
+        {
+            /* Skip host-form, as the regex definitely wants something
+             * before the given name. */
+            skip[1] = true;
+            name += 2;
+        }
+        if (strchr(name, '*') != NULL)
+        {
+            return -1; /* Can't handle a * later than the preamble. */
+        }
+
+        if (name > host || NULL != strchr(host, '\\'))
+        {
+            /* 2: leading '.' and final '\0' */
+            char copy[2 + strlen(name)], *c = copy;
+            c++[0] = '.'; /* For domain-form; and copy+1 gives host-form. */
+            /* Now copy the rest of the name, de-regex-ifying as we go: */
+            for (const char *p = name; p[0] != '\0'; p++)
+            {
+                if (p[0] == '\\')
+                {
+                    p++;
+                    if (p[0] != '.')
+                    {
+                        /* Regex includes a non-dot escape */
+                        return -1;
+                    }
+                }
+#if 0
+                else if (p[0] == '.')
+                {
+                    /* In principle, this is a special character; but
+                     * it may just be an unescaped dot, so let it be. */
+                }
+#endif
+                c++[0] = p[0];
+            }
+            assert(c < copy + sizeof(copy));
+            c[0] = '\0';
+
+            /* Now, for host then domain, add entry if suitable */
+            int pass = 2;
+            size_t ret = -1;
+            while (pass > 0)
+            {
+                pass--;
+                if (!skip[pass]) /* pass 0 is domain, pass 1 is host */
+                {
+                    ret = StrList_Append(sl, copy + pass);
+                }
+            }
+            return ret;
+        }
+        /* IsRegex() but is actually so boring it's just a name ! */
+    }
+    /* Just a simple host name. */
+
+    return StrList_Append(sl, host);
+}
+
 bool NEED_REVERSE_LOOKUP = false;
 
 static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
@@ -736,13 +835,11 @@ static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
         break;
 
     case ADMIT_TYPE_HOSTNAME:
-        /* TODO clean up possible regex, if it starts with ".*"
-         * then store two entries: entry, and *dot*entry. */
-        ret = StrList_Append(&ad->hostnames, entry);
+        ret = DeRegexify(&ad->hostnames, entry);
 
-        /* If any hostname rule is present, we set a global flag to turn on
-         * reverse DNS lookup in the new protocol. */
-        if (!NEED_REVERSE_LOOKUP)
+        /* If any hostname rule got added, we set a global flag to
+         * turn on reverse DNS lookup in the new protocol. */
+        if (ret + 1 && !NEED_REVERSE_LOOKUP)
         {
             Log(LOG_LEVEL_INFO,
                 "Found hostname admit/deny access_rules, "

@@ -281,13 +281,13 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
     CFRUNCOMMAND[0] = '\0';
     SetChecksumUpdatesDefault(ctx, true);
 
-/* Keep promised agent behaviour - control bodies */
+    /* Keep promised agent behaviour - control bodies */
 
     Banner("Server control promises..");
 
     PolicyResolve(ctx, policy, config);
 
-/* Now expand */
+    /* Now expand */
 
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_SERVER);
     if (constraints)
@@ -295,6 +295,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
         for (size_t i = 0; i < SeqLength(constraints); i++)
         {
             Constraint *cp = SeqAt(constraints, i);
+#define IsControlBody(e) (strcmp(cp->lval, CFS_CONTROLBODY[e].lval) == 0)
 
             if (!IsDefinedClass(ctx, cp->classes))
             {
@@ -307,42 +308,40 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (!value)
             {
-                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in server control body", cp->lval);
-                continue;
+                Log(LOG_LEVEL_ERR,
+                    "Unknown lval '%s' in server control body",
+                    cp->lval);
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SERVER_FACILITY].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_SERVER_FACILITY))
             {
                 SetFacility(value);
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_BAD_CLOCKS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_DENY_BAD_CLOCKS))
             {
                 DENYBADCLOCKS = BooleanFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting denybadclocks to '%s'", DENYBADCLOCKS ? "true" : "false");
-                continue;
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting denybadclocks to '%s'",
+                    DENYBADCLOCKS ? "true" : "false");
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS))
             {
                 LOGENCRYPT = BooleanFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting logencrypt to '%s'", LOGENCRYPT ? "true" : "false");
-                continue;
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting logencrypt to '%s'",
+                    LOGENCRYPT ? "true" : "false");
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_LOG_ALL_CONNECTIONS))
             {
                 SV.logconns = BooleanFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting logconns to %d", SV.logconns);
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_MAX_CONNECTIONS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_MAX_CONNECTIONS))
             {
                 CFD_MAXPROCESSES = (int) IntFromString(value);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
-                Log(LOG_LEVEL_VERBOSE, "Setting maxconnections to %d", CFD_MAXPROCESSES);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting maxconnections to %d",
+                    CFD_MAXPROCESSES);
                 /* The handling of max_readers in LMDB is not ideal, but
                  * here is how it is right now: We know that both cf-serverd and
                  * cf-hub will access the lastseen database. Worst case every
@@ -355,37 +354,35 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                                                    + EnterpriseGetMaxCfHubProcesses() + 10);
                 continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_INTERVAL].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_CALL_COLLECT_INTERVAL))
             {
                 COLLECT_INTERVAL = (int) 60 * IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting call_collect_interval to %d (seconds)", COLLECT_INTERVAL);
-                continue;
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting call_collect_interval to %d (seconds)",
+                    COLLECT_INTERVAL);
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LISTEN].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_LISTEN))
             {
                 SERVER_LISTEN = BooleanFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting server listen to '%s' ",
-                      (SERVER_LISTEN)? "true":"false");
-                continue;
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting server listen to '%s' ",
+                    SERVER_LISTEN ? "true" : "false");
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_WINDOW].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_CALL_COLLECT_WINDOW))
             {
                 COLLECT_WINDOW = (int) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting collect_window to %d (seconds)", COLLECT_INTERVAL);
-                continue;
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting collect_window to %d (seconds)",
+                    COLLECT_INTERVAL);
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CF_RUN_COMMAND].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_CF_RUN_COMMAND))
             {
                 strlcpy(CFRUNCOMMAND, value, sizeof(CFRUNCOMMAND));
-                Log(LOG_LEVEL_VERBOSE, "Setting cfruncommand to '%s'", CFRUNCOMMAND);
-                continue;
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting cfruncommand to '%s'",
+                    CFRUNCOMMAND);
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_CONNECTS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_ALLOW_CONNECTS))
             {
                 Log(LOG_LEVEL_VERBOSE, "Setting allowing connections from ...");
 
@@ -396,11 +393,8 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                         PrependItem(&SV.nonattackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
-
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_CONNECTS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_DENY_CONNECTS))
             {
                 Log(LOG_LEVEL_VERBOSE, "Setting denying connections from ...");
 
@@ -411,16 +405,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                         PrependItem(&SV.attackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
-
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SKIP_VERIFY].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_SKIP_VERIFY))
             {
-                continue;
+                /* Skip. */
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_ALL_CONNECTS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_ALLOW_ALL_CONNECTS))
             {
                 Log(LOG_LEVEL_VERBOSE, "Setting allowing multiple connections from ...");
 
@@ -431,11 +421,8 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                         PrependItem(&SV.multiconnlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
-
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_USERS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_ALLOW_USERS))
             {
                 Log(LOG_LEVEL_VERBOSE, "SET Allowing users ...");
 
@@ -446,11 +433,8 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                         PrependItem(&SV.allowuserlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
-
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_TRUST_KEYS_FROM].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_TRUST_KEYS_FROM))
             {
                 Log(LOG_LEVEL_VERBOSE, "Setting trust keys from ...");
 
@@ -461,11 +445,8 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                         PrependItem(&SV.trustkeylist, RlistScalarValue(rp), cp->classes);
                     }
                 }
-
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWLEGACYCONNECTS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_ALLOWLEGACYCONNECTS))
             {
                 Log(LOG_LEVEL_VERBOSE, "Setting allowing legacy connections from ...");
 
@@ -476,33 +457,26 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                         PrependItem(&SV.allowlegacyconnects, RlistScalarValue(rp), cp->classes);
                     }
                 }
-
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_PORT_NUMBER))
             {
                 CFENGINE_PORT = IntFromString(value);
                 strlcpy(CFENGINE_PORT_STR, value, sizeof(CFENGINE_PORT_STR));
                 Log(LOG_LEVEL_VERBOSE, "Setting default port number to %d",
                     CFENGINE_PORT);
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_BIND_TO_INTERFACE].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_BIND_TO_INTERFACE))
             {
                 strlcpy(BINDINTERFACE, value, sizeof(BINDINTERFACE));
                 Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
-                continue;
             }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWCIPHERS].lval) == 0)
+            else if (IsControlBody(SERVER_CONTROL_ALLOWCIPHERS))
             {
 
                 SV.allowciphers = xstrdup(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to '%s'", SV.allowciphers);
-                continue;
             }
+#undef IsControlBody
         }
     }
 
@@ -568,7 +542,7 @@ static bool IsPromiseTypeNotInServerTypeSequence(const char *promise_type)
 
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
 {
-/* Dial up the generic promise expansion with a callback */
+    /* Dial up the generic promise expansion with a callback */
 
     CleanReportBookFilterSet();
 
@@ -580,7 +554,9 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
         {
             if (RlistLen(bp->args) > 0)
             {
-                Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
+                Log(LOG_LEVEL_WARNING,
+                    "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.",
+                    bp->type, bp->name);
                 continue;
             }
 
@@ -957,8 +933,6 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                                                struct resource_acl *racl,
                                                Auth *ap, Auth *dp)
 {
-    Rlist *rp;
-
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         const Constraint *cp = SeqAt(pp->conlist, i);
@@ -971,14 +945,15 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
         switch (cp->rval.type)
         {
+#define IsAccessBody(e) (strcmp(cp->lval, CF_REMACCESS_BODIES[e].lval) == 0)
+
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
+            if (IsAccessBody(REMOTE_ACCESS_IFENCRYPTED))
             {
                 ap->encrypt = BooleanFromString(cp->rval.item);
-                continue;
             }
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_SHORTCUT].lval) == 0)
+            else if (IsAccessBody(REMOTE_ACCESS_SHORTCUT))
             {
                 const char *shortcut = cp->rval.item;
 
@@ -987,48 +962,42 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     Log(LOG_LEVEL_ERR,
                         "slashes are forbidden in ACL shortcut: %s",
                         shortcut);
-                    continue;
                 }
-
-                bool bret = StringMapHasKey(SV.path_shortcuts, shortcut);
-                if (bret)
+                else if (StringMapHasKey(SV.path_shortcuts, shortcut))
                 {
                     Log(LOG_LEVEL_WARNING,
                         "Already existing shortcut for path '%s' was replaced",
                         pp->promiser);
-                    continue;
                 }
+                else
+                {
+                    StringMapInsert(SV.path_shortcuts,
+                                    xstrdup(shortcut), xstrdup(pp->promiser));
 
-                StringMapInsert(SV.path_shortcuts,
-                                xstrdup(shortcut), xstrdup(pp->promiser));
-
-                Log(LOG_LEVEL_DEBUG, "Added shortcut '%s' for path: %s",
-                    shortcut, pp->promiser);
-                continue;
+                    Log(LOG_LEVEL_DEBUG, "Added shortcut '%s' for path: %s",
+                        shortcut, pp->promiser);
+                }
             }
-
             break;
 
         case RVAL_TYPE_LIST:
 
-            for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = (const Rlist *) cp->rval.item;
+                 rp != NULL; rp = rp->next)
             {
-
                 /* TODO keys, ips, hostnames are valid such strings. */
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITIPS].lval) == 0)
+                if (IsAccessBody(REMOTE_ACCESS_ADMITIPS))
                 {
                     ret = StrList_Append(&racl->admit.ips, RlistScalarValue(rp));
                     PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
                 }
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYIPS].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_DENYIPS))
                 {
                     ret = StrList_Append(&racl->deny.ips, RlistScalarValue(rp));
                     PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
                 }
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITHOSTNAMES].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_ADMITHOSTNAMES))
                 {
                     ret = StrList_Append(&racl->admit.hostnames, RlistScalarValue(rp));
                     /* If any hostname rule got added,
@@ -1038,9 +1007,8 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                         TurnOnReverseLookups();
                     }
                     NewHostToOldACL(ap, RlistScalarValue(rp));
-                    continue;
                 }
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYHOSTNAMES].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_DENYHOSTNAMES))
                 {
                     ret = StrList_Append(&racl->deny.hostnames, RlistScalarValue(rp));
                     /* If any hostname rule got added,
@@ -1050,38 +1018,29 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                         TurnOnReverseLookups();
                     }
                     NewHostToOldACL(dp, RlistScalarValue(rp));
-                    continue;
                 }
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITKEYS].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_ADMITKEYS))
                 {
                     ret = StrList_Append(&racl->admit.keys, RlistScalarValue(rp));
-                    continue;
                 }
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYKEYS].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_DENYKEYS))
                 {
                     ret = StrList_Append(&racl->deny.keys, RlistScalarValue(rp));
-                    continue;
                 }
-
                 /* Legacy stuff */
-
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_ADMIT))
                 {
                     ret = racl_SmartAppend(&racl->admit, RlistScalarValue(rp));
                     PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
                 }
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_DENY))
                 {
                     ret = racl_SmartAppend(&racl->deny, RlistScalarValue(rp));
                     PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
                 }
-
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
+                else if (IsAccessBody(REMOTE_ACCESS_MAPROOT))
                 {
                     PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
-                    continue;
                 }
             }
 
@@ -1097,6 +1056,8 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
         default:
             UnexpectedError("Unknown constraint type!");
             break;
+
+#undef IsAccessBody
         }
     }
 
@@ -1152,7 +1113,10 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     {
         if (errno != ENOENT)                        /* something went wrong */
         {
-            goto err_unknown;
+            Log(LOG_LEVEL_ERR,
+                "Failed to canonicalize path '%s' in access_rules, ignoring!",
+                pp->promiser);
+            return;
         }
         else                      /* file does not exist, it doesn't matter */
         {
@@ -1208,16 +1172,10 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     return;
 
   err_too_long:
-        Log(LOG_LEVEL_ERR,
-            "Path '%s' in access_rules is too long (%zu > %d), ignoring!",
-            pp->promiser, strlen(pp->promiser), PATH_MAX);
-        return;
-
-  err_unknown:
-        Log(LOG_LEVEL_ERR,
-            "Failed to canonicalize path '%s' in access_rules, ignoring!",
-            pp->promiser);
-        return;
+    Log(LOG_LEVEL_ERR,
+        "Path '%s' in access_rules is too long (%zu > %d), ignoring!",
+        pp->promiser, strlen(pp->promiser), PATH_MAX);
+    return;
 }
 
 /*********************************************************************/
@@ -1227,7 +1185,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
     Auth *ap, *dp;
     const char *handle = PromiseGetHandle(pp);
 
-    if ((handle == NULL) && (strcmp(type,"literal") == 0))
+    if (handle == NULL && strcmp(type, "literal") == 0)
     {
         Log(LOG_LEVEL_ERR, "Access to literal server data requires you to define a promise handle for reference");
         return;
@@ -1299,13 +1257,10 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
 
 static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp)
 {
-    Auth *ap, *dp;
-
-    ap = GetOrCreateAuth(pp->promiser, &SV.varadmit, &SV.varadmittail);
-    dp = GetOrCreateAuth(pp->promiser, &SV.vardeny, &SV.vardenytail);
+    Auth *dp = GetOrCreateAuth(pp->promiser, &SV.vardeny, &SV.vardenytail),
+        *ap = GetOrCreateAuth(pp->promiser, &SV.varadmit, &SV.varadmittail);
 
     RegisterLiteralServerData(ctx, pp->promiser, pp);
-
     ap->literal = true;
 
     size_t pos = acl_SortedInsert(&query_acl, pp->promiser);
@@ -1379,8 +1334,6 @@ static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail
 
 static Auth *GetAuthPath(const char *path, Auth *list)
 {
-    Auth *ap;
-
     size_t path_len = strlen(path);
     char unslashed_path[path_len + 1];
     memcpy(unslashed_path, path, path_len + 1);
@@ -1394,7 +1347,7 @@ static Auth *GetAuthPath(const char *path, Auth *list)
         DeleteSlash(unslashed_path);
     }
 
-    for (ap = list; ap != NULL; ap = ap->next)
+    for (Auth *ap = list; ap != NULL; ap = ap->next)
     {
         if (strcmp(ap->path, unslashed_path) == 0)
         {

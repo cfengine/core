@@ -1412,7 +1412,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     {
         result = DefaultVarPromise(ctx, pp);
     }
-    else if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    else if (strcmp("classes", pp->parent_promise_type->name) == 0 || strcmp("conditions", pp->parent_promise_type->name) == 0)
     {
         result = VerifyClassPromise(ctx, pp, NULL);
     }

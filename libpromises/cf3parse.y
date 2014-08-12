@@ -126,7 +126,7 @@ bundletype_values:     typeid
                                INSTALL_SKIP = true;
                            }
                        }
-                     | error 
+                     | error
                        {
                            yyclearin;
                            ParseError("Expected bundle type, wrong input '%s'", yytext);
@@ -140,7 +140,7 @@ bundleid:              bundleid_values
                        }
 
 bundleid_values:       symbol
-                     | error 
+                     | error
                        {
                            yyclearin;
                            ParseError("Expected bundle identifier, wrong input '%s'", yytext);
@@ -210,7 +210,7 @@ symbol:                IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-arglist:               /* Empty */ 
+arglist:               /* Empty */
                      | arglist_begin aitems arglist_end
                      | arglist_begin arglist_end
                      | arglist_begin error
@@ -277,7 +277,7 @@ bundlebody:            body_begin
 
                        bundle_decl
 
-                       CB 
+                       CB
                        {
                            INSTALL_SKIP = false;
                            P.offsets.last_id = -1;
@@ -311,12 +311,12 @@ bundle_decl:           /* empty */
 
 bundle_statements:     bundle_statement
                      | bundle_statements bundle_statement
-                     | error 
+                     | error
                        {
                           INSTALL_SKIP = true;
                           ParseError("Expected promise type, got '%s'", yytext);
                           ParserDebug("P:promise_type:error yychar = %d, %c, yyempty = %d\n", yychar, yychar, YYEMPTY);
-                          yyclearin; 
+                          yyclearin;
                        }
 
 
@@ -342,6 +342,12 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                                case SYNTAX_STATUS_NORMAL:
                                    if (strcmp(P.block, "bundle") == 0)
                                    {
+                                       // Alias classes -> conditions without tears
+                                       if (strcmp(P.currenttype, "conditions") == 0)
+                                       {
+                                           strcpy(P.currenttype, "classes");
+                                       }
+
                                        if (!INSTALL_SKIP)
                                        {
                                            P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
@@ -694,7 +700,7 @@ bodybody:              body_begin
 
                        bodyattribs
 
-                       CB 
+                       CB
                        {
                            P.offsets.last_id = -1;
                            P.offsets.last_string = -1;
@@ -798,7 +804,7 @@ selection:             selection_id                         /* BODY ONLY */
                                    }
                                }
                            }
-                           
+
                            RvalDestroy(P.rval);
                            P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                        }
@@ -988,7 +994,7 @@ litems:                /* empty */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 litem:                 IDSYNTAX
-                       { 
+                       {
                            ParserDebug("\tP:%s:%s:%s:%s list append; id = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                            RlistAppendScalar((Rlist **)&P.currentRlist, P.currentid);
                        }
@@ -1052,7 +1058,7 @@ usefunction:           functionid givearglist
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-givearglist:           OP 
+givearglist:           OP
                        {
                            if (++P.arg_nesting >= CF_MAX_NESTING)
                            {
@@ -1064,7 +1070,7 @@ givearglist:           OP
 
                        gaitems
 
-                       CP 
+                       CP
                        {
                            ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting], P.giveargs[P.arg_nesting]);

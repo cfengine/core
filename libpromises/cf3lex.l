@@ -207,7 +207,7 @@ promise_type   [a-zA-Z_]+:
 
 {class}               {
                           char *tmp = NULL;
-                        
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
 

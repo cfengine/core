@@ -131,6 +131,9 @@ void Summarize()
         }
     }
 
+    /* TODO: FIXME: also report classes_acl, vars_acl, literals_acl,
+     * query_acl and SV.path_shortcuts */
+
     Auth *ptr;
     Item *ip, *ipr;
 
@@ -259,6 +262,7 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
     query_acl     = calloc(1, sizeof(*query_acl));
     SV.path_shortcuts = StringMapNew();
 
+    /* TODO: Why not just use xcalloc ? */
     if (paths_acl == NULL || classes_acl == NULL || vars_acl == NULL ||
         literals_acl == NULL || query_acl == NULL ||
         SV.path_shortcuts == NULL)

@@ -1021,6 +1021,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         break;
     }
     case PROTOCOL_COMMAND_CALL_ME_BACK:
+        /* Server side, handing the collect call off to cf-hub. */
 
         if (acl_CheckExact(query_acl, "collect_calls",
                            conn->ipaddr, conn->revdns,

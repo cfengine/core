@@ -91,12 +91,11 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
     return backreference;
 }
 
-int IsRegex(char *str)
+int IsRegex(const char *str)
 {
-    char *sp;
+    const char *sp;
     int ret = false;
-    enum
-    { r_norm, r_norepeat, r_literal } special = r_norepeat;
+    enum { r_norm, r_norepeat, r_literal } special = r_norepeat;
     int bracket = 0;
     int paren = 0;
 
@@ -188,14 +187,14 @@ int IsRegex(char *str)
     }
 }
 
-int IsPathRegex(char *str)
+int IsPathRegex(const char *str)
 {
-    char *sp;
-    int result = false, s = 0, r = 0;
+    int result = IsRegex(str);
 
-    if ((result = IsRegex(str)))
+    if (result)
     {
-        for (sp = str; *sp != '\0'; sp++)
+        int s = 0, r = 0; /* Count square and round brackets. */
+        for (const char *sp = str; *sp != '\0'; sp++)
         {
             switch (*sp)
             {
@@ -221,7 +220,7 @@ int IsPathRegex(char *str)
                 break;
             default:
 
-                if ((*sp == FILE_SEPARATOR) && (r || s))
+                if (*sp == FILE_SEPARATOR && (r || s))
                 {
                     Log(LOG_LEVEL_ERR,
                           "Path regular expression %s seems to use expressions containing the directory symbol %c", str,
@@ -239,19 +238,16 @@ int IsPathRegex(char *str)
 
 /* Checks whether item matches a list of wildcards */
 
-int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
+int IsRegexItemIn(EvalContext *ctx, const Item *list, const char *regex)
 {
-    Item *ptr;
-
-    for (ptr = list; ptr != NULL; ptr = ptr->next)
+    for (const Item *ptr = list; ptr != NULL; ptr = ptr->next)
     {
         if ((ptr->classes) && (!IsDefinedClass(ctx, ptr->classes)))
         {
             continue;
         }
 
-        /* Avoid using regex if possible, due to memory leak */
-
+        /* Cheap pre-test: */
         if (strcmp(regex, ptr->name) == 0)
         {
             return true;
@@ -259,7 +255,7 @@ int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
 
         /* Make it commutative */
 
-        if ((StringMatchFull(regex, ptr->name)) || (StringMatchFull(ptr->name, regex)))
+        if (StringMatchFull(regex, ptr->name) || StringMatchFull(ptr->name, regex))
         {
             return true;
         }

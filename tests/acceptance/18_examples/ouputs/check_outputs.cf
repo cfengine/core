@@ -34,8 +34,8 @@ bundle agent test
 {
   meta:
       "test_skip_unsupported" string => "windows";
-      "test_suppress_fail" string => "sunos_5_10|sunos_5_9|aix", # need to re-test on solaris 8 and 10 but now passing on solaris 11
-       meta => { "redmine6225" };
+      "test_suppress_fail" string => "sunos_5_10|sunos_5_9", # need to re-test on solaris 8 and 10 but now passing on solaris 11
+      meta => { "redmine6225" };
 
   vars:
       "examples" slist => { @(init.all_examples) };

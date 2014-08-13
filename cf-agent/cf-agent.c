@@ -181,7 +181,7 @@ static const struct option OPTIONS[] =
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {"log-output", no_argument, 0, 'l'},
-    {"timing-output", no_argument, 0, 'l'},
+    {"timing-output", no_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {NULL, 0, 0, '\0'}
@@ -203,6 +203,7 @@ static const char *const HINTS[] =
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     "Use line-based log output format on console",
+    "Output timing information on console when in verbose mode",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     NULL

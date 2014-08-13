@@ -238,10 +238,10 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 
     /* FIXME: username is local */
-    GetCurrentUserName(conn->username, CF_SMALLBUF);
+    GetCurrentUserName(conn->username, sizeof(conn->username));
 #else
     /* Always say "root" as username from windows. */
-    snprintf(conn->username, CF_SMALLBUF, "root");
+    strlcpy(conn->username, "root", sizeof(conn->username));
 #endif
 
     if (port == NULL || *port == '\0')

@@ -1682,11 +1682,19 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
         /* { */
 
         /* } */
-
-        Log(LOG_LEVEL_INFO,
-            "Failed to canonicalise filename '%s' (realpath: %s)",
-            reqpath, GetErrorStr());
-        return (size_t) -1;
+        struct stat statbuf;
+        if ((lstat(reqpath, &statbuf) == 0) && S_ISLNK(statbuf.st_mode))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Requested file is a dead symbolic link (filename: %s)", reqpath);
+            strlcpy(dst, reqpath, CF_BUFSIZE);
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO,
+                "Failed to canonicalise filename '%s' (realpath: %s)",
+                reqpath, GetErrorStr());
+            return (size_t) -1;
+        }
     }
 
     size_t dst_len = strlen(dst);

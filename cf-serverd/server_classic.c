@@ -139,11 +139,16 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
     {
         Log(LOG_LEVEL_VERBOSE, "Filename %s is resolved to %s", translated_req_path, transrequest);
     }
-    else
+    else if ((lstat(translated_req_path, &statbuf) == -1) && !S_ISLNK(statbuf.st_mode))
     {
         Log(LOG_LEVEL_INFO, "Couldn't resolve (realpath: %s) filename: %s",
             GetErrorStr(), translated_req_path);
         return false;                /* can't continue without transrequest */
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Requested file is a dead symbolic link (filename: %s)", translated_req_path);
+        strlcpy(transrequest, translated_req_path, CF_BUFSIZE);
     }
 
     if (lstat(transrequest, &statbuf) == -1)

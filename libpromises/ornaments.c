@@ -130,7 +130,9 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
 
 
     LoggingContext *lctx = GetCurrentThreadContext();
-    Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", lctx->pctx->log_hook(lctx->pctx, EvalContextGetPass(ctx), ""));
+    char *hooked = lctx->pctx->log_hook(lctx->pctx, EvalContextGetPass(ctx), "");
+    Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", hooked);
+    free(hooked);
 
     if (pp->comment)
     {

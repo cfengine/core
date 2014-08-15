@@ -377,7 +377,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
             Log(LOG_LEVEL_VERBOSE, "Matched '%s'", ip->name);
         }
 
-        PrependItem(killlist, ip->name, "");
+        PrependItem(killlist, ip->name, NULL);
         (*killlist)->counter = pid;
         matches++;
     }

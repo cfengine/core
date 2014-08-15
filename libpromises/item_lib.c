@@ -545,7 +545,7 @@ Item *SplitString(const char *string, char sep)
     }
 
     before[i] = '\0';
-    PrependItem(&liststart, before, "");
+    PrependItem(&liststart, before, NULL);
 
     return ReverseItemList(liststart);
 }

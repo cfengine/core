@@ -228,7 +228,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
                     continue;
                 }
 
-                PrependItem(&result, ip->name, "");
+                PrependItem(&result, ip->name, NULL);
                 result->counter = (int)pid;
             }
         }
@@ -1137,7 +1137,7 @@ void ZCopyProcessList(Item **dest, const Item *source, Seq *pidlist, char **name
 
     if (PidInSeq(pidlist, gpid))
     {
-        PrependItem(dest, source->name, "");
+        PrependItem(dest, source->name, NULL);
     }
 }
 # endif /* HAVE_GETZONEID */

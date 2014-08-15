@@ -25,6 +25,7 @@
 #ifndef CFENGINE_PROTOTYPES3_H
 #define CFENGINE_PROTOTYPES3_H
 
+#include <cf3.defs.h>
 #include <compiler.h>
 #include <enterprise_extension.h>
 

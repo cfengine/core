@@ -631,7 +631,7 @@ static void PrepareServer(int sd)
  *
  * @return Number of live threads remaining after waiting.
  */
-static int WaitOnThreads(Policy *server_policy)
+static int WaitOnThreads()
 {
     int result = 1;
     for (int i = 2; i > 0; i--)
@@ -666,7 +666,6 @@ static int WaitOnThreads(Policy *server_policy)
         Log(LOG_LEVEL_VERBOSE,
             "All threads are done, cleaning up allocations");
         ClearAuthAndACLs();
-        PolicyDestroy(server_policy);
         ServerTLSDeInitialize();
     }
 
@@ -868,8 +867,9 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     /* This is a graceful exit, give 2 seconds chance to threads. */
-    int threads_left = WaitOnThreads(server_cfengine_policy);
+    int threads_left = WaitOnThreads();
     YieldCurrentLock(thislock);
+    PolicyDestroy(server_cfengine_policy);
 
     return threads_left;
 }

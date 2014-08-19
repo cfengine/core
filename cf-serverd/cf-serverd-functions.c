@@ -692,6 +692,7 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
             if (ThreadLock(cft_server_children))
             {
+                int prior = COLLECT_INTERVAL;
                 if (ACTIVE_THREADS == 0)
                 {
                     /* Check for new policy just before spawning the
@@ -700,6 +701,12 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                     CheckFileChanges(ctx, policy, config);
                 }
                 ThreadUnlock(cft_server_children);
+
+                if (prior != COLLECT_INTERVAL)
+                {
+                    /* Start, stop or change schedule, as appropriate. */
+                    CollectCallStart(COLLECT_INTERVAL);
+                }
             }
 
             /* Is there new connection pending at our listening socket? */

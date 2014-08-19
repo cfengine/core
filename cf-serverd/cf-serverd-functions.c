@@ -549,17 +549,9 @@ static int InitServer(size_t queue_size)
     return sd;
 }
 
-/**
- *  @retval >0 Number of threads still working
- *  @retval 0  All threads are done
- *  @retval -1 Server didn't run
- */
-int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
+/* Set up standard signal-handling. */
+static void InitSignals()
 {
-    int sd = -1;
-    CfLock thislock;
-    extern int COLLECT_WINDOW;
-
     MakeSignalPipe();
 
     signal(SIGINT, HandleSignalsForDaemon);
@@ -568,38 +560,36 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
+}
 
-    ServerTLSInitialize();
+/* Prepare synthetic agent promise and lock it. */
+static CfLock AcquireServerLock(EvalContext *ctx,
+                                GenericAgentConfig *config,
+                                Policy *server_policy)
+{
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(server_policy, NamespaceDefault(),
+                                        "server_cfengine_bundle", "agent",
+                                        NULL, NULL);
+        PromiseType *tp = BundleAppendPromiseType(bp, "server_cfengine");
 
-    sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
+        pp = PromiseTypeAppendPromise(tp, config->input_file,
+                                      (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                      NULL);
+    }
+    assert(pp);
 
     TransactionContext tc = {
         .ifelapsed = 0,
         .expireafter = 1,
     };
+    return AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+}
 
-    Policy *server_cfengine_policy = PolicyNew();
-    Promise *pp = NULL;
-    {
-        Bundle *bp = PolicyAppendBundle(server_cfengine_policy, NamespaceDefault(), "server_cfengine_bundle", "agent", NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "server_cfengine");
-
-        pp = PromiseTypeAppendPromise(tp, config->input_file, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
-    }
-    assert(pp);
-
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
-
-    if (thislock.lock == NULL)
-    {
-        PolicyDestroy(server_cfengine_policy);
-        if (sd >= 0)
-        {
-            cf_closesocket(sd);
-        }
-        return -1;
-    }
-
+/* Final preparations for running as server */
+static void PrepareServer(int sd)
+{
     if (sd != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
@@ -627,125 +617,243 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 #endif
 
     Log(LOG_LEVEL_NOTICE, "Server is starting...");
-    WritePID("cf-serverd.pid");
-    CollectCallStart(COLLECT_INTERVAL);
+    WritePID("cf-serverd.pid"); /* Arranges for atexit() to tidy it away */
+}
 
-    bool error = false;
-    while (!error && !IsPendingTermination())
+/* Wait for connection-handler threads to finish their work.
+ *
+ * @return Number of live threads remaining after waiting.
+ */
+static int WaitOnThreads(Policy *server_policy)
+{
+    int result = 1;
+    for (int i = 2; i > 0; i--)
     {
-        /* Check whether we have established peering with a hub */
-        if (CollectCallHasPending())
+        if (ThreadLock(cft_server_children))
         {
-            int waiting_queue = 0;
-            int new_client = CollectCallGetPending(&waiting_queue);
-            assert(new_client >= 0);
-            if (waiting_queue > COLLECT_WINDOW)
-            {
-                Log(LOG_LEVEL_INFO,
-                    "Closing collect call with queue longer than the allocated window [%d > %d]",
-                    waiting_queue, COLLECT_WINDOW);
-                cf_closesocket(new_client);
-            }
-            else
-            {
-                ConnectionInfo *info = ConnectionInfoNew();
-                assert(info);
-
-                ConnectionInfoSetSocket(info, new_client);
-                info->is_call_collect = true; /* Mark processed when done. */
-                ServerEntryPoint(ctx, POLICY_SERVER, info);
-            }
+            result = ACTIVE_THREADS;
+            ThreadUnlock(cft_server_children);
         }
 
-        Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
-        struct timeval timeout = { .tv_sec = 60 };
-        int signal_pipe = GetSignalPipe();
-        fd_set rset;
-        FD_ZERO(&rset);
-        FD_SET(signal_pipe, &rset);
-        /* sd might be -1 if "listen" attribute in body server control is set
-         * to off (enterprise feature for call-collected clients). */
-        if (sd != -1)
+        if (result == 0)
         {
-            FD_SET(sd, &rset);
+            break;
         }
 
-        int select_ret = select(MAX(sd, signal_pipe) + 1,
-                                &rset, NULL, NULL, &timeout);
+        Log(LOG_LEVEL_VERBOSE,
+            "Waiting %ds for %d connection threads to finish",
+            i, result);
 
-        if (select_ret == -1)
-        {
-            if (errno != EINTR)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Error while waiting for connections. (select: %s)",
-                    GetErrorStr());
-                error = true;                                   /* quit */
-            }
-        }
-        else                                          /* timeout or success */
-        {
-            /* Empty the signal pipe, it is there to only detect missed signals
-             * in-between while(!IsPendingTermination()) and select(). */
-            unsigned char buf;
-            while (recv(signal_pipe, &buf, 1, 0) > 0) {}
-
-            if (ThreadLock(cft_server_children))
-            {
-                int prior = COLLECT_INTERVAL;
-                if (ACTIVE_THREADS == 0)
-                {
-                    /* Check for new policy just before spawning the
-                     * thread, since server reconfiguration can only
-                     * happen when no threads are active. */
-                    CheckFileChanges(ctx, policy, config);
-                }
-                ThreadUnlock(cft_server_children);
-
-                if (prior != COLLECT_INTERVAL)
-                {
-                    /* Start, stop or change schedule, as appropriate. */
-                    CollectCallStart(COLLECT_INTERVAL);
-                }
-            }
-
-            /* Is there new connection pending at our listening socket? */
-            if (select_ret > 0 && sd != -1 && FD_ISSET(sd, &rset))
-            {
-                /* TODO embed ConnectionInfo into ServerConnectionState. */
-                ConnectionInfo *info = ConnectionInfoNew();
-                if (info == NULL)
-                {
-                    continue;
-                }
-
-                info->ss_len = sizeof(info->ss);
-                info->sd = accept(sd, (struct sockaddr *) &info->ss,
-                                  &info->ss_len);
-
-                if (info->sd == -1)
-                {
-                    ConnectionInfoDestroy(&info);
-                    continue;
-                }
-
-                /* Just convert IP address to string, no DNS lookup. */
-                char ipaddr[CF_MAX_IP_LEN] = "";
-                getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
-                            ipaddr, sizeof(ipaddr),
-                            NULL, 0, NI_NUMERICHOST);
-
-                /* IPv4 mapped addresses (e.g. "::ffff:192.168.1.2") are
-                 * hereby represented with their IPv4 counterpart. */
-                ServerEntryPoint(ctx, MapAddress(ipaddr), info);
-            }
-        }
+        sleep(1);
     }
 
+    if (result > 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "There are %d connection threads left, exiting anyway",
+            result);
+    }
+    else
+    {
+        assert(result == 0);
+        Log(LOG_LEVEL_VERBOSE,
+            "All threads are done, cleaning up allocations");
+        ClearAuthAndACLs();
+        PolicyDestroy(server_policy);
+        ServerTLSDeInitialize();
+    }
+
+    return result;
+}
+
+static void CollectCallIfDue(EvalContext *ctx)
+{
+    /* Check whether we have established peering with a hub */
+    if (CollectCallHasPending())
+    {
+        extern int COLLECT_WINDOW;
+        int waiting_queue = 0;
+        int new_client = CollectCallGetPending(&waiting_queue);
+        assert(new_client >= 0);
+        if (waiting_queue > COLLECT_WINDOW)
+        {
+            Log(LOG_LEVEL_INFO,
+                "Closing collect call with queue longer than the allocated window [%d > %d]",
+                waiting_queue, COLLECT_WINDOW);
+            cf_closesocket(new_client);
+        }
+        else
+        {
+            ConnectionInfo *info = ConnectionInfoNew();
+            assert(info);
+
+            ConnectionInfoSetSocket(info, new_client);
+            info->is_call_collect = true; /* Mark processed when done. */
+            ServerEntryPoint(ctx, POLICY_SERVER, info);
+        }
+    }
+}
+
+/* Wait up to a minute for an in-coming connection.
+ *
+ * @param sd The listening socket or -1.
+ * @retval > 0 In-coming connection.
+ * @retval 0 No in-coming connection.
+ * @retval -1 Error (other than interrupt).
+ * @retval < -1 Interrupted while waiting.
+ */
+static int WaitForIncoming(int sd)
+{
+    Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
+    struct timeval timeout = { .tv_sec = 60 };
+    int signal_pipe = GetSignalPipe();
+    fd_set rset;
+    FD_ZERO(&rset);
+    FD_SET(signal_pipe, &rset);
+
+    /* sd might be -1 if "listen" attribute in body server control is set
+     * to off (enterprise feature for call-collected clients). */
+    if (sd != -1)
+    {
+        FD_SET(sd, &rset);
+    }
+
+    int result = select(MAX(sd, signal_pipe) + 1,
+                        &rset, NULL, NULL, &timeout);
+    if (result == -1)
+    {
+        return (errno == EINTR) ? -2 : -1;
+    }
+    assert(result >= 0);
+
+    /* Empty the signal pipe, it is there to only detect missed
+     * signals in-between checking IsPendingTermination() and calling
+     * select(). */
+    unsigned char buf;
+    while (recv(signal_pipe, &buf, 1, 0) > 0)
+    {
+        /* skip */
+    }
+    /* If we had data on the signal pipe but not the listening socket,
+     * report no in-coming signals: */
+    if (result > 0 && (sd < 0 || !FD_ISSET(sd, &rset)))
+    {
+        return 0;
+    }
+
+    /* Otherwise, select's result is what we need to report: */
+    return result;
+}
+
+/* Check for new policy just before spawning a thread.
+ *
+ * Server reconfiguration can only happen when no threads are active,
+ * so this is a good time to do it; but we do still have to check for
+ * running threads. */
+static void PolicyUpdateIfSafe(EvalContext *ctx, Policy **policy,
+                               GenericAgentConfig *config)
+{
+    if (ThreadLock(cft_server_children))
+    {
+        int prior = COLLECT_INTERVAL;
+        if (ACTIVE_THREADS == 0)
+        {
+            CheckFileChanges(ctx, policy, config);
+        }
+        ThreadUnlock(cft_server_children);
+
+        /* Check for change in call-collect interval: */
+        if (prior != COLLECT_INTERVAL)
+        {
+            /* Start, stop or change schedule, as appropriate. */
+            CollectCallStart(COLLECT_INTERVAL);
+        }
+    }
+}
+
+/* Try to accept a connection; handle if we get one. */
+static void AcceptAndHandle(EvalContext *ctx, int sd)
+{
+    /* TODO embed ConnectionInfo into ServerConnectionState. */
+    ConnectionInfo *info = ConnectionInfoNew();
+    if (info == NULL)
+    {
+        return;
+    }
+
+    info->ss_len = sizeof(info->ss);
+    info->sd = accept(sd,
+                      (struct sockaddr *) &info->ss,
+                      &info->ss_len);
+    if (info->sd == -1)
+    {
+        ConnectionInfoDestroy(&info);
+        return;
+    }
+
+    /* Just convert IP address to string, no DNS lookup. */
+    char ipaddr[CF_MAX_IP_LEN] = "";
+    getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
+                ipaddr, sizeof(ipaddr),
+                NULL, 0, NI_NUMERICHOST);
+
+    /* IPv4 mapped addresses (e.g. "::ffff:192.168.1.2") are
+     * hereby represented with their IPv4 counterpart. */
+    ServerEntryPoint(ctx, MapAddress(ipaddr), info);
+}
+
+/**
+ *  @retval >0 Number of threads still working
+ *  @retval 0  All threads are done
+ *  @retval -1 Server didn't run
+ */
+int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
+{
+    InitSignals();
+    ServerTLSInitialize();
+    int sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
+
+    Policy *server_cfengine_policy = PolicyNew();
+    CfLock thislock = AcquireServerLock(ctx, config, server_cfengine_policy);
+    if (thislock.lock == NULL)
+    {
+        PolicyDestroy(server_cfengine_policy);
+        if (sd >= 0)
+        {
+            cf_closesocket(sd);
+        }
+        return -1;
+    }
+
+    PrepareServer(sd);
+    CollectCallStart(COLLECT_INTERVAL);
+
+    while (!IsPendingTermination())
+    {
+        CollectCallIfDue(ctx);
+
+        int selected = WaitForIncoming(sd);
+        if (selected == -1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Error while waiting for connections. (select: %s)",
+                GetErrorStr());
+            break;
+        }
+        else if (selected >= 0) /* timeout or success */
+        {
+            PolicyUpdateIfSafe(ctx, policy, config);
+
+            /* Is there a new connection pending at our listening socket? */
+            if (selected > 0)
+            {
+                AcceptAndHandle(ctx, sd);
+            }
+        } /* else: interrupted, maybe pending termination. */
+    }
     Log(LOG_LEVEL_NOTICE, "Cleaning up and exiting...");
 
     CollectCallStop();
-
     if (sd != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Closing listening socket");
@@ -753,43 +861,7 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     /* This is a graceful exit, give 2 seconds chance to threads. */
-    int threads_left = 1;
-    for (int i = 2; i > 0; i--)
-    {
-        if (ThreadLock(cft_server_children))
-        {
-            threads_left = ACTIVE_THREADS;
-            ThreadUnlock(cft_server_children);
-        }
-
-        if (threads_left == 0)
-        {
-            break;
-        }
-
-        Log(LOG_LEVEL_VERBOSE,
-            "Waiting %ds for %d connection threads to finish",
-            i, threads_left);
-
-        sleep(1);
-    }
-
-    if (threads_left > 0)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "There are %d connection threads left, exiting anyway",
-            threads_left);
-    }
-    else
-    {
-        assert(threads_left == 0);
-        Log(LOG_LEVEL_VERBOSE,
-            "All threads are done, cleaning up allocations");
-        ClearAuthAndACLs();
-        PolicyDestroy(server_cfengine_policy);
-        ServerTLSDeInitialize();
-    }
-
+    int threads_left = WaitOnThreads(server_cfengine_policy);
     YieldCurrentLock(thislock);
 
     return threads_left;

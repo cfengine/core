@@ -484,7 +484,7 @@ static int SplitProcLine(const char *proc,
         if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
         {
             e = strlen(proc) - 1;
-            while (ep[1] && ep[1] != '\n')
+            while (ep[0] && ep[0] != '\n')
             {
                 ep++;
             }
@@ -497,7 +497,7 @@ static int SplitProcLine(const char *proc,
         else
         {
             e = end[i];
-            while (ep[1] && !isspace((unsigned char)ep[1]))
+            while (ep[0] && !isspace((unsigned char)ep[0]))
             {
                 ep++;
             }

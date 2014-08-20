@@ -302,7 +302,7 @@ static long TimeCounter2Int(const char *s)
     else
     {
         Log(LOG_LEVEL_ERR,
-            "Unable to parse elapsed time 'ps' field as [dd-]hh:mm[:ss], got '%s'",
+            "Unable to parse 'ps' time field as [dd-]hh:mm[:ss], got '%s'",
             s);
         return CF_NOINT;
     }
@@ -323,17 +323,15 @@ static long TimeCounter2Int(const char *s)
 
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {
-    int i;
-    time_t value;
-
     if ((min == CF_NOINT) || (max == CF_NOINT))
     {
         return false;
     }
 
-    if ((i = GetProcColumnIndex(name1, name2, names)) != -1)
+    int i = GetProcColumnIndex(name1, name2, names);
+    if (i != -1)
     {
-        value = (time_t) TimeCounter2Int(line[i]);
+        time_t value = (time_t) TimeCounter2Int(line[i]);
 
         if (value == CF_NOINT)
         {
@@ -514,20 +512,21 @@ static int SplitProcLine(const char *proc,
 
     for (int i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
     {
-        /* Space-delimited, from sp to ep: */
-        const char *ep;
-        while (*sp == ' ')
+        /* Space-delimited heuristic, from sp to just before ep: */
+        while (isspace((unsigned char) sp[0]))
         {
             sp++;
         }
-        ep = sp;
+        const char *ep = sp;
 
-        /* Start with the column header's position; we may then need to
-         * grow outwards. */
+        /* Header-driven heuristic, field from proc[s] to proc[e].
+         * Start with the column header's position and maybe grow
+         * outwards. */
         int s = start[i], e;
         if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
         {
             e = strlen(proc) - 1;
+            /* Extend space-delimited field to line end: */
             while (ep[0] && ep[0] != '\n')
             {
                 ep++;
@@ -541,30 +540,31 @@ static int SplitProcLine(const char *proc,
         else
         {
             e = end[i];
+            /* Extend space-delimited to next space: */
             while (ep[0] && !isspace((unsigned char)ep[0]))
             {
                 ep++;
             }
         }
         /* ep points at the space (or '\0') *following* the word or
-         * final field */
+         * final field. */
 
         /* Some ps stimes may contain spaces, e.g. "Jan 25" */
         if (strcmp(names[i], "STIME") == 0 &&
             ep - sp == 3)
         {
             const char *np = ep;
-            while (isspace((unsigned char)*np))
+            while (isspace((unsigned char) np[0]))
             {
                 np++;
             }
-            if (isdigit((unsigned char)*np))
+            if (isdigit((unsigned char) np[0]))
             {
                 do
                 {
                     np++;
                 }
-                while (isdigit((unsigned char)*np));
+                while (isdigit((unsigned char) np[0]));
                 ep = np;
             }
         }

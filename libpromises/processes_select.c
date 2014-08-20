@@ -654,9 +654,9 @@ static int SplitProcLine(const char *proc,
                 column[0] = '\0';
             }
 
-            Log(LOG_LEVEL_INFO,
-                "Unacceptable model uncertainty examining process(%s): '%s' != '%s'",
-                proc, word, column);
+            Log(LOG_LEVEL_VERBOSE,
+                "Unreliable fuzzy parsing of ps output (%s) %s: '%s' != '%s'",
+                proc, names[i], word, column);
         }
 
         /* Fall back on word if column got an empty answer: */

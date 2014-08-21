@@ -578,14 +578,21 @@ static int SplitProcLine(const char *proc,
          * left even as far as under the heading of the next column
          * (seen with ps -fel's SZ spilling left into ADDR's space on
          * Linux).  While widening, it's OK to include a stray space;
-         * we'll trim that afterwards. */
+         * we'll trim that afterwards.  Overspill from neighbouring
+         * columns can muck up alignment, so "digit" means any
+         * character that can appear in a numeric field (we may need
+         * to tweak "alphabetic" likewise for text fields; the user
+         * field can, for example, have a '+' appended). */
+        bool overspilt = false;
 
-        /* Move s left until we run outside the field or find space. */
-        if (isdigit((unsigned char)proc[e]))
-        {
-            /* Numeric fields may include punctuators: */
+        /* Numeric fields may include [-.:] and perhaps other
+         * punctuators: */
 #define IsNumberish(c) (isdigit((unsigned char)(c)) || ispunct((unsigned char)(c)))
 
+        /* Right-aligned numeric: move s left until we run outside the
+         * field or find space. */
+        if (IsNumberish(proc[e]))
+        {
             bool number = i > 0; /* Should we check for under-spill ? */
             int outer = number ? end[i - 1] + 1 : 0;
             while (s >= outer && !isspace((unsigned char) proc[s]))
@@ -627,11 +634,14 @@ static int SplitProcLine(const char *proc,
                     }
                 }
             }
-#undef IsNumberish
-        }
 
-        /* Move e right likewise (but never under next heading): */
-        if (isalpha((unsigned char)proc[s]))
+            overspilt = IsNumberish(proc[e + 1]);
+        }
+#undef IsNumberish
+
+        /* Left-aligned text or numeric misaligned by overspill;
+         * move e right (but never under next heading): */
+        if (overspilt || isalpha((unsigned char) proc[s]))
         {
             int outer;
             if (i + 1 < CF_PROCCOLS && names[i + 1])

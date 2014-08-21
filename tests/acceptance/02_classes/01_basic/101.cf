@@ -1,0 +1,43 @@
+#######################################################
+#
+# Test not for conditions alias
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+  conditions:
+      "ok" not => "class_never_defined";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

@@ -506,7 +506,8 @@ static int SplitProcLine(const char *proc,
 
     memset(line, 0, sizeof(char *) * CF_PROCCOLS);
 
-    const char *sp = proc;
+    int prior = -1; /* End of last header-selected field. */
+    const char *sp = proc; /* Just after last space-separated field. */
     /* Scan in parallel for two heuristics: space-delimited fields
      * found using sp, and ones inferred from the column headers. */
 
@@ -523,6 +524,24 @@ static int SplitProcLine(const char *proc,
          * Start with the column header's position and maybe grow
          * outwards. */
         int s = start[i], e;
+
+        /* If the previous field over-spilled into this one, our start
+         * may be under our header, not directly below the header's
+         * start; but only believe this if the earlier field is
+         * followed by one space and the subsequent field does start
+         * under our header.  Otherwise, allow that the prior field
+         * may be abutting this field, or this field may have
+         * overflowed left into the prior field causing the prior to
+         * (mistakenly) think it includes the present. */
+        if (s <= prior &&
+            prior + 2 <= end[i] &&
+            proc[prior + 1] == ' ' &&
+            proc[prior + 2] != '\0' &&
+            !isspace((unsigned char) proc[prior + 2]))
+        {
+            s = prior + 2;
+        }
+
         if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
         {
             e = strlen(proc) - 1;
@@ -705,6 +724,7 @@ static int SplitProcLine(const char *proc,
         /* Fall back on word if column got an empty answer: */
         line[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(proc + s, 1 + e - s);
         sp = ep;
+        prior = e;
     }
 
     /* Since start times can be very imprecise (e.g. just a past day's

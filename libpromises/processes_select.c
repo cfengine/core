@@ -507,6 +507,7 @@ static int SplitProcLine(const char *proc,
     memset(line, 0, sizeof(char *) * CF_PROCCOLS);
 
     int prior = -1; /* End of last header-selected field. */
+    const size_t linelen = strlen(proc);
     const char *sp = proc; /* Just after last space-separated field. */
     /* Scan in parallel for two heuristics: space-delimited fields
      * found using sp, and ones inferred from the column headers. */
@@ -544,7 +545,7 @@ static int SplitProcLine(const char *proc,
 
         if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
         {
-            e = strlen(proc) - 1;
+            e = linelen - 1;
             /* Extend space-delimited field to line end: */
             while (ep[0] && ep[0] != '\n')
             {
@@ -559,6 +560,34 @@ static int SplitProcLine(const char *proc,
         else
         {
             e = end[i];
+
+            /* It's possible the present field has been shunted left
+             * to make way for an over-sized number or date to the
+             * right.  This can confuse the numeric check below, on
+             * which left-overspill is conditioned - it fails to
+             * recognise this field as numeric, so doesn't check for
+             * it overspilling to the left.  Look to see whether we
+             * should move e left a bit: this is a conservative check,
+             * that'll be revisited below. */
+            int back = start[i + 1];
+            while (back > s && !isspace((unsigned char) proc[back]))
+            {
+                back--;
+            }
+            if (back > s && back <= e &&
+                /* back > s implies isspace(proc[back]), with no
+                 * further space before the next field; if this is a
+                 * single space, it's credibly the separator between
+                 * our field, shunted left, and this over-spilled
+                 * field: */
+                proc[back] == ' ' &&
+                !isspace((unsigned char) proc[back - 1]))
+            {
+                /* So we have a non-empty field that ends under our
+                 * header but before e; adjust e. */
+                e = back - 1;
+            }
+
             /* Extend space-delimited to next space: */
             while (ep[0] && !isspace((unsigned char)ep[0]))
             {
@@ -657,27 +686,77 @@ static int SplitProcLine(const char *proc,
         }
 #undef IsNumberish
 
-        /* Left-aligned text or numeric misaligned by overspill;
-         * move e right (but never under next heading): */
-        if (overspilt || isalpha((unsigned char) proc[s]))
+        bool abut = false;
+        /* Left-aligned text or numeric misaligned by overspill; move
+         * e right (if there's any right to move into; last column
+         * already reaches end of proc): */
+        if (proc[e + 1] &&
+            (overspilt || isalpha((unsigned char) proc[s])))
         {
-            int outer;
-            if (i + 1 < CF_PROCCOLS && names[i + 1])
+            assert(i + 1 < CF_PROCCOLS && names[i + 1]);
+            int outer = start[i + 1]; /* Start of next field's header. */
+            int beyond = end[i + 1]; /* End of next field's header. */
+            if (beyond > linelen)
             {
-                outer = start[i + 1];
+                /* Command is shorter than its header. */
+                assert(i + 2 >= CF_PROCCOLS || NULL == names[i + 2]);
+                beyond = linelen;
+            }
+            assert(beyond >= outer);
+
+            int out = e;
+            do
+            {
+                out++;
+            } while (out < beyond && !isspace((unsigned char) proc[out]));
+
+            if (out < outer)
+            {
+                /* Simple extension to the right, no overlap: we're on
+                 * a space just before the next field's header. */
+                e = out - 1;
+            }
+            else if (out == beyond)
+            {
+                /* This looks like we're actually looking at the next
+                 * field over-spilling left so far that it reaches
+                 * under our header; but we did previously check for
+                 * this and amend e left-wards if it's credible; so
+                 * we're now looking at a case where it isn't;
+                 * probably our columns abut, with no space in
+                 * between.  The best we can do is include the text
+                 * between columns as part of both columns :-( */
+                abut = true;
+                prior = e; /* Before adjusting it: */
+                e = outer - 1;
             }
             else
             {
-                outer = strlen(proc);
-            }
-            /* Simplify loop condition; we want e to end *before* next
-             * field, not on its first byte (or the terminator): */
-            outer--;
+                /* Our word appears to over-spill under the next
+                 * header.  See if that's credible.  If the next is a
+                 * left-aligned field, it'll follow ours after exactly
+                 * a simple space.  If it's right-aligned (numeric),
+                 * it'll still follow after a single space unless it
+                 * has enough space to fit under its header after more
+                 * than one space. */
 
-            while (e < outer && !isspace((unsigned char) proc[e]))
-            {
-                e++;
+                assert(out < beyond && isspace((unsigned char) proc[out]));
+                if ((proc[out] == ' ' && proc[out + 1] &&
+                     !isspace((unsigned char) proc[out + 1])) ||
+                    (isdigit((unsigned char) proc[beyond]) &&
+                     isspace((unsigned char) proc[beyond + 1])))
+                {
+                    e = out - 1;
+                }
+                else
+                {
+                    e = outer - 1;
+                }
             }
+        }
+        if (!abut)
+        {
+            prior = e;
         }
 
         /* Strip off any leading and trailing spaces: */
@@ -724,7 +803,6 @@ static int SplitProcLine(const char *proc,
         /* Fall back on word if column got an empty answer: */
         line[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(proc + s, 1 + e - s);
         sp = ep;
-        prior = e;
     }
 
     /* Since start times can be very imprecise (e.g. just a past day's

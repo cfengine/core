@@ -512,6 +512,15 @@ static int SplitProcLine(const char *proc,
     /* Scan in parallel for two heuristics: space-delimited fields
      * found using sp, and ones inferred from the column headers. */
 
+    /* TODO: we test with isspace() mostly, which makes sense as TAB
+     * might be used to enable field alignment; but we make no attempt
+     * to account for the alignment offsets this may introduce, that
+     * would mess up the heuristic based on column headers.  Hard to
+     * do robustly, as we'd need to assume a tab-width and apply the
+     * same accounting to the headers (where start and end are indices
+     * of bytes, we'd need a third array for tab-induced offsets
+     * between headers). */
+
     for (int i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
     {
         /* Space-delimited heuristic, from sp to just before ep: */

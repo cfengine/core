@@ -7234,8 +7234,8 @@ static const FnCallArg PRODUCT_ARGS[] =
 static const FnCallArg DATE_ARGS[] =
 {
     {"1970,3000", CF_DATA_TYPE_INT, "Year"},
-    {"1,12", CF_DATA_TYPE_INT, "Month"},
-    {"1,31", CF_DATA_TYPE_INT, "Day"},
+    {"0,11", CF_DATA_TYPE_INT, "Month (January = 0)"},
+    {"0,30", CF_DATA_TYPE_INT, "Day (First day of month = 0)"},
     {"0,23", CF_DATA_TYPE_INT, "Hour"},
     {"0,59", CF_DATA_TYPE_INT, "Minute"},
     {"0,59", CF_DATA_TYPE_INT, "Second"},

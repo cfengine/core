@@ -46,19 +46,19 @@ static const ConstraintSyntax linkservice_constraints[] =
     // OSPF
 
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database priority number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("ospf_link_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "OSPF interface type", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ospf_authentication_digest", CF_ANYSTRING, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_passive_interface", "No service updates over this channel", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ospf_abr_summarization", "Allow Area Border Router to inject summaries into a stub area via this interface", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("ospf_area_type", "stub,nssa,normal", "Stub type area", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("ospf_area_type", "stub,nssa,normal", "Area type in ospf", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
 
     // BGP
 
-    ConstraintSyntaxNewString("bgp_session_neighbor", CF_IPRANGE, "A list of IP addresses or the current (unnumbered) interface to establish a bgp connection to one or more remote peers", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("bgp_session_neighbor", CF_IPRANGE, "IP address of the current (numbered) interface to establish a bgp connection with a remote peer", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_peer_as", CF_INTRANGE, "The remote peer's AS number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("bgp_route_reflector", "client,server", "For iBGP, a central route redistribuion hub", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("bgp_route_reflector", "client,server", "For iBGP, the role of this host with respect to a central route redistribuion hub", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_ttl_security", CF_INTRANGE, "Do not accept bgp frames more than this number of hops away", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_maximum_paths", "1,255", "Enable bgp multipath support", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("bgp_advertisement_interval", CF_INTRANGE, "How long do we wait (ifelapsed) to broadcast bgp updates", SYNTAX_STATUS_NORMAL),
@@ -73,8 +73,8 @@ static const ConstraintSyntax tunnel_constraints[] =
 {
     ConstraintSyntaxNewInt("tunnel_id", CF_VALRANGE, "Tunnel identifier number (VxLAN VNI etc)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_address", CF_IPRANGE, "Tunnel local management/loopback address", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("tunnel_multicast_group", CF_IPRANGE, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("tunnel_interface", CF_IPRANGE, "Optional particular interface for tunnel", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_multicast_group", CF_IPRANGE, "IP address of multicast group for tunnel distribution", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tunnel_interface", CF_IDRANGE, "Optional particular interface for tunnel", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_alien_addresses", CF_IDRANGE, "Name of a CFEngine array variable pointing to remote ADDRESSES data", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

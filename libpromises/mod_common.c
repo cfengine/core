@@ -121,6 +121,7 @@ static const ConstraintSyntax classes_constraints[] =
 };
 
 static const BodySyntax classes_body = BodySyntaxNew("classes", classes_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax outcome_body = BodySyntaxNew("outcome", classes_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 const ConstraintSyntax CF_VARBODY[] =
 {
@@ -498,7 +499,8 @@ const BodySyntax CONTROL_BODIES[] =
 const ConstraintSyntax CF_COMMON_BODIES[] =
 {
     ConstraintSyntaxNewBody("action", &action_body, "Output behaviour", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("classes", &classes_body, "Signalling behaviour", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("classes", &classes_body, "Signalling behaviour (alias for outcome)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("outcome", &outcome_body, "Signalling behaviour (alias for classes)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("comment", "", "A comment about this promise's real intention that follows through the program", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("depends_on", "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("handle", "", "A unique id-tag string for referring to this as a promisee elsewhere", SYNTAX_STATUS_NORMAL),
@@ -516,6 +518,7 @@ const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[] =
 {
 
     PromiseTypeSyntaxNew("*", "classes", CF_CLASSBODY, &ClassesParseTreeCheck, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("*", "conditions", CF_CLASSBODY, &ClassesParseTreeCheck, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNew("*", "defaults", CF_DEFAULTSBODY, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNew("*", "meta", CF_METABODY, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNew("*", "reports", CF_REPORT_BODIES, NULL, SYNTAX_STATUS_NORMAL),

@@ -1,0 +1,37 @@
+#######################################################
+#
+# Test on(), especially integer out of bounds on some Unices
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+     "unix_timestamp"   int => on(2014, 7 , 21 , 23 , 13 ,0);
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+
+      "ok" expression => isvariable("test.unix_timestamp");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

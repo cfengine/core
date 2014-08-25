@@ -1029,6 +1029,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     long time_no_see = 0;
     unsigned int len = 0;
     int drift, plainlen, received, encrypted = 0;
+    size_t zret;
     ServerFileGetState get_args;
     Item *classes;
 
@@ -1169,6 +1170,17 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
+        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+            SV.path_shortcuts,
+            conn->ipaddr, conn->revdns,
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+        if (zret == (size_t) -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            return false;
+        }
+
         if (!AccessControl(ctx, filename, conn, false))
         {
             Log(LOG_LEVEL_INFO, "Access denied to get object");
@@ -1226,6 +1238,17 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             get_args.buf_size = 2048;
         }
 
+        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+            SV.path_shortcuts,
+            conn->ipaddr, conn->revdns,
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+        if (zret == (size_t) -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            return false;
+        }
+
         Log(LOG_LEVEL_DEBUG, "Confirm decryption, and thus validity of caller");
         Log(LOG_LEVEL_DEBUG, "SGET '%s' with blocksize %d", filename, get_args.buf_size);
 
@@ -1271,6 +1294,17 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
 
+        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+            SV.path_shortcuts,
+            conn->ipaddr, conn->revdns,
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+        if (zret == (size_t) -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            return false;
+        }
+
         if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
             Log(LOG_LEVEL_INFO, "Access error");
@@ -1284,6 +1318,17 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_OPENDIR:
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
+
+        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+            SV.path_shortcuts,
+            conn->ipaddr, conn->revdns,
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+        if (zret == (size_t) -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            return false;
+        }
 
         if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
@@ -1345,6 +1390,17 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         drift = (int) (tloc - trem);
 
+        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+            SV.path_shortcuts,
+            conn->ipaddr, conn->revdns,
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+        if (zret == (size_t) -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            return false;
+        }
+
         if (!AccessControl(ctx, filename, conn, true))
         {
             Log(LOG_LEVEL_INFO, "Access control in sync");
@@ -1395,6 +1451,17 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         memset(filename, 0, sizeof(filename));
         sscanf(recvbuffer, "MD5 %[^\n]", filename);
+
+        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+            SV.path_shortcuts,
+            conn->ipaddr, conn->revdns,
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+        if (zret == (size_t) -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            return false;
+        }
 
         if (!AccessControl(ctx, filename, conn, encrypted))
         {

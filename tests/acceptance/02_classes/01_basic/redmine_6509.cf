@@ -1,0 +1,94 @@
+#######################################################
+#
+# Redmine#6509: repairs from delete bodies should not be seen as kept 
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  meta:
+    "test_suppress_fail" string => "any",
+      meta => { "redmine6509" };
+
+  files:
+    "$(G.testdir)/redmine_6509_1/."
+      create => "true";
+
+    "$(G.testdir)/redmine_6509_2"
+      delete => tidy;
+}
+
+
+bundle agent test
+{
+  files:
+    "$(G.testdir)/redmine_6509_1"
+      classes => mygeneric("dir1_absent"),
+      delete => tidy;
+
+    "$(G.testdir)/redmine_6509_2"
+      classes => mygeneric("dir2_absent"),
+      delete => tidy;
+}
+
+bundle agent check
+{
+  vars:
+    "expected_ok"
+      slist => {
+                 "dir1_absent_ok",
+                 "dir1_absent_repaired",
+                 "dir1_absent_reached",
+                 "dir2_absent_ok",
+                 "dir2_absent_kept",
+                 "dir2_absent_reached",
+               };
+
+    "seen_fail"
+      slist => {
+                 "dir1_absent_error",
+                 "dir1_absent_repair_failed",
+                 "dir1_absent_repair_denied",
+                 "dir1_absent_repair_timeout",
+                 "dir1_absent_kept",
+               };
+
+  classes:
+    "ok" and => { @(expected_ok) };
+
+    "fail" or => { @(seen_fail) };
+
+  reports:
+    DEBUG::
+      "Found $(expected_ok) defined as expected"
+        ifvarclass => "$(expected_ok)";
+
+      "Found $(seen_fail) which is not expected and causes the test to fail"
+        ifvarclass => "$(seen_fail)";
+
+      "Missing $(expected_ok) which is expected and not being defined causes the test to fail"
+        ifvarclass => "!$(expected_ok)";
+
+    !fail.ok::
+      "$(this.promise_filename) Pass";
+
+    fail::
+      "$(this.promise_filename) FAIL";
+
+}
+
+body classes mygeneric(x)
+{
+      promise_kept => { "$(x)_ok", "$(x)_kept", "$(x)_reached" };
+  promise_repaired => { "$(x)_ok", "$(x)_repaired", "$(x)_reached" };
+     repair_failed => { "$(x)_error", "$(x)_repair_failed", "$(x)_reached" };
+     repair_denied => { "$(x)_error", "$(x)_repair_denied", "$(x)_reached" };
+    repair_timeout => { "$(x)_error", "$(x)_repair_timeout", "$(x)_reached" };
+}

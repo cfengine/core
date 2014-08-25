@@ -92,7 +92,7 @@ bool GetExecOutput(const char *command, char *buffer, ShellType shell)
             break;
         }
 
-        snprintf(buffer + offset, CF_EXPANDSIZE, "%s\n", line);
+        snprintf(buffer + offset, CF_EXPANDSIZE - offset, "%s\n", line);
 
         offset += strlen(line) + 1;
     }

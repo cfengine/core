@@ -1170,14 +1170,14 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+        zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
             conn->ipaddr, conn->revdns,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            Log(LOG_LEVEL_VERBOSE, "Expanding filename (%s) made it too long (>= %zu)", filename, sizeof(filename));
             return false;
         }
 
@@ -1238,14 +1238,14 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             get_args.buf_size = 2048;
         }
 
-        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+        zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
             conn->ipaddr, conn->revdns,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            Log(LOG_LEVEL_VERBOSE, "Expanding filename (%s) made it too long (>= %zu)", filename, sizeof(filename));
             return false;
         }
 
@@ -1301,7 +1301,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (zret == (size_t) -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            Log(LOG_LEVEL_VERBOSE, "Expanding filename (%s) made it too long (>= %zu)", filename, sizeof(filename));
             return false;
         }
 
@@ -1326,7 +1326,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (zret == (size_t) -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            Log(LOG_LEVEL_VERBOSE, "Expanding filename (%s) made it too long (>= %zu)", filename, sizeof(filename));
             return false;
         }
 
@@ -1397,7 +1397,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (zret == (size_t) -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            Log(LOG_LEVEL_VERBOSE, "Expanding filename (%s) made it too long (>= %zu)", filename, sizeof(filename));
             return false;
         }
 
@@ -1452,14 +1452,14 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         memset(filename, 0, sizeof(filename));
         sscanf(recvbuffer, "MD5 %[^\n]", filename);
 
-        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+        zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
             conn->ipaddr, conn->revdns,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Something went wrong in shortcut fucnction (%s)", filename);
+            Log(LOG_LEVEL_VERBOSE, "Expanding filename (%s) made it too long (>= %zu)", filename, sizeof(filename));
             return false;
         }
 

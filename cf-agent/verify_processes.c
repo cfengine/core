@@ -325,23 +325,31 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
     {
         pid_t pid = ip->counter;
 
-        if (pid == 1)
+        if (a.signals) /* There are some processes we don't want to signal. */
         {
-            if ((RlistLen(a.signals) == 1) && (RlistKeyIn(a.signals, "hup")))
+            if (pid == 1)
             {
-                Log(LOG_LEVEL_VERBOSE, "Okay to send only HUP to init");
+                if (RlistLen(a.signals) == 1 && RlistKeyIn(a.signals, "hup"))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Okay to send only HUP to init");
+                }
+                else
+                {
+                    continue;
+                }
             }
-            else
+            else if (pid < 4)
             {
+                Log(LOG_LEVEL_VERBOSE, "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)",
+                    promiser);
                 continue;
             }
-        }
 
-        if ((pid < 4) && (a.signals))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)",
-                  promiser);
-            continue;
+            if (pid == cfengine_pid)
+            {
+                Log(LOG_LEVEL_VERBOSE, "cf-agent will not signal itself!");
+                continue;
+            }
         }
 
         bool promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
@@ -350,12 +358,6 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
         {
             Log(LOG_LEVEL_ERR, "Process alert '%s'", procdata->name);     /* legend */
             Log(LOG_LEVEL_ERR, "Process alert '%s'", ip->name);
-            continue;
-        }
-
-        if ((pid == cfengine_pid) && (a.signals))
-        {
-            Log(LOG_LEVEL_VERBOSE, "cf-agent will not signal itself!");
             continue;
         }
 

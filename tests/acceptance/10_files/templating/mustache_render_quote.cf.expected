@@ -1,2 +1,8 @@
+# Escaped variable references by default:
+Something &quot;special&quot; with quotes
+Something 'special' with quotes
+# Unescaped variable references:
+Something "special" with quotes
+Something 'special' with quotes
 Something "special" with quotes
 Something 'special' with quotes

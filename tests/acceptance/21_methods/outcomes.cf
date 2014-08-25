@@ -1,0 +1,233 @@
+#######################################################
+#
+# Test Method outcomes
+#
+# Methods type promises have an outcome of whatever the
+# worst outcome of any promise inside the bundle is. 
+# This test illustrates that behaviour and functions as
+# an example.
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+	methods:
+	    # Note the use of scoped_classes_generic to
+	    # define classes with predictable names regardless of the outcome.
+
+		"not_kept"
+			usebundle => method_not_kept,
+			classes => scoped_classes_generic("namespace", "method_not_kept_outcome"),
+			comment => "This will define the class 'method_not_kept_outcome_not_kept'
+			            because the worst outcome in the bundle is promise not_kept.";
+
+		"repaired"
+			usebundle => method_repaired,
+			classes => scoped_classes_generic("namespace", "method_repaired_outcome"),
+			comment => "This will define the class 'method_repaired_outcome_repaired'
+			            because the worst outcome in the bundle is a reapair.";
+		"kept"
+			usebundle => method_kept,
+			classes => scoped_classes_generic("namespace", "method_kept_outcome"),
+			comment => "This will define the class 'method_kept_outcome_kept'
+			            because the worst outcome in the bundle is promise kept.";
+
+		"not_kept_and_repaired"
+			usebundle => method_not_kept_and_repaired,
+			classes => scoped_classes_generic("namespace", "method_not_kept_and_repaired_outcome"),
+			comment => "This will define the class 'method_not_kept_outcome_not_kept'
+			            because the worst outcome in the bundle is promise not_kept.";
+
+		"repaired_and_kept"
+			usebundle => method_repaired_and_kept,
+			classes => scoped_classes_generic("namespace", "method_repaired_and_kept_outcome"),
+			comment => "This will define the class 'method_repaired_and_kept_outcome_repaired'
+			            because the worst outcome in the bundle is promise repaired.";
+
+	    "not_kept_and_repaired_and_kept"
+	    	usebundle => method_not_kept_and_repaired_and_kept,
+	    	classes => scoped_classes_generic("namespace", "method_not_kept_and_repaired_and_kept_outcome"),
+	    	comment => "This will define the class 'method_not_kept_and_repaired_and_kept_outcome_not_kept'
+	    	            because the worst outcome in the bundle is promise not_kept.";
+
+	   	"nested_not_kept"
+	   	    usebundle => nested_not_kept,
+	   	    classes => scoped_classes_generic("namespace", "nested_not_kept_outcome");
+}
+
+bundle agent method_not_kept
+{
+	commands:
+	  	linux::
+	  		"/bin/false"
+	  			comment => "Commands that return nonzero by default are a promise
+	  			            not kept. This should call the promise that activates
+	  			            this bundle to also be not kept";
+}
+
+bundle agent method_kept
+{
+	vars:
+		"kept_return_codes" slist => { "0" };
+
+	commands:
+		linux::
+			"/bin/true"
+				classes => kept_returncodes( @(kept_return_codes) ),
+				comment => "We are using  commands that return 0 to be seen as repaired.";
+}
+
+
+bundle agent method_repaired
+{
+	vars:
+		"repaired_return_codes" slist => { "0" };
+
+	commands:
+		linux::
+			"/bin/true"
+				classes => repaired_returncodes( @(repaired_return_codes) ),
+				comment => "We are using  commands that return 0 to be seen as repaired.";
+}
+
+bundle agent method_not_kept_and_repaired
+{
+	vars:
+		"repaired_return_codes" slist => { "0" };
+
+	commands:
+		linux::
+			"/bin/true"
+				classes => repaired_returncodes( @(repaired_return_codes) ),
+				comment => "We are using  commands that return 0 to be seen as repaired.";
+
+	  		"/bin/false"
+	  			comment => "Commands that return nonzero by default are a promise
+	  			            not kept.";
+}
+
+bundle agent method_repaired_and_kept
+{
+	vars:
+		"repaired_return_codes" slist => { "0" };
+		"kept_return_codes" slist => { "0" };
+
+	commands:
+		linux::
+			"/bin/true"
+				classes => repaired_returncodes( @(repaired_return_codes) ),
+				comment => "We are using  commands that return 0 to be seen as repaired.";
+
+			"/bin/true"
+				classes => kept_returncodes( @(kept_return_codes) ),
+				comment => "We are using  commands that return 0 to be seen as repaired.";
+}
+
+bundle agent method_not_kept_and_repaired_and_kept
+{
+	vars:
+		"repaired_return_codes" slist => { "0" };
+		"kept_return_codes" slist => { "0" };
+
+	commands:
+		linux::
+			"/bin/true"
+				classes => repaired_returncodes( @(repaired_return_codes) ),
+				comment => "We are using  commands that return 0 to be seen as repaired.";
+
+			"/bin/true"
+				classes => kept_returncodes( @(kept_return_codes) ),
+				comment => "We are using  commands that return 0 to be seen as repaired.";
+
+		  	"/bin/false"
+	  			comment => "Commands that return nonzero by default are a promise
+	  			            not kept.";
+}
+
+
+bundle agent nested_not_kept
+{
+	methods:
+		"deeper"
+			usebundle => deeper_nested_not_kept,
+			classes => scoped_classes_generic("bundle", "deeper_nested_not_kept_outcome");
+
+    reports:
+    	"$(this.bundle) activated 'deeper_nested_not_kept' and had a not kept outcome as expected"
+    		ifvarclass => "deeper_nested_not_kept_outcome_not_kept";
+
+    	"$(this.bundle) activated 'deeper_nested_not_kept' *DID NOT* have a not kept outcome as expected"
+    		ifvarclass => "!deeper_nested_not_kept_outcome_not_kept";
+}
+
+bundle agent deeper_nested_not_kept
+{
+	commands:
+	  	linux::
+	  		"/bin/false"
+	  			comment => "Commands that return nonzero by default are a promise
+	  			            not kept. This should call the promise that activates
+	  			            this bundle to also be not kept";
+}
+
+bundle agent check
+{
+  classes:
+    #"ok" expression => "method_not_kept_not_kept.method_kept_kept.method_repaired_repaired";
+    "ok" and => {
+    			  "method_kept_outcome_kept",
+    			  "method_repaired_outcome_repaired",
+    			  "method_not_kept_outcome_not_kept",
+    			  "method_not_kept_and_repaired_outcome_not_kept",
+    			  "method_repaired_and_kept_outcome_repaired",
+    			  "method_not_kept_and_repaired_and_kept_outcome_not_kept",
+    			  "nested_not_kept_outcome_not_kept",
+    			};
+
+  reports:
+  	DEBUG::
+  	    "All classes we are looking for are defined by 'scoped_classes_generic' from the standard lib.";
+
+  		"bundle:'method_not_kept' defined class:'method_not_kept_outcome_not_kept' as expected"
+  			ifvarclass => "method_not_kept_outcome_not_kept";
+
+  		"bundle:'method_kept' defined class:'method_kept_kept' as expected"
+  			ifvarclass => "method_kept_outcome_kept";
+
+  		"bundle:'method_repaired defined' defined class:'method_repaired_outcome_repaired' as expected"
+  			ifvarclass => "method_repaired_outcome_repaired";
+
+  		"bundle:'method_not_kept_and_repaired' defined class:'method_not_kept_and_repaired_outcome_not_kept' as expected"
+  			ifvarclass => "method_not_kept_and_repaired_outcome_not_kept";
+
+  		"bundle:'method_repaired_and_kept' defined class:'method_repaired_and_kept_outcome_repaired' as expected"
+  			ifvarclass => "method_repaired_and_kept_outcome_repaired";
+
+  		"bundle:'nested_not_kept' defined class:'nested_not_kept_outcome_not_kept' as expected"
+  			ifvarclass => "nested_not_kept_outcome_not_kept";
+
+  		"bundle:'nested_not_kept' *DID NOT* define class:'nested_not_kept_outcome_not_kept' as expected"
+  			ifvarclass => "!nested_not_kept_outcome_not_kept";
+  	ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body classes kept_returncodes(kept_return_codes)
+{
+	kept_returncodes => { @(kept_return_codes) };
+
+}
+body classes repaired_returncodes(repaired_return_codes)
+{
+	repaired_returncodes => { @(repaired_return_codes) };
+}

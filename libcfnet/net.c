@@ -194,7 +194,6 @@ int SocketConnect(const char *host, const char *port,
                   char *txtaddr, size_t txtaddr_size)
 {
     struct addrinfo *response, *ap;
-    struct addrinfo *response2, *ap2;
     int sd = -1, connected = false;
 
     struct addrinfo query = {
@@ -240,6 +239,7 @@ int SocketConnect(const char *host, const char *port,
                     .ai_flags = AI_PASSIVE
                 };
 
+                struct addrinfo *response2 = NULL, *ap2;
                 int ret2 = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2);
                 if (ret2 != 0)
                 {

@@ -181,58 +181,40 @@ usage() {
   echo
   echo "If arguments are given, those are executed as tests"
   echo
-  echo " -h        prints usage"
-  echo " --help"
-  echo
-  echo " -q        makes script much quieter"
-  echo " --quiet"
-  echo
+  echo " -h"
+  echo " --help    prints usage"
+  echo " -q"
+  echo " --quiet   makes script much quieter"
   echo " --gainroot=<command> forces use of command to gain root privileges,"
   echo "           otherwise fakeroot is used.  Use --gainroot=env to make this"
   echo "           option a no-op (e.g. you're running inside fakeroot already)"
-  echo
   echo " --agent   provides a way to specify non-default cf-agent location,"
   echo "           and defaults to $DEFAGENT."
-  echo
   echo " --baseclasses provides a way to override the default cf-agent classes,"
   echo "           and defaults to ${BASECLASSES}.  Also can use --bc"
-  echo
   echo " --extraclasses provides a way to append to the default cf-agent classes,"
   echo "           and defaults to ${EXTRACLASSES}.  Also can use --ec"
-  echo
   echo " --cfpromises  provides a way to specify non-default cf-promises location,"
   echo "               and defaults to $DEFCF_PROMISES."
-  echo
   echo " --cfserverd  provides a way to specify non-default cf-serverd location,"
   echo "               and defaults to $DEFCF_SERVERD."
-  echo
   echo " --cfkey  provides a way to specify non-default cf-key location,"
   echo "               and defaults to $DEFCF_KEY."
-  echo
   echo " --bindir  specifies the directory containing all the binaries."
   echo "           Mutually exclusive with --agent and --cf* arguments."
-  echo
   echo " --libtool specify non-default libtool location (only needed for --gdb)."
   echo "               defaults to $DEFLIBTOOL."
-  echo
   echo " --staging enable tests in staging directories. They are not expected to pass."
-  echo
   echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
   echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
   echo "           this option without a backup."
   echo "           If you use this option you should also use --gainroot=sudo,"
   echo "           otherwise you will get incorrect results."
-  echo
   echo " --no-network disable tests in network directories."
-  echo
   echo " --no-libxml2 disable tests involving xml file editing."
-  echo
   echo " --no-crashing disable tests that are expected to crash (for use with valgrind)."
-  echo
   echo " --no-timed disable timed tests that may introduce wait times."
-  echo
   echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
-  echo
   echo " --gdb         Run test under GDB"
   echo " --valgrind    Run test under Valgrind"
   echo " --callgrind   Run test under valgrind --tool=callgrind"

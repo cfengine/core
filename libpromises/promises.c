@@ -330,6 +330,17 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
         if (ifvarclass)
         {
+            /*
+              This might fail to expand if there are unexpanded variables in function arguments
+              (in which case the function won't be called at all).
+              If final is not a scalar, then expansion has failed (the function would still return true).
+              In that case, assume that we don't know the class, and skip the promise.
+
+              Note: EvaluateConstraintIteration calls VarClassExcluded via EvalContextPromiseIsActive,
+              trying to avoid function calls in promise bodies that are disabled due to class conditionals
+              or ifvarclass predicates. Changing the logic of VarClassExcluded would possibly break
+              function evaluation.
+            */
             Rval final;
             if (EvaluateConstraintIteration(ctx, ifvarclass, &final))
             {
@@ -337,7 +348,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
                 cp_copy->offset = ifvarclass->offset;
 
                 char *excluding_class_expr = NULL;
-                if (VarClassExcluded(ctx, pcopy, &excluding_class_expr))
+                if (final.type != RVAL_TYPE_SCALAR || VarClassExcluded(ctx, pcopy, &excluding_class_expr))
                 {
                     if (LEGACY_OUTPUT)
                     {

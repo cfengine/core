@@ -270,6 +270,59 @@ static bool EvaluateConstraintIteration(EvalContext *ctx, const Constraint *cp, 
     return true;
 }
 
+/**
+  @brief Helper function to determine whether the Rval of ifvarclass/if/unless is defined.
+  If the Rval is a function, call that function.
+*/
+static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Promise *pcopy)
+{
+    assert(ctx);
+    assert(cp);
+    assert(pcopy);
+
+    /*
+      This might fail to expand if there are unexpanded variables in function arguments
+      (in which case the function won't be called at all), but the function still returns true.
+
+      If expansion fails for other reasons, assume that we don't know this class.
+    */
+    Rval final;
+    if (!EvaluateConstraintIteration((EvalContext*)ctx, cp, &final))
+    {
+        return false;
+    }
+
+    char *classes = NULL;
+    Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);
+    cp_copy->offset = cp->offset;
+    switch (final.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        classes = RvalScalarValue(final);
+        break;
+
+    case RVAL_TYPE_FNCALL:
+        Log(LOG_LEVEL_DEBUG, "Function call in class expression did not succeed");
+        break;
+
+    default:
+        break;
+    }
+
+    if (!classes)
+    {
+        return false;
+    }
+    // sanity check for unexpanded variables
+    if (strchr(classes, '$') || strchr(classes, '@'))
+    {
+        Log(LOG_LEVEL_DEBUG, "Class expression did not evaluate");
+        return false;
+    }
+
+    return IsDefinedClass(ctx, classes);
+}
+
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
     assert(pp->promiser);
@@ -331,26 +384,15 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
             ifvarclass = PromiseGetConstraint(pp, "if");
         }
 
-        if (ifvarclass)
+        if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
         {
-            Rval final;
-            if (EvaluateConstraintIteration(ctx, ifvarclass, &final))
+            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for if/ifvarclass is not in scope", pp->promiser);
+            if (excluded)
             {
-                Constraint *cp_copy = PromiseAppendConstraint(pcopy, ifvarclass->lval, final, false);
-                cp_copy->offset = ifvarclass->offset;
-
-                if (final.type == RVAL_TYPE_SCALAR && !IsDefinedClass(ctx, RvalScalarValue(final)))
-                {
-                    //Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for if/ifvarclass '%s' is not in scope", pp->promiser, RvalScalarValue(final));
-
-                    if (excluded)
-                    {
-                        *excluded = true;
-                    }
-
-                    return pcopy;
-                }
+                *excluded = true;
             }
+
+            return pcopy;
         }
     }
 
@@ -358,26 +400,15 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         // look for 'unless' exclusion, to short-circuit evaluation of other constraints
         const Constraint *unless = PromiseGetConstraint(pp, "unless");
 
-        if (unless)
+        if (unless && IsVarClassDefined(ctx, unless, pcopy))
         {
-            Rval final;
-            if (EvaluateConstraintIteration(ctx, unless, &final))
+            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for unless is in scope", pp->promiser);
+            if (excluded)
             {
-                Constraint *cp_copy = PromiseAppendConstraint(pcopy, unless->lval, final, false);
-                cp_copy->offset = unless->offset;
-
-                if (final.type == RVAL_TYPE_SCALAR && IsDefinedClass(ctx, RvalScalarValue(final)))
-                {
-                    //Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for if/ifvarclass '%s' is not in scope", pp->promiser, RvalScalarValue(final));
-
-                    if (excluded)
-                    {
-                        *excluded = true;
-                    }
-
-                    return pcopy;
-                }
+                *excluded = true;
             }
+
+            return pcopy;
         }
     }
 

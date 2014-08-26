@@ -612,68 +612,6 @@ void SetBundleAborted(EvalContext *ctx)
     ctx->bundle_aborted = true;
 }
 
-bool VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
-{
-    Constraint *cp = PromiseGetConstraint(pp, "ifvarclass");
-    if (!cp)
-    {
-        cp = PromiseGetConstraint(pp, "if");
-        if (!cp)
-        {
-            return false;
-        }
-    }
-
-    if (cp->rval.type == RVAL_TYPE_FNCALL)
-    {
-        return false;
-    }
-
-    *classes = PromiseGetConstraintAsRval(pp, "ifvarclass", RVAL_TYPE_SCALAR);
-
-    if (*classes == NULL)
-    {
-        *classes = PromiseGetConstraintAsRval(pp, "if", RVAL_TYPE_SCALAR);
-
-        if (*classes == NULL)
-        {
-            return true;
-        }
-    }
-
-    if (strchr(*classes, '$') || strchr(*classes, '@'))
-    {
-        Log(LOG_LEVEL_DEBUG, "Class expression did not evaluate");
-        return true;
-    }
-
-    if (*classes && IsDefinedClass(ctx, *classes))
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
-}
-
-bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp)
-{
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        return false;
-    }
-    else
-    {
-        char *classes = NULL;
-        if (VarClassExcluded(ctx, pp, &classes))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
 
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {

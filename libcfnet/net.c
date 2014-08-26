@@ -247,7 +247,6 @@ int SocketConnect(const char *host, const char *port,
                         "Unable to lookup interface '%s' to bind. (getaddrinfo: %s)",
                         BINDINTERFACE, gai_strerror(ret2));
 
-                    freeaddrinfo(response2);
                     freeaddrinfo(response);
                     cf_closesocket(sd);
                     return -1;

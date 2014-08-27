@@ -127,8 +127,7 @@ int SendSocketStream(int sd, const char buffer[CF_BUFSIZE], int tosend)
         }
 
         already += sent;
-    }
-    while (already < tosend);
+    } while (already < tosend);
 
     return already;
 }

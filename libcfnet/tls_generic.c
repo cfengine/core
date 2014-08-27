@@ -701,8 +701,7 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
             return -1;
         }
         got += ret;
-    }
-    while ((buf[got-1] != '\n') && (got < buf_size));
+    } while ((buf[got-1] != '\n') && (got < buf_size));
     assert(got <= buf_size);
 
     /* Append '\0', there is room because buf_size has been decremented. */

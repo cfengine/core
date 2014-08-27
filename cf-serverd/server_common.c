@@ -1372,8 +1372,7 @@ static size_t StringReplace(char *buf, size_t buf_size,
 
         buf_idx = buf_newidx + find_len;
         p = strstr(&buf[buf_idx], find);
-    }
-    while (p != NULL);
+    } while (p != NULL);
 
     /* Copy leftover plus terminating '\0'. */
     size_t leftover_len = buf_len - buf_idx;

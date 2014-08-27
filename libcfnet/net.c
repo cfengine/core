@@ -193,7 +193,7 @@ int SocketConnect(const char *host, const char *port,
                   unsigned int connect_timeout, bool force_ipv4,
                   char *txtaddr, size_t txtaddr_size)
 {
-    struct addrinfo *response, *ap;
+    struct addrinfo *response = NULL, *ap;
     int sd = -1, connected = false;
 
     struct addrinfo query = {
@@ -204,6 +204,10 @@ int SocketConnect(const char *host, const char *port,
     int ret = getaddrinfo(host, port, &query, &response);
     if (ret != 0)
     {
+        if (response != NULL)
+        {
+            freeaddrinfo(response);
+        }
         Log(LOG_LEVEL_INFO,
               "Unable to find host '%s' service '%s' (%s)",
               host, port, gai_strerror(ret));

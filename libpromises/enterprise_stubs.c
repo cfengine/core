@@ -234,6 +234,10 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, SetMeasurementPromises, ARG_UNUSED I
 {
 }
 
-ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, CheckAndSetHAState, const char *, workdir, EvalContext *, ctx)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, CheckAndSetHAState, ARG_UNUSED const char *, workdir, ARG_UNUSED EvalContext *, ctx)
+{
+}
+
+ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, ReloadHAConfig)
 {
 }

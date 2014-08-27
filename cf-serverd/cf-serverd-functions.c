@@ -406,6 +406,10 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             time_t t = SetReferenceTime();
             UpdateTimeClasses(ctx, t);
             *policy = LoadPolicy(ctx, config);
+
+            /* Reload HA related configuration */
+            ReloadHAConfig();
+
             KeepPromises(ctx, *policy, config);
             Summarize();
         }

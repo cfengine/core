@@ -86,6 +86,7 @@ ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, GetObservable, int, i, char *, name, cha
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, SetMeasurementPromises, Item **, classlist);
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, CheckAndSetHAState, const char *, workdir, EvalContext *, ctx);
+ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, ReloadHAConfig);
 
 /* manual.c */
 

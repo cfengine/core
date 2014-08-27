@@ -62,7 +62,8 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
     }
     char buffer[1024];
     int so_far = 0;
-    do {
+    do
+    {
         int this_read = 0;
         int this_write = 0;
         this_read = read(source_fd, buffer, sizeof(buffer));
@@ -87,6 +88,7 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
         }
         so_far += this_read;
     } while (so_far < source_stat.st_size);
+
     fsync(destination_fd);
     close(source_fd);
     close(destination_fd);
@@ -152,8 +154,7 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
                 goto bad_twofd;
             }
         }
-    }
-    while (this_read > 0);
+    } while (this_read > 0);
 
     assert(this_read == 0);
     if (so_far != source_stat.st_size)

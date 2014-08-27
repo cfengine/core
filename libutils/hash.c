@@ -175,7 +175,8 @@ Hash *HashNewFromDescriptor(const int descriptor, HashMethod method)
     Hash *hash = HashBasicInit(method);
     context = EVP_MD_CTX_create();
     EVP_DigestInit_ex(context, md, NULL);
-    do {
+    do
+    {
         read_count = read(descriptor, buffer, 1024);
         EVP_DigestUpdate(context, buffer, (size_t) read_count);
     } while (read_count > 0);

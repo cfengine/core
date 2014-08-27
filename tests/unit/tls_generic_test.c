@@ -1076,6 +1076,9 @@ int EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
 
 static void test_TLSVerifyPeer(void)
 {
+#ifdef __sun
+    return; //redmine 6398
+#endif
     RESET_STATUS;
 
     SSL *ssl = NULL;
@@ -1245,6 +1248,9 @@ static void test_TLSVerifyPeer(void)
  */
 static void test_TLSBasicIO(void)
 {
+#ifdef __sun
+    return; //redmine 6398
+#endif
     RESET_STATUS;
     SSL *ssl = NULL;
     char output_buffer[] = "this is a buffer";

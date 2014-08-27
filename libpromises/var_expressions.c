@@ -298,11 +298,6 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
 
     assert(lval);
 
-    if (!scope && !_scope)
-    {
-        assert(ns == NULL && "A variable missing a scope should not have a namespace");
-    }
-
     if (scope)
     {
         if (SpecialScopeFromString(scope) != SPECIAL_SCOPE_NONE)
@@ -310,12 +305,9 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
             _ns = NULL;
         }
     }
-    else
+    else if (!_scope)
     {
-        if (!_scope)
-        {
-            assert(ns == NULL && "A variable missing a scope should not have a namespace");
-        }
+        assert(ns == NULL && "A variable missing a scope should not have a namespace");
     }
 
     VarRef *ref = xmalloc(sizeof(VarRef));

@@ -105,6 +105,12 @@ Tests which need network connectivity should be placed to 'network'
 subdirectories. Those tests may be disabled by passing --no-network option to
 'testall'.
 
+Tests which cannot be run in parallel with other tests should be put in a
+'serial' subdirectory. This is necessary if the test depends on for example
+a certain number of cf-agent processes running, or to open a network port that
+may be shared with other tests. Unsafe tests are always carried out serially,
+and do not need to be in a 'serial' subdirectory.
+
 NOTE: Since the class 'ok' is used in most tests, never create a persistent
 class called 'ok' in any test. Persistent classes are cleaned up between test
 runs, but better safe than sorry.

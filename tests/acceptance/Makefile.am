@@ -36,7 +36,7 @@ endif
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub testall dummy_etc
 
-TESTS = testall
+TESTS =
 TESTS_ENVIRONMENT = env \
 	AGENT=`pwd`/../../cf-agent/cf-agent \
 	CF_PROMISES=`pwd`/../../cf-promises/cf-promises \
@@ -46,6 +46,9 @@ TESTS_ENVIRONMENT = env \
 if !HAVE_LIBXML2
 TESTS_ENVIRONMENT += LIBXML2_TESTS=0
 endif
+
+check-local:
+	@+MAKE=$(MAKE) ./testall
 
 dist-hook:
 	cd $(srcdir); tar -c -f - [0-9]* | tar -x -C $(abspath $(distdir)) -f -

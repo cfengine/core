@@ -23,25 +23,33 @@ bundle agent init
 bundle agent test
 {
   files:
-      # "$(G.testdir)/dest_file_classic"
-      #   copy_from => copy_src_file("classic"),
-      #   classes => if_repaired("repaired_classic");
-      "$(G.testdir)/dest_file_latest"
-        copy_from => copy_src_file("latest"),
-        classes => if_repaired("repaired_latest");
+      # localhost_closed_hostname
+      # "$(G.testdir)/server1_classic"
+      #   copy_from => copy_file("9885", "classic"),
+      #   classes => if_repaired("repaired1_classic");
+      "$(G.testdir)/server1_latest"
+        copy_from => copy_file("9885", "latest"),
+        classes => if_repaired("repaired1_latest");
+      # localhost_closed_deny_hostnames
+      "$(G.testdir)/server2_classic"
+        copy_from => copy_file("9887", "classic"),
+        classes => if_repaired("repaired2_classic");
+      # "$(G.testdir)/server2_latest"
+      #   copy_from => copy_file("9887", "latest"),
+      #   classes => if_repaired("repaired2_latest");
 }
 
 #########################################################
 
-body copy_from copy_src_file(protocol_version)
+body copy_from copy_file(port, protocol_version)
 {
       source      => "$(G.testdir)/source_file";
       servers     => { "127.0.0.1" };
       compare     => "mtime";
       copy_backup => "false";
-      protocol_version => "$(protocol_version)";
 
-      portnumber => "9885"; # localhost_closed_hostname
+      portnumber       => "$(port)";
+      protocol_version => "$(protocol_version)";
 
       #encrypt     => "true";
       #verify      => "true";
@@ -60,9 +68,9 @@ bundle agent check
 
   reports:
 
-    !repaired_classic.!repaired_latest::
+    !repaired1_classic.!repaired1_latest.!repaired2_classic.!repaired2_latest::
       "$(fn[1]) Pass";
-    repaired_classic|repaired_latest::
+    repaired1_classic|repaired1_latest|repaired2_classic|repaired2_latest::
       "$(fn[1]) FAIL";
 
 }

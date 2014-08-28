@@ -138,7 +138,7 @@ int IsIPV4Address(char *name)
 int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
 {
     int ret;
-    struct addrinfo *response, *ap;
+    struct addrinfo *response = NULL, *ap;
     struct addrinfo query = {
         .ai_family = AF_UNSPEC,
         .ai_socktype = SOCK_STREAM
@@ -152,11 +152,15 @@ int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
     }
 
     ret = getaddrinfo(hostname, NULL, &query, &response);
-    if ((ret) != 0)
+    if (ret != 0)
     {
         Log(LOG_LEVEL_INFO,
             "Unable to lookup hostname '%s' or cfengine service. (getaddrinfo: %s)",
             hostname, gai_strerror(ret));
+        if (response != NULL)
+        {
+            freeaddrinfo(response);
+        }
         return -1;
     }
 
@@ -171,6 +175,8 @@ int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
             return 0;                                           /* Success */
         }
     }
+
+    assert(response != NULL);               /* getaddrinfo() was successful */
     freeaddrinfo(response);
 
     Log(LOG_LEVEL_ERR,
@@ -188,7 +194,7 @@ int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
 int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
 {
     int ret;
-    struct addrinfo *response;
+    struct addrinfo *response = NULL;
 
     /* First convert ipaddr string to struct sockaddr, with no DNS query. */
     struct addrinfo query = {
@@ -200,7 +206,11 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
     {
         Log(LOG_LEVEL_ERR,
             "Unable to convert IP address '%s'. (getaddrinfo: %s)",
-              ipaddr, gai_strerror(ret));
+            ipaddr, gai_strerror(ret));
+        if (response != NULL)
+        {
+            freeaddrinfo(response);
+        }
         return -1;
     }
 
@@ -219,6 +229,7 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
         return -1;
     }
 
+    assert(response != NULL);               /* getaddrinfo() was successful */
     freeaddrinfo(response);
     return 0;                                                   /* Success */
 }

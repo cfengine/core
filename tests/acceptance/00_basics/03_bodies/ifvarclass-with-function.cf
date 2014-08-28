@@ -1,0 +1,58 @@
+# Verify that functions returns are interpreted correctly in ifvarclass
+# Redmine 6327
+
+body common control
+{
+
+AUTO::
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+!AUTO::
+      bundlesequence => { "init", "check" };
+}
+
+bundle agent init
+{
+vars:
+  "always" string => "any";
+  "never" string => "!any";
+}
+
+bundle agent check
+{
+classes:
+  # yes
+  "variable_with_set_class" expression => "any",
+    ifvarclass => canonify("$(init.always)");
+
+  # no
+  "variable_with_unset_class" expression => "any",
+    ifvarclass => canonify("$(init.never)");
+  "just_a_class" expression => "any",
+    ifvarclass => not("any");
+  "undefined_variable" expression => "any",
+    ifvarclass => canonify("$(init.unknown)");
+  "undefined_bundle" expression => "any",
+    ifvarclass => canonify("$(never.never)");
+  "invalid_function" expression => "any",
+    ifvarclass => now();
+
+  "fail" expression => "variable_with_unset_class|just_a_class|undefined_variable|undefined_bundle|invalid_function";
+  "ok" and => { "variable_with_set_class", "!fail" };
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+
+  DEBUG.just_a_class::
+    "just_a_class";
+  DEBUG.undefined_variable::
+    "undefined_variable";
+  DEBUG.undefined_bundle::
+    "undefined_bundle";
+  DEBUG.invalid_function::
+    "invalid_function";
+}
+

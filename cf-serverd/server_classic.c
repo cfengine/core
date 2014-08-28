@@ -1294,7 +1294,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
 
-        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+        zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
             conn->ipaddr, conn->revdns,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
@@ -1319,7 +1319,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
 
-        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+        zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
             conn->ipaddr, conn->revdns,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
@@ -1390,7 +1390,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         drift = (int) (tloc - trem);
 
-        zret = ShortcutsExpand(filename, sizeof(filename) - 1,
+        zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
             conn->ipaddr, conn->revdns,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));

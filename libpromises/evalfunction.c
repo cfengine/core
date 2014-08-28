@@ -1790,7 +1790,8 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
         int sent = 0;
         int result = 0;
         size_t length = strlen(sendstring);
-        do {
+        do
+        {
             result = send(sd, sendstring, length, 0);
             if (result < 0)
             {

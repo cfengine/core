@@ -563,8 +563,7 @@ static int SplitProcLine(const char *proc,
                 do
                 {
                     np++;
-                }
-                while (isdigit((unsigned char) np[0]));
+                } while (isdigit((unsigned char) np[0]));
                 ep = np;
             }
         }

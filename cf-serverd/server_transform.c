@@ -869,12 +869,10 @@ static void NewHostToOldACL(Auth *old, const char *host)
             do
             {
                 dot++; /* Step over prior dot. */
-            }
-            while (dot[0] == '.'); /* Treat many dots as one. */
+            } while (dot[0] == '.'); /* Treat many dots as one. */
             extra++; /* For a backslash before the dot */
             dot = strchr(dot, '.');
-        }
-        while (dot);
+        } while (dot);
 
         char regex[strlen(host) + extra], *dst = regex;
         dst++[0] = '.';
@@ -891,8 +889,7 @@ static void NewHostToOldACL(Auth *old, const char *host)
             do /* Step over prior dot(s), as before. */
             {
                 dot++;
-            }
-            while (dot[0] == '.');
+            } while (dot[0] == '.');
 
             /* Identify next fragment: */
             const char *d = strchr(dot, '.');
@@ -904,8 +901,7 @@ static void NewHostToOldACL(Auth *old, const char *host)
 
             /* Advance: */
             dot = d;
-        }
-        while (dot);
+        } while (dot);
 
         /* Terminate: */
         assert(dst < regex + sizeof(regex));

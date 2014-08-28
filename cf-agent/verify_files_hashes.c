@@ -96,8 +96,7 @@ int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat,
                 close(fd1);
                 return true;
             }
-        }
-        while (bytes1 > 0);
+        } while (bytes1 > 0);
 
         close(fd2);
         close(fd1);

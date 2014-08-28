@@ -22,7 +22,8 @@ void test_mode(void)
     mode_t minus = 0;
 
     int mode = 0;
-    do {
+    do
+    {
 	ret = ParseModeString(modes[mode].string, &plus, &minus);
 	assert_true(ret);
 	assert_int_equal(modes[mode].plus, plus);
@@ -50,7 +51,8 @@ void test_validation(void)
     mode_t plus = 0;
 
     int mode = 0;
-    do {
+    do
+    {
        ret = ParseModeString( validation_modes[mode].string, &plus, &minus);
        assert_int_equal(validation_modes[mode].valid, ret);
     } while (validation_modes[mode++].string);

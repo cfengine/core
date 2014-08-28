@@ -354,9 +354,10 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 
         ptr = strchr(ptr, '.');
         if (ptr != NULL)
+        {
             ptr++;
-    }
-    while (ptr != NULL);
+        }
+    } while (ptr != NULL);
 
     EvalContextClassPutHard(ctx, VUQNAME, "source=agent,derived-from=sys.uqhost");
     EvalContextClassPutHard(ctx, VDOMAIN, "source=agent,derived-from=sys.domain");

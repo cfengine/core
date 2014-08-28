@@ -35,6 +35,7 @@ bundle agent test
       "x2" slist => { @(undefined1), @(x), @(undefined2) }, policy => "ifdefined";
       "x3" slist => { @(undefined1), @(undefined2), @(x) }, policy => "ifdefined";
       "x4" slist => { @(x), @(undefined1), @(undefined2), @(x) }, policy => "ifdefined";
+      "x5" slist => { @(undefined1), "entry", @(undefined2) }, policy => "ifdefined";
 }
 
 #######################################################
@@ -48,6 +49,7 @@ bundle agent check
       "joined_test_x2" string => join(",", "test.x2");
       "joined_test_x3" string => join(",", "test.x3");
       "joined_test_x4" string => join(",", "test.x4");
+      "joined_test_x5" string => join(",", "test.x5");
 
   classes:
       "ok0" expression => strcmp($(expected), $(joined_test_x));
@@ -55,8 +57,9 @@ bundle agent check
       "ok2" expression => strcmp($(expected), $(joined_test_x2));
       "ok3" expression => strcmp($(expected), $(joined_test_x3));
       "ok4" expression => strcmp("$(expected),$(expected)", $(joined_test_x4));
+      "ok5" expression => strcmp("entry", $(joined_test_x5));
 
-      "ok" and => { "ok0", "ok1", "ok2", "ok3", "ok4" };
+      "ok" and => { "ok0", "ok1", "ok2", "ok3", "ok4", "ok5" };
 
   reports:
     ok::
@@ -74,4 +77,6 @@ bundle agent check
       "x3: $(joined_test_x3)";
     DEBUG.!ok4::
       "x4: $(joined_test_x4)";
+    DEBUG.!ok5::
+      "x5: $(joined_test_x5)";
 }

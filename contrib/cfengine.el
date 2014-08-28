@@ -163,8 +163,8 @@ bundle agent rcfiles
   "Cache for `cfengine-mode' syntax trees obtained from 'cf-promises -s json'.")
 
 ; Be sure to keep these two in sync with libpromises/cf3.defs.h
-(defconst cfengine3-uint-range "0,999999999")
-(defconst cfengine3-sint-range "-999999999,999999999")
+(defconst cfengine3-uint-range "0,2147483647")
+(defconst cfengine3-sint-range "-2147483648,2147483647")
 
 (defconst cfengine3-fallback-syntax
   '((functions

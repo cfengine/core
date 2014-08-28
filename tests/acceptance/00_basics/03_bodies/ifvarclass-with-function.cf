@@ -38,11 +38,12 @@ classes:
     ifvarclass => now();
 
   "fail" expression => "variable_with_unset_class|just_a_class|undefined_variable|undefined_bundle|invalid_function";
+  "ok" and => { "variable_with_set_class", "!fail" };
 
 reports:
-  !fail::
+  ok::
     "$(this.promise_filename) Pass";
-  fail::
+  !ok::
     "$(this.promise_filename) FAIL";
 
   DEBUG.just_a_class::

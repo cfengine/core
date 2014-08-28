@@ -839,7 +839,7 @@ static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
 
         /* If any hostname rule got added, we set a global flag to
          * turn on reverse DNS lookup in the new protocol. */
-        if (ret + 1 && !NEED_REVERSE_LOOKUP)
+        if (ret != (size_t) -1 && !NEED_REVERSE_LOOKUP)
         {
             Log(LOG_LEVEL_INFO,
                 "Found hostname admit/deny access_rules, "

@@ -286,14 +286,19 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         {
             if (opts.drop_undefined)
             {
-                for (Rlist *rp = RvalRlistValue(rval); rp; rp = rp->next)
+                Rlist *stripped = RvalRlistValue(rval);
+                Rlist *entry = stripped;
+                while (entry)
                 {
-                    if (IsNakedVar(RlistScalarValue(rp), '@'))
+                    Rlist *delete_me = NULL;
+                    if (IsNakedVar(RlistScalarValue(entry), '@'))
                     {
-                        free(rp->val.item);
-                        rp->val.item = xstrdup(CF_NULL_VALUE);
+                        delete_me = entry;
                     }
+                    entry = entry->next;
+                    RlistDestroyEntry(&stripped, delete_me);
                 }
+                rval.item = stripped;
             }
 
             for (const Rlist *rp = RvalRlistValue(rval); rp; rp = rp->next)

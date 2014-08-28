@@ -1,14 +1,17 @@
 #######################################################
 #
 # Test that slists can be extended (redefined using its own previous value)
-# Redmine:4335 (https://cfengine.com/dev/issues/4335)
+# Redmine:4335 and 6541 
 #######################################################
 
 body common control
 {
+AUTO::
       inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
+!AUTO::
+      bundlesequence => { "init", "test", "check" };
 }
 
 #######################################################
@@ -22,12 +25,17 @@ bundle agent init
 bundle agent test
 {
   vars:
-    any::
       "x" slist => { "xyz" }, policy => "free";
 
       "x" slist => { @(x), "extended" }, policy => "free";
 
       "x" slist => { @(x), "more" }, policy => "free";
+
+      "x1" slist => { @(x), @(undefined1), @(undefined2) }, policy => "ifdefined";
+      "x2" slist => { @(undefined1), @(x), @(undefined2) }, policy => "ifdefined";
+      "x3" slist => { @(undefined1), @(undefined2), @(x) }, policy => "ifdefined";
+      "x4" slist => { @(x), @(undefined1), @(undefined2), @(x) }, policy => "ifdefined";
+      "x5" slist => { @(undefined1), "entry", @(undefined2) }, policy => "ifdefined";
 }
 
 #######################################################
@@ -35,10 +43,23 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "joined_test_x" string => join(",", "test.x");
+      "expected" string => "xyz,extended,more";
+      "joined_test_x" string => join(",", "test.x");
+      "joined_test_x1" string => join(",", "test.x1");
+      "joined_test_x2" string => join(",", "test.x2");
+      "joined_test_x3" string => join(",", "test.x3");
+      "joined_test_x4" string => join(",", "test.x4");
+      "joined_test_x5" string => join(",", "test.x5");
 
   classes:
-    "ok" expression => strcmp("xyz,extended,more", $(joined_test_x));
+      "ok0" expression => strcmp($(expected), $(joined_test_x));
+      "ok1" expression => strcmp($(expected), $(joined_test_x1));
+      "ok2" expression => strcmp($(expected), $(joined_test_x2));
+      "ok3" expression => strcmp($(expected), $(joined_test_x3));
+      "ok4" expression => strcmp("$(expected),$(expected)", $(joined_test_x4));
+      "ok5" expression => strcmp("entry", $(joined_test_x5));
+
+      "ok" and => { "ok0", "ok1", "ok2", "ok3", "ok4", "ok5" };
 
   reports:
     ok::
@@ -46,4 +67,16 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 
+    DEBUG.!ok0::
+      "x: $(joined_test_x)";
+    DEBUG.!ok1::
+      "x1: $(joined_test_x1)";
+    DEBUG.!ok2::
+      "x2: $(joined_test_x2)";
+    DEBUG.!ok3::
+      "x3: $(joined_test_x3)";
+    DEBUG.!ok4::
+      "x4: $(joined_test_x4)";
+    DEBUG.!ok5::
+      "x5: $(joined_test_x5)";
 }

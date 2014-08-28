@@ -32,7 +32,7 @@ bundle agent test
       "foo"           slist => splitstring (
 					     join("${separator}${prefix}", "temp_namelist"),
 					     "$(separator)",
-					     "99999999999"
+					     "999999999"
       );
       "nameserv" slist  => grep ("^[^\s]+$", join(escape("${separator}${prefix}"), "temp_namelist") );
 }

@@ -764,7 +764,8 @@ static size_t DeRegexify(StrList **sl, const char *host)
         }
         if (strchr(name, '*') != NULL)
         {
-            return -1; /* Can't handle a * later than the preamble. */
+            /* Can't handle a * later than the preamble. */
+            return (size_t) -1;
         }
 
         if (name > host || NULL != strchr(host, '\\'))
@@ -781,7 +782,7 @@ static size_t DeRegexify(StrList **sl, const char *host)
                     if (p[0] != '.')
                     {
                         /* Regex includes a non-dot escape */
-                        return -1;
+                        return (size_t) -1;
                     }
                 }
 #if 0

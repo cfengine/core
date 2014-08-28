@@ -193,8 +193,7 @@ int SocketConnect(const char *host, const char *port,
                   unsigned int connect_timeout, bool force_ipv4,
                   char *txtaddr, size_t txtaddr_size)
 {
-    struct addrinfo *response, *ap;
-    struct addrinfo *response2, *ap2;
+    struct addrinfo *response = NULL, *ap;
     int sd = -1, connected = false;
 
     struct addrinfo query = {
@@ -205,6 +204,10 @@ int SocketConnect(const char *host, const char *port,
     int ret = getaddrinfo(host, port, &query, &response);
     if (ret != 0)
     {
+        if (response != NULL)
+        {
+            freeaddrinfo(response);
+        }
         Log(LOG_LEVEL_INFO,
               "Unable to find host '%s' service '%s' (%s)",
               host, port, gai_strerror(ret));
@@ -240,6 +243,7 @@ int SocketConnect(const char *host, const char *port,
                     .ai_flags = AI_PASSIVE
                 };
 
+                struct addrinfo *response2 = NULL, *ap2;
                 int ret2 = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2);
                 if (ret2 != 0)
                 {
@@ -247,7 +251,11 @@ int SocketConnect(const char *host, const char *port,
                         "Unable to lookup interface '%s' to bind. (getaddrinfo: %s)",
                         BINDINTERFACE, gai_strerror(ret2));
 
-                    freeaddrinfo(response2);
+                    if (response2 != NULL)
+                    {
+                        freeaddrinfo(response2);
+                    }
+                    assert(response); /* Implied by while loop's conditional. */
                     freeaddrinfo(response);
                     cf_closesocket(sd);
                     return -1;
@@ -266,7 +274,10 @@ int SocketConnect(const char *host, const char *port,
                         "Unable to bind to interface '%s'. (bind: %s)",
                         BINDINTERFACE, GetErrorStr());
                 }
-                freeaddrinfo(response2);
+                if (response2 != NULL)
+                {
+                    freeaddrinfo(response2);
+                }
             }
 
             connected = TryConnect(sd, connect_timeout * 1000,

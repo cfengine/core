@@ -13,12 +13,21 @@ bundle agent test
         meta => { "redmine6405", "redmine6406" };
 
   methods:
-      "any" usebundle => dcs_fini("$(G.testdir)/dest_file_classic");
-      "any" usebundle => dcs_fini("$(G.testdir)/dest_file_latest");
+      # source file
       "any" usebundle => file_make("$(G.testdir)/source_file",
-                                      "This is the source file to copy $(sys.date) - always fresh");
+                                   "This is the source file to copy $(sys.date) - always fresh");
+      # destination files
+      "any" usebundle => dcs_fini("$(G.testdir)/server1_classic");
+      "any" usebundle => dcs_fini("$(G.testdir)/server1_latest");
+      "any" usebundle => dcs_fini("$(G.testdir)/server2_classic");
+      "any" usebundle => dcs_fini("$(G.testdir)/server2_latest");
+
       "any" usebundle => generate_key;
       "any" usebundle => start_server("localhost_closed_hostname");
+      "any" usebundle => start_server("localhost_closed_deny_hostnames");
+
       "any" usebundle => run_test("$(this.promise_filename).sub");
+
       "any" usebundle => stop_server("localhost_closed_hostname");
+      "any" usebundle => stop_server("localhost_closed_deny_hostnames");
 }

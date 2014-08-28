@@ -972,8 +972,8 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     continue;
                 }
 
-                bool ret = StringMapHasKey(SV.path_shortcuts, shortcut);
-                if (ret)
+                bool bret = StringMapHasKey(SV.path_shortcuts, shortcut);
+                if (bret)
                 {
                     Log(LOG_LEVEL_WARNING,
                         "Already existing shortcut for path '%s' was replaced",

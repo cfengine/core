@@ -328,7 +328,8 @@ static void child_mainloop(int channel)
         int received = 0;
         int sent = 0;
         char buffer[4096];
-        do {
+        do
+        {
             received = SSL_read(ssl, buffer, 4096);
             if (received < 0)
             {
@@ -1226,7 +1227,8 @@ static void test_TLSVerifyPeer(void)
     /*
      * Shutting down is not as easy as it seems.
      */
-    do {
+    do
+    {
         result = SSL_shutdown(ssl);
         assert_int_not_equal(-1, result);
     } while (result != 1);

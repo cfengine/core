@@ -68,7 +68,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
 {
     time_t now = time(NULL);
 
-    struct addrinfo query = { 0 }, *response;
+    struct addrinfo query = { 0 }, *response = NULL;
     char strport[PRINTSIZE(unsigned)];
     xsnprintf(strport, sizeof(strport), "%u", (unsigned) SYSLOG_PORT);
 
@@ -81,6 +81,10 @@ void RemoteSysLog(int log_priority, const char *log_string)
         Log(LOG_LEVEL_INFO,
             "Unable to find syslog_host or service: (%s/%s) %s",
             SYSLOG_HOST, strport, gai_strerror(err));
+        if (response != NULL)
+        {
+            freeaddrinfo(response);
+        }
         return;
     }
 

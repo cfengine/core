@@ -181,40 +181,49 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
     size_t i = 0;
     PromiseResult result = PROMISE_RESULT_SKIPPED;
     Buffer *expbuf = BufferNew();
-    for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); i++, PromiseIteratorNext(iter_ctx))
+    iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers);
+    /*
+     If any of the lists we iterate is null or contains only cf_null values,
+     then skip the entire promise.
+    */
+    if (!NullIterators(iter_ctx))
     {
-        if (handle)
+        do
         {
-            // This ordering is necessary to get automated canonification
-            BufferClear(expbuf);
-            ExpandScalar(ctx, NULL, "this", handle, expbuf);
-            CanonifyNameInPlace(BufferGet(expbuf));
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), CF_DATA_TYPE_STRING, "source=promise");
-        }
-        else
-        {
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
-        }
+            if (handle)
+            {
+                // This ordering is necessary to get automated canonification
+                BufferClear(expbuf);
+                ExpandScalar(ctx, NULL, "this", handle, expbuf);
+                CanonifyNameInPlace(BufferGet(expbuf));
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), CF_DATA_TYPE_STRING, "source=promise");
+            }
+            else
+            {
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
+            }
 
-        const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
-        if (!pexp)
-        {
-            // excluded
-            result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
-            continue;
-        }
+            const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
+            if (!pexp)
+            {
+                // excluded
+                result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
+                continue;
+            }
 
-        PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
+            PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
 
-        NotifyDependantPromises(ctx, pexp, iteration_result);
-        result = PromiseResultUpdate(result, iteration_result);
+            NotifyDependantPromises(ctx, pexp, iteration_result);
+            result = PromiseResultUpdate(result, iteration_result);
 
-        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
-        {
-            VerifyVarPromise(ctx, pexp, true);
-        }
+            if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
+            {
+                VerifyVarPromise(ctx, pexp, true);
+            }
 
-        EvalContextStackPopFrame(ctx);
+            EvalContextStackPopFrame(ctx);
+            ++i;
+        } while (PromiseIteratorNext(iter_ctx));
     }
 
     BufferDestroy(expbuf);
@@ -227,12 +236,6 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
 void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval,
                           Rlist **scalars, Rlist **lists, Rlist **containers)
 {
-    assert(rval.item);
-    if (rval.item == NULL)
-    {
-        return;
-    }
-
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:

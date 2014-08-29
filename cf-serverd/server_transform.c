@@ -757,7 +757,8 @@ static size_t DeRegexify(StrList **sl, const char *host)
         }
         if (strchr(name, '*') != NULL)
         {
-            return -1; /* Can't handle a * later than the preamble. */
+            /* Can't handle a * later than the preamble. */
+            return (size_t) -1;
         }
 
         if (name > host || NULL != strchr(host, '\\'))
@@ -774,7 +775,7 @@ static size_t DeRegexify(StrList **sl, const char *host)
                     if (p[0] != '.')
                     {
                         /* Regex includes a non-dot escape */
-                        return -1;
+                        return (size_t) -1;
                     }
                 }
 #if 0
@@ -811,6 +812,18 @@ static size_t DeRegexify(StrList **sl, const char *host)
 
 bool NEED_REVERSE_LOOKUP = false;
 
+static void TurnOnReverseLookups()
+{
+    if (!NEED_REVERSE_LOOKUP)
+    {
+        Log(LOG_LEVEL_INFO,
+            "Found hostname admit/deny in access_rules, "
+            "turning on reverse DNS lookups for every connection");
+        NEED_REVERSE_LOOKUP = true;
+    }
+
+}
+
 static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
 {
     size_t ret;
@@ -830,14 +843,11 @@ static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
     case ADMIT_TYPE_HOSTNAME:
         ret = DeRegexify(&ad->hostnames, entry);
 
-        /* If any hostname rule got added, we set a global flag to
+        /* If any hostname rule got added,
          * turn on reverse DNS lookup in the new protocol. */
-        if (ret + 1 && !NEED_REVERSE_LOOKUP)
+        if (ret != (size_t) -1)
         {
-            Log(LOG_LEVEL_INFO,
-                "Found hostname admit/deny access_rules, "
-                "turning on reverse DNS lookups on every connection");
-            NEED_REVERSE_LOOKUP = true;
+            TurnOnReverseLookups();
         }
 
         break;
@@ -962,8 +972,8 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     continue;
                 }
 
-                bool ret = StringMapHasKey(SV.path_shortcuts, shortcut);
-                if (ret)
+                bool bret = StringMapHasKey(SV.path_shortcuts, shortcut);
+                if (bret)
                 {
                     Log(LOG_LEVEL_WARNING,
                         "Already existing shortcut for path '%s' was replaced",
@@ -1003,12 +1013,24 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITHOSTNAMES].lval) == 0)
                 {
                     ret = StrList_Append(&racl->admit.hostnames, RlistScalarValue(rp));
+                    /* If any hostname rule got added,
+                     * turn on reverse DNS lookup in the new protocol. */
+                    if (ret != (size_t) -1)
+                    {
+                        TurnOnReverseLookups();
+                    }
                     NewHostToOldACL(ap, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYHOSTNAMES].lval) == 0)
                 {
                     ret = StrList_Append(&racl->deny.hostnames, RlistScalarValue(rp));
+                    /* If any hostname rule got added,
+                     * turn on reverse DNS lookup in the new protocol. */
+                    if (ret != (size_t) -1)
+                    {
+                        TurnOnReverseLookups();
+                    }
                     NewHostToOldACL(dp, RlistScalarValue(rp));
                     continue;
                 }

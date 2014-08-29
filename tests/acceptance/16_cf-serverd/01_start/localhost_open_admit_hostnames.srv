@@ -1,0 +1,33 @@
+# In access_rules, admit "localhost" instead of "127.0.0.1"
+
+body common control
+{
+      bundlesequence => { "access_rules" };
+      inputs => { "../../default.cf.sub" };
+
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control
+
+{
+      port => "9886";
+
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+  access:
+      "$(G.testdir)/source_file"
+        admit_hostnames   => { "localhost", "localhost.localdomain" };
+}
+

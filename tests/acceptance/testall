@@ -59,6 +59,8 @@ export GREP_OPTIONS
 # Defaults (overridden by command-line arguments)
 #
 LOG=test.log
+INOTIFYWATCH_LOG=inotifywatch.log
+INOTIFYWAIT_LOG=inotifywait.log
 SUMMARY=summary.log
 XML=test.xml
 XMLTMP=xml.tmp
@@ -75,6 +77,8 @@ NO_CLEAN=0
 BASECLASSES="AUTO"
 EXTRACLASSES="DEBUG"
 VALGRIND_OPTS="--leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions"
+INOTIFYWATCH_OPTS="-r -e modify -e attrib -e moved_to -e create -e delete -e delete_self"
+INOTIFYWAIT_OPTS="-r -m -e modify -e attrib -e moved_to -e create -e delete -e delete_self"
 
 # Use TEST_INDEX for indexing a poor man's array. Basically the subscript is
 # just appended to the variable name.
@@ -233,9 +237,13 @@ usage() {
   echo
   echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
   echo
-  echo " --gdb         Run test under GDB"
-  echo " --valgrind    Run test under Valgrind"
-  echo " --callgrind   Run test under valgrind --tool=callgrind"
+  echo " --gdb          Run test under GDB"
+  echo " --valgrind     Run test under Valgrind"
+  echo " --callgrind    Run test under valgrind --tool=callgrind"
+  echo
+  echo " --inotifywatch Run tests and log filesystem statistics"
+  echo " --inotifywait  Run tests and log filesystem events"
+  echo
   echo " --no-clean does not clean workdir after test finishes"
   echo "            (by default it gets cleaned only if test passed)."
 }
@@ -304,7 +312,7 @@ runtest() {
     if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]; then
       # Don't reset workdir if this is a subsequent pass.
       $GAINROOT rm -rf "$WORKDIR"
-      mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
+      mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp" 2> /dev/null
       chmod ugo+rwxt "$WORKDIR/tmp"
       if [ -n "$BINDIR" ]; then
         # Copy everything, because Windows depends on DLLs.
@@ -521,8 +529,12 @@ while true; do
     --valgrind)
       USE_VALGRIND=1;;
     --callgrind)
-      USE_VALGRIND=1;
+      USE_VALGRIND=1
       VALGRIND_OPTS="--suppressions=valgrind-suppressions --tool=callgrind";;
+    --inotifywatch)
+      USE_INOTIFYWATCH=1;;
+    --inotifywait)
+      USE_INOTIFYWAIT=1;;
     --staging)
       STAGING_TESTS=1;;
     --unsafe)
@@ -684,6 +696,35 @@ else
   exec 7>/dev/null
 fi
 
+if [ -n "$USE_INOTIFYWATCH" ]; then
+  if which inotifywatch 2>&1 > /dev/null; then
+    mkdir -p "$BASE_WORKDIR" 2> /dev/null
+    inotifywatch ${INOTIFYWATCH_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWATCH_LOG} &
+    INOTIFYWATCH_PID=$!
+  else
+    echo "info: inotifywatch not detected."
+    exit 0
+  fi
+fi
+
+if [ -n "$USE_INOTIFYWAIT" ]; then
+  if which inotifywait 2>&1 > /dev/null; then
+    mkdir -p "$BASE_WORKDIR" 2> /dev/null
+    inotifywait ${INOTIFYWAIT_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWAIT_LOG} &
+    INOTIFYWAIT_PID=$!
+  else
+    echo "info: inotifywait not detected."
+    exit 0
+  fi
+fi
+
+trap_handler() {
+  [ -n "$INOTIFYWATCH_PID" ] && kill -9 ${INOTIFYWATCH_PID} 2>&1 > /dev/null
+  [ -n "$INOTIFYWAIT_PID"  ] && kill -9 ${INOTIFYWAIT_PID}  2>&1 > /dev/null
+  exit 0
+}
+trap trap_handler EXIT SIGINT SIGTERM
+
 #
 # Now run the tests
 #
@@ -735,7 +776,7 @@ START_TIME=$(unix_seconds)
   echo "           tests=\"$TESTS_COUNT\""
 ) > "$XML"
 
-  echo -n "" > "$XMLTMP"
+echo -n "" > "$XMLTMP"
 
 check_and_run_timed_tests() {
   TEST_TIMED_INDEX=0

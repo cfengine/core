@@ -450,7 +450,8 @@ static int OpenReceiverChannel(void)
     int gres;
     if ((gres = getaddrinfo(ptr, servname, &query, &response)) != 0)
     {
-        Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", gai_strerror(gres));
+        Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)",
+            gai_strerror(gres));
         if (response)
         {
             freeaddrinfo(response);
@@ -530,6 +531,7 @@ static int OpenReceiverChannel(void)
         }
     }
 
+    assert(response != NULL);               /* getaddrinfo() was successful */
     freeaddrinfo(response);
     return sd;
 }

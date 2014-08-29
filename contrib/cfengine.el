@@ -162,6 +162,10 @@ bundle agent rcfiles
 (defvar cfengine-mode-syntax-cache nil
   "Cache for `cfengine-mode' syntax trees obtained from 'cf-promises -s json'.")
 
+; Be sure to keep these two in sync with libpromises/cf3.defs.h
+(defconst cfengine3-uint-range "0,2147483647")
+(defconst cfengine3-sint-range "-2147483648,2147483647")
+
 (defconst cfengine3-fallback-syntax
   '((functions
      (userexists
@@ -189,13 +193,13 @@ bundle agent rcfiles
       (category . "data") (variadic . :json-false)
       (parameters . [((range . "[a-zA-Z0-9_$(){}\\[\\].:]+") (type . "string"))
                      ((range . "head,tail") (type . "option"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "slist") (status . "normal"))
      (strftime
       (category . "data") (variadic . :json-false)
       (parameters . [((range . "gmtime,localtime") (type . "option"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "string") (status . "normal"))
      (strcmp
       (category . "data") (variadic . :json-false)
@@ -206,7 +210,7 @@ bundle agent rcfiles
       (category . "data") (variadic . :json-false)
       (parameters . [((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "slist") (status . "normal"))
      (splayclass
       (category . "utils") (variadic . :json-false)
@@ -231,10 +235,10 @@ bundle agent rcfiles
      (selectservers
       (category . "communication") (variadic . :json-false)
       (parameters . [((range . "@[(][a-zA-Z0-9]+[)]") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))
                      ((range . "[a-zA-Z0-9_$(){}\\[\\].:]+") (type . "string"))])
       (returnType . "int") (status . "normal"))
      (reverse
@@ -308,17 +312,17 @@ bundle agent rcfiles
      (readtcp
       (category . "communication") (variadic . :json-false)
       (parameters . [((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "string") (status . "normal"))
      (readstringlist
       (category . "io") (variadic . :json-false)
       (parameters . [((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "slist") (status . "normal"))
      (readstringarrayidx
       (category . "io") (variadic . :json-false)
@@ -326,8 +330,8 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (readstringarray
       (category . "io") (variadic . :json-false)
@@ -335,16 +339,16 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (readreallist
       (category . "io") (variadic . :json-false)
       (parameters . [((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "rlist") (status . "normal"))
      (readrealarray
       (category . "io") (variadic . :json-false)
@@ -352,16 +356,16 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (readintlist
       (category . "io") (variadic . :json-false)
       (parameters . [((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "ilist") (status . "normal"))
      (readintarray
       (category . "io") (variadic . :json-false)
@@ -369,18 +373,18 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (readfile
       (category . "io") (variadic . :json-false)
       (parameters . [((range . "\"?(/.*)") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "string") (status . "normal"))
      (randomint
       (category . "data") (variadic . :json-false)
-      (parameters . [((range . "-99999999999,9999999999") (type . "int"))
-                     ((range . "-99999999999,9999999999") (type . "int"))])
+      (parameters . [((range . cfengine3-sint-range) (type . "int"))
+                     ((range . cfengine3-sint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (product
       (category . "data") (variadic . :json-false)
@@ -390,19 +394,19 @@ bundle agent rcfiles
       (category . "communication") (variadic . :json-false)
       (parameters . [((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "slist") (status . "normal"))
      (peerleader
       (category . "communication") (variadic . :json-false)
       (parameters . [((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "string") (status . "normal"))
      (peers
       (category . "communication") (variadic . :json-false)
       (parameters . [((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "slist") (status . "normal"))
      (parsestringarrayidx
       (category . "io") (variadic . :json-false)
@@ -410,8 +414,8 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (parsestringarray
       (category . "io") (variadic . :json-false)
@@ -419,8 +423,8 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (parserealarray
       (category . "io") (variadic . :json-false)
@@ -428,8 +432,8 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (parseintarray
       (category . "io") (variadic . :json-false)
@@ -437,8 +441,8 @@ bundle agent rcfiles
                      ((range . "\"?(/.*)") (type . "string"))
                      ((range . ".*") (type . "string"))
                      ((range . ".*") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "int") (status . "normal"))
      (or
       (category . "data") (variadic . t)
@@ -456,7 +460,7 @@ bundle agent rcfiles
      (nth
       (category . "data") (variadic . :json-false)
       (parameters . [((range . "[a-zA-Z0-9_$(){}\\[\\].:]+") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "string") (status . "normal"))
      (now
       (category . "system") (variadic . :json-false)
@@ -574,8 +578,8 @@ bundle agent rcfiles
       (returnType . "context") (status . "normal"))
      (irange
       (category . "data") (variadic . :json-false)
-      (parameters . [((range . "-99999999999,9999999999") (type . "int"))
-                     ((range . "-99999999999,9999999999") (type . "int"))])
+      (parameters . [((range . cfengine3-sint-range) (type . "int"))
+                     ((range . cfengine3-sint-range) (type . "int"))])
       (returnType . "irange") (status . "normal"))
      (iprange
       (category . "communication") (variadic . :json-false)
@@ -601,7 +605,7 @@ bundle agent rcfiles
       (returnType . "slist") (status . "normal"))
      (hostsseen
       (category . "communication") (variadic . :json-false)
-      (parameters . [((range . "0,99999999999") (type . "int"))
+      (parameters . [((range . cfengine3-uint-range) (type . "int"))
                      ((range . "lastseen,notseen") (type . "option"))
                      ((range . "name,address") (type . "option"))])
       (returnType . "slist") (status . "normal"))
@@ -673,7 +677,7 @@ bundle agent rcfiles
      (getenv
       (category . "system") (variadic . :json-false)
       (parameters . [((range . "[a-zA-Z0-9_$(){}\\[\\].:]+") (type . "string"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "string") (status . "normal"))
      (format
       (category . "data") (variadic . t)
@@ -685,7 +689,7 @@ bundle agent rcfiles
                      ((range . "[a-zA-Z0-9_$(){}\\[\\].:]+") (type . "string"))
                      ((range . "true,false,yes,no,on,off") (type . "option"))
                      ((range . "true,false,yes,no,on,off") (type . "option"))
-                     ((range . "0,99999999999") (type . "int"))])
+                     ((range . cfengine3-uint-range) (type . "int"))])
       (returnType . "slist") (status . "normal"))
      (filestat
       (category . "files") (variadic . :json-false)
@@ -1295,7 +1299,7 @@ see.  Use it by executing `turn-on-eldoc-mode'."
          ;; In the main syntax-table, \ is marked as a punctuation, because
          ;; of its use in DOS-style directory separators.  Here we try to
          ;; recognize the cases where \ is used as an escape inside strings.
-         (syntax-propertize-rules ("\\(\\(?:\\\\\\)+\\)\"" (1 "\\"))))
+         (syntax-propertize-rules '("\\(\\(?:\\\\\\)+\\)\"" (1 "\\"))))
 
     ;; Backwards compatibility without `syntax-propertize-function'.
     (setq font-lock-defaults

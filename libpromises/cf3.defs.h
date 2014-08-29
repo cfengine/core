@@ -524,15 +524,24 @@ typedef enum
 
 #define CF_BUNDLE  (void*)1234  /* any non-null value, not used */
 
-#define CF_HIGHINIT 99999L
+/* Initial values for max=low, min=high when determining a range, for
+ * which we'll revise max upwards and in downwards if given meaningful
+ * bounds for them.  Quite why they're these values, rather than 9999
+ * (longest string of 9s to fit in an int16) or 999999999 (similar for
+ * int32) remains a mystery. */
+#define CF_HIGHINIT 999999L
 #define CF_LOWINIT -999999L
 
 #define CF_SIGNALRANGE "hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"
 #define CF_BOOL      "true,false,yes,no,on,off"
 #define CF_LINKRANGE "symlink,hardlink,relative,absolute"
-#define CF_TIMERANGE "0,2147483647"
-#define CF_VALRANGE  "0,99999999999"
-#define CF_INTRANGE  "-99999999999,9999999999"
+#define CF_TIMERANGE "0,2147483647" /* i.e. "0,0x7fffffff" */
+/* Be careful not to make these too big for the (signed - values are
+ * stored in int, even when controlled by CF_VALRANGE) valid 32-bit
+ * range, or they get wrapped, potentially to quite small (and
+ * mysterious, until you work out where they came from) values: */
+#define CF_VALRANGE            "0,2147483647"
+#define CF_INTRANGE  "-2147483648,2147483647"
 #define CF_INTLISTRANGE  "[-0-9_$(){}\\[\\].]+"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
 #define CF_CHARRANGE "^.$"

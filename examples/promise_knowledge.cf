@@ -68,9 +68,9 @@ bundle knowledge CfengineSiteConfiguration
       "system signals"   comment =>"Should match the generic pattern hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv, i.e. a unix signal name";
       "boolean"   comment =>"Should match the generic pattern true,false,yes,no,on,off, i.e. a positive or a negative";
       "link type"   comment =>"Should match the generic pattern symlink,hardlink,relative,absolute,none, i.e. a support link type";
-      "a time range"   comment =>"Should match the generic pattern 0,2147483648, i.e. a value from zero to a maximum system time -- but you should use time functions to convert this";
-      "a positive integer"   comment =>"Should match the generic pattern 0,99999999999, i.e. a number between zero and the maximum value";
-      "integer"   comment =>"Should match the generic pattern -99999999999,9999999999, i.e. a number between the minus and positive maximum values";
+      "a time range"   comment =>"Should match the generic pattern 0,2147483647, i.e. a value from zero to a maximum system time -- but you should use time functions to convert this";
+      "a positive integer"   comment =>"Should match the generic pattern 0,2147483647, i.e. a number between zero and the maximum value";
+      "integer"   comment =>"Should match the generic pattern -2147483648,2147483647, i.e. a number between the minus and positive maximum values";
       "real number"   comment =>"Should match the generic pattern -9.99999E100,9.99999E100, i.e. a number between the minus and positive maximum values";
       "a single character"   comment =>"Should match the generic pattern ^.$, i.e. one symbol";
       "posix file mode or permission"   comment =>"Should match the generic pattern [0-7augorwxst,+-]+, i.e. something that you would give as an argument to chmod";

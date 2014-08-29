@@ -104,9 +104,9 @@ static bool ProcessWaitUntilExited(pid_t pid, long timeout_ns)
     return false;
 }
 
-/*
- * A timeout to wait for process to become stopped
- */
+/* A timeout to wait for process to stop (pause) or exit.  Note that
+ * it's important that it not over-flow 32 bits; no more than nine 9s
+ * in a row ! */
 #define STOP_WAIT_TIMEOUT 999999999L
 
 /*
@@ -219,7 +219,7 @@ int GracefulTerminate(pid_t pid, time_t process_start_time)
         return errno == ESRCH;
     }
 
-    if (ProcessWaitUntilExited(pid, 999999999L))
+    if (ProcessWaitUntilExited(pid, STOP_WAIT_TIMEOUT))
     {
         return true;
     }
@@ -229,7 +229,7 @@ int GracefulTerminate(pid_t pid, time_t process_start_time)
         return errno == ESRCH;
     }
 
-    if (ProcessWaitUntilExited(pid, 999999999L))
+    if (ProcessWaitUntilExited(pid, STOP_WAIT_TIMEOUT))
     {
         return true;
     }

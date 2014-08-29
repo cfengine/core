@@ -14,7 +14,7 @@ body common control
 bundle agent init
 {
   meta:
-    "test_suppress_fail" string => "any",
+    "test_soft_fail" string => "any",
       meta => { "redmine6509" };
 
   files:

@@ -194,7 +194,8 @@ int SocketConnect(const char *host, const char *port,
                   char *txtaddr, size_t txtaddr_size)
 {
     struct addrinfo *response = NULL, *ap;
-    int sd = -1, connected = false;
+    bool connected = false;
+    int sd = -1;
 
     struct addrinfo query = {
         .ai_family = force_ipv4 ? AF_INET : AF_UNSPEC,
@@ -204,13 +205,13 @@ int SocketConnect(const char *host, const char *port,
     int ret = getaddrinfo(host, port, &query, &response);
     if (ret != 0)
     {
+        Log(LOG_LEVEL_INFO,
+              "Unable to find host '%s' service '%s' (%s)",
+              host, port, gai_strerror(ret));
         if (response != NULL)
         {
             freeaddrinfo(response);
         }
-        Log(LOG_LEVEL_INFO,
-              "Unable to find host '%s' service '%s' (%s)",
-              host, port, gai_strerror(ret));
         return -1;
     }
 
@@ -255,7 +256,7 @@ int SocketConnect(const char *host, const char *port,
                     {
                         freeaddrinfo(response2);
                     }
-                    assert(response); /* Implied by while loop's conditional. */
+                    assert(response);   /* first getaddrinfo was successful */
                     freeaddrinfo(response);
                     cf_closesocket(sd);
                     return -1;
@@ -274,10 +275,8 @@ int SocketConnect(const char *host, const char *port,
                         "Unable to bind to interface '%s'. (bind: %s)",
                         BINDINTERFACE, GetErrorStr());
                 }
-                if (response2 != NULL)
-                {
-                    freeaddrinfo(response2);
-                }
+                assert(response2);     /* second getaddrinfo was successful */
+                freeaddrinfo(response2);
             }
 
             connected = TryConnect(sd, connect_timeout * 1000,
@@ -286,10 +285,8 @@ int SocketConnect(const char *host, const char *port,
         }
     }
 
-    if (response != NULL)
-    {
-        freeaddrinfo(response);
-    }
+    assert(response != NULL);           /* first getaddrinfo was successful */
+    freeaddrinfo(response);
 
     if (!connected)
     {

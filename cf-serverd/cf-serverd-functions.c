@@ -350,10 +350,13 @@ static void ClearAuthAndACLs(void)
     acl_Free(query_acl);    query_acl = NULL;
 }
 
-static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
+static void CheckFileChanges(EvalContext *ctx, Policy **policy, 
+                               GenericAgentConfig *config, bool *policy_changed)
 {
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'",
         config->input_file);
+    
+    *policy_changed = false;
 
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
 
@@ -406,11 +409,10 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             UpdateTimeClasses(ctx, t);
             *policy = LoadPolicy(ctx, config);
 
-            /* Reload HA related configuration */
-            ReloadHAConfig();
-
             KeepPromises(ctx, *policy, config);
             Summarize();
+            
+            *policy_changed = true;
         }
         else
         {
@@ -696,14 +698,22 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
             if (ThreadLock(cft_server_children))
             {
+                bool was_policy_reloaded = false;
+                
                 if (ACTIVE_THREADS == 0)
                 {
                     /* Check for new policy just before spawning the
                      * thread, since server reconfiguration can only
                      * happen when no threads are active. */
-                    CheckFileChanges(ctx, policy, config);
+                    CheckFileChanges(ctx, policy, config, &was_policy_reloaded);
                 }
                 ThreadUnlock(cft_server_children);
+                
+                if (was_policy_reloaded)
+                {
+                    /* Reload HA related configuration */
+                    ReloadHAConfig();
+                }
             }
 
             /* Is there new connection pending at our listening socket? */

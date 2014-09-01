@@ -121,28 +121,38 @@ static void RandomSeed(void)
     RAND_screen();
 #endif
 
-    /* We should have had enough entropy by now. */
+    /* We should have had enough entropy by now. Else we print a message and
+     * use non-crypto-safe random data. */
     if (RAND_status() != 1)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "PRNG hasn't been seeded enough! Using some system data for seed");
+        /* TODO raise to LOG_LEVEL_WARNING? */
+        Log(LOG_LEVEL_INFO,
+            "PRNG hasn't been seeded enough, using some system data for seed!");
+        Log(LOG_LEVEL_INFO,
+            "A workaround is to copy 1KB of random bytes to '%s'",
+            randfile);
+
+        /* Various hacks. */
         RAND_seed(&CFSTARTTIME, sizeof(time_t));
         RAND_seed(VFQNAME, strlen(VFQNAME));
+
         time_t now = time(NULL);
         RAND_seed(&now, sizeof(time_t));
-        char uninitbuffer[100];
-        RAND_seed(uninitbuffer, sizeof(uninitbuffer));
 
+        unsigned char rand_buf[128];
+        for (size_t i = 0; i < sizeof(rand_buf); i++)
+        {
+            rand_buf[i] = rand() % 256;
+        }
+        RAND_seed(rand_buf, sizeof(rand_buf));
+
+        /* If we *still* not have enough entropy, then things will be failing
+         * all over the place. Should never happen because of the rand()
+         * buffer above which should cover all cases. */
         if (RAND_status() != 1)
         {
-#if 0 /* FIXME: We really are in trouble here !  But aborting is too drastic. */
-            UnexpectedError("Low entropy! "
-                            "Please report which platform you are using.");
-#else
-            Log(LOG_LEVEL_ERR,
-                "Failed to scavenge enough entropy! "
-                "Please report which platform you are using.");
-#endif
+            UnexpectedError("Low entropy, crypto operations will fail! "
+                            "See verbose log and report which platform you are using.");
         }
     }
 }

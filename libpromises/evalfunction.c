@@ -1524,11 +1524,9 @@ static FnCallResult FnCallLastNode(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         RlistDestroy(newlist);
         return (FnCallResult) { FNCALL_SUCCESS, { res, RVAL_TYPE_SCALAR } };
     }
-    else
-    {
-        RlistDestroy(newlist);
-        return FnFailure();
-    }
+
+    RlistDestroy(newlist);
+    return FnFailure();
 }
 
 /*******************************************************************/
@@ -5349,8 +5347,6 @@ static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy
 
 static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char *contents;
-
     char *filename = RlistScalarValue(finalargs);
     char *requested_max = RlistScalarValue(finalargs->next);
     int maxsize = IntFromString(requested_max);
@@ -5367,16 +5363,13 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     }
 
     // Read once to validate structure of file in itemlist
-    contents = CfReadFile(filename, maxsize);
-
+    char *contents = CfReadFile(filename, maxsize);
     if (contents)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { contents, RVAL_TYPE_SCALAR } };
     }
-    else
-    {
-        return FnFailure();
-    }
+
+    return FnFailure();
 }
 
 /*********************************************************************/
@@ -5948,7 +5941,6 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED const Policy *
 static FnCallResult FnCallLDAPValue(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], handle[CF_BUFSIZE];
-    void *newval = NULL;
 
 /* begin fn specific content */
 
@@ -5961,26 +5953,22 @@ static FnCallResult FnCallLDAPValue(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 
     snprintf(handle, CF_BUFSIZE, "%s_%s_%s_%s", dn, filter, name, scope);
 
-    if ((newval = CfLDAPValue(uri, dn, filter, name, scope, sec)))
+    void *newval = CfLDAPValue(uri, dn, filter, name, scope, sec);
+    if (newval)
     {
         CacheUnreliableValue("ldapvalue", handle, newval);
     }
-    else
+    else if (RetrieveUnreliableValue("ldapvalue", handle, buffer))
     {
-        if (RetrieveUnreliableValue("ldapvalue", handle, buffer))
-        {
-            newval = xstrdup(buffer);
-        }
+        newval = xstrdup(buffer);
     }
 
     if (newval)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
     }
-    else
-    {
-        return FnFailure();
-    }
+
+    return FnFailure();
 }
 
 /*********************************************************************/
@@ -5993,8 +5981,6 @@ static FnCallResult FnCallLDAPArray(EvalContext *ctx, ARG_UNUSED const Policy *p
         return FnFailure();
     }
 
-    void *newval;
-
     char *array = RlistScalarValue(finalargs);
     char *uri = RlistScalarValue(finalargs->next);
     char *dn = RlistScalarValue(finalargs->next->next);
@@ -6002,15 +5988,13 @@ static FnCallResult FnCallLDAPArray(EvalContext *ctx, ARG_UNUSED const Policy *p
     char *scope = RlistScalarValue(finalargs->next->next->next->next);
     char *sec = RlistScalarValue(finalargs->next->next->next->next->next);
 
-    if ((newval = CfLDAPArray(ctx, PromiseGetBundle(fp->caller), array, uri, dn, filter, scope, sec)))
+    void *newval = CfLDAPArray(ctx, PromiseGetBundle(fp->caller), array, uri, dn, filter, scope, sec);
+    if (newval)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
     }
-    else
-    {
-        return FnFailure();
-    }
 
+    return FnFailure();
 }
 
 /*********************************************************************/
@@ -6043,9 +6027,7 @@ static FnCallResult FnCallLDAPList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 static FnCallResult FnCallRegLDAP(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    void *newval;
-
-/* begin fn specific content */
+    /* begin fn specific content */
 
     char *uri = RlistScalarValue(finalargs);
     char *dn = RlistScalarValue(finalargs->next);
@@ -6055,15 +6037,13 @@ static FnCallResult FnCallRegLDAP(EvalContext *ctx, ARG_UNUSED const Policy *pol
     char *regex = RlistScalarValue(finalargs->next->next->next->next->next);
     char *sec = RlistScalarValue(finalargs->next->next->next->next->next->next);
 
-    if ((newval = CfRegLDAP(ctx, uri, dn, filter, name, scope, regex, sec)))
+    void *newval = CfRegLDAP(ctx, uri, dn, filter, name, scope, regex, sec);
+    if (newval)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
     }
-    else
-    {
-        return FnFailure();
-    }
 
+    return FnFailure();
 }
 
 /*********************************************************************/
@@ -6072,9 +6052,7 @@ static FnCallResult FnCallRegLDAP(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
 static FnCallResult FnCallDiskFree(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    off_t df;
-
-    df = GetDiskUsage(RlistScalarValue(finalargs), CF_SIZE_ABS);
+    off_t df = GetDiskUsage(RlistScalarValue(finalargs), CF_SIZE_ABS);
 
     if (df == CF_INFINITY)
     {

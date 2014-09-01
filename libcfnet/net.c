@@ -38,6 +38,10 @@
 /**
  * @param len is the number of bytes to send, or 0 if buffer is a
  *        '\0'-terminated string so strlen(buffer) can used.
+ * @NOTE #buffer can't be of zero length, our protocol
+ *       does not allow empty transactions! The reason is that
+ *       ReceiveTransaction() can't differentiate between that
+ *       and connection closed.
  */
 int SendTransaction(const ConnectionInfo *conn_info,
                     const char *buffer, int len, char status)
@@ -51,6 +55,8 @@ int SendTransaction(const ConnectionInfo *conn_info,
     {
         len = strlen(buffer);
     }
+
+    assert(len > 0);            /* Not allowed to send zero-payload packets */
 
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
@@ -115,8 +121,18 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
                         conn_info->protocol);
         ret = -1;
     }
+
     if (ret == -1 || ret == 0)
+    {
         return ret;
+    }
+    else if (ret != CF_INBAND_OFFSET)
+    {
+        Log(LOG_LEVEL_ERR,
+            "ReceiveTransaction: bogus short header (%d bytes: '%s')",
+            ret, proto);
+        return -1;
+    }
 
     LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction header: ", proto, ret);
 
@@ -124,20 +140,25 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     if (ret != 2)
     {
         Log(LOG_LEVEL_ERR,
-            "ReceiveTransaction: Bad packet -- bogus header: %s", proto);
-        return -1;
-    }
-    if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
-    {
-        Log(LOG_LEVEL_ERR,
-            "ReceiveTransaction: Bad packet -- too long (len=%d)", len);
+            "ReceiveTransaction: bogus header: %s", proto);
         return -1;
     }
     if (status != CF_MORE && status != CF_DONE)
     {
         Log(LOG_LEVEL_ERR,
-            "ReceiveTransaction: Bad packet -- bogus header (more='%c')",
-            status);
+            "ReceiveTransaction: bogus header (more='%c')", status);
+        return -1;
+    }
+    if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
+    {
+        Log(LOG_LEVEL_ERR,
+            "ReceiveTransaction: packet too long (len=%d)", len);
+        return -1;
+    }
+    else if (len <= 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "ReceiveTransaction: packet too short (len=%d)", len);
         return -1;
     }
 

@@ -7019,11 +7019,22 @@ static const FnCallArg AGO_ARGS[] =
 static const FnCallArg LATERTHAN_ARGS[] =
 {
     {"0,10000", CF_DATA_TYPE_INT, "Years"},
-    {"1,12", CF_DATA_TYPE_INT, "Months"},
-    {"1,31", CF_DATA_TYPE_INT, "Days"},
-    {"0,23", CF_DATA_TYPE_INT, "Hours"},
-    {"0,59", CF_DATA_TYPE_INT, "Minutes"},
-    {"0,59", CF_DATA_TYPE_INT, "Seconds"},
+    {"0,1000", CF_DATA_TYPE_INT, "Months"},
+    {"0,1000", CF_DATA_TYPE_INT, "Days"},
+    {"0,1000", CF_DATA_TYPE_INT, "Hours"},
+    {"0,1000", CF_DATA_TYPE_INT, "Minutes"},
+    {"0,40000", CF_DATA_TYPE_INT, "Seconds"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg DATE_ARGS[] = /* for on() */
+{
+    {"1970,3000", CF_DATA_TYPE_INT, "Year"},
+    {"0,1000", CF_DATA_TYPE_INT, "Month (January = 0)"},
+    {"0,1000", CF_DATA_TYPE_INT, "Day (First day of month = 0)"},
+    {"0,1000", CF_DATA_TYPE_INT, "Hour"},
+    {"0,1000", CF_DATA_TYPE_INT, "Minute"},
+    {"0,1000", CF_DATA_TYPE_INT, "Second"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -7398,17 +7409,6 @@ static const FnCallArg SUM_ARGS[] =
 static const FnCallArg PRODUCT_ARGS[] =
 {
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "A list of arbitrary real values"},
-    {NULL, CF_DATA_TYPE_NONE, NULL}
-};
-
-static const FnCallArg DATE_ARGS[] =
-{
-    {"1970,3000", CF_DATA_TYPE_INT, "Year"},
-    {"0,11", CF_DATA_TYPE_INT, "Month (January = 0)"},
-    {"0,30", CF_DATA_TYPE_INT, "Day (First day of month = 0)"},
-    {"0,23", CF_DATA_TYPE_INT, "Hour"},
-    {"0,59", CF_DATA_TYPE_INT, "Minute"},
-    {"0,59", CF_DATA_TYPE_INT, "Second"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

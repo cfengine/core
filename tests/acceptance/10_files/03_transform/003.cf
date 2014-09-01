@@ -24,12 +24,12 @@ bundle agent init
       create => "true";
 
       "$(G.testdir)/$(files)"
-      copy_from => init_copy("$(G.etc_group)");
+      copy_from => init_copy;
 }
 
-body copy_from init_copy(file)
+body copy_from init_copy
 {
-      source => "$(file)";
+      source => "$(G.etc_group)";
 }
 
 body classes init_set_class(class)
@@ -75,13 +75,16 @@ bundle agent check
 {
   vars:
       "count" string => execresult("$(G.wc) $(test.counter)", "noshell");
+    DEBUG::
+      "list" string => execresult("$(G.ls) -1 $(G.testdir)", "noshell");
 
   classes:
       "ok" expression => regcmp("\s*3\s.*", "$(count)");
 
   reports:
-    DEBUG::
-      "3 transformations expected, saw '$(count)'";
+    DEBUG.!ok::
+      "3 transformations expected, saw (wc): '$(count)'";
+      "3 copies of $(G.etc_group) expected, saw (ls): '$(list)'";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

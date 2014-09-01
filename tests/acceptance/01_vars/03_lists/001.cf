@@ -65,9 +65,22 @@ bundle edit_line test_insert
   vars:
       "one" slist => { "a", "b", "c" };
       "two" slist => { "x", "y", "z" };
+      "empty" slist => {};
+      "null" slist => { "cf_null" };
+      "nulls" slist => { "cf_null", "cf_null", "cf_null" };
+
+      "not_an_array" string => "zero";
+      "no_values" slist => getvalues("not_an_array");
 
   insert_lines:
       "$(one) $(two)";
+      # these should do nothing
+      "$(one) $(two) $(empty)";
+      "$(empty) $(one) $(null) $(two)";
+      "$(null) $(empty)";
+      "$(one) $(nulls)";
+      "$(nulls)";
+      "$(no_values)";
 }
 
 #######################################################

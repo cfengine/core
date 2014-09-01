@@ -112,6 +112,7 @@ GAINROOT=${GAINROOT:-$DEFAULT_GAINROOT}
 PASSED_TESTS=0
 FAILED_TESTS=0
 SUPPRESSED_FAILURES=0
+SOFT_FAILURES=0
 SKIPPED_TESTS=0
 
 #
@@ -367,22 +368,26 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     elif [ -z "$EXPECTED_CRASH" ]; then
       # We need to be careful when matching test outcomes. Because of convergence
       # passes, a test may output FAIL before it outputs Pass; in this case the
-      # latter trumps the former. Also be careful when matching an XFAIL; the
+      # latter trumps the former. Also be careful when matching an [XS]FAIL; the
       # test should not be allowed to output any other outcome in the same run,
       # except for FAIL.
 
       # Some states are output by dcs.cf.sub, therefore check for both TEST
       # prefix and dcs.cf.sub prefix.
       ESCAPED_TEST="$(echo "($TEST|dcs.cf.sub)" | sed -e 's/\./\\./g')"
-      if egrep -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE > /dev/null; then
+      if egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null; then
         # Check for other test case outcomes than fail. Should not happen.
-        if egrep -e "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v -e "R: .*$ESCAPED_TEST X?FAIL" > /dev/null; then
+        if egrep -e "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v -e "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null; then
           RESULT=FAIL
-          RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress nonexistent failure)${COLOR_NORMAL}"
+          RESULT_MSG="${COLOR_FAILURE}FAIL (The test Passed, but failure was expected)${COLOR_NORMAL}"
         else
-          REDMINE="$(egrep -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE | sed -e "s,.*XFAIL/redmine\([0-9][0-9]*\).*,\1,")"
-          RESULT=XFAIL
-          RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
+          REDMINE="$(egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine\([0-9][0-9]*\).*,\1,")"
+          RESULT="$(egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
+          if [ "$RESULT" = "XFAIL" ]; then
+            RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
+          else
+            RESULT_MSG="${COLOR_WARNING}Soft fail (Redmine #$REDMINE)${COLOR_NORMAL}"
+          fi
         fi
       elif egrep -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE > /dev/null; then
         RESULT=FAIL
@@ -430,7 +435,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
   fi
 
 
-  if [ "$RESULT" = "XFAIL" ]; then
+  if [ "$RESULT" = "XFAIL" -o "$RESULT" = "SFAIL" ]; then
     echo "    <testcase name=\"$(basename $TEST)\""
     echo "              classname=\"$TEST $RESULT_MSG\""
     echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
@@ -441,9 +446,9 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
   fi >> "$WORKDIR/$XML"
   
 
+  echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
   case "$RESULT" in
     Pass)
-      echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
       PASSED_TESTS=$(($PASSED_TESTS + 1))
 
       mkdir -p '.succeeded'
@@ -451,7 +456,6 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       ;;
 
     FAIL|XFAIL)
-      echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
       ( echo "        <failure type=\"$RESULT\""
         echo "                 message=\"$RESULT_MSG $TEST\">"
         cat $OUTFILE | sed -e "s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/'/\&quot;/g"
@@ -463,8 +467,16 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       fi
       ;;
 
+    SFAIL)
+      ( echo "        <skipped type=\"$RESULT_MSG\">"
+        echo "                 message=\"$RESULT_MSG $TEST\">"
+        cat $OUTFILE | sed -e "s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/'/\&quot;/g"
+        echo "        </skipped>"
+      ) >> "$WORKDIR/$XML"
+      SOFT_FAILURES=$(($SOFT_FAILURES + 1))
+      ;;
+
     Skip)
-      echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
       ( echo "        <skipped type=\"$RESULT_MSG\">"
         echo "        </skipped>"
       ) >> "$WORKDIR/$XML"
@@ -736,6 +748,7 @@ print_footer() {
   PASSED_TESTS=`egrep '^Pass ' $SUMMARY | wc -l`
   FAILED_TESTS=`egrep '^(FAIL|XFAIL) ' $SUMMARY | wc -l`
   SUPPRESSED_FAILURES=`egrep '^XFAIL ' $SUMMARY | wc -l`
+  SOFT_FAILURES=`egrep '^SFAIL ' $SUMMARY | wc -l`
   SKIPPED_TESTS=`egrep '^Skip ' $SUMMARY | wc -l`
 
   ( echo
@@ -744,15 +757,16 @@ print_footer() {
   ) | tee -a "$LOG" | tee -a "$SUMMARY" >&7
 
   ( echo
-    echo "Passed tests:  $PASSED_TESTS"
+    echo   "Passed tests:  $PASSED_TESTS"
     printf "Failed tests:  $FAILED_TESTS"
     if [ $SUPPRESSED_FAILURES -gt 0 ]; then
       echo " ($SUPPRESSED_FAILURES are known and suppressed)"
     else
       echo
     fi
-    echo "Skipped tests: $SKIPPED_TESTS"
-    echo "Total tests:   $TESTS_COUNT"
+    echo   "Skipped tests: $SKIPPED_TESTS"
+    echo   "Soft failures: $SOFT_FAILURES"
+    echo   "Total tests:   $TESTS_COUNT"
   ) | tee -a "$LOG" | tee -a "$SUMMARY"
 
   if [ -n "$PRINTLOG" ]; then

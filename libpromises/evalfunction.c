@@ -3107,7 +3107,10 @@ static FnCallResult FnCallFileStat(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 /*********************************************************************/
 
-static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
+                                          ARG_UNUSED const Policy *policy,
+                                          const FnCall *fp,
+                                          const Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *path = RlistScalarValue(finalargs);
     char *detail = RlistScalarValue(finalargs->next);
@@ -3121,179 +3124,176 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
     {
         return FnFailure();
     }
-    else
+    else if (!strcmp(detail, "size"))
     {
-        if (!strcmp(detail, "size"))
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_size);
+    }
+    else if (!strcmp(detail, "gid"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_gid);
+    }
+    else if (!strcmp(detail, "uid"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_uid);
+    }
+    else if (!strcmp(detail, "ino"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ino);
+    }
+    else if (!strcmp(detail, "nlink"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_nlink);
+    }
+    else if (!strcmp(detail, "ctime"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ctime);
+    }
+    else if (!strcmp(detail, "mtime"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mtime);
+    }
+    else if (!strcmp(detail, "atime"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_atime);
+    }
+    else if (!strcmp(detail, "permstr"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE,
+                 "%c%c%c%c%c%c%c%c%c%c",
+                 S_ISDIR(statbuf.st_mode) ? 'd' : '-',
+                 (statbuf.st_mode & S_IRUSR) ? 'r' : '-',
+                 (statbuf.st_mode & S_IWUSR) ? 'w' : '-',
+                 (statbuf.st_mode & S_IXUSR) ? 'x' : '-',
+                 (statbuf.st_mode & S_IRGRP) ? 'r' : '-',
+                 (statbuf.st_mode & S_IWGRP) ? 'w' : '-',
+                 (statbuf.st_mode & S_IXGRP) ? 'x' : '-',
+                 (statbuf.st_mode & S_IROTH) ? 'r' : '-',
+                 (statbuf.st_mode & S_IWOTH) ? 'w' : '-',
+                 (statbuf.st_mode & S_IXOTH) ? 'x' : '-');
+    }
+    else if (!strcmp(detail, "permoct"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) (statbuf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)));
+    }
+    else if (!strcmp(detail, "modeoct"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) statbuf.st_mode);
+    }
+    else if (!strcmp(detail, "mode"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mode);
+    }
+    else if (!strcmp(detail, "type"))
+    {
+        switch (statbuf.st_mode & S_IFMT)
         {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_size);
+        case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
+        case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
+        case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
+        case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
+        case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
+        case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
+        case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
+        default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
         }
-        else if (!strcmp(detail, "gid"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_gid);
-        }
-        else if (!strcmp(detail, "uid"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_uid);
-        }
-        else if (!strcmp(detail, "ino"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ino);
-        }
-        else if (!strcmp(detail, "nlink"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_nlink);
-        }
-        else if (!strcmp(detail, "ctime"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ctime);
-        }
-        else if (!strcmp(detail, "mtime"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mtime);
-        }
-        else if (!strcmp(detail, "atime"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_atime);
-        }
-        else if (!strcmp(detail, "permstr"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE,
-                     "%c%c%c%c%c%c%c%c%c%c",
-                     S_ISDIR(statbuf.st_mode) ? 'd' : '-',
-                     (statbuf.st_mode & S_IRUSR) ? 'r' : '-',
-                     (statbuf.st_mode & S_IWUSR) ? 'w' : '-',
-                     (statbuf.st_mode & S_IXUSR) ? 'x' : '-',
-                     (statbuf.st_mode & S_IRGRP) ? 'r' : '-',
-                     (statbuf.st_mode & S_IWGRP) ? 'w' : '-',
-                     (statbuf.st_mode & S_IXGRP) ? 'x' : '-',
-                     (statbuf.st_mode & S_IROTH) ? 'r' : '-',
-                     (statbuf.st_mode & S_IWOTH) ? 'w' : '-',
-                     (statbuf.st_mode & S_IXOTH) ? 'x' : '-');
-        }
-        else if (!strcmp(detail, "permoct"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) (statbuf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)));
-        }
-        else if (!strcmp(detail, "modeoct"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) statbuf.st_mode);
-        }
-        else if (!strcmp(detail, "mode"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mode);
-        }
-        else if (!strcmp(detail, "type"))
-        {
-            switch (statbuf.st_mode & S_IFMT)
-            {
-            case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
-            case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
-            case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
-            case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
-            case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
-            case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
-            case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
-            default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
-            }
-        }
-        else if (!strcmp(detail, "dev_minor"))
-        {
-        #if !defined(__MINGW32__)
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) minor(statbuf.st_dev) );
-        #else
-            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
-        #endif
-        }
-        else if (!strcmp(detail, "dev_major"))
-        {
-        #if !defined(__MINGW32__)
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) major(statbuf.st_dev) );
-        #else
-            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
-        #endif
-        }
-        else if (!strcmp(detail, "devno"))
-        {
-        #if !defined(__MINGW32__)
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_dev );
-        #else
-            snprintf(buffer, CF_MAXVARSIZE, "%c:", statbuf.st_dev + 'A');
-        #endif
-        }
-        else if (!strcmp(detail, "dirname"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%s", path);
-            ChopLastNode(buffer);
-            MapName(buffer);
-        }
-        else if (!strcmp(detail, "basename"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%s", ReadLastNode(path));
-        }
-        else if (!strcmp(detail, "linktarget") || !strcmp(detail, "linktarget_shallow"))
-        {
+    }
+    else if (!strcmp(detail, "dev_minor"))
+    {
 #if !defined(__MINGW32__)
-            char path_buffer[CF_BUFSIZE];
-            bool recurse = !strcmp(detail, "linktarget");
-            int cycles = 0;
-            int max_cycles = 30; // This allows for up to 31 levels of indirection.
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) minor(statbuf.st_dev) );
+#else
+        snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+#endif
+    }
+    else if (!strcmp(detail, "dev_major"))
+    {
+#if !defined(__MINGW32__)
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) major(statbuf.st_dev) );
+#else
+        snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+#endif
+    }
+    else if (!strcmp(detail, "devno"))
+    {
+#if !defined(__MINGW32__)
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_dev );
+#else
+        snprintf(buffer, CF_MAXVARSIZE, "%c:", statbuf.st_dev + 'A');
+#endif
+    }
+    else if (!strcmp(detail, "dirname"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%s", path);
+        ChopLastNode(buffer);
+        MapName(buffer);
+    }
+    else if (!strcmp(detail, "basename"))
+    {
+        snprintf(buffer, CF_MAXVARSIZE, "%s", ReadLastNode(path));
+    }
+    else if (!strcmp(detail, "linktarget") || !strcmp(detail, "linktarget_shallow"))
+    {
+#if !defined(__MINGW32__)
+        char path_buffer[CF_BUFSIZE];
+        bool recurse = !strcmp(detail, "linktarget");
+        int cycles = 0;
+        int max_cycles = 30; // This allows for up to 31 levels of indirection.
 
-            snprintf(path_buffer, CF_MAXVARSIZE, "%s", path);
+        strlcpy(path_buffer, path, CF_MAXVARSIZE);
 
-            // Iterate while we're looking at a link.
-            while (S_ISLNK(statbuf.st_mode))
+        // Iterate while we're looking at a link.
+        while (S_ISLNK(statbuf.st_mode))
+        {
+            if (cycles > max_cycles)
             {
-                if (cycles > max_cycles)
-                {
-                    Log(LOG_LEVEL_INFO, "%s bailing on link '%s' (original '%s') because %d cycles were chased",
-                        fp->name, path_buffer, path, cycles+1);
-                    break;
-                }
-
-                Log(LOG_LEVEL_VERBOSE, "%s resolving link '%s', cycle %d", fp->name, path_buffer, cycles+1);
-                // Prep buffer because readlink() doesn't terminate the path.
-                memset(buffer, 0, CF_BUFSIZE);
-
-                /* Note we subtract 1 since we may need an extra char for NULL. */
-                if (readlink(path_buffer, buffer, CF_BUFSIZE-1) < 0)
-                {
-                    // An error happened.  Empty the buffer (don't keep the last target).
-                    Log(LOG_LEVEL_ERR, "%s could not readlink '%s'", fp->name, path_buffer);
-                    path_buffer[0] = '\0';
-                    break;
-                }
-
-                Log(LOG_LEVEL_VERBOSE, "%s resolved link '%s' to %s", fp->name, path_buffer, buffer);
-                // We got a good link target into buffer.  Copy it to path_buffer.
-                snprintf(path_buffer, CF_MAXVARSIZE, "%s", buffer);
-
-                if (!recurse || lstat(path_buffer, &statbuf) == -1)
-                {
-                    if (!recurse)
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "%s bailing on link '%s' (original '%s') because linktarget_shallow was requested",
-                            fp->name, path_buffer, path);
-                    }
-                    else // error from lstat
-                    {
-                        Log(LOG_LEVEL_INFO, "%s bailing on link '%s' (original '%s') because it could not be read",
-                            fp->name, path_buffer, path);
-                    }
-                    break;
-                }
-
-                // At this point we haven't bailed, path_buffer has the link target
-                cycles++;
+                Log(LOG_LEVEL_INFO,
+                    "%s bailing on link '%s' (original '%s') because %d cycles were chased",
+                    fp->name, path_buffer, path, cycles + 1);
+                break;
             }
 
-            // Get the path_buffer back into buffer.
-            snprintf(buffer, CF_MAXVARSIZE, "%s", path_buffer);
+            Log(LOG_LEVEL_VERBOSE, "%s resolving link '%s', cycle %d", fp->name, path_buffer, cycles+1);
 
-#else
-            // Always return the original path on W32.
-            snprintf(buffer, CF_MAXVARSIZE, "%s", path);
-#endif
+            /* Note we subtract 1 since we may need an extra char for '\0'. */
+            ssize_t got = readlink(path_buffer, buffer, CF_BUFSIZE - 1);
+            if (got < 0)
+            {
+                // An error happened.  Empty the buffer (don't keep the last target).
+                Log(LOG_LEVEL_ERR, "%s could not readlink '%s'", fp->name, path_buffer);
+                path_buffer[0] = '\0';
+                break;
+            }
+            buffer[got] = '\0'; /* readlink() doesn't terminate */
+
+            Log(LOG_LEVEL_VERBOSE, "%s resolved link '%s' to %s", fp->name, path_buffer, buffer);
+            // We got a good link target into buffer.  Copy it to path_buffer.
+            strlcpy(path_buffer, buffer, CF_MAXVARSIZE);
+
+            if (!recurse)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "%s bailing on link '%s' (original '%s') because linktarget_shallow was requested",
+                    fp->name, path_buffer, path);
+                break;
+            }
+            else if (lstat(path_buffer, &statbuf) == -1)
+            {
+                Log(LOG_LEVEL_INFO,
+                    "%s bailing on link '%s' (original '%s') because it could not be read",
+                    fp->name, path_buffer, path);
+                break;
+            }
+
+            // At this point we haven't bailed, path_buffer has the link target
+            cycles++;
         }
+
+        // Get the path_buffer back into buffer.
+        strlcpy(buffer, path_buffer, CF_MAXVARSIZE);
+#else
+        // Always return the original path on W32.
+        strlcpy(buffer, path, CF_MAXVARSIZE);
+#endif
     }
 
     return FnReturn(buffer);

@@ -53,7 +53,10 @@ static bool LastRecvTimedOut(void)
  * @param buffer Buffer into which to read data
  * @param toget Number of bytes to read; a '\0' shall be written after
  *        the data; buffer must have space for that.
- * @return -1 on error; or actual length read.
+
+ * @return -1 on error; or number of bytes received. It should return less
+ *         than #toget bytes only if the peer closed the connection or timeout
+ *         or other unrecoverable error occured.
  */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
@@ -65,29 +68,32 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
         return -1;
     }
 
+    /* Repeat recv() until we get "toget" bytes. */
     for (already = 0; already < toget; already += got)
     {
         got = recv(sd, buffer + already, toget - already, 0);
 
         if (got == -1)
         {
-            if (errno == EINTR)
+            if (errno != EINTR)           /* recv() again in case of signal */
             {
-                continue;
+                if (LastRecvTimedOut())
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Timeout - remote end did not respond with the expected amount of data "
+                        "(received=%d, expecting=%d). (recv: %s)",
+                        already, toget, GetErrorStr());
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Couldn't receive (recv: %s)",
+                        GetErrorStr());
+                }
+
+                return -1;
             }
-            else if (LastRecvTimedOut())
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d). (recv: %s)",
-                    already, toget, GetErrorStr());
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Couldn't receive. (recv: %s)", GetErrorStr());
-            }
-            return -1;
         }
-        else if (got == 0) /* doesn't happen unless sock is closed */
+        else if (got == 0)                /* peer has closed the connection */
         {
             break;
         }

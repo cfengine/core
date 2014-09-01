@@ -79,10 +79,6 @@ void CryptoInitialize()
 
         RandomSeed();
 
-        long seed = 0;
-        RAND_bytes((unsigned char *)&seed, sizeof(seed));
-        srand48(seed);
-
         crypto_initialized = true;
     }
 }
@@ -101,9 +97,21 @@ void CryptoDeInitialize()
 
 static void RandomSeed(void)
 {
-    char randfile[CF_BUFSIZE];
+    /* 1. Seed the weak C PRNGs. */
+
+    /* Mix various stuff. */
+    pid_t pid = getpid();
+    size_t fqdn_len = strlen(VFQNAME) > 0 ? strlen(VFQNAME) : 1;
+    time_t start_time = CFSTARTTIME;
+    time_t now = time(NULL);
+
+    srand((unsigned) pid * fqdn_len * start_time * now);
+    srand48((long)  (pid * fqdn_len * start_time * now));
+
+    /* 2. Seed the strong OpenSSL PRNG. */
 
     /* randseed file is written by cf-key. */
+    char randfile[CF_BUFSIZE];
     snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
              CFWORKDIR, FILE_SEPARATOR);
     Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'",
@@ -127,17 +135,10 @@ static void RandomSeed(void)
     {
         /* TODO raise to LOG_LEVEL_WARNING? */
         Log(LOG_LEVEL_INFO,
-            "PRNG hasn't been seeded enough, using some system data for seed!");
+            "PRNG hasn't been seeded enough, using some pseudo-random bytes for seed!");
         Log(LOG_LEVEL_INFO,
             "A workaround is to copy 1KB of random bytes to '%s'",
             randfile);
-
-        /* Various hacks. */
-        RAND_seed(&CFSTARTTIME, sizeof(time_t));
-        RAND_seed(VFQNAME, strlen(VFQNAME));
-
-        time_t now = time(NULL);
-        RAND_seed(&now, sizeof(time_t));
 
         unsigned char rand_buf[128];
         for (size_t i = 0; i < sizeof(rand_buf); i++)
@@ -148,7 +149,7 @@ static void RandomSeed(void)
 
         /* If we *still* not have enough entropy, then things will be failing
          * all over the place. Should never happen because of the rand()
-         * buffer above which should cover all cases. */
+         * buffer above which should be enough for all cases. */
         if (RAND_status() != 1)
         {
             UnexpectedError("Low entropy, crypto operations will fail! "

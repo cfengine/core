@@ -2935,14 +2935,10 @@ static FnCallResult FnCallIsNewerThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 {
     struct stat frombuf, tobuf;
 
-/* begin fn specific content */
+    /* begin fn specific content */
 
-    if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
-    {
-        return FnFailure();
-    }
-
-    if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
+    if (stat(RlistScalarValue(finalargs),     &frombuf) == -1 ||
+        stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
         return FnFailure();
     }
@@ -2956,14 +2952,10 @@ static FnCallResult FnCallIsAccessedBefore(ARG_UNUSED EvalContext *ctx, ARG_UNUS
 {
     struct stat frombuf, tobuf;
 
-/* begin fn specific content */
+    /* begin fn specific content */
 
-    if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
-    {
-        return FnFailure();
-    }
-
-    if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
+    if (stat(RlistScalarValue(finalargs),     &frombuf) == -1 ||
+        stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
         return FnFailure();
     }
@@ -2977,13 +2969,10 @@ static FnCallResult FnCallIsChangedBefore(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
 {
     struct stat frombuf, tobuf;
 
-/* begin fn specific content */
+    /* begin fn specific content */
 
-    if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
-    {
-        return FnFailure();
-    }
-    else if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
+    if (stat(RlistScalarValue(finalargs),     &frombuf) == -1 ||
+        stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
         return FnFailure();
     }

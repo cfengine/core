@@ -4248,16 +4248,10 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
 static FnCallResult FnCallHostRange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
+    /* begin fn specific content */
 
     char *prefix = RlistScalarValue(finalargs);
     char *range = RlistScalarValue(finalargs->next);
-
-    strcpy(buffer, "!any");
 
     if (!FuzzyHostParse(range))
     {
@@ -4734,13 +4728,8 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 static FnCallResult FnCallRegCmp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
+    /* begin fn specific content */
 
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    strcpy(buffer, CF_ANYCLASS);
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
 
@@ -4751,13 +4740,8 @@ static FnCallResult FnCallRegCmp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
+    /* begin fn specific content */
 
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    strcpy(buffer, CF_ANYCLASS);
     const char *regex = RlistScalarValue(finalargs);
     const char *data = RlistScalarValue(finalargs->next);
     char *arrayname = xstrdup(RlistScalarValue(finalargs->next->next));

@@ -1,0 +1,36 @@
+######################################################
+#
+# laterthan() out of range in second
+#
+#####################################################
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+classes:
+     "after_year_5000_day" expression => laterthan(5000,1,1,0,0,60);
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" not => "any";
+
+  reports:
+    DEBUG::
+      "This test should fail";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

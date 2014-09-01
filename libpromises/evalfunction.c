@@ -5148,6 +5148,26 @@ static struct tm FnArgsToTm(const Rlist *rp)
     return ret;
 }
 
+
+/* Convert y/m/d/h/m/s 6-tuple, assuming 1-based (natural) month */
+static struct tm FnArgsToTmBase1Month(const Rlist *rp)
+{
+    struct tm ret = { .tm_isdst = -1 };
+    ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900; /* tm.tm_year stores year - 1900 */
+    rp = rp->next;
+    ret.tm_mon = IntFromString(RlistScalarValue(rp)) - 1;
+    rp = rp->next;
+    ret.tm_mday = IntFromString(RlistScalarValue(rp));
+    rp = rp->next;
+    ret.tm_hour = IntFromString(RlistScalarValue(rp));
+    rp = rp->next;
+    ret.tm_min = IntFromString(RlistScalarValue(rp));
+    rp = rp->next;
+    ret.tm_sec = IntFromString(RlistScalarValue(rp));
+    return ret;
+}
+
+
 static FnCallResult FnCallOn(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
@@ -5202,7 +5222,7 @@ static FnCallResult FnCallLaterThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 {
     char buffer[CF_BUFSIZE];
     time_t now = time(NULL);
-    struct tm tmv = FnArgsToTm(finalargs);
+    struct tm tmv = FnArgsToTmBase1Month(finalargs);
     time_t cftime = mktime(&tmv);
 
     if (cftime == -1)
@@ -6998,12 +7018,12 @@ static const FnCallArg AGO_ARGS[] =
 
 static const FnCallArg LATERTHAN_ARGS[] =
 {
-    {"0,1000", CF_DATA_TYPE_INT, "Years"},
-    {"0,1000", CF_DATA_TYPE_INT, "Months"},
-    {"0,1000", CF_DATA_TYPE_INT, "Days"},
-    {"0,1000", CF_DATA_TYPE_INT, "Hours"},
-    {"0,1000", CF_DATA_TYPE_INT, "Minutes"},
-    {"0,40000", CF_DATA_TYPE_INT, "Seconds"},
+    {"0,10000", CF_DATA_TYPE_INT, "Years"},
+    {"1,12", CF_DATA_TYPE_INT, "Months"},
+    {"1,31", CF_DATA_TYPE_INT, "Days"},
+    {"0,23", CF_DATA_TYPE_INT, "Hours"},
+    {"0,59", CF_DATA_TYPE_INT, "Minutes"},
+    {"0,59", CF_DATA_TYPE_INT, "Seconds"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

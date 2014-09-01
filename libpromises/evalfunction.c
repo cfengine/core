@@ -5134,10 +5134,13 @@ static FnCallResult FnCallReverse(EvalContext *ctx, ARG_UNUSED const Policy *pol
 static struct tm FnArgsToTm(const Rlist *rp)
 {
     struct tm ret = { .tm_isdst = -1 };
-    ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900; /* tm.tm_year stores year - 1900 */
+    /* .tm_year stores year - 1900 */
+    ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900;
     rp = rp->next;
+    /* .tm_mon counts from Jan = 0 to Dec = 11 */
     ret.tm_mon = IntFromString(RlistScalarValue(rp));
     rp = rp->next;
+    /* .tm_mday is day of month, 1 to 31, but we use 0 through 30 (for now) */
     ret.tm_mday = IntFromString(RlistScalarValue(rp)) + 1;
     rp = rp->next;
     ret.tm_hour = IntFromString(RlistScalarValue(rp));
@@ -5147,26 +5150,6 @@ static struct tm FnArgsToTm(const Rlist *rp)
     ret.tm_sec = IntFromString(RlistScalarValue(rp));
     return ret;
 }
-
-
-/* Convert y/m/d/h/m/s 6-tuple, assuming 1-based (natural) month */
-static struct tm FnArgsToTmBase1Month(const Rlist *rp)
-{
-    struct tm ret = { .tm_isdst = -1 };
-    ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900; /* tm.tm_year stores year - 1900 */
-    rp = rp->next;
-    ret.tm_mon = IntFromString(RlistScalarValue(rp)) - 1;
-    rp = rp->next;
-    ret.tm_mday = IntFromString(RlistScalarValue(rp));
-    rp = rp->next;
-    ret.tm_hour = IntFromString(RlistScalarValue(rp));
-    rp = rp->next;
-    ret.tm_min = IntFromString(RlistScalarValue(rp));
-    rp = rp->next;
-    ret.tm_sec = IntFromString(RlistScalarValue(rp));
-    return ret;
-}
-
 
 static FnCallResult FnCallOn(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
@@ -5222,7 +5205,11 @@ static FnCallResult FnCallLaterThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 {
     char buffer[CF_BUFSIZE];
     time_t now = time(NULL);
-    struct tm tmv = FnArgsToTmBase1Month(finalargs);
+    struct tm tmv = FnArgsToTm(finalargs);
+    /* Adjust to 1-based counting (input) for month and day of month
+     * (0-based in mktime): */
+    tmv.tm_mon--;
+    tmv.tm_mday--;
     time_t cftime = mktime(&tmv);
 
     if (cftime == -1)

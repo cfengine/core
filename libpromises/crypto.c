@@ -79,10 +79,6 @@ void CryptoInitialize()
 
         RandomSeed();
 
-        long seed = 0;
-        RAND_bytes((unsigned char *)&seed, sizeof(seed));
-        srand48(seed);
-
         crypto_initialized = true;
     }
 }
@@ -101,16 +97,30 @@ void CryptoDeInitialize()
 
 static void RandomSeed(void)
 {
-    char vbuff[CF_BUFSIZE];
+    /* 1. Seed the weak C PRNGs. */
+
+    /* Mix various stuff. */
+    pid_t pid = getpid();
+    size_t fqdn_len = strlen(VFQNAME) > 0 ? strlen(VFQNAME) : 1;
+    time_t start_time = CFSTARTTIME;
+    time_t now = time(NULL);
+
+    srand((unsigned) pid * fqdn_len * start_time * now);
+    srand48((long)  (pid * fqdn_len * start_time * now));
+
+    /* 2. Seed the strong OpenSSL PRNG. */
 
     /* randseed file is written by cf-key. */
-    snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
-    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'", vbuff);
+    char randfile[CF_BUFSIZE];
+    snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
+             CFWORKDIR, FILE_SEPARATOR);
+    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'",
+        randfile);
 
-    if (!RAND_load_file(vbuff, -1))
+    if (!RAND_load_file(randfile, -1))
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Could not read sufficient randomness from '%s'", vbuff);
+            "Could not read sufficient randomness from '%s'", randfile);
     }
 
 #ifndef __MINGW32__                                     /* windows may hang */
@@ -119,28 +129,31 @@ static void RandomSeed(void)
     RAND_screen();
 #endif
 
-    /* We should have had enough entropy by now. */
+    /* We should have had enough entropy by now. Else we print a message and
+     * use non-crypto-safe random data. */
     if (RAND_status() != 1)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "PRNG hasn't been seeded enough! Using some system data for seed");
-        RAND_seed(&CFSTARTTIME, sizeof(time_t));
-        RAND_seed(VFQNAME, strlen(VFQNAME));
-        time_t now = time(NULL);
-        RAND_seed(&now, sizeof(time_t));
-        char uninitbuffer[100];
-        RAND_seed(uninitbuffer, sizeof(uninitbuffer));
+        /* TODO raise to LOG_LEVEL_WARNING? */
+        Log(LOG_LEVEL_INFO,
+            "PRNG hasn't been seeded enough, using some pseudo-random bytes for seed!");
+        Log(LOG_LEVEL_INFO,
+            "A workaround is to copy 1KB of random bytes to '%s'",
+            randfile);
 
+        unsigned char rand_buf[128];
+        for (size_t i = 0; i < sizeof(rand_buf); i++)
+        {
+            rand_buf[i] = rand() % 256;
+        }
+        RAND_seed(rand_buf, sizeof(rand_buf));
+
+        /* If we *still* not have enough entropy, then things will be failing
+         * all over the place. Should never happen because of the rand()
+         * buffer above which should be enough for all cases. */
         if (RAND_status() != 1)
         {
-#if 0 /* FIXME: We really are in trouble here !  But aborting is too drastic. */
-            UnexpectedError("Low entropy! "
-                            "Please report which platform you are using.");
-#else
-            Log(LOG_LEVEL_ERR,
-                "Failed to scavenge enough entropy! "
-                "Please report which platform you are using.");
-#endif
+            UnexpectedError("Low entropy, crypto operations will fail! "
+                            "See verbose log and report which platform you are using.");
         }
     }
 }

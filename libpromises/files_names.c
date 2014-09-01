@@ -625,7 +625,7 @@ FilePathType FilePathGetType(const char *file_path)
 
 bool IsFileOutsideDefaultRepository(const char *f)
 {
-    return !StringStartsWith(f, GetWorkDir());
+    return !StringStartsWith(f, GetInputDir());
 }
 
 /*******************************************************************/

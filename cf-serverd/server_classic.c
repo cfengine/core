@@ -539,6 +539,9 @@ static void SetConnectionData(ServerConnectionState *conn, char *buf)
 
     sscanf(buf, "%255s %255s %255s", ipstring, fqname, username);
 
+    /* The "ipstring" that the client sends is currently *ignored* as
+     * conn->ipaddr is always set from the connecting socket address. */
+
     Log(LOG_LEVEL_DEBUG, "(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])",
             ipstring, fqname, username, conn->ipaddr);
 

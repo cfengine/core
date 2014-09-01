@@ -62,7 +62,7 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
     int already, got;
 
-    if (toget > CF_BUFSIZE - 1 || toget < 0)
+    if (toget > CF_BUFSIZE - 1 || toget <= 0)
     {
         Log(LOG_LEVEL_ERR, "Bad software request to receive %d bytes", toget);
         return -1;

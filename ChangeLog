@@ -1,3 +1,21 @@
+3.6.2
+        Bug fixes:
+        - don't regenerate software_packages.csv every time (Redmine #6441)
+        - improve verbose message for package_list_command
+        - fix missing log output on AIX (Redmine #6434)
+        - assorted fixes to dirname() esp on Windows (Redmine #4716)
+        - fix package manager detection
+        - fix build issues on FreeBSD
+        - allow copying of dead symbolic links (Redmine #6175)
+        - preserve order in readstringarrayidx (Redmine #6466)
+        - fix passing of unexpanded variable references to arrays (Redmine #5893)
+        - use entries for new {admin,deny}_{ips,hostnames} constraints in the relevant legacy
+          lists (Redmine #6542)
+        - cope with ps's numeric fields overflowing to the right
+        - interpret failing function calls in ifvarclass as class not set (Redmine #6327)
+        - remove unexpanded lists when extending lists (Redmine #6541)
+        - infer start-time of a process from elapsed when needed (Redmine #4094)
+
 3.6.1
         New features:
         - Introduced Solaris and AIX support into the 3.6 series, with many associated build and

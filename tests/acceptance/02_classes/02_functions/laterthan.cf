@@ -17,43 +17,42 @@ bundle agent test
 {
   classes:
       # On 32-bit systems, dates before 1901-12-13 aren't representable
-     "after_year_1902" expression => laterthan(1902,1,1,0,0,0),
-                            scope => "namespace";
+      "after_year_1902" expression => laterthan(1902,1,1,0,0,0),
+        scope => "namespace";
 
-     "after_year_1902_month" expression => laterthan(1902,12,1,0,0,0),
-                            scope => "namespace";
+      "after_year_1902_month" expression => laterthan(1902,12,1,0,0,0),
+        scope => "namespace";
 
-     "after_year_1902_day" expression => laterthan(1902,12,31,0,0,0),
-                            scope => "namespace";
+      "after_year_1902_day" expression => laterthan(1902,12,31,0,0,0),
+        scope => "namespace";
 
-     "after_year_1902_hour" expression => laterthan(1902,12,31,23,0,0),
-                            scope => "namespace";
+      "after_year_1902_hour" expression => laterthan(1902,12,31,23,0,0),
+        scope => "namespace";
 
-     "after_year_1902_minute" expression => laterthan(1902,12,31,23,59,0),
-                            scope => "namespace";
+      "after_year_1902_minute" expression => laterthan(1902,12,31,23,59,0),
+        scope => "namespace";
 
-     "after_year_1902_second" expression => laterthan(1902,12,31,23,59,59),
-                            scope => "namespace";
+      "after_year_1902_second" expression => laterthan(1902,12,31,23,59,59),
+        scope => "namespace";
 
       # On 32-bit systems, dates after 2038-01-18 aren't representable
-    "after_year_2037" expression => laterthan(2037,1,1,0,0,0),
-                            scope => "namespace";
+      "after_year_2037" expression => laterthan(2037,1,1,0,0,0),
+        scope => "namespace";
 
-     "after_year_2037_month" expression => laterthan(2037,12,1,0,0,0),
-                            scope => "namespace";
+      "after_year_2037_month" expression => laterthan(2037,12,1,0,0,0),
+        scope => "namespace";
 
-     "after_year_2037_day" expression => laterthan(2037,12,31,0,0,0),
-                            scope => "namespace";
+      "after_year_2037_day" expression => laterthan(2037,12,31,0,0,0),
+        scope => "namespace";
 
-     "after_year_2037_hour" expression => laterthan(2037,12,31,23,0,0),
-                            scope => "namespace";
+      "after_year_2037_hour" expression => laterthan(2037,12,31,23,0,0),
+        scope => "namespace";
 
-     "after_year_2037_minute" expression => laterthan(2037,12,31,23,59,0),
-                            scope => "namespace";
+      "after_year_2037_minute" expression => laterthan(2037,12,31,23,59,0),
+        scope => "namespace";
 
-     "after_year_2037_second" expression => laterthan(2037,12,31,23,59,59),
-                            scope => "namespace";
-
+      "after_year_2037_second" expression => laterthan(2037,12,31,23,59,59),
+        scope => "namespace";
 }
 
 #######################################################
@@ -78,7 +77,6 @@ bundle agent check
                    "after_year_2037_minute",
                    "after_year_2037_second"
       );
-
 
       "ok" and => { "after_year_1902_ok", "after_year_2037_ok" };
 

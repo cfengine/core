@@ -49,7 +49,16 @@ bundle agent cfe_internal_update
 
   files:
 
-    !windows.have_ppkeys::
+
+    have_ppkeys::
+
+      "$(sys.inputdir)"
+      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
+      copy_from => u_scp("masterfiles"),
+      depth_search => u_recurse("inf"),
+      classes => repaired("got_policy");
+
+    !windows.have_ppkeys.got_policy_failed::
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
@@ -57,13 +66,15 @@ bundle agent cfe_internal_update
       depth_search => u_recurse("inf"),
       classes => repaired("got_policy");
 
-    windows.have_ppkeys::
+    windows.have_ppkeys.got_policy_failed::
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
       copy_from => u_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
       depth_search => u_recurse("inf"),
       classes => repaired("got_policy");
+
+    windows.have_ppkeys::
 
       "$(sys.workdir)\\bin-twin\\."
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows",
@@ -190,6 +201,7 @@ bundle agent cfe_internal_call_update
 body classes repaired(x)
 {
       promise_repaired => {"$(x)"};
+      repair_failed => {"$(x)_failed"};
 }
 ############################################
 body perms u_p(p)

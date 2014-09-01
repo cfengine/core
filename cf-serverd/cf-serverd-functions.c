@@ -741,15 +741,9 @@ static int WaitForIncoming(int sd)
     {
         /* skip */
     }
-    /* If we had data on the signal pipe but not the listening socket,
-     * report no in-coming sockets. */
-    if (result > 0 && (sd < 0 || !FD_ISSET(sd, &rset)))
-    {
-        return 0;
-    }
 
-    /* Return 0 in case of timeout, or the valid socket descriptor. */
-    return result;
+    /* We have an incoming connection if select() marked sd as ready: */
+    return sd != -1 && result > 0 && FD_ISSET(sd, &rset);
 }
 
 /* Check for new policy just before spawning a thread.

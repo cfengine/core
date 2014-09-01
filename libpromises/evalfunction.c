@@ -2173,17 +2173,32 @@ static FnCallResult JoinRlist(const Rlist *input_list, const char *delimiter)
         return FnReturn("");
     }
 
+    bool more = false;
     Buffer *result = BufferNew();
     for (const Rlist *rp = input_list; rp; rp = rp->next)
     {
-        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
+        if (!more && strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
         {
             continue;
         }
 
         BufferAppendString(result, RlistScalarValue(rp));
 
-        if (rp->next)
+        more = false;
+        // skip all following cf_null values
+        while (rp->next)
+        {
+            if (strcmp(RlistScalarValue(rp->next), CF_NULL_VALUE) == 0)
+            {
+                rp = rp->next;
+            }
+            else
+            {
+                more = true;
+                break;
+            }
+        }
+        if (more)
         {
             BufferAppendString(result, delimiter);
         }

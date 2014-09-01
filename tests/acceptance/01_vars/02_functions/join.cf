@@ -28,8 +28,16 @@ bundle agent init
       "j" data => parsejson('[ 1, 2, [ 3, 4, 5 ], null, true, false ]');
       "k" data => parsejson('{}');
       "l" data => parsejson('{ "a": 100, "b": 200, "c": null}');
+      "m" slist => { "cf_null" };
+      "n" slist => { "a", "b", "c", "cf_null" };
+      "o" slist => { @(a), @(c) };
+      "p" slist => { @(c), @(m) };
+      "q" slist => { ":", ":" };
+      "r" slist => { ":", @(c) };
+      "s" slist => { ":", @(c), @(m) };
+      "t" slist => { @(n), @(m), @(n), ":" };
 
-      "lists" slist => { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l" };
+      "lists" slist => { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t" };
 }
 
 #######################################################
@@ -61,6 +69,14 @@ bundle agent check
       "expected_j" string => "1:2:true:false";
       "expected_k" string => "";
       "expected_l" string => "100:200";
+      "expected_m" string => "";
+      "expected_n" string => "a:b:c";
+      "expected_o" string => "b:c:a";
+      "expected_p" string => "";
+      "expected_q" string => ":::";
+      "expected_r" string => ":";
+      "expected_s" string => ":";
+      "expected_t" string => "a:b:c:a:b:c::";
 
   classes:
       "ok_$(lists)" expression => strcmp("$(expected_$(lists))",
@@ -69,7 +85,8 @@ bundle agent check
                                       "$(test.join_$(lists))");
 
       "ok" and => { "ok_a", "ok_b", "ok_c", "ok_d", "ok_e", "ok_f",
-                    "ok_g", "ok_h", "ok_i", "ok_j", "ok_k", "ok_l" };
+                    "ok_g", "ok_h", "ok_i", "ok_j", "ok_k", "ok_l",
+                    "ok_m", "ok_n", "ok_o", "ok_p", "ok_q", "ok_r", "ok_s", "ok_t" };
 
   reports:
     DEBUG::

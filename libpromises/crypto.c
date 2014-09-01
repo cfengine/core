@@ -101,16 +101,18 @@ void CryptoDeInitialize()
 
 static void RandomSeed(void)
 {
-    char vbuff[CF_BUFSIZE];
+    char randfile[CF_BUFSIZE];
 
     /* randseed file is written by cf-key. */
-    snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
-    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'", vbuff);
+    snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
+             CFWORKDIR, FILE_SEPARATOR);
+    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'",
+        randfile);
 
-    if (!RAND_load_file(vbuff, -1))
+    if (!RAND_load_file(randfile, -1))
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Could not read sufficient randomness from '%s'", vbuff);
+            "Could not read sufficient randomness from '%s'", randfile);
     }
 
 #ifndef __MINGW32__                                     /* windows may hang */

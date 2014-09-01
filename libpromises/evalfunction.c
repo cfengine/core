@@ -145,7 +145,7 @@ static FnCallResult FnReturnF(const char *fmt, ...)
     char *buffer;
     xvasprintf(&buffer, fmt, ap);
     va_end(ap);
-    return (FnCallResult) { FNCALL_SUCCESS, { buffer, RVAL_TYPE_SCALAR } };
+    return FnReturnNoCopy(buffer);
 }
 
 static FnCallResult FnReturnContext(bool result)
@@ -1522,7 +1522,7 @@ static FnCallResult FnCallLastNode(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     {
         char *res = xstrdup(RlistScalarValue(rp));
         RlistDestroy(newlist);
-        return (FnCallResult) { FNCALL_SUCCESS, { res, RVAL_TYPE_SCALAR } };
+        return FnReturnNoCopy(res);
     }
 
     RlistDestroy(newlist);
@@ -3907,7 +3907,7 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { StringWriterClose(typestring), RVAL_TYPE_SCALAR } };
+    return FnReturnNoCopy(StringWriterClose(typestring));
 }
 #endif /* unused code */
 /*********************************************************************/
@@ -4273,11 +4273,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
         BufferAppend(buf, format, strlen(format));
     }
 
-    char *result = xstrdup(BufferData(buf));
-    BufferDestroy(buf);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { result, RVAL_TYPE_SCALAR } };
-
+    return FnReturnBuffer(buf);
 }
 
 /*********************************************************************/
@@ -5038,7 +5034,6 @@ static struct tm FnArgsToTm(const Rlist *rp)
 
 static FnCallResult FnCallOn(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     struct tm tmv = FnArgsToTm(finalargs);
     time_t cftime = mktime(&tmv);
 
@@ -5047,9 +5042,7 @@ static FnCallResult FnCallOn(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Polic
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%ld", cftime);
 }
 
 /*********************************************************************/
@@ -5088,7 +5081,6 @@ static FnCallResult FnCallOr(EvalContext *ctx,
 
 static FnCallResult FnCallLaterThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     time_t now = time(NULL);
     struct tm tmv = FnArgsToTm(finalargs);
     /* Adjust to 1-based counting (input) for month and day of month
@@ -5102,21 +5094,11 @@ static FnCallResult FnCallLaterThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    if (now > cftime)
-    {
-        strcpy(buffer, CF_ANYCLASS);
-    }
-    else
-    {
-        strcpy(buffer, "!any");
-    }
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(now > cftime);
 }
 
 static FnCallResult FnCallAgoDate(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     struct tm ago = FnArgsToTm(finalargs);
     time_t now = time(NULL);
     struct tm t;
@@ -5130,22 +5112,18 @@ static FnCallResult FnCallAgoDate(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
     t.tm_sec -= ago.tm_sec;
 
     time_t cftime = mktime(&t);
-
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
-
     if (cftime < 0)
     {
-        strcpy(buffer, "0");
+        return FnReturn("0");
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%ld", cftime);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallAccumulatedDate(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     struct tm tmv = FnArgsToTm(finalargs);
 
     time_t cftime = 0;
@@ -5157,9 +5135,7 @@ static FnCallResult FnCallAccumulatedDate(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
     cftime += tmv.tm_mon * 30 * 24 * 3600;
     cftime += (tmv.tm_year + 1900) * 365 * 24 * 3600;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%ld", cftime);
 }
 
 /*********************************************************************/
@@ -5366,7 +5342,7 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     char *contents = CfReadFile(filename, maxsize);
     if (contents)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { contents, RVAL_TYPE_SCALAR } };
+        return FnReturnNoCopy(contents);
     }
 
     return FnFailure();
@@ -5965,7 +5941,7 @@ static FnCallResult FnCallLDAPValue(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 
     if (newval)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
+        return FnReturnNoCopy(newval);
     }
 
     return FnFailure();
@@ -5991,7 +5967,7 @@ static FnCallResult FnCallLDAPArray(EvalContext *ctx, ARG_UNUSED const Policy *p
     void *newval = CfLDAPArray(ctx, PromiseGetBundle(fp->caller), array, uri, dn, filter, scope, sec);
     if (newval)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
+        return FnReturnNoCopy(newval);
     }
 
     return FnFailure();
@@ -6040,7 +6016,7 @@ static FnCallResult FnCallRegLDAP(EvalContext *ctx, ARG_UNUSED const Policy *pol
     void *newval = CfRegLDAP(ctx, uri, dn, filter, name, scope, regex, sec);
     if (newval)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
+        return FnReturnNoCopy(newval);
     }
 
     return FnFailure();

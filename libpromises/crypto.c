@@ -105,8 +105,10 @@ static void RandomSeed(void)
     time_t start_time = CFSTARTTIME;
     time_t now = time(NULL);
 
-    srand((unsigned) pid * fqdn_len * start_time * now);
-    srand48((long)  (pid * fqdn_len * start_time * now));
+    srand((unsigned) pid      * start_time ^
+          (unsigned) fqdn_len * now);
+    srand48((long)  pid      * start_time ^
+            (long)  fqdn_len * now);
 
     /* 2. Seed the strong OpenSSL PRNG. */
 
@@ -147,9 +149,9 @@ static void RandomSeed(void)
         }
         RAND_seed(rand_buf, sizeof(rand_buf));
 
-        /* If we *still* not have enough entropy, then things will be failing
-         * all over the place. Should never happen because of the rand()
-         * buffer above which should be enough for all cases. */
+        /* If we *still* do not have enough entropy, then things will be
+         * failing all over the place. Should never happen because of the
+         * rand() buffer above which should be enough for all cases. */
         if (RAND_status() != 1)
         {
             UnexpectedError("Low entropy, crypto operations will fail! "

@@ -1172,7 +1172,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
-            conn->ipaddr, conn->revdns,
+            conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
@@ -1240,7 +1240,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
-            conn->ipaddr, conn->revdns,
+            conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
@@ -1296,7 +1296,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
-            conn->ipaddr, conn->revdns,
+            conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
@@ -1321,7 +1321,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
-            conn->ipaddr, conn->revdns,
+            conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
@@ -1392,7 +1392,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
-            conn->ipaddr, conn->revdns,
+            conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)
@@ -1454,7 +1454,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         zret = ShortcutsExpand(filename, sizeof(filename),
             SV.path_shortcuts,
-            conn->ipaddr, conn->revdns,
+            conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if (zret == (size_t) -1)

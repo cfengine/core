@@ -2352,7 +2352,6 @@ static void OpenVZ_Detect(EvalContext *ctx)
 /* path to the vzps binary */
 #define OPENVZ_VZPS_FILE "/bin/vzps"
     struct stat statbuf;
-    int i;
 
     /* The file /proc/bc/0 is present on host
        The file /proc/vz is present on guest
@@ -2368,7 +2367,7 @@ static void OpenVZ_Detect(EvalContext *ctx)
         {
             EvalContextClassPutHard(ctx, "virt_host_vz_vzps", "inventory,attribute_name=Virtual host,source=agent");
             /* here we must redefine the value of VPSHARDCLASS */
-            for (i = 0; i < PLATFORM_CONTEXT_MAX; i++)
+            for (int i = 0; i < PLATFORM_CONTEXT_MAX; i++)
             {
                 if (!strcmp(CLASSATTRIBUTES[i][0], "virt_host_vz_vzps"))
                 {

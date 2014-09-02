@@ -648,7 +648,8 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
 }
 
 /**
- * @brief Receives data from the SSL session and stores it on the buffer.
+ * @brief Receives at most #length bytes of data from the SSL session
+ *        and stores it in the buffer.
  * @param ssl SSL information.
  * @param buffer Buffer, of size at least CF_BUFSIZE, to store received data.
  * @param length Length of the data to receive, must be < CF_BUFSIZE.
@@ -664,6 +665,8 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     assert(length > 0);
     assert(length < CF_BUFSIZE);
     assert_SSLIsBlocking(ssl);
+
+    /* TODO what is the return value of SSL_read in case of socket timeout? */
 
     int received = SSL_read(ssl, buffer, length);
     if (received < 0)

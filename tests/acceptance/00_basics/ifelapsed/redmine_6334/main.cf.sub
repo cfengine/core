@@ -1,0 +1,38 @@
+bundle agent example
+{
+
+  methods:
+    "test" usebundle => test;
+
+}
+
+bundle agent test
+{
+  methods:
+    "Report"
+      usebundle => report_now($(this.bundle)),
+      action => now;
+
+    "Nested Report"
+      usebundle => call_report_now,
+      action => now;
+}
+
+bundle agent call_report_now
+{
+  methods:
+    "Call Report"
+      usebundle => report_now($(this.bundle)),
+      action => now;
+}
+bundle agent report_now(caller)
+{
+  reports:
+    "Called from $(caller)"
+      action => now;
+}
+
+body action now
+{
+    ifelapsed => "0";
+}

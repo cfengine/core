@@ -334,6 +334,13 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         RlistDestroy(expargs);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
+    else if (result.rval.type == RVAL_TYPE_LIST && !result.rval.item)
+    {
+        Rlist *seq = NULL;
+        // don't pass NULL items to evaluator
+        RlistPrepend(&seq, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+        result.rval.item = seq;
+    }
 
     if (fp_type->options & FNCALL_OPTION_CACHED)
     {

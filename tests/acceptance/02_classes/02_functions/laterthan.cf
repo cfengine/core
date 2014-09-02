@@ -16,43 +16,43 @@ body common control
 bundle agent test
 {
   classes:
-     "after_year_1000" expression => laterthan(1000,1,1,0,0,0),
-                            scope => "namespace";
+      # On 32-bit systems, dates before 1901-12-13 aren't representable
+      "after_year_1902" expression => laterthan(1902,1,1,0,0,0),
+        scope => "namespace";
 
-     "after_year_1000_month" expression => laterthan(1000,12,1,0,0,0),
-                            scope => "namespace";
+      "after_year_1902_month" expression => laterthan(1902,12,1,0,0,0),
+        scope => "namespace";
 
-     "after_year_1000_day" expression => laterthan(1000,12,31,0,0,0),
-                            scope => "namespace";
+      "after_year_1902_day" expression => laterthan(1902,12,31,0,0,0),
+        scope => "namespace";
 
-     "after_year_1000_hour" expression => laterthan(1000,12,31,23,0,0),
-                            scope => "namespace";
+      "after_year_1902_hour" expression => laterthan(1902,12,31,23,0,0),
+        scope => "namespace";
 
-     "after_year_1000_minute" expression => laterthan(1000,12,31,23,59,0),
-                            scope => "namespace";
+      "after_year_1902_minute" expression => laterthan(1902,12,31,23,59,0),
+        scope => "namespace";
 
-     "after_year_1000_second" expression => laterthan(1000,12,31,23,59,59),
-                            scope => "namespace";
+      "after_year_1902_second" expression => laterthan(1902,12,31,23,59,59),
+        scope => "namespace";
 
+      # On 32-bit systems, dates after 2038-01-18 aren't representable
+      "after_year_2037" expression => laterthan(2037,1,1,0,0,0),
+        scope => "namespace";
 
-    "after_year_5000" expression => laterthan(5000,1,1,0,0,0),
-                            scope => "namespace";
+      "after_year_2037_month" expression => laterthan(2037,12,1,0,0,0),
+        scope => "namespace";
 
-     "after_year_5000_month" expression => laterthan(5000,12,1,0,0,0),
-                            scope => "namespace";
+      "after_year_2037_day" expression => laterthan(2037,12,31,0,0,0),
+        scope => "namespace";
 
-     "after_year_5000_day" expression => laterthan(5000,12,31,0,0,0),
-                            scope => "namespace";
+      "after_year_2037_hour" expression => laterthan(2037,12,31,23,0,0),
+        scope => "namespace";
 
-     "after_year_5000_hour" expression => laterthan(5000,12,31,23,0,0),
-                            scope => "namespace";
+      "after_year_2037_minute" expression => laterthan(2037,12,31,23,59,0),
+        scope => "namespace";
 
-     "after_year_5000_minute" expression => laterthan(5000,12,31,23,59,0),
-                            scope => "namespace";
-
-     "after_year_5000_second" expression => laterthan(5000,12,31,23,59,59),
-                            scope => "namespace";
-
+      "after_year_2037_second" expression => laterthan(2037,12,31,23,59,59),
+        scope => "namespace";
 }
 
 #######################################################
@@ -60,26 +60,25 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "after_year_1000_ok" and => {
-                   "after_year_1000",
-                   "after_year_1000_month",
-                   "after_year_1000_day",
-                   "after_year_1000_hour",
-                   "after_year_1000_minute",
-                   "after_year_1000_second"
+      "after_year_1902_ok" and => {
+                   "after_year_1902",
+                   "after_year_1902_month",
+                   "after_year_1902_day",
+                   "after_year_1902_hour",
+                   "after_year_1902_minute",
+                   "after_year_1902_second"
       };
 
-      "after_year_5000_ok" not => or(
-                   "after_year_5000",
-                   "after_year_5000_month",
-                   "after_year_5000_day",
-                   "after_year_5000_hour",
-                   "after_year_5000_minute",
-                   "after_year_5000_second"
+      "after_year_2037_ok" not => or(
+                   "after_year_2037",
+                   "after_year_2037_month",
+                   "after_year_2037_day",
+                   "after_year_2037_hour",
+                   "after_year_2037_minute",
+                   "after_year_2037_second"
       );
 
-
-      "ok" and => { "after_year_1000_ok", "after_year_5000_ok" };
+      "ok" and => { "after_year_1902_ok", "after_year_2037_ok" };
 
   reports:
     ok::
@@ -87,4 +86,3 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 }
-

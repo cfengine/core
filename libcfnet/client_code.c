@@ -947,7 +947,8 @@ static void FlushFileStream(int sd, int toget)
     }
 }
 
-int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
+int CopyRegularFileNet(const char *source, const char *dest, off_t size,
+                       bool encrypt, AgentConnection *conn)
 {
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
@@ -1045,10 +1046,11 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if (n_read == -1)                             /* TODO what about 0? */
         {
-            /* This may happen on race conditions,
-             * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
+            /* This may happen on race conditions, where the file has shrunk
+             * since we asked for its size in SYNCH ... STAT source */
 
-            Log(LOG_LEVEL_ERR, "Error in client-server stream (has %s:%s shrunk?)", conn->this_server, source);
+            Log(LOG_LEVEL_ERR, "Error in client-server stream (has %s:%s shrunk?)",
+                conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1058,7 +1060,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if ((n_read_total == 0) && (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
-            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
+            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied",
+                conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1066,14 +1069,15 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if (strncmp(buf, cfchangedstr, strlen(cfchangedstr)) == 0)
         {
-            Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying", conn->this_server, source);
+            Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
+                conn->this_server, source);
             close(dd);
             free(buf);
             return false;
         }
 
 
-        /* Check for mismatch between encryption here and on server - can lead to misunderstanding */
+        /* Check for mismatch between encryption here and on server. */
 
         int value = -1;
         sscanf(buf, "t %d", &value);
@@ -1089,7 +1093,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if (!FSWrite(dest, dd, buf, n_read))
         {
-            Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s'. (FSWrite: %s)",
+            Log(LOG_LEVEL_ERR,
+                "Local disk write failed copying '%s:%s' to '%s'. (FSWrite: %s)",
                 conn->this_server, source, dest, GetErrorStr());
             if (conn)
             {

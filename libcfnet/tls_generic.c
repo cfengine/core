@@ -691,7 +691,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
 {
     int ret;
-    int got = 0;
+    size_t got = 0;
     buf_size -= 1;               /* Reserve one space for terminating '\0' */
 
     /* Repeat until we receive end of line. */
@@ -716,13 +716,14 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
     if ((got == buf_size) && (buf[got-1] != '\n'))
     {
         Log(LOG_LEVEL_ERR,
-            "Received line too long, hanging up! Length %d, line: %s",
+            "Received line too long, hanging up! Length %zu, line: %s",
             got, buf);
         return -1;
     }
 
     LogRaw(LOG_LEVEL_DEBUG, "TLSRecvLines(): ", buf, got);
-    return got;
+
+    return (got <= INT_MAX) ? (int) got : -1;
 }
 
 /**

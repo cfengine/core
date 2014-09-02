@@ -859,191 +859,192 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
 #ifndef __MINGW32__
 static const char *GetProcessOptions(void)
 {
+
 # ifdef __linux__
-      if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
-      {
-          // No threads on 2.4 kernels
-          return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
-      }
+    if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
+    {
+        // No threads on 2.4 kernels
+        return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
+    }
 # endif
 
-      return VPSOPTS[VPSHARDCLASS];
-  }
+    return VPSOPTS[VPSHARDCLASS];
+}
 #endif
 
-  static int ExtractPid(char *psentry, char **names, int *end)
-  {
-      int offset = 0;
+static int ExtractPid(char *psentry, char **names, int *end)
+{
+    int offset = 0;
 
-      for (int col = 0; col < CF_PROCCOLS; col++)
-      {
-          if (strcmp(names[col], "PID") == 0)
-          {
-              if (col > 0)
-              {
-                  offset = end[col - 1];
-              }
-              break;
-          }
-      }
+    for (int col = 0; col < CF_PROCCOLS; col++)
+    {
+        if (strcmp(names[col], "PID") == 0)
+        {
+            if (col > 0)
+            {
+                offset = end[col - 1];
+            }
+            break;
+        }
+    }
 
-      for (const char *sp = psentry + offset; *sp != '\0'; sp++) /* if first field contains alpha, skip */
-      {
-          /* If start with alphanum then skip it till the first space */
+    for (const char *sp = psentry + offset; *sp != '\0'; sp++) /* if first field contains alpha, skip */
+    {
+        /* If start with alphanum then skip it till the first space */
 
-          if (isalnum((unsigned char) *sp))
-          {
-              while (*sp != ' ' && *sp != '\0')
-              {
-                  sp++;
-              }
-          }
+        if (isalnum((unsigned char) *sp))
+        {
+            while (*sp != ' ' && *sp != '\0')
+            {
+                sp++;
+            }
+        }
 
-          while (*sp == ' ' || *sp == '\t')
-          {
-              sp++;
-          }
+        while (*sp == ' ' || *sp == '\t')
+        {
+            sp++;
+        }
 
-          int pid;
-          if (sscanf(sp, "%d", &pid) == 1 && pid != -1)
-          {
-              return pid;
-          }
-      }
+        int pid;
+        if (sscanf(sp, "%d", &pid) == 1 && pid != -1)
+        {
+            return pid;
+        }
+    }
 
-      return -1;
-  }
+    return -1;
+}
 
 # ifndef __MINGW32__
 # ifdef HAVE_GETZONEID
-  /* ListLookup with the following return semantics
-  * -1 if the first argument is smaller than the second
-  *  0 if the arguments are equal
-  *  1 if the first argument is bigger than the second
-  */
-  int PidListCompare(const void *pid1, const void *pid2, ARG_UNUSED void *user_data)
-  {
-      int p1 = (intptr_t)(void *)pid1;
-      int p2 = (intptr_t)(void *)pid2;
+/* ListLookup with the following return semantics
+ * -1 if the first argument is smaller than the second
+ *  0 if the arguments are equal
+ *  1 if the first argument is bigger than the second
+ */
+int PidListCompare(const void *pid1, const void *pid2, ARG_UNUSED void *user_data)
+{
+    int p1 = (intptr_t)(void *)pid1;
+    int p2 = (intptr_t)(void *)pid2;
 
-      if (p1 < p2)
-      {
-          return -1;
-      }
-      else if (p1 > p2)
-      {
-          return 1;
-      }
-      return 0;
-  }
-  /* Load processes using zone-aware ps
-  * to obtain solaris list of global
-  * process ids for root and non-root
-  * users to lookup later */
-  int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
-  {
+    if (p1 < p2)
+    {
+        return -1;
+    }
+    else if (p1 > p2)
+    {
+        return 1;
+    }
+    return 0;
+}
+/* Load processes using zone-aware ps
+ * to obtain solaris list of global
+ * process ids for root and non-root
+ * users to lookup later */
+int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
+{
 
-      char *names[CF_PROCCOLS];
-      int start[CF_PROCCOLS];
-      int end[CF_PROCCOLS];
+    char *names[CF_PROCCOLS];
+    int start[CF_PROCCOLS];
+    int end[CF_PROCCOLS];
 
-      int index = 0;
-      const char *pscmd = "/usr/bin/ps -Aleo zone,user,pid";
+    int index = 0;
+    const char *pscmd = "/usr/bin/ps -Aleo zone,user,pid";
 
-      FILE *psf = cf_popen(pscmd, "r", false);
-      if (psf == NULL)
-      {
-          Log(LOG_LEVEL_ERR, "ZLoadProcesstable: Couldn't open the process list with command %s.", pscmd);
-          return false;
-      }
-
-      size_t pbuff_size = CF_BUFSIZE;
-      char *pbuff = xmalloc(pbuff_size);
-
-      while (true)
-      {
-          ssize_t res = CfReadLine(&pbuff, &pbuff_size, psf);
-          if (res == -1)
-          {
-              if (!feof(psf))
-              {
-                  Log(LOG_LEVEL_ERR, "IsGlobalProcess(char **, int): Unable to read process list with command '%s'. (fread: %s)", pscmd, GetErrorStr());
-                  cf_pclose(psf);
-                  free(pbuff);
-                  return false;
-              }
-              else
-              {
-                  break;
-              }
-          }
-          Chop(pbuff, pbuff_size);
-          if (strstr(pbuff, "PID")) /*this is the banner*/
-          {
-              GetProcessColumnNames(pbuff, &names[0], start, end);
-          }
-          else
-          {
-              int pid = ExtractPid(pbuff, &names[0], end);
-
-              size_t zone_offset = strspn(pbuff, " ");
-              size_t zone_end_offset = strcspn(pbuff + zone_offset, " ") + zone_offset;
-              size_t user_offset = strspn(pbuff + zone_end_offset, " ") + zone_end_offset;
-              size_t user_end_offset = strcspn(pbuff + user_offset, " ") + user_offset;
-              bool is_global = (zone_end_offset - zone_offset == 6
-                                    && strncmp(pbuff + zone_offset, "global", 6) == 0);
-              bool is_root = (user_end_offset - user_offset == 4
-                                  && strncmp(pbuff + user_offset, "root", 4) == 0);
-
-              if (is_global && is_root)
-              {
-                  SeqAppend(rootpidlist, (void*)(intptr_t)pid);
-              }
-              else if (is_global && !is_root)
-              {
-                  SeqAppend(pidlist, (void*)(intptr_t)pid);
-              }
-          }
-      }
-      cf_pclose(psf);
-      free(pbuff);
-      return true;
-  }
-  bool PidInSeq(Seq *list, int pid)
-  {
-      void *res = SeqLookup(list, (void *)(intptr_t)pid, PidListCompare);
-      int result = (intptr_t)(void*)res;
-
-      if (result == pid)
-      {
-          return true;
-      }
-      return false;
-  }
-  /* return true if the process with
-  * pid is in the global zone */
-  int IsGlobalProcess(int pid, Seq *pidlist, Seq *rootpidlist)
-  {
-      if (PidInSeq(pidlist, pid) || PidInSeq(rootpidlist, pid))
-      {
-        return true;
-      }
-      else
-      {
+    FILE *psf = cf_popen(pscmd, "r", false);
+    if (psf == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "ZLoadProcesstable: Couldn't open the process list with command %s.", pscmd);
         return false;
-      }
-  }
-  void ZCopyProcessList(Item **dest, const Item *source, Seq *pidlist, char **names, int *end)
-  {
-      int gpid = ExtractPid(source->name, names, end);
+    }
 
-      if (PidInSeq(pidlist, gpid))
-      {
-          PrependItem(dest, source->name, "");
-      }
-  }
+    size_t pbuff_size = CF_BUFSIZE;
+    char *pbuff = xmalloc(pbuff_size);
+
+    while (true)
+    {
+        ssize_t res = CfReadLine(&pbuff, &pbuff_size, psf);
+        if (res == -1)
+        {
+            if (!feof(psf))
+            {
+                Log(LOG_LEVEL_ERR, "IsGlobalProcess(char **, int): Unable to read process list with command '%s'. (fread: %s)", pscmd, GetErrorStr());
+                cf_pclose(psf);
+                free(pbuff);
+                return false;
+            }
+            else
+            {
+                break;
+            }
+        }
+        Chop(pbuff, pbuff_size);
+        if (strstr(pbuff, "PID")) /*this is the banner*/
+        {
+            GetProcessColumnNames(pbuff, &names[0], start, end);
+        }
+        else
+        {
+            int pid = ExtractPid(pbuff, &names[0], end);
+
+            size_t zone_offset = strspn(pbuff, " ");
+            size_t zone_end_offset = strcspn(pbuff + zone_offset, " ") + zone_offset;
+            size_t user_offset = strspn(pbuff + zone_end_offset, " ") + zone_end_offset;
+            size_t user_end_offset = strcspn(pbuff + user_offset, " ") + user_offset;
+            bool is_global = (zone_end_offset - zone_offset == 6
+                                  && strncmp(pbuff + zone_offset, "global", 6) == 0);
+            bool is_root = (user_end_offset - user_offset == 4
+                                && strncmp(pbuff + user_offset, "root", 4) == 0);
+
+            if (is_global && is_root)
+            {
+                SeqAppend(rootpidlist, (void*)(intptr_t)pid);
+            }
+            else if (is_global && !is_root)
+            {
+                SeqAppend(pidlist, (void*)(intptr_t)pid);
+            }
+        }
+    }
+    cf_pclose(psf);
+    free(pbuff);
+    return true;
+}
+bool PidInSeq(Seq *list, int pid)
+{
+    void *res = SeqLookup(list, (void *)(intptr_t)pid, PidListCompare);
+    int result = (intptr_t)(void*)res;
+
+    if (result == pid)
+    {
+        return true;
+    }
+    return false;
+}
+/* return true if the process with
+ * pid is in the global zone */
+int IsGlobalProcess(int pid, Seq *pidlist, Seq *rootpidlist)
+{
+    if (PidInSeq(pidlist, pid) || PidInSeq(rootpidlist, pid))
+    {
+       return true;
+    }
+    else
+    {
+       return false;
+    }
+}
+void ZCopyProcessList(Item **dest, const Item *source, Seq *pidlist, char **names, int *end)
+{
+    int gpid = ExtractPid(source->name, names, end);
+
+    if (PidInSeq(pidlist, gpid))
+    {
+        PrependItem(dest, source->name, "");
+    }
+}
 # endif /* HAVE_GETZONEID */
-  int LoadProcessTable(Item **procdata)
+int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE];

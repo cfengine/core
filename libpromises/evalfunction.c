@@ -354,19 +354,11 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
     if (return_recent)
     {
         RlistDestroy(aged);
-        if (recent == NULL)
-        {
-            RlistAppendScalarIdemp(&recent, CF_NULL_VALUE);
-        }
         return recent;
     }
     else
     {
         RlistDestroy(recent);
-        if (aged == NULL)
-        {
-            RlistAppendScalarIdemp(&aged, CF_NULL_VALUE);
-        }
         return aged;
     }
 }
@@ -1064,11 +1056,6 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
         ClassTableIteratorDestroy(iter);
     }
 
-    if (!matches)
-    {
-        RlistAppendScalarIdemp(&matches, CF_NULL_VALUE);
-    }
-
     return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
 
@@ -1172,11 +1159,6 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, ARG_UNUSED const P
         VariableTableIteratorDestroy(iter);
     }
 
-    if (!matches)
-    {
-        RlistAppendScalarIdemp(&matches, CF_NULL_VALUE);
-    }
-
     return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
 
@@ -1215,11 +1197,6 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
     while ((element = SetIteratorNext(&it)))
     {
         RlistAppendScalar(&tags, element);
-    }
-
-    if (!tags)
-    {
-        RlistAppendScalar(&tags, CF_NULL_VALUE);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { tags, RVAL_TYPE_LIST } };
@@ -1299,11 +1276,6 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
     }
 
     pcre_free(rx);
-
-    if (!matches)
-    {
-        RlistAppendScalarIdemp(&matches, CF_NULL_VALUE);
-    }
 
     return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
@@ -1985,11 +1957,6 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
 
     VarRefDestroy(ref);
 
-    if (RlistLen(keys) == 0)
-    {
-        RlistAppendScalarIdemp(&keys, CF_NULL_VALUE);
-    }
-
     return (FnCallResult) { FNCALL_SUCCESS, { keys, RVAL_TYPE_LIST } };
 }
 
@@ -2102,11 +2069,6 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
 
     VarRefDestroy(ref);
 
-    if (RlistLen(values) == 0)
-    {
-        RlistAppendScalarIdemp(&values, CF_NULL_VALUE);
-    }
-
     return (FnCallResult) { FNCALL_SUCCESS, { values, RVAL_TYPE_LIST } };
 }
 
@@ -2130,10 +2092,6 @@ static FnCallResult FnCallSum(EvalContext *ctx, ARG_UNUSED const Policy *policy,
     double sum = 0;
 
     const Rlist *input_list = GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), NULL);
-    if (!input_list)
-    {
-        return FnFailure();
-    }
 
     for (const Rlist *rp = input_list; rp; rp = rp->next)
     {
@@ -2159,10 +2117,6 @@ static FnCallResult FnCallProduct(EvalContext *ctx, ARG_UNUSED const Policy *pol
     double product = 1.0;
 
     const Rlist *input_list = GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), NULL);
-    if (!input_list)
-    {
-        return FnFailure();
-    }
 
     for (const Rlist *rp = input_list; rp; rp = rp->next)
     {
@@ -2450,7 +2404,6 @@ static FnCallResult FnCallLsDir(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
     if (dirh == NULL)
     {
         Log(LOG_LEVEL_ERR, "Directory '%s' could not be accessed in lsdir(), (opendir: %s)", dirname, GetErrorStr());
-        RlistPrepend(&newlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
         return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
     }
 
@@ -2472,11 +2425,6 @@ static FnCallResult FnCallLsDir(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
     }
 
     DirClose(dirh);
-
-    if (newlist == NULL)
-    {
-        RlistPrepend(&newlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
-    }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }
@@ -2579,11 +2527,6 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
 
     BufferDestroy(expbuf);
     VariableTableIteratorDestroy(iter);
-
-    if (returnlist == NULL)
-    {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-    }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
@@ -2958,10 +2901,6 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     DataType list_dtype = CF_DATA_TYPE_NONE;
     const Rlist *list = GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), &list_dtype);
-    if (!list)
-    {
-        return FnFailure();
-    }
 
     if (list_dtype != CF_DATA_TYPE_STRING_LIST)
     {
@@ -3357,12 +3296,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
         }
     }
 
-    // When no entries were found, mark the empty list
-    if (NULL == returnlist)
-    {
-        RlistAppendScalar(&returnlist, CF_NULL_VALUE);
-    }
-
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
@@ -3596,11 +3529,6 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     }
 
     // else, return the list itself
-    if (NULL == returnlist)
-    {
-        RlistAppendScalar(&returnlist, CF_NULL_VALUE);
-    }
-
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
@@ -3615,10 +3543,6 @@ static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *pol
     Rlist *returnlist = NULL;
 
     const Rlist *input_list = GetListReferenceArgument(ctx, fp, name, NULL);
-    if (!input_list)
-    {
-        return FnFailure();
-    }
 
     if (head)
     {
@@ -3647,12 +3571,6 @@ static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *pol
         }
 
     }
-
-    if (NULL == returnlist)
-    {
-        RlistAppendScalar(&returnlist, CF_NULL_VALUE);
-    }
-
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
@@ -3666,19 +3584,9 @@ static FnCallResult FnCallSetop(EvalContext *ctx, ARG_UNUSED const Policy *polic
     const char *name_b = RlistScalarValue(finalargs->next);
 
     const Rlist *input_list_a = GetListReferenceArgument(ctx, fp, name_a, NULL);
-    if (!input_list_a)
-    {
-        return FnFailure();
-    }
-
     const Rlist *input_list_b = GetListReferenceArgument(ctx, fp, name_b, NULL);
-    if (!input_list_b)
-    {
-        return FnFailure();
-    }
 
     Rlist *returnlist = NULL;
-    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
     StringSet *set_b = StringSetNew();
     for (const Rlist *rp_b = input_list_b; rp_b != NULL; rp_b = rp_b->next)
@@ -3870,19 +3778,10 @@ static FnCallResult FnCallUnique(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
     Rlist *returnlist = NULL;
     const Rlist *input_list = GetListReferenceArgument(ctx, fp, name, NULL);
-    if (!input_list)
-    {
-        return FnFailure();
-    }
 
     for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
     {
         RlistAppendScalarIdemp(&returnlist, RlistScalarValue(rp));
-    }
-
-    if (NULL == returnlist)
-    {
-        RlistAppendScalar(&returnlist, CF_NULL_VALUE);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -4017,10 +3916,6 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
     else
     {
         const Rlist *input_list = GetListReferenceArgument(ctx, fp, varname, NULL);
-        if (!input_list)
-        {
-            return FnFailure();
-        }
 
         const Rlist *return_list = NULL;
         long index = IntFromString(key);
@@ -4054,10 +3949,6 @@ static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy
 
     DataType list_var_dtype = CF_DATA_TYPE_NONE;
     const Rlist *input_list = GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), &list_var_dtype);
-    if (!input_list)
-    {
-        return FnFailure();
-    }
 
     if (list_var_dtype != CF_DATA_TYPE_STRING_LIST)
     {
@@ -4237,8 +4128,9 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                         }
                         else            // it might be a list reference
                         {
-                            const Rlist *list = GetListReferenceArgument(ctx, fp, varname, NULL);
-                            if (NULL != list)
+                            DataType data_type;
+                            const Rlist *list = GetListReferenceArgument(ctx, fp, varname, &data_type);
+                            if (data_type == CF_DATA_TYPE_STRING_LIST)
                             {
                                 Writer *w = StringWriter();
                                 WriterWrite(w, "{ ");
@@ -4687,7 +4579,6 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
 
     RlistDestroy(pruned);
     pruned = NULL;
-    RlistPrepend(&pruned, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
     return (FnCallResult) { FNCALL_SUCCESS, { pruned, RVAL_TYPE_LIST } };
 }
 
@@ -4840,11 +4731,6 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
     RlistDestroy(newlist);
     free(file_buffer);
-
-    if (NULL == pruned)
-    {
-        RlistPrepend(&pruned, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
-    }
 
     RlistReverse(&pruned);
     return (FnCallResult) { FNCALL_SUCCESS, { pruned, RVAL_TYPE_LIST } };
@@ -5072,10 +4958,6 @@ static FnCallResult FnCallReverse(EvalContext *ctx, ARG_UNUSED const Policy *pol
 {
     DataType list_dtype = CF_DATA_TYPE_NONE;
     const Rlist *input_list = GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), &list_dtype);
-    if (!input_list)
-    {
-        return FnFailure();
-    }
 
     if (list_dtype != CF_DATA_TYPE_STRING_LIST)
     {
@@ -5868,11 +5750,6 @@ static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 // Read once to validate structure of file in itemlist
 
     newlist = RlistFromSplitRegex(string, split, max, true);
-
-    if (newlist == NULL)
-    {
-        RlistPrepend(&newlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
-    }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }

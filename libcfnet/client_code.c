@@ -919,9 +919,8 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
-    int dd, buf_size, n_read = 0;
-    int tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
+    const int buf_size = 2048;
 
     off_t n_read_total = 0;
     EVP_CIPHER_CTX crypto_ctx;
@@ -945,7 +944,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
     unlink(dest);                /* To avoid link attacks */
 
-    if ((dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    int dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600);
+    if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,
             "Copy from server '%s' to destination '%s' failed (open: %s)",
@@ -954,18 +954,23 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         return false;
     }
 
+
+
     workbuf[0] = '\0';
+    int tosend = snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
+    if (tosend <= 0 || tosend >= CF_BUFSIZE)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to compose GET command for file %s",
+            source);
+        close(dd);
+        return false;
+    }
 
-    buf_size = 2048;
-
-/* Send proposition C0 */
-
-    snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
-    tosend = strlen(workbuf);
+    /* Send proposition C0 */
 
     if (SendTransaction(conn->conn_info, workbuf, tosend, CF_DONE) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't send data");
+        Log(LOG_LEVEL_ERR, "Couldn't send GET command");
         close(dd);
         return false;
     }
@@ -978,7 +983,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     n_read_total = 0;
     while (n_read_total < size)
     {
-        int toget;
+        int toget, n_read;
 
         if ((size - n_read_total) >= buf_size)
         {
@@ -1037,10 +1042,10 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             return false;
         }
 
-        value = -1;
 
         /* Check for mismatch between encryption here and on server - can lead to misunderstanding */
 
+        int value = -1;
         sscanf(buf, "t %d", &value);
 
         if ((value > 0) && (strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0))

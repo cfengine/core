@@ -1,0 +1,113 @@
+#######################################################
+#
+# Test regcmp matching unexpanded vars
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "foo" string => "bar";
+    "regular_value_1" string => "a regular string with no expansion";
+    "regular_value_2" string => "A string that includes $(foo) expanded";
+    "regular_value_3" string => "A string that includes $(bar) unexpanded";
+}
+
+
+bundle agent test
+{
+  meta:
+      "test_suppress_fail" string => "any", # Can be a platform.
+        meta => { "redmin6519" };
+
+  vars:
+    "unexpanded_var_regex_1" string => "^\$\([a-zA-Z0-9_.]+\)$";
+    "unexpanded_var_regex_2" string => "^\$(const.dollar)\([a-zA-Z0-9_.]+\)$(const.dollar)";
+    "unexpanded_var_regex_3" string => "^.*\$\([a-zA-Z0-9_.]+\).*$";
+    "anything_regex" string => ".*";
+
+  classes:
+    "match_unexpanded_regex_1_to_unexpanded_value"
+      expression => regcmp($(unexpanded_var_regex_1), $(init.unexpanded_value)),
+      scope => "namespace";
+
+    "match_unexpanded_regex_2_to_unexpanded_value"
+      expression => regcmp($(unexpanded_var_regex_2), $(init.unexpanded_value)),
+      scope => "namespace";
+
+    "match_unexpanded_regex_3_to_regular_value_1"
+      expression => regcmp($(unexpanded_var_regex_3), $(init.regular_value_1)),
+      scope => "namespace";
+
+    "match_unexpanded_regex_3_to_regular_value_2"
+      expression => regcmp($(unexpanded_var_regex_3), $(init.regular_value_2)),
+      scope => "namespace";
+
+    "match_unexpanded_regex_3_to_regular_value_3"
+      expression => regcmp($(unexpanded_var_regex_3), $(init.regular_value_3)),
+      scope => "namespace";
+
+    "match_anything_regex_to_unexpanded_value"
+      expression => regcmp($(anything_regex), $(init.unexpanded_value)),
+      scope => "namespace";
+
+    "match_unexpanded_var_regex_1_to_regular_value_1"
+      expression => regcmp($(unexpanded_var_regex_1), $(init.regular_value_1)),
+      scope => "namespace";
+}
+
+bundle agent check
+{
+  classes:
+    "ok"
+      and => {
+               "match_unexpanded_regex_1_to_unexpanded_value",
+               "match_unexpanded_regex_2_to_unexpanded_value",
+               "match_unexpanded_regex_3_to_regular_value_3",
+               "match_anything_regex_to_unexpanded_value",
+             };
+
+    "fail"
+      or => {
+              "match_unexpanded_var_regex_1_to_regular_value_1",
+              "match_unexpanded_regex_3_to_regular_value_1",
+              "match_unexpanded_regex_3_to_regular_value_2",
+            };
+
+  reports:
+    ok.!fail::
+      "$(this.promise_filename) Pass";
+
+    !ok|fail::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG::
+      !match_unexpanded_regex_1_to_unexpanded_value::
+        "unexpanded_var_regex_1: '$(test.unexpanded_var_regex_1)' does not match '$(init.unexpanded_value)' but it should see 'http://regex101.com/r/hG2jH6/2'";
+
+      !match_unexpanded_regex_2_to_unexpanded_value::
+        "unexpanded_var_regex_2: '$(test.unexpanded_var_regex_2)' does not match '$(init.unexpanded_value)' but it should see 'http://regex101.com/r/hG2jH6/2'";
+
+      match_unexpanded_regex_3_to_regular_value_1::
+        "unexpanded_var_regex_3: '$(test.unexpanded_var_regex_3)' matches '$(init.regular_value_1)' but it should not see 'http://regex101.com/r/zZ9oC2/4'";
+
+      match_unexpanded_regex_3_to_regular_value_2::
+        "unexpanded_var_regex_3: '$(test.unexpanded_var_regex_3)' matches '$(init.regular_value_2)' but it should not see 'http://regex101.com/r/zZ9oC2/5'";
+
+      !match_unexpanded_regex_3_to_regular_value_3::
+        "unexpanded_var_regex_3: '$(test.unexpanded_var_regex_3)' does not match '$(init.regular_value_3)' but it should see 'http://regex101.com/r/zZ9oC2/6'";
+
+      !match_anything_regex_to_unexpanded_value::
+        "'$(test.anything_regex)' does not match '$(init.unexpanded_value)' but it should see 'http://regex101.com/r/zZ9oC2/2'";
+
+      match_unexpanded_var_regex_1_to_regular_value_1::
+        "'$(test.unexpanded_var_regex_1)' matches '$(init.regular_value_1)' but it shouldn't see 'http://regex101.com/r/zZ9oC2/3'";
+
+}

@@ -38,6 +38,8 @@
 /**
  * @param len is the number of bytes to send, or 0 if buffer is a
  *        '\0'-terminated string so strlen(buffer) can used.
+ * @return -1 in case of error or connection closed
+ *         (also currently returns 0 for success but don't count on it)
  * @NOTE #buffer can't be of zero length, our protocol
  *       does not allow empty transactions! The reason is that
  *       ReceiveTransaction() can't differentiate between that
@@ -75,13 +77,20 @@ int SendTransaction(const ConnectionInfo *conn_info,
 
     switch(conn_info->protocol)
     {
+
     case CF_PROTOCOL_CLASSIC:
         ret = SendSocketStream(conn_info->sd, work,
                                len + CF_INBAND_OFFSET);
         break;
+
     case CF_PROTOCOL_TLS:
         ret = TLSSend(conn_info->ssl, work, len + CF_INBAND_OFFSET);
+        if (ret <= 0)
+        {
+            ret = -1;
+        }
         break;
+
     default:
         UnexpectedError("SendTransaction: ProtocolVersion %d!",
                         conn_info->protocol);
@@ -89,9 +98,16 @@ int SendTransaction(const ConnectionInfo *conn_info,
     }
 
     if (ret == -1)
-        return -1;
+    {
+        return -1;                                              /* error */
+    }
     else
+    {
+        /* SSL_MODE_AUTO_RETRY guarantees no partial writes. */
+        assert(ret == len + CF_INBAND_OFFSET);
+
         return 0;
+    }
 }
 
 /*************************************************************************/

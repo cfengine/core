@@ -583,11 +583,14 @@ static void assert_SSLIsBlocking(const SSL *ssl)
  * @param ssl SSL information.
  * @param buffer Data to send.
  * @param length Length of the data to send.
- * @return The length of the data sent (which could be smaller than the
- *         requested length) or -1 in case of error.
+ * @return The length of the data sent (always equals #length if SSL is set
+ *         up correctly, see note), or -1 in case of error, or 0 for connection
+ *         closed.
+ *
  * @note Use only for *blocking* sockets. Set
- *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
- *       operation completed or an error occured.
+ *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) and make sure you haven't
+ *       turned on SSL_MODE_ENABLE_PARTIAL_WRITE so that either the
+ *       operation is completed (retval==length) or an error occured.
  *
  * @TODO ERR_get_error is only meaningful for some error codes, so check and
  *       return empty string otherwise.

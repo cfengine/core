@@ -195,6 +195,16 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
 
     LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction data: ", buffer, ret);
 
+    /* Should never happen given that we are using SSL_MODE_AUTO_RETRY and
+     * that transaction payload < CF_BUFSIZE < TLS record size. */
+    if (ret > 0 && ret < len)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Partial transaction read %d < %d bytes!",
+            ret, len);
+        return -1;
+    }
+
     return ret;
 }
 

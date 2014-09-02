@@ -1007,12 +1007,13 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             n_read = -1;
         }
 
-        if (n_read == -1)
+        if (n_read <= 0)
         {
             /* This may happen on race conditions,
              * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
-
-            Log(LOG_LEVEL_ERR, "Error in client-server stream (has %s:%s shrunk?)", conn->this_server, source);
+            Log(LOG_LEVEL_ERR,
+                "Error in client-server stream, has %s:%s shrunk? (code %d)",
+                conn->this_server, source, n_read);
             close(dd);
             free(buf);
             return false;
@@ -1067,7 +1068,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             return false;
         }
 
-        n_read_total += towrite;        /* n_read; */
+        n_read_total += n_read;
     }
 
     /* If the file ends with a `hole', something needs to be written at

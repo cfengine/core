@@ -164,13 +164,23 @@ Coding Style
 ------------
 
 * Loosely based on Allman-4 and the Google C++ Style Guide
-(http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).  Function
-names are CamelCase (with first letter capital), variable and parameters are
-under_scored.
+  (http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
+  Function names are CamelCase (with first letter capital), variable and
+  parameters are under_scored.
+
+  * Caution, do-while loops should have the closing brace at the same
+    line with while, so that it can't be confused with emtpy while statement.
+
+    ```
+    do
+    {
+        /* ... */
+    } while (condition);
+    ```
 
 * Read
-https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README It
-contains many good practices not only suitable for library writers.
+  https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README
+  It contains many good practices not only suitable for library writers.
 
 * C99 is encouraged in the language, use it.
 

@@ -96,7 +96,8 @@ component for evaluation.
 - *rlist.h*: List for Rvals (of attributes).
 - *expand.c*: Evaluates promises.
 - *parser.h*: Parse a policy file.
-- *policy.h*: Policy document object model, essentially the AST output of the parsing stage.
+- *policy.h*: Policy document object model, essentially the AST output of the
+              parsing stage.
 - *sysinfo.c*: Detects hard classes from the environment.
 - *evalfunction.c*: Where all the built-in functions are implemented.
 - *crypto.h*: Crypto utilities for some reason still tied to evaluation state.
@@ -106,8 +107,10 @@ Things you should not use in *libpromises*
 
 - *cf3.extern.h*: Remaining global variables.
 - *prototypes3.h*: The original singular header file.
-- *item_lib.h*: Item is a special purpose list that has been absued for unintended purposes.
-- *assoc.h*: An lval-rval pair, deprecated in favor of *EvalContext* symbol table.
+- *item_lib.h*: Item is a special purpose list that has been absued for
+                unintended purposes.
+- *assoc.h*: An lval-rval pair, deprecated in favor of *EvalContext*
+             symbol table.
 - *scope.h*: Old symbol table, this will move into *EvalContext*.
 
 ### cf-agent
@@ -147,12 +150,14 @@ to a policy server.
 1. Resolve IP of policy server.
 2. Remove existing files in outputs.
 3. Write built-in failsafe.cf to outputs.
-4. Write IP of policy server to policy_server.dat, optionally also marker file am_policy_server.
+4. Write IP of policy server to policy_server.dat, optionally also
+   marker file am_policy_server.
 5. Proceed using failsafe.cf as input file.
 5a. Evaluating failsafe.cf, fetches policy files from the policy server.
 5b. Evaluating failsafe.cf, starts *cf-execd*.
 6. Agent finishes.
-7. *cf-execd* continues to run *cf-agent* periodically with policy from */inputs*.
+7. *cf-execd* continues to run *cf-agent* periodically with policy
+   from */inputs*.
 
 
 Coding Style

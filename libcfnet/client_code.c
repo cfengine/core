@@ -949,7 +949,7 @@ static void FlushFileStream(int sd, int toget)
 
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
-    int dd, buf_size, n_read = 0, toget, towrite;
+    int dd, buf_size, n_read = 0;
     int tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
@@ -1008,18 +1008,19 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     n_read_total = 0;
     while (n_read_total < size)
     {
+        int toget;
+
         if ((size - n_read_total) >= buf_size)
         {
-            toget = towrite = buf_size;
+            toget = buf_size;
         }
         else if (size != 0)
         {
-            towrite = (size - n_read_total);
-            toget = towrite;
+            toget = size - n_read_total;
         }
         else
         {
-            toget = towrite = 0;
+            toget = 0;
         }
 
         /* Stage C1 - receive */
@@ -1037,7 +1038,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             n_read = -1;
         }
 
-        if (n_read == -1)
+        if (n_read == -1)                             /* TODO what about 0? */
         {
             /* This may happen on race conditions,
              * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
@@ -1097,7 +1098,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             return false;
         }
 
-        n_read_total += towrite;        /* n_read; */
+        n_read_total += toget;        /* n_read; */
     }
 
     /* If the file ends with a `hole', something needs to be written at

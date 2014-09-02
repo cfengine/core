@@ -1014,22 +1014,12 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
     n_read_total = 0;
     while (n_read_total < size)
     {
-        int toget, n_read;
+        int toget = MIN(size - n_read_total, buf_size);
 
-        if ((size - n_read_total) >= buf_size)
-        {
-            toget = buf_size;
-        }
-        else if (size != 0)
-        {
-            toget = size - n_read_total;
-        }
-        else
-        {
-            toget = 0;
-        }
+        assert(toget != 0);
 
         /* Stage C1 - receive */
+        int n_read;
         switch(conn->conn_info->protocol)
         {
         case CF_PROTOCOL_CLASSIC:

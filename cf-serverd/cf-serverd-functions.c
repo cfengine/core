@@ -741,7 +741,11 @@ static int WaitForIncoming(int sd)
     }
 
     /* We have an incoming connection if select() marked sd as ready: */
-    return sd != -1 && result > 0 && FD_ISSET(sd, &rset);
+    if (sd != -1 && result > 0 && FD_ISSET(sd, &rset))
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /* Check for new policy just before spawning a thread.

@@ -119,8 +119,6 @@ int SendTransaction(const ConnectionInfo *conn_info,
 int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
 {
     char proto[CF_INBAND_OFFSET + 1] = { 0 };
-    char status = 'x';
-    unsigned int len = 0;
     int ret;
 
     /* Get control channel. */
@@ -152,7 +150,10 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
 
     LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction header: ", proto, ret);
 
-    ret = sscanf(proto, "%c %u", &status, &len);
+    char status = 'x';
+    int len = 0;
+
+    ret = sscanf(proto, "%c %d", &status, &len);
     if (ret != 2)
     {
         Log(LOG_LEVEL_ERR,

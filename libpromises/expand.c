@@ -419,21 +419,29 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx,
                         switch (DataTypeToRvalType(value_type))
                         {
                         case RVAL_TYPE_LIST:
-                            if (level > 0)
                             {
-                                RlistPrependScalarIdemp(lists, mangled_inner_ref);
-                            }
-                            else
-                            {
-                                RlistAppendScalarIdemp(lists, mangled_inner_ref);
-                            }
-
-                            if (full_expansion)
-                            {
+                                bool has_valid_entries = false;
                                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                                 {
-                                    // append each slist item to each of full_expansion
-                                    RlistConcatInto(&tmp_list, *full_expansion, RlistScalarValue(rp));
+                                    has_valid_entries |= rp->val.item && (strcmp(rp->val.item, CF_NULL_VALUE) != 0);
+                                    if (full_expansion)
+                                    {
+                                        // append each slist item to each of full_expansion
+                                        RlistConcatInto(&tmp_list, *full_expansion, RlistScalarValue(rp));
+                                    }
+                                }
+                                if (!has_valid_entries)
+                                {
+                                    Log(LOG_LEVEL_DEBUG, "Skipping empty list '%s' in iteration", mangled_inner_ref);
+                                    break;
+                                }
+                                if (level > 0)
+                                {
+                                    RlistPrependScalarIdemp(lists, mangled_inner_ref);
+                                }
+                                else
+                                {
+                                    RlistAppendScalarIdemp(lists, mangled_inner_ref);
                                 }
                             }
                             break;
@@ -688,25 +696,36 @@ bool ExpandScalar(const EvalContext *ctx,
                 VarRefDestroy(ref);
             }
 
-            if (value)
+            switch (DataTypeToRvalType(type))
             {
-                switch (DataTypeToRvalType(type))
+            case RVAL_TYPE_SCALAR:
+                if (value)
                 {
-                case RVAL_TYPE_SCALAR:
-                    BufferAppendString(out, value);
-                    continue;
-
-                case RVAL_TYPE_CONTAINER:
-                    if (JsonGetElementType((JsonElement*)value) == JSON_ELEMENT_TYPE_PRIMITIVE)
-                    {
-                        BufferAppendString(out, JsonPrimitiveGetAsString((JsonElement*)value));
-                        continue;
-                    }
-                    break;
-
-                default:
-                    break;
+                     BufferAppendString(out, value);
+                     continue;
                 }
+                break;
+
+            case RVAL_TYPE_CONTAINER:
+                if (value && JsonGetElementType((JsonElement*)value) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    BufferAppendString(out, JsonPrimitiveGetAsString((JsonElement*)value));
+                    continue;
+                }
+                break;
+
+            default:
+                // Discover if we are about to evaluate a promise with a cf_null-list
+                if ((value && strcmp(RlistScalarValue(value), CF_NULL_VALUE) == 0) 
+                // or a list from a foreign bundle that can't be expanded because it is a null list there
+                   || (type == CF_DATA_TYPE_NONE && !value && strchr(BufferData(current_item), CF_MAPPEDLIST)))
+                {
+                    BufferClear(out);
+                    BufferAppendString(out, CF_NULL_VALUE); // mark as invalid - see ExpandDeRefPromise
+                    BufferDestroy(current_item);
+                    return false;
+                }
+                break;
             }
         }
 

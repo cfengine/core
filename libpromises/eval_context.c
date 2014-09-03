@@ -1184,7 +1184,7 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iter
 
     bool excluded = false;
     Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner, &excluded);
-    if (excluded)
+    if (excluded || !pexp)
     {
         PromiseDestroy(pexp);
         return NULL;

@@ -231,6 +231,7 @@ int SocketConnect(const char *host, const char *port,
         {
             Log(LOG_LEVEL_ERR, "Couldn't open a socket. (socket: %s)",
                 GetErrorStr());
+            ap = ap->ai_next;
         }
         else
         {

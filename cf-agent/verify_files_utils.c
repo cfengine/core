@@ -2572,7 +2572,7 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
     {
         /* Get a connection from the cache. TODO fix our connection cache to
          * account for ports and protocol version. */
-        conn = ConnCache_FindIdle(servername);
+        conn = ConnCache_FindIdle(servername, port, flags);
 
         if (conn != NULL)                 /* found idle connection in cache */
         {
@@ -2592,7 +2592,7 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
             if (conn == NULL)                           /* Couldn't connect */
             {
                 /* Allocate and add to the cache as failure. */
-                conn = NewAgentConn(servername);
+                conn = NewAgentConn(servername, port, flags);
                 conn->conn_info->status = CONNECTIONINFO_STATUS_NOT_ESTABLISHED;
 
                 ConnCache_Add(conn, CONNCACHE_STATUS_OFFLINE);

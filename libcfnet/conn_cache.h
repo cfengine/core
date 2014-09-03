@@ -16,7 +16,8 @@ enum ConnCacheStatus
 void ConnCache_Init(void);
 void ConnCache_Destroy(void);
 
-AgentConnection *ConnCache_FindIdle(const char *server);
+AgentConnection *ConnCache_FindIdle(const char *server, const char *port,
+                                    ConnectionFlags flags);
 void ConnCache_MarkNotBusy(AgentConnection *conn);
 void ConnCache_Add(AgentConnection *conn, enum ConnCacheStatus status);
 void ConnCache_IsBusy(AgentConnection *conn);

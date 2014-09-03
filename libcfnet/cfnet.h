@@ -142,9 +142,13 @@ typedef struct
     unsigned char *session_key;
     char encryption_type;
     short error;
-    ConnectionFlags flags;        /* mostly copy_from connection attributes */
-    char *this_server;
     Stat *cache;                        /* cache for stat() (SYNCH command) */
+
+    /* The following consist the ID of a server host, mostly taken from
+     * copy_from connection attributes. */
+    ConnectionFlags flags;
+    char *this_server;
+    char *this_port;
 } AgentConnection;
 
 

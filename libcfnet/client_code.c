@@ -166,8 +166,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     int ret;
     *err = 0;
 
-    conn = NewAgentConn(server);
-    conn->flags = flags;
+    conn = NewAgentConn(server, port, flags);
 
 #if !defined(__MINGW32__)
     signal(SIGPIPE, SIG_IGN);
@@ -341,6 +340,8 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
 
     for (sp = conn->cache; sp != NULL; sp = sp->next)
     {
+        /* TODO differentiate ports etc in this stat cache! */
+
         if ((strcmp(conn->this_server, sp->cf_server) == 0) && (strcmp(file, sp->cf_filename) == 0))
         {
             if (sp->cf_failed)  /* cached failure from cfopendir */

@@ -44,6 +44,7 @@ typedef enum
 {
     CONNECTIONINFO_STATUS_NOT_ESTABLISHED,
     CONNECTIONINFO_STATUS_ESTABLISHED
+    /* TODO ESTABLISHED==IDLE, BUSY, OFFLINE */
 } ConnectionStatus;
 
 struct ConnectionInfo {

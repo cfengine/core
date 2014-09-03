@@ -53,10 +53,6 @@ typedef struct
 
 static pthread_mutex_t cft_conncache = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
-
-/* Only IP address strings are stored in this list, so don't put any
- * hostnames. TODO convert to list of (sockaddr_storage *) to enforce this. */
-
 static Seq *conn_cache = NULL;
 
 
@@ -92,7 +88,8 @@ void ConnCache_Destroy()
     ThreadUnlock(&cft_conncache);
 }
 
-AgentConnection *ConnCache_FindIdle(const char *server)
+AgentConnection *ConnCache_FindIdle(const char *server, const char *port,
+                                    ConnectionFlags flags)
 {
     ThreadLock(&cft_conncache);
 
@@ -107,7 +104,12 @@ AgentConnection *ConnCache_FindIdle(const char *server)
                   "FindIdle: NULL connection in ConnCache_entry!");
 
 
-        if ((strcmp(server, svp->conn->this_server) == 0))
+        if (strcmp(server,  svp->conn->this_server) == 0 &&
+            memcmp(&flags, &svp->conn->flags, sizeof(flags)) == 0 &&
+            (port == svp->conn->this_port
+             ||
+             (port != NULL && svp->conn->this_port != NULL &&
+              strcmp(port,    svp->conn->this_port) == 0)))
         {
             if (svp->status == CONNCACHE_STATUS_BUSY)
             {
@@ -153,11 +155,9 @@ AgentConnection *ConnCache_FindIdle(const char *server)
     return ret_conn;
 }
 
-/*********************************************************************/
-
 void ConnCache_MarkNotBusy(AgentConnection *conn)
 {
-    Log(LOG_LEVEL_DEBUG, "Searching for busy connection to: %s",
+    Log(LOG_LEVEL_DEBUG, "Searching for specific busy connection to: %s",
         conn->this_server);
 
     ThreadLock(&cft_conncache);
@@ -196,8 +196,6 @@ void ConnCache_MarkNotBusy(AgentConnection *conn)
 
     Log(LOG_LEVEL_DEBUG, "Busy connection just became free");
 }
-
-/*********************************************************************/
 
 /* First time we open a connection, so store it. */
 void ConnCache_Add(AgentConnection *conn, enum ConnCacheStatus status)

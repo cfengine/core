@@ -30,13 +30,16 @@
 #include <buffer.h>                                     /* Buffer */
 #include <ip_address.h>                                 /* IPAddress */
 
-AgentConnection *NewAgentConn(const char *server_name)
+
+AgentConnection *NewAgentConn(const char *server, const char *port,
+                              ConnectionFlags flags)
 {
     AgentConnection *conn = xcalloc(1, sizeof(AgentConnection));
-    ConnectionInfo *info = ConnectionInfoNew();
-    conn->conn_info = info;
+    conn->conn_info = ConnectionInfoNew();
+    conn->this_server = xstrdup(server);
+    conn->this_port = (port == NULL) ? NULL : xstrdup(port);
+    conn->flags = flags;
     conn->encryption_type = 'c';
-    conn->this_server = xstrdup(server_name);
     conn->authenticated = false;
     return conn;
 }
@@ -53,15 +56,9 @@ void DeleteAgentConn(AgentConnection *conn)
     }
 
     ConnectionInfoDestroy(&conn->conn_info);
-    if (conn->session_key)
-    {
-        free(conn->session_key);
-    }
-    if (conn->this_server)
-    {
-        free(conn->this_server);
-    }
-
+    free(conn->this_server);
+    free(conn->this_port);
+    free(conn->session_key);
     *conn = (AgentConnection) {0};
     free(conn);
 }

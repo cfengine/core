@@ -66,7 +66,7 @@ bundle agent check
       # NB: shell would try to sub-shell on this (...), hence noshell.
 
   classes:
-      "after_year_1902_ok" and => {
+      "check_after_year_1902" and => {
                    "after_year_1902",
                    "after_year_1902_month",
                    "after_year_1902_day",
@@ -75,16 +75,16 @@ bundle agent check
                    "after_year_1902_second"
       };
 
-      "after_year_2037_ok" not => or(
+      "check_after_year_2037" or => {
                    "after_year_2037",
                    "after_year_2037_month",
                    "after_year_2037_day",
                    "after_year_2037_hour",
                    "after_year_2037_minute",
                    "after_year_2037_second"
-      );
+      };
 
-      "ok" and => { "after_year_1902_ok", "after_year_2037_ok" };
+      "ok" expression => "check_after_year_1902.!check_after_year_2037";
 
   reports:
     DEBUG.!after_year_1902::

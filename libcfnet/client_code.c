@@ -45,22 +45,8 @@
 
 #include <lastseen.h>                                            /* LastSaw */
 
-typedef struct
-{
-    char *server;
-    AgentConnection *conn;
-    int busy;
-} ServerItem;
 
 #define CFENGINE_SERVICE "cfengine"
-
-#define CF_COULD_NOT_CONNECT -2
-
-static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-
-static void NewClientCache(Stat *data, AgentConnection *conn);
-static void FlushFileStream(int sd, int toget);
-static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, AgentConnection *conn);
 
 
 /**
@@ -80,57 +66,6 @@ void cfnet_shut()
 {
     TLSDeInitialize();
     CryptoDeInitialize();
-}
-
-static Seq *GetGlobalServerList(void)
-{
-    /* Only ip address strings are stored in this list, so don't put any
-     * hostnames. TODO convert to list of (sockaddr_storage *) to enforce this. */
-    /* TODO replace Seq or lock properly. Someone changed this SERVERLIST from
-     * RList to Seq, but didn't think of the implications. As a result this
-     * list now is in great danger of corruption when written from multiple
-     * threads. Luckily multi-threaded access is not the common case. */
-    static Seq *server_list = NULL; /* GLOBAL_X */
-    if (!server_list)
-    {
-        server_list = SeqNew(100, free);
-    }
-    return server_list;
-}
-
-static int FSWrite(const char *destination, int dd, const char *buf, size_t n_write)
-{
-    const void *cur = buf;
-    const void *end = buf + n_write;
-
-    while (cur < end)
-    {
-        const void *skip_span = MemSpan(cur, 0, end - cur);
-        if (skip_span > cur)
-        {
-            if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
-            {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
-                return false;
-            }
-
-            cur = skip_span;
-        }
-
-        const void *copy_span = MemSpanInverse(cur, 0, end - cur);
-        if (copy_span > cur)
-        {
-            if (FullWrite(dd, cur, copy_span - cur) < 0)
-            {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
-                return false;
-            }
-
-            cur = copy_span;
-        }
-    }
-
-    return true;
 }
 
 
@@ -260,7 +195,8 @@ AgentConnection *ServerConnection(const char *server, const char *port,
                                         txtaddr, sizeof(txtaddr));
     if (conn->conn_info->sd == -1)
     {
-        Log(LOG_LEVEL_INFO, "No server is responding on this port");
+        Log(LOG_LEVEL_INFO, "No server is responding on port: %s",
+            port);
         DisconnectServer(conn);
         *err = -1;
         return NULL;
@@ -295,7 +231,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
         }
         assert(ret == 1);
 
-        ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
+        conn->conn_info->status = CONNECTIONINFO_STATUS_ESTABLISHED;
         LastSaw1(conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info),
                  LAST_SEEN_ROLE_CONNECT);
         break;
@@ -323,7 +259,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
             *err = -2; // auth err
             return NULL;
         }
-        ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
+        conn->conn_info->status = CONNECTIONINFO_STATUS_ESTABLISHED;
         break;
 
     default:
@@ -356,6 +292,88 @@ void DisconnectServer(AgentConnection *conn)
 }
 
 /*********************************************************************/
+
+static void NewStatCache(Stat *data, AgentConnection *conn)
+{
+    Stat *sp = xmemdup(data, sizeof(Stat));
+    sp->next = conn->cache;
+    conn->cache = sp;
+}
+
+static int FSWrite(const char *destination, int dd, const char *buf, size_t n_write)
+{
+    const void *cur = buf;
+    const void *end = buf + n_write;
+
+    while (cur < end)
+    {
+        const void *skip_span = MemSpan(cur, 0, end - cur);
+        if (skip_span > cur)
+        {
+            if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
+                return false;
+            }
+
+            cur = skip_span;
+        }
+
+        const void *copy_span = MemSpanInverse(cur, 0, end - cur);
+        if (copy_span > cur)
+        {
+            if (FullWrite(dd, cur, copy_span - cur) < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
+                return false;
+            }
+
+            cur = copy_span;
+        }
+    }
+
+    return true;
+}
+
+static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, AgentConnection *conn)
+{
+    Stat *sp;
+
+    for (sp = conn->cache; sp != NULL; sp = sp->next)
+    {
+        if ((strcmp(conn->this_server, sp->cf_server) == 0) && (strcmp(file, sp->cf_filename) == 0))
+        {
+            if (sp->cf_failed)  /* cached failure from cfopendir */
+            {
+                errno = EPERM;
+                return -1;
+            }
+
+            if ((strcmp(stattype, "link") == 0) && (sp->cf_lmode != 0))
+            {
+                statbuf->st_mode = sp->cf_lmode;
+            }
+            else
+            {
+                statbuf->st_mode = sp->cf_mode;
+            }
+
+            statbuf->st_uid = sp->cf_uid;
+            statbuf->st_gid = sp->cf_gid;
+            statbuf->st_size = sp->cf_size;
+            statbuf->st_atime = sp->cf_atime;
+            statbuf->st_mtime = sp->cf_mtime;
+            statbuf->st_ctime = sp->cf_ctime;
+            statbuf->st_ino = sp->cf_ino;
+            statbuf->st_dev = sp->cf_dev;
+            statbuf->st_nlink = sp->cf_nlink;
+
+            return 0;
+        }
+    }
+
+    return 1;
+}
 
 int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, bool encrypt, AgentConnection *conn)
 /* If a link, this reads readlink and sends it back in the same
@@ -537,7 +555,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
             cfst.cf_lmode |= (mode_t) S_IFLNK;
         }
 
-        NewClientCache(&cfst, conn);
+        NewStatCache(&cfst, conn);
 
         if ((cfst.cf_lmode != 0) && (strcmp(stattype, "link") == 0))
         {
@@ -564,6 +582,24 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
     Log(LOG_LEVEL_ERR, "Transmission refused or failed statting '%s', got '%s'", file, recvbuffer);
     errno = EPERM;
     return -1;
+}
+
+/*********************************************************************/
+
+/* TODO only a server_name is not enough for stat'ing of files... */
+
+const Stat *StatCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name)
+{
+    for (const Stat *sp = conn->cache; sp != NULL; sp = sp->next)
+    {
+        if (strcmp(server_name, sp->cf_server) == 0 &&
+            strcmp(file_name, sp->cf_filename) == 0)
+        {
+            return sp;
+        }
+    }
+
+    return NULL;
 }
 
 /*********************************************************************/
@@ -679,26 +715,6 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 }
 
 /*********************************************************************/
-
-static void NewClientCache(Stat *data, AgentConnection *conn)
-{
-    Stat *sp = xmemdup(data, sizeof(Stat));
-    sp->next = conn->cache;
-    conn->cache = sp;
-}
-
-const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name)
-{
-    for (const Stat *sp = conn->cache; sp != NULL; sp = sp->next)
-    {
-        if (strcmp(server_name, sp->cf_server) == 0 && strcmp(file_name, sp->cf_filename) == 0)
-        {
-            return sp;
-        }
-    }
-
-    return NULL;
-}
 
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn)
 {
@@ -917,6 +933,19 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
     return true;
 }
 
+static void FlushFileStream(int sd, int toget)
+{
+    int i;
+    char buffer[2];
+
+    Log(LOG_LEVEL_VERBOSE, "Flushing rest of file...%d bytes", toget);
+
+    for (i = 0; i < toget; i++)
+    {
+        recv(sd, buffer, 1, 0); /* flush to end of current file */
+    }
+}
+
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
@@ -1090,302 +1119,3 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     free(buf);
     return true;
 }
-
-/*********************************************************************/
-
-bool ServerOffline(const char *server)
-{
-    char ipaddr[CF_MAX_IP_LEN];
-    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
-    {
-        /* Ignore the error for now, resolution
-           will probably fail again soon... TODO return true? */
-        return false;
-    }
-
-    ThreadLock(&cft_serverlist);
-    Seq *srvlist_tmp = GetGlobalServerList();
-    ThreadUnlock(&cft_serverlist);
-
-    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
-    {
-        ServerItem *svp = SeqAt(srvlist_tmp, i);
-
-        if (svp == NULL)
-        {
-            ProgrammingError("SERVERLIST had NULL ServerItem!");
-        }
-
-        if (strcmp(ipaddr, svp->server) == 0)
-        {
-            if (svp->conn == NULL)
-            {
-                ProgrammingError("ServerOffline:"
-                                 " NULL connection in SERVERLIST for %s!",
-                                 ipaddr);
-            }
-
-            if (ConnectionInfoSocket(svp->conn->conn_info) == CF_COULD_NOT_CONNECT)
-                return true;
-            else
-                return false;
-        }
-    }
-
-    return false;
-}
-
-AgentConnection *GetIdleConnectionToServer(const char *server)
-{
-    char ipaddr[CF_MAX_IP_LEN];
-    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
-    {
-        Log(LOG_LEVEL_WARNING,
-            "Could not resolve: %s", server);
-        return NULL;
-    }
-
-    ThreadLock(&cft_serverlist);
-    Seq *srvlist_tmp = GetGlobalServerList();
-    ThreadUnlock(&cft_serverlist);
-
-    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
-    {
-        ServerItem *svp = SeqAt(srvlist_tmp, i);
-
-        if (svp == NULL)
-        {
-            ProgrammingError("SERVERLIST had NULL ServerItem!");
-        }
-
-        if ((strcmp(ipaddr, svp->server) == 0))
-        {
-            if (svp->conn == NULL)
-            {
-                ProgrammingError("GetIdleConnectionToServer:"
-                                 " NULL connection in SERVERLIST for %s!",
-                                 ipaddr);
-            }
-
-            if (svp->busy)
-            {
-                Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-                    " connection to '%s' seems to be busy.",
-                    ipaddr);
-            }
-            else if (ConnectionInfoSocket(svp->conn->conn_info) == CF_COULD_NOT_CONNECT)
-            {
-                Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-                    " connection to '%s' is marked as offline.",
-                    ipaddr);
-            }
-            else if (ConnectionInfoSocket(svp->conn->conn_info) > 0)
-            {
-                Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-                    " found connection to '%s' already open and ready.",
-                    ipaddr);
-                svp->busy = true;
-                return svp->conn;
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    " connection to '%s' is in unknown state %d!",
-                    ipaddr, ConnectionInfoSocket(svp->conn->conn_info));
-            }
-        }
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-        " no existing connection to '%s' is established.", ipaddr);
-    return NULL;
-}
-
-/*********************************************************************/
-
-void ServerNotBusy(AgentConnection *conn)
-{
-    ThreadLock(&cft_serverlist);
-    Seq *srvlist_tmp = GetGlobalServerList();
-    ThreadUnlock(&cft_serverlist);
-
-    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
-    {
-        ServerItem *svp = SeqAt(srvlist_tmp, i);
-
-        if (svp->conn == conn)
-        {
-            svp->busy = false;
-            Log(LOG_LEVEL_DEBUG, "Existing connection just became free...");
-            return;
-        }
-    }
-    ProgrammingError("ServerNotBusy: No connection found!");
-}
-
-/*********************************************************************/
-
-void MarkServerOffline(const char *server)
-/* Unable to contact the server so don't waste time trying for
-   other connections, mark it offline */
-{
-    AgentConnection *conn = NULL;
-
-    char ipaddr[CF_MAX_IP_LEN];
-    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Could not resolve: %s", server);
-        return;
-    }
-
-    ThreadLock(&cft_serverlist);
-    Seq *srvlist_tmp = GetGlobalServerList();
-
-    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
-    {
-        ServerItem *svp = SeqAt(srvlist_tmp, i);
-        if (svp == NULL)
-        {
-            ProgrammingError("SERVERLIST had NULL ServerItem!");
-        }
-
-        conn = svp->conn;
-        if (strcmp(ipaddr, svp->server) == 0)
-        /* TODO assert conn->remoteip == svp->server? Why do we need both? */
-        {
-            /* Found it, mark offline */
-            ConnectionInfoSetSocket(conn->conn_info, CF_COULD_NOT_CONNECT);
-            ThreadUnlock(&cft_serverlist);
-            return;
-        }
-    }
-
-    /* If no existing connection, create one and mark it unconnectable. */
-    ServerItem *svp = xmalloc(sizeof(*svp));
-    svp->server = xstrdup(ipaddr);
-    svp->busy = false;
-    svp->conn = NewAgentConn(ipaddr);
-    ConnectionInfoSetProtocolVersion(svp->conn->conn_info, CF_PROTOCOL_CLASSIC);
-    ConnectionInfoSetConnectionStatus(svp->conn->conn_info, CF_CONNECTION_NOT_ESTABLISHED);
-    ConnectionInfoSetSocket(svp->conn->conn_info, CF_COULD_NOT_CONNECT);
-
-    SeqAppend(srvlist_tmp, svp);
-    ThreadUnlock(&cft_serverlist);
-}
-
-/*********************************************************************/
-
-void CacheServerConnection(AgentConnection *conn, const char *server)
-/* First time we open a connection, so store it */
-{
-    char ipaddr[CF_MAX_IP_LEN];
-    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Failed to resolve: %s", server);
-        return;
-    }
-
-    ServerItem *svp = xmalloc(sizeof(*svp));
-    svp->server = xstrdup(ipaddr);
-    svp->busy = true;
-    svp->conn = conn;
-
-    ThreadLock(&cft_serverlist);
-    SeqAppend(GetGlobalServerList(), svp);
-    ThreadUnlock(&cft_serverlist);
-}
-
-/*********************************************************************/
-
-static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, AgentConnection *conn)
-{
-    Stat *sp;
-
-    for (sp = conn->cache; sp != NULL; sp = sp->next)
-    {
-        if ((strcmp(conn->this_server, sp->cf_server) == 0) && (strcmp(file, sp->cf_filename) == 0))
-        {
-            if (sp->cf_failed)  /* cached failure from cfopendir */
-            {
-                errno = EPERM;
-                return -1;
-            }
-
-            if ((strcmp(stattype, "link") == 0) && (sp->cf_lmode != 0))
-            {
-                statbuf->st_mode = sp->cf_lmode;
-            }
-            else
-            {
-                statbuf->st_mode = sp->cf_mode;
-            }
-
-            statbuf->st_uid = sp->cf_uid;
-            statbuf->st_gid = sp->cf_gid;
-            statbuf->st_size = sp->cf_size;
-            statbuf->st_atime = sp->cf_atime;
-            statbuf->st_mtime = sp->cf_mtime;
-            statbuf->st_ctime = sp->cf_ctime;
-            statbuf->st_ino = sp->cf_ino;
-            statbuf->st_dev = sp->cf_dev;
-            statbuf->st_nlink = sp->cf_nlink;
-
-            return 0;
-        }
-    }
-
-    return 1;
-}
-
-/*********************************************************************/
-
-static void FlushFileStream(int sd, int toget)
-{
-    int i;
-    char buffer[2];
-
-    Log(LOG_LEVEL_VERBOSE, "Flushing rest of file...%d bytes", toget);
-
-    for (i = 0; i < toget; i++)
-    {
-        recv(sd, buffer, 1, 0); /* flush to end of current file */
-    }
-}
-
-/*********************************************************************/
-
-void ConnectionsInit(void)
-{
-    ThreadLock(&cft_serverlist);
-    SeqClear(GetGlobalServerList());
-    ThreadUnlock(&cft_serverlist);
-}
-
-/*********************************************************************/
-
-/* No locking taking place in here, so make sure you've finalised all threads
- * before calling this one! */
-void ConnectionsCleanup(void)
-{
-    Seq *srvlist_tmp = GetGlobalServerList();
-
-    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
-    {
-        ServerItem *svp = SeqAt(srvlist_tmp, i);
-        if (svp == NULL)
-        {
-            ProgrammingError("SERVERLIST had NULL ServerItem!");
-        }
-        if (svp->conn == NULL)
-        {
-            ProgrammingError("ConnectionsCleanup:"
-                             "NULL connection in SERVERLIST!");
-        }
-
-        DisconnectServer(svp->conn);
-    }
-
-    SeqClear(srvlist_tmp);
-}
-

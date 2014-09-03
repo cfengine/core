@@ -403,7 +403,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 {
     int ret;
 
-    if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
+    if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         assert(ConnectionInfoSSL(conn->conn_info) == NULL);
         SSL *ssl = SSL_new(SSLSERVERCONTEXT);

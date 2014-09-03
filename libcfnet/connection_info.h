@@ -42,8 +42,8 @@
   */
 typedef enum
 {
-    CF_CONNECTION_NOT_ESTABLISHED,
-    CF_CONNECTION_ESTABLISHED
+    CONNECTIONINFO_STATUS_NOT_ESTABLISHED,
+    CONNECTIONINFO_STATUS_ESTABLISHED
 } ConnectionStatus;
 
 struct ConnectionInfo {
@@ -87,7 +87,7 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
 /**
   @brief Connection status
   @param info ConnectionInfo structure
-  @return Returns the status of the connection or CF_CONNECTION_NOT_ESTABLISHED in case of error.
+  @return Returns the status of the connection or CONNECTIONINFO_STATUS_NOT_ESTABLISHED in case of error.
 */
 ConnectionStatus ConnectionInfoConnectionStatus(const ConnectionInfo *info);
 /**

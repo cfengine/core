@@ -515,6 +515,7 @@ static void GetNameInfo3(EvalContext *ctx)
                     found = true;
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
+                    VPSHARDCLASS = (PlatformContext) i; /* this one can be overriden at vz detection */
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=OS type");
                     break;
                 }
@@ -2420,6 +2421,15 @@ static void OpenVZ_Detect(EvalContext *ctx)
         if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
         {
             EvalContextClassPutHard(ctx, "virt_host_vz_vzps", "inventory,attribute_name=Virtual host,source=agent");
+            /* here we must redefine the value of VPSHARDCLASS */
+            for (int i = 0; i < PLATFORM_CONTEXT_MAX; i++)
+            {
+                if (!strcmp(CLASSATTRIBUTES[i][0], "virt_host_vz_vzps"))
+                {
+                   VPSHARDCLASS = (PlatformContext) i;
+                   break;
+                }
+            }
         }
         else
         {

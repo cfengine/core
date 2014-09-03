@@ -868,7 +868,7 @@ static const char *GetProcessOptions(void)
     }
 # endif
 
-    return VPSOPTS[VSYSTEMHARDCLASS];
+    return VPSOPTS[VPSHARDCLASS];
 }
 #endif
 
@@ -1060,7 +1060,7 @@ int LoadProcessTable(Item **procdata)
 
     const char *psopts = GetProcessOptions();
 
-    snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], psopts);
+    snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VPSHARDCLASS], psopts);
 
     Log(LOG_LEVEL_VERBOSE, "Observe process table with %s", pscomm);
 

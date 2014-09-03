@@ -899,6 +899,8 @@ struct timespec
 # include <direct.h>
 #endif
 
+#include <poll.h>
+
 /* Must be always the last one! */
 #include <deprecated.h>
 #include <config.post.h>

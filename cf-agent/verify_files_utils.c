@@ -62,6 +62,7 @@
 #include <audit.h>
 #include <retcode.h>
 #include <cf-agent-enterprise-stubs.h>
+#include <conn_cache.h>
 
 #include <cf-windows-functions.h>
 
@@ -2569,17 +2570,40 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
     AgentConnection *conn = NULL;
     if (flags.cache_connection)
     {
-        /* Get a connection from the cache. TODO fix our connection cache to account for ports. */
-        conn = GetIdleConnectionToServer(servername);
-        if (conn == NULL)
+        /* Get a connection from the cache. TODO fix our connection cache to
+         * account for ports and protocol version. */
+        conn = ConnCache_FindIdle(servername);
+
+        if (conn != NULL)                 /* found idle connection in cache */
         {
+            return conn;
+        }
+        else
+        {
+            /* Open and cache new connection. */
+
             int err = 0;
             conn = ServerConnection(servername, port, conntimeout,
                                     flags, &err);
-            if (conn != NULL)
+
+            /* WARNING: if cache already has non-idle connections to that
+             * host, here we add more so that we connect in parallel. */
+
+            if (conn == NULL)                           /* Couldn't connect */
             {
-                /* Success! Put it in the cache and leave. */
-                CacheServerConnection(conn, servername);
+                /* Allocate and add to the cache as failure. */
+                conn = NewAgentConn(servername);
+                conn->conn_info->status = CONNECTIONINFO_STATUS_NOT_ESTABLISHED;
+
+                ConnCache_Add(conn, CONNCACHE_STATUS_OFFLINE);
+
+                return NULL;
+            }
+            else
+            {
+                /* Success! Put it in the cache as busy. */
+                ConnCache_Add(conn, CONNCACHE_STATUS_BUSY);
+                return conn;
             }
         }
     }
@@ -2588,19 +2612,8 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
         int err = 0;
         conn = ServerConnection(servername, port, conntimeout,
                                 flags, &err);
+        return conn;
     }
-
-    if (conn == NULL)
-    {
-        Log(LOG_LEVEL_INFO, "Unable to establish connection with %s",
-            servername);
-        if (flags.cache_connection)
-        {
-            MarkServerOffline(servername);
-        }
-    }
-
-    return conn;
 }
 
 void FileCopyConnectionClose(AgentConnection *conn)
@@ -2608,7 +2621,7 @@ void FileCopyConnectionClose(AgentConnection *conn)
     if (conn->flags.cache_connection)
     {
         /* Mark the connection as available in the cache. */
-        ServerNotBusy(conn);
+        ConnCache_MarkNotBusy(conn);
     }
     else
     {
@@ -3254,7 +3267,7 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
     }
     assert(attr.copy.servers && strcmp(RlistScalarValue(attr.copy.servers), "localhost"));
 
-    const Stat *sp = ClientCacheLookup(conn, RlistScalarValue(attr.copy.servers), sourcefile);
+    const Stat *sp = StatCacheLookup(conn, RlistScalarValue(attr.copy.servers), sourcefile);
 
     if (sp)
     {

@@ -339,7 +339,7 @@ static void *HandleConnection(void *c)
     SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info),
                       CONNTIMEOUT * 20 * 1000);
 
-    if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
+    if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         /* Decide the protocol used. */
         ret = ServerTLSPeek(conn->conn_info);

@@ -113,13 +113,11 @@ static Rlist *FirstRealEntry(Rlist *entry)
 
 static bool AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
 {
-    SeqAppend(iter->vars, new_var);
-
     Rlist *state = RvalRlistValue(new_var->rval);
     // move to the first non-null value
     state = FirstRealEntry(state);
+    SeqAppend(iter->vars, new_var);
     SeqAppend(iter->var_states, state);
-
     return state != NULL;
 }
 

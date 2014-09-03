@@ -31,6 +31,8 @@
    call external utility
 */
 PlatformContext VSYSTEMHARDCLASS; /* GLOBAL_E?, initialized_later */
+PlatformContext VPSHARDCLASS; /* used to define which ps command to use*/
+
 
 /* Configure system name and system-specific details. */
 

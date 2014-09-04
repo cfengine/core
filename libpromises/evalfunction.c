@@ -4584,14 +4584,11 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
 
     for (rp = newlist; rp != NULL; rp = rp->next)
     {
-        char s[CF_MAXVARSIZE];
-
-        if (EmptyString(RlistScalarValue(rp)))
+        const char *s = RlistScalarValue(rp);
+        if (EmptyString(s))
         {
             continue;
         }
-
-        strlcpy(s, RlistScalarValue(rp), CF_MAXVARSIZE);
 
         if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
         {
@@ -4671,13 +4668,11 @@ static FnCallResult FnCallPeerLeader(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
 
     for (rp = newlist; rp != NULL; rp = rp->next)
     {
-        if (EmptyString(RlistScalarValue(rp)))
+        const char *s = RlistScalarValue(rp);
+        if (EmptyString(s))
         {
             continue;
         }
-
-        char s[CF_MAXVARSIZE];
-        strlcpy(s, RlistScalarValue(rp), CF_MAXVARSIZE);
 
         const bool this_host = (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0);
 
@@ -4750,14 +4745,11 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
     for (rp = newlist; rp != NULL; rp = rp->next)
     {
-        char s[CF_MAXVARSIZE];
-
-        if (EmptyString(RlistScalarValue(rp)))
+        const char *s = RlistScalarValue(rp);
+        if (EmptyString(s))
         {
             continue;
         }
-
-        strlcpy(s, RlistScalarValue(rp), CF_MAXVARSIZE);
 
         if (i % groupsize == 0)
         {

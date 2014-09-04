@@ -16,7 +16,12 @@ body server control
 {
       port => "9878";
 
+      # DENY LOCALHOST!
       denyconnects          => { "127.0.0.1" };
+
+      # "127.0.0.1" is in this variable, but deny has precedence. So
+      # effectively we only admit non-localhost connections
+
       allowconnects         => { @(sys.ip_addresses) };
       allowallconnects      => { @(sys.ip_addresses) };
       trustkeysfrom         => { @(sys.ip_addresses) };

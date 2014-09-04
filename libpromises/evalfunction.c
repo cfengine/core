@@ -6044,6 +6044,12 @@ FnCallResult FnCallGroupExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Pol
 static bool SingleLine(const char *s)
 {
     size_t length = strcspn(s, "\n\r");
+#ifdef __MINGW32__ /* Treat a CRLF as a single line-ending: */
+    if (s[length] == '\r' && s[length + 1] == '\n')
+    {
+        length++;
+    }
+#endif
     /* [\n\r] followed by EOF */
     return s[length] && !s[length+1];
 }

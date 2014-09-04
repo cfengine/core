@@ -88,8 +88,9 @@ void ConnCache_Destroy()
     ThreadUnlock(&cft_conncache);
 }
 
-AgentConnection *ConnCache_FindIdle(const char *server, const char *port,
-                                    ConnectionFlags flags)
+AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
+                                            const char *port,
+                                            ConnectionFlags flags)
 {
     ThreadLock(&cft_conncache);
 

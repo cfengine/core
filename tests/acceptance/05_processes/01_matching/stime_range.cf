@@ -66,8 +66,8 @@ bundle agent init
       "hms[now]" rlist => { product("hrassec[now]"),
                             product("min2sec[now]") };
       "present" string => format("%.0f", sum("hms[now]"));
-      # Allow for a delay between when we asked for now_raw and when
-      # bundle agent test runs:
+      # Allow for up to 10s delay between when we asked for now_raw
+      # and when bundle agent test runs:
       "pausing" rlist => { @(hms[now]), "10" };
       "paused" string => format("%.0f", sum("pausing"));
       # Naturally, this doesn't work so well if the interval between
@@ -99,12 +99,12 @@ bundle agent init
       # A process started late in its day if less than $(present)
       # seconds before a whole number of days ago:
       "late_$(procs[$(pndx)][0])"
-        expression => isgreaterthan("$(when[$(procs[$(pndx)][0])])", "$(present)"),
+        expression => isgreaterthan("$(present)", "$(when[$(procs[$(pndx)][0])])"),
         scope => "namespace";
       # ... and early in its day if more than $(paused) seconds before
       # a whole number of days ago:
       "early_$(procs[$(pndx)][0])"
-        and => { isgreaterthan("$(present)", "$(when[$(procs[$(pndx)][0])])"),
+        and => { isgreaterthan("$(when[$(procs[$(pndx)][0])])", "$(paused)"),
                  "got_day_$(pndx)" },
         scope => "namespace";
       "got_early" or => { classmatch("early_\d+") }, scope => "namespace";

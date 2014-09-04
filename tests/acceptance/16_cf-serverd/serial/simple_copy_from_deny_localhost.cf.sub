@@ -24,9 +24,9 @@ bundle agent test
 {
   files:
       # localhost_closed_hostname
-      # "$(G.testdir)/server1_classic"
-      #   copy_from => copy_file("9885", "classic"),
-      #   classes => if_repaired("repaired1_classic");
+      "$(G.testdir)/server1_classic"
+        copy_from => copy_file("9885", "classic"),
+        classes => if_repaired("repaired1_classic");
       "$(G.testdir)/server1_latest"
         copy_from => copy_file("9885", "latest"),
         classes => if_repaired("repaired1_latest");
@@ -34,9 +34,9 @@ bundle agent test
       "$(G.testdir)/server2_classic"
         copy_from => copy_file("9887", "classic"),
         classes => if_repaired("repaired2_classic");
-      # "$(G.testdir)/server2_latest"
-      #   copy_from => copy_file("9887", "latest"),
-      #   classes => if_repaired("repaired2_latest");
+      "$(G.testdir)/server2_latest"
+        copy_from => copy_file("9887", "latest"),
+        classes => if_repaired("repaired2_latest");
 }
 
 #########################################################

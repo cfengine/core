@@ -23,16 +23,22 @@ bundle agent test
 {
   files:
 
-      "$(G.testdir)/destination_file" copy_from => copy_src_file,
-      classes => if_repaired("repaired");
+      "$(G.testdir)/destfile_classic"
+          copy_from => copy_src_file("classic"),
+          classes => if_repaired("copied_classic");
+      "$(G.testdir)/destfile_latest"
+          copy_from => copy_src_file("latest"),
+          classes => if_repaired("copied_latest");
 }
 
 #########################################################
 
-body copy_from copy_src_file
-
+body copy_from copy_src_file(protocol_version)
 {
+      protocol_version => "$(protocol_version)";
+
       source      => "$(G.testdir)/source_file";
+
       # localhost comes first but will be denied
       servers     => { @(sys.ip_addresses) };
       compare     => "mtime";
@@ -57,5 +63,19 @@ bundle agent check
 
   methods:
 
-      "any" usebundle => dcs_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
+  methods:
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testdir)/source_file", "$(G.testdir)/destfile_classic",
+                             "no", "same_classic", "differ_classic");
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testdir)/source_file", "$(G.testdir)/destfile_latest",
+                             "no", "same_latest", "differ_latest");
+
+  reports:
+
+    same_classic.same_latest::
+      "$(fn[1]) Pass";
+    !same_classic|!same_latest::
+      "$(fn[1]) FAIL";
+
 }

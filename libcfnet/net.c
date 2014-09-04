@@ -343,13 +343,6 @@ bool TryConnect(int sd, unsigned long timeout_ms,
 {
     assert(sa != NULL);
 
-    if (sd >= FD_SETSIZE)
-    {
-        Log(LOG_LEVEL_ERR, "Open connections exceed FD_SETSIZE limit of %d",
-            FD_SETSIZE);
-        return false;
-    }
-
     /* set non-blocking socket */
     int arg = fcntl(sd, F_GETFL, NULL);
     int ret = fcntl(sd, F_SETFL, arg | O_NONBLOCK);
@@ -372,25 +365,25 @@ bool TryConnect(int sd, unsigned long timeout_ms,
 
         int errcode;
         socklen_t opt_len = sizeof(errcode);
-        fd_set myset;
-        FD_ZERO(&myset);
-        FD_SET(sd, &myset);
+
+        struct pollfd pfd[] = {
+            {
+                .fd = sd,
+                .events = POLLOUT
+            }
+        };
 
         Log(LOG_LEVEL_VERBOSE, "Waiting to connect...");
 
-        struct timeval tv, *tvp;
-        if (timeout_ms > 0)
+        if (timeout_ms > INT_MAX)
         {
-            tv.tv_sec = timeout_ms / 1000;
-            tv.tv_usec = (timeout_ms % 1000) * 1000;
-            tvp = &tv;
+            // Overflow
+            Log(LOG_LEVEL_ERR, "Timeout %lu too large", timeout_ms);
+            return false;
         }
-        else
-        {
-            tvp = NULL;                                /* wait indefinitely */
-        }
+        int timeout = (unsigned long)timeout_ms;
 
-        ret = select(sd + 1, NULL, &myset, NULL, tvp);
+        ret = poll(pfd, 1, timeout);
         if (ret == 0)
         {
             Log(LOG_LEVEL_INFO, "Timeout connecting to server");

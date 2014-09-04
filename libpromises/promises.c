@@ -327,14 +327,17 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
     assert(pp->promiser);
     assert(pp->classes);
+    assert(excluded);
 
-    if (excluded)
-    {
-        *excluded = false;
-    }
+    *excluded = false;
 
-    Promise *pcopy = xcalloc(1, sizeof(Promise));
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
+    if (!returnval.item || (strcmp(returnval.item, CF_NULL_VALUE) == 0)) 
+    {
+        *excluded = true;
+        return NULL;
+    }
+    Promise *pcopy = xcalloc(1, sizeof(Promise));
     pcopy->promiser = RvalScalarValue(returnval);
 
     if ((strcmp("files", pp->parent_promise_type->name) != 0) &&

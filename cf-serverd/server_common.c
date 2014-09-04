@@ -1738,13 +1738,15 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
 
 #ifdef __MINGW32__            /* NT uses security identifier instead of uid */
 
+    bool is_root = strcmp(conn->username, "root") == 0;
+
     if (!NovaWin_UserNameToSid(conn->username, (SID *) conn->sid,
-                               CF_MAXSIDSIZE, false))
+                               CF_MAXSIDSIZE, !is_root))
     {
         memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
     }
 
-    if (strcmp(conn->username, "root") == 0)
+    if (is_root)
     {
         /* It the remote user identifies himself as root, even on Windows
          * cf-serverd must grant access to all files. uid==0 is checked later

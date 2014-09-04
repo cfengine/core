@@ -5042,7 +5042,7 @@ static FnCallResult FnCallOn(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Polic
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    return FnReturnF("%ld", cftime);
+    return FnReturnF("%jd", (intmax_t) cftime);
 }
 
 /*********************************************************************/
@@ -5117,7 +5117,7 @@ static FnCallResult FnCallAgoDate(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
         return FnReturn("0");
     }
 
-    return FnReturnF("%ld", cftime);
+    return FnReturnF("%jd", (intmax_t) cftime);
 }
 
 /*********************************************************************/
@@ -5135,7 +5135,7 @@ static FnCallResult FnCallAccumulatedDate(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
     cftime += tmv.tm_mon * 30 * 24 * 3600;
     cftime += (tmv.tm_year + 1900) * 365 * 24 * 3600;
 
-    return FnReturnF("%ld", cftime);
+    return FnReturnF("%jd", (intmax_t) cftime);
 }
 
 /*********************************************************************/
@@ -5152,7 +5152,7 @@ static FnCallResult FnCallNot(EvalContext *ctx,
 
 static FnCallResult FnCallNow(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
 {
-    return FnReturnF("%ld", (long)CFSTARTTIME);
+    return FnReturnF("%jd", (intmax_t)CFSTARTTIME);
 }
 
 /*********************************************************************/

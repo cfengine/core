@@ -59,6 +59,8 @@ export GREP_OPTIONS
 # Defaults (overridden by command-line arguments)
 #
 LOG=test.log
+INOTIFYWATCH_LOG=inotifywatch.log
+INOTIFYWAIT_LOG=inotifywait.log
 SUMMARY=summary.log
 XML=test.xml
 WHOAMI=/c/Windows/System32/whoami.exe
@@ -74,6 +76,8 @@ NO_CLEAN=0
 BASECLASSES="AUTO"
 EXTRACLASSES="DEBUG"
 VALGRIND_OPTS="--leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions"
+INOTIFYWATCH_OPTS="-r -e modify -e attrib -e moved_to -e create -e delete -e delete_self"
+INOTIFYWAIT_OPTS="-r -m -e modify -e attrib -e moved_to -e create -e delete -e delete_self"
 
 # Use TEST_INDEX for indexing a poor man's array. Basically the subscript is
 # just appended to the variable name.
@@ -215,9 +219,11 @@ usage() {
   echo " --no-crashing disable tests that are expected to crash (for use with valgrind)."
   echo " --no-timed disable timed tests that may introduce wait times."
   echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
-  echo " --gdb         Run test under GDB"
-  echo " --valgrind    Run test under Valgrind"
-  echo " --callgrind   Run test under valgrind --tool=callgrind"
+  echo " --gdb          Run test under GDB"
+  echo " --valgrind     Run test under Valgrind"
+  echo " --callgrind    Run test under valgrind --tool=callgrind"
+  echo " --inotifywatch Run tests and log filesystem statistics"
+  echo " --inotifywait  Run tests and log filesystem events"
   echo " --no-clean does not clean workdir after test finishes"
   echo "            (by default it gets cleaned only if test passed)."
   echo " -j[n]"
@@ -542,8 +548,12 @@ while true; do
     --valgrind)
       USE_VALGRIND=1;;
     --callgrind)
-      USE_VALGRIND=1;
+      USE_VALGRIND=1
       VALGRIND_OPTS="--suppressions=valgrind-suppressions --tool=callgrind";;
+    --inotifywatch)
+      USE_INOTIFYWATCH=1;;
+    --inotifywait)
+      USE_INOTIFYWAIT=1;;
     --staging)
       STAGING_TESTS=1;;
     --unsafe)
@@ -900,6 +910,35 @@ run_all_tests_using_make() {
 #
 # Now run the tests
 #
+
+# isEanbled? USE_INOTIFYWATCH
+if [ -n "$USE_INOTIFYWATCH" ]; then
+  if which inotifywatch 2>&1 > /dev/null; then
+    inotifywatch ${INOTIFYWATCH_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWATCH_LOG} &
+    INOTIFYWATCH_PID=$!
+  else
+    echo "info: inotifywatch not detected."
+    exit 0
+  fi
+fi
+
+# isEanbled? USE_INOTIFYWAIT
+if [ -n "$USE_INOTIFYWAIT" ]; then
+  if which inotifywait 2>&1 > /dev/null; then
+    inotifywait ${INOTIFYWAIT_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWAIT_LOG} &
+    INOTIFYWAIT_PID=$!
+  else
+    echo "info: inotifywait not detected."
+    exit 0
+  fi
+fi
+
+trap_handler() {
+  [ -n "$INOTIFYWATCH_PID" ] && kill -9 ${INOTIFYWATCH_PID} 2>&1 > /dev/null
+  [ -n "$INOTIFYWAIT_PID"  ] && kill -9 ${INOTIFYWAIT_PID}  2>&1 > /dev/null
+  exit 0
+}
+trap trap_handler EXIT SIGINT SIGTERM
 
 START_TIME=$(unix_seconds)
 if [ -z "$STAY_IN_WORKDIR" ]; then

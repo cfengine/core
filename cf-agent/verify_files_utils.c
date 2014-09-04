@@ -2652,7 +2652,7 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
     {
         /* Get a connection from the cache. TODO fix our connection cache to
          * account for ports and protocol version. */
-        conn = ConnCache_FindIdle(servername, port, flags);
+        conn = ConnCache_FindIdleMarkBusy(servername, port, flags);
 
         if (conn != NULL)                 /* found idle connection in cache */
         {

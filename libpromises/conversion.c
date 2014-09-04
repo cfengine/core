@@ -882,26 +882,33 @@ const char *CommandArg0(const char *execstr)
 }
 
 /*************************************************************/
-
-void CommandPrefix(char *execstr, char *comm)
+/* Actually returns a *suffix* of the command, within the first word
+ * of execstr, plus possibly some of what follows if we have space for
+ * it. */
+void CommandPrefix(char *execstr, char *comm, size_t csiz)
 {
-    char *sp;
-
-    for (sp = execstr; (*sp != ' ') && (*sp != '\0'); sp++)
+    char *sp = execstr;
+    /* Find end of first word - the command: */
+    while (!isspace((unsigned char) *sp) && *sp != '\0')
     {
+        sp++;
     }
 
-    if (sp - 10 >= execstr)
+    /* We want to include the command name and ideally early parts of
+     * the arguments; the command's path is less important.  So use at
+     * most two thirds of our buffer space on the command: */
+    const size_t chunk = (2 * csiz) / 3;
+    if (sp >= execstr + chunk)
     {
-        sp -= 10;               /* copy 15 most relevant characters of command */
+        sp -= chunk;
     }
     else
     {
         sp = execstr;
     }
 
-    memset(comm, 0, 20);
-    strncpy(comm, sp, 15);
+    /* Copy the "most relevant" characters of command */
+    strlcpy(comm, sp, csiz);
 }
 
 static int IsSpace(char *remainder)

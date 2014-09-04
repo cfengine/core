@@ -70,7 +70,7 @@ DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const 
 const char *MapAddress(const char *addr);
 const char *CommandArg0(const char *execstr);
 size_t CommandArg0_bound(char *dst, const char *src, size_t dst_size);
-void CommandPrefix(char *execstr, char *comm);
+void CommandPrefix(char *execstr, char *comm, size_t csiz);
 const char *DataTypeShortToType(char *short_type);
 int CoarseLaterThan(const char *key, const char *from);
 int FindTypeInArray(const char *const haystack[], const char *needle, int default_value, int null_value);

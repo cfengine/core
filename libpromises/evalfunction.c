@@ -6280,22 +6280,13 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
 
 static void CloseStringHole(char *s, int start, int end)
 {
-    int off = end - start;
-    char *sp;
-
-    if (off <= 0)
+    if (end > start)
     {
-        return;
+        memmove(s + start, s + end,
+                /* The 1+ ensures we copy the final '\0' */
+                1 + strlen(s + end));
     }
-
-    for (sp = s + start; *(sp + off) != '\0'; sp++)
-    {
-        *sp = *(sp + off);
-    }
-
-    *sp = '\0';
 }
-
 
 static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array)
 {

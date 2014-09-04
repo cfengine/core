@@ -75,14 +75,14 @@ bundle agent check
                    "after_year_1902_second"
       };
 
-      "after_year_2037_ok" not => or(
+      "after_year_2037_ok" or => {
                    "after_year_2037",
                    "after_year_2037_month",
                    "after_year_2037_day",
                    "after_year_2037_hour",
                    "after_year_2037_minute",
                    "after_year_2037_second"
-      );
+      };
 
       "ok" and => { "after_year_1902_ok", "after_year_2037_ok" };
 

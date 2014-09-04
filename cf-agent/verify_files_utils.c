@@ -191,40 +191,41 @@ static int MatchRlistItem(EvalContext *ctx, const Rlist *listofregex, const char
     return false;
 }
 
+/* (conn == NULL) then copy is from localhost. */
 static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                                 char *destfile, struct stat ssb,
                                 Attributes attr, const Promise *pp,
                                 CompressedArray **inode_cache,
                                 AgentConnection *conn)
 {
-    char *server;
     const char *lastnode;
     struct stat dsb;
     int found;
     mode_t srcmode = ssb.st_mode;
 
+    const char *server;
+    if (conn != NULL)
+    {
+        server = conn->this_server;
+    }
+    else
+    {
+        server = "localhost";
+    }
+
 #ifdef __MINGW32__
     if (attr.copy.copy_links != NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-              "copy_from.copylink_patterns is ignored on Windows "
+            "copy_from.copylink_patterns is ignored on Windows "
             "(source files cannot be symbolic links)");
     }
 #endif /* __MINGW32__ */
 
     attr.link.when_no_file = cfa_force;
 
-    if (attr.copy.servers)
-    {
-        server = RlistScalarValue(attr.copy.servers);
-    }
-    else
-    {
-        server = NULL;
-    }
-
-    if ((strcmp(sourcefile, destfile) == 0) &&
-        server && (strcmp(server, "localhost") == 0))
+    if (strcmp(sourcefile, destfile) == 0 &&
+        strcmp(server, "localhost") == 0)
     {
         Log(LOG_LEVEL_INFO,
             "File copy promise loop: file/dir '%s' is its own source",
@@ -359,16 +360,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                     "'%s' wasn't at destination (copying)",
                     destfile);
 
-                if (server)
-                {
-                    Log(LOG_LEVEL_INFO, "Copying from '%s:%s'",
-                        server, sourcefile);
-                }
-                else
-                {
-                    Log(LOG_LEVEL_INFO, "Copying from 'localhost:%s'",
-                        sourcefile);
-                }
+                Log(LOG_LEVEL_INFO, "Copying from '%s:%s'",
+                    server, sourcefile);
             }
 
             if (S_ISLNK(srcmode) && attr.copy.link_type != FILE_LINK_TYPE_NONE)
@@ -395,18 +388,11 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                                                            &dsb, attr, pp));
                 }
 
-                if (server)
-                {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp,
-                         attr, "Updated file from '%s:%s'", server, sourcefile);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp,
-                         attr, "Updated file from 'localhost:%s'", sourcefile);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                }
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr,
+                     "Updated file from '%s:%s'",
+                     server, sourcefile);
+
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
 
                 if (SINGLE_COPY_LIST)
                 {
@@ -420,18 +406,10 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             }
             else
             {
-                if (server)
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp,
-                         attr, "Copy from '%s:%s' failed", server, sourcefile);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                         "Copy from 'localhost:%s' failed", sourcefile);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                }
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp,
+                     attr, "Copy from '%s:%s' failed",
+                     server, sourcefile);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
 
             return result;
@@ -578,11 +556,9 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                     }
                     else
                     {
-                        char *source_host = server ? server : "localhost";
-
                         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp,
                              attr, "Updated '%s' from source '%s' on '%s'",
-                             destfile, sourcefile, source_host);
+                             destfile, sourcefile, server);
                         result = PromiseResultUpdate(
                             result, PROMISE_RESULT_CHANGE);
                         result = PromiseResultUpdate(

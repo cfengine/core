@@ -3086,7 +3086,7 @@ static FnCallResult FnCallFileStat(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     }
     if (!strcmp(fp->name, "filesize"))
     {
-        return FnReturnF("%jd", (uintmax_t) statbuf.st_size);
+        return FnReturnF("%ju", (uintmax_t) statbuf.st_size);
     }
 
     ProgrammingError("Unexpected function name in FnCallFileStat: %s", fp->name);
@@ -3113,35 +3113,35 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
     }
     else if (!strcmp(detail, "size"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_size);
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) statbuf.st_size);
     }
     else if (!strcmp(detail, "gid"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_gid);
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) statbuf.st_gid);
     }
     else if (!strcmp(detail, "uid"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_uid);
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) statbuf.st_uid);
     }
     else if (!strcmp(detail, "ino"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ino);
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) statbuf.st_ino);
     }
     else if (!strcmp(detail, "nlink"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_nlink);
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) statbuf.st_nlink);
     }
     else if (!strcmp(detail, "ctime"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ctime);
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (intmax_t) statbuf.st_ctime);
     }
     else if (!strcmp(detail, "mtime"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mtime);
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (intmax_t) statbuf.st_mtime);
     }
     else if (!strcmp(detail, "atime"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_atime);
+        snprintf(buffer, CF_MAXVARSIZE, "%jd", (intmax_t) statbuf.st_atime);
     }
     else if (!strcmp(detail, "permstr"))
     {
@@ -3168,7 +3168,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
     }
     else if (!strcmp(detail, "mode"))
     {
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mode);
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) statbuf.st_mode);
     }
     else if (!strcmp(detail, "type"))
     {
@@ -3187,7 +3187,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
     else if (!strcmp(detail, "dev_minor"))
     {
 #if !defined(__MINGW32__)
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) minor(statbuf.st_dev) );
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) minor(statbuf.st_dev) );
 #else
         snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
 #endif
@@ -3195,7 +3195,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
     else if (!strcmp(detail, "dev_major"))
     {
 #if !defined(__MINGW32__)
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) major(statbuf.st_dev) );
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) major(statbuf.st_dev) );
 #else
         snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
 #endif
@@ -3203,7 +3203,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
     else if (!strcmp(detail, "devno"))
     {
 #if !defined(__MINGW32__)
-        snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_dev );
+        snprintf(buffer, CF_MAXVARSIZE, "%ju", (uintmax_t) statbuf.st_dev );
 #else
         snprintf(buffer, CF_MAXVARSIZE, "%c:", statbuf.st_dev + 'A');
 #endif

@@ -858,10 +858,10 @@ const char *CommandArg0(const char *execstr)
     const char *start;
     char end_delimiter;
 
-    if(execstr[0] == '\"')
+    if (execstr[0] == '"')
     {
         start = execstr + 1;
-        end_delimiter = '\"';
+        end_delimiter = '"';
     }
     else
     {
@@ -872,8 +872,7 @@ const char *CommandArg0(const char *execstr)
     strlcpy(arg, start, sizeof(arg));
 
     char *cut = strchr(arg, end_delimiter);
-
-    if(cut)
+    if (cut)
     {
         *cut = '\0';
     }
@@ -911,13 +910,11 @@ void CommandPrefix(char *execstr, char *comm, size_t csiz)
     strlcpy(comm, sp, csiz);
 }
 
-static int IsSpace(char *remainder)
+static int IsSpace(char *sp)
 {
-    char *sp;
-
-    for (sp = remainder; *sp != '\0'; sp++)
+    for (; *sp != '\0'; sp++)
     {
-        if (!isspace((int)*sp))
+        if (!isspace((unsigned char)*sp))
         {
             return false;
         }
@@ -930,17 +927,8 @@ static int IsSpace(char *remainder)
 
 bool IsRealNumber(const char *s)
 {
-    static const double NO_DOUBLE = -123.45;
-    double a = NO_DOUBLE;
-
-    sscanf(s, "%lf", &a);
-
-    if (a == NO_DOUBLE)
-    {
-        return false;
-    }
-
-    return true;
+    double a;
+    return sscanf(s, "%lf", &a) == 1;
 }
 
 #ifndef __MINGW32__

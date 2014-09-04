@@ -86,7 +86,7 @@ static int ExecModule(EvalContext *ctx, char *command);
 
 static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const FnCall *fp, const char *lval_str, DataType *datatype_out);
-static void *CfReadFile(const char *filename, int maxsize);
+static char *CfReadFile(const char *filename, int maxsize);
 
 /*******************************************************************/
 
@@ -4551,7 +4551,6 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
 {
     Rlist *rp, *pruned;
     char *split = "\n";
-    char *file_buffer = NULL;
     int i, found, maxent = 100000, maxsize = 100000;
 
 /* begin fn specific content */
@@ -4566,7 +4565,7 @@ static FnCallResult FnCallPeers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
         return FnFailure();
     }
 
-    file_buffer = (char *) CfReadFile(filename, maxsize);
+    char *file_buffer = CfReadFile(filename, maxsize);
 
     if (file_buffer == NULL)
     {
@@ -4637,7 +4636,7 @@ static FnCallResult FnCallPeerLeader(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
 {
     Rlist *rp;
     char *split = "\n";
-    char *file_buffer = NULL, buffer[CF_MAXVARSIZE];
+    char buffer[CF_MAXVARSIZE];
     int i, found, maxent = 100000, maxsize = 100000;
 
     buffer[0] = '\0';
@@ -4654,8 +4653,7 @@ static FnCallResult FnCallPeerLeader(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
         return FnFailure();
     }
 
-    file_buffer = (char *) CfReadFile(filename, maxsize);
-
+    char *file_buffer = CfReadFile(filename, maxsize);
     if (file_buffer == NULL)
     {
         return FnFailure();
@@ -4721,7 +4719,6 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 {
     Rlist *rp, *pruned;
     char *split = "\n";
-    char *file_buffer = NULL;
     int i, maxent = 100000, maxsize = 100000;
 
 /* begin fn specific content */
@@ -4736,8 +4733,7 @@ static FnCallResult FnCallPeerLeaders(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         return FnFailure();
     }
 
-    file_buffer = (char *) CfReadFile(filename, maxsize);
-
+    char *file_buffer = CfReadFile(filename, maxsize);
     if (file_buffer == NULL)
     {
         return FnFailure();
@@ -5590,7 +5586,6 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *p
 // this function is separate so other data container readers can use it
 static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *finalargs)
 {
-    char *file_buffer = NULL;
     JsonElement *json = NULL;
 
 /* begin fn specific content */
@@ -5604,8 +5599,8 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
     int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
     bool make_array = 0 == strcmp(fp->name, "data_readstringarrayidx");
 
-// Read once to validate structure of file in itemlist
-    file_buffer = CfReadFile(filename, maxsize);
+    // Read once to validate structure of file in itemlist
+    char *file_buffer = CfReadFile(filename, maxsize);
     if (file_buffer)
     {
         file_buffer = StripPatterns(file_buffer, comment, filename);
@@ -5645,7 +5640,6 @@ static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *f
         return FnFailure();
     }
 
-    char *file_buffer = NULL;
     int entries = 0;
 
 /* begin fn specific content */
@@ -5659,8 +5653,8 @@ static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *f
     int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
     int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next->next));
 
-// Read once to validate structure of file in itemlist
-    file_buffer = CfReadFile(filename, maxsize);
+    // Read once to validate structure of file in itemlist
+    char *file_buffer = CfReadFile(filename, maxsize);
     if (!file_buffer)
     {
         entries = 0;
@@ -6188,7 +6182,7 @@ static bool SingleLine(const char *s)
     return s[length] && !s[length+1];
 }
 
-static void *CfReadFile(const char *filename, int maxsize)
+static char *CfReadFile(const char *filename, int maxsize)
 {
     struct stat sb;
     if (stat(filename, &sb) == -1)

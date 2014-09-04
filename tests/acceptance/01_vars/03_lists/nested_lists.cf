@@ -1,0 +1,126 @@
+#######################################################
+#
+# Nested iterations of slists (the ordering is not guaranteed, so we sort)
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "states" slist => { "actual", "expected" };
+
+      "actual" string => "";
+
+      "expected" string =>
+      "
+Nesting: 1
+Nesting: 2
+
+Nothing: 
+Unknown: $(unknown)
+A list: @(lists)
+Other empty: 5
+Other empty: 6
+Parameter nesting: 7
+Parameter nesting: 8
+Sub nesting: 7
+Sub nesting: 8";
+
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => insert_line("$(init.$(states))"),
+      edit_defaults => init_empty;
+}
+
+bundle edit_line insert_line(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent otherbundle
+{
+  vars:
+      "list_a" slist => { };
+      "list_b" slist => { "5", "6" };
+      "lists" slist => { "a", "b" };
+}
+
+bundle edit_line test_insert
+{
+  vars:
+      "list_a" slist => { "1", "2" };
+      "list_b" slist => {};
+      "lists" slist => { "a", "b" };
+      "nothing" string => "";
+
+  insert_lines:
+      "Nesting: $(list_$(lists))";
+      "Expanded: $(lists) $(list_a) $(list_b)";
+      "$(nothing)" insert_type => "preserve_all_lines"; # ignore existing newline
+      "Nothing: $(nothing)";
+      "Unknown: $(unknown)";
+      "A list: @(lists)";
+      "Other empty: $(otherbundle.list_$(otherbundle.lists))";
+}
+
+bundle agent sub(text)
+{
+  files:
+      "$(G.testfile).actual"
+      edit_line => insert_line("Sub nesting: $(text)");
+}
+
+bundle agent test
+{
+  vars:
+      "list_a" slist => { };
+      "list_b" slist => { "7", "8" };
+      "lists" slist => { "a", "b" };
+
+  files:
+      "$(G.testfile).actual"
+      edit_line => test_insert;
+
+      "$(G.testfile).actual"
+      edit_line => insert_line("Parameter nesting: $(list_$(lists))");
+
+  methods:
+      "nesting" usebundle => sub("$(list_$(lists))");
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  methods:
+      "any" usebundle => dcs_sort("$(G.testfile).actual", "$(G.testfile).actual.sorted");
+      "any" usebundle => dcs_sort("$(G.testfile).expected", "$(G.testfile).expected.sorted");
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual.sorted",
+                                            "$(G.testfile).expected.sorted",
+                                            "$(this.promise_filename)");
+}
+
+body contain check_in_shell
+{
+      useshell => "true";
+}
+

@@ -2730,6 +2730,11 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attribu
 
         conn = FileCopyConnectionOpen(ctx, servername, attr.copy,
                                       attr.transaction.background);
+        if (conn == NULL)
+        {
+            Log(LOG_LEVEL_INFO, "Unable to establish connection to '%s'",
+                servername);
+        }
 
         rp = rp->next;
     }

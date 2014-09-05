@@ -45,9 +45,36 @@
 
 #define CF_CRITIAL_SECTION "CF_CRITICAL_SECTION"
 
-static char CFLOCK[CF_BUFSIZE] = ""; /* GLOBAL_X */
-static char CFLAST[CF_BUFSIZE] = ""; /* GLOBAL_X */
-static char CFLOG[CF_BUFSIZE] = ""; /* GLOBAL_X */
+typedef struct CfLockStack_ {
+    char lock[CF_BUFSIZE];
+    char last[CF_BUFSIZE];
+    char log[CF_BUFSIZE];
+    struct CfLockStack_ *previous;
+} CfLockStack;
+
+static CfLockStack *LOCK_STACK = NULL;
+
+static void PushLock(char *lock, char *last, char *log)
+{
+    CfLockStack *new_lock = malloc(sizeof(CfLockStack));
+    strlcpy(new_lock->lock, lock, CF_BUFSIZE);
+    strlcpy(new_lock->last, last, CF_BUFSIZE);
+    strlcpy(new_lock->log, log, CF_BUFSIZE);
+
+    new_lock->previous = LOCK_STACK;
+    LOCK_STACK = new_lock;
+}
+
+static CfLockStack *PopLock()
+{
+    if (!LOCK_STACK)
+    {
+        return NULL;
+    }
+    CfLockStack *lock = LOCK_STACK;
+    LOCK_STACK = lock->previous;
+    return lock;
+}
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_X */
 
@@ -354,14 +381,16 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *o
 
 static void LocksCleanup(void)
 {
-    if (strlen(CFLOCK) > 0)
+    CfLockStack *lock;
+    while ((lock = PopLock()) != NULL)
     {
         CfLock best_guess = {
-            .lock = xstrdup(CFLOCK),
-            .last = xstrdup(CFLAST),
-            .log = xstrdup(CFLOG)
+            .lock = xstrdup(lock->lock),
+            .last = xstrdup(lock->last),
+            .log = xstrdup(lock->log)
         };
         YieldCurrentLock(best_guess);
+        free(lock);
     }
 }
 
@@ -728,9 +757,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     ReleaseCriticalSection(CF_CRITIAL_SECTION);
 
     // Keep this as a global for signal handling
-    strcpy(CFLOCK, cflock);
-    strcpy(CFLAST, cflast);
-    strcpy(CFLOG, cflog);
+    PushLock(cflock, cflast, cflog);
 
     return CfLockNew(cflast, cflock, cflog, false);
 }
@@ -771,9 +798,29 @@ void YieldCurrentLock(CfLock lock)
     /* This lock has ben yield'ed, don't try to yield it again in case process
      * is terminated abnormally.
      */
-    strcpy(CFLOCK, "");
-    strcpy(CFLAST, "");
-    strcpy(CFLOG, "");
+    CfLockStack *stack = LOCK_STACK;
+    CfLockStack *last = NULL;
+    while (stack)
+    {
+        if ((strcmp(stack->lock, lock.lock) == 0)
+         && (strcmp(stack->last, lock.last) == 0)
+         && (strcmp(stack->log, lock.log) == 0))
+        {
+            CfLockStack *delete_me = stack;
+            stack = stack->previous;
+            if (!last)
+            {
+                assert(delete_me == LOCK_STACK);
+                LOCK_STACK = stack;
+            } else {
+                last->previous = stack;
+            }
+            free(delete_me);
+            continue;
+        }
+        last = stack;
+        stack = stack->previous;
+    }
 
     LogLockCompletion(lock.log, getpid(), "Lock removed normally ", lock.lock, "");
 

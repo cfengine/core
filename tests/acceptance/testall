@@ -942,6 +942,11 @@ if [ -z "$STAY_IN_WORKDIR" ]; then
   finish_xml
 fi
 
+if [ $(($PASSED_TESTS+$FAILED_TESTS+$SOFT_FAILURES+$SKIPPED_TESTS)) -ne $TESTS_COUNT ]; then
+  echo "WARNING: Number of test results does not match number of tests!"
+  echo "Did something go wrong during execution?"
+  exit 2
+fi
 if [ "$FAILED_TESTS" -gt "$SUPPRESSED_FAILURES" ]; then
   exit 1
 else

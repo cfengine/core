@@ -6,6 +6,10 @@ body common control
 
 bundle agent run
 {
+  vars:
+      "path" string => "/etc/debian_version";
+
   classes:
       "loquacious" expression => returnszero("$(G.echo) loquacious quaalude", "noshell");
+      "$(path)" expression => returnszero("$(G.echo) redmine6561", "noshell");
 }

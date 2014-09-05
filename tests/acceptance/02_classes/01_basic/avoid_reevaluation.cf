@@ -17,7 +17,7 @@ bundle agent check
 {
   methods:
       "" usebundle => dcs_passif_output(".*",
-                                        ".*loquacious quaalude.*",
-                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub -Dloquacious | $(G.grep) qua",
+                                        ".*loquacious quaalude.*|.*/etc/debian_version.*",
+                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub -Dloquacious",
                                         $(this.promise_filename));
 }

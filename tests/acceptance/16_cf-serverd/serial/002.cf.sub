@@ -22,16 +22,20 @@ bundle agent test
 {
   files:
 
-      "$(G.testdir)/destination_file"
-      copy_from => copy_src_file,
-      classes => if_repaired("repaired");
+      "$(G.testdir)/destfile_classic"
+        copy_from => copy_src_file("classic"),
+        classes => if_repaired("copied_classic");
+      "$(G.testdir)/destfile_latest"
+        copy_from => copy_src_file("latest"),
+        classes => if_repaired("copied_latest");
 }
 
 #########################################################
 
-body copy_from copy_src_file
-
+body copy_from copy_src_file(protocol_version)
 {
+      protocol_version => "$(protocol_version)";
+
       source      => "$(G.testdir)/source_file";
       servers     => { "127.0.0.1" };
       compare     => "mtime";
@@ -56,9 +60,8 @@ bundle agent check
 
   reports:
 
-    !repaired::
+    !copied_classic.!copied_latest::
       "$(fn[1]) Pass";
-    repaired::
+    copied_classic|copied_latest::
       "$(fn[1]) FAIL";
-
 }

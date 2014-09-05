@@ -22,12 +22,12 @@ bundle agent init
 bundle agent test
 {
   files:
-      # "$(G.testdir)/dest_file_classic"
-      #   copy_from => copy_src_file("classic"),
-      #   classes => if_repaired("repaired_classic");
-      "$(G.testdir)/dest_file_latest"
+      "$(G.testdir)/destfile_classic"
+        copy_from => copy_src_file("classic"),
+        classes => if_repaired("copied_classic");
+      "$(G.testdir)/destfile_latest"
         copy_from => copy_src_file("latest"),
-        classes => if_repaired("repaired_latest");
+        classes => if_repaired("copied_latest");
 }
 
 #########################################################
@@ -52,9 +52,18 @@ bundle agent check
       "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
   methods:
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testdir)/source_file", "$(G.testdir)/destfile_classic",
+                             "no", "same_classic", "differ_classic");
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testdir)/source_file", "$(G.testdir)/destfile_latest",
+                             "no", "same_latest", "differ_latest");
 
-      # "any" usebundle => dcs_check_diff("$(G.testdir)/source_file",
-      #                                   "$(G.testdir)/dest_file_classic","$(fn[1])");
-      "any" usebundle => dcs_check_diff("$(G.testdir)/source_file",
-                                        "$(G.testdir)/dest_file_latest","$(fn[1])");
+  reports:
+
+    same_classic.same_latest::
+      "$(fn[1]) Pass";
+    !same_classic|!same_latest::
+      "$(fn[1]) FAIL";
+
 }

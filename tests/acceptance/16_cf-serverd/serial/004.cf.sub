@@ -62,8 +62,6 @@ bundle agent check
       "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
   methods:
-
-  methods:
       "any" usebundle => dcs_if_diff_expected(
                              "$(G.testdir)/source_file", "$(G.testdir)/destfile_classic",
                              "no", "same_classic", "differ_classic");

@@ -13,11 +13,17 @@ bundle agent test
         meta => { "redmine6406" };
 
   methods:
+      # source file
       "any" usebundle => file_make("$(G.testdir)/source_file",
                                    "Source and Destination are DIFFERENT_A");
-      "any" usebundle => file_make("$(G.testdir)/destination_file",
+      # destination files
+      "any" usebundle => file_make("$(G.testdir)/destfile_classic",
                                    "Source and Destination are DIFFERENT_B");
+      "any" usebundle => file_make("$(G.testdir)/destfile_latest",
+                                   "Source and Destination are DIFFERENT_B");
+
       "any" usebundle => generate_key;
+
       "any" usebundle => start_server("localhost_open");
       "any" usebundle => run_test("$(this.promise_filename).sub");
       "any" usebundle => stop_server("localhost_open");

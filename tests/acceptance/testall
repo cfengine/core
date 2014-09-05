@@ -877,36 +877,32 @@ run_all_tests() {
 
 run_all_tests_using_make() {
   MAKEFILE=Makefile.testall
+
+  unset SERIAL_TEST_LIST PARALLEL_TEST_LIST TIMED_TEST_LIST
+
+  for curr_test in $ALL_TESTS; do
+    case "$curr_test" in
+      */serial/*|*/unsafe/*)
+        SERIAL_TEST_LIST=$SERIAL_TEST_LIST${SERIAL_TEST_LIST:+ }$curr_test
+        ;;
+      */timed/*)
+        TIMED_TEST_LIST=$TIMED_TEST_LIST${TIMED_TEST_LIST:+ }$curr_test
+        ;;
+      *)
+        PARALLEL_TEST_LIST=$PARALLEL_TEST_LIST${PARALLEL_TEST_LIST:+ }$curr_test
+        # Separate make target list, because we do not want the target to be a file name, since make
+        # will skip it then.
+        PARALLEL_TARGET_LIST=$PARALLEL_TARGET_LIST${PARALLEL_TARGET_LIST:+ }${curr_test}_rule
+        ;;
+    esac
+  done
+
   # Redirect to makefile all at once.
   (
-    printf "tests: timed serial parallel\n\n"
-    unset SERIAL_TEST_LIST PARALLEL_TEST_LIST TIMED_TEST_LIST
-
-    for curr_test in $ALL_TESTS; do
-      case "$curr_test" in
-        */serial/*|*/unsafe/*)
-          SERIAL_TEST_LIST=$SERIAL_TEST_LIST${SERIAL_TEST_LIST:+ }$curr_test
-          ;;
-        */timed/*)
-          TIMED_TEST_LIST=$TIMED_TEST_LIST${TIMED_TEST_LIST:+ }$curr_test
-          ;;
-        *)
-          PARALLEL_TEST_LIST=$PARALLEL_TEST_LIST${PARALLEL_TEST_LIST:+ }$curr_test
-          # Separate make target list, because we do not want the target to be a file name, since make
-          # will skip it then.
-          PARALLEL_TARGET_LIST=$PARALLEL_TARGET_LIST${PARALLEL_TARGET_LIST:+ }${curr_test}_rule
-          ;;
-      esac
-    done
-
+    printf "tests: timed parallel\n\n"
     printf "timed:\n"
     if [ -n "$TIMED_TEST_LIST" ]; then
       printf "\t@$0 --stay-in-workdir -j1 $TIMED_TEST_LIST\n"
-    fi
-    printf "\n"
-    printf "serial: timed parallel\n"
-    if [ -n "$SERIAL_TEST_LIST" ]; then
-      printf "\t@$0 --stay-in-workdir -j1 $SERIAL_TEST_LIST\n"
     fi
     printf "\n"
     printf "parallel: $PARALLEL_TARGET_LIST\n\n"
@@ -915,6 +911,9 @@ run_all_tests_using_make() {
   ) > $MAKEFILE
 
   ${MAKE:-make} -k -f $MAKEFILE
+  if [ -n "$SERIAL_TEST_LIST" ]; then
+    $0 --stay-in-workdir -j1 $SERIAL_TEST_LIST
+  fi
 
   for curr_test in $ALL_TESTS; do
     collect_results "$curr_test"

@@ -1,0 +1,61 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init {
+  vars:
+      "present_files" slist => { "$(G.testdir)/file1" };
+      "absent_files" slist => { "$(G.testdir)/file2", "$(G.testdir)/file3" };
+      "test_files" slist => { @(present_files), @(absent_files) };
+
+  files:
+      "$(present_files)" create => "true";
+
+      "$(absent_files)" delete => tidy;
+}
+
+bundle agent test {
+  vars:
+      "files" slist => { @(init.test_files) };
+
+  classes:
+      "$(files)_exists_prefixed_class"
+        expression => fileexists("$(files)"),
+        comment =>
+      "The class should be automatically canonified, any indication that the classification happened should probably be verbose or debug level log output.";
+
+      "postfixed_class_exists_$(files)"
+        expression => fileexists("$(files)"),
+        comment =>
+          "The class should be automatically canonified, any indication that the classification happened should probably be verbose or debug level log output.";
+
+  reports:
+    DEBUG::
+      "Found $(files) is present based on prefixed class"
+        ifvarclass => canonify("$(files)_exists_prefixed_class");
+
+      "Found $(files) is present based on postfixed class"
+        ifvarclass => canonify("postfixed_class_exists_$(files)");
+
+}
+
+bundle agent check {
+  vars:
+      "expected_prefixed_classes"
+        slist => maplist("$(this)_exists_prefixed_class",
+                        @(init.present_files));
+
+      "expected_postfixed_classes"
+        slist => maplist("postfixed_class_exists_$(this)",
+                        @(init.present_files));
+
+      "expected_classes"
+        slist => { @(expected_prefixed_classes), @(expected_postfixed_classes) };
+
+  reports:
+      "Found  in $(my_datafile)";
+      "Found $(my_files) exists" ifvarclass => canonify("have_$(my_files)");
+}

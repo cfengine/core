@@ -1,0 +1,26 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent check
+# @brief Check that agent run with policy does not generate undesired error output when automatically canonifying classes
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine6566" };
+
+  vars:
+      "undesired_output"
+        string => ".*error.*prefixed_class.*";
+
+
+  methods:
+      "" usebundle => dcs_passif_output(".*",
+                                        $(undesired_output),
+                                        "$(sys.cf_agent) -K -f $(this.promise_filename).sub -b init,test",
+                                        $(this.promise_filename));
+}

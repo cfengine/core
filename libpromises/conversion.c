@@ -383,7 +383,7 @@ bool BooleanFromString(const char *s)
 
 long IntFromString(const char *s)
 {
-    long a = CF_NOINT;
+    intmax_t a = CF_NOINT;
     char c = 'X';
     char remainder[CF_BUFSIZE];
 
@@ -404,7 +404,7 @@ long IntFromString(const char *s)
 
     remainder[0] = '\0';
 
-    sscanf(s, "%ld%c%s", &a, &c, remainder);
+    sscanf(s, "%jd%c%s", &a, &c, remainder);
 
 // Test whether remainder is space only
 
@@ -442,7 +442,7 @@ long IntFromString(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                Log(LOG_LEVEL_ERR, "Percentage out of range (%ld)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range (%jd)", a);
                 return CF_NOINT;
             }
             else
@@ -460,7 +460,26 @@ long IntFromString(const char *s)
         }
     }
 
-    return a;
+    /* TODO Use strtol() instead of scanf(), it properly checks for overflow
+     * but it is prone to coding errors, so even better bring OpenBSD's
+     * strtonum() for proper conversions. */
+
+    if (a < LONG_MIN)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Number '%s' underflows a long int, truncating to %ld",
+            s, LONG_MIN);
+        return LONG_MIN;
+    }
+    else if (a > LONG_MAX)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Number '%s' overflows a long int, truncating to %ld",
+            s, LONG_MAX);
+        return LONG_MAX;
+    }
+
+    return (long) a;
 }
 
 Interval IntervalFromString(const char *string)

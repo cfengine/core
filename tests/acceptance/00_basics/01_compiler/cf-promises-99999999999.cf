@@ -1,0 +1,62 @@
+#######################################################
+#
+# Related to redmine #6531
+#
+# In short, on 32-bit platforms the maximum number that cf-agent
+# understands is LONG_MAX. However the number "99999999999" (eleven
+# nines) has been historically used in many places, so this test makes
+# sure that it's still being accepted, even though on 32-bit platforms
+# it will be truncated to LONG_MAX.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+# With this body we're making sure cf-promises won't bail out on
+# this. This is exactly the body that cf-promises was rejecting before
+# the fix.
+body classes u_always_forever(theclass)
+{
+    persist_time => 99999999999;
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      # truncation will happen on 32-bit architectures
+      "x" int     => "99999999999";
+      "y" int     => "-99999999999";
+}
+
+bundle agent test
+{
+  classes:
+      "x_ok" or => { strcmp("$(init.x)", "99999999999"),  # 64-bit arch
+                     strcmp("$(init.x)", "2147483647")    # 32-bit arch
+                   }, scope => "namespace";
+      "y_ok" or => { strcmp("$(init.y)", "-99999999999"), # 64-bit arch
+                     strcmp("$(init.y)", "-2147483648")   # 32-bit arch
+                   }, scope => "namespace";
+}
+
+bundle agent check
+{
+  reports:
+
+    DEBUG::
+      "x is $(init.x), should be 99999999999 or LONG_MAX";
+      "y is $(init.y), should be -99999999999 or LONG_MIN";
+    x_ok.y_ok::
+      "$(this.promise_filename) Pass";
+    !x_ok|!y_ok::
+      "$(this.promise_filename) FAIL";
+}

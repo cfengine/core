@@ -1,4 +1,9 @@
 3.6.2
+        Changes:
+        - input range validation for integers has been unified to 999999999
+          The previous input range (10x9) was to large to be represented in 32 bits,
+          causing integer overflow in time-related functions.
+
         Bug fixes:
         - don't regenerate software_packages.csv every time (Redmine #6441)
         - improve verbose message for package_list_command

@@ -215,23 +215,21 @@ int SocketConnect(const char *host, const char *port,
         return -1;
     }
 
-    ap = response;
-    while (ap != NULL && !connected)
+    for (ap = response; !connected && ap != NULL; ap = ap->ai_next)
     {
         /* Convert address to string. */
         getnameinfo(ap->ai_addr, ap->ai_addrlen,
                     txtaddr, txtaddr_size,
                     NULL, 0, NI_NUMERICHOST);
         Log(LOG_LEVEL_VERBOSE,
-            "Connecting to host %s (address %s), port %s",
-            host, txtaddr, port);
+            "Connecting to host %s, port %s as address %s",
+            host, port, txtaddr);
 
         sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
         if (sd == -1)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't open a socket. (socket: %s)",
-                GetErrorStr());
-            ap = ap->ai_next;
+            Log(LOG_LEVEL_ERR, "Couldn't open a socket to '%s' (socket: %s)",
+                txtaddr, GetErrorStr());
         }
         else
         {
@@ -282,29 +280,30 @@ int SocketConnect(const char *host, const char *port,
 
             connected = TryConnect(sd, connect_timeout * 1000,
                                    ap->ai_addr, ap->ai_addrlen);
-            ap = ap->ai_next;
+            if (!connected)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Unable to connect to address %s (%s)",
+                    txtaddr, GetErrorStr());
+                cf_closesocket(sd);
+                sd = -1;
+            }
         }
     }
 
     assert(response != NULL);           /* first getaddrinfo was successful */
     freeaddrinfo(response);
 
-    if (!connected)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Unable to connect to host %s (%s)",
-            host, GetErrorStr());
-
-        if (sd != -1)
-        {
-            cf_closesocket(sd);
-            sd = -1;
-        }
-    }
-    else
+    if (connected)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Connected to host %s address %s port %s",
             host, txtaddr, port);
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Unable to connect to host %s port %s",
+            host, port);
     }
 
     return sd;

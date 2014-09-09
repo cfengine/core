@@ -169,7 +169,7 @@ Coding Style
   parameters are under_scored.
 
   * Caution, do-while loops should have the closing brace at the same
-    line with while, so that it can't be confused with emtpy while statement.
+    line with while, so that it can't be confused with empty while statement.
 
     ```
     do

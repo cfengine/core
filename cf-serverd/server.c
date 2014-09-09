@@ -476,7 +476,11 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
  */
 static void DeleteConn(ServerConnectionState *conn)
 {
-    cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+    int sd = ConnectionInfoSocket(conn->conn_info);
+    if (sd >= 0)
+    {
+        cf_closesocket(sd);
+    }
     ConnectionInfoDestroy(&conn->conn_info);
     free(conn->session_key);
 

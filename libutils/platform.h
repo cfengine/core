@@ -394,6 +394,41 @@ typedef int socklen_t;
 int getloadavg (double loadavg[], int nelem);
 #endif
 
+#if !HAVE_DECL_LE32TOH
+// Assume that the rest of the associated functions are also missing.
+# ifdef WORDS_BIGENDIAN
+#  define le16toh(x) __bswap_16(x)
+#  define be16toh(x) (x)
+#  define htole16(x) __bswap_16(x)
+#  define htobe16(x) (x)
+
+#  define le32toh(x) __bswap_32(x)
+#  define be32toh(x) (x)
+#  define htole32(x) __bswap_32(x)
+#  define htobe32(x) (x)
+
+#  define le64toh(x) __bswap_64(x)
+#  define be64toh(x) (x)
+#  define htole64(x) __bswap_64(x)
+#  define htobe64(x) (x)
+# else
+#  define le16toh(x) (x)
+#  define be16toh(x) __bswap_16(x)
+#  define htole16(x) (x)
+#  define htobe16(x) __bswap_16(x)
+
+#  define le32toh(x) (x)
+#  define be32toh(x) __bswap_32(x)
+#  define htole32(x) (x)
+#  define htobe32(x) __bswap_32(x)
+
+#  define le64toh(x) (x)
+#  define be64toh(x) __bswap_64(x)
+#  define htole64(x) (x)
+#  define htobe64(x) __bswap_64(x)
+# endif
+#endif
+
 #if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 #endif

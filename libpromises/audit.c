@@ -104,9 +104,5 @@ void FatalError(const EvalContext *ctx, char *s, ...)
     }
 
     EndAudit(ctx, 0);
-#ifdef NDEBUG
-    exit(EXIT_FAILURE);
-#else
-    abort();
-#endif
+    exit(EXIT_FAILURE); // calling abort would bypass exit handlers and trigger subtle bugs
 }

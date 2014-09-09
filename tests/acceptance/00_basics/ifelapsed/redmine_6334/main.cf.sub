@@ -1,0 +1,72 @@
+# Test that locking works and that locks are clear upon abort
+# Called twice from main.cf
+
+body agent control
+{
+    abortclasses => { "abort_agent_run" };
+}
+
+bundle agent example
+{
+  methods:
+      "test" usebundle => test, action => now;
+}
+
+bundle agent test
+{
+  vars:
+    first::                                                      
+       "count" string => "first";
+    second::
+       "count" string => "second";
+
+  methods:
+# should print "Called from test" for both runs
+      "Report"
+      usebundle => report_now($(this.bundle)),
+      action => now;
+
+# should print "Called from call_report_now" for both runs
+      "Nested Report"
+      usebundle => call_report_now,
+      action => now;
+
+# should print "Called from only_first" only for the first run
+      "Only first"
+      usebundle => report_now("only_first");
+
+# should never print anything, but abort the execution
+      "Nested Abort"
+      usebundle => abort_now,
+      action => now;
+}
+
+bundle agent call_report_now
+{
+  methods:
+      "Call Report"
+      usebundle => report_now($(this.bundle)),
+      action => now;
+}
+
+bundle agent report_now(caller)
+{
+  reports:
+      "Called from $(caller) ($(test.count))"
+      action => now;
+}
+
+bundle agent abort_now
+{
+  classes:
+      "abort_agent_run" expression => "any";
+
+  reports:
+      "Called from abort_now ($(test.count))"
+      action => now;
+}
+
+body action now
+{
+    ifelapsed => "0";
+}

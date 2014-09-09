@@ -367,12 +367,11 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     // if this is a class promise, check if it is already set, if so, skip
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        if (IsDefinedClass(ctx, pcopy->promiser))
+        if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
         {
-            if (excluded)
-            {
-                *excluded = true;
-            }
+            Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
+                CanonifyName(pcopy->promiser));
+            *excluded = true;
 
             return pcopy;
         }
@@ -390,10 +389,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for if/ifvarclass is not in scope", pp->promiser);
-            if (excluded)
-            {
-                *excluded = true;
-            }
+            *excluded = true;
 
             return pcopy;
         }
@@ -406,10 +402,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         if (unless && IsVarClassDefined(ctx, unless, pcopy))
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for unless is in scope", pp->promiser);
-            if (excluded)
-            {
-                *excluded = true;
-            }
+            *excluded = true;
 
             return pcopy;
         }
@@ -428,10 +421,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
                 if (MissingDependencies(ctx, pcopy))
                 {
-                    if (excluded)
-                    {
-                        *excluded = true;
-                    }
+                    *excluded = true;
 
                     return pcopy;
                 }

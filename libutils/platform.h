@@ -394,10 +394,6 @@ typedef int socklen_t;
 int getloadavg (double loadavg[], int nelem);
 #endif
 
-#if !HAVE_DECL_LE32TOH
-uint32_t le32toh(uint32_t le32uint) __attribute__((const));
-#endif
-
 #if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 #endif

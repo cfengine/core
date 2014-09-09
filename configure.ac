@@ -716,10 +716,6 @@ AC_CHECK_FUNCS(fgetspent lckpwdf ulckpwdf)
 AC_CHECK_DECLS(getloadavg)
 AC_FUNC_GETLOADAVG
 
-AC_C_BIGENDIAN
-AC_CHECK_DECLS(le32toh)
-AC_REPLACE_FUNCS(le32toh)
-
 CF3_PATH_ROOT_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$CHPASSWD" != "x"],
       [AC_DEFINE(HAVE_CHPASSWD, 1, [Define if chpasswd tool is present])]

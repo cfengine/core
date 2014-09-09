@@ -550,7 +550,7 @@ static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char
 {
     Item *split;
     int n;
-    intmax_t max = CF_LOWINIT, min = CF_HIGHINIT;
+    long long max = CF_LOWINIT, min = CF_HIGHINIT;
 
     // Numeric types are registered by range separated by comma str "min,max"
     split = SplitString(range, ',');
@@ -560,7 +560,7 @@ static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char
         ProgrammingError("INTERN: format specifier for int rvalues is not ok for lval %s - got %d items", lval, n);
     }
 
-    sscanf(split->name, "%jd", &min);
+    sscanf(split->name, "%lld", &min);
 
     if (strcmp(split->next->name, "inf") == 0)
     {
@@ -568,7 +568,7 @@ static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char
     }
     else
     {
-        sscanf(split->next->name, "%jd", &max);
+        sscanf(split->next->name, "%lld", &max);
     }
 
     DeleteItemList(split);
@@ -604,7 +604,7 @@ static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const
 {
     Item *split, *ip, *rangep;
     int n;
-    intmax_t max = CF_LOWINIT, min = CF_HIGHINIT;
+    long long max = CF_LOWINIT, min = CF_HIGHINIT;
 
     // Numeric types are registered by range separated by comma str "min,max"
     if (*s == '[' || *s == '(')
@@ -619,7 +619,7 @@ static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const
         ProgrammingError("Format specifier %s for irange rvalues is not ok for lval %s - got %d items", range, lval, n);
     }
 
-    sscanf(split->name, "%jd", &min);
+    sscanf(split->name, "%lld", &min);
 
     if (strcmp(split->next->name, "inf") == 0)
     {
@@ -627,7 +627,7 @@ static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const
     }
     else
     {
-        sscanf(split->next->name, "%jd", &max);
+        sscanf(split->next->name, "%lld", &max);
     }
 
     DeleteItemList(split);

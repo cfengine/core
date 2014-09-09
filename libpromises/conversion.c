@@ -383,7 +383,7 @@ bool BooleanFromString(const char *s)
 
 long IntFromString(const char *s)
 {
-    intmax_t a = CF_NOINT;
+    long long a = CF_NOINT;
     char c = 'X';
     char remainder[CF_BUFSIZE];
 
@@ -404,7 +404,7 @@ long IntFromString(const char *s)
 
     remainder[0] = '\0';
 
-    sscanf(s, "%jd%c%s", &a, &c, remainder);
+    sscanf(s, "%lld%c%s", &a, &c, remainder);
 
 // Test whether remainder is space only
 
@@ -442,7 +442,7 @@ long IntFromString(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                Log(LOG_LEVEL_ERR, "Percentage out of range (%jd)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range (%lld)", a);
                 return CF_NOINT;
             }
             else

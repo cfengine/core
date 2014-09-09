@@ -80,7 +80,7 @@ unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
 
 char ToLower(char ch)
 {
-    if (isupper((int) ch))
+    if (isupper((unsigned char) ch))
     {
         return (ch - 'A' + 'a');
     }
@@ -94,12 +94,12 @@ char ToLower(char ch)
 
 char ToUpper(char ch)
 {
-    if ((isdigit((int) ch)) || (ispunct((int) ch)))
+    if ((isdigit((unsigned char) ch)) || (ispunct((unsigned char) ch)))
     {
         return (ch);
     }
 
-    if (isupper((int) ch))
+    if (isupper((unsigned char) ch))
     {
         return (ch);
     }
@@ -307,7 +307,7 @@ bool StringIsNumeric(const char *s)
 {
     for (; *s; s++)
     {
-        if (!isdigit((int)*s))
+        if (!isdigit((unsigned char)*s))
         {
             return false;
         }
@@ -320,7 +320,7 @@ bool StringIsPrintable(const char *s)
 {
     for (; *s; s++)
     {
-        if (!isprint((int)*s))
+        if (!isprint((unsigned char)*s))
         {
             return false;
         }
@@ -335,7 +335,7 @@ bool EmptyString(const char *s)
 
     for (sp = s; *sp != '\0'; sp++)
     {
-        if (!isspace((int)*sp))
+        if (!isspace((unsigned char)*sp))
         {
             return false;
         }
@@ -771,38 +771,53 @@ char *ScanPastChars(char *scanpast, char *input)
 
 int StripTrailingNewline(char *str, size_t max_length)
 {
-    char *c = str + strlen(str);
-
-    if (c - str > max_length)
+    if (str)
     {
-        return -1;
-    }
+        size_t i = strnlen(str, max_length + 1);
+        if (i > max_length) /* See off-by-one comment below */
+        {
+            return -1;
+        }
 
-    for (; (c >= str) && ((*c == '\0') || (*c == '\n')); --c)
-    {
-        *c = '\0';
+        while (i > 0 && str[i - 1] == '\n')
+        {
+            i--;
+        }
+        assert(str[i] == '\0' || str[i] == '\n');
+        str[i] = '\0';
     }
-
     return 0;
 }
 
+/* Off-by-one quirk in max_length.
+ *
+ * Both StripTrailngNewline() and Chop() have long allowed callers to
+ * pass (effectively) the strlen(str) rather than the size of memory
+ * (which is at least strlen() + 1) in the buffer.  The present
+ * incarnation thus reads max_length as max-strlen(), not as size of
+ * the buffer.  It may be sensible to review all callers and change so
+ * that max_length is the buffer size instead.
+ *
+ * TODO: assess practicality of that change in behaviour.
+ */
+
 int Chop(char *str, size_t max_length)
 {
-    if ((str == NULL) || (strlen(str) == 0))
+    if (str)
     {
-        return 0;
-    }
+        size_t i = strnlen(str, max_length + 1);
+        if (i > max_length) /* See off-by-one comment above */
+        {
+            return -1;
+        }
 
-    if (strlen(str) > max_length)
-    {
-        return -1;
-    }
-
-    for (int i = strlen(str) - 1; (i >= 0) && (isspace((int) str[i])); i--)
-    {
+        while (i > 0 && isspace((unsigned char)str[i-1]))
+        {
+            i--;
+        }
+        assert(str[i] == '\0' || isspace((unsigned char)str[i]));
         str[i] = '\0';
     }
-
     return 0;
 }
 

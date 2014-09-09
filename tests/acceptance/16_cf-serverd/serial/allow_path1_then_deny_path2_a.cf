@@ -7,7 +7,6 @@ body common control
 
 bundle agent test
 {
-        
   methods:
       "any" usebundle => dcs_fini("$(G.testdir)/destination_file1");
       "any" usebundle => dcs_fini("$(G.testdir)/destination_file2");
@@ -16,15 +15,11 @@ bundle agent test
       "any" usebundle => generate_key;
       "any" usebundle => start_server("localhost_deny_one_directory");
       "any" usebundle => start_server("localhost_deny_one_directory_with_regex");
-    !server_failed::
+
       "any" usebundle => run_test("$(this.promise_filename).sub");
 
       "any" usebundle => stop_server("localhost_deny_one_directory");
       "any" usebundle => stop_server("localhost_deny_one_directory_with_regex");
-
-  reports:
-    server_failed::
-      "FAIL";
 }
 
 # For the access rules in cf-serverd to work recursively, the paths must exist and be directories

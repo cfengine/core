@@ -1136,6 +1136,10 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             args = NULL;
             break;
         }
+        if (!strcmp(name, CF_NULL_VALUE))
+        {
+            continue;
+        }
 
         EvalContextSetBundleArgs(ctx, args);
 

@@ -1,0 +1,34 @@
+# Verify that normal ordering is observed within common bundles
+# See Redmine 6568
+
+body common control {
+    bundlesequence => { "test" };
+}
+
+bundle common main {
+  vars:
+      "prefix" string => "foo";
+
+  classes:
+      "prefix_$(prefix)" expression => "any";
+
+      "is_not_prefix_foo" expression => "!prefix_foo";
+      "is_prefix_foo" expression => "prefix_foo";
+
+      "PASS" and => { "is_prefix_foo", "!is_not_prefix_foo" };
+}
+
+bundle agent test
+{
+  reports:
+    DEBUG.is_not_prefix_foo::
+       "!prefix_foo";
+    DEBUG.is_prefix_foo::
+       "prefix_foo";
+
+    PASS::
+      "$(this.promise_filename) Pass";
+    !PASS::
+      "$(this.promise_filename) FAIL";
+}
+

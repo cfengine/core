@@ -152,8 +152,8 @@ check_PROGRAMS += \
 endif
 endif
 
-check_SCRIPTS = \
-	dynamic_dependency_test.sh
+check_SCRIPTS = dynamic_dependency_test.sh
+EXTRA_DIST   += dynamic_dependency_test.sh
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 

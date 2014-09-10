@@ -1,3 +1,10 @@
+# automake does not support "maude_LIBS" variables. We can only alter
+# the generic LIBS one. In case the functions are mocked in the test
+# implementation, then we are pretty sure that they will be overriden by
+# our local implementation. So we include *everything*...
+LIBS = $(CORE_LIBS)
+AM_LDFLAGS = $(CORE_LDFLAGS)
+
 # Those tests use stub functions interposition which does not work (yet)
 # under OS X. Another way of stubbing functions from libpromises is needed.
 if !XNU
@@ -7,13 +14,6 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I../../libutils \
 	-I../../libcfnet \
 	-I../../libpromises
-
-# automake does not support "maude_LIBS" variables. We can only alter
-# the generic LIBS one. In case the functions are mocked in the test
-# implementation, then we are pretty sure that they will be overriden by
-# our local implementation. So we include *everything*...
-LIBS = $(CORE_LIBS)
-AM_LDFLAGS = $(CORE_LDFLAGS)
 
 EXTRA_DIST = \
 	run_db_load.sh \

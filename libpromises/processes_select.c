@@ -970,8 +970,8 @@ static const char *GetProcessOptions(void)
 # ifdef __linux__
     if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
     {
-        // No threads on 2.4 kernels
-        return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
+        // No threads on 2.4 kernels, so omit nlwp
+        return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss:9,stime,etime,time,args";
     }
 # endif
 

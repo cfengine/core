@@ -48,7 +48,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a);
 static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *db, char *table, Rlist *columns, Attributes a, const Promise *pp, PromiseResult *result);
 Rlist *QueryTableColumns(CfdbConn *cfdb, char *db_name, char *table_name, Attributes a, const Promise *pp);
 static void CreateQueryForSQLServers(DatabaseType type, char *query);
-static void CreateTableColumns(EvalContext *ctx, CfdbConn *cfdb, char *table, Rlist *columns, PromiseResult *result, Attributes a, const Promise *pp);
+static void CreateTableColumns(EvalContext *ctx, CfdbConn *cfdb, const char *table, const Rlist *columns, PromiseResult *result, Attributes a, const Promise *pp);
 static int TableContainerExists(CfdbConn *cfdb, char *name);
 static Rlist *GetCurrentSQLTables(CfdbConn *cfdb);
 static int ValidateRegistryPromiser(char *s, const Promise *pp);
@@ -609,13 +609,16 @@ static int VerifyRowContent(EvalContext *ctx, CfdbConn *cfdb, ARG_UNUSED char *d
                 }
             }
 
-            char *check_query = xmalloc(strlen("insert into values where()()")+target_size+value_size+where_size+strlen(table_name)+10);
-            char *insert_query = xmalloc(strlen("insert into values where()()")+target_size+value_size+where_size+strlen(table_name)+10);
-            char *update_query = xmalloc(strlen("insert into values where()()")+target_size+value_size+where_size+strlen(table_name)+10);
+            char *check_query = NULL;
+            char *insert_query = NULL;
+            char *update_query = NULL;
 
-            sprintf(check_query, "select %s from %s where %s", inserts, table_name, wheres);
-            sprintf(insert_query, "insert into %s (%s,%s) values(%s,%s)", table_name, inserts, where_inserts, values, where_values);
-            sprintf(update_query, "update %s set %s where %s", table_name, updates, wheres);
+            xasprintf(&check_query, "select %s from %s where %s",
+                      inserts, table_name, wheres);
+            xasprintf(&insert_query, "insert into %s (%s,%s) values(%s,%s)",
+                      table_name, inserts, where_inserts, values, where_values);
+            xasprintf(&update_query, "update %s set %s where %s",
+                      table_name, updates, wheres);
 
             CfNewQueryDB(cfdb, check_query);
 
@@ -842,39 +845,50 @@ static int TableContainerExists(CfdbConn *cfdb, char *name)
 
 /*****************************************************************************/
 
-static void CreateTableColumns(EvalContext *ctx, CfdbConn *cfdb, char *table, Rlist *columns, PromiseResult *result, Attributes a, const Promise *pp)
+static void CreateTableColumns(EvalContext *ctx, CfdbConn *cfdb,
+                               const char *table, const Rlist *columns,
+                               PromiseResult *result, Attributes a,
+                               const Promise *pp)
 {
-    int size = 0;
-
-    if ((!DONTDO) && ((a.transaction.action) != cfa_warn))
+    if (!DONTDO && a.transaction.action != cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Database/table '%s' doesn't seem to exist, creating", table);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+             "Database/table '%s' doesn't seem to exist, creating", table);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
-        for (Rlist *rp = columns; rp != NULL; rp=rp->next)
+        const char fmt[] = "create table %s(";
+        /* We could subtract 2 from size below, as the %s gets replaced.
+         * The sizeof(fmt) includes the final '\0' we'll be needing. */
+        int size = sizeof(fmt) + strlen(table);
+        for (const Rlist *rp = columns; rp != NULL; rp=rp->next)
         {
-            size += strlen(rp->val.item) + 3;
+            size += strlen(rp->val.item) + 1; /* + 1 for ',' or ')' */
         }
 
-        char *query = xmalloc(size+strlen("create table")+strlen(table)+5);
+        char *query = xmalloc(size);
+        int used = snprintf(query, size, fmt, table);
+        assert(used > 0);
 
-        sprintf(query, "create table %s(", table);
-
-        for (Rlist *rp = columns; rp != NULL; rp=rp->next)
+        for (const Rlist *rp = columns; rp != NULL; rp = rp->next)
         {
-            char item[CF_MAXVARSIZE];
-            snprintf(item, CF_MAXVARSIZE, "%s,", (char *)rp->val.item);
-            strcat(query, item);
+            assert(used < size && used == strnlen(query, size));
+            int got = snprintf(query + used, size - used, "%s,",
+                               (const char *) rp->val.item);
+            assert(got > 0);
+            used += got;
         }
-
-        query[strlen(query)-1] = ')';
+        assert(used < size && used == strnlen(query, size));
+        /* Over-write the final ',' */
+        query[used - 1] = ')';
 
         CfVoidQueryDB(cfdb, query);
         free(query);
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Database.table '%s' doesn't seem to exist, but only a warning is promised", table);
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+             "Database.table '%s' doesn't seem to exist, but only a warning is promised",
+             table);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
     }
 }

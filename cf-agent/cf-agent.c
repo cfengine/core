@@ -1453,24 +1453,24 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         result = FindAndVerifyStoragePromises(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("packages", pp->parent_promise_type->name) == 0)
     {
         result = VerifyPackagesPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("users", pp->parent_promise_type->name) == 0)
     {
         result = VerifyUsersPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
 
     else if (strcmp("files", pp->parent_promise_type->name) == 0)
@@ -1478,48 +1478,48 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         result = ParallelFindAndVerifyFilesPromises(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("commands", pp->parent_promise_type->name) == 0)
     {
         result = VerifyExecPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("databases", pp->parent_promise_type->name) == 0)
     {
         result = VerifyDatabasePromises(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("methods", pp->parent_promise_type->name) == 0)
     {
         result = VerifyMethodsPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
         result = VerifyServicesPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
         result = VerifyEnvironmentsPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
-        EndMeasurePromise(start, pp);
-    }
+            EndMeasurePromise(start, pp);
+        }
     }
     else if (strcmp("reports", pp->parent_promise_type->name) == 0)
     {
@@ -1807,7 +1807,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
         Log(LOG_LEVEL_VERBOSE, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
         Log(LOG_LEVEL_VERBOSE, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
     
-    bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
+        bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
         Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
           bundle->name, bundle_compliance * 100.0);

@@ -649,7 +649,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         {
             Item *ip;
 
-            if (strncmp(sp, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)       /* End transmission */
+            if (strcmp(sp, CFD_TERMINATOR) == 0)        /* End transmission */
             {
                 return ret;
             }

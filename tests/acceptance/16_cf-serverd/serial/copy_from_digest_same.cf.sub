@@ -22,12 +22,12 @@ bundle agent init
 bundle agent test
 {
   files:
-      # "$(G.testdir)/dest_file_classic"
-      #   copy_from => copy_src_file("classic"),
-      #   classes => if_repaired("repaired_classic");
-      "$(G.testdir)/dest_file_latest"
+      "$(G.testdir)/destfile_classic"
+        copy_from => copy_src_file("classic"),
+        classes => if_repaired("copied_classic");
+      "$(G.testdir)/destfile_latest"
         copy_from => copy_src_file("latest"),
-        classes => if_repaired("repaired_latest");
+        classes => if_repaired("copied_latest");
 }
 
 #########################################################
@@ -53,9 +53,9 @@ bundle agent check
 
   reports:
 
-    !repaired_classic.!repaired_latest::
+    !copied_classic.!copied_latest::
       "$(fn[1]) Pass";
-    repaired_classic|repaired_latest::
+    copied_classic|copied_latest::
       "$(fn[1]) FAIL";
 
 }

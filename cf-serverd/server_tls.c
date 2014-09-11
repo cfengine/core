@@ -239,8 +239,8 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
  * @retval true if protocol version was successfully negotiated and IDENTITY
  *         command was parsed correctly. Identity fields (only #username for
  *         now) have the respective string values, or they are empty if field
- *         was not on IDENTITY line.  #conn_info->type has been updated with
- *         the negotiated protocol version.
+ *         was not on IDENTITY line.  #conn_info->protocol has been updated
+ *         with the negotiated protocol version.
  * @retval false in case of error.
  */
 static bool ServerIdentificationDialog(ConnectionInfo *conn_info,
@@ -357,7 +357,7 @@ static bool ServerIdentificationDialog(ConnectionInfo *conn_info,
     }
 
     /* Version client and server agreed on. */
-    conn_info->type = version_received;
+    conn_info->protocol = version_received;
 
     return true;
 }
@@ -403,7 +403,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 {
     int ret;
 
-    if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
+    if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         assert(ConnectionInfoSSL(conn->conn_info) == NULL);
         SSL *ssl = SSL_new(SSLSERVERCONTEXT);

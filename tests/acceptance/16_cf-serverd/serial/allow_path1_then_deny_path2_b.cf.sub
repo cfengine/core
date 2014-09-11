@@ -17,24 +17,35 @@ bundle agent init
 
 #######################################################
 
-body copy_from copy_from_port(port)
+body copy_from copy_from_port(port, protocol_version)
 
 {
+      portnumber       => "$(port)";
+      protocol_version => "$(protocol_version)";
+
+      # testroot dir is admitted on the server, while G.testdir is denied
       source      => "$(G.testdir)/source_file";
       servers     => { "127.0.0.1" };
-      portnumber => "$(port)";
-      trustkey => "true";
+      trustkey    => "true";
 }
 
 bundle agent test
 {
   files:
-      "$(G.testroot)/destination_file1"
-      copy_from => copy_from_port("9881"),        # localhost_deny_one_directory
-      classes => if_repaired("repaired1");
-      "$(G.testroot)/destination_file2"
-      copy_from => copy_from_port("9882"),        # localhost_deny_one_directory_with_regex
-      classes => if_repaired("repaired2");
+      # localhost_deny_one_directory
+      "$(G.testdir)/server1_classic"
+        copy_from => copy_from_port("9881", "classic"),
+        classes => if_repaired("copied1_classic");
+      "$(G.testdir)/server1_latest"
+        copy_from => copy_from_port("9881", "latest"),
+        classes => if_repaired("copied1_latest");
+      # localhost_deny_one_directory_with_regex
+      "$(G.testdir)/server2_classic"
+        copy_from => copy_from_port("9882", "classic"),
+        classes => if_repaired("copied2_classic");
+      "$(G.testdir)/server2_latest"
+        copy_from => copy_from_port("9882", "latest"),
+        classes => if_repaired("copied2_latest");
 }
 
 #######################################################
@@ -46,9 +57,10 @@ bundle agent check
       regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
   reports:
-      # Both copies must fail
-    !repaired1.!repaired2::
+
+    # All copies must fail
+    !copied1_classic.!copied1_latest.!copied2_classic.!copied2_latest::
       "$(fn[1]) Pass";
-    repaired1|repaired2::
+    copied1_classic|copied1_latest|copied2_classic|copied2_latest::
       "$(fn[1]) FAIL";
 }

@@ -81,6 +81,22 @@ typedef struct
     bool            trust_server     : 1;
 } ConnectionFlags;
 
+static inline bool ConnectionFlagsEqual(const ConnectionFlags *f1,
+                                        const ConnectionFlags *f2)
+{
+    if (f1->protocol_version == f2->protocol_version &&
+        f1->cache_connection == f2->cache_connection &&
+        f1->force_ipv4 == f2->force_ipv4 &&
+        f1->trust_server == f2->trust_server)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 
 #include "connection_info.h"                       /* needs ProtocolVersion */
 
@@ -142,9 +158,13 @@ typedef struct
     unsigned char *session_key;
     char encryption_type;
     short error;
-    ConnectionFlags flags;        /* mostly copy_from connection attributes */
-    char *this_server;
     Stat *cache;                        /* cache for stat() (SYNCH command) */
+
+    /* The following consistutes the ID of a server host, mostly taken from
+     * the copy_from connection attributes. */
+    ConnectionFlags flags;
+    char *this_server;
+    char *this_port;
 } AgentConnection;
 
 

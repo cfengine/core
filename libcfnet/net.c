@@ -67,18 +67,18 @@ int SendTransaction(const ConnectionInfo *conn_info,
     LogRaw(LOG_LEVEL_DEBUG, "SendTransaction data: ",
            work + CF_INBAND_OFFSET, len);
 
-    switch(ConnectionInfoProtocolVersion(conn_info))
+    switch(conn_info->protocol)
     {
     case CF_PROTOCOL_CLASSIC:
-        ret = SendSocketStream(ConnectionInfoSocket(conn_info), work,
+        ret = SendSocketStream(conn_info->sd, work,
                                len + CF_INBAND_OFFSET);
         break;
     case CF_PROTOCOL_TLS:
-        ret = TLSSend(ConnectionInfoSSL(conn_info), work, len + CF_INBAND_OFFSET);
+        ret = TLSSend(conn_info->ssl, work, len + CF_INBAND_OFFSET);
         break;
     default:
         UnexpectedError("SendTransaction: ProtocolVersion %d!",
-                        ConnectionInfoProtocolVersion(conn_info));
+                        conn_info->protocol);
         ret = -1;
     }
 
@@ -102,17 +102,17 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     int ret;
 
     /* Get control channel. */
-    switch(ConnectionInfoProtocolVersion(conn_info))
+    switch(conn_info->protocol)
     {
     case CF_PROTOCOL_CLASSIC:
-        ret = RecvSocketStream(ConnectionInfoSocket(conn_info), proto, CF_INBAND_OFFSET);
+        ret = RecvSocketStream(conn_info->sd, proto, CF_INBAND_OFFSET);
         break;
     case CF_PROTOCOL_TLS:
-        ret = TLSRecv(ConnectionInfoSSL(conn_info), proto, CF_INBAND_OFFSET);
+        ret = TLSRecv(conn_info->ssl, proto, CF_INBAND_OFFSET);
         break;
     default:
         UnexpectedError("ReceiveTransaction: ProtocolVersion %d!",
-                        ConnectionInfoProtocolVersion(conn_info));
+                        conn_info->protocol);
         ret = -1;
     }
     if (ret == -1 || ret == 0)
@@ -158,17 +158,17 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     }
 
     /* Get data. */
-    switch(ConnectionInfoProtocolVersion(conn_info))
+    switch(conn_info->protocol)
     {
     case CF_PROTOCOL_CLASSIC:
-        ret = RecvSocketStream(ConnectionInfoSocket(conn_info), buffer, len);
+        ret = RecvSocketStream(conn_info->sd, buffer, len);
         break;
     case CF_PROTOCOL_TLS:
-        ret = TLSRecv(ConnectionInfoSSL(conn_info), buffer, len);
+        ret = TLSRecv(conn_info->ssl, buffer, len);
         break;
     default:
         UnexpectedError("ReceiveTransaction: ProtocolVersion %d!",
-                        ConnectionInfoProtocolVersion(conn_info));
+                        conn_info->protocol);
         ret = -1;
     }
 

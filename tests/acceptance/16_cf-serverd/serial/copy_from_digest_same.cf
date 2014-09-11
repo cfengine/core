@@ -9,13 +9,17 @@ body common control
 bundle agent test
 {
   methods:
+      # source files
       "any" usebundle => file_make("$(G.testdir)/source_file",
                                    "Source and Destination are identical.");
-      "any" usebundle => file_make("$(G.testdir)/dest_file_latest",
+      # destination files
+      "any" usebundle => file_make("$(G.testdir)/destfile_latest",
                                    "Source and Destination are identical.");
-      "any" usebundle => file_make("$(G.testdir)/dest_file_classic",
+      "any" usebundle => file_make("$(G.testdir)/destfile_classic",
                                    "Source and Destination are identical.");
+
       "any" usebundle => generate_key;
+
       "any" usebundle => start_server("localhost_open");
       "any" usebundle => run_test("$(this.promise_filename).sub");
       "any" usebundle => stop_server("localhost_open");

@@ -16,20 +16,27 @@ bundle agent init
 
 #######################################################
 
-body copy_from copy_from_port(port)
+body copy_from copy_from_port(port, protocol_version)
 
 {
+      portnumber       => "$(port)";
+      protocol_version => "$(protocol_version)";
+
+      # testroot dir is admitted on the server, while G.testdir is denied
       source      => "$(G.testroot)/source_file";
       servers     => { "127.0.0.1" };
-      portnumber => "$(port)";
-      trustkey => "true";
+      trustkey    => "true";
 }
 
 bundle agent test
 {
   files:
-      "$(G.testroot)/destination_file1" copy_from => copy_from_port("9881");      # localhost_deny_one_directory
-      "$(G.testroot)/destination_file2" copy_from => copy_from_port("9882");      # localhost_deny_one_directory_with_regex
+      # localhost_deny_one_directory
+      "$(G.testdir)/server1_classic" copy_from => copy_from_port("9881", "classic");
+      "$(G.testdir)/server1_latest"  copy_from => copy_from_port("9881", "latest");
+      # localhost_deny_one_directory_with_regex
+      "$(G.testdir)/server2_classic" copy_from => copy_from_port("9882", "classic");
+      "$(G.testdir)/server2_latest"  copy_from => copy_from_port("9882", "latest");
 }
 
 #######################################################
@@ -40,6 +47,24 @@ bundle agent check
       "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testroot)/source_file","$(G.testroot)/destination_file1","$(fn[1])");
-      "any" usebundle => dcs_check_diff("$(G.testroot)/source_file","$(G.testroot)/destination_file2","$(fn[1])");
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testroot)/source_file", "$(G.testdir)/server1_classic",
+                             "no", "same_classic1", "differ_classic1");
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testroot)/source_file", "$(G.testdir)/server1_latest",
+                             "no", "same_latest1", "differ_latest1");
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testroot)/source_file", "$(G.testdir)/server2_classic",
+                             "no", "same_classic2", "differ_classic2");
+      "any" usebundle => dcs_if_diff_expected(
+                             "$(G.testroot)/source_file", "$(G.testdir)/server2_latest",
+                             "no", "same_latest2", "differ_latest2");
+
+  reports:
+
+    same_classic1.same_latest1.same_classic2.same_latest2::
+      "$(fn[1]) Pass";
+    !same_classic1|!same_latest1|!same_classic2|!same_latest2::
+      "$(fn[1]) FAIL";
+
 }

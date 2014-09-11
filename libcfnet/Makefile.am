@@ -15,4 +15,5 @@ libcfnet_la_SOURCES = \
 	tls_client.c tls_client.h \
 	tls_generic.c tls_generic.h \
 	connection_info.c connection_info.h \
+	conn_cache.c conn_cache.h \
 	key.c key.h

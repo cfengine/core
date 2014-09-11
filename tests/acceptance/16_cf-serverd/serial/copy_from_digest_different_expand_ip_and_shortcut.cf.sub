@@ -33,7 +33,10 @@ bundle agent test
 
 body copy_from copy_src_file
 {
+      # server-side shortcut expansion to "$(G.testdir)/$(connection.ip).txt"
       source      => "expand_ip_source";
+
+      # Special variable expansion only works with "latest" protocol.
 
       protocol_version => "latest";
       servers     => { "127.0.0.1" };
@@ -51,6 +54,14 @@ bundle agent check
       "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testdir)/127.0.0.1.txt",
-                                        "$(G.testdir)/destination_file","$(fn[1])");
+      "any" usebundle => dcs_if_diff_expected("$(G.testdir)/127.0.0.1.txt",
+                                              "$(G.testdir)/destination_file",
+                                              "no", "same_file", "differ_file");
+  reports:
+
+    same_file::
+      "$(fn[1]) Pass";
+    !same_file::
+      "$(fn[1]) FAIL";
+
 }

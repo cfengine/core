@@ -52,7 +52,7 @@ static int SplitProcLine(const char *proc, char **names, int *start, int *end, c
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
-static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
+static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
 
 /***************************************************************************/
@@ -917,9 +917,9 @@ bool IsProcessNameRunning(char *procNameRegex)
 }
 
 
-static void GetProcessColumnNames(char *proc, char **names, int *start, int *end)
+static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end)
 {
-    char *sp, title[16];
+    char title[16];
     int col, offset = 0;
 
     for (col = 0; col < CF_PROCCOLS; col++)
@@ -930,7 +930,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
 
     col = 0;
 
-    for (sp = proc; *sp != '\0'; sp++)
+    for (const char *sp = proc; *sp != '\0'; sp++)
     {
         offset = sp - proc;
 

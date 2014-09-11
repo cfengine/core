@@ -1245,25 +1245,30 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
 
 /* Pack names for transmission */
 
-    memset(sendbuffer, 0, CF_BUFSIZE);
-
     offset = 0;
-
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
+        /* Always leave MAXLINKSIZE bytes for CFD_TERMINATOR. Why??? */
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
+            /* Double '\0' indicates end of packet. */
+            sendbuffer[offset] = '\0';
             SendTransaction(conn->conn_info, sendbuffer, offset + 1, CF_MORE);
-            offset = 0;
-            memset(sendbuffer, 0, CF_BUFSIZE);
+
+            offset = 0;                                       /* new packet */
         }
 
+        /* TODO fix copying names greater than 256. */
         strlcpy(sendbuffer + offset, dirp->d_name, CF_MAXLINKSIZE);
-        offset += strlen(dirp->d_name) + 1;     /* + zero byte separator */
+        offset += strlen(dirp->d_name) + 1;                  /* +1 for '\0' */
     }
 
     strcpy(sendbuffer + offset, CFD_TERMINATOR);
-    SendTransaction(conn->conn_info, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), CF_DONE);
+    offset += strlen(CFD_TERMINATOR) + 1;                    /* +1 for '\0' */
+    /* Double '\0' indicates end of packet. */
+    sendbuffer[offset] = '\0';
+    SendTransaction(conn->conn_info, sendbuffer, offset + 1, CF_DONE);
+
     DirClose(dirh);
     return 0;
 }

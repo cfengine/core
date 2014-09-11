@@ -611,7 +611,6 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     char in[CF_BUFSIZE];
     char out[CF_BUFSIZE];
     int cipherlen = 0, tosend;
-    char *sp;
 
     if (strlen(dirname) > CF_BUFSIZE - 20)
     {
@@ -651,12 +650,22 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     Item *start = NULL, *end = NULL;                  /* NULL == empty list */
     while (true)
     {
+        /* TODO check the CF_MORE flag, no need for CFD_TERMINATOR. */
         int nbytes = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
 
         /* If recv error or socket closed before receiving CFD_TERMINATOR. */
         if (nbytes == -1 || nbytes == 0)
         {
             /* TODO mark connection in the cache as closed. */
+            goto err;
+        }
+
+        if (recvbuffer[0] == '\0')
+        {
+            Log(LOG_LEVEL_ERR,
+                "Empty%s server packet when listing directory '%s'!",
+                (start == NULL) ? " first" : "",
+                dirname);
             goto err;
         }
 
@@ -679,10 +688,10 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
             goto err;
         }
 
-        for (sp = recvbuffer; *sp != '\0'; sp++)
+        /* Double '\0' means end of packet. */
+        for (char *sp = recvbuffer; *sp != '\0'; sp += strlen(sp) + 1)
         {
-
-            if (strcmp(sp, CFD_TERMINATOR) == 0)        /* End transmission */
+            if (strcmp(sp, CFD_TERMINATOR) == 0)      /* end of all packets */
             {
                 return start;
             }
@@ -699,11 +708,6 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
             {
                 end->next = ip;
                 end = ip;
-            }
-
-            while (*sp != '\0')
-            {
-                sp++;
             }
         }
     }

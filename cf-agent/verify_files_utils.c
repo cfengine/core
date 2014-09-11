@@ -62,6 +62,7 @@
 #include <audit.h>
 #include <retcode.h>
 #include <cf-agent-enterprise-stubs.h>
+#include <known_dirs.h>
 
 #include <cf-windows-functions.h>
 
@@ -69,7 +70,7 @@
 
 static const Rlist *AUTO_DEFINE_LIST = NULL; /* GLOBAL_P */
 
-Item *VSETUIDLIST = NULL; /* GLOBAL_X */
+static Item *VSETXIDLIST = NULL;
 
 const Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
 static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
@@ -99,6 +100,8 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
                               const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 
 #ifndef __MINGW32__
+static void LoadSetxid(void);
+static void SaveSetxid(bool modified);
 static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm, const Promise *pp, Attributes attr);
 #endif
 #ifdef __APPLE__
@@ -3058,11 +3061,60 @@ static void FileAutoDefine(EvalContext *ctx, char *destfile)
 }
 
 #ifndef __MINGW32__
+static void LoadSetxid(void)
+{
+    assert(!VSETXIDLIST);
+
+    char filename[CF_BUFSIZE];
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+    MapName(filename);
+
+    VSETXIDLIST = RawLoadItemList(filename);
+}
+
+static void SaveSetxid(bool modified)
+{
+    if (!VSETXIDLIST)
+    {
+        return;
+    }
+
+    if (modified)
+    {
+        char filename[CF_BUFSIZE];
+        snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+        MapName(filename);
+
+        PurgeItemList(&VSETXIDLIST, "SETUID/SETGID");
+
+        Item *current = RawLoadItemList(filename);
+        if (!ListsCompare(VSETXIDLIST, current))
+        {
+            RawSaveItemList(VSETXIDLIST, filename, NewLineMode_Unix);
+        }
+    }
+
+    DeleteItemList(VSETXIDLIST);
+    VSETXIDLIST = NULL;
+}
+
+static bool IsInSetxidList(const char *file)
+{
+    if (!VSETXIDLIST)
+    {
+       LoadSetxid();
+    }
+
+    return IsItemIn(VSETXIDLIST, file);
+}
+
 static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm,
                                      const Promise *pp, Attributes attr)
 {
     int amroot = true;
     PromiseResult result = PROMISE_RESULT_NOOP;
+    bool setxid_modified = false;
+
 
     if (!IsPrivileged())
     {
@@ -3073,7 +3125,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
     {
         if (newperm & S_ISUID)
         {
-            if (!IsItemIn(VSETUIDLIST, file))
+            if (!IsInSetxidList(file))
             {
                 if (amroot)
                 {
@@ -3081,7 +3133,8 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
 
-                PrependItem(&VSETUIDLIST, file, NULL);
+                PrependItem(&VSETXIDLIST, file, NULL);
+                setxid_modified = true;
             }
         }
         else
@@ -3110,22 +3163,20 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
     {
         if (newperm & S_ISGID)
         {
-            if (!IsItemIn(VSETUIDLIST, file))
+            if (S_ISDIR(dstat->st_mode))
             {
-                if (S_ISDIR(dstat->st_mode))
+                /* setgid directory */
+            }
+            else if (!IsInSetxidList(file))
+            {
+                if (amroot)
                 {
-                    /* setgid directory */
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
-                else
-                {
-                    if (amroot)
-                    {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
-                        result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-                    }
 
-                    PrependItem(&VSETUIDLIST, file, NULL);
-                }
+                PrependItem(&VSETXIDLIST, file, NULL);
+                setxid_modified = true;
             }
         }
         else
@@ -3149,6 +3200,8 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
             }
         }
     }
+
+    SaveSetxid(setxid_modified);
 
     return result;
 }

@@ -48,7 +48,7 @@
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
-static int SplitProcLine(const char *proc, char **names, int *start, int *end, char **line);
+static int SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
@@ -57,7 +57,7 @@ static int ExtractPid(char *psentry, char **names, int *end);
 
 /***************************************************************************/
 
-static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
+static int SelectProcess(const char *procentry, time_t pstime, char **names, int *start, int *end, ProcessSelect a)
 {
     int result = true, i;
     char *column[CF_PROCCOLS];
@@ -65,7 +65,7 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, Pr
 
     StringSet *process_select_attributes = StringSetNew();
 
-    if (!SplitProcLine(procentry, names, start, end, column))
+    if (!SplitProcLine(procentry, pstime, names, start, end, column))
     {
         return false;
     }
@@ -201,6 +201,9 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
     pcre *rx = CompileRegex(process_name);
     if (rx)
     {
+        /* TODO: use actual time of ps-run, as time(NULL) may be later. */
+        time_t pstime = time(NULL);
+
         for (Item *ip = processes->next; ip != NULL; ip = ip->next)
         {
             int s, e;
@@ -212,7 +215,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
                     continue;
                 }
 
-                if (attrselect && !SelectProcess(ip->name, names, start, end, a))
+                if (attrselect && !SelectProcess(ip->name, pstime, names, start, end, a))
                 {
                     continue;
                 }
@@ -494,8 +497,9 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
 
 /*******************************************************************/
 /* line must be char *line[CF_PROCCOLS] in fact. */
+/* pstime should be the time at which ps was run. */
 
-static int SplitProcLine(const char *proc,
+static int SplitProcLine(const char *proc, time_t pstime,
                          char **names, int *start, int *end,
                          char **line)
 {
@@ -828,8 +832,7 @@ static int SplitProcLine(const char *proc,
             /* Trust the reported value if it matches hh:mm[:ss], though: */
             if (sscanf(line[j], "%d:%d:%d", ns, ns + 1, ns + 2) < 2)
             {
-                /* TODO: use time of ps-run, not time(NULL), which may be later. */
-                time_t value = time(NULL) - (time_t) elapsed;
+                time_t value = pstime - (time_t) elapsed;
 
                 Log(LOG_LEVEL_DEBUG,
                     "SplitProcLine: Replacing parsed start time %s with %s",
@@ -879,6 +882,8 @@ bool IsProcessNameRunning(char *procNameRegex)
         Log(LOG_LEVEL_ERR, "IsProcessNameRunning: PROCESSTABLE is empty");
         return false;
     }
+    /* TODO: use actual time of ps-run, not time(NULL), which may be later. */
+    time_t pstime = time(NULL);
 
     GetProcessColumnNames(PROCESSTABLE->name, colHeaders, start, end);
 
@@ -891,7 +896,7 @@ bool IsProcessNameRunning(char *procNameRegex)
             continue;
         }
 
-        if (!SplitProcLine(ip->name, colHeaders, start, end, lineSplit))
+        if (!SplitProcLine(ip->name, pstime, colHeaders, start, end, lineSplit))
         {
             Log(LOG_LEVEL_ERR, "IsProcessNameRunning: Could not split process line '%s'", ip->name);
             continue;

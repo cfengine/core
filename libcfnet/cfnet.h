@@ -144,8 +144,8 @@ typedef struct
     short error;
     Stat *cache;                        /* cache for stat() (SYNCH command) */
 
-    /* The following consist the ID of a server host, mostly taken from
-     * copy_from connection attributes. */
+    /* The following consistutes the ID of a server host, mostly taken from
+     * the copy_from connection attributes. */
     ConnectionFlags flags;
     char *this_server;
     char *this_port;

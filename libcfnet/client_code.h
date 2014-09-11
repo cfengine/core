@@ -31,6 +31,7 @@
 
 #include <communication.h>
 
+
 bool cfnet_init(void);
 void cfnet_shut(void);
 void DetermineCfenginePort(void);
@@ -41,20 +42,14 @@ AgentConnection *ServerConnection(const char *server, const char *port,
                                   unsigned int connect_timeout,
                                   ConnectionFlags flags, int *err);
 void DisconnectServer(AgentConnection *conn);
-int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, bool encrypt, AgentConnection *conn);
+
+const Stat *StatCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name);
+int cf_remote_stat(const char *file, struct stat *buf, const char *stattype,
+                   bool encrypt, AgentConnection *conn);
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
-int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn);
-
+int CopyRegularFileNet(const char *source, const char *dest, off_t size,
+                       bool encrypt, AgentConnection *conn);
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
-
-const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name);
-
-/* Mark connection as free */
-AgentConnection *GetIdleConnectionToServer(const char *server);
-void MarkServerOffline(const char *server);
-bool ServerOffline(const char *server);
-void CacheServerConnection(AgentConnection *conn, const char *server);
-void ServerNotBusy(AgentConnection *conn);
 
 int TLSConnectCallCollect(ConnectionInfo *conn_info, const char *username);
 

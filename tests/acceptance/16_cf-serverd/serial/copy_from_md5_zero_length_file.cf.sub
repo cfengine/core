@@ -20,15 +20,20 @@ bundle agent init
 bundle agent test
 {
   files:
-      "$(G.testdir)/destination_file"
-      copy_from => copy_src_file,
-      classes => if_repaired("copy_ok");
+      "$(G.testdir)/destfile_classic"
+          copy_from => copy_src_file("classic"),
+          classes => if_repaired("copied_classic");
+      "$(G.testdir)/destfile_latest"
+          copy_from => copy_src_file("latest"),
+          classes => if_repaired("copied_latest");
 }
 
 #########################################################
 
-body copy_from copy_src_file
+body copy_from copy_src_file(protocol_version)
 {
+      protocol_version => "$(protocol_version)";
+
       source      => "$(G.testdir)/source_file";
       servers     => { "127.0.0.1" };
       copy_backup => "false";
@@ -52,14 +57,14 @@ bundle agent check
   classes:
       "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
-      "empty_ok" and => { strcmp(filesize("$(G.testdir)/destination_file"),"0") };
+      "empty_classic" and => { strcmp(filesize("$(G.testdir)/destfile_classic"),"0") };
+      "empty_latest"  and => { strcmp(filesize("$(G.testdir)/destfile_latest"),"0") };
 
-
-  methods:
-    copy_ok.empty_ok::
-      "any" usebundle => dcs_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
 
   reports:
-    !copy_ok|!empty_ok::
+
+    copied_classic.copied_latest.empty_classic.empty_latest::
+      "$(fn[1]) Pass";
+    !copied_classic|!copied_latest|!empty_classic|!empty_latest::
       "$(fn[1]) FAIL";
 }

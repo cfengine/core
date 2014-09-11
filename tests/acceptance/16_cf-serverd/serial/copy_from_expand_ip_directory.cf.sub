@@ -39,6 +39,8 @@ body copy_from copy_src_file(file)
 {
       source      => "$(file)";
 
+      # Special variable expansion only works with "latest" protocol.
+
       protocol_version => "latest";
       servers     => { "127.0.0.1" };
       copy_backup => "false";
@@ -54,8 +56,17 @@ bundle agent check
       "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testdir)/127.0.0.1_DIR1/ADMIT_FILE",
-                                        "$(G.testdir)/destination_file1","$(fn[1])");
-      "any" usebundle => dcs_check_diff("$(G.testdir)/127.0.0.1_DIR2/ADMIT_FILE",
-                                        "$(G.testdir)/destination_file2","$(fn[1])");
+      "any" usebundle => dcs_if_diff_expected("$(G.testdir)/127.0.0.1_DIR1/ADMIT_FILE",
+                                              "$(G.testdir)/destination_file1",
+                                              "no", "same_file1", "differ_file1");
+      "any" usebundle => dcs_if_diff_expected("$(G.testdir)/127.0.0.1_DIR2/ADMIT_FILE",
+                                              "$(G.testdir)/destination_file2",
+                                              "no", "same_file2", "differ_file2");
+  reports:
+
+    same_file1.same_file2::
+      "$(fn[1]) Pass";
+    !same_file1|!same_file2::
+      "$(fn[1]) FAIL";
+
 }

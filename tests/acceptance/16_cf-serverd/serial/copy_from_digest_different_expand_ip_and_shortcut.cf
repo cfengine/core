@@ -8,7 +8,7 @@ body common control
 
 bundle agent test
 {
-  
+
   methods:
       "any" usebundle => file_make("$(G.testdir)/127.0.0.1.txt",
                                    "Source and Destination are different_A");

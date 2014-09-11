@@ -54,7 +54,7 @@ void ConnectionInfoDestroy(ConnectionInfo **info)
 
 ProtocolVersion ConnectionInfoProtocolVersion(const ConnectionInfo *info)
 {
-    return info ? info->type : CF_PROTOCOL_UNDEFINED;
+    return info ? info->protocol : CF_PROTOCOL_UNDEFINED;
 }
 
 void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion version)
@@ -68,7 +68,7 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
     case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_CLASSIC:
     case CF_PROTOCOL_TLS:
-        info->type = version;
+        info->protocol = version;
         break;
     default:
         break;
@@ -77,7 +77,7 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
 
 ConnectionStatus ConnectionInfoConnectionStatus(const ConnectionInfo *info)
 {
-    return info ? info->status : CF_CONNECTION_NOT_ESTABLISHED;
+    return info ? info->status : CONNECTIONINFO_STATUS_NOT_ESTABLISHED;
 }
 
 void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus status)
@@ -88,8 +88,8 @@ void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus st
     }
     switch (status)
     {
-    case CF_CONNECTION_NOT_ESTABLISHED:
-    case CF_CONNECTION_ESTABLISHED:
+    case CONNECTIONINFO_STATUS_NOT_ESTABLISHED:
+    case CONNECTIONINFO_STATUS_ESTABLISHED:
         info->status = status;
     default:
         break;

@@ -28,12 +28,11 @@
 #include <cfnet.h>
 
 /**
-  @brief Creates a new connection from Agent to Server.
-
-  @param server_name Server to connect to.
-  @return A fully initialized AgentConnection or NULL in case of error.
+  @brief Allocates a new AgentConnection (stores a connection from Agent
+         to Server).
   */
-AgentConnection *NewAgentConn(const char *server_name);
+AgentConnection *NewAgentConn(const char *server, const char *port,
+                              ConnectionFlags flags);
 /**
   @brief Destroys an AgentConnection.
   @param ap AgentConnection structure.

@@ -76,6 +76,7 @@
 #include <misc_lib.h>
 #include <buffer.h>
 #include <loading.h>
+#include <conn_cache.h>                 /* ConnCache_Init,ConnCache_Destroy */
 #include <../libenv/unix_iface.h>
 
 #include <mod_common.h>
@@ -1598,7 +1599,7 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
         break;
 
     case TYPE_SEQUENCE_FILES:
-        ConnectionsInit();
+        ConnCache_Init();
         break;
 
     case TYPE_SEQUENCE_PROCESSES:
@@ -1649,7 +1650,7 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_FILES:
-        ConnectionsCleanup();
+        ConnCache_Destroy();
         break;
 
     case TYPE_SEQUENCE_PROCESSES:

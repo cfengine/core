@@ -1,6 +1,6 @@
 #######################################################
 #
-# mtime server copy, localhost, no file access promise, should not copy
+# mtime server copy, localhost, trustkey = false, should not copy
 #
 #######################################################
 
@@ -23,20 +23,37 @@ bundle agent test
 {
   files:
 
-      "$(G.testdir)/destination_file"
-      copy_from => copy_src_file,
-      classes => if_repaired("repaired");
+  # WAZA! I can't enable both protocols to be tested because the second
+  # will always succeed! Here is why:
+
+  # cf-serverd and cf-agent are running in the same tree, so they have
+  # the same ID! (same localhost.priv,pub) So when we (the agent)
+  # contact the server 1st time, we drop the connection because we don't
+  # trust him, but *his* trust is open and he stores the proper
+  # MD5-xxx.pub file that identifies us. BUT THIS FILE IDENTIFIES THE
+  # SERVER AS WELL. So on the second (latest protocol) connection
+  # attempt, we (the agent) find that file and assume we have
+  # established trust with the server. Thus this test fails...
+
+      "$(G.testdir)/destfile_classic"
+          copy_from => copy_src_file("classic"),
+          classes => if_repaired("copied_classic");
+      # "$(G.testdir)/destfile_latest"
+      #     copy_from => copy_src_file("latest"),
+      #     classes => if_repaired("copied_latest");
 }
 
 #########################################################
 
-body copy_from copy_src_file
-
+body copy_from copy_src_file(protocol_version)
 {
+      protocol_version => "$(protocol_version)";
+
       source      => "$(G.testdir)/source_file";
       servers     => { "127.0.0.1" };
       compare     => "mtime";
       copy_backup => "false";
+      #trustkey => "true";
 
       portnumber => "9876"; # localhost_open
 
@@ -45,7 +62,6 @@ body copy_from copy_src_file
       #purge       => "false";
       #type_check  => "true";
       #force_ipv4  => "true";
-      #trustkey => "true";
 }
 
 #######################################################
@@ -57,8 +73,8 @@ bundle agent check
 
   reports:
 
-    !repaired::
+    !copied_classic.!copied_latest::
       "$(fn[1]) Pass";
-    repaired::
+    copied_classic|copied_latest::
       "$(fn[1]) FAIL";
 }

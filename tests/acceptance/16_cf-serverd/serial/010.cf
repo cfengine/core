@@ -13,10 +13,15 @@ bundle agent test
         meta => { "redmine6406" };
 
   methods:
-      "any" usebundle => dcs_fini("$(G.testdir)/destination_file");
+      # source file
       "any" usebundle => file_make("$(G.testdir)/source_file",
-                                                 "This is the source file to copy $(sys.date) - always fresh");
+                                   "This is the source file to copy $(sys.date) - always fresh");
+      # destination files
+      "any" usebundle => dcs_fini("$(G.testdir)/destfile_classic");
+      "any" usebundle => dcs_fini("$(G.testdir)/destfile_latest");
+
       "any" usebundle => generate_key;
+
       "any" usebundle => start_server("localhost_open");
       "any" usebundle => run_test("$(this.promise_filename).sub");
       "any" usebundle => stop_server("localhost_open");

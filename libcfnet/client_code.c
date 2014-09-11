@@ -588,7 +588,6 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 /*********************************************************************/
 
 /* TODO only a server_name is not enough for stat'ing of files... */
-
 const Stat *StatCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name)
 {
     for (const Stat *sp = conn->cache; sp != NULL; sp = sp->next)
@@ -603,8 +602,8 @@ const Stat *StatCacheLookup(AgentConnection *conn, const char *server_name, cons
     return NULL;
 }
 
-/*********************************************************************/
-
+/* Returning NULL (an empty list) does not mean empty directory but ERROR,
+ * since every directory has to contain at least . and .. */
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 {
     char sendbuffer[CF_BUFSIZE];
@@ -613,8 +612,6 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     char out[CF_BUFSIZE];
     int n, cipherlen = 0, tosend;
     char *sp;
-    Item *files = NULL;
-    Item *ret = NULL;
 
     if (strlen(dirname) > CF_BUFSIZE - 20)
     {
@@ -651,15 +648,16 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         return NULL;
     }
 
+    Item *start = NULL, *end = NULL;                  /* NULL == empty list */
     while (true)
     {
         if ((n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
         {
             /* TODO mark connection in the cache as closed. */
-            return NULL;
+            goto err;
         }
 
-        if (n == 0)
+        if (n == 0)                                        /* socket closed */
         {
             break;
         }
@@ -673,36 +671,35 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         if (FailedProtoReply(recvbuffer))
         {
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, dirname);
-            return NULL;
+            goto err;
         }
 
         if (BadProtoReply(recvbuffer))
         {
             Log(LOG_LEVEL_INFO, "%s", recvbuffer + strlen("BAD: "));
-            return NULL;
+            goto err;
         }
 
         for (sp = recvbuffer; *sp != '\0'; sp++)
         {
-            Item *ip;
 
             if (strncmp(sp, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)       /* End transmission */
             {
-                return ret;
+                return start;
             }
 
-            ip = xcalloc(1, sizeof(Item));
+            Item *ip = xcalloc(1, sizeof(Item));
             ip->name = (char *) AllocateDirentForFilename(sp);
 
-            if (files == NULL)  /* First element */
+            if (start == NULL)  /* First element */
             {
-                ret = ip;
-                files = ip;
+                start = ip;
+                end = ip;
             }
             else
             {
-                files->next = ip;
-                files = ip;
+                end->next = ip;
+                end = ip;
             }
 
             while (*sp != '\0')
@@ -712,7 +709,17 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         }
     }
 
-    return ret;
+    return start;
+
+  err:                                                         /* free list */
+    for (Item *ip = start; ip != NULL; ip = start)
+    {
+        start = ip->next;
+        free(ip->name);
+        free(ip);
+    }
+
+    return NULL;
 }
 
 /*********************************************************************/

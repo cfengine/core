@@ -273,9 +273,8 @@ int TLSTry(ConnectionInfo *conn_info)
     }
     assert(SSLCLIENTCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
 
-    ConnectionInfoSetSSL(conn_info, SSL_new(SSLCLIENTCONTEXT));
-    SSL *ssl = ConnectionInfoSSL(conn_info);
-    if (ssl == NULL)
+    conn_info->ssl = SSL_new(SSLCLIENTCONTEXT);
+    if (conn_info->ssl == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_new: %s",
             TLSErrorString(ERR_get_error()));
@@ -283,22 +282,22 @@ int TLSTry(ConnectionInfo *conn_info)
     }
 
     /* Pass conn_info inside the ssl struct for TLSVerifyCallback(). */
-    SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn_info);
+    SSL_set_ex_data(conn_info->ssl, CONNECTIONINFO_SSL_IDX, conn_info);
 
     /* Initiate the TLS handshake over the already open TCP socket. */
-    SSL_set_fd(ssl, ConnectionInfoSocket(conn_info));
+    SSL_set_fd(conn_info->ssl, conn_info->sd);
 
-    int ret = SSL_connect(ssl);
+    int ret = SSL_connect(conn_info->ssl);
     if (ret <= 0)
     {
-        TLSLogError(ssl, LOG_LEVEL_ERR,
+        TLSLogError(conn_info->ssl, LOG_LEVEL_ERR,
                     "Failed to establish TLS connection", ret);
         return -1;
     }
 
     Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
-        SSL_get_cipher_name(ssl),
-        SSL_get_cipher_version(ssl));
+        SSL_get_cipher_name(conn_info->ssl),
+        SSL_get_cipher_version(conn_info->ssl));
     Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
     return 0;

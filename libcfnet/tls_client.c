@@ -179,14 +179,14 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
     ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
 
     ProtocolVersion wanted_version;
-    if (conn_info->type == CF_PROTOCOL_UNDEFINED)
+    if (conn_info->protocol == CF_PROTOCOL_UNDEFINED)
     {
         /* TODO parse CFE_v%d received and use that version if it's lower. */
         wanted_version = CF_PROTOCOL_LATEST;
     }
     else
     {
-        wanted_version = conn_info->type;
+        wanted_version = conn_info->protocol;
     }
 
     /* Send "CFE_v%d cf-agent version". */
@@ -251,7 +251,7 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
 
     /* Before it contained the protocol version we requested from the server,
      * now we put in the value that was negotiated. */
-    conn_info->type = wanted_version;
+    conn_info->protocol = wanted_version;
 
     return 1;
 }

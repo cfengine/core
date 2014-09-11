@@ -54,7 +54,7 @@ void ConnectionInfoDestroy(ConnectionInfo **info)
 
 ProtocolVersion ConnectionInfoProtocolVersion(const ConnectionInfo *info)
 {
-    return info ? info->type : CF_PROTOCOL_UNDEFINED;
+    return info ? info->protocol : CF_PROTOCOL_UNDEFINED;
 }
 
 void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion version)
@@ -68,7 +68,7 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
     case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_CLASSIC:
     case CF_PROTOCOL_TLS:
-        info->type = version;
+        info->protocol = version;
         break;
     default:
         break;

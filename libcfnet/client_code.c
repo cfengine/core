@@ -210,7 +210,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 
         /* Set the version to request during protocol negotiation. After
          * TLSConnect() it will have the version we finally ended up with. */
-        conn->conn_info->type = CF_PROTOCOL_LATEST;
+        conn->conn_info->protocol = CF_PROTOCOL_LATEST;
 
         ret = TLSConnect(conn->conn_info, flags.trust_server,
                          conn->remoteip, conn->username);
@@ -238,7 +238,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_CLASSIC:
 
-        conn->conn_info->type = CF_PROTOCOL_CLASSIC;
+        conn->conn_info->protocol = CF_PROTOCOL_CLASSIC;
         conn->encryption_type = CfEnterpriseOptions();
 
         if (!IdentifyAgent(conn->conn_info))

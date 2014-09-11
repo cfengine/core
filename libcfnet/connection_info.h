@@ -48,7 +48,7 @@ typedef enum
 } ConnectionStatus;
 
 struct ConnectionInfo {
-    ProtocolVersion type;
+    ProtocolVersion protocol;
     ConnectionStatus status;
     int sd;                           /* Socket descriptor */
     SSL *ssl;                         /* OpenSSL struct for TLS connections */

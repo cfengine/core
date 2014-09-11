@@ -880,7 +880,7 @@ bool IsProcessNameRunning(char *procNameRegex)
         return false;
     }
 
-    GetProcessColumnNames(PROCESSTABLE->name, (char **) colHeaders, start, end);
+    GetProcessColumnNames(PROCESSTABLE->name, colHeaders, start, end);
 
     for (const Item *ip = PROCESSTABLE->next; !matched && ip != NULL; ip = ip->next) // iterate over ps lines
     {
@@ -1087,7 +1087,7 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
             }
         }
         Chop(pbuff, pbuff_size);
-        if (strstr(pbuff, "PID")) /*this is the banner*/
+        if (strstr(pbuff, "PID")) /* This line is the header. */
         {
             GetProcessColumnNames(pbuff, &names[0], start, end);
         }

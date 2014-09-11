@@ -176,7 +176,7 @@ int TLSVerifyCallback(X509_STORE_CTX *store_ctx,
     }
 
     /* From that data get the key if the connection is already established. */
-    RSA *already_negotiated_key = KeyRSA(ConnectionInfoKey(conn_info));
+    RSA *already_negotiated_key = KeyRSA(conn_info->remote_key);
     /* Is there an already negotiated certificate? */
     X509 *previous_tls_cert = SSL_get_peer_certificate(ssl);
 
@@ -282,7 +282,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
 {
     int ret, retval;
 
-    X509 *received_cert = SSL_get_peer_certificate(ConnectionInfoSSL(conn_info));
+    X509 *received_cert = SSL_get_peer_certificate(conn_info->ssl);
     if (received_cert == NULL)
     {
         Log(LOG_LEVEL_ERR,
@@ -317,7 +317,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     }
 
     Key *key = KeyNew(remote_key, CF_DEFAULT_DIGEST);
-    ConnectionInfoSetKey(conn_info, key);
+    conn_info->remote_key = key;
 
     /*
      * Compare the key received with the one stored.
@@ -381,9 +381,9 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
   ret4:
     if (retval == -1)
     {
-        /* We won't be needing conn_info->key */
+        /* We won't be needing conn_info->remote_key */
         KeyDestroy(&key);
-        ConnectionInfoSetKey(conn_info, NULL);
+        conn_info->remote_key = NULL;
     }
   ret3:
     EVP_PKEY_free(received_pubkey);

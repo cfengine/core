@@ -126,16 +126,16 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     {
         Log(LOG_LEVEL_VERBOSE,
             "Server is TRUSTED, received key %s MATCHES stored one.",
-            ConnectionInfoPrintableKeyHash(conn_info));
+            KeyPrintableHash(conn_info->remote_key));
     }
     else   /* ret == 0 */
     {
         if (trust_server)             /* We're most probably bootstrapping. */
         {
             Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
-                ConnectionInfoPrintableKeyHash(conn_info));
-            SavePublicKey(username, ConnectionInfoPrintableKeyHash(conn_info),
-                          KeyRSA(ConnectionInfoKey(conn_info)));
+                KeyPrintableHash(conn_info->remote_key));
+            SavePublicKey(username, KeyPrintableHash(conn_info->remote_key),
+                          KeyRSA(conn_info->remote_key));
         }
         else
         {
@@ -231,7 +231,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
         assert(ret == 1);
 
         conn->conn_info->status = CONNECTIONINFO_STATUS_ESTABLISHED;
-        LastSaw1(conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info),
+        LastSaw1(conn->remoteip, KeyPrintableHash(conn->conn_info->remote_key),
                  LAST_SEEN_ROLE_CONNECT);
         break;
 
@@ -275,16 +275,16 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 void DisconnectServer(AgentConnection *conn)
 {
     /* Socket needs to be closed even after SSL_shutdown. */
-    if (ConnectionInfoSocket(conn->conn_info) >= 0)                  /* Not INVALID or OFFLINE */
+    if (conn->conn_info->sd >= 0)                 /* Not INVALID or OFFLINE */
     {
-        if (ConnectionInfoProtocolVersion(conn->conn_info) >= CF_PROTOCOL_TLS &&
-                ConnectionInfoSSL(conn->conn_info) != NULL)
+        if (conn->conn_info->protocol >= CF_PROTOCOL_TLS &&
+            conn->conn_info->ssl != NULL)
         {
-            SSL_shutdown(ConnectionInfoSSL(conn->conn_info));
+            SSL_shutdown(conn->conn_info->ssl);
         }
 
-        cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-        ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
+        cf_closesocket(conn->conn_info->sd);
+        conn->conn_info->sd = SOCKET_INVALID;
         Log(LOG_LEVEL_VERBOSE, "Connection to %s is closed", conn->remoteip);
     }
     DeleteAgentConn(conn);
@@ -410,7 +410,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && conn->conn_info->protocol == CF_PROTOCOL_CLASSIC;
 
     if (encrypt)
     {
@@ -624,7 +624,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && conn->conn_info->protocol == CF_PROTOCOL_CLASSIC;
 
     if (encrypt)
     {
@@ -729,7 +729,7 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && conn->conn_info->protocol == CF_PROTOCOL_CLASSIC;
 
     if (encrypt)
     {
@@ -958,7 +958,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && conn->conn_info->protocol == CF_PROTOCOL_CLASSIC;
 
     if (encrypt)
     {
@@ -1023,17 +1023,17 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         }
 
         /* Stage C1 - receive */
-        switch(ConnectionInfoProtocolVersion(conn->conn_info))
+        switch(conn->conn_info->protocol)
         {
         case CF_PROTOCOL_CLASSIC:
-            n_read = RecvSocketStream(ConnectionInfoSocket(conn->conn_info), buf, toget);
+            n_read = RecvSocketStream(conn->conn_info->sd, buf, toget);
             break;
         case CF_PROTOCOL_TLS:
-            n_read = TLSRecv(ConnectionInfoSSL(conn->conn_info), buf, toget);
+            n_read = TLSRecv(conn->conn_info->ssl, buf, toget);
             break;
         default:
             UnexpectedError("CopyRegularFileNet: ProtocolVersion %d!",
-                            ConnectionInfoProtocolVersion(conn->conn_info));
+                            conn->conn_info->protocol);
             n_read = -1;
         }
 
@@ -1092,7 +1092,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             free(buf);
             unlink(dest);
             close(dd);
-            FlushFileStream(ConnectionInfoSocket(conn->conn_info), size - n_read_total);
+            FlushFileStream(conn->conn_info->sd, size - n_read_total);
             EVP_CIPHER_CTX_cleanup(&crypto_ctx);
             return false;
         }
@@ -1112,7 +1112,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         free(buf);
         unlink(dest);
         close(dd);
-        FlushFileStream(ConnectionInfoSocket(conn->conn_info), size - n_read_total);
+        FlushFileStream(conn->conn_info->sd, size - n_read_total);
         return false;
     }
 

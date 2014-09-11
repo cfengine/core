@@ -2520,7 +2520,6 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
     char vbuff[CF_BUFSIZE];
     struct stat ssb, dsb;
     struct timespec start;
-    char eventname[CF_BUFSIZE];
 
     if (conn != NULL && (!conn->authenticated))
     {
@@ -2596,11 +2595,16 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     DeleteCompressedArray(inode_cache);
 
-    snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)",
-             conn ? conn->this_server : "localhost",
-             BufferData(source), destination);
+    const char *mid = PromiseGetConstraintAsRval(pp, "measurement_class", RVAL_TYPE_SCALAR);
+    if (mid)
+    {
+        char eventname[CF_BUFSIZE];
+        snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)",
+                 conn ? conn->this_server : "localhost",
+                 BufferData(source), destination);
 
-    EndMeasure(eventname, start);
+        EndMeasure(eventname, start);
+    }
 
     BufferDestroy(source);
     return result;

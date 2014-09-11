@@ -683,7 +683,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         for (sp = recvbuffer; *sp != '\0'; sp++)
         {
 
-            if (strncmp(sp, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)       /* End transmission */
+            if (strcmp(sp, CFD_TERMINATOR) == 0)        /* End transmission */
             {
                 return start;
             }

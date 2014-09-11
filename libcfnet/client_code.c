@@ -610,7 +610,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     char recvbuffer[CF_BUFSIZE];
     char in[CF_BUFSIZE];
     char out[CF_BUFSIZE];
-    int n, cipherlen = 0, tosend;
+    int cipherlen = 0, tosend;
     char *sp;
 
     if (strlen(dirname) > CF_BUFSIZE - 20)
@@ -651,21 +651,20 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     Item *start = NULL, *end = NULL;                  /* NULL == empty list */
     while (true)
     {
-        if ((n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
+        int nbytes = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
+
+        /* If recv error or socket closed before receiving CFD_TERMINATOR. */
+        if (nbytes == -1 || nbytes == 0)
         {
             /* TODO mark connection in the cache as closed. */
             goto err;
         }
 
-        if (n == 0)                                        /* socket closed */
-        {
-            break;
-        }
-
         if (encrypt)
         {
-            memcpy(in, recvbuffer, n);
-            DecryptString(conn->encryption_type, in, recvbuffer, conn->session_key, n);
+            memcpy(in, recvbuffer, nbytes);
+            DecryptString(conn->encryption_type, in, recvbuffer,
+                          conn->session_key, nbytes);
         }
 
         if (FailedProtoReply(recvbuffer))

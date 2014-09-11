@@ -142,7 +142,8 @@ check_PROGRAMS = \
 	ring_buffer_test \
 	strlist_test \
 	addr_lib_test \
-	libcompat_test
+	libcompat_test \
+	split_process_line_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

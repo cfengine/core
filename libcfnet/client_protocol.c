@@ -111,10 +111,15 @@ int IdentifyAgent(ConnectionInfo *conn_info)
             return false;
         }
 
-        /* getnameinfo() should always return FQDN. Some resolvers will not
-         * return FQNAME and missing PTR will give numerical result */
-        if ((strlen(VDOMAIN) > 0)                      /* TODO true always? */
-            && (!IsIPV6Address(dnsname)) && (!strchr(dnsname, '.')))
+        /* Append a hostname if getnameinfo() does not return FQDN. Might only
+         * happen if the host has no domainname, in which case VDOMAIN might
+         * also be empty! In addition, missing PTR will give numerical result,
+         * so use it either it's IPv4 or IPv6. Finally don't append the
+         * VDOMAIN if "localhost" is resolved name, it means we're connecting
+         * via loopback. */
+        if ((strlen(VDOMAIN) > 0) &&
+            !IsIPV6Address(dnsname) && (strchr(dnsname, '.') == NULL) &&
+            strcmp(dnsname, "localhost") != 0)
         {
             strcat(dnsname, ".");
             strncat(dnsname, VDOMAIN, CF_MAXVARSIZE / 2);

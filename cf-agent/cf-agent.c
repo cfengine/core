@@ -1819,10 +1819,16 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
         Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
           bundle->name, bundle_compliance * 100.0);
 
-        char name[CF_MAXVARSIZE];
-        snprintf(name, CF_MAXVARSIZE, "%s:%s", bundle->ns, bundle->name);
-
-        EndMeasure(name, start);
+        if (LogGetGlobalLevel() >= LOG_LEVEL_INFO)
+        {
+            char name[CF_MAXVARSIZE];
+            snprintf(name, CF_MAXVARSIZE, "%s:%s", bundle->ns, bundle->name);
+            EndMeasure(name, start);
+        }
+        else
+        {
+            EndMeasure(NULL, start);
+        }
         Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
         Log(LOG_LEVEL_VERBOSE, "\n");
     }

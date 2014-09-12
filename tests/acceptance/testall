@@ -65,15 +65,39 @@ WHOAMI=/c/Windows/System32/whoami.exe
 BASE_WORKDIR="$(pwd)/workdir"
 QUIET=
 TIMED_TESTS=${TIMED_TESTS:-1}
+export TIMED_TESTS
 CRASHING_TESTS=${CRASHING_TESTS:-1}
+export CRASHING_TESTS
 STAGING_TESTS=${STAGING_TESTS:-0}
+export STAGING_TESTS
 NETWORK_TESTS=${NETWORK_TESTS:-1}
+export NETWORK_TESTS
 UNSAFE_TESTS=${UNSAFE_TESTS:-0}
+export UNSAFE_TESTS
 LIBXML2_TESTS=${LIBXML2_TESTS:-1}
-NO_CLEAN=0
-BASECLASSES="AUTO"
-EXTRACLASSES="DEBUG"
-VALGRIND_OPTS="--leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions"
+export LIBXML2_TESTS
+BINDIR=${BINDIR:-}
+export BINDIR
+NO_CLEAN=${NO_CLEAN:-0}
+export NO_CLEAN
+BASECLASSES=${BASECLASSES:-AUTO}
+export BASECLASSES
+EXTRACLASSES=${EXTRACLASSES:-DEBUG}
+export EXTRACLASSES
+VALGRIND_OPTS="${VALGRIND_OPTS:---leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions}"
+export VALGRIND_OPTS
+AGENT=${AGENT:-}
+export AGENT
+CF_PROMISES=${CF_PROMISES:-}
+export CF_PROMISES
+CF_SERVERD=${CF_SERVERD:-}
+export CF_SERVERD
+CF_KEY=${CF_KEY:-}
+export CF_KEY
+LIBTOOL=${LIBTOOL:-}
+export LIBTOOL
+
+export MAKEFLAGS
 
 # Use TEST_INDEX for indexing a poor man's array. Basically the subscript is
 # just appended to the variable name.
@@ -853,36 +877,32 @@ run_all_tests() {
 
 run_all_tests_using_make() {
   MAKEFILE=Makefile.testall
+
+  unset SERIAL_TEST_LIST PARALLEL_TEST_LIST TIMED_TEST_LIST
+
+  for curr_test in $ALL_TESTS; do
+    case "$curr_test" in
+      */serial/*|*/unsafe/*)
+        SERIAL_TEST_LIST=$SERIAL_TEST_LIST${SERIAL_TEST_LIST:+ }$curr_test
+        ;;
+      */timed/*)
+        TIMED_TEST_LIST=$TIMED_TEST_LIST${TIMED_TEST_LIST:+ }$curr_test
+        ;;
+      *)
+        PARALLEL_TEST_LIST=$PARALLEL_TEST_LIST${PARALLEL_TEST_LIST:+ }$curr_test
+        # Separate make target list, because we do not want the target to be a file name, since make
+        # will skip it then.
+        PARALLEL_TARGET_LIST=$PARALLEL_TARGET_LIST${PARALLEL_TARGET_LIST:+ }${curr_test}_rule
+        ;;
+    esac
+  done
+
   # Redirect to makefile all at once.
   (
-    printf "tests: timed serial parallel\n\n"
-    unset SERIAL_TEST_LIST PARALLEL_TEST_LIST TIMED_TEST_LIST
-
-    for curr_test in $ALL_TESTS; do
-      case "$curr_test" in
-        */serial/*|*/unsafe/*)
-          SERIAL_TEST_LIST=$SERIAL_TEST_LIST${SERIAL_TEST_LIST:+ }$curr_test
-          ;;
-        */timed/*)
-          TIMED_TEST_LIST=$TIMED_TEST_LIST${TIMED_TEST_LIST:+ }$curr_test
-          ;;
-        *)
-          PARALLEL_TEST_LIST=$PARALLEL_TEST_LIST${PARALLEL_TEST_LIST:+ }$curr_test
-          # Separate make target list, because we do not want the target to be a file name, since make
-          # will skip it then.
-          PARALLEL_TARGET_LIST=$PARALLEL_TARGET_LIST${PARALLEL_TARGET_LIST:+ }${curr_test}_rule
-          ;;
-      esac
-    done
-
+    printf "tests: timed parallel\n\n"
     printf "timed:\n"
     if [ -n "$TIMED_TEST_LIST" ]; then
       printf "\t@$0 --stay-in-workdir -j1 $TIMED_TEST_LIST\n"
-    fi
-    printf "\n"
-    printf "serial: timed parallel\n"
-    if [ -n "$SERIAL_TEST_LIST" ]; then
-      printf "\t@$0 --stay-in-workdir -j1 $SERIAL_TEST_LIST\n"
     fi
     printf "\n"
     printf "parallel: $PARALLEL_TARGET_LIST\n\n"
@@ -891,6 +911,9 @@ run_all_tests_using_make() {
   ) > $MAKEFILE
 
   ${MAKE:-make} -k -f $MAKEFILE
+  if [ -n "$SERIAL_TEST_LIST" ]; then
+    $0 --stay-in-workdir -j1 $SERIAL_TEST_LIST
+  fi
 
   for curr_test in $ALL_TESTS; do
     collect_results "$curr_test"
@@ -919,6 +942,11 @@ if [ -z "$STAY_IN_WORKDIR" ]; then
   finish_xml
 fi
 
+if [ $(($PASSED_TESTS+$FAILED_TESTS+$SOFT_FAILURES+$SKIPPED_TESTS)) -ne $TESTS_COUNT ]; then
+  echo "WARNING: Number of test results does not match number of tests!"
+  echo "Did something go wrong during execution?"
+  exit 2
+fi
 if [ "$FAILED_TESTS" -gt "$SUPPRESSED_FAILURES" ]; then
   exit 1
 else

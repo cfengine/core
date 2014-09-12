@@ -118,7 +118,7 @@ Output "$(this.promise_filename) Pass" for passing
 
 If you want to use tools like grep, diff, touch, etc, please use the
 $(G.grep) format so that the correct path to the tool is chosen by
-this template. If a tool is missing you can add it to the list below.
+the test template. If a tool is missing you can add it to dcs.cf.sub.
 
 ------------------------------------------------------------------------------
 Waiting in tests

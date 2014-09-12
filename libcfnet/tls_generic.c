@@ -583,11 +583,14 @@ static void assert_SSLIsBlocking(const SSL *ssl)
  * @param ssl SSL information.
  * @param buffer Data to send.
  * @param length Length of the data to send.
- * @return The length of the data sent (which could be smaller than the
- *         requested length) or -1 in case of error.
+ * @return The length of the data sent (always equals #length if SSL is set
+ *         up correctly, see note), or -1 in case of error, or 0 for connection
+ *         closed.
+ *
  * @note Use only for *blocking* sockets. Set
- *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
- *       operation completed or an error occured.
+ *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) and make sure you haven't
+ *       turned on SSL_MODE_ENABLE_PARTIAL_WRITE so that either the
+ *       operation is completed (retval==length) or an error occured.
  *
  * @TODO ERR_get_error is only meaningful for some error codes, so check and
  *       return empty string otherwise.
@@ -628,7 +631,8 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
 }
 
 /**
- * @brief Receives data from the SSL session and stores it on the buffer.
+ * @brief Receives at most #length bytes of data from the SSL session
+ *        and stores it in the buffer.
  * @param ssl SSL information.
  * @param buffer Buffer, of size at least CF_BUFSIZE, to store received data.
  * @param length Length of the data to receive, must be < CF_BUFSIZE.
@@ -644,6 +648,8 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     assert(length > 0);
     assert(length < CF_BUFSIZE);
     assert_SSLIsBlocking(ssl);
+
+    /* TODO what is the return value of SSL_read in case of socket timeout? */
 
     int received = SSL_read(ssl, buffer, length);
     if (received < 0)
@@ -685,7 +691,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
 {
     int ret;
-    int got = 0;
+    size_t got = 0;
     buf_size -= 1;               /* Reserve one space for terminating '\0' */
 
     /* Repeat until we receive end of line. */
@@ -710,13 +716,14 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
     if ((got == buf_size) && (buf[got-1] != '\n'))
     {
         Log(LOG_LEVEL_ERR,
-            "Received line too long, hanging up! Length %d, line: %s",
+            "Received line too long, hanging up! Length %zu, line: %s",
             got, buf);
         return -1;
     }
 
     LogRaw(LOG_LEVEL_DEBUG, "TLSRecvLines(): ", buf, got);
-    return got;
+
+    return (got <= INT_MAX) ? (int) got : -1;
 }
 
 /**

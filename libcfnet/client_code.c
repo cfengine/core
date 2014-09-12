@@ -947,11 +947,11 @@ static void FlushFileStream(int sd, int toget)
     }
 }
 
-int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
+int CopyRegularFileNet(const char *source, const char *dest, off_t size,
+                       bool encrypt, AgentConnection *conn)
 {
-    int dd, buf_size, n_read = 0, toget, towrite;
-    int tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
+    const int buf_size = 2048;
 
     off_t n_read_total = 0;
     EVP_CIPHER_CTX crypto_ctx;
@@ -975,7 +975,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
     unlink(dest);                /* To avoid link attacks */
 
-    if ((dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    int dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600);
+    if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,
             "Copy from server '%s' to destination '%s' failed (open: %s)",
@@ -984,18 +985,23 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         return false;
     }
 
+
+
     workbuf[0] = '\0';
+    int tosend = snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
+    if (tosend <= 0 || tosend >= CF_BUFSIZE)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to compose GET command for file %s",
+            source);
+        close(dd);
+        return false;
+    }
 
-    buf_size = 2048;
-
-/* Send proposition C0 */
-
-    snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
-    tosend = strlen(workbuf);
+    /* Send proposition C0 */
 
     if (SendTransaction(conn->conn_info, workbuf, tosend, CF_DONE) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't send data");
+        Log(LOG_LEVEL_ERR, "Couldn't send GET command");
         close(dd);
         return false;
     }
@@ -1008,21 +1014,12 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     n_read_total = 0;
     while (n_read_total < size)
     {
-        if ((size - n_read_total) >= buf_size)
-        {
-            toget = towrite = buf_size;
-        }
-        else if (size != 0)
-        {
-            towrite = (size - n_read_total);
-            toget = towrite;
-        }
-        else
-        {
-            toget = towrite = 0;
-        }
+        int toget = MIN(size - n_read_total, buf_size);
+
+        assert(toget != 0);
 
         /* Stage C1 - receive */
+        int n_read;
         switch(conn->conn_info->protocol)
         {
         case CF_PROTOCOL_CLASSIC:
@@ -1037,12 +1034,14 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             n_read = -1;
         }
 
-        if (n_read == -1)
+        if (n_read <= 0)
         {
-            /* This may happen on race conditions,
-             * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
+            /* This may happen on race conditions, where the file has shrunk
+             * since we asked for its size in SYNCH ... STAT source */
 
-            Log(LOG_LEVEL_ERR, "Error in client-server stream (has %s:%s shrunk?)", conn->this_server, source);
+            Log(LOG_LEVEL_ERR,
+                "Error in client-server stream, has %s:%s shrunk? (code %d)",
+                conn->this_server, source, n_read);
             close(dd);
             free(buf);
             return false;
@@ -1052,7 +1051,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if ((n_read_total == 0) && (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
-            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
+            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied",
+                conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1060,16 +1060,17 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if (strncmp(buf, cfchangedstr, strlen(cfchangedstr)) == 0)
         {
-            Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying", conn->this_server, source);
+            Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
+                conn->this_server, source);
             close(dd);
             free(buf);
             return false;
         }
 
-        value = -1;
 
-        /* Check for mismatch between encryption here and on server - can lead to misunderstanding */
+        /* Check for mismatch between encryption here and on server. */
 
+        int value = -1;
         sscanf(buf, "t %d", &value);
 
         if ((value > 0) && (strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0))
@@ -1083,7 +1084,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         if (!FSWrite(dest, dd, buf, n_read))
         {
-            Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s'. (FSWrite: %s)",
+            Log(LOG_LEVEL_ERR,
+                "Local disk write failed copying '%s:%s' to '%s'. (FSWrite: %s)",
                 conn->this_server, source, dest, GetErrorStr());
             if (conn)
             {
@@ -1097,7 +1099,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             return false;
         }
 
-        n_read_total += towrite;        /* n_read; */
+        n_read_total += n_read;
     }
 
     /* If the file ends with a `hole', something needs to be written at

@@ -394,6 +394,11 @@ typedef int socklen_t;
 int getloadavg (double loadavg[], int nelem);
 #endif
 
+#ifdef HAVE_ENDIAN_H
+# include <endian.h>
+#endif
+
+#if !HAVE_DECL_LE32TOH
 static inline uint32_t ByteSwap32(uint32_t le32uint)
 {
     uint32_t be32uint;
@@ -405,12 +410,12 @@ static inline uint32_t ByteSwap32(uint32_t le32uint)
     be_ptr[3] = le_ptr[0];
     return be32uint;
 }
-
-#if !HAVE_DECL_LE32TOH
 # ifdef WORDS_BIGENDIAN
 #  define le32toh(x) ByteSwap32(x)
+#  define htole32(x) ByteSwap32(x)
 # else
 #  define le32toh(x) (x)
+#  define htole32(x) (x)
 # endif
 #endif
 

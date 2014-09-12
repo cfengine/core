@@ -48,16 +48,16 @@
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
-static int SplitProcLine(const char *proc, char **names, int *start, int *end, char **line);
+static int SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
-static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
+static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
 
 /***************************************************************************/
 
-static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
+static int SelectProcess(const char *procentry, time_t pstime, char **names, int *start, int *end, ProcessSelect a)
 {
     int result = true, i;
     char *column[CF_PROCCOLS];
@@ -65,7 +65,7 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, Pr
 
     StringSet *process_select_attributes = StringSetNew();
 
-    if (!SplitProcLine(procentry, names, start, end, column))
+    if (!SplitProcLine(procentry, pstime, names, start, end, column))
     {
         return false;
     }
@@ -201,6 +201,9 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
     pcre *rx = CompileRegex(process_name);
     if (rx)
     {
+        /* TODO: use actual time of ps-run, as time(NULL) may be later. */
+        time_t pstime = time(NULL);
+
         for (Item *ip = processes->next; ip != NULL; ip = ip->next)
         {
             int s, e;
@@ -212,7 +215,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
                     continue;
                 }
 
-                if (attrselect && !SelectProcess(ip->name, names, start, end, a))
+                if (attrselect && !SelectProcess(ip->name, pstime, names, start, end, a))
                 {
                     continue;
                 }
@@ -494,8 +497,9 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
 
 /*******************************************************************/
 /* line must be char *line[CF_PROCCOLS] in fact. */
+/* pstime should be the time at which ps was run. */
 
-static int SplitProcLine(const char *proc,
+static int SplitProcLine(const char *proc, time_t pstime,
                          char **names, int *start, int *end,
                          char **line)
 {
@@ -506,9 +510,20 @@ static int SplitProcLine(const char *proc,
 
     memset(line, 0, sizeof(char *) * CF_PROCCOLS);
 
-    const char *sp = proc;
+    int prior = -1; /* End of last header-selected field. */
+    const size_t linelen = strlen(proc);
+    const char *sp = proc; /* Just after last space-separated field. */
     /* Scan in parallel for two heuristics: space-delimited fields
      * found using sp, and ones inferred from the column headers. */
+
+    /* TODO: we test with isspace() mostly, which makes sense as TAB
+     * might be used to enable field alignment; but we make no attempt
+     * to account for the alignment offsets this may introduce, that
+     * would mess up the heuristic based on column headers.  Hard to
+     * do robustly, as we'd need to assume a tab-width and apply the
+     * same accounting to the headers (where start and end are indices
+     * of bytes, we'd need a third array for tab-induced offsets
+     * between headers). */
 
     for (int i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
     {
@@ -523,9 +538,27 @@ static int SplitProcLine(const char *proc,
          * Start with the column header's position and maybe grow
          * outwards. */
         int s = start[i], e;
+
+        /* If the previous field over-spilled into this one, our start
+         * may be under our header, not directly below the header's
+         * start; but only believe this if the earlier field is
+         * followed by one space and the subsequent field does start
+         * under our header.  Otherwise, allow that the prior field
+         * may be abutting this field, or this field may have
+         * overflowed left into the prior field causing the prior to
+         * (mistakenly) think it includes the present. */
+        if (s <= prior &&
+            prior + 2 <= end[i] &&
+            proc[prior + 1] == ' ' &&
+            proc[prior + 2] != '\0' &&
+            !isspace((unsigned char) proc[prior + 2]))
+        {
+            s = prior + 2;
+        }
+
         if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
         {
-            e = strlen(proc) - 1;
+            e = linelen - 1;
             /* Extend space-delimited field to line end: */
             while (ep[0] && ep[0] != '\n')
             {
@@ -540,6 +573,34 @@ static int SplitProcLine(const char *proc,
         else
         {
             e = end[i];
+
+            /* It's possible the present field has been shunted left
+             * to make way for an over-sized number or date to the
+             * right.  This can confuse the numeric check below, on
+             * which left-overspill is conditioned - it fails to
+             * recognise this field as numeric, so doesn't check for
+             * it overspilling to the left.  Look to see whether we
+             * should move e left a bit: this is a conservative check,
+             * that'll be revisited below. */
+            int back = start[i + 1];
+            while (back > s && !isspace((unsigned char) proc[back]))
+            {
+                back--;
+            }
+            if (back > s && back <= e &&
+                /* back > s implies isspace(proc[back]), with no
+                 * further space before the next field; if this is a
+                 * single space, it's credibly the separator between
+                 * our field, shunted left, and this over-spilled
+                 * field: */
+                proc[back] == ' ' &&
+                !isspace((unsigned char) proc[back - 1]))
+            {
+                /* So we have a non-empty field that ends under our
+                 * header but before e; adjust e. */
+                e = back - 1;
+            }
+
             /* Extend space-delimited to next space: */
             while (ep[0] && !isspace((unsigned char)ep[0]))
             {
@@ -638,27 +699,77 @@ static int SplitProcLine(const char *proc,
         }
 #undef IsNumberish
 
-        /* Left-aligned text or numeric misaligned by overspill;
-         * move e right (but never under next heading): */
-        if (overspilt || isalpha((unsigned char) proc[s]))
+        bool abut = false;
+        /* Left-aligned text or numeric misaligned by overspill; move
+         * e right (if there's any right to move into; last column
+         * already reaches end of proc): */
+        if (proc[e + 1] &&
+            (overspilt || isalpha((unsigned char) proc[s])))
         {
-            int outer;
-            if (i + 1 < CF_PROCCOLS && names[i + 1])
+            assert(i + 1 < CF_PROCCOLS && names[i + 1]);
+            int outer = start[i + 1]; /* Start of next field's header. */
+            int beyond = end[i + 1]; /* End of next field's header. */
+            if (beyond > linelen)
             {
-                outer = start[i + 1];
+                /* Command is shorter than its header. */
+                assert(i + 2 >= CF_PROCCOLS || NULL == names[i + 2]);
+                beyond = linelen;
+            }
+            assert(beyond >= outer);
+
+            int out = e;
+            do
+            {
+                out++;
+            } while (out < beyond && !isspace((unsigned char) proc[out]));
+
+            if (out < outer)
+            {
+                /* Simple extension to the right, no overlap: we're on
+                 * a space just before the next field's header. */
+                e = out - 1;
+            }
+            else if (out == beyond)
+            {
+                /* This looks like we're actually looking at the next
+                 * field over-spilling left so far that it reaches
+                 * under our header; but we did previously check for
+                 * this and amend e left-wards if it's credible; so
+                 * we're now looking at a case where it isn't;
+                 * probably our columns abut, with no space in
+                 * between.  The best we can do is include the text
+                 * between columns as part of both columns :-( */
+                abut = true;
+                prior = e; /* Before adjusting it: */
+                e = outer - 1;
             }
             else
             {
-                outer = strlen(proc);
-            }
-            /* Simplify loop condition; we want e to end *before* next
-             * field, not on its first byte (or the terminator): */
-            outer--;
+                /* Our word appears to over-spill under the next
+                 * header.  See if that's credible.  If the next is a
+                 * left-aligned field, it'll follow ours after exactly
+                 * a simple space.  If it's right-aligned (numeric),
+                 * it'll still follow after a single space unless it
+                 * has enough space to fit under its header after more
+                 * than one space. */
 
-            while (e < outer && !isspace((unsigned char) proc[e]))
-            {
-                e++;
+                assert(out < beyond && isspace((unsigned char) proc[out]));
+                if ((proc[out] == ' ' && proc[out + 1] &&
+                     !isspace((unsigned char) proc[out + 1])) ||
+                    (isdigit((unsigned char) proc[beyond]) &&
+                     isspace((unsigned char) proc[beyond + 1])))
+                {
+                    e = out - 1;
+                }
+                else
+                {
+                    e = outer - 1;
+                }
             }
+        }
+        if (!abut)
+        {
+            prior = e;
         }
 
         /* Strip off any leading and trailing spaces: */
@@ -720,8 +831,7 @@ static int SplitProcLine(const char *proc,
             /* Trust the reported value if it matches hh:mm[:ss], though: */
             if (sscanf(line[j], "%d:%d:%d", ns, ns + 1, ns + 2) < 2)
             {
-                /* TODO: use time of ps-run, not time(NULL), which may be later. */
-                time_t value = time(NULL) - (time_t) elapsed;
+                time_t value = pstime - (time_t) elapsed;
 
                 Log(LOG_LEVEL_DEBUG,
                     "SplitProcLine: Replacing parsed start time %s with %s",
@@ -771,8 +881,10 @@ bool IsProcessNameRunning(char *procNameRegex)
         Log(LOG_LEVEL_ERR, "IsProcessNameRunning: PROCESSTABLE is empty");
         return false;
     }
+    /* TODO: use actual time of ps-run, not time(NULL), which may be later. */
+    time_t pstime = time(NULL);
 
-    GetProcessColumnNames(PROCESSTABLE->name, (char **) colHeaders, start, end);
+    GetProcessColumnNames(PROCESSTABLE->name, colHeaders, start, end);
 
     for (const Item *ip = PROCESSTABLE->next; !matched && ip != NULL; ip = ip->next) // iterate over ps lines
     {
@@ -783,7 +895,7 @@ bool IsProcessNameRunning(char *procNameRegex)
             continue;
         }
 
-        if (!SplitProcLine(ip->name, colHeaders, start, end, lineSplit))
+        if (!SplitProcLine(ip->name, pstime, colHeaders, start, end, lineSplit))
         {
             Log(LOG_LEVEL_ERR, "IsProcessNameRunning: Could not split process line '%s'", ip->name);
             continue;
@@ -809,9 +921,9 @@ bool IsProcessNameRunning(char *procNameRegex)
 }
 
 
-static void GetProcessColumnNames(char *proc, char **names, int *start, int *end)
+static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end)
 {
-    char *sp, title[16];
+    char title[16];
     int col, offset = 0;
 
     for (col = 0; col < CF_PROCCOLS; col++)
@@ -822,7 +934,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
 
     col = 0;
 
-    for (sp = proc; *sp != '\0'; sp++)
+    for (const char *sp = proc; *sp != '\0'; sp++)
     {
         offset = sp - proc;
 
@@ -863,8 +975,8 @@ static const char *GetProcessOptions(void)
 # ifdef __linux__
     if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
     {
-        // No threads on 2.4 kernels
-        return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
+        // No threads on 2.4 kernels, so omit nlwp
+        return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss:9,stime,etime,time,args";
     }
 # endif
 
@@ -979,7 +1091,7 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
             }
         }
         Chop(pbuff, pbuff_size);
-        if (strstr(pbuff, "PID")) /*this is the banner*/
+        if (strstr(pbuff, "PID")) /* This line is the header. */
         {
             GetProcessColumnNames(pbuff, &names[0], start, end);
         }

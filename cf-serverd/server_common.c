@@ -50,6 +50,7 @@ static const int CF_NOSIZE = -1;
 #include <misc_lib.h>                              /* UnexpectedError */
 #include <cf-windows-functions.h>                  /* NovaWin_UserNameToSid */
 #include <mutex.h>                                 /* ThreadLock */
+#include <stat_cache.h>                            /* struct Stat */
 
 
 void RefuseAccess(ServerConnectionState *conn, char *errmesg)

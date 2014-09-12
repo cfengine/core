@@ -57,8 +57,6 @@
 #include <known_dirs.h>
 #include <evalfunction.h>
 
-static void LoadSetuid(void);
-static void SaveSetuid(void);
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
 
@@ -285,7 +283,6 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, CF_DATA_TYPE_STRING, "source=promise");
     Attributes a = GetExpandedAttributes(ctx, pp, &attr);
 
-    LoadSetuid();
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {
@@ -483,7 +480,6 @@ exit:
             "No action was requested for file '%s'. Maybe a typo in the policy?", path);
     }
 
-    SaveSetuid();
     YieldCurrentLock(thislock);
 
     ClearExpandedAttributes(&a);
@@ -779,33 +775,4 @@ static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp
     }
 
     return result;
-}
-
-static void LoadSetuid(void)
-{
-    char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
-    MapName(filename);
-
-    VSETUIDLIST = RawLoadItemList(filename);
-}
-
-/*********************************************************************/
-
-static void SaveSetuid(void)
-{
-    char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
-    MapName(filename);
-
-    PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");
-
-    Item *current = RawLoadItemList(filename);
-    if (!ListsCompare(VSETUIDLIST, current))
-    {
-        RawSaveItemList(VSETUIDLIST, filename, NewLineMode_Unix);
-    }
-
-    DeleteItemList(VSETUIDLIST);
-    VSETUIDLIST = NULL;
 }

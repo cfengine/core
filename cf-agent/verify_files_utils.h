@@ -29,7 +29,6 @@
 #include <cfnet.h>                                       /* AgentConnection */
 #include <comparray.h>
 
-extern Item *VSETUIDLIST;
 extern const Rlist *SINGLE_COPY_LIST;
 
 void SetFileAutoDefineList(const Rlist *auto_define_list);

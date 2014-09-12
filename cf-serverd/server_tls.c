@@ -775,7 +775,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         int ret = sscanf(recvbuffer, "SYNCH %ld STAT %[^\n]",
                          &time_no_see, filename);
 
-        if (ret != 2  || time_no_see == 0 || filename[0] == '\0')
+        if (ret != 2 || filename[0] == '\0')
         {
             goto protocol_error;
         }

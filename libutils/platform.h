@@ -417,7 +417,7 @@ static inline uint32_t ByteSwap32(uint32_t le32uint)
 #  define le32toh(x) (x)
 #  define htole32(x) (x)
 # endif
-#endif
+#endif // !HAVE_DECL_LE32TOH
 
 #if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);

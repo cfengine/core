@@ -117,14 +117,15 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
 
     /* Not found in cache */
 
-
     char recvbuffer[CF_BUFSIZE];
     memset(recvbuffer, 0, CF_BUFSIZE);
 
     time_t tloc = time(NULL);
     if (tloc == (time_t) -1)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't read system clock");
+        Log(LOG_LEVEL_ERR, "Couldn't read system clock (time: %s)",
+            GetErrorStr());
+        tloc = 0;
     }
 
     char sendbuffer[CF_BUFSIZE];

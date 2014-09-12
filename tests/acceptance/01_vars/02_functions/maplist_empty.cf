@@ -1,0 +1,25 @@
+body common control {
+    bundlesequence => { "example" };
+}
+
+bundle agent example {
+  vars:
+      "list" slist => {};
+      "mapped_list" slist => maplist("- $(this)", "list");
+      "length" int => length("mapped_list");
+
+  classes:
+      "length_$(length)" expression => "any";
+      "PASS" expression => "length_0";
+
+  reports:
+    DEBUG.!PASS::
+      "mapped_list $(mapped_list)";
+      "length $(length)";
+
+    PASS::
+      "$(this.promise_filename) Pass";
+    !PASS::
+      "$(this.promise_filename) FAIL";
+}
+

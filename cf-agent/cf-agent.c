@@ -152,6 +152,7 @@ static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
 static void BannerStatus(PromiseResult status, char *type, char *name);
+static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -1257,6 +1258,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             if (type == TYPE_SEQUENCE_CONTEXTS)
             {
                 BundleResolve(ctx, bp);
+                BundleResolvePromiseType(ctx, bp, "defaults", (PromiseActuator*)DefaultVarPromise);
             }
         }
     }

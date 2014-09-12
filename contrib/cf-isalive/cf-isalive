@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+"""
+# cf-isalive
+
+Detect and alert when CFEngine is stuck
+
+## 1. About
+
+Script used to detect and alert when CFEngine is stuck or dead and not applying
+any promise for a while (`MAX_SECOND_LATE`)
+
+## 2. Usage
+
+Simply run the script. You'll only get output on failure, as illustrated below.
+
+### 2.1. On a system where CFEngine is stuck
+
+```
+root@host:~# /etc/cron.hourly/cf-isalive
+I'm late ! CFEngine did not run for 13770 seconds ! Check me !
+Last /var/cfengine/promise_summary.log line:
+1401544020,1401544080: Outcome of version Percolate Promises.cf 1.4 (agent-0):
+    Promises observed to be kept 100%, Promises repaired 0%, Promises not
+    repaired 0%
+root@host:~# echo $?
+1
+```
+
+### 2.2. On a system where CFEngine is in a good state
+
+```
+root@host:~# /etc/cron.hourly/cf-isalive
+root@host:~# echo $?
+0
+```
+
+## 3. Installation
+
+Ideally you want to run this script hourly and get its output by email.
+It's easy to do on any debian-based system:
+
+```
+root@host:~# cp cf-isalive /etc/cron.hourly/cf-isalive
+root@host:~# chmod +x /etc/cron.hourly/cf-isalive
+```
+
+## 4. Licensing
+
+cf-isalive
+Copyright (C) 2012  Percolate Industries, Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+
+import re
+import time
+import argparse
+
+# The location of the promise summary log file
+CF_PROMISE_SUMMARY_FILE = u'/var/cfengine/promise_summary.log'
+
+# An instance is not alerting the ops if it's late less than this amount of
+# seconds
+MAX_SECOND_LATE = 3600
+
+
+def get_last_line_of_file(filepath):
+    """
+    Get the last line of the file
+
+    Args:
+        filepath (basestring)
+
+    Returns:
+        str
+    """
+    assert isinstance(filepath, basestring)
+
+    try:
+        logfile = open(filepath, 'r')
+    except IOError:
+        exit('Unable to open {}'.format(filepath))
+
+    last_line = ''
+
+    while True:
+        line = logfile.readline()
+        if not line:
+            break
+        last_line = line
+
+    logfile.close()
+
+    # Remove the newline char from the last line we got
+    last_line = last_line.rstrip('\n')
+
+    return last_line
+
+
+def main(max_second_late):
+    """
+    Args:
+        max_second_late (int)
+    """
+    assert isinstance(max_second_late, int)
+    last_line = get_last_line_of_file(CF_PROMISE_SUMMARY_FILE)
+    # print last_line
+    # 1337377540,1337377541: Outcome of version Percolate Promises.cf 1.0.0
+    #   (agent-0): Promises observed to be kept 98%, Promises repaired 2%,
+    #   Promises not repaired 0%
+    # 1373380520,1373380549: Outcome of version Percolate Promises.cf 1.2
+    #   (agent-0): Promises observed to be kept 100%, Promises repaired 0%,
+    #   Promises not repaired 0%
+    # In enterprise_stubs.c
+    # "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept
+    #   %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%"
+    regex = ('^(\d+),(\d+): Outcome of version (.*?) \(.*?\):'
+             ' Promises observed to be kept (\d{1,3}(\.\d\d)?)%, Promises'
+             ' repaired (\d{1,3}(\.\d\d)?)%, Promises not repaired'
+             ' (\d{1,3}(\.\d\d)?)%$')
+    matches = re.match(regex, last_line)
+    if not matches:
+        exit('Unable to parse the last line of promise_summary.log')
+
+    # start_time = matches.groups()[0]
+    end_time = matches.groups()[1]
+    # version_string = matches.groups()[2]
+    # promises_kept = matches.groups()[3]
+    # promises_repaired = matches.groups()[5]
+    # promises_not_repaired = matches.groups()[7]
+    # print matches.groups()
+
+    # Since when this instance has not scheduled a CFEngine run ?
+    sec_late = int(time.time() - float(end_time))
+    if sec_late > max_second_late:
+        exit("I'm late ! CFEngine did not run for {} seconds ! Check me !\n"
+             "Last {} line:\n{}"
+             .format(sec_late, CF_PROMISE_SUMMARY_FILE, last_line))
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s',
+                        '--max-seconds',
+                        action='store',
+                        dest='max_seconds',
+                        type=int,
+                        default=MAX_SECOND_LATE)
+    args = parser.parse_args()
+    main(args.max_seconds)

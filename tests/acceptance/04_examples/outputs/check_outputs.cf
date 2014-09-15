@@ -33,9 +33,9 @@ bundle agent init
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
-      "test_suppress_fail" string => "sunos_5_10", # need to re-test on solaris 8 and 10 but now passing on solaris 11
-      meta => { "redmine6225" };
+      # It's unrealistic to keep this test perfectly stable on all non-Linux platforms.
+      # It would require examples that quickly get very cluttered.
+      "test_skip_unsupported" string => "!linux";
 
   vars:
       "examples" slist => { @(init.all_examples) };

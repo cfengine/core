@@ -3653,8 +3653,9 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         return false;
     }
 
-    /* If name ends in /. then this is a directory */
-    if (strcmp(".", ReadLastNode(file)) == 0)
+    /* If name ends in /., or depthsearch is set, then this is a directory */
+    bool is_dir = attr.havedepthsearch || (strcmp(".", ReadLastNode(file)) == 0);
+    if (is_dir)
     {
         Log(LOG_LEVEL_DEBUG, "File object '%s' seems to be a directory", file);
 

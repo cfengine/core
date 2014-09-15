@@ -25,7 +25,7 @@ bundle agent test
 {
   
   meta:
-      "test_suppress_fail" string => "windows|sunos_5_9",
+      "test_suppress_fail" string => "windows",
         meta => { "redmine4747" };
         
   processes:

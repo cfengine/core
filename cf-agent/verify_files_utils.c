@@ -3709,11 +3709,23 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
 
             MakeParentDirectory(file, attr.move_obstructions);
 
-            int fd = safe_creat(file, filemode);
+            int fd = safe_open(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
             if (fd == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. (creat: %s)",
-                     file, (uintmax_t)filemode, GetErrorStr());
+                char errormsg[CF_BUFSIZE];
+                if (errno == EEXIST)
+                {
+                    snprintf(errormsg, sizeof(errormsg), "(open: '%s'). "
+                             "Most likely a dangling symlink is in the way. "
+                             "Refusing to create the target file of dangling symlink (security risk).",
+                             GetErrorStr());
+                }
+                else
+                {
+                    snprintf(errormsg, sizeof(errormsg), "(open: %s)", GetErrorStr());
+                }
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
+                     file, (uintmax_t)filemode, errormsg);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 umask(saveumask);
                 return false;

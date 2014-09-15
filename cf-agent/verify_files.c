@@ -332,7 +332,18 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         ChopLastNode(basedir);
         if (safe_chdir(basedir))
         {
-            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
+            char msg[CF_BUFSIZE];
+            snprintf(msg, sizeof(msg), "Failed to chdir into '%s'. (chdir: '%s')",
+                     basedir, GetErrorStr());
+            if (errno == ENOLINK)
+            {
+                Log(LOG_LEVEL_ERR, "%s. There may be a symlink in the path that has a different "
+                    "owner from the owner of its target (security risk).", msg);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "%s", msg);
+            }
         }
     }
 

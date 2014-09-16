@@ -69,14 +69,14 @@ bundle agent test
       perms => m("666"),
       classes => promiser2_generic;
 
-    # 2 promisers - dir + 1 file
+    # 1 promisers - 1 file
     "$(G.testdir)"
       file_select => by_exec_cmd,
       perms => m("666"),
       classes => promiser2_generic,
       depth_search => test_recurse;
 
-    # 7 promisers - dir + 6 files
+    # 6 promisers - 6 files
     "$(G.testdir)"
       file_select => test_plain,
       depth_search => test_recurse,
@@ -178,8 +178,8 @@ bundle agent check
       "ok_expand" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
       "ok0" expression => strcmp("$(ok_0_count)", 1);
       "ok1" expression => strcmp("$(ok_1_count)", 6);
-      "ok2" expression => strcmp("$(ok_2_count)", 5);
-      "ok3" expression => strcmp("$(ok_3_count)", 7);
+      "ok2" expression => strcmp("$(ok_2_count)", 4);
+      "ok3" expression => strcmp("$(ok_3_count)", 6);
       "ok4" expression => strcmp("$(ok_4_count)", 4);
       "ok5" expression => fileexists("$(G.testdir)/copy_me");
 

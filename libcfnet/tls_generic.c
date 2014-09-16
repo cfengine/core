@@ -527,13 +527,13 @@ static const char *TLSPrimarySSLError(int code)
  * @warning Use only for SSL_connect(), SSL_accept(), SSL_do_handshake(),
  *          SSL_read(), SSL_peek(), SSL_write(), see SSL_get_error man page.
  */
-void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
+void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int retcode)
 {
     assert(prepend != NULL);
 
-    /* For when code==SSL_ERROR_SYSCALL. */
+    /* For when retcode==SSL_ERROR_SYSCALL. */
     const char *syserr = (errno != 0) ? GetErrorStr() : "";
-    int errcode         = SSL_get_error(ssl, code);
+    int errcode         = SSL_get_error(ssl, retcode);
     const char *errstr1 = TLSPrimarySSLError(errcode);
     /* For SSL_ERROR_SSL, SSL_ERROR_SYSCALL (man SSL_get_error). It's not
      * useful for SSL_read() and SSL_write(). */
@@ -552,10 +552,32 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
     {
         Log(level, "%s: send timeout", prepend);
     }
-    else
+    /* if we got SSL_ERROR_SYSCALL and ERR_get_error() returned 0 then take
+     * ret into account (man SSL_get_error). */
+    else if (errcode == SSL_ERROR_SYSCALL && errstr2 == NULL &&
+             (retcode == 0 || retcode == -1))
+    {
+        /* This is not described in SSL_get_error manual, but play it safe. */
+        if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
+        {
+            Log(level, "%s: remote peer terminated TLS session",
+                prepend);
+        }
+        /* "an EOF was observed that violates the protocol" */
+        else if (retcode == 0)
+        {
+            Log(level, "%s: socket closed", prepend);
+        }
+        /* "the underlying BIO reported an I/O error" */
+        else if (retcode == -1)
+        {
+            Log(level, "%s: underlying network error (%s)", prepend, syserr);
+        }
+    }
+    else                                 /* generic error printing fallback */
     {
         Log(level, "%s: (%d %s) %s %s",
-            prepend, code, errstr1,
+            prepend, retcode, errstr1,
             (errstr2 == NULL) ? "" : errstr2,          /* most likely empty */
             syserr);
     }

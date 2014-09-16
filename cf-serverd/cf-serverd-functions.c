@@ -787,9 +787,7 @@ static void AcceptAndHandle(EvalContext *ctx, int sd)
     }
 
     info->ss_len = sizeof(info->ss);
-    info->sd = accept(sd,
-                      (struct sockaddr *) &info->ss,
-                      &info->ss_len);
+    info->sd = accept(sd, (struct sockaddr *) &info->ss, &info->ss_len);
     if (info->sd == -1)
     {
         ConnectionInfoDestroy(&info);

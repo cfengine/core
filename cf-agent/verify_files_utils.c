@@ -1947,7 +1947,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
 static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, const Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!DONTDO)
+    if (!DONTDO && attr.transaction.action == cfa_fix)
     {
         if (utime(path, NULL) != -1)
         {
@@ -1963,7 +1963,9 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, co
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Need to touch (update timestamps) path '%s'", path);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+             "Need to touch (update time stamps) for '%s', but only a warning was promised!", path);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
     }
 
     return result;

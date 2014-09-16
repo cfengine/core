@@ -1,0 +1,61 @@
+#######################################################
+#
+# Copy a directory structure, mixing create and depth_search 
+# Redmine 6027
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "source_dirs" slist => { ".", "a.dir/.", "a.dir/b.dir/." };
+      "source_files" slist => { "a.file", "a.dir/b.file" };
+  files:
+      "$(G.testdir)_source/$(source_dirs)"
+      create => "true";
+
+      "$(G.testdir)_source/$(source_files)"
+      create => "true";
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testdir)_destination"
+      create => "true",
+      copy_from => local_cp("$(G.testdir)_source"),
+      depth_search => recurse("inf");
+
+      "$(G.testdir)_destination_dir/."
+      create => "true",
+      copy_from => local_cp("$(G.testdir)_source"),
+      depth_search => recurse("inf");
+}
+
+bundle agent check
+{
+  # test that selected destination file system entries exist with the correct type
+  classes:
+    "files_ok" and => { strcmp(filestat("$(G.testdir)_destination/a.dir/b.file", "type"), "regular file"),
+                        strcmp(filestat("$(G.testdir)_destination_dir/a.dir/b.file", "type"), "regular file") };
+    "dirs_ok" and => { strcmp(filestat("$(G.testdir)_destination", "type"), "directory"),
+                       strcmp(filestat("$(G.testdir)_destination/a.dir/b.dir", "type"), "directory"),
+                       strcmp(filestat("$(G.testdir)_destination_dir/a.dir/b.dir", "type"), "directory") };
+
+    "ok" and => { "files_ok", "dirs_ok" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

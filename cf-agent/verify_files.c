@@ -416,7 +416,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         else
         {
             /* unless child nodes were repaired, set a promise kept class */
-            if (!IsDefinedClass(ctx, "repaired"))
+            if (result == PROMISE_RESULT_NOOP)
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Basedir '%s' not promising anything", path);
             }

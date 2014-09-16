@@ -334,16 +334,29 @@ void GetInterfacesInfo(EvalContext *ctx)
     list.ifc_len = sizeof(ifbuf);
     list.ifc_req = ifbuf;
 
+    /* WARNING: *BSD use unsigned long as second argument to ioctl() while
+     * POSIX specifies *signed* int. Using the largest possible signed type is
+     * the best strategy.*/
 #ifdef SIOCGIFCONF
-    const int request = SIOCGIFCONF;
+    intmax_t request = SIOCGIFCONF;
 #else
-    const int request = OSIOCGIFCONF;
+    intmax_t request = OSIOCGIFCONF;
 #endif
-    if (ioctl(fd, request, &list) == -1 ||
-        list.ifc_len < sizeof(struct ifreq))
+    int ret = ioctl(fd, request, &list);
+    if (ret == -1)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024. (ioctl: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Couldn't get interfaces (ioctl(SIOCGIFCONF): %s)",
+            GetErrorStr());
         exit(EXIT_FAILURE);
+    }
+
+    if (list.ifc_len < (int) sizeof(struct ifreq))
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Interface list returned is too small (%d bytes), "
+            "assuming no interfaces present", list.ifc_len);
+        list.ifc_len = 0;
     }
 
     char last_name[sizeof(ifp->ifr_name)] = "";

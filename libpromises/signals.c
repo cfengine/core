@@ -163,7 +163,6 @@ void HandleSignalsForDaemon(int signum)
     case SIGHUP:
     case SIGSEGV:
     case SIGKILL:
-    case SIGPIPE:
         PENDING_TERMINATION = true;
         break;
     case SIGUSR1:
@@ -172,6 +171,7 @@ void HandleSignalsForDaemon(int signum)
     case SIGUSR2:
         LogSetGlobalLevel(LOG_LEVEL_NOTICE);
         break;
+    case SIGPIPE:
     default:
         /* No action */
         break;

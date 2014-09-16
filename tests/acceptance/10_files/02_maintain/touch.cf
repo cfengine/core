@@ -1,0 +1,56 @@
+#######################################################
+#
+# Test that action => "warn" works correctly for touch
+# Redmine 3172 
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      create => "true";
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testfile)"
+      touch => "true",
+      action => warn_only,
+      classes => if_repaired("wrong_class_set");
+
+      "$(G.testfile)_not_there"
+      touch => "true",
+      action => warn_only;
+
+      "$(G.testfile)_there"
+      touch => "true";
+}
+
+bundle agent check
+{
+  vars:
+      "wrong_classes" slist => classesmatching("wrong_.*");
+  classes:
+      "wrong_file_there" expression => fileexists("$(G.testfile)_not_there");
+      "right_file_there" expression => fileexists("$(G.testfile)_there");
+
+      "ok" and => { "right_file_there", "!wrong_file_there", "!wrong_class_set" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG.!ok::
+      "Unwanted class: $(wrong_classes)";
+}

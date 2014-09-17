@@ -98,6 +98,7 @@ LIBTOOL=${LIBTOOL:-}
 export LIBTOOL
 
 export MAKEFLAGS
+export GAINROOT
 
 # Use TEST_INDEX for indexing a poor man's array. Basically the subscript is
 # just appended to the variable name.

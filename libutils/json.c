@@ -2106,10 +2106,10 @@ JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **js
     {
         return JSON_PARSE_ERROR_NO_DATA;
     }
-    JsonElement *json = NULL;
+    assert(json_out);
+    *json_out = NULL;
     const char *data = StringWriterData(contents);
-    JsonParseError err = JsonParse(&data, &json);
+    JsonParseError err = JsonParse(&data, json_out);
     WriterClose(contents);
-    *json_out = json;
     return err;
 }

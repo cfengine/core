@@ -1379,7 +1379,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         trem = (time_t) time_no_see;
 
-        if ((time_no_see == 0) || (filename[0] == '\0'))
+        if (filename[0] == '\0')
         {
             break;
         }

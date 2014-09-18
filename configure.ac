@@ -8,7 +8,7 @@ dnl ##########################################################################
 
 AC_PREREQ(2.59)
 
-AC_INIT
+AC_INIT(CFEngine, 3.7.0a1.revision)
 AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
 AC_CANONICAL_TARGET
 
@@ -25,7 +25,7 @@ dnl The version in the next line is the only one to set
 dnl
 
 _AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, 3.7.0a1.revision)
+AM_INIT_AUTOMAKE([subdir-objects])
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")

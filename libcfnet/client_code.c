@@ -55,11 +55,7 @@
 bool cfnet_init()
 {
     CryptoInitialize();
-
-    if (TLSClientInitialize())
-        return true;
-    else
-        return false;
+    return TLSClientInitialize();
 }
 
 void cfnet_shut()
@@ -74,30 +70,29 @@ char CFENGINE_PORT_STR[16] = "5308";
 
 void DetermineCfenginePort()
 {
-    struct servent *server;
     assert(sizeof(CFENGINE_PORT_STR) >= PRINTSIZE(CFENGINE_PORT));
     /* ... but we leave more space, as service names can be longer */
 
     errno = 0;
-    if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) != NULL)
+    struct servent *server = getservbyname(CFENGINE_SERVICE, "tcp");
+    if (server != NULL)
     {
         CFENGINE_PORT = ntohs(server->s_port);
         snprintf(CFENGINE_PORT_STR, sizeof(CFENGINE_PORT_STR),
                  "%d", CFENGINE_PORT);
     }
+    else if (errno == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "No registered cfengine service, using default");
+    }
     else
     {
-        if (errno == 0)
-        {
-            Log(LOG_LEVEL_VERBOSE, "No registered cfengine service, using default");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Unable to query services database, using default. (getservbyname: %s)", GetErrorStr());
-        }
+        Log(LOG_LEVEL_VERBOSE,
+            "Unable to query services database, using default. (getservbyname: %s)",
+            GetErrorStr());
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %d", CFENGINE_PORT);
+    Log(LOG_LEVEL_VERBOSE, "Default port for cfengine is %d", CFENGINE_PORT);
 }
 
 /**
@@ -177,10 +172,10 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 
     /* FIXME: username is local */
-    GetCurrentUserName(conn->username, CF_SMALLBUF);
+    GetCurrentUserName(conn->username, sizeof(conn->username));
 #else
     /* Always say "root" as username from windows. */
-    snprintf(conn->username, CF_SMALLBUF, "root");
+    strlcpy(conn->username, "root", sizeof(conn->username));
 #endif
 
     if (port == NULL || *port == '\0')
@@ -503,7 +498,9 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
         {
             if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
             {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Copy failed (no space?) while copying to '%s' from network '%s'",
+                    destination, GetErrorStr());
                 return false;
             }
 
@@ -515,7 +512,9 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
         {
             if (FullWrite(dd, cur, copy_span - cur) < 0)
             {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to '%s' from network '%s'", destination, GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Copy failed (no space?) while copying to '%s' from network '%s'",
+                    destination, GetErrorStr());
                 return false;
             }
 

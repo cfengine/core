@@ -32,7 +32,9 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Prom
 {
     bool result_retcode = true;
 
-    if ((a.classes.retcode_kept) || (a.classes.retcode_repaired) || (a.classes.retcode_failed))
+    if (a.classes.retcode_kept ||
+        a.classes.retcode_repaired ||
+        a.classes.retcode_failed)
     {
         int matched = false;
         char retcodeStr[PRINTSIZE(retcode)];
@@ -43,7 +45,6 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Prom
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a,
                  "Command related to promiser '%s' returned code defined as promise kept %d", pp->promiser,
                  retcode);
-            result_retcode = true;
             matched = true;
         }
 
@@ -53,7 +54,6 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Prom
                  "Command related to promiser '%s' returned code defined as promise repaired %d", pp->promiser,
                  retcode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-            result_retcode = true;
             matched = true;
         }
 
@@ -84,7 +84,6 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, Attributes a, const Prom
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Finished command related to promiser '%s' -- succeeded",
                  pp->promiser);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-            result_retcode = true;
         }
         else
         {

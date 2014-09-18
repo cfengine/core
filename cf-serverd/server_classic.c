@@ -641,28 +641,29 @@ char iscrypt, enterprise_field;
                         sauth, &iscrypt, &crypt_len,
                         &challenge_len, &enterprise_field);
 
-    if (nparam != 5)
+    if (nparam >= 1 && strcmp(sauth, "SAUTH") != 0)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
-            "peer sent only %d out of 5 expected parameters",
-            nparam);
-
-        if (nparam >= 1 && strcmp(sauth, "SAUTH") != 0)
-        {
-            Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "was expecting SAUTH command but got '%s'",
-                sauth);
-        }
-
+            "was expecting SAUTH command but got '%s'",
+            sauth);
         return false;
     }
 
-    if (strcmp(sauth, "SAUTH") != 0)
+    if (nparam != 5 && nparam != 4)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
-            "was expecting SAUTH command but got: %s",
-            sauth);
+            "peer sent only %d arguments to SAUTH command",
+            nparam - 1);
         return false;
+    }
+
+    /* CFEngine 2 had no enterprise/community differentiation. */
+    if (nparam == 4)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Peer sent only 4 parameters, "
+            "assuming it is a legacy community client");
+        enterprise_field = 'c';
     }
 
     if ((challenge_len == 0) || (crypt_len == 0))

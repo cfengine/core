@@ -312,6 +312,10 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
     {
         logic = c_xor;
     }
+    else
+    {
+        return false;
+    }
 
     for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
     {

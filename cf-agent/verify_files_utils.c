@@ -2085,7 +2085,8 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "'%s' has permission %04jo - [should be %04jo]", file,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+                 "'%s' has permission %04jo - [should be %04jo]", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             break;
@@ -2096,18 +2097,22 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
             {
                 if (safe_chmod(file, newperm & 07777) == -1)
                 {
-                    Log(LOG_LEVEL_ERR, "chmod failed on '%s'. (chmod: %s)", file, GetErrorStr());
+                    Log(LOG_LEVEL_ERR,
+                        "chmod failed on '%s'. (chmod: %s)",
+                        file, GetErrorStr());
                     break;
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Object '%s' had permission %04jo, changed it to %04jo", file,
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                 "Object '%s' had permission %04jo, changed it to %04jo", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             break;
 
         default:
-            ProgrammingError("Unhandled file action in switch: %d", attr.transaction.action);
+            ProgrammingError("Unhandled file action in switch: %d",
+                             attr.transaction.action);
         }
     }
 

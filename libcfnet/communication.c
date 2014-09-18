@@ -22,8 +22,12 @@
   included file COSL.txt.
 */
 
+
+#include <platform.h>
 #include <communication.h>
+
 #include <connection_info.h>
+#include <stat_cache.h>                                 /* Stat */
 #include <alloc.h>                                      /* xmalloc,... */
 #include <logging.h>                                    /* Log */
 #include <misc_lib.h>                                   /* ProgrammingError */

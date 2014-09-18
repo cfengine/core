@@ -43,9 +43,6 @@ AgentConnection *ServerConnection(const char *server, const char *port,
                                   ConnectionFlags flags, int *err);
 void DisconnectServer(AgentConnection *conn);
 
-const Stat *StatCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name);
-int cf_remote_stat(const char *file, struct stat *buf, const char *stattype,
-                   bool encrypt, AgentConnection *conn);
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
 int CopyRegularFileNet(const char *source, const char *dest, off_t size,
                        bool encrypt, AgentConnection *conn);

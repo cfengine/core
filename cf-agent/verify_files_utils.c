@@ -63,6 +63,7 @@
 #include <retcode.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <conn_cache.h>
+#include <stat_cache.h>                      /* remote_stat,StatCacheLookup */
 #include <known_dirs.h>
 
 #include <cf-windows-functions.h>
@@ -3393,7 +3394,7 @@ static int cf_stat(const char *file, struct stat *buf, FileCopy fc, AgentConnect
     else
     {
         assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
-        return cf_remote_stat(file, buf, "file", fc.encrypt, conn);
+        return cf_remote_stat(conn, fc.encrypt, file, buf, "file");
     }
 }
 
@@ -3409,9 +3410,11 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
     {
         return readlink(sourcefile, linkbuf, buffsize - 1);
     }
-    assert(attr.copy.servers && strcmp(RlistScalarValue(attr.copy.servers), "localhost"));
+    assert(attr.copy.servers &&
+           strcmp(RlistScalarValue(attr.copy.servers), "localhost"));
 
-    const Stat *sp = StatCacheLookup(conn, RlistScalarValue(attr.copy.servers), sourcefile);
+    const Stat *sp = StatCacheLookup(conn, sourcefile,
+                                     RlistScalarValue(attr.copy.servers));
 
     if (sp)
     {

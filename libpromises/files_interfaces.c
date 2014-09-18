@@ -36,6 +36,7 @@
 #include <client_code.h>
 #include <string_lib.h>
 #include <rlist.h>
+#include <stat_cache.h>                                      /* remote_stat */
 
 int cf_lstat(const char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
@@ -51,7 +52,7 @@ int cf_lstat(const char *file, struct stat *buf, FileCopy fc, AgentConnection *c
     else
     {
         assert(fc.servers && strcmp(fc.servers->val.item, "localhost"));
-        return cf_remote_stat(file, buf, "link", fc.encrypt, conn);
+        return cf_remote_stat(conn, fc.encrypt, file, buf, "link");
     }
 }
 

@@ -465,6 +465,12 @@ int safe_open(const char *pathname, int flags, ...)
                 }
                 else
                 {
+                    if ((flags & O_CREAT) && (flags & O_EXCL))
+                    {
+                        close(currentfd);
+                        errno = EEXIST;
+                        return -1;
+                    }
                     // Already exists. Make sure we *don't* create it.
                     flags &= ~O_CREAT;
                 }

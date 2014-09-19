@@ -465,6 +465,12 @@ int safe_open(const char *pathname, int flags, ...)
                 }
                 else
                 {
+                    if ((flags & O_CREAT) && (flags & O_EXCL))
+                    {
+                        close(currentfd);
+                        errno = EEXIST;
+                        return -1;
+                    }
                     // Already exists. Make sure we *don't* create it.
                     flags &= ~O_CREAT;
                 }
@@ -487,6 +493,10 @@ int safe_open(const char *pathname, int flags, ...)
                         else
                         {
                             // Too many attempts. Give up.
+                            // Most likely a link that is in the way of file creation, but can also
+                            // be a file that is constantly created and deleted (race condition).
+                            // It is not possible to separate between the two, so return EACCES to
+                            // signal that we denied access.
                             errno = EACCES;
                         }
                     }
@@ -517,7 +527,9 @@ int safe_open(const char *pathname, int flags, ...)
                 if (stat_before.st_uid != stat_after.st_uid || stat_before.st_gid != stat_after.st_gid)
                 {
                     close(currentfd);
-                    errno = EACCES;
+                    // Return ENOLINK to signal that the link cannot be followed
+                    // ('Link has been severed').
+                    errno = ENOLINK;
                     return -1;
                 }
             }

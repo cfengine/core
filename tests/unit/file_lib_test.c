@@ -293,7 +293,7 @@ static void test_safe_open_unsafe_symlink(void)
     switch_symlink_hook();
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK, O_RDONLY) < 0);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
 
     return_to_test_dir();
 }
@@ -361,7 +361,7 @@ static void test_safe_open_unsafe_switched_symlink(void)
     //switch_symlink_hook();
 
     assert_true(safe_open(TEST_FILE, O_RDONLY) < 0);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
 
     return_to_test_dir();
 }
@@ -395,7 +395,7 @@ static void test_safe_open_unsafe_dir_symlink(void)
     switch_symlink_hook();
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK "/passwd", O_RDONLY) < 0);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
 
     return_to_test_dir();
 }
@@ -469,7 +469,7 @@ static void test_safe_open_unsafe_switched_dir_symlink(void)
     //switch_symlink_hook();
 
     assert_true(safe_open(TEST_LINK "/passwd", O_RDONLY) < 0);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
 
     return_to_test_dir();
 }
@@ -548,12 +548,12 @@ static void test_safe_open_create_unsafe_switched_symlink(void)
     //switch_symlink_hook();
 
     assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
 
     return_to_test_dir();
 }
 
-static void test_safe_open_create_dangling_symlink(void)
+static void test_safe_open_create_switched_dangling_symlink(void)
 {
     setup_tempfiles();
 
@@ -570,7 +570,39 @@ static void test_safe_open_create_dangling_symlink(void)
     return_to_test_dir();
 }
 
-static void test_safe_open_dangling_symlink(void)
+static void test_safe_open_create_switched_dangling_symlink_exclusively(void)
+{
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = "/etc/file-that-for-sure-does-not-exist";
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //switch_symlink_hook();
+
+    assert_true(safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_EXCL, 0644) < 0);
+    assert_int_equal(errno, EEXIST);
+
+    return_to_test_dir();
+}
+
+static void test_safe_open_create_dangling_symlink_exclusively(void)
+{
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = "/etc/file-that-for-sure-does-not-exist";
+    switch_symlink_hook();
+
+    assert_true(safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_EXCL, 0644) < 0);
+    assert_int_equal(errno, EEXIST);
+
+    return_to_test_dir();
+}
+
+static void test_safe_open_switched_dangling_symlink(void)
 {
     setup_tempfiles();
 
@@ -911,7 +943,7 @@ static void test_safe_chown_unsafe_link(void)
     assert_int_equal(statbuf.st_uid, 0);
     assert_int_equal(statbuf.st_gid, 0);
     assert_int_equal(safe_chown(TEST_FILE, 100, 100), -1);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
     assert_int_equal(statbuf.st_uid, 0);
     assert_int_equal(statbuf.st_gid, 0);
@@ -1097,7 +1129,7 @@ static void test_safe_lchown_unsafe_link_to_directory(void)
     assert_int_equal(statbuf.st_uid, 0);
     assert_int_equal(statbuf.st_gid, 0);
     assert_int_equal(safe_lchown(TEST_LINK "/" TEST_FILE, 100, 100), -1);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
 
     assert_int_equal(lchown(TEST_SUBDIR "/" TEST_FILE, 100, 100), 0);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
@@ -1204,7 +1236,7 @@ static void test_safe_chmod_unsafe_link(void)
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
     assert_int_equal(statbuf.st_mode & 0777, 0777);
     assert_int_equal(safe_chmod(TEST_FILE, 0644), -1);
-    assert_int_equal(errno, EACCES);
+    assert_int_equal(errno, ENOLINK);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
     assert_int_equal(statbuf.st_mode & 0777, 0777);
 
@@ -1286,8 +1318,10 @@ int main(int argc, char **argv)
             unit_test(test_safe_open_create_safe_inserted_symlink),
             unit_test(test_safe_open_create_alternating_symlink),
             unit_test(test_safe_open_create_unsafe_switched_symlink),
-            unit_test(test_safe_open_create_dangling_symlink),
-            unit_test(test_safe_open_dangling_symlink),
+            unit_test(test_safe_open_create_switched_dangling_symlink),
+            unit_test(test_safe_open_create_switched_dangling_symlink_exclusively),
+            unit_test(test_safe_open_create_dangling_symlink_exclusively),
+            unit_test(test_safe_open_switched_dangling_symlink),
             unit_test(test_safe_open_root),
             unit_test(test_safe_open_ending_slashes),
             unit_test(test_safe_open_null),

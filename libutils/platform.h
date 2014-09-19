@@ -742,6 +742,12 @@ struct timespec
 # define ENOTSUPP EINVAL
 #endif
 
+#ifndef ENOLINK
+// Should be well outside the range of any errno value.
+// Will never actually be returned by any function on a platform that doesn't support it.
+# define ENOLINK 123456
+#endif
+
 /*******************************************************************/
 /* Copy file defines                                               */
 /*******************************************************************/

@@ -3655,12 +3655,6 @@ static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr
 
 bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes attr, PromiseResult *result)
 {
-    int fd;
-
-    /* If name ends in /. then this is a directory */
-
-// attr.move_obstructions for MakeParentDirectory
-
     if (!IsAbsoluteFileName(file))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
@@ -3669,7 +3663,9 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         return false;
     }
 
-    if (strcmp(".", ReadLastNode(file)) == 0)
+    /* If name ends in /., or depthsearch is set, then this is a directory */
+    bool is_dir = attr.havedepthsearch || (strcmp(".", ReadLastNode(file)) == 0);
+    if (is_dir)
     {
         Log(LOG_LEVEL_DEBUG, "File object '%s' seems to be a directory", file);
 
@@ -3713,7 +3709,8 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
 
             MakeParentDirectory(file, attr.move_obstructions);
 
-            if ((fd = safe_creat(file, filemode)) == -1)
+            int fd = safe_creat(file, filemode);
+            if (fd == -1)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. (creat: %s)",
                      file, (uintmax_t)filemode, GetErrorStr());

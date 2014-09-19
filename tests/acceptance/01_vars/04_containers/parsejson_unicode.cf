@@ -1,0 +1,24 @@
+#######################################################
+#
+# Test that we don't barf on unicode escapes in JSON
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle =>
+      dcs_passif_output(".*\bR: response index: unicode\b.*",
+                        ".*Error parsing JSON.*",
+                        "$(sys.cf_agent) -KIf $(this.promise_filename).sub",
+                        $(this.promise_filename));
+}

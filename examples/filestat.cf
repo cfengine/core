@@ -22,10 +22,10 @@
 
 #+begin_src prep
 #@ ```
-#@ echo 1234567890 > FILE.txt
-#@ chmod 0755 FILE.txt
-#@ chown 0 FILE.txt
-#@ chgrp 0 FILE.txt
+#@ echo 1234567890 > filestat.cf.txt
+#@ chmod 0755 filestat.cf.txt
+#@ chown 0 filestat.cf.txt
+#@ chgrp 0 filestat.cf.txt
 #@ ```
 #+end_src
 ###############################################################################
@@ -57,7 +57,7 @@ bundle agent fileinfo(f)
       "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
 
   reports:
-      "$(this.bundle): file $(stat[$(f)][basename]) has $(fields) = $(stat[$(f)][$(fields)])";
+      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
 }
 #+end_src
 ###############################################################################

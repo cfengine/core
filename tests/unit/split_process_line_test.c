@@ -2,6 +2,40 @@
 
 #include <processes_select.c>
 
+/* Actual ps output witnessed, that we probably can't hope to robustly
+ * parse. */
+static void test_split_line_challenges(void)
+{
+#if 0 /* Enable to see how many we actually get right ! */
+    /* Collect all test data in one array to make alignments visible: */
+    static const char *lines[] = {
+        "USER       PID    SZ    VSZ   RSS NLWP STIME     ELAPSED     TIME COMMAND",
+        "operatic 14338 1042534 4170136 2122012 9 Sep15 4-06:11:34 2-09:27:49 /usr/lib/opera/opera"
+        /* It's unlikely we'll realise NLWP is 9 ! */
+    };
+    char *name[CF_PROCCOLS]; /* Headers */
+    char *field[CF_PROCCOLS]; /* Content */
+    int start[CF_PROCCOLS] = { 0 };
+    int end[CF_PROCCOLS] = { 0 };
+    int i, user = 0, nlwp = 5;
+
+    /* Prepare data needed by tests and assert things tests can then assume: */
+    GetProcessColumnNames(lines[0], name, start, end);
+    assert_string_equal(name[user], "USER");
+    assert_string_equal(name[nlwp], "NLWP");
+
+    assert_true(SplitProcLine(lines[1], pstime, name, start, end, field));
+    assert_string_equal(field[user], "operatic");
+    assert_string_equal(field[nlwp], "9");
+
+    /* Finally, tidy away headers: */
+    for (i = 0; name[i] != NULL; i++)
+    {
+        free(name[i]);
+    }
+#endif
+}
+
 static void test_split_line_elapsed(void)
 {
     /* Collect all test data in one array to make alignments visible: */
@@ -329,6 +363,7 @@ int main(void)
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
         {
+            unit_test(test_split_line_challenges),
             unit_test(test_split_line_noelapsed),
             unit_test(test_split_line_elapsed),
             unit_test(test_split_line_longcmd),

@@ -11,8 +11,11 @@ file for prerequisites and build instructions.
 
 ## License
 
-As per the [LICENSE](https://github.com/cfengine/core/blob/master/LICENSE) file, CFEngine Community is licensed
-under the Gnu General Public License GPL, version 3.
+As per the [LICENSE](https://github.com/cfengine/core/blob/master/LICENSE) file,
+CFEngine Community is licensed under the GNU General Public License, version 3.
+
+All the files in this repository are licensed under GNU GPL version 3, unless
+stated otherwise in the copyright notice inside the particular file.
 
 ## Example Usage
 

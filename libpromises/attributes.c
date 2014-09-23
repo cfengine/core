@@ -962,7 +962,7 @@ EditDefaults GetEditDefaults(const EvalContext *ctx, const Promise *pp)
 
     e.maxfilesize = PromiseGetConstraintAsInt(ctx, "max_file_size", pp);
 
-    if ((e.maxfilesize == CF_NOINT) || (e.maxfilesize == 0))
+    if (e.maxfilesize == CF_NOINT)
     {
         e.maxfilesize = EDITFILESIZE;
     }

@@ -205,7 +205,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 
     if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
     {
-        Log(LOG_LEVEL_INFO, "File '%s' is bigger than the limit edit.max_file_size = '%jd' > '%d' bytes", file,
+        Log(LOG_LEVEL_INFO, "File '%s' is bigger than the edit limit. max_file_size = '%jd' > '%d' bytes", file,
               (intmax_t) statbuf.st_size, edits.maxfilesize);
         return false;
     }

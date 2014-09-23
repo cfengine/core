@@ -387,6 +387,14 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
     }
+    if ((!end_ptr || end_ptr == CF_UNDEFINED_ITEM) && a.region.select_end)
+    {
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+            "The promised end pattern '%s' was not found when selecting region to delete in '%s'",
+             a.region.select_end, edcontext->filename);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+        return false;
+    }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteline-%s-%s", pp->promiser, edcontext->filename);
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);

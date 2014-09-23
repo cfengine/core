@@ -92,7 +92,7 @@ static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, const Promise *pp);
 static int SelectLine(EvalContext *ctx, const char *line, Attributes a);
 static int NotAnchored(char *s);
-static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, EditContext *edcontext);
 static int MultiLineString(char *s);
 static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 
@@ -368,7 +368,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
         begin_ptr = CF_UNDEFINED_ITEM;
         end_ptr = CF_UNDEFINED_ITEM;
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         if (a.region.include_end || a.region.include_start)
         {
@@ -453,7 +453,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
         begin_ptr = *start;
         end_ptr = NULL;         // EndOfList(*start);
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised column edit '%s' could not select an edit region in '%s'",
              pp->promiser, edcontext->filename);
@@ -509,7 +509,7 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
         begin_ptr = *start;
         end_ptr = NULL;         //EndOfList(*start);
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "The promised pattern replace '%s' could not select an edit region in '%s'", pp->promiser,
@@ -673,7 +673,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         begin_ptr = *start;
         end_ptr = NULL;         //EndOfList(*start);
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "The promised line insertion '%s' could not select an edit region in '%s'", pp->promiser,
@@ -733,7 +733,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 /***************************************************************************/
 
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a,
-                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
+                        EditContext *edcontext)
 /*
 
 This should provide pointers to the first and last line of text that include the
@@ -756,10 +756,9 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
                 {
                     if (ip->next == NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+                        Log(LOG_LEVEL_VERBOSE,
                              "The promised start pattern '%s' found an empty region at the end of file '%s'",
                              a.region.select_start, edcontext->filename);
-                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                         return false;
                     }
                 }
@@ -786,10 +785,9 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
 
     if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+        Log(LOG_LEVEL_VERBOSE,
              "The promised start pattern '%s' was not found when selecting edit region in '%s'",
              a.region.select_start, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
 

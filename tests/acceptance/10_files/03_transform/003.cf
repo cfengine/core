@@ -20,10 +20,10 @@ bundle agent init
       "files" slist => { "1", "2", "3" };
 
   files:
-      "$(G.testdir)/."
+      "$(G.testdir)/files/."
       create => "true";
 
-      "$(G.testdir)/$(files)"
+      "$(G.testdir)/files/$(files)"
       copy_from => init_copy;
 }
 
@@ -47,12 +47,12 @@ bundle agent test
 
   files:
     windows::
-      "$(G.testdir)"
+      "$(G.testdir)/files"
       transformer => "$(G.echo) $(this.promiser) >> $(counter)",
       file_select => test_plain,
       depth_search => test_recurse;
     !windows::
-      "$(G.testdir)"
+      "$(G.testdir)/files"
       transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
       file_select => test_plain,
       depth_search => test_recurse;
@@ -76,7 +76,7 @@ bundle agent check
   vars:
       "count" string => execresult("$(G.wc) -l $(test.counter)", "noshell");
     DEBUG::
-      "list" string => execresult("$(G.ls) -1 $(G.testdir)", "noshell");
+      "list" string => execresult("$(G.ls) -1 $(G.testdir)/files", "noshell");
 
   classes:
       "ok" expression => regcmp("^\s*3\s.*", "$(count)");

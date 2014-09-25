@@ -313,6 +313,10 @@ runtest() {
     chmod ugo+rwxt "$WORKDIR/tmp"
   fi
 
+  if [ -n "$NEXT_TIMEOUT_VAR" ]; then
+    eval $NEXT_TIMEOUT_VAR=
+  fi
+
   if [ -n "$SKIP" ]; then
     TEST_END_TIME=$TEST_START_TIME
     RESULT=Skip
@@ -382,10 +386,6 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     echo "Return code is $RETVAL." >> "$WORKDIR/$LOG"
 
     TEST_END_TIME=$(unix_seconds)
-
-    if [ -n "$NEXT_TIMEOUT_VAR" ]; then
-      eval $NEXT_TIMEOUT_VAR=
-    fi
 
     RESULT_MSG=
     if [ -z "$EXPECTED_CRASH" ] && [ $RETVAL -ne 0 ]; then

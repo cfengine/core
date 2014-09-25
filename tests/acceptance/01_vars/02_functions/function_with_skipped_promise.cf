@@ -1,0 +1,43 @@
+# Make sure function is (not) evaluated in a promise (not) skipped via ifvarclass
+# Redmine 6577
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/." create => "true";
+}
+
+bundle agent test 
+{
+  vars:
+      "files" slist => { "want_file", "dont_want_file" };
+
+  classes:
+      "want_file" expression => "any";
+
+      "test" expression => returnszero("$(G.touch) $(G.testdir)/$(files)", "noshell"),
+      ifvarclass => "$(files)";
+}
+
+bundle agent check
+{
+  classes:
+      "$(test.files)_exists" expression => fileexists("$(G.testdir)/$(test.files)"); 
+
+      "ok" expression => "want_file_exists.!dont_want_file_exists";
+
+  reports:
+    DEBUG.!ok::
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

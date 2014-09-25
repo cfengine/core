@@ -27,9 +27,9 @@
           first change all existing policy uses to 999999999 (nine 9s instead
           of eleven 9s), second fix the C code to not wrap-around in case of
           overflow, but use the LONG_MAX value (Redmine #6531).
-	- cf-serverd and other daemons no longer reload their configuration
-	  every minute if CFEngine is built with an inputs directory outside
-	  of the work directory (not the default). (Redmine #6551)
+        - cf-serverd and other daemons no longer reload their configuration
+          every minute if CFEngine is built with an inputs directory outside
+          of the work directory (not the default). (Redmine #6551)
 
 3.6.1
         New features:

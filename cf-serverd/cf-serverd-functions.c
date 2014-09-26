@@ -355,9 +355,17 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'",
         config->input_file);
 
+    /* If we force the reload of config, effectively recheck the promises */
+    if ( IsRequestReloadConfig() )
+    {
+       Log(LOG_LEVEL_VERBOSE, "Force reload of inputs files...");
+       GenericAgentCheckPolicy(config, true, true);
+       ClearRequestReloadConfig();
+    }
+
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
 
-    if (config->agent_specific.daemon.last_validated_at < validated_at)
+    if (config->agent_specific.daemon.last_validated_at < validated_at )
     {
         /* Rereading policies now, so update timestamp. */
         config->agent_specific.daemon.last_validated_at = validated_at;
@@ -563,7 +571,7 @@ static void InitSignals()
 
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
-    signal(SIGHUP, SIG_IGN);
+    signal(SIGHUP, HandleSignalsForDaemon);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);

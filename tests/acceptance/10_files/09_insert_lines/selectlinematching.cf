@@ -48,8 +48,8 @@ bundle agent test
       # Run subtests.  Need to be in verbose mode to see the output.
       # The full verbose output is too big for variable assignment here.
       # So extract (grep) only potentially interesting lines.
-      "subout_1" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_1 2>&1 | $(G.grep) -Ei 'select_line_matching'", "useshell");
-      "subout_2" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_2 2>&1 | $(G.grep) -Ei 'select_line_matching'", "useshell");
+      "subout_1" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_1 2>&1 | $(G.egrep) -i 'select_line_matching'", "useshell");
+      "subout_2" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_2 2>&1 | $(G.egrep) -i 'select_line_matching'", "useshell");
 
   reports:
     DEBUG::

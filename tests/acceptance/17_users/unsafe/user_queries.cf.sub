@@ -78,7 +78,7 @@ bundle agent user_is_in_secondary_group(user, group, true_class, false_class)
 {
   commands:
     !windows::
-      "$(G.grep) -E '^$(group):[^:]*:[^:]*:[^:]*,?$(user)(,|$)' /etc/group"
+      "$(G.egrep) '^$(group):[^:]*:[^:]*:[^:]*,?$(user)(,|$)' /etc/group"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 
@@ -98,7 +98,7 @@ bundle agent user_is_in_any_secondary_group(user, true_class, false_class)
 {
   commands:
     !windows::
-      "$(G.grep) -E '^[^:]*:[^:]*:[^:]*:[^:]*,?$(user)(,|$)' /etc/group"
+      "$(G.egrep) '^[^:]*:[^:]*:[^:]*:[^:]*,?$(user)(,|$)' /etc/group"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 

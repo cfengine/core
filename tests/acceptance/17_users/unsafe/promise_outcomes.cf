@@ -15,13 +15,13 @@ body common control
 bundle agent init
 {
   meta:
-      # Something in the Solaris 10 chroot test environment makes it impossible
+      # Something in the Solaris 10/11 chroot test environment makes it impossible
       # to test matching passwords, the pam module always returns error.
       # This should not happen in a production system though.
       # Since the error is not on our part, and likely unsolvable, we set
       # Redmine to zero. However, it would be nice to know if the problem ever
       # goes away, so using soft_fail.
-      "test_soft_fail" string => "sunos_5_10",
+      "test_soft_fail" string => "sunos_5_10|sunos_5_11",
         meta => { "redmine0" };
 
   # AIX doesn't like long names (> 8 chars), so keep them short.

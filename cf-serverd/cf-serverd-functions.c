@@ -262,7 +262,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
-    signal(SIGHUP, SIG_IGN);
+    signal(SIGHUP, HandleSignalsForDaemon);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
@@ -573,6 +573,14 @@ int OpenReceiverChannel(void)
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     CfDebug("Checking file updates on %s\n", config->input_file);
+
+    /* If we force the reload of config, effectively recheck the promises */
+    if ( IsRequestReloadConfig() )
+    {
+       CfDebug("Force reload of inputs files...")
+       GenericAgentCheckPolicy(config, true, true);
+       ClearRequestReloadConfig();
+    }
 
     if (NewPromiseProposals(ctx, config->input_file, InputFiles(ctx, *policy)))
     {

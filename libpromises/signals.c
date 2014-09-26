@@ -48,11 +48,22 @@ static const char *SIGNALS[] =
 
 static bool PENDING_TERMINATION = false;
 
+static bool RELOAD_CONFIG = false;
 /********************************************************************/
 
 bool IsPendingTermination(void)
 {
     return PENDING_TERMINATION;
+}
+
+bool IsRequestReloadConfig(void)
+{
+    return RELOAD_CONFIG;
+}
+
+void ClearRequestReloadConfig()
+{
+    RELOAD_CONFIG = false;
 }
 
 /********************************************************************/
@@ -104,6 +115,10 @@ void HandleSignalsForDaemon(int signum)
     else if (signum == SIGUSR2)
     {
         DEBUG = false;
+    }
+    else if (signum == SIGUP)
+    {
+        RELOAD_CONFIG = true;
     }
 
 /* Reset the signal handler */

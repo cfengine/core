@@ -31,6 +31,10 @@
 // check whether the running deamon should terminate after having received a signal.
 bool IsPendingTermination(void);
 
+// Check whether we need to reload config for cf-serverd
+bool IsRequestReloadConfig(void);
+void ClearRequestReloadConfig();
+
 void HandleSignalsForDaemon(int signum);
 void HandleSignalsForAgent(int signum);
 

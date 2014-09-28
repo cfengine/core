@@ -1527,6 +1527,7 @@ const char* JsonParseErrorToString(JsonParseError error)
         [JSON_PARSE_ERROR_OBJECT_OPEN_LVAL] = "Unable to parse json data as object, tried to close object having opened an l-value",
 
         [JSON_PARSE_ERROR_INVALID_START] = "Unwilling to parse json data starting with invalid character",
+        [JSON_PARSE_ERROR_TRUNCATED] = "Unable to parse JSON without truncating",
         [JSON_PARSE_ERROR_NO_DATA] = "No data"
     };
 
@@ -2101,10 +2102,15 @@ JsonParseError JsonParse(const char **data, JsonElement **json_out)
 
 JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **json_out)
 {
-    Writer *contents = FileRead(path, size_max, NULL);
+    bool truncated = false;
+    Writer *contents = FileRead(path, size_max, &truncated);
     if (!contents)
     {
         return JSON_PARSE_ERROR_NO_DATA;
+    }
+    else if (truncated)
+    {
+        return JSON_PARSE_ERROR_TRUNCATED;
     }
     assert(json_out);
     *json_out = NULL;

@@ -1235,6 +1235,133 @@ static void test_detach_key_from_object(void)
     JsonDestroy(detached);
 }
 
+static void test_parse_array_double_commas(void)
+{
+    {
+        const char *data = "[ \"foo\",, \"bar\" ]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[\"foo\", , \"bar\" ]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[ \"foo\", \"bar\",, ]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[ \"foo\", \"bar\", , ]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+}
+
+static void test_parse_array_comma_after_brace(void)
+{
+    {
+        const char *data = "[ , \"foo\", \"bar\" ]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[,\"foo\",\"bar\"]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+}
+
+static void test_parse_array_bad_nested_elems(void)
+{
+    {
+        const char *data = "[ \"foo\" [\"baz\"], \"bar\" ]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[\"foo\"[\"baz\"],\"bar\"]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[ \"foo\" {\"boing\": \"baz\"}, \"bar\" ]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "[\"foo\"{\"boing\":\"baz\"},\"bar\"]";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+}
+
+static void test_parse_object_double_colon(void)
+{
+    {
+        const char *data = "{ \"foo\":: \"bar\" }";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{\"foo\"::\"bar\"}";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+}
+
+static void test_parse_object_double_comma(void)
+{
+    {
+        const char *data = "{ ,, }";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{,,}";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{\"foo\":\"bar\",,}";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+
+    {
+        const char *data = "{\"foo\": \"bar\", , }";
+        JsonElement *json = NULL;
+        assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        assert_false(json);
+    }
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -1292,6 +1419,11 @@ int main()
         unit_test(test_array_remove_range),
         unit_test(test_remove_key_from_object),
         unit_test(test_detach_key_from_object),
+        unit_test(test_parse_array_double_commas),
+        unit_test(test_parse_array_comma_after_brace),
+        unit_test(test_parse_array_bad_nested_elems),
+        unit_test(test_parse_object_double_colon),
+        unit_test(test_parse_object_double_comma),
     };
 
     return run_tests(tests);

@@ -1515,6 +1515,7 @@ const char* JsonParseErrorToString(JsonParseError error)
 
         [JSON_PARSE_ERROR_ARRAY_START] = "Unable to parse json data as array, did not start with '['",
         [JSON_PARSE_ERROR_ARRAY_END] = "Unable to parse json data as array, did not end with ']'",
+        [JSON_PARSE_ERROR_ARRAY_COMMA] = "Unable to parse json data as array, extraneous commas",
 
         [JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL] = "Unable to parse json data as object, unrecognized token beginning entry",
         [JSON_PARSE_ERROR_OBJECT_START] = "Unable to parse json data as object, did not start with '{'",
@@ -1763,6 +1764,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
     }
 
     JsonElement *array = JsonArrayCreate(DEFAULT_CONTAINER_CAPACITY);
+    char prev_char = '[';
 
     for (*data = *data + 1; **data != '\0'; *data = *data + 1)
     {
@@ -1788,6 +1790,11 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
 
         case '[':
             {
+                if (prev_char != '[' && prev_char != ',')
+                {
+                    JsonDestroy(array);
+                    return JSON_PARSE_ERROR_ARRAY_START;
+                }
                 JsonElement *child_array = NULL;
                 JsonParseError err = JsonParseAsArray(data, &child_array);
                 if (err != JSON_PARSE_OK)
@@ -1803,6 +1810,11 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
 
         case '{':
             {
+                if (prev_char != '[' && prev_char != ',')
+                {
+                    JsonDestroy(array);
+                    return JSON_PARSE_ERROR_ARRAY_START;
+                }
                 JsonElement *child_object = NULL;
                 JsonParseError err = JsonParseAsObject(data, &child_object);
                 if (err != JSON_PARSE_OK)
@@ -1817,6 +1829,11 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
             break;
 
         case ',':
+            if (prev_char == ',' || prev_char == '[')
+            {
+                JsonDestroy(array);
+                return JSON_PARSE_ERROR_ARRAY_COMMA;
+            }
             break;
 
         case ']':
@@ -1857,6 +1874,8 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
             JsonDestroy(array);
             return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
         }
+
+        prev_char = **data;
     }
 
     *json_out = NULL;
@@ -1874,6 +1893,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
 
     JsonElement *object = JsonObjectCreate(DEFAULT_CONTAINER_CAPACITY);
     char *property_name = NULL;
+    char prev_char = '{';
 
     for (*data = *data + 1; **data != '\0'; *data = *data + 1)
     {
@@ -1916,7 +1936,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             break;
 
         case ':':
-            if (property_name == NULL)
+            if (property_name == NULL || prev_char == ':' || prev_char == ',')
             {
                 json_out = NULL;
                 free(property_name);
@@ -1926,7 +1946,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             break;
 
         case ',':
-            if (property_name != NULL)
+            if (property_name != NULL || prev_char == ':' || prev_char == ',')
             {
                 free(property_name);
                 JsonDestroy(object);
@@ -2038,6 +2058,8 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             JsonDestroy(object);
             return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
         }
+
+        prev_char = **data;
     }
 
     *json_out = NULL;

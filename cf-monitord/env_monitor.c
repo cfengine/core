@@ -338,10 +338,10 @@ static void GetQ(EvalContext *ctx, const Policy *policy)
     ZeroArrivals();
 
     MonProcessesGatherData(CF_THIS);
+    MonDiskGatherData(CF_THIS);
 #ifndef __MINGW32__
     MonCPUGatherData(CF_THIS);
     MonLoadGatherData(CF_THIS);
-    MonDiskGatherData(CF_THIS);
     MonNetworkGatherData(CF_THIS);
     MonNetworkSnifferGatherData();
     MonTempGatherData(CF_THIS);

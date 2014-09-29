@@ -21,7 +21,8 @@
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
-
+#include <logging.h>
+#include <json.h>
 
 #include <alloc.h>
 #include <sequence.h>
@@ -29,8 +30,6 @@
 #include <file_lib.h>
 #include <printsize.h>
 #include <regex.h>
-
-#include <json.h>
 
 static const int SPACES_PER_INDENT = 2;
 static const int DEFAULT_CONTAINER_CAPACITY = 64;
@@ -1501,7 +1500,6 @@ const char* JsonParseErrorToString(JsonParseError error)
 
         [JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_START] = "Unable to parse json data as string, did not start with doublequote",
         [JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_END] = "Unable to parse json data as string, did not end with doublequote",
-        [JSON_PARSE_ERROR_STRING_UNSUPPORTED_ESCAPE] = "Unsupported escape sequence",
 
         [JSON_PARSE_ERROR_NUMBER_EXPONENT_NEGATIVE] = "Unable to parse json data as number, - not at the start or not after exponent",
         [JSON_PARSE_ERROR_NUMBER_EXPONENT_POSITIVE] = "Unable to parse json data as number, + without preceding exponent",
@@ -1535,6 +1533,8 @@ const char* JsonParseErrorToString(JsonParseError error)
 
 static JsonParseError JsonParseAsString(const char **data, char **str_out)
 {
+    /* NB: although JavaScript supports both single and double quotes
+     * as string delimiters, JSON only supports double quotes. */
     if (**data != '"')
     {
         *str_out = NULL;
@@ -1558,8 +1558,8 @@ static JsonParseError JsonParseAsString(const char **data, char **str_out)
             case '\\':
             case '"':
             case '/':
-                WriterWriteChar(writer, **data);
-                continue;
+                break;
+
             case 'b':
                 WriterWriteChar(writer, '\b');
                 continue;
@@ -1577,14 +1577,22 @@ static JsonParseError JsonParseAsString(const char **data, char **str_out)
                 continue;
 
             default:
-                WriterClose(writer);
-                *str_out = NULL;
-                return JSON_PARSE_ERROR_STRING_UNSUPPORTED_ESCAPE;
+                /* Unrecognised escape sequence.
+                 *
+                 * For example, we fail to handle Unicode escapes -
+                 * \u{hex digits} - we have no way to represent the
+                 * character they denote.  So keep them verbatim, for
+                 * want of any other way to handle them; but warn. */
+                Log(LOG_LEVEL_WARNING,
+                    "Keeping verbatim unrecognised JSON escape '%.6s'",
+                    *data - 1); /* i.e. include the \ in the displayed escape */
+                WriterWriteChar(writer, '\\');
+                break;
             }
-
+            /* Deliberate fall-through */
         default:
             WriterWriteChar(writer, **data);
-            continue;
+            break;
         }
     }
 
@@ -2084,10 +2092,10 @@ JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **js
     {
         return JSON_PARSE_ERROR_NO_DATA;
     }
-    JsonElement *json = NULL;
+    assert(json_out);
+    *json_out = NULL;
     const char *data = StringWriterData(contents);
-    JsonParseError err = JsonParse(&data, &json);
+    JsonParseError err = JsonParse(&data, json_out);
     WriterClose(contents);
-    *json_out = json;
     return err;
 }

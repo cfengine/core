@@ -1,0 +1,14 @@
+body common control
+{
+      bundlesequence  => { "redmine_6549" };
+}
+
+bundle agent redmine_6549
+{
+  vars:
+      "response" data => parsejson('{ "unicode": "Linux kernel \u03c0 = 3,14" }');
+      "response_idx" slist => getindices("response");
+
+  reports:
+      "response index: $(response_idx)";
+}

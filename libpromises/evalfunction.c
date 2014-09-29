@@ -5408,44 +5408,59 @@ static FnCallResult FnCallReadCSV(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
 }
 
-static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *args)
+static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx,
+                                   ARG_UNUSED const Policy *policy,
+                                   ARG_UNUSED const FnCall *fp,
+                                   const Rlist *args)
 {
     const char *input_path = RlistScalarValue(args);
     size_t size_max = IntFromString(RlistScalarValue(args->next));
 
     /* FIXME: fail if truncated? */
-    Writer *contents = FileRead(input_path, size_max, NULL);
-    if (!contents)
-    {
-        Log(LOG_LEVEL_ERR, "Error reading JSON input file '%s'", input_path);
-        return FnFailure();
-    }
     JsonElement *json = NULL;
-    const char *data = StringWriterData(contents);
-    if ((JsonParse(&data, &json) != JSON_PARSE_OK) ||
-        (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE))
+    JsonParseError res = JsonParseFile(input_path, size_max, &json);
+    if (res != JSON_PARSE_OK)
     {
-        Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s'", input_path);
-        WriterClose(contents);
-        return FnFailure();
+        Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s': %s",
+            input_path, JsonParseErrorToString(res));
+    }
+    else if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        Log(LOG_LEVEL_ERR, "Non-container from parsing JSON file '%s'", input_path);
+        JsonDestroy(json);
+    }
+    else
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
     }
 
-    WriterClose(contents);
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnFailure();
 }
 
-static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *args)
+static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
+                                    ARG_UNUSED const Policy *policy,
+                                    ARG_UNUSED const FnCall *fp,
+                                    const Rlist *args)
 {
     const char *data = RlistScalarValue(args);
     JsonElement *json = NULL;
-    if (JsonParse(&data, &json) != JSON_PARSE_OK ||
-        JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    JsonParseError res = JsonParse(&data, &json);
+    if (res != JSON_PARSE_OK)
     {
-        Log(LOG_LEVEL_ERR, "Error parsing JSON expression '%s'", data);
-        return FnFailure();
+        Log(LOG_LEVEL_ERR, "Error parsing JSON expression '%s': %s",
+            data, JsonParseErrorToString(res));
+    }
+    else if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        Log(LOG_LEVEL_ERR, "Non-container from parsing JSON expression '%s'", data);
+        JsonDestroy(json);
+    }
+    else
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnFailure();
 }
 
 /*********************************************************************/
@@ -6520,22 +6535,34 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             const char *hold = BufferData(holder);
             Log(LOG_LEVEL_DEBUG, "Module protocol parsing JSON %s", content);
 
-            if ((JsonParse(&hold, &json) != JSON_PARSE_OK) ||
-                (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE))
+            JsonParseError res = JsonParse(&hold, &json);
+            if (res != JSON_PARSE_OK)
             {
-                Log(LOG_LEVEL_INFO, "Module protocol passed an invalid or too-long JSON structure, must be object or array");
+                Log(LOG_LEVEL_INFO,
+                    "Failed to parse JSON '%s' for module protocol: %s",
+                    content, JsonParseErrorToString(res));
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Defined data container variable '%s' in context '%s' with value '%s'",
-                    name, context, BufferData(holder));
+                if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    Log(LOG_LEVEL_INFO,
+                        "Module protocol JSON '%s' should be object or array; wasn't",
+                        content);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Defined data container variable '%s' in context '%s' with value '%s'",
+                        name, context, BufferData(holder));
 
-                Buffer *tagbuf = StringSetToBuffer(tags, ',');
-                VarRef *ref = VarRefParseFromScope(name, context);
+                    Buffer *tagbuf = StringSetToBuffer(tags, ',');
+                    VarRef *ref = VarRefParseFromScope(name, context);
 
-                EvalContextVariablePut(ctx, ref, json, CF_DATA_TYPE_CONTAINER, BufferData(tagbuf));
-                VarRefDestroy(ref);
-                BufferDestroy(tagbuf);
+                    EvalContextVariablePut(ctx, ref, json, CF_DATA_TYPE_CONTAINER, BufferData(tagbuf));
+                    VarRefDestroy(ref);
+                    BufferDestroy(tagbuf);
+                }
 
                 JsonDestroy(json);
             }

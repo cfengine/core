@@ -24,16 +24,15 @@ Preparing for running tests
     test suite over Berkeley DB.
 
 * Install fakeroot(1). If this tool is not available for your operating system,
-  you may any other "fake root" environment or even sudo(1). Alternative tools
-  are specified by --gainroot option of `testall' script. Note that if you use
-  the --unsafe option (can damage your system), you may have to use
+  you may use any other "fake root" environment or even sudo(1). Alternative
+  tools are specified by --gainroot option of `testall' script. Note that if you
+  use the --unsafe option (can damage your system), you may have to use
   --gainroot=sudo in order to get correct results.
 
 * If you want output in color, set CFENGINE_COLOR to 1.  If you want
   diff output colorized, you also need to install the colordiff
   utility.
 
-* if you plan to use `git bisect` to hunt for a bug, try
   tests/acceptance/bisect-acceptance.pl, contributed by the
   indomitable Chris Dituri
 

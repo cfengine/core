@@ -151,6 +151,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 }
 /*****************************************************************************/
 
+/* Lookup a reverse entry (IP->KeyHash) in lastseen database. */
 static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
 {
     char address_key[CF_BUFSIZE];
@@ -172,14 +173,19 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
 
     if (!ReadDB(db, hostkey_key, &back_address, sizeof(back_address)))
     {
-        /* There is no key -> address mapping. Remove reverse mapping and return failure. */
+        Log(LOG_LEVEL_VERBOSE, "Lastseen db inconsistency: "
+            "no forward entry '%s' for existing reverse entry '%s', "
+            "removing reverse entry!",
+            hostkey_key, address_key);
         DeleteDB(db, address_key);
         return false;
     }
-
-    if (strcmp(address, back_address) != 0)
+    else if (strcmp(address, back_address) != 0)
     {
-        /* Forward and reverse mappings do not match. Remove reverse mapping and return failure. */
+        Log(LOG_LEVEL_VERBOSE, "Lastseen db inconsistency: "
+            "forward entry '%s' -> '%s' differs from reverse entry "
+            "'%s' -> '%s', removing reverse entry!",
+            hostkey_key, back_address, address_key, hostkey);
         DeleteDB(db, address_key);
         return false;
     }
@@ -190,37 +196,52 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
 
 /*****************************************************************************/
 
+/* Given an address it returns a key - its own key if address is 127.0.0.1,
+ * else it looks the "aADDRESS" entry in lastseen. */
 bool Address2Hostkey(char *dst, size_t dst_size, const char *address)
 {
+    bool retval = false;
     dst[0] = '\0';
+
     if ((strcmp(address, "127.0.0.1") == 0) ||
         (strcmp(address, "::1") == 0) ||
         (strcmp(address, VIPADDRESS) == 0))
     {
+        Log(LOG_LEVEL_DEBUG,
+            "Address2Hostkey: Returning local key for address %s",
+            address);
+
         if (PUBKEY)
         {
             unsigned char digest[EVP_MAX_MD_SIZE + 1];
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
             HashPrintSafe(dst, dst_size, digest,
                           CF_DEFAULT_DIGEST, true);
-            return true;
+            retval = true;
         }
         else
         {
-            return false;
+            Log(LOG_LEVEL_VERBOSE,
+                "Local key not found, generate one with cf-key?");
+            retval = false;
+        }
+    }
+    else                                                 /* lastseen lookup */
+    {
+        DBHandle *db;
+        if (OpenDB(&db, dbid_lastseen))
+        {
+            retval = Address2HostkeyInDB(db, address, dst);
+            CloseDB(db);
         }
     }
 
-    DBHandle *db;
-    if (!OpenDB(&db, dbid_lastseen))
-    {
-        return false;
-    }
+    Log(LOG_LEVEL_VERBOSE, "Key digest for address '%s' is %s", address,
+        retval ? dst : "not found!");
 
-    bool ret = Address2HostkeyInDB(db, address, dst);
-    CloseDB(db);
-    return ret;
+    return retval;
 }
+
 /**
  * @brief detects whether input is a host/ip name or a key digest
  *

@@ -278,25 +278,21 @@ void PolicyHubUpdateKeys(const char *policy_server)
 /*********************************************************************/
 
 /**
- * @brief Search for a key just like HavePublicKey(), but get the
- *        hash value from lastseen db.
+ * @brief Search for a key given an IP address, by getting the
+ *        key hash value from lastseen db.
  * @return NULL if the key was not found in any form.
  */
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
 {
     char hash[CF_HOSTKEY_STRING_SIZE];
 
+    /* Get the key hash for that address from lastseen db. */
     bool found = Address2Hostkey(hash, sizeof(hash), ipaddress);
-    if (found)
-    {
-        return HavePublicKey(username, ipaddress, hash);
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "Key for host '%s' not found in lastseen db",
-            ipaddress);
-        return HavePublicKey(username, ipaddress, "");
-    }
+
+    /* If not found, by passing "" as digest, we effectively look only for
+     * the old-style key file, e.g. root-1.2.3.4.pub. */
+    return HavePublicKey(username, ipaddress,
+                         found ? hash : "");
 }
 
 static const char *const pub_passphrase = "public";
@@ -322,9 +318,10 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
     if (stat(newname, &statbuf) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Did not find new key format '%s'", newname);
-        snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
-        MapName(oldname);
 
+        snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub",
+                 CFWORKDIR, username, ipaddress);
+        MapName(oldname);
         Log(LOG_LEVEL_VERBOSE, "Trying old style '%s'", oldname);
 
         if (stat(oldname, &statbuf) == -1)

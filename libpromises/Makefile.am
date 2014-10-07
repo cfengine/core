@@ -147,8 +147,7 @@ endif
 
 if SOLARIS
 libpromises_la_SOURCES += \
-	process_solaris.c \
-	solaris_ifaddrs.c solaris_ifaddrs.h
+	process_solaris.c
 endif
 
 if !LINUX

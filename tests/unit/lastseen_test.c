@@ -105,9 +105,9 @@ static void test_reverse_conflict(void)
 
     assert_int_equal(WriteDB(db, "a127.0.0.64", "SHA-98765", strlen("SHA-98765") + 1), true);
 
-    /* Check that resolution return false */
+    /* Check that resolution return true */
     char result[CF_BUFSIZE];
-    assert_int_equal(Address2Hostkey(result, sizeof(result), "127.0.0.64"), false);
+    assert_int_equal(Address2Hostkey(result, sizeof(result), "127.0.0.64"), true);
 
     /* Check that entry is removed */
     assert_int_equal(HasKeyDB(db, "a127.0.0.64", strlen("a127.0.0.64") + 1), false);
@@ -126,9 +126,9 @@ static void test_reverse_missing_forward(void)
 
     assert_int_equal(DeleteDB(db, "kSHA-12345"), true);
 
-    /* Check that resolution return false */
+    /* Check that resolution return true */
     char result[CF_BUFSIZE];
-    assert_int_equal(Address2Hostkey(result, sizeof(result), "127.0.0.64"), false);
+    assert_int_equal(Address2Hostkey(result, sizeof(result), "127.0.0.64"), true);
 
     /* Check that entry is removed */
     assert_int_equal(HasKeyDB(db, "a127.0.0.64", strlen("a127.0.0.64") + 1), false);

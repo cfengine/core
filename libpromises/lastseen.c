@@ -165,6 +165,9 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
         return false;
     }
 
+    /* Check for inconsistencies. Return success even if db is found
+     * inconsistent, since the reverse entry is already found. */
+
     char hostkey_key[CF_BUFSIZE];
     char back_address[CF_BUFSIZE];
 
@@ -178,7 +181,6 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
             "removing reverse entry!",
             hostkey_key, address_key);
         DeleteDB(db, address_key);
-        return false;
     }
     else if (strcmp(address, back_address) != 0)
     {
@@ -187,7 +189,6 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
             "'%s' -> '%s', removing reverse entry!",
             hostkey_key, back_address, address_key, hostkey);
         DeleteDB(db, address_key);
-        return false;
     }
 
     strlcpy(result, hostkey, CF_BUFSIZE);

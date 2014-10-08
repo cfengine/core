@@ -1235,7 +1235,7 @@ static void test_detach_key_from_object(void)
     JsonDestroy(detached);
 }
 
-static void test_parse_array_double_commas(void)
+static void test_parse_array_double_and_trailing_commas(void)
 {
     {
         const char *data = "[ \"foo\",, \"bar\" ]";
@@ -1263,6 +1263,14 @@ static void test_parse_array_double_commas(void)
         JsonElement *json = NULL;
         assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
+    }
+
+    {
+        // We accept one, and only one, trailing comma.
+        const char *data = "[ \"foo\", \"bar\", ]";
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        JsonDestroy(json);
     }
 }
 
@@ -1331,7 +1339,7 @@ static void test_parse_object_double_colon(void)
     }
 }
 
-static void test_parse_object_double_comma(void)
+static void test_parse_object_double_and_trailing_comma(void)
 {
     {
         const char *data = "{ ,, }";
@@ -1359,6 +1367,14 @@ static void test_parse_object_double_comma(void)
         JsonElement *json = NULL;
         assert_int_not_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_false(json);
+    }
+
+    {
+        // We accept one, and only one, trailing comma.
+        const char *data = "{\"foo\": \"bar\", }";
+        JsonElement *json = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+        JsonDestroy(json);
     }
 }
 
@@ -1419,11 +1435,11 @@ int main()
         unit_test(test_array_remove_range),
         unit_test(test_remove_key_from_object),
         unit_test(test_detach_key_from_object),
-        unit_test(test_parse_array_double_commas),
+        unit_test(test_parse_array_double_and_trailing_commas),
         unit_test(test_parse_array_comma_after_brace),
         unit_test(test_parse_array_bad_nested_elems),
         unit_test(test_parse_object_double_colon),
-        unit_test(test_parse_object_double_comma),
+        unit_test(test_parse_object_double_and_trailing_comma),
     };
 
     return run_tests(tests);

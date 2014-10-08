@@ -176,7 +176,7 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
 
     if (!ReadDB(db, hostkey_key, &back_address, sizeof(back_address)))
     {
-        Log(LOG_LEVEL_VERBOSE, "Lastseen db inconsistency: "
+        Log(LOG_LEVEL_WARNING, "Lastseen db inconsistency: "
             "no forward entry '%s' for existing reverse entry '%s', "
             "removing reverse entry!",
             hostkey_key, address_key);
@@ -184,7 +184,7 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
     }
     else if (strcmp(address, back_address) != 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Lastseen db inconsistency: "
+        Log(LOG_LEVEL_WARNING, "Lastseen db inconsistency: "
             "forward entry '%s' -> '%s' differs from reverse entry "
             "'%s' -> '%s', removing reverse entry!",
             hostkey_key, back_address, address_key, hostkey);

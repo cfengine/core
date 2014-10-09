@@ -770,11 +770,11 @@ print_header() {
 
 print_footer() {
   # Recalculate results since sub invocations may not have been recorded.
-  PASSED_TESTS=`egrep '^Pass ' $SUMMARY | wc -l`
-  FAILED_TESTS=`egrep '^(FAIL|XFAIL) ' $SUMMARY | wc -l`
-  SUPPRESSED_FAILURES=`egrep '^XFAIL ' $SUMMARY | wc -l`
-  SOFT_FAILURES=`egrep '^SFAIL ' $SUMMARY | wc -l`
-  SKIPPED_TESTS=`egrep '^Skip ' $SUMMARY | wc -l`
+  PASSED_TESTS=`egrep '^Pass ' $SUMMARY | wc -l | tr -d ' '`
+  FAILED_TESTS=`egrep '^(FAIL|XFAIL) ' $SUMMARY | wc -l | tr -d ' '`
+  SUPPRESSED_FAILURES=`egrep '^XFAIL ' $SUMMARY | wc -l | tr -d ' '`
+  SOFT_FAILURES=`egrep '^SFAIL ' $SUMMARY | wc -l | tr -d ' '`
+  SKIPPED_TESTS=`egrep '^Skip ' $SUMMARY | wc -l | tr -d ' '`
 
   ( echo
     echo ======================================================================

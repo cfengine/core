@@ -364,19 +364,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
 
-    // if this is a class promise, check if it is already set, if so, skip
-    if (strcmp("classes", pp->parent_promise_type->name) == 0)
-    {
-        if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
-                CanonifyName(pcopy->promiser));
-            *excluded = true;
-
-            return pcopy;
-        }
-    }
-
     {
         // look for 'if'/'ifvarclass' exclusion, to short-circuit evaluation of other constraints
         const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");

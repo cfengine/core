@@ -1,0 +1,43 @@
+# Test that a function that has side effects (e.g. populates an array) is
+# always called, even if the class being evaluated is already set.
+# Also make sure that it happens in the evaluation stage, not in the pre-
+# evaluation stage where variables and classes are evaluated early.
+# Redmine #6661.
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent test
+{
+  vars:
+      "list" slist => { "one", "two" };
+  classes:
+    delay::
+      "match" expression => regextract("(.*o.*)", "$(list)", "$(list)");
+  files:
+      "$(G.tempdir)/nonexistingfile"
+        delete => tidy,
+        # To force invokation in the main evaluation stage.
+        classes => always("delay");
+}
+
+bundle agent check
+{
+  classes:
+      "ok_one" expression => strcmp("$(test.one[1])", "one");
+      "ok_two" expression => strcmp("$(test.two[1])", "two");
+
+  reports:
+    DEBUG::
+      "'$(test.one[1])' != 'one'"
+        ifvarclass => "!ok_one";
+      "'$(test.two[1])' != 'two'"
+        ifvarclass => "!ok_two";
+    ok_one.ok_two::
+      "$(this.promise_filename) Pass";
+    !ok_one|!ok_two::
+      "$(this.promise_filename) FAIL";
+}

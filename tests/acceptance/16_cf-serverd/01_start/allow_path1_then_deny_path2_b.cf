@@ -8,10 +8,6 @@ body common control
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "freebsd",
-        meta => { "redmine6406" };
-
   methods:
       "any" usebundle => generate_key;
       "any" usebundle => start_server("localhost_deny_one_directory");

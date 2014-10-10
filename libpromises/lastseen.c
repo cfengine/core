@@ -72,6 +72,8 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
  * algebra sense) the data relations.
  */
 
+/* TODO #ifndef NDEBUG check, report loudly, and fix consistency issues in every operation. */
+
 /*****************************************************************************/
 
 /**
@@ -165,6 +167,7 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
         return false;
     }
 
+#ifndef NDEBUG
     /* Check for inconsistencies. Return success even if db is found
      * inconsistent, since the reverse entry is already found. */
 
@@ -177,19 +180,10 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
     if (!ReadDB(db, hostkey_key, &back_address, sizeof(back_address)))
     {
         Log(LOG_LEVEL_WARNING, "Lastseen db inconsistency: "
-            "no forward entry '%s' for existing reverse entry '%s', "
-            "removing reverse entry!",
+            "no key entry '%s' for existing host entry '%s'",
             hostkey_key, address_key);
-        DeleteDB(db, address_key);
     }
-    else if (strcmp(address, back_address) != 0)
-    {
-        Log(LOG_LEVEL_WARNING, "Lastseen db inconsistency: "
-            "forward entry '%s' -> '%s' differs from reverse entry "
-            "'%s' -> '%s', removing reverse entry!",
-            hostkey_key, back_address, address_key, hostkey);
-        DeleteDB(db, address_key);
-    }
+#endif
 
     strlcpy(result, hostkey, CF_BUFSIZE);
     return true;
@@ -267,19 +261,46 @@ static bool IsDigestOrHost(const char *input)
 }
 
 /**
- * @brief check whether the lastseen DB is coherent or not
- * 
- * A DB is coherent mainly if all the entries are valid and if there is
- * a strict one-to-one correspondance between hosts and key digests
- * (whether in MD5 or SHA1 format).
+ * @brief check whether the lastseen DB is coherent or not.
  *
- * @retval true if the lastseen DB is coherent, false otherwise
+ * It is allowed for a aIP1 -> KEY1 to not have a reverse kKEY1 -> IP.
+ * kKEY1 *must* exist, but may point to another IP.
+ * Same for IP values, they *must* appear as aIP entries, but we don't
+ * care where they point to.
+ * So for every aIP->KEY1 entry there should be a kKEY1->whatever entry.
+ * And for every kKEY->IP1 entry there should be a aIP1->whatever entry.
+ *
+ * If a host changes IP, then we have a new entry aIP2 -> KEY1 together
+ * with the aIP1 -> KEY1 entry. ALLOWED.
+ *
+ * If a host changes key, then its entry will become aIP1 -> KEY2.
+ * Then still it will exist kKEY1 -> IP1 but also kKEY2 -> IP1. ALLOWED
+ *
+ * Can I have a IP value of some kKEY that does not have any aIP entry?
+ * NO because at some time aIP it was written in the database.
+ * SO EVERY kIP must be found in aIPS.
+ * kIPS SUBSET OF aIPS
+ *
+ * Can I have a KEY value of some aIP that does not have any kKEY entry?
+ * NO for the same reason.
+ * SO EVERY akey must be found in kkeys.
+ * aKEYS SUBSET OF kKEYS
+ *
+ * FIN
+ *
+ * @TODO P.S. redesign lastseen. Really, these whole requirements are
+ *       implemented on top of a simple key-value store, no wonder it's such a
+ *       mess. I believe that reverse mapping is not even needed since only
+ *       aIP entries are ever looked up. kKEY entries can be deprecated and
+ *       forget all the false notion of "schema consistency" in this key-value
+ *       store...
+ *
+ * @retval true if the lastseen DB is coherent, false otherwise.
  */
 bool IsLastSeenCoherent(void)
 {
     DBHandle *db;
     DBCursor *cursor;
-    bool res = true;
 
     if (!OpenDB(&db, dbid_lastseen))
     {
@@ -298,17 +319,25 @@ bool IsLastSeenCoherent(void)
     void *value;
     int ksize, vsize;
 
-    Item *qkeys=NULL;
-    Item *akeys=NULL;
-    Item *kkeys=NULL;
-    Item *ahosts=NULL;
-    Item *khosts=NULL;
+    Item *qKEYS = NULL;
+    Item *aKEYS = NULL;
+    Item *kKEYS = NULL;
+    Item *aIPS = NULL;
+    Item *kIPS = NULL;
 
+    bool result = true;
     while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
-        if (key[0] != 'k' && key[0] != 'q' && key[0] != 'a' )
+        if (strcmp(key, "version") != 0 &&
+            strncmp(key, "qi", 2) != 0 &&
+            strncmp(key, "qo", 2) != 0 &&
+            key[0] != 'k' &&
+            key[0] != 'a')
         {
-            continue;
+            Log(LOG_LEVEL_WARNING,
+                "lastseen db inconsistency, unexpected key: %s",
+                key);
+            result = false;
         }
 
         if (key[0] == 'q' )
@@ -316,9 +345,9 @@ bool IsLastSeenCoherent(void)
             if (strncmp(key,"qiSHA=",5)==0 || strncmp(key,"qoSHA=",5)==0 ||
                 strncmp(key,"qiMD5=",5)==0 || strncmp(key,"qoMD5=",5)==0)
             {
-                if (IsItemIn(qkeys, key+2)==false)
+                if (!IsItemIn(qKEYS, key+2))
                 {
-                    PrependItem(&qkeys, key+2, NULL);
+                    PrependItem(&qKEYS, key+2, NULL);
                 }
             }
         }
@@ -327,26 +356,26 @@ bool IsLastSeenCoherent(void)
         {
             if (strncmp(key, "kSHA=", 4)==0 || strncmp(key, "kMD5=", 4)==0)
             {
-                if (IsItemIn(kkeys, key+1)==false)
+                if (!IsItemIn(kKEYS, key+1))
                 {
-                    PrependItem(&kkeys, key+1, NULL);
+                    PrependItem(&kKEYS, key+1, NULL);
                 }
-                if (IsItemIn(khosts, value)==false)
+                if (!IsItemIn(kIPS, value))
                 {
-                    PrependItem(&khosts, value, NULL);
+                    PrependItem(&kIPS, value, NULL);
                 }
             }
         }
 
         if (key[0] == 'a' )
         {
-            if (IsItemIn(ahosts, key+1)==false)
+            if (!IsItemIn(aIPS, key+1))
             {
-                PrependItem(&ahosts, key+1, NULL);
+                PrependItem(&aIPS, key+1, NULL);
             }
-            if (IsItemIn(akeys, value)==false)
+            if (!IsItemIn(aKEYS, value))
             {
-                PrependItem(&akeys, value, NULL);
+                PrependItem(&aKEYS, value, NULL);
             }
         }
     }
@@ -354,25 +383,50 @@ bool IsLastSeenCoherent(void)
     DeleteDBCursor(cursor);
     CloseDB(db);
 
-    if (ListsCompare(ahosts, khosts) == false)
+
+    /* For every kKEY->IP1 entry there should be a aIP1->whatever entry.
+     * So basically: kIPS SUBSET OF aIPS. */
+    Item *kip = kIPS;
+    while (kip != NULL)
     {
-        res = false;
-        goto clean;
-    }
-    if (ListsCompare(akeys, kkeys) == false)
-    {
-        res = false;
-        goto clean;
+        if (!IsItemIn(aIPS, kip->name))
+        {
+            Log(LOG_LEVEL_WARNING,
+                "lastseen db inconsistency, found kKEY -> '%s' entry, "
+                "but no 'a%s' -> any key entry exists!",
+                kip->name, kip->name);
+
+            result = false;
+        }
+
+        kip = kip->next;
     }
 
-clean:
-    DeleteItemList(qkeys);
-    DeleteItemList(akeys);
-    DeleteItemList(kkeys);
-    DeleteItemList(ahosts);
-    DeleteItemList(khosts);
+    /* For every aIP->KEY1 entry there should be a kKEY1->whatever entry.
+     * So basically: aKEYS SUBSET OF kKEYS. */
+    Item *akey = aKEYS;
+    while (akey != NULL)
+    {
+        if (!IsItemIn(kKEYS, akey->name))
+        {
+            Log(LOG_LEVEL_WARNING,
+                "lastseen db inconsistency, found aIP -> '%s' entry, "
+                "but no 'k%s' -> any ip entry exists!",
+                akey->name, akey->name);
 
-    return res;
+            result = false;
+        }
+
+        akey = akey->next;
+    }
+
+    DeleteItemList(qKEYS);
+    DeleteItemList(aKEYS);
+    DeleteItemList(kKEYS);
+    DeleteItemList(aIPS);
+    DeleteItemList(kIPS);
+
+    return result;
 }
 
 /**

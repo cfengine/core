@@ -21,14 +21,16 @@ static void tests_setup(void)
 static void setup(void)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -f '%s'/*", CFWORKDIR);
     system(cmd);
 }
 
 static void tests_teardown(void)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -f '%s'/*", CFWORKDIR);
+    system(cmd);
+    xsnprintf(cmd, CF_BUFSIZE, "rmdir '%s'", CFWORKDIR);
     system(cmd);
 }
 

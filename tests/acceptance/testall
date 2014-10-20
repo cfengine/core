@@ -960,9 +960,10 @@ if [ -n "$USE_INOTIFYWAIT" ]; then
 fi
 
 trap_handler() {
+  ret_code=$?
   [ -n "$INOTIFYWATCH_PID" ] && kill -9 ${INOTIFYWATCH_PID} 2>&1 > /dev/null
   [ -n "$INOTIFYWAIT_PID"  ] && kill -9 ${INOTIFYWAIT_PID}  2>&1 > /dev/null
-  exit 0
+  exit $ret_code
 }
 trap trap_handler EXIT INT TERM
 

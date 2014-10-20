@@ -964,7 +964,9 @@ trap_handler() {
   [ -n "$INOTIFYWAIT_PID"  ] && kill -9 ${INOTIFYWAIT_PID}  2>&1 > /dev/null
   exit 0
 }
-trap trap_handler EXIT INT TERM
+if [ -n "$USE_INOTIFYWATCH" -o -n "$USE_INOTIFYWAIT"  ]; then
+  trap trap_handler EXIT INT TERM
+fi
 
 START_TIME=$(unix_seconds)
 if [ -z "$STAY_IN_WORKDIR" ]; then

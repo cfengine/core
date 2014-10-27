@@ -1415,13 +1415,21 @@ static FnCallResult FnCallCanonify(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    char buf[CF_BUFSIZE];
+    char *buf = NULL;
     char *string = RlistScalarValue(finalargs);
-    int len = 0;
+    FnCallResult ret;
+    size_t len = strlen(string);
+	size_t bufsiz = len + 1 < 2 ? 2 : len + 1;
 
-    memset(buf, 0, sizeof(buf));
-    strlcpy(buf, string, sizeof(buf));
-    len = strlen(buf);
+    if (len > CF_INFINITY)
+    {
+        free(buf);
+        Log(LOG_LEVEL_ERR, "%s: unable to parse without truncating", fp->name);
+        return FnFailure();
+    }
+
+    buf = xcalloc(bufsiz, sizeof(char));
+    (void)strlcpy(buf, string, bufsiz);
 
     if (!strcmp(fp->name, "string_downcase"))
     {
@@ -1451,12 +1459,12 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_length"))
     {
-        xsnprintf(buf, sizeof(buf), "%d", len);
+        xsnprintf(buf, bufsiz, "%d", len);
     }
     else if (!strcmp(fp->name, "string_head"))
     {
         const long max = IntFromString(RlistScalarValue(finalargs->next));
-        if (max < sizeof(buf))
+        if (max < bufsiz)
         {
             buf[max] = '\0';
         }
@@ -1466,16 +1474,19 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
         const long max = IntFromString(RlistScalarValue(finalargs->next));
         if (max < len)
         {
-            strncpy(buf, string + len - max, sizeof(buf) - 1);
+            strncpy(buf, string + len - max, len);
         }
     }
     else
     {
         Log(LOG_LEVEL_ERR, "text xform with unknown call function %s, aborting", fp->name);
+        free(buf);
         return FnFailure();
     }
 
-    return FnReturn(buf);
+    ret = FnReturn(buf);
+    free(buf);
+    return ret;
 }
 
 /*********************************************************************/
@@ -5239,15 +5250,15 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     char *requested_max = RlistScalarValue(finalargs->next);
     int maxsize = IntFromString(requested_max);
 
-    if (maxsize > CF_BUFSIZE)
+    if (maxsize > CF_INFINITY)
     {
-        Log(LOG_LEVEL_INFO, "%s: requested max size %s is more than the internal limit " TOSTRING(CF_BUFSIZE), fp->name, requested_max);
-        maxsize = CF_BUFSIZE;
+        Log(LOG_LEVEL_INFO, "%s: requested max size %s is more than the internal limit " TOSTRING(CF_INFINITY), fp->name, requested_max);
+        maxsize = CF_INFINITY;
     }
 
     if (maxsize == 0)
     {
-        maxsize = CF_BUFSIZE;
+        maxsize = CF_INFINITY;
     }
 
     // Read once to validate structure of file in itemlist

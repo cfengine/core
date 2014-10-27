@@ -1,0 +1,31 @@
+#######################################################
+#
+# Redmine#5462
+# Redmine#6484
+# respect depends_on restriction
+
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine#5462", "redmine#6484", "zendesk#1576", "zendesk#1577", "zendesk#1578" };
+
+  methods:
+      "" usebundle => dcs_passif_output(".*Pass.*",
+                                        ".*FAIL.*",
+                                        "$(sys.cf_agent) -K -f $(this.promise_filename).sub -b sub_init,sub_test,sub_check -DDEBUG",
+                                        $(this.promise_filename));
+}

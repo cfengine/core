@@ -24,13 +24,13 @@ bundle agent check
 {
   vars:
       "sizes" ilist => { @(test.sizes) };
-      "expected[0]" int => "4095";
+      "expected[0]" int => "10240";
       "expected[1]" int => "1";
       "expected[4094]" int => "4094";
       "expected[4095]" int => "4095";
-      "expected[4096]" int => "4095";
-      "expected[4097]" int => "4095";
-      "expected[99999999]" int => "4095";
+      "expected[4096]" int => "4096";
+      "expected[4097]" int => "4097";
+      "expected[99999999]" int => "10240";
 
   classes:
       "ok_$(sizes)" expression => strcmp("$(test.length_$(sizes))",

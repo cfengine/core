@@ -1454,13 +1454,13 @@ static FnCallResult FnCallCanonify(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    char buf[CF_BUFSIZE];
+    char *buf = NULL;
     char *string = RlistScalarValue(finalargs);
-    int len = 0;
+    size_t len = strlen(string);
+    size_t bufsiz = MAX(len + 1, PRINTSIZE(len));
 
-    memset(buf, 0, sizeof(buf));
-    strlcpy(buf, string, sizeof(buf));
-    len = strlen(buf);
+    buf = xcalloc(bufsiz, sizeof(char));
+    memcpy(buf, string, len + 1);
 
     if (!strcmp(fp->name, "string_downcase"))
     {
@@ -1490,7 +1490,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_length"))
     {
-        xsnprintf(buf, sizeof(buf), "%d", len);
+        xsnprintf(buf, bufsiz, "%d", len);
     }
     else if (!strcmp(fp->name, "string_head"))
     {
@@ -1498,9 +1498,10 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
         if (max < 0)
         {
             Log(LOG_LEVEL_ERR, "string_head called with negative value %ld", max);
+            free(buf);
             return FnFailure();
         }
-        else if (max < sizeof(buf))
+        else if (max < bufsiz)
         {
             buf[max] = '\0';
         }
@@ -1511,20 +1512,22 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
         if (max < 0)
         {
             Log(LOG_LEVEL_ERR, "string_tail called with negative value %ld", max);
+            free(buf);
             return FnFailure();
         }
         else if (max < len)
         {
-            strncpy(buf, string + len - max, sizeof(buf) - 1);
+            memcpy(buf, string + len - max, max + 1);
         }
     }
     else
     {
         Log(LOG_LEVEL_ERR, "text xform with unknown call function %s, aborting", fp->name);
+        free(buf);
         return FnFailure();
     }
 
-    return FnReturn(buf);
+    return FnReturnNoCopy(buf);
 }
 
 /*********************************************************************/
@@ -5436,17 +5439,17 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
     char *filename = RlistScalarValue(finalargs);
     char *requested_max = RlistScalarValue(finalargs->next);
-    int maxsize = IntFromString(requested_max);
+    long maxsize = IntFromString(requested_max);
 
-    if (maxsize > CF_BUFSIZE)
+    if (maxsize > CF_INFINITY)
     {
-        Log(LOG_LEVEL_INFO, "%s: requested max size %s is more than the internal limit " TOSTRING(CF_BUFSIZE), fp->name, requested_max);
-        maxsize = CF_BUFSIZE;
+        Log(LOG_LEVEL_INFO, "%s: requested max size %s is more than the internal limit " TOSTRING(CF_INFINITY), fp->name, requested_max);
+        maxsize = CF_INFINITY;
     }
 
     if (maxsize == 0)
     {
-        maxsize = CF_BUFSIZE;
+        maxsize = CF_INFINITY;
     }
 
     if (maxsize < 0)

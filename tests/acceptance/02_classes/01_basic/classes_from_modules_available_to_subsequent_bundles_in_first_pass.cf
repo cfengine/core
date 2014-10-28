@@ -1,0 +1,29 @@
+#######################################################
+#
+# Redmine#6689 - Should be able to use negative expression on class defined
+# from module protocol right away
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine#6689", "zendesk#1548" };
+
+  methods:
+      "" usebundle => dcs_passif_output("should be set",
+                                        "should not be set",
+                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub",
+                                        $(this.promise_filename));
+}

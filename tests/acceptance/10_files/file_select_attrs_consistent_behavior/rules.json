@@ -1,0 +1,14 @@
+[
+{
+"location": "/tmp/logs/tidy"
+"context": "any",
+"action": "TIDY",
+"frequency": "10",
+"type": "plain",
+"filter": ".*.log",
+"retention": "2",
+"depth": "2",
+"size": "ANY",
+"reason": "Tidy all logs"
+}
+]

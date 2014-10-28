@@ -1,0 +1,54 @@
+#!/var/cfengine/bin/cf-agent -Kf
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { "main"};
+}
+
+bundle agent main
+{
+  methods:
+    "any" usebundle => module_stub;
+    "any" usebundle => test_bundle;
+}
+
+bundle agent module_stub
+{
+  commands:
+    any::
+      "$(G.echo) +test_class"
+        comment    => "Setting test_class",
+        module     => "true" ;
+}
+
+bundle agent test_bundle
+{
+  vars:
+    # because this bundle runs after the module, I would expect both
+    # of these class statements to be false (and the vars not set).
+    # In practice, $(bogus_first) seems to somehow get set before
+    # the module runs, and $(bogus_second) - which is forced to run
+    # in the second pass of this bundle, is not set, which is correct.
+    !test_class::
+      "bogus_first"
+        string => "should not be set",
+        comment => "because module_stub was activated and test_class was defined *BEFORE* $(this.bundle) was activated";
+
+    secondpass.!test_class::
+      "bogus_second"
+        string => "should not be set",
+        comment => "because even when its the second pass, test_class was already defined.";
+
+    !secondpass.test_class::
+      "good_first"
+        string => "should be set";
+
+  classes:
+      "secondpass" expression => "any";
+
+  reports:
+      # I would expect *neither* of these vars to be defined
+      "Value of bogus_first is: $(bogus_first)";
+      "Value of bogus_second is: $(bogus_second)";
+      "Value of good_first is: $(good_first)";
+}

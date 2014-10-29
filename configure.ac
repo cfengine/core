@@ -528,6 +528,11 @@ AC_CHECK_HEADERS(sys/mount.h, [], [], [AC_INCLUDES_DEFAULT
 # Required on BSD to get struct sockaddr_dl (for retrieving MAC addresses from getifaddrs())
 AC_CHECK_HEADERS(net/if_dl.h)
 
+# Required on Solaris to get struct arpreq (for retrieving MAC addresses)
+AC_CHECK_HEADERS(net/if_arp.h, , , [AC_INCLUDES_DEFAULT
+#include <sys/socket.h>
+])
+
 AC_CHECK_HEADERS(utime.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)

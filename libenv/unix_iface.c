@@ -43,6 +43,10 @@
 # endif
 #endif
 
+#ifdef HAVE_NET_IF_ARP_H
+# include <net/if_arp.h>
+#endif
+
 #define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
@@ -65,10 +69,6 @@
 #include <sys/ndd_var.h>
 #include <sys/kinfo.h>
 static int aix_get_mac_addr(const char *device_name, uint8_t mac[6]);
-#endif
-
-#if defined (__sun) && !defined(HAVE_GETIFADDRS)
-#include <solaris_ifaddrs.h>
 #endif
 
 static void FindV6InterfacesInfo(EvalContext *ctx);
@@ -160,7 +160,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
     snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
     EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
 
-# elif defined(HAVE_GETIFADDRS)
+# elif defined(HAVE_GETIFADDRS) && !defined(__sun)
     char hw_mac[CF_MAXVARSIZE];
     char *m;
     struct ifaddrs *ifaddr, *ifa;
@@ -225,41 +225,40 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", CF_DATA_TYPE_STRING, "source=agent");
         EvalContextClassPutHard(ctx, "mac_unknown", "source=agent");
     }
-# elif defined(__sun) && !defined(HAVE_GETIFADDRS)
 
-    char hw_mac[CF_MAXVARSIZE];
-    
-    struct ifaddrs *ifaddr, *ifa;
-    struct sockaddr_dl *sdl;
+# elif defined(SIOCGARP)
 
-    if (solaris_getifaddrs(&ifaddr) == -1)
+    struct arpreq arpreq;
+
+    ((struct sockaddr_in*)&arpreq.arp_pa)->sin_addr.s_addr =
+        ((struct sockaddr_in*)&ifp->ifr_addr)->sin_addr.s_addr;
+
+    if (ioctl(fd, SIOCGARP, &arpreq) == -1)
     {
-        Log(LOG_LEVEL_ERR, "!! Could not get interface %s addresses (getifaddrs)",
-          ifp->ifr_name);
-
+        Log(LOG_LEVEL_ERR, "Could not get interface %s addresses (ioctl(SIOCGARP): '%s')",
+            ifp->ifr_name, GetErrorStr());
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", CF_DATA_TYPE_STRING, "source=agent");
         EvalContextClassPutHard(ctx, "mac_unknown", "source=agent");
         return;
     }
-    for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
-    {      
-        struct sockaddr * saddr = ifaddr->ifa_addr;
-        snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
-        (unsigned char) saddr->sa_data[0],
-        (unsigned char) saddr->sa_data[1],
-        (unsigned char) saddr->sa_data[2],
-        (unsigned char) saddr->sa_data[3],
-        (unsigned char) saddr->sa_data[4],
-        (unsigned char) saddr->sa_data[5]);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
-        RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
-        RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
+    char hw_mac[CF_MAXVARSIZE];
 
-        snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-        EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
-    }
-    solaris_freeifaddrs(ifaddr);
+    snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+             (unsigned char) arpreq.arp_ha.sa_data[0],
+             (unsigned char) arpreq.arp_ha.sa_data[1],
+             (unsigned char) arpreq.arp_ha.sa_data[2],
+             (unsigned char) arpreq.arp_ha.sa_data[3],
+             (unsigned char) arpreq.arp_ha.sa_data[4],
+             (unsigned char) arpreq.arp_ha.sa_data[5]);
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
+    RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+    RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+
+    snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
+    EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
+
 # else
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", CF_DATA_TYPE_STRING, "source=agent");
     EvalContextClassPutHard(ctx, "mac_unknown", "source=agent");

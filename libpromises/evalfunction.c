@@ -1456,7 +1456,12 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     else if (!strcmp(fp->name, "string_head"))
     {
         const long max = IntFromString(RlistScalarValue(finalargs->next));
-        if (max < sizeof(buf))
+        if (max < 0)
+        {
+            Log(LOG_LEVEL_ERR, "string_head called with negative value %ld", max);
+            return FnFailure();
+        }
+        else if (max < sizeof(buf))
         {
             buf[max] = '\0';
         }
@@ -1464,7 +1469,12 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     else if (!strcmp(fp->name, "string_tail"))
     {
         const long max = IntFromString(RlistScalarValue(finalargs->next));
-        if (max < len)
+        if (max < 0)
+        {
+            Log(LOG_LEVEL_ERR, "string_tail called with negative value %ld", max);
+            return FnFailure();
+        }
+        else if (max < len)
         {
             strncpy(buf, string + len - max, sizeof(buf) - 1);
         }
@@ -5248,6 +5258,12 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     if (maxsize == 0)
     {
         maxsize = CF_BUFSIZE;
+    }
+
+    if (maxsize < 0)
+    {
+        Log(LOG_LEVEL_ERR, "%s: requested max size %s is less than 0", fp->name, requested_max);
+        return FnFailure();
     }
 
     // Read once to validate structure of file in itemlist

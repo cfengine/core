@@ -5449,6 +5449,12 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         maxsize = CF_BUFSIZE;
     }
 
+    if (maxsize < 0)
+    {
+        Log(LOG_LEVEL_ERR, "%s: requested max size %s is less than 0", fp->name, requested_max);
+        return FnFailure();
+    }
+
     // Read once to validate structure of file in itemlist
     contents = CfReadFile(filename, maxsize);
 

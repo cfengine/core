@@ -765,71 +765,6 @@ static FnCallResult FnCallConcat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
 /*********************************************************************/
 
-static FnCallResult FnCallClassMatch(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
-    const char *regex = RlistScalarValue(finalargs);
-    pcre *rx = CompileRegex(regex);
-
-    {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            char *expr = ClassRefToString(cls->ns, cls->name);
-
-            /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex, expr) ||
-                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
-            {
-                free(expr);
-                ClassTableIteratorDestroy(iter);
-                if (rx)
-                {
-                    pcre_free(rx);
-                }
-                return FnReturnContext(true);
-            }
-
-            free(expr);
-        }
-        ClassTableIteratorDestroy(iter);
-
-    }
-
-    {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            char *expr = ClassRefToString(cls->ns, cls->name);
-
-            /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex,expr) ||
-                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
-            {
-                free(expr);
-                ClassTableIteratorDestroy(iter);
-                if (rx)
-                {
-                    pcre_free(rx);
-                }
-                return FnReturnContext(true);
-            }
-
-            free(expr);
-        }
-        ClassTableIteratorDestroy(iter);
-    }
-
-    if (rx)
-    {
-        pcre_free(rx);
-    }
-    return FnReturnContext(false);
-}
-
-/*********************************************************************/
-
 static FnCallResult FnCallIfElse(EvalContext *ctx,
                                  ARG_UNUSED const Policy *policy,
                                  ARG_UNUSED const FnCall *fp,
@@ -874,59 +809,6 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
 
     /* If we get here, we've reached the last argument (arg->next is NULL). */
     return FnReturn(RlistScalarValue(arg));
-}
-
-/*********************************************************************/
-
-static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
-    unsigned count = 0;
-    const char *regex = RlistScalarValue(finalargs);
-    pcre *rx = CompileRegex(regex);
-
-    {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            char *expr = ClassRefToString(cls->ns, cls->name);
-
-            /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex, expr) ||
-                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
-            {
-                count++;
-            }
-
-            free(expr);
-        }
-        ClassTableIteratorDestroy(iter);
-    }
-
-    {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            char *expr = ClassRefToString(cls->ns, cls->name);
-
-            /* FIXME: review this strcmp. Moved out from StringMatch */
-            if (!strcmp(regex, expr) ||
-                (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
-            {
-                count++;
-            }
-
-            free(expr);
-        }
-        ClassTableIteratorDestroy(iter);
-    }
-
-    if (rx)
-    {
-        pcre_free(rx);
-    }
-    return FnReturnF("%u", count);
 }
 
 /*********************************************************************/
@@ -999,6 +881,26 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
 
 static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    bool count_only = false;
+    bool check_only = false;
+    unsigned count = 0;
+
+    if (0 == strcmp(fp->name, "classmatch"))
+    {
+        check_only = true;
+    }
+    else if (0 == strcmp(fp->name, "countclassesmatching"))
+    {
+        count_only = true;
+    }
+    else if (0 == strcmp(fp->name, "classesmatching"))
+    {
+    }
+    else
+    {
+        FatalError(ctx, "FnCallClassesMatching: got unknown function name '%s', aborting", fp->name);
+    }
+
     if (!finalargs)
     {
         FatalError(ctx, "Function '%s' requires at least one argument", fp->name);
@@ -1023,11 +925,28 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
         const char *element = NULL;
         while ((element = StringSetIteratorNext(&it)))
         {
-            RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
+            if (count_only || check_only)
+            {
+                count++;
+
+                if (check_only)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
+            }
         }
 
         StringSetDestroy(global_matches);
         ClassTableIteratorDestroy(iter);
+    }
+
+    if (check_only && count >= 1)
+    {
+        return FnReturnContext(true);
     }
 
     {
@@ -1038,13 +957,35 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
         const char *element = NULL;
         while ((element = StringSetIteratorNext(&it)))
         {
-            RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
+            if (count_only || check_only)
+            {
+                count++;
+
+                if (check_only)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
+            }
         }
 
         StringSetDestroy(local_matches);
         ClassTableIteratorDestroy(iter);
     }
 
+    if (check_only)
+    {
+        return FnReturnContext(count >= 1);
+    }
+    else if (count_only)
+    {
+        return FnReturnF("%u", count);
+    }
+
+    // else, this is classesmatching()
     return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
 
@@ -6753,18 +6694,11 @@ static const FnCallArg CLASSIFY_ARGS[] =
 
 static const FnCallArg CLASSMATCH_ARGS[] =
 {
-    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
 static const FnCallArg CONCAT_ARGS[] =
 {
-    {NULL, CF_DATA_TYPE_NONE, NULL}
-};
-
-static const FnCallArg COUNTCLASSESMATCHING_ARGS[] =
-{
-    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -7527,12 +7461,12 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classify", CF_DATA_TYPE_CONTEXT, CLASSIFY_ARGS, &FnCallClassify, "True if the canonicalization of the argument is a currently defined class",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("classmatch", CF_DATA_TYPE_CONTEXT, CLASSMATCH_ARGS, &FnCallClassMatch, "True if the regular expression matches any currently defined class",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("classmatch", CF_DATA_TYPE_CONTEXT, CLASSMATCH_ARGS, &FnCallClassesMatching, "True if the regular expression matches any currently defined class",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching, "List the defined classes matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("countclassesmatching", CF_DATA_TYPE_INT, COUNTCLASSESMATCHING_ARGS, &FnCallCountClassesMatching, "Count the number of defined classes matching regex arg1",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("countclassesmatching", CF_DATA_TYPE_INT, CLASSMATCH_ARGS, &FnCallClassesMatching, "Count the number of defined classes matching regex arg1",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("countlinesmatching", CF_DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching, "Count the number of lines matching regex arg1 in file arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("datastate", CF_DATA_TYPE_CONTAINER, DATASTATE_ARGS, &FnCallDatastate, "Construct a container of the variable and class state",

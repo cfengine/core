@@ -412,7 +412,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
           RESULT=FAIL
           RESULT_MSG="${COLOR_FAILURE}FAIL (The test Passed, but failure was expected)${COLOR_NORMAL}"
         else
-          REDMINE="$(egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine\([0-9][0-9]*\).*,\1,")"
+          REDMINE="$(egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine[^0-9]*\([0-9][0-9]*\).*,\1,")"
           RESULT="$(egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
           if [ "$RESULT" = "XFAIL" ]; then
             RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"

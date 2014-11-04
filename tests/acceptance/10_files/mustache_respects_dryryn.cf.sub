@@ -1,0 +1,41 @@
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+body agent control
+{
+  dryrun => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "template_target" string => "$(G.testfile)";
+
+  files:
+    # The template should not be rendered because dryrun is set
+    "$(template_target)"
+      edit_template => "$(this.promise_filename).mustache",
+      template_method => "mustache";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "fail" expression => regline("SHOULD NOT RENDER", $(test.template_target) );
+
+  reports:
+    !fail::
+      "$(this.promise_filename) Pass";
+    fail::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

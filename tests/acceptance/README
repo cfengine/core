@@ -33,6 +33,7 @@ Preparing for running tests
   diff output colorized, you also need to install the colordiff
   utility.
 
+* If you plan to use `git bisect` to hunt for a bug, try
   tests/acceptance/bisect-acceptance.pl, contributed by the
   indomitable Chris Dituri
 

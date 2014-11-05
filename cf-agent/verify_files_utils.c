@@ -2692,16 +2692,16 @@ PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *s
     switch (attr.link.link_type)
     {
     case FILE_LINK_TYPE_SYMLINK:
-        VerifyLink(ctx, destination, source, attr, pp);
+        result = VerifyLink(ctx, destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_HARDLINK:
-        VerifyHardLink(ctx, destination, source, attr, pp);
+        result = VerifyHardLink(ctx, destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_RELATIVE:
-        VerifyRelativeLink(ctx, destination, source, attr, pp);
+        result = VerifyRelativeLink(ctx, destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_ABSOLUTE:
-        VerifyAbsoluteLink(ctx, destination, source, attr, pp);
+        result = VerifyAbsoluteLink(ctx, destination, source, attr, pp);
         break;
     default:
         Log(LOG_LEVEL_ERR, "Unknown link type - should not happen.");

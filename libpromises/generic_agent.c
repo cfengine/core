@@ -714,9 +714,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
     }
 
-    VIFELAPSED = 1;
-    VEXPIREAFTER = 1;
-
     setlinebuf(stdout);
 
     if (config->agent_specific.agent.bootstrap_policy_server)

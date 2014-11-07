@@ -1,0 +1,87 @@
+# Tests that the defaults to ifelapsed and expireafter are correct,
+# and that changing them has an effect.
+
+# We repeatedly run four promises, all adding a line of text to a file. What we
+# test is how many times the line gets added to the file, depending on the
+# value of ifelapsed and expireafter. The promise is carried out three times,
+# once at 0 seconds, once at 20 seconds, and once at 65 seconds.
+#
+# Seconds        0----------------20----------------65      No. lines
+# LR + DE       Add              Noop              Noop        1
+# LR + SE       Add              Noop              Add         2
+# SR + DI       Add              Noop              Add         2
+# SR + LI       Add              Noop              Noop        1
+#
+# LR = Long Running promise
+# SR = Short Running promise
+# DE = Default Expireafter
+# SE = Short Expireafter
+# DI = Default Ifelapsed
+# LI = Long Ifelapsed
+
+body common control
+{
+    inputs => { "../../../default.cf.sub" };
+    bundlesequence => { default($(this.promiser_filename)) };
+}
+
+bundle agent init
+{
+  meta:
+      # Backgrounding doesn't work properly on Windows.
+      "test_skip_needs_work" string => "windows";
+
+  methods:
+    test_pass_4::
+      "any" usebundle => file_make("$(G.testfile).expireafter.expected", "one promise execution");
+      "any" usebundle => file_make("$(G.testfile).short_expireafter.expected", "one promise execution
+one promise execution");
+      "any" usebundle => file_make("$(G.testfile).ifelapsed.expected", "one promise execution
+one promise execution");
+      "any" usebundle => file_make("$(G.testfile).long_ifelapsed.expected", "one promise execution");
+
+}
+
+bundle agent test
+{
+  vars:
+      "cases" slist => { "expireafter",
+                         "short_expireafter",
+                         "ifelapsed",
+                         "long_ifelapsed",
+                       };
+
+  commands:
+    test_pass_1|test_pass_2|test_pass_3::
+      "$(sys.cf_agent) -D $(cases) -f $(this.promise_filename).sub 1>$(G.testfile).$(cases).output.log 2>&1 &"
+        contain => in_shell;
+}
+
+bundle agent check
+{
+  methods:
+    test_pass_1::
+      "any" usebundle => dcs_wait($(this.promise_filename), 20);
+    test_pass_2::
+      "any" usebundle => dcs_wait($(this.promise_filename), 45);
+    test_pass_3::
+      # Final delay is just to make sure all background echos have happened.
+      "any" usebundle => dcs_wait($(this.promise_filename), 10);
+
+  vars:
+    test_pass_4::
+      "pass_classes" slist => maplist("$(this)_pass", "test.cases");
+      "pass_expr" string => join(".", "pass_classes");
+      "fail_classes" slist => maplist("!$(this)_fail", "test.cases");
+      "fail_expr" string => join(".", "fail_classes");
+
+  methods:
+    test_pass_4::
+      "any" usebundle => dcs_if_diff("$(G.testfile).$(test.cases)",
+                                     "$(G.testfile).$(test.cases).expected",
+                                     "$(test.cases)_pass",
+                                     "$(test.cases)_fail");
+
+      "any" usebundle => dcs_passif("$(pass_expr).$(fail_expr)",
+                                    "$(this.promise_filename)");
+}

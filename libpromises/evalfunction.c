@@ -5484,6 +5484,8 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
 static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     const char *varname = RlistScalarValue(finalargs);
+    const bool writejson_mode = strcmp(fp->name, "writejson") == 0;
+    const char *filename = writejson_mode ? RlistScalarValue(finalargs->next) : NULL;
 
     VarRef *ref = VarRefParse(varname);
     DataType type = CF_DATA_TYPE_NONE;
@@ -5492,23 +5494,47 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *p
 
     if (type == CF_DATA_TYPE_CONTAINER)
     {
-        Writer *w = StringWriter();
-        int length;
-
-        JsonWrite(w, value, 0);
-        Log(LOG_LEVEL_DEBUG, "%s: from data container %s, got JSON data '%s'", fp->name, varname, StringWriterData(w));
-
-        length = strlen(StringWriterData(w));
-        if (length >= CF_BUFSIZE)
+        Writer *w;
+        if (writejson_mode)
         {
-            Log(LOG_LEVEL_INFO, "%s: truncating data container %s JSON data from %d bytes to %d", fp->name, varname, length, CF_BUFSIZE);
+            int fd = creat(filename, 0600);
+            if (fd == -1)
+            {
+                Log(LOG_LEVEL_ERR, "%s: could not create file '%s' (creat: %s)", fp->name, filename, GetErrorStr());
+                return FnFailure();
+            }
+
+            w = FileWriter(fdopen(fd, "w"));
+        }
+        else
+        {
+            w = StringWriter();
         }
 
-        char buf[CF_BUFSIZE];
-        snprintf(buf, CF_BUFSIZE, "%s", StringWriterData(w));
-        WriterClose(w);
+        JsonWrite(w, value, 0);
 
-        return FnReturn(buf);
+        if (writejson_mode)
+        {
+            WriterClose(w);
+            return FnReturnContext(true);
+        }
+        else
+        {
+            int length;
+            Log(LOG_LEVEL_DEBUG, "%s: from data container %s, got JSON data '%s'", fp->name, varname, StringWriterData(w));
+
+            length = strlen(StringWriterData(w));
+            if (length >= CF_BUFSIZE)
+            {
+                Log(LOG_LEVEL_INFO, "%s: truncating data container %s JSON data from %d bytes to %d", fp->name, varname, length, CF_BUFSIZE);
+            }
+
+            char buf[CF_BUFSIZE];
+            snprintf(buf, CF_BUFSIZE, "%s", StringWriterData(w));
+            WriterClose(w);
+
+            return FnReturn(buf);
+        }
     }
     else
     {
@@ -7210,6 +7236,13 @@ static const FnCallArg STOREJSON_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg WRITEJSON_ARGS[] =
+{
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine data container identifier"},
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name to write"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg READTCP_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Host name or IP address of server socket"},
@@ -7769,6 +7802,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("writejson", CF_DATA_TYPE_CONTEXT, WRITEJSON_ARGS, &FnCallStoreJson, "Write the data container arg1 in JSON format into file arg2",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
 
     // Functions section following new naming convention
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",

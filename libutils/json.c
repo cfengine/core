@@ -21,18 +21,22 @@
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
+
 #include <logging.h>
 #include <json.h>
+#include <json-priv.h>
+#include <json-yaml.h>
 
 #include <alloc.h>
 #include <sequence.h>
 #include <string_lib.h>
+#include <misc_lib.h>
 #include <file_lib.h>
 #include <printsize.h>
 #include <regex.h>
 
 static const int SPACES_PER_INDENT = 2;
-static const int DEFAULT_CONTAINER_CAPACITY = 64;
+const int DEFAULT_CONTAINER_CAPACITY = 64;
 
 static const char *const JSON_TRUE = "true";
 static const char *const JSON_FALSE = "false";
@@ -1526,6 +1530,8 @@ const char* JsonParseErrorToString(JsonParseError error)
 
         [JSON_PARSE_ERROR_INVALID_START] = "Unwilling to parse json data starting with invalid character",
         [JSON_PARSE_ERROR_TRUNCATED] = "Unable to parse JSON without truncating",
+        [JSON_PARSE_ERROR_NO_LIBYAML] = "CFEngine was not built with libyaml support",
+        [JSON_PARSE_ERROR_LIBYAML_FAILURE] = "libyaml internal failure",
         [JSON_PARSE_ERROR_NO_DATA] = "No data"
     };
 
@@ -1603,7 +1609,7 @@ static JsonParseError JsonParseAsString(const char **data, char **str_out)
     return JSON_PARSE_ERROR_STRING_NO_DOUBLEQUOTE_END;
 }
 
-static JsonParseError JsonParseAsNumber(const char **data, JsonElement **json_out)
+JsonParseError JsonParseAsNumber(const char **data, JsonElement **json_out)
 {
     Writer *writer = StringWriter();
 
@@ -2108,7 +2114,7 @@ JsonParseError JsonParse(const char **data, JsonElement **json_out)
     return JSON_PARSE_ERROR_NO_DATA;
 }
 
-JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **json_out)
+JsonParseError JsonParseAnyFile(const char *path, size_t size_max, JsonElement **json_out, const bool yaml_format)
 {
     bool truncated = false;
     Writer *contents = FileRead(path, size_max, &truncated);
@@ -2123,7 +2129,22 @@ JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **js
     assert(json_out);
     *json_out = NULL;
     const char *data = StringWriterData(contents);
-    JsonParseError err = JsonParse(&data, json_out);
+    JsonParseError err;
+
+    if (yaml_format)
+    {
+        err = JsonParseYamlString(&data, json_out);
+    }
+    else
+    {
+        err = JsonParse(&data, json_out);
+    }
+
     WriterClose(contents);
     return err;
+}
+
+JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **json_out)
+{
+    return JsonParseAnyFile(path, size_max, json_out, false);
 }

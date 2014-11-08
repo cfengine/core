@@ -5370,17 +5370,35 @@ static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx,
     const char *input_path = RlistScalarValue(args);
     size_t size_max = IntFromString(RlistScalarValue(args->next));
 
+    bool yaml_mode = (0 == strcmp(fp->name, "readyaml"));
+    const char* data_type = yaml_mode ? "YAML" : "JSON";
+
     /* FIXME: fail if truncated? */
     JsonElement *json = NULL;
-    JsonParseError res = JsonParseFile(input_path, size_max, &json);
-    if (res != JSON_PARSE_OK)
+    JsonParseError res;
+    if (yaml_mode)
     {
-        Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s': %s",
-            input_path, JsonParseErrorToString(res));
+        res = JsonParseYamlFile(input_path, size_max, &json);
+    }
+    else
+    {
+        res = JsonParseFile(input_path, size_max, &json);
+    }
+
+    // the NO_DATA errors often happen when the file hasn't been created yet
+    if (res == JSON_PARSE_ERROR_NO_DATA)
+    {
+        Log(LOG_LEVEL_ERR, "Data error parsing %s file '%s': %s",
+            data_type, input_path, JsonParseErrorToString(res));
+    }
+    else if (res != JSON_PARSE_OK)
+    {
+        Log(LOG_LEVEL_ERR, "Error parsing %s file '%s': %s",
+            data_type, input_path, JsonParseErrorToString(res));
     }
     else if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
     {
-        Log(LOG_LEVEL_ERR, "Non-container from parsing JSON file '%s'", input_path);
+        Log(LOG_LEVEL_ERR, "Non-container from parsing %s file '%s'", data_type, input_path);
         JsonDestroy(json);
     }
     else
@@ -5398,15 +5416,27 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
 {
     const char *data = RlistScalarValue(args);
     JsonElement *json = NULL;
-    JsonParseError res = JsonParse(&data, &json);
+    bool yaml_mode = (0 == strcmp(fp->name, "parseyaml"));
+    const char* data_type = yaml_mode ? "YAML" : "JSON";
+    JsonParseError res;
+
+    if (yaml_mode)
+    {
+        res = JsonParseYamlString(&data, &json);
+    }
+    else
+    {
+        res = JsonParse(&data, &json);
+    }
+
     if (res != JSON_PARSE_OK)
     {
-        Log(LOG_LEVEL_ERR, "Error parsing JSON expression '%s': %s",
-            data, JsonParseErrorToString(res));
+        Log(LOG_LEVEL_ERR, "Error parsing %s expression '%s': %s",
+            data_type, data, JsonParseErrorToString(res));
     }
     else if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
     {
-        Log(LOG_LEVEL_ERR, "Non-container from parsing JSON expression '%s'", data);
+        Log(LOG_LEVEL_ERR, "Non-container from parsing %s expression '%s'", data_type, data);
         JsonDestroy(json);
     }
     else
@@ -7615,6 +7645,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parsestringarrayidx", CF_DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseStringArrayIndex, "Read an array of strings from a string, indexing by line number and sequentially within each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("parseyaml", CF_DATA_TYPE_CONTAINER, PARSEJSON_ARGS, &FnCallParseJson, "Parse a data container from a YAML string",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("peers", CF_DATA_TYPE_STRING_LIST, PEERS_ARGS, &FnCallPeers, "Get a list of peers (not including ourself) from the partition to which we belong",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("peerleader", CF_DATA_TYPE_STRING, PEERLEADER_ARGS, &FnCallPeerLeader, "Get the assigned peer-leader of the partition to which we belong",
@@ -7644,6 +7676,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("readstringarrayidx", CF_DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadStringArrayIndex, "Read an array of strings from a file, indexed by line number and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readstringlist", CF_DATA_TYPE_STRING_LIST, READSTRINGLIST_ARGS, &FnCallReadStringList, "Read and assign a list variable from a file of separated strings",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readyaml", CF_DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadJson, "Read a data container from a YAML file",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readtcp", CF_DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),

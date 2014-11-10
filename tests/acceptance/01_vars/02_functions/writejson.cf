@@ -1,0 +1,50 @@
+# Test that the writejson() function will convert a data container back to JSON
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "json" string => '{
+  "x": [
+    1,
+    2,
+    3
+  ]
+}';
+}
+
+bundle agent test
+{
+  vars:
+      "data" data => parsejson($(init.json));
+      "data_s" string => format("%S", data);
+
+  classes:
+      "written" expression => writejson(data, $(G.testfile));
+
+  reports:
+    EXTRA::
+      "$(this.bundle): wrote $(data_s)";
+}
+
+bundle agent check
+{
+  vars:
+      "back" data => readjson($(G.testfile), 10k);
+      "back_s" string => format("%S", back);
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(test.data_s),
+                                      $(back_s),
+                                      "$(this.promise_filename)",
+                                      "no");
+  reports:
+    EXTRA::
+      "$(this.bundle): got back $(back_s)";
+}

@@ -31,12 +31,16 @@ bundle agent example
   classes:
 
       "do_it" and => { classmatch("cfengine_3.*"), "any" };
-
+      "have_hardclass_nonesuch" expression => classmatch("nonesuchclass_sodonttryit", hardclass);
   reports:
 
     do_it::
 
       "Host matches pattern";
+
+    have_hardclass_nonesuch::
+
+      "Host has that really weird hardclass";
 }
 #+end_src
 ###############################################################################

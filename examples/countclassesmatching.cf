@@ -31,7 +31,7 @@ bundle agent example
   vars:
       # this is anchored, so you need .* to match multiple things
       "num" int => countclassesmatching("cfengine");
-
+      "hardcount" int => countclassesmatching(".*", "hardclass");
   reports:
       "Found $(num) classes matching";
 }

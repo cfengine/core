@@ -1,0 +1,41 @@
+body common control
+{
+    inputs => { "../../../default.cf.sub" };
+    bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  commands:
+    # Use "has_run" class to avoid reexecution. This may happen because of the
+    # sleep making the promise last for two minutes. Default ifelapsed time is
+    # 1 minute.
+    !has_run.expireafter::
+      "$(G.echo) one promise execution >> $(G.testfile).expireafter ; $(G.sleep) 120"
+        contain => in_shell,
+        classes => always("has_run");
+    !has_run.short_expireafter::
+      "$(G.echo) one promise execution >> $(G.testfile).short_expireafter ; $(G.sleep) 120"
+        contain => in_shell,
+        action => set_expireafter(1),
+        classes => always("has_run");
+    !has_run.ifelapsed::
+      "$(G.echo) one promise execution >> $(G.testfile).ifelapsed"
+        contain => in_shell,
+        classes => always("has_run");
+    !has_run.long_ifelapsed::
+      "$(G.echo) one promise execution >> $(G.testfile).long_ifelapsed"
+        contain => in_shell,
+        action => set_ifelapsed(5),
+        classes => always("has_run");
+}
+
+body action set_ifelapsed(x)
+{
+    ifelapsed => "$(x)";
+}
+
+body action set_expireafter(x)
+{
+    expireafter => "$(x)";
+}

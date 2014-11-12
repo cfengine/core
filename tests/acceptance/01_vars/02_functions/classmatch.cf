@@ -1,0 +1,34 @@
+# Test that classmatch works correctly
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+  classes:
+      "test_fbeae67f3e347b5e0032302200141131" expression => "any", meta => { "x" };
+      "test_fbeae67f3e347b5e0032302200141131_1" expression => "any", meta => { "x" };
+      "test_fbeae67f3e347b5e0032302200141131_2" expression => "any", meta => { "y" };
+}
+
+bundle common test
+{
+  classes:
+      "have_classes" expression => classmatch("test_fbeae67f3e347b5e0032302200141131");
+      "have_x_classes" expression => classmatch("test_fbeae67f3e347b5e0032302200141131_1.*", "x");
+      "have_z_classes" expression => classmatch("nosuchclass");
+      "have_z_classes" expression => classmatch("test_fbeae67f3e347b5e0032302200141131_2", "z");
+      "have_z_classes" expression => classmatch("test_fbeae67f3e347b5e0032302200141131_2.*", "z");
+}
+
+bundle agent check
+{
+ methods:
+      "" usebundle => dcs_passif_expected("have_classes,have_x_classes",
+                                         "have_z_classes",
+                                         $(this.promise_filename)),
+      inherit => "true";
+}

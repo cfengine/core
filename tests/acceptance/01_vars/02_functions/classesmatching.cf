@@ -1,4 +1,4 @@
-# Test that classesmatching works correctly
+# Test that classesmatching and countclassesmatching work correctly
 
 body common control
 {
@@ -14,32 +14,36 @@ bundle common init
       "test_fbeae67f3e347b5e0032302200141131_2" expression => "any", meta => { "y" };
 }
 
-bundle agent test
+bundle common test
 {
   vars:
       "classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*");
       "x_classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
       "z_classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "z");
 
+      "ccm_classes" int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*");
+      "ccm_x_classes" int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
+      "ccm_z_classes" int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*", "z");
+
       "count" int => length(classes);
       "x_count" int => length(x_classes);
       "z_count" int => length(z_classes);
+
+  classes:
+      "have_count_classes" expression => strcmp($(count), 3);
+      "have_count_x_classes" expression => strcmp($(x_count), 2);
+      "have_count_z_classes" expression => strcmp($(z_count), 0);
+
+      "have_ccm_classes" expression => strcmp($(ccm_classes), 3);
+      "have_ccm_x_classes" expression => strcmp($(ccm_x_classes), 2);
+      "have_ccm_z_classes" expression => strcmp($(ccm_z_classes), 0);
 }
 
 bundle agent check
 {
-  classes:
-      "ok" and => { strcmp("$(test.count)", "3"),
-                    strcmp("$(test.x_count)", "2"),
-                    strcmp("$(test.z_count)", "0") };
-
-  reports:
-    DEBUG::
-      "Found classes $(test.classes), length $(test.count)";
-      "Found x classes $(test.x_classes), length $(test.x_count)";
-      "Found z classes $(test.z_classes), length $(test.z_count)";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+ methods:
+      "" usebundle => dcs_passif_expected("have_count_classes,have_count_x_classes,have_count_z_classes,have_ccm_classes,have_ccm_x_classes,have_ccm_z_classes",
+                                          "",
+                                          $(this.promise_filename)),
+      inherit => "true";
 }

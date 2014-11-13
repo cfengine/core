@@ -32,6 +32,8 @@ typedef enum
 {
     TAG_TYPE_VAR,
     TAG_TYPE_VAR_UNESCAPED,
+    TAG_TYPE_VAR_SERIALIZED,
+    TAG_TYPE_VAR_SERIALIZED_COMPACT,
     TAG_TYPE_SECTION,
     TAG_TYPE_SECTION_END,
     TAG_TYPE_INVERTED,
@@ -241,6 +243,14 @@ static Mustache NextTag(const char *input,
         ret.type = TAG_TYPE_VAR_UNESCAPED;
         ret.content++;
         break;
+    case '%':
+        ret.type = TAG_TYPE_VAR_SERIALIZED;
+        ret.content++;
+        break;
+    case '$':
+        ret.type = TAG_TYPE_VAR_SERIALIZED_COMPACT;
+        ret.content++;
+        break;
     default:
         ret.type = TAG_TYPE_VAR;
         break;
@@ -377,12 +387,33 @@ static bool RenderVariablePrimitive(Buffer *out, const JsonElement *primitive, c
     return false;
 }
 
+static bool RenderVariableContainer(Buffer *out, const JsonElement *container, bool compact)
+{
+  Writer *w = StringWriter();
+  if (compact)
+  {
+    JsonWriteCompact(w, container);
+  }
+  else
+  {
+    JsonWrite(w, container, 0);
+  }
+
+  BufferAppendString(out, StringWriterData(w));
+  WriterClose(w);
+  return true;
+}
+
 static bool RenderVariable(Buffer *out,
                            const char *content, size_t content_len,
-                           bool escaped,
+                           TagType conversion,
                            Seq *hash_stack)
 {
     JsonElement *var = NULL;
+    bool escape = conversion == TAG_TYPE_VAR;
+    bool serialize = conversion == TAG_TYPE_VAR_SERIALIZED;
+    bool serialize_compact = conversion == TAG_TYPE_VAR_SERIALIZED_COMPACT;
+
     if (strncmp(content, ".", content_len) == 0)
     {
         var = SeqAt(hash_stack, SeqLength(hash_stack) - 1);
@@ -400,11 +431,19 @@ static bool RenderVariable(Buffer *out,
     switch (JsonGetElementType(var))
     {
     case JSON_ELEMENT_TYPE_PRIMITIVE:
-        return RenderVariablePrimitive(out, var, escaped);
+        // note that this also covers 'serialize' on primitives
+        return RenderVariablePrimitive(out, var, escape);
 
     case JSON_ELEMENT_TYPE_CONTAINER:
+      if (serialize || serialize_compact)
+      {
+        return RenderVariableContainer(out, var, serialize_compact);
+      }
+      else
+      {
         assert(false);
         return false;
+      }
     }
 
     assert(false);
@@ -500,13 +539,15 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
         case TAG_TYPE_NONE:
             return true;
 
+        case TAG_TYPE_VAR_SERIALIZED:
+        case TAG_TYPE_VAR_SERIALIZED_COMPACT:
         case TAG_TYPE_VAR_UNESCAPED:
         case TAG_TYPE_VAR:
             if (!skip_content)
             {
                 if (tag.content_len > 0)
                 {
-                    if (!RenderVariable(out, tag.content, tag.content_len, tag.type == TAG_TYPE_VAR, hash_stack))
+                    if (!RenderVariable(out, tag.content, tag.content_len, tag.type, hash_stack))
                     {
                         return false;
                     }

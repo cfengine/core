@@ -341,6 +341,17 @@ void globfree(glob_t *pglob);
 # include <sys/sockio.h>
 #endif
 
+/*
+  Work around bug in HPUX system headers:
+  "/usr/include/machine/sys/getppdp.h:65: error: array type has incomplete element type"
+*/
+#ifdef __hpux
+union mpinfou
+{
+    int dummy;
+};
+#endif
+
 #ifndef __MINGW32__
 # include <sys/socket.h>
 # include <sys/ioctl.h>

@@ -173,11 +173,18 @@ libpromises_la_SOURCES += \
 	process_solaris.c
 endif
 
+if FREEBSD
+libpromises_la_SOURCES += \
+        process_freebsd.c
+endif
+
 if !LINUX
 if !AIX
 if !SOLARIS
+if !FREEBSD
 libpromises_la_SOURCES += \
         process_unix_stub.c
+endif
 endif
 endif
 endif

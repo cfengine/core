@@ -1847,6 +1847,14 @@ VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ct
     return table ? VariableTableIteratorNew(table, ns, scope, lval) : NULL;
 }
 
+
+VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalContext *ctx, const VarRef *ref)
+{
+    assert(ref);
+    VariableTable *table = ref->scope ? GetVariableTableForScope(ctx, ref->ns, ref->scope) : ctx->global_variables;
+    return table ? VariableTableIteratorNewFromVarRef(table, ref) : NULL;
+}
+
 const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval)
 {
     if (lval >= COMMON_CONTROL_MAX)

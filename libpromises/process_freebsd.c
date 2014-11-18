@@ -91,7 +91,7 @@ ProcessState GetProcessState(pid_t pid)
     ProcessStat st;
     if (GetProcessStat(pid, &st))
     {
-        if (st.state == 'T' || st.state == 'Z')
+        if (st.state == 'T')
         {
             return PROCESS_STATE_STOPPED;
         }

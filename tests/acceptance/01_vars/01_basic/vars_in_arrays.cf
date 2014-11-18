@@ -33,9 +33,9 @@ bundle agent init
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).expected",
-                                        "$(G.testfile).actual",
-                                        "$(this.promise_filename)");
+      "any" usebundle => sorted_check_diff("$(G.testfile).expected",
+                                           "$(G.testfile).actual",
+                                           "$(this.promise_filename)");
 
 }
 

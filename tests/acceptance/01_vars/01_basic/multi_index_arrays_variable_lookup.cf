@@ -7,7 +7,7 @@
 
 body common control
 {
-     # inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -28,11 +28,6 @@ bundle agent test
     "file[22][0]" string => "something";
 }
 
-bundle agent gvar ( name, value )
-{
-  vars:
-      "${name}" string => "${value}";
-}
 #######################################################
 
 bundle agent check

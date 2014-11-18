@@ -43,6 +43,19 @@ static VariableTable *ReferenceTable(void)
         assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
         VarRefDestroy(ref);
     }
+    
+    {
+        VarRef *ref = VarRefParse("scope3.array[te][st]");
+        Rval rval = (Rval) { "scope3.array[te][st]", RVAL_TYPE_SCALAR };
+        assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
+        VarRefDestroy(ref);
+    }
+    {
+        VarRef *ref = VarRefParse("scope3.array[t][e][s][t]");
+        Rval rval = (Rval) { "scope3.array[t][e][s][t]", RVAL_TYPE_SCALAR };
+        assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
+        VarRefDestroy(ref);
+    }
 
     assert_false(PutVar(t, "ns1:scope1.lval1"));
     assert_false(PutVar(t, "ns1:scope1.lval2"));
@@ -68,6 +81,17 @@ static void test_get_in_default_namespace(void)
     TestGet(t, "scope1.lval1");
     TestGet(t, "scope1.lval2");
     TestGet(t, "scope2.lval1");
+
+    VariableTableDestroy(t);
+}
+
+// Redmine 6674
+static void test_multi_index_array_conflation(void)
+{
+    VariableTable *t = ReferenceTable();
+
+    TestGet(t, "scope3.array[te][st]");
+    TestGet(t, "scope3.array[t][e][s][t]");
 
     VariableTableDestroy(t);
 }
@@ -121,7 +145,7 @@ static void test_remove(void)
         assert_true(VariableTableGet(t, ref) == NULL);
         assert_false(VariableTableRemove(t, ref));
 
-        assert_int_equal(9, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(11, VariableTableCount(t, NULL, NULL, NULL));
 
         VarRefDestroy(ref);
     }
@@ -132,7 +156,7 @@ static void test_remove(void)
         assert_true(VariableTableGet(t, ref) == NULL);
         assert_false(VariableTableRemove(t, ref));
 
-        assert_int_equal(8, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(10, VariableTableCount(t, NULL, NULL, NULL));
 
         VarRefDestroy(ref);
     }
@@ -147,7 +171,7 @@ static void test_clear(void)
         assert_false(VariableTableClear(t, "xxx", NULL, NULL));
         assert_false(VariableTableClear(t, NULL, "xxx", NULL));
         assert_false(VariableTableClear(t, NULL, NULL, "xxx"));
-        assert_int_equal(10, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(12, VariableTableCount(t, NULL, NULL, NULL));
         VariableTableDestroy(t);
     }
 
@@ -168,7 +192,7 @@ static void test_clear(void)
     {
         VariableTable *t = ReferenceTable();
         assert_true(VariableTableClear(t, "default", "scope1", NULL));
-        assert_int_equal(4, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(6, VariableTableCount(t, NULL, NULL, NULL));
         VariableTableDestroy(t);
     }
 
@@ -182,28 +206,28 @@ static void test_clear(void)
     {
         VariableTable *t = ReferenceTable();
         assert_true(VariableTableClear(t, "ns1", NULL, NULL));
-        assert_int_equal(7, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(9, VariableTableCount(t, NULL, NULL, NULL));
         VariableTableDestroy(t);
     }
 
     {
         VariableTable *t = ReferenceTable();
         assert_true(VariableTableClear(t, "ns1", "scope2", NULL));
-        assert_int_equal(9, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(11, VariableTableCount(t, NULL, NULL, NULL));
         VariableTableDestroy(t);
     }
 
     {
         VariableTable *t = ReferenceTable();
         assert_true(VariableTableClear(t, "default", "scope1", "lval1"));
-        assert_int_equal(9, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(11, VariableTableCount(t, NULL, NULL, NULL));
         VariableTableDestroy(t);
     }
 
     {
         VariableTable *t = ReferenceTable();
         assert_true(VariableTableClear(t, "default", "scope1", "lval1"));
-        assert_int_equal(9, VariableTableCount(t, NULL, NULL, NULL));
+        assert_int_equal(11, VariableTableCount(t, NULL, NULL, NULL));
         VariableTableDestroy(t);
     }
 }
@@ -212,14 +236,14 @@ static void test_counting(void)
 {
     VariableTable *t = ReferenceTable();
 
-    assert_int_equal(10, VariableTableCount(t, NULL, NULL, NULL));
-    assert_int_equal(7, VariableTableCount(t, "default", NULL, NULL));
+    assert_int_equal(12, VariableTableCount(t, NULL, NULL, NULL));
+    assert_int_equal(9, VariableTableCount(t, "default", NULL, NULL));
     assert_int_equal(8, VariableTableCount(t, NULL, "scope1", NULL));
     assert_int_equal(6, VariableTableCount(t, "default", "scope1", NULL));
     assert_int_equal(4, VariableTableCount(t, NULL, NULL, "lval1"));
     assert_int_equal(3, VariableTableCount(t, "ns1", NULL, NULL));
     assert_int_equal(2, VariableTableCount(t, "ns1", "scope1", NULL));
-    assert_int_equal(4, VariableTableCount(t, NULL, NULL, "array"));
+    assert_int_equal(6, VariableTableCount(t, NULL, NULL, "array"));
     assert_int_equal(1, VariableTableCount(t, "default", "scope1", "lval1"));
 
     VariableTableDestroy(t);
@@ -232,28 +256,66 @@ static void test_iterate_indices(void)
     {
         VarRef *ref = VarRefParse("default:scope1.array");
         VariableTableIterator *iter = VariableTableIteratorNewFromVarRef(t, ref);
+        
+        unsigned short number_of_entries = 0;
+        while (VariableTableIteratorNext(iter))
+        {
+            number_of_entries++;
+        }
+        assert_int_equal(4, number_of_entries);
+        
+        VariableTableIteratorDestroy(iter);
+        VarRefDestroy(ref);
+    }
+    
+    {
+        VarRef *ref = VarRefParse("default:scope1.array[two]");
+        VariableTableIterator *iter = VariableTableIteratorNewFromVarRef(t, ref);
+
+        unsigned short number_of_entries = 0;
+        while (VariableTableIteratorNext(iter))
+        {
+            number_of_entries++;
+        }
+        
+        assert_int_equal(3, number_of_entries);
+        
+        VariableTableIteratorDestroy(iter);
+        VarRefDestroy(ref);
+    }
+}
+
+// Below test relies on the ordering items in RB tree which is strongly
+// related to the hash function used.
+static void test_iterate_indices_ordering_related(void)
+{
+    VariableTable *t = ReferenceTable();
+    
+    {    
+        VarRef *ref = VarRefParse("default:scope1.array");
+        VariableTableIterator *iter = VariableTableIteratorNewFromVarRef(t, ref);
 
         Variable *v = VariableTableIteratorNext(iter);
+        assert_true(v != NULL);
+        assert_int_equal(1, v->ref->num_indices);
+        assert_string_equal("two", v->ref->indices[0]);
+
+        v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
         assert_int_equal(2, v->ref->num_indices);
         assert_string_equal("two", v->ref->indices[0]);
         assert_string_equal("three", v->ref->indices[1]);
-
-        v = VariableTableIteratorNext(iter);
-        assert_true(v != NULL);
-        assert_int_equal(1, v->ref->num_indices);
-        assert_string_equal("one", v->ref->indices[0]);
-
-        v = VariableTableIteratorNext(iter);
-        assert_true(v != NULL);
-        assert_int_equal(1, v->ref->num_indices);
-        assert_string_equal("two", v->ref->indices[0]);
-
+        
         v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
         assert_int_equal(2, v->ref->num_indices);
         assert_string_equal("two", v->ref->indices[0]);
         assert_string_equal("four", v->ref->indices[1]);
+
+        v = VariableTableIteratorNext(iter);
+        assert_true(v != NULL);
+        assert_int_equal(1, v->ref->num_indices);
+        assert_string_equal("one", v->ref->indices[0]);
 
         assert_false(VariableTableIteratorNext(iter) != NULL);
 
@@ -267,14 +329,14 @@ static void test_iterate_indices(void)
 
         Variable *v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
+        assert_int_equal(1, v->ref->num_indices);
+        assert_string_equal("two", v->ref->indices[0]);
+        
+        v = VariableTableIteratorNext(iter);
+        assert_true(v != NULL);
         assert_int_equal(2, v->ref->num_indices);
         assert_string_equal("two", v->ref->indices[0]);
         assert_string_equal("three", v->ref->indices[1]);
-
-        v = VariableTableIteratorNext(iter);
-        assert_true(v != NULL);
-        assert_int_equal(1, v->ref->num_indices);
-        assert_string_equal("two", v->ref->indices[0]);
 
         v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
@@ -299,6 +361,8 @@ int main()
         unit_test(test_get_in_default_namespace),
         unit_test(test_get_different_namespaces),
         unit_test(test_get_indices),
+        unit_test(test_iterate_indices_ordering_related),
+        unit_test(test_multi_index_array_conflation),
         unit_test(test_replace),
         unit_test(test_remove),
         unit_test(test_clear),

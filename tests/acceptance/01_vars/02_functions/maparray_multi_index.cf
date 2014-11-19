@@ -23,7 +23,7 @@ bundle agent init
 bundle agent test
 {
   vars:
-    "bundles[zculib][mypaths]"    slist => { "paths.cf", "paths2.cf" };
+    "bundles[zculib][mypaths]"    slist => { "pathsa.cf", "pathsb.cf" };
     "bundles[zculib][myservices]" slist => { "myservices.cf" };
 
     #make sure that below variables will be not mapped
@@ -33,8 +33,9 @@ bundle agent test
     "bundles[services][afs]"          slist => { "afs.cf", "afsadm.cf" };
     "bundles[services][base]"         slist => { "base.cf", "base2.cf" };    
 
-    "inputs"       slist => maparray("zculib/$(this.v)","bundles[zculib]");
-    "inputs_str"   string => join(",", "inputs");
+    "inputs"        slist => maparray("zculib/$(this.v)","bundles[zculib]");
+    "sorted_inputs" slist => sort("inputs", "lex");
+    "inputs_str"    string => join(",", "sorted_inputs");
 }
 
 ###########################################################
@@ -42,7 +43,7 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "expected_merge" string => "zculib/myservices.cf,zculib/paths.cf,zculib/paths2.cf";
+    "expected_merge" string => "zculib/myservices.cf,zculib/pathsa.cf,zculib/pathsb.cf";
 
   classes:
     "ok_merge" expression => strcmp($(expected_merge), $(test.inputs_str));

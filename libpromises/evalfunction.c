@@ -1400,7 +1400,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
         if (max < 0)
         {
             Log(LOG_LEVEL_ERR, "string_head called with negative value %ld", max);
-			free(buf);
+            free(buf);
             return FnFailure();
         }
         else if (max < bufsiz)
@@ -1414,7 +1414,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
         if (max < 0)
         {
             Log(LOG_LEVEL_ERR, "string_tail called with negative value %ld", max);
-			free(buf);
+            free(buf);
             return FnFailure();
         }
         else if (max < len)

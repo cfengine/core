@@ -24,14 +24,15 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "tests" slist => { "q1", "q2", "q3" };
-      "offsets" ilist => { "0", "1", "20", "26", "27", "28" };
+      "tests" slist => { "q1", "q2", "q3", "q4" };
+      "offsets" ilist => { "0", "1", "20", "26", "27", "28", "10240" };
       "fn1" slist => { "string_head", "string_tail" };
       "data[q1]" string => "this is the Question";
       "data[q2]" string => "";
       "data[q3]" string => "some text is not $(const.t) simple
 
 ";
+      "data[q4]" string => readfile("$(this.promise_filename).txt", "inf");
 
       "data[$(tests)_string_reverse]" string => string_reverse("$(data[$(tests)])");
       "data[$(tests)_string_length]" int => string_length("$(data[$(tests)])");
@@ -52,6 +53,7 @@ bundle agent test
       "expected[q1_$(fn1)_26]" string => "$(data[q1])";
       "expected[q1_$(fn1)_27]" string => "$(data[q1])";
       "expected[q1_$(fn1)_28]" string => "$(data[q1])";
+      "expected[q1_$(fn1)_10240]" string => "$(data[q1])";
 
       "expected[q2_string_reverse]" string => "";
       "expected[q2_string_length]" int => "0";
@@ -82,6 +84,26 @@ elpmis $(const.t) ton si txet emos";
 ";
       "expected[q3_$(fn1)_27]" string => "$(data[q3])";
       "expected[q3_$(fn1)_28]" string => "$(data[q3])";
+      "expected[q3_$(fn1)_10240]" string => "$(data[q3])";
+
+      "expected[q4_string_reverse]" string => readfile("$(this.promise_filename).reverse.txt", "inf");
+      "expected[q4_string_length]" int => "10240";
+      "expected[q4_string_upcase]" string => readfile("$(this.promise_filename).uppercase.txt", "inf");
+      "expected[q4_string_downcase]" string => readfile("$(this.promise_filename).lowercase.txt", "inf");
+      "expected[q4_string_head_0]" string => "";
+      "expected[q4_string_tail_0]" string => "";
+      "expected[q4_string_head_1]" string => "a";
+      "expected[q4_string_tail_1]" string => "j";
+      "expected[q4_string_head_20]" string => readfile("$(this.promise_filename).txt", "20");
+      "expected[q4_string_tail_20]" string => readfile("$(this.promise_filename).tail20.txt", "20");
+      "expected[q4_string_head_26]" string => readfile("$(this.promise_filename).txt", "26");
+      "expected[q4_string_tail_26]" string => readfile("$(this.promise_filename).tail26.txt", "26");
+      "expected[q4_string_head_27]" string => readfile("$(this.promise_filename).txt", "27");
+      "expected[q4_string_tail_27]" string => readfile("$(this.promise_filename).tail27.txt", "27");
+      "expected[q4_string_head_28]" string => readfile("$(this.promise_filename).txt", "28");
+      "expected[q4_string_tail_28]" string => readfile("$(this.promise_filename).tail28.txt", "28");
+      "expected[q4_string_head_10240]" string => "$(data[q4])";
+      "expected[q4_string_tail_10240]" string => "$(data[q4])";
 }
 
 #######################################################
@@ -107,20 +129,25 @@ bundle agent check
       "not_ok_$(tests)_$(fn1)_$(offsets)" not => strcmp("$(test.expected[$(tests)_$(fn1)_$(offsets)])",
                                                         "$(test.data[$(tests)_$(fn1)_$(offsets)])");
 
-      "ok" and => { 'ok_q1_string_reverse', 'ok_q2_string_reverse', 'ok_q3_string_reverse',
-                    'ok_q1_string_length', 'ok_q2_string_length', 'ok_q3_string_length',
-                    'ok_q1_string_upcase', 'ok_q2_string_upcase', 'ok_q3_string_upcase',
-                    'ok_q1_string_downcase', 'ok_q2_string_downcase', 'ok_q3_string_downcase',
+      "ok" and => { 'ok_q1_string_reverse', 'ok_q2_string_reverse', 'ok_q3_string_reverse', 'ok_q4_string_reverse',
+                    'ok_q1_string_length', 'ok_q2_string_length', 'ok_q3_string_length', 'ok_q4_string_length',
+                    'ok_q1_string_upcase', 'ok_q2_string_upcase', 'ok_q3_string_upcase', 'ok_q4_string_upcase',
+                    'ok_q1_string_downcase', 'ok_q2_string_downcase', 'ok_q3_string_downcase', 'ok_q4_string_downcase',
 
-                    'ok_q1_string_head_0', 'ok_q2_string_head_0', 'ok_q3_string_head_0', 'ok_q1_string_tail_0',
-                    'ok_q2_string_tail_0', 'ok_q3_string_tail_0', 'ok_q1_string_head_1', 'ok_q2_string_head_1',
-                    'ok_q3_string_head_1', 'ok_q1_string_tail_1', 'ok_q2_string_tail_1', 'ok_q3_string_tail_1',
-                    'ok_q1_string_head_20', 'ok_q2_string_head_20', 'ok_q3_string_head_20', 'ok_q1_string_tail_20',
-                    'ok_q2_string_tail_20', 'ok_q3_string_tail_20', 'ok_q1_string_head_26', 'ok_q2_string_head_26',
-                    'ok_q3_string_head_26', 'ok_q1_string_tail_26', 'ok_q2_string_tail_26', 'ok_q3_string_tail_26',
-                    'ok_q1_string_head_27', 'ok_q2_string_head_27', 'ok_q3_string_head_27', 'ok_q1_string_tail_27',
-                    'ok_q2_string_tail_27', 'ok_q3_string_tail_27', 'ok_q1_string_head_28', 'ok_q2_string_head_28',
-                    'ok_q3_string_head_28', 'ok_q1_string_tail_28', 'ok_q2_string_tail_28', 'ok_q3_string_tail_28'
+                    'ok_q1_string_head_0', 'ok_q2_string_head_0', 'ok_q3_string_head_0', 'ok_q4_string_head_0',
+                    'ok_q1_string_tail_0', 'ok_q2_string_tail_0', 'ok_q3_string_tail_0', 'ok_q4_string_tail_0',
+                    'ok_q1_string_head_1', 'ok_q2_string_head_1', 'ok_q3_string_head_1', 'ok_q4_string_head_1',
+                    'ok_q1_string_tail_1', 'ok_q2_string_tail_1', 'ok_q3_string_tail_1', 'ok_q4_string_tail_1',
+                    'ok_q1_string_head_20', 'ok_q2_string_head_20', 'ok_q3_string_head_20', 'ok_q4_string_head_20',
+                    'ok_q1_string_tail_20', 'ok_q2_string_tail_20', 'ok_q3_string_tail_20', 'ok_q4_string_tail_20',
+                    'ok_q1_string_head_26', 'ok_q2_string_head_26', 'ok_q3_string_head_26', 'ok_q4_string_head_26',
+                    'ok_q1_string_tail_26', 'ok_q2_string_tail_26', 'ok_q3_string_tail_26', 'ok_q4_string_tail_26',
+                    'ok_q1_string_head_27', 'ok_q2_string_head_27', 'ok_q3_string_head_27', 'ok_q4_string_head_27',
+                    'ok_q1_string_tail_27', 'ok_q2_string_tail_27', 'ok_q3_string_tail_27', 'ok_q4_string_tail_27',
+                    'ok_q1_string_head_28', 'ok_q2_string_head_28', 'ok_q3_string_head_28', 'ok_q4_string_head_28',
+                    'ok_q1_string_tail_28', 'ok_q2_string_tail_28', 'ok_q3_string_tail_28', 'ok_q4_string_tail_28',
+                    'ok_q1_string_head_10240', 'ok_q2_string_head_10240', 'ok_q3_string_head_10240', 'ok_q4_string_head_10240',
+                    'ok_q1_string_tail_10240', 'ok_q2_string_tail_10240', 'ok_q3_string_tail_10240', 'ok_q4_string_tail_10240'
       };
 
   reports:

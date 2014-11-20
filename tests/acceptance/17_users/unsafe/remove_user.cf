@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test removing a user
-#
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user present gets removed";
+      "story_id" string => "5526";
+      "covers" string => "operational_repaired";
+}
+
 #######################################################
 
 body common control

@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test warning about adding a user
-#
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user not present gets added (dry run only)";
+      "story_id" string => "5525";
+      "covers" string => "dryrun_repaired";
+}
+
 #######################################################
 
 body common control

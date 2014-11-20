@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test warning about modifying a user with many attributes.
-#
+bundle common test_meta
+{
+vars:
+  "description" string => "A user present gets many attributes changed (dry run)";
+  "story_id" string => "5525";
+  "covers" string => "dryrun_repaired";
+}
+
 #######################################################
 
 body common control

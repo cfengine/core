@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test a user promise without a policy attribute.
-#
+bundle common test_meta
+{
+vars:
+  "description" string => "A user not present gets added when there is no policy attribute";
+  "story_id" string => "5525";
+  "covers" string => "operational_repaired";
+}
+
 #######################################################
 
 body common control

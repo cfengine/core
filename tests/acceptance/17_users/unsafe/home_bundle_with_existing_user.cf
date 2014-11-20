@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test home_bundle when modifying an existing user.
-#
+bundle common test_meta
+{
+vars:
+  "description" string => "A user present gets the home bundle run";
+  "story_id" string => "5525";
+  "covers" string => "operational_repaired";
+}
+
 #######################################################
 
 body common control

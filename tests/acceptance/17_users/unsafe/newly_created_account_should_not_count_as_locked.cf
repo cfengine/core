@@ -1,3 +1,11 @@
+bundle common test_meta
+{
+vars:
+  "description" string => "A user present gets locked";
+  "story_id" string => "5525";
+  "covers" string => "operational_repaired";
+}
+
 #######################################################
 #
 # Test that a newly created account does not confuse

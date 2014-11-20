@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test warning about unlocking a user.
-#
+bundle common test_meta
+{
+vars:
+  "description" string => "A user present gets enabled and the password changed (dry run)";
+  "story_id" string => "5525";
+  "covers" string => "dryrun_repaired";
+}
+
 #######################################################
 
 body common control

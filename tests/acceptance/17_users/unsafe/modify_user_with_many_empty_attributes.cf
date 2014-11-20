@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test modifying a user with many empty attributes.
-#
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user present gets multiple empty attributes changed";
+      "story_id" string => "5525";
+      "covers" string => "operational_repaired";
+}
+
 #######################################################
 
 body common control

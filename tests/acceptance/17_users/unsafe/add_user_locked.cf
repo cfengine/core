@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test adding a which is locked.
-#
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user not present gets added locked";
+      "story_id" string => "5525";
+      "covers" string => "operational_repaired";
+}
+
 #######################################################
 
 body common control

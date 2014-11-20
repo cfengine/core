@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test warning about locking a user.
-#
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user present gets locked (dry run)";
+      "story_id" string => "5525";
+      "covers" string => "dryrun_repaired";
+}
+
 #######################################################
 
 body common control

@@ -39,11 +39,11 @@ typedef struct
 
 static bool GetProcessStat(pid_t pid, ProcessStat *state)
 {
-    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, (int)pid };
+    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, pid };
     struct kinfo_proc psinfo;
-    size_t len = sizeof psinfo;
+    size_t len = sizeof(psinfo);
 
-    if (sysctl(mib, sizeof(mib)/sizeof(mib[0]), &psinfo, &len, NULL, 0) < 0)
+    if (sysctl(mib, sizeof(mib)/sizeof(mib[0]), &psinfo, &len, NULL, 0) == 0)
     {
         state->starttime = psinfo.ki_start.tv_sec;
 

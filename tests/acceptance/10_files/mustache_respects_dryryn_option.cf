@@ -1,8 +1,13 @@
-#######################################################
-#
-# Test that --dry-run restricts mustache template rendering
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that --dry-run restricts mustache template rendering";
+      "story_id" string => "5535";
+      "covers" string => "dryrun_repaired";
+}
+
 # Ref: https://dev.cfengine.com/issues/6739
-#
+
 #######################################################
 
 body common control
@@ -33,5 +38,3 @@ bundle agent check
     "check"
       usebundle => dcs_passif_output(".*Pass.*", ".*FAIL.*", $(command), $(this.promise_filename));
 }
-### PROJECT_ID: core
-### CATEGORY_ID: 27

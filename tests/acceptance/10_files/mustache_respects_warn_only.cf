@@ -42,11 +42,6 @@ bundle agent test
 
 bundle agent check
 {
-  meta:
-    "test_soft_fail"
-      string => "any",
-      meta => { "redmine#6739" };
-
   classes:
     "fail" expression => regline("SHOULD NOT RENDER", $(test.template_target) );
 

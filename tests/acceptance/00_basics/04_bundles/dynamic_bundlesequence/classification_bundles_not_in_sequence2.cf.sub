@@ -1,0 +1,92 @@
+# Test a simple dynamic bundlesequnece pattern
+# Classification Bundles listed in bundlesequence
+# Map role bundles (which uses the classify bundle) is defined BEFORE the classify bundle (linerally).
+# Bundle list built from array
+# Lexicly sorted bundles activated with methods promise
+body common control
+#
+{
+    bundlesequence => { "go" };
+}
+
+bundle agent go
+#
+{
+  vars:
+      "bundles" slist => { @(map_role_bundles.bundles) };
+      "sorted_bundles" slist => sort(bundles, "lex");
+
+  methods:
+      "$(sorted_bundles)" usebundle => $(sorted_bundles);
+}
+
+bundle agent app_one
+#
+{
+  reports:
+      "HEY I activated $(this.bundle)";
+}
+
+bundle agent app_two
+#
+{
+  reports:
+      "HEY I activated $(this.bundle)";
+}
+bundle agent app00_zero
+#
+{
+  reports:
+      "HEY I activated $(this.bundle)";
+}
+
+bundle agent app_zero
+#
+{
+  reports:
+      "HEY I activated $(this.bundle)";
+}
+bundle common map_role_bundles
+#
+{
+  vars:
+    # Define bundles
+    any::
+      "role[app00_zero]"
+        string => "/path/to/policy_file.cf",
+        comment =>
+          "Roles are based on groups. Roles
+                    map to bundles. Bundles are defined in a specific file.";
+
+      "role[app_zero]"
+        string => "/path/to/policy_file.cf",
+        comment =>
+          "Roles are based on groups. Roles
+                    map to bundles. Bundles are defined in a specific file.";
+    group_one::
+      "role[app_one]"
+        string => "/path/to/policy_file.cf",
+        comment =>
+          "Roles are based on groups. Roles
+                    map to bundles. Bundles are defined in a specific file.";
+    group_none::
+      "role[app_two]" string => "/path/to_policy_file.cf";
+
+    any::
+      "bundles" slist => getindices(role);
+}
+
+
+bundle common classify
+#
+{
+  vars:
+      "variable" string => "vmware";
+
+  classes:
+      "group_one"
+        expression => strcmp("vmware", "vmware"),
+        comment => "Highest level classification, other classes depend on this.";
+}
+
+

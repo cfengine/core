@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test unlocking a user.
-#
+bundle common test_meta
+{
+vars:
+  "description" string => "A user present gets enabled";
+  "story_id" string => "5525";
+  "covers" string => "operational_repaired";
+}
+
 #######################################################
 
 body common control

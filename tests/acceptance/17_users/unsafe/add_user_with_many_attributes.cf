@@ -1,7 +1,11 @@
-#######################################################
-#
-# Test adding a user with many attributes.
-#
+bundle common test_meta
+{
+vars:
+  "description" string => "A user not present gets added with several attributes";
+  "story_id" string => "5525";
+  "covers" string => "operational_repaired";
+}
+
 #######################################################
 
 body common control

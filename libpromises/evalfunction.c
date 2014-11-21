@@ -6017,8 +6017,11 @@ static bool SingleLine(const char *s)
     return s[length] && !s[length+1];
 }
 
+/* TODO change maxsize to size_t. */
 static char *CfReadFile(const char *filename, int maxsize)
 {
+    /* TODO remove this stat() call, it's a remnant from old code
+       that examined sb.st_size. */
     struct stat sb;
     if (stat(filename, &sb) == -1)
     {

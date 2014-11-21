@@ -1454,12 +1454,11 @@ static FnCallResult FnCallCanonify(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    char *buf = NULL;
     char *string = RlistScalarValue(finalargs);
     size_t len = strlen(string);
+    /* In case of string_length(), buf needs enough space to hold a number. */
     size_t bufsiz = MAX(len + 1, PRINTSIZE(len));
-
-    buf = xcalloc(bufsiz, sizeof(char));
+    char *buf = xcalloc(bufsiz, sizeof(char));
     memcpy(buf, string, len + 1);
 
     if (!strcmp(fp->name, "string_downcase"))

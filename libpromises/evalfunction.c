@@ -5193,15 +5193,9 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     char *requested_max = RlistScalarValue(finalargs->next);
     long maxsize = IntFromString(requested_max);
 
-    if (maxsize > CF_INFINITY)
+    if (maxsize == CF_INFINITY)                      /* "inf" in the policy */
     {
-        Log(LOG_LEVEL_INFO, "%s: requested max size %s is more than the internal limit " TOSTRING(CF_INFINITY), fp->name, requested_max);
-        maxsize = CF_INFINITY;
-    }
-
-    if (maxsize == 0)
-    {
-        maxsize = CF_INFINITY;
+        maxsize = 0;
     }
 
     if (maxsize < 0)

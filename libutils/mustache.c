@@ -333,8 +333,21 @@ static void RenderContent(Buffer *out, const char *content, size_t len, bool htm
     }
 }
 
-static bool RenderVariablePrimitive(Buffer *out, const JsonElement *primitive, const bool escaped)
+static bool RenderVariablePrimitive(Buffer *out, const JsonElement *primitive, const bool escaped, const bool key_mode)
 {
+    if (key_mode && JsonElementGetPropertyName(primitive))
+    {
+        if (escaped)
+        {
+            RenderHTMLContent(out, JsonElementGetPropertyName(primitive), strlen(JsonElementGetPropertyName(primitive)));
+        }
+        else
+        {
+            BufferAppendString(out, JsonElementGetPropertyName(primitive));
+        }
+        return true;
+    }
+
     switch (JsonGetPrimitiveType(primitive))
     {
     case JSON_PRIMITIVE_TYPE_STRING:
@@ -383,7 +396,11 @@ static bool RenderVariable(Buffer *out,
                            Seq *hash_stack)
 {
     JsonElement *var = NULL;
-    if (strncmp(content, ".", content_len) == 0)
+
+    const bool item_mode = strncmp(content, ".", content_len) == 0;
+    const bool key_mode = strncmp(content, "@", content_len) == 0;
+
+    if (item_mode || key_mode)
     {
         var = SeqAt(hash_stack, SeqLength(hash_stack) - 1);
     }
@@ -400,7 +417,7 @@ static bool RenderVariable(Buffer *out,
     switch (JsonGetElementType(var))
     {
     case JSON_ELEMENT_TYPE_PRIMITIVE:
-        return RenderVariablePrimitive(out, var, escaped);
+        return RenderVariablePrimitive(out, var, escaped, key_mode);
 
     case JSON_ELEMENT_TYPE_CONTAINER:
         assert(false);
@@ -572,21 +589,6 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                     switch (JsonGetContainerType(var))
                     {
                     case JSON_CONTAINER_TYPE_OBJECT:
-                        {
-                            const char *cur_section_end = NULL;
-                            if (!Render(out, start, input,
-                                        hash_stack,
-                                        delim_start, delim_start_len, delim_end, delim_end_len,
-                                        skip_content || tag.type == TAG_TYPE_INVERTED, section, &cur_section_end))
-                            {
-                                free(section);
-                                return false;
-                            }
-                            free(section);
-                            input = cur_section_end;
-                        }
-                        break;
-
                     case JSON_CONTAINER_TYPE_ARRAY:
                         if (JsonLength(var) > 0)
                         {

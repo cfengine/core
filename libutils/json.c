@@ -94,6 +94,13 @@ static void JsonElementSetPropertyName(JsonElement *element, const char *propert
     }
 }
 
+const char* JsonElementGetPropertyName(const JsonElement *element)
+{
+    assert(element);
+
+    return element->propertyName;
+}
+
 static JsonElement *JsonElementCreateContainer(JsonContainerType containerType, const char *propertyName,
                                                size_t initialCapacity)
 {

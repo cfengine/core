@@ -25,7 +25,7 @@ ssize_t sendto(ARG_UNUSED int sockfd, ARG_UNUSED const void *buf,
  * We might be naives by thinking that size_t, socklen_t and such are the same size as int.
  * Given that we are not using them here, we can live with that assumption.
  */
-ssize_t sendto(ARG_UNUSED int sockfd, ARG_UNUSED const void *buf,
+int sendto(ARG_UNUSED int sockfd, ARG_UNUSED const void *buf,
                int len,
                ARG_UNUSED int flags,
                const void *dest_addr,

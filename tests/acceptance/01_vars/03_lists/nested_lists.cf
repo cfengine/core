@@ -22,24 +22,27 @@ bundle agent init
 
       "expected" string =>
       "
-a x
-a y
-a z
-b x
-b y
-b z
-c x
-c y
-c z";
+Nesting: 1
+Nesting: 2
+
+Nothing: 
+Unknown: $(unknown)
+A list: @(lists)
+Other empty: 5
+Other empty: 6
+Parameter nesting: 7
+Parameter nesting: 8
+Sub nesting: 7
+Sub nesting: 8";
 
   files:
       "$(G.testfile).$(states)"
       create => "true",
-      edit_line => init_insert("$(init.$(states))"),
+      edit_line => insert_line("$(init.$(states))"),
       edit_defaults => init_empty;
 }
 
-bundle edit_line init_insert(str)
+bundle edit_line insert_line(str)
 {
   insert_lines:
       "$(str)";
@@ -52,35 +55,55 @@ body edit_defaults init_empty
 
 #######################################################
 
-bundle agent test
+bundle agent otherbundle
 {
-  files:
-      "$(G.testfile).actual"
-      edit_line => test_insert;
-
+  vars:
+      "list_a" slist => { };
+      "list_b" slist => { "5", "6" };
+      "lists" slist => { "a", "b" };
 }
 
 bundle edit_line test_insert
 {
   vars:
-      "one" slist => { "a", "b", "c" };
-      "two" slist => { "x", "y", "z" };
-      "empty" slist => {};
-      "null" slist => { "cf_null" };
-      "nulls" slist => { "cf_null", "cf_null", "cf_null" };
-
-      "not_an_array" string => "zero";
-      "no_values" slist => getvalues("not_an_array");
+      "list_a" slist => { "1", "2" };
+      "list_b" slist => {};
+      "lists" slist => { "a", "b" };
+      "nothing" string => "";
 
   insert_lines:
-      "$(one) $(two)";
-      # these should do nothing
-      "$(one) $(two) $(empty)";
-      "$(empty) $(one) $(null) $(two)";
-      "$(null) $(empty)";
-      "$(one) $(nulls)";
-      "$(nulls)";
-      "$(no_values)";
+      "Nesting: $(list_$(lists))";
+      "Expanded: $(lists) $(list_a) $(list_b)";
+      "$(nothing)" insert_type => "preserve_all_lines"; # ignore existing newline
+      "Nothing: $(nothing)";
+      "Unknown: $(unknown)";
+      "A list: @(lists)";
+      "Other empty: $(otherbundle.list_$(otherbundle.lists))";
+}
+
+bundle agent sub(text)
+{
+  files:
+      "$(G.testfile).actual"
+      edit_line => insert_line("Sub nesting: $(text)");
+}
+
+bundle agent test
+{
+  vars:
+      "list_a" slist => { };
+      "list_b" slist => { "7", "8" };
+      "lists" slist => { "a", "b" };
+
+  files:
+      "$(G.testfile).actual"
+      edit_line => test_insert;
+
+      "$(G.testfile).actual"
+      edit_line => insert_line("Parameter nesting: $(list_$(lists))");
+
+  methods:
+      "nesting" usebundle => sub("$(list_$(lists))");
 }
 
 #######################################################

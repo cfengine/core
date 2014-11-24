@@ -85,11 +85,17 @@ bool ForeignZone(char *s)
 # endif
     return false;
 }
-int  CurrentZoneName(ARG_UNUSED const char *s)
+
+#ifdef HAVE_GETZONEID
+#define ZONE_ONLY
+#else
+#define ZONE_ONLY ARG_UNUSED
+#endif
+int CurrentZoneName(ZONE_ONLY const char *s)
 {
 # ifdef HAVE_GETZONEID
     zoneid_t zid = getzoneid();
-    
+
     if (zid >= 0)
     {
         return getzonenamebyid(zid, s, ZONENAME_MAX);

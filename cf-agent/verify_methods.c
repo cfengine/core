@@ -84,6 +84,20 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
             const FnCall *fp = RvalFnCallValue(call);
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
             args = fp->args;
+            int arg_index = 0;
+            while (args)
+            {
+               ++arg_index;
+               if (strcmp(args->val.item, CF_NULL_VALUE) == 0)
+               {
+                   Log(LOG_LEVEL_DEBUG, "Skipping invokation of method '%s' due to null-values in argument '%d'",
+                       fp->name, arg_index);
+                   BufferDestroy(method_name);
+                   return PROMISE_RESULT_SKIPPED;
+               }
+               args = args->next;
+            }
+            args = fp->args;
         }
         break;
 
@@ -130,6 +144,23 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
             BannerSubBundle(bp, args);
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
+
+            /* Clear all array-variables that are already set in the sub-bundle.
+               Otherwise, array-data accumulates between multiple bundle evaluations.
+               Note: for bundles invoked multiple times via bundlesequence, array
+               data *does* accumulate. */
+            VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, bp->ns, bp->name, NULL);
+            Variable *var;
+            while ((var = VariableTableIteratorNext(iter)))
+            {
+                if (!var->ref->num_indices)
+                {
+                    continue;
+                }
+                EvalContextVariableRemove(ctx, var->ref);
+            }
+            VariableTableIteratorDestroy(iter);
+
             BundleResolve(ctx, bp);
 
             result = ScheduleAgentOperations(ctx, bp);

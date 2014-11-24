@@ -57,8 +57,6 @@
 #include <known_dirs.h>
 #include <evalfunction.h>
 
-static void LoadSetuid(void);
-static void SaveSetuid(void);
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
 
@@ -285,7 +283,6 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, CF_DATA_TYPE_STRING, "source=promise");
     Attributes a = GetExpandedAttributes(ctx, pp, &attr);
 
-    LoadSetuid();
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {
@@ -335,7 +332,18 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         ChopLastNode(basedir);
         if (safe_chdir(basedir))
         {
-            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
+            char msg[CF_BUFSIZE];
+            snprintf(msg, sizeof(msg), "Failed to chdir into '%s'. (chdir: '%s')",
+                     basedir, GetErrorStr());
+            if (errno == ENOLINK)
+            {
+                Log(LOG_LEVEL_ERR, "%s. There may be a symlink in the path that has a different "
+                    "owner from the owner of its target (security risk).", msg);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "%s", msg);
+            }
         }
     }
 
@@ -419,7 +427,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         else
         {
             /* unless child nodes were repaired, set a promise kept class */
-            if (!IsDefinedClass(ctx, "repaired"))
+            if (result == PROMISE_RESULT_NOOP)
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Basedir '%s' not promising anything", path);
             }
@@ -483,7 +491,6 @@ exit:
             "No action was requested for file '%s'. Maybe a typo in the policy?", path);
     }
 
-    SaveSetuid();
     YieldCurrentLock(thislock);
 
     ClearExpandedAttributes(&a);
@@ -784,33 +791,4 @@ static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp
     }
 
     return result;
-}
-
-static void LoadSetuid(void)
-{
-    char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
-    MapName(filename);
-
-    VSETUIDLIST = RawLoadItemList(filename);
-}
-
-/*********************************************************************/
-
-static void SaveSetuid(void)
-{
-    char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
-    MapName(filename);
-
-    PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");
-
-    Item *current = RawLoadItemList(filename);
-    if (!ListsCompare(VSETUIDLIST, current))
-    {
-        RawSaveItemList(VSETUIDLIST, filename, NewLineMode_Unix);
-    }
-
-    DeleteItemList(VSETUIDLIST);
-    VSETUIDLIST = NULL;
 }

@@ -480,7 +480,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
 
     EVP_PKEY_free(pkey);
 
-    assert (x509 != NULL);
+    assert(x509 != NULL);
     return x509;
 
 
@@ -648,7 +648,8 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
 }
 
 /**
- * @brief Receives data from the SSL session and stores it on the buffer.
+ * @brief Receives at most #length bytes of data from the SSL session
+ *        and stores it in the buffer.
  * @param ssl SSL information.
  * @param buffer Buffer, of size at least CF_BUFSIZE, to store received data.
  * @param length Length of the data to receive, must be < CF_BUFSIZE.
@@ -664,6 +665,8 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     assert(length > 0);
     assert(length < CF_BUFSIZE);
     assert_SSLIsBlocking(ssl);
+
+    /* TODO what is the return value of SSL_read in case of socket timeout? */
 
     int received = SSL_read(ssl, buffer, length);
     if (received < 0)
@@ -705,7 +708,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
 {
     int ret;
-    int got = 0;
+    size_t got = 0;
     buf_size -= 1;               /* Reserve one space for terminating '\0' */
 
     /* Repeat until we receive end of line. */
@@ -731,13 +734,14 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
     if ((got == buf_size) && (buf[got-1] != '\n'))
     {
         Log(LOG_LEVEL_ERR,
-            "Received line too long, hanging up! Length %d, line: %s",
+            "Received line too long, hanging up! Length %zu, line: %s",
             got, buf);
         return -1;
     }
 
     LogRaw(LOG_LEVEL_DEBUG, "TLSRecvLines(): ", buf, got);
-    return got;
+
+    return (got <= INT_MAX) ? (int) got : -1;
 }
 
 /**

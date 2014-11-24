@@ -297,15 +297,53 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
 
     /* and/or/xor expressions */
 
+    enum {
+        c_or = 0, c_and, c_xor
+    } logic;
+
+    if (strcmp(cp->lval, "or") == 0)
+    {
+        logic = c_or;
+    }
+    else if (strcmp(cp->lval, "and") == 0)
+    {
+        logic = c_and;
+    }
+    else if (strcmp(cp->lval, "xor") == 0)
+    {
+        logic = c_xor;
+    }
+
     for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
     {
+        // tolerate unexpanded entries here and interpret as "class not set"
         if (rp->val.type != RVAL_TYPE_SCALAR)
         {
-            return false;
+            result = false;
+        }
+        else
+        {
+            result = IsDefinedClass(ctx, RlistScalarValue(rp));
         }
 
-        result = IsDefinedClass(ctx, RlistScalarValue(rp));
-
+        // shortcut and and or
+        switch (logic)
+        {
+        case c_or:
+            if (result)
+            {
+                return true;
+            }
+            break;
+        case c_and:
+            if (!result)
+            {
+                return false;
+            }
+            break;
+        default:
+            break;
+        }
         result_and = result_and && result;
         result_or = result_or || result;
         result_xor ^= result;
@@ -313,18 +351,13 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
 
 // Class combinations
 
-    if (strcmp(cp->lval, "or") == 0)
+    switch (logic)
     {
+    case c_or:
         return result_or;
-    }
-
-    if (strcmp(cp->lval, "xor") == 0)
-    {
-        return (result_xor == 1) ? true : false;
-    }
-
-    if (strcmp(cp->lval, "and") == 0)
-    {
+    case c_xor:
+        return result_xor == 1;
+    case c_and:
         return result_and;
     }
 

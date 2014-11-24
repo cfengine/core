@@ -289,11 +289,6 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
             fp->name);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
-    else if (caller && !EvalContextPromiseIsActive(ctx, caller))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Skipping function '%s', because it was excluded by classes", fp->name);
-        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
-    }
 
     const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
@@ -338,6 +333,13 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     {
         RlistDestroy(expargs);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
+    }
+    else if (result.rval.type == RVAL_TYPE_LIST && !result.rval.item)
+    {
+        Rlist *seq = NULL;
+        // don't pass NULL items to evaluator
+        RlistPrepend(&seq, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+        result.rval.item = seq;
     }
 
     if (fp_type->options & FNCALL_OPTION_CACHED)

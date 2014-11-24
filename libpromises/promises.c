@@ -274,14 +274,17 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
     assert(pp->promiser);
     assert(pp->classes);
+    assert(excluded);
 
-    if (excluded)
-    {
-        *excluded = false;
-    }
+    *excluded = false;
 
-    Promise *pcopy = xcalloc(1, sizeof(Promise));
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
+    if (!returnval.item || (strcmp(returnval.item, CF_NULL_VALUE) == 0)) 
+    {
+        *excluded = true;
+        return NULL;
+    }
+    Promise *pcopy = xcalloc(1, sizeof(Promise));
     pcopy->promiser = RvalScalarValue(returnval);
 
     if ((strcmp("files", pp->parent_promise_type->name) != 0) &&
@@ -308,66 +311,56 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
 
+    // if this is a class promise, check if it is already set, if so, skip
+    if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        // if this is a class promise, check if it is already set, if so, skip
-        if (strcmp("classes", pp->parent_promise_type->name) == 0)
+        if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
         {
-            if (IsDefinedClass(ctx, pcopy->promiser))
-            {
-                Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
-                    pcopy->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
+                CanonifyName(pcopy->promiser));
+            *excluded = true;
 
-                if (excluded)
+            return pcopy;
+        }
+    }
+
+    // look for ifvarclass exclusion, to short-circuit evaluation of other constraints
+    const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
+    if (ifvarclass)
+    {
+        /*
+          This might fail to expand if there are unexpanded variables in function arguments
+          (in which case the function won't be called at all).
+          If final is not a scalar, then expansion has failed (the function would still return true).
+          In that case, assume that we don't know the class, and skip the promise.
+
+          Note: EvaluateConstraintIteration calls VarClassExcluded via EvalContextPromiseIsActive,
+          trying to avoid function calls in promise bodies that are disabled due to class conditionals
+          or ifvarclass predicates. Changing the logic of VarClassExcluded would possibly break
+          function evaluation.
+        */
+        Rval final;
+        if (EvaluateConstraintIteration(ctx, ifvarclass, &final))
+        {
+            Constraint *cp_copy = PromiseAppendConstraint(pcopy, ifvarclass->lval, final, false);
+            cp_copy->offset = ifvarclass->offset;
+
+            char *excluding_class_expr = NULL;
+            if (final.type != RVAL_TYPE_SCALAR || VarClassExcluded(ctx, pcopy, &excluding_class_expr))
+            {
+                if (LEGACY_OUTPUT)
                 {
-                    *excluded = true;
+                    Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                    Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as ifvarclass %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                    Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
                 }
+                else
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as ifvarclass '%s' is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                }
+                *excluded = true;
 
                 return pcopy;
-            }
-        }
-
-        // look for ifvarclass exclusion, to short-circuit evaluation of other constraints
-        const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
-        if (ifvarclass)
-        {
-            /*
-              This might fail to expand if there are unexpanded variables in function arguments
-              (in which case the function won't be called at all).
-              If final is not a scalar, then expansion has failed (the function would still return true).
-              In that case, assume that we don't know the class, and skip the promise.
-
-              Note: EvaluateConstraintIteration calls VarClassExcluded via EvalContextPromiseIsActive,
-              trying to avoid function calls in promise bodies that are disabled due to class conditionals
-              or ifvarclass predicates. Changing the logic of VarClassExcluded would possibly break
-              function evaluation.
-            */
-            Rval final;
-            if (EvaluateConstraintIteration(ctx, ifvarclass, &final))
-            {
-                Constraint *cp_copy = PromiseAppendConstraint(pcopy, ifvarclass->lval, final, false);
-                cp_copy->offset = ifvarclass->offset;
-
-                char *excluding_class_expr = NULL;
-                if (final.type != RVAL_TYPE_SCALAR || VarClassExcluded(ctx, pcopy, &excluding_class_expr))
-                {
-                    if (LEGACY_OUTPUT)
-                    {
-                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as ifvarclass %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
-                        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as ifvarclass '%s' is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
-                    }
-
-                    if (excluded)
-                    {
-                        *excluded = true;
-                    }
-
-                    return pcopy;
-                }
             }
         }
     }
@@ -385,10 +378,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
                 if (MissingDependencies(ctx, pcopy))
                 {
-                    if (excluded)
-                    {
-                        *excluded = true;
-                    }
+                    *excluded = true;
 
                     return pcopy;
                 }

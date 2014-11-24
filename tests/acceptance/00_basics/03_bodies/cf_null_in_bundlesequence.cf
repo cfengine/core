@@ -1,0 +1,16 @@
+body common control {
+    bundlesequence => { "cf_null", "test" };
+}
+
+bundle agent test
+{
+  classes:
+      "ok" expression => "any";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

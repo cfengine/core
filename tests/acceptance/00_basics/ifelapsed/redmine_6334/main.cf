@@ -1,0 +1,65 @@
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+      "first"
+        string =>
+          execresult("$(sys.cf_agent) -KIf $(this.promise_filename).sub -b example -Dfirst",
+                     "noshell"),
+        comment => "Ignore locks in this first run - it will still write the locks!";
+
+      "second"
+        string =>
+          execresult("$(sys.cf_agent) -If $(this.promise_filename).sub -b example -Dsecond",
+                     "noshell"),
+        comment => "Don't ignore locks here so for pass_only_first_test_second case";
+}
+
+bundle agent check
+{
+  vars:
+      "pass_strings" slist => { "test", "call_report_now", "only_first", "abort_now" };
+      "activations" slist => { "test.first", "test.second" };
+
+# we want to see all of those in either "test.first" or "test.second"
+      "pass_classes" slist => {
+                              "pass_test_test_first",
+                              "pass_call_report_now_test_first",
+                              "pass_test_test_second",
+                              "pass_call_report_now_test_second",
+                              "pass_only_first_test_first",
+                              };
+
+# we don't want to any of those in neither "test.first" nor "test.second"
+      "fail_classes" slist => {
+                              "pass_only_first_test_second",
+                              "pass_abort_now_test_first",
+                              "pass_abort_now_test_second"
+                              };
+
+  classes:
+      "pass_$(pass_strings)_$(activations)" expression => regcmp(".*R: Called from $(pass_strings).*",
+                                                                 "$($(activations))");
+
+      "ok_pass" and => { @(pass_classes) };
+      "fail_pass" or => { @(fail_classes) };
+
+      "ok" expression => "ok_pass.!fail_pass";
+
+  reports:
+    DEBUG.!ok::
+      "Failed activation $(activations): '$($(activations))'";
+    DEBUG::
+      "expected  : $(pass_classes)" ifvarclass => not("$(pass_classes)");
+      "unexpected: $(fail_classes)" ifvarclass => "$(fail_classes)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

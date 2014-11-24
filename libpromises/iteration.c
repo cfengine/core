@@ -34,13 +34,10 @@
 
 struct PromiseIterator_
 {
-    bool started;
-    Seq *vars;
-    Seq *var_states;
+    Seq *vars; // list of (list-)variables (CfAssoc) to iterate over
+    Seq *var_states; // list of expanded values (Rlist) for each variable
+    bool has_null_list; // true if any list is empty
 };
-
-static bool EndOfIterationInternal(const PromiseIterator *iter, size_t index);
-static bool NullIteratorsInternal(PromiseIterator *iter, size_t index);
 
 static void RlistAppendContainerPrimitive(Rlist **list, const JsonElement *primitive)
 {
@@ -103,22 +100,25 @@ static Rlist *ContainerToRlist(const JsonElement *container)
     return list;
 }
 
-static void AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
+static Rlist *FirstRealEntry(Rlist *entry)
 {
-    SeqAppend(iter->vars, new_var);
-
-    Rlist *list_value = RvalRlistValue(new_var->rval);
-    Rlist *state = new_var->rval.item =
-        RlistPrepend(&list_value, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
-    RlistAppendScalar(&list_value, CF_NULL_VALUE);
-
-    while (state && state->val.type == RVAL_TYPE_SCALAR &&
-           strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0)
+    while (entry && entry->val.item &&
+           entry->val.type == RVAL_TYPE_SCALAR &&
+           strcmp(entry->val.item, CF_NULL_VALUE) == 0)
     {
-        state = state->next;
+        entry = entry->next;
     }
+    return entry;
+}
 
+static bool AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
+{
+    Rlist *state = RvalRlistValue(new_var->rval);
+    // move to the first non-null value
+    state = FirstRealEntry(state);
+    SeqAppend(iter->vars, new_var);
     SeqAppend(iter->var_states, state);
+    return state != NULL;
 }
 
 PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *lists, const Rlist *containers)
@@ -127,7 +127,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
     iter->vars = SeqNew(RlistLen(lists), DeleteAssoc);
     iter->var_states = SeqNew(RlistLen(lists), NULL);
-    iter->started = false;
+    iter->has_null_list = false;
 
     for (const Rlist *rp = lists; rp != NULL; rp = rp->next)
     {
@@ -145,7 +145,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
         VarRefDestroy(ref);
 
         CfAssoc *new_var = NewAssoc(RlistScalarValue(rp), (Rval) { (void *)value, DataTypeToRvalType(dtype) }, dtype);
-        AppendIterationVariable(iter, new_var);
+        iter->has_null_list |= !AppendIterationVariable(iter, new_var);
     }
 
     for (const Rlist *rp = containers; rp; rp = rp->next)
@@ -171,7 +171,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
         new_var->rval = (Rval) { ContainerToRlist(value), RVAL_TYPE_LIST };
         new_var->dtype = CF_DATA_TYPE_STRING_LIST;
 
-        AppendIterationVariable(iter, new_var);
+        iter->has_null_list |= !AppendIterationVariable(iter, new_var);
     }
 
     // We now have a control list of list-variables, with internal state in state_ptr
@@ -199,51 +199,14 @@ void PromiseIteratorDestroy(PromiseIterator *iter)
     }
 }
 
-/*****************************************************************************/
-
-static bool NullIteratorsInternal(PromiseIterator *iter, size_t index)
+bool NullIterators(const PromiseIterator *iter)
 {
-    if (index >= SeqLength(iter->vars))
-    {
-        return false;
-    }
-
-    for (size_t i = index; i < SeqLength(iter->var_states); i++)
-    {
-        const CfAssoc *var = SeqAt(iter->vars, i);
-
-        if (var->rval.type == RVAL_TYPE_LIST)
-        {
-            const Rlist *state = SeqAt(iter->var_states, i);
-            if (state)
-            {
-                switch (state->val.type)
-                {
-                case RVAL_TYPE_SCALAR:
-                    if (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0)
-                    {
-                        return true;
-                    }
-                   break;
-
-                case RVAL_TYPE_FNCALL:
-                    if (strcmp(RlistFnCallValue(state)->name, CF_NULL_VALUE) == 0)
-                    {
-                        return true;
-                    }
-                    break;
-
-                default:
-                    ProgrammingError("Unexpected rval type %d in iterator", state->val.type);
-                }
-            }
-        }
-    }
-
-    return false;
+    return iter->has_null_list;
 }
 
-static void VariableStateIncrement(PromiseIterator *iter, size_t index)
+/*****************************************************************************/
+
+static bool VariableStateIncrement(PromiseIterator *iter, size_t index)
 {
     assert(index < SeqLength(iter->var_states));
 
@@ -254,16 +217,22 @@ static void VariableStateIncrement(PromiseIterator *iter, size_t index)
     case RVAL_TYPE_LIST:
         {
             Rlist *state = SeqAt(iter->var_states, index);
-            SeqSet(iter->var_states, index, state->next);
+            assert(state);
+            // find the next valid value, return false if there is none
+            state = FirstRealEntry(state->next);
+            SeqSet(iter->var_states, index, state);
+            return state != NULL;
         }
         break;
 
     default:
         ProgrammingError("Unhandled case in switch");
     }
+
+    return false;
 }
 
-static void VariableStateReset(PromiseIterator *iter, size_t index)
+static bool VariableStateReset(PromiseIterator *iter, size_t index)
 {
     assert(index < SeqLength(iter->var_states));
 
@@ -274,14 +243,18 @@ static void VariableStateReset(PromiseIterator *iter, size_t index)
     case RVAL_TYPE_LIST:
         {
             Rlist *state = RvalRlistValue(var->rval);
-            state = state->next;
+            // find the first valid value, return false if there is none
+            state = FirstRealEntry(state);
             SeqSet(iter->var_states, index, state);
+            return state != NULL;
         }
         break;
 
     default:
         ProgrammingError("Unhandled case in switch");
     }
+
+    return false;
 }
 
 static bool VariableStateHasMore(const PromiseIterator *iter, size_t index)
@@ -316,14 +289,13 @@ static bool IncrementIterationContextInternal(PromiseIterator *iter, size_t inde
     if (!VariableStateHasMore(iter, index))
     {
         /* This wheel has come to full revolution, so move to next */
-        if (index < (SeqLength(iter->vars) - 1))
+        if (index < SeqLength(iter->vars))
         {
             /* Increment next wheel */
             if (IncrementIterationContextInternal(iter, index + 1))
             {
                 /* Not at end yet, so reset this wheel */
-                VariableStateReset(iter, index);
-                return true;
+                return VariableStateReset(iter, index);
             }
             else
             {
@@ -333,91 +305,20 @@ static bool IncrementIterationContextInternal(PromiseIterator *iter, size_t inde
         }
         else
         {
-            /* Reached last variable wheel - waiting for end detection */
+            /* Reached last variable wheel - pass up */
             return false;
         }
     }
     else
     {
         /* Update the current wheel */
-        VariableStateIncrement(iter, index);
-
-        while (NullIteratorsInternal(iter, index))
-        {
-            if (IncrementIterationContextInternal(iter, index + 1))
-            {
-                // If we are at the end of this wheel, we need to shift to next wheel
-                VariableStateReset(iter, index);
-                return true;
-            }
-            else
-            {
-                // Otherwise increment this wheel
-                VariableStateIncrement(iter, index);
-                break;
-            }
-        }
-
-        if (EndOfIterationInternal(iter, index))
-        {
-            return false;
-        }
-
-        return true;
+        return VariableStateIncrement(iter, index);
     }
 }
 
 bool PromiseIteratorNext(PromiseIterator *iter_ctx)
 {
-    iter_ctx->started = true;
     return IncrementIterationContextInternal(iter_ctx, 0);
-}
-
-static bool EndOfIterationInternal(const PromiseIterator *iter, size_t index)
-{
-    if (index >= SeqLength(iter->vars))
-    {
-        return true;
-    }
-
-    for (size_t i = index; i < SeqLength(iter->var_states); i++)
-    {
-        CfAssoc *var = SeqAt(iter->vars, i);
-
-        switch (var->rval.type)
-        {
-        case RVAL_TYPE_LIST:
-            {
-                const Rlist *state = SeqAt(iter->var_states, i);
-                if (!state)
-                {
-                    continue;
-                }
-                else if (state->next)
-                {
-                    return false;
-                }
-            }
-            break;
-
-        default:
-            ProgrammingError("Unhandled value in switch %d", var->rval.type);
-        }
-    }
-
-    return true;
-}
-
-bool PromiseIteratorHasMore(const PromiseIterator *iter)
-{
-    if (SeqLength(iter->vars) > 0)
-    {
-        return !EndOfIterationInternal(iter, 0);
-    }
-    else
-    {
-        return !iter->started;
-    }
 }
 
 void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter)

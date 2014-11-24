@@ -13,10 +13,6 @@ body common control
 
 bundle agent init
 {
-  meta:
-    "test_suppress_fail" string => "any",
-      meta => { "redmine6509" };
-
   files:
     "$(G.testdir)/redmine_6509_1/."
       create => "true";
@@ -66,7 +62,7 @@ bundle agent check
     "fail" or => { @(seen_fail) };
 
   reports:
-    DEBUG::
+    DEBUG.fail::
       "Found $(expected_ok) defined as expected"
         ifvarclass => "$(expected_ok)";
 

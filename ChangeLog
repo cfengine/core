@@ -1,3 +1,33 @@
+3.6.3
+        Bug fixes:
+        - Iterate correctly over empty lists (Redmine #6553)
+        - Improvements to discovery of OpenVZ
+        - Release locks when an abort-class is set in a bundle invoked by a
+          methods promise (Redmine #6334)
+        - Don't warn when an uncanonified promiser is used in classes promise
+          (Redmine #6561)
+        - Skip cf_null entries in bundlesequence (Redmine #6119)
+        - Respect defaults promises in bundles that also use classes
+          (Redmine #5748)
+        - Reduce disk I/O on agents - optimize access to performance database
+          and setuid/gid cache in cf-agent.[hostname].log (Redmine #6523)
+        - Various fixes to ps output parsing
+        - Skip over cf_null entries in lists passed to maplist (Redmine #6576)
+        - Handle unexpanded entries in 'or' attribute of classes as unset
+          classes (Redmine #6569)
+        - Respect warn-only action policy for touch in files promises
+          (Redmine #3172)
+        - Interpret files promiser as directory if depth_search body is set
+          (Redmine #6027, #3400)
+        - Make files promise that should delete a file only set kept classes
+          when the file wasn't there (Redmine #6509)
+        - Improve error message when encountering unsafe links (Redmine #6570)
+        - Interpet max_file_size in edit_defaults set to 0 as "unlimited", as
+          documented (Redmine #6588)
+        - Don't delete lines from a file - and don't segfault - if select_end
+          is specified but never matches (Redmine #6589)
+        - Harden network protocol, handle interrupted transmissions (TODO jimis)
+
 3.6.2
         Bug fixes:
         - don't regenerate software_packages.csv every time (Redmine #6441)

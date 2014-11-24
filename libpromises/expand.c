@@ -181,40 +181,49 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
     size_t i = 0;
     PromiseResult result = PROMISE_RESULT_SKIPPED;
     Buffer *expbuf = BufferNew();
-    for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); i++, PromiseIteratorNext(iter_ctx))
+    iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers);
+    /*
+     If any of the lists we iterate is null or contains only cf_null values,
+     then skip the entire promise.
+    */
+    if (!NullIterators(iter_ctx))
     {
-        if (handle)
+        do
         {
-            // This ordering is necessary to get automated canonification
-            BufferClear(expbuf);
-            ExpandScalar(ctx, NULL, "this", handle, expbuf);
-            CanonifyNameInPlace(BufferGet(expbuf));
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), CF_DATA_TYPE_STRING, "source=promise");
-        }
-        else
-        {
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
-        }
+            if (handle)
+            {
+                // This ordering is necessary to get automated canonification
+                BufferClear(expbuf);
+                ExpandScalar(ctx, NULL, "this", handle, expbuf);
+                CanonifyNameInPlace(BufferGet(expbuf));
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), CF_DATA_TYPE_STRING, "source=promise");
+            }
+            else
+            {
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
+            }
 
-        const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
-        if (!pexp)
-        {
-            // excluded
-            result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
-            continue;
-        }
+            const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
+            if (!pexp)
+            {
+                // excluded
+                result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
+                continue;
+            }
 
-        PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
+            PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
 
-        NotifyDependantPromises(ctx, pexp, iteration_result);
-        result = PromiseResultUpdate(result, iteration_result);
+            NotifyDependantPromises(ctx, pexp, iteration_result);
+            result = PromiseResultUpdate(result, iteration_result);
 
-        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
-        {
-            VerifyVarPromise(ctx, pexp, true);
-        }
+            if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
+            {
+                VerifyVarPromise(ctx, pexp, true);
+            }
 
-        EvalContextStackPopFrame(ctx);
+            EvalContextStackPopFrame(ctx);
+            ++i;
+        } while (PromiseIteratorNext(iter_ctx));
     }
 
     BufferDestroy(expbuf);
@@ -227,12 +236,6 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
 void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval,
                           Rlist **scalars, Rlist **lists, Rlist **containers)
 {
-    assert(rval.item);
-    if (rval.item == NULL)
-    {
-        return;
-    }
-
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
@@ -416,21 +419,29 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx,
                         switch (DataTypeToRvalType(value_type))
                         {
                         case RVAL_TYPE_LIST:
-                            if (level > 0)
                             {
-                                RlistPrependScalarIdemp(lists, mangled_inner_ref);
-                            }
-                            else
-                            {
-                                RlistAppendScalarIdemp(lists, mangled_inner_ref);
-                            }
-
-                            if (full_expansion)
-                            {
+                                bool has_valid_entries = false;
                                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                                 {
-                                    // append each slist item to each of full_expansion
-                                    RlistConcatInto(&tmp_list, *full_expansion, RlistScalarValue(rp));
+                                    has_valid_entries |= rp->val.item && (strcmp(rp->val.item, CF_NULL_VALUE) != 0);
+                                    if (full_expansion)
+                                    {
+                                        // append each slist item to each of full_expansion
+                                        RlistConcatInto(&tmp_list, *full_expansion, RlistScalarValue(rp));
+                                    }
+                                }
+                                if (!has_valid_entries)
+                                {
+                                    Log(LOG_LEVEL_DEBUG, "Skipping empty list '%s' in iteration", mangled_inner_ref);
+                                    break;
+                                }
+                                if (level > 0)
+                                {
+                                    RlistPrependScalarIdemp(lists, mangled_inner_ref);
+                                }
+                                else
+                                {
+                                    RlistAppendScalarIdemp(lists, mangled_inner_ref);
                                 }
                             }
                             break;
@@ -685,25 +696,36 @@ bool ExpandScalar(const EvalContext *ctx,
                 VarRefDestroy(ref);
             }
 
-            if (value)
+            switch (DataTypeToRvalType(type))
             {
-                switch (DataTypeToRvalType(type))
+            case RVAL_TYPE_SCALAR:
+                if (value)
                 {
-                case RVAL_TYPE_SCALAR:
-                    BufferAppendString(out, value);
-                    continue;
-
-                case RVAL_TYPE_CONTAINER:
-                    if (JsonGetElementType((JsonElement*)value) == JSON_ELEMENT_TYPE_PRIMITIVE)
-                    {
-                        BufferAppendString(out, JsonPrimitiveGetAsString((JsonElement*)value));
-                        continue;
-                    }
-                    break;
-
-                default:
-                    break;
+                     BufferAppendString(out, value);
+                     continue;
                 }
+                break;
+
+            case RVAL_TYPE_CONTAINER:
+                if (value && JsonGetElementType((JsonElement*)value) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    BufferAppendString(out, JsonPrimitiveGetAsString((JsonElement*)value));
+                    continue;
+                }
+                break;
+
+            default:
+                // Discover if we are about to evaluate a promise with a cf_null-list
+                if ((value && strcmp(RlistScalarValue(value), CF_NULL_VALUE) == 0) 
+                // or a list from a foreign bundle that can't be expanded because it is a null list there
+                   || (type == CF_DATA_TYPE_NONE && !value && strchr(BufferData(current_item), CF_MAPPEDLIST)))
+                {
+                    BufferClear(out);
+                    BufferAppendString(out, CF_NULL_VALUE); // mark as invalid - see ExpandDeRefPromise
+                    BufferDestroy(current_item);
+                    return false;
+                }
+                break;
             }
         }
 
@@ -885,6 +907,25 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
     }
 }
 
+void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char *type, PromiseActuator *actuator)
+{
+    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    {
+        PromiseType *pt = SeqAt(bundle->promise_types, j);
+
+        if (strcmp(pt->name, type) == 0)
+        {
+            EvalContextStackPushPromiseTypeFrame(ctx, pt);
+            for (size_t i = 0; i < SeqLength(pt->promises); i++)
+            {
+                Promise *pp = SeqAt(pt->promises, i);
+                ExpandPromise(ctx, pp, actuator, NULL);
+            }
+            EvalContextStackPopFrame(ctx);
+        }
+    }
+}
+
 void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 {
     Log(LOG_LEVEL_DEBUG, "Resolving variables in bundle '%s' '%s'",
@@ -892,37 +933,9 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 
     if (strcmp(bundle->type, "common") == 0)
     {
-        for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
-        {
-            PromiseType *pt = SeqAt(bundle->promise_types, j);
-            if (strcmp(pt->name, "classes") == 0)
-            {
-                EvalContextStackPushPromiseTypeFrame(ctx, pt);
-                for (size_t i = 0; i < SeqLength(pt->promises); i++)
-                {
-                    Promise *pp = SeqAt(pt->promises, i);
-                    ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
-                }
-                EvalContextStackPopFrame(ctx);
-            }
-        }
+        BundleResolvePromiseType(ctx, bundle, "classes", VerifyClassPromise);
     }
-
-    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
-    {
-        PromiseType *pt = SeqAt(bundle->promise_types, j);
-
-        if (strcmp(pt->name, "vars") == 0)
-        {
-            EvalContextStackPushPromiseTypeFrame(ctx, pt);
-            for (size_t i = 0; i < SeqLength(pt->promises); i++)
-            {
-                Promise *pp = SeqAt(pt->promises, i);
-                ExpandPromise(ctx, pp, (PromiseActuator*)VerifyVarPromise, NULL);
-            }
-            EvalContextStackPopFrame(ctx);
-        }
-    }
+    BundleResolvePromiseType(ctx, bundle, "vars", (PromiseActuator*)VerifyVarPromise);
 }
 
 ProtocolVersion ProtocolVersionParse(const char *s)

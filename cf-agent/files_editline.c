@@ -92,7 +92,7 @@ static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, const Promise *pp);
 static int SelectLine(EvalContext *ctx, const char *line, Attributes a);
 static int NotAnchored(char *s);
-static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, EditContext *edcontext);
 static int MultiLineString(char *s);
 static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 
@@ -367,10 +367,10 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!a.haveregion)
     {
-        begin_ptr = CF_UNDEFINED_ITEM;
-        end_ptr = CF_UNDEFINED_ITEM;
+        begin_ptr = NULL;
+        end_ptr = NULL;
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         if (a.region.include_end || a.region.include_start)
         {
@@ -386,6 +386,14 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
         }
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
+    }
+    if (!end_ptr && a.region.select_end)
+    {
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+            "The promised end pattern '%s' was not found when selecting region to delete in '%s'",
+             a.region.select_end, edcontext->filename);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+        return false;
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteline-%s-%s", pp->promiser, edcontext->filename);
@@ -447,7 +455,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
         begin_ptr = *start;
         end_ptr = NULL;         // EndOfList(*start);
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised column edit '%s' could not select an edit region in '%s'",
              pp->promiser, edcontext->filename);
@@ -503,7 +511,7 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
         begin_ptr = *start;
         end_ptr = NULL;         //EndOfList(*start);
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "The promised pattern replace '%s' could not select an edit region in '%s'", pp->promiser,
@@ -538,10 +546,10 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
 
 static int SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
-    Item *ip_prev = CF_UNDEFINED_ITEM;
+    Item *ip_prev = NULL;
 
-    *match = CF_UNDEFINED_ITEM;
-    *prev = CF_UNDEFINED_ITEM;
+    *match = NULL;
+    *prev = NULL;
 
     for (Item *ip = begin; ip != end; ip = ip->next)
     {
@@ -567,10 +575,10 @@ static int SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *be
 
 static int SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
-    Item *ip, *ip_last = NULL, *ip_prev = CF_UNDEFINED_ITEM;
+    Item *ip, *ip_last = NULL, *ip_prev = NULL;
 
-    *match = CF_UNDEFINED_ITEM;
-    *prev = CF_UNDEFINED_ITEM;
+    *match = NULL;
+    *prev = NULL;
 
     for (ip = begin; ip != end; ip = ip->next)
     {
@@ -604,8 +612,8 @@ static int SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *
     Item *ip;
     int ret = false;
 
-    *match = CF_UNDEFINED_ITEM;
-    *prev = CF_UNDEFINED_ITEM;
+    *match = NULL;
+    *prev = NULL;
 
     if (regex == NULL)
     {
@@ -627,7 +635,7 @@ static int SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *
         }
     }
 
-    if ((*match != CF_UNDEFINED_ITEM) && (*prev == CF_UNDEFINED_ITEM))
+    if ((*match != NULL) && (*prev == NULL))
     {
         for (ip = start; (ip != NULL) && (ip != *match); ip = ip->next)
         {
@@ -667,7 +675,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         begin_ptr = *start;
         end_ptr = NULL;         //EndOfList(*start);
     }
-    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext, &result))
+    else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "The promised line insertion '%s' could not select an edit region in '%s'", pp->promiser,
@@ -727,33 +735,32 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 /***************************************************************************/
 
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a,
-                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
+                        EditContext *edcontext)
 /*
 
 This should provide pointers to the first and last line of text that include the
 delimiters, since we need to include those in case they are being deleted, etc.
 It returns true if a match was identified, else false.
 
-If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_ITEM
+If no such region matches, begin_ptr and end_ptr should point to NULL 
 
 */
 {
-    Item *ip, *beg = CF_UNDEFINED_ITEM, *end = CF_UNDEFINED_ITEM;
+    Item *ip, *beg = NULL, *end = NULL;
 
     for (ip = start; ip != NULL; ip = ip->next)
     {
         if (a.region.select_start)
         {
-            if (beg == CF_UNDEFINED_ITEM && FullTextMatch(ctx, a.region.select_start, ip->name))
+            if (!beg && FullTextMatch(ctx, a.region.select_start, ip->name))
             {
                 if (!a.region.include_start)
                 {
                     if (ip->next == NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+                        Log(LOG_LEVEL_VERBOSE,
                              "The promised start pattern '%s' found an empty region at the end of file '%s'",
                              a.region.select_start, edcontext->filename);
-                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                         return false;
                     }
                 }
@@ -763,33 +770,27 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
             }
         }
 
-        if (a.region.select_end && beg != CF_UNDEFINED_ITEM)
+        if (a.region.select_end && beg)
         {
-            if (end == CF_UNDEFINED_ITEM && FullTextMatch(ctx, a.region.select_end, ip->name))
+            if (!end && FullTextMatch(ctx, a.region.select_end, ip->name))
             {
                 end = ip;
                 break;
             }
         }
 
-        if (beg != CF_UNDEFINED_ITEM && end != CF_UNDEFINED_ITEM)
+        if (beg && end)
         {
             break;
         }
     }
 
-    if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
+    if (!beg && a.region.select_start)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+        Log(LOG_LEVEL_VERBOSE,
              "The promised start pattern '%s' was not found when selecting edit region in '%s'",
              a.region.select_start, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
-    }
-
-    if (end == CF_UNDEFINED_ITEM)
-    {
-        end = NULL;
     }
 
     *begin_ptr = beg;
@@ -865,7 +866,7 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
 static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a,
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
-    Item *ip, *prev = CF_UNDEFINED_ITEM;
+    Item *ip, *prev = NULL;
     int allow_multi_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
 
     // Insert at the start of the file
@@ -956,7 +957,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
 
 // Get a pointer from before the region so we can patch the hole later
 
-    if (begin == CF_UNDEFINED_ITEM)
+    if (begin == NULL)
     {
         initiator = *start;
     }
@@ -972,7 +973,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
         }
     }
 
-    if (end == CF_UNDEFINED_ITEM)
+    if (end == NULL)
     {
         terminator = NULL;
     }
@@ -1607,14 +1608,14 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 
         retval |= InsertCompoundLineAtLocation(ctx, BufferGet(exp), start, begin_ptr, end_ptr, loc, prev, a, pp, edcontext, result);
 
-        if (preserve_block && prev == CF_UNDEFINED_ITEM)
+        if (preserve_block && !prev)
         {
             // If we are inserting a preserved block before, need to flip the implied order after the first insertion
             // to get the order of the block right
             //a.location.before_after = cfe_after;
         }
 
-        if (prev && prev != CF_UNDEFINED_ITEM)
+        if (prev)
         {
             prev = prev->next;
         }
@@ -1678,7 +1679,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
 
         retval |= InsertLineAtLocation(ctx, buf, start, location, prev, a, pp, edcontext, result);
 
-        if (preserve_block && a.location.before_after == EDIT_ORDER_BEFORE && location == NULL && prev == CF_UNDEFINED_ITEM)
+        if (preserve_block && a.location.before_after == EDIT_ORDER_BEFORE && location == NULL && prev == NULL)
         {
             // If we are inserting a preserved block before, need to flip the implied order after the first insertion
             // to get the order of the block right
@@ -1686,7 +1687,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
             location = *start;
         }
 
-        if (prev && prev != CF_UNDEFINED_ITEM)
+        if (prev)
         {
             prev = prev->next;
         }
@@ -1756,7 +1757,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
 
 {   int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
 
-    if (prev == CF_UNDEFINED_ITEM)      /* Insert at first line */
+    if (!prev)      /* Insert at first line */
     {
         if (a.location.before_after == EDIT_ORDER_BEFORE)
         {

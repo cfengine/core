@@ -741,15 +741,13 @@ static int WaitForIncoming(int sd)
     {
         /* skip */
     }
-    /* If we had data on the signal pipe but not the listening socket,
-     * report no in-coming sockets. */
-    if (result > 0 && (sd < 0 || !FD_ISSET(sd, &rset)))
-    {
-        return 0;
-    }
 
-    /* Return 0 in case of timeout, or the valid socket descriptor. */
-    return result;
+    /* We have an incoming connection if select() marked sd as ready: */
+    if (sd != -1 && result > 0 && FD_ISSET(sd, &rset))
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /* Check for new policy just before spawning a thread.
@@ -789,9 +787,7 @@ static void AcceptAndHandle(EvalContext *ctx, int sd)
     }
 
     info->ss_len = sizeof(info->ss);
-    info->sd = accept(sd,
-                      (struct sockaddr *) &info->ss,
-                      &info->ss_len);
+    info->sd = accept(sd, (struct sockaddr *) &info->ss, &info->ss_len);
     if (info->sd == -1)
     {
         ConnectionInfoDestroy(&info);

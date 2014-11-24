@@ -48,7 +48,7 @@ void ConnectionInfoDestroy(ConnectionInfo **info)
         SSL_free((*info)->ssl);
     }
     KeyDestroy(&(*info)->remote_key);
-    free (*info);
+    free(*info);
     *info = NULL;
 }
 

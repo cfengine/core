@@ -69,11 +69,7 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
 bool cfnet_init()
 {
     CryptoInitialize();
-
-    if (TLSClientInitialize())
-        return true;
-    else
-        return false;
+    return TLSClientInitialize();
 }
 
 void cfnet_shut()
@@ -139,30 +135,29 @@ char CFENGINE_PORT_STR[16] = "5308";
 
 void DetermineCfenginePort()
 {
-    struct servent *server;
     assert(sizeof(CFENGINE_PORT_STR) >= PRINTSIZE(CFENGINE_PORT));
     /* ... but we leave more space, as service names can be longer */
 
     errno = 0;
-    if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) != NULL)
+    struct servent *server = getservbyname(CFENGINE_SERVICE, "tcp");
+    if (server != NULL)
     {
         CFENGINE_PORT = ntohs(server->s_port);
         snprintf(CFENGINE_PORT_STR, sizeof(CFENGINE_PORT_STR),
                  "%d", CFENGINE_PORT);
     }
+    else if (errno == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "No registered cfengine service, using default");
+    }
     else
     {
-        if (errno == 0)
-        {
-            Log(LOG_LEVEL_VERBOSE, "No registered cfengine service, using default");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Unable to query services database, using default. (getservbyname: %s)", GetErrorStr());
-        }
+        Log(LOG_LEVEL_VERBOSE,
+            "Unable to query services database, using default. (getservbyname: %s)",
+            GetErrorStr());
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %d", CFENGINE_PORT);
+    Log(LOG_LEVEL_VERBOSE, "Default port for cfengine is %d", CFENGINE_PORT);
 }
 
 /**
@@ -243,10 +238,10 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 
     /* FIXME: username is local */
-    GetCurrentUserName(conn->username, CF_SMALLBUF);
+    GetCurrentUserName(conn->username, sizeof(conn->username));
 #else
     /* Always say "root" as username from windows. */
-    snprintf(conn->username, CF_SMALLBUF, "root");
+    strlcpy(conn->username, "root", sizeof(conn->username));
 #endif
 
     if (port == NULL || *port == '\0')
@@ -649,7 +644,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         {
             Item *ip;
 
-            if (strncmp(sp, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)       /* End transmission */
+            if (strcmp(sp, CFD_TERMINATOR) == 0)        /* End transmission */
             {
                 return ret;
             }
@@ -919,9 +914,8 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
-    int dd, buf_size, n_read = 0, toget, towrite;
-    int tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
+    const int buf_size = 2048;
 
     off_t n_read_total = 0;
     EVP_CIPHER_CTX crypto_ctx;
@@ -945,7 +939,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
     unlink(dest);                /* To avoid link attacks */
 
-    if ((dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    int dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600);
+    if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,
             "Copy from server '%s' to destination '%s' failed (open: %s)",
@@ -954,18 +949,23 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         return false;
     }
 
+
+
     workbuf[0] = '\0';
+    int tosend = snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
+    if (tosend <= 0 || tosend >= CF_BUFSIZE)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to compose GET command for file %s",
+            source);
+        close(dd);
+        return false;
+    }
 
-    buf_size = 2048;
-
-/* Send proposition C0 */
-
-    snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
-    tosend = strlen(workbuf);
+    /* Send proposition C0 */
 
     if (SendTransaction(conn->conn_info, workbuf, tosend, CF_DONE) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't send data");
+        Log(LOG_LEVEL_ERR, "Couldn't send GET command");
         close(dd);
         return false;
     }
@@ -978,18 +978,19 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     n_read_total = 0;
     while (n_read_total < size)
     {
+        int toget, n_read;
+
         if ((size - n_read_total) >= buf_size)
         {
-            toget = towrite = buf_size;
+            toget = buf_size;
         }
         else if (size != 0)
         {
-            towrite = (size - n_read_total);
-            toget = towrite;
+            toget = size - n_read_total;
         }
         else
         {
-            toget = towrite = 0;
+            toget = 0;
         }
 
         /* Stage C1 - receive */
@@ -1007,7 +1008,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             n_read = -1;
         }
 
-        if (n_read == -1)
+        if (n_read == -1)                             /* TODO what about 0? */
         {
             /* This may happen on race conditions,
              * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
@@ -1036,10 +1037,10 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             return false;
         }
 
-        value = -1;
 
         /* Check for mismatch between encryption here and on server - can lead to misunderstanding */
 
+        int value = -1;
         sscanf(buf, "t %d", &value);
 
         if ((value > 0) && (strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0))
@@ -1067,7 +1068,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             return false;
         }
 
-        n_read_total += towrite;        /* n_read; */
+        n_read_total += toget;        /* n_read; */
     }
 
     /* If the file ends with a `hole', something needs to be written at

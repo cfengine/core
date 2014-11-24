@@ -26,6 +26,10 @@ bundle agent test
 {
   vars:
     "file[22][0]" string => "something";
+    "file[2][20]" string => "anything";
+
+    "a[10]" string => "a";
+    "a1[0]" string => "b";
 }
 
 #######################################################
@@ -33,7 +37,10 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "failure" expression => strcmp("${file[2][20]}", "${file[22][0]}");
+      "fail_1" expression => strcmp("${test.file[22][0]}", "${test.file[2][20]}");
+      "fail_2" expression => strcmp("${test.a[10]}", "${test.a1[0]}");
+
+      "failure" or => { "fail_1", "fail_2" };
 
   reports:
     failure::

@@ -31,6 +31,10 @@
 #include <hashes.h>
 #include <scope.h>
 
+// This is not allowed to be the part of VarRef.indices so looks safe 
+// to be used as multi array indices separator while hashing.
+#define ARRAY_SEPARATOR_HASH ']' 
+
 static size_t VarRefHash(const VarRef *ref)
 {
     unsigned int h = 0;
@@ -69,6 +73,13 @@ static size_t VarRefHash(const VarRef *ref)
 
     for (size_t k = 0; k < ref->num_indices; k++)
     {
+        // Fixing multi index arrays hashing collisions - Redmine 6674
+        // Multi index arrays with indexes expanded to the same string 
+        // (e.g. v[te][st], v[t][e][s][t]) will not be hashed to the same value.
+        h += ARRAY_SEPARATOR_HASH;
+        h += (h << 10);
+        h ^= (h >> 6);
+        
         for (int i = 0; ref->indices[k][i] != '\0'; i++)
         {
             h += ref->indices[k][i];

@@ -1,0 +1,52 @@
+#######################################################
+#
+# Conflation of multi-index entries in arrays
+# Redmine#6674: Conflation of multi-index entries in arrays
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "file[22][0]" string => "something";
+    "file[2][20]" string => "anything";
+
+    "a[10]" string => "a";
+    "a1[0]" string => "b";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "fail_1" expression => strcmp("${test.file[22][0]}", "${test.file[2][20]}");
+      "fail_2" expression => strcmp("${test.a[10]}", "${test.a1[0]}");
+
+      "failure" or => { "fail_1", "fail_2" };
+
+  reports:
+    failure::
+      "$(this.promise_filename) FAIL";
+    !failure::
+      "$(this.promise_filename) Pass";
+
+}
+

@@ -1,0 +1,62 @@
+###########################################################
+#
+# Test that multiple getindices only get the specified keys
+# Redmine#6779
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent init
+{
+}
+
+###########################################################
+
+bundle agent test
+{
+    vars:
+        "bundle_config[dir][dir_test1]" string =>   "dir_test1";
+        "bundle_config[dir][dir_test2]" string =>   "dir_test2";
+        "bundle_config[lnk][lnk_test1]" string =>   "lnk_test1";
+        "bundle_config[lnk][lnk_test2]" string =>   "lnk_test2";
+
+        "dir_keys"  slist => getindices("bundle_config[dir]");
+        "lnk_keys"  slist => getindices("bundle_config[lnk]");
+
+        "dir_keys_sorted"   slist => sort("dir_keys", "lex");
+        "lnk_keys_sorted"   slist => sort("lnk_keys", "lex");
+
+        "dir_keys_str"  string => join(",", "dir_keys_sorted");
+        "lnk_keys_str"  string => join(",", "lnk_keys_sorted");
+}
+
+###########################################################
+
+bundle agent check
+{
+    vars:
+        "expected_dir_keys" string => "dir_test1,dir_test2";
+        "expected_lnk_keys" string => "lnk_test1,lnk_test2";
+
+    classes:
+        "ok_dir_keys" expression => strcmp($(expected_dir_keys), $(test.dir_keys_str));
+        "ok_lnk_keys" expression => strcmp($(expected_lnk_keys), $(test.lnk_keys_str));
+        "ok" and => { "ok_dir_keys", "ok_lnk_keys" };
+
+    reports:
+        DEBUG:: 
+            "dir_keys = '$(test.dir_keys_str)', expected = '$(expected_dir_keys)'";
+            "lnk_keys = '$(test.lnk_keys_str)', expected = '$(expected_lnk_keys)'";
+        ok::
+            "$(this.promise_filename) Pass";
+        !ok::
+            "$(this.promise_filename) FAIL";
+}

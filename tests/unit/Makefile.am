@@ -187,6 +187,10 @@ XFAIL_TESTS = evalfunction_test     # Redmine 6318
 XFAIL_TESTS += set_domainname_test  # Redmine 6317
 endif
 
+if HPUX
+XFAIL_TESTS = mon_load_test # Redmine #3569
+endif
+
 #
 # OS X uses real system calls instead of our stubs unless this option is used
 #

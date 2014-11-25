@@ -198,7 +198,7 @@ void MonNetworkGatherData(double *cf_this)
 
     strcat(comm, " -an");
 
-    if ((pp = cf_popen(comm, "r", true)) == NULL)
+    if (!FileCanOpen(comm, "r") || ((pp = cf_popen(comm, "r", true)) == NULL))
     {
         /* FIXME: no logging */
         return;

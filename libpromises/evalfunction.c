@@ -224,7 +224,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
 
         default:
             {
-                VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+                VariableTableIterator *iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
                 convert = JsonObjectCreate(10);
                 Variable *var;
                 while ((var = VariableTableIteratorNext(iter)))
@@ -1983,7 +1983,8 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
     }
     else
     {
-        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+        VariableTableIterator *iter = 
+                EvalContextVariableTableFromRefIteratorNew(ctx, ref);
         const Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
@@ -2083,7 +2084,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
     }
     else
     {
-        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+        VariableTableIterator *iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
         Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
@@ -2516,7 +2517,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
             VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
         }
 
-        iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+        iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
         selected_index = ref->num_indices;
         VarRefDestroy(ref);
     }

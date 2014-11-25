@@ -153,6 +153,7 @@ bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableClearMatch(EvalContext *ctx);
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const char *ns, const char *scope, const char *lval);
+VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalContext *ctx, const VarRef *ref);
 
 bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key);
 void EvalContextPromiseLockCachePut(EvalContext *ctx, const char *key);

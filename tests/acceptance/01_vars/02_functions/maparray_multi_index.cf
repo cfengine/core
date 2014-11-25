@@ -1,0 +1,61 @@
+###########################################################
+#
+# Test maparray for multi-index arrays
+# Redmine#6033
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent init
+{
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+    "bundles[zculib][mypaths]"    slist => { "pathsa.cf", "pathsb.cf" };
+    "bundles[zculib][myservices]" slist => { "myservices.cf" };
+
+    #make sure that below variables will be not mapped
+    "bundles[zcuinventory][zcuinventory]"             slist => { "inv_zcuinventory.cf" };
+    "bundles[zcuinventory][inventory_fibrechannel]"   slist => { "inv_fibrechannel.cf" };
+    "bundles[zcuinventory][inventory_virtualization]" slist => { "inv_virtualization.cf" };
+    "bundles[services][afs]"          slist => { "afs.cf", "afsadm.cf" };
+    "bundles[services][base]"         slist => { "base.cf", "base2.cf" };    
+
+    "inputs"        slist => maparray("zculib/$(this.v)","bundles[zculib]");
+    "sorted_inputs" slist => sort("inputs", "lex");
+    "inputs_str"    string => join(",", "sorted_inputs");
+}
+
+###########################################################
+
+bundle agent check
+{
+  vars:
+    "expected_merge" string => "zculib/myservices.cf,zculib/pathsa.cf,zculib/pathsb.cf";
+
+  classes:
+    "ok_merge" expression => strcmp($(expected_merge), $(test.inputs_str));
+
+  reports:
+    DEBUG::
+      "inputs_zculib : $(test.inputs_str)";
+      "expected_zculib : $(expected_merge)"; 
+    ok_merge::
+      "$(this.promise_filename) Pass";
+    !ok_merge::
+      "$(this.promise_filename) FAIL";
+}
+
+

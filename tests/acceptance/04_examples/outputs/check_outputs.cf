@@ -60,7 +60,7 @@ bundle agent test_example(file)
   vars:
       "cfile" string => canonify($(file));
 
-      "checker" string => "$(G.perl) $(init.checker) --cfagent=$(sys.cf_agent) --workdir=$(G.testdir) -lc";
+      "checker" string => "$(G.perl) $(init.checker) --cfagent=$(sys.cf_agent) --workdir=$(G.testdir) -c";
 
   classes:
       "failure_$(cfile)" not => returnszero("$(checker) $(file)", "noshell"), scope => "namespace";

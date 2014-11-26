@@ -50,14 +50,14 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: Found key relayhost
-#@ R: Found key smtp_sasl_security_options
 #@ R: Found key inet_protocols
-#@ R: Found key smtp_sasl_auth_enable
-#@ R: Found key default_privs
+#@ R: Found key mydomain
 #@ R: Found key smtp_use_tls
 #@ R: Found key smtp_sasl_password_maps
-#@ R: Found key mydomain
+#@ R: Found key smtp_sasl_security_options
+#@ R: Found key relayhost
+#@ R: Found key default_privs
 #@ R: Found key inet_interfaces
+#@ R: Found key smtp_sasl_auth_enable
 #@ ```
 #+end_src

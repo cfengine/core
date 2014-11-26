@@ -145,6 +145,27 @@ static bool ResolveFilename(const char *req_path, char *res_path)
     return true;
 }
 
+static bool PathMatch(const char *stem, const char *request)
+{
+    const size_t stemlen = strlen(stem);
+    if (strcmp(stem, FILE_SEPARATOR_STR) == 0)
+    {
+        /* Matches everything: */
+        return true;
+    }
+
+    if (strcmp(stem, request) == 0)
+    {
+        /* An exact match is a match: */
+        return true;
+    }
+
+    /* Otherwise, match only if stem names a parent directory of request: */
+    return (strlen(request) > stemlen &&
+            request[stemlen] == FILE_SEPARATOR &&
+            strncmp(stem, request, stemlen) == 0);
+}
+
 static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
 {
     int access = false;
@@ -193,47 +214,25 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     for (Auth *ap = SV.admit; ap != NULL; ap = ap->next)
     {
-        int res = false;
-
         Log(LOG_LEVEL_DEBUG, "Examining rule in access list (%s,%s)", transrequest, ap->path);
 
         /* TODO MapName when constructing this list. */
         strlcpy(transpath, ap->path, CF_BUFSIZE);
         MapName(transpath);
 
-        /* If everything is allowed */
-        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
-            ||
-            /* or if transpath is a parent directory of transrequest */
-            (strlen(transrequest) > strlen(transpath)
-            && strncmp(transpath, transrequest, strlen(transpath)) == 0
-            && transrequest[strlen(transpath)] == FILE_SEPARATOR)
-            ||
-            /* or if it's an exact match */
-            (strcmp(transpath, transrequest) == 0))
-        {
-            res = true;
-        }
-
-        /* Exact match means single file to admit */
-        if (strcmp(transpath, transrequest) == 0)
-        {
-            res = true;
-        }
-
-        if (res)
+        if (PathMatch(transpath, transrequest))
         {
             Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", transrequest, transpath);
 
             if (stat(transpath, &statbuf) == -1)
             {
                 Log(LOG_LEVEL_INFO,
-                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
-                      transpath);
+                    "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
+                    transpath);
                 continue;
             }
 
-            if ((!encrypt) && (ap->encrypt == true))
+            if (!encrypt && ap->encrypt)
             {
                 Log(LOG_LEVEL_ERR, "File %s requires encrypt connection...will not serve", transpath);
                 access = false;
@@ -242,15 +241,15 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..");
 
-                if ((IsMatchItemIn(ap->maproot, conn->ipaddr)) ||
-                    (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
+                if (IsMatchItemIn(ap->maproot, conn->ipaddr) ||
+                    IsRegexItemIn(ctx, ap->maproot, conn->hostname))
                 {
                     conn->maproot = true;
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
-                if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
-                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
+                if (IsMatchItemIn(ap->accesslist, conn->ipaddr) ||
+                    IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
                 {
                     access = true;
                     Log(LOG_LEVEL_DEBUG, "Access granted to host: %s", conn->ipaddr);
@@ -265,23 +264,15 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         strlcpy(transpath, dp->path, CF_BUFSIZE);
         MapName(transpath);
 
-        /* If everything is denied */
-        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
-            ||
-            /* or if transpath is a parent directory of transrequest */
-            (strlen(transrequest) > strlen(transpath) &&
-             strncmp(transpath, transrequest, strlen(transpath)) == 0 &&
-             transrequest[strlen(transpath)] == FILE_SEPARATOR)
-            ||
-            /* or if it's an exact match */
-            (strcmp(transpath, transrequest) == 0))
+        if (PathMatch(transpath, transrequest))
         {
             if ((IsMatchItemIn(dp->accesslist, conn->ipaddr)) ||
                 (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))
             {
                 access = false;
-                Log(LOG_LEVEL_INFO, "Host '%s' in deny list, explicitly denying access to '%s'",
-                    conn->ipaddr, transrequest);
+                Log(LOG_LEVEL_INFO,
+                    "Host '%s' in deny list, explicitly denying access to '%s' in '%s'",
+                    conn->ipaddr, transrequest, transpath);
                 break;
             }
         }
@@ -346,7 +337,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                 break;
             }
 
-            if ((!encrypt) && (ap->encrypt == true))
+            if (!encrypt && ap->encrypt)
             {
                 Log(LOG_LEVEL_ERR, "Variable %s requires encrypt connection...will not serve", name);
                 access = false;
@@ -438,7 +429,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         "Found a matching rule in access list (%s in %s)",
                         ip->name, ap->path);
 
-                    if (ap->classpattern == false)
+                    if (!ap->classpattern)
                     {
                         Log(LOG_LEVEL_ERR,
                             "Context %s requires a literal server item... "
@@ -448,7 +439,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         continue;
                     }
 
-                    if ((!encrypt) && (ap->encrypt == true))
+                    if (!encrypt && ap->encrypt)
                     {
                         Log(LOG_LEVEL_ERR,
                             "Context %s requires encrypt connection... "
@@ -625,44 +616,22 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
     }
 }
 
-static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen)
-{
-    unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+/*****************************************************/
+/* The pieces that make up AuthenticationDialogue(): */
 
-    if ((PRIVKEY == NULL) || (PUBKEY == NULL))
-    {
-        Log(LOG_LEVEL_ERR,
-            "No public/private key pair exists, create one with cf-key");
-        return false;
-    }
-
-    int PRIVKEY_size = RSA_size(PRIVKEY);
-    int digestLen;
-    HashMethod digestType;
-
-    if (FIPS_MODE)
-    {
-        digestType = CF_DEFAULT_DIGEST;
-        digestLen = CF_DEFAULT_DIGEST_LEN;
-    }
-    else
-    {
-        digestType = HASH_METHOD_MD5;
-        digestLen = CF_MD5_LEN;
-    }
-
-/* parameters received in SAUTH command */
-char iscrypt, enterprise_field;
-
-/* proposition C1 - SAUTH command */
+/* Proposition C1 - SAUTH command */
+static bool PropC1(char *iscrypt, char *enterprise_field,
+                   char *recvbuffer, int recvlen,
+                   unsigned char *digest, HashMethod digestType,
+                   int PRIVKEY_size)
 {
     char sauth[10] = { 0 };
     unsigned int crypt_len;          /* received encrypted challenge length */
     unsigned int challenge_len;        /* challenge length after decryption */
 
     int nparam = sscanf(recvbuffer, "%9s %c %u %u %c",
-                        sauth, &iscrypt, &crypt_len,
-                        &challenge_len, &enterprise_field);
+                        sauth, iscrypt, &crypt_len,
+                        &challenge_len, enterprise_field);
 
     if (nparam >= 1 && strcmp(sauth, "SAUTH") != 0)
     {
@@ -686,7 +655,7 @@ char iscrypt, enterprise_field;
         Log(LOG_LEVEL_VERBOSE,
             "Peer sent only 4 parameters, "
             "assuming it is a legacy community client");
-        enterprise_field = 'c';
+        *enterprise_field = 'c';
     }
 
     if ((challenge_len == 0) || (crypt_len == 0))
@@ -716,12 +685,12 @@ char iscrypt, enterprise_field;
 
     Log(LOG_LEVEL_DEBUG,
         "Challenge encryption = %c, challenge_len = %u, crypt_len = %u",
-        iscrypt, challenge_len, crypt_len);
+        *iscrypt, challenge_len, crypt_len);
 
     char *challenge;
     char decrypted_challenge[PRIVKEY_size];
 
-    if (iscrypt == 'y')                         /* challenge came encrypted */
+    if (*iscrypt == 'y')                         /* challenge came encrypted */
     {
         if (recvlen < CF_RSA_PROTO_OFFSET + crypt_len)
         {
@@ -775,12 +744,15 @@ char iscrypt, enterprise_field;
         challenge = &recvbuffer[CF_RSA_PROTO_OFFSET];
     }
 
-/* Client's ID is now established by key or trusted, reply with digest */
+    /* Client's ID is now established by key or trusted, reply with digest */
     HashString(challenge, challenge_len, digest, digestType);
+
+    return true;
 }
 
-/* proposition C2 - Receive client's public key modulus */
-RSA *newkey = RSA_new();
+/* Proposition C2 - Receive client's public key modulus */
+static bool PropC2(ServerConnectionState *conn,
+                   char *recvbuffer, RSA *newkey)
 {
 
     int len_n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
@@ -788,57 +760,57 @@ RSA *newkey = RSA_new();
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "error while receiving public key modulus");
-        RSA_free(newkey);
-        return false;
     }
-
-    if (len_n == 0)
+    else if (len_n == 0)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "connection was closed while receiving public key modulus");
-        RSA_free(newkey);
-        return false;
     }
-
-    if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
+    else if (NULL != (newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)))
+    {
+        return true;
+    }
+    else
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key modulus failed "
             "(%s)", CryptoLastErrorString());
-        RSA_free(newkey);
-        return false;
     }
+
+    return false;
 }
 
-/* proposition C3 - Receive client's public key exponent. */
+/* Proposition C3 - Receive client's public key exponent. */
+static bool PropC3(ServerConnectionState *conn,
+                   char *recvbuffer, RSA *newkey)
 {
     int len_e = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
     if (len_e == -1)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "error while receiving public key exponent");
-        RSA_free(newkey);
-        return false;
     }
-    if (len_e == 0)
+    else if (len_e == 0)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "connection was closed while receiving public key exponent");
-        RSA_free(newkey);
-        return false;
     }
-
-    if ((newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
+    else if (NULL != (newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)))
+    {
+        return true;
+    }
+    else
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key exponent failed "
             "(%s)", CryptoLastErrorString());
-        RSA_free(newkey);
-        return false;
     }
+
+    return false;
 }
 
 /* Compute and store hash of the client's public key. */
+static bool StorePeerPubKey(ServerConnectionState *conn, RSA *newkey)
 {
     Key *key = KeyNew(newkey, CF_DEFAULT_DIGEST);
     conn->conn_info->remote_key = key;
@@ -850,19 +822,12 @@ RSA *newkey = RSA_new();
              LAST_SEEN_ROLE_ACCEPT);
 
     /* Do we want to trust the received key? */
-    if (!CheckStoreKey(conn, newkey))   /* conceals proposition S1 */
-    {
-        return false;
-    }
+    return CheckStoreKey(conn, newkey);   /* conceals proposition S1 */
 }
 
-/* proposition S2 - reply with digest of challenge. */
-{
-    Log(LOG_LEVEL_DEBUG, "Sending challenge response");
-    SendTransaction(conn->conn_info, digest, digestLen, CF_DONE);
-}
-
-/* proposition S3 - send counter-challenge */
+/* Proposition S3 - send counter-challenge */
+static bool PropS3(ServerConnectionState *conn, RSA *newkey,
+                   char *digest, HashMethod digestType)
 {
     BIGNUM *counter_challenge_BN = BN_new();
     if (counter_challenge_BN == NULL)
@@ -890,48 +855,49 @@ RSA *newkey = RSA_new();
     int ret = RSA_public_encrypt(counter_challenge_len, counter_challenge,
                                  encrypted_counter_challenge, newkey,
                                  RSA_PKCS1_PADDING);
-    if (ret != encrypted_len)
+    if (ret == encrypted_len)
     {
-        if (ret == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "public encryption of counter-challenge failed "
-                "(%s)", CryptoLastErrorString());
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "public encryption of counter-challenge failed "
-                "(result length %d but should be %d)",
-                ret, encrypted_len);
-        }
-        return false;
+        Log(LOG_LEVEL_DEBUG, "Sending counter-challenge");
+        SendTransaction(conn->conn_info, encrypted_counter_challenge,
+                        encrypted_len, CF_DONE);
+        return true;
+    }
+    else if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "public encryption of counter-challenge failed "
+            "(%s)", CryptoLastErrorString());
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "public encryption of counter-challenge failed "
+            "(result length %d but should be %d)",
+            ret, encrypted_len);
     }
 
-    Log(LOG_LEVEL_DEBUG, "Sending counter-challenge");
-    SendTransaction(conn->conn_info, encrypted_counter_challenge,
-                    encrypted_len, CF_DONE);
+    return false;
 }
 
-/* proposition S4, S5 - If the client doesn't have our public key, send it. */
+/* Proposition S4, S5 - the client doesn't have our public key, so send it. */
+static void SendServerPubKey(ServerConnectionState *conn)
 {
-    if (iscrypt != 'y')
-    {
-        Log(LOG_LEVEL_DEBUG, "Sending server's public key");
+    Log(LOG_LEVEL_DEBUG, "Sending server's public key");
 
-        char bignum_buf[CF_BUFSIZE] = { 0 };
+    char bignum_buf[CF_BUFSIZE] = { 0 };
 
-        /* proposition S4  - conditional */
-        int len_n = BN_bn2mpi(PUBKEY->n, bignum_buf);
-        SendTransaction(conn->conn_info, bignum_buf, len_n, CF_DONE);
+    /* proposition S4  - conditional */
+    int len_n = BN_bn2mpi(PUBKEY->n, bignum_buf);
+    SendTransaction(conn->conn_info, bignum_buf, len_n, CF_DONE);
 
-        /* proposition S5  - conditional */
-        int len_e = BN_bn2mpi(PUBKEY->e, bignum_buf);
-        SendTransaction(conn->conn_info, bignum_buf, len_e, CF_DONE);
-    }
+    /* proposition S5  - conditional */
+    int len_e = BN_bn2mpi(PUBKEY->e, bignum_buf);
+    SendTransaction(conn->conn_info, bignum_buf, len_e, CF_DONE);
 }
 
-/* proposition C4 - Receive counter-challenge response. */
+/* Proposition C4 - Receive counter-challenge response. */
+static bool PropC4(ServerConnectionState *conn,
+                   char *digest, int digestLen, HashMethod digestType)
 {
     char recv_buf[CF_BUFSIZE] = { 0 };
 
@@ -955,24 +921,27 @@ RSA *newkey = RSA_new();
                 "only got %d out of %d bytes",
                 recv_len, digestLen);
         }
-        return false;
     }
-
-    if (HashesMatch(digest, recv_buf, digestType))
+    else if (HashesMatch(digest, recv_buf, digestType))
     {
         Log(LOG_LEVEL_VERBOSE,
             "Authentication of client %s/%s achieved",
             conn->hostname, conn->ipaddr);
+        return true;
     }
     else
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "counter-challenge response was incorrect");
-        return false;
     }
+
+    return false;
 }
 
-/* proposition C5 - Receive session key */
+/* Proposition C5 - Receive session key */
+static bool PropC5(ServerConnectionState *conn,
+                   char enterprise_field,
+                   int PRIVKEY_size)
 {
     Log(LOG_LEVEL_DEBUG, "Receiving session key from client...");
 
@@ -1040,12 +1009,78 @@ RSA *newkey = RSA_new();
 
         memcpy(conn->session_key, decrypted_session_key, session_key_size);
     }
+    return true;
 }
 
-return true;
+static int AuthenticationDialogue(ServerConnectionState *conn,
+                                  char *recvbuffer, int recvlen)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+
+    if ((PRIVKEY == NULL) || (PUBKEY == NULL))
+    {
+        Log(LOG_LEVEL_ERR,
+            "No public/private key pair exists, create one with cf-key");
+        return false;
+    }
+
+    int PRIVKEY_size = RSA_size(PRIVKEY);
+    int digestLen;
+    HashMethod digestType;
+
+    if (FIPS_MODE)
+    {
+        digestType = CF_DEFAULT_DIGEST;
+        digestLen = CF_DEFAULT_DIGEST_LEN;
+    }
+    else
+    {
+        digestType = HASH_METHOD_MD5;
+        digestLen = CF_MD5_LEN;
+    }
+
+    /* parameters received in SAUTH command */
+    char iscrypt, enterprise_field;
+    if (!PropC1(&iscrypt, &enterprise_field,
+                recvbuffer, recvlen,
+                digest, digestType, PRIVKEY_size))
+    {
+        return false;
+    }
+
+    RSA *newkey = RSA_new();
+    if (!PropC2(conn, recvbuffer, newkey) ||
+        !PropC3(conn, recvbuffer, newkey))
+    {
+        RSA_free(newkey);
+        return false;
+    }
+
+    /* Even on failure, conn takes over ownership of newkey: */
+    if (!StorePeerPubKey(conn, newkey))
+    {
+        return false;
+    }
+
+    /* Proposition S2 - reply with digest of challenge: */
+    Log(LOG_LEVEL_DEBUG, "Sending challenge response");
+    SendTransaction(conn->conn_info, digest, digestLen, CF_DONE);
+
+    if (!PropS3(conn, newkey, digest, digestType))
+    {
+        return false;
+    }
+
+    if (iscrypt != 'y')
+    {
+        SendServerPubKey(conn);
+    }
+
+    return (PropC4(conn, digest, digestLen, digestType) &&
+            PropC5(conn, enterprise_field, PRIVKEY_size));
 }
 
-
+/*****************************************************/
 
 int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 {

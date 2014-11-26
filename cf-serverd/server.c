@@ -170,15 +170,15 @@ static void PurgeOldConnections(Item **list, time_t now)
 
     if (ThreadLock(cft_count))
     {
-        Item *ip, *next;
-        for (ip = *list; ip != NULL; ip = next)
+        Item *next;
+        for (Item *ip = *list; ip != NULL; ip = next)
         {
             int then = 0;
             sscanf(ip->classes, "%d", &then);
 
             next = ip->next;
 
-            if (now > then + 7200)
+            if (now > then + 2 * SECONDS_PER_HOUR)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "IP address '%s' has been more than two hours in connection list, purging",
@@ -196,62 +196,61 @@ static void PurgeOldConnections(Item **list, time_t now)
 
 static void SpawnConnection(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info)
 {
-    ServerConnectionState *conn = NULL;
-    int ret;
-    pthread_t tid;
-    pthread_attr_t threadattrs;
-
-    conn = NewConn(ctx, info);                 /* freed in HandleConnection */
-    int sd_accepted = ConnectionInfoSocket(info);
+    ServerConnectionState *conn = NewConn(ctx, info); /* freed in HandleConnection */
     strlcpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN );
 
     Log(LOG_LEVEL_VERBOSE,
         "New connection (from %s, sd %d), spawning new thread...",
-        conn->ipaddr, sd_accepted);
+        conn->ipaddr, ConnectionInfoSocket(info));
 
-    ret = pthread_attr_init(&threadattrs);
-    if (ret != 0)
+    /* Prepare thread attributes: */
+    pthread_attr_t threadattrs;
+    if (0 == pthread_attr_init(&threadattrs))
+    {
+        int ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "SpawnConnection: Unable to set thread to detached state (%s).",
+                GetErrorStr());
+        }
+        else
+        {
+            if (0 != pthread_attr_setstacksize(&threadattrs, 1024 * 1024))
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "SpawnConnection: Unable to set thread stack size (%s).",
+                    GetErrorStr());
+                /* Continue with default thread stack size. */
+            }
+
+            pthread_t tid;
+            ret = pthread_create(&tid, &threadattrs, HandleConnection, conn);
+            if (ret != 0)
+            {
+                errno = ret; /* For GetErrorStr()'s sake. */
+                Log(LOG_LEVEL_ERR,
+                    "Unable to spawn worker thread. (pthread_create: %s)",
+                    GetErrorStr());
+            }
+        }
+        pthread_attr_destroy(&threadattrs);
+
+        if (ret == 0) /* Success. */
+        {
+            return;
+        }
+        /* ... else: tidy up. */
+    }
+    else
     {
         Log(LOG_LEVEL_ERR,
             "SpawnConnection: Unable to initialize thread attributes (%s)",
             GetErrorStr());
-        goto err;
-    }
-    ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_ERR,
-            "SpawnConnection: Unable to set thread to detached state (%s).",
-            GetErrorStr());
-        goto cleanup;
-    }
-    ret = pthread_attr_setstacksize(&threadattrs, 1024 * 1024);
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_WARNING,
-            "SpawnConnection: Unable to set thread stack size (%s).",
-            GetErrorStr());
-        /* Continue with default thread stack size. */
     }
 
-    ret = pthread_create(&tid, &threadattrs, HandleConnection, conn);
-    if (ret != 0)
-    {
-        errno = ret;
-        Log(LOG_LEVEL_ERR,
-            "Unable to spawn worker thread. (pthread_create: %s)",
-            GetErrorStr());
-        goto cleanup;
-    }
-
-  cleanup:
-    pthread_attr_destroy(&threadattrs);
-  err:
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
-        HandleConnection(conn);
-    }
+    Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
+    HandleConnection(conn);
 }
 
 /*********************************************************************/
@@ -277,85 +276,23 @@ static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, con
 /* TRIES: counts the number of consecutive connections dropped. */
 static int TRIES = 0;
 
-static void *HandleConnection(void *c)
+static void HandleDialogue(ServerConnectionState *conn)
 {
-    ServerConnectionState *conn = c;
-    int ret;
-
-    /* Set logging prefix to be the IP address for all of thread's lifetime. */
-
-    /* This stack-allocated struct should be valid for all the lifetime of the
-     * thread. Just make sure that after calling DeleteConn() (which frees
-     * ipaddr), you exit the thread right away. */
-    LoggingPrivContext log_ctx = {
-        .log_hook = LogHook,
-        .param = conn->ipaddr
-    };
-    LoggingPrivSetContext(&log_ctx);
-
-    Log(LOG_LEVEL_INFO, "Accepting connection");
-
-    /* We test if number of active threads is greater than max, if so we deny
-       connection, if it happened too many times within a short timeframe then we
-       kill ourself.TODO this test should be done *before* spawning the thread. */
-    ret = ThreadLock(cft_server_children);
-    if (!ret)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
-        goto ret2;
-    }
-    else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
-    {
-        if (TRIES > MAXTRIES)
-        {
-            /* This happens when no thread was freed while we had to drop 5
-             * (or maxconnections/3) consecutive connections, because none of
-             * the existing threads finished. */
-            Log(LOG_LEVEL_CRIT,
-                "Server seems to be paralyzed. DOS attack? "
-                "Committing apoptosis...");
-            ThreadUnlock(cft_server_children);
-            FatalError(conn->ctx, "Terminating");
-        }
-
-        TRIES++;
-        Log(LOG_LEVEL_ERR,
-            "Too many threads (%d > %d), dropping connection! "
-            "Increase server maxconnections?",
-            ACTIVE_THREADS, CFD_MAXPROCESSES);
-
-        ThreadUnlock(cft_server_children);
-        goto ret2;
-    }
-
-    ACTIVE_THREADS++;
-    TRIES = 0;
-    ThreadUnlock(cft_server_children);
-
-    DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
-
-    /* 20 times the connect() timeout should be enough to avoid MD5
-     * computation timeouts on big files on old slow Solaris 8 machines. */
-    SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info),
-                      CONNTIMEOUT * 20 * 1000);
-
     if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         /* Decide the protocol used. */
-        ret = ServerTLSPeek(conn->conn_info);
-        if (ret == -1)
+        if (ServerTLSPeek(conn->conn_info) == -1)
         {
-            goto ret1;
+            return;
         }
     }
 
     ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
     if (protocol_version == CF_PROTOCOL_LATEST)
     {
-        ret = ServerTLSSessionEstablish(conn);
-        if (ret == -1)
+        if (ServerTLSSessionEstablish(conn) == -1)
         {
-            goto ret1;
+            return;
         }
     }
     else if (protocol_version < CF_PROTOCOL_LATEST &&
@@ -367,14 +304,14 @@ static void *HandleConnection(void *c)
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");
-            goto ret1;
+            return;
         }
     }
     else
     {
         UnexpectedError("HandleConnection: ProtocolVersion %d!",
                         ConnectionInfoProtocolVersion(conn->conn_info));
-        goto ret1;
+        return;
     }
 
 
@@ -385,10 +322,10 @@ static void *HandleConnection(void *c)
          * IP address, to check hostname access_rules. */
         if (NEED_REVERSE_LOOKUP)
         {
-            ret = getnameinfo((const struct sockaddr *) &conn->conn_info->ss,
-                              conn->conn_info->ss_len,
-                              conn->revdns, sizeof(conn->revdns),
-                              NULL, 0, NI_NAMEREQD);
+            int ret = getnameinfo((const struct sockaddr *) &conn->conn_info->ss,
+                                  conn->conn_info->ss_len,
+                                  conn->revdns, sizeof(conn->revdns),
+                                  NULL, 0, NI_NAMEREQD);
             if (ret != 0)
             {
                 Log(LOG_LEVEL_INFO,
@@ -419,15 +356,75 @@ static void *HandleConnection(void *c)
     }
     /* ============================================================ */
 
+    Log(LOG_LEVEL_INFO, "Handled connection: closing it and terminating thread");
+}
 
-    Log(LOG_LEVEL_INFO, "Closed connection, terminating thread");
+static void *HandleConnection(void *c)
+{
+    ServerConnectionState *conn = c;
 
-  ret1:
-    ThreadLock(cft_server_children);
-    ACTIVE_THREADS--;
-    ThreadUnlock(cft_server_children);
+    /* Set logging prefix to be the IP address for all of thread's lifetime. */
 
-  ret2:
+    /* This stack-allocated struct should be valid for all the lifetime of the
+     * thread. Just make sure that after calling DeleteConn() (which frees
+     * ipaddr), you exit the thread right away. */
+    LoggingPrivContext log_ctx = {
+        .log_hook = LogHook,
+        .param = conn->ipaddr
+    };
+    LoggingPrivSetContext(&log_ctx);
+
+    Log(LOG_LEVEL_INFO, "Accepting connection");
+
+    /* We test if number of active threads is greater than max, if so we deny
+       connection, if it happened too many times within a short timeframe then we
+       kill ourself. TODO this test should be done *before* spawning the thread. */
+    if (!ThreadLock(cft_server_children))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
+    }
+    else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
+    {
+        if (TRIES > MAXTRIES)
+        {
+            /* This happens when no thread was freed while we had to drop 5
+             * (or maxconnections/3) consecutive connections, because none of
+             * the existing threads finished. */
+            Log(LOG_LEVEL_CRIT,
+                "Server seems to be paralyzed. DOS attack? "
+                "Committing apoptosis...");
+            ThreadUnlock(cft_server_children);
+            FatalError(conn->ctx, "Terminating");
+        }
+
+        TRIES++;
+        Log(LOG_LEVEL_ERR,
+            "Too many threads (%d > %d), dropping connection! "
+            "Increase server maxconnections?",
+            ACTIVE_THREADS, CFD_MAXPROCESSES);
+
+        ThreadUnlock(cft_server_children);
+    }
+    else
+    {
+        ACTIVE_THREADS++;
+        TRIES = 0;
+        ThreadUnlock(cft_server_children);
+
+        DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
+
+        /* 20 times the connect() timeout should be enough to avoid MD5
+         * computation timeouts on big files on old slow Solaris 8 machines. */
+        SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info),
+                          CONNTIMEOUT * 20 * 1000);
+
+        HandleDialogue(conn);
+
+        ThreadLock(cft_server_children);
+        ACTIVE_THREADS--;
+        ThreadUnlock(cft_server_children);
+    }
+
     if (conn->conn_info->is_call_collect)
     {
         CollectCallMarkProcessed();
@@ -443,31 +440,33 @@ static void *HandleConnection(void *c)
 
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 {
-    ServerConnectionState *conn = NULL;
+#if 1
+    /* TODO: why do we do this ?  We fail if getsockname() fails, but
+     * don't use the information it returned.  Was the intent to use
+     * it to fill in conn->ipaddr ? */
     struct sockaddr_storage addr;
     socklen_t size = sizeof(addr);
 
     if (getsockname(ConnectionInfoSocket(info), (struct sockaddr *)&addr, &size) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not obtain socket address. (getsockname: '%s')", GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Could not obtain socket address. (getsockname: '%s')",
+            GetErrorStr());
         return NULL;
     }
+#endif
 
-    conn = xcalloc(1, sizeof(*conn));
+    ServerConnectionState *conn = xcalloc(1, sizeof(*conn));
     conn->ctx = ctx;
     conn->conn_info = info;
-    conn->user_data_set = false;
-    conn->rsa_auth = false;
-    conn->hostname[0] = '\0';
-    conn->ipaddr[0] = '\0';
-    conn->username[0] = '\0';
-    conn->revdns[0] = '\0';
-    conn->session_key = NULL;
     conn->encryption_type = 'c';
     /* Only public files (chmod o+r) accessible to non-root */
-    conn->maproot = false;
     conn->uid = CF_UNKNOWN_OWNER;                    /* Careful, 0 is root! */
+    /* conn->maproot is false: only public files (chmod o+r) are accessible */
 
+    Log(LOG_LEVEL_DEBUG,
+        "New connection (socket %d).",
+        ConnectionInfoSocket(info));
     return conn;
 }
 
@@ -477,22 +476,19 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 static void DeleteConn(ServerConnectionState *conn)
 {
     int sd = ConnectionInfoSocket(conn->conn_info);
-    if (sd >= 0)
+    if (sd != SOCKET_INVALID)
     {
         cf_closesocket(sd);
     }
     ConnectionInfoDestroy(&conn->conn_info);
-    free(conn->session_key);
 
-    if (conn->ipaddr != NULL)
+    if (conn->ipaddr[0] != '\0' &&
+        ThreadLock(cft_count))
     {
-        if (ThreadLock(cft_count))
-        {
-            DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
-            ThreadUnlock(cft_count);
-        }
+        DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
+        ThreadUnlock(cft_count);
     }
 
-    *conn = (ServerConnectionState) {0};
+    free(conn->session_key);
     free(conn);
 }

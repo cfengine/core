@@ -18,7 +18,7 @@ my %options = (
                workdir => "/tmp",
               );
 
-GetOptions(\%options,
+die ("Unknown options") unless GetOptions(\%options,
            "help|h!",
            "check|c!",
            "cfagent=s",

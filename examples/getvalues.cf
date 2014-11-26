@@ -48,8 +48,8 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: Found values: value_2
 #@ R: Found values: value_1
+#@ R: Found values: value_2
 #@ R: Found container values: 1
 #@ R: Found container values: 2
 #@ R: Found container values: 3

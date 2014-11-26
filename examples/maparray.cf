@@ -47,9 +47,9 @@ bundle agent run
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: mapped array: key='1', static lookup = 'lookup 2', value='2'
-#@ R: mapped array: key='one', static lookup = 'lookup two', value='two'
 #@ R: mapped array: key='3999', static lookup = 'lookup big', value='big'
 #@ R: mapped array: key='3999', static lookup = 'lookup small', value='small'
+#@ R: mapped array: key='one', static lookup = 'lookup two', value='two'
+#@ R: mapped array: key='1', static lookup = 'lookup 2', value='2'
 #@ ```
 #+end_src

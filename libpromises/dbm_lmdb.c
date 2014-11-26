@@ -66,6 +66,8 @@ struct DBCursorPriv_
     bool pending_delete;
 };
 
+static int DB_MAX_READERS = -1;
+
 /******************************************************************************/
 
 static int GetReadTransaction(DBPriv *db, MDB_txn **txn)
@@ -168,8 +170,10 @@ const char *DBPrivGetFileExtension(void)
 #define LMDB_MAXSIZE    104857600
 #endif
 
-/* Lastseen default number of maxreaders = 4x the default lmdb maxreaders */
-#define DEFAULT_LASTSEEN_MAXREADERS (126*4)
+void DBPrivSetMaximumConcurrentTransactions(int max_txn)
+{
+    DB_MAX_READERS = max_txn;
+}
 
 DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
 {
@@ -200,14 +204,13 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
               dbpath, mdb_strerror(rc));
         goto err;
     }
-    if (id == dbid_lastseen)
+    if (DB_MAX_READERS > 0)
     {
-        /* lastseen needs by default 4x more reader locks than other DBs*/
-        rc = mdb_env_set_maxreaders(db->env, DEFAULT_LASTSEEN_MAXREADERS);
+        rc = mdb_env_set_maxreaders(db->env, DB_MAX_READERS);
         if (rc)
         {
             Log(LOG_LEVEL_ERR, "Could not set maxreaders for database %s: %s",
-                  dbpath, mdb_strerror(rc));
+                dbpath, mdb_strerror(rc));
             goto err;
         }
     }
@@ -224,6 +227,26 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",
               dbpath, mdb_strerror(rc));
         goto err;
+    }
+    if (DB_MAX_READERS > 0)
+    {
+        int max_readers;
+        rc = mdb_env_get_maxreaders(db->env, &max_readers);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not get maxreaders for database %s: %s",
+                dbpath, mdb_strerror(rc));
+            goto err;
+        }
+        if (max_readers < DB_MAX_READERS)
+        {
+            // LMDB will only reinitialize maxreaders if no database handles are
+            // open, including in other processes, which is how we might end up
+            // here.
+            Log(LOG_LEVEL_VERBOSE, "Failed to set LMDB max reader limit on database '%s', "
+                "consider restarting CFEngine",
+                dbpath);
+        }
     }
     rc = mdb_txn_begin(db->env, NULL, MDB_RDONLY, &txn);
     if (rc)
@@ -555,45 +578,5 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
 char *DBPrivDiagnose(const char *dbpath)
 {
     return StringFormat("Unable to diagnose LMDB file (not implemented) for '%s'", dbpath);
-}
-
-int UpdateLastSeenMaxReaders(int maxreaders)
-{
-    int rc = 0;
-    /* We assume that every cf_lastseen DB has already a minimum of 504 maxreaders */
-    if (maxreaders > DEFAULT_LASTSEEN_MAXREADERS)
-    {
-        char workbuf[CF_BUFSIZE];
-        MDB_env *env = NULL;
-        rc = mdb_env_create(&env);
-        if (rc)
-        {
-            Log(LOG_LEVEL_ERR, "Could not create lastseen database env : %s",
-                mdb_strerror(rc));
-            goto err;
-        }
-
-        rc = mdb_env_set_maxreaders(env, maxreaders);
-        if (rc)
-        {
-            Log(LOG_LEVEL_ERR, "Could not change lastseen maxreaders to %d : %s",
-                maxreaders, mdb_strerror(rc));
-            goto err;
-        }
-
-        snprintf(workbuf, CF_BUFSIZE, "%s%ccf_lastseen.lmdb", GetWorkDir(), FILE_SEPARATOR);
-        rc = mdb_env_open(env, workbuf, MDB_NOSUBDIR, 0644);
-        if (rc)
-        {
-            Log(LOG_LEVEL_ERR, "Could not open lastseen database env : %s",
-                mdb_strerror(rc));
-        }
-err:
-        if (env)
-        {
-            mdb_env_close(env);
-        }
-    }
-    return rc;
 }
 #endif

@@ -193,6 +193,19 @@ static void RegisterShutdownHandler(void)
     RegisterAtExitFunction(&CloseAllDBExit);
 }
 
+/**
+ * Keeps track of the maximum number of concurrent transactions, which is
+ * expected to be set by agents as they start up. If it is not set it will use
+ * the existing value. If it is set, but the database cannot honor it, CFEngine
+ * will warn.
+ * @param max_txn Maximum number of concurrent transactions for a single
+ *                database.
+ */
+void DBSetMaximumConcurrentTransactions(int max_txn)
+{
+    DBPrivSetMaximumConcurrentTransactions(max_txn);
+}
+
 bool OpenDB(DBHandle **dbp, dbid id)
 {
     DBHandle *handle = DBHandleGet(id);

@@ -45,7 +45,8 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../libpromises/dbm_api.c \
+libdb_la_SOURCES = db_stubs.c \
+	../../libpromises/dbm_api.c \
 	../../libpromises/mutex.c \
 	../../libpromises/dbm_quick.c \
 	../../libpromises/dbm_tokyocab.c \

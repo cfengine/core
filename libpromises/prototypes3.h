@@ -127,4 +127,8 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp);
 
 ENTERPRISE_FUNC_1ARG_DECLARE(bool, LicenseInstall, char *, path_source);
 
+/* cf-serverd */
+
+ENTERPRISE_FUNC_0ARG_DECLARE(size_t, EnterpriseGetMaxCfHubProcesses);
+
 #endif

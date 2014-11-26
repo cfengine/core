@@ -60,6 +60,8 @@ typedef struct DBCursor_ DBCursor;
 typedef DBHandle CF_DB;
 typedef DBCursor CF_DBC;
 
+void DBSetMaximumConcurrentTransactions(int max_txn);
+
 bool OpenDB(CF_DB **dbp, dbid db);
 void CloseDB(CF_DB *dbp);
 
@@ -88,6 +90,5 @@ bool DeleteDBCursor(CF_DBC *dbcp);
 
 char *DBIdToPath(const char *workdir, dbid id);
 
-int UpdateLastSeenMaxReaders(int maxreaders);
 StringMap *LoadDatabaseToStringMap(dbid database_id);
 #endif  /* NOT CFENGINE_DBM_API_H */

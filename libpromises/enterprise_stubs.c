@@ -241,3 +241,8 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, CheckAndSetHAState, ARG_UNUSED const
 ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, ReloadHAConfig)
 {
 }
+
+ENTERPRISE_FUNC_0ARG_DEFINE_STUB(size_t, EnterpriseGetMaxCfHubProcesses)
+{
+    return 0;
+}

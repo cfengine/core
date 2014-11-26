@@ -117,7 +117,7 @@ int IdentifyAgent(ConnectionInfo *conn_info)
             && (!IsIPV6Address(dnsname)) && (!strchr(dnsname, '.')))
         {
             strcat(dnsname, ".");
-            strncat(dnsname, VDOMAIN, CF_MAXVARSIZE / 2);
+            strlcat(dnsname, VDOMAIN, sizeof(dnsname));
         }
 
         /* Seems to be a bug in some resolvers that adds garbage, when it just

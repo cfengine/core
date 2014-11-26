@@ -568,16 +568,16 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
 /*********************************************************************/
 
+/* Returning NULL (an empty list) does not mean empty directory but ERROR,
+ * since every directory has to contain at least . and .. */
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 {
     char sendbuffer[CF_BUFSIZE];
     char recvbuffer[CF_BUFSIZE];
     char in[CF_BUFSIZE];
     char out[CF_BUFSIZE];
-    int n, cipherlen = 0, tosend;
+    int cipherlen = 0, tosend;
     char *sp;
-    Item *files = NULL;
-    Item *ret = NULL;
 
     if (strlen(dirname) > CF_BUFSIZE - 20)
     {
@@ -614,58 +614,57 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         return NULL;
     }
 
+    Item *start = NULL, *end = NULL;                  /* NULL == empty list */
     while (true)
     {
-        if ((n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
+        int nbytes = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
+
+        /* If recv error or socket closed before receiving CFD_TERMINATOR. */
+        if (nbytes == -1 || nbytes == 0)
         {
             /* TODO mark connection in the cache as closed. */
-            return NULL;
-        }
-
-        if (n == 0)
-        {
-            break;
+            goto err;
         }
 
         if (encrypt)
         {
-            memcpy(in, recvbuffer, n);
-            DecryptString(conn->encryption_type, in, recvbuffer, conn->session_key, n);
+            memcpy(in, recvbuffer, nbytes);
+            DecryptString(conn->encryption_type, in, recvbuffer,
+                          conn->session_key, nbytes);
         }
 
         if (FailedProtoReply(recvbuffer))
         {
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, dirname);
-            return NULL;
+            goto err;
         }
 
         if (BadProtoReply(recvbuffer))
         {
             Log(LOG_LEVEL_INFO, "%s", recvbuffer + strlen("BAD: "));
-            return NULL;
+            goto err;
         }
 
         for (sp = recvbuffer; *sp != '\0'; sp++)
         {
-            Item *ip;
 
             if (strncmp(sp, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)       /* End transmission */
             {
-                return ret;
+                return start;
             }
 
-            ip = xcalloc(1, sizeof(Item));
+            Item *ip = xcalloc(1, sizeof(Item));
             ip->name = (char *) AllocateDirentForFilename(sp);
 
-            if (files == NULL)  /* First element */
+            if (start == NULL)  /* First element */
             {
-                ret = ip;
-                files = ip;
+                start = ip;
+                end = ip;
             }
             else
             {
-                files->next = ip;
-                files = ip;
+                end->next = ip;
+                end = ip;
             }
 
             while (*sp != '\0')
@@ -675,7 +674,17 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         }
     }
 
-    return ret;
+    return start;
+
+  err:                                                         /* free list */
+    for (Item *ip = start; ip != NULL; ip = start)
+    {
+        start = ip->next;
+        free(ip->name);
+        free(ip);
+    }
+
+    return NULL;
 }
 
 /*********************************************************************/
@@ -1007,12 +1016,13 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             n_read = -1;
         }
 
-        if (n_read == -1)
+        if (n_read <= 0)
         {
             /* This may happen on race conditions,
              * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
-
-            Log(LOG_LEVEL_ERR, "Error in client-server stream (has %s:%s shrunk?)", conn->this_server, source);
+            Log(LOG_LEVEL_ERR,
+                "Error in client-server stream, has %s:%s shrunk? (code %d)",
+                conn->this_server, source, n_read);
             close(dd);
             free(buf);
             return false;
@@ -1067,7 +1077,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             return false;
         }
 
-        n_read_total += towrite;        /* n_read; */
+        n_read_total += n_read;
     }
 
     /* If the file ends with a `hole', something needs to be written at

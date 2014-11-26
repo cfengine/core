@@ -33,6 +33,7 @@
 #include <misc_lib.h>
 #include <file_lib.h>
 #include <known_dirs.h>
+#include <bootstrap.h>
 
 #ifdef LMDB
 
@@ -214,13 +215,14 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
             goto err;
         }
     }
-    if (id != dbid_locks)
+    if (id == dbid_locks
+        || (GetAmPolicyHub(GetWorkDir()) && id == dbid_lastseen))
     {
-        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);
+        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR|MDB_NOSYNC, 0644);
     }
     else
     {
-        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR|MDB_NOSYNC, 0644);
+        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);
     }
     if (rc)
     {

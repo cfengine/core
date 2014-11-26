@@ -344,17 +344,16 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 CFD_MAXPROCESSES = (int) IntFromString(value);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
                 Log(LOG_LEVEL_VERBOSE, "Setting maxconnections to %d", CFD_MAXPROCESSES);
-#ifdef LMDB
-                static int LSD_MAXREADERS = 0;
-                if (LSD_MAXREADERS < CFD_MAXPROCESSES)
-                {
-                    int rc = UpdateLastSeenMaxReaders(CFD_MAXPROCESSES);
-                    if (rc == 0)
-                    {
-                        LSD_MAXREADERS = CFD_MAXPROCESSES;
-                    }
-                }
-#endif
+                /* The handling of max_readers in LMDB is not ideal, but
+                 * here is how it is right now: We know that both cf-serverd and
+                 * cf-hub will access the lastseen database. Worst case every
+                 * single thread and process will do it at the same time, and
+                 * this has in fact been observed. So we add the maximum of
+                 * those two values together to provide a safe ceiling. In
+                 * addition, cf-agent can access the database occasionally as
+                 * well, so add a few extra for that too. */
+                DBSetMaximumConcurrentTransactions(CFD_MAXPROCESSES
+                                                   + EnterpriseGetMaxCfHubProcesses() + 10);
                 continue;
             }
 

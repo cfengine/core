@@ -52,7 +52,7 @@ Cfengine Propulsion Lab
         - fix maparray reading whole input array when using subarray
           (Redmine #6033)
         - fix directories being randomly changed to files (Redmine #6027)
-        - updat‌e defaults promise type to work with classes (Redmine #5748)
+        - update defaults promise type to work with classes (Redmine #5748)
         - systemd integration in services promises (Redmine #5415)
         - fix touch attribute ignoring action = warn_only (Redmine #3172)
         - fix 4KB string limit in functions readfile, string_downcase,

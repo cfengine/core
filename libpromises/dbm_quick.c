@@ -111,6 +111,10 @@ const char *DBPrivGetFileExtension(void)
     return "qdbm";
 }
 
+void DBPrivSetMaximumConcurrentTransactions(ARG_UNUSED int max_txn)
+{
+}
+
 DBPriv *DBPrivOpenDB(const char *filename, ARG_UNUSED dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));

@@ -1,3 +1,43 @@
+3.6.3
+        New features:
+        - support for HP-UX 11.23 and later
+        - experimental support for Red Hat Enterprise Linux 7
+
+        Bug fixes:
+        - fix getindices on multi-dimensional arrays (Redmine #6779)
+        - fix mustache template method to run in dryrun mode (Redmine #6739)
+        - set mailto and mailfrom settings for execd in def.cf (Redmine #6702)
+        - fix conflation of multi-index entries in arrays (Redmine #6674)
+        - fix promise locking when transfering using update.cf (Redmine #6623)
+        - update JSON parser to return an error on truncation (Redmine #6608)
+        - fix sys.hardware_addresses not expanded (Redmine #6603)
+        - fix opening database txn /var/cfengine/cf_lastseen.lmdb: 
+          MDB_READERS_FULL when running cf-keys --show-hosts (Redmine #6602)
+        - fix segfault (Null pointer dereference) when select_end in delete_lines never 
+          matches (Redmine #6589)
+        - fix max_file_size => "0" not disabling or allowing any size (Redmine #6588)
+        - fix ifvarclass, with iteration over list, failing when deleting files with time 
+          condition (Redmine #6577)
+        - fix classes defined with "or" constraint are never set if any value doesn't 
+          evaluate to a scalar (Redmine #6569)
+        - update "mailfrom" default in default policy (Redmine #6567)
+        - fix logrotate ambiguity of filename (Redmine #6563)
+        - fix parsing JSON files (Redmine #6549)
+        - reduce write count activity to /var partition (Redmine #6523)
+        - fix files delete attribute incorrectly triggering promise_kept (Redmine #6509)
+        - update services bundle output related to chkconfig when run in inform
+          mode. (Redmine #6492)
+        - fix Solaris serverd tests (Redmine #6406)
+        - fix broken bechaviour of merging arrays with readstringarray (Redmine #6369)
+        - fix ifelapsed bug with bundle nesting (Redmine #6334)
+        - fix handling cf_null in bundlesequence (Redmine #6119)
+        - fix maparray reading whole input array when using subarray (Redmine #6033)
+        - fix directories being randomly changed to files (Redmine #6027)
+        - updat‌e defaults promise type to work with classes (Redmine #5748)
+        - systemd integration in services promises (Redmine #5415)
+        - fix touch attribute ignoring action = warn_only (Redmine #3172)
+        - fix readfile and textfrom functions to not rely on 4k limit (Redmine #2912)
+
 3.6.2
         Bug fixes:
         - don't regenerate software_packages.csv every time (Redmine #6441)

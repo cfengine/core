@@ -1873,7 +1873,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
 static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, const Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!DONTDO)
+    if (!DONTDO && attr.transaction.action == cfa_fix)
     {
         if (utime(path, NULL) != -1)
         {
@@ -1889,7 +1889,9 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, co
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Need to touch (update timestamps) path '%s'", path);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+             "Need to touch (update time stamps) for '%s', but only a warning was promised!", path);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
     }
 
     return result;
@@ -2447,7 +2449,6 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
     char vbuff[CF_BUFSIZE];
     struct stat ssb, dsb;
     struct timespec start;
-    char eventname[CF_BUFSIZE];
 
     if (conn != NULL && (!conn->authenticated))
     {
@@ -2516,10 +2517,16 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     DeleteCompressedArray(inode_cache);
 
-    snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)",
-             conn ? conn->this_server : "localhost", BufferData(source), destination);
+    const char *mid = PromiseGetConstraintAsRval(pp, "measurement_class", RVAL_TYPE_SCALAR);
+    if (mid)
+    {
+        char eventname[CF_BUFSIZE];
+        snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)",
+                 conn ? conn->this_server : "localhost",
+                 BufferData(source), destination);
 
-    EndMeasure(eventname, start);
+        EndMeasure(eventname, start);
+    }
 
     BufferDestroy(source);
     return result;

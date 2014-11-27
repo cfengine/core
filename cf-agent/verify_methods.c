@@ -130,6 +130,23 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
             BannerSubBundle(bp, args);
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
+
+            /* Clear all array-variables that are already set in the sub-bundle.
+               Otherwise, array-data accumulates between multiple bundle evaluations.
+               Note: for bundles invoked multiple times via bundlesequence, array
+               data *does* accumulate. */
+            VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, bp->ns, bp->name, NULL);
+            Variable *var;
+            while ((var = VariableTableIteratorNext(iter)))
+            {
+                if (!var->ref->num_indices)
+                {
+                    continue;
+                }
+                EvalContextVariableRemove(ctx, var->ref);
+            }
+            VariableTableIteratorDestroy(iter);
+
             BundleResolve(ctx, bp);
 
             result = ScheduleAgentOperations(ctx, bp);

@@ -1,0 +1,58 @@
+body common control
+{
+bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+  methods:
+    "example" usebundle => class_default,
+    useresult => "value";
+    "example" usebundle => no_class_default,
+    useresult => "value";
+
+  classes:
+    "fail1" expression => strcmp("$(value[1])", "one");
+    "fail2" expression => strcmp("$(value[2])", "two");
+    "fail" or => { "fail1", "fail2" };
+    "ok" and => { strcmp("$(value[1])", "default"), strcmp("$(value[2])", "default") };
+
+  reports:
+    fail1.!ok::
+      "value 1: $(value[1])";
+    fail2.!ok::
+      "value 2: $(value[2])";
+
+    !fail.ok::
+      "$(this.promise_filename) Pass";
+    fail.!ok::
+      "$(this.promise_filename) FAIL";
+}
+
+bundle agent class_default
+{
+ vars:
+  "a" string => "one";
+
+ defaults:
+  "a" string => "default", if_match_regex => "one";
+
+ classes:
+ "test" expression => "any";
+
+ reports:
+  "${a}" bundle_return_value_index => "1";
+}
+
+bundle agent no_class_default
+{
+ vars:
+  "b" string => "two";
+
+ defaults:
+  "b" string => "default", if_match_regex => "two";
+
+ reports:
+  "${b}" bundle_return_value_index => "2";
+}
+

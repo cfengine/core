@@ -166,6 +166,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
+static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -1154,6 +1155,10 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             args = NULL;
             break;
         }
+        if (!strcmp(name, CF_NULL_VALUE))
+        {
+            continue;
+        }
 
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, name, "agent");
         if (!bp)
@@ -1268,6 +1273,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             if (type == TYPE_SEQUENCE_CONTEXTS)
             {
                 BundleResolve(ctx, bp);
+                BundleResolvePromiseType(ctx, bp, "defaults", (PromiseActuator*)DefaultVarPromise);
             }
         }
     }

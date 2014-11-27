@@ -1,3 +1,26 @@
+dnl
+dnl  Copyright (C) CFEngine AS
+dnl
+dnl  This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+dnl
+dnl  This program is free software; you can redistribute it and/or modify it
+dnl  under the terms of the GNU General Public License as published by the
+dnl  Free Software Foundation; version 3.
+dnl
+dnl  This program is distributed in the hope that it will be useful,
+dnl  but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+dnl  GNU General Public License for more details.
+dnl
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+dnl
+dnl To the extent this program is licensed as part of the Enterprise
+dnl versions of CFEngine, the applicable Commercial Open Source License
+dnl (COSL) may apply to this file if you as a licensee so wish it. See
+dnl included file COSL.txt.
+dnl
 dnl ##########################################################################
 dnl #
 dnl # Build CFEngine

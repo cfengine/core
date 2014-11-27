@@ -40,8 +40,9 @@
         - updat‌e defaults promise type to work with classes (Redmine #5748)
         - systemd integration in services promises (Redmine #5415)
         - fix touch attribute ignoring action = warn_only (Redmine #3172)
-        - fix readfile and textfrom functions to not rely on 4k limit
-          (Redmine #2912)
+        - fix 4KB string limit in functions readfile, string_downcase,
+          string_head, string_reverse, string_length, string_tail,
+          string_upcase (Redmine #2912)
 
 3.6.2
         Bug fixes:

@@ -8,12 +8,21 @@ bundle common G
 {
   vars:
     windows::
-      "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
+      "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell"),
+        classes => always("cwd_done"),
+        # Optimization to run cmd as few times as possible.
+        ifvarclass => "!cwd_done.agent";
+
       # Use for redirection, not as a real file.
       "dev_null" string => "nul";
       "exeext" slist => { ".exe", ".bat" };
+
     !windows::
-      "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
+      "cwd" string => execresult("pwd", "useshell"),
+        classes => always("cwd_done"),
+        # Optimization to run pwd as few times as possible.
+        ifvarclass => "!cwd_done.agent";
+
       # Use for redirection, not as a real file.
       "dev_null" string => "/dev/null";
       "exeext" string => "";

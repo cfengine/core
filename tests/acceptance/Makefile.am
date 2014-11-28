@@ -77,7 +77,7 @@ dist-hook:
 	cd $(srcdir); tar -c -f - [0-9]* | tar -x -C $(abspath $(distdir)) -f -
 	chmod -R go-w $(distdir)
 
-CLEANFILES = *.gcno *.gcda
+CLEANFILES = *.gcno *.gcda dcs-cmds-cache.module$(EXEEXT)
 
 pluck:
 	echo '### This is an auto-generated file, see Makefile.am and `make pluck` ###' > plucked.cf.sub

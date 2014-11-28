@@ -16,6 +16,7 @@ bundle common G
       # Use for redirection, not as a real file.
       "dev_null" string => "nul";
       "exeext" slist => { ".exe", ".bat" };
+      "scriptext" string => ".bat";
 
     !windows::
       "cwd" string => execresult("pwd", "useshell"),
@@ -26,6 +27,7 @@ bundle common G
       # Use for redirection, not as a real file.
       "dev_null" string => "/dev/null";
       "exeext" string => "";
+      "scriptext" string => "";
 
     any::
       # General commands.
@@ -61,7 +63,12 @@ bundle common G
                         "wc",
                       };
       # Special cases.
+      "cmds_special" slist => { "make", "diff_maybecolor" };
       "make_cmds" slist => { "gmake", "make" };
+
+      "cmds_cache" string => "dcs-cmds-cache.module$(scriptext)";
+      "cmds_cache_path" string => "$(this.promise_dirname)/$(cmds_cache)";
+      "cmds_cache_module" string => "$(sys.workdir)/modules/$(cmds_cache)";
 
     any::
       "paths[tests]" string                  => "$(this.promise_dirname)";
@@ -86,6 +93,11 @@ bundle common G
       "paths_indices" slist => getindices("paths");
 
   classes:
+      "cmds_not_cached"
+        not => fileexists("$(cmds_cache_module)"),
+        scope => "namespace";
+
+    cmds_not_cached::
       # General commands.
       "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)");
       "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)"),
@@ -97,7 +109,10 @@ bundle common G
       scope => "namespace";
 
       "want_color" expression => strcmp(getenv("CFENGINE_COLOR", 4k), "1");
-      "have_colordiff" expression => fileexists($(colordiff));
+      "has_diff_maybecolor" expression => "has_diff";
+
+    !cmds_not_cached::
+      "cmds_loaded" expression => usemodule("$(cmds_cache)", "");
 
   vars:
       # General commands.
@@ -111,9 +126,9 @@ bundle common G
       "make" string => "$(paths[$(paths_indices)])$(const.dirsep)gmake$(exeext)",
       ifvarclass => canonify("$(paths_indices)_gmake$(exeext)");
 
-    want_color.have_colordiff::
+    want_color.has_colordiff::
       "diff_maybecolor" string => $(colordiff);
-    !want_color|!have_colordiff::
+    !want_color|!has_colordiff::
       "diff_maybecolor" string => $(diff);
 
   classes:
@@ -189,6 +204,14 @@ bundle agent default(filename)
 
       "bundles" slist => bundlesmatching("default:(init|test|check)");
 
+  files:
+    cmds_not_cached::
+      "$(G.cmds_cache_path)"
+        create => "true",
+        perms => m("0700"),
+        edit_line => cmds_cache,
+        edit_defaults => empty;
+
   methods:
       "any" usebundle => test_precheck;
 
@@ -258,6 +281,39 @@ bundle agent test_precheck
       "$(this.promise_filename) SFAIL/$(test_soft_fail_redmine)";
     test_soft_fail_match.!test_soft_fail_redmine_set::
       "$(this.promise_filename) FAIL/no_redmine_number";
+}
+
+bundle edit_line cmds_cache
+{
+  vars:
+    windows::
+      "prefix" string => "echo ";
+    !windows::
+      "prefix" string => "";
+
+  insert_lines:
+    windows::
+      "@echo off";
+    !windows::
+      "#!/bin/sh";
+      # Use here-document to avoid as many commands as possible.
+      "cat <<EOF";
+
+    any::
+      "$(prefix)^context=G";
+
+      "$(prefix)+has_$(G.cmds)"
+        ifvarclass => "has_$(G.cmds)";
+      "$(prefix)=$(G.cmds)=$(G.$(G.cmds))"
+        ifvarclass => "has_$(G.cmds)";
+
+      "$(prefix)+has_$(G.cmds_special)"
+        ifvarclass => "has_$(G.cmds_special)";
+      "$(prefix)=$(G.cmds_special)=$(G.$(G.cmds_special))"
+        ifvarclass => "has_$(G.cmds_special)";
+
+    !windows::
+      "EOF";
 }
 
 #######################################################

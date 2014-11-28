@@ -315,8 +315,11 @@ runtest() {
   if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]; then
     # Don't reset workdir if this is a subsequent pass.
     $GAINROOT rm -rf "$WORKDIR"
-    mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
+    mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp" "$WORKDIR/modules"
     chmod ugo+rwxt "$WORKDIR/tmp"
+    if [ -f "dcs-cmds-cache.module"* ]; then
+      cp "dcs-cmds-cache.module"* "$WORKDIR/modules"
+    fi
   fi
 
   if [ -n "$NEXT_TIMEOUT_VAR" ]; then

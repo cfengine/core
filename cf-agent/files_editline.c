@@ -28,6 +28,7 @@
 #include <eval_context.h>
 #include <promises.h>
 #include <files_names.h>
+#include <files_interfaces.h>
 #include <vars.h>
 #include <item_lib.h>
 #include <sort.h>
@@ -1542,7 +1543,8 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
                                 Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     FILE *fin;
-    char buf[CF_BUFSIZE];
+    char *p, *buf;
+    size_t buflen, plen, readlen;
     int retval = false;
     Item *loc = NULL;
     int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
@@ -1554,41 +1556,13 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         return false;
     }
 
+    size_t buf_size = CF_BUFSIZE;
+    char *buf = xmalloc(buf_size);
     loc = location;
     Buffer *exp = BufferNew();
 
-    for(;;)
+    while (CfReadLine(&buf, &buf_size, fin) != -1)
     {
-        if (fgets(buf, sizeof(buf), fin) == NULL)
-        {
-            if (ferror(fin)) {
-                if (errno == EISDIR)
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not read file %s: Is a directory", pp->promiser);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-                    break;
-                }
-                else
-                {
-                    UnexpectedError("Failed to read line from stream");
-                    break;
-                }
-            }
-            else /* feof */
-            {
-                break;
-            }
-        }
-        if (StripTrailingNewline(buf, CF_EXPANDSIZE) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
-        }
-
-        if (feof(fin) && strlen(buf) == 0)
-        {
-            break;
-        }
-
         BufferClear(exp);
         if (a.expandvars)
         {
@@ -1639,12 +1613,27 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             location = *start;
         }
+
+        free(buf);
+        buf = NULL;
+    }
+
+    if (ferror(fin))
+    {
+        if (errno == EISDIR)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not read file %s: Is a directory", pp->promiser);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+        }
+        else
+        {
+            UnexpectedError("Failed to read line from stream");
+        }
     }
 
     fclose(fin);
     BufferDestroy(exp);
     return retval;
-
 }
 
 /***************************************************************************/

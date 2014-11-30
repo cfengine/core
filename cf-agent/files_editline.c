@@ -1543,8 +1543,6 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
                                 Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     FILE *fin;
-    char *p, *buf;
-    size_t buflen, plen, readlen;
     int retval = false;
     Item *loc = NULL;
     int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
@@ -1643,8 +1641,6 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
                                         PromiseResult *result)
 {
     bool retval = false;
-    char buf[CF_EXPANDSIZE];
-    char *sp;
     int preserve_all_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
     int preserve_block = a.sourcetype && (preserve_all_lines || strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
@@ -1656,10 +1652,18 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
 
     // Iterate over any lines within the chunk
 
-    for (sp = chunk; sp <= chunk + strlen(chunk); sp++)
+    char *buf = NULL;
+    size_t buf_size = 0;
+    for (char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
     {
-        memset(buf, 0, CF_BUFSIZE);
-        StringNotMatchingSetCapped(sp, CF_BUFSIZE, "\n", buf);
+        if (strlen(chunk) + 1 > buf_size)
+        {
+            buf_size = strlen(chunk) + 1;
+            buf = xrealloc(buf, buf_size);
+        }
+
+        memset(buf, 0, buf_size);
+        StringNotMatchingSetCapped(sp, buf_size, "\n", buf);
         sp += strlen(buf);
 
         if (!SelectLine(ctx, buf, a))
@@ -1702,6 +1706,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
         }
     }
 
+    free(buf);
     return retval;
 }
 

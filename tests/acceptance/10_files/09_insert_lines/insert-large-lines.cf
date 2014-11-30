@@ -1,0 +1,37 @@
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+    "data" string => readfile("$(this.promise_filename).txt", "16431");
+  files:
+    "$(G.testfile).actual"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => test_insert("$(data)");
+}
+
+bundle edit_line test_insert(data)
+{
+  insert_lines:
+    "$(data)";
+}
+
+body edit_defaults init_empty
+{
+  empty_file_before_editing => "true";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
+                                            "$(this.promise_filename).txt",
+                                            "$(this.promise_filename)");
+}

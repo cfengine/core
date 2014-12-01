@@ -1856,7 +1856,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
     return result;
 }
 
-static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp)
+static PromiseResult VerifyDelete(EvalContext *ctx,
+                                  char *path, struct stat *sb,
+                                  Attributes attr, const Promise *pp)
 {
     const char *lastnode = ReadLastNode(path);
     char buf[CF_MAXVARSIZE];
@@ -1866,7 +1868,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (DONTDO)
     {
-        Log(LOG_LEVEL_INFO, "Promise requires deletion of file object '%s'", path);
+        Log(LOG_LEVEL_INFO, "Promise requires deletion of file object '%s'",
+            path);
     }
     else
     {
@@ -1874,38 +1877,47 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "'%s' '%s' should be deleted",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+                 "%s '%s' should be deleted",
                  S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             break;
 
         case cfa_fix:
 
-            if (!S_ISDIR(sb->st_mode))
+            if (!S_ISDIR(sb->st_mode))                      /* file,symlink */
             {
-                if (unlink(lastnode) == -1)
+                int ret = unlink(lastnode);
+                if (ret == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't unlink '%s' tidying. (unlink: %s)",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+                         "Couldn't unlink '%s' tidying. (unlink: %s)",
                          path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Deleted file '%s'", path);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                         "Deleted file '%s'", path);
+                    result = PromiseResultUpdate(result,
+                                                 PROMISE_RESULT_CHANGE);
                 }
             }
-            else                // directory
+            else                                               /* directory */
             {
                 if (!attr.delete.rmdirs)
                 {
-                    Log(LOG_LEVEL_INFO, "Keeping directory '%s'. (unlink: %s)", path, GetErrorStr());
+                    Log(LOG_LEVEL_VERBOSE, "Keeping directory '%s' "
+                        "since \"rmdirs\" attribute was not specified",
+                        path);
                     return result;
                 }
 
                 if (attr.havedepthsearch && strcmp(path, pp->promiser) == 0)
                 {
-                    /* This is the parent and we cannot delete it from here - must delete separately */
+                    /* This is the parent of a recursive promise, it's not
+                     * allowed to delete it here, must delete separately in a
+                     * non-recursive promise. */
                     return result;
                 }
 
@@ -1924,13 +1936,14 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
                 if (rmdir(buf) == -1)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                         "Delete directory '%s' failed (cannot delete node called '%s'). (rmdir: %s)",
-                         path, buf, GetErrorStr());
+                         "Delete directory '%s' failed (rmdir: %s)",
+                         path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Deleted directory '%s'", path);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                         "Deleted directory '%s'", path);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
@@ -1938,7 +1951,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
             break;
 
         default:
-            ProgrammingError("Unhandled file action in switch: %d", attr.transaction.action);
+            ProgrammingError("Unhandled file action in switch: %d",
+                             attr.transaction.action);
         }
     }
 

@@ -1863,7 +1863,6 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
                                   Attributes attr, const Promise *pp)
 {
     const char *lastnode = ReadLastNode(path);
-    char buf[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "Verifying file deletions for '%s'", path);
 
@@ -1923,19 +1922,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
                     return result;
                 }
 
-                // use the full path if we are to delete the current dir
-                if ((strcmp(lastnode, ".") == 0) && strlen(path) > 2)
-                {
-                    snprintf(buf, sizeof(buf), "%s", path);
-                    buf[strlen(path) - 1] = '\0';
-                    buf[strlen(path) - 2] = '\0';
-                }
-                else
-                {
-                    snprintf(buf, sizeof(buf), "%s", lastnode);
-                }
-
-                if (rmdir(buf) == -1)
+                int ret = rmdir(lastnode);
+                if (ret == -1)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                          "Delete directory '%s' failed (rmdir: %s)",

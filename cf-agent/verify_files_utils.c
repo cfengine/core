@@ -1916,9 +1916,10 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
 
                 if (attr.havedepthsearch && strcmp(path, pp->promiser) == 0)
                 {
-                    /* This is the parent of a recursive promise, it's not
-                     * allowed to delete it here, must delete separately in a
-                     * non-recursive promise. */
+                    Log(LOG_LEVEL_DEBUG,
+                        "Skipping deletion of parent directory for recursive promise '%s', "
+                        "you must specify separate promise for deleting",
+                        path);
                     return result;
                 }
 

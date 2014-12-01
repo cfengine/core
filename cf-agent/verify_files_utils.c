@@ -1921,15 +1921,25 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
             }
 
             int ret = rmdir(lastnode);
-            if (ret == -1)
+            if (ret == -1 && errno != EEXIST && errno != ENOTEMPTY)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                      "Delete directory '%s' failed (rmdir: %s)",
                      path, GetErrorStr());
                 return PROMISE_RESULT_FAIL;
             }
+            else if (ret == -1 &&
+                     (errno == EEXIST || errno == ENOTEMPTY))
+            {
+                /* It's never allowed to delete non-empty directories, they
+                 * are silently skipped. */
+                Log(LOG_LEVEL_VERBOSE,
+                    "Delete directory '%s' not empty, skipping", path);
+                return PROMISE_RESULT_NOOP;
+            }
             else
             {
+                assert(ret != -1);
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
                      "Deleted directory '%s'", path);
                 return PROMISE_RESULT_CHANGE;

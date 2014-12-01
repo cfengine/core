@@ -1846,12 +1846,22 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
                     snprintf(buf, sizeof(buf), "%s", lastnode);
                 }
 
-                if (rmdir(buf) == -1)
+                int ret = rmdir(buf);
+                if (ret == -1 && errno != EEXIST && errno != ENOTEMPTY)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                          "Delete directory '%s' failed (cannot delete node called '%s'). (rmdir: %s)",
                          path, buf, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                }
+                else if (ret == -1 &&
+                         (errno == EEXIST || errno == ENOTEMPTY))
+                {
+                    /* It's never allowed to delete non-empty directories, they
+                     * are silently skipped. */
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Delete directory '%s' not empty, skipping", buf);
+                    return result;                   /* PROMISE_RESULT_NOOP */
                 }
                 else
                 {

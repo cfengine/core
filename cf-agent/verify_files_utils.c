@@ -79,7 +79,9 @@ static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
 
 static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const Promise *pp, PromiseResult *result);
 static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp);
-static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp);
+static PromiseResult VerifyDelete(EvalContext *ctx,
+                                  const char *path, const struct stat *sb,
+                                  Attributes attr, const Promise *pp);
 static PromiseResult VerifyCopy(EvalContext *ctx, const char *source, char *destination, Attributes attr, const Promise *pp,
                                 CompressedArray **inode_cache, AgentConnection *conn);
 static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, const Promise *pp);
@@ -1857,7 +1859,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
 }
 
 static PromiseResult VerifyDelete(EvalContext *ctx,
-                                  char *path, struct stat *sb,
+                                  const char *path, const struct stat *sb,
                                   Attributes attr, const Promise *pp)
 {
     const char *lastnode = ReadLastNode(path);

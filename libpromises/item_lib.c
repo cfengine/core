@@ -515,37 +515,34 @@ Item *SplitString(const char *string, char sep)
     into a linked list of separate items, */
 {
     Item *liststart = NULL;
-    const char *sp = string;
-    char before[CF_BUFSIZE];
-    int i = 0;
+    char *before = xstrdup(string);
+    char *sp = before;      /* selection pointer */
+    char *chunk = before;   /* next chunk to insert into list */
+    char *start = before;   /* start of string to free */
 
-    while (*sp != '\0')
+    while ((sp = strchr(before, sep)) != NULL)
     {
-        if (*sp != sep)
-        {
-            before[i] = *sp;
-            i++;
-        }
-        else if (sp > string && sp[-1] == '\\')
+        if (sp != before && sp[-1] == '\\')
         {
             /* Escaped use of list separator; over-write the backslash
-             * we copied last time round the loop (and don't increment
-             * i, so next time round we'll continue in the right
-             * place). */
-            before[i - 1] = sep;
+             * we copied last time round the loop
+             */
+            memmove(sp - 1, sp, strlen(sp) + 1);
+            before = sp;
+            continue;
         }
-        else
+        else if (sp != before && sp[-1] != '\\')
         {
-            before[i] = '\0';
-            PrependItem(&liststart, before, NULL);
-            i = 0;
+            *sp = '\0';
+            PrependItem(&liststart, chunk, NULL);
         }
 
-        sp++;
+        before = sp + 1;
+        chunk = sp + 1;
     }
 
-    before[i] = '\0';
-    PrependItem(&liststart, before, "");
+    PrependItem(&liststart, chunk, "");
+    free(start);
 
     return ReverseItemList(liststart);
 }

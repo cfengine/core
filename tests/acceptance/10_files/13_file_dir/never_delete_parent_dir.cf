@@ -1,0 +1,72 @@
+#######################################################
+#
+# Test rmdirs => true never deletes parent directory, i.e. the promiser.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  # Create a bunch of subdirectories and files. All will be deleted later.
+
+  vars:
+    "dir"      string => "$(G.testdir)/dir";
+    "subdir1"  string => "$(dir)/subdir1/.";
+    "subdir2"  string => "$(dir)/subdir2/.";
+
+  files:
+      "$(dir)/."          create => "true";
+      "$(subdir1)"      create => "true";
+      "$(subdir2)"      create => "true";
+      "$(subdir2)/blah" create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  # Delete everything under "dir", but the promiser itself should never
+  # be removed.
+
+  files:
+    "$(init.dir)"
+      depth_search => recurse_include_basedir("inf"),
+      file_select  => all,
+      delete       => tidy,
+      # success should be set after removing all subdirs
+      classes      => if_ok("success");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "dir_exists"     expression => isdir($(init.dir));
+
+    "ok" expression => "success.dir_exists";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+
+
+body depth_search recurse_include_basedir(d)
+{
+  depth           => "$(d)";
+  include_basedir => "true";
+}
+
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

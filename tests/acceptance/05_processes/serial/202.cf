@@ -29,7 +29,7 @@ bundle agent test
         meta => { "redmine4747" };
       # Test keeps alternating between pass and fail. There is probably a bug
       # here, but we can't afford to hold up the build pipeline all the time.
-      "test_skip_needs_work" string => "sunos_5_11",
+      "test_skip_needs_work" string => "solaris",
         meta => { "redmine6809" };
 
   processes:

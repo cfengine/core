@@ -25,6 +25,10 @@
 #ifndef CFENGINE_JSON_H
 #define CFENGINE_JSON_H
 
+#ifdef HAVE_LIBYAML
+#include <yaml.h>
+#endif
+
 /**
   @brief JSON data-structure.
 
@@ -93,6 +97,8 @@ typedef enum
     JSON_PARSE_ERROR_OBJECT_OPEN_LVAL,
 
     JSON_PARSE_ERROR_INVALID_START,
+    JSON_PARSE_ERROR_NO_LIBYAML,
+    JSON_PARSE_ERROR_LIBYAML_FAILURE,
     JSON_PARSE_ERROR_NO_DATA,
     JSON_PARSE_ERROR_TRUNCATED,
 
@@ -346,11 +352,19 @@ JsonElement *JsonArrayGet(JsonElement *array, size_t index);
 
 /**
   @brief Parse a string to create a JsonElement
-  @param data [in, out] Pointer to the string to parse
+  @param data [in] Pointer to the string to parse
   @param json_out Resulting JSON object
   @returns See JsonParseError and JsonParseErrorToString
   */
 JsonParseError JsonParse(const char **data, JsonElement **json_out);
+
+/**
+  @brief Parse a YAML string to create a JsonElement
+  @param data [in, out] Pointer to the string to parse
+  @param json_out Resulting JSON object
+  @returns See JsonParseError and JsonParseErrorToString
+  */
+JsonParseError JsonParseYamlString(const char **data, JsonElement **json_out);
 
 /**
  * @brief Convenience function to parse JSON from a file
@@ -360,6 +374,15 @@ JsonParseError JsonParse(const char **data, JsonElement **json_out);
  * @return See JsonParseError and JsonParseErrorToString
  */
 JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **json_out);
+
+/**
+ * @brief Convenience function to parse JSON from a YAML file
+ * @param path Path to the file
+ * @param size_max Maximum size to read in memory
+ * @param json_out Resulting JSON object
+ * @return See JsonParseError and JsonParseErrorToString
+ */
+JsonParseError JsonParseYamlFile(const char *path, size_t size_max, JsonElement **json_out);
 
 const char* JsonParseErrorToString(JsonParseError error);
 

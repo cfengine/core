@@ -196,9 +196,14 @@ void MonNetworkGatherData(double *cf_this)
 
     sscanf(VNETSTAT[VSYSTEMHARDCLASS], "%s", comm);
 
+    if (!FileCanOpen(comm, "r"))
+    {
+        return;
+    }
+
     strcat(comm, " -an");
 
-    if (!FileCanOpen(comm, "r") || ((pp = cf_popen(comm, "r", true)) == NULL))
+    if ((pp = cf_popen(comm, "r", true)) == NULL)
     {
         /* FIXME: no logging */
         return;

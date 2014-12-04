@@ -64,7 +64,12 @@ my @search = @ARGV;
 @search = ('/var/cfengine/masterfiles')
  unless scalar @search;
 
-find(\&wanted, @search);
+find({ wanted => \&wanted, preprocess => \&sort_files }, @search);
+
+sub sort_files
+{
+    return sort(@_);
+}
 
 sub find_color
 {

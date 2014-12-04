@@ -532,7 +532,7 @@ Rlist *RlistParseShown(const char *string)
 
     for (rp = splitlist; rp != NULL; rp = rp->next)
     {
-        sscanf(RlistScalarValue(rp), "%*[{ '\"]%255[^'\"]", value);
+        sscanf(RlistScalarValue(rp), "%*[{ '\"]%255[^'\"}]", value);
         RlistAppendScalar(&newlist, value);
     }
 

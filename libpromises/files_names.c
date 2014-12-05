@@ -716,6 +716,8 @@ const char *GetSoftwarePatchesFilename(char *buffer)
 
 const char *RealPackageManager(const char *manager)
 {
+    assert(manager);
+
     const char *pos = strchr(manager, ' ');
     if (strncmp(manager, "env ", 4) != 0
         && (!pos || pos - manager < 4 || strncmp(pos - 4, "/env", 4) != 0))

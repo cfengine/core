@@ -266,7 +266,8 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                     sp += len;
                 }
 
-                *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
+                int nl = StripTrailingNewline(promiser, size);
+                assert(nl != -1);
 
                 np = PromiseTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
                 np->offset.line = lineno;

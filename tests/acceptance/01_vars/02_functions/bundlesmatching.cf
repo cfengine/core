@@ -13,22 +13,22 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "runs" slist => bundlesmatching("default:run.*");
-      "run_123s" slist => bundlesmatching("default:run_123.*");
-      "bundle_123" string => nth(run_123s, 0);
+      "bundle_runs" slist => bundlesmatching("default:bundle_run.*");
+      "bundle_run_123s" slist => bundlesmatching("default:bundle_run_123.*");
+      "bundle_123" string => nth(bundle_run_123s, 0);
 
-      "run_meta_deprecated_unsorted" slist => bundlesmatching("default:run_meta.*", "deprecated");
-      "run_meta_deprecated" slist => sort(run_meta_deprecated_unsorted, "lex");
-      "bundle_deprecated" string => nth(run_meta_deprecated, 0);
+      "bundle_run_meta_deprecated_unsorted" slist => bundlesmatching("default:bundle_run_meta.*", "deprecated");
+      "bundle_run_meta_deprecated" slist => sort(bundle_run_meta_deprecated_unsorted, "lex");
+      "bundle_deprecated" string => nth(bundle_run_meta_deprecated, 0);
 
-      "run_meta_obsoleted_unsorted" slist => bundlesmatching("default:run_meta.*", "obs.*", "deprecated");
-      "run_meta_obsoleted" slist => sort(run_meta_obsoleted_unsorted, "lex");
-      "bundle_obsoleted" string => nth(run_meta_obsoleted, 0);
+      "bundle_run_meta_obsoleted_unsorted" slist => bundlesmatching("default:bundle_run_meta.*", "obs.*", "deprecated");
+      "bundle_run_meta_obsoleted" slist => sort(bundle_run_meta_obsoleted_unsorted, "lex");
+      "bundle_obsoleted" string => nth(bundle_run_meta_obsoleted, 0);
 
-      "count" int => length(runs);
-      "123_count" int => length(run_123s);
-      "deprecated_count" int => length(run_meta_deprecated);
-      "obsoleted_count" int => length(run_meta_obsoleted);
+      "count" int => length(bundle_runs);
+      "123_count" int => length(bundle_run_123s);
+      "deprecated_count" int => length(bundle_run_meta_deprecated);
+      "obsoleted_count" int => length(bundle_run_meta_obsoleted);
 }
 
 bundle agent check
@@ -37,23 +37,23 @@ bundle agent check
       "ok" and => { strcmp("$(test.count)", "6"),
                     strcmp("$(test.123_count)", "1"),
                     strcmp("$(test.deprecated_count)", "2"),
-                    strcmp("$(test.bundle_deprecated)", "default:run_meta_deprecated"),
+                    strcmp("$(test.bundle_deprecated)", "default:bundle_run_meta_deprecated"),
                     strcmp("$(test.obsoleted_count)", "1"),
-                    strcmp("$(test.bundle_obsoleted)", "default:run_meta_deprecated"),
-                    strcmp("$(test.bundle_123)", "default:run_123_456") };
+                    strcmp("$(test.bundle_obsoleted)", "default:bundle_run_meta_deprecated"),
+                    strcmp("$(test.bundle_123)", "default:bundle_run_123_456") };
 
   reports:
     DEBUG::
-      "Runs count $(test.count)";
+      "Bundle runs count $(test.count)";
       "123 count $(test.123_count)";
       "Deprecated count $(test.deprecated_count)";
       "'obs.*' && deprecated count $(test.obsoleted_count)";
-      "Found bundles $(test.runs)";
-      "Found 123 bundles $(test.run_123s)";
+      "Found bundles $(test.bundle_runs)";
+      "Found 123 bundles $(test.bundle_run_123s)";
       "First 123 bundle is $(test.bundle_123)";
-      "Found deprecated bundles $(test.run_meta_deprecated)";
+      "Found deprecated bundles $(test.bundle_run_meta_deprecated)";
       "First deprecated bundle is $(test.bundle_deprecated)";
-      "Found obsoleted bundles $(test.run_meta_obsoleted)";
+      "Found obsoleted bundles $(test.bundle_run_meta_obsoleted)";
       "First obsoleted bundle is $(test.bundle_obsoleted)";
     ok::
       "$(this.promise_filename) Pass";
@@ -61,30 +61,30 @@ bundle agent check
       "$(this.promise_filename) FAIL";
 }
 
-bundle agent run_123_456
+bundle agent bundle_run_123_456
 {
 }
 
-bundle agent run_789_0ab
+bundle agent bundle_run_789_0ab
 {
 }
 
-bundle agent run_cde_fgh
+bundle agent bundle_run_cde_fgh
 {
 }
 
-bundle agent run_meta_deprecated
+bundle agent bundle_run_meta_deprecated
 {
   meta:
       "tags" slist => { "deprecated", "obsoleted" };
 }
 
-bundle agent run_meta_string_tags
+bundle agent bundle_run_meta_string_tags
 {
   meta:
       "tags" string => "deprecated";
 }
 
-bundle agent run_meta_missing_tags
+bundle agent bundle_run_meta_missing_tags
 {
 }

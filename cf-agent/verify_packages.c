@@ -502,6 +502,13 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
 {
     if (a.packages.package_list_update_command != NULL)
     {
+        if (!a.packages.package_add_command)
+        {
+            Log(LOG_LEVEL_ERR, "package_add_command missing while trying to "
+                               "generate list of installed packages");
+            return false;
+        }
+
         time_t horizon = 24 * 60, now = time(NULL);
         bool call_update = true;
         struct stat sb;

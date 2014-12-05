@@ -2232,7 +2232,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
             return false;
         }
-        if (!attr.haveselect || SelectLeaf(ctx, path, sb, attr.select))
+        if (!attr.haveselect || SelectLeaf(ctx, name, sb, attr.select))
         {
             VerifyFileLeaf(ctx, name, sb, attr, pp, result);
             return true;
@@ -2248,8 +2248,6 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         Log(LOG_LEVEL_WARNING, "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)", rlevel, name);
         return false;
     }
-
-    memset(path, 0, CF_BUFSIZE);
 
     if (!PushDirState(ctx, name, sb))
     {
@@ -2281,7 +2279,11 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             continue;
         }
 
-        strcpy(path, name);
+        memset(path, 0, sizeof(path));
+        if (strlcpy(path, name, sizeof(path)-2) >= sizeof(path)-2)
+        {
+            Log(LOG_LEVEL_ERR, "Truncated filename %s while performing depth-first search", path);
+        }
         AddSlash(path);
 
         if (!JoinPath(path, dirp->d_name))

@@ -620,6 +620,8 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
 
+    MakeParentDirectory(GetLogDir(), force);
+
     snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
 
     if (stat(vbuff, &sb) == -1)

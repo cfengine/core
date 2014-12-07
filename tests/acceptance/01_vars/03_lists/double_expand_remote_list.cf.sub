@@ -1,0 +1,32 @@
+# Redmine#6866
+# Test that nested expansion of arrays works
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { "init", "test", "report" };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "list" slist => { "1", "2", "3" };
+}
+
+bundle agent test
+{
+  vars:
+    "other_list" string => "init.list";
+}
+
+bundle agent report
+{
+  reports:
+    # This should print
+    #R: List : 1
+    #R: List : 2
+    #R: List : 3
+    "Direct: $(init.list)";
+    "Indirect: $($(test.other_list))";
+}

@@ -8,7 +8,7 @@ body common control
                 };
         inputs =>
                 {
-                "inputs_from_included_common_bundle_read_inputs_with_lsdir.cf.sub",
+                "read_inputs.cf.sub",
                 "@(read_inputs.inputs)"
                 };
 }

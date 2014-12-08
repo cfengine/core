@@ -28,7 +28,7 @@ bundle agent init
 bundle agent check
 {
   vars:
-    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -D no_use_lsdir";
 
   methods:
     "check"

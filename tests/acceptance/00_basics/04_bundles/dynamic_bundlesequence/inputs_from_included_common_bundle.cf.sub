@@ -1,0 +1,30 @@
+# Dynamic inputs
+body common control
+{
+ bundlesequence => {
+                 "prep_read_inputs",
+                 "read_inputs",
+                 "evaluation1",
+                };
+        inputs =>
+                {
+                "inputs_from_included_common_bundle_read_inputs.cf.sub",
+                "@(read_inputs.inputs)"
+                };
+}
+
+
+
+bundle common evaluation1
+{
+
+classes:
+  "PASS" expression => "test_bundle_enabled_class";
+
+reports:
+  PASS::
+  "PASS test_bundle_enabled_class IS defined";
+  !PASS::
+  "FAIL test_bundle_enabled_class NOT defined";
+
+}

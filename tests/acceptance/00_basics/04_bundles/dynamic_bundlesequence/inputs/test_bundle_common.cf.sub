@@ -1,0 +1,13 @@
+bundle common test_bundle_common
+{
+classes:
+    "test_bundle_disabled_class"       or => { "disable_test_bundle" };
+    "test_bundle_supported_platform"   or =>  { "linux.enable_test_bundle" };
+    "test_bundle_supported_class"      or => { "enable_test_bundle" };
+    "test_bundle_enabled_class"        and => { "test_bundle_supported_class", 
+                                         "test_bundle_supported_platform", 
+                                         "!test_bundle_disabled_class" };
+reports:
+    debug::
+    "$(this.bundle)";
+}

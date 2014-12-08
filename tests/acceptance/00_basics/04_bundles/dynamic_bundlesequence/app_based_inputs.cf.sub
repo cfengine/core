@@ -29,25 +29,25 @@ bundle common map_role_bundles
     # Define bundles
     any::
       "role[app00_zero]"
-        string => "$(this.promise_dirname)/apps/app00_zero.cf",
+        string => "$(this.promise_dirname)/apps/app00_zero.cf.sub",
         comment =>
           "Roles are based on groups. Roles
                     map to bundles. Bundles are defined in a specific file.";
 
       "role[app_zero]"
-        string => "$(this.promise_dirname)/apps/app_zero.cf",
+        string => "$(this.promise_dirname)/apps/app_zero.cf.sub",
         comment =>
           "Roles are based on groups. Roles
                     map to bundles. Bundles are defined in a specific file.";
     group_one::
       "role[app_one]"
-        string => "$(this.promise_dirname)/apps/app_one.cf",
+        string => "$(this.promise_dirname)/apps/app_one.cf.sub",
         comment =>
           "Roles are based on groups. Roles
                     map to bundles. Bundles are defined in a specific file.";
     group_none::
       "role[app_two]"
-        string => "$(this.promise_dirname)/apps/app_two.cf";
+        string => "$(this.promise_dirname)/apps/app_two.cf.sub";
 
     any::
       "inputs" slist => getvalues(role);

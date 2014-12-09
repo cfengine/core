@@ -1,3 +1,8 @@
+3.6.4
+        Bug fixes:
+        - Fixed bug on FreeBSD which sometimes led to the wrong process being
+          killed (Redmine #2330)
+
 3.6.3
         New features:
         - support for HP-UX 11.23 and later

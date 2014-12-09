@@ -11,11 +11,19 @@ bundle agent test
     # sleep making the promise last for two minutes. Default ifelapsed time is
     # 1 minute.
     !has_run.expireafter::
-      "$(G.echo) one promise execution >> $(G.testfile).expireafter ; $(G.sleep) 120"
+      "$(G.echo) $$ $PPID >> $(G.testfile).expireafter.pid
+$(G.echo) one promise execution >> $(G.testfile).expireafter
+$(G.sleep) 120 &
+$(G.echo) $! >> $(G.testfile).expireafter.pid
+wait"
         contain => in_shell,
         classes => always("has_run");
     !has_run.short_expireafter::
-      "$(G.echo) one promise execution >> $(G.testfile).short_expireafter ; $(G.sleep) 120"
+      "$(G.echo) $$ $PPID >> $(G.testfile).short_expireafter.pid
+$(G.echo) one promise execution >> $(G.testfile).short_expireafter
+$(G.sleep) 120 &
+$(G.echo) $! >> $(G.testfile).short_expireafter.pid
+wait"
         contain => in_shell,
         action => set_expireafter(1),
         classes => always("has_run");

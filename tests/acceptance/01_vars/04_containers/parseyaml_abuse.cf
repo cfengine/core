@@ -1,0 +1,46 @@
+#######################################################
+#
+# Abuse parseyaml()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "strings" data => parsejson('
+[
+ "- valid",
+ "xyzzz",
+ "- xyzzz",
+ "[xyzzz]",
+ "- { xyzzz: }",
+ "xyzzz: { p: 100 }",
+ "- p class=\\"some class\\" id=\\"some-id\\": abusing the free naming of properties in YAML.",
+]');
+
+      "n" slist => getindices(strings);
+
+      "load_$(n)" data => parseyaml("$(strings[$(n)])");
+
+      "load_s_$(n)" string => format("%S", "load_$(n)");
+
+  reports:
+    EXTRA::
+      "parsing $(n) = $(strings[$(n)])";
+      "convert $(n) = $(load_s_$(n))";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_pass("$(this.promise_filename)");
+}

@@ -93,6 +93,8 @@ typedef enum
     JSON_PARSE_ERROR_OBJECT_OPEN_LVAL,
 
     JSON_PARSE_ERROR_INVALID_START,
+    JSON_PARSE_ERROR_NO_LIBYAML,
+    JSON_PARSE_ERROR_LIBYAML_FAILURE,
     JSON_PARSE_ERROR_NO_DATA,
     JSON_PARSE_ERROR_TRUNCATED,
 
@@ -346,7 +348,7 @@ JsonElement *JsonArrayGet(JsonElement *array, size_t index);
 
 /**
   @brief Parse a string to create a JsonElement
-  @param data [in, out] Pointer to the string to parse
+  @param data [in] Pointer to the string to parse
   @param json_out Resulting JSON object
   @returns See JsonParseError and JsonParseErrorToString
   */

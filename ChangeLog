@@ -13,7 +13,7 @@ Cfengine Propulsion Lab
           simplify the bootstrap process for clients that have different
           sys.masterdir settings (Redmine #3697)
 
-3.6.4
+Next patch release:
         Bug fixes:
         - Fixed bug on FreeBSD which sometimes led to the wrong process being
           killed (Redmine #2330)

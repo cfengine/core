@@ -1,4 +1,4 @@
-3.6.4
+Next patch release:
         Bug fixes:
         - Fixed bug on FreeBSD which sometimes led to the wrong process being
           killed (Redmine #2330)

@@ -817,27 +817,30 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
 */
 {
     const Item *ip = begin;
-    char buf[CF_BUFSIZE];
+    size_t buf_size = strlen(chunk) + 1;
+    char *buf = xcalloc(1, buf_size);
     int lines = 0;
 
     for (const char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
     {
-        memset(buf, 0, CF_BUFSIZE);
         sscanf(sp, "%[^\n]", buf);
         sp += strlen(buf);
 
         if (ip == NULL)
         {
-            return false;
+            lines = 0;
+            goto bad;
         }
 
         if (!regex && strcmp(buf, ip->name) != 0)
         {
-            return false;
+            lines = 0;
+            goto bad;
         }
         if (regex && !FullTextMatch(ctx, buf, ip->name))
         {
-            return false;
+            lines = 0;
+            goto bad;
         }
 
         lines++;
@@ -846,7 +849,8 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
 
         if (ip == end)
         {
-            return false;
+            lines = 0;
+            goto bad;
         }
 
         // Now see if there is more
@@ -859,13 +863,16 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
         {
             if (++sp <= chunk + strlen(chunk))
             {
-                return false;
+                lines = 0;
+                goto bad;
             }
 
             break;
         }
     }
 
+bad:
+    free(buf);
     return lines;
 }
 
@@ -1397,6 +1404,7 @@ static int SanityCheckDeletions(Attributes a, const Promise *pp)
 
 /***************************************************************************/
 
+/* XXX */
 static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
 {
     Rlist *rp;

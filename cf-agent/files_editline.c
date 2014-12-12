@@ -1401,16 +1401,22 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
     Rlist *rp;
     char *sp, *spto, *firstchar, *lastchar;
     InsertMatchType opt;
-    char work[CF_BUFSIZE], final[CF_BUFSIZE];
     Item *list = SplitString(camel, '\n'), *ip;
     int direct_cmp = false, ok = false, escaped = false;
+    char *final = NULL;
+    size_t final_size = 0;
+    char *work = NULL;
+    size_t work_size = 0;
 
-//Split into separate lines first
-
+    //Split into separate lines first
     for (ip = list; ip != NULL; ip = ip->next)
     {
         ok = false;
         direct_cmp = (strcmp(camel, haystack) == 0);
+        final = xstrdup(ip->name);
+        final_size = strlen(final) + 1;
+        work = NULL;
+        work_size = final_size;
 
         if (insert_match == NULL)
         {
@@ -1418,9 +1424,6 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
             ok = ok || direct_cmp;
             break;
         }
-
-        
-        strlcpy(final, ip->name, CF_BUFSIZE);
 
         for (rp = insert_match; rp != NULL; rp = rp->next)
         {
@@ -1441,27 +1444,33 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
             }
 
             if (!escaped)
-            {    
-            // Need to escape the original string once here in case it contains regex chars when non-exact match
-            EscapeRegexChars(ip->name, final, CF_BUFSIZE - 1);
-            escaped = true;
+            {
+                // Need to escape the original string once here in case it contains regex chars when non-exact match
+                // Check size of escaped string, and realloc if necessary
+                size_t escape_regex_len = EscapeRegexCharsLen(ip->name);
+                if (escape_regex_len + 1 > final_size)
+                {
+                    final = xrealloc(final, escape_regex_len + 1);
+                    final_size = escape_regex_len + 1;
+                }
+
+                EscapeRegexChars(ip->name, final, final_size);
+                escaped = true;
             }
-            
+
             if (opt == INSERT_MATCH_TYPE_IGNORE_EMBEDDED)
             {
-                memset(work, 0, CF_BUFSIZE);
-
                 // Strip initial and final first
+                // Since we're stripping space and replacing it with \s+, we need to account for that
+                // when allocating work
+                for (firstchar = final; isspace((int)*firstchar); firstchar++);
+                for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--);
+                work_size = final_size + 6;
+                work = xcalloc(1, work_size);
+                size_t required_size = 0;
+                char toadd[] = {'\0', '\0', '\0', '\0'};
 
-                for (firstchar = final; isspace((int)*firstchar); firstchar++)
-                {
-                }
-
-                for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--)
-                {
-                }
-
-                for (sp = final, spto = work; *sp != '\0'; sp++)
+                for (sp = final, spto = work; *sp != '\0'; sp++, spto += strlen(toadd), toadd[0] = '\0')
                 {
                     if ((sp > firstchar) && (sp < lastchar))
                     {
@@ -1470,34 +1479,78 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
                             while (isspace((int)*(sp + 1)))
                             {
                                 sp++;
+                                required_size++;
                             }
 
-                            strcat(spto, "\\s+");
-                            spto += 3;
+                            required_size += 3;
+                            strlcpy(toadd, "\\s+", sizeof(toadd));
                         }
                         else
                         {
-                            *spto++ = *sp;
+                            required_size++;
+                            toadd[0] = *sp;
+                            toadd[1] = '\0';
                         }
                     }
                     else
                     {
-                        *spto++ = *sp;
+                        required_size++;
+                        toadd[0] = *sp;
+                        toadd[1] = '\0';
+                    }
+
+                    if (required_size > work_size)
+                    {
+                        // Increase required_size by a small amount, so we don't reallocate every
+                        // iteration
+                        work_size = required_size + 12;
+                        work = xrealloc(work, work_size);
+                    }
+
+                    if (strlcat(spto, toadd, work_size) >= work_size - 1)
+                    {
+                        UnexpectedError("Truncation concatenating %s and %s", spto, toadd);
                     }
                 }
+                required_size += 1;
 
-                strcpy(final, work);
+                if (required_size > work_size)
+                {
+                    work_size = required_size + 12;
+                    work = xrealloc(work, work_size);
+                }
+
+
+                // Realloc and retry on truncation
+                if (strlcpy(final, work, final_size) >= final_size - 1)
+                {
+                    final = xrealloc(final, work_size);
+                    final_size = work_size;
+                    strlcpy(final, work, final_size);
+                }
+
+                free(work);
+                work = NULL;
             }
 
             if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
             {
                 if (strncmp(final, "\\s*", 3) != 0)
                 {
-                    for (sp = final; isspace((int)*sp); sp++)
-                    {
-                    }
+                    for (sp = final; isspace((int)*sp); sp++);
+                    work_size = final_size + 3;
+                    work = xcalloc(1, work_size);
                     strcpy(work, sp);
-                    snprintf(final, CF_BUFSIZE, "\\s*%s", work);
+
+                    if (snprintf(final, final_size, "\\s*%s", work) >= final_size - 1)
+                    {
+                        final = xrealloc(final, work_size);
+                        final_size = work_size;
+                        snprintf(final, final_size, "\\s*%s", work);
+                    }
+
+                    free(work);
+                    work = NULL;
                 }
             }
 
@@ -1505,20 +1558,36 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
             {
                 if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
                 {
+                    work_size = final_size + 3;
+                    work = xcalloc(1, work_size);
                     strcpy(work, final);
-                    snprintf(final, CF_BUFSIZE, "%s\\s*", work);
+
+                    for (sp = work + strlen(work) - 1; (sp > work) && (isspace((int)*sp)); sp--);
+                    *++sp = '\0';
+                    if (snprintf(final, final_size, "%s\\s*", work) >= final_size - 1)
+                    {
+                        final = xrealloc(final, work_size);
+                        final_size = work_size;
+                        snprintf(final, final_size, "%s\\s*", work);
+                    }
+
+                    free(work);
+                    work = NULL;
                 }
             }
 
             ok = ok || (FullTextMatch(ctx, final, haystack));
         }
 
+        free(final);
+        final = NULL;
         if (!ok)                // All lines in region need to match to avoid insertions
         {
             break;
         }
     }
 
+    free(final);
     DeleteItemList(list);
     return ok;
 }

@@ -1,0 +1,37 @@
+# Redmine#6866
+# Test that varibles are fully expanded
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      meta => { "redmine#6866" },
+      string => "any";
+
+  vars:
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+    "expected" string => "R: Direct: 1
+R: Direct: 2
+R: Direct: 3
+R: Indirect: 1
+R: Indirect: 2
+R: Indirect: 3";
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*$(expected).*", "", $(command), $(this.promise_filename));
+
+  reports:
+    DEBUG::
+      "=== Expected ===
+'$(expected)'
+================";
+
+}

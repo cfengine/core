@@ -308,6 +308,27 @@ void EscapeSpecialChars(const char *str, char *strEsc, int strEscSz, char *noEsc
     }
 }
 
+size_t EscapeRegexCharsLen(const char *str)
+{
+    size_t ret = 2;
+    for (const char *sp = str; *sp != '\0'; sp++)
+    {
+        switch (*sp)
+        {
+            case '.':
+            case '*':
+                ret++;
+                break;
+            default:
+                break;
+        }
+
+        ret++;
+    }
+
+    return ret;
+}
+
 void EscapeRegexChars(char *str, char *strEsc, int strEscSz)
 {
     char *sp;
@@ -324,7 +345,7 @@ void EscapeRegexChars(char *str, char *strEsc, int strEscSz)
             strEsc[strEscPos++] = '\\';
             break;
         default:
-            break;                
+            break;
         }
 
         strEsc[strEscPos++] = *sp;

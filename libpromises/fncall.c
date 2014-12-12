@@ -232,7 +232,7 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
                                                            fncall_type->args[argnum].pattern, 1);
             if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
             {
-                FatalError(ctx, "In function '%s', '%s'", fp->name, SyntaxTypeMatchToString(err));
+                FatalError(ctx, "In function '%s', error in variable '%s', '%s'", fp->name, (const char *)rp->val.item, SyntaxTypeMatchToString(err));
             }
         }
 

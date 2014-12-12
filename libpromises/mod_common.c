@@ -384,6 +384,7 @@ const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     ConstraintSyntaxNewStringList("exclude_hosts", "", "A list of IP addresses of hosts to exclude from report collection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("hub_schedule", "", "The class schedule used by cf-hub for report collation", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("port", "1,65535", "Default port for contacting hub nodes. Default value: 5308", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("client_history_timeout", "1,65535", "Threshold in hours over which if client did not report, hub will start query for full state of the host and discard all accumulated report history on the client. Default value: 6 hours", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

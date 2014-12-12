@@ -1,0 +1,71 @@
+#######################################################
+#
+# Select files based on type
+#
+# Ref: https://dev.cfengine.com/issues/6878
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "symlink" string => "$(G.testdir)/symlink_to_tmp_target";
+    "target" string => "$(G.testdir)/target";
+
+  files:
+    "$(target)/."
+      create => "true";
+
+    "$(symlink)"
+      delete => tidy;
+
+    "$(symlink)"
+      link_from => linkfrom("$(target)", "symlink"),
+      classes => scoped_classes_generic("namespace", "init_symlink");
+}
+
+#######################################################
+bundle agent test
+{
+    files:
+        "$(init.symlink)"
+            file_select  => select_type("symlink"),
+            delete       => nodir,
+            pathtype     => "literal",
+            classes => scoped_classes_generic("namespace", "test_symlink");
+}
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "OK" not => fileexists("$(init.symlink)");
+
+  reports:
+    OK::
+      "$(this.promise_filename) Pass";
+
+    !OK::
+      "$(this.promise_filename) Fail";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27
+body delete nodir
+{
+    rmdirs => "false";
+}
+
+body file_select select_type(type)
+{
+    file_types  => { "$(type)" };
+    file_result => "file_types";
+}

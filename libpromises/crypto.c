@@ -87,10 +87,25 @@ void CryptoDeInitialize()
 {
     if (crypto_initialized)
     {
+        char randfile[CF_BUFSIZE];
+        snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
+                 CFWORKDIR, FILE_SEPARATOR);
+
+        /* Only write out a seed if the file doesn't exist
+         * and we have enough entropy to do so. If RAND_write_File
+         * returns a bad value, delete the poor seed.
+         */
+        if (access(randfile, R_OK) && errno == ENOENT && RAND_write_file(randfile) != 1024)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Could not write randomness to '%s'", randfile);
+            unlink(randfile); /* do not reuse entropy */
+        }
+
+        chmod(randfile, 0600);
         EVP_cleanup();
         CleanupOpenSSLThreadLocks();
-        // TODO: Is there an ERR_unload_crypto_strings() ?
-        // TODO: Are there OpenSSL_clear_all_{digests,algorithms} ?
+        ERR_free_strings();
         crypto_initialized = false;
     }
 }
@@ -112,51 +127,30 @@ static void RandomSeed(void)
 
     /* 2. Seed the strong OpenSSL PRNG. */
 
-    /* randseed file is written by cf-key. */
-    char randfile[CF_BUFSIZE];
-    snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
-             CFWORKDIR, FILE_SEPARATOR);
-    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'",
-        randfile);
-
-    if (!RAND_load_file(randfile, -1))
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Could not read sufficient randomness from '%s'", randfile);
-    }
-
 #ifndef __MINGW32__                                     /* windows may hang */
     RAND_poll();
 #else
     RAND_screen();
 #endif
 
-    /* We should have had enough entropy by now. Else we print a message and
-     * use non-crypto-safe random data. */
     if (RAND_status() != 1)
     {
-        /* TODO raise to LOG_LEVEL_WARNING? */
-        Log(LOG_LEVEL_INFO,
-            "PRNG hasn't been seeded enough, using some pseudo-random bytes for seed!");
-        Log(LOG_LEVEL_INFO,
-            "A workaround is to copy 1KB of random bytes to '%s'",
+        /* randseed file is written on deinitialization of crypto system */
+        char randfile[CF_BUFSIZE];
+        snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
+                 CFWORKDIR, FILE_SEPARATOR);
+        Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'",
             randfile);
 
-        unsigned char rand_buf[128];
-        for (size_t i = 0; i < sizeof(rand_buf); i++)
+        if (RAND_load_file(randfile, -1) != 1024)
         {
-            rand_buf[i] = rand() % 256;
+            Log(LOG_LEVEL_CRIT,
+                "Could not read randomness from '%s'", randfile);
+            unlink(randfile); /* kill randseed if error reading it */
         }
-        RAND_seed(rand_buf, sizeof(rand_buf));
 
-        /* If we *still* do not have enough entropy, then things will be
-         * failing all over the place. Should never happen because of the
-         * rand() buffer above which should be enough for all cases. */
-        if (RAND_status() != 1)
-        {
-            UnexpectedError("Low entropy, crypto operations will fail! "
-                            "See verbose log and report which platform you are using.");
-        }
+        /* If we've used the random seed, then delete */
+        unlink(randfile);
     }
 }
 

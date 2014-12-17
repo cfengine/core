@@ -65,6 +65,7 @@ TESTS_ENVIRONMENT = env \
 	CF_PROMISES=`pwd`/../../cf-promises/cf-promises \
 	CF_SERVERD=`pwd`/../../cf-serverd/cf-serverd \
 	CF_KEY=`pwd`/../../cf-key/cf-key \
+	RPMVERCMP=`pwd`/../../ext/rpmvercmp \
 	MOCK_PACKAGE_MANAGER=`pwd`/mock_package_manager
 if !HAVE_LIBXML2
 TESTS_ENVIRONMENT += LIBXML2_TESTS=0

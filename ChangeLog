@@ -2,6 +2,8 @@ Next patch release:
         Bug fixes:
         - Fixed bug on FreeBSD which sometimes led to the wrong process being
           killed (Redmine #2330)
+        - Fixed package version comparison sometimes failing with rpm package
+          manager (Redmine #6807)
 
 3.6.3
         New features:

@@ -94,6 +94,8 @@ CF_SERVERD=${CF_SERVERD:-}
 export CF_SERVERD
 CF_KEY=${CF_KEY:-}
 export CF_KEY
+RPMVERCMP=${RPMVERCMP:-}
+export RPMVERCMP
 LIBTOOL=${LIBTOOL:-}
 export LIBTOOL
 
@@ -187,15 +189,6 @@ unix_seconds() {
   rm $BASE_WORKDIR/x
 }
 
-# echo
-# echo === Test environment: ===
-# echo AGENT=$AGENT
-# echo CF_PROMISES=$CF_PROMISES
-# echo CF_SERVERD=$CF_SERVERD
-# echo CF_KEY=$CF_KEY
-# echo =========================
-# echo
-
 usage() {
   echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
   echo
@@ -210,21 +203,23 @@ usage() {
   echo " --help    prints usage"
   echo " -q"
   echo " --quiet   makes script much quieter"
-  echo " --gainroot=<command> forces use of command to gain root privileges,"
+  echo " --gainroot=<command>  forces use of command to gain root privileges,"
   echo "           otherwise fakeroot is used.  Use --gainroot=env to make this"
   echo "           option a no-op (e.g. you're running inside fakeroot already)"
   echo " --agent   provides a way to specify non-default cf-agent location,"
   echo "           and defaults to $DEFAGENT."
-  echo " --baseclasses provides a way to override the default cf-agent classes,"
+  echo " --baseclasses  provides a way to override the default cf-agent classes,"
   echo "           and defaults to ${BASECLASSES}.  Also can use --bc"
-  echo " --extraclasses provides a way to append to the default cf-agent classes,"
+  echo " --extraclasses  provides a way to append to the default cf-agent classes,"
   echo "           and defaults to ${EXTRACLASSES}.  Also can use --ec"
   echo " --cfpromises  provides a way to specify non-default cf-promises location,"
-  echo "               and defaults to $DEFCF_PROMISES."
+  echo "           and defaults to $DEFCF_PROMISES."
   echo " --cfserverd  provides a way to specify non-default cf-serverd location,"
-  echo "               and defaults to $DEFCF_SERVERD."
-  echo " --cfkey  provides a way to specify non-default cf-key location,"
-  echo "               and defaults to $DEFCF_KEY."
+  echo "           and defaults to $DEFCF_SERVERD."
+  echo " --cfkey   provides a way to specify non-default cf-key location,"
+  echo "           and defaults to $DEFCF_KEY."
+  echo " --rpmvercmp  provides a way to specify non-default rpmvercmp location,"
+  echo "           and defaults to $DEFRPMVERCMP."
   echo " --bindir  specifies the directory containing all the binaries."
   echo "           Mutually exclusive with --agent and --cf* arguments."
   echo " --libtool specify non-default libtool location (only needed for --gdb)."
@@ -334,6 +329,7 @@ runtest() {
         $LN_CMD "$CF_PROMISES" "$WORKDIR/bin"
         $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
         $LN_CMD "$CF_KEY" "$WORKDIR/bin"
+        $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
       fi
     fi
     if uname | grep MINGW > /dev/null; then
@@ -597,6 +593,8 @@ while true; do
       CF_SERVERD=${1#--cfserverd=};;
     --cfkey=*)
       CF_KEY=${1#--cfkey=};;
+    --rpmvercmp=*)
+      RPMVERCMP=${1#--rpmvercmp=};;
     --bindir=*)
       BINDIR=${1#--bindir=};;
     --libtool=*)
@@ -651,9 +649,9 @@ do
   esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" ]; then
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" -o -n "$RPMVERCMP" ]; then
   if [ -n "$BINDIR" ]; then
-    echo "--bindir is mutually exclusive with --agent and --cf* arguments"
+    echo "--bindir is mutually exclusive with specifying individual binaries."
     exit 2
   fi
 fi
@@ -666,11 +664,13 @@ find_default_binary()
     [ -x "`pwd`/$2/$2" ] && eval $1=\""`pwd`/$2/$2"\"
     [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
     [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
+    [ -x "`pwd`/../../ext/$2" ] && eval $1=\""`pwd`/../../ext/$2"\"
 }
 find_default_binary DEFAGENT cf-agent
 find_default_binary DEFCF_PROMISES cf-promises
 find_default_binary DEFCF_SERVERD cf-serverd
 find_default_binary DEFCF_KEY cf-key
+find_default_binary DEFRPMVERCMP rpmvercmp
 
 [ -x "`pwd`/libtool" ] && DEFLIBTOOL="`pwd`/libtool"
 [ -x "`pwd`/../../libtool" ] && DEFLIBTOOL="`pwd`/../../libtool"
@@ -679,11 +679,12 @@ AGENT=${AGENT:-${DEFAGENT}}
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
+RPMVERCMP=${RPMVERCMP:-${DEFRPMVERCMP}}
 LIBTOOL=${LIBTOOL:-${DEFLIBTOOL}}
 
-if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" ]
+if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" -o ! -x "$RPMVERCMP" ]
 then
-	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?  Check '$AGENT', '$CF_PROMISES', '$CF_SERVERD', and '$CF_KEY'"
+	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?  Check '$AGENT', '$CF_PROMISES', '$CF_SERVERD', '$CF_KEY' and '$RPMVERCMP'"
 	exit 1
 fi
 

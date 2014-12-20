@@ -960,13 +960,15 @@ rval:                  IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  OB litems CB
+list:                  OB CB
+                     | OB litems CB
+                     | OB litems ',' CB
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litems:                /* empty */
-                     | litem
-                     | litem ','  litems
+litems:
+                       litem
+                     | litems ',' litem
                      | litem error
                        {
                            ParserDebug("P:rval:list:error yychar = %d\n", yychar);

@@ -976,7 +976,9 @@ litems:                /* empty */
                            }
                            else if ( yychar == ASSIGN )
                            {
-                               ParseError("Check list statement  previous line, Expected '}', wrong input '%s'", yytext);
+                               ParseError("Check list statement previous line,"
+                                          " Expected '}', wrong input '%s'",
+                                          yytext);
                            }
                            else
                            {
@@ -988,15 +990,27 @@ litems:                /* empty */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 litem:                 IDSYNTAX
-                       { 
-                           ParserDebug("\tP:%s:%s:%s:%s list append; id = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
-                           RlistAppendScalar((Rlist **)&P.currentRlist, P.currentid);
+                       {
+                           ParserDebug("\tP:%s:%s:%s:%s list append: "
+                                       "id = %s\n",
+                                       P.block, P.blocktype, P.blockid,
+                                       (P.currentclasses ?
+                                            P.currentclasses : "any"),
+                                       P.currentid);
+                           RlistAppendScalar((Rlist **) &P.currentRlist,
+                                             P.currentid);
                        }
 
                      | QSTRING
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s list append: qstring = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
-                           RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s list append: "
+                                       "qstring = %s\n",
+                                       P.block, P.blocktype, P.blockid,
+                                       (P.currentclasses ?
+                                            P.currentclasses : "any"),
+                                       P.currentstring);
+                           RlistAppendScalar((Rlist **) &P.currentRlist,
+                                             (void *) P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }

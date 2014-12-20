@@ -68,7 +68,6 @@ static size_t CURRENT_PROMISER_LINE = 0;
 %}
 
 %token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_TYPE BUNDLE BODY ASSIGN ARROW NAKEDVAR
-%token OP CP OB CB
 %expect 1
 
 %%
@@ -219,12 +218,12 @@ arglist:               /* Empty */
                           ParseError("Error in bundle parameter list, expected ')', wrong input '%s'", yytext);
                        }
 
-arglist_begin:         OP
+arglist_begin:         '('
                        {
                            ParserDebug("P:%s:%s:%s arglist begin:%s\n", P.block,P.blocktype,P.blockid, yytext);
                        }
 
-arglist_end:           CP
+arglist_end:           ')'
                        {
                            ParserDebug("P:%s:%s:%s arglist end:%s\n", P.block,P.blocktype,P.blockid, yytext);
                        }
@@ -277,7 +276,7 @@ bundlebody:            body_begin
 
                        bundle_decl
 
-                       CB 
+                       '}'
                        {
                            INSTALL_SKIP = false;
                            P.offsets.last_id = -1;
@@ -292,7 +291,7 @@ bundlebody:            body_begin
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-body_begin:            OB
+body_begin:            '{'
                        {
                            ParserDebug("P:%s:%s:%s begin body open\n", P.block,P.blocktype,P.blockid);
                        }
@@ -694,7 +693,7 @@ bodybody:              body_begin
 
                        bodyattribs
 
-                       CB 
+                       '}'
                        {
                            P.offsets.last_id = -1;
                            P.offsets.last_string = -1;
@@ -960,9 +959,9 @@ rval:                  IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  OB CB
-                     | OB litems CB
-                     | OB litems ',' CB
+list:                  '{' '}'
+                     | '{' litems '}'
+                     | '{' litems ',' '}'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -1068,7 +1067,7 @@ usefunction:           functionid givearglist
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-givearglist:           OP 
+givearglist:           '('
                        {
                            if (++P.arg_nesting >= CF_MAX_NESTING)
                            {
@@ -1080,7 +1079,7 @@ givearglist:           OP
 
                        gaitems
 
-                       CP 
+                       ')'
                        {
                            ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting], P.giveargs[P.arg_nesting]);

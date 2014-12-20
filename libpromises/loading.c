@@ -467,7 +467,8 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
     StringSet *parsed_files_and_checksums = StringSetNew();
     StringSet *failed_files = StringSetNew();
 
-    Policy *policy = LoadPolicyFile(ctx, config, config->input_file, parsed_files_and_checksums, failed_files);
+    Policy *policy = LoadPolicyFile(ctx, config, config->input_file,
+                                    parsed_files_and_checksums, failed_files);
 
     if (StringSetSize(failed_files) > 0)
     {
@@ -483,10 +484,13 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
         if (PolicyCheckPartial(policy, errors))
         {
-            if (!config->bundlesequence && (PolicyIsRunnable(policy) || config->check_runnable))
+            if (!config->bundlesequence &&
+                (PolicyIsRunnable(policy) || config->check_runnable))
             {
-                Log(LOG_LEVEL_VERBOSE, "Running full policy integrity checks");
-                PolicyCheckRunnable(ctx, policy, errors, config->ignore_missing_bundles);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Running full policy integrity checks");
+                PolicyCheckRunnable(ctx, policy, errors,
+                                    config->ignore_missing_bundles);
             }
         }
 

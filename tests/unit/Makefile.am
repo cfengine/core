@@ -181,6 +181,11 @@ EXTRA_DIST   += dynamic_dependency_test.sh
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
+if AIX
+XFAIL_TESTS = evalfunction_test     # Redmine 6318
+XFAIL_TESTS += set_domainname_test  # Redmine 6317
+endif
+
 #
 # OS X uses real system calls instead of our stubs unless this option is used
 #

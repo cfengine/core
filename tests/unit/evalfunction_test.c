@@ -47,9 +47,6 @@ int getnetgrent(char **hostp, char **userp, char **domainp)
 
 static void test_hostinnetgroup_found(void)
 {
-#ifdef _AIX
-    return; //redmine6318
-#endif
     EvalContext *ctx = EvalContextNew();
 
     FnCallResult res;

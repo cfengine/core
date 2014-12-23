@@ -716,27 +716,28 @@ static bool SetAccountLockExpiration(const char *puser, bool lock)
 
 static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
 {
-    if (lock)
+    if (hash)
     {
-        if (hash[0] != '!')
+        if (lock)
         {
-            char new_hash[strlen(hash) + 2];
-            xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
-            if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
+            if (hash[0] != '!')
             {
-                return false;
+                char new_hash[strlen(hash) + 2];
+                xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
+                if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
+                {
+                    return false;
+                }
             }
         }
-    }
-    else
-    {
-        // Important to check. Password may already have been changed if that was also
-        // specified in the policy.
-        if (hash[0] == '!')
+        else
         {
-            if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
+            if (hash[0] == '!')
             {
-                return false;
+                if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
+                {
+                    return false;
+                }
             }
         }
     }
@@ -1288,9 +1289,19 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
         else
         {
             const char *hash;
-            if (!GetPasswordHash(puser, passwd_info, &hash))
+            if (CFUSR_CHECKBIT(changemap, i_password) == 0)
             {
-                return false;
+                if (!GetPasswordHash(puser, passwd_info, &hash))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // Don't unlock the hash if we already set the password. Our
+                // cached value in passwd_info->pw_passwd will be wrong, and the
+                // account will already have been unlocked anyway.
+                hash = NULL;
             }
             if (!SetAccountLocked(puser, hash, (u.policy == USER_STATE_LOCKED)))
             {

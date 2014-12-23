@@ -50,7 +50,7 @@ bundle agent test
       group_primary => "$(user_tests.group1)";
 
   commands:
-    !windows::
+    sudo_works::
       "sudo -u johndoe $(G.touch) $(G.testfile)"
         contain => test_contain_body;
 }
@@ -78,16 +78,16 @@ bundle agent check
       classes => always("methods_run");
 
   files:
-    !windows::
+    sudo_works::
       "$(G.testfile)"
         perms => check_perms_body,
         classes => check_classes_body;
 
   classes:
       "ready" expression => "methods_run";
-    !windows::
+    sudo_works::
       "ok" and => { "success", "!failure", "perms_ok", "!perms_not_ok" };
-    windows::
+    !sudo_works::
       "ok" and => { "success", "!failure" };
 
   reports:

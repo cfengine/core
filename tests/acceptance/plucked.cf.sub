@@ -1,5 +1,40 @@
 ### This is an auto-generated file, see Makefile.am and `make pluck` ###
 
+bundle agent run_ifdefined(namespace, mybundle)
+# @brief bundle to maybe run another bundle dynamically
+# @param namespace the namespace, usually `$(this.namespace)`
+# @param mybundle the bundle to maybe run
+#
+# This bundle simply is a way to run another bundle only if it's defined.
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent run
+# {
+#   methods:
+#       # does nothing if bundle "runthis" is not defined
+#       "go" usebundle => run_ifdefined($(this.namespace), runthis);
+# }
+# ```
+{
+  vars:
+      "bundlesfound" slist => bundlesmatching("^$(namespace):$(mybundle)$");
+      "count" int => length(bundlesfound);
+
+  classes:
+      "runidentified" expression => strcmp(1, $(count));
+
+  methods:
+      "any"
+      usebundle  => $(bundlesfound),
+      ifvarclass => "runidentified";
+
+  reports:
+    verbose_mode::
+      "$(this.bundle): found matching bundles $(bundlesfound) for namespace '$(namespace)' and bundle '$(mybundle)'";
+}
+
 body contain in_dir_shell(dir)
 # @brief run command after switching to directory "dir" with full shell
 # @param dir directory to change into
@@ -72,17 +107,6 @@ body contain in_dir_shell_and_silent(dir)
       useshell => "true"; # canonical "useshell" but this is backwards-compatible
       no_output => "true";
       chdir => "$(dir)";
-}
-
-bundle edit_line create_solaris_admin_file
-# @brief The following bundle is part of a package setup for solaris
-#
-# See unit examples.
-{
-  insert_lines:
-
-      "$(solaris_knowledge.admin_nocheck)"
-      comment => "Insert contents of Solaris admin file (automatically install packages)";
 }
 
 body action if_elapsed(x)
@@ -164,24 +188,25 @@ body classes classes_generic(x)
 # @param x The unique part of the classes to be defined
 {
       promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error","$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
       promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
 }
 
 body classes scoped_classes_generic(scope, x)
 # @brief Define `x` prefixed/suffixed with promise outcome
-# **See also:** `scope`
+# 
+# **See also:** [`scope`][Promise Types and Attributes#scope]
 #
 # @param scope The scope in which the class should be defined
 # @param x The unique part of the classes to be defined
 {
       scope => "$(scope)";
       promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
       promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
 }
 
@@ -1362,6 +1387,17 @@ body copy_from perms_cp(from)
       preserve    => "true";
 }
 
+body copy_from perms_dcp(from)
+# @brief Copy a local file if it is different from the existing copy and
+# preserve file permissions on the local copy.
+#
+# @param from The path to the source file.
+{
+      source      => "$(from)";
+      preserve    => "true";
+      compare     => "digest";
+}
+
 body copy_from backup_local_cp(from)
 # @brief Copy a local file and  keep a backup of old versions.
 #
@@ -1750,4 +1786,15 @@ bundle agent file_link(target, link)
   reports:
     inform_mode|EXTRA::
       "$(this.bundle): $(link) will be a symlink to $(target)";
+}
+
+bundle edit_line create_solaris_admin_file
+# @brief The following bundle is part of a package setup for solaris
+#
+# See unit examples.
+{
+  insert_lines:
+
+      "$(solaris_knowledge.admin_nocheck)"
+      comment => "Insert contents of Solaris admin file (automatically install packages)";
 }

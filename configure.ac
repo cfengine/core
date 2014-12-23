@@ -725,6 +725,11 @@ AC_CHECK_DECLS(isfinite, [], [], [[#include <math.h>]])
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(fgetspent lckpwdf ulckpwdf)
+AC_CHECK_LIB([sec], [fgetspent], [
+    AC_DEFINE([HAVE_LIBSEC], 1, [Define if -lsec is available])
+    AC_DEFINE([HAVE_FGETSPENT], 1, [Define if fgetspent is available])
+    LIBS="-lsec $LIBS"
+])
 
 AC_CHECK_DECLS(getloadavg)
 AC_FUNC_GETLOADAVG

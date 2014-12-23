@@ -56,7 +56,7 @@ bundle agent test
       groups_secondary => { "$(user_tests.group1)" };
 
   commands:
-    !windows::
+    sudo_works::
       "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
         contain => test_contain_body;
 }
@@ -70,14 +70,14 @@ bundle agent check
       classes => always("methods_run");
 
   classes:
-    !windows::
+    sudo_works::
       "content_ok" not => strcmp("0", countlinesmatching("Succeeded", "$(G.testfile)"));
 
   classes:
       "ready" expression => "methods_run";
-    !windows::
+    sudo_works::
       "ok" and => { "success", "!failure", "content_ok" };
-    windows::
+    !sudo_works::
       "ok" and => { "success", "!failure" };
 
   reports:

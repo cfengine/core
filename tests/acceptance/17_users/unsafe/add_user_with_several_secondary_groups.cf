@@ -65,7 +65,7 @@ bundle agent test
       groups_secondary => { "$(user_tests.group1)", "$(user_tests.group2)" };
 
   commands:
-    !windows::
+    sudo_works::
       "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
         contain => test_contain_body;
       "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile).2'"
@@ -76,12 +76,6 @@ bundle agent test
 
 bundle agent check
 {
-  reports:
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
-
   methods:
     "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "bin_success", "bin_failure"),
       classes => always("bin_methods_run");
@@ -95,9 +89,9 @@ bundle agent check
 
   classes:
       "ready" and => { "bin_methods_run", "sys_methods_run" };
-    !windows::
+    sudo_works::
       "ok" and => { "bin_success", "!bin_failure", "sys_success", "!sys_failure", "1_ok", "2_ok" };
-    windows::
+    !sudo_works::
       "ok" and => { "bin_success", "!bin_failure", "sys_success", "!sys_failure" };
 
   reports:

@@ -681,12 +681,38 @@ static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
     return (system_hash[0] == '!');
 }
 
-static bool SetAccountLockExpiration(const char *puser, bool lock)
+static bool PlatformSupportsExpirationLock(void)
 {
+#ifdef __sun
     // Solaris has the concept of account expiration, but it is only possible
     // to set a date in the future. We need to set it to a past date, so we
     // have to skip it on that platform.
-#ifndef __sun
+    return false;
+
+#elif __hpux
+    struct stat statbuf;
+    // "/etc/shadow" signals the so called "trusted model" on HPUX.
+    if (stat("/etc/shadow", &statbuf) == 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+#else
+    return true;
+#endif
+}
+
+static bool SetAccountLockExpiration(const char *puser, bool lock)
+{
+    if (!PlatformSupportsExpirationLock())
+    {
+        return true;
+    }
+
     char cmd[CF_BUFSIZE + strlen(puser)];
 
     strcpy (cmd, USERMOD);
@@ -709,7 +735,6 @@ static bool SetAccountLockExpiration(const char *puser, bool lock)
             lock ? "locking" : "unlocking", puser, cmd);
         return false;
     }
-#endif // !__sun
 
     return true;
 }

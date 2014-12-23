@@ -277,7 +277,7 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
         [SYNTAX_TYPE_MATCH_ERROR_FNCALL_UNKNOWN] = "Unknown function",
 
         [SYNTAX_TYPE_MATCH_ERROR_CONTEXT_OUT_OF_RANGE] = "Context string is invalid/out of range",
-        [SYNTAX_TYPE_MATCH_ERROR_ABSOULUTE_PATH] = "Filename is not an absolute path",
+        [SYNTAX_TYPE_MATCH_ERROR_ABSOLUTE_PATH] = "Filename is not an absolute path",
     };
 
     return msgs[result];
@@ -519,9 +519,9 @@ static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const c
     {
         return SYNTAX_TYPE_MATCH_ERROR_EMPTY_SCALAR_OUT_OF_RANGE;
     }
-    else if (!strcmp(range, CF_ABSPATHRANGE) || !strcmp(range,CF_ABSPATHRANGE))
+    else if (!strcmp(range, CF_ABSPATHRANGE))
     {
-        return SYNTAX_TYPE_MATCH_ERROR_ABSOULUTE_PATH;
+        return SYNTAX_TYPE_MATCH_ERROR_ABSOLUTE_PATH;
     }
     else
     {

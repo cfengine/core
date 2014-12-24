@@ -28,6 +28,8 @@
 
 static const ConstraintSyntax match_value_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
+
     /* Row models */
     ConstraintSyntaxNewString("select_line_matching", CF_ANYSTRING, "Regular expression for matching line location", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("select_line_number", CF_VALRANGE, "Read from the n-th line of the output (fixed format)", SYNTAX_STATUS_NORMAL),

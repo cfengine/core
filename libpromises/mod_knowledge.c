@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax association_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("forward_relationship", "", "Name of forward association between promiser topic and associates", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewString("backward_relationship", "", "Name of backward/inverse association from associates to promiser topic", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewStringList("associates", "", "List of associated topics by this forward relationship", SYNTAX_STATUS_REMOVED),

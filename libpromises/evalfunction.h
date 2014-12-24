@@ -40,6 +40,6 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 FnCallResult FnCallGroupExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 FnCallResult FnCallUserExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 
-JsonElement *DefaultTemplateData(const EvalContext *ctx);
+JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle);
 
 #endif

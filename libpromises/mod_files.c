@@ -29,6 +29,7 @@
 
 static const ConstraintSyntax location_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("before_after", "before,after", "Menu option, point cursor before of after matched line. Default value: after", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("first_last", "first,last", "Menu option, choose first or last occurrence of match in file. Default value: last", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("select_line_matching", CF_ANYSTRING, "Regular expression for matching file line location", SYNTAX_STATUS_NORMAL),
@@ -39,6 +40,7 @@ static const BodySyntax location_body = BodySyntaxNew("location", location_const
 
 static const ConstraintSyntax edit_field_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewBool("allow_blank_fields", "true/false allow blank fields in a line (do not purge). Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("extend_fields", "true/false add new fields at end of line if necessary to complete edit. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("field_operation", "prepend,append,alphanum,delete,set", "Menu option policy for editing subfields. Default value: none", SYNTAX_STATUS_NORMAL),
@@ -54,6 +56,7 @@ static const BodySyntax edit_field_body = BodySyntaxNew("edit_field", edit_field
 
 static const ConstraintSyntax replace_with_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("occurrences", "all,first", "Menu option to replace all occurrences or just first (NB the latter is non-convergent). Default value: all", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("replace_value", CF_ANYSTRING, "Value used to replace regular expression matches in search", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
@@ -63,6 +66,7 @@ static const BodySyntax replace_with_body = BodySyntaxNew("replace_with", replac
 
 static const ConstraintSyntax select_region_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewBool("include_start_delimiter", "Whether to include the section delimiter. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("include_end_delimiter", "Whether to include the section delimiter. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("select_start", CF_ANYSTRING, "Regular expression matching start of edit region", SYNTAX_STATUS_NORMAL),
@@ -74,6 +78,7 @@ static const BodySyntax select_region_body = BodySyntaxNew("select_region", sele
 
 static const ConstraintSyntax delete_select_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("delete_if_startwith_from_list", CF_ANYSTRING, "Delete line if it starts with a string in the list", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("delete_if_not_startwith_from_list", CF_ANYSTRING, "Delete line if it DOES NOT start with a string in the list", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("delete_if_match_from_list", CF_ANYSTRING, "Delete line if it fully matches a regex in the list", SYNTAX_STATUS_NORMAL),
@@ -87,6 +92,7 @@ static const BodySyntax delete_select_body = BodySyntaxNew("delete_select", dele
 
 static const ConstraintSyntax insert_select_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("insert_if_startwith_from_list", CF_ANYSTRING, "Insert line if it starts with a string in the list", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("insert_if_not_startwith_from_list", CF_ANYSTRING,"Insert line if it DOES NOT start with a string in the list", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("insert_if_match_from_list", CF_ANYSTRING, "Insert line if it fully matches a regex in the list", SYNTAX_STATUS_NORMAL),
@@ -155,6 +161,7 @@ static bool AclCheck(const Body *body, Seq *errors)
 
 static const ConstraintSyntax acl_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("aces", "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)", "Native settings for access control entry", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("acl_directory_inherit", "nochange,parent,specify,clear", "Access control list type for the affected file system", SYNTAX_STATUS_DEPRECATED),
     ConstraintSyntaxNewOption("acl_default", "nochange,access,specify,clear", "How to apply default (inheritable) access control list", SYNTAX_STATUS_NORMAL),
@@ -170,6 +177,7 @@ static const BodySyntax acl_body = BodySyntaxNew("acl", acl_constraints, &AclChe
 
 static const ConstraintSyntax changes_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("hash", "md5,sha1,sha224,sha256,sha384,sha512,best", "Hash files for change detection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("report_changes", "all,stats,content,none", "Specify criteria for change warnings", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("update_hashes", "Update hash values immediately after change warning", SYNTAX_STATUS_NORMAL),
@@ -181,6 +189,7 @@ static const BodySyntax changes_body = BodySyntaxNew("changes", changes_constrai
 
 static const ConstraintSyntax depth_search_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewInt("depth", CF_VALRANGE, "Maximum depth level for search", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("exclude_dirs", ".*", "List of regexes of directory names NOT to include in depth search", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("include_basedir", "true/false include the start/root dir of the search results", SYNTAX_STATUS_NORMAL),
@@ -195,6 +204,7 @@ static const BodySyntax depth_search_body = BodySyntaxNew("depth_search", depth_
 
 static const ConstraintSyntax edit_defaults_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("edit_backup", "true,false,timestamp,rotate", "Menu option for backup policy on edit changes. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("empty_file_before_editing", "Baseline memory model of file to zero/empty before commencing promised edits. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("inherit", "If true this causes the sub-bundle to inherit the private classes of its parent", SYNTAX_STATUS_NORMAL),
@@ -208,6 +218,7 @@ static const BodySyntax edit_defaults_body = BodySyntaxNew("edit_defaults", edit
 
 static const ConstraintSyntax delete_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("dirlinks", "delete,tidy,keep", "Menu option policy for dealing with symbolic links to directories during deletion", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rmdirs", "true/false whether to delete empty directories during recursive deletion", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
@@ -217,6 +228,7 @@ static const BodySyntax delete_body = BodySyntaxNew("delete", delete_constraints
 
 static const ConstraintSyntax rename_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewBool("disable", "true/false automatically rename and remove permissions. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("disable_mode", CF_MODERANGE, "The permissions to set when a file is disabled", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("disable_suffix", "", "The suffix to add to files when disabling (.cfdisabled)", SYNTAX_STATUS_NORMAL),
@@ -229,6 +241,7 @@ static const BodySyntax rename_body = BodySyntaxNew("rename", rename_constraints
 
 static const ConstraintSyntax perms_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("bsdflags", CF_BSDFLAGRANGE, "List of menu options for bsd file system flags to set", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("groups", CF_USERRANGE, "List of acceptable groups of group ids, first is change target", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("mode", CF_MODERANGE, "File permissions (like posix chmod)", SYNTAX_STATUS_NORMAL),
@@ -241,6 +254,7 @@ static const BodySyntax perms_body = BodySyntaxNew("perms", perms_constraints, N
 
 static const ConstraintSyntax file_select_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("leaf_name", "", "List of regexes that match an acceptable name", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("path_name", CF_ABSPATHRANGE, "List of pathnames to match acceptable target", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("search_mode", CF_MODERANGE, "A list of mode masks for acceptable file permissions", SYNTAX_STATUS_NORMAL),
@@ -269,6 +283,7 @@ static const BodySyntax file_select_body = BodySyntaxNew("file_select", file_sel
 
 static const ConstraintSyntax link_from_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("copy_patterns", "", "A set of patterns that should be copied and synchronized instead of linked", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("link_children", "true/false whether to link all directory's children to source originals. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("link_type", CF_LINKRANGE, "The type of link used to alias the file. Default value: symlink", SYNTAX_STATUS_NORMAL),
@@ -286,6 +301,7 @@ static const ConstraintSyntax copy_from_constraints[] =
      * a verification stage -- this attribute gets picked instead of another
      * 'source'
      */
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("source", CF_PATHRANGE, "Reference source file from which to copy", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("servers", "[A-Za-z0-9_.:\\-\\[\\]]+", "List of servers in order of preference from which to copy", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("collapse_destination_dir", "true/false Place files in subdirectories into the root destination directory during copy", SYNTAX_STATUS_NORMAL),

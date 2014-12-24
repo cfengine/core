@@ -1,0 +1,65 @@
+# Test that the bundlestate() function gives good data
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "bundlestate.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "s" string => "Hello!";
+      "d" data => parsejson('[4,5,6]');
+      "list" slist => { "element1", "element2" };
+      "h" data => parsejson('{ "a": "x", "b": "y"}');
+
+  methods:
+      "" usebundle => external:init;
+      "" usebundle => external:dump;
+}
+
+bundle agent test
+{
+  vars:
+      "holder" data => bundlestate("init");
+      "holder2" data => bundlestate("$(this.namespace):init");
+      "holder3" data => bundlestate("nosuchnamespace:init");
+      "holder4" data => bundlestate("external:init");
+
+      "holder_s" string => format("%S", holder);
+      "holder2_defined" string => ifelse(isvariable(holder2), "we have holder 2 and we shouldn't", "");
+      "holder3_defined" string => ifelse(isvariable("holder3"), "we have holder 3 and we shouldn't", "");
+      "holder4_s" string => format("%S", holder4);
+
+      "s_s" string => format("%S", "holder[s]");
+      "s_d" string => format("%S", "holder[d]");
+      "s_list" string => format("%S", "holder[list]");
+      "s_h" string => format("%S", "holder[h]");
+}
+
+bundle agent check
+{
+  methods:
+      "check" usebundle => dcs_check_strcmp("$(test.s_s)
+$(test.s_d)
+$(test.s_list)
+$(test.s_h)
+$(test.holder4_s)
+$(external:dump.external_holder_s)
+$(external:dump.external_holder2_s)
+$(test.holder2_defined)
+$(test.holder3_defined)",
+                                           '"Hello!"
+[4,5,6]
+["element1","element2"]
+{"a":"x","b":"y"}
+{"external_s":"External Hello!"}
+$(test.holder_s)
+{"external_s":"External Hello!"}
+
+',
+                                           $(this.promise_filename),
+                                           "no");
+}

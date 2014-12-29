@@ -22,32 +22,35 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_PROCESS_H
-#define CFENGINE_PROCESS_H
+#include <process_lib.h>
+#include <process_unix_priv.h>
 
-#include <platform.h>
+#include <sys/pstat.h>
 
-#define PROCESS_START_TIME_UNKNOWN ((time_t)0)
+time_t GetProcessStartTime(pid_t pid)
+{
+    struct pst_status proc;
 
-/*
- * Obtain start time of specified process.
- *
- * @return start time (Unix timestamp) of specified process
- * @return PROCESS_START_TIME_UNKNOWN if start time cannot be determined
- */
-time_t GetProcessStartTime(pid_t pid);
+    if (pstat_getproc(&proc, sizeof(proc), 0, pid) > 0)
+    {
+        return proc.pst_start;
+    }
+    else
+    {
+        return PROCESS_START_TIME_UNKNOWN;
+    }
+}
 
-/*
- * Gracefully kill the process with pid #pid and start time #process_start_time.
- *
- * Under Unix this will send SIGINT, then SIGTERM and then SIGKILL if process
- * does not exit.
- *
- * #process_start_time may be PROCESS_START_TIME_UNKNOWN, which will disable
- * safety check for killing right process.
- *
- * @return true if process was killed successfully, false otherwise.
- */
-int GracefulTerminate(pid_t pid, time_t process_start_time);
+ProcessState GetProcessState(pid_t pid)
+{
+    struct pst_status proc;
 
-#endif
+    if (pstat_getproc(&proc, sizeof(proc), 0, pid) > 0)
+    {
+        return proc.pst_stat == PS_STOP ? PROCESS_STATE_STOPPED : PROCESS_STATE_RUNNING;
+    }
+    else
+    {
+        return PROCESS_STATE_DOES_NOT_EXIST;
+    }
+}

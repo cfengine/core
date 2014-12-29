@@ -143,6 +143,7 @@ check_PROGRAMS = \
 	string_expressions_test \
 	var_expressions_test \
 	process_terminate_unix_test \
+	process_test \
 	exec-config-test \
 	generic_agent_test \
 	syntax_test \
@@ -326,6 +327,8 @@ connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la .
 rlist_test_SOURCES = rlist_test.c \
        ../../libpromises/rlist.c ../../libutils/logging.c
 rlist_test_LDADD = libtest.la libstr.la ../../libpromises/libpromises.la
+
+process_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 if LINUX
 

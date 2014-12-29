@@ -1128,7 +1128,9 @@ case "$target_os" in
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         ;;
-   hpux*|hp-ux*) 
+   hpux*|hp-ux*)
+        dnl pstat* functions may fail with EOVERFLOW without this.
+        AC_DEFINE(_PSTAT64, 1, [Enable wide data structures everywhere])
         ;;
    aix*)
         CPPFLAGS="$CPPFLAGS -w"

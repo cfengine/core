@@ -1,9 +1,9 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user present gets locked and the password changed";
+      "description" string => "A user present gets locked (dry run)";
       "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+      "covers" string => "dryrun_repaired";
 }
 
 #######################################################
@@ -16,8 +16,18 @@ body common control
 
 #######################################################
 
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
 bundle agent init
 {
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
   users:
     "johndoe"
       policy => "present";
@@ -27,19 +37,15 @@ bundle agent init
 
 bundle agent test
 {
-  vars:
-    "hash" string => "dTloMVpjYt1w2";
-
   users:
     "johndoe"
-      policy => "locked",
-      password => test_password;
+      action => test_action,
+      policy => "locked";
 }
 
-body password test_password
+body action test_action
 {
-  format => "hash";
-  data => "$(test.hash)";
+  action_policy => "warn";
 }
 
 #######################################################
@@ -47,7 +53,7 @@ body password test_password
 bundle agent check
 {
   methods:
-    "any" usebundle => user_is_locked("johndoe", "success", "failure"),
+    "any" usebundle => user_is_unlocked("johndoe", "success", "failure"),
       classes => always("methods_run");
 
   classes:

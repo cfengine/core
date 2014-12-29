@@ -252,28 +252,32 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
     if (strlen(passwd_info->pw_passwd) <= 4)
     {
 #ifdef HAVE_FGETSPENT
-        Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from shadow database.", puser);
+        struct stat statbuf;
+        if (stat("/etc/shadow", &statbuf) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from shadow database.", puser);
 
-        struct spwd *spwd_info;
-        errno = 0;
-        spwd_info = GetSpEntry(puser);
-        if (!spwd_info)
-        {
-            if (errno)
+            struct spwd *spwd_info;
+            errno = 0;
+            spwd_info = GetSpEntry(puser);
+            if (!spwd_info)
             {
-                Log(LOG_LEVEL_ERR, "Could not get information from user shadow database: %s", GetErrorStr());
-                return false;
+                if (errno)
+                {
+                    Log(LOG_LEVEL_ERR, "Could not get information from user shadow database: %s", GetErrorStr());
+                    return false;
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Could not find user when checking password.");
+                    return false;
+                }
             }
-            else
+            else if (spwd_info)
             {
-                Log(LOG_LEVEL_ERR, "Could not find user when checking password.");
-                return false;
+                *result = spwd_info->sp_pwdp;
+                return true;
             }
-        }
-        else if (spwd_info)
-        {
-            *result = spwd_info->sp_pwdp;
-            return true;
         }
 
 #elif defined(_AIX)

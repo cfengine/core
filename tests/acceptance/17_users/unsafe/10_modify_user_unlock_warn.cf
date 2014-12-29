@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test locking a user.
+# Test warning about unlocking a user.
 #
 #######################################################
 
@@ -12,11 +12,21 @@ body common control
 
 #######################################################
 
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
 bundle agent init
 {
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
   users:
     "johndoe"
-      policy => "present";
+      policy => "locked";
 }
 
 #######################################################
@@ -25,7 +35,13 @@ bundle agent test
 {
   users:
     "johndoe"
-      policy => "locked";
+      action => test_action,
+      policy => "present";
+}
+
+body action test_action
+{
+  action_policy => "warn";
 }
 
 #######################################################

@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test adding a locked a user and setting a password.
+# Test locking a user.
 #
 #######################################################
 
@@ -12,30 +12,30 @@ body common control
 
 #######################################################
 
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
 bundle agent init
 {
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
   users:
     "johndoe"
-      policy => "absent";
+      policy => "present";
 }
 
 #######################################################
 
 bundle agent test
 {
-  vars:
-    "hash" string => "dTloMVpjYt1w2";
-
   users:
     "johndoe"
-      policy => "locked",
-      password => test_password;
-}
-
-body password test_password
-{
-  format => "hash";
-  data => "$(test.hash)";
+      policy => "locked";
 }
 
 #######################################################

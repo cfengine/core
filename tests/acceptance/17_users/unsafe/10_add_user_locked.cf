@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test unlocking a user.
+# Test adding a which is locked.
 #
 #######################################################
 
@@ -12,11 +12,22 @@ body common control
 
 #######################################################
 
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
 bundle agent init
 {
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
+  # Remove him first, should he already be present.
   users:
     "johndoe"
-      policy => "locked";
+      policy => "absent";
 }
 
 #######################################################
@@ -25,7 +36,7 @@ bundle agent test
 {
   users:
     "johndoe"
-      policy => "present";
+      policy => "locked";
 }
 
 #######################################################
@@ -33,7 +44,7 @@ bundle agent test
 bundle agent check
 {
   methods:
-    "any" usebundle => user_is_unlocked("johndoe", "success", "failure"),
+    "any" usebundle => user_is_locked("johndoe", "success", "failure"),
       classes => always("methods_run");
 
   classes:

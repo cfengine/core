@@ -1045,6 +1045,51 @@ void ZCopyProcessList(Item **dest, const Item *source, Seq *pidlist, char **name
     }
 }
 # endif /* HAVE_GETZONEID */
+
+static void CheckPsLineLimitations(void)
+{
+#ifdef __hpux
+    FILE *ps_fd;
+    int ret;
+    char limit[21];
+    char *buf = NULL;
+    size_t bufsize = 0;
+
+    ps_fd = fopen("/etc/default/ps", "r");
+    if (!ps_fd)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Could not open '/etc/default/ps' "
+            "to check ps line length limitations.");
+        return;
+    }
+
+    while (true)
+    {
+        ret = CfReadLine(&buf, &bufsize, ps_fd);
+        if (ret < 0)
+        {
+            break;
+        }
+
+        ret = sscanf(buf, "DEFAULT_CMD_LINE_WIDTH = %20[0-9]", limit);
+
+        if (ret == 1)
+        {
+            if (atoi(limit) < 1024)
+            {
+                Log(LOG_LEVEL_VERBOSE, "ps line length limit is less than 1024. "
+                    "Consider adjusting the DEFAULT_CMD_LINE_WIDTH setting in /etc/default/ps "
+                    "in order to guarantee correct process matching.");
+            }
+            break;
+        }
+    }
+
+    free(buf);
+    fclose(ps_fd);
+#endif
+}
+
 int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
@@ -1058,6 +1103,8 @@ int LoadProcessTable(Item **procdata)
         Log(LOG_LEVEL_VERBOSE, "Reusing cached process table");
         return true;
     }
+
+    CheckPsLineLimitations();
 
     const char *psopts = GetProcessOptions();
 

@@ -7,3 +7,11 @@
 {{#classes.empty}}
   <p>The list is empty.</p>
 {{/classes.empty}}
+
+{{#vars.test.d}}
+ {{.}}
+{{/vars.test.d}}
+
+{{#vars.test.h}}
+ key "{{@}}" value "{{.}}"
+{{/vars.test.h}}

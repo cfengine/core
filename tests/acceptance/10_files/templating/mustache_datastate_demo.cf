@@ -41,6 +41,8 @@ bundle agent test
       "template_file" string => "$(init.origtestdir)/demo.datastate.mustache";
       "header" string => "Colors";
       "items" slist => { "red", "green", "blue" };
+      "d" data => parsejson('[4,5,6]');
+      "h" data => parsejson('{ "a": "x", "b": "y"}');
 
   files:
       "$(G.testfile)"
@@ -65,6 +67,13 @@ bundle agent check
  blue
 
   <p>The list is empty.</p>
+
+ 4
+ 5
+ 6
+
+ key "a" value "x"
+ key "b" value "y"
 ';
 
       "actual" string => readfile("$(G.testfile)", 10000);

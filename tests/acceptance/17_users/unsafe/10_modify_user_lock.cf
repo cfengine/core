@@ -1,7 +1,7 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user present gets enabled";
+      "description" string => "A user present gets set to locked";
       "story_id" string => "5525";
       "covers" string => "operational_repaired";
 }
@@ -16,11 +16,21 @@ body common control
 
 #######################################################
 
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
 bundle agent init
 {
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
   users:
     "johndoe"
-      policy => "locked";
+      policy => "present";
 }
 
 #######################################################
@@ -29,7 +39,7 @@ bundle agent test
 {
   users:
     "johndoe"
-      policy => "present";
+      policy => "locked";
 }
 
 #######################################################
@@ -37,7 +47,7 @@ bundle agent test
 bundle agent check
 {
   methods:
-    "any" usebundle => user_is_unlocked("johndoe", "success", "failure"),
+    "any" usebundle => user_is_locked("johndoe", "success", "failure"),
       classes => always("methods_run");
 
   classes:

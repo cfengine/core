@@ -1,9 +1,9 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user present gets several attributes changed";
+      "description" string => "A user present gets many attributes changed (dry run)";
       "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+      "covers" string => "dryrun_repaired";
 }
 
 #######################################################
@@ -16,25 +16,42 @@ body common control
 
 #######################################################
 
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
 bundle agent init
 {
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
+  vars:
+    "hash" string => "dTloMVpjYt1w2";
+
   # Start out with other attributes.
   users:
     "johndoe"
       policy => "present",
       password => init_password,
       uid => "8765",
-      group_primary => "$(user_tests.gid2)",
+      group_primary => "$(user_tests.group2)",
       groups_secondary => { "$(user_tests.group1)" },
-      home_dir => "/home/johndoe",
-      shell => "/bin/bash",
-      description => "Wrong!";
+      home_dir => "/johns_old_home_dir",
+      shell => "/bin/csh",
+      description => "Good user";
 }
 
 body password init_password
 {
-  format => "plaintext";
-  data => "Wrong0P4SSW0RD";
+  !windows::
+    format => "hash";
+    data => "$(init.hash)";
+  windows::
+    format => "plaintext";
+    data => "Old0P4SSW0RD";
 }
 
 #######################################################
@@ -42,29 +59,30 @@ body password init_password
 bundle agent test
 {
   vars:
-    "hash" string => "dTloMVpjYt1w2";
-    "desc_string" string => "This description should make the CFEngine test pass";
+    "desc_string" string => "This description should make the CFEngine test fail";
 
   users:
     "johndoe"
+      action => test_action,
       policy => "present",
       password => test_password,
       uid => "9876",
       group_primary => "$(user_tests.group1)",
       groups_secondary => { "$(user_tests.group2)" },
-      home_dir => "/home/user-johndoe",
-      shell => "/bin/csh",
+      home_dir => "/johns_home_dir",
+      shell => "/bin/sh",
       description => "$(desc_string)";
+}
+
+body action test_action
+{
+  action_policy => "warn";
 }
 
 body password test_password
 {
-  !windows::
-    format => "hash";
-    data => "$(test.hash)";
-  windows::
-    format => "plaintext";
-    data => "New0P4SSW0RD";
+  format => "plaintext";
+  data => "Wrong0P4SSW0RD";
 }
 
 #######################################################
@@ -75,32 +93,32 @@ bundle agent check
       "any" usebundle => remove_stale_groups;
 
   methods:
-    "any" usebundle => user_has_uid("johndoe", "9876", "uid_success", "uid_failure"),
+    "any" usebundle => user_has_uid("johndoe", "8765", "uid_success", "uid_failure"),
       classes => always("uid_methods_run");
 
-    "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "pgroup_success", "pgroup_failure"),
+    "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group2)", "pgroup_success", "pgroup_failure"),
       classes => always("pgroup_methods_run");
 
-    "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group2)", "sgroup_success", "sgroup_failure"),
+    "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "sgroup_success", "sgroup_failure"),
       classes => always("sgroup_methods_run");
 
-    "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "not_sgroup_failure", "not_sgroup_success"),
+    "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group2)", "not_sgroup_failure", "not_sgroup_success"),
       classes => always("not_sgroup_methods_run");
 
-    "any" usebundle => user_has_home_dir("johndoe", "/home/user-johndoe", "home_success", "home_failure"),
+    "any" usebundle => user_has_home_dir("johndoe", "/johns_old_home_dir", "home_success", "home_failure"),
       classes => always("home_methods_run");
 
     "any" usebundle => user_has_shell("johndoe", "/bin/csh", "shell_success", "shell_failure"),
       classes => always("shell_methods_run");
 
-    "any" usebundle => user_has_description("johndoe", "$(test.desc_string)", "desc_success", "desc_failure"),
+    "any" usebundle => user_has_description("johndoe", "Good user", "desc_success", "desc_failure"),
       classes => always("desc_methods_run");
 
     !windows::
-      "any" usebundle => user_has_password_hash("johndoe", "$(test.hash)", "hash_success", "hash_failure"),
+      "any" usebundle => user_has_password_hash("johndoe", "$(init.hash)", "hash_success", "hash_failure"),
         classes => always("hash_methods_run");
     windows::
-      "any" usebundle => user_has_password("johndoe", "New0P4SSW0RD", "hash_success", "hash_failure"),
+      "any" usebundle => user_has_password("johndoe", "Wrong0P4SSW0RD", "hash_failure", "hash_success"),
         classes => always("hash_methods_run");
 
   classes:

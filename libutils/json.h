@@ -156,6 +156,7 @@ void JsonDestroy(JsonElement *element);
 size_t JsonLength(const JsonElement *element);
 
 JsonElementType JsonGetElementType(const JsonElement *element);
+const char* JsonElementGetPropertyName(const JsonElement *element);
 
 JsonContainerType JsonGetContainerType(const JsonElement *container);
 

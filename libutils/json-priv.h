@@ -27,7 +27,7 @@
 
 #include <json.h>
 
-const int DEFAULT_CONTAINER_CAPACITY;
+extern const int DEFAULT_CONTAINER_CAPACITY;
 
 JsonParseError JsonParseAnyFile(const char *path, size_t size_max, JsonElement **json_out,
                                 const bool yaml_format);

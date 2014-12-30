@@ -880,42 +880,63 @@ run_all_tests() {
 run_all_tests_using_make() {
   MAKEFILE=Makefile.testall
 
-  unset SERIAL_TEST_LIST PARALLEL_TEST_LIST TIMED_TEST_LIST
+  TEST_BLOCKS=1
+  LAST_WAS_SERIAL=0
 
   for curr_test in $ALL_TESTS; do
+    # Keep serial tests after preceding tests and before following tests.
     case "$curr_test" in
-      */serial/*|*/unsafe/*)
-        SERIAL_TEST_LIST=$SERIAL_TEST_LIST${SERIAL_TEST_LIST:+ }$curr_test
-        ;;
-      */timed/*)
-        TIMED_TEST_LIST=$TIMED_TEST_LIST${TIMED_TEST_LIST:+ }$curr_test
+      /serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*)
+        if [ $LAST_WAS_SERIAL = 0 ]; then
+          TEST_BLOCKS=$(($TEST_BLOCKS + 1))
+          LAST_WAS_SERIAL=1
+        fi
         ;;
       *)
-        PARALLEL_TEST_LIST=$PARALLEL_TEST_LIST${PARALLEL_TEST_LIST:+ }$curr_test
-        # Separate make target list, because we do not want the target to be a file name, since make
-        # will skip it then.
-        PARALLEL_TARGET_LIST=$PARALLEL_TARGET_LIST${PARALLEL_TARGET_LIST:+ }${curr_test}_rule
+        if [ $LAST_WAS_SERIAL = 1 ]; then
+          TEST_BLOCKS=$(($TEST_BLOCKS + 1))
+          LAST_WAS_SERIAL=0
+        fi
+        ;;
+    esac
+    case "$curr_test" in
+      /serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*|*/timed/*)
+        eval MAKE_RECIPE_LIST$TEST_BLOCKS='$MAKE_RECIPE_LIST'$TEST_BLOCKS'${MAKE_RECIPE_LIST'$TEST_BLOCKS':+ }$curr_test'
+        ;;
+      *)
+        # Separate make target list (notice the "_rule"), because we do not want the target to be a
+        # file name, since make will skip it if it exists (which of course it does).
+        eval MAKE_TARGET_LIST$TEST_BLOCKS='$MAKE_TARGET_LIST'$TEST_BLOCKS'${MAKE_TARGET_LIST'$TEST_BLOCKS':+ }${curr_test}_rule'
         ;;
     esac
   done
 
   # Redirect to makefile all at once.
   (
-    printf "tests: timed parallel\n\n"
-    printf "timed:\n"
-    if [ -n "$TIMED_TEST_LIST" ]; then
-      printf "\t@$0 --stay-in-workdir -j1 $TIMED_TEST_LIST\n"
-    fi
-    printf "\n"
-    printf "parallel: $PARALLEL_TARGET_LIST\n\n"
+    printf "tests:\n\n"
+    printf "parallel_block0:\n\n"
+    printf "serial_block0:\n\n"
+    printf "tests: serial_block0 parallel_block0\n\n"
 
-    printf "%%_rule: %%\n\t@$0 --stay-in-workdir -j1 \$<\n\n"
+    i=1
+    while [ $i -le $TEST_BLOCKS ]; do
+      if eval test -n '"$MAKE_RECIPE_LIST'$i'"'; then
+        eval printf '"serial_block$i:\n\t@-$0 --stay-in-workdir -j1 $MAKE_RECIPE_LIST'$i'\n\n"'
+      fi
+      printf "serial_block$i: serial_block$(($i-1)) parallel_block$(($i-1))\n\n"
+      eval printf '"parallel_block$i: $MAKE_TARGET_LIST'$i'\n\n"'
+      if eval test -n '"$MAKE_TARGET_LIST'$i'"'; then
+        eval printf '"$MAKE_TARGET_LIST'$i': serial_block$(($i-1)) parallel_block$(($i-1))\n\n"'
+      fi
+      printf "tests: serial_block$i parallel_block$i\n\n"
+
+      i=$(($i + 1))
+    done
+
+    printf "%%_rule: %%\n\t@-$0 --stay-in-workdir -j1 \$<\n\n"
   ) > $MAKEFILE
 
   ${MAKE:-make} -k -f $MAKEFILE
-  if [ -n "$SERIAL_TEST_LIST" ]; then
-    $0 --stay-in-workdir -j1 $SERIAL_TEST_LIST
-  fi
 
   for curr_test in $ALL_TESTS; do
     collect_results "$curr_test"

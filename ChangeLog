@@ -15,7 +15,7 @@ Next patch release:
         - fix mustache template method to run in dryrun mode (Redmine #6739)
         - set mailto and mailfrom settings for execd in def.cf (Redmine #6702)
         - fix conflation of multi-index entries in arrays (Redmine #6674)
-        - fix promise locking when transfering using update.cf (Redmine #6623)
+        - fix promise locking when transferring using update.cf (Redmine #6623)
         - update JSON parser to return an error on truncation (Redmine #6608)
         - fix sys.hardware_addresses not expanded (Redmine #6603)
         - fix opening database txn /var/cfengine/cf_lastseen.lmdb:
@@ -209,7 +209,7 @@ Next patch release:
               (e.g. "cfengine.com") or subdomains (starting with dot,
               e.g. ".cfengine.com") for "admit/deny"_hostnames. Same rules
               apply to 'deny_*' attributes.
-            - These new constaints and the paths in access_rules, can contain
+            - These new constraints and the paths in access_rules, can contain
               special variables "$(connection.ip)", "$(connection.hostname)",
               "$(connection.key)", which are expanded dynamically for every
               received connection.
@@ -654,7 +654,7 @@ Next patch release:
 	  ** WARNING: When upgrading, make sure that any existing use
 		      of depends_on does not make some promises being
 		      unintentionally ignored. This can happen if you are
-		      currently refering to non-existant or never-run handles
+		      currently referring to non-existent or never-run handles
 		      in depends_on attributes.
 
 	- methods return values, initial implementation
@@ -787,7 +787,7 @@ Next patch release:
 
 	- Do not lose hard classes in cf-serverd during policy reload
 	  (Mantis #1218).
-	- Implement recieve network timeout in cf-serverd. Prevents
+	- Implement receive network timeout in cf-serverd. Prevents
 	  overloading cf-serverd with stale connections.
 
 3.3.8   (Bugfix and Stability release)
@@ -1065,7 +1065,7 @@ Next patch release:
 	Added detection of network interfaces which belong to BSD jails.
 
 	Improve robustness of multi-threaded code, in particular fix
-	problems with spurious acces denials in server and losing of
+	problems with spurious access denials in server and losing of
 	authentication rules after policy reload.
 
 	cf-promises accepts option -b matching cf-agent, which causes it
@@ -1128,7 +1128,7 @@ Next patch release:
 3.1.2   (Scalability/efficiency release)
 
 	Big efficiency improvements by caching output from
-	cf-promises. Can also be used for much more efficent policy
+	cf-promises. Can also be used for much more efficient policy
 	deployment (only pull if changed).
 
 	Caching state of ps command for greater efficiency. Reloaded for each bundle.
@@ -1462,7 +1462,7 @@ Next patch release:
 	Reporting rationalized in cf-promises with -r only to avoid
 	leaving output files everywhere.
 
-	Hooks added for upcoming commerical additions to cfengine.
+	Hooks added for upcoming commercial additions to cfengine.
 
 	Added classify() and hostinnetgroup() functions
 	Added additional change management options for change detection

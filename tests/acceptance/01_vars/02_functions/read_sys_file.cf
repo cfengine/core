@@ -1,4 +1,4 @@
-# Redmine#1032: Test that /sys and /proc files with 0 length are succesfully read by readfile() function
+# Redmine#1032: Test that /sys and /proc files with 0 length are successfully read by readfile() function
 
 body common control
 {

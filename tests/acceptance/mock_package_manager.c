@@ -331,7 +331,7 @@ static void AddPackage(PackagePattern *pattern)
         Package *p = SeqAt(matching_available, i);
 
         SeqAppend(installed_packages, p);
-        fprintf(stderr, "Succesfully installed package %s\n", SerializePackage(p));
+        fprintf(stderr, "Successfully installed package %s\n", SerializePackage(p));
     }
 
     SavePackages(INSTALLED_PACKAGES_FILE_NAME, installed_packages);

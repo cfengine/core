@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of CFEngine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commercial Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -1042,7 +1042,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, ARG_UNUSED EvalC
 
         if ((ExecCommand(comm, result, pp) != 0))
         {
-            Log(LOG_LEVEL_VERBOSE, "Memeber for bridge %s could not be added", promiser);
+            Log(LOG_LEVEL_VERBOSE, "Member for bridge %s could not be added", promiser);
             *result = PROMISE_RESULT_FAIL;
             return;
         }

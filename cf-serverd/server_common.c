@@ -1330,7 +1330,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
 
 
 /**
- * Replace all occurences of #find with #replace.
+ * Replace all occurrences of #find with #replace.
  *
  * @return the length of #buf or (size_t) -1 in case of overflow, or 0
  *         if no replace took place.
@@ -1391,7 +1391,7 @@ static size_t StringReplace(char *buf, size_t buf_size,
 }
 
 /**
- * Search and replace occurences of #find1, #find2, #find3, with
+ * Search and replace occurrences of #find1, #find2, #find3, with
  * #repl1, #repl2, #repl3 respectively.
  *
  *   "$(connection.ip)" from "191.168.0.1"

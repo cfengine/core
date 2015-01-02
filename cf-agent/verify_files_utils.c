@@ -776,7 +776,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
         if ((attr.recursion.travlinks) || (attr.copy.link_type == FILE_LINK_TYPE_NONE))
         {
             /* No point in checking if there are untrusted symlinks here,
-               since this is from a trusted source, by defintion */
+               since this is from a trusted source, by definition */
 
             if (cf_stat(newfrom, &sb, attr.copy, conn) == -1)
             {

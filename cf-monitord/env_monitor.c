@@ -52,7 +52,7 @@
 /*****************************************************************************/
 
 #define CF_ENVNEW_FILE   "env_data.new"
-#define cf_noise_threshold 6    /* number that does not warrent large anomaly status */
+#define cf_noise_threshold 6    /* number that does not warrant large anomaly status */
 #define MON_THRESHOLD_HIGH 1000000      // samples should stay below this threshold
 #define LDT_BUFSIZE 10
 

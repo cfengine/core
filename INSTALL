@@ -88,7 +88,7 @@ INSTALLATION INSTRUCTIONS
 CFEngine might be installed in two configurations:
 
  * (default) Native CFEngine file layout. Everything is installed in
-   /var/cfengine, layed out as a "secondary FHS root". This layout is designed to
+   /var/cfengine, laid out as a "secondary FHS root". This layout is designed to
    keep CFEngine running even if most of the system is broken (e.g. /usr is not
    mounted due to NFS breakage).
 

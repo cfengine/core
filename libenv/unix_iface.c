@@ -647,7 +647,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
             }
         }
 
-        if (isalnum(buffer[0])) // This line is the interface indentifier
+        if (isalnum(buffer[0])) // This line is the interface identifier
         {
             char one[CF_SMALLBUF], two[CF_SMALLBUF];
             one[0] = '\0';

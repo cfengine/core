@@ -28,7 +28,7 @@
 /*
  * Platform-specific definitions and declarations.
  *
- * INCLUDE THIS HEADER ALWAYS FIRST in order to define apropriate macros for
+ * INCLUDE THIS HEADER ALWAYS FIRST in order to define appropriate macros for
  * including system headers (such as _FILE_OFFSET_BITS).
  */
 

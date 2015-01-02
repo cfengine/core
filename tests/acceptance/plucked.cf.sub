@@ -790,7 +790,7 @@ bundle edit_line set_config_values(v)
            classes => always("replace_attempted_$(cindex[$(index)])");
 
   insert_lines:
-      # If the line doesn't exist, or there is more than one occurance
+      # If the line doesn't exist, or there is more than one occurrence
       # of the LHS commented out, insert a new line and try to place it
       # after the commented LHS (keep new line with old comments)
       "$(index) $($(v)[$(index)])"
@@ -798,7 +798,7 @@ bundle edit_line set_config_values(v)
         location => after("^\s*#\s*($(index)\s+.*|$(index))$"),
       ifvarclass => "replace_attempted_$(cindex[$(index)]).multiple_comments_$(cindex[$(index)])";
 
-      # If the line doesn't exist and there are no occurances
+      # If the line doesn't exist and there are no occurrences
       # of the LHS commented out, insert a new line at the eof
       "$(index) $($(v)[$(index)])"
          comment => "Insert the value, marker doesn't exist $(index)",

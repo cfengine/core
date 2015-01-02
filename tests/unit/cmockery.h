@@ -222,7 +222,7 @@
         cast_to_largest_integral_type(minimum), \
         cast_to_largest_integral_type(maximum), __FILE__, __LINE__)
 
-// Assert that the specified value is < minumum or > maximum
+// Assert that the specified value is < minimum or > maximum
 # define assert_not_in_range(value, minimum, maximum) \
     _assert_not_in_range( \
         cast_to_largest_integral_type(value), \
@@ -421,7 +421,7 @@ void _expect_any(const char *const function, const char *const parameter,
 void _check_expected(const char *const function_name, const char *const parameter_name,
                      const char *file, const int line, const LargestIntegralType value);
 
-// Can be used to replace assert in tested code so that in conjuction with
+// Can be used to replace assert in tested code so that in conjunction with
 // check_assert() it's possible to determine whether an assert condition has
 // failed without stopping a test.
 void mock_assert(const int result, const char *const expression, const char *const file, const int line);

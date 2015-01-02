@@ -193,7 +193,7 @@ usage() {
   echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
   echo
   echo "If no test is given, all standard tests are run:"
-  echo "  Tests with names of form <file>.cf are expected to run succesfully"
+  echo "  Tests with names of form <file>.cf are expected to run successfully"
   echo "  Tests with names of form <file>.x.cf are expected to crash"
   echo "Set ${COLOR_SUCCESS}CFENGINE_COLOR=1${COLOR_NORMAL} to get ANSI color markers where appropriate."
   echo

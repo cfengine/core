@@ -35,7 +35,7 @@ bool cfnet_init(void);
 void cfnet_shut(void);
 void DetermineCfenginePort(void);
 /**
-  @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
+  @param err Set to 0 on success, -1 no server response, -2 authentication failure.
   */
 AgentConnection *ServerConnection(const char *server, const char *port,
                                   unsigned int connect_timeout,

@@ -1565,7 +1565,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 
 /* Now, grok the release.  For AS, we neglect the AS at the end of the
  * numerical release because we already figured out that it *is* AS
- * from the infomation above.  We assume that all the strings will
+ * from the information above.  We assume that all the strings will
  * have the word 'release' before the numerical release.
  */
 

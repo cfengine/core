@@ -275,7 +275,7 @@ int TLSVerifyCallback(X509_STORE_CTX *store_ctx,
  * @retval 0 if stored key for the host is missing or differs from the one
  *         received.
  * @retval -1 in case of other error (error will be Log()ed).
- * @note When return value is != -1 (so no error occured) the #conn_info struct
+ * @note When return value is != -1 (so no error occurred) the #conn_info struct
  *       should have been populated, with key received and its hash.
  */
 int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username)
@@ -607,7 +607,7 @@ static void assert_SSLIsBlocking(const SSL *ssl)
  *         requested length) or -1 in case of error.
  * @note Use only for *blocking* sockets. Set
  *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
- *       operation completed or an error occured.
+ *       operation completed or an error occurred.
  *
  * @TODO ERR_get_error is only meaningful for some error codes, so check and
  *       return empty string otherwise.
@@ -657,7 +657,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  *         closed.
  * @note Use only for *blocking* sockets. Set
  *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
- *       operation completed or an error occured.
+ *       operation completed or an error occurred.
  */
 int TLSRecv(SSL *ssl, char *buffer, int length)
 {

@@ -148,7 +148,7 @@ unsigned PolicyHash(const Policy *policy);
 StringSet *PolicySourceFiles(const Policy *policy);
 
 /**
- * @brief Merge two partial policy objects. The memory for the child objects of the original policies are transfered to the new parent.
+ * @brief Merge two partial policy objects. The memory for the child objects of the original policies are transferred to the new parent.
  * @param a
  * @param b
  * @return Merged policy

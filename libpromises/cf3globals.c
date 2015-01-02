@@ -54,7 +54,7 @@ int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
 char POLICY_SERVER[CF_MAX_IP_LEN] = ""; /* GLOBAL_X */
 
 /*****************************************************************************/
-/* Compatability infrastructure                                              */
+/* Compatibility infrastructure                                              */
 /*****************************************************************************/
 
 bool DONTDO = false; /* GLOBAL_A */

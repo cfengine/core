@@ -74,7 +74,7 @@ substituted directly for a LIST is not iterated, but dropped into
 place, i.e. in list-lvals and the promisee (since this would be
 equivalent to a re-concatenation of the expanded separate promises)
 
-Any list variable occuring within a scalar or in place of a scalar
+Any list variable occurring within a scalar or in place of a scalar
 is assumed to be iterated i.e. $(name).
 
 To expand a promise, we build temporary hash tables. There are two

@@ -138,7 +138,7 @@ ssize_t SeqIndexOf(Seq *seq, const void *key, SeqItemComparator Compare);
 ssize_t SeqBinaryIndexOf(Seq *seq, const void *key, SeqItemComparator Compare);
 
 /**
-  @brief Remove an inclusive range of items in the Sequence. A single item may be removed by specifiying start = end.
+  @brief Remove an inclusive range of items in the Sequence. A single item may be removed by specifying start = end.
   @param seq [in] The Sequence to remove from.
   @param start [in] Index of the first element to remove
   @param end [in] Index of the last element to remove.
@@ -165,7 +165,7 @@ void SeqSort(Seq *seq, SeqItemComparator compare, void *user_data);
 Seq *SeqSoftSort(const Seq *seq, SeqItemComparator compare, void *user_data);
 
 /**
-  @brief Remove an inclusive range of item handles in the Sequence. A single item may be removed by specifiying start = end.
+  @brief Remove an inclusive range of item handles in the Sequence. A single item may be removed by specifying start = end.
   @param seq [in] The Sequence to remove from.
   @param start [in] Index of the first element to remove
   @param end [in] Index of the last element to remove.

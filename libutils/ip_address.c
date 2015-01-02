@@ -337,7 +337,7 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
     /*
      * IPV6 parsing is more complex than IPV4 parsing. There are a few ground rules:
      * - Leading zeros can be omitted.
-     * - Fields that are just zeros can be abreviated to one zero or completely omitted.
+     * - Fields that are just zeros can be abbreviated to one zero or completely omitted.
      * In the later case the following notation is used: '::'.
      * - Port number is specified in a special way:
      * [hhhh:hhhh:hhhh:hhhh:hhhh:hhhh:hhhh:hhhh]:ppppp

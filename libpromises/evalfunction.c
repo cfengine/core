@@ -116,7 +116,7 @@ int FnNumArgs(const FnCallType *call_type)
   */
 
 /*
- * Return succesful FnCallResult with copy of str retained.
+ * Return successful FnCallResult with copy of str retained.
  */
 static FnCallResult FnReturn(const char *str)
 {
@@ -124,7 +124,7 @@ static FnCallResult FnReturn(const char *str)
 }
 
 /*
- * Return succesful FnCallResult with str as is.
+ * Return successful FnCallResult with str as is.
  */
 static FnCallResult FnReturnNoCopy(char *str)
 {
@@ -6732,7 +6732,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         }
 
         content[0] = '\0';
-        // TODO: the variable name is limited to 256 to accomodate the
+        // TODO: the variable name is limited to 256 to accommodate the
         // context name once it's in the vartable.  Maybe this can be relaxed.
         sscanf(line + 1, "%256[^=]=%4095[^\n]", name, content);
 
@@ -6751,7 +6751,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 
     case '%':
         content[0] = '\0';
-        // TODO: the variable name is limited to 256 to accomodate the
+        // TODO: the variable name is limited to 256 to accommodate the
         // context name once it's in the vartable.  Maybe this can be relaxed.
         sscanf(line + 1, "%256[^=]=", name);
 

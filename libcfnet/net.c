@@ -429,7 +429,7 @@ bool TryConnect(int sd, unsigned long timeout_ms,
         }
     }
 
-    /* Connection suceeded, return to blocking mode. */
+    /* Connection succeeded, return to blocking mode. */
     ret = fcntl(sd, F_SETFL, arg);
     if (ret == -1)
     {

@@ -223,7 +223,7 @@ void DBPrivCommit(ARG_UNUSED DBPriv *db)
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
-    // FIXME: distinguish between "entry not found" and "error occured"
+    // FIXME: distinguish between "entry not found" and "error occurred"
 
     return tchdbvsiz(db->hdb, key, key_size) != -1;
 }

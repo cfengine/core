@@ -189,7 +189,7 @@ static int SafeKill(pid_t pid, time_t expected_start_time, int signal)
     int saved_errno = errno;
 
     /*
-     * We don't check return value of SIGCONT, as the proces may have been
+     * We don't check return value of SIGCONT, as the process may have been
      * terminated already by previous kill. Moreover, what would we do with the
      * return code?
      */

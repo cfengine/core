@@ -90,7 +90,7 @@ AC_DEFUN([HW_FUNC_VSNPRINTF],
 [
   AC_REQUIRE([HW_HEADER_STDARG_H])dnl Our check evaluates HAVE_STDARG_H.
 
-  dnl The folowing checks are not *required* to HAVE_VSNPRINTF, but they
+  dnl The following checks are not *required* to HAVE_VSNPRINTF, but they
   dnl should be checked (and pass!) for the test in snprintf.c to pass.
   AC_CHECK_HEADERS([inttypes.h locale.h stddef.h stdint.h])
   AC_CHECK_MEMBERS([struct lconv.decimal_point, struct lconv.thousands_sep],

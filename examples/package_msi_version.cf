@@ -19,7 +19,7 @@
 # included file COSL.txt.
 
 #
-# MSI package managment using version criteria
+# MSI package management using version criteria
 #
 
 body common control

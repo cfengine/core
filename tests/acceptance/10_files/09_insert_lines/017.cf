@@ -16,7 +16,7 @@ body common control
 
 bundle agent test {
   meta:
-      "test_suppress_fail" string => "aix",
+      "test_suppress_fail" string => "aix|hpux",
         meta => { "redmine6336" };
 
   files:

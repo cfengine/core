@@ -113,7 +113,7 @@ then
 else
     if [ ! -f $TEST_FOLDER/cf-upgrade-done ];
     then
-        echo "$TEST_NAME: Verfication Failure";
+        echo "$TEST_NAME: Verification Failure";
         echo "*** Debug info below ***";
         echo "command line: $CL";
         echo "output:";

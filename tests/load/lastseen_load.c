@@ -2,9 +2,6 @@
 #include <dbm_api.h>
 #include <lastseen.h>
 
-char CFWORKDIR[CF_BUFSIZE] = "/tmp";
-
-
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 

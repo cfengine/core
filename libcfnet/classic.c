@@ -56,7 +56,7 @@ static bool LastRecvTimedOut(void)
 
  * @return -1 on error; or number of bytes received. It should return less
  *         than #toget bytes only if the peer closed the connection or timeout
- *         or other unrecoverable error occured.
+ *         or other unrecoverable error occurred.
  */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {

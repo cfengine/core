@@ -58,14 +58,14 @@ bool IsNakedVar(const char *str, char vtype);
   @brief Takes a variable and removes decorations.
 
   This function performs no validations, it is necessary to call the validation functions before calling this function.
-  @remarks This function does not check for NULL pointers, that is the caller's responsability.
+  @remarks This function does not check for NULL pointers, that is the caller's responsibility.
   @param s1 Buffer to store the undecorated variable.
   @param s2 Decorated variable
   */
 void GetNaked(char *s1, const char *s2);
 /**
   @brief Checks if a given variable is a list or not.
-  @remarks This function does not check for NULL pointers, it is responsability of the caller.
+  @remarks This function does not check for NULL pointers, it is responsibility of the caller.
   @param variable Variable to be checked
   @return True if the variable is a list, False otherwise.
   */

@@ -624,7 +624,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         FatalError(ctx, " No access to WORKSPACE/inputs dir");
     }
-    else
+
+    /* ensure WORKSPACE/inputs directory has all user bits set (u+rwx) */
+    if ((sb.st_mode & 0700) != 0700)
     {
         chmod(vbuff, sb.st_mode | 0700);
     }
@@ -635,7 +637,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         FatalError(ctx, " No access to WORKSPACE/outputs dir");
     }
-    else
+
+    /* ensure WORKSPACE/outputs directory has all user bits set (u+rwx) */
+    if ((sb.st_mode & 0700) != 0700)
     {
         chmod(vbuff, sb.st_mode | 0700);
     }

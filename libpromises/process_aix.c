@@ -39,7 +39,7 @@ int getprocs64(struct procentry64 *, int, struct fdsinfo64 *, int, pid_t *, int)
 static bool FillProcEntry(struct procentry64* pe, pid_t pid)
 {
     pid_t nextpid = pid;
-    int ret = getprocs64(pe, sizeof(pe), NULL, 0, &nextpid, 1);
+    int ret = getprocs64(pe, sizeof(*pe), NULL, 0, &nextpid, 1);
 
     /*
      * getprocs64 may

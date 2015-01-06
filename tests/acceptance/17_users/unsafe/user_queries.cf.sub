@@ -4,8 +4,11 @@ bundle common user_tests
     !windows::
       "group1" string => "bin";
       "group2" string => "sys";
-      "gid1" string => "2";
       "gid2" string => "3";
+    redhat|suse::
+      "gid1" string => "1";
+    !redhat.!suse.!windows::
+      "gid1" string => "2";
 
     windows::
       "group1" string => "Users";

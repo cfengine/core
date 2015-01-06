@@ -324,7 +324,7 @@ bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
     MDB_val mkey, data;
     MDB_txn *txn;
     int rc;
-    // FIXME: distinguish between "entry not found" and "error occured"
+    // FIXME: distinguish between "entry not found" and "error occurred"
 
     rc = GetReadTransaction(db, &txn);
     if (rc == MDB_SUCCESS)

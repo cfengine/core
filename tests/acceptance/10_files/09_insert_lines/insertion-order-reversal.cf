@@ -22,7 +22,7 @@ bundle agent init
       "BEGIN
     One potato
     Two potato
-    Three potatos
+    Three potatoes
     Four
 END";
 

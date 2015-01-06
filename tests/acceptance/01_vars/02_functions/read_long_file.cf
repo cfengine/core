@@ -1,4 +1,4 @@
-# Test that long file is succesfully read by readstringlist() function
+# Test that long file is successfully read by readstringlist() function
 
 body common control
 {

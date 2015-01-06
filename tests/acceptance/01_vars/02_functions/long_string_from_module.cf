@@ -39,7 +39,7 @@ bundle agent check
 {
   classes:
       "ok" expression => "any",
-        comment => "If we made it to here, we didnt crash";
+        comment => "If we made it to here, we didn't crash";
 
   reports:
     ok::

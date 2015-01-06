@@ -93,7 +93,7 @@ bundle agent check
       "$(this.promise_filename) FAIL";
 }
 
-body classes succesfully_executed(class)
+body classes successfully_executed(class)
 {
       kept_returncodes => { "0" };
       promise_kept => { "$(class)" };

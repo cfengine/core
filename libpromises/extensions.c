@@ -139,7 +139,7 @@ void *extension_library_open(const char *name)
     const char * (*GetExtensionLibraryVersion)() = shlib_load(handle, "GetExtensionLibraryVersion");
     if (!GetExtensionLibraryVersion)
     {
-        Log(LOG_LEVEL_ERR, "Could not retreive version from extension plugin (%s). Not loading the plugin.", name);
+        Log(LOG_LEVEL_ERR, "Could not retrieve version from extension plugin (%s). Not loading the plugin.", name);
         goto close_and_fail;
     }
 

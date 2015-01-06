@@ -1,4 +1,4 @@
-# Test that empty file is succesfully read by readfile() function
+# Test that empty file is successfully read by readfile() function
 
 body common control
 {

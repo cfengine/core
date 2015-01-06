@@ -23,7 +23,7 @@
 # to see list of packages type "apt-cache pkgnames"
 # to see list of installed packages type "dpkg --get-selections"
 #
-# Package managment
+# Package management
 #
 
 body common control

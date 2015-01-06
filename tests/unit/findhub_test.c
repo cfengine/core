@@ -155,7 +155,7 @@ int avahi_client_errno(AvahiClient *c)
 
 const char *avahi_strerror(int error)
 {
-    return "Avahi error occured";
+    return "Avahi error occurred";
 }
 
 AvahiServiceResolver *avahi_service_resolver_new(AvahiClient *c, AvahiIfIndex index, AvahiProtocol protocol, const char * s1, const char *s2, const char *s3, 

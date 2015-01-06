@@ -92,7 +92,7 @@ struct StringExpression_
  * if succeeded, then result is the result of parsing and position is last
  * character consumed.
  *
- * if not succeded, then result is NULL and position is last character consumed
+ * if not succeeded, then result is NULL and position is last character consumed
  * before the error.
  */
 typedef struct

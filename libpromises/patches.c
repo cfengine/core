@@ -27,7 +27,7 @@
   given platform These are conditionally compiled, pending extensions or
   developments in the OS concerned.
 
-  FIXME: move to the libcompat/ directory or to the apropriate source file.
+  FIXME: move to the libcompat/ directory or to the appropriate source file.
 */
 
 #include <cf3.defs.h>

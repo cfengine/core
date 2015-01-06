@@ -70,7 +70,7 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub);
 
 /**
  * @brief Write the builtin failsafe policy to the default location
- * @return True if succesful
+ * @return True if successful
  */
 bool WriteBuiltinFailsafePolicy(const char *workdir);
 
@@ -82,7 +82,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename);
 /**
  * @brief Removes all files in $(sys.inputdir)
  * @param inputdir
- * @return True if succesful
+ * @return True if successful
  */
 bool RemoveAllExistingPolicyInInputs(const char *inputdir);
 

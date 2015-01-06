@@ -23,7 +23,7 @@ bundle agent init
       "BEGIN
     One potato
     Two potato
-    Two potatos
+    Two potatoes
     Leading   embedded   and trailing spaces   
     Four
 END";
@@ -39,7 +39,7 @@ Leading embedded and trailing spaces
       "BEGIN
     One potato
     Two potato
-    Two potatos
+    Two potatoes
     Leading   embedded   and trailing spaces   
     Four
 END

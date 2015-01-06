@@ -61,7 +61,7 @@ void MonEntropyClassesReset(void)
  *   E = -------------------------
  *                 ln(N)
  *
- *   Divisor is a uncertainity per digit, to normalize it to [0..1] we divide it
+ *   Divisor is a uncertainty per digit, to normalize it to [0..1] we divide it
  *   by ln(N).
  */
 

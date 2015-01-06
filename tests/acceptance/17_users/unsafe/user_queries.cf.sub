@@ -4,12 +4,34 @@ bundle common user_tests
     !windows::
       "group1" string => "bin";
       "group2" string => "sys";
-      "gid1" string => "2";
       "gid2" string => "3";
+    redhat|suse::
+      "gid1" string => "1";
+    !redhat.!suse.!windows::
+      "gid1" string => "2";
 
     windows::
       "group1" string => "Users";
       "group2" string => "Administrators";
+
+  classes:
+    # On HPUX we use a sudo hack, which doesn't support '-u'.
+    !windows.!hpux::
+      "sudo_works" expression => "any";
+
+    hpux::
+      "passwords_in_shadow" expression => fileexists("/etc/shadow");
+      "passwords_in_passwd" not => fileexists("/etc/shadow");
+    windows|aix::
+      "passwords_in_shadow" expression => "!any";
+      "passwords_in_passwd" expression => "!any";
+    !hpux.!windows.!aix::
+      "passwords_in_shadow" expression => "any";
+      "passwords_in_passwd" expression => "!any";
+    windows|aix::
+      "passwords_in_passwd_format" expression => "!any";
+    !windows.!aix::
+      "passwords_in_passwd_format" expression => "any";
 }
 
 bundle agent remove_stale_groups
@@ -189,6 +211,10 @@ bundle agent user_has_password_hash(user, hash, true_class, false_class)
       "escaped_hash" string => escape("$(hash)");
     aix::
       "user_hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
+    passwords_in_passwd::
+      "passwd_file" string => "/etc/passwd";
+    passwords_in_shadow::
+      "passwd_file" string => "/etc/shadow";
 
   classes:
     aix::
@@ -198,8 +224,8 @@ bundle agent user_has_password_hash(user, hash, true_class, false_class)
         scope => "namespace";
 
   commands:
-    !windows.!aix::
-      "$(G.grep) '^$(user):$(escaped_hash):' /etc/shadow"
+    passwords_in_passwd_format::
+      "$(G.grep) '^$(user):$(escaped_hash):' $(passwd_file)"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 
@@ -211,8 +237,12 @@ bundle agent user_has_password_hash(user, hash, true_class, false_class)
 bundle agent user_get_password_hash(user)
 {
   vars:
-    !windows.!aix::
-      "hash" string => execresult("$(G.grep) '^$(user):' /etc/shadow | $(G.sed) -e 's/[^:]*:\([^:]*\):.*/\1/'", "useshell");
+    passwords_in_passwd::
+      "passwd_file" string => "/etc/passwd";
+    passwords_in_shadow::
+      "passwd_file" string => "/etc/shadow";
+    passwords_in_passwd_format::
+      "hash" string => execresult("$(G.grep) '^$(user):' $(passwd_file) | $(G.sed) -e 's/[^:]*:\([^:]*\):.*/\1/'", "useshell");
     aix::
       "hash" string => execresult("$(this.promise_dirname)/aix_get_shadow_field.pl password $(user)", "useshell");
 
@@ -241,9 +271,13 @@ bundle agent user_is_locked(user, true_class, false_class)
         scope => "namespace";
 
   commands:
-    !windows.!aix::
+    passwords_in_shadow::
       # Notice the [^:] without * at the end. That field (expiry) should be *something*.
       "$(G.grep) '^$(user):![^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:$(expiry_date)[^:]*:' /etc/shadow"
+        contain => no_output_shell,
+        classes => on_success("$(true_class)", "$(false_class)");
+    passwords_in_passwd::
+      "$(G.grep) '^$(user):![^:]*:' /etc/passwd"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 
@@ -272,9 +306,13 @@ bundle agent user_is_unlocked(user, true_class, false_class)
         scope => "namespace";
 
   commands:
-    !windows.!aix::
+    passwords_in_shadow::
       # Notice the field at the end. That field (expiry) should be gone or zero.
       "$(G.egrep) '^$(user):[^:!]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:(:|0:)' /etc/shadow"
+        contain => no_output_shell,
+        classes => on_success("$(true_class)", "$(false_class)");
+    passwords_in_passwd::
+      "$(G.grep) '^$(user):[^:!]*:' /etc/passwd"
         contain => no_output_shell,
         classes => on_success("$(true_class)", "$(false_class)");
 

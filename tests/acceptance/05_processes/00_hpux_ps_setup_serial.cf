@@ -1,0 +1,47 @@
+# Simply makes sure that /etc/default/ps has the correct setting on HPUX. If
+# DEFAULT_CMD_LINE_WIDTH is too low ps output may be truncated, leading to test
+# failures. We adjust it here if we are running in unsafe mode, else we simply
+# check that it is correct and fail if it isn't.
+
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "test_skip_unsupported" string => "!hpux";
+
+  classes:
+      "unsafe_mode"
+        expression => strcmp(getenv("UNSAFE_TESTS", "10"), "1"),
+        scope => "namespace";
+
+  files:
+    unsafe_mode::
+      "/etc/default/ps"
+        edit_line => ps_edit;
+}
+
+bundle edit_line ps_edit
+{
+  delete_lines:
+      "\s*DEFAULT_CMD_LINE_WIDTH\s*=\s*[0-9]+\s*";
+  insert_lines:
+      "DEFAULT_CMD_LINE_WIDTH=1024";
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => regline("DEFAULT_CMD_LINE_WIDTH=1024",
+                                 "/etc/default/ps");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

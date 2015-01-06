@@ -25,6 +25,8 @@
 #ifndef CFENGINE_PROCESS_H
 #define CFENGINE_PROCESS_H
 
+#include <platform.h>
+
 #define PROCESS_START_TIME_UNKNOWN ((time_t)0)
 
 /*

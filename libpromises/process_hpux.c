@@ -22,41 +22,18 @@
   included file COSL.txt.
 */
 
-#include <cf3.defs.h>
-
 #include <process_lib.h>
 #include <process_unix_priv.h>
-#include <files_lib.h>
 
-#include <procinfo.h>
-
-/*
- * AIX 5.3 is missing this declaration
- */
-#ifndef HAVE_GETPROCS64
-int getprocs64(struct procentry64 *, int, struct fdsinfo64 *, int, pid_t *, int);
-#endif
-static bool FillProcEntry(struct procentry64* pe, pid_t pid)
-{
-    pid_t nextpid = pid;
-    int ret = getprocs64(pe, sizeof(*pe), NULL, 0, &nextpid, 1);
-
-    /*
-     * getprocs64 may
-     *  - return -1 => we can't access this process (EPERM)
-     *  - return 0 => end of process table, no such process
-     *  - return another process' info => no such process
-     */
-    return ret == 1 && pe->pi_pid == pid;
-}
+#include <sys/pstat.h>
 
 time_t GetProcessStartTime(pid_t pid)
 {
-    struct procentry64 pe;
+    struct pst_status proc;
 
-    if (FillProcEntry(&pe, pid))
+    if (pstat_getproc(&proc, sizeof(proc), 0, pid) > 0)
     {
-        return pe.pi_start;
+        return proc.pst_start;
     }
     else
     {
@@ -66,11 +43,11 @@ time_t GetProcessStartTime(pid_t pid)
 
 ProcessState GetProcessState(pid_t pid)
 {
-    struct procentry64 pe;
+    struct pst_status proc;
 
-    if (FillProcEntry(&pe, pid))
+    if (pstat_getproc(&proc, sizeof(proc), 0, pid) > 0)
     {
-        return pe.pi_state == SSTOP ? PROCESS_STATE_STOPPED : PROCESS_STATE_RUNNING;
+        return proc.pst_stat == PS_STOP ? PROCESS_STATE_STOPPED : PROCESS_STATE_RUNNING;
     }
     else
     {

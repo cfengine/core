@@ -1,0 +1,88 @@
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user not present gets added with secondary group";
+      "story_id" string => "5525";
+      "covers" string => "operational_repaired";
+}
+
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub",
+                  "user_queries.cf.sub",
+                  "disable_sudo_tty_requirement.cf.sub"
+                };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+body perms init_perms_body
+{
+  groups => { "$(user_tests.group1)" };
+  mode => "664";
+}
+
+bundle agent init
+{
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "absent";
+
+  files:
+    "$(G.testfile)"
+      create => "true",
+      perms => init_perms_body;
+
+  methods:
+      "any" usebundle => disable_sudo_tty_requirement;
+}
+
+#######################################################
+
+body contain test_contain_body
+{
+  useshell => "useshell";
+}
+
+bundle agent test
+{
+  users:
+    "johndoe"
+      policy => "present",
+      groups_secondary => { "$(user_tests.group1)" };
+
+  commands:
+    sudo_works::
+      "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
+        contain => test_contain_body;
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "success", "failure"),
+      classes => always("methods_run");
+
+  classes:
+    sudo_works::
+      "content_ok" not => strcmp("0", countlinesmatching("Succeeded", "$(G.testfile)"));
+
+  classes:
+      "ready" expression => "methods_run";
+    sudo_works::
+      "ok" and => { "success", "!failure", "content_ok" };
+    !sudo_works::
+      "ok" and => { "success", "!failure" };
+
+  reports:
+    ok.ready::
+      "$(this.promise_filename) Pass";
+    !ok.ready::
+      "$(this.promise_filename) FAIL";
+}

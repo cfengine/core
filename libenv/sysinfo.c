@@ -85,7 +85,6 @@
 
 // HP-UX: pstat_getproc(2) on init (pid 1)
 #if defined(__hpux)
-# define _PSTAT64
 # include <sys/param.h>
 # include <sys/pstat.h>
 # define BOOT_TIME_WITH_PSTAT_GETPROC

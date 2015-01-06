@@ -1,0 +1,137 @@
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user present gets several attributes changed";
+      "story_id" string => "5525";
+      "covers" string => "operational_repaired";
+}
+
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
+  # Start out with other attributes.
+  users:
+    "johndoe"
+      policy => "present",
+      password => init_password,
+      uid => "8765",
+      group_primary => "$(user_tests.gid2)",
+      groups_secondary => { "$(user_tests.group1)" },
+      home_dir => "/home/johndoe",
+      shell => "/bin/bash",
+      description => "Wrong!";
+}
+
+body password init_password
+{
+  format => "plaintext";
+  data => "Wrong0P4SSW0RD";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "hash" string => "dTloMVpjYt1w2";
+    "desc_string" string => "This description should make the CFEngine test pass";
+
+  users:
+    "johndoe"
+      policy => "present",
+      password => test_password,
+      uid => "9876",
+      group_primary => "$(user_tests.group1)",
+      groups_secondary => { "$(user_tests.group2)" },
+      home_dir => "/home/user-johndoe",
+      shell => "/bin/csh",
+      description => "$(desc_string)";
+}
+
+body password test_password
+{
+  !windows::
+    format => "hash";
+    data => "$(test.hash)";
+  windows::
+    format => "plaintext";
+    data => "New0P4SSW0RD";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => remove_stale_groups;
+
+  methods:
+    "any" usebundle => user_has_uid("johndoe", "9876", "uid_success", "uid_failure"),
+      classes => always("uid_methods_run");
+
+    "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "pgroup_success", "pgroup_failure"),
+      classes => always("pgroup_methods_run");
+
+    "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group2)", "sgroup_success", "sgroup_failure"),
+      classes => always("sgroup_methods_run");
+
+    "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "not_sgroup_failure", "not_sgroup_success"),
+      classes => always("not_sgroup_methods_run");
+
+    "any" usebundle => user_has_home_dir("johndoe", "/home/user-johndoe", "home_success", "home_failure"),
+      classes => always("home_methods_run");
+
+    "any" usebundle => user_has_shell("johndoe", "/bin/csh", "shell_success", "shell_failure"),
+      classes => always("shell_methods_run");
+
+    "any" usebundle => user_has_description("johndoe", "$(test.desc_string)", "desc_success", "desc_failure"),
+      classes => always("desc_methods_run");
+
+    !windows::
+      "any" usebundle => user_has_password_hash("johndoe", "$(test.hash)", "hash_success", "hash_failure"),
+        classes => always("hash_methods_run");
+    windows::
+      "any" usebundle => user_has_password("johndoe", "New0P4SSW0RD", "hash_success", "hash_failure"),
+        classes => always("hash_methods_run");
+
+  classes:
+      "ready" and => { "uid_methods_run", "pgroup_methods_run", "sgroup_methods_run", "not_sgroup_methods_run",
+                       "home_methods_run", "shell_methods_run", "desc_methods_run", "hash_methods_run" };
+    !windows::
+      # Note the secondary group classes here. Windows treats primary and secondary groups the same,
+      # and hence that test is invalid there.
+      "unix_ok" and => { "uid_success", "!uid_failure", "shell_success", "!shell_failure",
+                         "not_sgroup_success", "!not_sgroup_failure", };
+    windows::
+      "unix_ok" expression => "any";
+    any::
+      "ok" and => { "pgroup_success", "!pgroup_failure", "sgroup_success", "!sgroup_failure",
+                    "hash_success", "!hash_failure",
+                    "home_success", "!home_failure", "desc_success", "!desc_failure",
+                    "unix_ok" };
+
+  reports:
+    ok.ready::
+      "$(this.promise_filename) Pass";
+    !ok.ready::
+      "$(this.promise_filename) FAIL";
+}

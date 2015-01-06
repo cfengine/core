@@ -113,7 +113,20 @@ Tests which cannot be run in parallel with other tests should be put in a
 'serial' subdirectory. This is necessary if the test depends on for example
 a certain number of cf-agent processes running, or to open a network port that
 may be shared with other tests. Unsafe tests are always carried out serially,
-and do not need to be in a 'serial' subdirectory.
+and do not need to be in a 'serial' subdirectory. You can also give individual
+tests a name that contains "serial" as a word.
+
+Serial tests enforce strictly sorted order when they are encountered, so you can
+use them to initialize some precondition for a set a of tests by sorting it
+lexicographically before the others and giving it a name containing "serial".
+The other tests can then be executed in parallel, unless they need to be serial
+for other reasons. For example, you can use two serial tests, one to set up a
+cf-serverd, and one to tear it down, and in between you put normal tests. Note
+that timed tests (see below) have one small exception: If a test that is both
+timed and serial is executed in the same "block" as other serial tests (that is,
+when one or more serials tests follow another), it will always be executed
+first. So put it in a timed directory as well, if you want to be absolutely
+sure.
 
 NOTE: Since the class 'ok' is used in most tests, never create a persistent
 class called 'ok' in any test. Persistent classes are cleaned up between test
@@ -178,7 +191,7 @@ possible variable names:
   - test_suppress_fail
       Runs the test, but will accept failure. Use this when there is a
       real failure, but it is acceptable for the time being. This
-      variable requires a meta tag on the the variable set to
+      variable requires a meta tag on the variable set to
       "redmine<number>", where <number> is a Redmine issue number.
       There is a subtle difference between the two. Soft failures will
       not be reported as a failure in the XML output, and is
@@ -234,6 +247,8 @@ cf-promises may have denied execution of the promises, etc.
 
 FAILed to crash: test was expected to crash, but did not. This is another kind
 of failure, split into separate kind due to low impact.
+
+Soft fail: the test failed as expected by a "test_soft_fail" promise.
 
 Skipped: test is skipped due to be either explicitly disabled or being
 Nova-specific and being run on Community cf-agent.

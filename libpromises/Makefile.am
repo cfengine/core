@@ -169,6 +169,11 @@ libpromises_la_SOURCES += \
 	process_aix.c
 endif
 
+if HPUX
+libpromises_la_SOURCES += \
+	process_hpux.c
+endif
+
 if SOLARIS
 libpromises_la_SOURCES += \
 	process_solaris.c
@@ -181,10 +186,12 @@ endif
 
 if !LINUX
 if !AIX
+if !HPUX
 if !SOLARIS
 if !FREEBSD
 libpromises_la_SOURCES += \
         process_unix_stub.c
+endif
 endif
 endif
 endif

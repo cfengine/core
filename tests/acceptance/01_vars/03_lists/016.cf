@@ -22,10 +22,6 @@ bundle agent init
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "hpux",
-        meta => { "redmine4963" };
-
 files:
   "$(G.testfile).actual"
     create => "true",

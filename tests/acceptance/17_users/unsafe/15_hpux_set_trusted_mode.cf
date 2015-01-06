@@ -1,0 +1,32 @@
+# Not a test, but just setting up trusted mode on HPUX.
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "!hpux";
+
+  classes:
+      "trusted_mode"
+        expression => fileexists("/etc/shadow"),
+        scope => "namespace";
+
+  commands:
+    !trusted_mode::
+      "$(G.echo) yes | /usr/sbin/pwconv"
+        contain => in_shell;
+}
+
+bundle agent check
+{
+  reports:
+    trusted_mode::
+      "$(this.promise_filename) Pass";
+    !trusted_mode::
+      "$(this.promise_filename) FAIL";
+}

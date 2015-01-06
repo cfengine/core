@@ -753,6 +753,11 @@ AC_CHECK_DECLS(isfinite, [], [], [[#include <math.h>]])
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(fgetspent lckpwdf ulckpwdf)
+AC_CHECK_LIB([sec], [fgetspent], [
+    AC_DEFINE([HAVE_LIBSEC], 1, [Define if -lsec is available])
+    AC_DEFINE([HAVE_FGETSPENT], 1, [Define if fgetspent is available])
+    LIBS="-lsec $LIBS"
+])
 
 AC_CHECK_DECLS(getloadavg)
 AC_FUNC_GETLOADAVG
@@ -1151,7 +1156,9 @@ case "$target_os" in
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
         ;;
-   hpux*|hp-ux*) 
+   hpux*|hp-ux*)
+        dnl pstat* functions may fail with EOVERFLOW without this.
+        AC_DEFINE(_PSTAT64, 1, [Enable wide data structures everywhere])
         ;;
    aix*)
         CPPFLAGS="$CPPFLAGS -w"

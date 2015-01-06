@@ -1,0 +1,84 @@
+bundle common test_meta
+{
+  vars:
+      "description" string => "A user not present gets added with multiple attributes (dry run only)";
+      "story_id" string => "5525";
+      "covers" string => "dryrun_repaired";
+}
+
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle common hpux_trusted
+{
+  classes:
+      "hpux_trusted_mode_test"
+        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+}
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "absent";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "desc_string" string => "This description should make the CFEngine test pass";
+
+  users:
+    "johndoe"
+      action => test_action,
+      policy => "present",
+      uid => "9876",
+      group_primary => "$(user_tests.gid1)",
+      groups_secondary => { "$(user_tests.group2)" },
+      password => test_password,
+      shell => "/bin/csh",
+      description => "$(desc_string)";
+}
+
+body action test_action
+{
+  action_policy => "warn";
+}
+
+body password test_password
+{
+  format => "hash";
+  data => "dTloMVpjYt1w2";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "any" usebundle => user_exists("johndoe", "failure", "success"),
+      classes => always("methods_run");
+
+  classes:
+      "ready" expression => "methods_run";
+      "ok" and => { "success", "!failure" };
+
+  reports:
+    ok.ready::
+      "$(this.promise_filename) Pass";
+    !ok.ready::
+      "$(this.promise_filename) FAIL";
+}

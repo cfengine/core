@@ -91,14 +91,6 @@ assign     =>
 
 arrow      ->
 
-op         [(]
-
-cp         [)]
-
-ob         [{]
-
-cb         [}]
-
 /*
  * Three types of quoted strings:
  *
@@ -292,31 +284,6 @@ promise_type   [a-zA-Z_]+:
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
                       }
-
-{op}                  {
-                          P.line_pos += yyleng;
-                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
-                          return OP;
-                      }
-
-{cp}                  {
-                          P.line_pos += yyleng;
-                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
-                          return CP;
-                      }
-
-{ob}                  {
-                          P.line_pos += yyleng;
-                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
-                          return OB;
-                      }
-
-{cb}                  {
-                          P.line_pos += yyleng;
-                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
-                          return CB;
-                      }
-
 
 {space}+              {
                           P.line_pos += yyleng;

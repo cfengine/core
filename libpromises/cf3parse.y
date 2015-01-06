@@ -68,7 +68,6 @@ static size_t CURRENT_PROMISER_LINE = 0;
 %}
 
 %token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_TYPE BUNDLE BODY ASSIGN ARROW NAKEDVAR
-%token OP CP OB CB
 %expect 1
 
 %%
@@ -219,12 +218,12 @@ arglist:               /* Empty */
                           ParseError("Error in bundle parameter list, expected ')', wrong input '%s'", yytext);
                        }
 
-arglist_begin:         OP
+arglist_begin:         '('
                        {
                            ParserDebug("P:%s:%s:%s arglist begin:%s\n", P.block,P.blocktype,P.blockid, yytext);
                        }
 
-arglist_end:           CP
+arglist_end:           ')'
                        {
                            ParserDebug("P:%s:%s:%s arglist end:%s\n", P.block,P.blocktype,P.blockid, yytext);
                        }
@@ -277,7 +276,7 @@ bundlebody:            body_begin
 
                        bundle_decl
 
-                       CB 
+                       '}'
                        {
                            INSTALL_SKIP = false;
                            P.offsets.last_id = -1;
@@ -292,7 +291,7 @@ bundlebody:            body_begin
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-body_begin:            OB
+body_begin:            '{'
                        {
                            ParserDebug("P:%s:%s:%s begin body open\n", P.block,P.blocktype,P.blockid);
                        }
@@ -694,7 +693,7 @@ bodybody:              body_begin
 
                        bodyattribs
 
-                       CB 
+                       '}'
                        {
                            P.offsets.last_id = -1;
                            P.offsets.last_string = -1;
@@ -960,13 +959,15 @@ rval:                  IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  OB litems CB
+list:                  '{' '}'
+                     | '{' litems '}'
+                     | '{' litems ',' '}'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litems:                /* empty */
-                     | litem
-                     | litem ','  litems
+litems:
+                       litem
+                     | litems ',' litem
                      | litem error
                        {
                            ParserDebug("P:rval:list:error yychar = %d\n", yychar);
@@ -976,7 +977,9 @@ litems:                /* empty */
                            }
                            else if ( yychar == ASSIGN )
                            {
-                               ParseError("Check list statement  previous line, Expected '}', wrong input '%s'", yytext);
+                               ParseError("Check list statement previous line,"
+                                          " Expected '}', wrong input '%s'",
+                                          yytext);
                            }
                            else
                            {
@@ -988,15 +991,27 @@ litems:                /* empty */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 litem:                 IDSYNTAX
-                       { 
-                           ParserDebug("\tP:%s:%s:%s:%s list append; id = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
-                           RlistAppendScalar((Rlist **)&P.currentRlist, P.currentid);
+                       {
+                           ParserDebug("\tP:%s:%s:%s:%s list append: "
+                                       "id = %s\n",
+                                       P.block, P.blocktype, P.blockid,
+                                       (P.currentclasses ?
+                                            P.currentclasses : "any"),
+                                       P.currentid);
+                           RlistAppendScalar((Rlist **) &P.currentRlist,
+                                             P.currentid);
                        }
 
                      | QSTRING
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s list append: qstring = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
-                           RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s list append: "
+                                       "qstring = %s\n",
+                                       P.block, P.blocktype, P.blockid,
+                                       (P.currentclasses ?
+                                            P.currentclasses : "any"),
+                                       P.currentstring);
+                           RlistAppendScalar((Rlist **) &P.currentRlist,
+                                             (void *) P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -1052,7 +1067,7 @@ usefunction:           functionid givearglist
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-givearglist:           OP 
+givearglist:           '('
                        {
                            if (++P.arg_nesting >= CF_MAX_NESTING)
                            {
@@ -1064,7 +1079,7 @@ givearglist:           OP
 
                        gaitems
 
-                       CP 
+                       ')'
                        {
                            ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting], P.giveargs[P.arg_nesting]);

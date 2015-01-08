@@ -33,12 +33,14 @@
 /* Globals */
 
 static bool ACPI;
+static bool SYSTHERMAL;
 static bool LMSENSORS;
 
 /* Prototypes */
 
 #if defined(__linux__)
 static bool GetAcpi(double *cf_this);
+static bool GetSysThermal(double *cf_this);
 static bool GetLMSensors(double *cf_this);
 #endif
 
@@ -55,6 +57,11 @@ static bool GetLMSensors(double *cf_this);
 void MonTempGatherData(double *cf_this)
 {
     if (ACPI && GetAcpi(cf_this))
+    {
+        return;
+    }
+
+    if (SYSTHERMAL && GetSysThermal(cf_this))
     {
         return;
     }
@@ -78,6 +85,12 @@ void MonTempGatherData(ARG_UNUSED double *cf_this)
 void MonTempInit(void)
 {
     struct stat statbuf;
+
+    if (stat("/sys/devices/virtual/thermal", &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_DEBUG, "Found a thermal device in /sys");
+        SYSTHERMAL = true;
+    }
 
     if (stat("/proc/acpi/thermal_zone", &statbuf) != -1)
     {
@@ -167,6 +180,59 @@ static bool GetAcpi(double *cf_this)
     }
 
     DirClose(dirh);
+    return true;
+}
+
+/******************************************************************************/
+
+static bool GetSysThermal(double *cf_this)
+{
+    FILE *fp;
+    int count;
+    char path[CF_BUFSIZE];
+    char buf[CF_BUFSIZE];
+
+    for (count = 0; count < 4; count++)
+    {
+        double temp = 0;
+
+        snprintf(path, CF_BUFSIZE, "/sys/devices/virtual/thermal/thermal_zone%d/temp", count);
+
+        if ((fp = fopen(path, "r")) == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Couldn't open '%s'", path);
+            continue;
+        }
+
+        if (fgets(buf, sizeof(buf), fp) == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to read line from stream '%s'", path);
+            fclose(fp);
+            continue;
+        }
+
+        sscanf(buf, "%lf", &temp);
+
+        switch (count)
+        {
+        case 0:
+            cf_this[ob_temp0] = temp;
+            break;
+        case 1:
+            cf_this[ob_temp1] = temp;
+            break;
+        case 2:
+            cf_this[ob_temp2] = temp;
+            break;
+        case 3:
+            cf_this[ob_temp3] = temp;
+            break;
+        }
+
+        Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf", count, temp);
+        fclose(fp);
+    }
+
     return true;
 }
 

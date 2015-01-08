@@ -32,8 +32,8 @@
 
 /* Globals */
 
-static bool ACPI = false;
-static bool LMSENSORS = false;
+static bool ACPI;
+static bool LMSENSORS;
 
 /* Prototypes */
 
@@ -103,7 +103,7 @@ static bool GetAcpi(double *cf_this)
     Dir *dirh;
     FILE *fp;
     const struct dirent *dirp;
-    int count = 0;
+    int count;
     char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
     double temp = 0;
 

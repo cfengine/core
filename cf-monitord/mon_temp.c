@@ -105,7 +105,7 @@ static bool GetAcpi(double *cf_this)
     const struct dirent *dirp;
     int count;
     char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
-    double temp = 0;
+    double temp;
 
     if ((dirh = DirOpen("/proc/acpi/thermal_zone")) == NULL)
     {
@@ -135,6 +135,7 @@ static bool GetAcpi(double *cf_this)
             continue;
         }
 
+        temp = 0.0;
         sscanf(buf, "%*s %lf", &temp);
 
         for (count = 0; count < 4; count++)

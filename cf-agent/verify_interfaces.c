@@ -470,13 +470,13 @@ static void AssessVxLAN(char *promiser, PromiseResult *result, EvalContext *ctx,
         }
 
         match = true;
-    }
 
-    if (a->interface.state && strcmp(a->interface.state, "down") == 0 && lsp->up)
-    {
-        InterfaceDown(promiser,result,pp);
-        *result = PROMISE_RESULT_CHANGE;
-        return;
+        if (a->interface.state && strcmp(a->interface.state, "down") == 0 && lsp->up)
+        {
+            InterfaceDown(promiser,result,pp);
+            *result = PROMISE_RESULT_CHANGE;
+            return;
+        }
     }
 
     if (a->interface.tunnel_multicast_group && strcmp(loopback, a->interface.tunnel_multicast_group) != 0)

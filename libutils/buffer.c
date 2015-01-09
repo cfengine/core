@@ -395,6 +395,7 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
     {
         buffer->used = printed;
     }
+    va_end(aq);
     return printed;
 }
 

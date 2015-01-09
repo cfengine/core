@@ -2867,7 +2867,7 @@ DockerPS *QueryDockerProcessTable(DockerPS **containers)
             break;
         }
 
-        if (strncmp(line, "Cannot connect", strlen("Cannot connect") == 0))
+        if (strncmp(line, "Cannot connect", strlen("Cannot connect")) == 0)
         {
             free(line);
             cf_pclose(pfp);

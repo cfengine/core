@@ -2889,7 +2889,7 @@ DockerPS *QueryDockerProcessTable(DockerPS **containers)
 
         id[0] = image[0] = '\0';
 
-        if (offset > 0)
+        if (offset != NULL)
         {
             sscanf(line, "%s %s", id, image);
             sscanf(offset, "%s", name);

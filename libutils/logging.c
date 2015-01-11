@@ -291,15 +291,19 @@ void LogRaw(LogLevel level, const char *prefix, const void *buf, size_t buflen)
     unsigned char dst[buflen+1];
     assert(sizeof(dst) <= CF_MAX_BUFSIZE);
 
-    size_t i;
-    for (i = 0; i < buflen; i++)
+    LoggingContext *lctx = GetCurrentThreadContext();
+    if (level <= lctx->report_level || level <= lctx->log_level)
     {
-        dst[i] = isprint(src[i]) ? src[i] : '.';
-    }
-    dst[i] = '\0';
+        size_t i;
+        for (i = 0; i < buflen; i++)
+        {
+            dst[i] = isprint(src[i]) ? src[i] : '.';
+        }
+        dst[i] = '\0';
 
-    /* And Log the translated buffer, which is now a valid string. */
-    Log(level, "%s%s", prefix, dst);
+        /* And Log the translated buffer, which is now a valid string. */
+        Log(level, "%s%s", prefix, dst);
+    }
 }
 
 void Log(LogLevel level, const char *fmt, ...)

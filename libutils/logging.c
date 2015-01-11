@@ -259,7 +259,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
 void LogRaw(LogLevel level, const char *prefix, const void *buf, size_t buflen)
 {
     /* Translate non printable characters to printable ones. */
-    const unsigned char *src = (const unsigned char *) buf;
+    const unsigned char *src = buf;
     unsigned char dst[buflen+1];
     size_t i;
 

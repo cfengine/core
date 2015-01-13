@@ -277,25 +277,33 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     free(hooked_msg);
 }
 
+/* TODO create libutils/defs.h. */
+#define CF_MAX_BUFSIZE 16384
+
 /**
- * @brief Logs binary data in #buf, with each byte translated to '.' if not
- *        printable. Message is prefixed with #prefix.
+ * @brief Logs binary data in #buf, with unprintable bytes translated to '.'.
+ *        Message is prefixed with #prefix.
+ * @param #buflen must be no more than CF_MAX_BUFSIZE
  */
 void LogRaw(LogLevel level, const char *prefix, const void *buf, size_t buflen)
 {
-    /* Translate non printable characters to printable ones. */
-    const unsigned char *src = (const unsigned char *) buf;
+    const unsigned char *src = buf;
     unsigned char dst[buflen+1];
-    size_t i;
+    assert(sizeof(dst) <= CF_MAX_BUFSIZE);
 
-    for (i = 0; i < buflen; i++)
+    LoggingContext *lctx = GetCurrentThreadContext();
+    if (level <= lctx->report_level || level <= lctx->log_level)
     {
-        dst[i] = isprint(src[i]) ? src[i] : '.';
-    }
-    dst[i] = '\0';
+        size_t i;
+        for (i = 0; i < buflen; i++)
+        {
+            dst[i] = isprint(src[i]) ? src[i] : '.';
+        }
+        dst[i] = '\0';
 
-    /* And Log the translated buffer, which is now a valid string. */
-    Log(level, "%s%s", prefix, dst);
+        /* And Log the translated buffer, which is now a valid string. */
+        Log(level, "%s%s", prefix, dst);
+    }
 }
 
 void Log(LogLevel level, const char *fmt, ...)

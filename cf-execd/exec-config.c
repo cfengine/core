@@ -26,6 +26,7 @@
 
 #include <alloc.h>
 #include <string_lib.h>
+#include <writer.h>
 
 #include <rlist.h>
 #include <eval_context.h>
@@ -37,22 +38,18 @@ static const int THREE_HOURS = 3 * 60 * 60;
 
 static char *GetIpAddresses(const EvalContext *ctx)
 {
-    /* FIXME: correctly handle cases with a lot of IPs assigned to a host */
-    char ipbuf[CF_MAXVARSIZE] = "";
+    Writer *ipbuf = StringWriter();
+
     for (Item *iptr = EvalContextGetIpAddresses(ctx); iptr != NULL; iptr = iptr->next)
     {
-        if ((SafeStringLength(ipbuf) + SafeStringLength(iptr->name)) < sizeof(ipbuf))
+        WriterWrite(ipbuf, iptr->name);
+        if (iptr->next != NULL)
         {
-            strcat(ipbuf, iptr->name);
-            strcat(ipbuf, " ");
-        }
-        else
-        {
-            break;
+            WriterWriteChar(ipbuf, ' ');
         }
     }
-    Chop(ipbuf, sizeof(ipbuf));
-    return xstrdup(ipbuf);
+
+    return StringWriterClose(ipbuf);
 }
 
 ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Policy *policy)

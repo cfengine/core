@@ -43,6 +43,7 @@ const char *const CLASSTEXT[] =
     [PLATFORM_CONTEXT_HP] = "hpux",
     [PLATFORM_CONTEXT_AIX] = "aix",
     [PLATFORM_CONTEXT_LINUX] = "linux",
+    [PLATFORM_CONTEXT_BUSYBOX] = "linux",
     [PLATFORM_CONTEXT_SOLARIS] = "solaris",
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "solaris",
     [PLATFORM_CONTEXT_FREEBSD] = "freebsd",
@@ -67,6 +68,7 @@ const char *const VPSCOMM[] =
     [PLATFORM_CONTEXT_HP] = "/bin/ps",                      /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/bin/ps",                     /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/bin/ps",                   /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "/bin/ps",                 /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/bin/ps",                 /* solaris >= 11 */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/ucb/ps",         /* solaris  < 11 */
     [PLATFORM_CONTEXT_FREEBSD] = "/bin/ps",                 /* freebsd */
@@ -95,6 +97,7 @@ const char *const VPSOPTS[] =
     [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",       /* aix */
     /* Note: keep in sync with GetProcessOptions()'s hack for Linux 2.4 */
     [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss:9,nlwp,stime,etime,time,args",/* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "",                  /* linux / busybox */
     [PLATFORM_CONTEXT_SOLARIS] = "auxww",     /* solaris >= 11 */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxww", /* solaris < 11 */
     [PLATFORM_CONTEXT_FREEBSD] = "auxw",              /* freebsd */
@@ -119,6 +122,7 @@ const char *const VFSTAB[] =
     [PLATFORM_CONTEXT_HP] = "/etc/fstab",             /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/filesystems",      /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/fstab",          /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "/etc/fstab",        /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/etc/vfstab",       /* solaris */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "/etc/vfstab",   /* solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/etc/fstab",        /* freebsd */

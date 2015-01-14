@@ -6379,14 +6379,14 @@ static void CloseStringHole(char *s, int start, int end)
 static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array)
 {
     JsonElement *ret = make_array ? JsonArrayCreate(10) : JsonObjectCreate(10);
-    StringSet *lines = StringSetFromString(file_buffer, '\n');
+    Seq *lines = SeqStringFromString(file_buffer, '\n');
 
-    StringSetIterator iter = StringSetIteratorInit(lines);
     char *line;
     int hcount = 0;
 
-    while ((line = StringSetIteratorNext(&iter)) && hcount < maxent)
+    for (size_t i = 0; i < SeqLength(lines) && hcount < maxent; i++)
     {
+        line = (char*) SeqAt(lines, i);
         size_t line_len = strlen(line);
 
         if (line_len == 0 || (line_len == 1 && line[0] == '\r'))
@@ -6429,7 +6429,7 @@ static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buff
         }
     }
 
-    StringSetDestroy(lines);
+    SeqDestroy(lines);
 
     return ret;
 }

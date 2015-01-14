@@ -183,6 +183,7 @@ static const char *const CLASSATTRIBUTES[][3] =
     [PLATFORM_CONTEXT_HP] = {"hp-ux", ".*", ".*"},      /* hpux */
     [PLATFORM_CONTEXT_AIX] = {"aix", ".*", ".*"},       /* aix */
     [PLATFORM_CONTEXT_LINUX] = {"linux", ".*", ".*"},   /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = {"busybox", ".*", ".*"}, /* linux w/ busybox - warning uname returns linux */
     [PLATFORM_CONTEXT_SOLARIS] = {"sunos", ".*",
                                   "5\\.1[1-9].*"},      /* new solaris, SunOS >= 5.11 */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = {"sunos", ".*",
@@ -209,6 +210,7 @@ static const char *const VRESOLVCONF[] =
     [PLATFORM_CONTEXT_HP] = "/etc/resolv.conf",          /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/resolv.conf",         /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/resolv.conf",       /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "/etc/resolv.conf",     /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/etc/resolv.conf",     /* new solaris */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "/etc/resolv.conf", /* old solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/etc/resolv.conf",     /* freebsd */
@@ -233,6 +235,7 @@ static const char *const VMAILDIR[] =
     [PLATFORM_CONTEXT_HP] = "/var/mail",           /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/var/spool/mail",    /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/var/spool/mail",  /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "",               /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/var/mail",      /* new solaris */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "/var/mail",  /* old solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/var/mail",      /* freebsd */
@@ -257,6 +260,7 @@ static const char *const VEXPORTS[] =
     [PLATFORM_CONTEXT_HP] = "/etc/exports",             /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/exports",            /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/exports",          /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "",                    /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/etc/dfs/dfstab",     /* new solaris */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "/etc/dfs/dfstab", /* old solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/etc/exports",        /* freebsd */
@@ -442,6 +446,12 @@ static void GetNameInfo3(EvalContext *ctx)
      * uname cannot differentiate android from linux
      */
     strcpy(VSYSNAME.sysname, "android");
+#endif
+#ifdef __BUSYBOX__
+    /*
+     * uname cannot differentiate a busybox toolset from a normal GNU linux toolset
+     */
+     strcpy(VSYSNAME.sysname, "busybox");
 #endif
 
     ToLowerStrInplace(VSYSNAME.sysname);

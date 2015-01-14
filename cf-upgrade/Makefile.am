@@ -25,7 +25,7 @@ sbin_PROGRAMS = cf-upgrade
 
 LIBS=				 # This tool should not link to anything
 AM_LDFLAGS=
-AM_CPPFLAGS=
+AM_CPPFLAGS=-I$(top_srcdir)/libutils # platform.h
 
 LDADD=../libcompat/libcompat.la
 

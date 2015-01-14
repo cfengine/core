@@ -33,11 +33,17 @@ bundle agent check
       "dim" int => length("test.params");
       "length" int => length("test.pk");
       "last" string => nth("test.value", 599);
+
+      "pluck_23" data => mergedata("test.params[22]");
+      "pluck_24" data => mergedata("test.params[23]");
+
   classes:
-      "ok1" expression => strcmp($(dim), "3");
+      "ok1" expression => strcmp($(dim), "24");
       "ok2" expression => strcmp($(dim), $(length));
       "ok3" expression => strcmp("$(test.params[2][0])", "not_working_app_config");
-      "ok" and => { "ok1", "ok2", "ok3" };
+      "ok4" expression => strcmp("$(pluck_24[0])", "LAST");
+      "ok5" expression => strcmp("$(pluck_23[0])", "NEXT-TO-LAST");
+      "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5" };
 
   reports:
     DEBUG.ok1::
@@ -46,12 +52,20 @@ bundle agent check
       "passed2";
     DEBUG.ok3::
       "passed3";
+    DEBUG.ok4::
+      "passed4";
+    DEBUG.ok5::
+      "passed5";
     DEBUG.!ok1::
-      "failed1 $(dim) != 3";
+      "failed1 $(dim) != 24";
     DEBUG.!ok2::
       "failed2 $(dim) != $(length)";
     DEBUG.!ok3::
       "failed3 $(test.params[2][0]) != not_working_app_config";
+    DEBUG.!ok4::
+      "failed4 $(pluck_24[0]) != LAST";
+    DEBUG.!ok5::
+      "failed5 $(pluck_23[0]) != NEXT-TO-LAST";
 
     ok::
       "$(this.promise_filename) Pass";

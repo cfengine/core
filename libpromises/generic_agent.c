@@ -620,13 +620,17 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
 
+    MakeParentDirectory(GetLogDir(), force);
+
     snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
 
     if (stat(vbuff, &sb) == -1)
     {
         FatalError(ctx, " No access to WORKSPACE/inputs dir");
     }
-    else
+
+    /* ensure WORKSPACE/inputs directory has all user bits set (u+rwx) */
+    if ((sb.st_mode & 0700) != 0700)
     {
         chmod(vbuff, sb.st_mode | 0700);
     }
@@ -637,7 +641,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         FatalError(ctx, " No access to WORKSPACE/outputs dir");
     }
-    else
+
+    /* ensure WORKSPACE/outputs directory has all user bits set (u+rwx) */
+    if ((sb.st_mode & 0700) != 0700)
     {
         chmod(vbuff, sb.st_mode | 0700);
     }
@@ -1123,18 +1129,37 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 
-    Log(LOG_LEVEL_VERBOSE, "Making sure that locks are private...");
-
-    if (chown(CFWORKDIR, getuid(), getgid()) == -1)
+    /* check that CFWORKDIR exists */
+    if (stat(CFWORKDIR, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to set owner on '%s'' to '%ju.%ju'. (chown: %s)", CFWORKDIR, (uintmax_t)getuid(),
-            (uintmax_t)getgid(), GetErrorStr());
+        FatalError(ctx,"Unable to stat CFWORKDIR directory '%s'! (stat: %s)\n",
+                   CFWORKDIR, GetErrorStr());
     }
 
-    if (stat(CFWORKDIR, &statbuf) != -1)
+    Log(LOG_LEVEL_VERBOSE, "Making sure that internal directories are private...");
+
+    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the trusted workdir");
+
+    /* fix any improper uid/gid ownership on CFWORKDIR */
+    if (statbuf.st_uid != getuid() || statbuf.st_gid != getgid())
     {
-        /* change permissions go-w */
-        chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
+        if (chown(CFWORKDIR, getuid(), getgid()) == -1)
+        {
+            const char* error_reason = GetErrorStr();
+
+            Log(LOG_LEVEL_ERR, "Unable to set ownership on '%s' to '%ju.%ju'. (chown: %s)",
+                CFWORKDIR, (uintmax_t)getuid(), (uintmax_t)getgid(), error_reason);
+        }
+    }
+
+    /* ensure CFWORKDIR permissions are go-w */
+    if ((statbuf.st_mode & 022) != 0)
+    {
+        if (chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022)) == -1);
+        {
+            Log(LOG_LEVEL_ERR, "Unable to set permissions on '%s' to go-w. (chmod: %s)",
+                CFWORKDIR, GetErrorStr());
+        }
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);

@@ -68,16 +68,51 @@ static void test_process_state(void)
         assert_true(false);
     }
 
-    usleep(200000);
-    assert_int_equal(GetProcessState(new_pid), PROCESS_STATE_RUNNING);
+    int state = -1000;
+
+    for (int c = 0; c < 10; c++)
+    {
+        state = GetProcessState(new_pid);
+        if (state == PROCESS_STATE_RUNNING)
+        {
+            break;
+        }
+        else
+        {
+            usleep(200000);
+        }
+    }
+    assert_int_equal(state, PROCESS_STATE_RUNNING);
 
     kill(new_pid, SIGSTOP);
-    usleep(200000);
-    assert_int_equal(GetProcessState(new_pid), PROCESS_STATE_STOPPED);
+    for (int c = 0; c < 10; c++)
+    {
+        state = GetProcessState(new_pid);
+        if (state == PROCESS_STATE_STOPPED)
+        {
+            break;
+        }
+        else
+        {
+            usleep(200000);
+        }
+    }
+    assert_int_equal(state, PROCESS_STATE_STOPPED);
 
     kill(new_pid, SIGCONT);
-    usleep(200000);
-    assert_int_equal(GetProcessState(new_pid), PROCESS_STATE_RUNNING);
+    for (int c = 0; c < 10; c++)
+    {
+        state = GetProcessState(new_pid);
+        if (state == PROCESS_STATE_RUNNING)
+        {
+            break;
+        }
+        else
+        {
+            usleep(200000);
+        }
+    }
+    assert_int_equal(state, PROCESS_STATE_RUNNING);
 
     kill(new_pid, SIGKILL);
 }

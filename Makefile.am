@@ -33,7 +33,7 @@ SUBDIRS = libcompat libutils libcfnet libenv libpromises \
 	tests
 
 # Hack around redmine #6925 issue with make dist.
-TAR_OPTIONS = --hard-dereference
+TAR_OPTIONS = --hard-dereference --owner=0 --group=0
 export TAR_OPTIONS
 
 DIST_SUBDIRS = libcompat libutils libcfnet libenv libpromises cf-agent cf-execd	\

@@ -2666,15 +2666,21 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
     assert(false);
 }
 
-JsonElement *DefaultTemplateData(const EvalContext *ctx)
+JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
 {
     JsonElement *hash = JsonObjectCreate(30);
-    JsonElement *classes = JsonObjectCreate(50);
-    JsonElement *bundles = JsonObjectCreate(50);
-    JsonObjectAppendObject(hash, "classes", classes);
-    JsonObjectAppendObject(hash, "vars", bundles);
+    JsonElement *classes = NULL;
+    JsonElement *bundles = NULL;
 
+    bool want_all_bundles = (NULL == wantbundle);
+
+    if (want_all_bundles) // no specific bundle
     {
+        classes = JsonObjectCreate(50);
+        bundles = JsonObjectCreate(50);
+        JsonObjectAppendObject(hash, "classes", classes);
+        JsonObjectAppendObject(hash, "vars", bundles);
+
         ClassTableIterator *it = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
         Class *cls;
         while ((cls = ClassTableIteratorNext(it)))
@@ -2684,11 +2690,8 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx)
             free(key);
         }
         ClassTableIteratorDestroy(it);
-    }
 
-    {
-        ClassTableIterator *it = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls;
+        it = EvalContextClassTableIteratorNewLocal(ctx);
         while ((cls = ClassTableIteratorNext(it)))
         {
             char *key = ClassRefToString(cls->ns, cls->name);
@@ -2705,17 +2708,30 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx)
         {
             // TODO: need to get a CallRef, this is bad
             char *scope_key = ClassRefToString(var->ref->ns, var->ref->scope);
-            JsonElement *scope_obj = JsonObjectGetAsObject(bundles, scope_key);
-            if (!scope_obj)
+
+            JsonElement *scope_obj = NULL;
+            if (want_all_bundles)
             {
-                scope_obj = JsonObjectCreate(50);
-                JsonObjectAppendObject(bundles, scope_key, scope_obj);
+                scope_obj = JsonObjectGetAsObject(bundles, scope_key);
+                if (!scope_obj)
+                {
+                    scope_obj = JsonObjectCreate(50);
+                    JsonObjectAppendObject(bundles, scope_key, scope_obj);
+                }
             }
+            else if (0 == strcmp(scope_key, wantbundle))
+            {
+                scope_obj = hash;
+            }
+
             free(scope_key);
 
-            char *lval_key = VarRefToString(var->ref, false);
-            JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
-            free(lval_key);
+            if (NULL != scope_obj)
+            {
+                char *lval_key = VarRefToString(var->ref, false);
+                JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
+                free(lval_key);
+            }
         }
         VariableTableIteratorDestroy(it);
     }
@@ -2733,8 +2749,32 @@ static FnCallResult FnCallDatastate(EvalContext *ctx,
                                     ARG_UNUSED const FnCall *fp,
                                     ARG_UNUSED const Rlist *args)
 {
-    JsonElement *state = DefaultTemplateData(ctx);
+    JsonElement *state = DefaultTemplateData(ctx, NULL);
     return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
+}
+
+static FnCallResult FnCallBundlestate(EvalContext *ctx,
+                                      ARG_UNUSED const Policy *policy,
+                                      ARG_UNUSED const FnCall *fp,
+                                      ARG_UNUSED const Rlist *args)
+{
+    JsonElement *state = DefaultTemplateData(ctx, RlistScalarValue(args));
+
+    if (NULL == state ||
+        JsonGetElementType(state) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonLength(state) < 1)
+    {
+        if (NULL != state)
+        {
+            JsonDestroy(state);
+        }
+
+        return FnFailure();
+    }
+    else
+    {
+        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
+    }
 }
 
 
@@ -7442,6 +7482,12 @@ static const FnCallArg DATASTATE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg BUNDLESTATE_ARGS[] =
+{
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "Bundle name"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg GETCLASSMETATAGS_ARGS[] =
 {
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "Class identifier"},
@@ -7482,6 +7528,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("bundlesmatching", CF_DATA_TYPE_STRING_LIST, BUNDLESMATCHING_ARGS, &FnCallBundlesMatching, "Find all the bundles that match a regular expression and tags.",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("bundlestate", CF_DATA_TYPE_CONTAINER, BUNDLESTATE_ARGS, &FnCallBundlestate, "Construct a container of the variables in a bundle and the global class state",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("canonify", CF_DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a legal class name",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("canonifyuniquely", CF_DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a unique legal class name",

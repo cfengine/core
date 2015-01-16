@@ -595,7 +595,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     JsonElement *default_template_data = NULL;
     if (!a.template_data)
     {
-        a.template_data = default_template_data = DefaultTemplateData(ctx);
+        a.template_data = default_template_data = DefaultTemplateData(ctx, NULL);
     }
 
     Buffer *output_buffer = BufferNew();

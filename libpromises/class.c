@@ -64,7 +64,12 @@ static size_t ClassRefHash(const char *ns, const char *name)
     return (h & (INT_MAX - 1));
 }
 
-void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, ContextScope scope)
+/**
+ * @param #tags is a comma separated string of words.
+ *              Both "" or NULL are equivalent.
+ */
+void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft,
+               ContextScope scope, const char *tags)
 {
     if (ns)
     {
@@ -80,9 +85,13 @@ void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, Conte
 
     cls->is_soft = is_soft;
     cls->scope = scope;
-    cls->tags = NULL;
-
     cls->hash = ClassRefHash(cls->ns, cls->name);
+
+    cls->tags = StringSetFromString(tags, ',');
+    if (!is_soft && !StringSetContains(cls->tags, "hardclass"))
+    {
+        StringSetAdd(cls->tags, xstrdup("hardclass"));
+    }
 }
 
 static void ClassDestroySoft(Class *cls)
@@ -136,21 +145,15 @@ bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_
     Class *cls = ClassTableGet(table, ns, name);
     if (cls)
     {
+        /* Saves a malloc() and an RBTreePut() call. */
         ClassDestroySoft(cls);
-        ClassInit(cls, ns, name, is_soft, scope);
+        ClassInit(cls, ns, name, is_soft, scope, tags);
         return true;
     }
     else
     {
         cls = xmalloc(sizeof(Class));
-        ClassInit(cls, ns, name, is_soft, scope);
-        // NULL tags are OK (but you want to give good tags, don't you?)
-        cls->tags = StringSetFromString(tags, ',');
-        if (!is_soft && !StringSetContains(cls->tags, "hardclass"))
-        {
-            StringSetAdd(cls->tags, xstrdup("hardclass"));
-        }
-
+        ClassInit(cls, ns, name, is_soft, scope, tags);
         return RBTreePut(table->classes, (void *)cls->hash, cls);
     }
 }

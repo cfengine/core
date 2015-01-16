@@ -563,6 +563,10 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
             /* This is char pointer, it can point to unaligned data. */
             tags = ((PersistentClassInfo *) info_p)->tags;
         }
+        else
+        {
+            tags = "";                                          /* no tags */
+        }
 
         if (now > info.expires)
         {
@@ -1812,11 +1816,7 @@ StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const ch
         return NULL;
     }
 
-    if (!cls->tags)
-    {
-        cls->tags = StringSetNew();
-    }
-
+    assert(cls->tags != NULL);
     return cls->tags;
 }
 
@@ -1828,11 +1828,7 @@ StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
         return NULL;
     }
 
-    if (!var->tags)
-    {
-        var->tags = StringSetNew();
-    }
-
+    assert(var->tags != NULL);
     return var->tags;
 }
 

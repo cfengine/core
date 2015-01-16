@@ -1,0 +1,20 @@
+body file control
+{
+      namespace => "external";
+}
+
+bundle agent init
+{
+  vars:
+      "external_s" string => "External Hello!";
+}
+
+bundle agent dump
+{
+  vars:
+      "external_holder" data => bundlestate("init");
+      "external_holder2" data => bundlestate("external:init");
+
+      "external_holder_s" string => format("%S", external_holder);
+      "external_holder2_s" string => format("%S", external_holder2);
+}

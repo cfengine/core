@@ -84,6 +84,7 @@ static const char *const VNETSTAT[] =
     [PLATFORM_CONTEXT_HP] = "/usr/bin/netstat -rn",          /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/usr/bin/netstat -rn",         /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/bin/netstat -rn",           /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "/bin/netstat -rn",         /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/usr/bin/netstat -rn",     /* solaris */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/bin/netstat -rn", /* solaris */
     [PLATFORM_CONTEXT_FREEBSD] = "/usr/bin/netstat -rn",     /* freebsd */

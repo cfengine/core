@@ -264,6 +264,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     struct stat osb, oslb, dsb;
     CfLock thislock;
     int exists;
+    bool link = false;
 
     Attributes attr = GetFilesAttributes(ctx, pp);
 
@@ -307,6 +308,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File '%s' exists as promised", path);
         }
         exists = true;
+        link = true;
     }
 
     if ((a.havedelete) && (!exists))
@@ -406,7 +408,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 /* Phase 1 - */
 
-    if (exists && ((a.havedelete) || (a.haverename) || (a.haveperms) || (a.havechange) || (a.transformer)))
+    if ((exists && ((a.haverename) || (a.haveperms) || (a.havechange) || (a.transformer))) ||
+        ((exists || link) && a.havedelete))
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
 

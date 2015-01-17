@@ -16,7 +16,9 @@ body common control
 
 bundle agent init
 {
-  vars:
+  files:
+      "$(G.testfile)/sourcefile"
+        delete => init_delete;
 }
 
 #######################################################
@@ -25,10 +27,10 @@ bundle agent test
 {
   files:
       "$(G.testdir)/mylink"
-      link_from => ln_s("$(G.testdir)/sourcefile");
+        link_from => ln_s("$(G.testdir)/sourcefile");
 
       "$(G.testdir)/mylink"
-      delete => tidy;
+        delete => tidy;
 }
 
 body link_from ln_s(x)

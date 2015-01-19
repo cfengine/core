@@ -206,7 +206,16 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
 
         PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
 
-        NotifyDependantPromises(ctx, pexp, iteration_result);
+        // Redmine#6484 
+        // Only during pre-evaluation ActOnPromise is set to be a pointer to 
+        // CommonEvalPromise. While doing CommonEvalPromise check all the 
+        // handles should be not collected and dependant promises should not
+        // be notified.
+        if (ActOnPromise != &CommonEvalPromise)
+        {
+            NotifyDependantPromises(ctx, pexp, iteration_result);
+        }
+            
         result = PromiseResultUpdate(result, iteration_result);
 
         if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)

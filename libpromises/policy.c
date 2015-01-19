@@ -2651,7 +2651,6 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
 
 Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
 {
-    Constraint *retval = NULL;
     if (!pp)
     {
         return NULL;
@@ -2667,7 +2666,7 @@ Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
         }
     }
 
-    return retval;
+    return NULL;
 }
 
 Constraint *PromiseGetImmediateConstraint(const Promise *pp, const char *lval)

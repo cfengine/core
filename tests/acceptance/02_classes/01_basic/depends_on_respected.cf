@@ -1,0 +1,125 @@
+# Redmine#5462
+# Redmine#6484
+# respect depends_on restriction
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)_present_if_test_commands_false_considered_kept_or_repaired"
+      delete => tidy;
+
+    "$(G.testfile)_present_if_test_commands_echo_ran"
+      delete => tidy;
+}
+
+bundle agent test
+{
+
+  files:
+    "$(G.testfile)_present_if_test_commands_false_considered_kept_or_repaired"
+      create => "true",
+      handle => "test_files",
+      classes => scoped_classes_generic("namespace", "test_commands_files_testfile"),
+      depends_on => { "test_commands_false", "test_commands_false2" };
+
+  commands:
+    "$(G.false)"
+      handle => "test_commands_false",
+      classes => scoped_classes_generic("namespace", "test_commands_false");
+
+    "$(G.false)"
+      handle => "test_commands_false2",
+      classes => scoped_classes_generic("namespace", "test_commands_false2");
+
+    "$(G.true)"
+      handle => "test_commands_true",
+      classes => scoped_classes_generic("namespace", "test_commands_true"),
+      depends_on => { "test_commands_false", "test_commands_false2" };
+
+  packages:
+    "test_packages"
+      package_method => mock,
+      handle => "test_packages",
+      classes => scoped_classes_generic("namespace", "test_packages"),
+      depends_on => { "test_commands_false", "test_commands_false2" };
+
+  reports:
+    "This promise '$(this.handle)' should have been skipped as the promise 'test_commands_false'
+     should never be kept or repaired"
+      handle => "test_reports",
+      classes => scoped_classes_generic("namespace", "test_reports"),
+      depends_on => { "test_commands_false", "test_commands_false2" };
+
+
+}
+
+bundle agent check
+{
+  vars:
+    "fail_classes"
+      slist => {
+                 "test_commands_true_reached",
+                 "test_files_reached",
+                 "test_reports_reached",
+                 "test_packages_reached",
+                };
+
+  classes:
+      "fail" or => { @(fail_classes) }; 
+
+  reports:
+    DEBUG::
+      "'test_commands_false' was ok unexpectedly"
+        ifvarclass => "test_commands_false_ok";
+
+       "'test_commands_false' was kept unexpectedly"
+        ifvarclass => "test_commands_false_kept";
+
+      "'test_commands_false' was repaired unexpectedly"
+        ifvarclass => "test_commands_false_repaired";
+
+       "'test_commands_false' was not_ok as expected"
+        ifvarclass => "test_commands_false_not_ok";
+         
+       "'test_commands_false2' was ok unexpectedly"
+        ifvarclass => "test_commands_false2_ok";
+
+       "'test_commands_false2' was kept unexpectedly"
+        ifvarclass => "test_commands_false2_kept";
+
+       "'test_commands_false2' was repaired unexpectedly"
+        ifvarclass => "test_commands_false2_repaired";
+
+       "'test_commands_false2' was not_ok as expected"
+        ifvarclass => "test_commands_false2_not_ok";
+  
+      "'$(fail_classes)' erroneously thought 'test_commands_false' and or 'test_commands_false2' was ok aka (kept or repaired)."
+        ifvarclass => "$(fail_classes)";
+
+    fail::
+      "$(this.promise_filename) FAIL";
+
+    !fail::
+      "$(this.promise_filename) Pass";
+}
+
+body package_method mock
+{
+      package_changes => "individual";
+      package_list_command => "$(G.echo) --list-installed";
+      package_list_name_regex => "^[^:]*";
+      package_list_version_regex => ":(?<=:).*(?=:)";
+      package_installed_regex => "^[^:]*";
+
+      package_add_command => "$(G.echo) --add ";
+      package_update_command => "$(G.echo) --update ";
+      package_delete_command => "$(G.echo) --delete ";
+      package_verify_command => "$(G.echo) --verify ";
+}

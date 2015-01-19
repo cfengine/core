@@ -1,0 +1,50 @@
+# Redmine#5462
+# Redmine#6484
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+    "states" slist => { "actual", "expected" };
+
+    "expected_content" string =>
+    "second_line
+first_line";
+
+  files:
+    "$(G.testfile).expected"
+      create => "true",
+      edit_line => test_insert("$(expected_content)");
+
+    "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert("first_line"),
+      depends_on => { "insert_second_line" };
+
+    "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert("second_line"),
+      handle => "insert_second_line";
+}
+
+bundle edit_line test_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
+}
+
+

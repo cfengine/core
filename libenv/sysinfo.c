@@ -1442,6 +1442,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 #define REDHAT_C_ID "Red Hat Enterprise Linux Client"
 #define REDHAT_S_ID "Red Hat Enterprise Linux Server"
 #define REDHAT_W_ID "Red Hat Enterprise Linux Workstation"
+#define REDHAT_CN_ID "Red Hat Enterprise Linux ComputerNode"
 #define MANDRAKE_ID "Linux Mandrake"
 #define MANDRAKE_10_1_ID "Mandrakelinux"
 #define WHITEBOX_ID "White Box Enterprise Linux"
@@ -1515,6 +1516,11 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     {
         vendor = "redhat";
         edition = "c";
+    }
+    else if (!strncmp(relstring, REDHAT_CN_ID, strlen(REDHAT_CN_ID)))
+    {
+        vendor = "redhat";
+        edition = "cn";
     }
     else if (!strncmp(relstring, REDHAT_ID, strlen(REDHAT_ID)))
     {

@@ -18,6 +18,7 @@ unsigned int ROUND_DURATION = 10;          /* how long to run each loop */
  * from child threads and read from the main one. It's only a test, so
  * @ediosyncratic please spare me. */
 time_t START_TIME;
+pid_t PPID;
 char CFWORKDIR[CF_BUFSIZE];
 unsigned long      lastsaw_COUNTER[MAX_NUM_THREADS];
 unsigned long     keycount_COUNTER[MAX_NUM_THREADS];
@@ -187,7 +188,14 @@ void print_progress_sighandler(int signum ARG_UNUSED)
 {
     fprintf(PARENT_INPUT, "%5lu", child_COUNTER);
     putc('\0', PARENT_INPUT);
-    fflush(PARENT_INPUT);
+    int ret = fflush(PARENT_INPUT);
+    if (ret != 0)
+    {
+        perror("fflush");
+        fprintf(stderr, "Child couldn't write to parent, "
+                "it probably died, exiting!\n");
+        exit(EXIT_FAILURE);
+    }
 
     child_COUNTER = 0;
 }
@@ -226,17 +234,42 @@ void worker_process()
     }
 
     /* 2. Wait for signal */
-    unsigned retu = sleep(100);
-    if (retu == 0)
+    unsigned long wait_seconds = 0;
+    while (!child_START)
     {
-        fprintf(stderr,
-                "Child was never signaled to start, exiting!\n");
-        exit(EXIT_FAILURE);
+        sleep(1);
+        wait_seconds++;
+
+        pid_t ppid = getppid();
+        if (ppid != PPID)
+        {
+            fprintf(stderr,
+                    "PPID changed (%ld != %ld), maybe parent died, exiting!\n",
+                    (long) PPID, (long) ppid);
+            exit(EXIT_FAILURE);
+        }
+
+        if (wait_seconds >= 100)
+        {
+            fprintf(stderr,
+                    "Child was not signaled to start after %lu seconds, "
+                    "exiting!\n", wait_seconds);
+            exit(EXIT_FAILURE);
+        }
     }
 
     /* 3. DO THE WORK until SIGUSR1 comes */
     while (child_START)
     {
+        pid_t ppid = getppid();
+        if (ppid != PPID)
+        {
+            fprintf(stderr,
+                    "PPID changed (%ld != %ld), maybe parent died, exiting!\n",
+                    (long) PPID, (long) ppid);
+            exit(EXIT_FAILURE);
+        }
+
         if (child_COUNTER % 10 == 0)
         {
             LastSeenHostKeyCount();
@@ -332,8 +365,10 @@ void print_progress(int lastsaw_num_threads, int keycount_num_threads,
                        child_report, sizeof(child_report) - 1);
         if (ret <= 0)
         {
+            perror("read");
             fprintf(stderr,
-                    "Couldn't read from child %d, it probably died!\n", j);
+                    "Couldn't read from child %d, it probably died, "
+                    "exiting!\n", j);
             exit(EXIT_FAILURE);
         }
         printf("%5s", child_report);
@@ -466,8 +501,8 @@ int main(int argc, char *argv[])
     }
     printf("Work directory: %s\n", CFWORKDIR);
 
+    PPID = getpid();           /* for children to determine if parent lives */
     START_TIME = time(NULL);
-
 
     /* === SPAWN A CHILD PROCESS FOR LATER === */
 

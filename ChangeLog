@@ -13,12 +13,25 @@ Cfengine Propulsion Lab
           simplify the bootstrap process for clients that have different
           sys.masterdir settings (Redmine #3697)
 
-Next patch release:
+3.6.4:
+        Features:
+        - Introduced users promises support on HP-UX platform.
+        - Introduced process promises support on HP-UX platform.
+
         Bug fixes:
         - Fixed bug on FreeBSD which sometimes led to the wrong process being
           killed (Redmine #2330)
         - Fixed package version comparison sometimes failing with rpm package
           manager (Redmine #6807)
+        - Fixed a bug in users promises which would sometimes set the wrong
+          password hash if the user would also be unlocked at the same time.
+        - Fixed a bug on AIX which would occationally kill the wrong process.
+        - Improved error message for functions that require an absolute path.
+          (Redmine #6877)
+        - Fixed some spelling errors in examples.
+        - Fixed error in out-of-tree builds when building cf-upgrade.
+        - Fixed a bug which would make cf-agent exit with an error if it was
+          built with a custom log directory, and that directory did not exist.
 
 3.6.3
         New features:

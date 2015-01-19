@@ -32,6 +32,8 @@ Cfengine Propulsion Lab
         - Fixed error in out-of-tree builds when building cf-upgrade.
         - Fixed a bug which would make cf-agent exit with an error if it was
           built with a custom log directory, and that directory did not exist.
+        - Fixed ordering of evaluating promises when depends_on is used. 
+          (Redmine #6484, Redmine #5462)
 
 3.6.3
         New features:

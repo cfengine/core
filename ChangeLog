@@ -32,8 +32,14 @@ Cfengine Propulsion Lab
         - Fixed error in out-of-tree builds when building cf-upgrade.
         - Fixed a bug which would make cf-agent exit with an error if it was
           built with a custom log directory, and that directory did not exist.
-        - Fixed ordering of evaluating promises when depends_on is used. 
+        - Fixed ordering of evaluating promises when depends_on is used.
           (Redmine #6484, Redmine #5462)
+        - Skip non-empty directories silently when recursively deleting.
+          (Redmine #6331)
+        - Fix memory exhaustion with list larger than 4994 items.
+          (Redmine # 6672)
+        - Fix cf-execd segfault on IP address detection (Redmine #6905).
+        - Fix hard class detection of RHEL6 ComputeNode (Redmine #3148).
 
 3.6.3
         New features:

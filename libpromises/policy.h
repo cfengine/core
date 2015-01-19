@@ -424,6 +424,6 @@ bool BundleTypeCheck(const char *name);
  * @brief Return a default bundle name for this method/service
  */
 
-const Rval DefaultBundleConstraint(const Promise *pp, char *promisetype);
+Rval DefaultBundleConstraint(const Promise *pp, char *promisetype);
 
 #endif

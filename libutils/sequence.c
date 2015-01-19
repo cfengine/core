@@ -115,7 +115,6 @@ void SeqAppendSeq(Seq *seq, const Seq *items)
 void SeqRemoveRange(Seq *seq, size_t start, size_t end)
 {
     assert(seq);
-    assert(start >= 0);
     assert(end < seq->length);
     assert(start <= end);
 
@@ -273,7 +272,6 @@ Seq *SeqSoftSort(const Seq *seq, SeqItemComparator compare, void *user_data)
 void SeqSoftRemoveRange(Seq *seq, size_t start, size_t end)
 {
     assert(seq);
-    assert(start >= 0);
     assert(end < seq->length);
     assert(start <= end);
 

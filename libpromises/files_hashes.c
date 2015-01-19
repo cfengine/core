@@ -39,31 +39,33 @@
 
 void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
-    FILE *file;
-    EVP_MD_CTX context;
-    int len, md_len;
-    unsigned char buffer[1024];
-    const EVP_MD *md = NULL;
-
-    if ((file = safe_fopen(filename, "rb")) == NULL)
+    FILE *file = safe_fopen(filename, "rb");
+    if (file == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_INFO,
+            "Cannot open file for hashing '%s'. (fopen: %s)",
+            filename, GetErrorStr());
     }
     else
     {
-        md = EVP_get_digestbyname(HashNameFromId(type));
-
+        int md_len;
+        unsigned char buffer[1024];
+        const EVP_MD *const md = EVP_get_digestbyname(HashNameFromId(type));
+        EVP_MD_CTX context;
         EVP_DigestInit(&context, md);
 
-        while ((len = fread(buffer, 1, 1024, file)))
+        size_t len;
+        while (!feof(file) &&
+               /* When reading a directory (!) fread() returns 0 while !feof(). */
+               0 < (len = fread(buffer, 1, sizeof(buffer), file)))
         {
             EVP_DigestUpdate(&context, buffer, len);
         }
-
-        EVP_DigestFinal(&context, digest, &md_len);
+        fclose(file);
 
         /* Digest length stored in md_len */
-        fclose(file);
+        EVP_DigestFinal(&context, digest, &md_len);
+        /* TODO: should we return md_len (also for HashString) ? */
     }
 }
 
@@ -71,29 +73,27 @@ void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], H
 
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
-    EVP_MD_CTX context;
-    const EVP_MD *md = NULL;
-    int md_len;
-
-    switch (type)
+    if (type == HASH_METHOD_CRYPT)
     {
-    case HASH_METHOD_CRYPT:
-        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use another algorithm instead");
+        Log(LOG_LEVEL_ERR,
+            "The crypt support is not presently implemented, please use another algorithm instead");
         memset(digest, 0, EVP_MAX_MD_SIZE + 1);
-        break;
-
-    default:
-        md = EVP_get_digestbyname(HashNameFromId(type));
-
+    }
+    else
+    {
+        const EVP_MD *md = EVP_get_digestbyname(HashNameFromId(type));
         if (md == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
+            Log(LOG_LEVEL_INFO,
+                "Digest type %s not supported by OpenSSL library",
+                HashNameFromId(type));
         }
+        EVP_MD_CTX context;
+        int md_len;
 
         EVP_DigestInit(&context, md);
         EVP_DigestUpdate(&context, (unsigned char *) buffer, (size_t) len);
         EVP_DigestFinal(&context, digest, &md_len);
-        break;
     }
 }
 
@@ -101,43 +101,33 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
-    EVP_MD_CTX context;
-    const EVP_MD *md = NULL;
-    int md_len, i, buf_len, actlen;
-    unsigned char *buffer;
-
-    if (key->n)
-    {
-        buf_len = (size_t) BN_num_bytes(key->n);
-    }
-    else
-    {
-        buf_len = 0;
-    }
-
+    int buf_len = key->n ? BN_num_bytes(key->n) : 0;
     if (key->e)
     {
-        if (buf_len < (i = (size_t) BN_num_bytes(key->e)))
+        int i = BN_num_bytes(key->e);
+        if (buf_len < i)
         {
             buf_len = i;
         }
     }
 
-    buffer = xmalloc(buf_len + 10);
-
-    switch (type)
+    unsigned char *buffer = xmalloc(buf_len + 10);
+    if (type == HASH_METHOD_CRYPT)
     {
-    case HASH_METHOD_CRYPT:
-        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use sha256 instead");
-        break;
-
-    default:
-        md = EVP_get_digestbyname(HashNameFromId(type));
-
+        Log(LOG_LEVEL_ERR,
+            "The crypt support is not presently implemented, please use sha256 instead");
+    }
+    else
+    {
+        const EVP_MD *md = EVP_get_digestbyname(HashNameFromId(type));
         if (md == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
+            Log(LOG_LEVEL_INFO,
+                "Digest type %s not supported by OpenSSL library",
+                HashNameFromId(type));
         }
+        EVP_MD_CTX context;
+        int md_len, actlen;
 
         EVP_DigestInit(&context, md);
 
@@ -146,7 +136,6 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
         actlen = BN_bn2bin(key->e, buffer);
         EVP_DigestUpdate(&context, buffer, actlen);
         EVP_DigestFinal(&context, digest, &md_len);
-        break;
     }
 
     free(buffer);
@@ -158,19 +147,8 @@ int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
                 const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type)
 {
-    int i, size = EVP_MAX_MD_SIZE;
-
-    size = HashSizeFromId(type);
-
-    for (i = 0; i < size; i++)
-    {
-        if (digest1[i] != digest2[i])
-        {
-            return false;
-        }
-    }
-
-    return true;
+    size_t size = HashSizeFromId(type);
+    return memcmp(digest1, digest2, size) == 0;
 }
 
 /* TODO rewrite this ugliness, currently it's not safe, it truncates! */
@@ -227,7 +205,7 @@ char *SkipHashType(char *hash)
 {
     char *str = hash;
 
-    if(BEGINSWITH(hash, "MD5=") || BEGINSWITH(hash, "SHA="))
+    if (BEGINSWITH(hash, "MD5=") || BEGINSWITH(hash, "SHA="))
     {
         str = hash + 4;
     }

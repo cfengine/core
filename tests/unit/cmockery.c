@@ -280,10 +280,11 @@ static const ExceptionCodeInfo exception_codes[] =
 };
 #endif // !_WIN32
 
+static void print_xml(const char *const format, ...) /* FUNC_ATTR_PRINTF(1, 2) */;
 static void exit_test(void) FUNC_ATTR_NORETURN;
 
 // Exit the currently executing test.
-     static void exit_test(void)
+static void exit_test(void)
 {
     if (global_running_test)
     {
@@ -1677,7 +1678,7 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS *exception_pointers)
 }
 #endif // !_WIN32
 
-void vinit_xml (const char *const format, va_list args)
+static void vinit_xml (const char *const format, va_list args)
 {
     FILE* xmlfile = fopen(global_xmlfile, "w");
     vfprintf(xmlfile, format, args);
@@ -1687,7 +1688,7 @@ void vinit_xml (const char *const format, va_list args)
 #endif // _WIN32
 }
 
-void init_xml (const char *const format, ...)
+static void init_xml(const char *const format, ...)
 {
     if (!global_is_file_writer_test)
     {
@@ -1698,7 +1699,7 @@ void init_xml (const char *const format, ...)
     }
 }
 
-void vprint_xml(const char *const format, va_list args)
+static void vprint_xml(const char *const format, va_list args)
 {
     FILE* xmlfile = fopen(global_xmlfile, "a");
     vfprintf(xmlfile, format, args);
@@ -1708,7 +1709,7 @@ void vprint_xml(const char *const format, va_list args)
 #endif // _WIN32
 }
 
-void print_xml(const char *const format, ...)
+static void print_xml(const char *const format, ...)
 {
     if (!global_is_file_writer_test)
     {
@@ -1719,28 +1720,30 @@ void print_xml(const char *const format, ...)
     }
 }
 
-void append_xml(const char *ofile, const char *ifile)
+static void append_xml(const char *ofile, const char *ifile)
 {
     if (!global_is_file_writer_test)
     {
-        char ch;
-        FILE* xmlfile = fopen(ofile, "ab");
-        FILE* xml_tmp = fopen(ifile, "rb");
-        while(!feof(xml_tmp))
+        FILE* xmlout = fopen(ofile, "ab");
+        if (xmlout)
         {
-            ch = getc(xml_tmp);
-            if(!feof(xml_tmp))
+            FILE* xmlsrc = fopen(ifile, "rb");
+            if (xmlsrc)
             {
-                putc(ch, xmlfile);
+                int ch;
+                while (!feof(xmlsrc) && EOF != (ch = getc(xmlsrc)))
+                {
+                    putc(ch, xmlout);
+                }
+                fclose(xmlsrc);
             }
+            fclose(xmlout);
         }
-        fclose(xmlfile);
-        fclose(xml_tmp);
     }
 }
 
 // Standard output and error print methods.
-void vprint_message(const char *const format, va_list args)
+static void vprint_message(const char *const format, va_list args)
 {
     vprintf(format, args);
 #ifdef _WIN32
@@ -1748,7 +1751,7 @@ void vprint_message(const char *const format, va_list args)
 #endif // _WIN32
 }
 
-void vprint_error(const char *const format, va_list args)
+static void vprint_error(const char *const format, va_list args)
 {
     vfprintf(stderr, format, args);
 #ifdef _WIN32

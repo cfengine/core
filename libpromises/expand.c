@@ -165,17 +165,16 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
 
     EvalContextStackPushPromiseFrame(ctx, pp, true);
 
-    PromiseIterator *iter_ctx = NULL;
-    size_t i = 0;
+    PromiseIterator *iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers);
     PromiseResult result = PROMISE_RESULT_SKIPPED;
-    Buffer *expbuf = BufferNew();
-    iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers);
     /*
      If any of the lists we iterate is null or contains only cf_null values,
      then skip the entire promise.
     */
     if (!NullIterators(iter_ctx))
     {
+        size_t i = 0;
+        Buffer *expbuf = BufferNew();
         do
         {
             if (handle)
@@ -212,9 +211,9 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
             EvalContextStackPopFrame(ctx);
             ++i;
         } while (PromiseIteratorNext(iter_ctx));
+        BufferDestroy(expbuf);
     }
 
-    BufferDestroy(expbuf);
     PromiseIteratorDestroy(iter_ctx);
     EvalContextStackPopFrame(ctx);
 

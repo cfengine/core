@@ -1779,9 +1779,9 @@ static JsonParseError JsonParseAsPrimitive(const char **data, JsonElement **json
 
 static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out)
 {
+    *json_out = NULL;
     if (**data != '[')
     {
-        *json_out = NULL;
         return JSON_PARSE_ERROR_ARRAY_START;
     }
 
@@ -1892,7 +1892,6 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                 break;
             }
 
-            *json_out = NULL;
             JsonDestroy(array);
             return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
         }
@@ -1900,16 +1899,15 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
         prev_char = **data;
     }
 
-    *json_out = NULL;
     JsonDestroy(array);
     return JSON_PARSE_ERROR_ARRAY_END;
 }
 
 static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_out)
 {
+    *json_out = NULL;
     if (**data != '{')
     {
-        *json_out = NULL;
         return JSON_PARSE_ERROR_ARRAY_START;
     }
 
@@ -1960,7 +1958,6 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
         case ':':
             if (property_name == NULL || prev_char == ':' || prev_char == ',')
             {
-                json_out = NULL;
                 free(property_name);
                 JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_COLON;
@@ -2018,7 +2015,6 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             }
             else
             {
-                *json_out = NULL;
                 free(property_name);
                 JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_OBJECT_LVAL;
@@ -2028,7 +2024,6 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
         case '}':
             if (property_name != NULL)
             {
-                *json_out = NULL;
                 free(property_name);
                 JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_OPEN_LVAL;
@@ -2075,7 +2070,6 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 }
             }
 
-            *json_out = NULL;
             free(property_name);
             JsonDestroy(object);
             return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
@@ -2084,7 +2078,6 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
         prev_char = **data;
     }
 
-    *json_out = NULL;
     free(property_name);
     JsonDestroy(object);
     return JSON_PARSE_ERROR_OBJECT_END;
@@ -2097,6 +2090,8 @@ JsonParseError JsonParse(const char **data, JsonElement **json_out)
     {
         return JSON_PARSE_ERROR_NO_DATA;
     }
+    assert(json_out);
+    *json_out = NULL;
 
     while (**data)
     {

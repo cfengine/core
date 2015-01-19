@@ -276,12 +276,12 @@ void PromisePath(Writer *w, const Promise *pp);
 const char *PromiseGetHandle(const Promise *pp);
 
 /**
- * @brief Get the int value of the first effective constraint found matching, from a promise
+ * @brief Get the long value of the first effective constraint found matching, from a promise
  * @param lval
  * @param pp
- * @return Int value, or CF_NOINT
+ * @return Value, or CF_NOINT
  */
-int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp);
+long PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp);
 
 /**
  * @brief Get the real value of the first effective constraint found matching, from a promise

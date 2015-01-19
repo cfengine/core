@@ -100,65 +100,51 @@ void MonTempInit(void)
 #if defined(__linux__)
 static bool GetAcpi(double *cf_this)
 {
-    Dir *dirh;
-    FILE *fp;
-    const struct dirent *dirp;
-    int count = 0;
-    char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
-    double temp = 0;
-
-    if ((dirh = DirOpen("/proc/acpi/thermal_zone")) == NULL)
+    char path[CF_BUFSIZE] = "/proc/acpi/thermal_zone", buf[CF_BUFSIZE];
+    Dir *dirh = DirOpen(path);
+    if (dirh == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Can't open directory '%s'. (opendir: %s)", path, GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE,
+            "Can't open directory '%s'. (opendir: %s)",
+            path, GetErrorStr());
         return false;
     }
 
-    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
+    const struct dirent *dirp;
+    while (NULL != (dirp = DirRead(dirh)))
     {
-        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
+        if (0 == strcmp(dirp->d_name, ".") ||
+            0 == strcmp(dirp->d_name, ".."))
         {
             continue;
         }
 
-        snprintf(path, CF_BUFSIZE, "/proc/acpi/thermal_zone/%s/temperature", dirp->d_name);
+        snprintf(path, CF_BUFSIZE,
+                 "/proc/acpi/thermal_zone/%s/temperature",
+                 dirp->d_name);
 
-        if ((fp = fopen(path, "r")) == NULL)
+        FILE *fp = fopen(path, "r");
+        if (fp == NULL)
         {
             Log(LOG_LEVEL_ERR, "Couldn't open '%s'", path);
             continue;
         }
 
-        if (fgets(buf, sizeof(buf), fp) == NULL)
+        double temp;
+        if (fgets(buf, sizeof(buf), fp) == NULL ||
+            sscanf(buf, "%*s %lf", &temp) < 1)
         {
             Log(LOG_LEVEL_ERR, "Failed to read line from stream '%s'", path);
             fclose(fp);
             continue;
         }
 
-        sscanf(buf, "%*s %lf", &temp);
-
-        for (count = 0; count < 4; count++)
+        enum observables target[] = { ob_temp0, ob_temp1, ob_temp2, ob_temp3 };
+        for (int count = 0; count < 4; count++)
         {
-            snprintf(index, 2, "%d", count);
-
-            if (strstr(dirp->d_name, index))
+            if (strchr(dirp->d_name, count + '0'))
             {
-                switch (count)
-                {
-                case 0:
-                    cf_this[ob_temp0] = temp;
-                    break;
-                case 1:
-                    cf_this[ob_temp1] = temp;
-                    break;
-                case 2:
-                    cf_this[ob_temp2] = temp;
-                    break;
-                case 3:
-                    cf_this[ob_temp3] = temp;
-                    break;
-                }
-
+                cf_this[target[count]] = temp;
                 Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf", count, temp);
             }
         }

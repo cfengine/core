@@ -227,12 +227,18 @@ static void child_mainloop(int channel)
     if (!init_test_server())
     {
         message = -1;
-        result = write(channel, &message, sizeof(int));
+        write(channel, &message, sizeof(int));
         exit(EXIT_FAILURE);
     }
 
     /* Create a unix socket. */
     local_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (local_socket < 0)
+    {
+        message = -1;
+        write(channel, &message, sizeof(int));
+        exit(EXIT_SUCCESS);
+    }
     my_addr.sin_family = AF_INET;
     my_addr.sin_addr.s_addr = INADDR_ANY;
     my_addr.sin_port = htons(8035);
@@ -247,7 +253,7 @@ static void child_mainloop(int channel)
     if (result < 0)
     {
         message = -1;
-        result = write(channel, &message, sizeof(int));
+        write(channel, &message, sizeof(int));
         exit(EXIT_FAILURE);
     }
     /*
@@ -257,7 +263,7 @@ static void child_mainloop(int channel)
     if (result < 0)
     {
         message = -1;
-        result = write(channel, &message, sizeof(int));
+        write(channel, &message, sizeof(int));
         exit(EXIT_FAILURE);
     }
     /*
@@ -296,7 +302,7 @@ static void child_mainloop(int channel)
         remote_socket = accept(local_socket, (struct sockaddr *)&peer_addr, &peer_addr_size);
         if (remote_socket < 0)
         {
-            Log (LOG_LEVEL_CRIT, "Could not accept connection");
+            Log(LOG_LEVEL_CRIT, "Could not accept connection");
             exit(EXIT_FAILURE);
         }
         /*
@@ -309,8 +315,7 @@ static void child_mainloop(int channel)
         {
             Log(LOG_LEVEL_CRIT, "Could not create SSL structure on the server side");
             SSL_free(ssl);
-            close (remote_socket);
-            remote_socket = -1;
+            close(remote_socket);
             exit(EXIT_FAILURE);
         }
         SSL_set_fd(ssl, remote_socket);
@@ -318,8 +323,7 @@ static void child_mainloop(int channel)
         if (result < 0)
         {
             Log(LOG_LEVEL_CRIT, "Could not accept a TLS connection");
-            close (remote_socket);
-            remote_socket = -1;
+            close(remote_socket);
             exit(EXIT_FAILURE);
         }
         /*
@@ -372,17 +376,17 @@ static bool start_child_process()
     }
     else if (CHILD_PID == 0)                         /* CHILD a.k.a server */
     {
-        close (channel[0]);
+        close(channel[0]);
         child_mainloop(channel[1]);
     }
     else                                             /* PARENT a.k.a client */
     {
-        close (channel[1]);
+        close(channel[1]);
         int message = 0;
         result = read(channel[0], &message, sizeof(int));
         if ((result < 0) || (message < 0))
         {
-            close (channel[0]);
+            close(channel[0]);
             if (result < 0)
             {
                 perror("Failed to read() from child");
@@ -405,7 +409,7 @@ static bool start_child_process()
                       strlen(server_name_template_public));
         if (result < 0)
         {
-            close (channel[0]);
+            close(channel[0]);
             /*
              * Wait for child process
              */
@@ -421,7 +425,7 @@ static bool start_child_process()
                       strlen(server_certificate_template_public));
         if (result < 0)
         {
-            close (channel[0]);
+            close(channel[0]);
             /*
              * Wait for child process
              */
@@ -704,7 +708,7 @@ static void tests_teardown(void)
             char *name;
             xasprintf(&name, "%s/%s", TESTDIR, entry->d_name);
             unlink(name);
-            free (name);
+            free(name);
         }
         closedir(folder);
         rmdir(TESTDIR);
@@ -773,7 +777,7 @@ static int EVP_PKEY_cmp_result = -1;
 #define SSL_READ_REMOVE_BUFFER \
     if (SSL_read_buffer) \
     {  \
-        free (SSL_read_buffer); \
+        free(SSL_read_buffer); \
         SSL_read_buffer = NULL; \
     }
 #define SSL_GET_PEER_CERTIFICATE_RETURN(x) \

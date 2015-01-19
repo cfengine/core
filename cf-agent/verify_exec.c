@@ -183,7 +183,6 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 {
     char eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
-    char comm[20];
     int outsourced, count = 0;
 #if !defined(__MINGW32__)
     mode_t maskval = 0;
@@ -258,7 +257,8 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         return ACTION_RESULT_OK;
     }
 
-    CommandPrefix(cmdline, comm);
+    char comm[20];
+    CommandPrefix(cmdline, comm, sizeof(comm));
 
     if (a.transaction.background)
     {

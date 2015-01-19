@@ -202,19 +202,19 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf)
 
 /*******************************************************************/
 
+#ifndef __MINGW32__
+#define closesocket(x) close(x)
+#endif
+
 int cf_closesocket(int sd)
 {
-    int res;
-
-#ifdef __MINGW32__
-    res = closesocket(sd);
-#else
-    res = close(sd);
-#endif
+    int res = closesocket(sd);
 
     if (res != 0)
     {
-        Log(LOG_LEVEL_ERR, "Could not close socket. (cf_closesocket: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Could not close socket. (cf_closesocket: %s)",
+            GetErrorStr());
     }
 
     return res;
@@ -222,11 +222,13 @@ int cf_closesocket(int sd)
 
 int LinkOrCopy(const char *from, const char *to, int sym)
 /**
- *  Creates symlink to file on platforms supporting it, copies on
- *  others.
- **/
+ * Creates a (symbolic or hard) link to file on platforms supporting
+ * it, copies on others.
+ * @param from Name of target file.
+ * @param to Name of link (or copy) to be created.
+ * @param sym Set false for hard link, true for symbolic link.
+ */
 {
-
 #ifdef __MINGW32__                    // only copy on Windows for now
 
     if (!CopyFile(from, to, TRUE))

@@ -167,18 +167,15 @@ char *ReadPolicyServerFile(const char *workdir)
 
     if (fp)
     {
-        if (fscanf(fp, "%63s", contents) != 1)
-        {
-            fclose(fp);
-            return NULL;
-        }
+        assert(CF_MAX_IP_LEN > 63);
+        bool ok = fscanf(fp, "%63s", contents) == 1;
         fclose(fp);
-        return xstrdup(contents);
+        if (ok)
+        {
+            return xstrdup(contents);
+        }
     }
-    else
-    {
-        return NULL;
-    }
+    return NULL;
 }
 
 bool WritePolicyServerFile(const char *workdir, const char *new_policy_server)

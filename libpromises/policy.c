@@ -1938,13 +1938,13 @@ void BundleToString(Writer *writer, Bundle *bundle)
             IndentPrint(writer, 2);
             WriterWriteF(writer, "\"%s\"", pp->promiser);
 
-            /* FIX: add support
-             *
-             if (pp->promisee != NULL)
-             {
-             fprintf(out, "%s", pp->promisee);
-             }
-            */
+#if 0
+            /* FIXME: add support */
+            if (pp->promisee != NULL)
+            {
+                fprintf(out, "%s", pp->promisee);
+            }
+#endif
 
             for (size_t k = 0; k < SeqLength(pp->conlist); k++)
             {
@@ -1980,7 +1980,6 @@ void PolicyToString(const Policy *policy, Writer *writer)
         BodyToString(writer, body);
         WriterWriteChar(writer, '\n');
     }
-
 }
 
 //*****************************************************************************
@@ -1992,7 +1991,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
     if (strcmp("string", type) == 0 || strcmp("symbol", type) == 0)
     {
         const char *value = JsonObjectGetAsString(json_rval, "value");
-        return ((Rval) { xstrdup(value), RVAL_TYPE_SCALAR });
+        return (Rval) { xstrdup(value), RVAL_TYPE_SCALAR };
     }
     else if (strcmp("list", type) == 0)
     {
@@ -2005,7 +2004,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
             RlistAppend(&rlist, list_value.item, list_value.type);
         }
 
-        return ((Rval) { rlist, RVAL_TYPE_LIST });
+        return (Rval) { rlist, RVAL_TYPE_LIST };
     }
     else if (strcmp("functionCall", type) == 0)
     {
@@ -2023,12 +2022,10 @@ static Rval RvalFromJson(JsonElement *json_rval)
 
         FnCall *fn = FnCallNew(name, args);
 
-        return ((Rval) { fn, RVAL_TYPE_FNCALL });
+        return (Rval) { fn, RVAL_TYPE_FNCALL };
     }
-    else
-    {
-        ProgrammingError("Unexpected rval type: %s", type);
-    }
+
+    ProgrammingError("Unexpected rval type: %s", type);
 }
 
 static Constraint *PromiseAppendConstraintJson(Promise *promise, JsonElement *json_constraint)
@@ -2279,19 +2276,15 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (strcmp(cp->lval, lval) == 0)
+        if (strcmp(cp->lval, lval) == 0 &&
+            IsDefinedClass(ctx, cp->classes))
         {
-            if (IsDefinedClass(ctx, cp->classes))
+            if (retval != CF_UNDEFINED)
             {
-                if (retval != CF_UNDEFINED)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s' (boolean) constraints break this promise", lval);
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-            }
-            else
-            {
-                continue;
+                Log(LOG_LEVEL_ERR,
+                    "Multiple '%s' (boolean) constraints break this promise",
+                    lval);
+                PromiseRef(LOG_LEVEL_ERR, pp);
             }
 
             if (cp->rval.type != RVAL_TYPE_SCALAR)
@@ -2302,13 +2295,13 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
                 FatalError(ctx, "Aborted");
             }
 
-            if (strcmp(cp->rval.item, "true") == 0 || strcmp(cp->rval.item, "yes") == 0)
+            if (strcmp(cp->rval.item, "true") == 0 ||
+                strcmp(cp->rval.item, "yes") == 0)
             {
                 retval = true;
-                continue;
             }
-
-            if (strcmp(cp->rval.item, "false") == 0 || strcmp(cp->rval.item, "no") == 0)
+            else if (strcmp(cp->rval.item, "false") == 0 ||
+                     strcmp(cp->rval.item, "no") == 0)
             {
                 retval = false;
             }
@@ -2333,34 +2326,31 @@ int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq 
     {
         Constraint *cp = SeqAt(constraints, i);
 
-        if (strcmp(cp->lval, lval) == 0)
+        if (strcmp(cp->lval, lval) == 0 &&
+            IsDefinedClass(ctx, cp->classes))
         {
-            if (IsDefinedClass(ctx, cp->classes))
+            if (retval != CF_UNDEFINED)
             {
-                if (retval != CF_UNDEFINED)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s' (boolean) body constraints break this promise", lval);
-                }
-            }
-            else
-            {
-                continue;
+                Log(LOG_LEVEL_ERR,
+                    "Multiple '%s' (boolean) body constraints break this promise",
+                    lval);
             }
 
             if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
-                Log(LOG_LEVEL_ERR, "Type mismatch - expected type %c for boolean constraint '%s'",
+                Log(LOG_LEVEL_ERR,
+                    "Type mismatch - expected type %c for boolean constraint '%s'",
                     cp->rval.type, lval);
                 FatalError(ctx, "Aborted");
             }
 
-            if (strcmp(cp->rval.item, "true") == 0 || strcmp(cp->rval.item, "yes") == 0)
+            if (strcmp(cp->rval.item, "true") == 0 ||
+                strcmp(cp->rval.item, "yes") == 0)
             {
                 retval = true;
-                continue;
             }
-
-            if (strcmp(cp->rval.item, "false") == 0 || strcmp(cp->rval.item, "no") == 0)
+            else if (strcmp(cp->rval.item, "false") == 0 ||
+                     strcmp(cp->rval.item, "no") == 0)
             {
                 retval = false;
             }
@@ -2400,7 +2390,8 @@ bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, con
                 continue;
             }
 
-            if (!(cp->rval.type == RVAL_TYPE_FNCALL || cp->rval.type == RVAL_TYPE_SCALAR))
+            if (!(cp->rval.type == RVAL_TYPE_FNCALL ||
+                  cp->rval.type == RVAL_TYPE_SCALAR))
             {
                 Log(LOG_LEVEL_ERR,
                     "Anomalous type mismatch - type %c for bundle constraint '%s' did not match internals",
@@ -2436,15 +2427,19 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *constraint = SeqAt(pp->conlist, i);
-        success &= ConstraintCheckSyntax(constraint, errors);
+        if (!ConstraintCheckSyntax(constraint, errors))
+        {
+            success = false;
+        }
     }
 
-    const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_promise_type->parent_bundle->type,
-                                                        pp->parent_promise_type->name);
+    const PromiseTypeSyntax *pts =
+        PromiseTypeSyntaxGet(pp->parent_promise_type->parent_bundle->type,
+                             pp->parent_promise_type->name);
 
-    if (pts->check_promise)
+    if (pts->check_promise && !pts->check_promise(pp, errors))
     {
-        success &= pts->check_promise(pp, errors);
+        success = false;
     }
 
     return success;
@@ -2494,9 +2489,8 @@ const char *PromiseGetHandle(const Promise *pp)
     return (const char *)PromiseGetImmediateRvalValue("handle", pp, RVAL_TYPE_SCALAR);
 }
 
-int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp)
+long PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
-    int retval = CF_NOINT;
     const Constraint *cp = PromiseGetConstraint(pp, lval);
     if (cp)
     {
@@ -2508,10 +2502,10 @@ int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Pr
             FatalError(ctx, "Aborted");
         }
 
-        retval = (int) IntFromString((char *) cp->rval.item);
+        return IntFromString((const char *) cp->rval.item);
     }
 
-    return retval;
+    return CF_NOINT;
 }
 
 /*****************************************************************************/
@@ -2546,13 +2540,9 @@ static bool Str2Mode(const char *s, mode_t *mode_out)
 
     if (s == NULL)
     {
-        *mode_out = (mode_t)0;
-        return true;
+        a = 0;
     }
-
-    sscanf(s, "%o", &a);
-
-    if (a == CF_UNDEFINED)
+    else if (sscanf(s, "%o", &a) != 1 || a == CF_UNDEFINED)
     {
         return false;
     }
@@ -2601,9 +2591,6 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
 
 uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
-    int retval = CF_SAME_OWNER;
-    char buffer[CF_MAXVARSIZE];
-
     const Constraint *cp = PromiseGetConstraint(pp, lval);
     if (cp)
     {
@@ -2616,10 +2603,11 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
             FatalError(ctx, "Aborted");
         }
 
-        retval = Str2Uid((char *) cp->rval.item, buffer, pp);
+        char buffer[CF_MAXVARSIZE];
+        return Str2Uid((char *) cp->rval.item, buffer, pp);
     }
 
-    return retval;
+    return CF_SAME_OWNER;
 }
 
 #endif /* !__MINGW32__ */
@@ -2637,9 +2625,6 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
 
 gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promise *pp)
 {
-    int retval = CF_SAME_GROUP;
-    char buffer[CF_MAXVARSIZE];
-
     const Constraint *cp = PromiseGetConstraint(pp, lval);
     if (cp)
     {
@@ -2652,10 +2637,11 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
             FatalError(ctx, "Aborted");
         }
 
-        retval = Str2Gid((char *) cp->rval.item, buffer, pp);
+        char buffer[CF_MAXVARSIZE];
+        return Str2Gid((char *) cp->rval.item, buffer, pp);
     }
 
-    return retval;
+    return CF_SAME_GROUP;
 }
 #endif /* !__MINGW32__ */
 
@@ -2682,23 +2668,19 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
 
 Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
 {
-    Constraint *retval = NULL;
-    if (!pp)
+    if (pp)
     {
-        return NULL;
-    }
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-    {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
         {
-            return cp;
+            Constraint *cp = SeqAt(pp->conlist, i);
+
+            if (strcmp(cp->lval, lval) == 0)
+            {
+                return cp;
+            }
         }
     }
-
-    return retval;
+    return NULL;
 }
 
 Constraint *PromiseGetConstraintWithType(const Promise *pp, const char *lval, RvalType type)
@@ -2723,26 +2705,26 @@ Constraint *PromiseGetConstraintWithType(const Promise *pp, const char *lval, Rv
 
 Constraint *PromiseGetImmediateConstraint(const Promise *pp, const char *lval)
 {
-    if (pp == NULL)
+    if (pp)
     {
-        return NULL;
-    }
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); ++i)
-    {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        for (size_t i = 0; i < SeqLength(pp->conlist); ++i)
         {
-            /* It would be nice to check whether the constraint we have asked
-               for is defined in promise (not in referenced body), but there
-               seem to be no way to do it easily.
+            Constraint *cp = SeqAt(pp->conlist, i);
 
-               Checking for absence of classes does not work, as constrains
-               obtain classes defined on promise itself.
-            */
+            if (strcmp(cp->lval, lval) == 0)
+            {
+                /* It would be nice to check whether the constraint we
+                   have asked for is defined in promise (not in
+                   referenced body), but there seems to be no way to
+                   do it easily.
 
-            return cp;
+                   Checking for absence of classes does not work, as
+                   constrains obtain classes defined on promise
+                   itself.
+                */
+
+                return cp;
+            }
         }
     }
 
@@ -2757,10 +2739,8 @@ void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType
     {
         return constraint->rval.item;
     }
-    else
-    {
-        return NULL;
-    }
+
+    return NULL;
 }
 
 /*****************************************************************************/
@@ -2773,10 +2753,8 @@ void *PromiseGetConstraintAsRval(const Promise *pp, const char *lval, RvalType r
     {
         return constraint->rval.item;
     }
-    else
-    {
-        return NULL;
-    }
+
+    return NULL;
 }
 
 /*****************************************************************************/
@@ -2807,25 +2785,19 @@ void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 
         const char *sp = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR);
-        if (sp)
+        if (sp && !IsExpandable(sp))
         {
-            if (!IsExpandable(sp))
+            const Item *ptr = ReturnItemIn(EDIT_ANCHORS, sp);
+            if (ptr == NULL)
             {
-                const Item *ptr = NULL;
-                if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
-                {
-                    if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)
-                    {
-                        Log(LOG_LEVEL_INFO,
-                            "insert_lines promise uses the same select_line_matching anchor '%s' as another promise. This will lead to non-convergent behaviour unless 'empty_file_before_editing' is set",
-                            sp);
-                        PromiseRef(LOG_LEVEL_INFO, pp);
-                    }
-                }
-                else
-                {
-                    PrependItem(&EDIT_ANCHORS, sp, PromiseGetBundle(pp)->name);
-                }
+                PrependItem(&EDIT_ANCHORS, sp, PromiseGetBundle(pp)->name);
+            }
+            else if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)
+            {
+                Log(LOG_LEVEL_INFO,
+                    "insert_lines promise uses the same select_line_matching anchor '%s' as another promise. This will lead to non-convergent behaviour unless 'empty_file_before_editing' is set",
+                    sp);
+                PromiseRef(LOG_LEVEL_INFO, pp);
             }
         }
     }
@@ -2872,10 +2844,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
                         for (size_t l = 0; bs[l].lval != NULL; l++)
                         {
-                            if (bs[l].dtype == CF_DATA_TYPE_BUNDLE)
-                            {
-                            }
-                            else if (bs[l].dtype == CF_DATA_TYPE_BODY)
+                            if (bs[l].dtype == CF_DATA_TYPE_BODY)
                             {
                                 const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax->constraints;
 
@@ -2929,20 +2898,7 @@ bool BundleTypeCheck(const char *name)
         }
     }
 
-    if (!strcmp("knowledge", name))
-    {
-        return true;
-    }
-
-    if (!strcmp("edit_line", name))
-    {
-        return true;
-    }
-
-    if (!strcmp("edit_xml", name))
-    {
-        return true;
-    }
-
-    return false;
+    return (0 == strcmp("knowledge", name) ||
+            0 == strcmp("edit_line", name) ||
+            0 == strcmp("edit_xml", name));
 }

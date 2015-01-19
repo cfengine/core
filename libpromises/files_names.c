@@ -449,7 +449,7 @@ void CanonifyNameInPlace(char *s)
 {
     for (; *s != '\0'; s++)
     {
-        if ((!isalnum((int)(unsigned char)*s)) || (*s == '.'))
+        if (!isalnum((unsigned char)*s))
         {
             *s = '_';
         }

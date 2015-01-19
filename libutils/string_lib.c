@@ -190,35 +190,33 @@ bool StringSafeEqual(const char *a, const char *b)
 
 char *SearchAndReplace(const char *source, const char *search, const char *replace)
 {
-    const char *source_ptr = source;
-
-    if ((source == NULL) || (search == NULL) || (replace == NULL))
+    if (source == NULL || search == NULL || replace == NULL)
     {
         ProgrammingError("Programming error: NULL argument is passed to SearchAndReplace");
     }
 
-    if (strcmp(search, "") == 0)
+    /* Perverse case: treat empty string as if it's nowhere found (the
+     * alternative is that it's found everywhere, which gets silly).
+     */
+    if (search[0] == '\0')
     {
         return xstrdup(source);
     }
 
     Writer *w = StringWriter();
+    const char *tail = source, *found;
+    const size_t searchlen = strlen(search);
 
-    for (;;)
+    while (NULL != (found = strstr(tail, search)))
     {
-        const char *found_ptr = strstr(source_ptr, search);
-
-        if (found_ptr == NULL)
-        {
-            WriterWrite(w, source_ptr);
-            return StringWriterClose(w);
-        }
-
-        WriterWriteLen(w, source_ptr, found_ptr - source_ptr);
+        WriterWriteLen(w, tail, found - tail);
         WriterWrite(w, replace);
 
-        source_ptr += found_ptr - source_ptr + strlen(search);
+        tail = found + searchlen;
     }
+
+    WriterWrite(w, tail);
+    return StringWriterClose(w);
 }
 
 /*********************************************************************/
@@ -831,63 +829,43 @@ bool StringEndsWith(const char *str, const char *suffix)
         return false;
     }
 
-    for (size_t i = 0; i < suffix_len; i++)
-    {
-        if (str[str_len - i - 1] != suffix[suffix_len - i - 1])
-        {
-            return false;
-        }
-    }
-
-    return true;
+    return 0 == strcmp(str + str_len - suffix_len, suffix);
 }
 
 bool StringStartsWith(const char *str, const char *prefix)
 {
-    int str_len = strlen(str);
-    int prefix_len = strlen(prefix);
-
-    if (prefix_len > str_len)
-    {
-        return false;
-    }
-
-    for (int i = 0; i < prefix_len; i++)
-    {
-        if (str[i] != prefix[i])
-        {
-            return false;
-        }
-    }
-    return true;
+    return 0 == strncmp(str, prefix, strlen(prefix));
 }
 
 void *MemSpan(const void *mem, char c, size_t n)
 {
-    const char *end = mem + n;
-    for (; (char*)mem < end; ++mem)
+    const char *p = mem;
+    size_t i = 0;
+    while (i < n && p[i] == c)
     {
-        if (*((char *)mem) != c)
-        {
-            return (char *)mem;
-        }
+        i++;
     }
 
-    return (char *)mem;
+    /* We have to cast away constness here: callers who pass us a
+     * non-const mem want a non-const return back, so we return a
+     * non-const pointer; but we want to allow callers to pass a
+     * const-qualified mem, as long as they have the sense to not use
+     * the non-const-ness of our return !
+     */
+    return (void *)(p + i);
 }
 
 void *MemSpanInverse(const void *mem, char c, size_t n)
 {
-    const char *end = mem + n;
-    for (; (char*)mem < end; ++mem)
+    const char *p = mem;
+    size_t i = 0;
+    while (i < n && p[i] != c)
     {
-        if (*((char*)mem) == c)
-        {
-            return (char *)mem;
-        }
+        i++;
     }
 
-    return (char *)mem;
+    /* Cast away constness, as for MemSpan */
+    return (void *)(p + i);
 }
 
 /*

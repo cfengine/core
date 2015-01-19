@@ -270,13 +270,13 @@ static void ShowContext(EvalContext *ctx)
 static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    char hashbuffer[CF_HOSTKEY_STRING_SIZE] = { 0 };
-    char hashprintbuffer[CF_BUFSIZE] = { 0 };
+    char hashprintbuffer[CF_BUFSIZE];
+    const size_t prelen = strlcpy(hashprintbuffer, "{checksum}", CF_BUFSIZE);
+    assert(prelen < CF_BUFSIZE);
 
     HashFile(policy_file, digest, CF_DEFAULT_DIGEST);
-    snprintf(hashprintbuffer, CF_BUFSIZE - 1, "{checksum}%s",
-             HashPrintSafe(hashbuffer, sizeof(hashbuffer), digest,
-                           CF_DEFAULT_DIGEST, true));
+    HashPrintSafe(hashprintbuffer + prelen, sizeof(hashprintbuffer) - prelen,
+                  digest, CF_DEFAULT_DIGEST, true);
 
     Log(LOG_LEVEL_DEBUG, "Hashed policy file %s to %s", policy_file, hashprintbuffer);
 

@@ -760,14 +760,13 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
                                          const Promise *pp)
 {
     PackageItem *list = NULL;
-    char name[CF_MAXVARSIZE], version[CF_MAXVARSIZE], arch[CF_MAXVARSIZE], mgr[CF_MAXVARSIZE], line[CF_BUFSIZE];
-    char thismanager[CF_MAXVARSIZE];
-    FILE *fin;
+    char name[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
+    char arch[CF_MAXVARSIZE], mgr[CF_MAXVARSIZE];
+    char thismanager[CF_MAXVARSIZE], line[CF_BUFSIZE];
     time_t horizon = 24 * 60, now = time(NULL);
     struct stat sb;
 
     GetSoftwareCacheFilename(name);
-
     if (stat(name, &sb) == -1)
     {
         return NULL;
@@ -781,45 +780,40 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
     if (now - sb.st_mtime < horizon * 60)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Cache file '%s' exists and is sufficiently fresh according to (package_list_update_ifelapsed)", name);
+            "Cache file '%s' exists and is sufficiently fresh according to (package_list_update_ifelapsed)",
+            name);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Cache file '%s' exists, but it is out of date (package_list_update_ifelapsed)", name);
+        Log(LOG_LEVEL_VERBOSE,
+            "Cache file '%s' exists, but it is out of date (package_list_update_ifelapsed)",
+            name);
         return NULL;
     }
 
-    if ((fin = fopen(name, "r")) == NULL)
+    FILE *fin = fopen(name, "r");
+    if (fin == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Cannot open the source log '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
-              name, GetErrorStr());
+        Log(LOG_LEVEL_INFO,
+            "Cannot open the source log '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
+            name, GetErrorStr());
         return NULL;
     }
 
-/* Max 2016 entries - at least a week */
-
-    snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(RealPackageManager(manager->manager)));
+    /* Max 2016 entries per week */
+    strlcpy(thismanager, ReadLastNode(RealPackageManager(manager->manager)), CF_MAXVARSIZE);
 
     int linenumber = 0;
-    for(;;)
+    while (fgets(line, sizeof(line), fin))
     {
-        if (fgets(line, sizeof(line), fin) == NULL)
-        {
-            if (ferror(fin))
-            {
-                UnexpectedError("Failed to read line %d from stream '%s'", linenumber+1, name);
-                break;
-            }
-            else /* feof */
-            {
-                break;
-            }
-        }
         ++linenumber;
-        int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\r\n]", name, version, arch, mgr);
+        name[0] = version[0] = arch[0] = mgr[0] = '\0';
+        int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\r\n]",
+                               name, version, arch, mgr);
         if (scancount != 4)
         {
-            Log(LOG_LEVEL_VERBOSE, "Could only read %d values from line %d in '%s'", scancount, linenumber, name);
+            Log(LOG_LEVEL_VERBOSE, "Could only read %d values from line %d in '%s'",
+                scancount, linenumber, name);
         }
 
         /*
@@ -830,7 +824,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
          * package method is updated to detect this architecture, on next
          * execution update this architecture to the real one.
          */
-        if (!strcmp(arch, "default"))
+        if (strcmp(arch, "default") == 0)
         {
             strlcpy(arch, default_arch, CF_MAXVARSIZE);
         }
@@ -841,7 +835,17 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
         }
     }
 
+    if (ferror(fin))
+    {
+        UnexpectedError("Failed to read line %d from stream '%s'",
+                        linenumber + 1, name);
+    }
+    else
+    {
+        assert(feof(fin));
+    }
     fclose(fin);
+
     return list;
 }
 

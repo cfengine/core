@@ -598,7 +598,7 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
         switch(current_state)
         {
             case ST_ERROR:
-                Log(LOG_LEVEL_ERR, "Parsing error : Malformed string");
+                Log(LOG_LEVEL_ERR, "Parsing error : Malformed string (%s)/(%s)", str, s);
                 ret = 1;
                 goto clean;
             case ST_OPENED:
@@ -747,7 +747,7 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
 
     if (current_state != ST_CLOSED && current_state != ST_PRECLOSED )
     {
-        Log(LOG_LEVEL_ERR, "Parsing error : Malformed string (unexpected end of input)");
+        Log(LOG_LEVEL_ERR, "Parsing error : Ended unexpectedly (%s)", str);
         ret = 3;
         goto clean;
     }

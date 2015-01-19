@@ -858,10 +858,10 @@ const char *CommandArg0(const char *execstr)
     const char *start;
     char end_delimiter;
 
-    if(execstr[0] == '\"')
+    if (execstr[0] == '"')
     {
         start = execstr + 1;
-        end_delimiter = '\"';
+        end_delimiter = '"';
     }
     else
     {
@@ -872,8 +872,7 @@ const char *CommandArg0(const char *execstr)
     strlcpy(arg, start, sizeof(arg));
 
     char *cut = strchr(arg, end_delimiter);
-
-    if(cut)
+    if (cut)
     {
         *cut = '\0';
     }
@@ -882,35 +881,40 @@ const char *CommandArg0(const char *execstr)
 }
 
 /*************************************************************/
-
-void CommandPrefix(char *execstr, char *comm)
+/* Actually returns a *suffix* of the command, within the first word
+ * of execstr, plus possibly some of what follows if we have space for
+ * it. */
+void CommandPrefix(char *execstr, char *comm, size_t csiz)
 {
-    char *sp;
-
-    for (sp = execstr; (*sp != ' ') && (*sp != '\0'); sp++)
+    char *sp = execstr;
+    /* Find end of first word - the command: */
+    while (!isspace((unsigned char) *sp) && *sp != '\0')
     {
+        sp++;
     }
 
-    if (sp - 10 >= execstr)
+    /* We want to include the command name and ideally early parts of
+     * the arguments; the command's path is less important.  So use at
+     * most two thirds of our buffer space on the command: */
+    const size_t chunk = (2 * csiz) / 3;
+    if (sp >= execstr + chunk)
     {
-        sp -= 10;               /* copy 15 most relevant characters of command */
+        sp -= chunk;
     }
     else
     {
         sp = execstr;
     }
 
-    memset(comm, 0, 20);
-    strncpy(comm, sp, 15);
+    /* Copy the "most relevant" characters of command */
+    strlcpy(comm, sp, csiz);
 }
 
-static int IsSpace(char *remainder)
+static int IsSpace(char *sp)
 {
-    char *sp;
-
-    for (sp = remainder; *sp != '\0'; sp++)
+    for (; *sp != '\0'; sp++)
     {
-        if (!isspace((int)*sp))
+        if (!isspace((unsigned char)*sp))
         {
             return false;
         }
@@ -923,17 +927,8 @@ static int IsSpace(char *remainder)
 
 bool IsRealNumber(const char *s)
 {
-    static const double NO_DOUBLE = -123.45;
-    double a = NO_DOUBLE;
-
-    sscanf(s, "%lf", &a);
-
-    if (a == NO_DOUBLE)
-    {
-        return false;
-    }
-
-    return true;
+    double a;
+    return sscanf(s, "%lf", &a) == 1;
 }
 
 #ifndef __MINGW32__

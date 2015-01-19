@@ -82,24 +82,26 @@ static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_X */
 #ifdef LMDB
 static void GenerateMd5Hash(const char *istring, char *ohash)
 {
-    if (!strcmp(istring, "CF_CRITICAL_SECTION"))
-    { 
+    if (0 == strcmp(istring, "CF_CRITICAL_SECTION"))
+    {
         strcpy(ohash, istring);
         return;
     }
 
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     HashString(istring, strlen(istring), digest, HASH_METHOD_MD5);
+    /* TODO: use md_len from that as digest_len ? */
+    const size_t digest_len = 16;
 
-    const char lookup[]="0123456789abcdef";
-    for (int i=0; i<16; i++)
+    const char lookup[] = "0123456789abcdef";
+    for (int i = 0; i < digest_len; i++)
     {
-        ohash[i*2]   = lookup[digest[i] >> 4];
-        ohash[i*2+1] = lookup[digest[i] & 0xf];
+        ohash[i * 2]     = lookup[digest[i] >> 4];
+        ohash[i * 2 + 1] = lookup[digest[i] & 0xf];
     }
-    ohash[16*2] = '\0';
+    ohash[digest_len * 2] = '\0';
 
-    if (!strncmp(istring, "lock.track_license_bundle.track_license", 39))
+    if (0 == strncmp(istring, "lock.track_license_bundle.track_license", 39))
     {
         ohash[0] = 'X';
     }
@@ -111,26 +113,14 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 #ifdef LMDB
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
-    if (!strcmp(lock_id, "CF_CRITICAL_SECTION"))
-    {
-        strcpy(digest2, lock_id);
-    }
-    else
+    if (strcmp(lock_id, "CF_CRITICAL_SECTION") != 0)
     {
         GenerateMd5Hash(lock_id, digest2);
+        lock_id = (char *)digest2; /* cast away unsignedness */
     }
-
-    if(WriteDB(dbp, digest2, lock_data, sizeof(LockData)))
-#else
-    if(WriteDB(dbp, lock_id, lock_data, sizeof(LockData)))
 #endif
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+
+    return WriteDB(dbp, lock_id, lock_data, sizeof(LockData));
 }
 
 static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
@@ -146,12 +136,12 @@ static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
 
 time_t FindLockTime(const char *name)
 {
-    CF_DB *dbp;
     LockData entry = {
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
-    if ((dbp = OpenLock()) == NULL)
+    CF_DB *dbp = OpenLock();
+    if (dbp == NULL)
     {
         return -1;
     }
@@ -159,28 +149,21 @@ time_t FindLockTime(const char *name)
 #ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(name, ohash);
-
-    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
-#else
-    if (ReadDB(dbp, name, &entry, sizeof(entry)))
+    name = (char *)ohash; /* cast away unsignedness */
 #endif
-    {
-        CloseLock(dbp);
-        return entry.time;
-    }
-    else
-    {
-        CloseLock(dbp);
-        return -1;
-    }
+
+    time_t ans = ReadDB(dbp, name, &entry, sizeof(entry)) ? entry.time : -1;
+    CloseLock(dbp);
+    return ans;
 }
 
 static void RemoveDates(char *s)
 {
-    int i, a = 0, b = 0, c = 0, d = 0;
-    char *dayp = NULL, *monthp = NULL, *sp;
-    char *days[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-    char *months[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+    int i;
+    char *dayp = NULL, *monthp = NULL;
+    char days[7][4] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    char months[12][4] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
 // Canonifies or blanks our times/dates for locks where there would be an explosion of state
 
@@ -192,44 +175,46 @@ static void RemoveDates(char *s)
 
     for (i = 0; i < 7; i++)
     {
-        if ((dayp = strstr(s, days[i])))
+        dayp = strstr(s, days[i]);
+        if (dayp)
         {
-            *dayp = 'D';
-            *(dayp + 1) = 'A';
-            *(dayp + 2) = 'Y';
+            memcpy(dayp, "DAY", 3);
             break;
         }
     }
 
     for (i = 0; i < 12; i++)
     {
-        if ((monthp = strstr(s, months[i])))
+        monthp = strstr(s, months[i]);
+        if (monthp)
         {
-            *monthp = 'M';
-            *(monthp + 1) = 'O';
-            *(monthp + 2) = 'N';
+            memcpy(monthp, "MON", 3);
             break;
         }
     }
 
     if (dayp && monthp)         // looks like a full date
     {
-        sscanf(monthp + 4, "%d %d:%d:%d", &a, &b, &c, &d);
-
-        if (a * b * c * d == 0)
+        int h, m, sec, d, stop;
+        if (sscanf(monthp + 4, "%d %d:%d:%d%n", &d, &h, &m, &sec, &stop) < 4)
         {
             // Probably not a date
             return;
         }
+        /* TODO: we should probably move the DAY and MON stomps above
+         * to here, so that we only modify s if we actually think it's
+         * a date.  As it is, we may modify it then change our mind
+         * and decide it's not a date.  Of course, fixing this is a
+         * backwards-incompatible change, so must be approached with
+         * care ... albeit using sscanf() properly already goes there
+         * (if d, h, m or sec was 0, it "wasn't a date", because 0 was
+         * its initial value, so obviously sscanf had failed).
+         */
 
-        for (sp = monthp + 4; *sp != '\0'; sp++)
+        /* Stomp on the digits of day number and time (but not year) */
+        for (char *sp = monthp + 4; *sp != '\0' && sp <= monthp + stop; sp++)
         {
-            if (sp > monthp + 15)
-            {
-                break;
-            }
-
-            if (isdigit((int)*sp))
+            if (isdigit(*sp))
             {
                 *sp = 't';
             }
@@ -239,9 +224,9 @@ static void RemoveDates(char *s)
 
 static int RemoveLock(const char *name)
 {
-    CF_DB *dbp;
+    CF_DB *dbp = OpenLock();
 
-    if ((dbp = OpenLock()) == NULL)
+    if (dbp == NULL)
     {
         return -1;
     }
@@ -250,19 +235,14 @@ static int RemoveLock(const char *name)
 #ifdef LMDB
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
-    if (!strcmp(name, "CF_CRITICAL_SECTION"))
-    {
-        strcpy(digest2, name);
-    }
-    else
+    if (strcmp(name, "CF_CRITICAL_SECTION") != 0)
     {
         GenerateMd5Hash(name, digest2);
+        name = (char*) digest2; /* cast away unsignedness */
     }
-
-    DeleteDB(dbp, digest2);
-#else
-    DeleteDB(dbp, name);
 #endif
+
+    DeleteDB(dbp, name);
     ThreadUnlock(cft_lock);
 
     CloseLock(dbp);
@@ -329,45 +309,36 @@ static pid_t FindLockPid(char *name)
 #ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(name, ohash);
-
-    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
-#else
-    if (ReadDB(dbp, name, &entry, sizeof(entry)))
+    name = (char *)ohash; /* cast away unsignedness */
 #endif
-    {
-        CloseLock(dbp);
-        return entry.pid;
-    }
-    else
-    {
-        CloseLock(dbp);
-        return -1;
-    }
+
+    pid_t ans = ReadDB(dbp, name, &entry, sizeof(entry)) ? entry.pid : -1;
+    CloseLock(dbp);
+    return ans;
 }
 
 static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *operand)
 {
-    FILE *fp;
-    char buffer[CF_MAXVARSIZE];
-    time_t tim;
-
     if (cflog == NULL)
     {
         return;
     }
 
-    if ((fp = fopen(cflog, "a")) == NULL)
+    FILE *fp = fopen(cflog, "a");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Can't open lock-log file '%s'. (fopen: %s)", cflog, GetErrorStr());
         exit(EXIT_FAILURE);
     }
 
-    if ((tim = time((time_t *) NULL)) == -1)
+    time_t tim = time((time_t *) NULL);
+    if (tim == -1)
     {
         Log(LOG_LEVEL_DEBUG, "Couldn't read system clock");
     }
 
-    snprintf(buffer, sizeof(buffer), "%s", ctime(&tim));
+    char buffer[CF_MAXVARSIZE];
+    strcpy(buffer, ctime(&tim));
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
@@ -401,38 +372,40 @@ static void RegisterLockCleanup(void)
 
 static char *BodyName(const Promise *pp)
 {
-    char *name, *sp;
-    int size = 0;
+    /* Return a type template for the promise body for lock-type identification */
+    char *name = xmalloc(CF_MAXVARSIZE);
+    char *sp = pp->parent_promise_type->name;
 
-/* Return a type template for the promise body for lock-type identification */
-
-    name = xmalloc(CF_MAXVARSIZE);
-
-    sp = pp->parent_promise_type->name;
-
-    if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+    int size = strlen(sp);
+    if (size < CF_MAXVARSIZE - CF_BUFFERMARGIN)
     {
         strcpy(name, sp);
-        strcat(name, ".");
-        size += strlen(sp);
+        name[size++] = '.';
+    }
+    else
+    {
+        size = 0;
     }
 
     for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
+        /* Exception for args, by symmetry, for locking: */
+        if (strcmp(cp->lval, "args") == 0)
         {
             continue;
         }
 
-        if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+        size_t here = strlen(cp->lval);
+        if (size + here < CF_MAXVARSIZE - CF_BUFFERMARGIN)
         {
-            strcat(name, cp->lval);
-            strcat(name, ".");
-            size += strlen(cp->lval);
+            strcpy(name + size, cp->lval);
+            size += here;
+            name[size++] = '.';
         }
     }
+    name[size] = '\0';
 
     return name;
 }
@@ -464,18 +437,16 @@ static bool KillLockHolder(const char *lock)
 #ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(lock, ohash);
-
-    if (!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
-#else
-    if (!ReadDB(dbp, lock, &lock_data, sizeof(lock_data)))
+    lock = (char *)ohash; /* cast away unsignedness */
 #endif
+
+    bool locked = ReadDB(dbp, lock, &lock_data, sizeof(lock_data));
+    CloseLock(dbp);
+    if (!locked)
     {
         /* No lock found */
-        CloseLock(dbp);
         return true;
     }
-
-    CloseLock(dbp);
 
     return GracefulTerminate(lock_data.pid, lock_data.process_start_time);
 }
@@ -660,8 +631,9 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
     free(promise);
 
-    Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d", cc_operator, cc_operand, tc.expireafter,
-        tc.ifelapsed);
+    Log(LOG_LEVEL_DEBUG,
+        "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d",
+        cc_operator, cc_operand, tc.expireafter, tc.ifelapsed);
 
     int sum = 0;
     for (int i = 0; cc_operator[i] != '\0'; i++)
@@ -678,12 +650,15 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     snprintf(cflog, CF_BUFSIZE, "%s/cf3.%.40s.runlog", GetLogDir(), host);
 
     char cflock[CF_BUFSIZE] = "";
-    snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
+    snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s",
+             PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
     char cflast[CF_BUFSIZE] = "";
-    snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
+    snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s",
+             PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
-    Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'", PromiseGetBundle(pp)->name, cflock);
+    Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'",
+        PromiseGetBundle(pp)->name, cflock);
 
     // Now see if we can get exclusivity to edit the locks
     WaitForCriticalSection(CF_CRITIAL_SECTION);

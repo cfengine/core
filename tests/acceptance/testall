@@ -263,7 +263,7 @@ workdir() {
 #        timeout into. Used by timed tests.
 runtest() {
   # Clear local variables
-  unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE
+  unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE TEST_DESCRIPTION TEST_STORY TEST_COVERS
 
   AGENT="$1"
   TEST="$2"
@@ -389,6 +389,18 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
     TEST_END_TIME=$(unix_seconds)
 
+    # Try to collect test metadata if any
+    if egrep -e "R: test description: " $OUTFILE > /dev/null; then
+      TEST_DESCRIPTION="$(egrep -e "R: test description" $OUTFILE | sed -e "s,.*test description: \(\w*\),\1,")"
+    fi
+    if egrep -e "R: test story_id: " $OUTFILE > /dev/null; then
+      TEST_STORY="$(egrep -e "R: test story_id" $OUTFILE | sed -e "s,.*test story_id: \([0-9][0-9]*\),\1,")"
+    fi
+    if egrep -e "R: test covers: " $OUTFILE > /dev/null; then
+      TEST_COVERS="$(egrep -e "R: test covers" $OUTFILE | sed -e "s,.*test covers:[ \t][ \t]*\(\w*\),\1,")"
+    fi
+
+
     RESULT_MSG=
     if [ -z "$EXPECTED_CRASH" ] && [ $RETVAL -ne 0 ]; then
       RESULT=FAIL
@@ -471,7 +483,23 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     echo "              classname=\"$TEST\""
     echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
   fi >> "$WORKDIR/$XML"
-  
+
+ 
+  # Fill test metadata if any
+  if [ ! -z "$TEST_DESCRIPTION" ] || [ ! -z "$TEST_STORY" ] || [ ! -z "$TEST_COVERS" ]; then
+    echo "        <metadata"
+    if [ ! -z "$TEST_DESCRIPTION" ]; then
+      echo "                 name=\"$TEST_DESCRIPTION\""
+    fi
+    if [ ! -z "$TEST_STORY" ]; then
+      echo "                 story_id=\"$TEST_STORY\""
+    fi
+    if [ ! -z "$TEST_COVERS" ]; then
+      echo "                 covers=\"$TEST_COVERS\""
+    fi
+    echo "        </metadata>"
+  fi >> "$WORKDIR/$XML"
+
 
   echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
   case "$RESULT" in

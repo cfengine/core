@@ -181,6 +181,7 @@ bundle agent default(filename)
       "bundles" slist => bundlesmatching("default:(init|test|check)");
 
   methods:
+      "any" usebundle => collect_stories_metadata;
       "any" usebundle => test_precheck;
 
     proceed_with_test::
@@ -209,6 +210,22 @@ bundle agent test_run(filename)
     !AUTO::
       "# You must either specify '-D AUTO' or run the following commands:";
       "cf-agent -f .$(const.dirsep)$(filename) -b $(tests)";
+}
+
+bundle agent collect_stories_metadata
+{
+  vars:
+    "test_meta_vars" slist => { "description", "story_id", "covers" };
+  classes:
+    "have_$(test_meta_vars)" expression => isvariable("test_meta.$(test_meta_vars)");
+
+  reports:
+    have_description::
+      "test description: $(test_meta.description)";
+    have_story_id::
+      "test story_id: $(test_meta.story_id)";
+    have_covers::
+      "test covers: $(test_meta.covers)";
 }
 
 bundle agent test_precheck

@@ -482,15 +482,15 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
   # Fill test metadata if any
   if [ ! -z "$TEST_DESCRIPTION" ] || [ ! -z "$TEST_STORY" ] || [ ! -z "$TEST_COVERS" ]; then
     if [ ! -z "$TEST_DESCRIPTION" ]; then
-      echo "        <metadata name=\"$TEST_DESCRIPTION\""
+      TEST_DESCRIPTION_METATAG="name=\"$TEST_DESCRIPTION\""
     fi
     if [ ! -z "$TEST_STORY" ]; then
-      echo "                  story_id=\"$TEST_STORY\""
+      TEST_STORY_METATAG="story_id=\"$TEST_STORY\""
     fi
     if [ ! -z "$TEST_COVERS" ]; then
-      echo "                  covers=\"$TEST_COVERS\">"
+      TEST_COVERS_METATAG="covers=\"$TEST_COVERS\""
     fi
-    echo "        </metadata>"
+    echo "        <system-out>$TEST_DESCRIPTION_METATAG $TEST_STORY_METATAG $TEST_COVERS_METATAG</system-out>"
   fi >> "$WORKDIR/$XML"
 
 

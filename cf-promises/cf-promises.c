@@ -81,7 +81,7 @@ static const struct option OPTIONS[] =
     {"policy-output-format", required_argument, 0, 'p'},
     {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
-    {"warn", optional_argument, 0, 'W'},
+    {"warn", required_argument, 0, 'W'},
     {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
     {"tag-release", required_argument, 0, 'T'},

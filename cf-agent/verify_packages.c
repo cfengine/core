@@ -3163,7 +3163,7 @@ bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdC
     {
     }
 
-    while ((*(cmd - 1) != FILE_SEPARATOR) && (cmd >= command))
+    while (cmd > command && cmd[-1] != FILE_SEPARATOR)
     {
         cmd--;
     }

@@ -204,4 +204,12 @@ void SeqClear(Seq *seq);
   */
 Seq *SeqGetRange(const Seq *seq, size_t start, size_t end);
 
+/**
+  @brief Create a new Sequence from splitting a string on a fixed delimiter
+  @param [in] str String to split.
+  @param [in] delimiter The delimiter, a fixed string.
+  @return A pointer to the always created Sequence
+  */
+Seq *SeqStringFromString(const char *str, char delimiter);
+
 #endif

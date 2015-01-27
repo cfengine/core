@@ -1140,7 +1140,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     /* ensure CFWORKDIR permissions are go-w */
     if ((statbuf.st_mode & 022) != 0)
     {
-        if (chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022)) == -1);
+        if (chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022)) == -1)
         {
             Log(LOG_LEVEL_ERR, "Unable to set permissions on '%s' to go-w. (chmod: %s)",
                 CFWORKDIR, GetErrorStr());

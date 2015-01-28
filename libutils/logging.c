@@ -186,7 +186,7 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
 
         if (level <= LOG_LEVEL_INFO)
         {
-            fprintf(stdout, "%s %s\n", LogLevelToString(level), msg);
+            fprintf(stdout, "%s: %s\n", LogLevelToString(level), msg);
         }
         else
         {

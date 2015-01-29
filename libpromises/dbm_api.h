@@ -49,7 +49,7 @@ typedef enum
     dbid_license,
     dbid_value,
     dbid_agent_execution,
-    dbid_bundles,
+    dbid_bundles,   // Deprecated
 
     dbid_max
 } dbid;

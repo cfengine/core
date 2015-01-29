@@ -91,7 +91,6 @@ static const char *const DB_PATHS[] = {
     [dbid_license] = "nova_track",
     [dbid_value] = "nova_value",
     [dbid_agent_execution] = "nova_agent_execution",
-    [dbid_bundles] = "bundles",
 };
 
 /******************************************************************************/

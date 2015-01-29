@@ -76,7 +76,6 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_lmdb.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
-	../../libpromises/dbm_migration_bundles.c \
 	../../libutils/logging.c \
 	../../libutils/atexit.c
 if HPUX
@@ -113,7 +112,6 @@ check_PROGRAMS = \
 	changes_migration_test \
 	db_test \
 	db_concurrent_test \
-	dbm_migration_bundles_test \
 	misc_lib_test \
 	item_lib_test \
 	crypto_symmetric_test \
@@ -289,10 +287,6 @@ lastseen_migration_test_SOURCES = lastseen_migration_test.c \
 	../../libpromises/lastseen.c ../../libutils/statistics.c ../../libpromises/item_lib.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
-
-dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c
-dbm_migration_bundles_test_LDADD = libdb.la
-#dbm_migration_bundles_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 

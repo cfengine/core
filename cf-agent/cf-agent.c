@@ -1748,7 +1748,6 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 
     Log(LOG_LEVEL_VERBOSE, "Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
           bundle->name, bundle_compliance * 100.0);
-    LastSawBundle(bundle, bundle_compliance);
 
     // return the worst case for the bundle status
     

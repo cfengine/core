@@ -24,10 +24,6 @@
 
 #include <cf-agent-enterprise-stubs.h>
 
-ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LastSawBundle, ARG_UNUSED const Bundle *, bundle, ARG_UNUSED double, comp)
-{
-}
-
 ENTERPRISE_FUNC_8ARG_DEFINE_STUB(PromiseResult, LogFileChange,
                                  ARG_UNUSED EvalContext *, ctx,
                                  ARG_UNUSED const char *, file,

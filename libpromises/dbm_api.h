@@ -49,7 +49,6 @@ typedef enum
     dbid_license,
     dbid_value,
     dbid_agent_execution,
-    dbid_bundles,
 
     dbid_max
 } dbid;

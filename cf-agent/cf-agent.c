@@ -1833,8 +1833,6 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
         Log(LOG_LEVEL_VERBOSE, "\n");
     }
 
-    LastSawBundle(bundle, bundle_compliance);
-
     // return the worst case for the bundle status
     
     if (delta_pr_notkept > 0)

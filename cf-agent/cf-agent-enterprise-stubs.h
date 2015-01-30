@@ -35,8 +35,6 @@
 PromiseResult VerifyRegistryPromise(EvalContext *ctx, Attributes a, const Promise *pp);
 #endif
 
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LastSawBundle, const Bundle *, bundle, double, compliance);
-
 typedef bool (*CopyRegularFileFunction)(EvalContext *ctx,
                                        const char *source,
                                        const char *dest,

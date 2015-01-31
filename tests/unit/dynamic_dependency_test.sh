@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Tests that the symbols in our static libraries do not occur twice in the
 # output binaries. Most platforms don't warn about this, but it has potential

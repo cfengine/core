@@ -50,6 +50,30 @@ bundle edit_line init_insert_lines
       "string_spears": "yes",
       "bows": "maybe"
     }
+  ],
+  "f": [
+    {
+      "hostname": "prd-web",
+      "packages": [
+        "apache",
+        "memcache"
+      ],
+      "users": [
+        "root",
+        "mike"
+      ]
+    },
+    {
+      "hostname": "prd-db",
+      "packages": [
+        "postgresql"
+      ],
+      "users": [
+        "root",
+        "john",
+        "debbie"
+      ]
+    }
   ]
 }';
 }
@@ -68,6 +92,21 @@ e:
     boolean_spears: yes
     string_spears: "yes"
     bows: maybe
+f:
+  - hostname: prd-web
+    packages:
+      - apache
+      - memcache
+    users:
+      - root
+      - mike
+  - hostname: prd-db
+    packages:
+      - postgresql
+    users:
+      - root
+      - john
+      - debbie
 ');
 
       "load_s" string => storejson(load);

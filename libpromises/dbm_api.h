@@ -29,8 +29,8 @@
 
 typedef enum
 {
-    dbid_classes,
-    dbid_variables,
+    dbid_classes,   // Deprecated
+    dbid_variables, // Deprecated
     dbid_performance,
     dbid_checksums, // Deprecated
     dbid_filestats, // Deprecated

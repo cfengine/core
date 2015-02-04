@@ -265,10 +265,9 @@ int main(int argc, char *argv[])
         AllClassesReport(ctx);
     }
 
-    // only note class usage when default policy is run
-    Nova_NoteClassUsage(ctx, config);
-    Nova_NoteVarUsageDB(ctx, config);
     Nova_TrackExecution(config->input_file);
+    GenerateDiffReports(config, ctx);
+
     PurgeLocks();
     BackupLockDatabase();
 
@@ -283,7 +282,6 @@ int main(int argc, char *argv[])
 
     EndAudit(ctx, CFA_BACKGROUND);
 
-    GenerateDiffReports(config);
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
     GenericAgentFinalize(ctx, config);

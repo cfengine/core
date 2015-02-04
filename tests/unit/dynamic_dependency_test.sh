@@ -51,7 +51,8 @@ fi
 cd ../..
 
 # Sanity check that nm works.
-if ! nm --help >/dev/null; then
+if ! which nm | grep '^/' >/dev/null; then
+    echo "Could not find nm"
     exit 2
 fi
 

@@ -193,6 +193,12 @@ void MonNetworkGatherData(double *cf_this)
 
     DeleteItemList(ALL_INCOMING);
     ALL_INCOMING = NULL;
+    
+    DeleteItemList(MON_TCP4);
+    DeleteItemList(MON_TCP6);
+    DeleteItemList(MON_UDP4);
+    DeleteItemList(MON_UDP6);
+    MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
 
     sscanf(VNETSTAT[VSYSTEMHARDCLASS], "%s", comm);
 

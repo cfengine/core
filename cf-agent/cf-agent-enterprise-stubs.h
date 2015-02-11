@@ -35,8 +35,6 @@
 PromiseResult VerifyRegistryPromise(EvalContext *ctx, Attributes a, const Promise *pp);
 #endif
 
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LastSawBundle, const Bundle *, bundle, double, compliance);
-
 typedef bool (*CopyRegularFileFunction)(EvalContext *ctx,
                                        const char *source,
                                        const char *dest,
@@ -58,15 +56,8 @@ ENTERPRISE_FUNC_8ARG_DECLARE(PromiseResult, LogFileChange,
                              const char *, destination, DeleteCompressedArrayFunction, DeleteCompressedArrayPtr);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
-
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_NoteVarUsageDB,
-                                  EvalContext *, ctx,
-                                  const GenericAgentConfig *, config);
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_NoteClassUsage,
-                                  EvalContext *, ctx,
-                                  const GenericAgentConfig *, config);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_TrackExecution, const char *, input_file);
-ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenerateDiffReports, const GenericAgentConfig *, config);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenerateDiffReports, const GenericAgentConfig *, config, const EvalContext *, ctx);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_NoteAgentExecutionPerformance, const char *,
                                   input_file, struct timespec, start);
 

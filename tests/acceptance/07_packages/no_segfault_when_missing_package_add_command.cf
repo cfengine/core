@@ -1,0 +1,124 @@
+# Test that there is no segfault when doing package_policy => "add" with a
+# package_method that does not define the package_add_command..
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+  packages:
+    redhat|centos::
+      "cfe_internal_non_existing_package"
+        package_policy => "add",
+        package_method => yum_rpm_without_package_add;
+}
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "redhat";
+
+  classes:
+      "ok" expression => "any";
+
+  reports:
+    DEBUG::
+      "$(test.subout)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body package_method yum_rpm_without_package_add
+{
+      package_changes => "bulk";
+      package_list_command => "$(rpm_knowledge.call_rpm) -qa --qf '$(rpm_knowledge.rpm3_output_format)'";
+      package_patch_list_command => "$(redhat_knowledge.call_yum) $(redhat_knowledge.yum_options) check-update $(redhat_knowledge.check_update_postproc)";
+
+      package_list_name_regex    => "$(rpm_knowledge.rpm3_name_regex)";
+      package_list_version_regex => "$(rpm_knowledge.rpm3_version_regex)";
+      package_list_arch_regex    => "$(rpm_knowledge.rpm3_arch_regex)";
+
+      package_installed_regex => ".*";
+      package_name_convention => "$(name)-$(version).$(arch)";
+
+      # just give the package name to rpm to delete, otherwise it gets "name.*" (from package_name_convention above)
+      package_delete_convention => "$(name)";
+
+      # set it to "0" to avoid caching of list during upgrade
+      package_list_update_command => "$(redhat_knowledge.call_yum) $(redhat_knowledge.yum_options) check-update $(redhat_knowledge.check_update_postproc)";
+      package_list_update_ifelapsed => $(update_interval);
+
+      package_patch_name_regex    => "$(redhat_knowledge.patch_name_regex)";
+      package_patch_version_regex => "$(redhat_knowledge.patch_version_regex)";
+      package_patch_arch_regex    => "$(redhat_knowledge.patch_arch_regex)";
+
+      # Not having package_add_command defined caused a segfault once
+      #package_add_command    => "/bin/true $(redhat_knowledge.call_yum) $(redhat_knowledge.yum_options) -y install";
+
+      package_update_command => "/bin/true $(redhat_knowledge.call_yum) $(redhat_knowledge.yum_options) -y update";
+      package_patch_command  => "/bin/true $(redhat_knowledge.call_yum) $(redhat_knowledge.yum_options) -y update";
+      package_delete_command => "/bin/true $(rpm_knowledge.call_rpm) -e --nodeps";
+      package_verify_command => "$(rpm_knowledge.call_rpm) -V";
+}
+bundle common redhat_knowledge
+# @depends paths
+# @brief common Red Hat knowledge bundle
+#
+# This common bundle has useful information about Red Hat and its
+# derivatives
+{
+  vars:
+      # Red Hat default package architecture
+      "default_arch" string => $(sys.arch);
+
+      "call_yum" string => "$(paths.path[yum])";
+
+      # on RHEL 4, Yum doesn't know how to be --quiet
+      "yum_options" string => ifelse("redhat_4", "",
+                                     "--quiet");
+
+      # yum check-update prints a lot of extra useless lines, but the format of
+      # the actual package lines is:
+      #
+      #   <name>.<arch>    <version>    <repo>
+      #
+      # We try to match that format as closely as possible, so we reject
+      # possibly interspersed error messages.
+      "patch_name_regex" string    => "^(\S+)\.[^\s.]+\s+\S+\s+\S+\s*$";
+      "patch_version_regex" string => "^\S+\.[^\s.]+\s+(\S+)\s+\S+\s*$";
+      "patch_arch_regex" string    => "^\S+\.([^\s.]+)\s+\S+\s+\S+\s*$";
+
+      # Combine multiline entries into one line. A line without at least three
+      # fields gets combined with the next line, if that line starts with a
+      # space.
+      "check_update_postproc" string => "| $(paths.sed) -r -n -e '
+        :begin;
+        /\S+\s+\S+\s+\S+/!{    # Check for valid line.
+            N;                 # If not, read in the next line and append it.
+            /\n /!{            # Check whether that line started with a space.
+                h;             # If not, copy buffer to clipboard.
+                s/\n[^\n]*$//; # Erase last line.
+                p;             # Print current buffer.
+                x;             # Restore from clipboard.
+                s/^.*\n//;     # Erase everything but last line.
+            };
+            s/\n / /;          # Combine lines by removing newline.
+            bbegin;            # Jump back to begin.
+        };
+        p;                     # Print current buffer.'";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 29

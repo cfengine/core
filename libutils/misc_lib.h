@@ -34,18 +34,55 @@
 #define UnexpectedError(...) __UnexpectedError(__FILE__, __LINE__, __VA_ARGS__)
 
 
-#ifndef NDEBUG
+/**
+ *  CF_ASSERT(condition, message...)
+ *
+ *  If NDEBUG is defined then the #message is printed and execution continues,
+ *  else execution aborts.
+ */
 
+#ifndef NDEBUG
 # define CF_ASSERT(condition, ...)                                      \
     do {                                                                \
         if (!(condition))                                               \
             ProgrammingError(__VA_ARGS__);                              \
     } while(0)
-
 #else
-  /* TODO in non-debug builds, this could be UnexpectedError(), but it needs
+  /* TODO UnexpectedError() needs
    * to be rate limited to avoid spamming the console.  */
-# define CF_ASSERT(condition, ...) (void)(0)
+# define CF_ASSERT(condition, ...)                                      \
+    do {                                                                \
+        if (!(condition))                                               \
+            UnexpectedError(__VA_ARGS__);                               \
+    } while(0)
+#endif
+
+
+/**
+ * CF_ASSERT_FIX(condition, fix, message...)
+ *
+ * If NDEBUG is defined then the #message is printed, the #fix is executed,
+ * and execution continues. If not NDEBUG, the #fix is ignored and execution
+ * is aborted.
+ */
+
+#ifndef NDEBUG
+# define CF_ASSERT_FIX(condition, fix, ...)                             \
+    do {                                                                \
+        if (!(condition))                                               \
+            ProgrammingError(__VA_ARGS__);                              \
+    } while(0)
+#else
+  /* TODO UnexpectedError() needs
+   * to be rate limited to avoid spamming the console.  */
+# define CF_ASSERT_FIX(condition, fix, ...)                             \
+    do {                                                                \
+        if (!(condition))                                               \
+        {                                                               \
+            UnexpectedError(__VA_ARGS__);                               \
+            (fix);                                                      \
+        }                                                               \
+    } while(0)
 #endif
 
 

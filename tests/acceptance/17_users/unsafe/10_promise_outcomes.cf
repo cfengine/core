@@ -24,14 +24,16 @@ bundle agent init
   meta:
       "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
 
-      # Something in the Solaris 10/11 chroot test environment makes it impossible
+      # Something in the Solaris chroot test environment makes it impossible
       # to test matching passwords, the pam module always returns error.
       # This should not happen in a production system though.
       # Since the error is not on our part, and likely unsolvable, we set
       # Redmine to zero. However, it would be nice to know if the problem ever
       # goes away, so using soft_fail.
-      "test_soft_fail" string => "sunos_5_10|sunos_5_11",
+      "test_soft_fail" string => "!hpux_trusted_mode_test.(solaris.!sunos_5_9)",
         meta => { "redmine0" };
+      # On Solaris 9 PAM just crashes inside chroot.
+      "test_skip_needs_work" string => "!hpux_trusted_mode_test.sunos_5_9";
 
   # AIX doesn't like long names (> 8 chars), so keep them short.
   # a = absent

@@ -503,6 +503,9 @@ int lstat(const char *file_name, struct stat *buf);
 #if !HAVE_DECL_SLEEP
 unsigned int sleep(unsigned int seconds);
 #endif
+#if !HAVE_DECL_ROUND
+double round(double x);
+#endif
 #if !HAVE_DECL_NANOSLEEP
 int nanosleep(const struct timespec *req, struct timespec *rem);
 #endif

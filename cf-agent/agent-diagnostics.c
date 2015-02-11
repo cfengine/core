@@ -183,11 +183,6 @@ AgentDiagnosticsResult AgentDiagnosticsCheckDBChecksums(const char *workdir)
     return AgentDiagnosticsCheckDB(workdir, dbid_checksums);
 }
 
-AgentDiagnosticsResult AgentDiagnosticsCheckDBClasses(const char *workdir)
-{
-    return AgentDiagnosticsCheckDB(workdir, dbid_classes);
-}
-
 AgentDiagnosticsResult AgentDiagnosticsCheckDBLastSeen(const char *workdir)
 {
     return AgentDiagnosticsCheckDB(workdir, dbid_lastseen);
@@ -224,7 +219,6 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
 
         { "Check persistent classes DB", &AgentDiagnosticsCheckDBPersistentClasses },
         { "Check checksums DB", &AgentDiagnosticsCheckDBChecksums },
-        { "Check classes DB", &AgentDiagnosticsCheckDBClasses },
         { "Check observations DB", &AgentDiagnosticsCheckDBObservations },
         { "Check file stats DB", &AgentDiagnosticsCheckDBFileStats },
         { "Check locks DB", &AgentDiagnosticsCheckDBLocks },

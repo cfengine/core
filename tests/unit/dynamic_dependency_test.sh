@@ -49,6 +49,13 @@ fi
 
 
 cd ../..
+
+# Sanity check that nm works.
+if ! which nm | grep '^/' >/dev/null; then
+    echo "Could not find nm"
+    exit 2
+fi
+
 #                libutils.a         libenv.a         libcfnet.a
 #                    v                 v                 v
 for symbol in LogSetGlobalLevel GetInterfacesInfo ConnectionInfoNew; do

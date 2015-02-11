@@ -29,6 +29,8 @@
 
 #include <unistd.h>
 
+int SPAWNED_PID = -1;
+
 static void test_process_start_time(void)
 {
     int this_pid, new_pid;
@@ -48,11 +50,14 @@ static void test_process_start_time(void)
         assert_true(false);
     }
 
+    SPAWNED_PID = new_pid;
+
     time_t newproc_starttime = GetProcessStartTime(new_pid);
     // We might have slipped by a few seconds, but shouldn't be much.
     assert_true(newproc_starttime >= this_starttime + 1 && newproc_starttime <= this_starttime + 5);
 
     kill(new_pid, SIGKILL);
+    SPAWNED_PID = -1;
 }
 
 static void test_process_state(void)
@@ -67,6 +72,8 @@ static void test_process_state(void)
         execl("/bin/sleep", "/bin/sleep", "5", NULL);
         assert_true(false);
     }
+
+    SPAWNED_PID = new_pid;
 
     int state = -1000;
 
@@ -115,6 +122,7 @@ static void test_process_state(void)
     assert_int_equal(state, PROCESS_STATE_RUNNING);
 
     kill(new_pid, SIGKILL);
+    SPAWNED_PID = -1;
 }
 
 int main()
@@ -127,5 +135,10 @@ int main()
         unit_test(test_process_state),
     };
 
-    return run_tests(tests);
+    int ret = run_tests(tests);
+    if (SPAWNED_PID >= 0)
+    {
+        kill(SPAWNED_PID, SIGKILL);
+    }
+    return ret;
 }

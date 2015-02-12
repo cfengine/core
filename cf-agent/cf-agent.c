@@ -265,10 +265,9 @@ int main(int argc, char *argv[])
         AllClassesReport(ctx);
     }
 
-    // only note class usage when default policy is run
-    Nova_NoteClassUsage(ctx, config);
-    Nova_NoteVarUsageDB(ctx, config);
     Nova_TrackExecution(config->input_file);
+    GenerateDiffReports(config, ctx);
+
     PurgeLocks();
     BackupLockDatabase();
 
@@ -283,7 +282,6 @@ int main(int argc, char *argv[])
 
     EndAudit(ctx, CFA_BACKGROUND);
 
-    GenerateDiffReports(config);
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
     GenericAgentFinalize(ctx, config);
@@ -1750,7 +1748,6 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 
     Log(LOG_LEVEL_VERBOSE, "Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
           bundle->name, bundle_compliance * 100.0);
-    LastSawBundle(bundle, bundle_compliance);
 
     // return the worst case for the bundle status
     

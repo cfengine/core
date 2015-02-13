@@ -35,7 +35,7 @@
  * do that for Linux, where main development happens. */
 
 
-#if defined(__linux__) && defined(__GLIBC__)
+#if defined(__linux__) && defined(__GLIBC__) && (!defined(_FORTIFY_SOURCE) || (_FORTIFY_SOURCE < 1))
 
 
 int sprintf(char *str, const char *format, ...) \

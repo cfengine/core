@@ -81,14 +81,22 @@ bool VariableTableRemove(VariableTable *table, const VarRef *ref)
     return RBTreeRemove(table->vars, (void *)ref->hash);
 }
 
-static Variable *VariableNew(VarRef *ref, Rval rval, DataType type, StringSet *tags, const Promise *promise)
+static Variable *VariableNew(VarRef *ref, Rval rval, DataType type,
+                             StringSet *tags, const Promise *promise)
 {
     Variable *var = xmalloc(sizeof(Variable));
 
     var->ref = ref;
     var->rval = rval;
     var->type = type;
-    var->tags = tags;
+    if (tags == NULL)
+    {
+        var->tags = StringSetFromString("", ',');
+    }
+    else
+    {
+        var->tags = tags;
+    }
     var->promise = promise;
 
     return var;
@@ -104,7 +112,8 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
     Variable *var = VariableTableGet(table, ref);
     if (var == NULL)
     {
-        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','), promise);
+        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
+                          StringSetFromString(tags, ','), promise);
         result = RBTreePut(table->vars, (void *)var->ref->hash, var);
     }
     else // if (!RvalsEqual(var->rval *rval) // TODO: implement-me !
@@ -274,6 +283,8 @@ VariableTable *VariableTableCopyLocalized(const VariableTable *table, const char
     Variable *foreign_var = NULL;
     while ((foreign_var = VariableTableIteratorNext(iter)))
     {
+        /* TODO why is tags NULL here? Shouldn't it be an exact copy of
+         * foreign_var->tags? */
         Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref),
                                               RvalCopy(foreign_var->rval), foreign_var->type,
                                               NULL, foreign_var->promise);

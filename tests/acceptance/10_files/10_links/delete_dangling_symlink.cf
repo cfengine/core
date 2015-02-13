@@ -1,0 +1,47 @@
+#######################################################
+#
+# Delete dangling symlinks
+# https://dev.cfengine.com/issues/6582
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testdir)/mylink"
+        link_from => ln_s("$(G.testdir)/sourcefile");
+
+      "$(G.testdir)/mylink"
+        delete => tidy;
+}
+
+body link_from ln_s(x)
+{
+      link_type => "symlink";
+      source => "$(x)";
+      when_no_source => "force";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "link_absent" not => fileexists("$(G.testdir)/mylink");
+
+  reports:
+    link_absent::
+      "$(this.promise_filename) Pass";
+
+    !link_absent::
+      "$(this.promise_filename) Fail";
+}

@@ -470,13 +470,13 @@ static void AssessVxLAN(char *promiser, PromiseResult *result, EvalContext *ctx,
         }
 
         match = true;
-    }
 
-    if (a->interface.state && strcmp(a->interface.state, "down") == 0 && lsp->up)
-    {
-        InterfaceDown(promiser,result,pp);
-        *result = PROMISE_RESULT_CHANGE;
-        return;
+        if (a->interface.state && strcmp(a->interface.state, "down") == 0 && lsp->up)
+        {
+            InterfaceDown(promiser,result,pp);
+            *result = PROMISE_RESULT_CHANGE;
+            return;
+        }
     }
 
     if (a->interface.tunnel_multicast_group && strcmp(loopback, a->interface.tunnel_multicast_group) != 0)
@@ -1459,9 +1459,9 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp, const Rl
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
     char indent[CF_SMALLBUF];
-    char hw_addr[CF_MAX_IP_LEN];
-    char v4_addr[CF_MAX_IP_LEN];
-    char v6_addr[CF_MAX_IP_LEN];
+    char hw_addr[CF_MAX_IP_LEN + 1];
+    char v4_addr[CF_MAX_IP_LEN + 1];
+    char v6_addr[CF_MAX_IP_LEN + 1];
     char if_name[CF_SMALLBUF];
     char endline[CF_BUFSIZE];
     char comm[CF_BUFSIZE];

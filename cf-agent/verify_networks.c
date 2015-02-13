@@ -415,7 +415,7 @@ static int GetArpInfo(ARPState **list, const Promise *pp)
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
     char comm[CF_BUFSIZE];
-    char ip[CF_MAX_IP_LEN], mac[CF_MAX_IP_LEN], device[CF_SMALLBUF], state[CF_SMALLBUF];
+    char ip[CF_MAX_IP_LEN + 1], mac[CF_MAX_IP_LEN], device[CF_SMALLBUF], state[CF_SMALLBUF];
     ARPState *entry = NULL;
 
     snprintf(comm, CF_BUFSIZE, "%s neighbour show", CF_LINUX_IP_COMM);

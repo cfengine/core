@@ -1985,7 +1985,7 @@ static bool XmlNodesCompareNodes(const xmlNodePtr node1, const xmlNodePtr node2,
             compare = false;
             break;
         }
-        child1 = xmlNextElementSibling(node1);
+        child1 = xmlNextElementSibling(child1);
     }
 
     xmlFreeNode(child1);
@@ -2187,7 +2187,7 @@ static bool XmlNodesSubsetOfNodes(const xmlNodePtr node1, const xmlNodePtr node2
             subset = false;
             break;
         }
-        child1 = xmlNextElementSibling(node1);
+        child1 = xmlNextElementSibling(child1);
     }
 
     return subset;

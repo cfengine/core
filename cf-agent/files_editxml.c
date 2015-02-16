@@ -1953,9 +1953,6 @@ static bool XmlNodesCompareAttributes(const xmlNodePtr node1, const xmlNodePtr n
 static bool XmlNodesCompareNodes(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain same nodes found in node2? */
 {
-
-    int count1, count2, compare = true;
-
     if (!node1 && !node2)
     {
         return true;
@@ -1966,19 +1963,17 @@ static bool XmlNodesCompareNodes(const xmlNodePtr node1, const xmlNodePtr node2,
         return false;
     }
 
-    count1 = xmlChildElementCount(node1);
-    count2 = xmlChildElementCount(node2);
+    int count1 = xmlChildElementCount(node1);
+    int count2 = xmlChildElementCount(node2);
 
     if (count1 != count2)
     {
         return false;
     }
 
-
-    //get node list from node1 and node2
     xmlNodePtr child1 = xmlFirstElementChild(node1);
-
-    while (child1)
+    bool compare = true;
+    while (child1 != NULL)
     {
         if (!XmlVerifyNodeInNodeExact(child1, node2, a, pp))
         {
@@ -2162,9 +2157,6 @@ static bool XmlNodesSubsetOfAttributes(const xmlNodePtr node1, const xmlNodePtr 
 static bool XmlNodesSubsetOfNodes(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain matching subset of nodes found in node2? */
 {
-    xmlNodePtr child1 = NULL;
-    int subset = true;
-
     if (!node1 && !node2)
     {
         return true;
@@ -2176,9 +2168,9 @@ static bool XmlNodesSubsetOfNodes(const xmlNodePtr node1, const xmlNodePtr node2
     }
 
     //get node list from node1 and node2
-    child1 = xmlFirstElementChild(node1);
-
-    while (child1)
+    xmlNodePtr child1 = xmlFirstElementChild(node1);
+    bool subset = true;
+    while (child1 != NULL)
     {
         if (!XmlVerifyNodeInNodeExact(child1, node2, a, pp))
         {
@@ -2316,25 +2308,21 @@ static bool XmlVerifyNodeInNodeExact(const xmlNodePtr node1, const xmlNodePtr no
 /* Does node2 contain a node with content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
 {
-    xmlNodePtr comparenode = NULL;
 
     if ((node1 == NULL) || (node2 == NULL))
     {
         return false;
     }
 
-    if ((comparenode = xmlFirstElementChild(node2)) == NULL)
-    {
-        return false;
-    }
+    xmlNodePtr comparenode = xmlFirstElementChild(node2);
 
-    while (comparenode)
+    while (comparenode != NULL)
     {
         if (XmlNodesCompare(node1, comparenode, a, pp))
         {
-
             return true;
         }
+
         comparenode = xmlNextElementSibling(comparenode);
     }
 
@@ -2353,12 +2341,8 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
     }
 
     xmlNodePtr comparenode = xmlFirstElementChild(node2);
-    if (!comparenode)
-    {
-        return NULL;
-    }
 
-    while (comparenode)
+    while (comparenode != NULL)
     {
         if (XmlNodesSubset(node1, comparenode, a, pp))
         {

@@ -1988,8 +1988,6 @@ static bool XmlNodesCompareNodes(const xmlNodePtr node1, const xmlNodePtr node2,
         child1 = xmlNextElementSibling(child1);
     }
 
-    xmlFreeNode(child1);
-
     return compare;
 }
 
@@ -2370,7 +2368,6 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
         comparenode = xmlNextElementSibling(comparenode);
     }
 
-    xmlFree(comparenode);
     return NULL;
 }
 

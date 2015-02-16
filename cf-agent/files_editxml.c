@@ -2336,7 +2336,7 @@ static bool XmlVerifyNodeInNodeExact(const xmlNodePtr node1, const xmlNodePtr no
         comparenode = xmlNextElementSibling(comparenode);
     }
 
-    return true;
+    return false;
 }
 
 /*********************************************************************/

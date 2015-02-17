@@ -281,6 +281,29 @@ bool ListsCompare(const Item *list1, const Item *list2)
     return true;
 }
 
+/**
+ * Checks whether list1 is a subset of list2, i.e. every entry in list1 must
+ * be found in list2.
+ */
+bool ListSubsetOfList(const Item *list1, const Item *list2)
+{
+    const Item *list1_ptr = list1;
+    CYCLE_DECLARE(list1_ptr, slow, toggle);
+
+    while (list1_ptr != NULL)
+    {
+        if (!IsItemIn(list2, list1_ptr->name))
+        {
+            return false;
+        }
+
+        list1_ptr = list1_ptr->next;
+        CYCLE_CHECK(list1_ptr, slow, toggle);
+    }
+
+    return true;               /* all elements of list1 were found in list2 */
+}
+
 /*********************************************************************/
 
 Item *EndOfList(Item *ip)

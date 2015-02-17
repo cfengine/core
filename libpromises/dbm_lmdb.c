@@ -56,6 +56,7 @@ typedef struct DBTxn_
     MDB_txn *txn;
     // Whether txn is a read/write (true) or read-only (false) transaction.
     bool rw_txn;
+    bool cursor_open;
 } DBTxn;
 
 struct DBCursorPriv_
@@ -71,7 +72,7 @@ static int DB_MAX_READERS = -1;
 
 /******************************************************************************/
 
-static int GetReadTransaction(DBPriv *db, MDB_txn **txn)
+static int GetReadTransaction(DBPriv *db, DBTxn **txn)
 {
     DBTxn *db_txn = pthread_getspecific(db->txn_key);
     int rc = MDB_SUCCESS;
@@ -91,12 +92,12 @@ static int GetReadTransaction(DBPriv *db, MDB_txn **txn)
         }
     }
 
-    *txn = db_txn->txn;
+    *txn = db_txn;
 
     return rc;
 }
 
-static int GetWriteTransaction(DBPriv *db, MDB_txn **txn)
+static int GetWriteTransaction(DBPriv *db, DBTxn **txn)
 {
     DBTxn *db_txn = pthread_getspecific(db->txn_key);
     int rc = MDB_SUCCESS;
@@ -130,7 +131,7 @@ static int GetWriteTransaction(DBPriv *db, MDB_txn **txn)
         }
     }
 
-    *txn = db_txn->txn;
+    *txn = db_txn;
 
     return rc;
 }
@@ -309,6 +310,7 @@ void DBPrivCommit(DBPriv *db)
     DBTxn *db_txn = pthread_getspecific(db->txn_key);
     if (db_txn && db_txn->txn)
     {
+        assert(!db_txn->cursor_open);
         int rc = mdb_txn_commit(db_txn->txn);
         if (rc != MDB_SUCCESS)
         {
@@ -322,16 +324,17 @@ void DBPrivCommit(DBPriv *db)
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
     MDB_val mkey, data;
-    MDB_txn *txn;
+    DBTxn *txn;
     int rc;
     // FIXME: distinguish between "entry not found" and "error occurred"
 
     rc = GetReadTransaction(db, &txn);
     if (rc == MDB_SUCCESS)
     {
+        assert(!txn->cursor_open);
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
-        rc = mdb_get(txn, db->dbi, &mkey, &data);
+        rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
         if (rc && rc != MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_ERR, "Could not read database entry: %s", mdb_strerror(rc));
@@ -345,7 +348,7 @@ bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
 {
     MDB_val mkey, data;
-    MDB_txn *txn;
+    DBTxn *txn;
     int rc;
 
     data.mv_size = 0;
@@ -353,9 +356,10 @@ int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
     rc = GetReadTransaction(db, &txn);
     if (rc == MDB_SUCCESS)
     {
+        assert(!txn->cursor_open);
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
-        rc = mdb_get(txn, db->dbi, &mkey, &data);
+        rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
         if (rc && rc != MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_ERR, "Could not read database entry: %s", mdb_strerror(rc));
@@ -369,16 +373,17 @@ int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
 bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
 {
     MDB_val mkey, data;
-    MDB_txn *txn;
+    DBTxn *txn;
     int rc;
     bool ret = false;
 
     rc = GetReadTransaction(db, &txn);
     if (rc == MDB_SUCCESS)
     {
+        assert(!txn->cursor_open);
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
-        rc = mdb_get(txn, db->dbi, &mkey, &data);
+        rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
         if (rc == MDB_SUCCESS)
         {
             if (dest_size > data.mv_size)
@@ -400,15 +405,16 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
 {
     MDB_val mkey, data;
-    MDB_txn *txn;
+    DBTxn *txn;
     int rc = GetWriteTransaction(db, &txn);
     if (rc == MDB_SUCCESS)
     {
+        assert(!txn->cursor_open);
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
         data.mv_data = (void *)value;
         data.mv_size = value_size;
-        rc = mdb_put(txn, db->dbi, &mkey, &data, 0);
+        rc = mdb_put(txn->txn, db->dbi, &mkey, &data, 0);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Could not write database entry: %s", mdb_strerror(rc));
@@ -421,13 +427,14 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
 bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
 {
     MDB_val mkey;
-    MDB_txn *txn;
+    DBTxn *txn;
     int rc = GetWriteTransaction(db, &txn);
     if (rc == MDB_SUCCESS)
     {
+        assert(!txn->cursor_open);
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
-        rc = mdb_del(txn, db->dbi, &mkey, NULL);
+        rc = mdb_del(txn->txn, db->dbi, &mkey, NULL);
         if (rc == MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_DEBUG, "Entry not found: %s", mdb_strerror(rc));
@@ -444,19 +451,21 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
 DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 {
     DBCursorPriv *cursor = NULL;
-    MDB_txn *txn;
+    DBTxn *txn;
     int rc;
     MDB_cursor *mc;
 
     rc = GetWriteTransaction(db, &txn);
     if (rc == MDB_SUCCESS)
     {
-        rc = mdb_cursor_open(txn, db->dbi, &mc);
+        assert(!txn->cursor_open);
+        rc = mdb_cursor_open(txn->txn, db->dbi, &mc);
         if (rc == MDB_SUCCESS)
         {
             cursor = xcalloc(1, sizeof(DBCursorPriv));
             cursor->db = db;
             cursor->mc = mc;
+            txn->cursor_open = true;
         }
         else
         {
@@ -563,6 +572,12 @@ bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_s
 
 void DBPrivCloseCursor(DBCursorPriv *cursor)
 {
+    DBTxn *txn;
+    int rc = GetWriteTransaction(cursor->db, &txn);
+    assert(rc == MDB_SUCCESS);
+    assert(txn->cursor_open);
+    txn->cursor_open = false;
+
     if (cursor->curkv)
     {
         free(cursor->curkv);

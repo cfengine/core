@@ -257,7 +257,7 @@ workdir() {
 #        timeout into. Used by timed tests.
 runtest() {
   # Clear local variables
-  unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE
+  unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE TEST_DESCRIPTION TEST_STORY TEST_COVERS
 
   AGENT="$1"
   TEST="$2"
@@ -383,6 +383,18 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
     TEST_END_TIME=$(unix_seconds)
 
+    # Try to collect test metadata if any
+    if egrep "R: test description: " $OUTFILE > /dev/null; then
+      TEST_DESCRIPTION="$(egrep "R: test description" $OUTFILE | sed -e "s,.*test description: \([A-Za-z0-9_]*\),\1,")"
+    fi
+    if egrep -e "R: test story_id: " $OUTFILE > /dev/null; then
+      TEST_STORY="$(egrep "R: test story_id" $OUTFILE | sed -e "s,.*test story_id: \([0-9][0-9]*\),\1,")"
+    fi
+    if egrep -e "R: test covers: " $OUTFILE > /dev/null; then
+      TEST_COVERS="$(egrep "R: test covers" $OUTFILE | sed -e "s,.*test covers: \([A-Za-z0-9_]*\),\1,")"
+    fi
+
+
     RESULT_MSG=
     if [ -z "$EXPECTED_CRASH" ] && [ $RETVAL -ne 0 ]; then
       RESULT=FAIL
@@ -396,40 +408,40 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       # Some states are output by dcs.cf.sub, therefore check for both TEST
       # prefix and dcs.cf.sub prefix.
       ESCAPED_TEST="$(echo "($TEST|dcs.cf.sub)" | sed -e 's/\./\\./g')"
-      if egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null; then
+      if egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null; then
         # Check for other test case outcomes than fail. Should not happen.
-        if egrep -e "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v -e "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null; then
+        if egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null; then
           RESULT=FAIL
           RESULT_MSG="${COLOR_FAILURE}FAIL (The test Passed, but failure was expected)${COLOR_NORMAL}"
         else
-          REDMINE="$(egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine\([0-9][0-9]*\).*,\1,")"
-          RESULT="$(egrep -e "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
+          REDMINE="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine\([0-9][0-9]*\).*,\1,")"
+          RESULT="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
           if [ "$RESULT" = "XFAIL" ]; then
             RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
           else
             RESULT_MSG="${COLOR_WARNING}Soft fail (Redmine #$REDMINE)${COLOR_NORMAL}"
           fi
         fi
-      elif egrep -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE > /dev/null; then
+      elif egrep "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE > /dev/null; then
         RESULT=FAIL
         RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"
-      elif egrep -e "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE > /dev/null; then
+      elif egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE > /dev/null; then
         if [ -z "$NEXT_TIMEOUT_VAR" ]; then
           RESULT=FAIL
           RESULT_MSG="${COLOR_FAILURE}FAIL (Test tried to wait but is not in \"timed\" directory)${COLOR_NORMAL}"
         else
-          WAIT_TIME=$(egrep -e "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -e 's,.*Wait/\([0-9][0-9]*\).*,\1,')
+          WAIT_TIME=$(egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -e 's,.*Wait/\([0-9][0-9]*\).*,\1,')
           eval $NEXT_TIMEOUT_VAR=$(($TEST_END_TIME+$WAIT_TIME))
           RESULT=Wait
           RESULT_MSG="Awaiting ($WAIT_TIME seconds)..."
         fi
-      elif egrep -e "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null; then
+      elif egrep "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null; then
         RESULT=Pass
         RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-      elif egrep -e "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null; then
+      elif egrep "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
-      elif egrep -e "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE > /dev/null; then
+      elif egrep "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE > /dev/null; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
       else
@@ -465,7 +477,22 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     echo "              classname=\"$TEST\""
     echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
   fi >> "$WORKDIR/$XML"
-  
+
+ 
+  # Fill test metadata if any
+  if [ ! -z "$TEST_DESCRIPTION" ] || [ ! -z "$TEST_STORY" ] || [ ! -z "$TEST_COVERS" ]; then
+    if [ ! -z "$TEST_DESCRIPTION" ]; then
+      TEST_DESCRIPTION_METATAG="name=\"$TEST_DESCRIPTION\""
+    fi
+    if [ ! -z "$TEST_STORY" ]; then
+      TEST_STORY_METATAG="story_id=\"$TEST_STORY\""
+    fi
+    if [ ! -z "$TEST_COVERS" ]; then
+      TEST_COVERS_METATAG="covers=\"$TEST_COVERS\""
+    fi
+    echo "        <system-out>$TEST_DESCRIPTION_METATAG $TEST_STORY_METATAG $TEST_COVERS_METATAG</system-out>"
+  fi >> "$WORKDIR/$XML"
+
 
   echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
   case "$RESULT" in

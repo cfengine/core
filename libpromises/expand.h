@@ -50,7 +50,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy, const char *ns, c
  * @param bundle
  */
 void BundleResolve(EvalContext *ctx, const Bundle *bundle);
-void PolicyResolve(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
+void PolicyResolve(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config, int num_of_passes);
 void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char *type, PromiseActuator *actuator);
 
 bool IsNakedVar(const char *str, char vtype);

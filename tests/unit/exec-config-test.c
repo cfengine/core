@@ -25,7 +25,7 @@ static void run_test_in_policy(const char *policy_filename, TestFn fn)
         AGENT_TYPE_EXECUTOR);
     EvalContext *ctx = EvalContextNew();
     Policy *policy = TestParsePolicy(policy_filename);
-    PolicyResolve(ctx, policy, agent_config);
+    PolicyResolve(ctx, policy, agent_config, 1);
 
     /* Setup global environment */
     strcpy(VFQNAME, "localhost.localdomain");

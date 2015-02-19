@@ -150,9 +150,14 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
             continue;
         }
 
+        /* If one of the inputs items is something we need to expand make sure
+         * we are going through whole policy once again to have all the 
+         * dependencies resolved. */
         if (IsExpandable(unresolved_input))
         {
-            PolicyResolve(ctx, policy, config);
+            /* Iterate through bundles just once as we are interested in 
+             * dependencies between different bundles. */
+            PolicyResolve(ctx, policy, config, 1);
         }
 
         Rval resolved_input = EvaluateFinalRval(ctx, policy, NULL, "sys", rp->val, true, NULL);
@@ -326,7 +331,8 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
         return NULL;
     }
 
-    PolicyResolve(ctx, policy, config);
+    /* Do 3 passes of variables and classes in common bundles. */
+    PolicyResolve(ctx, policy, config, 3);
 
     Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
     Body *body_file_control = PolicyGetBody(policy, NULL, "file", "control");
@@ -530,7 +536,7 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
             EvalContextStackPopFrame(ctx);
         }
 
-        PolicyResolve(ctx, policy, config);
+        PolicyResolve(ctx, policy, config, 1);
 
         // TODO: need to move this inside PolicyCheckRunnable eventually.
         if (!config->bundlesequence && config->check_runnable)

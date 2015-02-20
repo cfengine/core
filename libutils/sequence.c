@@ -219,8 +219,6 @@ static void Swap(void **l, void **r)
 // adopted from http://rosettacode.org/wiki/Sorting_algorithms/Quicksort#C
 static void QuickSortRecursive(void **data, int n, SeqItemComparator Compare, void *user_data, size_t maxterm)
 {
-    assert(maxterm < 1000);
-
     if (n < 2)
     {
         return;

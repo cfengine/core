@@ -196,6 +196,13 @@ possible variable names:
       the build, and is appropriate for regressions or platform
       differences.
 
+The rule of thumb is:
+
+* If you are writing an acceptance test for a (not yet fixed) bug in
+Redmine: Use test_soft_fail.
+
+* If you are fixing failures on a specific platform: Use test_suppress_fail.
+
 In all cases, the variable is expected to be set to a class expression
 suitable for ifvarclass, where a positive match means that the test
 will be skipped. So the expression '"test_skip_needs_work" string =>

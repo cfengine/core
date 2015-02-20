@@ -1,0 +1,76 @@
+#######################################################
+#
+# Select files based on symlink target
+# Ref: https://dev.cfengine.com/issues/6878
+#
+########################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "symlink" string => "$(G.testdir)/symlink_to_tmp_target";
+    "target" string => "$(G.testdir)/target";
+
+  files:
+    "$(target)/."
+      create => "true";
+
+    "$(symlink)"
+      link_from => linkfrom("$(target)", "symlink"),
+      classes => scoped_classes_generic("namespace", "init_symlink");
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "test_skip_unsupported"
+      string => "windows";
+
+  # Delete the file only if it is a symlink pointing to the expected target
+  files:
+    "$(init.symlink)"
+      file_select => symlinked_to("$(init.target)"),
+      delete => nodir,
+      pathtype => "literal",
+      classes => scoped_classes_generic("namespace", "test_symlink");
+}
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "OK" not => fileexists("$(init.symlink)");
+
+  reports:
+    OK::
+      "$(this.promise_filename) Pass";
+
+    !OK::
+      "$(this.promise_filename) Fail";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27
+
+body file_select symlinked_to(name)
+{
+    file_types  => { "symlink" };
+    issymlinkto => { "$(name)" };
+    file_result => "issymlinkto";
+}
+
+body delete nodir
+{
+    rmdirs => "false";
+}

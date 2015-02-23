@@ -963,10 +963,27 @@ static void SetFlavour(EvalContext *ctx, const char *flavour)
 static void OSClasses(EvalContext *ctx)
 {
 #ifdef __linux__
-    struct stat statbuf;
+
+/* First we check if init process is systemd, and set "systemd" hard class. */
+
+    {
+        char init_cmdline[CF_BUFSIZE];
+        if (ReadLine("/proc/1/cmdline", init_cmdline, sizeof(init_cmdline)))
+        {
+            char *p = strstr(init_cmdline, "/systemd");
+            if (p != NULL &&
+                p[strlen("/systemd")] == '\0')
+            {
+                EvalContextClassPutHard(ctx, "systemd",
+                                        "inventory,attribute_name=none,source=agent");
+            }
+        }
+    }
 
 /* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
    we test for those distributions first */
+
+    struct stat statbuf;
 
     if (stat("/etc/mandriva-release", &statbuf) != -1)
     {

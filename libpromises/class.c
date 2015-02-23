@@ -142,6 +142,20 @@ bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_
     }
     else
     {
+        if (ns == NULL ||
+            strcmp("default", ns) == 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "Setting %sclass %s",
+                is_soft ? "" : "hard ",
+                name);
+        }
+        else                                        /* also print namespace */
+        {
+            Log(LOG_LEVEL_DEBUG, "Setting %sclass %s:%s",
+                is_soft ? "" : "hard ",
+                ns, name);
+        }
+
         cls = xmalloc(sizeof(Class));
         ClassInit(cls, ns, name, is_soft, scope);
         // NULL tags are OK (but you want to give good tags, don't you?)

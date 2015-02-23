@@ -21,6 +21,7 @@ bundle common G
     any::
       # General commands.
       "cmds" slist => { "date",
+                        "dd",
                         "diff",
                         "cat",
                         "colordiff",
@@ -49,6 +50,7 @@ bundle common G
                         "tee",
                         "touch",
                         "true",
+                        "yes",
                         "wc",
                       };
       # Special cases.

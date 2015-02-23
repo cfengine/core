@@ -1,0 +1,89 @@
+########################################################################
+#
+# Test that selecting symlinks does not generate unnecessary errors
+# Ref: https://dev.cfengine.com/issues/6996
+########################################################################
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+# Ensure there is a directory structure created with both plain files and
+# symlinks to a plain file.
+{
+  files:
+    "$(G.testdir)/."
+      create => "true";
+
+    "$(G.testdir)/plainfile_0"
+      create => "true",
+      edit_line => insert_lines("Just some content");
+
+    "$(G.testdir)/file_select/."
+      create => "true";
+
+    "$(G.testdir)/file_select/plainfile_1"
+      copy_from => local_cp("/$(G.testdir)/plainfile_0");
+
+    "$(G.testdir)/file_select/plainfile_2"
+      copy_from => local_cp("/$(G.testdir)/plainfile_0");
+
+    "$(G.testdir)/file_select/symlink_1"
+      link_from => ln_s("/$(G.testdir)/plainfile_0");
+
+    "$(G.testdir)/file_select/symlink_2"
+      link_from => ln_s("/$(G.testdir)/plainfile_0");
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testdir)/file_select/."
+      delete => tidy,
+      depth_search => recurse("inf"),
+      file_select => select_symlink_pointing_to_usr,
+      comment => "This does not select and delete non symlink files, but did
+		  result in undesirable errors for Unable to read link in
+                  filter. (readlink: Invalid argument)";
+}
+
+bundle agent check
+{
+  vars:
+    "files" slist => lsdir("$(G.testdir)/file_select/", ".*", "false");
+    "dir_count" int => length(files);
+
+  classes:
+    # Since we cant test ourself for stdout, we just make sure that the number
+    # of files is correct. A seperate policy runs this one and inspects its
+    # output. It needs something to check for passing condition. And failing
+    # condition is the errors its looking for
+    "have_expected_number_of_files" expression => strcmp("$(dir_count)", "6");
+
+    "ok" expression => "have_expected_number_of_files";
+
+  reports:
+    ok::
+      "Pass $(this.promise_filename)";
+}
+
+body file_select select_symlink_pointing_to_usr
+{
+  file_types => { "symlink" };
+  issymlinkto => { "/usr/.*" };
+  file_result => "file_types.issymlinkto";
+}
+
+body link_from ln_s(x)
+# @brief Create a symbolink link to `x`
+# The link is created even if the source of the link does not exist.
+# @param x The source of the link
+{
+      link_type => "symlink";
+      source => "$(x)";
+      when_no_source => "force";
+}
+

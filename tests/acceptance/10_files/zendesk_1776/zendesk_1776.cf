@@ -1,0 +1,40 @@
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that seleting files based on symlink do not generate undesired errors";
+      "story_id" string => "";
+      "covers" string => "";
+}
+
+# Ref: https://dev.cfengine.com/issues/6996
+
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "!windows",
+      meta => { "redmine6996" };
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "The test deals with symlinks which are not supported on
+                  windows";
+
+  vars:
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO";
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*Pass.*", ".*readlink: Invalid argument.*", $(command), $(this.promise_filename));
+}

@@ -44,6 +44,7 @@
 #include <cf-serverd-enterprise-stubs.h>
 #include <syslog_client.h>
 #include <verify_classes.h>
+#include <verify_vars.h>
 #include <generic_agent.h> /* HashControls */
 #include <file_lib.h>      /* IsDirReal */
 #include <matching.h>      /* IsRegex */
@@ -53,7 +54,6 @@
 #include "strlist.h"
 
 
-static void KeepContextBundles(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail);
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp);
@@ -267,7 +267,6 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
         exit(255);
     }
 
-    KeepContextBundles(ctx, policy);
     KeepControlPromises(ctx, policy, config);
     KeepPromiseBundles(ctx, policy);
 }
@@ -543,47 +542,29 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
 /*********************************************************************/
 
-static void KeepContextBundles(EvalContext *ctx, const Policy *policy)
+/* Sequence in which server promise types should be evaluated */
+static const char *const SERVER_TYPESEQUENCE[] =
 {
-/* Dial up the generic promise expansion with a callback */
+    "vars",
+    "classes",
+    "roles",
+    "access",
+    NULL
+};
 
-    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+/* Check if promise is NOT belonging to default server types 
+ * (see SERVER_TYPESEQUENCE)*/
+static bool IsPromiseTypeNotInServerTypeSequence(const char *promise_type)
+{
+    for (int type = 0; SERVER_TYPESEQUENCE[type] != NULL; type++)
     {
-        Bundle *bp = SeqAt(policy->bundles, i);
-
-        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
+        if (strcmp(promise_type, SERVER_TYPESEQUENCE[type]) == 0)
         {
-            if (RlistLen(bp->args) > 0)
-            {
-                Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
-                continue;
-            }
-
-            EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-            {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-
-                if ((strcmp(sp->name, "vars") != 0) && (strcmp(sp->name, "classes") != 0))
-                {
-                    continue;
-                }
-
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
-                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-                {
-                    Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
-                }
-                EvalContextStackPopFrame(ctx);
-
-            }
-            EvalContextStackPopFrame(ctx);
+            return false;
         }
     }
+    return true;
 }
-
-/*********************************************************************/
 
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
 {
@@ -604,15 +585,19 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
             }
 
             EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+            
+            for (int type = 0; SERVER_TYPESEQUENCE[type] != NULL; type++)
             {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-
-                if ((strcmp(sp->name, "access") != 0) && (strcmp(sp->name, "roles") != 0))
+                const PromiseType *sp = BundleGetPromiseType((Bundle *)bp, SERVER_TYPESEQUENCE[type]);
+                
+                /* Some promise types might not be there. */
+                if (!sp || SeqLength(sp->promises) == 0)
                 {
+                    Log(LOG_LEVEL_DEBUG, "No promise type %s in bundle %s", 
+                                         SERVER_TYPESEQUENCE[type], bp->name);
                     continue;
                 }
-
+                
                 EvalContextStackPushPromiseTypeFrame(ctx, sp);
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -621,6 +606,35 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
                 }
                 EvalContextStackPopFrame(ctx);
             }
+            
+            /* Check if we are having some other promise types which we 
+             * should evaluate. THIS IS ONLY FOR BACKWARD COMPATIBILITY! */
+            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+            {
+                PromiseType *sp = SeqAt(bp->promise_types, j);
+                
+                /* Skipping evaluation of promise as this was evaluated in 
+                 * loop above. */
+                if (!IsPromiseTypeNotInServerTypeSequence(sp->name))
+                {
+                    Log(LOG_LEVEL_DEBUG, "Skipping subsequent evaluation of "
+                            "promise type %s in bundle %s", sp->name, bp->name);
+                    continue;
+                }
+                
+                Log(LOG_LEVEL_WARNING, "Trying to evaluate unsupported/obsolete "
+                            "promise type %s in bundle %s", sp->name, bp->name);
+
+                EvalContextStackPushPromiseTypeFrame(ctx, sp);
+                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
+                {
+                    Promise *pp = SeqAt(sp->promises, ppi);
+                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
+                }
+                EvalContextStackPopFrame(ctx);
+
+            }
+            
             EvalContextStackPopFrame(ctx);
         }
     }
@@ -631,6 +645,11 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
     assert(!param);
     PromiseBanner(ctx, pp);
 
+    if (strcmp(pp->parent_promise_type->name, "vars") == 0)
+    {
+        return VerifyVarPromise(ctx, pp, NULL);
+    }
+    
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);

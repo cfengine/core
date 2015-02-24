@@ -24,6 +24,7 @@
 
 #include <test.h>
 
+#include <logging.h>
 #include <process_lib.h>
 #include <process_unix_priv.h>
 

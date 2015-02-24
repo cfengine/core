@@ -142,14 +142,69 @@ static void test_process_state(void)
     SPAWNED_PID = -1;
 }
 
+static void test_graceful_terminate(void)
+{
+    int ret, state;
+    pid_t new_pid;
+
+    new_pid = fork();
+    assert_true(new_pid >= 0);
+
+    if (new_pid == 0)                                           /* child */
+    {
+        execl("/bin/sleep", "/bin/sleep", "10", NULL);
+        assert_true(false);                                  /* unreachable */
+    }
+
+    time_t start_time = GetProcessStartTime(new_pid);
+    SPAWNED_PID = new_pid;
+
+    printf("Spawned a \"sleep\" child with PID %jd and start_time %jd\n",
+           (intmax_t) new_pid, (intmax_t) start_time);
+
+    state = GetProcessState(new_pid);
+    assert_int_equal(state, PROCESS_STATE_RUNNING);
+
+    printf("Killing child with wrong start_time, child should not die...\n");
+
+    ret = GracefulTerminate(new_pid, 12345);             /* fake start time */
+    /* TODO Despite not actually killing the child, this call returns true! */
+    assert_true(ret);
+
+    state = GetProcessState(new_pid);
+    assert_int_equal(state, PROCESS_STATE_RUNNING);
+
+    printf("Killing child with correct start_time, child should die...\n");
+
+    ret = GracefulTerminate(new_pid, start_time);
+    assert_true(ret);
+
+    state = GetProcessState(new_pid);
+    assert_int_equal(state, PROCESS_STATE_ZOMBIE);
+
+    wait(NULL);                                               /* reap child */
+
+    state = GetProcessState(new_pid);
+    assert_int_equal(state, PROCESS_STATE_DOES_NOT_EXIST);
+
+    printf("Child Dead!\n");
+
+    SPAWNED_PID = -1;
+}
+
+
 int main()
 {
     PRINT_TEST_BANNER();
+
+    /* Don't miss the messages about GetProcessStartTime not implemented. */
+    LogSetGlobalLevel(LOG_LEVEL_DEBUG);
 
     const UnitTest tests[] =
     {
         unit_test(test_process_start_time),
         unit_test(test_process_state),
+        unit_test(test_graceful_terminate)
     };
 
     int ret = run_tests(tests);

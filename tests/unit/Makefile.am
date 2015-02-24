@@ -190,10 +190,6 @@ if HPUX
 XFAIL_TESTS = mon_load_test # Redmine #3569
 endif
 
-if SOLARIS
-XFAIL_TESTS = process_test # Redmine #6946
-endif
-
 #
 # OS X uses real system calls instead of our stubs unless this option is used
 #

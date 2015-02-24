@@ -86,8 +86,7 @@ ProcessState GetProcessState(pid_t pid)
     pstatus_t pstatus;
     if (GetProcessPstatus(pid, &pstatus))
     {
-        if ((pstatus.pr_lwp.pr_flags & PR_STOPPED)
-            && (pstatus.pr_lwp.pr_why == PR_SIGNALLED))
+        if (pstatus.pr_lwp.pr_flags & PR_STOPPED)
         {
             return PROCESS_STATE_STOPPED;
         }

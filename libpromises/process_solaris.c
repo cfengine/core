@@ -83,8 +83,71 @@ static bool GetProcessPstatus(pid_t pid, pstatus_t *pstatus)
 
 ProcessState GetProcessState(pid_t pid)
 {
+/* This is the documented way to check for zombie process, on Solaris 9
+ * however I couldn't get it to work: Killing a child process and then reading
+ * /proc/PID/psinfo *before* reaping the dead child, resulted in
+ * psinfo.pr_nlwp == 1 and psinfo.pr_lwp.pr_lwpid == 1.
+ */
+
+#if 0
+    psinfo_t psinfo;
+    if (GetProcessPsinfo(pid, &psinfo))
+    {
+        if (psinfo.pr_nlwp == 0 &&
+            psinfo.pr_lwp.pr_lwpid == 0)
+        {
+            return PROCESS_STATE_ZOMBIE;
+        }
+        else
+        {
+            /* Then, we must read the "status" file to get
+             * pstatus.pr_lwp.pr_flags, because the psinfo.pr_lwp.pr_flag is
+             * deprecated. */
+            pstatus_t pstatus;
+            if (GetProcessPstatus(pid &pstatus))
+            {
+                if (pstatus.pr_lwp.pr_flags & PR_STOPPED)
+                {
+                    return PROCESS_STATE_STOPPED;
+                }
+                else
+                {
+                    return PROCESS_STATE_RUNNING;
+                }
+            }
+        }
+    }
+
+    return PROCESS_STATE_DOES_NOT_EXIST;
+#endif
+
+
+
+    /* HACK WARNING: By experimentation I figured out that on Solaris 9 there
+       is no clear way to figure out if a process is zombie, but if the
+       "status" file is not there while the "psinfo" file is, then it's most
+       probably a zombie. */
+
     pstatus_t pstatus;
-    if (GetProcessPstatus(pid, &pstatus))
+    bool success = GetProcessPstatus(pid, &pstatus);
+
+    if (!success && errno == ENOENT)                 /* file does not exist */
+    {
+        psinfo_t psinfo;
+        if (GetProcessPsinfo(pid, &psinfo))
+        {
+            /* /proc/PID/psinfo exists, /proc/PID/status does not exist */
+            return PROCESS_STATE_ZOMBIE;
+        }
+        else                   /* Neither status nor psinfo could be opened */
+        {
+            return PROCESS_STATE_DOES_NOT_EXIST;
+        }
+    }
+
+    /* Read the flags from status, since reading it from
+       psinfo is deprecated. */
+    if (success)
     {
         if (pstatus.pr_lwp.pr_flags & PR_STOPPED)
         {
@@ -95,8 +158,10 @@ ProcessState GetProcessState(pid_t pid)
             return PROCESS_STATE_RUNNING;
         }
     }
-    else
-    {
-        return PROCESS_STATE_DOES_NOT_EXIST;
-    }
+
+    /* If we reach this point it's probably because /proc/PID/status couldn't
+     * be opened because of EPERM. We can't do anything to that process, so we
+     * might as well pretend it does not exist. */
+
+    return PROCESS_STATE_DOES_NOT_EXIST;
 }

@@ -70,7 +70,15 @@ ProcessState GetProcessState(pid_t pid)
 
     if (FillProcEntry(&pe, pid))
     {
-        return pe.pi_state == SSTOP ? PROCESS_STATE_STOPPED : PROCESS_STATE_RUNNING;
+        switch (pe.pi_state)
+        {
+        case SSTOP:
+            return PROCESS_STATE_STOPPED;
+        case SZOMB:
+            return PROCESS_STATE_ZOMBIE;
+        default:
+            return PROCESS_STATE_RUNNING;
+        }
     }
     else
     {

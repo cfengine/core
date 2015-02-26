@@ -29,7 +29,7 @@
 
 #define PROCESS_START_TIME_UNKNOWN ((time_t)0)
 
-/*
+/**
  * Obtain start time of specified process.
  *
  * @return start time (Unix timestamp) of specified process
@@ -37,7 +37,7 @@
  */
 time_t GetProcessStartTime(pid_t pid);
 
-/*
+/**
  * Gracefully kill the process with pid #pid and start time #process_start_time.
  *
  * Under Unix this will send SIGINT, then SIGTERM and then SIGKILL if process

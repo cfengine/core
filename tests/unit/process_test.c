@@ -168,8 +168,7 @@ static void test_graceful_terminate(void)
     printf("Killing child with wrong start_time, child should not die...\n");
 
     ret = GracefulTerminate(new_pid, 12345);             /* fake start time */
-    /* TODO Despite not actually killing the child, this call returns true! */
-    assert_true(ret);
+    assert_false(ret);
 
     state = GetProcessState(new_pid);
     assert_int_equal(state, PROCESS_STATE_RUNNING);

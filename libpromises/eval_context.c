@@ -1274,7 +1274,18 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
         char context_copy[CF_MAXVARSIZE];
         char canonified_context[CF_MAXVARSIZE];
 
-        strcpy(canonified_context, name);
+
+        /* Redmine #7013
+         * Fix for classes names longer than CF_MAXVARSIZE. */
+        if (strlen(name) >= sizeof(canonified_context))
+        {
+            Log(LOG_LEVEL_WARNING, "Skipping adding class [%s] as its name "
+                "is equal or longer than %zu", name, sizeof(canonified_context));
+            return false;
+        }
+        
+        strlcpy(canonified_context, name, sizeof(canonified_context));
+        
         if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
         {
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");

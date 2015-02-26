@@ -68,7 +68,7 @@ time_t GetProcessStartTime(pid_t pid)
 static bool GetProcessPstatus(pid_t pid, pstatus_t *pstatus)
 {
     char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "/proc/%d/status", (int)pid);
+    snprintf(filename, CF_BUFSIZE, "/proc/%jd/status", (intmax_t) pid);
 
     int fd = open(filename, O_RDONLY);
     if (fd == -1)

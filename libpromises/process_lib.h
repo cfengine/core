@@ -47,7 +47,9 @@ time_t GetProcessStartTime(pid_t pid);
  * safety check for killing right process.
  *
  * @return true if process was killed successfully, false otherwise.
+ * @return false if killing failed for any reason, or if the PID wasn't
+ *               present in the first place.
  */
-int GracefulTerminate(pid_t pid, time_t process_start_time);
+bool GracefulTerminate(pid_t pid, time_t process_start_time);
 
 #endif

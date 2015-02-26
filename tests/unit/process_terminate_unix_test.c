@@ -280,7 +280,7 @@ void test_kill_wrong_process(void)
     InitFakeProcess(66666, 100, false, false, true);
 
     int res = GracefulTerminate(1, 12345);
-    assert_true(res);
+    assert_false(res);
 
     FakeProcessDoSignals();
 
@@ -345,7 +345,7 @@ void test_kill_anothers_process(void)
     InitFakeProcess(12345, 100, true, true, false);
 
     int res = GracefulTerminate(1, 12345);
-    assert_true(res);
+    assert_false(res);
 
     FakeProcessDoSignals();
 

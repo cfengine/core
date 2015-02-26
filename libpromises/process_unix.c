@@ -232,11 +232,14 @@ static int Kill(pid_t pid, time_t process_start_time, int signal)
     }
 }
 
-int GracefulTerminate(pid_t pid, time_t process_start_time)
+bool GracefulTerminate(pid_t pid, time_t process_start_time)
 {
     if (Kill(pid, process_start_time, SIGINT) < 0)
     {
-        return errno == ESRCH;
+        /* If we failed to kill the process return error. If the process
+         * doesn't even exist (errno==ESRCH), again return error, we shouldn't
+         * have signalled the PID in the first place. */
+        return false;
     }
 
     if (ProcessWaitUntilExited(pid, STOP_WAIT_TIMEOUT))

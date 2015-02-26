@@ -732,7 +732,10 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
                 }
                 else
                 {
-                    Log(LOG_LEVEL_ERR, "Unable to kill expired process %d from lock %s", (int)pid, cflock);
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Unable to kill expired process %jd from lock %s"
+                        " (probably process not found or permission denied)",
+                        (intmax_t) pid, cflock);
                 }
             }
             else

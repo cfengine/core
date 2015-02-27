@@ -123,18 +123,28 @@ bundle agent cfe_internal_update
 
   commands:
 
-    start_exec.!windows::
+    start_exec.!windows.!systemd::
 
       "$(sys.cf_execd)"
       handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
       classes => repaired("executor_started");
 
-    start_server::
+    start_server.!systemd::
 
       "$(sys.cf_serverd)"
       handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
       action => ifwin_bg,
       classes => repaired("server_started");
+
+    start_exec.systemd::
+
+      # We explicitly use "restart", because it is possible that cf-serverd
+      # is running, even if cf-execd isn't, for example. Here we want to be
+      # sure we relaunch everything.
+
+      "/usr/bin/systemctl restart cfengine3"
+      handle => "cfe_internal_bootstrap_update_commands_systemd_cfe_start",
+      classes => repaired("executor_started");
 
       #
 

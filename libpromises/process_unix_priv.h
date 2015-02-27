@@ -37,6 +37,7 @@ typedef enum
 {
     PROCESS_STATE_RUNNING,
     PROCESS_STATE_STOPPED,
+    PROCESS_STATE_ZOMBIE,
     PROCESS_STATE_DOES_NOT_EXIST
 } ProcessState;
 
@@ -45,6 +46,7 @@ typedef enum
  *
  * @return PROCESS_STATE_RUNNING if process exists and is running,
  * @return PROCESS_STATE_STOPPED if process exists and has been stopped by SIGSTOP signal,
+ * @return PROCESS_STATE_ZOMBIE  if process exists and is zombie,
  * @return PROCESS_STATE_DOES_NOT_EXIST if process cannot be found.
  */
 ProcessState GetProcessState(pid_t pid);

@@ -718,25 +718,31 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         {
             if (elapsedtime >= tc.expireafter)
             {
-                Log(LOG_LEVEL_INFO, "Lock %s expired (after %jd/%u minutes)", cflock, (intmax_t) elapsedtime,
-                      tc.expireafter);
+                Log(LOG_LEVEL_INFO, "Lock %s expired (after %jd/%u minutes)",
+                    cflock, (intmax_t) elapsedtime, tc.expireafter);
 
                 pid_t pid = FindLockPid(cflock);
 
                 if (KillLockHolder(cflock))
                 {
-                    LogLockCompletion(cflog, pid, "Lock expired, process killed", cc_operator, cc_operand);
+                    LogLockCompletion(cflog, pid,
+                                      "Lock expired, process killed",
+                                      cc_operator, cc_operand);
                     unlink(cflock);
                 }
                 else
                 {
-                    Log(LOG_LEVEL_ERR, "Unable to kill expired process %d from lock %s", (int)pid, cflock);
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Unable to kill expired process %jd from lock %s"
+                        " (probably process not found or permission denied)",
+                        (intmax_t) pid, cflock);
                 }
             }
             else
             {
                 ReleaseCriticalSection(CF_CRITIAL_SECTION);
-                Log(LOG_LEVEL_VERBOSE, "Couldn't obtain lock for %s (already running!)", cflock);
+                Log(LOG_LEVEL_VERBOSE,
+                    "Couldn't obtain lock for %s (already running!)", cflock);
                 return CfLockNull();
             }
         }

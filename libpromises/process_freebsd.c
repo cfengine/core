@@ -91,12 +91,13 @@ ProcessState GetProcessState(pid_t pid)
     ProcessStat st;
     if (GetProcessStat(pid, &st))
     {
-        if (st.state == 'T')
+        switch (st.state)
         {
+        case 'T':
             return PROCESS_STATE_STOPPED;
-        }
-        else
-        {
+        case 'Z':
+            return PROCESS_STATE_ZOMBIE;
+        default:
             return PROCESS_STATE_RUNNING;
         }
     }

@@ -101,6 +101,66 @@ ProcessState GetProcessState(pid_t pid)
     }
 }
 
+void FakeProcessDoSignals(void)
+{
+    /* React immediately to STOP and CONT in order to properly do the
+     * STOP-kill-CONT sequence inside SafeKill(). */
+    if (has_stop)
+    {
+        stopped = true;
+        was_stopped = true;
+        has_stop = false;
+    }
+
+    if (has_cont)
+    {
+        stopped = false;
+        has_cont = false;
+    }
+
+    /* Do NOT react to other signals if it's not the time yet. */
+    if (current_time < signal_time)
+    {
+        return;
+    }
+
+    if (has_int)
+    {
+        if (!proc_1_int_blocked)
+        {
+            exists = false;
+            exit_signal = SIGINT;
+            stopped = false;
+            signal_time = -1;
+        }
+        has_int = false;
+    }
+
+    if (has_term)
+    {
+        if (!proc_1_term_blocked)
+        {
+            exists = false;
+            exit_signal = SIGTERM;
+            stopped = false;
+            signal_time = -1;
+        }
+        has_term = false;
+    }
+
+    if (has_kill)
+    {
+        exists = false;
+        exit_signal = SIGKILL;
+        stopped = false;
+        signal_time = -1;
+
+        has_kill = false;
+    }
+
+    signal_time = -1;
+}
+
 int kill(pid_t pid, int signal)
 {
     assert_int_equal(pid, 1);
@@ -153,61 +213,10 @@ int kill(pid_t pid, int signal)
         return -1;
     }
 
+    FakeProcessDoSignals();
+
     return 0;
 }
-
-void FakeProcessDoSignals(void)
-{
-    if (has_stop)
-    {
-        stopped = true;
-        was_stopped = true;
-        has_stop = false;
-    }
-
-    if (has_cont)
-    {
-        stopped = false;
-        has_cont = false;
-    }
-
-    if (has_int)
-    {
-        if (!proc_1_int_blocked)
-        {
-            exists = false;
-            exit_signal = SIGINT;
-            stopped = false;
-            signal_time = -1;
-        }
-        has_int = false;
-    }
-
-    if (has_term)
-    {
-        if (!proc_1_term_blocked)
-        {
-            exists = false;
-            exit_signal = SIGTERM;
-            stopped = false;
-            signal_time = -1;
-        }
-        has_term = false;
-    }
-
-    if (has_kill)
-    {
-        exists = false;
-        exit_signal = SIGKILL;
-        stopped = false;
-        signal_time = -1;
-
-        has_kill = false;
-    }
-
-    signal_time = -1;
-}
-
 
 int nanosleep(const struct timespec *req, struct timespec *rem)
 {
@@ -271,7 +280,7 @@ void test_kill_wrong_process(void)
     InitFakeProcess(66666, 100, false, false, true);
 
     int res = GracefulTerminate(1, 12345);
-    assert_true(res);
+    assert_false(res);
 
     FakeProcessDoSignals();
 
@@ -292,8 +301,8 @@ void test_kill_long_reacting_signal(void)
 
     FakeProcessDoSignals();
 
-    assert_true(exists); /* We should not kill this process */
-    assert_false(stopped); /* It should either be running or waiting to process SIGCONT */
+    /* This process is not even reacting to SIGKILL. */
+    assert_true(exists);
 }
 
 void test_kill_no_sigint(void)
@@ -320,6 +329,9 @@ void test_kill_no_sigint_sigterm(void)
     int res = GracefulTerminate(1, 12345);
     assert_true(res);
 
+    /* Sleep a bit so that KILL is processed. */
+    current_time += 100;
+
     FakeProcessDoSignals();
 
     assert_false(exists);
@@ -333,7 +345,7 @@ void test_kill_anothers_process(void)
     InitFakeProcess(12345, 100, true, true, false);
 
     int res = GracefulTerminate(1, 12345);
-    assert_true(res);
+    assert_false(res);
 
     FakeProcessDoSignals();
 

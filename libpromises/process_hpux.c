@@ -47,7 +47,15 @@ ProcessState GetProcessState(pid_t pid)
 
     if (pstat_getproc(&proc, sizeof(proc), 0, pid) > 0)
     {
-        return proc.pst_stat == PS_STOP ? PROCESS_STATE_STOPPED : PROCESS_STATE_RUNNING;
+        switch (proc.pst_stat)
+        {
+        case PS_STOP:
+            return PROCESS_STATE_STOPPED;
+        case PS_ZOMBIE:
+            return PROCESS_STATE_ZOMBIE;
+        default:
+            return PROCESS_STATE_RUNNING;
+        }
     }
     else
     {

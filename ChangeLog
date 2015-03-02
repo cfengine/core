@@ -15,6 +15,7 @@ Cfengine Propulsion Lab
 
 3.6.5:
         Features:
+        - Introduced "systemd" hard class. (Redmine #6995)
         - Added paths to dtrace, zfs and zpool on FreeBSD in masterfiles.
 
         Bug fixes:
@@ -31,6 +32,9 @@ Cfengine Propulsion Lab
         - Fixed monitord reporting wrongly on open ports. (Redmine #6926)
         - Skip adding the class when its name is longer than 1024 characters.
           Fixed core dump when the name is too large. (Redmine #7013)
+        - Fixed detection of stopped process on Solaris. (Redmine #6946)
+        - Fixed infinite loop (Redmine #6992) plus a couple more minor
+          bugs in edit_xml promises.
 
 3.6.4:
         Features:

@@ -1,3 +1,19 @@
+3.6.5:
+        Features:
+        - Added paths to dtrace, zfs and zpool on FreeBSD in masterfiles.
+
+        Bug fixes:
+        - Fixed build error on certain RHEL5 and SLES10 setups. (Redmine #6841)
+        - Fixed a bug which caused dangling symlinks not to be removed.
+          (Redmine #6582)
+        - Fixed data_readstringarrayidx function not preserving the order of the
+          array it's producing. (Redmine #6920)
+        - Fixed a bug which sometimes caused CFEngine to kill the wrong daemon
+          if both the host and a container inside the host were running
+          CFEngine. (Redmine #6906)
+        - Made sure the rm_rf_depth bundle also deletes the base directory.
+          (Redmine #7009)
+
 3.6.4:
         Features:
         - Introduced users promises support on HP-UX platform.

@@ -13,6 +13,9 @@
           CFEngine. (Redmine #6906)
         - Made sure the rm_rf_depth bundle also deletes the base directory.
           (Redmine #7009)
+        - Fixed monitord reporting wrongly on open ports. (Redmine #6926)
+        - Skip adding the class when its name is longer than 1024 characters.
+          Fixed core dump when the name is too large. (Redmine #7013)
 
 3.6.4:
         Features:

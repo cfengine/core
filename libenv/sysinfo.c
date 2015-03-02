@@ -970,7 +970,17 @@ static void OSClasses(EvalContext *ctx)
         char init_cmdline[CF_BUFSIZE];
         if (ReadLine("/proc/1/cmdline", init_cmdline, sizeof(init_cmdline)))
         {
-            char *p = strstr(init_cmdline, "/systemd");
+            char *p;
+            char *next_p = NULL;
+            const char *term = "/systemd";
+            // Find last component.
+            do
+            {
+                p = next_p;
+                next_p = strstr(next_p ? next_p+strlen(term) : init_cmdline, term);
+            }
+            while (next_p);
+
             if (p != NULL &&
                 p[strlen("/systemd")] == '\0')
             {

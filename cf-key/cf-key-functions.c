@@ -314,7 +314,13 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     fclose(fp);
 
     snprintf(vbuff, CF_BUFSIZE, "%s/randseed", CFWORKDIR);
-    RAND_write_file(vbuff);
+    if (RAND_write_file(vbuff) != 1024)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to write randseed");
+        unlink(vbuff); /* randseed isn't safe to use */
+        return;
+    }
+
     chmod(vbuff, 0644);
 }
 

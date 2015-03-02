@@ -32,9 +32,9 @@
 
 /* Globals */
 
-static bool ACPI;
-static bool SYSTHERMAL;
-static bool LMSENSORS;
+static bool ACPI       = false;
+static bool SYSTHERMAL = false;
+static bool LMSENSORS  = false;
 
 /* Prototypes */
 

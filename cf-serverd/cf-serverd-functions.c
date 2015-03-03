@@ -794,9 +794,13 @@ static void AcceptAndHandle(EvalContext *ctx, int sd)
                       &info->ss_len);
     if (info->sd == -1)
     {
+        Log(LOG_LEVEL_INFO, "Error accepting connection (%s)", GetErrorStr());
         ConnectionInfoDestroy(&info);
         return;
     }
+
+    Log(LOG_LEVEL_DEBUG, "Socket descriptor returned from accept(): %d",
+        info->sd);
 
     /* Just convert IP address to string, no DNS lookup. */
     char ipaddr[CF_MAX_IP_LEN] = "";
@@ -840,6 +844,8 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         CollectCallIfDue(ctx);
 
         int selected = WaitForIncoming(sd);
+
+        Log(LOG_LEVEL_DEBUG, "select(): %d", selected);
         if (selected == -1)
         {
             Log(LOG_LEVEL_ERR,

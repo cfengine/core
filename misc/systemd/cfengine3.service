@@ -1,0 +1,14 @@
+[Unit]
+Description=CFEngine 3 deamons
+After=syslog.target
+Wants=cfengine3-web.service
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/sysconfig/cfengine3
+Environment="CF_NO_WEB_SERVICES=1"
+ExecStart=/etc/init.d/cfengine3 start
+ExecStop=/etc/init.d/cfengine3 stop
+
+[Install]
+WantedBy=multi-user.target

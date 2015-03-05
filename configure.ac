@@ -1293,6 +1293,54 @@ if test "x$with_shell" = "xno"; then
 fi
 AC_DEFINE_UNQUOTED(SHELL_PATH, "$with_shell", [Path to the POSIX-compatible shell])
 
+dnl ######################################################################
+dnl init.d script installation
+dnl ######################################################################
+
+AC_ARG_WITH(init-script, AS_HELP_STRING([--with-init-script=PATH],
+    [Install init.d script in given path. The default is no, but if specified, the default path is platform specific.]),
+[
+    if test -n "$withval" && test "x$withval" != "xno"; then
+        if test "x$withval" = "xyes"; then
+            AS_CASE(["$target_os"],
+            [aix],
+            [
+                INIT_D_PATH=/etc/rc.d/init.d
+            ],
+            [hpux],
+            [
+                INIT_D_PATH=/sbin/init.d
+            ],
+            [
+                INIT_D_PATH=/etc/init.d
+            ])
+        else
+            INIT_D_PATH="$withval"
+        fi
+        AC_SUBST([INIT_D_PATH])
+        AC_CONFIG_FILES([misc/init.d/cfengine3])
+    fi
+])
+AM_CONDITIONAL([WITH_INIT_D_SCRIPT], [test -n "$INIT_D_PATH"])
+
+dnl ######################################################################
+dnl systemd unit file installation
+dnl ######################################################################
+
+AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
+    [Install systemd service file in given path. The default is no, but if specified, the default path is /usr/lib/systemd/system.]),
+[
+    if test -n "$withval" && test "x$withval" != "xno"; then
+        if test "x$withval" = "xyes"; then
+            SYSTEMD_SERVICE_PATH=/usr/lib/systemd/system
+        else
+            SYSTEMD_SERVICE_PATH="$withval"
+        fi
+        AC_SUBST([SYSTEMD_SERVICE_PATH])
+    fi
+])
+AM_CONDITIONAL([WITH_SYSTEMD_SERVICE], [test -n "$SYSTEMD_SERVICE_PATH"])
+
 dnl #####################################################################
 dnl Hostname and Version stuff
 dnl #####################################################################
@@ -1446,6 +1494,18 @@ else
   AC_MSG_RESULT([-> Enterprise extensions: Plugin or not included])
 fi
 
+if test -n "$INIT_D_PATH"; then
+  AC_MSG_RESULT([-> init.d script: $INIT_D_PATH])
+else
+  AC_MSG_RESULT([-> init.d script: disabled])
+fi
+
+if test -n "$SYSTEMD_SERVICE_PATH"; then
+  AC_MSG_RESULT([-> Systemd service: $SYSTEMD_SERVICE_PATH])
+else
+  AC_MSG_RESULT([-> Systemd service: disabled])
+fi
+
 m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
@@ -1477,6 +1537,7 @@ AC_CONFIG_FILES([Makefile
     cf-upgrade/Makefile
     cf-runagent/Makefile
     cf-serverd/Makefile
+    misc/Makefile
     ext/Makefile
     examples/Makefile
     tests/Makefile

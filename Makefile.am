@@ -27,9 +27,22 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = libcompat libutils libcfnet libenv libpromises \
-	cf-agent cf-execd cf-key cf-monitord \
-	cf-promises cf-runagent cf-serverd cf-upgrade ext examples \
+SUBDIRS = libcompat \
+	libutils \
+	libcfnet \
+	libenv \
+	libpromises \
+	cf-agent \
+	cf-execd \
+	cf-key \
+	cf-monitord \
+	cf-promises \
+	cf-runagent \
+	cf-serverd \
+	cf-upgrade \
+	misc \
+	ext \
+	examples \
 	tests
 
 # Hack around redmine #6925 issue with make dist.

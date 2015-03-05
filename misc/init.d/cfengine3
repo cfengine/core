@@ -1,0 +1,543 @@
+#!/bin/sh
+#
+# cfengine3
+# 
+#
+# Created by Nakarin Phooripoom on 22/6/2011.
+# Copyright 2010 CFEngine AS. All rights reserved.
+#
+### BEGIN INIT INFO
+# Provides:          cfengine3
+# Required-Start:    $local_fs $remote_fs $network $time
+# Required-Stop:     $local_fs $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: GNU configuration engine
+# Description:       Tool for configuring and maintaining network machines
+### END INIT INFO
+#
+# chkconfig: 2345 60 40
+# description: Starts the cfengine daemons for remote and periodic \
+#    execution of cfengine and for environment monitoring.
+# set -e
+
+##### start: Defined variables and conditios #####
+
+PREFIX=/var/cfengine
+INPUTDIR=default
+if [ "$INPUTDIR" = "default" ]; then
+    INPUTDIR="$PREFIX/inputs"
+fi
+
+CFEXECD=$PREFIX/bin/cf-execd
+CFSERVD=$PREFIX/bin/cf-serverd
+CFMOND=$PREFIX/bin/cf-monitord
+CFENTERPRISE_INITD=$PREFIX/bin/cfengine3-nova-hub-init-d.sh
+
+ECHO=/bin/echo
+TOUCH=/bin/touch
+RM=/bin/rm
+KILL=/bin/kill
+PKILL=/usr/bin/pkill
+MV=/bin/mv
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PREFIX/bin
+
+# Has the package been 'removed' but not purged?
+test -f $CFEXECD || exit 0
+
+# default is no OS
+SUSE=0
+REDHAT=0
+DEBIAN=0
+
+# SuSE
+if [ -d /var/lock/subsys ] && [ -f /usr/bin/zypper ]; then
+    SUSE=1
+fi
+
+# RedHat4/RedHat5/CentOS/Fedora
+if [ -f /usr/bin/yum ] || [ -f /usr/sbin/up2date ]; then
+    if [ -d /var/lock/subsys ]; then
+        REDHAT=1
+    fi
+fi
+
+# Debian/Ubuntu
+if [ -f /etc/debian_version ] && [ -f /usr/bin/apt-get ]; then
+    DEBIAN=1
+    if [ -d /run/lock ]; then
+        LOCKDIR=/run/lock
+    else
+        LOCKDIR=/var/lock
+    fi
+fi
+
+if [ -z "$LOCKDIR" ]; then
+    LOCKDIR=/var/lock
+fi
+
+# default control file
+if [ "$DEBIAN" = "1" ]; then
+    DEFAULT=/etc/default/cfengine3
+else
+    DEFAULT=/etc/sysconfig/cfengine3
+fi
+
+if [ -f $DEFAULT ]; then
+    . $DEFAULT
+else
+    RUN_CF_EXECD=1
+    RUN_CF_SERVERD=1
+    RUN_CF_MONITORD=1
+fi
+
+# Check /sbin/startproc for SUSE
+if [ -x /sbin/startproc ] && [ -f /etc/rc.status ]; then
+    . /etc/rc.status
+    rc_reset
+    PROC=1
+else
+    PROC=0
+fi
+
+# Source function library. (Redhat/Centos/Fedora)
+if [ -f /usr/bin/yum ] && [ -f /etc/rc.d/init.d/functions ]; then
+    . /etc/rc.d/init.d/functions
+    FUNC=1
+else
+    set -e
+    FUNC=0
+fi
+
+# Check something for Debian/Ubuntu
+if [ -x /sbin/start-stop-daemon ]; then
+    SSD=1
+else
+    SSD=0
+fi
+
+# Grep PID
+cfexecd_status=`ps waxu|grep -v grep|grep cf-execd|awk -F' ' '{print $2}'`
+cfserverd_status=`ps waxu|grep -v grep|grep cf-serverd|awk -F' ' '{print $2}'`
+cfmonitord_status=`ps waxu|grep -v grep|grep cf-monitord|awk -F' ' '{print $2}'`
+
+##### end: Defined variables and conditions #####
+
+##### Source enterprise script, if present #####
+
+if [ -f "$CFENTERPRISE_INITD" ]; then
+    CALLED_FROM_INITSCRIPT="1" . "$CFENTERPRISE_INITD"
+else
+    alias enterprise_start=true
+    alias enterprise_stop=true
+    alias enterprise_status=true
+fi
+
+### start scripting here ###
+
+case "$1" in
+    start)
+        if ! [ -f $INPUTDIR/promises.cf ]; then
+            # Prevent the enterprise scripts from launching any non-web
+            # related stuff when we are not bootstrapped.
+            export CF_ONLY_WEB_SERVICES=1
+        fi
+
+        # Start Enterprise services.
+        enterprise_start
+
+        if [ "$CF_ONLY_WEB_SERVICES" = "1" ]; then
+            exit 0
+        fi
+
+        # start cf-execd
+        # Redhat/Centos/Fedora
+        if [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+            $ECHO -n "Starting `basename $CFEXECD`: "
+            daemon $CFEXECD
+            $TOUCH /var/lock/subsys/`basename $CFEXECD`
+            $ECHO
+        elif [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+            $ECHO -n "Starting `basename $CFEXECD`: "
+            $CFEXECD
+            $TOUCH /var/lock/subsys/`basename $CFEXECD`
+            $ECHO
+        fi
+        # SUSE
+        if [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+            $ECHO -n "Starting `basename $CFEXECD`: "
+            /sbin/startproc $CFEXECD
+            rc_status -v
+            $TOUCH /var/run/`basename $CFEXECD`.pid
+        elif [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+            $ECHO -n "Starting `basename $CFEXECD`: "
+            $CFEXECD
+            $TOUCH /var/run/`basename $CFEXECD`.pid
+        fi
+        # Debian/Ubuntu
+        if [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+            $ECHO -n "Starting `basename $CFEXECD`: "
+            /sbin/start-stop-daemon --start --verbose --exec $CFEXECD
+            $TOUCH $LOCKDIR/`basename $CFEXECD`
+        elif [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+            $ECHO -n "Starting `basename $CFEXECD`: "
+            $CFEXECD
+            $TOUCH $LOCKDIR/`basename $CFEXECD`
+            $ECHO
+        fi
+        
+        # start cf-serverd
+        # Redhat/Centos/Fedora
+        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+            $ECHO -n "Starting `basename $CFSERVD`: "
+            daemon $CFSERVD
+            $TOUCH /var/lock/subsys/`basename $CFSERVD`
+            $ECHO
+        elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+            $ECHO -n "Starting `basename $CFSERVD`: "
+            $CFSERVD
+            $TOUCH /var/lock/subsys/`basename $CFSERVD`
+            $ECHO
+        fi
+        # SUSE
+        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+            $ECHO -n "Starting `basename $CFSERVD`: "
+            /sbin/startproc $CFSERVD
+            rc_status -v
+            $TOUCH /var/run/`basename $CFSERVD`.pid
+        elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+            $ECHO -n "Starting `basename $CFSERVD`: "
+            $CFSERVD
+            $TOUCH /var/run/`basename $CFSERVD`.pid
+        fi
+        # Debian/Ubuntu
+        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+            $ECHO -n "Starting `basename $CFSERVD`: "
+            /sbin/start-stop-daemon --start --verbose --exec $CFSERVD
+            $TOUCH $LOCKDIR/`basename $CFSERVD`
+        elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+            $ECHO -n "Starting `basename $CFSERVD`: "
+            $CFSERVD
+            $TOUCH $LOCKDIR/`basename $CFSERVD`
+            $ECHO
+        fi
+        
+        # start cf-monitord
+        # Redhat/Centos/Fedora
+        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+            $ECHO -n "Starting `basename $CFMOND`: "
+            daemon $CFMOND
+            $TOUCH /var/lock/subsys/`basename $CFMOND`
+            $ECHO
+        elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+            $ECHO -n "Starting `basename $CFMOND`: "
+            $CFMOND
+            $TOUCH /var/lock/subsys/`basename $CFMOND`
+            $ECHO
+        fi
+        # SUSE
+        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+            $ECHO -n "Starting `basename $CFMOND`: "
+            /sbin/startproc $CFMOND
+            rc_status -v
+            $TOUCH /var/run/`basename $CFMOND`.pid
+        elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+            $ECHO -n "Starting `basename $CFMOND`: "
+            $CFMOND
+            $TOUCH /var/run/`basename $CFMOND`.pid
+        fi
+        # Debian/Ubuntu
+        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+            $ECHO -n "Starting `basename $CFMOND`: "
+            /sbin/start-stop-daemon --start --verbose --exec $CFMOND
+            $TOUCH $LOCKDIR/`basename $CFMOND`
+        elif [ "$RUN_CF_MONTIROD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+            $ECHO -n "Starting `basename $CFMOND`: "
+            $CFMOND
+            $TOUCH $LOCKDIR/`basename $CFMOND`
+            $ECHO
+        fi
+        exit 0
+        ;;
+    stop)
+        if [ "$CF_ONLY_WEB_SERVICES" != "1" ]; then
+            # shutdown cf-execd
+            # Redhat/Centos/Fedora
+            if [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+                $ECHO -n "Shutting down `basename $CFEXECD`: "
+                killproc $CFEXECD || :
+                if [ -f /var/lock/subsys/`basename $CFEXECD` ]; then
+                    $RM -f /var/lock/subsys/`basename $CFEXECD` || true
+                fi
+                $ECHO
+            elif [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+                $ECHO -n "Shutting down `basename $CFEXECD`: "
+                $PKILL `basename $CFEXECD` || :
+                if [ -f /var/lock/subsys/`basename $CFEXECD` ]; then
+                    $RM -f /var/lock/subsys/`basename $CFEXECD` || true
+                fi
+                $ECHO
+            fi
+            # SUSE
+            if [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+                if [ $cfexecd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFEXECD`: "
+                    /sbin/killproc -TERM $CFEXECD || :
+                    rc_status -v
+                    if [ -f /var/run/`basename $CFEXECD`.pid ]; then
+                        $RM /var/run/`basename $CFEXECD`.pid || true
+                    fi
+                fi
+            elif [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+                if [ $cfexecd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFEXECD`: "
+                    $PKILL `basename $CFEXECD` || :
+                    if [ -f /var/run/`basename $CFEXECD`.pid ]; then
+                        $RM /var/run/`basename $CFEXECD`.pid || true
+                    fi
+                fi
+            fi
+            # Debian/Ubuntu
+            if [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+                if [ $cfexecd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFEXECD` ... "
+                    /sbin/start-stop-daemon -o --stop --retry 5 --name `basename $CFEXECD` || :
+                    if [ -f $LOCKDIR/`basename $CFEXECD` ]; then
+                        $RM $LOCKDIR/`basename $CFEXECD` || true
+                    fi
+                    $ECHO
+                fi
+            elif [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+                if [ $cfexecd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFEXECD` ... "
+                    $PKILL `basename $CFEXECD` || :
+                    if [ -f $LOCKDIR/`basename $CFEXECD` ]; then
+                        $RM $LOCKDIR/`basename $CFEXECD` || true
+                    fi
+                    $ECHO
+                fi
+            fi
+            
+            # shutdown cf-serverd
+            # Redhat/Centos/Fedora
+            if [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+                $ECHO -n "Shutting down `basename $CFSERVD`: "
+                killproc $CFSERVD || :
+                if [ -f /var/lock/subsys/`basename $CFSERVD` ]; then
+                    $RM -f /var/lock/subsys/`basename $CFSERVD` || true
+                fi
+                $ECHO
+            elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+                $ECHO -n "Shutting down `basename $CFSERVD`: "
+                $PKILL `basename $CFSERVD` || :
+                if [ -f /var/lock/subsys/`basename $CFSERVD` ]; then
+                    $RM -f /var/lock/subsys/`basename $CFSERVD` || true
+                fi
+                $ECHO
+            fi
+            # SUSE
+            if [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+                if [ $cfserverd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFSERVD`: "
+                    /sbin/killproc -TERM $CFSERVD || :
+                    rc_status -v
+                    if [ -f /var/run/`basename $CFSERVD`.pid ]; then
+                        $RM /var/run/`basename $CFSERVD`.pid || true
+                    fi
+                fi
+            elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+                if [ $cfserverd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFSERVD`: "
+                    $PKILL `basename $CFSERVD` || :
+                    if [ -f /var/run/`basename $CFSERVD`.pid ]; then
+                        $RM /var/run/`basename $CFSERVD`.pid || true
+                    fi
+                fi
+            fi
+            # Debian/Ubuntu
+            if [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+                if [ $cfserverd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFSERVD` ... "
+                    /sbin/start-stop-daemon -o --stop --retry 5 --name `basename $CFSERVD` || :
+                    if [ -f $LOCKDIR/`basename $CFSERVD` ]; then
+                        $RM $LOCKDIR/`basename $CFSERVD` || true
+                    fi
+                    $ECHO
+                fi
+            elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+                if [ $cfserverd_status ]; then
+                    $ECHO -n "Shutting down `basename $CFSERVD` ... "
+                    $PKILL `basename $CFSERVD` || :
+                    if [ -f $LOCKDIR/`basename $CFSERVD` ]; then
+                        $RM $LOCKDIR/`basename $CFSERVD` || true
+                    fi
+                    $ECHO
+                fi
+            fi
+            
+            # shutdown cf-monitord
+            # Redhat/Centos/Fedora
+            if [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+                $ECHO -n "Shutting down `basename $CFMOND`: "
+                killproc $CFMOND || :
+                if [ -f /var/lock/subsys/`basename $CFMOND` ]; then
+                    $RM -f /var/lock/subsys/`basename $CFMOND` || true
+                fi
+                $ECHO
+            elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+                $ECHO -n "Shutting down `basename $CFMOND`: "
+                $PKILL `basename $CFMOND` || :
+                if [ -f /var/lock/subsys/`basename $CFMOND` ]; then
+                    $RM -f /var/lock/subsys/`basename $CFMOND` || true
+                fi
+                $ECHO
+            fi
+            # SUSE
+            if [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+                if [ $cfmonitord_status ]; then
+                    $ECHO -n "Shutting down `basename $CFMOND`: "
+                    /sbin/killproc -TERM $CFMOND || :
+                    rc_status -v
+                    if [ -f /var/run/`basename $CFMOND`.pid ]; then
+                        $RM /var/run/`basename $CFMOND`.pid || true
+                    fi
+                fi
+            elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+                if [ $cfmonitord_status ]; then
+                    $ECHO -n "Shutting down `basename $CFMOND`: "
+                    $PKILL `basename $CFMOND` || :
+                    if [ -f /var/run/`basename $CFMOND`.pid ]; then
+                        $RM /var/run/`basename $CFMOND`.pid || true
+                    fi
+                fi
+            fi
+            # Debian/Ubuntu
+            if [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+                if [ $cfmonitord_status ]; then
+                    $ECHO -n "Shutting down `basename $CFMOND` ... "
+                    /sbin/start-stop-daemon -o --stop --retry 5 --name `basename $CFMOND` || :
+                    if [ -f $LOCKDIR/`basename $CFMOND` ]; then
+                        $RM $LOCKDIR/`basename $CFMOND` || true
+                    fi
+                    $ECHO
+                fi
+            elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+                if [ $cfmonitord_status ]; then
+                    $ECHO -n "Shutting down `basename $CFMOND` ... "
+                    $PKILL `basename $CFMOND` || :
+                    if [ -f $LOCKDIR/`basename $CFMOND` ]; then
+                        $RM $LOCKDIR/`basename $CFMOND` || true
+                    fi
+                    $ECHO
+                fi
+            fi
+        fi
+
+        # Stop Enterprise services.
+        enterprise_stop
+
+        exit 0
+        ;;
+    status)
+        if [ "$CF_ONLY_WEB_SERVICES" = "1" ]; then
+            exit 0
+        fi
+
+        # Status Enterprise services.
+        enterprise_status
+
+        # status cf-execd
+        # Redhat/Centos/Fedora
+        if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+            status $CFEXECD
+        elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+            if [ $cfexecd_status ]; then
+                $ECHO "cf-execd (pid $cfexecd_status) is running..."
+            else 
+                $ECHO "cf-execd is not running"
+            fi
+        fi
+        # SUSE
+        if [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+            if [ $cfexecd_status ]; then
+                $ECHO -n "Checking for `basename $CFEXECD` "
+                checkproc $CFEXECD
+                rc_status -v
+            fi
+        fi
+        # Debain/Ubuntu
+        if [ "$DEBIAN" = "1" ]; then
+            if [ $cfexecd_status ]; then
+                $ECHO "cf-execd (pid $cfexecd_status) is running..."
+            else 
+                $ECHO "cf-execd is not running"
+            fi
+        fi
+        
+        # status cf-serverd
+        # Redhat/Centos/Fedora
+        if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+            status $CFSERVD
+        elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+            if [ $cfserverd_status ]; then
+                $ECHO "cf-serverd (pid $cfserverd_status) is running..."
+            else
+                $ECHO "cf-serverd is not running"
+            fi
+        fi
+        # SUSE
+        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+            if [ $cfserverd_status ]; then
+                $ECHO -n "Checking for `basename $CFSERVD` "
+                checkproc $CFSERVD
+                rc_status -v
+            fi
+        fi
+        # Debain/Ubuntu
+        if [ "$DEBIAN" = "1" ]; then
+            if [ $cfserverd_status ]; then
+                $ECHO "cf-serverd (pid $cfserverd_status) is running..."
+            else 
+                $ECHO "cf-serverd is not running"
+            fi
+        fi
+        
+        # status cf-monitord
+        # Redhat/Centos/Fedora
+        if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+            status $CFMOND
+        elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+            if [ $cfmonitord_status ]; then
+                $ECHO "cf-monitord (pid $cfmonitord_status) is running..."
+            else
+                $ECHO "cf-monitord is not running"
+            fi
+        fi
+        # SUSE
+        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+            if [ $cfmonitord_status ]; then
+                echo -n "Checking for `basename $CFMOND` "
+                checkproc $CFMOND
+                rc_status -v
+            fi
+        fi
+        # Debain/Ubuntu
+        if [ "$DEBIAN" = "1" ]; then
+            if [ $cfmonitord_status ]; then
+                $ECHO "cf-monitord (pid $cfmonitord_status) is running..."
+            else 
+                $ECHO "cf-monitord is not running"
+            fi
+        fi
+        exit 0
+        ;;
+    restart|reload|force-reload)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|restart|reload|force-reload}" >&2
+        exit 1
+        ;;
+esac

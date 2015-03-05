@@ -175,8 +175,9 @@ check_PROGRAMS += \
 endif
 endif
 
-check_SCRIPTS = dynamic_dependency_test.sh
-EXTRA_DIST   += dynamic_dependency_test.sh
+check_SCRIPTS = dynamic_dependency_test.sh \
+	bootstrap_inc_uptodate_test.sh
+EXTRA_DIST   += $(check_SCRIPTS)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 

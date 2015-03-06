@@ -46,7 +46,7 @@ off_t GetDiskUsage(char *file, CfSize type)
 # else
     struct statfs buf;
 # endif
-    off_t used = 0, avail = 0;
+    int64_t used = 0, avail = 0;
     int capacity = 0;
 
     memset(&buf, 0, sizeof(buf));
@@ -72,23 +72,23 @@ off_t GetDiskUsage(char *file, CfSize type)
 # endif
 
 # if defined __sun
-    used = (buf.f_blocks - buf.f_bfree) * buf.f_frsize;
-    avail = buf.f_bavail * buf.f_frsize;
+    used = (buf.f_blocks - buf.f_bfree) * (int64_t)buf.f_frsize;
+    avail = buf.f_bavail * (int64_t)buf.f_frsize;
 # endif
 
 # if defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__ || defined __hpux || defined __APPLE__
-    used = (buf.f_blocks - buf.f_bfree) * buf.f_bsize;
-    avail = buf.f_bavail * buf.f_bsize;
+    used = (buf.f_blocks - buf.f_bfree) * (int64_t)buf.f_bsize;
+    avail = buf.f_bavail * (int64_t)buf.f_bsize;
 # endif
 
 # if defined _AIX || defined __SCO_DS || defined _CRAY
-    used = (buf.f_blocks - buf.f_bfree) * (float) buf.f_bsize;
-    avail = buf.f_bfree * (float) buf.f_bsize;
+    used = (buf.f_blocks - buf.f_bfree) * (int64_t)buf.f_bsize;
+    avail = buf.f_bfree * (int64_t)buf.f_bsize;
 # endif
 
 # if defined __linux__
-    used = (buf.f_blocks - buf.f_bfree) * (float) buf.f_bsize;
-    avail = buf.f_bavail * (float) buf.f_bsize;
+    used = (buf.f_blocks - buf.f_bfree) * (int64_t)buf.f_bsize;
+    avail = buf.f_bavail * (int64_t)buf.f_bsize;
 # endif
 
     capacity = (double) (avail) / (double) (avail + used) * 100;
@@ -97,7 +97,17 @@ off_t GetDiskUsage(char *file, CfSize type)
 
     if (type == CF_SIZE_ABS)
     {
-        return avail;
+        // TODO: This should be handled better by actually returning a bigger
+        // data type, but for now just protect against overflow by hitting the
+        // ceiling.
+        if (sizeof(off_t) < sizeof(int64_t) && avail > 0x7fffffffLL)
+        {
+            return 0x7fffffff;
+        }
+        else
+        {
+            return avail;
+        }
     }
     else
     {

@@ -52,7 +52,7 @@
 
 #ifndef __MINGW32__
 
-# ifdef HAVE_STRUCT_SOCKADDR_SA_LEN
+# if defined(HAVE_STRUCT_SOCKADDR_SA_LEN) && !defined(__NetBSD__)
 #  ifdef _SIZEOF_ADDR_IFREQ
 #   define SIZEOF_IFREQ(x) _SIZEOF_ADDR_IFREQ(x)
 #  else

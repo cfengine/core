@@ -1,7 +1,6 @@
 [Unit]
 Description=CFEngine 3 deamons
 After=syslog.target
-Wants=cfengine3-web.service
 
 [Service]
 Type=forking

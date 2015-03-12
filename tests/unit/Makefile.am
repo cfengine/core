@@ -330,7 +330,7 @@ connection_management_test_SOURCES = connection_management_test.c ../../cf-serve
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \
-	../../libpromises/rlist.c \
+	../../libpromises/rlist.c
 rlist_test_LDADD = libtest.la ../../libpromises/libpromises.la
 # Workaround for object file basename conflicts, search the web for
 # "automake created with both libtool and without"

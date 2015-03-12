@@ -2632,24 +2632,24 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
 
         if (name_len > 2 && name_str[0] == '[')
         {
-            Seq *s = StringMatchCaptures("^\\[ *([^ ]+) *\\]$", name_str);
+            Seq *s = StringMatchCaptures("^\\[ *([^ ]+) *\\]$", name_str, false);
 
             if (s && SeqLength(s) == 2)
             {
                 wrap_array_mode = true;
-                name = BufferNewFrom(SeqAt(s, 1), strlen(SeqAt(s, 1)));
+                name = BufferCopy((const Buffer*) SeqAt(s, 1));
             }
 
             SeqDestroy(s);
         }
         else if (name_len > 0 && name_str[0] == '{' && name_str[name_len-1] == '}')
         {
-            Seq *s = StringMatchCaptures("^\\{ *\"([^\"]+)\" *: *([^ ]+) *\\}$", name_str);
+            Seq *s = StringMatchCaptures("^\\{ *\"([^\"]+)\" *: *([^ ]+) *\\}$", name_str, false);
 
             if (s && SeqLength(s) == 3)
             {
-                wrap_map_key = BufferNewFrom(SeqAt(s, 1), strlen(SeqAt(s, 1)));
-                name = BufferNewFrom(SeqAt(s, 2), strlen(SeqAt(s, 2)));
+                wrap_map_key = BufferCopy((const Buffer*) SeqAt(s, 1));
+                name = BufferCopy((const Buffer*) SeqAt(s, 2));
             }
 
             SeqDestroy(s);
@@ -4128,12 +4128,12 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
         Seq *s;
 
         while (check &&
-               (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check)))
+               (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check, false)))
         {
             {
                 if (SeqLength(s) >= 2)
                 {
-                    const char *format_piece = SeqAt(s, 1);
+                    const char *format_piece = BufferData(SeqAt(s, 1));
                     bool percent = (0 == strncmp(format_piece, "%%", 2));
                     char *data = NULL;
 
@@ -4288,9 +4288,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
             {
                 if (SeqLength(s) >= 3)
                 {
-                    const char* static_piece = SeqAt(s, 2);
-                    BufferAppend(buf, static_piece, strlen(static_piece));
-                    // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending static piece = '%s'", static_piece);
+                    BufferAppend(buf, BufferData(SeqAt(s, 2)), BufferSize(SeqAt(s, 2)));
                 }
                 else
                 {
@@ -4301,7 +4299,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
             {
                 if (SeqLength(s) >= 4)
                 {
-                    strlcpy(check_buffer, SeqAt(s, 3), CF_BUFSIZE);
+                    strlcpy(check_buffer, BufferData(SeqAt(s, 3)), CF_BUFSIZE);
                     check = check_buffer;
                 }
                 else
@@ -4793,49 +4791,85 @@ static FnCallResult FnCallRegCmp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
+    const bool container_mode = strcmp(fp->name, "data_regextract") == 0;
+
     const char *regex = RlistScalarValue(finalargs);
     const char *data = RlistScalarValue(finalargs->next);
-    char *arrayname = xstrdup(RlistScalarValue(finalargs->next->next));
-    if (!IsQualifiedVariable(arrayname))
+    char *arrayname = NULL;
+
+    if (!container_mode)
     {
-        if (fp->caller)
+        arrayname = xstrdup(RlistScalarValue(finalargs->next->next));
+
+        if (!IsQualifiedVariable(arrayname))
         {
-            VarRef *ref = VarRefParseFromBundle(arrayname, PromiseGetBundle(fp->caller));
-            free(arrayname);
-            arrayname = VarRefToString(ref, true);
-            VarRefDestroy(ref);
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Function '%s' called with an unqualifed array reference '%s', "
-                "and the reference could not be automatically qualified as the function was not called from a promise.",
-                fp->name, arrayname);
-            free(arrayname);
-            return FnFailure();
+            if (fp->caller)
+            {
+                VarRef *ref = VarRefParseFromBundle(arrayname, PromiseGetBundle(fp->caller));
+                free(arrayname);
+                arrayname = VarRefToString(ref, true);
+                VarRefDestroy(ref);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Function '%s' called with an unqualifed array reference '%s', "
+                    "and the reference could not be automatically qualified as the function was not called from a promise.",
+                    fp->name, arrayname);
+                free(arrayname);
+                return FnFailure();
+            }
         }
     }
 
-    Seq *s = StringMatchCaptures(regex, data);
+    Seq *s = StringMatchCaptures(regex, data, true);
 
     if (!s || SeqLength(s) == 0)
     {
         SeqDestroy(s);
         free(arrayname);
-        return FnReturnContext(false);
+        return container_mode ? FnFailure() : FnReturnContext(false);
     }
 
-    for (int i = 0; i < SeqLength(s); ++i)
+    JsonElement *json = NULL;
+
+    if (container_mode)
     {
-        char var[CF_MAXVARSIZE] = "";
-        snprintf(var, CF_MAXVARSIZE - 1, "%s[%d]", arrayname, i);
-        VarRef *new_ref = VarRefParse(var);
-        EvalContextVariablePut(ctx, new_ref, SeqAt(s, i), CF_DATA_TYPE_STRING, "source=function,function=regextract");
-        VarRefDestroy(new_ref);
+        json = JsonObjectCreate(SeqLength(s)/2);
+    }
+
+    for (int i = 0; i < SeqLength(s); i+=2)
+    {
+        Buffer *key = SeqAt(s, i);
+        Buffer *value = SeqAt(s, i+1);
+
+
+        if (container_mode)
+        {
+            JsonObjectAppendString(json, BufferData(key), BufferData(value));
+        }
+        else
+        {
+            char var[CF_MAXVARSIZE] = "";
+            snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, BufferData(key));
+            VarRef *new_ref = VarRefParse(var);
+            EvalContextVariablePut(ctx, new_ref, BufferData(value),
+                                   CF_DATA_TYPE_STRING,
+                                   "source=function,function=regextract");
+            VarRefDestroy(new_ref);
+        }
     }
 
     free(arrayname);
     SeqDestroy(s);
-    return FnReturnContext(true);
+
+    if (container_mode)
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    }
+    else
+    {
+        return FnReturnContext(true);
+    }
 }
 
 /*********************************************************************/
@@ -7324,6 +7358,13 @@ static const FnCallArg REGEXTRACT_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg DATA_REGEXTRACT_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Match string"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg REGISTRYVALUE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Windows registry key"},
@@ -7893,6 +7934,10 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("min", CF_DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the minimum of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variance", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+
+    // Data container functions
+    FnCallTypeNew("data_regextract", CF_DATA_TYPE_CONTAINER, DATA_REGEXTRACT_ARGS, &FnCallRegExtract, "Matches the regular expression in arg 1 against the string in arg2 and returns a data container holding the backreferences by name",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // File parsing functions that output a data container

@@ -1,0 +1,73 @@
+# data_regextract() test
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  vars:
+      "patterns" data => parsejson('["^(?<name1>...)(...)(..)-(?<name2>...)-(..).*", "", ".*", "(?<myword>...)"]');
+      "plength" int => length(patterns);
+      "pi" slist => expandrange("[0-$(plength)]", 1); # this is one more than the valid indices
+
+      "strings" data => parsejson('[ "abcdef12-345-67andsoon", "", "!!!", "one two three"]');
+      "slength" int => length(strings);
+      "si" slist => expandrange("[0-$(slength)]", 1); # this is one more than the valid indices
+
+      "parsed_$(pi)_$(si)" data => data_regextract(nth(patterns, $(pi)),
+                                                  nth(strings, $(si)));
+      "parsed_$(pi)_$(si)_str" string => format("%S", "parsed_$(pi)_$(si)");
+
+  reports:
+    EXTRA::
+      "$(this.bundle): $(pi) $(si) '$(patterns[$(pi)])' matching '$(strings[$(si)])' => $(parsed_$(pi)_$(si)_str)";
+}
+
+bundle agent check
+{
+  vars:
+      "actual" string => "
+0 0 $(test.parsed_0_0_str)
+
+1 0 $(test.parsed_1_0_str)
+1 1 $(test.parsed_1_1_str)
+1 2 $(test.parsed_1_2_str)
+1 3 $(test.parsed_1_3_str)
+
+2 0 $(test.parsed_2_0_str)
+2 1 $(test.parsed_2_1_str)
+2 2 $(test.parsed_2_2_str)
+2 3 $(test.parsed_2_3_str)
+
+3 0 $(test.parsed_3_0_str)
+3 2 $(test.parsed_3_2_str)
+3 3 $(test.parsed_3_3_str)
+";
+
+      "expected" string => '
+0 0 {"0":"abcdef12-345-67andsoon","name1":"abc","2":"def","3":"12","name2":"345","5":"67"}
+
+1 0 {"0":""}
+1 1 {"0":""}
+1 2 {"0":""}
+1 3 {"0":""}
+
+2 0 {"0":"abcdef12-345-67andsoon"}
+2 1 {"0":""}
+2 2 {"0":"!!!"}
+2 3 {"0":"one two three"}
+
+3 0 {"0":"abc","myword":"abc"}
+3 2 {"0":"!!!","myword":"!!!"}
+3 3 {"0":"one","myword":"one"}
+';
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(actual), $(expected),
+                                      $(this.promise_filename),
+                                      "no");
+
+}

@@ -32,7 +32,7 @@ endif
 AM_LDFLAGS += $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDFLAGS) \
 	$(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS) $(SQLITE3_LDFLAGS) $(LIBACL_LDFLAGS)
 
-EXTRA_DIST = extensions_template.c extensions_template.h enterprise_extension.sed math.pc
+EXTRA_DIST = extensions_template.c extensions_template.h enterprise_extension.sed math.pc text2cstring.pl failsafe.cf
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libutils -I$(srcdir)/../libcfnet \

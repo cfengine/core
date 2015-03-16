@@ -57,8 +57,6 @@ if HAVE_LIBXML2
 	$(LIBXML2_LIBS)
 endif
 
-EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub testall dummy_etc
-
 TESTS =
 TESTS_ENVIRONMENT = env \
 	AGENT=`pwd`/../../cf-agent/cf-agent \
@@ -74,9 +72,15 @@ endif
 check-local:
 	@+MAKE=$(MAKE) ./testall
 
+
+EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub testall dummy_etc
+
+# Recursively include all tests in the dist tarball and set proper permissions
+EXTRA_DIST += $(wildcard [0-9]*)
+
 dist-hook:
-	cd $(srcdir); tar -c -f - [0-9]* | tar -x -C $(abspath $(distdir)) -f -
 	chmod -R go-w $(distdir)
+
 
 CLEANFILES = *.gcno *.gcda
 

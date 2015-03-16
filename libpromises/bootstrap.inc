@@ -131,7 +131,7 @@
             "      # is running, even if cf-execd isn't, for example. Here we want to be\n"
             "      # sure we relaunch everything.\n"
             "\n"
-            "      \"/usr/bin/systemctl restart cfengine3\"\n"
+            "      \"/bin/systemctl restart cfengine3\"\n"
             "      handle => \"cfe_internal_bootstrap_update_commands_systemd_cfe_start\",\n"
             "      classes => repaired(\"executor_started\");\n"
             "\n"

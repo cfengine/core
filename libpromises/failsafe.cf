@@ -133,7 +133,7 @@ bundle agent cfe_internal_update
 
       "/bin/systemctl restart cfengine3"
       handle => "cfe_internal_bootstrap_update_commands_systemd_cfe_start",
-      classes => repaired("executor_started");
+      classes => repaired_two("executor_started", "server_started");
 
       #
 
@@ -223,6 +223,12 @@ bundle agent cfe_internal_call_update
 body classes repaired(x)
 {
       promise_repaired => {"$(x)"};
+}
+############################################
+body classes repaired_two(x,y)
+{
+      promise_repaired => {"$(x)", "$(y)"};
+      repair_failed => {"$(x)_failed"};
 }
 ############################################
 body perms u_p(p)

@@ -32,9 +32,11 @@ SUBDIRS = libcompat libutils libcfnet libenv libpromises \
 	cf-promises cf-runagent cf-serverd cf-upgrade ext examples \
 	tests
 
-# Hack around redmine #6925 issue with make dist.
-TAR_OPTIONS = --hard-dereference --owner=0 --group=0
+
+# Hide the buildsystem's username, at least with GNU tar.
+TAR_OPTIONS = --owner=0 --group=0
 export TAR_OPTIONS
+
 
 DIST_SUBDIRS = libcompat libutils libcfnet libenv libpromises cf-agent cf-execd	\
 	cf-key cf-monitord cf-promises cf-runagent cf-serverd cf-upgrade ext	        \

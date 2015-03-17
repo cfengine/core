@@ -1,15 +1,16 @@
 [Unit]
-Description=CFEngine 3 deamons
+Description=CFEngine 3 Mission Portal daemons
 After=syslog.target
-Wants=cfengine3-web.service
-After=cfengine3-web.service
+PartOf=cfengine3.service
+ConditionPathExists=/var/cfengine/bin/cfengine3-nova-hub-init-d.sh
 
 [Service]
 Type=forking
 EnvironmentFile=/etc/sysconfig/cfengine3
-Environment="CF_NO_WEB_SERVICES=1"
+Environment="CF_ONLY_WEB_SERVICES=1"
 ExecStart=/etc/init.d/cfengine3 start
 ExecStop=/etc/init.d/cfengine3 stop
 
 [Install]
 WantedBy=multi-user.target
+WantedBy=cfengine3.service

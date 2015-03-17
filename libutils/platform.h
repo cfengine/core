@@ -430,6 +430,10 @@ static inline uint32_t ByteSwap32(uint32_t le32uint)
 # endif
 #endif // !HAVE_DECL_LE32TOH
 
+#if !HAVE_DECL_CLOSEFROM
+int closefrom(int fd);
+#endif
+
 #if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 #endif

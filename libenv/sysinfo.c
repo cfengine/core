@@ -1469,7 +1469,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 #define REDHAT_C_ID "Red Hat Enterprise Linux Client"
 #define REDHAT_S_ID "Red Hat Enterprise Linux Server"
 #define REDHAT_W_ID "Red Hat Enterprise Linux Workstation"
-#define REDHAT_CN_ID "Red Hat Enterprise Linux ComputerNode"
+#define REDHAT_CN_ID "Red Hat Enterprise Linux ComputeNode"
 #define MANDRAKE_ID "Linux Mandrake"
 #define MANDRAKE_10_1_ID "Mandrakelinux"
 #define WHITEBOX_ID "White Box Enterprise Linux"

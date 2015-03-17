@@ -1337,6 +1337,7 @@ AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
             SYSTEMD_SERVICE_PATH="$withval"
         fi
         AC_SUBST([SYSTEMD_SERVICE_PATH])
+        AC_CONFIG_FILES([misc/systemd/cfengine3-web.service])
     fi
 ])
 AM_CONDITIONAL([WITH_SYSTEMD_SERVICE], [test -n "$SYSTEMD_SERVICE_PATH"])

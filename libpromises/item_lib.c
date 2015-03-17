@@ -510,38 +510,41 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
     ip->classes = NULL;
 }
 
+/**
+ *  Splits a string containing a separator like ':' into a linked list of
+ *  separate items,
+ *
+ *  @NOTE string can't contain backslashes '\' because currently they can only
+ *        be used to escape the separator, if separator needs to be included.
+ */
 Item *SplitString(const char *string, char sep)
- /* Splits a string containing a separator like :
-    into a linked list of separate items, */
 {
     Item *liststart = NULL;
-    char *before = xstrdup(string);
-    char *sp = before;      /* selection pointer */
-    char *chunk = before;   /* next chunk to insert into list */
-    char *start = before;   /* start of string to free */
+    char *start = xstrdup(string);
+    char *after = start;              /* pointer right after separator */
+    char *sp = start;                 /* pointer to separator */
+    char *chunk = start;              /* start of chunk to insert into list */
 
-    while ((sp = strchr(before, sep)) != NULL)
+    while ((sp = strchr(after, sep)) != NULL)
     {
-        if (sp != before && sp[-1] == '\\')
+        if (sp > chunk && sp[-1] == '\\')
         {
-            /* Escaped use of list separator; over-write the backslash
-             * we copied last time round the loop
-             */
+            /* Escaped use of list separator; over-write the backslash. */
             memmove(sp - 1, sp, strlen(sp) + 1);
-            before = sp;
+            after = sp;
             continue;
         }
-        else if (sp != before && sp[-1] != '\\')
-        {
-            *sp = '\0';
-            PrependItem(&liststart, chunk, NULL);
-        }
 
-        before = sp + 1;
+        assert((sp == chunk) ||
+               (sp != chunk && sp[-1] != '\\'));
+
+        *sp = '\0';
+        PrependItem(&liststart, chunk, NULL);
+        after = sp + 1;
         chunk = sp + 1;
     }
 
-    PrependItem(&liststart, chunk, "");
+    PrependItem(&liststart, chunk, NULL);
     free(start);
 
     return ReverseItemList(liststart);

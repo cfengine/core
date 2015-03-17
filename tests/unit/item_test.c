@@ -113,41 +113,122 @@ static void test_list_compare(void)
 static void test_split_string(void)
 {
     Item *actual = NULL, *expected = NULL;
-    bool result = false;
 
     actual = SplitString("foo", ':');
-    assert_string_equal(actual->name, "foo");
-    DeleteItemList(actual);
-    actual = NULL;
+    AppendItem(&expected, "foo", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
 
     actual = SplitString("foo:bar", ':');
     AppendItem(&expected, "foo", NULL);
     AppendItem(&expected, "bar", NULL);
-
-    result = ListsCompare(actual, expected);
-    assert_true(result);
-
-    DeleteItemList(expected);
-    DeleteItemList(actual);
-    actual = NULL;
-    expected = NULL;
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
 
     actual = SplitString("foo\\:bar", ':');
-    assert_string_equal(actual->name, "foo:bar");
-    DeleteItemList(actual);
-    actual = NULL;
+    AppendItem(&expected, "foo:bar", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
 
     actual = SplitString("foo:bar\\:baz", ':');
     AppendItem(&expected, "foo", NULL);
     AppendItem(&expected, "bar:baz", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
 
-    result = ListsCompare(actual, expected);
-    assert_true(result);
+    actual = SplitString("", ':');
+    AppendItem(&expected, "", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
 
-    DeleteItemList(expected);
-    DeleteItemList(actual);
-    actual = NULL;
-    expected = NULL;
+    actual = SplitString(":", ':');
+    AppendItem(&expected, "", NULL);
+    AppendItem(&expected, "", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString(":blah", ':');
+    AppendItem(&expected, "", NULL);
+    AppendItem(&expected, "blah", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("blah:", ':');
+    AppendItem(&expected, "blah", NULL);
+    AppendItem(&expected, "", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("blah::blue", ':');
+    AppendItem(&expected, "blah", NULL);
+    AppendItem(&expected, "", NULL);
+    AppendItem(&expected, "blue", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("\\:", ':');
+    AppendItem(&expected, ":", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("\\:blah", ':');
+    AppendItem(&expected, ":blah", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("blah\\:", ':');
+    AppendItem(&expected, "blah:", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("blah\\:\\:blue", ':');
+    AppendItem(&expected, "blah::blue", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("blah\\::blue", ':');
+    AppendItem(&expected, "blah:", NULL);
+    AppendItem(&expected, "blue", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    actual = SplitString("blah:\\:blue", ':');
+    AppendItem(&expected, "blah", NULL);
+    AppendItem(&expected, ":blue", NULL);
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
+    test_progress_end();
 }
 
 int main()

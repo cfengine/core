@@ -514,39 +514,72 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
  *  Splits a string containing a separator like ':' into a linked list of
  *  separate items,
  *
- *  @NOTE string can't contain backslashes '\' because currently they can only
- *        be used to escape the separator, if separator needs to be included.
+ *  @NOTE backslashes can be used to escape either the separator, or the
+ *        backslash itself, e.g. "\:" or "\\" (ofcourse proper C strings need
+ *        double backslash).
  */
 Item *SplitString(const char *string, char sep)
 {
     Item *liststart = NULL;
-    char *start = xstrdup(string);
-    char *after = start;              /* pointer right after separator */
-    char *sp = start;                 /* pointer to separator */
-    char *chunk = start;              /* start of chunk to insert into list */
 
-    while ((sp = strchr(after, sep)) != NULL)
+    size_t string_len = strlen(string);
+
+    /* Temporary buffer for each chunk we append. This has the maximum
+     * possible size we might possibly need. */
+    char *buf = xmalloc(string_len + 1);
+    size_t buf_len = 0;
+
+    /* We scan the string for separator or backslash. */
+    char sep2[3] = { sep, '\\', '\0' };
+    size_t z = 0;
+
+    while ((z = strcspn(string, sep2)) < string_len)
     {
-        if (sp > chunk && sp[-1] == '\\')
+        memcpy(&buf[buf_len], string, z);
+        buf_len += z;
+
+        if (string[z] == '\\')
         {
-            /* Escaped use of list separator; over-write the backslash. */
-            memmove(sp - 1, sp, strlen(sp) + 1);
-            after = sp;
+            /* Check next character after backslash, if it's backslash or
+             * separator then skip backslash, append character to buffer. */
+            if (string[z+1] == '\\' || string[z+1] == sep)
+            {
+                z++;
+            }
+
+            /* Append the single character to our buffer. */
+            buf[buf_len] = string[z];
+            buf_len++;
+
+            /* Find next backslash or separator. */
+            string     += z + 1;
+            string_len -= z + 1;
             continue;
         }
+        else                   /* separator was found, and it's not escaped */
+        {
+            assert(string[z] == sep);
+            assert((z == 0) ||
+                   (z > 0 && string[z-1] != '\\'));
+        }
 
-        assert((sp == chunk) ||
-               (sp != chunk && sp[-1] != '\\'));
+        /* Terminate buffer and add to Item list. */
+        buf[buf_len] = '\0';
+        PrependItem(&liststart, buf, NULL);
 
-        *sp = '\0';
-        PrependItem(&liststart, chunk, NULL);
-        after = sp + 1;
-        chunk = sp + 1;
+        /* Empty the buffer. */
+        buf_len = 0;
+        /* Start new search from after separator. */
+        string     += z + 1;
+        string_len -= z + 1;
     }
 
-    PrependItem(&liststart, chunk, NULL);
-    free(start);
+    memcpy(&buf[buf_len], string, z);
+    buf_len += z;
+    buf[buf_len] = '\0';
+    PrependItem(&liststart, buf, NULL);
 
+    free(buf);
     return ReverseItemList(liststart);
 }
 

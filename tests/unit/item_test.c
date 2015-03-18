@@ -110,6 +110,46 @@ static void test_list_compare(void)
     DeleteItemList(list2);
 }
 
+static void test_split_string(void)
+{
+    Item *actual = NULL, *expected = NULL;
+    bool result = false;
+
+    actual = SplitString("foo", ':');
+    assert_string_equal(actual->name, "foo");
+    DeleteItemList(actual);
+    actual = NULL;
+
+    actual = SplitString("foo:bar", ':');
+    AppendItem(&expected, "foo", NULL);
+    AppendItem(&expected, "bar", NULL);
+
+    result = ListsCompare(actual, expected);
+    assert_true(result);
+
+    DeleteItemList(expected);
+    DeleteItemList(actual);
+    actual = NULL;
+    expected = NULL;
+
+    actual = SplitString("foo\\:bar", ':');
+    assert_string_equal(actual->name, "foo:bar");
+    DeleteItemList(actual);
+    actual = NULL;
+
+    actual = SplitString("foo:bar\\:baz", ':');
+    AppendItem(&expected, "foo", NULL);
+    AppendItem(&expected, "bar:baz", NULL);
+
+    result = ListsCompare(actual, expected);
+    assert_true(result);
+
+    DeleteItemList(expected);
+    DeleteItemList(actual);
+    actual = NULL;
+    expected = NULL;
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -117,7 +157,8 @@ int main()
     {
         unit_test(test_prepend_item),
         unit_test(test_list_len),
-        unit_test(test_list_compare)
+        unit_test(test_list_compare),
+        unit_test(test_split_string)
     };
 
     return run_tests(tests);

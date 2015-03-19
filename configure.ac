@@ -1318,7 +1318,7 @@ AC_ARG_WITH(init-script, AS_HELP_STRING([--with-init-script=PATH],
             INIT_D_PATH="$withval"
         fi
         AC_SUBST([INIT_D_PATH])
-        AC_CONFIG_FILES([misc/init.d/cfengine3])
+        AC_CONFIG_FILES([misc/init.d/cfengine3], [chmod +x misc/init.d/cfengine3])
     fi
 ])
 AM_CONDITIONAL([WITH_INIT_D_SCRIPT], [test -n "$INIT_D_PATH"])

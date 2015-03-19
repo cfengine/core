@@ -51,10 +51,6 @@ TAR_OPTIONS = --owner=0 --group=0
 export TAR_OPTIONS
 
 
-DIST_SUBDIRS = libcompat libutils libcfnet libenv libpromises cf-agent cf-execd	\
-	cf-key cf-monitord cf-promises cf-runagent cf-serverd cf-upgrade ext	        \
-	examples tests
-
 # Set explicitly to avoid picking up {nova}/*.m4
 
 DIST_COMMON = README.md Makefile.am Makefile.in configure AUTHORS aclocal.m4 \

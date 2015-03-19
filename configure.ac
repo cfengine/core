@@ -41,11 +41,7 @@ dnl AM_INIT_AUTOMAKE.
 dnl
 AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
 
-define([revision], esyscmd([sh -c "(git rev-list -1 --abbrev-commit HEAD || echo unknown) | tr -d '\n'" 2>/dev/null]))dnl
-
-dnl
-dnl The version in the next line is the only one to set
-dnl
+define([revision], m4_esyscmd_s([git rev-list -1 --abbrev-commit HEAD]))
 
 _AM_SET_OPTION([tar-ustar])
 AM_INIT_AUTOMAKE(cfengine, 3.6.6.revision)

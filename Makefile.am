@@ -40,6 +40,9 @@ export TAR_OPTIONS
 
 EXTRA_DIST = ChangeLog INSTALL README.md LICENSE
 
+# Include all initscripts / systemd unit files
+EXTRA_DIST += misc
+
 docsdir = $(docdir)
 docs_DATA = README.md ChangeLog
 

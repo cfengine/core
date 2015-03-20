@@ -32,6 +32,11 @@ fi
 CFEXECD=$PREFIX/bin/cf-execd
 CFSERVD=$PREFIX/bin/cf-serverd
 CFMOND=$PREFIX/bin/cf-monitord
+
+CFEXECD_PIDFILE=$PREFIX/cf-execd.pid
+CFSERVD_PIDFILE=$PREFIX/cf-serverd.pid
+CFMOND_PIDFILE=$PREFIX/cf-monitord.pid
+
 CFENTERPRISE_INITD=$PREFIX/bin/cfengine3-nova-hub-init-d.sh
 
 ECHO=/bin/echo
@@ -178,7 +183,7 @@ case "$1" in
         # Debian/Ubuntu
         if [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
             $ECHO -n "Starting `basename $CFEXECD`: "
-            /sbin/start-stop-daemon --start --verbose --exec $CFEXECD
+            /sbin/start-stop-daemon --start --pidfile $CFEXECD_PIDFILE --verbose --exec $CFEXECD
             $TOUCH $LOCKDIR/`basename $CFEXECD`
         elif [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
             $ECHO -n "Starting `basename $CFEXECD`: "
@@ -214,7 +219,7 @@ case "$1" in
         # Debian/Ubuntu
         if [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
             $ECHO -n "Starting `basename $CFSERVD`: "
-            /sbin/start-stop-daemon --start --verbose --exec $CFSERVD
+            /sbin/start-stop-daemon --start --pidfile $CFSERVD_PIDFILE --verbose --exec $CFSERVD
             $TOUCH $LOCKDIR/`basename $CFSERVD`
         elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
             $ECHO -n "Starting `basename $CFSERVD`: "
@@ -250,7 +255,7 @@ case "$1" in
         # Debian/Ubuntu
         if [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
             $ECHO -n "Starting `basename $CFMOND`: "
-            /sbin/start-stop-daemon --start --verbose --exec $CFMOND
+            /sbin/start-stop-daemon --start --pidfile $CFMOND_PIDFILE --verbose --exec $CFMOND
             $TOUCH $LOCKDIR/`basename $CFMOND`
         elif [ "$RUN_CF_MONTIROD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
             $ECHO -n "Starting `basename $CFMOND`: "
@@ -300,14 +305,12 @@ case "$1" in
             fi
             # Debian/Ubuntu
             if [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-                if [ $cfexecd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFEXECD` ... "
-                    /sbin/start-stop-daemon -o --stop --retry 5 --name `basename $CFEXECD` || :
-                    if [ -f $LOCKDIR/`basename $CFEXECD` ]; then
-                        $RM $LOCKDIR/`basename $CFEXECD` || true
-                    fi
-                    $ECHO
+                $ECHO -n "Shutting down `basename $CFEXECD` ... "
+                /sbin/start-stop-daemon -o --stop --pidfile $CFEXECD_PIDFILE --retry 5 --name `basename $CFEXECD` || :
+                if [ -f $LOCKDIR/`basename $CFEXECD` ]; then
+                    $RM $LOCKDIR/`basename $CFEXECD` || true
                 fi
+                $ECHO
             elif [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
                 if [ $cfexecd_status ]; then
                     $ECHO -n "Shutting down `basename $CFEXECD` ... "
@@ -357,14 +360,12 @@ case "$1" in
             fi
             # Debian/Ubuntu
             if [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-                if [ $cfserverd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFSERVD` ... "
-                    /sbin/start-stop-daemon -o --stop --retry 5 --name `basename $CFSERVD` || :
-                    if [ -f $LOCKDIR/`basename $CFSERVD` ]; then
-                        $RM $LOCKDIR/`basename $CFSERVD` || true
-                    fi
-                    $ECHO
+                $ECHO -n "Shutting down `basename $CFSERVD` ... "
+                /sbin/start-stop-daemon -o --stop --pidfile $CFSERVD_PIDFILE --retry 5 --name `basename $CFSERVD` || :
+                if [ -f $LOCKDIR/`basename $CFSERVD` ]; then
+                    $RM $LOCKDIR/`basename $CFSERVD` || true
                 fi
+                $ECHO
             elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
                 if [ $cfserverd_status ]; then
                     $ECHO -n "Shutting down `basename $CFSERVD` ... "
@@ -414,14 +415,12 @@ case "$1" in
             fi
             # Debian/Ubuntu
             if [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-                if [ $cfmonitord_status ]; then
-                    $ECHO -n "Shutting down `basename $CFMOND` ... "
-                    /sbin/start-stop-daemon -o --stop --retry 5 --name `basename $CFMOND` || :
-                    if [ -f $LOCKDIR/`basename $CFMOND` ]; then
-                        $RM $LOCKDIR/`basename $CFMOND` || true
-                    fi
-                    $ECHO
+                $ECHO -n "Shutting down `basename $CFMOND` ... "
+                /sbin/start-stop-daemon -o --stop --pidfile $CFMOND_PIDFILE --retry 5 --name `basename $CFMOND` || :
+                if [ -f $LOCKDIR/`basename $CFMOND` ]; then
+                    $RM $LOCKDIR/`basename $CFMOND` || true
                 fi
+                $ECHO
             elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
                 if [ $cfmonitord_status ]; then
                     $ECHO -n "Shutting down `basename $CFMOND` ... "

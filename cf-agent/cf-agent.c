@@ -37,8 +37,6 @@
 #include <verify_users.h>
 #include <verify_services.h>
 #include <verify_storage.h>
-#include <verify_networks.h>
-#include <verify_interfaces.h>
 #include <verify_files.h>
 #include <verify_files_utils.h>
 #include <verify_vars.h>
@@ -77,10 +75,8 @@
 #include <buffer.h>
 #include <loading.h>
 #include <conn_cache.h>                 /* ConnCache_Init,ConnCache_Destroy */
-#include <../libenv/unix_iface.h>
 
 #include <mod_common.h>
-#include <routing_services.h>
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
@@ -112,9 +108,6 @@ static const char *const AGENT_TYPESEQUENCE[] =
     "vars",
     "defaults",
     "classes",                  /* Maelstrom order 2 */
-    "interfaces",
-    "routes",
-    "addresses",
     "users",
     "files",
     "packages",
@@ -1422,30 +1415,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     {
         result = VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("interfaces", pp->parent_promise_type->name) == 0)
-    {
-        result = VerifyInterfacePromise(ctx, pp);
-        if (result != PROMISE_RESULT_SKIPPED)
-        {
-            EndMeasurePromise(start, pp);
-        }
-    }
-    else if (strcmp("routes", pp->parent_promise_type->name) == 0)
-    {
-        result = VerifyRoutePromise(ctx, pp);
-        if (result != PROMISE_RESULT_SKIPPED)
-        {
-            EndMeasurePromise(start, pp);
-        }
-    }
-    else if (strcmp("addresses", pp->parent_promise_type->name) == 0)
-    {
-        result = VerifyArpPromise(ctx, pp);
-        if (result != PROMISE_RESULT_SKIPPED)
-        {
-            EndMeasurePromise(start, pp);
-        }
-    }
     else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
         result = VerifyProcessesPromise(ctx, pp);
@@ -1621,18 +1590,6 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
 #endif /* !__MINGW32__ */
         break;
 
-    case TYPE_SEQUENCE_INTERFACES:
-
-        InitializeRoutingServices(policy, ctx);
-        ROUTING_ACTIVE = NewRoutingState();
-
-        if (QueryRoutingServiceState(ctx, ROUTING_ACTIVE))
-        {
-            KeepOSPFLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
-            KeepBGPLinkServiceControlPromises(ROUTING_POLICY, ROUTING_ACTIVE);
-        }
-        break;
-
     default:
         break;
     }
@@ -1664,12 +1621,6 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
     case TYPE_SEQUENCE_PACKAGES:
         ExecuteScheduledPackages(ctx);
         CleanScheduledPackages();
-        break;
-
-    case TYPE_SEQUENCE_INTERFACES:
-        WriteNativeInterfacesFile();
-        DeleteRoutingState(ROUTING_ACTIVE);
-        GetInterfacesInfo(ctx);
         break;
 
     default:

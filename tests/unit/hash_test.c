@@ -52,7 +52,7 @@ void tests_setup()
             initialized = 0;
             return;
         }
-        BN_set_word(bn, 3);
+        BN_set_word(bn, RSA_F4);
         RSA_generate_key_ex(rsa, 1024, bn, NULL);
         BN_free(bn);
     }

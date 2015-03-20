@@ -5,9 +5,6 @@ Cfengine Propulsion Lab
         New features:
         - compile time option (--with-statedir) to
           override the default state/ directory path.
-        - Networking: intefaces, addresses, routes promises
-        - database promises reworked, and SQLite support added
-        - guest_environments promises reworked
         - services/methods get a default
           bundle name -> method|service_Canonify($(this.promiser)) -
           must be in the same namespace as caller

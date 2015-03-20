@@ -38,7 +38,7 @@
 #define ATTR        22
 
 Item *ALL_INCOMING = NULL;
-Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL, *MON_RAW4 = NULL, *MON_RAW6 = NULL;
+Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
 /*******************************************************************/
 /* Anomaly                                                         */
@@ -74,8 +74,6 @@ static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum 
     {"3306", "mysql", ob_mysql_in, ob_mysql_out},
     {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
     {"631", "ipp", ob_ipp_in, ob_ipp_out},
-    {"89", "ospf-raw", ob_ospf_in, ob_ospf_out},
-    {"179", "bgp", ob_bgp_in, ob_bgp_out},
 };
 
 static const char *const VNETSTAT[] =
@@ -112,10 +110,8 @@ void MonNetworkInit(void)
     DeleteItemList(MON_TCP6);
     DeleteItemList(MON_UDP4);
     DeleteItemList(MON_UDP6);
-    DeleteItemList(MON_RAW4);
-    DeleteItemList(MON_RAW6);
 
-    MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = MON_RAW4 = MON_RAW6 = NULL;
+    MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
 
     char vbuff[CF_BUFSIZE];
     const char* const statedir = GetStateDir();
@@ -195,7 +191,7 @@ void MonNetworkGatherData(double *cf_this)
     char *sp;
     int i;
     enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
-    enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6, cfn_raw4, cfn_raw6 } packet = cfn_tcp4;
+    enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
 
     for (i = 0; i < ATTR; i++)
     {
@@ -291,12 +287,12 @@ void MonNetworkGatherData(double *cf_this)
 
         // Line by line state in modern/linux output
 
-        if (strncmp(vbuff,"udp6",4) == 0)  // Backwards compat
+        if (strncmp(vbuff,"udp6",4) == 0)
         {
             packet = cfn_udp6;
             type = cfn_new;
         }
-        else if (strncmp(vbuff,"tcp6",4) == 0) // Backwards compat
+        else if (strncmp(vbuff,"tcp6",4) == 0)
         {
             packet = cfn_tcp6;
             type = cfn_new;
@@ -306,14 +302,9 @@ void MonNetworkGatherData(double *cf_this)
             packet = cfn_udp4;
             type = cfn_new;
         }
-        else if (strncmp(vbuff,"tcp",3) == 0) // New kernel does not distinguish 4/6
+        else if (strncmp(vbuff,"tcp",3) == 0)
         {
             packet = cfn_tcp4;
-            type = cfn_new;
-        }
-        else if (strncmp(vbuff,"raw",3) == 0)
-        {
-            packet = cfn_raw4;
             type = cfn_new;
         }
 
@@ -322,24 +313,6 @@ void MonNetworkGatherData(double *cf_this)
         switch (type)
         {
         case cfn_new:  sscanf(vbuff, "%*s %*s %*s %s %s", local, remote);  /* linux-like */
-
-            if (strstr(local,"::")) // this is ipv6 (new kernel detection needs this)
-            {
-                switch (packet)
-                {
-                case cfn_tcp4:
-                    packet = cfn_tcp6;
-                    break;
-                case cfn_udp4:
-                    packet = cfn_udp6;
-                    break;
-                case cfn_raw4:
-                    packet = cfn_raw6;
-                    break;
-                default:
-                    break;
-                }
-            }
             break;
 
         case cfn_old:
@@ -384,12 +357,6 @@ void MonNetworkGatherData(double *cf_this)
                 break;
             case cfn_tcp6:
                 IdempPrependItem(&MON_TCP6, localport, local);
-                break;
-            case cfn_raw4:
-                IdempPrependItem(&MON_RAW4, localport, local);
-                break;
-            case cfn_raw6:
-                IdempPrependItem(&MON_RAW6, localport, local);
                 break;
             default:
                 break;

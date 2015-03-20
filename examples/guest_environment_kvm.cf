@@ -10,7 +10,7 @@ body common control
 }
 
 
-bundle agent kvm_create
+bundle agent kvm_create 
 {
 
   guest_environments:
@@ -77,10 +77,9 @@ body environment_resources mykvm(name, arch, cpu_count, mem_kb, disk_file)
       <source file='$(disk_file)'/>
       <target dev='vda' bus='virtio'/>
     </disk>
-   <interface type='network'>
-     <source network='default'/>
-     <mac address='00:24:D7:A1:0E:44'/>
-   </interface>
+    <interface type='network'>
+      <source network='default'/>
+    </interface>
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' autoport='yes'/>
   </devices>

@@ -32,9 +32,8 @@ static const ConstraintSyntax database_server_constraints[] =
     ConstraintSyntaxNewString("db_server_owner", "", "User name for database connection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("db_server_password", "", "Clear text password for database connection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("db_server_host", "", "Hostname or address for connection to database, blank means localhost", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("db_server_type", "postgres,mysql,sqlite", "The dialect of the database server. Default value: none", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("db_server_type", "postgres,mysql", "The dialect of the database server. Default value: none", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("db_server_connection_db", "", "The name of an existing database to connect to in order to create/manage other databases", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("db_embedded_directory_path", "", "The root directory in which to store embedded database files", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

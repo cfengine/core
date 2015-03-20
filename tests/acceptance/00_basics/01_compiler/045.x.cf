@@ -6,7 +6,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+      bundlesequence  => { default("$(this.promise_filename)") };   
       version => "1.0";
 }
 
@@ -29,7 +29,7 @@ bundle agent test
 {
   guest_environments:
       "host1"
-      guest_state => "still_none",
+      environment_host => "...com._",
       classes => whatever("ok");
 }
 

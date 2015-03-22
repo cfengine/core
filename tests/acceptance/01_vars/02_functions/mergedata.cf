@@ -36,6 +36,8 @@ bundle agent test
 
       "load_$(X)" data => mergedata("load$(X)");
       "load_$(X)_$(Y)" data => mergedata("load$(X)", "load$(Y)");
+      "wrap_key_$(X)" data => mergedata('{ "wrapkey": load$(X) }');
+      "wrap_array_$(X)" data => mergedata('[ load$(X) ]');
 
       "bad1" data => mergedata(missingvar);
       "bad2" data => mergedata(load1, missingvar);
@@ -84,8 +86,22 @@ bundle agent check
       "expected_5_4" string => '{"mykey":["myvalue"],"lastkey!":[],"anotherkey":"anothervalue"}';
       "expected_5_5" string => '{"mykey":["myvalue"],"lastkey!":[],"anotherkey":"anothervalue"}';
 
+      "expected_wrapped_key_1" string => '{"wrapkey":[1,2,3]}';
+      "expected_wrapped_key_2" string => '{"wrapkey":["element1","element2","element3"]}';
+      "expected_wrapped_key_3" string => '{"wrapkey":{"x":"y"}}';
+      "expected_wrapped_key_4" string => '{"wrapkey":[]}';
+      "expected_wrapped_key_5" string => '{"wrapkey":{"mykey":["myvalue"],"lastkey!":[],"anotherkey":"anothervalue"}}';
+
+      "expected_wrapped_array_1" string => '[[1,2,3]]';
+      "expected_wrapped_array_2" string => '[["element1","element2","element3"]]';
+      "expected_wrapped_array_3" string => '[{"x":"y"}]';
+      "expected_wrapped_array_4" string => '[[]]';
+      "expected_wrapped_array_5" string => '[{"mykey":["myvalue"],"lastkey!":[],"anotherkey":"anothervalue"}]';
+
       "actual_$(X)_$(Y)" string => format("%S", "test.load_$(X)_$(Y)");
       "actual_$(X)" string => format("%S", "test.load_$(X)");
+      "actual_wrapped_key_$(X)" string => format("%S", "test.wrap_key_$(X)");
+      "actual_wrapped_array_$(X)" string => format("%S", "test.wrap_array_$(X)");
 
   classes:
       "not_ok_$(X)_$(Y)" not => strcmp("$(actual_$(X)_$(Y))",
@@ -94,12 +110,24 @@ bundle agent check
       "not_ok_$(X)" not => strcmp("$(actual_$(X))",
                                   "$(expected_$(X))");
 
+      "not_ok_wrapped_key_$(X)" not => strcmp("$(actual_wrapped_key_$(X))",
+                                             "$(expected_wrapped_key_$(X))");
+
+      "not_ok_wrapped_array_$(X)" not => strcmp("$(actual_wrapped_array_$(X))",
+                                               "$(expected_wrapped_array_$(X))");
+
       "ok" not => classmatch("not_ok_.*");
 
   reports:
     DEBUG::
       "$(X): actual $(actual_$(X)) != $(X) expected $(expected_$(X))"
        ifvarclass => "not_ok_$(X)";
+
+      "$(X): actual wrap key $(actual_wrapped_key_$(X)) != $(X) expected wrapped key $(expected_wrapped_key_$(X))"
+       ifvarclass => "not_ok_wrapped_key_$(X)";
+
+      "$(X): actual wrap array $(actual_wrapped_array_$(X)) != $(X) expected wrapped array $(expected_wrapped_array_$(X))"
+       ifvarclass => "not_ok_wrapped_array_$(X)";
 
       "$(X)+$(Y): actual $(actual_$(X)_$(Y)) != $(X)+$(Y) expected $(expected_$(X)_$(Y))"
        ifvarclass => "not_ok_$(X)_$(Y)";

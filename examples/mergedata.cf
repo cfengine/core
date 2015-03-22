@@ -43,7 +43,12 @@ bundle agent test
       "merged_d1_array1" data => mergedata("d1", "array1");
       "merged_d2_array2" data => mergedata("d2", "array2");
 
+      "merged_d1_wrap_array_d2" data => mergedata("d1", "[ d2 ]");
+      "merged_d1_wrap_map_d2" data => mergedata("d1", '{ "newkey": d2 }');
+
       "merged_d1_d2_str" string => format("merging %S with %S produced %S", d1, d2, merged_d1_d2);
+      "merged_d1_wrap_array_d2_str" string => format("merging %S with wrapped [ %S ] produced %S", d1, d2, merged_d1_wrap_array_d2);
+      "merged_d1_wrap_map_d2_str" string => format('merging %S with wrapped { "newkey": %S produced %S', d1, d2, merged_d1_wrap_map_d2);
       "merged_d1_d3_str" string => format("merging %S with %S produced %S", d1, d3, merged_d1_d3);
       "merged_d3_list1_str" string => format("merging %S with %S produced %S", d3, list1, merged_d3_list1);
 
@@ -51,6 +56,8 @@ bundle agent test
       "merged_d2_array2_str" string => format("merging %S with %s produced %S", d2, array2, merged_d2_array2);
   reports:
       "$(merged_d1_d2_str)";
+      "$(merged_d1_wrap_array_d2_str)";
+      "$(merged_d1_wrap_map_d2_str)";
       "$(merged_d1_d3_str)";
       "$(merged_d3_list1_str)";
       "$(merged_d1_array1_str)";
@@ -87,6 +94,8 @@ bundle agent cmerge(varlist)
 #+begin_src example_output
 #@ ```
 #@ R: merging {"a":[1,2,3],"b":[]} with {"b":[4,5,6]} produced {"a":[1,2,3],"b":[4,5,6]}
+#@ R: merging {"a":[1,2,3],"b":[]} with wrapped [ {"b":[4,5,6]} ] produced {"a":[1,2,3],"b":[],"0":{"b":[4,5,6]}}
+#@ R: merging {"a":[1,2,3],"b":[]} with wrapped { "newkey": {"b":[4,5,6]} produced {"a":[1,2,3],"b":[],"newkey":{"b":[4,5,6]}}
 #@ R: merging {"a":[1,2,3],"b":[]} with [4,5,6] produced {"a":[1,2,3],"b":[],"0":4,"1":5,"2":6}
 #@ R: merging [4,5,6] with { "element1", "element2" } produced [4,5,6,"element1","element2"]
 #@ R: merging {"a":[1,2,3],"b":[]} with array1 produced {"a":[1,2,3],"b":[],"mykey":["array_element1","array_element2"]}

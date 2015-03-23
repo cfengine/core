@@ -1299,7 +1299,7 @@ see.  Use it by executing `turn-on-eldoc-mode'."
          ;; In the main syntax-table, \ is marked as a punctuation, because
          ;; of its use in DOS-style directory separators.  Here we try to
          ;; recognize the cases where \ is used as an escape inside strings.
-         (syntax-propertize-rules '("\\(\\(?:\\\\\\)+\\)\"" (1 "\\"))))
+         (syntax-propertize-rules ("\\(\\(?:\\\\\\)+\\)\"" (1 "\\"))))
 
     ;; Backwards compatibility without `syntax-propertize-function'.
     (setq font-lock-defaults

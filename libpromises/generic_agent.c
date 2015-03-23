@@ -101,8 +101,8 @@ static void SanitizeEnvironment()
 
 ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len)
 {
-    *digest = HASH_METHOD_MD5;
-    *digest_len = CF_MD5_LEN;
+    *digest = HASH_METHOD_SHA256;
+    *digest_len = CF_SHA256_LEN;
 }
 
 void MarkAsPolicyServer(EvalContext *ctx)

@@ -243,11 +243,11 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     printf("Making a key pair for cfengine, please wait, this could take a minute...\n");
 
 #ifdef OPENSSL_NO_DEPRECATED
-    BN_set_word(rsa_bignum, 35);
+    BN_set_word(rsa_bignum, RSA_F4);
 
     if (!RSA_generate_key_ex(pair, 2048, rsa_bignum, NULL))
 #else
-    pair = RSA_generate_key(2048, 35, NULL, NULL);
+    pair = RSA_generate_key(2048, 65537, NULL, NULL);
 
     if (pair == NULL)
 #endif

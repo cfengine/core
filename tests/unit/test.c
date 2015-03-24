@@ -53,3 +53,13 @@ void _assert_double_close(double left, double right, const char *const file, con
     }
 }
 
+void test_progress()
+{
+    putchar('.');
+    fflush(stdout);
+}
+void test_progress_end()
+{
+    putchar('\n');
+    fflush(stdout);
+}

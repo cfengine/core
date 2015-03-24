@@ -54,7 +54,7 @@ static bool init_test_server()
     int ret;
     RSA *key = RSA_new();
     BIGNUM *bignum = BN_new();
-    BN_set_word(bignum, 17);
+    BN_set_word(bignum, RSA_F4);
     ret = RSA_generate_key_ex(key, 1024, bignum, NULL);
     if (!ret)
     {
@@ -451,7 +451,7 @@ static bool init_test_client()
     int ret;
     RSA *key = RSA_new();
     BIGNUM *bignum = BN_new();
-    BN_set_word(bignum, 17);
+    BN_set_word(bignum, RSA_F4);
     ret = RSA_generate_key_ex(key, 1024, bignum, NULL);
     if (!ret)
     {

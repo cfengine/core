@@ -1151,6 +1151,26 @@ static void OSClasses(EvalContext *ctx)
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
     SetFlavour(ctx, context);
 
+#ifdef __FreeBSD__
+    /*
+     * Define a hard class with just the version major number on FreeBSD
+     *
+     * For example, when being run on either FreeBSD 10.0 or 10.1 a class
+     * called freebsd_10 will be defined
+     */
+    for (char *sp = vbuff; *sp != '\0'; sp++)
+    {
+        if (*sp == '.')
+        {
+            *sp = '\0';
+            break;
+        }
+    }
+
+    snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
+    EvalContextClassPutHard(ctx, context, "source=agent,derived-from=sys.flavour");
+#endif
+
 #endif
 
     GetCPUInfo(ctx);

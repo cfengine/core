@@ -170,7 +170,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         "Apparent body '%s' was undeclared or could "
                         "have incorrect args, but used in a promise near "
                         "line %zu of %s (possible unquoted literal value)",
-                        RvalScalarValue(cp->rval), pp->offset.line,
+                        RvalScalarValue(cp->rval),pp->offset.line,
                         PromiseGetBundle(pp)->source_path);
                 }
                 else
@@ -216,7 +216,8 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     }
                 }
 
-                if (!callee)
+                if (!callee && (strcmp("ifvarclass", cp->lval) != 0 &&
+                                strcmp("if", cp->lval) != 0))
                 {
                     Log(LOG_LEVEL_ERR,
                         "Apparent bundle '%s' was undeclared, but "

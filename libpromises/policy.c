@@ -1312,7 +1312,7 @@ PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
 
 /*******************************************************************/
 
-Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes)
+Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses)
 {
     assert(promiser && "Missing promiser");
     assert(type && "Missing promise type");
@@ -1343,6 +1343,11 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     if (strcmp("packages", type->name) == 0)
     {
         PromiseAppendConstraint(pp, "package_method", RvalNew("generic", RVAL_TYPE_SCALAR), true);
+    }
+
+    if (NULL != varclasses)
+    {
+        PromiseAppendConstraint(pp, "ifvarclass", RvalNew(varclasses, RVAL_TYPE_SCALAR), true);
     }
 
     return pp;
@@ -1425,6 +1430,16 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
         Constraint *old_cp = SeqAt(pp->conlist, i);
         if (strcmp(old_cp->lval, lval) == 0)
         {
+            if (strcmp(old_cp->lval, "ifvarclass") == 0 ||
+                strcmp(old_cp->lval, "if") == 0)
+            {
+                Buffer *grow = BufferNew();
+                BufferAppendF(grow, "(%s).", old_cp->rval);
+                BufferAppend(grow, RvalScalarValue(rval), strlen(RvalScalarValue(rval)));
+                rval.item = xstrdup(BufferData(grow)); // TODO: will this leak?
+
+                BufferDestroy(grow);
+            }
             SeqSet(pp->conlist, i, cp);
             return cp;
         }
@@ -2049,7 +2064,7 @@ static Promise *PromiseTypeAppendPromiseJson(PromiseType *promise_type, JsonElem
 {
     const char *promiser = JsonObjectGetAsString(json_promise, "promiser");
 
-    Promise *promise = PromiseTypeAppendPromise(promise_type, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+    Promise *promise = PromiseTypeAppendPromise(promise_type, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
 
     JsonElement *json_attributes = JsonObjectGetAsArray(json_promise, "attributes");
     for (size_t i = 0; i < JsonLength(json_attributes); i++)

@@ -116,6 +116,7 @@ arrow      ->
 qstring        \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 
 class          [.|&!()a-zA-Z0-9_\200-\377:]+::
+varclass       (\"[^"]*\"|\'[^"]*\')::
 
 promise_type   [a-zA-Z_]+:
 
@@ -141,6 +142,13 @@ promise_type   [a-zA-Z_]+:
                               free(P.currentclasses);
                               P.currentclasses = NULL;
                           }
+
+                          if (P.currentvarclasses != NULL)
+                          {
+                              free(P.currentvarclasses);
+                              P.currentvarclasses = NULL;
+                          }
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:bundle %d\n", P.line_pos);
                           return BUNDLE;
@@ -154,6 +162,13 @@ promise_type   [a-zA-Z_]+:
                               free(P.currentclasses);
                               P.currentclasses = NULL;
                           }
+
+                          if (P.currentvarclasses != NULL)
+                          {
+                              free(P.currentvarclasses);
+                              P.currentvarclasses = NULL;
+                          }
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:body %d\n", P.line_pos);
                           return BODY;
@@ -197,6 +212,33 @@ promise_type   [a-zA-Z_]+:
                           return ARROW;
                       }
 
+{varclass}            {
+                          char *tmp = NULL;
+                        
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:varclass %s %d\n", yytext, P.line_pos);
+
+                          tmp = xstrdup(yytext+1); // remove leading quote
+                          tmp[yyleng-4] = '\0'; // remove tail quote plus ::
+
+                          if (P.currentclasses != NULL)
+                          {
+                              free(P.currentclasses);
+                              P.currentclasses = NULL;
+                          }
+
+                          if (P.currentvarclasses != NULL)
+                          {
+                              free(P.currentvarclasses);
+                              P.currentvarclasses = NULL;
+                          }
+
+                          P.currentvarclasses = xstrdup(tmp);
+
+                          free(tmp);
+                          return CLASS;
+                      }
+
 {class}               {
                           char *tmp = NULL;
                         
@@ -209,6 +251,13 @@ promise_type   [a-zA-Z_]+:
                           if (P.currentclasses != NULL)
                           {
                               free(P.currentclasses);
+                              P.currentclasses = NULL;
+                          }
+
+                          if (P.currentvarclasses != NULL)
+                          {
+                              free(P.currentvarclasses);
+                              P.currentvarclasses = NULL;
                           }
 
                           P.currentclasses = xstrdup(tmp);
@@ -232,6 +281,12 @@ promise_type   [a-zA-Z_]+:
                           {
                               free(P.currentclasses);
                               P.currentclasses = NULL;
+                          }
+
+                          if (P.currentvarclasses != NULL)
+                          {
+                              free(P.currentvarclasses);
+                              P.currentvarclasses = NULL;
                           }
 
                           free(tmp);

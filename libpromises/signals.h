@@ -30,6 +30,9 @@
 // check whether the running daemon should terminate after having received a signal.
 bool IsPendingTermination(void);
 
+bool ReloadConfigRequested(void);
+void ClearRequestReloadConfig();
+
 void MakeSignalPipe(void);
 int GetSignalPipe(void);
 void HandleSignalsForDaemon(int signum);

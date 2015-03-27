@@ -352,7 +352,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     WritePID("cf-execd.pid");
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
-    signal(SIGHUP, SIG_IGN);
+    signal(SIGHUP, HandleSignalsForDaemon);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
@@ -474,12 +474,25 @@ static Reload CheckNewPromises(GenericAgentConfig *config)
 
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
 
+    bool reload_config = false;
+
     if (config->agent_specific.daemon.last_validated_at < validated_at)
     {
+        Log(LOG_LEVEL_VERBOSE, "New promises detected...");
+        reload_config = true;
+    }
+    if (ReloadConfigRequested())
+    {
+        Log(LOG_LEVEL_VERBOSE, "Force reload of inputs files...");
+        reload_config = true;
+    }
+
+    if (reload_config)
+    {
+        ClearRequestReloadConfig();
+
         /* Rereading policies now, so update timestamp. */
         config->agent_specific.daemon.last_validated_at = validated_at;
-
-        Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
         if (GenericAgentArePromisesValid(config))
         {

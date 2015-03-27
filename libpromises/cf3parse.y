@@ -766,6 +766,12 @@ selection:             selection_id                         /* BODY ONLY */
                                            {
                                                cp = BodyAppendConstraint(P.currentbody, P.lval, RvalCopy(P.rval), P.currentclasses, P.references_body);
                                            }
+
+                                           if (P.currentvarclasses != NULL)
+                                           {
+                                               ParseError("Body attributes can't be put under a variable class '%s'", P.currentvarclasses);
+                                           }
+
                                            cp->offset.line = P.line_no;
                                            cp->offset.start = P.offsets.last_id;
                                            cp->offset.end = P.offsets.current;

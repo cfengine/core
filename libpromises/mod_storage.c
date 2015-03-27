@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax volume_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewBool("check_foreign", "true/false verify storage that is mounted from a foreign system on this host. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("freespace", "[0-9]+[MBkKgGmb%]", "Absolute or percentage minimum disk space that should be available before warning", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("sensible_size", CF_VALRANGE, "Minimum size in bytes that should be used on a sensible-looking storage device", SYNTAX_STATUS_NORMAL),
@@ -40,6 +41,7 @@ static const BodySyntax volume_body = BodySyntaxNew("volume", volume_constraints
 
 static const ConstraintSyntax mount_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewBool("edit_fstab", "true/false add or remove entries to the file system table (\"fstab\"). Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("mount_type", "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("mount_source", CF_ABSPATHRANGE, "Path of remote file system to mount", SYNTAX_STATUS_NORMAL),

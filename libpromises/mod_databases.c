@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax database_server_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("db_server_owner", "", "User name for database connection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("db_server_password", "", "Clear text password for database connection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("db_server_host", "", "Hostname or address for connection to database, blank means localhost", SYNTAX_STATUS_NORMAL),

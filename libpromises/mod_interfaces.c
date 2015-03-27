@@ -29,6 +29,7 @@
 
 static const ConstraintSyntax linkstate_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("bonding", "balance-rr,active-backup,balance-xor,broadcast,802.3ad,balance-tlb,balance-alb", "The Link Aggregation Control Protocol is enabled to bond interfaces", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("manager", "cfengine,native,nativefirst", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("state", "up,down", "Status of interface", SYNTAX_STATUS_NORMAL),
@@ -43,6 +44,8 @@ static const ConstraintSyntax linkstate_constraints[] =
 
 static const ConstraintSyntax linkservice_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
+
     // OSPF
 
     ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
@@ -71,6 +74,7 @@ static const ConstraintSyntax linkservice_constraints[] =
 
 static const ConstraintSyntax tunnel_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewInt("tunnel_id", CF_VALRANGE, "Tunnel identifier number (VxLAN VNI etc)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_address", CF_IPRANGE, "Tunnel local management/loopback address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tunnel_multicast_group", CF_IPRANGE, "Authentication digest for interface", SYNTAX_STATUS_NORMAL),
@@ -106,6 +110,7 @@ static const ConstraintSyntax interface_constraints[] =
 
 static const ConstraintSyntax reachable_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("gateway_ip", CF_ANYSTRING, "IP address on gateway to next hop", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("gateway_interface", CF_ANYSTRING, "Interface name of gateway to next hop", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("delete_route", "If this route exists, remove it", SYNTAX_STATUS_NORMAL),

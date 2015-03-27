@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax printfile_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("file_to_print", CF_ABSPATHRANGE, "Path name to the file that is to be sent to standard output", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("number_of_lines", CF_VALRANGE, "Integer maximum number of lines to print from selected file", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

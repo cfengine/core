@@ -80,6 +80,7 @@ static bool ActionCheck(const Body *body, Seq *errors)
 
 static const ConstraintSyntax action_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("action_policy", "fix,warn,nop", "Whether to repair or report about non-kept promises", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ifelapsed", CF_VALRANGE, "Number of minutes before next allowed assessment of promise. Default value: control body value", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("expireafter", CF_VALRANGE, "Number of minutes before a repair action is interrupted and retried. Default value: control body value", SYNTAX_STATUS_NORMAL),
@@ -103,6 +104,7 @@ static const BodySyntax action_body = BodySyntaxNew("action", action_constraints
 
 static const ConstraintSyntax classes_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("scope", "namespace,bundle", "Scope of the contexts set by this body", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("promise_repaired", CF_IDRANGE, "A list of classes to be defined globally", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("repair_failed", CF_IDRANGE, "A list of classes to be defined globally", SYNTAX_STATUS_NORMAL),

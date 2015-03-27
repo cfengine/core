@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax package_method_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("package_add_command", CF_PATHRANGE, "Command to install a package to the system", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("package_arch_regex", "", "Regular expression with one backreference to extract package architecture string", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("package_changes", "individual,bulk", "Menu option - whether to group packages into a single aggregate command", SYNTAX_STATUS_NORMAL),

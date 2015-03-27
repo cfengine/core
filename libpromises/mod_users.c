@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax password_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewOption("format", "plaintext,hash", "The format of the given password, either plaintext or hash", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("data", "", "Password", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax service_method_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("service_args", "", "Parameters for starting the service as command", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("service_autostart_policy", "none,boot_time,on_demand", "Should the service be started automatically by the OS", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBundle("service_bundle", "A bundle reference with two arguments (service_name,args) used if the service type is generic", SYNTAX_STATUS_NORMAL),

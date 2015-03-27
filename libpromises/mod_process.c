@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax process_count_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("in_range_define", "", "List of classes to define if the matches are in range", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("match_range", CF_VALRANGE, "Integer range for acceptable number of matches for this process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("out_of_range_define", "", "List of classes to define if the matches are out of range", SYNTAX_STATUS_NORMAL),
@@ -38,6 +39,7 @@ static const BodySyntax process_count_body = BodySyntaxNew("process_count", proc
 
 static const ConstraintSyntax process_select_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewString("command", "", "Regular expression matching the command/cmd field of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("pid", CF_VALRANGE, "Range of integers matching the process id of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("pgid", CF_VALRANGE, "Range of integers matching the parent group id of a process", SYNTAX_STATUS_NORMAL),

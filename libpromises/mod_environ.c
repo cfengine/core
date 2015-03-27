@@ -28,6 +28,7 @@
 
 static const ConstraintSyntax environment_resources_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewInt("env_cpus", CF_VALRANGE, "Number of virtual CPUs in the environment", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewInt("env_memory", CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewInt("env_disk", CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)", SYNTAX_STATUS_REMOVED),
@@ -38,6 +39,7 @@ static const ConstraintSyntax environment_resources_constraints[] =
 
 static const ConstraintSyntax guest_details_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewInt("guest_cpus", CF_VALRANGE, "Number of virtual CPUs in the environment", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("guest_memory", CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("guest_disk", CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)", SYNTAX_STATUS_NORMAL),
@@ -55,6 +57,7 @@ static const BodySyntax guest_details_body = BodySyntaxNew("guest_details", gues
 
 static const ConstraintSyntax environment_interface_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("env_addresses", "", "The IP addresses of the environment's network interfaces is deprecated", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewString("env_name", "", "The hostname of the virtual environment is deprecated - use the promiser", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewString("env_network", "", "The hostname of the virtual network is deprecated", SYNTAX_STATUS_REMOVED),

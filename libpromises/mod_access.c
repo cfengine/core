@@ -56,6 +56,7 @@ static bool AccessParseTreeCheck(const Promise *pp, Seq *errors);
 
 static const ConstraintSyntax report_data_select_constraints[] =
 {
+    CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewStringList("classes_include", CF_ANYSTRING, "List of regex filters for class names to be included into class report", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewStringList("classes_exclude", CF_ANYSTRING, "List of regex filters for class names to be excluded from class report", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewStringList("variables_include", CF_ANYSTRING, "List of regex filters for variable full qualified path to be included into variables report", SYNTAX_STATUS_REMOVED),

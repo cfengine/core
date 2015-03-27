@@ -34,10 +34,11 @@ bundle agent test
       ifvarclass => "$(sys.os)";
     any::
       "s2" string => "any hello";
-    "any"::
+    'any'::
       "s3" string => "string hello";
     "$(sys.os)"::
       "s4" string => "variable context hello!!!";
+      "s4_2" string => "variable context hello!!!";
     "$(sys.os).any"::
       "s5" string => "compound variable context hello!!!";
     "not$(sys.os)"::
@@ -63,6 +64,7 @@ hello, this is OS linux
 any hello
 string hello
 variable context hello!!!
+variable context hello!!!
 compound variable context hello!!!
 6
 augmented variable context hello!!!
@@ -76,6 +78,7 @@ $(test.s1)
 $(test.s2)
 $(test.s3)
 $(test.s4)
+$(test.s4_2)
 $(test.s5)
 $(test.s6)
 $(test.s7)

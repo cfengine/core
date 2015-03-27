@@ -1434,8 +1434,9 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
                 strcmp(old_cp->lval, "if") == 0)
             {
                 Buffer *grow = BufferNew();
-                BufferAppendF(grow, "(%s).", old_cp->rval);
+                BufferAppendF(grow, "(%s).(", old_cp->rval);
                 BufferAppend(grow, RvalScalarValue(rval), strlen(RvalScalarValue(rval)));
+                BufferAppendChar(grow, ')');
                 rval.item = xstrdup(BufferData(grow)); // TODO: will this leak?
 
                 BufferDestroy(grow);

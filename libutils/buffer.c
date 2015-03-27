@@ -245,6 +245,16 @@ void BufferAppendString(Buffer *buffer, const char *str)
     buffer->buffer[buffer->used] = '\0';
 }
 
+void BufferTrimToMaxLength(Buffer *buffer, unsigned int max)
+{
+    if (buffer->used > max)
+    {
+        buffer->used = max;
+        // no need to call ExpandIfNeeded
+        buffer->buffer[buffer->used] = '\0';
+    }
+}
+
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
     assert(buffer);

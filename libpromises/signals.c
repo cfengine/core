@@ -26,11 +26,22 @@
 
 static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 
+static bool RELOAD_CONFIG = false; /* GLOBAL_X */
 /********************************************************************/
 
 bool IsPendingTermination(void)
 {
     return PENDING_TERMINATION;
+}
+
+bool IsRequestReloadConfig(void)
+{
+    return RELOAD_CONFIG;
+}
+
+void ClearRequestReloadConfig()
+{
+    RELOAD_CONFIG = false;
 }
 
 /********************************************************************/
@@ -170,6 +181,9 @@ void HandleSignalsForDaemon(int signum)
         break;
     case SIGUSR2:
         LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+        break;
+    case SIGHUP:
+        RELOAD_CONFIG = true;
         break;
     case SIGPIPE:
     default:

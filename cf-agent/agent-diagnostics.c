@@ -143,7 +143,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
 
 static AgentDiagnosticsResult AgentDiagnosticsCheckDB(ARG_UNUSED const char *workdir, dbid id)
 {
-    char *dbpath = DBIdToPath(GetStateDir(), id);
+    char *dbpath = DBIdToPath(id);
     char *error = DBPrivDiagnose(dbpath);
 
     if (error)

@@ -445,7 +445,7 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
     CF_DB *dbp;
     if (!OpenDB(&dbp, dbid_state))
     {
-        char *db_path = DBIdToPath(GetWorkDir(), dbid_state);
+        char *db_path = DBIdToPath(dbid_state);
         Log(LOG_LEVEL_ERR, "While persisting class, unable to open database at '%s' (OpenDB: %s)",
             db_path, GetErrorStr());
         free(db_path);

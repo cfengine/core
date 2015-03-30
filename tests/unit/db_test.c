@@ -5,6 +5,8 @@
 
 #include <cf3.defs.h>
 #include <dbm_api.h>
+#include <file_lib.h>
+#include <files_copy.h>
 #include <misc_lib.h>                                          /* xsnprintf */
 
 
@@ -167,6 +169,62 @@ void test_recreate(void)
     CloseDB(db);
 }
 
+void test_old_workdir_db_location(void)
+{
+#ifndef LMDB
+    // We manipulate the LMDB file name directly. Not adapted to the others.
+    return;
+#endif
+
+    CF_DB *db;
+
+    char *state_dir;
+
+    xasprintf(&state_dir, "%s%cstate", GetWorkDir(), FILE_SEPARATOR);
+
+    if (strcmp(GetStateDir(), state_dir) != 0)
+    {
+        // Test only works when statedir is $(workdir)/state.
+        free(state_dir);
+        return;
+    }
+
+    assert_true(OpenDB(&db, dbid_lastseen));
+    assert_true(WriteDB(db, "key", "first_value", strlen("first_value") + 1));
+    CloseDB(db);
+
+    char *old_db, *orig_db, *new_db;
+    // Due to caching of the path we need to use a different db when opening the
+    // second time, otherwise the path is not rechecked.
+    xasprintf(&orig_db, "%s%ccf_lastseen.lmdb", GetStateDir(), FILE_SEPARATOR);
+    xasprintf(&old_db, "%s%ccf_audit.lmdb", GetWorkDir(), FILE_SEPARATOR);
+    xasprintf(&new_db, "%s%ccf_audit.lmdb", GetStateDir(), FILE_SEPARATOR);
+
+    // Copy database to old location.
+    assert_true(CopyRegularFileDisk(orig_db, old_db));
+
+    // Change content.
+    assert_true(OpenDB(&db, dbid_lastseen));
+    assert_true(WriteDB(db, "key", "second_value", strlen("second_value") + 1));
+    CloseDB(db);
+
+    // Copy database to new location.
+    assert_true(CopyRegularFileDisk(orig_db, new_db));
+
+    char value[CF_BUFSIZE];
+
+    // Old location should take precedence.
+    assert_true(OpenDB(&db, dbid_audit));
+    assert_true(ReadDB(db, "key", value, sizeof(value)));
+    assert_string_equal(value, "first_value");
+    CloseDB(db);
+
+    free(state_dir);
+    free(old_db);
+    free(orig_db);
+    free(new_db);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -179,6 +237,7 @@ int main()
             unit_test(test_iter_modify_entry),
             unit_test(test_iter_delete_entry),
             unit_test(test_recreate),
+            unit_test(test_old_workdir_db_location),
         };
 
     PRINT_TEST_BANNER();

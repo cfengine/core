@@ -305,8 +305,8 @@ static bool OpenChangesDB(CF_DB **db)
     }
 
     struct stat statbuf;
-    char *old_checksums_db = DBIdToPath(GetStateDir(), dbid_checksums);
-    char *old_filestats_db = DBIdToPath(GetStateDir(), dbid_filestats);
+    char *old_checksums_db = DBIdToPath(dbid_checksums);
+    char *old_filestats_db = DBIdToPath(dbid_filestats);
 
     if (stat(old_checksums_db, &statbuf) != -1)
     {

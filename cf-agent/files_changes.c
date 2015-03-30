@@ -305,8 +305,8 @@ static bool OpenChangesDB(CF_DB **db)
     }
 
     struct stat statbuf;
-    char *old_checksums_db = DBIdToPath(GetWorkDir(), dbid_checksums);
-    char *old_filestats_db = DBIdToPath(GetWorkDir(), dbid_filestats);
+    char *old_checksums_db = DBIdToPath(GetStateDir(), dbid_checksums);
+    char *old_filestats_db = DBIdToPath(GetStateDir(), dbid_filestats);
 
     if (stat(old_checksums_db, &statbuf) != -1)
     {
@@ -791,7 +791,7 @@ void FileChangesLogChange(const char *file, FileState status, char *msg, const P
 
 /* This is inefficient but we don't want to lose any data */
 
-    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
+    snprintf(fname, CF_BUFSIZE, "%s/%s", GetStateDir(), CF_FILECHANGE_NEW);
     MapName(fname);
 
 #ifndef __MINGW32__

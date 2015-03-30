@@ -4,6 +4,8 @@
 #include <misc_lib.h>                                          /* xsnprintf */
 #include <known_dirs.h>
 
+char CFWORKDIR[CF_BUFSIZE];
+
 void tests_setup(void)
 {
     static char env[] = /* Needs to be static for putenv() */

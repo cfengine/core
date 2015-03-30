@@ -41,7 +41,6 @@
 
 
 extern RSA *PRIVKEY, *PUBKEY;
-extern char CFWORKDIR[];
 
 
 /* Global SSL context for client connections over new TLS protocol. */

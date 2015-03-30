@@ -44,9 +44,9 @@ static void tests_setup(void)
 static void tests_teardown(void)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", GetStateDir());
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", GetStateDir());
     system(cmd);
-    xsnprintf(cmd, CF_BUFSIZE, "rmdir '%s'", GetStateDir());
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", GetWorkDir());
     system(cmd);
 }
 
@@ -54,7 +54,7 @@ static void tests_teardown(void)
 static void setup(void)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -f '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", GetStateDir());
     system(cmd);
 }
 
@@ -229,7 +229,7 @@ static void end()
     DBH = NULL;
 
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, sizeof(cmd), "rm -f '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, sizeof(cmd), "rm -rf '%s'/*", GetStateDir());
     system(cmd);
 }
 

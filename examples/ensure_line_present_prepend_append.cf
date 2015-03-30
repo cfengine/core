@@ -1,0 +1,27 @@
+# Note that this example assumes that the masterfiles policy framework is installed
+# in inputs in your user's working directory (e.g. /var/cfengine/inputs for root).
+
+
+body common control
+{
+bundlesequence => { "line_prepend", "line_append" };
+inputs => { "$(sys.libdir)/stdlib.cf" };
+}
+
+
+bundle agent line_prepend
+{
+files:
+"/tmp/test_line_prepend"
+  edit_line => prepend_if_no_line("I am the first line"),
+  create => "true";
+}
+
+
+bundle agent line_append
+{
+files:
+"/tmp/test_line_append"
+  edit_line => append_if_no_line("I am the last line"),
+  create => "true";
+}

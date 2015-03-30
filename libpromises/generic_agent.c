@@ -1141,11 +1141,11 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", workdir, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 
-    /* check that CFWORKDIR exists */
-    if (stat(CFWORKDIR, &statbuf) == -1)
+    /* check that GetWorkDir() exists */
+    if (stat(GetWorkDir(), &statbuf) == -1)
     {
-        FatalError(ctx,"Unable to stat CFWORKDIR directory '%s'! (stat: %s)\n",
-                   CFWORKDIR, GetErrorStr());
+        FatalError(ctx,"Unable to stat working directory '%s'! (stat: %s)\n",
+                   GetWorkDir(), GetErrorStr());
     }
 
     Log(LOG_LEVEL_VERBOSE, "Making sure that internal directories are private...");

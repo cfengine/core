@@ -24,7 +24,7 @@
 
 #include <bootstrap.h>
 
-bool GetAmPolicyHub(const char *workdir)
+bool GetAmPolicyHub()
 {
     return true;
 }

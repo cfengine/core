@@ -29,14 +29,7 @@
 #include <misc_lib.h>                                          /* xsnprintf */
 
 
-char CFWORKDIR[CF_BUFSIZE];
-
 #include <files_changes.c>
-
-const char *GetWorkDir()
-{
-    return CFWORKDIR;
-}
 
 #define NO_FILES 4
 
@@ -51,11 +44,15 @@ struct stat filestat_value;
 
 static void test_setup(void)
 {
-    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/changes_migration_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
-    char state_dir[PATH_MAX];
-    xsnprintf(state_dir, sizeof(state_dir), "%s/state", CFWORKDIR);
-    mkdir(state_dir, 0755);
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/changes_migration_test.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 
     CF_DB *db;
     assert_true(OpenDB(&db, dbid_checksums));
@@ -181,8 +178,8 @@ static void test_migration(void)
 
 static void test_teardown(void)
 {
-    DeleteDirectoryTree(CFWORKDIR);
-    rmdir(CFWORKDIR);
+    DeleteDirectoryTree(GetWorkDir());
+    rmdir(GetWorkDir());
 }
 
 int main()

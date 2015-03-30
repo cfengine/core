@@ -89,7 +89,7 @@ void CryptoDeInitialize()
     {
         char randfile[CF_BUFSIZE];
         snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
-                 CFWORKDIR, FILE_SEPARATOR);
+                 GetWorkDir(), FILE_SEPARATOR);
 
         /* Only write out a seed if the file doesn't exist
          * and we have enough entropy to do so. If RAND_write_File

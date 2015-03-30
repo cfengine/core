@@ -20,6 +20,7 @@
 #include <server_tls.h>
 #include <tls_client.h>
 #include <connection_info.h>
+#include <known_dirs.h>
 
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL;
@@ -886,13 +887,13 @@ RSA *original_HavePublicKey(const char *username, const char *ipaddress, const c
 
     snprintf(keyname, CF_MAXVARSIZE, "%s-%s", username, digest);
 
-    snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
+    snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", GetWorkDir(), keyname);
     MapName(newname);
 
     if (stat(newname, &statbuf) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Did not find new key format '%s'", newname);
-        snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
+        snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", GetWorkDir(), username, ipaddress);
         MapName(oldname);
 
         Log(LOG_LEVEL_VERBOSE, "Trying old style '%s'", oldname);

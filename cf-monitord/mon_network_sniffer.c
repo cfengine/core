@@ -430,7 +430,7 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to write datafile '%s'", filename);
+        Log(LOG_LEVEL_ERR, "Couldn't save TCP entropy to '%s' (fopen: %s)", filename, GetErrorStr());
         return;
     }
 

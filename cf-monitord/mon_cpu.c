@@ -50,7 +50,7 @@ void MonCPUGatherData(double *cf_this)
 
     if ((fp = fopen("/proc/stat", "r")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Didn't find proc data");
+        Log(LOG_LEVEL_VERBOSE, "Could not open /proc/stat while gathering CPU data (fopen: %s)", GetErrorStr());
         return;
     }
 

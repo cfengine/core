@@ -491,7 +491,7 @@ int HashDirectoryTreeCallback(const char *filename, ARG_UNUSED const struct stat
     FILE *file = fopen(filename, "rb");
     if (!file)
     {
-        Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
         return -1;
     }
 

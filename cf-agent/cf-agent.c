@@ -906,7 +906,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPOSITORY].lval) == 0)
             {
                 SetRepositoryLocation(value);
-                Log(LOG_LEVEL_VERBOSE, "SET repository = %s", (const char *)value);
+                Log(LOG_LEVEL_VERBOSE, "Setting repository to '%s'", (const char *)value);
                 continue;
             }
 
@@ -970,7 +970,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_TIMEOUT].lval) == 0)
             {
                 CONNTIMEOUT = IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting timeout = %jd", (intmax_t) CONNTIMEOUT);
+                Log(LOG_LEVEL_VERBOSE, "Setting timeout to %jd", (intmax_t) CONNTIMEOUT);
                 continue;
             }
 
@@ -1030,7 +1030,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
         if (!SetSyslogHost(value))
         {
             Log(LOG_LEVEL_ERR,
-                  "FAILed to set syslog_host, '%s' too long", (const char *)value);
+                  "Failed to set syslog_host to '%s', too long", (const char *)value);
         }
         else
         {
@@ -1179,7 +1179,7 @@ static void AllClassesReport(const EvalContext *ctx)
     FILE *fp = NULL;
     if ((fp = fopen(context_report_file, "w")) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Could not open allclasses cache file");
+        Log(LOG_LEVEL_INFO, "Could not open allclasses cache file '%s' (fopen: %s)", context_report_file, GetErrorStr());
     }
     else
     {
@@ -1605,7 +1605,7 @@ static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence t
     case TYPE_SEQUENCE_PROCESSES:
         if (!LoadProcessTable(&PROCESSTABLE))
         {
-            Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep process promises");
+            Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep processes: type promises");
             return false;
         }
         break;

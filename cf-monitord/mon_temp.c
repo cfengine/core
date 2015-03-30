@@ -137,7 +137,7 @@ static bool GetAcpi(double *cf_this)
 
         if ((fp = fopen(path, "r")) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't open '%s'", path);
+            Log(LOG_LEVEL_ERR, "Couldn't open '%s' to gather temperature data (fopen: %s)", path, GetErrorStr());
             continue;
         }
 

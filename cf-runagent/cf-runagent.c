@@ -755,7 +755,7 @@ static FILE *NewStream(char *name)
 
         if ((fp = fopen(filename, "w")) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Unable to open file '%s'", filename);
+            Log(LOG_LEVEL_ERR, "Unable to open file '%s' (fopen: %s)", filename, GetErrorStr());
             fp = stdout;
         }
     }

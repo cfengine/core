@@ -411,7 +411,7 @@ static void DBPathMoveBroken(const char *filename)
 
     if(rename(filename, filename_broken) != 0)
     {
-        Log(LOG_LEVEL_ERR, "Failed moving broken db out of the way");
+        Log(LOG_LEVEL_ERR, "Failed moving broken db out of the way '%s'", filename);
     }
 
     free(filename_broken);

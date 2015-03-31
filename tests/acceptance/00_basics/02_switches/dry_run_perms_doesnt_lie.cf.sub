@@ -1,0 +1,14 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testdir)/redmine_7082"
+    create => "true",
+    perms => m("go-rwx");
+}

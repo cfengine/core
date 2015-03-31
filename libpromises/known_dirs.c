@@ -48,9 +48,7 @@ GET_DEFAULT_DIRECTORY_DEFINE(State, STATEDIR)
 
 #elif !defined(__MINGW32__)
 
-#define MAX_DIR_LENGTH (CF_BUFSIZE / 2)
-
-static const char *GetDefaultDir_helper(char dir[MAX_DIR_LENGTH], const char *root_dir, const char *append_dir)
+const char *GetDefaultDir_helper(char dir[PATH_MAX], const char *root_dir, const char *append_dir)
 {
     if (getuid() > 0)
     {
@@ -60,14 +58,14 @@ static const char *GetDefaultDir_helper(char dir[MAX_DIR_LENGTH], const char *ro
 
             if ( append_dir == NULL )
             {
-                if (snprintf(dir, MAX_DIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_DIR_LENGTH)
+                if (snprintf(dir, PATH_MAX, "%s/.cfagent", mpw->pw_dir) >= PATH_MAX)
                 {
                     return NULL;
                 }
             }
             else
             {
-                if (snprintf(dir, MAX_DIR_LENGTH, "%s/.cfagent/%s", mpw->pw_dir, append_dir) >= MAX_DIR_LENGTH)
+                if (snprintf(dir, PATH_MAX, "%s/.cfagent/%s", mpw->pw_dir, append_dir) >= PATH_MAX)
                 {
                     return NULL;
                 }
@@ -81,10 +79,12 @@ static const char *GetDefaultDir_helper(char dir[MAX_DIR_LENGTH], const char *ro
     }
 }
 
+#endif
+
 #define GET_DEFAULT_DIRECTORY_DEFINE(FUNC, STATIC, GLOBAL, FOLDER)  \
-static const char *GetDefault##FUNC##Dir(void)                      \
+const char *GetDefault##FUNC##Dir(void)                             \
 {                                                                   \
-    static char STATIC##dir[MAX_DIR_LENGTH]; /* GLOBAL_C */         \
+    static char STATIC##dir[PATH_MAX]; /* GLOBAL_C */               \
     return GetDefaultDir_helper(STATIC##dir, GLOBAL, FOLDER);       \
 }                                                                   \
 
@@ -94,8 +94,6 @@ GET_DEFAULT_DIRECTORY_DEFINE(Pid, pid, PIDDIR, NULL)
 GET_DEFAULT_DIRECTORY_DEFINE(Master, master, MASTERDIR, "masterfiles")
 GET_DEFAULT_DIRECTORY_DEFINE(Input, input, INPUTDIR, "inputs")
 GET_DEFAULT_DIRECTORY_DEFINE(State, state, STATEDIR, "state")
-
-#endif
 
 /*******************************************************************/
 

@@ -89,9 +89,10 @@ Look in default.cf for some standard check bundles (for example, to compare
 files when testing file edits, or for cleaning up temporary files).
 
 Tests should be named with short names describing what they test, using lower-
-case letters and underscores only. If the test is expected to generate a crash
-or error (that is, if they contan syntax errors or other faults), it should
-have an additional '.x' suffix before '.cf' (e.g. 'string_vars.x.cf').
+case letters and underscores only. If the test is expected to generate an error
+(that is, if they contan syntax errors or other faults), it should have an
+additional '.x' suffix before '.cf' (e.g. 'string_vars.x.cf'). A crash will
+still cause a failure.
 
 Tests which are not expected to pass yet (e.g. there is a bug in code which
 prevents tests from passing) should be placed in 'staging' subdirectory in the
@@ -251,9 +252,6 @@ abnormally terminates and we wanted it to do that.
 FAIL: not doing what we wanted: either test finished and returned "FAIL" from
 check bundle, or something went wrong - cf-agent might have dropped core,
 cf-promises may have denied execution of the promises, etc.
-
-FAILed to crash: test was expected to crash, but did not. This is another kind
-of failure, split into separate kind due to low impact.
 
 Soft fail: the test failed as expected by a "test_soft_fail" promise.
 

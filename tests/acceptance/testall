@@ -455,12 +455,15 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
         RESULT_MSG="${COLOR_FAILURE}FAIL${COLOR_NORMAL}"
       fi
     else
-      if [ $RETVAL -ne 0 ]; then
+      if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ]; then
         RESULT=Pass
         RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+      elif [ $RETVAL -ge 128 ]; then
+        RESULT=FAIL
+        RESULT_MSG="${COLOR_FAILURE}FAIL (Crashed)${COLOR_NORMAL}"
       else
         RESULT=FAIL
-        RESULT_MSG="${COLOR_FAILURE}FAILed to crash${COLOR_NORMAL}"
+        RESULT_MSG="${COLOR_FAILURE}FAIL (Failed to exit with non-zero status)${COLOR_NORMAL}"
       fi
     fi
 

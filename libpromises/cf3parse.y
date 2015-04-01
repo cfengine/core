@@ -576,7 +576,23 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                        // Intentional fall
                                    case SYNTAX_STATUS_NORMAL:
                                        {
-                                           if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "data") == 0)
+                                           const char *item = P.rval.item;
+                                           // convert @(x) to mergedata(x)
+                                           if (P.rval.type == RVAL_TYPE_SCALAR &&
+                                               (strcmp(P.lval, "data") == 0 || strcmp(P.lval, "template_data") == 0) &&
+                                               strlen(item) > 3 &&
+                                               item[0] == '@' &&
+                                               (item[1] == '(' || item[1] == '{'))
+                                           {
+                                               Rlist *synthetic_args = NULL;
+                                               RlistAppendScalar(&synthetic_args, xstrndup(P.rval.item+2, strlen(P.rval.item)-3 ));
+                                               RvalDestroy(P.rval);
+
+                                               P.rval = (Rval) { FnCallNew(xstrdup("mergedata"), synthetic_args), RVAL_TYPE_FNCALL };
+                                           }
+                                           // convert 'json or yaml' to direct container or parsejson(x) or parseyaml(x)
+                                           else if (P.rval.type == RVAL_TYPE_SCALAR &&
+                                                    (strcmp(P.lval, "data") == 0 || strcmp(P.lval, "template_data") == 0))
                                            {
                                                JsonElement *json = NULL;
                                                JsonParseError res;

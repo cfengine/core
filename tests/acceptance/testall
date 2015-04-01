@@ -402,9 +402,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
 
     RESULT_MSG=
-    if [ -z "$EXPECTED_CRASH" ] && [ $RETVAL -ne 0 ]; then
-      RESULT=FAIL
-    elif [ -z "$EXPECTED_CRASH" ]; then
+    if [ -z "$EXPECTED_CRASH" ]; then
       # We need to be careful when matching test outcomes. Because of convergence
       # passes, a test may output FAIL before it outputs Pass; in this case the
       # latter trumps the former. Also be careful when matching an [XS]FAIL; the
@@ -428,6 +426,8 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             RESULT_MSG="${COLOR_WARNING}Soft fail (Redmine #$REDMINE)${COLOR_NORMAL}"
           fi
         fi
+      elif [ $RETVAL -ne 0 ]; then
+        RESULT=FAIL
       elif egrep "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE > /dev/null; then
         RESULT=FAIL
         RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"

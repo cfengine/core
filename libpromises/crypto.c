@@ -89,7 +89,7 @@ void CryptoDeInitialize()
     {
         char randfile[CF_BUFSIZE];
         snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
-                 CFWORKDIR, FILE_SEPARATOR);
+                 GetWorkDir(), FILE_SEPARATOR);
 
         /* Only write out a seed if the file doesn't exist
          * and we have enough entropy to do so. If RAND_write_File
@@ -138,7 +138,7 @@ static void RandomSeed(void)
         /* randseed file is written on deinitialization of crypto system */
         char randfile[CF_BUFSIZE];
         snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
-                 CFWORKDIR, FILE_SEPARATOR);
+                 GetWorkDir(), FILE_SEPARATOR);
         Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'",
             randfile);
 
@@ -231,10 +231,10 @@ bool LoadSecretKeys(void)
 
 void PolicyHubUpdateKeys(const char *policy_server)
 {
-    if (GetAmPolicyHub(CFWORKDIR)
-        && NULL != PUBKEY)
+    if (GetAmPolicyHub() && NULL != PUBKEY)
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        const char* const workdir = GetWorkDir();
 
         char dst_public_key_filename[CF_BUFSIZE] = "";
         {
@@ -242,7 +242,7 @@ void PolicyHubUpdateKeys(const char *policy_server)
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
             snprintf(dst_public_key_filename, sizeof(dst_public_key_filename),
                      "%s/ppkeys/%s-%s.pub",
-                     CFWORKDIR, "root",
+                     workdir, "root",
                      HashPrintSafe(buffer, sizeof(buffer), digest,
                                    CF_DEFAULT_DIGEST, true));
             MapName(dst_public_key_filename);
@@ -252,7 +252,7 @@ void PolicyHubUpdateKeys(const char *policy_server)
         if ((stat(dst_public_key_filename, &sb) == -1))
         {
             char src_public_key_filename[CF_BUFSIZE] = "";
-            snprintf(src_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", CFWORKDIR);
+            snprintf(src_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", workdir);
             MapName(src_public_key_filename);
 
             // copy localhost.pub to root-HASH.pub on policy server
@@ -303,10 +303,11 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
     struct stat statbuf;
     FILE *fp;
     RSA *newkey = NULL;
+    const char* const workdir = GetWorkDir();
 
     snprintf(keyname, CF_MAXVARSIZE, "%s-%s", username, digest);
 
-    snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
+    snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", workdir, keyname);
     MapName(newname);
 
     if (stat(newname, &statbuf) == -1)
@@ -314,7 +315,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
         Log(LOG_LEVEL_VERBOSE, "Did not find new key format '%s'", newname);
 
         snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub",
-                 CFWORKDIR, username, ipaddress);
+                 workdir, username, ipaddress);
         MapName(oldname);
         Log(LOG_LEVEL_VERBOSE, "Trying old style '%s'", oldname);
 
@@ -391,7 +392,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     }
 
     ret = snprintf(filename, sizeof(filename), "%s/ppkeys/%s.pub",
-                   CFWORKDIR, keyname);
+                   GetWorkDir(), keyname);
     if (ret >= sizeof(filename))
     {
         Log(LOG_LEVEL_ERR, "Filename too long!");

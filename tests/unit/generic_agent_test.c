@@ -9,6 +9,8 @@
 #include <misc_lib.h>                                          /* xsnprintf */
 
 
+char CFWORKDIR[CF_BUFSIZE];
+
 void test_load_masterfiles(void)
 {
     EvalContext *ctx = EvalContextNew();

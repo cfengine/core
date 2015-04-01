@@ -155,6 +155,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   INPUTDIR='default'
   LOGDIR='${localstatedir}/lib/cfengine'
   PIDDIR='${localstatedir}/lib/cfengine'
+  STATEDIR='default'
 ], [
   if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
@@ -165,6 +166,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         INPUTDIR=default
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        STATEDIR=default
       ;;
       *)
         WORKDIR=/var/cfengine
@@ -172,6 +174,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         INPUTDIR=default
         LOGDIR=/var/cfengine
         PIDDIR=/var/cfengine
+        STATEDIR=default
       ;;
     esac
   else
@@ -180,6 +183,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     INPUTDIR="default"
     LOGDIR="${localstatedir}/cfengine"
     PIDDIR="${localstatedir}/cfengine"
+    STATEDIR="default"
   fi
 
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
@@ -1198,12 +1202,12 @@ dnl Configure LOCKDIR and LOGDIR
 dnl #####################################################################
 
 AC_ARG_WITH(workdir,
-    [  --with-workdir=WORKDIR  default internal for trusted cache ],
+    [  --with-workdir=WORKDIR  default for internal (trusted) working directory ],
     [
-        if test x$withval != x ; then
-            WORKDIR=$withval
-            LOGDIR=$withval
-            PIDDIR=$withval
+        if test "x$withval" != x ; then
+            WORKDIR="$withval"
+            LOGDIR="$withval"
+            PIDDIR="$withval"
         fi
     ],
 )
@@ -1216,10 +1220,10 @@ AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [Workdir location])
 AC_SUBST(workdir, "${WORKDIR}")
 
 AC_ARG_WITH(masterdir,
-    [  --with-masterdir=MASTERDIR  default internal for masterfiles directory ],
+    [  --with-masterdir=MASTERDIR  default for internal masterfiles directory ],
     [
-        if test x$withval != x ; then
-            MASTERDIR=$withval
+        if test "x$withval" != x ; then
+            MASTERDIR="$withval"
         fi
     ],
 )
@@ -1232,10 +1236,10 @@ AC_DEFINE_UNQUOTED(MASTERDIR, "${MASTERDIR}", [Masterfiles directory location])
 AC_SUBST(masterdir, "${MASTERDIR}")
 
 AC_ARG_WITH(inputdir,
-    [  --with-inputdir=INPUTDIR  default internal for inputs directory ],
+    [  --with-inputdir=INPUTDIR  default for internal inputs directory ],
     [
-        if test x$withval != x ; then
-            INPUTDIR=$withval
+        if test "x$withval" != x ; then
+            INPUTDIR="$withval"
         fi
     ],
 )
@@ -1248,10 +1252,10 @@ AC_DEFINE_UNQUOTED(INPUTDIR, "${INPUTDIR}", [Inputs directory location])
 AC_SUBST(inputdir, "${INPUTDIR}")
 
 AC_ARG_WITH(logdir,
-    [  --with-logdir=LOGDIR  default internal for log directory ],
+    [  --with-logdir=LOGDIR  default for internal log directory ],
     [
-        if test x$withval != x ; then
-            LOGDIR=$withval
+        if test "x$withval" != x ; then
+            LOGDIR="$withval"
         fi
     ],
 )
@@ -1264,10 +1268,10 @@ AC_DEFINE_UNQUOTED(LOGDIR, "${LOGDIR}", [Logdir location])
 AC_SUBST(logdir, "${LOGDIR}")
 
 AC_ARG_WITH(piddir,
-    [  --with-piddir=LOGDIR  default internal for pid directory ],
+    [  --with-piddir=LOGDIR  default for internal pid directory ],
     [
-        if test x$withval != x ; then
-            PIDDIR=$withval
+        if test "x$withval" != x ; then
+            PIDDIR="$withval"
         fi
     ],
 )
@@ -1278,6 +1282,22 @@ adl_RECURSIVE_EVAL("${PIDDIR}", PIDDIR)
 
 AC_DEFINE_UNQUOTED(PIDDIR, "${PIDDIR}", [piddir location])
 AC_SUBST(piddir, "${PIDDIR}")
+
+AC_ARG_WITH(statedir,
+    [  --with-statedir=STATEDIR  default for internal state directory ],
+    [
+        if test "x$withval" != x ; then
+            STATEDIR="$withval"
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in STATEDIR
+
+adl_RECURSIVE_EVAL("${STATEDIR}", STATEDIR)
+
+AC_DEFINE_UNQUOTED(STATEDIR, "${STATEDIR}", [State directory location])
+AC_SUBST(statedir, "${STATEDIR}")
 
 AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
                    [Specify path to POSIX-compatible shell (if not /bin/sh)])],
@@ -1510,6 +1530,7 @@ AC_MSG_RESULT([-> Masterdir: $MASTERDIR])
 AC_MSG_RESULT([-> Inputdir: $INPUTDIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
+AC_MSG_RESULT([-> Statedir: $STATEDIR])
 
 AC_MSG_RESULT( )
 

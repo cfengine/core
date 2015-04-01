@@ -528,7 +528,7 @@ bundle agent dcs_fini(file)
   commands:
       "$(G.rm) -rf $(file)*"
       contain => dcs_useshell;
-      "$(G.rm) -rf $(sys.workdir)/state/cf_state.*"
+      "$(G.rm) -rf $(sys.statedir)/cf_state.*"
       contain => dcs_useshell;
 
   reports:

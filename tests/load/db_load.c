@@ -1,4 +1,7 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <cf3.defs.h>
+#include <known_dirs.h>
 
 #include <dbm_api.h>
 
@@ -29,6 +32,20 @@ static bool ReadWriteDataIsValid(char *data);
 static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
+
+static void tests_setup(void)
+{
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/db_load.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
+}
 
 static void *contend(ARG_UNUSED void *param)
 {
@@ -192,8 +209,7 @@ int main(int argc, char **argv)
     /* To clean up after databases are closed */
     atexit(&Cleanup);
 
-    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_load.XXXXXX");
-    mkdtemp(CFWORKDIR);
+    tests_setup();
 
     int numthreads = atoi(argv[1]);
 

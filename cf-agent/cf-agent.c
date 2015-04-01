@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
     if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
         RemovePolicyServerFile(GetWorkDir());
-        WriteAmPolicyHubFile(GetWorkDir(), false);
+        WriteAmPolicyHubFile(false);
         ret = 1;
     }
 
@@ -454,11 +454,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 const char *workdir = GetWorkDir();
                 const char *inputdir = GetInputDir();
                 const char *logdir = GetLogDir();
-                strcpy(CFWORKDIR, workdir);
+                const char *statedir = GetStateDir();
                 Writer *out = FileWriter(stdout);
                 WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
                 WriterWriteF(out, "self-diagnostics for agent using inputdir '%s'\n", inputdir);
                 WriterWriteF(out, "self-diagnostics for agent using logdir '%s'\n", logdir);
+                WriterWriteF(out, "self-diagnostics for agent using statedir '%s'\n", statedir);
 
                 AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
                 AgentDiagnosticsRunAllChecksNova(workdir, out, &AgentDiagnosticsRun, &AgentDiagnosticsResultNew);
@@ -1174,7 +1175,7 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 static void AllClassesReport(const EvalContext *ctx)
 {
     char context_report_file[CF_BUFSIZE];
-    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+    snprintf(context_report_file, CF_BUFSIZE, "%s%callclasses.txt", GetStateDir(), FILE_SEPARATOR);
 
     FILE *fp = NULL;
     if ((fp = fopen(context_report_file, "w")) == NULL)

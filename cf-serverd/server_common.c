@@ -118,7 +118,7 @@ Item *ListPersistentClasses()
 
     if (!OpenDB(&dbp, dbid_state))
     {
-        char *db_path = DBIdToPath(WORKDIR, dbid_state);
+        char *db_path = DBIdToPath(dbid_state);
         Log(LOG_LEVEL_ERR, "Unable to open persistent classes database '%s'", db_path);
         free(db_path);
         return NULL;
@@ -126,7 +126,7 @@ Item *ListPersistentClasses()
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        char *db_path = DBIdToPath(WORKDIR, dbid_state);
+        char *db_path = DBIdToPath(dbid_state);
         Log(LOG_LEVEL_ERR, "Unable to get cursor for persistent classes database '%s'", db_path);
         free(db_path);
         CloseDB(dbp);

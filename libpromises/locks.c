@@ -1018,7 +1018,7 @@ void PurgeLocks(void)
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        char *db_path = DBIdToPath(WORKDIR, dbid_locks);
+        char *db_path = DBIdToPath(dbid_locks);
         Log(LOG_LEVEL_ERR, "Unable to get cursor for locks database '%s'", db_path);
         free(db_path);
         CloseLock(dbp);

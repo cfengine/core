@@ -1,4 +1,10 @@
 Cfengine Propulsion Lab
+        Changes:
+        - all embedded databases are now rooted in the state/ directory.
+
+        New features:
+        - compile time option (--with-statedir) to
+          override the default state/ directory path.
         - Networking: intefaces, addresses, routes promises
         - database promises reworked, and SQLite support added
         - guest_environments promises reworked

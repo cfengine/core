@@ -479,7 +479,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
 
    Called by VerifyInstalledPackages
 
-   * calls a.packages.package_list_update_command if $(sys.workdir)/state/software_update_timestamp_<manager>
+   * calls a.packages.package_list_update_command if $(sys.statedir)/software_update_timestamp_<manager>
      is older than the interval specified in package_list_update_ifelapsed.
    * assembles the package list from a.packages.package_list_command
    * respects a.packages.package_commands_useshell (boolean)
@@ -514,8 +514,8 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
         struct stat sb;
         char update_timestamp_file[PATH_MAX];
 
-        snprintf(update_timestamp_file, sizeof(update_timestamp_file), "%s%cstate%csoftware_update_timestamp_%s",
-                 GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR,
+        snprintf(update_timestamp_file, sizeof(update_timestamp_file), "%s%csoftware_update_timestamp_%s",
+                 GetStateDir(), FILE_SEPARATOR,
                  ReadLastNode(RealPackageManager(a.packages.package_add_command)));
 
         if (stat(update_timestamp_file, &sb) != -1)

@@ -40,6 +40,7 @@
 #include <policy.h>
 #include <zones.h>
 #include <printsize.h>
+#include <known_dirs.h>
 
 # ifdef HAVE_GETZONEID
 #include <sequence.h>
@@ -1299,8 +1300,9 @@ int LoadProcessTable(Item **procdata)
     cf_pclose(prp);
 
 /* Now save the data */
+    const char* const statedir = GetStateDir();
 
-    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_procs", CFWORKDIR);
+    snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_procs", statedir, FILE_SEPARATOR);
     RawSaveItemList(*procdata, vbuff, NewLineMode_Unix);
 
 # ifdef HAVE_GETZONEID
@@ -1339,11 +1341,12 @@ int LoadProcessTable(Item **procdata)
     {
         PrependItem(&rootprocs, otherprocs->name, NULL);
     }
-    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_rootprocs", CFWORKDIR);
+
+    snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_rootprocs", statedir, FILE_SEPARATOR);
     RawSaveItemList(rootprocs, vbuff, NewLineMode_Unix);
     DeleteItemList(rootprocs);
 
-    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_otherprocs", CFWORKDIR);
+    snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_otherprocs", statedir, FILE_SEPARATOR);
     RawSaveItemList(otherprocs, vbuff, NewLineMode_Unix);
     DeleteItemList(otherprocs);
 

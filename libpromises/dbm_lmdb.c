@@ -217,7 +217,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
         }
     }
     if (id == dbid_locks
-        || (GetAmPolicyHub(GetWorkDir()) && id == dbid_lastseen))
+        || (GetAmPolicyHub() && id == dbid_lastseen))
     {
         rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR|MDB_NOSYNC, 0644);
     }

@@ -1,4 +1,7 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <test.h>
+#include <known_dirs.h>
 
 #include <cf3.defs.h>
 #include <dbm_api.h>
@@ -9,8 +12,16 @@ char CFWORKDIR[CF_BUFSIZE];
 
 void tests_setup(void)
 {
-    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/db_concurrent_test.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 void tests_teardown(void)

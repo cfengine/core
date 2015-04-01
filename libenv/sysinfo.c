@@ -378,6 +378,8 @@ void DiscoverVersion(EvalContext *ctx)
     int major = 0;
     int minor = 0;
     int patch = 0;
+    const char* const workdir = GetWorkDir();
+
     if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
     {
         char workbuf[CF_BUFSIZE];
@@ -389,7 +391,10 @@ void DiscoverVersion(EvalContext *ctx)
         snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
-        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d",
+                 workdir, FILE_SEPARATOR, FILE_SEPARATOR,
+                 FILE_SEPARATOR, major, minor);
+
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
         snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
@@ -400,7 +405,7 @@ void DiscoverVersion(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", CFWORKDIR, CF_DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workdir, CF_DATA_TYPE_STRING, "source=agent");
     }
 }
 
@@ -412,6 +417,7 @@ static void GetNameInfo3(EvalContext *ctx)
     struct hostent *hp;
     struct sockaddr_in cin;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    const char* const workdir = GetWorkDir();
 
 #ifdef _AIX
     char real_version[_SYS_NMLN];
@@ -564,17 +570,18 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=OS kernel");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Architecture");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", CFWORKDIR, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", workdir, CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fstab", VFSTAB[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "logdir", GetLogDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "piddir", GetPidDir(), CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "statedir", GetStateDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), CF_DATA_TYPE_STRING, "source=agent");
 
-    snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(workbuf, CF_BUFSIZE, "%s%cbin", workdir, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", GetInputDir(), FILE_SEPARATOR);
@@ -611,16 +618,16 @@ static void GetNameInfo3(EvalContext *ctx)
         // twin has own dir, and is named agent
         if (i == 0)
         {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin-twin%ccf-agent.exe", CFWORKDIR, FILE_SEPARATOR,
+            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin-twin%ccf-agent.exe", workdir, FILE_SEPARATOR,
                      FILE_SEPARATOR);
         }
         else
         {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
                      components[i]);
         }
 #else
-        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[i]);
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", workdir, FILE_SEPARATOR, FILE_SEPARATOR, components[i]);
 #endif
 
         have_component[i] = false;
@@ -640,10 +647,10 @@ static void GetNameInfo3(EvalContext *ctx)
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[0]));
 
 #if defined(_WIN32)
-        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
                  components[1]);
 #else
-        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", workdir, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
 #endif
 
         if (stat(name, &sb) != -1)
@@ -825,7 +832,7 @@ static void Get3Environment(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "Looking for environment from cf-monitord...");
 
-    snprintf(env, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
+    snprintf(env, CF_BUFSIZE, "%s/%s", GetStateDir(), CF_ENV_FILE);
     MapName(env);
 
     if (stat(env, &statbuf) == -1)

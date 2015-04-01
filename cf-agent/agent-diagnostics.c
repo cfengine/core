@@ -34,6 +34,7 @@
 #include <tokyo_check.h>
 #include <lastseen.h>
 #include <file_lib.h>
+#include <known_dirs.h>
 
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message)
@@ -83,9 +84,9 @@ AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir)
                                      policy_server != NULL ? policy_server : xstrdup("Not bootstrapped"));
 }
 
-AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir)
+AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(ARG_UNUSED const char *workdir)
 {
-    bool am_policy_server = GetAmPolicyHub(workdir);
+    bool am_policy_server = GetAmPolicyHub();
     return AgentDiagnosticsResultNew(am_policy_server,
                                      am_policy_server ? xstrdup("Acting as a policy server") : xstrdup("Not acting as a policy server"));
 }
@@ -140,9 +141,9 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
     return res;
 }
 
-static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid id)
+static AgentDiagnosticsResult AgentDiagnosticsCheckDB(ARG_UNUSED const char *workdir, dbid id)
 {
-    char *dbpath = DBIdToPath(workdir, id);
+    char *dbpath = DBIdToPath(id);
     char *error = DBPrivDiagnose(dbpath);
 
     if (error)

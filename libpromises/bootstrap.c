@@ -75,17 +75,17 @@ bool BootstrapAllowed(void)
 
 /*****************************************************************************/
 
-static char *AmPolicyHubFilename(const char *workdir)
+static char *AmPolicyHubFilename(void)
 {
-    return StringFormat("%s%cstate%cam_policy_hub", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
+    return StringFormat("%s%cam_policy_hub", GetStateDir(), FILE_SEPARATOR);
 }
 
-bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
+bool WriteAmPolicyHubFile(bool am_policy_hub)
 {
-    char *filename = AmPolicyHubFilename(workdir);
+    char *filename = AmPolicyHubFilename();
     if (am_policy_hub)
     {
-        if (!GetAmPolicyHub(workdir))
+        if (!GetAmPolicyHub())
         {
             if (creat(filename, 0600) == -1)
             {
@@ -97,7 +97,7 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
     }
     else
     {
-        if (GetAmPolicyHub(workdir))
+        if (GetAmPolicyHub())
         {
             if (unlink(filename) != 0)
             {
@@ -214,10 +214,10 @@ bool RemovePolicyServerFile(const char *workdir)
     return true;
 }
 
-bool GetAmPolicyHub(const char *workdir)
+bool GetAmPolicyHub(void)
 {
     char path[CF_BUFSIZE] = { 0 };
-    snprintf(path, sizeof(path), "%s/state/am_policy_hub", workdir);
+    snprintf(path, sizeof(path), "%s/am_policy_hub", GetStateDir());
     MapName(path);
 
     struct stat sb;

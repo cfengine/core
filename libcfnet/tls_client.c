@@ -37,10 +37,10 @@
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                       /* LoadSecretKeys */
+#include <bootstrap.h>                     /* ReadPolicyServerFile */
 
 
 extern RSA *PRIVKEY, *PUBKEY;
-extern char CFWORKDIR[];
 
 
 /* Global SSL context for client connections over new TLS protocol. */

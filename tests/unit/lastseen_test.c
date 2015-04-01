@@ -5,6 +5,7 @@
 #include <lastseen.h>
 #include <item_lib.h>
 #include <misc_lib.h>                                          /* xsnprintf */
+#include <known_dirs.h>
 
 
 char CFWORKDIR[CF_BUFSIZE];
@@ -28,16 +29,24 @@ char tmpbuf[CF_BUFSIZE];
 
 static void tests_setup(void)
 {
-    xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_test.XXXXXX");
-    mkdtemp(CFWORKDIR);
+    static char env[] = /* Needs to be static for putenv() */
+        "CFENGINE_TEST_OVERRIDE_WORKDIR=/tmp/lastseen_test.XXXXXX";
+
+    char *workdir = strchr(env, '=') + 1; /* start of the path */
+    assert(workdir - 1 && workdir[0] == '/');
+
+    mkdtemp(workdir);
+    strlcpy(CFWORKDIR, workdir, CF_BUFSIZE);
+    putenv(env);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 static void tests_teardown(void)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -f '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", GetStateDir());
     system(cmd);
-    xsnprintf(cmd, CF_BUFSIZE, "rmdir '%s'", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", GetWorkDir());
     system(cmd);
 }
 
@@ -45,7 +54,7 @@ static void tests_teardown(void)
 static void setup(void)
 {
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, CF_BUFSIZE, "rm -f '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, CF_BUFSIZE, "rm -rf '%s'/*", GetStateDir());
     system(cmd);
 }
 
@@ -220,7 +229,7 @@ static void end()
     DBH = NULL;
 
     char cmd[CF_BUFSIZE];
-    xsnprintf(cmd, sizeof(cmd), "rm -f '%s'/*", CFWORKDIR);
+    xsnprintf(cmd, sizeof(cmd), "rm -rf '%s'/*", GetStateDir());
     system(cmd);
 }
 

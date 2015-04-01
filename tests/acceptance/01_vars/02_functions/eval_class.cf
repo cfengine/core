@@ -1,0 +1,77 @@
+#######################################################
+#
+# Test eval() in class context mode
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "values[0]" string => "x";
+      "values[1]" string => "+ 200";
+      "values[2]" string => "200 + 100";
+      "values[3]" string => "200 - 100";
+      "values[4]" string => "- - -";
+      "values[5]" string => "2 - (3 - 1)";
+      "values[6]" string => "";
+      "values[7]" string => "3 / 0";
+      "values[8]" string => "3^3";
+      "values[9]" string => "(-1)^2";
+      "values[10]" string => "sin(20)";
+      "values[11]" string => "cos(20)";
+      "values[12]" string => "asin(0.2)";
+      "values[13]" string => "acos(0.2)";
+      "values[14]" string => "tan(20)";
+      "values[15]" string => "atan(0.2)";
+      "values[16]" string => "log(0.2)";
+      "values[17]" string => "ln2";
+      "values[18]" string => "ln10";
+      "values[19]" string => "20 % 3";
+      "values[20]" string => "sqrt(0.2)";
+      "values[21]" string => "ceil(3.5)";
+      "values[22]" string => "floor(3.4)";
+      "values[23]" string => "abs(-3.4)";
+      "values[24]" string => "-3.4 -3.4";
+      "values[25]" string => "-3.400000 -3.400001";
+      "values[26]" string => "pi";
+      "values[27]" string => "e";
+      "values[28]" string => "10 == 10";
+      "values[29]" string => "10 == 11";
+      "values[30]" string => "3**0";
+      "values[31]" string => "step(10)";
+      "values[32]" string => "step(-10)";
+      "values[33]" string => "100k";
+      "values[34]" string => "(200m - 100k) / (2t + 2t)";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+      "context_eval_$(indices)" expression => eval("$(init.values[$(indices)])", "class", "infix"),
+      scope => "namespace";
+
+  vars:
+      "indices" slist => getindices("init.values");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("context_eval_2,context_eval_3,context_eval_7,context_eval_8,context_eval_9,context_eval_10,context_eval_11,context_eval_12,context_eval_13,context_eval_14,context_eval_15,context_eval_16,context_eval_17,context_eval_18,context_eval_19,context_eval_20,context_eval_21,context_eval_22,context_eval_23,context_eval_24,context_eval_25,context_eval_26,context_eval_27,context_eval_28,context_eval_30,context_eval_31,context_eval_33,context_eval_34",
+                                         "context_eval_0,context_eval_1,context_eval_4,context_eval_5,context_eval_6,context_eval_29,context_eval_32",
+                                         $(this.promise_filename));
+}

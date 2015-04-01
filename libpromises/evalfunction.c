@@ -5205,16 +5205,21 @@ static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy
     char *input = RlistScalarValue(finalargs);
     char *type = RlistScalarValue(finalargs->next);
     char *options = RlistScalarValue(finalargs->next->next);
-    if (0 != strcmp(type, "math") || 0 != strcmp(options, "infix"))
-    {
-        Log(LOG_LEVEL_ERR, "Unknown %s evaluation type %s or options %s", fp->name, type, options);
-        return FnFailure();
-    }
+
+    const bool context_mode = (strcmp(type, "class") == 0);
 
     char failure[CF_BUFSIZE];
     memset(failure, 0, sizeof(failure));
 
     double result = EvaluateMathInfix(ctx, input, failure);
+    if (context_mode)
+    {
+        // see CLOSE_ENOUGH in math.peg
+        return FnReturnContext(strlen(failure) == 0 &&
+                               !(result < 0.00000000000000001 &&
+                                 result > -0.00000000000000001));
+    }
+
     if (strlen(failure) > 0)
     {
         Log(LOG_LEVEL_INFO, "%s error: %s (input '%s')", fp->name, failure, input);
@@ -7453,7 +7458,7 @@ static const FnCallArg FORMAT_ARGS[] =
 static const FnCallArg EVAL_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input string"},
-    {"math", CF_DATA_TYPE_OPTION, "Evaluation type"},
+    {"math,class", CF_DATA_TYPE_OPTION, "Evaluation type"},
     {"infix", CF_DATA_TYPE_OPTION, "Evaluation options"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };

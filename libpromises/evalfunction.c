@@ -2624,23 +2624,91 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
 
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
-        VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(arg));
+        const char *name_str = RlistScalarValue(arg);
+        int name_len = strlen(name_str);
+        bool wrap_array_mode = false;
+        Buffer *wrap_map_key = NULL;
+        Buffer *name = NULL;
+
+        if (name_len > 2 && name_str[0] == '[')
+        {
+            Seq *s = StringMatchCaptures("^\\[ *([^ ]+) *\\]$", name_str);
+
+            if (s && SeqLength(s) == 2)
+            {
+                wrap_array_mode = true;
+                name = BufferNewFrom(SeqAt(s, 1), strlen(SeqAt(s, 1)));
+            }
+
+            SeqDestroy(s);
+        }
+        else if (name_len > 0 && name_str[0] == '{' && name_str[name_len-1] == '}')
+        {
+            Seq *s = StringMatchCaptures("^\\{ *\"([^\"]+)\" *: *([^ ]+) *\\}$", name_str);
+
+            if (s && SeqLength(s) == 3)
+            {
+                wrap_map_key = BufferNewFrom(SeqAt(s, 1), strlen(SeqAt(s, 1)));
+                name = BufferNewFrom(SeqAt(s, 2), strlen(SeqAt(s, 2)));
+            }
+
+            SeqDestroy(s);
+        }
+        else
+        {
+            name = BufferNewFrom(name_str, name_len);
+        }
+
+        VarRef *ref = NULL;
+
+        if (NULL != name)
+        {
+            ref = ResolveAndQualifyVarName(fp, BufferData(name));
+            BufferDestroy(name);
+        }
+
         if (!ref)
         {
             SeqDestroy(containers);
+
+            if (NULL != wrap_map_key) BufferDestroy(wrap_map_key);
+
             return FnFailure();
         }
 
         JsonElement *json = VarRefValueToJson(ctx, fp, ref, NULL, 0);
+
         VarRefDestroy(ref);
 
         if (!json)
         {
             SeqDestroy(containers);
+
+            if (NULL != wrap_map_key) BufferDestroy(wrap_map_key);
+
             return FnFailure();
         }
 
+        if (wrap_array_mode)
+        {
+            JsonElement *parent = JsonArrayCreate(1);
+            JsonArrayAppendElement(parent, json);
+            json = parent;
+        }
+        else if (NULL != wrap_map_key)
+        {
+            JsonElement *parent = JsonObjectCreate(1);
+            JsonObjectAppendElement(parent, BufferData(wrap_map_key), json);
+            json = parent;
+        }
+        else
+        {
+            // do nothing, no wrapping
+        }
+
         SeqAppend(containers, json);
+
+        if (NULL != wrap_map_key) BufferDestroy(wrap_map_key);
 
     } // end of args loop
 

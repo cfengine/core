@@ -138,6 +138,11 @@ static const char *LogLevelToColor(LogLevel level)
     }
 }
 
+static const char *LogLevelColorReset()
+{
+    return "\x1b[0m";
+}
+
 bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp)
 {
     if (strftime(dest, n, "%Y-%m-%dT%H:%M:%S%z", timestamp) == 0)
@@ -164,8 +169,8 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
 
         if (color)
         {
-            fprintf(output_file, "%s%s %8s: %s\x1b[0m\n", LogLevelToColor(level),
-                    formatted_timestamp, string_level, msg);
+            fprintf(output_file, "%s%s %8s: %s%s\n", LogLevelToColor(level),
+                    formatted_timestamp, string_level, msg, LogLevelColorReset());
         }
         else
         {
@@ -174,6 +179,11 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     }
     else
     {
+        if (color)
+        {
+            fputs(stdout, LogLevelToColor(level));
+        }
+
         if (level >= LOG_LEVEL_INFO && VPREFIX[0])
         {
             fprintf(stdout, "%s ", VPREFIX);
@@ -190,7 +200,7 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
         }
         else
         {
-            fprintf(stdout, "%s\n", msg);
+            fprintf(stdout, "%s%s\n", msg, (color ? "" : LogLevelColorReset()));
         }
     }
 }

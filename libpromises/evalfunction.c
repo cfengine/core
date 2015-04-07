@@ -29,6 +29,7 @@
 #include <dir.h>
 #include <dbm_api.h>
 #include <lastseen.h>
+#include <files_copy.h>
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <files_hashes.h>
@@ -3152,6 +3153,76 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
     if (lstat(path, &statbuf) == -1)
     {
         return FnFailure();
+    }
+    else if (!strcmp(detail, "xattr"))
+    {
+#if defined(WITH_XATTR)
+        // Extended attributes include both POSIX ACLs and SELinux contexts.
+        char attr_raw_names[CF_BUFSIZE];
+        ssize_t attr_raw_names_size = listxattr(path, attr_raw_names, sizeof(attr_raw_names));
+
+        if (attr_raw_names_size < 0)
+        {
+            if (errno != ENOTSUP && errno != ENODATA)
+            {
+                Log(LOG_LEVEL_ERR, "Can't read extended attributes of '%s'. (listxattr: %s)",
+                    path, GetErrorStr());
+            }
+        }
+        else
+        {
+            Buffer *printattr = BufferNew();
+            for (int pos = 0; pos < attr_raw_names_size;)
+            {
+                const char *current = attr_raw_names + pos;
+                pos += strlen(current) + 1;
+
+                if (!StringIsPrintable(current))
+                {
+                    Log(LOG_LEVEL_INFO, "Skipping extended attribute of '%s', it has a non-printable name: '%s'",
+                        path, current);
+                    continue;
+                }
+
+                char data[CF_BUFSIZE];
+                int datasize = getxattr(path, current, data, sizeof(data));
+                if (datasize < 0)
+                {
+                    if (errno == ENOTSUP)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR, "Can't read extended attribute '%s' of '%s'. (getxattr: %s)",
+                            path, current, GetErrorStr());
+                    }
+                }
+                else
+                {
+                  if (!StringIsPrintable(data))
+                  {
+                      Log(LOG_LEVEL_INFO, "Skipping extended attribute of '%s', it has non-printable data: '%s=%s'",
+                          path, current, data);
+                      continue;
+                  }
+
+                  BufferPrintf(printattr, "%s=%s", current, data);
+
+                  // Append a newline for multiple attributes.
+                  if (attr_raw_names_size > 0)
+                  {
+                      BufferAppendChar(printattr, '\n');
+                  }
+                }
+            }
+
+            snprintf(buffer, CF_MAXVARSIZE, "%s", BufferData(printattr));
+            BufferDestroy(printattr);
+        }
+#else // !WITH_XATTR
+    // do nothing, leave the buffer empty
+#endif
     }
     else if (!strcmp(detail, "size"))
     {
@@ -6980,7 +7051,7 @@ static const FnCallArg FILESTAT_ARGS[] =
 static const FnCallArg FILESTAT_DETAIL_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File object name"},
-    {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", CF_DATA_TYPE_OPTION, "stat() field to get"},
+    {"size,gid,uid,ino,nlink,ctime,atime,mtime,xattr,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", CF_DATA_TYPE_OPTION, "stat() field to get"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

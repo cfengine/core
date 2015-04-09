@@ -1,0 +1,83 @@
+# https://dev.cfengine.com/issues/7094
+#
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+body edit_defaults test_empty
+{
+  empty_file_before_editing => "true";
+  edit_backup => "false";
+}
+
+bundle agent init
+{
+  vars:
+    "test_file" string => "$(G.testfile).test";
+
+  files:
+    "$(test_file)"
+      create => "true",
+      edit_defaults => test_empty;
+}
+
+bundle agent test
+{
+  files:
+    "$(init.test_file)"
+      edit_line  => add_bad();
+
+    "$(init.test_file)"
+      edit_line  => add_bad2();
+}
+
+bundle agent check
+{
+  vars:
+    "expected" string => "Bad 1
+    Bad 2
+
+    Bad 3
+";
+
+    "actual" string => readfile("$(init.test_file)", "inf");
+
+  classes:
+    "ok" expression => strcmp("$(expected)", "$(actual)");
+
+  reports:
+    DEBUG::
+      "OK: Expected  '$(expected)' == '$(actual)'"
+      ifvarclass => "ok";
+
+      "FAIL: Expected '$(expected)' <> '$(actual)'"
+      ifvarclass => "!ok";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+}
+
+bundle edit_line add_bad() {
+  insert_lines:
+    "Bad 1
+    Bad 2
+
+    Bad 3"
+      insert_type => "preserve_block";
+}
+
+bundle edit_line add_bad2() {
+  insert_lines:
+    "    Bad 2
+
+    Bad 3"
+      insert_type => "preserve_block";
+
+}

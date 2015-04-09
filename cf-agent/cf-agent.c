@@ -75,6 +75,7 @@
 #include <buffer.h>
 #include <loading.h>
 #include <conn_cache.h>                 /* ConnCache_Init,ConnCache_Destroy */
+#include <net.h>
 
 #include <mod_common.h>
 

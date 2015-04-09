@@ -1,0 +1,49 @@
+#######################################################
+#
+# Test a simple dynamic bundlesequnece pattern
+# Classification Bundles listed in bundlesequence
+# Bundle list built from array
+# Bundles policy defined in seperate file
+# include only app files neaded based on list built from array
+# Lexicly sorted bundles activated with methods promise
+#######################################################
+
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "template_target" string => "$(G.testfile)";
+
+  files:
+      "$(template_target)"
+        create => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine#6867", "zendesk#1600" };
+
+  vars:
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(
+".*R: HEY I activated app00_zero
+R: HEY I activated app_one
+R: HEY I activated app_zero.*", ".*FAIL.*", $(command), $(this.promise_filename));
+
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

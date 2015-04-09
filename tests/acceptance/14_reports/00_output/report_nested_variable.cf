@@ -1,0 +1,39 @@
+# Check that nested variables are reported (Redmine: https://cfengine.com/dev/issues/4247)
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "any",
+        meta => { "redmine4247" };
+
+  vars:
+    !FAKE_PASS::
+      "subout" string => execresult("$(sys.cf_agent) -b runme -Kf $(this.promise_filename).sub", "noshell");
+    FAKE_PASS::
+      "subout" string => execresult("$(sys.cf_agent) -b runme -Kf $(this.promise_filename).sub -DFAKE_PASS", "noshell");
+}
+
+
+bundle agent check
+{
+  classes:
+      "ok" expression => regcmp(".*replaced-by=something_else.*", "$(test.subout)");
+
+  reports:
+    DEBUG::
+      "$(test.subout)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 2

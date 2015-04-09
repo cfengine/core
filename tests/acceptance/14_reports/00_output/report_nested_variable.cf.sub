@@ -1,0 +1,21 @@
+bundle agent old_bundle
+{
+  meta:
+    "tags" slist => {
+                      "deprecated=3.6.0",
+                      "deprecation-reason=Generic reimplementation",
+                      "replaced-by=something_else",
+                    };
+
+}
+bundle agent runme
+{
+  vars:
+    "deprecated" slist => bundlesmatching(".*", "deprecated.*");
+
+  reports:
+    !FAKE_PASS::
+      "$(deprecated): $($(deprecated)_meta.tags)";
+    FAKE_PASS::
+      "$(deprecated): $(old_bundle_meta.tags)";
+}

@@ -1,0 +1,17 @@
+bundle common read_classes
+{
+
+vars:
+  linux::
+  "local_classes" slist => lsdir("$(this.promise_dirname)/../classes","\w.*","false");
+
+classes:
+  "$(local_classes)" expression => "any";
+  "PASS_READ_CLASSES1" expression => "enable_test_bundle";
+
+reports:
+  PASS_READ_CLASSES1::
+  "PASS $(this.bundle) $(sys.cf_version)";
+  !PASS_READ_CLASSES1::
+  "FAIL $(this.bundle) $(sys.cf_version) Module Failed";
+}

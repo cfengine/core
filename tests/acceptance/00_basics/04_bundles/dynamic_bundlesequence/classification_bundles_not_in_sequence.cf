@@ -1,0 +1,43 @@
+#######################################################
+#
+# Test a simple dynamic bundlesequnece pattern
+# Classification Bundles NOT listed in bundlesequence
+# Classificaiton bundles defined in order used
+# Bundle list built from array
+# Lexicly sorted bundles activated with methods promise
+#######################################################
+
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "template_target" string => "$(G.testfile)";
+
+  files:
+      "$(template_target)"
+        create => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(
+".*R: HEY I activated app00_zero
+R: HEY I activated app_one
+R: HEY I activated app_zero.*", ".*FAIL.*", $(command), $(this.promise_filename));
+
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

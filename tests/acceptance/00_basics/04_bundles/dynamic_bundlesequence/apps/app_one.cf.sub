@@ -1,0 +1,7 @@
+bundle agent app_one
+#
+{
+  reports:
+      "HEY I activated $(this.bundle)";
+}
+

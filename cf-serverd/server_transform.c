@@ -48,6 +48,7 @@
 #include <generic_agent.h> /* HashControls */
 #include <file_lib.h>      /* IsDirReal */
 #include <matching.h>      /* IsRegex */
+#include <net.h>
 
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "server_access.h"

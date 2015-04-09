@@ -1,0 +1,7 @@
+bundle agent app00_zero
+#
+{
+  reports:
+      "HEY I activated $(this.bundle)";
+}
+

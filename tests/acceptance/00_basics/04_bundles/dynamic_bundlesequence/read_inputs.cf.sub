@@ -1,0 +1,19 @@
+bundle common prep_read_inputs
+{
+  vars:
+    linux.use_lsdir::
+      "inputs" slist => lsdir("inputs","\w.*","true");
+
+    linux.use_lsdir_relative::
+      "inputs" slist => lsdir("$(this.promise_dirname)/inputs","\w.*","true");
+
+    linux.no_use_lsdir::
+      "inputs" slist => { "inputs/read_classes.cf.sub",  "inputs/test_bundle_common.cf.sub" };
+}
+
+bundle common read_inputs
+{
+  vars:
+    linux::
+      "inputs" slist => { @(prep_read_inputs.inputs) };
+}

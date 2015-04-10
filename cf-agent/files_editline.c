@@ -28,6 +28,7 @@
 #include <eval_context.h>
 #include <promises.h>
 #include <files_names.h>
+#include <files_interfaces.h>
 #include <vars.h>
 #include <item_lib.h>
 #include <sort.h>
@@ -1542,7 +1543,6 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
                                 Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     FILE *fin;
-    char buf[CF_BUFSIZE];
     int retval = false;
     Item *loc = NULL;
     int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
@@ -1554,41 +1554,13 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         return false;
     }
 
+    size_t buf_size = CF_BUFSIZE;
+    char *buf = xmalloc(buf_size);
     loc = location;
     Buffer *exp = BufferNew();
 
-    for(;;)
+    while (CfReadLine(&buf, &buf_size, fin) != -1)
     {
-        if (fgets(buf, sizeof(buf), fin) == NULL)
-        {
-            if (ferror(fin)) {
-                if (errno == EISDIR)
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not read file %s: Is a directory", pp->promiser);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-                    break;
-                }
-                else
-                {
-                    UnexpectedError("Failed to read line from stream");
-                    break;
-                }
-            }
-            else /* feof */
-            {
-                break;
-            }
-        }
-        if (StripTrailingNewline(buf, CF_EXPANDSIZE) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
-        }
-
-        if (feof(fin) && strlen(buf) == 0)
-        {
-            break;
-        }
-
         BufferClear(exp);
         if (a.expandvars)
         {
@@ -1639,12 +1611,27 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             location = *start;
         }
+
+        free(buf);
+        buf = NULL;
+    }
+
+    if (ferror(fin))
+    {
+        if (errno == EISDIR)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not read file %s: Is a directory", pp->promiser);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+        }
+        else
+        {
+            UnexpectedError("Failed to read line from stream");
+        }
     }
 
     fclose(fin);
     BufferDestroy(exp);
     return retval;
-
 }
 
 /***************************************************************************/
@@ -1654,8 +1641,6 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
                                         PromiseResult *result)
 {
     bool retval = false;
-    char buf[CF_EXPANDSIZE];
-    char *sp;
     int preserve_all_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
     int preserve_block = a.sourcetype && (preserve_all_lines || strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
@@ -1667,10 +1652,18 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
 
     // Iterate over any lines within the chunk
 
-    for (sp = chunk; sp <= chunk + strlen(chunk); sp++)
+    char *buf = NULL;
+    size_t buf_size = 0;
+    for (char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
     {
-        memset(buf, 0, CF_BUFSIZE);
-        StringNotMatchingSetCapped(sp, CF_BUFSIZE, "\n", buf);
+        if (strlen(chunk) + 1 > buf_size)
+        {
+            buf_size = strlen(chunk) + 1;
+            buf = xrealloc(buf, buf_size);
+        }
+
+        memset(buf, 0, buf_size);
+        StringNotMatchingSetCapped(sp, buf_size, "\n", buf);
         sp += strlen(buf);
 
         if (!SelectLine(ctx, buf, a))
@@ -1713,6 +1706,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
         }
     }
 
+    free(buf);
     return retval;
 }
 

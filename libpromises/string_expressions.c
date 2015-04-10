@@ -169,7 +169,18 @@ static StringParseResult ParseToken(const char *expr, int start, int end)
         endlit++;
     }
 
-    if (endlit > start)
+    if (endlit > start &&
+        (expr[endlit] == ':' ||
+        expr[endlit] == '.' ||
+        expr[endlit] == '|' ||
+        expr[endlit] == ')' ||
+        expr[endlit] == '(' ||
+        expr[endlit] == '$' ||
+        expr[endlit] == '@' ||
+        expr[endlit] == '{' ||
+        expr[endlit] == '}' ||
+        expr[endlit] == '&' ||
+        expr[endlit] == '\0'))
     {
         StringExpression *ret = xcalloc(1, sizeof(StringExpression));
 

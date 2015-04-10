@@ -49,16 +49,10 @@ Attributes GetReplaceAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetReportsAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetServicesAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetStorageAttributes(const EvalContext *ctx, const Promise *pp);
-Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp);
-Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp);
-Attributes GetArpAttributes(const EvalContext *ctx, const Promise *pp);
 
-Arp GetArpConstraints(const EvalContext *ctx, const Promise *pp);
 Acl GetAclConstraints(const EvalContext *ctx, const Promise *pp);
 ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *pp);
 Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp);
-Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp);
-Networks GetNetworkConstraints(const EvalContext *ctx, const Promise *pp);
 DefineClasses GetClassDefinitionConstraints(const EvalContext *ctx, const Promise *pp);
 EditColumn GetColumnConstraints(const EvalContext *ctx, const Promise *pp);
 EditDefaults GetEditDefaults(const EvalContext *ctx, const Promise *pp);

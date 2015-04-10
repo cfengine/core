@@ -27,7 +27,6 @@
 #include <mod_common.h>
 
 #include <mod_environ.h>
-#include <mod_interfaces.h>
 #include <mod_outputs.h>
 #include <mod_access.h>
 #include <mod_storage.h>
@@ -391,34 +390,10 @@ const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax FILE_CONTROL_CONSTRAINTS[] =
+const ConstraintSyntax file_control_constraints[] =  /* enum cfh_control */
 {
     ConstraintSyntaxNewString("namespace", CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-const ConstraintSyntax ROUTING_CONTROLBODY[] =
-{
-    ConstraintSyntaxNewString("routing_service_log_file", CF_ANYSTRING, "Log file for route service messages, if supported on platform", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("routing_service_password", CF_ANYSTRING, "Password for service, if supported on platform", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("ospf_log_adjacency_changes", "normal,detail,none", "OSPF logging of neighbour changes", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_log_timestamp_precision", "0,6", "Maximum precision in microseconds [0-6]", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ospf_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOptionList("ospf_redistribute", "kernel,connected,static,bgp", "Sources of routing information to distribute", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("ospf_redistribute_metric_type", "1,2", "How to calculate metrics for external routes", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_kernel_metric", CF_VALRANGE, "Metric for redistributed kernel route", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_connected_metric", CF_VALRANGE, "Metric for redistributed direct connetions", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_static_metric", CF_VALRANGE, "Metric for redistributed static route", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("ospf_redistribute_bgp_metric", CF_VALRANGE, "Metric for redistributed BGP route", SYNTAX_STATUS_NORMAL),
-
-    ConstraintSyntaxNewInt("bgp_local_as", CF_VALRANGE, "This router's BGP autonomous system number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("bgp_router_id", CF_IPRANGE, "The router's identity address aka loopback address", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("bgp_log_neighbor_changes", CF_BOOL, "Activate logging for bgp neighbour changes", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOptionList("bgp_redistribute", "kernel,connected,static,ospf", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("bgp_ipv4_networks", CF_IPRANGE, "Declare local ipv4 networks to advertise for this router", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("bgp_ipv6_networks", CF_IPRANGE, "Declare local ipv6 networks to advertise for this router", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("bgp_graceful_restart", "BGP session restart RFC, default is false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -477,8 +452,7 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_RUNC, CFR_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew(CF_FILEC, FILE_CONTROL_CONSTRAINTS, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew(CF_ROUTEC, ROUTING_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew("file", file_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
     BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
@@ -541,7 +515,6 @@ const PromiseTypeSyntax *const CF_ALL_PROMISE_TYPES[] =
     CF_DATABASES_PROMISE_TYPES,      /* mod_databases.c */
     CF_ENVIRONMENT_PROMISE_TYPES,    /* mod_environ.c */
     CF_FILES_PROMISE_TYPES,          /* mod_files.c */
-    CF_INTERFACES_PROMISE_TYPES,     /* mod_interfaces.c */
     CF_METHOD_PROMISE_TYPES,         /* mod_methods.c */
     CF_OUTPUTS_PROMISE_TYPES,        /* mod_outputs.c */
     CF_PACKAGES_PROMISE_TYPES,       /* mod_packages.c */

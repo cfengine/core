@@ -25,14 +25,21 @@ body common control
     bundlesequence => { default($(this.promiser_filename)) };
 }
 
+bundle common fakeroot_check
+{
+  classes:
+      "using_fakeroot"
+        expression => regcmp(".+", getenv("FAKEROOTKEY", "10")),
+        scope => "namespace";
+}
+
 bundle agent init
 {
   meta:
       # Backgrounding doesn't work properly on Windows.
-      #"test_skip_needs_work" string => "windows";
-      # Somehow the backgrounding leaves stale processes behind which messes
-      # with later executions. Needs to be fixed later.
-      "test_skip_needs_work" string => "any";
+      # Also, fakeroot somehow interferes with background processes, and causes
+      # stale processes to linger, so disable test when using that.
+      "test_skip_needs_work" string => "windows|using_fakeroot";
 
   methods:
     test_pass_4::
@@ -43,6 +50,10 @@ one promise execution");
 one promise execution");
       "any" usebundle => file_make("$(G.testfile).long_ifelapsed.expected", "one promise execution");
 
+  commands:
+    test_pass_4::
+      "kill `$(G.cat) $(G.testfile)*.pid`"
+        contain => in_shell;
 }
 
 bundle agent test

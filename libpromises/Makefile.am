@@ -118,7 +118,6 @@ libpromises_la_SOURCES = \
         mod_storage.c mod_storage.h \
         mod_knowledge.c mod_knowledge.h \
         mod_users.c mod_users.h \
-        mod_interfaces.c mod_interfaces.h \
         modes.c \
         mutex.c mutex.h \
         ornaments.c ornaments.h \

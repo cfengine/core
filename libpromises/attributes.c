@@ -30,8 +30,6 @@
 #include <logging.h>
 #include <chflags.h>
 #include <audit.h>
-#include <string_lib.h>
-#include <communication.h>
 
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
@@ -165,63 +163,12 @@ Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
     Attributes attr = { {0} };
 
     attr.havebundle = PromiseBundleConstraintExists(ctx, "home_bundle", pp);
+
     attr.inherit = PromiseGetConstraintAsBoolean(ctx, "home_bundle_inherit", pp);
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
     attr.users = GetUserConstraints(ctx, pp);
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.transaction = GetTransactionConstraints(ctx, pp);
-    attr.classes = GetClassDefinitionConstraints(ctx, pp);
-    attr.interface = GetInterfaceConstraints(ctx, pp);
-
-    attr.havelinkstate = PromiseGetConstraintAsBoolean(ctx, "link_state", pp);
-    attr.havelinkservices = PromiseGetConstraintAsBoolean(ctx, "link_services", pp);
-    attr.havetunnel = PromiseGetConstraintAsBoolean(ctx, "tunnel", pp);
-
-    attr.havebridge = (attr.interface.bridge_interfaces == NULL) ? false : true;
-    attr.havebond = (attr.interface.bond_interfaces == NULL) ? false : true;
-    attr.haveipv4 = (attr.interface.v4_addresses == NULL) ? false : true;
-    attr.haveipv6 = (attr.interface.v6_addresses == NULL) ? false : true;
-    attr.haveuvlan = (attr.interface.untagged_vlan == NULL) ? false : true;
-    attr.havetvlan = (attr.interface.tagged_vlans == NULL) ? false : true;
-
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.transaction = GetTransactionConstraints(ctx, pp);
-    attr.classes = GetClassDefinitionConstraints(ctx, pp);
-    attr.networks = GetNetworkConstraints(ctx, pp);
-
-    attr.haveroutedto = PromiseGetConstraintAsBoolean(ctx, "routed_to", pp);
-    attr.havebalance = PromiseGetConstraintAsBoolean(ctx, "balanced_destinations", pp);
-
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetArpAttributes(const EvalContext *ctx, const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.transaction = GetTransactionConstraints(ctx, pp);
-    attr.classes = GetClassDefinitionConstraints(ctx, pp);
-    attr.arp = GetArpConstraints(ctx, pp);
     return attr;
 }
 
@@ -388,15 +335,17 @@ Environments GetEnvironmentsConstraints(const EvalContext *ctx, const Promise *p
 {
     Environments e;
 
-    e.cpus = PromiseGetConstraintAsInt(ctx, "guest_cpus", pp);
-    e.memory = PromiseGetConstraintAsInt(ctx, "guest_memory", pp);
-    e.disk = PromiseGetConstraintAsInt(ctx, "guest_disk", pp);
-    e.image_path = PromiseGetConstraintAsRval(pp, "guest_image_path", RVAL_TYPE_SCALAR);
-    e.image_name = PromiseGetConstraintAsRval(pp, "guest_image_name", RVAL_TYPE_SCALAR);
-    e.spec = PromiseGetConstraintAsRval(pp, "guest_libvirt_xml", RVAL_TYPE_SCALAR);
-    e.addresses = PromiseGetConstraintAsList(ctx, "guest_addresses", pp);
-    e.type = PromiseGetConstraintAsRval(pp, "guest_type", RVAL_TYPE_SCALAR);
-    e.state = EnvironmentStateFromString(PromiseGetConstraintAsRval(pp, "guest_state", RVAL_TYPE_SCALAR));
+    e.cpus = PromiseGetConstraintAsInt(ctx, "env_cpus", pp);
+    e.memory = PromiseGetConstraintAsInt(ctx, "env_memory", pp);
+    e.disk = PromiseGetConstraintAsInt(ctx, "env_disk", pp);
+    e.baseline = PromiseGetConstraintAsRval(pp, "env_baseline", RVAL_TYPE_SCALAR);
+    e.spec = PromiseGetConstraintAsRval(pp, "env_spec", RVAL_TYPE_SCALAR);
+    e.host = PromiseGetConstraintAsRval(pp, "environment_host", RVAL_TYPE_SCALAR);
+
+    e.addresses = PromiseGetConstraintAsList(ctx, "env_addresses", pp);
+    e.name = PromiseGetConstraintAsRval(pp, "env_name", RVAL_TYPE_SCALAR);
+    e.type = PromiseGetConstraintAsRval(pp, "environment_type", RVAL_TYPE_SCALAR);
+    e.state = EnvironmentStateFromString(PromiseGetConstraintAsRval(pp, "environment_state", RVAL_TYPE_SCALAR));
 
     return e;
 }
@@ -1570,10 +1519,10 @@ StorageVolume GetVolumeConstraints(const EvalContext *ctx, const Promise *pp)
 
 Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
 {
-    Report r = {0};
-
-    r.result = PromiseGetConstraintAsRval(pp, "bundle_return_value_index", RVAL_TYPE_SCALAR);
-
+ Report r = {0};
+ 
+ r.result = PromiseGetConstraintAsRval(pp, "bundle_return_value_index", RVAL_TYPE_SCALAR);
+    
     if (PromiseGetConstraintAsRval(pp, "lastseen", RVAL_TYPE_SCALAR))
     {
         r.havelastseen = true;
@@ -1614,7 +1563,7 @@ Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
     {
         Log(LOG_LEVEL_ERR, "bundle_return_value promise for '%s' in bundle '%s' with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
     }
-
+    
     return r;
 }
 
@@ -1671,7 +1620,7 @@ Measurement GetMeasurementConstraint(const EvalContext *ctx, const Promise *pp)
     m.select_line_matching = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR);
     m.select_line_number = PromiseGetConstraintAsInt(ctx, "select_line_number", pp);
     m.policy = MeasurePolicyFromString(PromiseGetConstraintAsRval(pp, "select_multiline_policy", RVAL_TYPE_SCALAR));
-
+    
     m.extraction_regex = PromiseGetConstraintAsRval(pp, "extraction_regex", RVAL_TYPE_SCALAR);
     m.units = PromiseGetConstraintAsRval(pp, "units", RVAL_TYPE_SCALAR);
     m.growing = PromiseGetConstraintAsBoolean(ctx, "track_growing_file", pp);
@@ -1689,7 +1638,6 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
     d.db_server_password = PromiseGetConstraintAsRval(pp, "db_server_password", RVAL_TYPE_SCALAR);
     d.db_server_host = PromiseGetConstraintAsRval(pp, "db_server_host", RVAL_TYPE_SCALAR);
     d.db_connect_db = PromiseGetConstraintAsRval(pp, "db_server_connection_db", RVAL_TYPE_SCALAR);
-    d.db_directory = PromiseGetConstraintAsRval(pp, "db_embedded_directory_path", RVAL_TYPE_SCALAR);
     d.type = PromiseGetConstraintAsRval(pp, "database_type", RVAL_TYPE_SCALAR);
     d.server = PromiseGetConstraintAsRval(pp, "database_server", RVAL_TYPE_SCALAR);
     d.columns = PromiseGetConstraintAsList(ctx, "database_columns", pp);
@@ -1708,113 +1656,6 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
 
     return d;
 }
-
-/*******************************************************************/
-
-Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
-{
-    Interfaces i;
-
-    // Proxy body
-
-    i.bridge_interfaces = PromiseGetConstraintAsList(ctx, "bridge_interfaces", pp);
-    i.bond_interfaces = PromiseGetConstraintAsList(ctx, "bond_interfaces", pp);
-    i.tagged_vlans = PromiseGetConstraintAsList(ctx, "tagged_vlans", pp);
-    i.untagged_vlan = PromiseGetConstraintAsRval(pp, "untagged_vlan", RVAL_TYPE_SCALAR);
-    i.v4_addresses = PromiseGetConstraintAsList(ctx, "ipv4_addresses", pp);
-    i.v6_addresses = PromiseGetConstraintAsList(ctx, "ipv6_addresses", pp);
-    i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
-    i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
-    i.manager = PromiseGetConstraintAsRval(pp, "manager", RVAL_TYPE_SCALAR);
-    i.spanning = PromiseGetConstraintAsRval(pp, "spanning", RVAL_TYPE_SCALAR);
-    i.autoneg = PromiseGetConstraintAsBoolean(ctx, "auto_negotiation", pp);
-    i.purge = PromiseGetConstraintAsBoolean(ctx, "purge_addresses", pp);
-    i.delete = PromiseGetConstraintAsBoolean(ctx, "delete", pp);
-    i.mtu = PromiseGetConstraintAsInt(ctx, "mtu", pp);
-    i.speed = PromiseGetConstraintAsInt(ctx, "speed", pp);
-    i.min_bonding = PromiseGetConstraintAsInt(ctx, "min_bonding", pp);
-
-    i.ospf_hello_interval = PromiseGetConstraintAsInt(ctx, "ospf_hello_interval", pp);
-    i.ospf_priority = PromiseGetConstraintAsInt(ctx, "ospf_priority", pp);
-    i.ospf_link_type = PromiseGetConstraintAsRval(pp, "ospf_link_type", RVAL_TYPE_SCALAR);
-    i.ospf_authentication_digest = PromiseGetConstraintAsRval(pp, "ospf_authentication_digest", RVAL_TYPE_SCALAR);
-    i.ospf_passive_interface = PromiseGetConstraintAsBoolean(ctx, "ospf_passive_interface", pp);
-    i.ospf_abr_summarization = PromiseGetConstraintAsBoolean(ctx, "ospf_abr_summarization", pp);
-
-    char *areatype = PromiseGetConstraintAsRval(pp, "ospf_area_type", RVAL_TYPE_SCALAR);
-    if (areatype && strcmp(areatype, "stub") == 0)
-    {
-        i.ospf_area_type = 's';
-    }
-    else
-    {
-        i.ospf_area_type = 'n';
-    }
-
-    i.ospf_area = PromiseGetConstraintAsInt(ctx, "ospf_area", pp);
-
-    char *sp = PromiseGetConstraintAsRval(pp, "bonding", RVAL_TYPE_SCALAR);
-    i.bonding = GetBondingMode(sp);
-
-    i.tunnel_id = PromiseGetConstraintAsInt(ctx, "tunnel_id", pp);
-    i.tunnel_loopback = PromiseGetConstraintAsRval(pp, "tunnel_address", RVAL_TYPE_SCALAR);
-    i.tunnel_multicast_group = PromiseGetConstraintAsRval(pp, "tunnel_multicast_group", RVAL_TYPE_SCALAR);
-    i.tunnel_interface = PromiseGetConstraintAsRval(pp, "tunnel_interface", RVAL_TYPE_SCALAR);
-    i.tunnel_alien_arp = PromiseGetConstraintAsRval(pp, "tunnel_alien_arp", RVAL_TYPE_SCALAR);
-
-    i.bgp_remote_as = PromiseGetConstraintAsInt(ctx, "bgp_peer_as", pp);
-    i.bgp_neighbour = PromiseGetConstraintAsRval(pp, "bgp_session_neighbor", RVAL_TYPE_SCALAR);
-
-    if (i.bgp_neighbour && (IsIPV4Address(i.bgp_neighbour) ||IsIPV6Address(i.bgp_neighbour)) && strchr(i.bgp_neighbour, '/'))
-    {
-        Log(LOG_LEVEL_ERR, "Neighbour IP address should be a host not be a network address '%s' in BGP interface promise", i.bgp_neighbour);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-    }
-
-    char *refl = PromiseGetConstraintAsRval(pp, "bgp_route_reflector", RVAL_TYPE_SCALAR);
-    if (refl && (strcmp(refl, "server") == 0))
-    {
-        i.bgp_reflector = true;
-    }
-    else
-    {
-        i.bgp_reflector = false;
-    }
-
-    i.bgp_ttl_security = PromiseGetConstraintAsInt(ctx, "bgp_ttl_security", pp);
-    i.bgp_advert_interval = PromiseGetConstraintAsInt(ctx, "bgp_advertisement_interval", pp);
-    i.bgp_next_hop_self = PromiseGetConstraintAsBoolean(ctx, "bgp_next_hop_self", pp);
-    i.bgp_families = PromiseGetConstraintAsList(ctx, "bgp_advertise_families", pp);
-    i.bgp_maximum_paths = PromiseGetConstraintAsInt(ctx, "bgp_maximum_paths", pp);
-    i.bgp_ipv6_neighbor_discovery_route_advertisement = PromiseGetConstraintAsRval(pp, "bgp_ipv6_neighbor_discovery_route_advertisement", RVAL_TYPE_SCALAR);
-    return i;
-}
-
-/*******************************************************************/
-
-Networks GetNetworkConstraints(const EvalContext *ctx, const Promise *pp)
-{
-    Networks n;
-
-    n.gateway_ip = PromiseGetConstraintAsRval(pp, "gateway_ip", RVAL_TYPE_SCALAR);
-    n.gateway_interface = PromiseGetConstraintAsRval(pp, "gateway_interface", RVAL_TYPE_SCALAR);
-    n.delete_route = PromiseGetConstraintAsBoolean(ctx, "delete_route", pp);
-    return n;
-}
-
-/*******************************************************************/
-
-Arp GetArpConstraints(const EvalContext *ctx, const Promise *pp)
-{
-    Arp a;
-
-    a.link_address = PromiseGetConstraintAsRval(pp, "link_address", RVAL_TYPE_SCALAR);
-    ToLowerStrInplace(a.link_address);
-    a.interface = PromiseGetConstraintAsRval(pp, "interface", RVAL_TYPE_SCALAR);
-    a.delete_link = PromiseGetConstraintAsBoolean(ctx, "delete_link", pp);
-    return a;
-}
-
 /*******************************************************************/
 
 User GetUserConstraints(const EvalContext *ctx, const Promise *pp)

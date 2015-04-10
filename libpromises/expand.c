@@ -1077,7 +1077,8 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
 }
 
 void PolicyResolve(EvalContext *ctx, const Policy *policy,
-                   GenericAgentConfig *config)
+                   GenericAgentConfig *config,
+                   int num_of_passes)
 {
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -1085,7 +1086,10 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
         if (strcmp("common", bundle->type) == 0)
         {
             EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
-            BundleResolve(ctx, bundle);
+            for (int pass = 0; pass < num_of_passes; pass++)
+            {
+                BundleResolve(ctx, bundle);
+            }
             EvalContextStackPopFrame(ctx);
         }
     }

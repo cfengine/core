@@ -285,7 +285,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
     Banner("Server control promises..");
 
-    PolicyResolve(ctx, policy, config);
+    PolicyResolve(ctx, policy, config, 1);
 
 /* Now expand */
 

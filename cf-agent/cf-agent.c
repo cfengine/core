@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
     }
 
     Nova_TrackExecution(config->input_file);
-    GenerateDiffReports(config, ctx);
+    GenerateReports(config, ctx);
 
     PurgeLocks();
     BackupLockDatabase();

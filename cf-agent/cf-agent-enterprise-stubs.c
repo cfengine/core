@@ -42,7 +42,7 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_TrackExecution, ARG_UNUSED cons
 {
 }
 
-ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenerateDiffReports, 
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenerateReports, 
                                       ARG_UNUSED const GenericAgentConfig *, config, 
                                       ARG_UNUSED const EvalContext *, ctx)
 {

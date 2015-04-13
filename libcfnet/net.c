@@ -246,12 +246,17 @@ uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */
  *  This function is global, accross all network operations (and interfaces, perhaps)
  *  @param tosend Length of current packet being sent out (in bytes)
  */
+#ifndef CLOCK_MONOTONIC
+/* Some OS-es don't have monotonic clock, but we can still use the
+ * next available one */
+# define CLOCK_MONOTONIC CLOCK_REALTIME
+#endif
 
 void EnforceBwLimit(int tosend)
 {
     const uint32_t u_10e6 = 1000000L;
     const uint32_t u_10e9 = 1000000000L;
-    struct timespec clock_now;
+    struct timespec clock_now = {0, 0L};
 
     if (!bwlimit_kbytes)
     {
@@ -291,6 +296,20 @@ void EnforceBwLimit(int tosend)
         {
             bwlimit_next.tv_sec++;
             bwlimit_next.tv_nsec -= u_10e9;
+        }
+
+        if (bwlimit_next.tv_sec > 20)
+        {
+            /* Upper limit of 20sec for penalty. This will avoid huge wait if
+             * our clock has jumped >minutes back in time. Still, assuming that
+             * most of our packets are <= 2048 bytes, the lower bwlimit is bound
+             * to 102.4 Bytes/sec. With 65k packets (rare) is 3.7kBytes/sec in
+             * that extreme case.
+             * With more clients hitting a single server, this lower bound is
+             * multiplied by num of clients, eg. 102.4kBytes/sec for 1000 reqs.
+             * simultaneously.
+             */
+            bwlimit_next.tv_sec = 20;
         }
         pthread_mutex_unlock(&bwlimit_lock);
     }

@@ -35,8 +35,6 @@
 
 /* Globals */
 
-#define ATTR        22
-
 Item *ALL_INCOMING = NULL;
 Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
@@ -52,7 +50,7 @@ typedef struct
     enum observables out;
 } Sock;
 
-static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum */
+static const Sock ECGSOCKS[] =     /* extended to map old to new using enum */
 {
     {"137", "netbiosns", ob_netbiosns_in, ob_netbiosns_out},
     {"138", "netbiosdgm", ob_netbiosdgm_in, ob_netbiosdgm_out},
@@ -75,6 +73,7 @@ static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum 
     {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
     {"631", "ipp", ob_ipp_in, ob_ipp_out},
 };
+#define ATTR (sizeof(ECGSOCKS) / sizeof(ECGSOCKS[0]))
 
 static const char *const VNETSTAT[] =
 {

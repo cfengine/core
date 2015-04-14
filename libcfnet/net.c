@@ -246,10 +246,13 @@ uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */
  *  This function is global, accross all network operations (and interfaces, perhaps)
  *  @param tosend Length of current packet being sent out (in bytes)
  */
-#ifndef CLOCK_MONOTONIC
+
+#ifdef CLOCK_MONOTONIC
+# define PREFERRED_CLOCK CLOCK_MONOTONIC
+#else
 /* Some OS-es don't have monotonic clock, but we can still use the
  * next available one */
-# define CLOCK_MONOTONIC CLOCK_REALTIME
+# define PREFERRED_CLOCK CLOCK_REALTIME
 #endif
 
 void EnforceBwLimit(int tosend)
@@ -266,7 +269,7 @@ void EnforceBwLimit(int tosend)
 
     if (pthread_mutex_lock(&bwlimit_lock) == 0)
     {
-        clock_gettime(CLOCK_MONOTONIC, &clock_now);
+        clock_gettime(PREFERRED_CLOCK, &clock_now);
 
         if ((bwlimit_next.tv_sec < clock_now.tv_sec) ||
             ( (bwlimit_next.tv_sec == clock_now.tv_sec) &&

@@ -236,9 +236,12 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
   the correct amount of time, in total.
  */
 
+#ifndef _WIN32
 static pthread_mutex_t bwlimit_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct timespec bwlimit_next = {0, 0L};
-uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */ 
+#endif
+
+uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */
 
 
 /** Throttle traffic, if next packet happens too soon after the previous one
@@ -257,15 +260,21 @@ uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */
 
 void EnforceBwLimit(int tosend)
 {
-    const uint32_t u_10e6 = 1000000L;
-    const uint32_t u_10e9 = 1000000000L;
-    struct timespec clock_now = {0, 0L};
-
     if (!bwlimit_kbytes)
     {
         /* early return, before any expensive syscalls */
         return;
     }
+
+#ifdef _WIN32
+    Log(LOG_LEVEL_WARNING, "Bandwidth limiting with \"bwlimit\" is not supported on Windows.");
+    (void)tosend; // Avoid "unused" warning.
+    return;
+#else
+
+    const uint32_t u_10e6 = 1000000L;
+    const uint32_t u_10e9 = 1000000000L;
+    struct timespec clock_now = {0, 0L};
 
     if (pthread_mutex_lock(&bwlimit_lock) == 0)
     {
@@ -327,7 +336,7 @@ void EnforceBwLimit(int tosend)
     {
         nanosleep(&clock_now, NULL);
     }
-
+#endif // !_WIN32
 }
 
 

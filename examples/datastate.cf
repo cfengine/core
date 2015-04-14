@@ -59,7 +59,7 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: holder vars = {"list":["element1","element2"],"s":"Hello!","d":[4,5,6]}
+#@ R: holder vars = {"d":[4,5,6],"list":["element1","element2"],"s":"Hello!"}
 #@ R: I have the holder class
 #@ ```
 #+end_src

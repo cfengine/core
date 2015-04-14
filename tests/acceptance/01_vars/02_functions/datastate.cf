@@ -34,7 +34,7 @@ bundle agent check
       "known_classes" slist => getindices("test.state[classes]");
       "printed_classes" string => format("%S", known_classes);
       "init_expected" string => '{"x":"1","y":{"ykey":["yvalue1","yvalue2"]},"z":["z1","z2","z3"]}';
-      "ns_expected" string => '{"i":"1","l":[1,"l","|"],"j":"two","k":["k2","everest"]}';
+      "ns_expected" string => '{"i":"1","j":"two","k":["k2","everest"],"l":[1,"l","|"]}';
 
   classes:
       "init_ok" expression => strcmp($(init_state_str), $(init_expected));

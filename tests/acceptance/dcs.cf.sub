@@ -38,6 +38,7 @@ bundle common G
                         "mkdir",
                         "mock_package_manager",
                         "mv",
+                        "no_fds",
                         "od",
                         "perl",
                         "printf",
@@ -133,6 +134,9 @@ bundle common G
       "testdir" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
       "testfile" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
 
+  classes:
+      "using_fakeroot"
+        expression => regcmp(".+", getenv("FAKEROOTKEY", "10"));
 }
 
 bundle common dcs_strings

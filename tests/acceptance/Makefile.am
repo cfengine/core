@@ -41,6 +41,9 @@ noinst_PROGRAMS += mock_package_manager
 
 mock_package_manager_SOURCES =
 mock_package_manager_LDADD = libmock_package_manager.la
+
+noinst_PROGRAMS += no_fds
+no_fds_LDADD = ../../libutils/libutils.la
 endif # !BUILTIN_EXTENSIONS
 
 if HAVE_LIBXML2

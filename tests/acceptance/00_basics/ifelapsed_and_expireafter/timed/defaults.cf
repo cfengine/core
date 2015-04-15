@@ -28,11 +28,8 @@ body common control
 bundle agent init
 {
   meta:
-      # Backgrounding doesn't work properly on Windows.
-      #"test_skip_needs_work" string => "windows";
-      # Somehow the backgrounding leaves stale processes behind which messes
-      # with later executions. Needs to be fixed later.
-      "test_skip_needs_work" string => "any";
+      # Backgrounding doesn't work properly on Windows or with fakeroot.
+      "test_skip_needs_work" string => "windows|using_fakeroot";
 
   methods:
     test_pass_4::
@@ -56,7 +53,7 @@ bundle agent test
 
   commands:
     test_pass_1|test_pass_2|test_pass_3::
-      "$(sys.cf_agent) -D $(cases) -f $(this.promise_filename).sub 1>$(G.testfile).$(cases).output.log 2>&1 &"
+      "$(G.no_fds) $(sys.cf_agent) -D $(cases) -f $(this.promise_filename).sub 1>>$(G.testfile).$(cases).output.log 2>&1 &"
         contain => in_shell;
 }
 

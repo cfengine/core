@@ -1286,12 +1286,27 @@ static void JsonArrayWrite(Writer *writer, const JsonElement *array, size_t inde
     WriterWriteChar(writer, ']');
 }
 
+int JsonElementPropertyCompare(const void *e1, const void *e2, ARG_UNUSED void *user_data)
+{
+    return strcmp( ((JsonElement*)e1)->propertyName,
+                   ((JsonElement*)e2)->propertyName);
+}
+
 void JsonObjectWrite(Writer *writer, const JsonElement *object, size_t indent_level)
 {
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
     WriterWrite(writer, "{\n");
+
+    for (size_t i = 0; i < object->container.children->length; i++)
+    {
+        assert(object->container.children->data[i]->propertyName);
+    }
+
+    // sort the children Seq so the output is canonical (keys are sorted)
+    // we've already asserted that the children have a valid propertyName
+    SeqSort(object->container.children, (SeqItemComparator)JsonElementPropertyCompare, NULL);
 
     for (size_t i = 0; i < object->container.children->length; i++)
     {
@@ -1390,12 +1405,6 @@ static void JsonArrayWriteCompact(Writer *writer, const JsonElement *array)
     }
 
     WriterWriteChar(writer, ']');
-}
-
-int JsonElementPropertyCompare(const void *e1, const void *e2, ARG_UNUSED void *user_data)
-{
-    return strcmp( ((JsonElement*)e1)->propertyName,
-                   ((JsonElement*)e2)->propertyName);
 }
 
 void JsonObjectWriteCompact(Writer *writer, const JsonElement *object)

@@ -61,10 +61,10 @@ bundle edit_line init_insert_lines
     "where_else": 100.2300
   },
   {
-    "nowhere": true,
     "boolean_spears": true,
-    "string_spears": "yes",
-    "bows": "maybe"
+    "bows": "maybe",
+    "nowhere": true,
+    "string_spears": "yes"
   }
 ]';
 }

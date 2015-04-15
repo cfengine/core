@@ -64,6 +64,7 @@
 #include <csv_parser.h>
 #include <json-yaml.h>
 #include <known_dirs.h>
+#include <mustache.h>
 
 #include <math_eval.h>
 
@@ -5809,6 +5810,57 @@ static FnCallResult FnCallParseRealArray(EvalContext *ctx, ARG_UNUSED const Poli
 
 /*********************************************************************/
 
+static FnCallResult FnCallStringMustache(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    if (!finalargs)
+    {
+        return FnFailure();
+    }
+
+    const char* const mustache_template = RlistScalarValue(finalargs);
+    JsonElement *json = NULL;
+    bool destroy_json = false;
+
+    if (finalargs->next) // we have a variable name...
+    {
+      VarRef *ref = VarRefParse(RlistScalarValue(finalargs->next));
+      DataType type = CF_DATA_TYPE_NONE;
+      const void *value = EvalContextVariableGet(ctx, ref, &type);
+      VarRefDestroy(ref);
+
+      if (type != CF_DATA_TYPE_CONTAINER)
+      {
+        Log(LOG_LEVEL_VERBOSE, "Function '%s' was called with an invalid data container name: '%s'.", fp->name, RlistScalarValue(finalargs->next));
+        return FnFailure();
+      }
+
+      json = (JsonElement *)value;
+    }
+    else
+    {
+      json = DefaultTemplateData(ctx, NULL);
+      destroy_json = true;
+    }
+
+    Buffer *result = BufferNew();
+    bool success = MustacheRender(result, mustache_template, json);
+
+    // if we allocated a new container, destroy it now
+    if (destroy_json) JsonDestroy(json);
+
+    if (success)
+    {
+        return FnReturnBuffer(result);
+    }
+    else
+    {
+        BufferDestroy(result);
+        return FnFailure();
+    }
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     /* 2args: string,split_regex,max  */
@@ -7588,6 +7640,12 @@ static const FnCallArg DATA_READSTRINGARRAY_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+
+static const FnCallArg STRING_MUSTACHE_ARGS[] =
+{
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -7866,6 +7924,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
 
     // Functions section following new naming convention
+    FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 

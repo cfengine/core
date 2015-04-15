@@ -475,16 +475,18 @@ static int OpenReceiverChannel(void)
     int sd = -1;
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        if ((sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol)) == -1)
+        sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
+        if (sd == -1)
         {
             continue;
         }
 
        #ifdef IPV6_V6ONLY
         /* Properly implemented getaddrinfo(AI_PASSIVE) should return the IPV6
-           loopback address first. Some platforms (Windows) don't listen to
-           both address families when binding to it and need this flag. Some
-           other platforms won't even honour this flag (openbsd). */
+           loopback address first. Some platforms (notably Windows) don't
+           listen to both address families when binding to it and need this
+           flag. Some other platforms won't even honour this flag
+           (openbsd). */
         if (BINDINTERFACE[0] == '\0' && ap->ai_family == AF_INET6)
         {
             int no = 0;
@@ -534,14 +536,11 @@ static int OpenReceiverChannel(void)
             }
             break;
         }
-        else
-        {
-            Log(LOG_LEVEL_INFO,
-                "Could not bind server address. (bind: %s)",
-                GetErrorStr());
-            cf_closesocket(sd);
-            sd = -1;
-        }
+        Log(LOG_LEVEL_INFO,
+            "Could not bind server address. (bind: %s)",
+            GetErrorStr());
+        cf_closesocket(sd);
+        sd = -1;
     }
 
     assert(response != NULL);               /* getaddrinfo() was successful */
@@ -551,22 +550,23 @@ static int OpenReceiverChannel(void)
 
 static int InitServer(size_t queue_size)
 {
-    int sd = -1;
+    int sd = OpenReceiverChannel();
 
-    if ((sd = OpenReceiverChannel()) == -1)
+    if (sd == -1)
     {
         Log(LOG_LEVEL_ERR, "Unable to start server");
-        exit(EXIT_FAILURE);
     }
-
-    if (listen(sd, queue_size) == -1)
+    else if (listen(sd, queue_size) == -1)
     {
         Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
         cf_closesocket(sd);
-        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        return sd;
     }
 
-    return sd;
+    exit(EXIT_FAILURE);
 }
 
 /* Set up standard signal-handling. */
@@ -792,11 +792,7 @@ static void PolicyUpdateIfSafe(EvalContext *ctx, Policy **policy,
 static void AcceptAndHandle(EvalContext *ctx, int sd)
 {
     /* TODO embed ConnectionInfo into ServerConnectionState. */
-    ConnectionInfo *info = ConnectionInfoNew();
-    if (info == NULL)
-    {
-        return;
-    }
+    ConnectionInfo *info = ConnectionInfoNew(); /* Uses xcalloc() */
 
     info->ss_len = sizeof(info->ss);
     info->sd = accept(sd, (struct sockaddr *) &info->ss, &info->ss_len);
@@ -831,6 +827,10 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     InitSignals();
     ServerTLSInitialize();
     int sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
+
+    /* Necessary for our use of select() to work in WaitForIncoming(): */
+    assert(sd < sizeof(fd_set) * CHAR_BIT &&
+           GetSignalPipe() < sizeof(fd_set) * CHAR_BIT);
 
     Policy *server_cfengine_policy = PolicyNew();
     CfLock thislock = AcquireServerLock(ctx, config, server_cfengine_policy);

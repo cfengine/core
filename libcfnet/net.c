@@ -225,6 +225,121 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     return ret;
 }
 
+/* BWlimit global variables
+
+  Throttling happens for all network interfaces, all traffic being sent for
+  any connection of this process (cf-agent or cf-serverd).
+  We need a lock, to avoid concurrent writes to "bwlimit_next".
+  Then, "bwlimit_next" is the absolute time (as of clock_gettime() ) that we
+  are clear to send, after. It is incremented with the delay for every packet
+  scheduled for sending. Thus, integer arithmetic will make sure we wait for
+  the correct amount of time, in total.
+ */
+
+#ifndef _WIN32
+static pthread_mutex_t bwlimit_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct timespec bwlimit_next = {0, 0L};
+#endif
+
+uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */
+
+
+/** Throttle traffic, if next packet happens too soon after the previous one
+ * 
+ *  This function is global, accross all network operations (and interfaces, perhaps)
+ *  @param tosend Length of current packet being sent out (in bytes)
+ */
+
+#ifdef CLOCK_MONOTONIC
+# define PREFERRED_CLOCK CLOCK_MONOTONIC
+#else
+/* Some OS-es don't have monotonic clock, but we can still use the
+ * next available one */
+# define PREFERRED_CLOCK CLOCK_REALTIME
+#endif
+
+void EnforceBwLimit(int tosend)
+{
+    if (!bwlimit_kbytes)
+    {
+        /* early return, before any expensive syscalls */
+        return;
+    }
+
+#ifdef _WIN32
+    Log(LOG_LEVEL_WARNING, "Bandwidth limiting with \"bwlimit\" is not supported on Windows.");
+    (void)tosend; // Avoid "unused" warning.
+    return;
+#else
+
+    const uint32_t u_10e6 = 1000000L;
+    const uint32_t u_10e9 = 1000000000L;
+    struct timespec clock_now = {0, 0L};
+
+    if (pthread_mutex_lock(&bwlimit_lock) == 0)
+    {
+        clock_gettime(PREFERRED_CLOCK, &clock_now);
+
+        if ((bwlimit_next.tv_sec < clock_now.tv_sec) ||
+            ( (bwlimit_next.tv_sec == clock_now.tv_sec) &&
+              (bwlimit_next.tv_nsec < clock_now.tv_nsec) ) )
+        {
+            /* penalty has expired, we can immediately send data. But reset the timestamp */
+            bwlimit_next = clock_now;
+            clock_now.tv_sec = 0;
+            clock_now.tv_nsec = 0L;
+        }
+        else
+        {
+            clock_now.tv_sec = bwlimit_next.tv_sec - clock_now.tv_sec;
+            clock_now.tv_nsec = bwlimit_next.tv_nsec - clock_now.tv_nsec;
+            if (clock_now.tv_nsec < 0L)
+            {
+                clock_now.tv_sec --;
+                clock_now.tv_nsec += u_10e9;
+            }
+        }
+
+        uint64_t delay = ((uint64_t) tosend * u_10e6) / bwlimit_kbytes; /* in ns */
+
+        bwlimit_next.tv_sec += (delay / u_10e9);
+        bwlimit_next.tv_nsec += (long) (delay % u_10e9);
+        if (bwlimit_next.tv_nsec >= u_10e9)
+        {
+            bwlimit_next.tv_sec++;
+            bwlimit_next.tv_nsec -= u_10e9;
+        }
+
+        if (bwlimit_next.tv_sec > 20)
+        {
+            /* Upper limit of 20sec for penalty. This will avoid huge wait if
+             * our clock has jumped >minutes back in time. Still, assuming that
+             * most of our packets are <= 2048 bytes, the lower bwlimit is bound
+             * to 102.4 Bytes/sec. With 65k packets (rare) is 3.7kBytes/sec in
+             * that extreme case.
+             * With more clients hitting a single server, this lower bound is
+             * multiplied by num of clients, eg. 102.4kBytes/sec for 1000 reqs.
+             * simultaneously.
+             */
+            bwlimit_next.tv_sec = 20;
+        }
+        pthread_mutex_unlock(&bwlimit_lock);
+    }
+
+    /* Even if we push our data every few bytes to the network interface,
+      the software+hardware buffers will queue it and send it in bursts,
+      anyway. It is more likely that we will waste CPU sys-time calling
+      nanosleep() for such short delays.
+      So, sleep only if we have >1ms penalty
+    */
+    if (clock_now.tv_sec > 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= u_10e6))  )
+    {
+        nanosleep(&clock_now, NULL);
+    }
+#endif // !_WIN32
+}
+
+
 /*************************************************************************/
 
 

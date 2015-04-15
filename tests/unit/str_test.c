@@ -598,28 +598,3 @@ int main()
 
     return run_tests(tests);
 }
-
-/* LCOV_EXCL_START */
-
-/* Stub out functions we do not use in test */
-
-void __ProgrammingError(ARG_UNUSED const char *file,
-                        ARG_UNUSED int lineno,
-                        ARG_UNUSED const char *format, ...)
-{
-    fail();
-    exit(42);
-}
-
-void FatalError(ARG_UNUSED char *s, ...)
-{
-    fail();
-    exit(42);
-}
-
-void Log(ARG_UNUSED LogLevel level, ARG_UNUSED const char *fmt, ...)
-{
-    fail();
-}
-
-/* LCOV_EXCL_STOP */

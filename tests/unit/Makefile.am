@@ -61,9 +61,15 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/regex.c \
-	../../libutils/encode.c ../../libutils/writer.c \
-	../../libutils/sequence.c
+libstr_la_SOURCES = \
+	../../libutils/buffer.c \
+	../../libutils/encode.c \
+	../../libutils/logging.c \
+	../../libutils/misc_lib.c \
+	../../libutils/regex.c \
+	../../libutils/sequence.c \
+	../../libutils/string_lib.c \
+	../../libutils/writer.c
 libstr_la_LIBADD = libtest.la
 
 
@@ -230,6 +236,9 @@ list_test_SOURCES = list_test.c
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+# Workaround for object file basename conflicts, search the web for
+# "automake created with both libtool and without"
+buffer_test_CPPFLAGS = $(AM_CPPFLAGS)
 
 csv_parser_test_SOURCES = csv_parser_test.c ../../libutils/csv_parser.c
 csv_parser_test_LDADD = libtest.la ../../libutils/libutils.la
@@ -321,8 +330,11 @@ connection_management_test_SOURCES = connection_management_test.c ../../cf-serve
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \
-       ../../libpromises/rlist.c ../../libutils/logging.c
-rlist_test_LDADD = libtest.la libstr.la ../../libpromises/libpromises.la
+	../../libpromises/rlist.c \
+rlist_test_LDADD = libtest.la ../../libpromises/libpromises.la
+# Workaround for object file basename conflicts, search the web for
+# "automake created with both libtool and without"
+rlist_test_CPPFLAGS = $(AM_CPPFLAGS)
 
 process_test_LDADD = libtest.la ../../libpromises/libpromises.la
 

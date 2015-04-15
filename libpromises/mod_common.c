@@ -259,6 +259,7 @@ const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
     ConstraintSyntaxNewString("syslog_host", CF_IPRANGE, "The name or address of a host to which syslog messages should be sent directly by UDP. Default value: localhost", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("syslog_port", CF_VALRANGE, "The port number of a UDP syslog service. Default value: 514", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("fips_mode", "Activate full FIPS mode restrictions. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewReal("bwlimit", CF_VALRANGE, "Limit outgoing protocol bandwidth in Bytes per second", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("cache_system_functions", "Cache the result of system functions. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: classic", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

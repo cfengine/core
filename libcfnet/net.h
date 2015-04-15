@@ -47,5 +47,6 @@ int SocketConnect(const char *host, const char *port,
 bool TryConnect(int sd, unsigned long timeout_ms,
                 const struct sockaddr *sa, socklen_t sa_len);
 
+extern uint32_t bwlimit_kbytes;
 
 #endif

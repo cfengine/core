@@ -139,5 +139,6 @@ typedef struct
 
 const char *sockaddr_ntop(const void *src, char *dst, socklen_t size);
 
+void EnforceBwLimit(int tosend);
 
 #endif

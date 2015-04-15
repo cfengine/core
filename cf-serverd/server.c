@@ -170,15 +170,15 @@ static void PurgeOldConnections(Item **list, time_t now)
 
     if (ThreadLock(cft_count))
     {
-        Item *ip, *next;
-        for (ip = *list; ip != NULL; ip = next)
+        Item *next;
+        for (Item *ip = *list; ip != NULL; ip = next)
         {
             int then = 0;
             sscanf(ip->classes, "%d", &then);
 
             next = ip->next;
 
-            if (now > then + 7200)
+            if (now > then + 2 * SECONDS_PER_HOUR)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "IP address '%s' has been more than two hours in connection list, purging",
@@ -302,7 +302,7 @@ static void *HandleConnection(void *c)
     if (!ret)
     {
         Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
-        goto ret2;
+        goto conndone;
     }
     else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
     {
@@ -325,7 +325,7 @@ static void *HandleConnection(void *c)
             ACTIVE_THREADS, CFD_MAXPROCESSES);
 
         ThreadUnlock(cft_server_children);
-        goto ret2;
+        goto conndone;
     }
 
     ACTIVE_THREADS++;
@@ -345,7 +345,7 @@ static void *HandleConnection(void *c)
         ret = ServerTLSPeek(conn->conn_info);
         if (ret == -1)
         {
-            goto ret1;
+            goto dethread;
         }
     }
 
@@ -355,7 +355,7 @@ static void *HandleConnection(void *c)
         ret = ServerTLSSessionEstablish(conn);
         if (ret == -1)
         {
-            goto ret1;
+            goto dethread;
         }
     }
     else if (protocol_version < CF_PROTOCOL_LATEST &&
@@ -367,14 +367,14 @@ static void *HandleConnection(void *c)
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");
-            goto ret1;
+            goto dethread;
         }
     }
     else
     {
         UnexpectedError("HandleConnection: ProtocolVersion %d!",
                         ConnectionInfoProtocolVersion(conn->conn_info));
-        goto ret1;
+        goto dethread;
     }
 
 
@@ -419,15 +419,14 @@ static void *HandleConnection(void *c)
     }
     /* ============================================================ */
 
+    Log(LOG_LEVEL_INFO, "Closing connection, terminating thread");
 
-    Log(LOG_LEVEL_INFO, "Closed connection, terminating thread");
-
-  ret1:
+  dethread:
     ThreadLock(cft_server_children);
     ACTIVE_THREADS--;
     ThreadUnlock(cft_server_children);
 
-  ret2:
+  conndone:
     if (conn->conn_info->is_call_collect)
     {
         CollectCallMarkProcessed();
@@ -443,31 +442,33 @@ static void *HandleConnection(void *c)
 
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 {
-    ServerConnectionState *conn = NULL;
+#if 1
+    /* TODO: why do we do this ?  We fail if getsockname() fails, but
+     * don't use the information it returned.  Was the intent to use
+     * it to fill in conn->ipaddr ? */
     struct sockaddr_storage addr;
     socklen_t size = sizeof(addr);
 
     if (getsockname(ConnectionInfoSocket(info), (struct sockaddr *)&addr, &size) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not obtain socket address. (getsockname: '%s')", GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Could not obtain socket address. (getsockname: '%s')",
+            GetErrorStr());
         return NULL;
     }
+#endif
 
-    conn = xcalloc(1, sizeof(*conn));
+    ServerConnectionState *conn = xcalloc(1, sizeof(*conn));
     conn->ctx = ctx;
     conn->conn_info = info;
-    conn->user_data_set = false;
-    conn->rsa_auth = false;
-    conn->hostname[0] = '\0';
-    conn->ipaddr[0] = '\0';
-    conn->username[0] = '\0';
-    conn->revdns[0] = '\0';
-    conn->session_key = NULL;
     conn->encryption_type = 'c';
     /* Only public files (chmod o+r) accessible to non-root */
-    conn->maproot = false;
     conn->uid = CF_UNKNOWN_OWNER;                    /* Careful, 0 is root! */
+    /* conn->maproot is false: only public files (chmod o+r) are accessible */
 
+    Log(LOG_LEVEL_DEBUG,
+        "New connection (socket %d).",
+        ConnectionInfoSocket(info));
     return conn;
 }
 
@@ -477,22 +478,20 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 static void DeleteConn(ServerConnectionState *conn)
 {
     int sd = ConnectionInfoSocket(conn->conn_info);
-    if (sd >= 0)
+    if (sd != SOCKET_INVALID)
     {
         cf_closesocket(sd);
     }
     ConnectionInfoDestroy(&conn->conn_info);
-    free(conn->session_key);
 
-    if (conn->ipaddr != NULL)
+    if (conn->ipaddr[0] != '\0' &&
+        ThreadLock(cft_count))
     {
-        if (ThreadLock(cft_count))
-        {
-            DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
-            ThreadUnlock(cft_count);
-        }
+        DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
+        ThreadUnlock(cft_count);
     }
 
     *conn = (ServerConnectionState) {0};
+    free(conn->session_key);
     free(conn);
 }

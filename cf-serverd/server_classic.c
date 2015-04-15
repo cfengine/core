@@ -145,6 +145,27 @@ static bool ResolveFilename(const char *req_path, char *res_path)
     return true;
 }
 
+static bool PathMatch(const char *stem, const char *request)
+{
+    const size_t stemlen = strlen(stem);
+    if (strcmp(stem, FILE_SEPARATOR_STR) == 0)
+    {
+        /* Matches everything: */
+        return true;
+    }
+
+    if (strcmp(stem, request) == 0)
+    {
+        /* An exact match is a match: */
+        return true;
+    }
+
+    /* Otherwise, match only if stem names a parent directory of request: */
+    return (strlen(request) > stemlen &&
+            request[stemlen] == FILE_SEPARATOR &&
+            strncmp(stem, request, stemlen) == 0);
+}
+
 static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
 {
     int access = false;
@@ -193,47 +214,25 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     for (Auth *ap = SV.admit; ap != NULL; ap = ap->next)
     {
-        int res = false;
-
         Log(LOG_LEVEL_DEBUG, "Examining rule in access list (%s,%s)", transrequest, ap->path);
 
         /* TODO MapName when constructing this list. */
         strlcpy(transpath, ap->path, CF_BUFSIZE);
         MapName(transpath);
 
-        /* If everything is allowed */
-        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
-            ||
-            /* or if transpath is a parent directory of transrequest */
-            (strlen(transrequest) > strlen(transpath)
-            && strncmp(transpath, transrequest, strlen(transpath)) == 0
-            && transrequest[strlen(transpath)] == FILE_SEPARATOR)
-            ||
-            /* or if it's an exact match */
-            (strcmp(transpath, transrequest) == 0))
-        {
-            res = true;
-        }
-
-        /* Exact match means single file to admit */
-        if (strcmp(transpath, transrequest) == 0)
-        {
-            res = true;
-        }
-
-        if (res)
+        if (PathMatch(transpath, transrequest))
         {
             Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", transrequest, transpath);
 
             if (stat(transpath, &statbuf) == -1)
             {
                 Log(LOG_LEVEL_INFO,
-                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
-                      transpath);
+                    "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
+                    transpath);
                 continue;
             }
 
-            if ((!encrypt) && (ap->encrypt == true))
+            if (!encrypt && ap->encrypt)
             {
                 Log(LOG_LEVEL_ERR, "File %s requires encrypt connection...will not serve", transpath);
                 access = false;
@@ -242,15 +241,15 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..");
 
-                if ((IsMatchItemIn(ap->maproot, conn->ipaddr)) ||
-                    (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
+                if (IsMatchItemIn(ap->maproot, conn->ipaddr) ||
+                    IsRegexItemIn(ctx, ap->maproot, conn->hostname))
                 {
                     conn->maproot = true;
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
-                if ((IsMatchItemIn(ap->accesslist, conn->ipaddr))
-                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
+                if (IsMatchItemIn(ap->accesslist, conn->ipaddr) ||
+                    IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
                 {
                     access = true;
                     Log(LOG_LEVEL_DEBUG, "Access granted to host: %s", conn->ipaddr);
@@ -265,23 +264,15 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         strlcpy(transpath, dp->path, CF_BUFSIZE);
         MapName(transpath);
 
-        /* If everything is denied */
-        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
-            ||
-            /* or if transpath is a parent directory of transrequest */
-            (strlen(transrequest) > strlen(transpath) &&
-             strncmp(transpath, transrequest, strlen(transpath)) == 0 &&
-             transrequest[strlen(transpath)] == FILE_SEPARATOR)
-            ||
-            /* or if it's an exact match */
-            (strcmp(transpath, transrequest) == 0))
+        if (PathMatch(transpath, transrequest))
         {
             if ((IsMatchItemIn(dp->accesslist, conn->ipaddr)) ||
                 (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))
             {
                 access = false;
-                Log(LOG_LEVEL_INFO, "Host '%s' in deny list, explicitly denying access to '%s'",
-                    conn->ipaddr, transrequest);
+                Log(LOG_LEVEL_INFO,
+                    "Host '%s' in deny list, explicitly denying access to '%s' in '%s'",
+                    conn->ipaddr, transrequest, transpath);
                 break;
             }
         }
@@ -346,7 +337,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                 break;
             }
 
-            if ((!encrypt) && (ap->encrypt == true))
+            if (!encrypt && ap->encrypt)
             {
                 Log(LOG_LEVEL_ERR, "Variable %s requires encrypt connection...will not serve", name);
                 access = false;
@@ -438,7 +429,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         "Found a matching rule in access list (%s in %s)",
                         ip->name, ap->path);
 
-                    if (ap->classpattern == false)
+                    if (!ap->classpattern)
                     {
                         Log(LOG_LEVEL_ERR,
                             "Context %s requires a literal server item... "
@@ -448,7 +439,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         continue;
                     }
 
-                    if ((!encrypt) && (ap->encrypt == true))
+                    if (!encrypt && ap->encrypt)
                     {
                         Log(LOG_LEVEL_ERR,
                             "Context %s requires encrypt connection... "

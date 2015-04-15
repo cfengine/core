@@ -69,9 +69,9 @@ int closefrom(int fd)
     xsnprintf(proc_dir, sizeof(proc_dir), "/proc/%i/fd", getpid());
 
     DIR *iter = opendir(proc_dir);
-    int iter_fd = dirfd(iter);
     if (iter)
     {
+        int iter_fd = dirfd(iter);
         const struct dirent *entry;
 
         while ((entry = readdir(iter)))

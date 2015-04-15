@@ -1,0 +1,70 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "config", "example" };
+}
+
+bundle agent config
+{
+  vars:
+      "deserts" data => parsejson('{ "deserts": {
+  "Africa": "Sahara",
+  "Asia": "Gobi"
+} }');
+}
+
+
+bundle agent example
+{
+  vars:
+      # {{@}} is the current key during an iteration in 3.7 with Mustache
+      "with_data_container" string => string_mustache("from container: deserts = {{%deserts}}
+from container: {{#deserts}}The desert {{.}} is in {{@}}. {{/deserts}}", "config.deserts");
+
+      # you can dump an entire data structure with {{%myvar}} in 3.7 with Mustache
+      "with_system_state" string => string_mustache("from datastate(): deserts = {{%vars.config.deserts.deserts}}
+from datastate(): {{#vars.config.deserts.deserts}}The desert {{.}} is in {{@}}. {{/vars.config.deserts.deserts}}"); # will use datastate()
+
+  reports:
+      "With an explicit data container: $(with_data_container)";
+
+      "With the system datastate(): $(with_system_state)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: With an explicit data container: from container: deserts = {
+#@   "Africa": "Sahara",
+#@   "Asia": "Gobi"
+#@ }
+#@ from container: The desert Sahara is in Africa. The desert Gobi is in Asia. 
+#@ R: With the system datastate(): from datastate(): deserts = {
+#@   "Africa": "Sahara",
+#@   "Asia": "Gobi"
+#@ }
+#@ from datastate(): The desert Sahara is in Africa. The desert Gobi is in Asia. 
+#@ ```
+#+end_src

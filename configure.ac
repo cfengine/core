@@ -751,6 +751,13 @@ AC_C_BIGENDIAN
 AC_CHECK_HEADERS([endian.h])
 AC_CHECK_DECLS(le32toh, [], [], [[#include <endian.h>]])
 
+AC_CHECK_DECLS(closefrom, [], [], [[#include <unistd.h>
+                                    #include <stdlib.h>]])
+AC_REPLACE_FUNCS(closefrom)
+
+AC_CHECK_HEADERS([sys/pstat.h])
+AC_CHECK_FUNCS(pstat_getfile2)
+
 CF3_PATH_ROOT_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$CHPASSWD" != "x"],
       [AC_DEFINE(HAVE_CHPASSWD, 1, [Define if chpasswd tool is present])]

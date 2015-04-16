@@ -176,7 +176,6 @@ static const struct option OPTIONS[] =
     {"no-lock", no_argument, 0, 'K'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
-    {"log-output", no_argument, 0, 'l'},
     {"timing-output", no_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
@@ -198,7 +197,6 @@ static const char *const HINTS[] =
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
-    "Use line-based log output format on console",
     "Output timing information on console when in verbose mode",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
@@ -301,14 +299,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
      */
     bool cfruncommand = false;
 
-    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hlC::E", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::E", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
-        case 'l':
-            MACHINE_OUTPUT = true;
-            break;
-
         case 't':
             TIMING = true;
             break;
@@ -1523,11 +1517,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
 
 static void BannerStatus(PromiseResult status, char *type, char *name)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     if ((strcmp(type, "vars") == 0) || (strcmp(type, "classes") == 0))
     {
         return;
@@ -1748,11 +1737,6 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance = 0.0;
         
-    if (MACHINE_OUTPUT)
-    {
-        return PROMISE_RESULT_NOOP;
-    }
-
     delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);

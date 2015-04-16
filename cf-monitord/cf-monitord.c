@@ -85,7 +85,6 @@ static const struct option OPTIONS[] =
     {"no-fork", no_argument, 0, 'F'},
     {"histograms", no_argument, 0, 'H'},
     {"tcpdump", no_argument, 0, 'T'},
-    {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
@@ -104,7 +103,6 @@ static const char *const HINTS[] =
     "Run process in foreground, not as a daemon",
     "Ignored for backward compatibility",
     "Interface with tcpdump if available to collect data about network",
-    "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
@@ -139,14 +137,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhlC::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhC::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
-        case 'l':
-            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
-            break;
-
         case 'f':
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
             MINUSF = true;

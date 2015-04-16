@@ -128,8 +128,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
-    LoggingSetAgentType(CF_AGENTTYPES[config->agent_type],
-                        config->agent_type == AGENT_TYPE_AGENT);
+    LoggingSetAgentType(CF_AGENTTYPES[config->agent_type]);
     EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");
 
     DetectEnvironment(ctx);
@@ -1450,7 +1449,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
 
-    LoggingSetAgentType(CF_AGENTTYPES[agent_type], agent_type == AGENT_TYPE_AGENT);
+    LoggingSetAgentType(CF_AGENTTYPES[agent_type]);
     config->agent_type = agent_type;
 
     // TODO: system state, perhaps pull out as param

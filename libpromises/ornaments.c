@@ -31,11 +31,6 @@
 
 void SpecialTypeBanner(TypeSequence type, int pass)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     if (type == TYPE_SEQUENCE_CONTEXTS)
     {
         Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
@@ -54,15 +49,6 @@ void SpecialTypeBanner(TypeSequence type, int pass)
 
 void PromiseBanner(EvalContext *ctx, const Promise *pp)
 {
-    if (MACHINE_OUTPUT)
-    {
-        if (pp->comment)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Comment '%s'", pp->comment);
-        }
-        return;
-    }
-
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
@@ -148,11 +134,6 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
 
 void Legend()
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
     Log(LOG_LEVEL_VERBOSE, "PREFIX LEGEND:");
     Log(LOG_LEVEL_VERBOSE, " V: variable or parameter new definition in scope");
@@ -168,11 +149,6 @@ void Legend()
 
 void Banner(const char *s)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
     Log(LOG_LEVEL_VERBOSE, " %s ", s);
     Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
@@ -183,11 +159,6 @@ void Banner(const char *s)
 
 void BundleBanner(const Bundle *bp, const Rlist *params)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
 
     if (params)
@@ -209,7 +180,7 @@ void BundleBanner(const Bundle *bp, const Rlist *params)
 
 void EndBundleBanner(const Bundle *bp)
 {
-    if (MACHINE_OUTPUT || bp == NULL)
+    if (bp == NULL)
     {
         return;
     }

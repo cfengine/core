@@ -193,11 +193,6 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
 // TODO: should be replaced by something not complected with loading
 static void ShowContext(EvalContext *ctx)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     Seq *hard_contexts = SeqNew(1000, NULL);
     Seq *soft_contexts = SeqNew(1000, NULL);
 

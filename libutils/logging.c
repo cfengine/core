@@ -254,7 +254,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     }
     else
     {
-        hooked_msg = xstrdup(msg);
+        hooked_msg = msg;
     }
 
     if (level <= lctx->report_level)
@@ -273,8 +273,12 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     {
         LogToSystemLog(hooked_msg, level);
     }
+
+    if (hooked_msg != msg)
+    {
+        free(hooked_msg);
+    }
     free(msg);
-    free(hooked_msg);
 }
 
 /* TODO create libutils/defs.h. */

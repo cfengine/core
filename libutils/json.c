@@ -1301,12 +1301,12 @@ void JsonObjectWrite(Writer *writer, const JsonElement *object, size_t indent_le
 
     for (size_t i = 0; i < object->container.children->length; i++)
     {
-        assert(object->container.children->data[i]->propertyName);
+        assert(((JsonElement*)object->container.children->data[i])->propertyName);
     }
 
     // sort the children Seq so the output is canonical (keys are sorted)
     // we've already asserted that the children have a valid propertyName
-    SeqSort(object->container.children, (SeqItemComparator)JsonElementPropertyCompare, NULL);
+    JsonSort((JsonElement*)object, (JsonComparator*)JsonElementPropertyCompare, NULL);
 
     for (size_t i = 0; i < object->container.children->length; i++)
     {
@@ -1416,12 +1416,12 @@ void JsonObjectWriteCompact(Writer *writer, const JsonElement *object)
 
     for (size_t i = 0; i < object->container.children->length; i++)
     {
-        assert(object->container.children->data[i]->propertyName);
+        assert(((JsonElement*)object->container.children->data[i])->propertyName);
     }
 
     // sort the children Seq so the output is canonical (keys are sorted)
     // we've already asserted that the children have a valid propertyName
-    SeqSort(object->container.children, (SeqItemComparator)JsonElementPropertyCompare, NULL);
+    JsonSort((JsonElement*)object, (JsonComparator*)JsonElementPropertyCompare, NULL);
 
     for (size_t i = 0; i < object->container.children->length; i++)
     {

@@ -43,10 +43,10 @@
 
 static const char *const passphrase = "Cfengine passphrase";
 
-RSA* LoadPublicKey(const char* filename)
+RSA *LoadPublicKey(const char *filename)
 {
-    FILE* fp;
-    RSA* key;
+    FILE *fp;
+    RSA *key;
 
     fp = safe_fopen(filename, "r");
     if (fp == NULL)
@@ -79,11 +79,11 @@ RSA* LoadPublicKey(const char* filename)
 
 /** Return a string with the printed digest of the given key file,
     or NULL if an error occurred. */
-char* LoadPubkeyDigest(const char* filename)
+char *LoadPubkeyDigest(const char *filename)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    RSA* key = NULL;
-    char* buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
+    RSA *key = NULL;
+    char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
 
     key = LoadPublicKey(filename);
     if (NULL == key)
@@ -98,7 +98,7 @@ char* LoadPubkeyDigest(const char* filename)
 }
 
 /** Return a string with the printed digest of the given key file. */
-char* GetPubkeyDigest(RSA* pubkey)
+char *GetPubkeyDigest(RSA *pubkey)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
@@ -113,7 +113,7 @@ char* GetPubkeyDigest(RSA* pubkey)
 
 /** Print digest of the specified public key file.
     Return 0 on success and 1 on error. */
-int PrintDigest(const char* pubkey)
+int PrintDigest(const char *pubkey)
 {
     char *digeststr = LoadPubkeyDigest(pubkey);
 
@@ -185,24 +185,24 @@ void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username)
 }
 
 /**
- * Trust the given key.  If @c ipaddress is not @c NULL, then also
+ * Trust the given key.  If #ipaddress is not NULL, then also
  * update the "last seen" database.  The IP address is required for
  * trusting a server key (on the client); it is -currently- optional
  * for trusting a client key (on the server).
  */
-int TrustKey(const char* filename, const char* ipaddress, const char* username)
+int TrustKey(const char *filename, const char *ipaddress, const char *username)
 {
     RSA* key;
     char *digest;
 
     key = LoadPublicKey(filename);
-    if (NULL == key)
+    if (key == NULL)
     {
         return 1; /* ERROR exitcode */
     }
 
     digest = GetPubkeyDigest(key);
-    if (NULL == digest)
+    if (digest == NULL)
     {
         return 1; /* ERROR exitcode */
     }

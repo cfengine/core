@@ -43,7 +43,7 @@ int EncryptString(char type, const char *in, char *out, unsigned char *key, int 
 int DecryptString(char type, const char *in, char *out, unsigned char *key, int len);
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest);
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress);
-void SavePublicKey(const char *username, const char *digest, const RSA *key);
+bool SavePublicKey(const char *username, const char *digest, const RSA *key);
 
 char *PublicKeyFile(const char *workdir);
 char *PrivateKeyFile(const char *workdir);

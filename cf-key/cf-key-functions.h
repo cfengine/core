@@ -44,7 +44,7 @@ char *LoadPubkeyDigest(const char *pubkey);
 char *GetPubkeyDigest(RSA *pubkey);
 int PrintDigest(const char *pubkey);
 void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username);
-int TrustKey(const char *pubkey, const char *ipaddress, const char *username);
+bool TrustKey(const char *pubkey, const char *ipaddress, const char *username);
 bool ShowHost(const char *hostkey, const char *address,
               bool incoming, const KeyHostSeen *quality, void *ctx);
 void ShowLastSeenHosts();

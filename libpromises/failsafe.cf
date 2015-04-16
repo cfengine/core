@@ -252,6 +252,9 @@ body copy_from u_scp(from)
 {
       source      => "$(from)";
       compare     => "digest";
+    # This class is always set when bootstrapping. You can deactivate
+    # this class with --trust-server=no when bootstrapping
+    trust_server::
       trustkey    => "true";
     !am_policy_hub::
       servers => { "$(sys.policy_hub)" };

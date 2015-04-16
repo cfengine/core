@@ -93,7 +93,6 @@ static const struct option OPTIONS[] =
     {"once", no_argument, 0, 'O'},
     {"no-winsrv", no_argument, 0, 'W'},
     {"ld-library-path", required_argument, 0, 'L'},
-    {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
@@ -115,7 +114,6 @@ static const char *const HINTS[] =
     "Run once and then exit (implies no-fork)",
     "Do not run as a service on windows - use this when running from a command shell (CFEngine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
-    "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
@@ -183,14 +181,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR);
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMWlC::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMWC::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
-        case 'l':
-            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
-            break;
-
         case 'f':
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
             MINUSF = true;

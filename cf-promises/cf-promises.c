@@ -82,7 +82,6 @@ static const struct option OPTIONS[] =
     {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
     {"warn", required_argument, 0, 'W'},
-    {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
     {"tag-release", required_argument, 0, 'T'},
     {NULL, 0, 0, '\0'}
@@ -109,7 +108,6 @@ static const char *const HINTS[] =
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
-    "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Tag a directory with promises.cf with cf_promises_validated and cf_promises_release_id",
     NULL
@@ -211,7 +209,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
     config->tag_release_dir = NULL;
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:lC::T:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:C::T:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -245,10 +243,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             default:
                 break;
             }
-
-        case 'l':
-            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
-            break;
 
         case 'c':
             config->check_runnable = true;

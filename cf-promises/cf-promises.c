@@ -84,6 +84,7 @@ static const struct option OPTIONS[] =
     {"warn", required_argument, 0, 'W'},
     {"color", optional_argument, 0, 'C'},
     {"tag-release", required_argument, 0, 'T'},
+    {"timestamp", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -110,6 +111,7 @@ static const char *const HINTS[] =
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Tag a directory with promises.cf with cf_promises_validated and cf_promises_release_id",
+    "Log timestamps on each line of log output",
     NULL
 };
 
@@ -209,7 +211,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
     config->tag_release_dir = NULL;
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:C::T:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:C::T:l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -387,6 +389,10 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentConfigSetInputFile(config, optarg, "promises.cf");
             MINUSF = true;
             config->tag_release_dir = xstrdup(optarg);
+            break;
+
+        case 'l':
+            LoggingEnableTimestamps(true);
             break;
 
         default:

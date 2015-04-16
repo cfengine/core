@@ -1284,11 +1284,12 @@ void GenericAgentWriteHelp(Writer *w, const char *component, const struct option
         char short_option[] = ", -*";
         if (options[i].val < 128)
         {
-            // Within ASCII range.
+            // Within ASCII range, means there is a short option.
             short_option[3] = options[i].val;
         }
         else
         {
+            // No short option.
             short_option[0] = '\0';
         }
         if (options[i].has_arg)

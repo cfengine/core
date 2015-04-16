@@ -108,6 +108,7 @@ static const struct option OPTIONS[] =
     {"interactive", no_argument, 0, 'i'},
     {"timeout", required_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
+    {"timestamp", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -129,6 +130,7 @@ static const char *const HINTS[] =
     "Enable interactive mode for key trust",
     "Connection timeout, seconds",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
+    "Log timestamps on each line of log output",
     NULL
 };
 
@@ -249,7 +251,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -360,6 +362,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 exit(EXIT_FAILURE);
             }
+            break;
+
+        case 'l':
+            LoggingEnableTimestamps(true);
             break;
 
         default:

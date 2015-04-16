@@ -62,6 +62,7 @@ static const char *const CF_KEY_SHORT_DESCRIPTION =
 static const char *const CF_KEY_MANPAGE_LONG_DESCRIPTION =
     "The CFEngine key generator makes key pairs for remote authentication.\n";
 
+#define TIMESTAMP_VAL 1234 // Anything outside ASCII range.
 static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
@@ -76,6 +77,7 @@ static const struct option OPTIONS[] =
     {"print-digest", required_argument, 0, 'p'},
     {"trust-key", required_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
+    {"timestamp", no_argument, 0, TIMESTAMP_VAL},
     {NULL, 0, 0, '\0'}
 };
 
@@ -96,6 +98,7 @@ static const char *const HINTS[] =
     is the local path of the public key for client at IPADDR address.",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. \
     If option is used, the default value is 'auto'",
+    "Log timestamps on each line of log output",
     NULL
 };
 
@@ -233,7 +236,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::", OPTIONS, &optindex)) != EOF)
     {
-        switch ((char) c)
+        switch (c)
         {
         case 'f':
             KEY_PATH = optarg;
@@ -306,6 +309,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 exit(EXIT_FAILURE);
             }
+            break;
+
+        case TIMESTAMP_VAL:
+            LoggingEnableTimestamps(true);
             break;
 
         default:

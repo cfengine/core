@@ -94,6 +94,7 @@ static const struct option OPTIONS[] =
     {"no-winsrv", no_argument, 0, 'W'},
     {"ld-library-path", required_argument, 0, 'L'},
     {"color", optional_argument, 0, 'C'},
+    {"timestamp", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -115,6 +116,7 @@ static const char *const HINTS[] =
     "Do not run as a service on windows - use this when running from a command shell (CFEngine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
+    "Log timestamps on each line of log output",
     NULL
 };
 
@@ -181,7 +183,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR);
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMWC::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMWC::l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -275,6 +277,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 exit(EXIT_FAILURE);
             }
+            break;
+
+        case 'l':
+            LoggingEnableTimestamps(true);
             break;
 
         default:

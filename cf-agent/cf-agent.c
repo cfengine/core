@@ -179,6 +179,7 @@ static const struct option OPTIONS[] =
     {"timing-output", no_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
+    {"timestamp", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -200,6 +201,7 @@ static const char *const HINTS[] =
     "Output timing information on console when in verbose mode",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
+    "Log timestamps on each line of log output",
     NULL
 };
 
@@ -299,7 +301,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
      */
     bool cfruncommand = false;
 
-    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::E", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::El", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
@@ -464,6 +466,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'E':
             extension_libraries_disable();
+            break;
+
+        case 'l':
+            LoggingEnableTimestamps(true);
             break;
 
         default:

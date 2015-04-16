@@ -158,9 +158,6 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     time_t now_seconds = time(NULL);
     localtime_r(&now_seconds, &now);
 
-    char formatted_timestamp[64];
-    LoggingFormatTimestamp(formatted_timestamp, 64, &now);
-
     if (color)
     {
         fprintf(output_file, "%s", LogLevelToColor(level));
@@ -171,6 +168,8 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     }
     if (TIMESTAMPS)
     {
+        char formatted_timestamp[64];
+        LoggingFormatTimestamp(formatted_timestamp, 64, &now);
         fprintf(stdout, "%s ", formatted_timestamp);
     }
 

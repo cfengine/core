@@ -1486,6 +1486,9 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 
     config->agent_specific.agent.bootstrap_policy_server = NULL;
 
+    /* By default we trust the network when bootstrapping. */
+    config->agent_specific.agent.bootstrap_trust_server = true;
+
     switch (agent_type)
     {
     case AGENT_TYPE_COMMON:
@@ -1556,6 +1559,12 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
         EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
+        if (config->agent_specific.agent.bootstrap_trust_server)
+        {
+            EvalContextClassPutHard(ctx, "trust_server", "source=agent");
+            Log(LOG_LEVEL_NOTICE, "Bootstrap mode: implicitly trust server, "
+                "use --trust-server=no if server trust is already established");
+        }
     }
 
     if (config->color)

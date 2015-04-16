@@ -79,6 +79,7 @@ typedef struct
         struct
         {
             char *bootstrap_policy_server;
+            bool bootstrap_trust_server;
         } agent;
         struct
         {

@@ -182,27 +182,28 @@ static LogLevel CalculateReportLevel(const Promise *pp)
     return report_level;
 }
 
+const char *EvalContextStackToString(EvalContext *ctx)
+{
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    if (last_frame)
+    {
+        return last_frame->path;
+    }
+    return "";
+}
+
 static char *LogHook(LoggingPrivContext *pctx, LogLevel level, const char *message)
 {
     const EvalContext *ctx = pctx->param;
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);
-    if (last_frame)
+    if (last_frame
+        && last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION
+        && level <= LOG_LEVEL_INFO)
     {
-        if (last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
-        {
-            if (level <= LOG_LEVEL_INFO)
-            {
-                RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
-            }
-        }
-
-        return StringConcatenate(3, last_frame->path, ": ", message);
+        RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
     }
-    else
-    {
-        return xstrdup(message);
-    }
+    return xstrdup(message);
 }
 
 static const char *GetAgentAbortingContext(const EvalContext *ctx)

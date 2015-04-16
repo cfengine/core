@@ -217,45 +217,33 @@ static void ShowContext(EvalContext *ctx)
     SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
     SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
 
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
 
     {
-        Writer *w = NULL;
-        w = StringWriter();
-        WriterWrite(w, "BEGIN Discovered hard classes:\n");
+        Log(LOG_LEVEL_VERBOSE, "BEGIN Discovered hard classes:");
 
         for (size_t i = 0; i < SeqLength(hard_contexts); i++)
         {
             const char *context = SeqAt(hard_contexts, i);
-            WriterWriteF(w, "%s C: discovered hard class %s\n", VPREFIX, context);
+            Log(LOG_LEVEL_VERBOSE, "C: discovered hard class %s", context);
         }
 
-        WriterWriteF(w, "%s END Discovered hard classes", VPREFIX);
-        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        WriterClose(w);
+        Log(LOG_LEVEL_VERBOSE, "END Discovered hard classes");
     }
 
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
 
+    if (SeqLength(soft_contexts))
     {
-        Writer *w = NULL;
-        w = StringWriter();
-        WriterWrite(w, "BEGIN initial soft classes:\n");
+        Log(LOG_LEVEL_VERBOSE, "BEGIN initial soft classes:");
 
         for (size_t i = 0; i < SeqLength(soft_contexts); i++)
         {
             const char *context = SeqAt(soft_contexts, i);
-            WriterWriteF(w, "%s C: added soft class %s\n", VPREFIX, context);
+            Log(LOG_LEVEL_VERBOSE, "C: added soft class %s", context);
         }
 
-        WriterWriteF(w, "%s END initial soft classes", VPREFIX);
-
-        if (SeqLength(soft_contexts) > 0)
-        {
-            Log(LOG_LEVEL_VERBOSE, "%s\n", StringWriterData(w));
-        }
-
-        WriterClose(w);
+        Log(LOG_LEVEL_VERBOSE, "END initial soft classes");
     }
 
     SeqDestroy(hard_contexts);

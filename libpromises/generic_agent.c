@@ -1281,13 +1281,23 @@ void GenericAgentWriteHelp(Writer *w, const char *component, const struct option
 
     for (int i = 0; options[i].name != NULL; i++)
     {
-        if (options[i].has_arg)
+        char short_option[] = ", -*";
+        if (options[i].val < 128)
         {
-            WriterWriteF(w, "  --%-12s, -%c value - %s\n", options[i].name, (char) options[i].val, hints[i]);
+            // Within ASCII range.
+            short_option[3] = options[i].val;
         }
         else
         {
-            WriterWriteF(w, "  --%-12s, -%-7c - %s\n", options[i].name, (char) options[i].val, hints[i]);
+            short_option[0] = '\0';
+        }
+        if (options[i].has_arg)
+        {
+            WriterWriteF(w, "  --%-12s%s value - %s\n", options[i].name, short_option, hints[i]);
+        }
+        else
+        {
+            WriterWriteF(w, "  --%-12s%-10s - %s\n", options[i].name, short_option, hints[i]);
         }
     }
 

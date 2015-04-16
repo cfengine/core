@@ -192,10 +192,10 @@ int main(int argc, char *argv[])
                 "For completeness, use --trust-key IPADDR:filename");
         }
 
-        int ret = TrustKey(filename, ipaddr, username);
+        bool ret = TrustKey(filename, ipaddr, username);
 
         free(arg);
-        return ret;
+        return ret ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     char *public_key_file, *private_key_file;

@@ -192,7 +192,7 @@ void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username)
  * trusting a server key (on the client); it is -currently- optional
  * for trusting a client key (on the server).
  */
-int TrustKey(const char *filename, const char *ipaddress, const char *username)
+bool TrustKey(const char *filename, const char *ipaddress, const char *username)
 {
     RSA* key;
     char *digest;
@@ -200,13 +200,13 @@ int TrustKey(const char *filename, const char *ipaddress, const char *username)
     key = LoadPublicKey(filename);
     if (key == NULL)
     {
-        return 1; /* ERROR exitcode */
+        return false;
     }
 
     digest = GetPubkeyDigest(key);
     if (digest == NULL)
     {
-        return 1; /* ERROR exitcode */
+        return false;
     }
 
     if (ipaddress != NULL)
@@ -217,10 +217,10 @@ int TrustKey(const char *filename, const char *ipaddress, const char *username)
         LastSaw1(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
     }
 
-    SavePublicKey(username, digest, key);
-
+    bool ret = SavePublicKey(username, digest, key);
     free(digest);
-    return 0; /* OK exitcode */
+
+    return ret;
 }
 
 extern bool cf_key_interrupted;

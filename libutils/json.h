@@ -168,7 +168,7 @@ double JsonPrimitiveGetAsReal(const JsonElement *primitive);
 const char *JsonGetPropertyAsString(const JsonElement *element);
 
 /**
-  @brief Pretty-print a JsonElement recursively into a Writer.
+  @brief Pretty-print a JsonElement recursively into a Writer.  If it's a JsonObject, its children will be sorted to produce canonical JSON output, but the object's contents are not modified so it's still a const.
   @see Writer
   @param writer [in] The Writer object to use as a buffer.
   @param element [in] The JSON element to print.

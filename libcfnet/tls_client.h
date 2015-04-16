@@ -34,10 +34,11 @@ void TLSDeInitialize(void);
 
 int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
                                   const char *username);
+int TLSTry(ConnectionInfo *conn_info);
 
+/* Exported for enterprise. */
 int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
                const char *ipaddr, const char *username);
-int TLSTry(ConnectionInfo *conn_info);
 
 
 #endif

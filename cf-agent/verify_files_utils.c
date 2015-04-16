@@ -2678,18 +2678,14 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
     AgentConnection *conn = NULL;
     if (flags.cache_connection)
     {
-        /* Get a connection from the cache. TODO fix our connection cache to
-         * account for ports and protocol version. */
         conn = ConnCache_FindIdleMarkBusy(servername, port, flags);
 
         if (conn != NULL)                 /* found idle connection in cache */
         {
             return conn;
         }
-        else
+        else                    /* not found, open and cache new connection */
         {
-            /* Open and cache new connection. */
-
             int err = 0;
             conn = ServerConnection(servername, port, conntimeout,
                                     flags, &err);

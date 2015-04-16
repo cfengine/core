@@ -117,27 +117,26 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
         return -1;
     }
 
+    const char *key_hash = KeyPrintableHash(conn_info->remote_key);
+
     if (ret == 1)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Server is TRUSTED, received key %s MATCHES stored one.",
-            KeyPrintableHash(conn_info->remote_key));
+            "Server is TRUSTED, received key '%s' MATCHES stored one.",
+            key_hash);
     }
     else   /* ret == 0 */
     {
         if (trust_server)             /* We're most probably bootstrapping. */
         {
-            Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
-                KeyPrintableHash(conn_info->remote_key));
+            Log(LOG_LEVEL_NOTICE, "Trusting new key: %s", key_hash);
             SavePublicKey(username, KeyPrintableHash(conn_info->remote_key),
                           KeyRSA(conn_info->remote_key));
         }
         else
         {
             Log(LOG_LEVEL_ERR,
-                "TRUST FAILED, server presented an untrusted key, dropping connection!");
-            Log(LOG_LEVEL_ERR,
-                "Rebootstrap the client if you really want to start trusting this new key");
+                "TRUST FAILED, server presented untrusted key: %s", key_hash);
             return -1;
         }
     }

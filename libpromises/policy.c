@@ -1437,9 +1437,10 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
                 BufferAppendF(grow, "(%s).(", old_cp->rval);
                 BufferAppend(grow, RvalScalarValue(rval), strlen(RvalScalarValue(rval)));
                 BufferAppendChar(grow, ')');
-                rval.item = xstrdup(BufferData(grow)); // TODO: will this leak?
-
+                RvalDestroy(cp->rval);
+                rval = RvalNew(BufferData(grow), RVAL_TYPE_SCALAR);
                 BufferDestroy(grow);
+                cp->rval = rval;
             }
             SeqSet(pp->conlist, i, cp);
             return cp;

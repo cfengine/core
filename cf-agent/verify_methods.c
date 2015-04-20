@@ -78,8 +78,6 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 
 PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, const Promise *pp)
 {
-    assert(a.havebundle);
-
     const Rlist *args = NULL;
     Buffer *method_name = BufferNew();
     switch (call.type)

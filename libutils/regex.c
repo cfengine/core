@@ -30,6 +30,8 @@
 #include <logging.h>
 #include <string_lib.h>
 
+#include <buffer.h>
+
 
 #define STRING_MATCH_OVECCOUNT 30
 #define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
@@ -133,7 +135,17 @@ bool StringMatchFullWithPrecompiledRegex(pcre *pattern, const char *str)
     }
 }
 
-Seq *StringMatchCaptures(const char *regex, const char *str)
+// Returns a Sequence with Buffer elements.
+
+// If return_names is set, the even positions will be the name or
+// number of the capturing group, followed by the captured data in the
+// odd positions (so for N captures you can expect 2N elements in the
+// Sequence).
+
+// If return_names is not set, only the captured data is returned (so
+// for N captures you can expect N elements in the Sequence).
+
+Seq *StringMatchCaptures(const char *regex, const char *str, const bool return_names)
 {
     assert(regex);
     assert(str);
@@ -160,6 +172,22 @@ Seq *StringMatchCaptures(const char *regex, const char *str)
         return NULL;
     }
 
+    // Get the table of named captures.
+    unsigned char *name_table = NULL; // Doesn't have to be freed as per docs.
+    int namecount = 0;
+    int name_entry_size = 0;
+    unsigned char *tabptr;
+
+    pcre_fullinfo(pattern, NULL, PCRE_INFO_NAMECOUNT, &namecount);
+
+    const bool have_named_captures = (namecount > 0 && return_names);
+
+    if (have_named_captures)
+    {
+        pcre_fullinfo(pattern, NULL, PCRE_INFO_NAMETABLE, &name_table);
+        pcre_fullinfo(pattern, NULL, PCRE_INFO_NAMEENTRYSIZE, &name_entry_size);
+    }
+
     int *ovector = xmalloc(sizeof(int) * (captures + 1) * 3);
 
     int result = pcre_exec(pattern, NULL, str, strlen(str),
@@ -172,12 +200,44 @@ Seq *StringMatchCaptures(const char *regex, const char *str)
         return NULL;
     }
 
-    Seq *ret = SeqNew(captures + 1, free);
+    Seq *ret = SeqNew(captures + 1, BufferDestroy);
     for (int i = 0; i <= captures; ++i)
     {
-        SeqAppend(ret, xstrndup(str + ovector[2*i],
-                                ovector[2*i + 1] - ovector[2 * i]));
+        Buffer *capture = NULL;
+
+        if (have_named_captures)
+        {
+            // The overhead of doing a nested name scan is negligible.
+            tabptr = name_table;
+            for (int namepos = 0; namepos < namecount; namepos++)
+            {
+                int n = (tabptr[0] << 8) | tabptr[1];
+                if (n == i) // We found the position
+                {
+                    capture = BufferNewFrom(tabptr + 2, name_entry_size - 3);
+                    break;
+                }
+                tabptr += name_entry_size;
+            }
+        }
+
+        if (return_names)
+        {
+            if (NULL == capture)
+            {
+                capture = BufferNew();
+                BufferAppendF(capture, "%zd", i);
+            }
+
+            SeqAppend(ret, capture);
+        }
+
+        Buffer *data = BufferNewFrom(str + ovector[2*i],
+                                     ovector[2*i + 1] - ovector[2 * i]);
+        Log(LOG_LEVEL_DEBUG, "StringMatchCaptures: return_names = %d, have_named_captures = %d, offset %d, name '%s', data '%s'", return_names, have_named_captures, i, capture == NULL ? "no_name" : BufferData(capture), BufferData(data));
+        SeqAppend(ret, data);
     }
+
     free(ovector);
     pcre_free(pattern);
     return ret;

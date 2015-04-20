@@ -1,0 +1,92 @@
+# Test that methods promises work correctly both with and without usebundle.
+
+body common control
+{
+      inputs => { '../default.cf.sub' };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  vars:
+      "test_var7" string => "7";
+      "test_var8" string => "8";
+
+  methods:
+      "check1";
+      "check2"                 usebundle => check2;
+      "bad_check3"             usebundle => check3;
+      #"checkN(4)";            # Not currently working.
+      "checkN(5)"              usebundle => checkN(5);
+      "bad_checkN(6)"          usebundle => checkN(6);
+      "checkN(bad)"            usebundle => checkN(good);
+      "check$(test_var7)";
+      #"checkN($(test_var8))"; # Not currently working.
+}
+
+bundle agent check1
+{
+  classes:
+      "ok_1" expression => "any",
+        scope => "namespace";
+}
+bundle agent check2
+{
+  classes:
+      "ok_2" expression => "any",
+        scope => "namespace";
+}
+bundle agent check3
+{
+  classes:
+      "ok_3" expression => "any",
+        scope => "namespace";
+}
+bundle agent bad_check3
+{
+  classes:
+      "bad_3" expression => "any",
+        scope => "namespace";
+}
+bundle agent checkN(X)
+{
+  classes:
+      "ok_$(X)" expression => "any",
+        scope => "namespace";
+}
+bundle agent bad_checkN(X)
+{
+  classes:
+      "bad_$(X)" expression => "any",
+        scope => "namespace";
+}
+bundle agent check7
+{
+  classes:
+      "ok_7" expression => "any",
+        scope => "namespace";
+}
+
+bundle agent check
+{
+  vars:
+      "cases" slist => { 1, 2, 3, 5, 6, 7, "good" };
+      "positive" slist => maplist("ok_$(this)", "cases");
+      "negative" slist => { maplist("bad_$(this)", "cases"), "ok_bad" };
+
+  classes:
+      "positive_match" and => { @(positive) };
+      "negative_match" or  => { @(negative) };
+      "ok" expression => "positive_match.!negative_match";
+
+  reports:
+    DEBUG::
+      "Classes not set that should be: $(positive)"
+        if => "!$(positive)";
+      "Classes set that should not be: $(negative)"
+        if => "$(negative)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

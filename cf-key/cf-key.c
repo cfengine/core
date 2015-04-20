@@ -227,11 +227,12 @@ int main(int argc, char *argv[])
 static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
-    int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::",
+                            OPTIONS, NULL))
+           != -1)
     {
         switch (c)
         {

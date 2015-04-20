@@ -93,11 +93,8 @@ static const char *const HINTS[] =
     "Force removal of keys (USE AT YOUR OWN RISK)",
     "Install license file on Enterprise server (CFEngine Enterprise Only)",
     "Print digest of the specified public key",
-    "Make cf-serverd/cf-agent trust the specified public key. \
-    Argument value is of the form [[USER@]IPADDR:]FILENAME where FILENAME \
-    is the local path of the public key for client at IPADDR address.",
-    "Enable colorized output. Possible values: 'always', 'auto', 'never'. \
-    If option is used, the default value is 'auto'",
+    "Make cf-serverd/cf-agent trust the specified public key. Argument value is of the form [[USER@]IPADDR:]FILENAME where FILENAME is the local path of the public key for client at IPADDR address.",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
     NULL
 };

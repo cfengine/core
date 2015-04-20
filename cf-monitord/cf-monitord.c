@@ -135,13 +135,13 @@ int main(int argc, char *argv[])
 static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
-    int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhC::l", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhC::l",
+                            OPTIONS, NULL)) != -1)
     {
-        switch ((char) c)
+        switch (c)
         {
         case 'f':
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);

@@ -244,16 +244,16 @@ int main(int argc, char *argv[])
 static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
-    int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_RUNAGENT);
 
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::l", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::l",
+                            OPTIONS, NULL)) != -1)
     {
-        switch ((char) c)
+        switch (c)
         {
         case 'f':
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);

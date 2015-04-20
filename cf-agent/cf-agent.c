@@ -301,9 +301,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
      */
     bool cfruncommand = false;
 
-    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::El", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::El",
+                            OPTIONS, NULL))
+           != -1)
     {
-        switch ((char) c)
+        switch (c)
         {
         case 't':
             TIMING = true;

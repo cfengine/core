@@ -59,17 +59,25 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 
     const Constraint *cp;
     Rval method_name;
+    bool destroy_name;
 
     if ((cp = PromiseGetConstraint(pp, "usebundle")))
     {
         method_name = cp->rval;
+        destroy_name = false;
     }
     else
     {
-        method_name = DefaultBundleConstraint(pp, "method");
+        method_name = RvalNew(pp->promiser, RVAL_TYPE_SCALAR);
+        destroy_name = true;
     }
 
     PromiseResult result = VerifyMethod(ctx, method_name, a, pp);
+
+    if (destroy_name)
+    {
+        RvalDestroy(method_name);
+    }
 
     return result;
 }

@@ -431,7 +431,8 @@ promisee_statement:    promiser
 
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
                                                                            RvalCopy(P.rval),
-                                                                           P.currentclasses ? P.currentclasses : "any");
+                                                                           P.currentclasses ? P.currentclasses : "any",
+                                                                           P.currentvarclasses);
                                P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -458,7 +459,8 @@ promiser_statement:    promiser
 
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
-                                                                P.currentclasses ? P.currentclasses : "any");
+                                                                           P.currentclasses ? P.currentclasses : "any",
+                                                                           P.currentvarclasses);
                                P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -764,6 +766,12 @@ selection:             selection_id                         /* BODY ONLY */
                                            {
                                                cp = BodyAppendConstraint(P.currentbody, P.lval, RvalCopy(P.rval), P.currentclasses, P.references_body);
                                            }
+
+                                           if (P.currentvarclasses != NULL)
+                                           {
+                                               ParseError("Body attributes can't be put under a variable class '%s'", P.currentvarclasses);
+                                           }
+
                                            cp->offset.line = P.line_no;
                                            cp->offset.start = P.offsets.last_id;
                                            cp->offset.end = P.offsets.current;
@@ -872,18 +880,18 @@ arrow_type:            ARROW
 
 class:                 CLASS
                        {
-                           P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses) - 2;
-                           ParserDebug("\tP:%s:%s:%s:%s class = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext);
+                           P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses ? P.currentclasses : P.currentvarclasses) - 2;
+                           ParserDebug("\tP:%s:%s:%s:%s %s = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? "class": "varclass", yytext);
 
-                           /* class literal includes terminating :: */
-                           /* Warning : AIX does not like yylen     */
-                           char *literal = xstrndup(yytext, strlen(yytext) - 2);
+                           if (NULL != P.currentclasses)
+                           {
+                               char *literal = xstrdup(P.currentclasses);
 
-                           ValidateClassLiteral(literal);
+                               ValidateClassLiteral(literal);
 
-                           free(literal);
+                               free(literal);
+                           }
                        }
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 

@@ -216,7 +216,8 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     }
                 }
 
-                if (!callee)
+                if (!callee && (strcmp("ifvarclass", cp->lval) != 0 &&
+                                strcmp("if", cp->lval) != 0))
                 {
                     Log(LOG_LEVEL_ERR,
                         "Apparent bundle '%s' was undeclared, but "

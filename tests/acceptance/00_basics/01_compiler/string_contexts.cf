@@ -1,0 +1,95 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  defaults:
+      "s1" string => "1";
+      "s2" string => "2";
+      "s3" string => "3";
+      "s4" string => "4";
+      "s5" string => "5";
+      "s6" string => "6";
+      "s7" string => "7";
+      "s8" string => "8";
+
+  classes:
+      "$(mylist)" expression => "any";
+
+  vars:
+      "mylist" slist => { "a", "b", "c" };
+      "s1" string => "hello, this is OS $(sys.os)",
+      ifvarclass => "$(sys.os)";
+    any::
+      "s2" string => "any hello";
+    'any'::
+      "s3" string => "string hello";
+    "$(sys.os)"::
+      "s4" string => "variable context hello!!!";
+      "s4_2" string => "variable context hello!!!";
+    "$(sys.os).any"::
+      "s5" string => "compound variable context hello!!!";
+    "not$(sys.os)"::
+      "s6" string => "BAD variable context hello!!!";
+    "$(sys.os)"::
+      "s7" string => "augmented variable context hello!!!",
+      ifvarclass => "any";
+
+    "$(sys.os)"::
+      "s8" string => "BAD augmented variable context hello!!!",
+      ifvarclass => "nonesuch";
+    "$(mylist).cfengine"::
+      "iterated_$(mylist)" string => "iteration class $(mylist)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected" string => "
+hello, this is OS linux
+any hello
+string hello
+variable context hello!!!
+variable context hello!!!
+compound variable context hello!!!
+6
+augmented variable context hello!!!
+8
+iteration class a
+iteration class b
+iteration class c
+";
+      "actual" string => "
+$(test.s1)
+$(test.s2)
+$(test.s3)
+$(test.s4)
+$(test.s4_2)
+$(test.s5)
+$(test.s6)
+$(test.s7)
+$(test.s8)
+$(test.iterated_a)
+$(test.iterated_b)
+$(test.iterated_c)
+";
+  methods:
+      "" usebundle => dcs_check_strcmp($(expected),
+                                      $(actual),
+                                      $(this.promise_filename),
+                                      "no");
+}

@@ -17,7 +17,7 @@ bundle agent check
 {
   methods:
       "" usebundle =>
-      dcs_passif_output(".*\bR: response index: unicode\b.*",
+      dcs_passif_output(".*R: response index: unicode\b.*",
                         ".*Error parsing JSON.*",
                         "$(sys.cf_agent) -KIf $(this.promise_filename).sub",
                         $(this.promise_filename));

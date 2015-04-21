@@ -48,7 +48,7 @@ bundle agent check
 ";
 
       "expected" string => '
-0 0 {"0":"abcdef12-345-67andsoon","name1":"abc","2":"def","3":"12","name2":"345","5":"67"}
+0 0 {"0":"abcdef12-345-67andsoon","2":"def","3":"12","5":"67","name1":"abc","name2":"345"}
 
 1 0 {"0":""}
 1 1 {"0":""}

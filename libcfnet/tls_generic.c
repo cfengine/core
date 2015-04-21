@@ -322,12 +322,14 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     /*
      * Compare the key received with the one stored.
      */
-    RSA *expected_rsa_key = HavePublicKey(username, remoteip,
-                                          KeyPrintableHash(key));
+    const char *key_hash = KeyPrintableHash(key);
+    RSA *expected_rsa_key = HavePublicKey(username, remoteip, key_hash);
+
     if (expected_rsa_key == NULL)
     {
+        /* TODO LOG_LEVEL_NOTICE once cf-serverd logs to a different file. */
         Log(LOG_LEVEL_VERBOSE,
-            "Public key for remote host not found in ppkeys");
+            "Received key '%s' not found in ppkeys", key_hash);
         retval = 0;
         goto ret4;
     }
@@ -358,8 +360,9 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     }
     else if (ret == 0 || ret == -1)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Public key for remote host compares different to the one in ppkeys");
+        Log(LOG_LEVEL_NOTICE,
+            "Received key '%s' compares different to the one in ppkeys",
+            key_hash);
         retval = 0;
         goto ret6;
     }

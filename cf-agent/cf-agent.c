@@ -177,6 +177,7 @@ static const struct option OPTIONS[] =
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {"timing-output", no_argument, 0, 't'},
+    {"trust-server", optional_argument, 0, 'T'},
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {"timestamp", no_argument, 0, 'l'},
@@ -199,6 +200,7 @@ static const char *const HINTS[] =
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     "Output timing information on console when in verbose mode",
+    "Possible values: 'yes' (default, trust the server when bootstrapping), 'no' (server key must already be trusted)",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     "Log timestamps on each line of log output",
@@ -284,7 +286,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     extern char *optarg;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
-
+    bool option_trust_server = false;
+;
 /* DEPRECATED:
    --policy-server (-s) is deprecated in community version 3.5.0.
    Support rewrite from some common old bootstrap options (until community version 3.6.0?).
@@ -301,9 +304,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
      */
     bool cfruncommand = false;
 
-    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::El", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::ElT::",
+                            OPTIONS, NULL))
+           != -1)
     {
-        switch ((char) c)
+        switch (c)
         {
         case 't':
             TIMING = true;
@@ -472,6 +477,21 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             LoggingEnableTimestamps(true);
             break;
 
+        case 'T':
+            option_trust_server = true;
+
+            /* If the argument is missing, we trust by default. */
+            if (optarg == NULL || strcmp(optarg, "yes") == 0)
+            {
+                config->agent_specific.agent.bootstrap_trust_server = true;
+            }
+            else
+            {
+                config->agent_specific.agent.bootstrap_trust_server = false;
+            }
+
+            break;
+
         default:
             {
                 Writer *w = FileWriter(stdout);
@@ -486,6 +506,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                                           argv_new + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
+    }
+
+    if (option_trust_server &&
+        config->agent_specific.agent.bootstrap_policy_server == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Option --trust-server can only be used when bootstrapping");
         exit(EXIT_FAILURE);
     }
 

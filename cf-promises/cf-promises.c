@@ -54,18 +54,19 @@ static const char *const CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is 
     "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
     "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
-typedef enum
+/* Long-style only options, values must start above max ASCII value. */
+enum
 {
-    PROMISES_OPTION_EVAL_FUNCTIONS,
-    PROMISES_OPTION_SHOW_CLASSES,
-    PROMISES_OPTION_SHOW_VARIABLES
-} PromisesOptions;
+    OPT_EVAL_FUNCTIONS = 256,
+    OPT_SHOW_CLASSES,
+    OPT_SHOW_VARS
+};
 
 static const struct option OPTIONS[] =
 {
-    [PROMISES_OPTION_EVAL_FUNCTIONS] = {"eval-functions", optional_argument, 0, 0 },
-    [PROMISES_OPTION_SHOW_CLASSES] = {"show-classes", no_argument, 0, 0 },
-    [PROMISES_OPTION_SHOW_VARIABLES] = {"show-vars", no_argument, 0, 0 },
+    {"eval-functions", optional_argument, 0, OPT_EVAL_FUNCTIONS },
+    {"show-classes", no_argument, 0, OPT_SHOW_CLASSES },
+    {"show-vars", no_argument, 0, OPT_SHOW_VARS },
     {"help", no_argument, 0, 'h'},
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
@@ -90,9 +91,9 @@ static const struct option OPTIONS[] =
 
 static const char *const HINTS[] =
 {
-    [PROMISES_OPTION_EVAL_FUNCTIONS] = "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'yes'",
-    [PROMISES_OPTION_SHOW_CLASSES] = "Show discovered classes, including those defined in common bundles in policy",
-    [PROMISES_OPTION_SHOW_VARIABLES] = "Show discovered variables, including those defined without dependency to user-defined classes in policy",
+    "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'yes'",
+    "Show discovered classes, including those defined in common bundles in policy",
+    "Show discovered variables, including those defined without dependency to user-defined classes in policy",
     "Print the help message",
     "Use the specified bundlesequence for verification",
     "Enable debugging output",
@@ -206,45 +207,31 @@ int main(int argc, char *argv[])
 GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
-    int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
     config->tag_release_dir = NULL;
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:C::T:l", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
+                            OPTIONS, NULL))
+           != -1)
     {
-        switch ((char) c)
+        switch (c)
         {
-        case 0:
-            switch (optindex)
+        case OPT_EVAL_FUNCTIONS:
+            if (!optarg)
             {
-            case PROMISES_OPTION_EVAL_FUNCTIONS:
-                if (!optarg)
-                {
-                    optarg = "yes";
-                }
-                config->agent_specific.common.eval_functions = strcmp("yes", optarg) == 0;
-                break;
-
-            case PROMISES_OPTION_SHOW_CLASSES:
-                if (!optarg)
-                {
-                    optarg = "yes";
-                }
-                config->agent_specific.common.show_classes = strcmp("yes", optarg) == 0;
-                break;
-
-            case PROMISES_OPTION_SHOW_VARIABLES:
-                if (!optarg)
-                {
-                    optarg = "yes";
-                }
-                config->agent_specific.common.show_variables = strcmp("yes", optarg) == 0;
-                break;
-
-            default:
-                break;
+                optarg = "yes";
             }
+            config->agent_specific.common.eval_functions = strcmp("yes", optarg) == 0;
+            break;
+
+        case OPT_SHOW_CLASSES:
+            config->agent_specific.common.show_classes = true;
+            break;
+
+        case OPT_SHOW_VARS:
+            config->agent_specific.common.show_variables = true;
+            break;
 
         case 'c':
             config->check_runnable = true;

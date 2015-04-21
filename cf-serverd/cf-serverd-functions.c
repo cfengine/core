@@ -141,13 +141,14 @@ static int GenerateAvahiConfig(const char *path)
 GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
-    int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER);
 
-    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhAC::l", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhAC::l",
+                            OPTIONS, NULL))
+           != -1)
     {
-        switch ((char) c)
+        switch (c)
         {
         case 'f':
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);

@@ -31,11 +31,6 @@
 
 void SpecialTypeBanner(TypeSequence type, int pass)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     if (type == TYPE_SEQUENCE_CONTEXTS)
     {
         Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
@@ -54,15 +49,6 @@ void SpecialTypeBanner(TypeSequence type, int pass)
 
 void PromiseBanner(EvalContext *ctx, const Promise *pp)
 {
-    if (MACHINE_OUTPUT)
-    {
-        if (pp->comment)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Comment '%s'", pp->comment);
-        }
-        return;
-    }
-
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
@@ -128,11 +114,7 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
         Log(LOG_LEVEL_VERBOSE, "P:    \"unless\" class condition: %s", StringWriterData(w));
     }
 
-
-    LoggingContext *lctx = GetCurrentThreadContext();
-    char *hooked = lctx->pctx->log_hook(lctx->pctx, EvalContextGetPass(ctx), "");
-    Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", hooked);
-    free(hooked);
+    Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", EvalContextStackToString(ctx));
 
     if (pp->comment)
     {
@@ -148,12 +130,7 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
 
 void Legend()
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
     Log(LOG_LEVEL_VERBOSE, "PREFIX LEGEND:");
     Log(LOG_LEVEL_VERBOSE, " V: variable or parameter new definition in scope");
     Log(LOG_LEVEL_VERBOSE, " C: class/context new definition ");
@@ -161,21 +138,16 @@ void Legend()
     Log(LOG_LEVEL_VERBOSE, " P: promise execution output ");
     Log(LOG_LEVEL_VERBOSE, " A: accounting output ");
     Log(LOG_LEVEL_VERBOSE, " T: time measurement for stated object (promise or bundle)");
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
 }
 
 /****************************************************************************************/
 
 void Banner(const char *s)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
     Log(LOG_LEVEL_VERBOSE, " %s ", s);
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
+    Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
 
 }
 
@@ -183,11 +155,6 @@ void Banner(const char *s)
 
 void BundleBanner(const Bundle *bp, const Rlist *params)
 {
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
 
     if (params)
@@ -209,7 +176,7 @@ void BundleBanner(const Bundle *bp, const Rlist *params)
 
 void EndBundleBanner(const Bundle *bp)
 {
-    if (MACHINE_OUTPUT || bp == NULL)
+    if (bp == NULL)
     {
         return;
     }

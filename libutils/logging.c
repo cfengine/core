@@ -28,10 +28,9 @@
 #include <misc_lib.h>
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
-bool MACHINE_OUTPUT = false; /* GLOBAL_A */
 
 static char AgentType[80] = "generic";
-static bool BePretty;
+static bool TIMESTAMPS = false;
 
 static LogLevel global_level = LOG_LEVEL_NOTICE; /* GLOBAL_X */
 
@@ -65,10 +64,14 @@ LoggingContext *GetCurrentThreadContext(void)
     return lctx;
 }
 
-void LoggingSetAgentType(const char *type, bool pretty)
+void LoggingSetAgentType(const char *type)
 {
     strlcpy(AgentType, type, sizeof(AgentType));
-    BePretty = pretty;
+}
+
+void LoggingEnableTimestamps(bool enable)
+{
+    TIMESTAMPS = enable;
 }
 
 void LoggingPrivSetContext(LoggingPrivContext *pctx)
@@ -155,43 +158,27 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     time_t now_seconds = time(NULL);
     localtime_r(&now_seconds, &now);
 
-    char formatted_timestamp[64];
-    LoggingFormatTimestamp(formatted_timestamp, 64, &now);
-
-    if (MACHINE_OUTPUT)
+    if (color)
     {
-        const char *string_level = LogLevelToString(level);
-
-        if (color)
-        {
-            fprintf(output_file, "%s%s %8s: %s\x1b[0m\n", LogLevelToColor(level),
-                    formatted_timestamp, string_level, msg);
-        }
-        else
-        {
-            fprintf(output_file, "%s %8s: %s\n", formatted_timestamp, string_level, msg);
-        }
+        fprintf(output_file, "%s", LogLevelToColor(level));
     }
-    else
+    if (level >= LOG_LEVEL_INFO && VPREFIX[0])
     {
-        if (level >= LOG_LEVEL_INFO && VPREFIX[0])
-        {
-            fprintf(stdout, "%s ", VPREFIX);
-        }
+        fprintf(stdout, "%s ", VPREFIX);
+    }
+    if (TIMESTAMPS)
+    {
+        char formatted_timestamp[64];
+        LoggingFormatTimestamp(formatted_timestamp, 64, &now);
+        fprintf(stdout, "%s ", formatted_timestamp);
+    }
 
-        if (!BePretty)
-        {
-            fprintf(stdout, "%s ", formatted_timestamp);
-        }
+    fprintf(stdout, "%s: %s\n", LogLevelToString(level), msg);
 
-        if (level <= LOG_LEVEL_INFO)
-        {
-            fprintf(stdout, "%s: %s\n", LogLevelToString(level), msg);
-        }
-        else
-        {
-            fprintf(stdout, "%s\n", msg);
-        }
+    if (color)
+    {
+        // Turn off the color again.
+        fprintf(output_file, "\x1b[0m");
     }
 }
 
@@ -254,27 +241,24 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     }
     else
     {
-        hooked_msg = xstrdup(msg);
+        hooked_msg = msg;
     }
 
     if (level <= lctx->report_level)
     {
-        if (MACHINE_OUTPUT)
-        {
-            LogToConsole(hooked_msg, level, lctx->color);
-        }
-        else
-        {
-            LogToConsole(msg, level, lctx->color);
-        }
+        LogToConsole(hooked_msg, level, lctx->color);
     }
 
     if (level <= lctx->log_level && level < LOG_LEVEL_VERBOSE)
     {
         LogToSystemLog(hooked_msg, level);
     }
+
+    if (hooked_msg != msg)
+    {
+        free(hooked_msg);
+    }
     free(msg);
-    free(hooked_msg);
 }
 
 /* TODO create libutils/defs.h. */

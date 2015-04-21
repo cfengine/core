@@ -79,8 +79,8 @@ static const struct option OPTIONS[] =
     {"no-fork", no_argument, 0, 'F'},
     {"ld-library-path", required_argument, 0, 'L'},
     {"generate-avahi-conf", no_argument, 0, 'A'},
-    {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
+    {"timestamp", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -99,8 +99,8 @@ static const char *const HINTS[] =
     "Run as a foreground processes (do not fork)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     "Generates avahi configuration file to enable policy server to be discovered in the network",
-    "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
+    "Log timestamps on each line of log output",
     NULL
 };
 
@@ -145,13 +145,10 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER);
 
-    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhAlC::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhAC::l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
-        case 'l':
-            break;
-
         case 'f':
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
             MINUSF = true;
@@ -247,6 +244,10 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 exit(EXIT_FAILURE);
             }
+            break;
+
+        case 'l':
+            LoggingEnableTimestamps(true);
             break;
 
         default:

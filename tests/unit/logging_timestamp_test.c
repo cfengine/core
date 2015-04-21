@@ -7,7 +7,8 @@
 
 static void test_timestamp_regex(void)
 {
-    LoggingSetAgentType("test", false);
+    LoggingSetAgentType("test");
+    LoggingEnableTimestamps(true);
     LoggingSetColor(false);
     fflush(stderr);
     fflush(stdout);

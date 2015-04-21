@@ -58,11 +58,6 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 
-    if (MACHINE_OUTPUT)
-    {
-        return;
-    }
-
     if (TIMING)
     {
         Log(LOG_LEVEL_VERBOSE, "\n");

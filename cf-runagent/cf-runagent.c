@@ -107,8 +107,8 @@ static const struct option OPTIONS[] =
     {"hail", required_argument, 0, 'H'},
     {"interactive", no_argument, 0, 'i'},
     {"timeout", required_argument, 0, 't'},
-    {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
+    {"timestamp", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -129,8 +129,8 @@ static const char *const HINTS[] =
     "Hail the following comma-separated lists of hosts, overriding default list",
     "Enable interactive mode for key trust",
     "Connection timeout, seconds",
-    "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
+    "Log timestamps on each line of log output",
     NULL
 };
 
@@ -251,14 +251,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:lC::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
-        case 'l':
-            Log(LOG_LEVEL_VERBOSE, "Legacy output has been deprecated");
-            break;
-
         case 'f':
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
             MINUSF = true;
@@ -366,6 +362,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 exit(EXIT_FAILURE);
             }
+            break;
+
+        case 'l':
+            LoggingEnableTimestamps(true);
             break;
 
         default:

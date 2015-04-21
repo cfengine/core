@@ -71,7 +71,8 @@ void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void LogRaw(LogLevel level, const char *prefix, const void *buf, size_t buflen);
 void VLog(LogLevel level, const char *fmt, va_list ap);
 
-void LoggingSetAgentType(const char *type, bool pretty);
+void LoggingSetAgentType(const char *type);
+void LoggingEnableTimestamps(bool enable);
 void LogSetGlobalLevel(LogLevel level);
 LogLevel LogGetGlobalLevel(void);
 

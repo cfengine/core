@@ -30,7 +30,8 @@ bundle agent test
 
   vars:
       "mylist" slist => { "a", "b", "c" };
-      "s1" string => "hello, this is OS $(sys.os)",
+      "myvar" string => "me";
+      "s1" string => "hello, this is $(myvar)",
       ifvarclass => "$(sys.os)";
     any::
       "s2" string => "any hello";
@@ -60,7 +61,7 @@ bundle agent check
 {
   vars:
       "expected" string => "
-hello, this is OS linux
+hello, this is me
 any hello
 string hello
 variable context hello!!!

@@ -64,6 +64,7 @@ typedef struct
     char currenttype[CF_MAXVARSIZE];
     char *currentstring;
     char *currentclasses;
+    char *currentvarclasses;
 
     Policy *policy;
 

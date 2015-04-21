@@ -382,7 +382,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
 /*********************************************************************/
 
-void SavePublicKey(const char *user, const char *digest, const RSA *key)
+bool SavePublicKey(const char *user, const char *digest, const RSA *key)
 {
     char keyname[CF_MAXVARSIZE], filename[CF_BUFSIZE];
     struct stat statbuf;
@@ -394,7 +394,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     {
         Log(LOG_LEVEL_ERR, "USERNAME-KEY (%s-%s) string too long!",
             user, digest);
-        return;
+        return false;
     }
 
     ret = snprintf(filename, sizeof(filename), "%s/ppkeys/%s.pub",
@@ -402,13 +402,16 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     if (ret >= sizeof(filename))
     {
         Log(LOG_LEVEL_ERR, "Filename too long!");
-        return;
+        return false;
     }
 
     MapName(filename);
     if (stat(filename, &statbuf) != -1)
     {
-        return;
+        Log(LOG_LEVEL_VERBOSE,
+            "Public key file '%s' already exists, not rewriting",
+            filename);
+        return true;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Saving public key to file '%s'", filename);
@@ -416,7 +419,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     if ((fp = fopen(filename, "w")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to write a public key '%s'. (fopen: %s)", filename, GetErrorStr());
-        return;
+        return false;
     }
 
     if (!PEM_write_RSAPublicKey(fp, key))
@@ -424,9 +427,12 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
         Log(LOG_LEVEL_ERR,
             "Error saving public key to '%s'. (PEM_write_RSAPublicKey: %s)",
             filename, CryptoLastErrorString());
+        fclose(fp);
+        return false;
     }
 
     fclose(fp);
+    return true;
 }
 
 int EncryptString(char type, const char *in, char *out, unsigned char *key, int plainlen)

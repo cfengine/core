@@ -43,10 +43,10 @@
 
 static const char *const passphrase = "Cfengine passphrase";
 
-RSA* LoadPublicKey(const char* filename)
+RSA *LoadPublicKey(const char *filename)
 {
-    FILE* fp;
-    RSA* key;
+    FILE *fp;
+    RSA *key;
 
     fp = safe_fopen(filename, "r");
     if (fp == NULL)
@@ -79,13 +79,13 @@ RSA* LoadPublicKey(const char* filename)
 
 /** Return a string with the printed digest of the given key file,
     or NULL if an error occurred. */
-char* GetPubkeyDigest(const char* pubkey)
+char *LoadPubkeyDigest(const char *filename)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    RSA* key = NULL;
-    char* buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
+    RSA *key = NULL;
+    char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
 
-    key = LoadPublicKey(pubkey);
+    key = LoadPublicKey(filename);
     if (NULL == key)
     {
         return NULL;
@@ -97,13 +97,25 @@ char* GetPubkeyDigest(const char* pubkey)
     return buffer;
 }
 
+/** Return a string with the printed digest of the given key file. */
+char *GetPubkeyDigest(RSA *pubkey)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
+
+    HashPubKey(pubkey, digest, CF_DEFAULT_DIGEST);
+    HashPrintSafe(buffer, CF_HOSTKEY_STRING_SIZE,
+                  digest, CF_DEFAULT_DIGEST, true);
+    return buffer;
+}
+
 /*****************************************************************************/
 
 /** Print digest of the specified public key file.
     Return 0 on success and 1 on error. */
-int PrintDigest(const char* pubkey)
+int PrintDigest(const char *pubkey)
 {
-    char *digeststr = GetPubkeyDigest(pubkey);
+    char *digeststr = LoadPubkeyDigest(pubkey);
 
     if (NULL == digeststr)
     {
@@ -115,21 +127,98 @@ int PrintDigest(const char* pubkey)
     return 0; /* OK exitcode */
 }
 
-int TrustKey(const char* pubkey)
+/**
+ * Split a "key" argument of the form "[[user@]address:]filename" into
+ * components (public) key file name, IP address, and (remote) user
+ * name.  Pointers to the corresponding segments of the #keyarg
+ * string will be written into the three output arguments #filename,
+ * #ipaddr, and #username. (Hence, the three output string have
+ * the same lifetime/scope as the #keyarg string.)
+ *
+ * The only required component is the file name.  If IP address is
+ * missing, NULL is written into the #ipaddr pointer.  If the
+ * username is missing, #username will point to the constant string
+ * "root".
+ *
+ * @NOTE the #keyarg argument is modified by this function!
+ */
+void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username)
 {
-    char *digeststr = GetPubkeyDigest(pubkey);
-    char outfilename[CF_BUFSIZE];
-    bool ok;
+    char *s;
 
-    if (NULL == digeststr)
-        return 1; /* ERROR exitcode */
+    /* set defaults */
+    *ipaddr = NULL;
+    *username = "root";
 
-    snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
-    free(digeststr);
+    /* use rightmost colon so we can cope with IPv6 addresses */
+    s = strrchr(keyarg, ':');
+    if (s == NULL)
+    {
+        /* no colon, entire argument is a filename */
+        *filename = keyarg;
+        return;
+    }
 
-    ok = CopyRegularFileDisk(pubkey, outfilename);
+    *s = '\0';              /* split string */
+    *filename = s + 1;      /* filename starts at 1st character after ':' */
 
-    return (ok? 0 : 1);
+    s = strchr(keyarg, '@');
+    if (s == NULL)
+    {
+        /* no username given, use default */
+        *ipaddr = keyarg;
+        return;
+    }
+
+    *s = '\0';
+    *ipaddr = s + 1;
+    *username = keyarg;
+
+    /* special case: if we got user@:/path/to/file
+       then reset ipaddr to NULL instead of empty string */
+    if (**ipaddr == '\0')
+    {
+        *ipaddr = NULL;
+    }
+
+    return;
+}
+
+/**
+ * Trust the given key.  If #ipaddress is not NULL, then also
+ * update the "last seen" database.  The IP address is required for
+ * trusting a server key (on the client); it is -currently- optional
+ * for trusting a client key (on the server).
+ */
+bool TrustKey(const char *filename, const char *ipaddress, const char *username)
+{
+    RSA* key;
+    char *digest;
+
+    key = LoadPublicKey(filename);
+    if (key == NULL)
+    {
+        return false;
+    }
+
+    digest = GetPubkeyDigest(key);
+    if (digest == NULL)
+    {
+        return false;
+    }
+
+    if (ipaddress != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Adding a CONNECT entry in lastseen db: IP '%s', key '%s'",
+            ipaddress, digest);
+        LastSaw1(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
+    }
+
+    bool ret = SavePublicKey(username, digest, key);
+    free(digest);
+
+    return ret;
 }
 
 extern bool cf_key_interrupted;
@@ -171,7 +260,7 @@ void ShowLastSeenHosts()
  * @brief removes all traces of entry 'input' from lastseen and filesystem
  *
  * @param[in] key digest (SHA/MD5 format) or free host name string
- * @param[in] must_be_coherent. false : delete if lastseen is incoherent, 
+ * @param[in] must_be_coherent. false : delete if lastseen is incoherent,
  *                              true :  don't if lastseen is incoherent
  * @retval 0 if entry was deleted, >0 otherwise
  */

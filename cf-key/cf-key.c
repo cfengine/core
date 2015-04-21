@@ -40,15 +40,15 @@
 
 #include <cf-key-functions.h>
 
-int SHOWHOSTS = false; /* GLOBAL_A */
-bool FORCEREMOVAL = false; /* GLOBAL_A */
-bool REMOVEKEYS = false; /* GLOBAL_A */
-bool LICENSE_INSTALL = false; /* GLOBAL_A */
-char LICENSE_SOURCE[MAX_FILENAME] = ""; /* GLOBAL_A */
-const char *remove_keys_host = NULL; /* GLOBAL_A */
-static char *print_digest_arg = NULL; /* GLOBAL_A */
-static char *trust_key_arg = NULL; /* GLOBAL_A */
-static char *KEY_PATH = NULL; /* GLOBAL_A */
+int SHOWHOSTS = false;                                          /* GLOBAL_A */
+bool FORCEREMOVAL = false;                                      /* GLOBAL_A */
+bool REMOVEKEYS = false;                                        /* GLOBAL_A */
+bool LICENSE_INSTALL = false;                                   /* GLOBAL_A */
+char LICENSE_SOURCE[MAX_FILENAME] = "";                         /* GLOBAL_A */
+const char *remove_keys_host = NULL;                            /* GLOBAL_A */
+static char *print_digest_arg = NULL;                           /* GLOBAL_A */
+static char *trust_key_arg = NULL;                              /* GLOBAL_A */
+static char *KEY_PATH = NULL;                                   /* GLOBAL_A */
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
@@ -91,7 +91,7 @@ static const char *const HINTS[] =
     "Force removal of keys (USE AT YOUR OWN RISK)",
     "Install license file on Enterprise server (CFEngine Enterprise Only)",
     "Print digest of the specified public key",
-    "Make cf-serverd/cf-agent trust the specified public key",
+    "Make cf-serverd/cf-agent trust the specified public key. Argument value is of the form [[USER@]IPADDR:]FILENAME where FILENAME is the local path of the public key for client at IPADDR address",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
@@ -174,9 +174,25 @@ int main(int argc, char *argv[])
         return success ? 0 : 1;
     }
 
-    if (trust_key_arg)
+    if (trust_key_arg != NULL)
     {
-        return TrustKey(trust_key_arg);
+        char *filename, *ipaddr, *username;
+        /* We will modify the argument to --trust-key. */
+        char *arg = xstrdup(trust_key_arg);
+
+        ParseKeyArg(arg, &filename, &ipaddr, &username);
+
+        /* Server IP address required to trust key on the client side. */
+        if (ipaddr == NULL)
+        {
+            Log(LOG_LEVEL_NOTICE, "Establishing trust might be incomplete. "
+                "For completeness, use --trust-key IPADDR:filename");
+        }
+
+        bool ret = TrustKey(filename, ipaddr, username);
+
+        free(arg);
+        return ret ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     char *public_key_file, *private_key_file;

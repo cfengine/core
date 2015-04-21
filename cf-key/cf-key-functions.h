@@ -39,11 +39,14 @@
 #include <eval_context.h>
 #include <crypto.h>
 
-RSA* LoadPublicKey(const char* filename);
-char* GetPubkeyDigest(const char* pubkey);
-int PrintDigest(const char* pubkey);
-int TrustKey(const char* pubkey);
-bool ShowHost(const char *hostkey, const char *address, bool incoming, const KeyHostSeen *quality, void *ctx);
+RSA *LoadPublicKey(const char *filename);
+char *LoadPubkeyDigest(const char *pubkey);
+char *GetPubkeyDigest(RSA *pubkey);
+int PrintDigest(const char *pubkey);
+void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username);
+bool TrustKey(const char *pubkey, const char *ipaddress, const char *username);
+bool ShowHost(const char *hostkey, const char *address,
+              bool incoming, const KeyHostSeen *quality, void *ctx);
 void ShowLastSeenHosts();
 int RemoveKeys(const char *input, bool must_be_coherent);
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file);

@@ -29,7 +29,9 @@ bundle agent init
 {
   meta:
       # Backgrounding doesn't work properly on Windows or with fakeroot.
-      "test_skip_needs_work" string => "windows|using_fakeroot";
+      # In addition, RHEL4 seems to have some problem killing the test
+      # afterwards.
+      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4";
 
   methods:
     test_pass_4::

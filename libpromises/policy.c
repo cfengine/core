@@ -1434,9 +1434,9 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
                 strcmp(old_cp->lval, "if") == 0)
             {
                 Buffer *grow = BufferNew();
-                BufferAppendF(grow, "(%s).(", old_cp->rval);
-                BufferAppend(grow, RvalScalarValue(rval), strlen(RvalScalarValue(rval)));
-                BufferAppendChar(grow, ')');
+                BufferAppendF(grow, "(%s).(%s)",
+                              RvalScalarValue(old_cp->rval),
+                              RvalScalarValue(rval));
                 RvalDestroy(cp->rval);
                 rval = RvalNew(BufferData(grow), RVAL_TYPE_SCALAR);
                 BufferDestroy(grow);

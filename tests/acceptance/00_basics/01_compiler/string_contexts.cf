@@ -31,24 +31,25 @@ bundle agent test
   vars:
       "mylist" slist => { "a", "b", "c" };
       "myvar" string => "me";
+      "myclass" string => "any";
       "s1" string => "hello, this is $(myvar)",
-      ifvarclass => "$(sys.os)";
+      ifvarclass => "$(myclass)";
     any::
       "s2" string => "any hello";
     'any'::
       "s3" string => "string hello";
-    "$(sys.os)"::
+    "$(myclass)"::
       "s4" string => "variable context hello!!!";
       "s4_2" string => "variable context hello!!!";
-    "$(sys.os).any"::
+    "$(myclass).any"::
       "s5" string => "compound variable context hello!!!";
-    "not$(sys.os)"::
+    "not$(myclass)"::
       "s6" string => "BAD variable context hello!!!";
-    "$(sys.os)"::
+    "$(myclass)"::
       "s7" string => "augmented variable context hello!!!",
       ifvarclass => "any";
 
-    "$(sys.os)"::
+    "$(myclass)"::
       "s8" string => "BAD augmented variable context hello!!!",
       ifvarclass => "nonesuch";
     "$(mylist).cfengine"::

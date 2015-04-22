@@ -311,7 +311,6 @@ void BufferAppendF(Buffer *buffer, const char *format, ...)
          */
         ExpandIfNeeded(buffer, buffer->used + printed);
 
-        buffer->used = 0;
         printed = vsnprintf(buffer->buffer + buffer->used, buffer->capacity - buffer->used, format, ap);
         buffer->used += printed;
     }

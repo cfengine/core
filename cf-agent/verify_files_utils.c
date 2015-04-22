@@ -2016,33 +2016,33 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
         Log(LOG_LEVEL_DEBUG, "Trying to fix mode...newperm '%jo', stat '%jo'",
             (uintmax_t) (newperm & 07777), (uintmax_t) (dstat->st_mode & 07777));
 
-        switch (attr.transaction.action)
+        if (attr.transaction.action == cfa_warn || DONTDO)
         {
-        case cfa_warn:
 
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "'%s' has permission %04jo - [should be %04jo]", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-            break;
-
-        case cfa_fix:
-
-            if (!DONTDO)
+        }
+        else if (attr.transaction.action == cfa_fix)
+        {
+            if (safe_chmod(file, newperm & 07777) == -1)
             {
-                if (safe_chmod(file, newperm & 07777) == -1)
-                {
-                    Log(LOG_LEVEL_ERR, "chmod failed on '%s'. (chmod: %s)", file, GetErrorStr());
-                    break;
-                }
+                Log(LOG_LEVEL_ERR,
+                    "chmod failed on '%s'. (chmod: %s)",
+                    file, GetErrorStr());
             }
-
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Object '%s' had permission %04jo, changed it to %04jo", file,
-                 (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-            break;
-
-        default:
-            ProgrammingError("Unhandled file action in switch: %d", attr.transaction.action);
+            else
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                     "Object '%s' had permission %04jo, changed it to %04jo", file,
+                     (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+        }
+        else
+        {
+            ProgrammingError("Unhandled file action in switch: %d",
+                             attr.transaction.action);
         }
     }
 

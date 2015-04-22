@@ -814,7 +814,7 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
 
     for (const char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
     {
-        memset(buf, 0, buf_size);
+        buf[0] = '\0';
         sscanf(sp, "%[^\n]", buf);
         sp += strlen(buf);
 

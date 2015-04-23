@@ -810,11 +810,12 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
 {
     const Item *ip = begin;
     size_t buf_size = strlen(chunk) + 1;
-    char *buf = xcalloc(1, buf_size);
+    char *buf = xmalloc(buf_size);
     int lines = 0;
 
     for (const char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
     {
+        buf[0] = '\0';
         sscanf(sp, "%[^\n]", buf);
         sp += strlen(buf);
 

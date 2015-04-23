@@ -30,8 +30,8 @@ bundle agent init
   meta:
       # Backgrounding doesn't work properly on Windows or with fakeroot.
       # In addition, RHEL4 seems to have some problem killing the test
-      # afterwards.
-      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4";
+      # afterwards, and HP-UX is too slow for timing to be accurate.
+      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux";
 
   methods:
     test_pass_4::

@@ -215,15 +215,27 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
             goto err;
         }
     }
+
+    unsigned int open_flags = MDB_NOSUBDIR;
     if (id == dbid_locks
         || (GetAmPolicyHub(GetWorkDir()) && id == dbid_lastseen))
     {
-        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR|MDB_NOSYNC, 0644);
+        open_flags |= MDB_NOSYNC;
     }
-    else
-    {
-        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);
-    }
+
+#ifdef __hpux
+    /*
+     * On HP-UX, a unified file cache was not introduced until version 11.31.
+     * This means that on 11.23 there are separate file caches for mmap()'ed
+     * files and open()'ed files. When these two are mixed, changes made using
+     * one mode won't be immediately seen by the other mode, which is an
+     * assumption LMDB is relying on. The MDB_WRITEMAP flag causes LMDB to use
+     * mmap() only, so that we stay within one file cache.
+     */
+    open_flags |= MDB_WRITEMAP;
+#endif
+
+    rc = mdb_env_open(db->env, dbpath, open_flags, 0644);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",

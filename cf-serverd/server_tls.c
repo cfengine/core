@@ -90,6 +90,7 @@ bool ServerTLSInitialize()
         Log(LOG_LEVEL_ERR,
             "No valid ciphers in cipher list: %s",
             cipher_list);
+        goto err2;
     }
 
     if (PRIVKEY == NULL || PUBKEY == NULL)

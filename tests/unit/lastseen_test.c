@@ -325,20 +325,10 @@ static void test_consistent_1a()
     LastSaw1(IP1, KEY1, ACC);
     LastSaw1(IP2, KEY2, ACC);
 
-#ifdef __hpux
-    // Redmine #6994: NULL is not the desired result, it's just so that we don't
-    // have to xfail the whole test just because of one failure. The #else
-    // portion has the right results.
-    assert_string_equal(DBGetStr(DBH, "a"IP1), NULL);
-    assert_string_equal(DBGetStr(DBH, "a"IP2), NULL);
-    assert_string_equal(DBGetStr(DBH, "k"KEY1), NULL);
-    assert_string_equal(DBGetStr(DBH, "k"KEY2), NULL);
-#else
     assert_string_equal(DBGetStr(DBH, "a"IP1), KEY1);
     assert_string_equal(DBGetStr(DBH, "a"IP2), KEY2);
     assert_string_equal(DBGetStr(DBH, "k"KEY1), IP1);
     assert_string_equal(DBGetStr(DBH, "k"KEY2), IP2);
-#endif
 
     assert_int_equal(IsLastSeenCoherent(), true);
 }

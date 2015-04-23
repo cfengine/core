@@ -1,0 +1,92 @@
+# Test that parsejson defines variables as expected when the string includes a
+# variable that is undefined.
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+  vars:
+    "myvar" string => "xyz";
+}
+
+bundle agent test
+{
+  vars:
+    "localvar" string => "$(init.myvar)";
+
+    # Parsejson including a fully qualified remote variable that should be defined
+    "var1"
+      data => parsejson('{"key":"$(init.myvar)"}'),
+      meta => { "find" };
+    "svar1" string => format("%S", var1);
+
+    # Parsejson including a fully qualified remote variable that should not be found
+    "var2"
+      data => parsejson('{"key":"$(nobundle.myvar)"}'),
+      meta => { "find" };
+    "svar2" string => format("%S", var2);
+
+    # Parsejson including a local variable that is set based on a fully
+    # qualified remote variable that should be found
+    "var3"
+      data => parsejson('{"key":"$(localvar)"}'),
+      meta => { "find" };
+    "svar3" string => format("%S", var3);
+
+    # Parsejson including a local variable that should not be found
+    "var4"
+      data => parsejson('{"key":"$(localvarmissing)"}'),
+      meta => { "find" };
+    "svar4" string => format("%S", var4);
+
+
+}
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7130" };
+
+  vars:
+    "expected_data_var1" string => '{"key":"xyz"}';
+    "expected_data_var2" string => '{"key":"$(const.dollar)(nobundle.myvar)"}';
+    "expected_data_var3" string => '{"key":"xyz"}';
+    "expected_data_var4" string => '{"key":"$(const.dollar)(localvarmissing)"}';
+    "expected_data_var4" string => '{"key":"$(const.dollar)(localvarmissing)"}';
+    "expected_vars" slist => { "default:test.var1", "default:test.var2", "default:test.var3", "default:test.var4" };
+
+    "found_vars" slist => variablesmatching("$(this.namespace):test\..*", "find");
+    "difference_expected_found" slist => difference("expected_vars", "found_vars");
+    "count_difference_expected_found" int => length("difference_expected_found");
+
+  classes:
+    "var1_ok" expression => strcmp("$(expected_data_var1)", "$(test.svar1)");
+    "var2_ok" expression => strcmp("$(expected_data_var2)", "$(test.svar2)");
+    "var3_ok" expression => strcmp("$(expected_data_var3)", "$(test.svar3)");
+    "var4_ok" expression => strcmp("$(expected_data_var4)", "$(test.svar4)");
+
+    "fail" expression => isgreaterthan("count_difference_expected_found", 0);
+    "ok" expression => "!fail.(var1_ok.var2_ok.var3_ok.var4_ok)";
+
+  reports:
+    DEBUG::
+      "Found var: '$(found_vars)'";
+      "Expected var: '$(expected_vars)'";
+      "Expected content var1: '$(expected_data_var1)' Actual content var1: '$(test.svar1)'";
+      "Expected content var2: '$(expected_data_var2)' Actual content var2: '$(test.svar2)'";
+      "Expected content var3: '$(expected_data_var3)' Actual content var3: '$(test.svar3)'";
+      "Expected content var4: '$(expected_data_var4)' Actual content var4: '$(test.svar4)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    fail::
+      "$(this.promise_filename) FAIL";
+
+}

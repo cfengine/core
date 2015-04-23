@@ -1,0 +1,33 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testdir)/."
+      create => "true";
+
+    "$(G.testdir)/redmine_7082"
+      create => "true",
+      perms => m("777"),
+      comment => "We first ensure a file exists with specific permissions so
+                  that we can test if we get unexpected output when later
+                  running with dry-run.";
+}
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) -Knf $(this.promise_filename).sub -I -b test";
+
+  methods:
+    # Since the agent is run with dry-run (-n) there should be no statement of permissions changing.
+    # In fact, permissions are not changed, the agent only says they are, so it is only the false statement that needs to be checked.
+    "test_agent_output"
+      usebundle => dcs_passif_output(".*has permission 0777 - \[should be 0700\].*", ".*had permission 0777, changed it to 0700.*", $(command), $(this.promise_filename));
+
+}

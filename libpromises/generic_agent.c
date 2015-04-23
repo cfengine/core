@@ -1562,7 +1562,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         if (config->agent_specific.agent.bootstrap_trust_server)
         {
             EvalContextClassPutHard(ctx, "trust_server", "source=agent");
-            Log(LOG_LEVEL_NOTICE, "Bootstrap mode: implicitly trust server, "
+            Log(LOG_LEVEL_NOTICE, "Bootstrap mode: implicitly trusting server, "
                 "use --trust-server=no if server trust is already established");
         }
     }

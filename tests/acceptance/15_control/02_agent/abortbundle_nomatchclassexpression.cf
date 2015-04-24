@@ -1,0 +1,27 @@
+##########################################################################
+#
+# Test that bundles will not abort when a class expression used in
+# abortbundleclass does not match.
+##########################################################################
+
+
+body common control
+{
+      inputs => {
+                  "../../default.cf.sub",
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO";
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*PASS.*", "", $(command), $(this.promise_filename));
+}

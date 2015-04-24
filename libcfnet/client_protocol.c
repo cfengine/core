@@ -209,17 +209,11 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     bool need_to_implicitly_trust_server;
     char enterprise_field = 'c';
 
-    if (PUBKEY == NULL || PRIVKEY == NULL)
+    if (PRIVKEY == NULL || PUBKEY == NULL)
     {
-        /* Try once more to load the keys, maybe the system is converging. */
-        LoadSecretKeys();
-        if (PUBKEY == NULL || PRIVKEY == NULL)
-        {
-            char *pubkeyfile = PublicKeyFile(GetWorkDir());
-            Log(LOG_LEVEL_ERR, "No public/private key pair found at: %s", pubkeyfile);
-            free(pubkeyfile);
-            return false;
-        }
+        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
+            " please create one using cf-key");
+        return false;
     }
 
     enterprise_field = CfEnterpriseOptions();

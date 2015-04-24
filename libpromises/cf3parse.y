@@ -600,11 +600,9 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                Buffer *copy = BufferNewFrom(P.rval.item, strlen(P.rval.item));
 
                                                const char* fname = NULL;
-                                               int offset = 0;
                                                if (strlen(P.rval.item) > 3 && strncmp("---", P.rval.item, 3) == 0)
                                                {
                                                    fname = "parseyaml";
-                                                   offset = 0;
 
                                                    // look for unexpanded variables
                                                    if (NULL == strstr(P.rval.item, "$(") && NULL == strstr(P.rval.item, "${"))
@@ -617,7 +615,6 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                else
                                                {
                                                    fname = "parsejson";
-                                                   offset = 0;
                                                    // look for unexpanded variables
                                                    if (NULL == strstr(P.rval.item, "$(") && NULL == strstr(P.rval.item, "${"))
                                                    {
@@ -631,11 +628,11 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
 
                                                if (json_parse_attempted && res != JSON_PARSE_OK)
                                                {
-                                                   // no error, we'll try with the fname fncall
+                                                   // Parsing failed, insert fncall so it can be retried during evaluation
                                                }
                                                else if (NULL != json && JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
                                                {
-                                                   // no error, we'll try with the fname fncall
+                                                   // Parsing failed, insert fncall so it can be retried during evaluation
                                                    JsonDestroy(json);
                                                    json = NULL;
                                                }
@@ -645,7 +642,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                    if (NULL == json)
                                                    {
                                                        Rlist *synthetic_args = NULL;
-                                                       RlistAppendScalar(&synthetic_args, xstrdup(P.rval.item+offset));
+                                                       RlistAppendScalar(&synthetic_args, xstrdup(P.rval.item));
                                                        RvalDestroy(P.rval);
 
                                                        P.rval = (Rval) { FnCallNew(xstrdup(fname), synthetic_args), RVAL_TYPE_FNCALL };

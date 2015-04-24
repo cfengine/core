@@ -453,6 +453,13 @@ int safe_open(const char *pathname, int flags, ...)
                 return -1;
             }
 
+            // We can't safely open(2) a FIFO without blocking infinitely
+            if (S_ISFIFO(stat_before.st_mode))
+            {
+                close(currentfd);
+                return -1;
+            }
+
             TEST_SYMLINK_SWITCH_POINT
 
             if (!next_component)
@@ -665,6 +672,13 @@ int safe_chown(const char *path, uid_t owner, gid_t group)
     int fd = safe_open(path, 0);
     if (fd < 0)
     {
+        // Do additional checking for FIFOs
+        struct stat st;
+        if (stat(path, &st) == 0 && S_ISFIFO(st.st_mode))
+        {
+            return chown(path, owner, group);
+        }
+
         return -1;
     }
 
@@ -739,6 +753,13 @@ int safe_chmod(const char *path, mode_t mode)
     int fd = safe_open(path, 0);
     if (fd < 0)
     {
+        // Do additional checking for FIFOs
+        struct stat st;
+        if (stat(path, &st) == 0 && S_ISFIFO(st.st_mode))
+        {
+            return chmod(path, mode);
+        }
+
         return -1;
     }
 

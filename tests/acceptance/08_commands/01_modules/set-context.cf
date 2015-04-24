@@ -56,7 +56,7 @@ bundle agent check
 
       "e1" string => '{"x":[456,789]}';
       "e5" string => '["read","some","strings"]';
-      "e6" string => '{"mix":["match"],"ping":"pong","paddle":true,"nothing":null}';
+      "e6" string => '{"mix":["match"],"nothing":null,"paddle":true,"ping":"pong"}';
 
       "hello_contexts" slist => { "xyz_123___456", "_456", "456", "_", "a__456__", "__a__", };
 

@@ -94,9 +94,9 @@ bundle agent cmerge(varlist)
 #+begin_src example_output
 #@ ```
 #@ R: merging {"a":[1,2,3],"b":[]} with {"b":[4,5,6]} produced {"a":[1,2,3],"b":[4,5,6]}
-#@ R: merging {"a":[1,2,3],"b":[]} with wrapped [ {"b":[4,5,6]} ] produced {"a":[1,2,3],"b":[],"0":{"b":[4,5,6]}}
+#@ R: merging {"a":[1,2,3],"b":[]} with wrapped [ {"b":[4,5,6]} ] produced {"0":{"b":[4,5,6]},"a":[1,2,3],"b":[]}
 #@ R: merging {"a":[1,2,3],"b":[]} with wrapped { "newkey": {"b":[4,5,6]} produced {"a":[1,2,3],"b":[],"newkey":{"b":[4,5,6]}}
-#@ R: merging {"a":[1,2,3],"b":[]} with [4,5,6] produced {"a":[1,2,3],"b":[],"0":4,"1":5,"2":6}
+#@ R: merging {"a":[1,2,3],"b":[]} with [4,5,6] produced {"0":4,"1":5,"2":6,"a":[1,2,3],"b":[]}
 #@ R: merging [4,5,6] with { "element1", "element2" } produced [4,5,6,"element1","element2"]
 #@ R: merging {"a":[1,2,3],"b":[]} with array1 produced {"a":[1,2,3],"b":[],"mykey":["array_element1","array_element2"]}
 #@ R: merging {"b":[4,5,6]} with array2 produced {"b":[4,5,6],"otherkey":"hello"}

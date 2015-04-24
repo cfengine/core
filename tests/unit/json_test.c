@@ -11,12 +11,13 @@ static const char *OBJECT_ARRAY = "{\n" "  \"first\": [\n" "    \"one\",\n" "   
 
 static const char *OBJECT_COMPOUND = "{\n"
     "  \"first\": \"one\",\n"
+    "  \"fourth\": {\n" "    \"fifth\": \"five\"\n" "  },\n"
     "  \"second\": {\n"
-    "    \"third\": \"three\"\n" "  },\n" "  \"fourth\": {\n" "    \"fifth\": \"five\"\n" "  }\n" "}";
+    "    \"third\": \"three\"\n" "  }\n" "}";
 
 static const char *OBJECT_SIMPLE = "{\n" "  \"first\": \"one\",\n" "  \"second\": \"two\"\n" "}";
 
-static const char *OBJECT_NUMERIC = "{\n" "  \"real\": 1234.5678,\n" "  \"int\": -1234567890\n" "}";
+static const char *OBJECT_NUMERIC = "{\n" "  \"int\": -1234567890,\n" "  \"real\": 1234.5678\n" "}";
 
 static const char *OBJECT_BOOLEAN = "{\n" "  \"bool_value\": true\n" "}";
 
@@ -211,7 +212,7 @@ static void test_show_object_compound_compact(void)
     JsonWriteCompact(writer, json);
     char *output = StringWriterClose(writer);
 
-    assert_string_equal("{\"first\":\"one\",\"second\":{\"third\":\"three\"},\"fourth\":{\"fifth\":\"five\"}}", output);
+    assert_string_equal("{\"first\":\"one\",\"fourth\":{\"fifth\":\"five\"},\"second\":{\"third\":\"three\"}}", output);
 
     JsonDestroy(json);
     free(output);

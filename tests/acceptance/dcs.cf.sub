@@ -36,6 +36,7 @@ bundle common G
                         "ln",
                         "ls",
                         "mkdir",
+                        "mkfifo",
                         "mock_package_manager",
                         "mv",
                         "no_fds",

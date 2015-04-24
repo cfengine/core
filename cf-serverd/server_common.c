@@ -1010,20 +1010,10 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
         cfst.cf_readlink = linkbuf;
     }
-#endif /* !__MINGW32__ */
-
-    if ((!islink) && (stat(filename, &statbuf) == -1))
-    {
-        Log(LOG_LEVEL_VERBOSE, "BAD: unable to stat file '%s'. (stat: %s)",
-            filename, GetErrorStr());
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
-        return -1;
-    }
-
-    Log(LOG_LEVEL_DEBUG, "Getting size of link deref '%s'", linkbuf);
 
     if (islink && (stat(filename, &statlinkbuf) != -1))       /* linktype=copy used by agent */
     {
+        Log(LOG_LEVEL_DEBUG, "Getting size of link deref '%s'", linkbuf);
         statbuf.st_size = statlinkbuf.st_size;
         statbuf.st_mode = statlinkbuf.st_mode;
         statbuf.st_uid = statlinkbuf.st_uid;
@@ -1031,6 +1021,8 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
         statbuf.st_mtime = statlinkbuf.st_mtime;
         statbuf.st_ctime = statlinkbuf.st_ctime;
     }
+
+#endif /* !__MINGW32__ */
 
     if (S_ISDIR(statbuf.st_mode))
     {

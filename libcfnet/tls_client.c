@@ -61,6 +61,12 @@ bool TLSClientInitialize()
         return true;
     }
 
+    if (PRIVKEY == NULL || PUBKEY == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
+            " please create one using cf-key");
+        return false;
+    }
     if (!TLSGenericInitialize())
     {
         return false;
@@ -265,13 +271,13 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
  */
 int TLSTry(ConnectionInfo *conn_info)
 {
-    /* SSL Context might not be initialised up to now due to lack of keys, as
-     * they might be generated as part of the policy (e.g. failsafe.cf). */
-    if (!TLSClientInitialize())
+    if (PRIVKEY == NULL || PUBKEY == NULL)
     {
+        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
+            " please create one using cf-key");
         return -1;
     }
-    assert(SSLCLIENTCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
+    assert(SSLCLIENTCONTEXT != NULL);
 
     conn_info->ssl = SSL_new(SSLCLIENTCONTEXT);
     if (conn_info->ssl == NULL)

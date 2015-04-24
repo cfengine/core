@@ -1,0 +1,64 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src prep
+#@ ```
+#@ echo 1 > /tmp/1
+#@ echo 2 > /tmp/2
+#@ echo 3 > /tmp/3
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+bundle agent example
+
+{
+  vars:
+
+      "md5" string => file_hash("/tmp/1","md5");
+      "sha256" string => file_hash("/tmp/2","sha256");
+      "sha384" string => hash("/tmp/3","sha384");
+      "sha512" string => hash("/tmp/3","sha512");
+
+  reports:
+
+      "'1\n' hashed to: md5 $(md5)";
+      "'2\n' hashed to: sha256 $(sha256)";
+      "'3\n' hashed to: sha384 $(sha384)";
+      "'3\n' hashed to: sha512 $(sha512)";
+
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: '1\n' hashed to: md5 b026324c6904b2a9cb4b88d6d61c81d1
+#@ R: '2\n' hashed to: sha256 53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3
+#@ R: '3\n' hashed to: sha384 54f7379844b41bf513c0557a7195ca96a8ac90d0f8cc87d3607ef7ab593a7c61732759387afaabaf72ca2c0bd599373e
+#@ R: '3\n' hashed to: sha512 48b3c46b24db82059b5c87603066cf8d2165837d66e268286feb384644c808c06edf99aeaca0d879f4ee6ec70ebfaa0b98d5b77c12f7c0a68de3f7302dec6e21
+#@ ```
+#+end_src

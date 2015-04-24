@@ -230,37 +230,59 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                 VariableTableIterator *iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
                 convert = JsonObjectCreate(10);
                 Variable *var;
+
+                char *last_key = NULL;
                 while ((var = VariableTableIteratorNext(iter)))
                 {
-                    // TODO: explain array iteration
-                    if (var->ref->num_indices != 1)
+                    size_t index_offset = ref->name_index_count;
+                    JsonElement *holder = convert;
+                    if (var->ref->num_indices - index_offset == 1)
                     {
-                        continue;
+                        last_key = var->ref->indices[index_offset];
                     }
-
-                    switch (var->rval.type)
+                    else if (var->ref->num_indices - index_offset > 1)
                     {
-                    case RVAL_TYPE_SCALAR:
-                        JsonObjectAppendString(convert, var->ref->indices[0], var->rval.item);
-                        break;
-
-                    case RVAL_TYPE_LIST:
-                    {
-                        JsonElement *array = JsonArrayCreate(10);
-                        for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                        Log(LOG_LEVEL_DEBUG, "%s: got ref with starting depth %zd and index count %zd", fp->name, index_offset, var->ref->num_indices);
+                        for (int index = index_offset; index < var->ref->num_indices-1; index++)
                         {
-                            if (rp->val.type == RVAL_TYPE_SCALAR &&
-                                strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                            JsonElement *local = JsonObjectGet(holder, var->ref->indices[index]);
+                            if (NULL == local)
                             {
-                                JsonArrayAppendString(array, RlistScalarValue(rp));
+                                local = JsonObjectCreate(1);
+                                JsonObjectAppendObject(holder, var->ref->indices[index], local);
                             }
-                        }
-                        JsonObjectAppendArray(convert, var->ref->indices[0], array);
-                    }
-                    break;
 
-                    default:
+                            last_key = var->ref->indices[index+1];
+                            holder = local;
+                        }
+                    }
+
+                    if (NULL != last_key && NULL != holder)
+                    {
+                        switch (var->rval.type)
+                        {
+                        case RVAL_TYPE_SCALAR:
+                            JsonObjectAppendString(holder, last_key, var->rval.item);
+                            break;
+
+                        case RVAL_TYPE_LIST:
+                        {
+                            JsonElement *array = JsonArrayCreate(10);
+                            for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                            {
+                                if (rp->val.type == RVAL_TYPE_SCALAR &&
+                                    strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                                {
+                                    JsonArrayAppendString(array, RlistScalarValue(rp));
+                                }
+                            }
+                            JsonObjectAppendArray(holder, last_key, array);
+                        }
                         break;
+
+                        default:
+                            break;
+                        }
                     }
                 }
 

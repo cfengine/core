@@ -33,6 +33,7 @@
 typedef struct
 {
     size_t hash;
+    size_t name_index_count;
     char *ns;
     char *scope;
     char *lval;

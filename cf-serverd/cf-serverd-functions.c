@@ -432,6 +432,10 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
 
             time_t t = SetReferenceTime();
             UpdateTimeClasses(ctx, t);
+
+            /* TODO BUG: this modifies config, but previous config has not
+             * been reset/free'd. Ideally we would want LoadPolicy to not
+             * modify config at all, but only modify ctx. */
             *policy = LoadPolicy(ctx, config);
 
             /* Reload HA related configuration */

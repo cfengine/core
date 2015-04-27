@@ -29,7 +29,7 @@
 #include <cfnet.h>
 
 
-bool TLSClientInitialize(void);
+bool TLSClientInitialize(const char *ciphers);
 void TLSDeInitialize(void);
 
 int TLSClientIdentificationDialog(ConnectionInfo *conn_info,

@@ -37,7 +37,6 @@
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                       /* LoadSecretKeys */
-#include <bootstrap.h>                     /* ReadPolicyServerFile */
 
 
 extern RSA *PRIVKEY, *PUBKEY;
@@ -51,7 +50,7 @@ static X509 *SSLCLIENTCERT = NULL; /* GLOBAL_X */
 /**
  * @warning Make sure you've called CryptoInitialize() first!
  */
-bool TLSClientInitialize()
+bool TLSClientInitialize(const char *ciphers)
 {
     int ret;
     static bool is_initialised = false;
@@ -82,15 +81,18 @@ bool TLSClientInitialize()
 
     TLSSetDefaultOptions(SSLCLIENTCONTEXT);
 
-    if (PRIVKEY == NULL || PUBKEY == NULL)
+    if (ciphers != NULL)
     {
-        Log(CryptoGetMissingKeyLogLevel(),
-            "No public/private key pair is loaded, trying to reload");
-        LoadSecretKeys();
-        if (PRIVKEY == NULL || PUBKEY == NULL)
+        Log(LOG_LEVEL_DEBUG,
+            "Setting cipher list for outgoing TLS connections to: %s",
+            ciphers);
+
+        ret = SSL_CTX_set_cipher_list(SSLCLIENTCONTEXT, ciphers);
+        if (ret != 1)
         {
-            Log(CryptoGetMissingKeyLogLevel(),
-                "No public/private key pair found");
+            Log(LOG_LEVEL_ERR,
+                "No valid ciphers in cipher list: %s",
+                ciphers);
             goto err2;
         }
     }

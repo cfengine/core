@@ -962,7 +962,10 @@ ProtocolVersion ProtocolVersionParse(const char *s)
     }
 }
 
-
+/**
+ * Evaluate the relevant control body, and set the
+ * relevant fields in #ctx and #config.
+ */
 static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
                                const Body *control_body)
 {
@@ -970,6 +973,8 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
     Rval returnval;
 
     assert(strcmp(control_body->name, "control") == 0);
+
+    assert(CFG_CONTROLBODY[COMMON_CONTROL_MAX].lval == NULL);
 
     for (int i = 0; CONTROL_BODIES[i].constraints != NULL; i++)
     {

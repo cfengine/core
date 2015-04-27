@@ -706,7 +706,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         char *bootstrapped_policy_server = ReadPolicyServerFile(workdir);
         PolicyHubUpdateKeys(bootstrapped_policy_server);
         free(bootstrapped_policy_server);
-        cfnet_init();
+        const char *tls_ciphers =
+            EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_CIPHERS);
+        cfnet_init(tls_ciphers);
     }
 
     size_t cwd_size = PATH_MAX;
@@ -1483,6 +1485,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->heap_soft = NULL;
     config->heap_negated = NULL;
     config->ignore_locks = false;
+
+    config->protocol_version = CF_PROTOCOL_UNDEFINED;
 
     config->agent_specific.agent.bootstrap_policy_server = NULL;
 

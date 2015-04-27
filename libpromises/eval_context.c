@@ -58,8 +58,14 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
+/**
+ * Every agent has only one EvalContext from process start to finish.
+ */
 struct EvalContext_
 {
+    /* TODO: a pointer to read-only version of config is often needed. */
+    /* const GenericAgentConfig *config; */
+
     int eval_options;
     bool bundle_aborted;
     bool checksum_updates_default;

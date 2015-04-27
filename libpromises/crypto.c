@@ -538,6 +538,7 @@ char *PrivateKeyFile(const char *workdir)
     return keyfile;
 }
 
+/* TODO remove this. Proper solution is to include a key in our test environment. */
 LogLevel CryptoGetMissingKeyLogLevel(void)
 {
     if (getuid() == 0 &&

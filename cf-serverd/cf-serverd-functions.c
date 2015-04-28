@@ -699,7 +699,7 @@ static void CollectCallIfDue(EvalContext *ctx)
         if (waiting_queue > COLLECT_WINDOW)
         {
             Log(LOG_LEVEL_INFO,
-                "Closing collect call with queue longer than the allocated window [%d > %d]",
+                "Abandoning collect call attempt with queue longer than collect_window [%d > %d]",
                 waiting_queue, COLLECT_WINDOW);
             cf_closesocket(new_client);
         }

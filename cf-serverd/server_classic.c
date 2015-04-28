@@ -620,10 +620,10 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
 
-    if ((PRIVKEY == NULL) || (PUBKEY == NULL))
+    if (PRIVKEY == NULL || PUBKEY == NULL)
     {
-        Log(LOG_LEVEL_ERR,
-            "No public/private key pair exists, create one with cf-key");
+        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
+            " please create one using cf-key");
         return false;
     }
 

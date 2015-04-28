@@ -90,12 +90,13 @@ bool ServerTLSInitialize()
         Log(LOG_LEVEL_ERR,
             "No valid ciphers in cipher list: %s",
             cipher_list);
+        goto err2;
     }
 
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
-        Log(LOG_LEVEL_ERR,
-            "No public/private key pair is loaded, create one with cf-key");
+        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
+            " please create one using cf-key");
         goto err2;
     }
 

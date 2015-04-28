@@ -1871,10 +1871,7 @@ VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalCont
 
 const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval)
 {
-    if (lval >= COMMON_CONTROL_MAX)
-    {
-        return NULL;
-    }
+    assert(lval >= 0 && lval < COMMON_CONTROL_MAX);
 
     VarRef *ref = VarRefParseFromScope(CFG_CONTROLBODY[lval].lval, "control_common");
     const void *ret = EvalContextVariableGet(ctx, ref, NULL);

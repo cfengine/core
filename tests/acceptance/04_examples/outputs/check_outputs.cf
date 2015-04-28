@@ -19,10 +19,6 @@ bundle agent init
       "checker" string => "$(basedir)/remake_outputs.pl";
       "all_examples" slist => findfiles("$(basedir)/*.cf");
 
-  commands:
-      # we need to avoid the cf-key messages
-      "$(sys.cf_key)";
-
   reports:
     DEBUG_LOTS::
       "$(this.bundle): will consider example $(all_examples)";

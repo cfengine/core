@@ -62,7 +62,8 @@ bool TLSClientInitialize(const char *ciphers)
 
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
-        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
+        /* VERBOSE in case it's a custom, local-only installation. */
+        Log(LOG_LEVEL_VERBOSE, "No public/private key pair is loaded,"
             " please create one using cf-key");
         return false;
     }

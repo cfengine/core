@@ -37,7 +37,7 @@ extern time_t CFSTARTTIME;
 
 extern struct utsname VSYSNAME;
 extern char VIPADDRESS[CF_MAX_IP_LEN];
-extern char VPREFIX[];
+extern char VPREFIX[1024];
 
 extern char VDOMAIN[CF_MAXVARSIZE];
 extern char VFQNAME[];

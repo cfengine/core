@@ -710,7 +710,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 continue;
             }
 
-            if (EvalContextVariableControlCommonGet(ctx, CommonControlFromString(cp->lval)))
+            if (CommonControlFromString(cp->lval) != COMMON_CONTROL_MAX)
             {
                 /* Already handled in generic_agent */
                 continue;

@@ -913,7 +913,7 @@ run_all_tests_using_make() {
   for curr_test in $ALL_TESTS; do
     # Keep serial tests after preceding tests and before following tests.
     case "$curr_test" in
-      /serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*)
+      */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*)
         if [ $LAST_WAS_SERIAL = 0 ]; then
           TEST_BLOCKS=$(($TEST_BLOCKS + 1))
           LAST_WAS_SERIAL=1
@@ -927,7 +927,7 @@ run_all_tests_using_make() {
         ;;
     esac
     case "$curr_test" in
-      /serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*|*/timed/*)
+      */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*|*/timed/*)
         eval MAKE_RECIPE_LIST$TEST_BLOCKS='$MAKE_RECIPE_LIST'$TEST_BLOCKS'${MAKE_RECIPE_LIST'$TEST_BLOCKS':+ }$curr_test'
         ;;
       *)

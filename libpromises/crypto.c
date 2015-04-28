@@ -54,7 +54,6 @@ void CRYPTO_set_id_callback(unsigned long (*func)(void));
 static void RandomSeed(void);
 static void SetupOpenSSLThreadLocks(void);
 static void CleanupOpenSSLThreadLocks(void);
-LogLevel CryptoGetMissingKeyLogLevel();
 
 /* TODO move crypto.[ch] to libutils. Will need to remove all manipulation of
  * lastseen db. */
@@ -168,7 +167,8 @@ bool LoadSecretKeys(void)
         FILE *fp = fopen(privkeyfile, "r");
         if (!fp)
         {
-            Log(CryptoGetMissingKeyLogLevel(),
+            /* VERBOSE in case it's a custom, local-only installation. */
+            Log(LOG_LEVEL_VERBOSE,
                 "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)",
                 privkeyfile, GetErrorStr());
             free(privkeyfile);
@@ -196,7 +196,8 @@ bool LoadSecretKeys(void)
         FILE *fp = fopen(pubkeyfile, "r");
         if (!fp)
         {
-            Log(CryptoGetMissingKeyLogLevel(),
+            /* VERBOSE in case it's a custom, local-only installation. */
+            Log(LOG_LEVEL_VERBOSE,
                 "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)",
                 pubkeyfile, GetErrorStr());
             free(pubkeyfile);
@@ -348,7 +349,8 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if ((fp = fopen(newname, "r")) == NULL)
     {
-        Log(CryptoGetMissingKeyLogLevel(), "Couldn't find a public key '%s'. (fopen: %s)", newname, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Couldn't open public key file '%s' (fopen: %s)",
+            newname, GetErrorStr());
         return NULL;
     }
 
@@ -356,8 +358,8 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
                                         (void *)pub_passphrase)) == NULL)
     {
         Log(LOG_LEVEL_ERR,
-            "Error reading public key. (PEM_read_RSAPublicKey: %s)",
-            CryptoLastErrorString());
+            "Error reading public key from '%s' (PEM_read_RSAPublicKey: %s)",
+            newname, CryptoLastErrorString());
         fclose(fp);
         return NULL;
     }
@@ -366,7 +368,8 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if ((BN_num_bits(newkey->e) < 2) || (!BN_is_odd(newkey->e)))
     {
-        Log(LOG_LEVEL_ERR, "RSA Exponent too small or not odd");
+        Log(LOG_LEVEL_ERR, "RSA Exponent too small or not odd for key: %s",
+            newname);
         RSA_free(newkey);
         return NULL;
     }
@@ -536,21 +539,6 @@ char *PrivateKeyFile(const char *workdir)
     xasprintf(&keyfile,
               "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", workdir);
     return keyfile;
-}
-
-/* TODO remove this. Proper solution is to include a key in our test environment. */
-LogLevel CryptoGetMissingKeyLogLevel(void)
-{
-    if (getuid() == 0 &&
-        NULL == getenv("FAKEROOTKEY") &&
-        NULL == getenv("CFENGINE_TEST_OVERRIDE_WORKDIR"))
-    {
-        return LOG_LEVEL_ERR;
-    }
-    else
-    {
-        return LOG_LEVEL_VERBOSE;
-    }
 }
 
 

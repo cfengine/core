@@ -969,13 +969,11 @@ ProtocolVersion ProtocolVersionParse(const char *s)
 static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
                                const Body *control_body)
 {
-    const ConstraintSyntax *body_syntax = NULL;
-    Rval returnval;
-
-    assert(strcmp(control_body->name, "control") == 0);
+    const char *filename = control_body->source_path;
 
     assert(CFG_CONTROLBODY[COMMON_CONTROL_MAX].lval == NULL);
 
+    const ConstraintSyntax *body_syntax = NULL;
     for (int i = 0; CONTROL_BODIES[i].constraints != NULL; i++)
     {
         body_syntax = CONTROL_BODIES[i].constraints;
@@ -985,100 +983,146 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             break;
         }
     }
-
     if (body_syntax == NULL)
     {
-        FatalError(ctx, "Unknown agent");
+        FatalError(ctx, "Unknown control body: %s", control_body->type);
     }
 
-    char scope[CF_BUFSIZE];
-    snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
+    char *scope;
+    assert(strcmp(control_body->name, "control") == 0);
+    xasprintf(&scope, "control_%s", control_body->type);
+
     Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence for scope '%s'", scope);
 
     EvalContextStackPushBodyFrame(ctx, NULL, control_body, NULL);
 
     for (size_t i = 0; i < SeqLength(control_body->conlist); i++)
     {
-        Constraint *cp = SeqAt(control_body->conlist, i);
+        const char *lval;
+        Rval evaluated_rval;
+        size_t lineno;
 
-        if (!IsDefinedClass(ctx, cp->classes))
+        /* Use nested scope to constrain cp. */
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(control_body->conlist, i);
+            lval   = cp->lval;
+            lineno = cp->offset.line;
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
-        {
-            returnval = ExpandPrivateRval(ctx, NULL, scope, cp->rval.item, cp->rval.type);
-        }
-        else
-        {
-            returnval = EvaluateFinalRval(ctx, control_body->parent_policy, NULL, scope, cp->rval, true, NULL);
-        }
+            if (!IsDefinedClass(ctx, cp->classes))
+            {
+                continue;
+            }
 
-        VarRef *ref = VarRefParseFromScope(cp->lval, scope);
+            if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
+            {
+                evaluated_rval = ExpandPrivateRval(ctx, NULL, scope,
+                                                   cp->rval.item, cp->rval.type);
+            }
+            else
+            {
+                evaluated_rval = EvaluateFinalRval(ctx, control_body->parent_policy,
+                                                   NULL, scope, cp->rval,
+                                                   true, NULL);
+            }
+
+        } /* Close scope: assert we only use evaluated_rval, not cp->rval. */
+
+        VarRef *ref = VarRefParseFromScope(lval, scope);
         EvalContextVariableRemove(ctx, ref);
 
-        if (!EvalContextVariablePut(ctx, ref, returnval.item, ConstraintSyntaxGetDataType(body_syntax, cp->lval), "source=promise"))
+        RvalType rval_proper_datatype =
+            ConstraintSyntaxGetDataType(body_syntax, lval);
+        if (evaluated_rval.type != DataTypeToRvalType(rval_proper_datatype))
         {
-            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
+            Log(LOG_LEVEL_ERR,
+                "Attribute '%s' in %s:%zu is of wrong type, skipping",
+                lval, filename, lineno);
+            goto cont;
+        }
+
+        bool success = EvalContextVariablePut(
+            ctx, ref, evaluated_rval.item, rval_proper_datatype,
+            "source=promise");
+        if (!success)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Attribute '%s' in %s:%zu can't be added, skipping",
+                lval, filename, lineno);
+            goto cont;
         }
 
         VarRefDestroy(ref);
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
         {
-            strlcpy(VPREFIX, returnval.item, CF_MAXVARSIZE);
+            strlcpy(VPREFIX, RvalScalarValue(evaluated_rval),
+                    sizeof(VPREFIX));
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_DOMAIN].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_DOMAIN].lval) == 0)
         {
-            strcpy(VDOMAIN, cp->rval.item);
+            strlcpy(VDOMAIN, RvalScalarValue(evaluated_rval),
+                    sizeof(VDOMAIN));
             Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
+
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Host name");
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, CF_DATA_TYPE_STRING, "source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost",
+                                          VFQNAME, CF_DATA_TYPE_STRING,
+                                          "inventory,source=agent,attribute_name=Host name");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain",
+                                          VDOMAIN, CF_DATA_TYPE_STRING,
+                                          "source=agent");
             EvalContextClassPutHard(ctx, VDOMAIN, "source=agent");
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_inputs %s", RvalScalarValue(cp->rval));
-            config->ignore_missing_inputs = BooleanFromString(cp->rval.item);
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_inputs %s",
+                RvalScalarValue(evaluated_rval));
+            config->ignore_missing_inputs = BooleanFromString(
+                RvalScalarValue(evaluated_rval));
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_BUNDLES].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_BUNDLES].lval) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_bundles %s", RvalScalarValue(cp->rval));
-            config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_bundles %s",
+                RvalScalarValue(evaluated_rval));
+            config->ignore_missing_bundles = BooleanFromString(
+                RvalScalarValue(evaluated_rval));
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_CACHE_SYSTEM_FUNCTIONS].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_CACHE_SYSTEM_FUNCTIONS].lval) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "SET cache_system_functions %s", RvalScalarValue(cp->rval));
-            bool cache_system_functions = BooleanFromString(RvalScalarValue(cp->rval));
+            Log(LOG_LEVEL_VERBOSE, "SET cache_system_functions %s",
+                RvalScalarValue(evaluated_rval));
+            bool cache_system_functions = BooleanFromString(
+                RvalScalarValue(evaluated_rval));
             EvalContextSetEvalOption(ctx, EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS,
                                      cache_system_functions);
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_PROTOCOL_VERSION].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_PROTOCOL_VERSION].lval) == 0)
         {
-            config->protocol_version = ProtocolVersionParse(RvalScalarValue(cp->rval));
+            config->protocol_version = ProtocolVersionParse(
+                RvalScalarValue(evaluated_rval));
             Log(LOG_LEVEL_VERBOSE, "SET common protocol_version: %s",
                 PROTOCOL_VERSION_STRING[config->protocol_version]);
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
         {
             /* Ignored */
-            continue;
+            goto cont;
         }
 
-        RvalDestroy(returnval);
+      cont:
+        RvalDestroy(evaluated_rval);
     }
 
     EvalContextStackPopFrame(ctx);
+    free(scope);
 }
 
 void PolicyResolve(EvalContext *ctx, const Policy *policy,

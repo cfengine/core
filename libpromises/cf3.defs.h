@@ -60,6 +60,7 @@
 /* Various defines                                                 */
 /*******************************************************************/
 
+#define CF_MAXSIZE 102400000
 #define CF_BILLION 1000000000L
 #define CF_EXPANDSIZE (2*CF_BUFSIZE)
 #define CF_BUFFERMARGIN 128

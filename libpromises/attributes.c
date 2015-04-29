@@ -73,6 +73,7 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.transformer = PromiseGetConstraintAsRval(pp, "transformer", RVAL_TYPE_SCALAR);
     attr.move_obstructions = PromiseGetConstraintAsBoolean(ctx, "move_obstructions", pp);
     attr.pathtype = PromiseGetConstraintAsRval(pp, "pathtype", RVAL_TYPE_SCALAR);
+    attr.file_type = PromiseGetConstraintAsRval(pp, "file_type", RVAL_TYPE_SCALAR);
 
     attr.acl = GetAclConstraints(ctx, pp);
     attr.perms = GetPermissionConstraints(ctx, pp);

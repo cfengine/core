@@ -3779,6 +3779,52 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
             return false;
         }
     }
+    else if (attr.file_type && !strncmp(attr.file_type, "fifo", 5))
+    {
+#ifndef _WIN32
+        if (!DONTDO)
+        {
+            mode_t saveumask = umask(0);
+            mode_t filemode = 0600;
+
+            if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+            {
+                /* Relying on umask is risky */
+                filemode = 0600;
+                Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+            }
+            else
+            {
+                filemode = attr.perms.plus & ~(attr.perms.minus);
+            }
+
+            MakeParentDirectory(file, attr.move_obstructions);
+
+            char errormsg[CF_BUFSIZE];
+            if (!mkfifo(file, filemode))
+            {
+                snprintf(errormsg, sizeof(errormsg), "(mkfifo: %s)", GetErrorStr());
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
+                     file, (uintmax_t)filemode, errormsg);
+                umask(saveumask);
+                return false;
+            }
+
+            umask(saveumask);
+            return true;
+        }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create fifo '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+            return false;
+        }
+#else
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Operation not supported on Windows");
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        return false;
+#endif
+    }
     else
     {
         if (!DONTDO && attr.transaction.action != cfa_warn)

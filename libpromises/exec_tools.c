@@ -33,10 +33,9 @@
 
 /********************************************************************/
 
-bool GetExecOutput(const char *command, char *buffer, ShellType shell)
+bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell)
 /* Buffer initially contains whole exec string */
 {
-    int offset = 0;
     FILE *pp;
 
     if (shell == SHELL_TYPE_USE)
@@ -63,12 +62,12 @@ bool GetExecOutput(const char *command, char *buffer, ShellType shell)
         return false;
     }
 
-    memset(buffer, 0, CF_EXPANDSIZE);
-
+    size_t offset = 0;
     size_t line_size = CF_EXPANDSIZE;
-    char *line = xmalloc(line_size);
+    size_t attempted_size = 0;
+    char *line = xcalloc(1, line_size);
 
-    for (;;)
+    while (*buffer_size < CF_MAXSIZE)
     {
         ssize_t res = CfReadLine(&line, &line_size, pp);
         if (res == -1)
@@ -86,26 +85,25 @@ bool GetExecOutput(const char *command, char *buffer, ShellType shell)
             }
         }
 
-        if (strlen(line) + offset > CF_EXPANDSIZE - 10)
+        if ((attempted_size = snprintf(*buffer + offset, *buffer_size - offset, "%s\n", line)) >= *buffer_size - offset)
         {
-            Log(LOG_LEVEL_ERR, "Buffer exceeded %d bytes in exec '%s'", CF_EXPANDSIZE, command);
-            break;
+            *buffer_size += (attempted_size > CF_EXPANDSIZE ? attempted_size : CF_EXPANDSIZE);
+            *buffer = xrealloc(*buffer, *buffer_size);
+            snprintf(*buffer + offset, *buffer_size - offset, "%s\n", line);
         }
-
-        snprintf(buffer + offset, CF_EXPANDSIZE - offset, "%s\n", line);
 
         offset += strlen(line) + 1;
     }
 
     if (offset > 0)
     {
-        if (Chop(buffer, CF_EXPANDSIZE) == -1)
+        if (Chop(*buffer, *buffer_size) == -1)
         {
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "GetExecOutput got '%s'", buffer);
+    Log(LOG_LEVEL_DEBUG, "GetExecOutput got '%s'", *buffer);
 
     cf_pclose(pp);
     free(line);

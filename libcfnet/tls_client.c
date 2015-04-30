@@ -42,13 +42,26 @@
 extern RSA *PRIVKEY, *PUBKEY;
 
 
-/* Global SSL context for client connections over new TLS protocol. */
-static SSL_CTX *SSLCLIENTCONTEXT = NULL; /* GLOBAL_X */
-static X509 *SSLCLIENTCERT = NULL; /* GLOBAL_X */
+/**
+ * Global SSL context for initiated connections over the TLS protocol. For the
+ * agent, they are written only once, *after* the common control bundles have
+ * been evaluated.
+ *
+ * 1. Common bundles evaluation: LoadPolicy()->PolicyResolve()
+ * 2. Create TLS contexts:       GenericAgentDiscoverContext()->GenericAgentInitialize()->cfnet_init()
+ */
+static SSL_CTX *SSLCLIENTCONTEXT = NULL;
+static X509 *SSLCLIENTCERT = NULL;
 
 
 /**
  * @warning Make sure you've called CryptoInitialize() first!
+ *
+ * @TODO if this function is called a second time, it just returns true, and
+ * does not do nothing more. What if the settings (e.g. min_tls_version) have
+ * changed? This can happen when cf-serverd reloads policy. Fixing this goes
+ * much deeper though, as it would require cf-serverd to call
+ * GenericAgentDiscoverContext() when reloading policy.
  */
 bool TLSClientInitialize(const char *ciphers)
 {

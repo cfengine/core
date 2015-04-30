@@ -36,13 +36,11 @@ bundle agent start_server(server_config)
       "$(sys.cf_serverd) -Kdf $(server_config) > $(dlog) 2>&1"
       contain => run_under_shell,
       action => in_background,
-      handle => "run_debug_server",
       classes => if_failed("server_failed");
 
     debug_server|windows::
       # Sleep 3 seconds since cf-serverd takes some time to start in background mode.
       "$(G.sleep) 3"
-      depends_on => { "run_debug_server" },
       contain => run_under_shell;
 
   reports:

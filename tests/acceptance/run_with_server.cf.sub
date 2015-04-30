@@ -60,7 +60,7 @@ bundle agent run_test(test_name)
       "$(sys.cf_agent) -KIf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
       contain => run_under_shell;
     debug_client::
-      "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
+      "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
       contain => run_under_shell;
 
   reports:

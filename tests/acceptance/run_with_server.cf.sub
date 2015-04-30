@@ -25,27 +25,27 @@ bundle agent start_server(server_config)
   commands:
     !debug_server.!windows::
       "$(sys.cf_serverd) -Kf $(server_config)"
-      classes => if_failed("server_failed");
+        classes => if_failed("server_failed");
     !debug_server.windows::
       # Windows cannot daemonize and needs to start in background.
       "$(sys.cf_serverd) -Kf $(server_config)"
-      action => in_background,
-      classes => if_failed("server_failed");
+        action => in_background,
+        classes => if_failed("server_failed");
 
     debug_server::
       "$(sys.cf_serverd) -Kdf $(server_config) > $(dlog) 2>&1"
-      contain => run_under_shell,
-      action => in_background,
-      classes => if_failed("server_failed");
+        contain => run_under_shell,
+        action => in_background,
+        classes => if_failed("server_failed");
 
     debug_server|windows::
       # Sleep 3 seconds since cf-serverd takes some time to start in background mode.
       "$(G.sleep) 3"
-      contain => run_under_shell;
+        contain => run_under_shell;
 
   reports:
     debug_server::
-      "$(sys.cf_serverd) was run in debug mode with configuration $(server_config).  The logs will be in $(dlog)";
+      "$(sys.cf_serverd) was run in debug mode, the logs will be in $(dlog)";
 }
 
 bundle agent run_test(test_name)
@@ -58,14 +58,14 @@ bundle agent run_test(test_name)
   commands:
     !debug_client::
       "$(sys.cf_agent) -KIf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
-      contain => run_under_shell;
+        contain => run_under_shell;
     debug_client::
       "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
-      contain => run_under_shell;
+        contain => run_under_shell;
 
   reports:
     debug_client::
-      "$(sys.cf_agent) was run in debug mode with configuration $(test_name).  The logs will be in $(dlog)";
+      "$(sys.cf_agent) was run in debug mode, the logs will be in $(dlog)";
 }
 
 

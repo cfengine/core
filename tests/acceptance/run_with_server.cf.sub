@@ -19,7 +19,8 @@ bundle agent start_server(server_config)
       "debug_server" expression => "debug_mode";
 
   vars:
-      "dlog" string => "$(sys.workdir)/server-debug.$(server_config).log";
+      "config_basename" string => filestat("$(server_config)", basename);
+      "dlog"            string => "$(sys.workdir)/server-debug.$(config_basename).log";
 
   commands:
     !debug_server.!windows::

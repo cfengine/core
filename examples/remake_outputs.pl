@@ -171,6 +171,10 @@ sub equal_outputs
     $x =~ s/.*RANDOM.*//mg;
     $y =~ s/.*RANDOM.*//mg;
 
+    # strip leading blanks, for example from "  error:"
+    $x =~ s/^ *//mg;
+    $y =~ s/^ *//mg;
+
     if ($x ne $y)
     {
         open my $fha, '>', "$tempfile.a" or die "Could not write to diff output $tempfile.a: $!";

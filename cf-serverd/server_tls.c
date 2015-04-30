@@ -44,8 +44,8 @@
 #include "server_access.h"          /* access_CheckResource, acl_CheckExact */
 
 
-static SSL_CTX *SSLSERVERCONTEXT = NULL; /* GLOBAL_X */
-static X509 *SSLSERVERCERT = NULL; /* GLOBAL_X */
+static SSL_CTX *SSLSERVERCONTEXT = NULL;
+static X509 *SSLSERVERCERT = NULL;
 
 
 /**

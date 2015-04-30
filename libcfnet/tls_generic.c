@@ -771,9 +771,13 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx)
      * to let the user know what happens. */
     if (SSL_CTX_get_options(ssl_ctx) != 0)
     {
-      Log(LOG_LEVEL_WARNING, "This version of CFEngine was compiled against OpenSSL < 0.9.8m, using it with a later OpenSSL version is insecure.");
-      Log(LOG_LEVEL_WARNING, "The current version uses compatibility workarounds that may allow CVE-2009-3555 exploitation.");
-      Log(LOG_LEVEL_WARNING, "Please update your CFEngine package or compile it against your current OpenSSL version.");
+      Log(LOG_LEVEL_WARNING,
+          "This version of CFEngine was compiled against OpenSSL < 0.9.8m, "
+          "using it with a later OpenSSL version is insecure. "
+          "The current version uses compatibility workarounds that may allow "
+          "CVE-2009-3555 exploitation.");
+      Log(LOG_LEVEL_WARNING, "Please update your CFEngine package or "
+          "compile it against your current OpenSSL version.");
     }
 #endif
 

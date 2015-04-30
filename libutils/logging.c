@@ -98,7 +98,7 @@ const char *LogLevelToString(LogLevel level)
     switch (level)
     {
     case LOG_LEVEL_CRIT:
-        return "critical";
+        return "CRITICAL";
     case LOG_LEVEL_ERR:
         return "error";
     case LOG_LEVEL_WARNING:
@@ -173,7 +173,7 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
         fprintf(stdout, "%s ", formatted_timestamp);
     }
 
-    fprintf(stdout, "%s: %s\n", LogLevelToString(level), msg);
+    fprintf(stdout, "%8s: %s\n", LogLevelToString(level), msg);
 
     if (color)
     {

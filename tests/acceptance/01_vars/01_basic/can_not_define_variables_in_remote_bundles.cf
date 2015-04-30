@@ -1,0 +1,55 @@
+#######################################################
+#
+# Test that it is invalid to define variables in remote bundles
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "check.variable"
+	string => "is defined from bundle $(this.bundle)",
+        comment => "This should not be allowed, perhaps the first part
+                    of the variable should be canonified, or it should
+                    be a parser error";
+
+      "array[with.a.dot]"
+	string => "value",
+	comment => "dots should be allowed in array keys";
+}
+#######################################################
+
+bundle agent check
+{
+  meta:
+      "test_soft_fail"
+        string => "any",
+        meta => { "redmine7145" };
+
+  classes:
+      "variable_defined" expression => isvariable("variable");
+      "variable_has_content" expression => regcmp(".*", "$(variable)");
+      "fail" expression => "(variable_defined|variable_has_content)";
+
+  reports:
+    DEBUG::
+      "'variable' in bundle '$(this.bundle)' is defined"
+        ifvarclass => "variable_defined";
+
+      "'variable' in bundle '$(this.bundle)' = '$(variable)'"
+        ifvarclass => "variable_has_content";
+    ok::
+      "$(this.promise_filename) Pass";
+
+    fail::
+      "$(this.promise_filename) FAIL";
+}

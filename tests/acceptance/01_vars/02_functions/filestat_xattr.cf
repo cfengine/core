@@ -1,0 +1,57 @@
+#######################################################
+#
+# Redmine#4079: Test filestat() with xattr
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle common xattr_support
+{
+  vars:
+      "xattr" string => "/usr/bin/xattr";
+
+  classes:
+      "has_xattr" and => { fileexists($(xattr)) };
+}
+
+#######################################################
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "!has_xattr";
+
+  methods:
+      "" usebundle => file_make($(G.testfile), "");
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  commands:
+      "$(init.xattr) -w foo bar $(G.testfile)";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "attributes" string => filestat($(G.testfile), "xattr");
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(attributes), "foo=bar",
+                                      $(this.promise_filename),
+                                      "no");
+}

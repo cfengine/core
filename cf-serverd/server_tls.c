@@ -69,12 +69,14 @@ bool ServerTLSInitialize()
         goto err1;
     }
 
-    TLSSetDefaultOptions(SSLSERVERCONTEXT);
+    TLSSetDefaultOptions(SSLSERVERCONTEXT, SV.allowtlsversion);
 
     /*
-     * CFEngine is not a web server so we don't need many ciphers. We only
-     * allow a safe but very common subset by default, extensible via
-     * "allowciphers" in body server control. By default allow:
+     * CFEngine is not a web server so it does not need to support many
+     * ciphers. It only allows a safe but very common subset by default,
+     * extensible via "allowciphers" in body server control. By default
+     * it allows:
+     *
      *     AES256-GCM-SHA384: most high-grade RSA-based cipher from TLSv1.2
      *     AES256-SHA: most backwards compatible but high-grade, from SSLv3
      */

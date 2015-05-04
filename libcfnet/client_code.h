@@ -32,7 +32,7 @@
 #include <communication.h>
 
 
-bool cfnet_init(const char *ciphers);
+bool cfnet_init(const char *tls_min_version, const char *ciphers);
 void cfnet_shut(void);
 void DetermineCfenginePort(void);
 /**

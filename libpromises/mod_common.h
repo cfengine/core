@@ -53,13 +53,15 @@ typedef enum
     SERVER_CONTROL_LISTEN,
     SERVER_CONTROL_ALLOWCIPHERS,
     SERVER_CONTROL_ALLOWLEGACYCONNECTS,
-    SERVER_CONTROL_NONE
+    SERVER_CONTROL_ALLOWTLSVERSION,
+    SERVER_CONTROL_MAX
 } ServerControl;
 
 
-extern const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_NONE + 1];
+extern const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_MAX + 1];
 
 
 CommonControl CommonControlFromString(const char *lval);
+
 
 #endif

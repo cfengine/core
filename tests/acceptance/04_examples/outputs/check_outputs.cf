@@ -19,10 +19,6 @@ bundle agent init
       "checker" string => "$(basedir)/remake_outputs.pl";
       "all_examples" slist => findfiles("$(basedir)/*.cf");
 
-  commands:
-      # we need to avoid the cf-key messages
-      "$(sys.cf_key)";
-
   reports:
     DEBUG_LOTS::
       "$(this.bundle): will consider example $(all_examples)";
@@ -43,16 +39,16 @@ bundle agent test
 
   classes:
       "has_output_block_$(canon[$(examples)])"
-      expression => regline(".*example_output.*", $(examples));
+        expression => regline(".*example_output.*", $(examples));
 
   methods:
       "$(examples)" usebundle => test_example($(examples)),
-      ifvarclass => "has_output_block_$(canon[$(examples)])";
+        ifvarclass => "has_output_block_$(canon[$(examples)])";
 
   reports:
     DEBUG::
       "$(this.bundle): found example with output $(examples)"
-      ifvarclass => "has_output_block_$(canon[$(examples)])";
+        ifvarclass => "has_output_block_$(canon[$(examples)])";
 }
 
 bundle agent test_example(file)
@@ -67,11 +63,11 @@ bundle agent test_example(file)
 
   methods:
       "with verbose" usebundle => verbose_output("$(checker) -v $(file)"),
-      ifvarclass => "failure_$(cfile)";
+        ifvarclass => "failure_$(cfile)";
 
   reports:
       "$(this.bundle): checker '$(checker) $(file)' returned error"
-      ifvarclass => "failure_$(cfile)";
+        ifvarclass => "failure_$(cfile)";
 
     DEBUG::
       "$(this.bundle): ran checker '$(checker) $(file)'";

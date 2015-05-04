@@ -400,10 +400,22 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
              * calling the same steps as in cf-serverd.c:main()? Those are:
              *   GenericAgentConfigApply();     // not here!
              *   GenericAgentDiscoverContext(); // not here!
+             *   EvalContextClassPutHard("server");             // only here!
              *   if (GenericAgentCheckPolicy()) // not here!
-             *     policy=GenericAgentLoadPolicy();
+             *     policy = LoadPolicy();
+             *   ThisAgentInit();               // not here, only calls umask()
+             *   ReloadHAConfig();                              // only here!
              *   KeepPromises();
              *   Summarize();
+             * Plus the following from within StartServer() which is only
+             * called during startup:
+             *   InitSignals();                  // not here
+             *   ServerTLSInitialize();          // not here
+             *   SetServerListenState();         // not here
+             *   InitServer()                    // not here
+             *   PolicyNew()+AcquireServerLock() // not here
+             *   PrepareServer(sd);              // not here
+             *   CollectCallStart();  // both
              */
 
             char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
@@ -415,10 +427,15 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             DetectEnvironment(ctx);
             KeepHardClasses(ctx);
 
+            /* During startup this is done in GenericAgentDiscoverContext(). */
             EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_SERVER], "cfe_internal,source=agent");
 
             time_t t = SetReferenceTime();
             UpdateTimeClasses(ctx, t);
+
+            /* TODO BUG: this modifies config, but previous config has not
+             * been reset/free'd. Ideally we would want LoadPolicy to not
+             * modify config at all, but only modify ctx. */
             *policy = LoadPolicy(ctx, config);
 
             /* Reload HA related configuration */

@@ -706,7 +706,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         char *bootstrapped_policy_server = ReadPolicyServerFile(workdir);
         PolicyHubUpdateKeys(bootstrapped_policy_server);
         free(bootstrapped_policy_server);
-        cfnet_init();
+        const char *tls_ciphers =
+            EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_CIPHERS);
+        cfnet_init(tls_ciphers);
     }
 
     size_t cwd_size = PATH_MAX;
@@ -1484,6 +1486,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->heap_negated = NULL;
     config->ignore_locks = false;
 
+    config->protocol_version = CF_PROTOCOL_UNDEFINED;
+
     config->agent_specific.agent.bootstrap_policy_server = NULL;
 
     /* By default we trust the network when bootstrapping. */
@@ -1562,7 +1566,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         if (config->agent_specific.agent.bootstrap_trust_server)
         {
             EvalContextClassPutHard(ctx, "trust_server", "source=agent");
-            Log(LOG_LEVEL_NOTICE, "Bootstrap mode: implicitly trust server, "
+            Log(LOG_LEVEL_NOTICE, "Bootstrap mode: implicitly trusting server, "
                 "use --trust-server=no if server trust is already established");
         }
     }

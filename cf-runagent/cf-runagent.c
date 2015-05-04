@@ -68,7 +68,8 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
-static int HailServer(EvalContext *ctx, char *host);
+static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
+                      char *host);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
@@ -195,7 +196,7 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(ctx, RlistScalarValue(rp));
+                        HailServer(ctx, config, RlistScalarValue(rp));
                         exit(EXIT_SUCCESS);
                     }
                     else        /* parent process */
@@ -214,7 +215,7 @@ int main(int argc, char *argv[])
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(ctx, RlistScalarValue(rp));
+                HailServer(ctx, config, RlistScalarValue(rp));
                 rp = rp->next;
             }
         }                       /* end while */
@@ -404,7 +405,8 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static int HailServer(EvalContext *ctx, char *host)
+static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
+                      char *host)
 {
     assert(host != NULL);
 
@@ -498,11 +500,8 @@ static int HailServer(EvalContext *ctx, char *host)
         Log(LOG_LEVEL_INFO, "...........................................................................");
     }
 
-    const char *s =
-        EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_PROTOCOL_VERSION);
-
     ConnectionFlags connflags = {
-        .protocol_version = ProtocolVersionParse(s),
+        .protocol_version = config->protocol_version,
         .trust_server = trustkey
     };
     int err = 0;

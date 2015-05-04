@@ -52,10 +52,10 @@
 /**
  * Initialize client's network library.
  */
-bool cfnet_init()
+bool cfnet_init(const char *ciphers)
 {
     CryptoInitialize();
-    return TLSClientInitialize();
+    return TLSClientInitialize(ciphers);
 }
 
 void cfnet_shut()

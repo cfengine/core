@@ -37,7 +37,6 @@
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                       /* LoadSecretKeys */
-#include <bootstrap.h>                     /* ReadPolicyServerFile */
 
 
 extern RSA *PRIVKEY, *PUBKEY;
@@ -51,7 +50,7 @@ static X509 *SSLCLIENTCERT = NULL; /* GLOBAL_X */
 /**
  * @warning Make sure you've called CryptoInitialize() first!
  */
-bool TLSClientInitialize()
+bool TLSClientInitialize(const char *ciphers)
 {
     int ret;
     static bool is_initialised = false;
@@ -61,6 +60,13 @@ bool TLSClientInitialize()
         return true;
     }
 
+    if (PRIVKEY == NULL || PUBKEY == NULL)
+    {
+        /* VERBOSE in case it's a custom, local-only installation. */
+        Log(LOG_LEVEL_VERBOSE, "No public/private key pair is loaded,"
+            " please create one using cf-key");
+        return false;
+    }
     if (!TLSGenericInitialize())
     {
         return false;
@@ -76,15 +82,18 @@ bool TLSClientInitialize()
 
     TLSSetDefaultOptions(SSLCLIENTCONTEXT);
 
-    if (PRIVKEY == NULL || PUBKEY == NULL)
+    if (ciphers != NULL)
     {
-        Log(CryptoGetMissingKeyLogLevel(),
-            "No public/private key pair is loaded, trying to reload");
-        LoadSecretKeys();
-        if (PRIVKEY == NULL || PUBKEY == NULL)
+        Log(LOG_LEVEL_DEBUG,
+            "Setting cipher list for outgoing TLS connections to: %s",
+            ciphers);
+
+        ret = SSL_CTX_set_cipher_list(SSLCLIENTCONTEXT, ciphers);
+        if (ret != 1)
         {
-            Log(CryptoGetMissingKeyLogLevel(),
-                "No public/private key pair found");
+            Log(LOG_LEVEL_ERR,
+                "No valid ciphers in cipher list: %s",
+                ciphers);
             goto err2;
         }
     }
@@ -265,13 +274,13 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
  */
 int TLSTry(ConnectionInfo *conn_info)
 {
-    /* SSL Context might not be initialised up to now due to lack of keys, as
-     * they might be generated as part of the policy (e.g. failsafe.cf). */
-    if (!TLSClientInitialize())
+    if (PRIVKEY == NULL || PUBKEY == NULL)
     {
+        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
+            " please create one using cf-key");
         return -1;
     }
-    assert(SSLCLIENTCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
+    assert(SSLCLIENTCONTEXT != NULL);
 
     conn_info->ssl = SSL_new(SSLCLIENTCONTEXT);
     if (conn_info->ssl == NULL)

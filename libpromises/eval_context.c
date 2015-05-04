@@ -58,8 +58,14 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
+/**
+ * Every agent has only one EvalContext from process start to finish.
+ */
 struct EvalContext_
 {
+    /* TODO: a pointer to read-only version of config is often needed. */
+    /* const GenericAgentConfig *config; */
+
     int eval_options;
     bool bundle_aborted;
     bool checksum_updates_default;
@@ -1865,10 +1871,7 @@ VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalCont
 
 const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval)
 {
-    if (lval >= COMMON_CONTROL_MAX)
-    {
-        return NULL;
-    }
+    assert(lval >= 0 && lval < COMMON_CONTROL_MAX);
 
     VarRef *ref = VarRefParseFromScope(CFG_CONTROLBODY[lval].lval, "control_common");
     const void *ret = EvalContextVariableGet(ctx, ref, NULL);

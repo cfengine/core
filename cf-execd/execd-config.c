@@ -73,8 +73,10 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
             const void *value = EvalContextVariableGet(ctx, ref, NULL);
             if (!value)
             {
-                // TODO: should've been checked before this point. change to programming error
-                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in exec control body", cp->lval);
+                /* Has already been checked by the parser. */
+                ProgrammingError(
+                    "Unknown attribute in body executor control: %s",
+                    cp->lval);
                 VarRefDestroy(ref);
                 continue;
             }

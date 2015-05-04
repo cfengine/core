@@ -766,3 +766,17 @@ bundle agent dcs_passif_output1(wanted, command, test)
                                         $(test)),
       inherit => "true";
 }
+
+bundle agent generate_key
+{
+  classes:
+      "key_exists" expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub");
+  files:
+    !key_exists::
+      "$(sys.workdir)/ppkeys/localhost.priv"
+        create => "true",
+        copy_from => dcs_sync("$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.priv");
+      "$(sys.workdir)/ppkeys/localhost.pub"
+        create => "true",
+        copy_from => dcs_sync("$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub");
+}

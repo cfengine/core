@@ -1,7 +1,7 @@
 #
 body common control
 {
-      inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
+      inputs => { "../../default.cf.sub", "../../run_with_server.cf.sub" };
       bundlesequence => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -13,7 +13,7 @@ bundle agent test
       "any" usebundle => file_make("$(G.testdir)/source_file",
                                                  "This is the source file to copy $(sys.date) - always fresh");
       "any" usebundle => generate_key;
-      "any" usebundle => start_server("localhost_open_with_data_select");
+      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open_with_data_select.srv");
       "any" usebundle => run_test("$(this.promise_filename).sub");
-      "any" usebundle => stop_server("localhost_open_with_data_select");
+      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open_with_data_select.srv");
 }

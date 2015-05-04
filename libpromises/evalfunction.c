@@ -2931,7 +2931,10 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
             if (NULL != scope_obj)
             {
                 char *lval_key = VarRefToString(var->ref, false);
-                JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
+                if (NULL == strchr(lval_key, '#')) // don't collect mangled refs
+                {
+                    JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
+                }
                 free(lval_key);
             }
         }
@@ -5770,6 +5773,12 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
 
     bool yaml_mode = (0 == strcmp(requested_mode, "YAML"));
     const char* data_type = requested_mode;
+
+    // TODO: eliminate truncation limits in json.c
+    if (0 == size_max)
+    {
+        size_max = 50 * (1024 * 1024);
+    }
 
     /* FIXME: fail if truncated? */
     JsonElement *json = NULL;

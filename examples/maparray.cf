@@ -37,10 +37,23 @@ bundle agent run
       "todo[1]" string => "2";
       "todo[one]" string => "two";
       "todo[3999]" slist => { "big", "small" };
-      "map" slist => maparray("key='$(this.k)', static lookup = '$(static[$(this.v)])', value='$(this.v)'", "todo");
+      "map" slist => maparray("key='$(this.k)', static lookup = '$(static[$(this.v)])', value='$(this.v)'", todo);
+
+      "mycontainer" data => parsejson('
+{
+  "top":
+  {
+    "x": 2,
+    "y": "big"
+  }
+}');
+
+      "mapc" slist => maparray("key='$(this.k)', key2='$(this.k[1])', static lookup = '$(static[$(this.v)])', value='$(this.v)'", mycontainer);
+      "mapc_str" string => format("%S", mapc);
 
   reports:
       "mapped array: $(map)";
+      "mapped container: $(mapc_str)";
 }
 
 #+end_src
@@ -51,5 +64,6 @@ bundle agent run
 #@ R: mapped array: key='3999', static lookup = 'lookup small', value='small'
 #@ R: mapped array: key='one', static lookup = 'lookup two', value='two'
 #@ R: mapped array: key='1', static lookup = 'lookup 2', value='2'
+#@ R: mapped container: { "key='top', key2='x', static lookup = 'lookup 2', value='2'", "key='top', key2='y', static lookup = 'lookup big', value='big'" }
 #@ ```
 #+end_src

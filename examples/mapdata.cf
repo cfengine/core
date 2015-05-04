@@ -1,0 +1,76 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "run" };
+}
+
+bundle agent run
+{
+  vars:
+      "myarray[lookup][big]" string => "lookup big";
+      "myarray[lookup][small]" string => "lookup small";
+
+      # every item must parse as valid JSON when the interpretation is `json`
+      "mapa_json" data => mapdata("json", '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }', myarray);
+      "mapa_json_str" string => format("%S", mapa_json);
+
+      # every item is just a string when the interpretation is `none`
+      "mapa_none" data => mapdata("none", 'key=$(this.k), level 2 key = $(this.k[1]), value=$(this.v)', myarray);
+      "mapa_none_str" string => format("%S", mapa_none);
+
+      "mycontainer" data => parsejson('
+{
+  "top":
+  {
+    "x": 100,
+    "y": 200
+  }
+}');
+
+      # every item must parse as valid JSON when the interpretation is `json`
+      "mapc_json" data => mapdata("json", '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }', mycontainer);
+      "mapc_json_str" string => format("%S", mapc_json);
+
+      # every item is just a string when the interpretation is `none`
+      "mapc_none" data => mapdata("none", 'key=$(this.k), level 2 key = $(this.k[1]), value=$(this.v)', mycontainer);
+      "mapc_none_str" string => format("%S", mapc_none);
+
+  reports:
+      "mapdata/json on classic CFEngine array result: $(mapa_json_str)";
+      "mapdata/none on classic CFEngine array result: $(mapa_none_str)";
+      "mapdata/json on data container result: $(mapc_json_str)";
+      "mapdata/none on data container result: $(mapc_none_str)";
+}
+
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: mapdata/json on classic CFEngine array result: [{"key":"lookup","key2":"small","value":"lookup small"},{"key":"lookup","key2":"big","value":"lookup big"}]
+#@ R: mapdata/none on classic CFEngine array result: ["key=lookup, level 2 key = small, value=lookup small","key=lookup, level 2 key = big, value=lookup big"]
+#@ R: mapdata/json on data container result: [{"key":"top","key2":"x","value":"100"},{"key":"top","key2":"y","value":"200"}]
+#@ R: mapdata/none on data container result: ["key=top, level 2 key = x, value=100","key=top, level 2 key = y, value=200"]
+#@ ```
+#+end_src

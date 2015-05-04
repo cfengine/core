@@ -231,37 +231,59 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                 VariableTableIterator *iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
                 convert = JsonObjectCreate(10);
                 Variable *var;
+
+                char *last_key = NULL;
                 while ((var = VariableTableIteratorNext(iter)))
                 {
-                    // TODO: explain array iteration
-                    if (var->ref->num_indices != 1)
+                    size_t index_offset = ref->name_index_count;
+                    JsonElement *holder = convert;
+                    if (var->ref->num_indices - index_offset == 1)
                     {
-                        continue;
+                        last_key = var->ref->indices[index_offset];
                     }
-
-                    switch (var->rval.type)
+                    else if (var->ref->num_indices - index_offset > 1)
                     {
-                    case RVAL_TYPE_SCALAR:
-                        JsonObjectAppendString(convert, var->ref->indices[0], var->rval.item);
-                        break;
-
-                    case RVAL_TYPE_LIST:
-                    {
-                        JsonElement *array = JsonArrayCreate(10);
-                        for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                        Log(LOG_LEVEL_DEBUG, "%s: got ref with starting depth %zd and index count %zd", fp->name, index_offset, var->ref->num_indices);
+                        for (int index = index_offset; index < var->ref->num_indices-1; index++)
                         {
-                            if (rp->val.type == RVAL_TYPE_SCALAR &&
-                                strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                            JsonElement *local = JsonObjectGet(holder, var->ref->indices[index]);
+                            if (NULL == local)
                             {
-                                JsonArrayAppendString(array, RlistScalarValue(rp));
+                                local = JsonObjectCreate(1);
+                                JsonObjectAppendObject(holder, var->ref->indices[index], local);
                             }
-                        }
-                        JsonObjectAppendArray(convert, var->ref->indices[0], array);
-                    }
-                    break;
 
-                    default:
+                            last_key = var->ref->indices[index+1];
+                            holder = local;
+                        }
+                    }
+
+                    if (NULL != last_key && NULL != holder)
+                    {
+                        switch (var->rval.type)
+                        {
+                        case RVAL_TYPE_SCALAR:
+                            JsonObjectAppendString(holder, last_key, var->rval.item);
+                            break;
+
+                        case RVAL_TYPE_LIST:
+                        {
+                            JsonElement *array = JsonArrayCreate(10);
+                            for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                            {
+                                if (rp->val.type == RVAL_TYPE_SCALAR &&
+                                    strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                                {
+                                    JsonArrayAppendString(array, RlistScalarValue(rp));
+                                }
+                            }
+                            JsonObjectAppendArray(holder, last_key, array);
+                        }
                         break;
+
+                        default:
+                            break;
+                        }
                     }
                 }
 
@@ -2374,9 +2396,20 @@ static FnCallResult FnCallLsDir(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
 
 /*********************************************************************/
 
-static FnCallResult FnCallMapArray(EvalContext *ctx,
-                                   ARG_UNUSED const Policy *policy,
-                                   const FnCall *fp, const Rlist *finalargs)
+bool EvalContextVariablePutSpecialEscaped(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags, bool escape)
+{
+    if (escape)
+    {
+        char *escaped = EscapeCharCopy(value, '"', '\\');
+        bool ret = EvalContextVariablePutSpecial(ctx, scope, lval, escaped, type, tags);
+        free(escaped);
+        return ret;
+    }
+
+    return EvalContextVariablePutSpecial(ctx, scope, lval, value, type, tags);
+}
+
+static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     if (!fp->caller)
     {
@@ -2384,89 +2417,146 @@ static FnCallResult FnCallMapArray(EvalContext *ctx,
         return FnFailure();
     }
 
-    const char *arg_map = RlistScalarValue(finalargs);
-    const char *arg_array = RlistScalarValue(finalargs->next);
+    bool mapdatamode = 0 == strcmp(fp->name, "mapdata");
+    Rlist *returnlist = NULL;
 
-    VariableTableIterator *iter;
-    size_t selected_index = 0;
+    const char *conversion;
+    const char *arg_map;
+    const char *varname;
+
+    if (mapdatamode)
     {
-        VarRef *ref = VarRefParse(arg_array);
-        if (!VarRefIsQualified(ref))
-        {
-            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
-            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
-        }
-
-        iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
-        selected_index = ref->num_indices;
-        VarRefDestroy(ref);
+        conversion = RlistScalarValue(finalargs);
+        arg_map = RlistScalarValue(finalargs->next);
+        varname = RlistScalarValue(finalargs->next->next);
+    }
+    else
+    {
+        conversion = "none";
+        arg_map = RlistScalarValue(finalargs);
+        varname = RlistScalarValue(finalargs->next);
     }
 
-    Rlist *returnlist = NULL;
-    Variable *var;
-    Buffer *expbuf = BufferNew();
-    while ((var = VariableTableIteratorNext(iter)))
+    bool jsonmode = 0 == strcmp(conversion, "json");
+
+    VarRef *ref = ResolveAndQualifyVarName(fp, varname);
+    if (!ref)
     {
-        if (var->ref->num_indices <= selected_index)
-        {
-            continue;
-        }
+        return FnFailure();
+    }
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", var->ref->indices[selected_index], CF_DATA_TYPE_STRING, "source=function,function=maparray");
+    JsonElement *container = VarRefValueToJson(ctx, fp, ref, NULL, 0);
 
-        switch (var->rval.type)
+    if (NULL == container)
+    {
+        return FnFailure();
+    }
+
+    if (JsonGetElementType(container) != JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' got an unexpected non-container from argument '%s'", fp->name, varname);
+        JsonDestroy(container);
+
+        return FnFailure();
+    }
+
+    Buffer *expbuf = BufferNew();
+
+    if (JsonGetContainerType(container) != JSON_CONTAINER_TYPE_OBJECT)
+    {
+        JsonElement *temp = JsonObjectCreate(0);
+        JsonElement *temp2 = JsonMerge(temp, container);
+        JsonDestroy(temp);
+        JsonDestroy(container);
+
+        container = temp2;
+    }
+
+    JsonIterator iter = JsonIteratorInit(container);
+    const JsonElement *e;
+
+    while (NULL != (e = JsonIteratorNextValue(&iter)))
+    {
+        EvalContextVariablePutSpecialEscaped(ctx, SPECIAL_SCOPE_THIS, "k", JsonGetPropertyAsString(e),
+                                             CF_DATA_TYPE_STRING, "source=function,function=maparray",
+                                             jsonmode);
+
+        switch (JsonGetElementType(e))
         {
-        case RVAL_TYPE_SCALAR:
+        case JSON_ELEMENT_TYPE_PRIMITIVE:
+            BufferClear(expbuf);
+            EvalContextVariablePutSpecialEscaped(ctx, SPECIAL_SCOPE_THIS, "v", JsonPrimitiveGetAsString(e),
+                                                 CF_DATA_TYPE_STRING, "source=function,function=maparray",
+                                                 jsonmode);
+
+            ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
+
+            if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
+                strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
             {
+                RlistDestroy(returnlist);
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                BufferDestroy(expbuf);
+                JsonDestroy(container);
+                return FnFailure();
+            }
+
+            RlistAppendScalar(&returnlist, BufferData(expbuf));
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+
+            break;
+
+        case JSON_ELEMENT_TYPE_CONTAINER:
+        {
+            const JsonElement *e2;
+            JsonIterator iter2 = JsonIteratorInit(e);
+            int position = 0;
+            while (NULL != (e2 = JsonIteratorNextValueByType(&iter2, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+            {
+                char *key = (char*) JsonGetPropertyAsString(e2);
+                bool havekey = NULL != key;
+                if (havekey)
+                {
+                    EvalContextVariablePutSpecialEscaped(ctx, SPECIAL_SCOPE_THIS, "k[1]", key,
+                                                         CF_DATA_TYPE_STRING, "source=function,function=maparray",
+                                                         jsonmode);
+                }
+
                 BufferClear(expbuf);
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, CF_DATA_TYPE_STRING,
-                                              "source=function,function=maparray");
+
+                EvalContextVariablePutSpecialEscaped(ctx, SPECIAL_SCOPE_THIS, "v", JsonPrimitiveGetAsString(e2),
+                                                     CF_DATA_TYPE_STRING, "source=function,function=maparray",
+                                                     jsonmode);
+
                 ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
 
-                if (strstr(BufferData(expbuf), "$(this.k)") ||
-                    strstr(BufferData(expbuf), "${this.k}") ||
-                    strstr(BufferData(expbuf), "$(this.v)") ||
-                    strstr(BufferData(expbuf), "${this.v}"))
+                if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
+                    (havekey && (strstr(BufferData(expbuf), "$(this.k[1])") || strstr(BufferData(expbuf), "${this.k[1]}"))) ||
+                    strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
                 {
                     RlistDestroy(returnlist);
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                    if (havekey)
+                    {
+                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k[1]");
+                    }
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
                     BufferDestroy(expbuf);
-                    VariableTableIteratorDestroy(iter);
+                    JsonDestroy(container);
                     return FnFailure();
                 }
 
-                RlistAppendScalar(&returnlist, BufferData(expbuf));
-                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-            }
-            break;
-
-        case RVAL_TYPE_LIST:
-            {
-                for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                RlistAppendScalarIdemp(&returnlist, BufferData(expbuf));
+                if (havekey)
                 {
-                    BufferClear(expbuf);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", RlistScalarValue(rp), CF_DATA_TYPE_STRING, "source=function,function=maparray");
-                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
-
-                    if (strstr(BufferData(expbuf), "$(this.k)") ||
-                        strstr(BufferData(expbuf), "${this.k}") ||
-                        strstr(BufferData(expbuf), "$(this.v)") ||
-                        strstr(BufferData(expbuf), "${this.v}"))
-                    {
-                        RlistDestroy(returnlist);
-                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
-                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                        BufferDestroy(expbuf);
-                        VariableTableIteratorDestroy(iter);
-                        return FnFailure();
-                    }
-
-                    RlistAppendScalarIdemp(&returnlist, BufferData(expbuf));
-                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k[1]");
                 }
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                position++;
             }
-            break;
+        }
+        break;
 
         default:
             break;
@@ -2475,8 +2565,45 @@ static FnCallResult FnCallMapArray(EvalContext *ctx,
     }
 
     BufferDestroy(expbuf);
-    VariableTableIteratorDestroy(iter);
+    JsonDestroy(container);
 
+    JsonElement *returnjson = NULL;
+
+    if (returnlist == NULL && !mapdatamode)
+    {
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+    }
+
+    // this is mapdata()
+    if (mapdatamode)
+    {
+        returnjson = JsonArrayCreate(RlistLen(returnlist));
+        for (const Rlist *rp = returnlist; rp != NULL; rp = rp->next)
+        {
+            const char *data = RlistScalarValue(rp);
+            if (jsonmode)
+            {
+                JsonElement *parsed = NULL;
+                if (JsonParse(&data, &parsed) == JSON_PARSE_OK)
+                {
+                    JsonArrayAppendElement(returnjson, parsed);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Function '%s' could not parse dynamic JSON '%s', skipping it", fp->name, data);
+                }
+            }
+            else
+            {
+                JsonArrayAppendString(returnjson, data);
+            }
+        }
+
+        RlistDestroy(returnlist);
+        return (FnCallResult) { FNCALL_SUCCESS, { returnjson, RVAL_TYPE_CONTAINER } };
+    }
+
+    // this is maparray()
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
@@ -7309,7 +7436,15 @@ static const FnCallArg EXPANDRANGE_ARGS[] =
 static const FnCallArg MAPARRAY_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array identifier, the array variable to map"},
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, the array variable to map"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg MAPDATA_ARGS[] =
+{
+    {"none,json", CF_DATA_TYPE_OPTION, "Conversion to apply to the mapped string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, the array variable to map"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -7910,7 +8045,9 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("makerule", CF_DATA_TYPE_STRING, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
                       FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray, "Return a list with each element modified by a pattern based $(this.k) and $(this.v)",
+    FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapData, "Return a list with each element mapped from a CFEngine array or data container by a pattern based on $(this.k) and $(this.v)",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("mapdata", CF_DATA_TYPE_CONTAINER, MAPDATA_ARGS, &FnCallMapData, "Return a data container with each element parsed from a JSON string applied to every key-value pair of the given CFEngine array or data container, given as $(this.k) and $(this.v)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maplist", CF_DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

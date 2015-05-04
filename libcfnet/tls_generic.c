@@ -755,8 +755,12 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
 
 /**
  * Set safe OpenSSL defaults commonly used by both clients and servers.
+ *
+ * @param min_version the minimum acceptable TLS version for incoming or
+ *        outgoing connections (depending on ssl_ctx), for example
+ *        "1", "1.1", "1.2".
  */
-void TLSSetDefaultOptions(SSL_CTX *ssl_ctx)
+void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
 {
 #if HAVE_DECL_SSL_CTX_CLEAR_OPTIONS
     /* Clear all flags, we do not want compatibility tradeoffs like
@@ -781,10 +785,60 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx)
     }
 #endif
 
+    const char *compiletime_min_version = "1.2";
 
-    /* Use only TLS v1 or later.
-       TODO policy option for SSL_OP_NO_TLSv{1,1_1} */
+#ifndef  SSL_OP_NO_TLSv1_1
+#   define SSL_OP_NO_TLSv1_1 0x0                                /* nop */
+    compiletime_min_version = "1.1";
+
+# ifndef  SSL_OP_NO_TLSv1
+#   define SSL_OP_NO_TLSv1 0x0                                  /* nop */
+    compiletime_min_version = "1.0";
+# endif
+
+#endif
+
+    /* In any case use only TLS v1 or later. */
     long options = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+
+    if (min_version == NULL
+        || strcmp(min_version, "1")   == 0
+        || strcmp(min_version, "1.0") == 0)
+    {
+        /* Do nothing, that's our default setting */
+        Log(LOG_LEVEL_DEBUG, "Minimum acceptable TLS version: 1.0");
+    }
+    else if (strcmp(min_version, "1.1") == 0)
+    {
+        if (strcmp(compiletime_min_version, "1.0") == 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
+                " however because of old OpenSSL version it is set to: %s",
+                min_version, compiletime_min_version);
+        }
+        options |= SSL_OP_NO_TLSv1;
+        Log(LOG_LEVEL_DEBUG, "Minimum acceptable TLS version: 1.1");
+
+    }
+    else if (strcmp(min_version, "1.2") == 0)
+    {
+        if (strcmp(compiletime_min_version, "1.0") == 0 ||
+            strcmp(compiletime_min_version, "1.1") == 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
+                " however because of old OpenSSL version it is set to: %s",
+                min_version, compiletime_min_version);
+        }
+        options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
+        Log(LOG_LEVEL_DEBUG, "Minimum acceptable TLS version: 1.2");
+    }
+    else
+    {
+        Log(LOG_LEVEL_WARNING, "Unsupported TLS version '%s' requested,"
+            " minimum acceptable TLS version set to: 1.0",
+            min_version);
+    }
+
 
     /* No session resumption or renegotiation for now. */
     options |= SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;

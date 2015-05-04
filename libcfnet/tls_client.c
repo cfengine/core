@@ -58,12 +58,13 @@ static X509 *SSLCLIENTCERT = NULL;
  * @warning Make sure you've called CryptoInitialize() first!
  *
  * @TODO if this function is called a second time, it just returns true, and
- * does not do nothing more. What if the settings (e.g. min_tls_version) have
+ * does not do nothing more. What if the settings (e.g. tls_min_version) have
  * changed? This can happen when cf-serverd reloads policy. Fixing this goes
  * much deeper though, as it would require cf-serverd to call
  * GenericAgentDiscoverContext() when reloading policy.
  */
-bool TLSClientInitialize(const char *ciphers)
+bool TLSClientInitialize(const char *tls_min_version,
+                         const char *ciphers)
 {
     int ret;
     static bool is_initialised = false;
@@ -93,7 +94,7 @@ bool TLSClientInitialize(const char *ciphers)
         goto err1;
     }
 
-    TLSSetDefaultOptions(SSLCLIENTCONTEXT);
+    TLSSetDefaultOptions(SSLCLIENTCONTEXT, tls_min_version);
 
     if (ciphers != NULL)
     {

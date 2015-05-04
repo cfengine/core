@@ -66,6 +66,7 @@ typedef struct
     Item *trustkeylist;                               /* "trustkeysfrom" */
     Item *allowlegacyconnects;
     char *allowciphers;
+    char *allowtlsversion;
 
     /* ACL for resource_type "path". */
     Auth *admit;

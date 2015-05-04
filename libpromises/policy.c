@@ -1529,15 +1529,20 @@ static char *EscapeQuotes(const char *s, char *out, int outSz)
 
 static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
 {
-    JsonElement *json_attribute = JsonObjectCreate(10);
-
     switch (rval.type)
     {
+    case RVAL_TYPE_CONTAINER:
+    {
+        return JsonCopy(RvalContainerValue(rval));
+    }
+
     case RVAL_TYPE_SCALAR:
     {
         char buffer[CF_BUFSIZE];
 
         EscapeQuotes((const char *) rval.item, buffer, sizeof(buffer));
+
+        JsonElement *json_attribute = JsonObjectCreate(10);
 
         if (symbolic_reference)
         {
@@ -1558,6 +1563,7 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
         Rlist *rp = NULL;
         JsonElement *list = JsonArrayCreate(10);
 
+        JsonElement *json_attribute = JsonObjectCreate(10);
         JsonObjectAppendString(json_attribute, "type", "list");
 
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
@@ -1574,6 +1580,7 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
         Rlist *argp = NULL;
         FnCall *call = (FnCall *) rval.item;
 
+        JsonElement *json_attribute = JsonObjectCreate(10);
         JsonObjectAppendString(json_attribute, "type", "functionCall");
         JsonObjectAppendString(json_attribute, "name", call->name);
 
@@ -1591,7 +1598,6 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
         return json_attribute;
     }
 
-    case RVAL_TYPE_CONTAINER:
     case RVAL_TYPE_NOPROMISEE:
         ProgrammingError("Attempted to export attribute of type: %c", rval.type);
         return NULL;

@@ -23,6 +23,9 @@ bundle agent init
 bundle agent test
 {
   vars:
+    "bundles[x][y][z1]" string => "xyz1";
+    "bundles[x][y][z23]" slist => { "xyz2", "xyz3" };
+
     "bundles[zculib][mypaths]"    slist => { "pathsa.cf", "pathsb.cf" };
     "bundles[zculib][myservices]" slist => { "myservices.cf" };
 
@@ -33,29 +36,20 @@ bundle agent test
     "bundles[services][afs]"          slist => { "afs.cf", "afsadm.cf" };
     "bundles[services][base]"         slist => { "base.cf", "base2.cf" };    
 
+    "bundles[onelevel1]" slist => { "onelevel1_avalue", "onelevel1_bvalue" };    
+    "bundles[onelevel2]" string => "onelevel2value";    
+
     "inputs"        slist => maparray("zculib/$(this.v)","bundles[zculib]");
-    "sorted_inputs" slist => sort("inputs", "lex");
-    "inputs_str"    string => join(",", "sorted_inputs");
+    "merged_bundles" data => mergedata(bundles);
+    "merged_zculib" data => mergedata("bundles[zculib]");
 }
 
 ###########################################################
 
 bundle agent check
 {
-  vars:
-    "expected_merge" string => "zculib/myservices.cf,zculib/pathsa.cf,zculib/pathsb.cf";
-
-  classes:
-    "ok_merge" expression => strcmp($(expected_merge), $(test.inputs_str));
-
-  reports:
-    DEBUG::
-      "inputs_zculib : $(test.inputs_str)";
-      "expected_zculib : $(expected_merge)"; 
-    ok_merge::
-      "$(this.promise_filename) Pass";
-    !ok_merge::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }
-
-

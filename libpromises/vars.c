@@ -52,10 +52,11 @@ bool RlistIsUnresolved(const Rlist *list)
         {
             if (strstr(RlistScalarValue(rp), "$(this)") || strstr(RlistScalarValue(rp), "${this}") ||
                 strstr(RlistScalarValue(rp), "$(this.k)") || strstr(RlistScalarValue(rp), "${this.k}") ||
+                strstr(RlistScalarValue(rp), "$(this.k[1])") || strstr(RlistScalarValue(rp), "${this.k[1]}") ||
                 strstr(RlistScalarValue(rp), "$(this.v)") || strstr(RlistScalarValue(rp), "${this.v}"))
             {
                 // We should allow this in function args for substitution in maplist() etc
-                // We should allow this.k and this.v in function args for substitution in maparray() etc
+                // We should allow this.k and this.k[1] and this.v in function args for substitution in maparray() etc
             }
             else
             {

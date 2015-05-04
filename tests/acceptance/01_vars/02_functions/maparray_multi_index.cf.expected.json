@@ -1,0 +1,96 @@
+{
+  "bundles[onelevel1]": [
+    "onelevel1_avalue",
+    "onelevel1_bvalue"
+  ],
+  "bundles[onelevel2]": "onelevel2value",
+  "bundles[services][afs]": [
+    "afs.cf",
+    "afsadm.cf"
+  ],
+  "bundles[services][base]": [
+    "base.cf",
+    "base2.cf"
+  ],
+  "bundles[x][y][z1]": "xyz1",
+  "bundles[x][y][z23]": [
+    "xyz2",
+    "xyz3"
+  ],
+  "bundles[zcuinventory][inventory_fibrechannel]": [
+    "inv_fibrechannel.cf"
+  ],
+  "bundles[zcuinventory][inventory_virtualization]": [
+    "inv_virtualization.cf"
+  ],
+  "bundles[zcuinventory][zcuinventory]": [
+    "inv_zcuinventory.cf"
+  ],
+  "bundles[zculib][mypaths]": [
+    "pathsa.cf",
+    "pathsb.cf"
+  ],
+  "bundles[zculib][myservices]": [
+    "myservices.cf"
+  ],
+  "inputs": [
+    "zculib/myservices.cf",
+    "zculib/pathsa.cf",
+    "zculib/pathsb.cf"
+  ],
+  "merged_bundles": {
+    "onelevel1": [
+      "onelevel1_avalue",
+      "onelevel1_bvalue"
+    ],
+    "onelevel2": "onelevel2value",
+    "services": {
+      "afs": [
+        "afs.cf",
+        "afsadm.cf"
+      ],
+      "base": [
+        "base.cf",
+        "base2.cf"
+      ]
+    },
+    "x": {
+      "y": {
+        "z1": "xyz1",
+        "z23": [
+          "xyz2",
+          "xyz3"
+        ]
+      }
+    },
+    "zcuinventory": {
+      "inventory_fibrechannel": [
+        "inv_fibrechannel.cf"
+      ],
+      "inventory_virtualization": [
+        "inv_virtualization.cf"
+      ],
+      "zcuinventory": [
+        "inv_zcuinventory.cf"
+      ]
+    },
+    "zculib": {
+      "mypaths": [
+        "pathsa.cf",
+        "pathsb.cf"
+      ],
+      "myservices": [
+        "myservices.cf"
+      ]
+    }
+  },
+  "merged_zculib": {
+    "mypaths": [
+      "pathsa.cf",
+      "pathsb.cf"
+    ],
+    "myservices": [
+      "myservices.cf"
+    ]
+  }
+}

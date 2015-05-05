@@ -313,7 +313,6 @@ void GetInterfacesInfo(EvalContext *ctx)
     struct ifreq ifbuf[CF_IFREQ], ifr, *ifp;
     struct ifconf list;
     struct sockaddr_in *sin;
-    struct hostent *hp;
     char *sp, workbuf[CF_BUFSIZE];
     char ip[CF_MAXVARSIZE];
     char name[CF_MAXVARSIZE];
@@ -435,32 +434,6 @@ void GetInterfacesInfo(EvalContext *ctx)
 
                 Log(LOG_LEVEL_DEBUG, "Adding hostip '%s'", txtaddr);
                 EvalContextClassPutHard(ctx, txtaddr, "inventory,attribute_name=none,source=agent");
-
-                if ((hp = gethostbyaddr((char *) &(sin->sin_addr.s_addr),
-                                        sizeof(sin->sin_addr.s_addr), AF_INET))
-                    == NULL)
-                {
-                    Log(LOG_LEVEL_DEBUG, "No hostinformation for '%s' found",
-                        txtaddr);
-                }
-                else
-                {
-                    if (hp->h_name != NULL)
-                    {
-                        Log(LOG_LEVEL_DEBUG, "Adding hostname '%s'", hp->h_name);
-                        EvalContextClassPutHard(ctx, hp->h_name, "inventory,attribute_name=none,source=agent");
-
-                        if (hp->h_aliases != NULL)
-                        {
-                            for (i = 0; hp->h_aliases[i] != NULL; i++)
-                            {
-                                Log(LOG_LEVEL_DEBUG, "Adding alias '%s'",
-                                    hp->h_aliases[i]);
-                                EvalContextClassPutHard(ctx, hp->h_aliases[i], "inventory,attribute_name=none,source=agent");
-                            }
-                        }
-                    }
-                }
 
                 if (strcmp(txtaddr, "0.0.0.0") == 0)
                 {

@@ -2775,7 +2775,7 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attribu
     if (!copyfrom_localhost && conn == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "No suitable server responded to hail");
+             "No suitable server found");
         PromiseRef(LOG_LEVEL_INFO, pp);
         return PROMISE_RESULT_FAIL;
     }

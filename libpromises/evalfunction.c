@@ -796,10 +796,11 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
                                  ARG_UNUSED const FnCall *fp,
                                  const Rlist *finalargs)
 {
+    bool list_mode = (0 == strcmp(fp->name, "list_ifelse"));
     int argcount = 0;
     char id[CF_BUFSIZE];
 
-    snprintf(id, CF_BUFSIZE, "built-in FnCall ifelse-arg");
+    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
 
     /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (const Rlist *arg = finalargs; arg; arg = arg->next)
@@ -815,8 +816,10 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
     /* Require an odd number of arguments. We will always return something. */
     if (argcount%2 != 1)
     {
-        FatalError(ctx, "in built-in FnCall ifelse: even number of arguments");
+      FatalError(ctx, "in built-in FnCall %s: even number of arguments", fp->name);
     }
+
+    Rlist *ret = NULL;
 
     const Rlist *arg;
     for (arg = finalargs;        /* Start with arg set to finalargs. */
@@ -827,14 +830,45 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
          * arguments as a class. */
         if (IsDefinedClass(ctx, RlistScalarValue(arg)))
         {
-            /* If the evaluation returned true in the current context,
-             * return the second of the two arguments. */
-            return FnReturn(RlistScalarValue(arg->next));
+          if (list_mode)
+          {
+              // We can hack this to use the list structures directly
+              // but it's not worthwhile
+              Rlist *items = RlistFromSplitRegex(RlistScalarValue(arg->next), "\n", 100, true);
+              for (const Rlist *item = items; item; item = item->next)
+              {
+                  RlistPrepend(&ret, RlistScalarValue(item), RVAL_TYPE_SCALAR);
+              }
+          }
+          else
+          {
+              /* In scalar mode, if the evaluation returned true in
+               * the current context, return the second of the two
+               * arguments. */
+              return FnReturn(RlistScalarValue(arg->next));
+          }
         }
     }
 
-    /* If we get here, we've reached the last argument (arg->next is NULL). */
-    return FnReturn(RlistScalarValue(arg));
+    if (list_mode)
+    {
+        // We can hack this to use the list structures directly
+        // but it's not worthwhile
+        Rlist *items = RlistFromSplitRegex(RlistScalarValue(arg), "\n", 100, true);
+        for (const Rlist *item = items; item; item = item->next)
+        {
+            RlistPrepend(&ret, RlistScalarValue(item), RVAL_TYPE_SCALAR);
+        }
+
+        RlistReverse(&ret);
+        return (FnCallResult) { FNCALL_SUCCESS, { ret, RVAL_TYPE_LIST } };
+    }
+    else
+    {
+        /* In scalar mode, if we get here, we've reached the last
+           argument (arg->next is NULL). */
+        return FnReturn(RlistScalarValue(arg));
+    }
 }
 
 /*********************************************************************/
@@ -8203,6 +8237,10 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variance", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+
+    // List building functions
+    FnCallTypeNew("list_ifelse", CF_DATA_TYPE_STRING_LIST, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments to build a list from values",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Data container functions
     FnCallTypeNew("data_regextract", CF_DATA_TYPE_CONTAINER, DATA_REGEXTRACT_ARGS, &FnCallRegExtract, "Matches the regular expression in arg 1 against the string in arg2 and returns a data container holding the backreferences by name",

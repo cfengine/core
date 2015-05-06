@@ -200,6 +200,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 
     switch (flags.protocol_version)
     {
+    case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_TLS:
 
         /* Set the version to request during protocol negotiation. After
@@ -229,7 +230,6 @@ AgentConnection *ServerConnection(const char *server, const char *port,
                  LAST_SEEN_ROLE_CONNECT);
         break;
 
-    case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_CLASSIC:
 
         conn->conn_info->protocol = CF_PROTOCOL_CLASSIC;

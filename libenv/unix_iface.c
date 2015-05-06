@@ -549,7 +549,7 @@ void GetInterfacesInfo(EvalContext *ctx)
     if (ips)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, CF_DATA_TYPE_STRING_LIST,
-                                      "inventory,source=agent,attribute_name=IPv4 addresses");
+                                      "source=agent");
     }
 
     RlistDestroy(interfaces);

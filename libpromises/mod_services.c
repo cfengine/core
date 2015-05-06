@@ -41,7 +41,7 @@ static const BodySyntax service_method_body = BodySyntaxNew("service_method", se
 
 static const ConstraintSyntax services_constraints[] =
 {
-    ConstraintSyntaxNewOption("service_policy", "start,stop,disable,restart,reload", "Policy for cfengine service status", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("service_policy", "start,stop,enable,disable,restart,reload", "Policy for cfengine service status", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("service_dependencies", CF_IDRANGE, "A list of services on which the named service abstraction depends", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("service_method", &service_method_body, "Details of promise body for the service abtraction feature", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

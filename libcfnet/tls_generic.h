@@ -45,7 +45,7 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code);
 int TLSSend(SSL *ssl, const char *buffer, int length);
 int TLSRecv(SSL *ssl, char *buffer, int length);
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
-void TLSSetDefaultOptions(SSL_CTX *ssl_ctx);
+void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version);
 const char *TLSErrorString(intmax_t errcode);
 
 #endif

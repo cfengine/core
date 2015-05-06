@@ -143,7 +143,8 @@ static void JsonParseYamlData(yaml_parser_t *parser, JsonElement *element, const
     while (1)
     {
         yaml_parser_parse(parser, &event);
-        Log(LOG_LEVEL_DEBUG, "YAML parse: event arrived with depth %d, key %s",
+        Log(LOG_LEVEL_DEBUG, "YAML parse: event of type %d arrived with depth %d, key %s",
+            event.type,
             depth,
             key == NULL ? "[NULL]" : key);
 
@@ -296,6 +297,11 @@ static void JsonParseYamlData(yaml_parser_t *parser, JsonElement *element, const
         {
             Log(LOG_LEVEL_DEBUG, "YAML parse: ending stream");
             break;
+        }
+        else if (event.type == YAML_NO_EVENT)
+        {
+            Log(LOG_LEVEL_DEBUG, "YAML parse: NO_EVENT");
+            break; // NO_EVENT doesn't need to be deleted
         }
         else
         {

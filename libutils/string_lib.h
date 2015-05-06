@@ -107,6 +107,15 @@ int Chop(char *str, size_t max_length);
  * @brief Check if a string ends with the given suffix
  * @param str
  * @param suffix
+ * @param case_fold whether the comparison is case-insensitive
+ * @return True if suffix matches
+ */
+bool StringEndsWithCase(const char *str, const char *suffix, const bool case_fold);
+
+/**
+ * @brief Check if a string ends with the given suffix
+ * @param str
+ * @param suffix
  * @return True if suffix matches
  */
 bool StringEndsWith(const char *str, const char *suffix);

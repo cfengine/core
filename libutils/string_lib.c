@@ -821,7 +821,7 @@ int Chop(char *str, size_t max_length)
     return 0;
 }
 
-bool StringEndsWith(const char *str, const char *suffix)
+bool StringEndsWithCase(const char *str, const char *suffix, const bool case_fold)
 {
     size_t str_len = strlen(str);
     size_t suffix_len = strlen(suffix);
@@ -833,13 +833,26 @@ bool StringEndsWith(const char *str, const char *suffix)
 
     for (size_t i = 0; i < suffix_len; i++)
     {
-        if (str[str_len - i - 1] != suffix[suffix_len - i - 1])
+        char a = str[str_len - i - 1];
+        char b = suffix[suffix_len - i - 1];
+        if (case_fold)
+        {
+            a = ToLower(a);
+            b = ToLower(b);
+        }
+
+        if (a != b)
         {
             return false;
         }
     }
 
     return true;
+}
+
+bool StringEndsWith(const char *str, const char *suffix)
+{
+    return StringEndsWithCase(str, suffix, false);
 }
 
 bool StringStartsWith(const char *str, const char *prefix)

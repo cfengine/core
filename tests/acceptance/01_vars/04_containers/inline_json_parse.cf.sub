@@ -1,0 +1,5 @@
+bundle agent mytest
+{
+  vars:
+      "inline" data => '{ "key": "special value e8hoeAM1UJC5xmqwCx9iJARKZ9qGk8GU" }';
+}

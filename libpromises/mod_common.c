@@ -261,7 +261,7 @@ const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
     ConstraintSyntaxNewBool("fips_mode", "Activate full FIPS mode restrictions. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewReal("bwlimit", CF_VALRANGE, "Limit outgoing protocol bandwidth in Bytes per second", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("cache_system_functions", "Cache the result of system functions. Default value: true", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: classic", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: \"latest\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("tls_ciphers", "", "List of acceptable ciphers in outgoing TLS connections. For syntax help see man page for \"openssl ciphers\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("tls_min_version", "", "Minimum acceptable TLS version for outgoing connections. Default is \"1.0\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

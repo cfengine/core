@@ -340,8 +340,9 @@ static void ClearAuthAndACLs(void)
     DeleteItemList(SV.allowuserlist);       SV.allowuserlist = NULL;
     DeleteItemList(SV.allowlegacyconnects); SV.allowlegacyconnects = NULL;
 
-    StringMapDestroy(SV.path_shortcuts);    SV.path_shortcuts = NULL;
-    free(SV.allowciphers);                  SV.allowciphers = NULL;
+    StringMapDestroy(SV.path_shortcuts);    SV.path_shortcuts  = NULL;
+    free(SV.allowciphers);                  SV.allowciphers    = NULL;
+    free(SV.allowtlsversion);               SV.allowtlsversion = NULL;
 
     /* New ACLs */
     NEED_REVERSE_LOOKUP = false;

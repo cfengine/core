@@ -122,7 +122,7 @@ static bool init_test_server()
         goto err1;
     }
 
-    TLSSetDefaultOptions(SSLSERVERCONTEXT);
+    TLSSetDefaultOptions(SSLSERVERCONTEXT, NULL);
 
     /* Override one of the default options: always accept peer's certificate,
      * this is a dummy server. */
@@ -530,7 +530,7 @@ static bool init_test_client()
         goto err1;
     }
 
-    TLSSetDefaultOptions(SSLCLIENTCONTEXT);
+    TLSSetDefaultOptions(SSLCLIENTCONTEXT, NULL);
 
     /*
      * Create cert into memory and load it into SSL context.

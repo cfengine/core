@@ -469,13 +469,22 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             else if (IsControlBody(SERVER_CONTROL_BIND_TO_INTERFACE))
             {
                 strlcpy(BINDINTERFACE, value, sizeof(BINDINTERFACE));
-                Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
+                Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to: %s",
+                    BINDINTERFACE);
             }
             else if (IsControlBody(SERVER_CONTROL_ALLOWCIPHERS))
             {
-
+                assert(SV.allowciphers == NULL);                /* no leak */
                 SV.allowciphers = xstrdup(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to '%s'", SV.allowciphers);
+                Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to: %s",
+                    SV.allowciphers);
+            }
+            else if (IsControlBody(SERVER_CONTROL_ALLOWTLSVERSION))
+            {
+                assert(SV.allowtlsversion == NULL);             /* no leak */
+                SV.allowtlsversion = xstrdup(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting allowtlsversion to: %s",
+                    SV.allowtlsversion);
             }
 #undef IsControlBody
         }

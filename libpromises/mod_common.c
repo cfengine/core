@@ -262,7 +262,8 @@ const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
     ConstraintSyntaxNewReal("bwlimit", CF_VALRANGE, "Limit outgoing protocol bandwidth in Bytes per second", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("cache_system_functions", "Cache the result of system functions. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: classic", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("tls_ciphers", ".*", "List of acceptable ciphers in TLS connections that are initiated. For syntax help see man page for \"openssl ciphers\"", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("tls_ciphers", "", "List of acceptable ciphers in outgoing TLS connections. For syntax help see man page for \"openssl ciphers\"", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("tls_min_version", "", "Minimum acceptable TLS version for outgoing connections. Default is \"1.0\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -314,7 +315,7 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_NONE + 1] =
+const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_MAX + 1] =
 {
     ConstraintSyntaxNewStringList("allowallconnects", "","List of IPs or hostnames that may have more than one connection to the server port", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("allowconnects", "", "List of IPs or hostnames that may connect to the server port", SYNTAX_STATUS_NORMAL),
@@ -339,6 +340,7 @@ const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_NONE + 1] =
     ConstraintSyntaxNewBool("listen", "true/false enable server daemon to listen on defined port. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("allowciphers", "", "List of ciphers the server accepts. For Syntax help see man page for \"openssl ciphers\". Default is \"AES256-GCM-SHA384:AES256-SHA\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("allowlegacyconnects", "", "List of IPs from whom we accept legacy protocol connections", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("allowtlsversion", "", "Minimum TLS version allowed for incoming connections", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

@@ -708,7 +708,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         free(bootstrapped_policy_server);
         const char *tls_ciphers =
             EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_CIPHERS);
-        cfnet_init(tls_ciphers);
+        const char *tls_min_version =
+            EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_MIN_VERSION);
+        cfnet_init(tls_min_version, tls_ciphers);
     }
 
     size_t cwd_size = PATH_MAX;

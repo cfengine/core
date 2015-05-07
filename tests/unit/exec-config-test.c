@@ -87,7 +87,6 @@ static void test_execd_config_full(void)
     run_test_in_policy("body_executor_control_full.cf", &execd_config_full_cb);
 }
 
-#define THREE_HOURS (3*60*60)
 
 static void exec_config_empty_cb(const EvalContext *ctx, const Policy *policy)
 {
@@ -96,7 +95,6 @@ static void exec_config_empty_cb(const EvalContext *ctx, const Policy *policy)
     assert_int_equal(false, config->scheduled_run);
     /* FIXME: exec-config should provide default exec_command */
     assert_string_equal("", config->exec_command);
-    assert_int_equal(THREE_HOURS, config->agent_expireafter);
     assert_string_equal("", config->mail_server);
     /* FIXME: exec-config should provide default from address */
     assert_string_equal("", config->mail_from_address);

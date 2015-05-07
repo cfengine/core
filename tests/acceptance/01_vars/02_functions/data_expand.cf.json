@@ -1,0 +1,5 @@
+{
+    "plain data": "nothing",
+    "$(x)": "nothing again",
+    "$(y)": "$(nosuchvar)",
+}

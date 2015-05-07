@@ -1,0 +1,33 @@
+###########################################################
+#
+# Test data_expand()
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+      "x" string => "foo";
+      "y" int => "200";
+      "load_unexpanded" data => readjson("$(this.promise_filename).json", inf);
+      "load_expanded" data => data_expand(load_unexpanded);
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

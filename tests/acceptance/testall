@@ -102,6 +102,8 @@ RPMVERCMP=${RPMVERCMP:-}
 export RPMVERCMP
 LIBTOOL=${LIBTOOL:-}
 export LIBTOOL
+INCLUDE_IN_WORKDIR=${INCLUDE_IN_WORKDIR:-}
+export INCLUDE_IN_WORKDIR
 
 export MAKEFLAGS
 export GAINROOT
@@ -228,6 +230,8 @@ usage() {
   echo "           Mutually exclusive with --agent and --cf* arguments."
   echo " --libtool specify non-default libtool location (only needed for --gdb)."
   echo "               defaults to $DEFLIBTOOL."
+  echo " --include Include the file or directory given in the workdir before the test"
+  echo "           starts. This option may be given several times."
   echo " --staging enable tests in staging directories. They are not expected to pass."
   echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
   echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
@@ -336,6 +340,16 @@ runtest() {
         $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
         $LN_CMD "$CF_KEY" "$WORKDIR/bin"
         $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
+      fi
+      if [ -n "$INCLUDE_IN_WORKDIR" ]; then
+        if [ -d "$INCLUDE_IN_WORKDIR" ]; then
+          # For directories, make a real directories and symlinks inside.
+          # This is useful if we need modifications inside the directory.
+          mkdir -p "$WORKDIR/$(basename $INCLUDE_IN_WORKDIR)"
+          $LN_CMD "$INCLUDE_IN_WORKDIR"/* "$WORKDIR/$(basename $INCLUDE_IN_WORKDIR)"
+        else
+          $LN_CMD "$INCLUDE_IN_WORKDIR" "$WORKDIR"
+        fi
       fi
     fi
     if uname | grep MINGW > /dev/null; then
@@ -639,6 +653,8 @@ while true; do
       BINDIR=${1#--bindir=};;
     --libtool=*)
       LIBTOOL=${1#--libtool=};;
+    --include=*)
+      INCLUDE_IN_WORKDIR="$INCLUDE_IN_WORKDIR${INCLUDE_IN_WORKDIR:+ }${1#--include=}";;
     -j*|--jobs*)
       MAKEFLAGS="$MAKEFLAGS $1";;
     --printlog)

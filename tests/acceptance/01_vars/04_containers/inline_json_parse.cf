@@ -1,0 +1,23 @@
+#######################################################
+#
+# Test inline JSON and YAML data
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_passif_output(".*e8hoeAM1UJC5xmqwCx9iJARKZ9qGk8GU.*",
+                                             "",
+                                             "$(sys.cf_promises) -p json $(this.promise_filename).sub",
+                                             $(this.promise_filename));
+}

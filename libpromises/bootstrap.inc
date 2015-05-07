@@ -182,6 +182,7 @@
             "      \"Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)\n"
             "       Please check\n"
             "       * cf-serverd is running on $(sys.policy_hub)\n"
+            "       * CFEngine version on the policy hub is 3.6.0 or latest - otherwise you need to tweak the protocol_version setting\n"
             "       * network connectivity to $(sys.policy_hub) on port 5308\n"
             "       * masterfiles 'body server control' - in particular allowconnects, trustkeysfrom and skipverify\n"
             "       * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny\n"

@@ -1040,8 +1040,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         ReceiveCollectCall(conn);
         /* On success that returned true; otherwise, it did all
-         * relevant Log()ging.  Either way, it closed the connection,
-         * so we're no longer busy with it: */
+         * relevant Log()ging.  Either way, we're no longer busy with
+         * it and our caller can close the connection: */
         return false;
 
     case PROTOCOL_COMMAND_BAD:

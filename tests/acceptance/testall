@@ -102,6 +102,8 @@ RPMVERCMP=${RPMVERCMP:-}
 export RPMVERCMP
 LIBTOOL=${LIBTOOL:-}
 export LIBTOOL
+INCLUDE_IN_WORKDIR=${INCLUDE_IN_WORKDIR:-}
+export INCLUDE_IN_WORKDIR
 
 export MAKEFLAGS
 export GAINROOT
@@ -228,6 +230,8 @@ usage() {
   echo "           Mutually exclusive with --agent and --cf* arguments."
   echo " --libtool specify non-default libtool location (only needed for --gdb)."
   echo "               defaults to $DEFLIBTOOL."
+  echo " --include Include the file or directory given in the workdir before the test"
+  echo "           starts. This option may be given several times."
   echo " --staging enable tests in staging directories. They are not expected to pass."
   echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
   echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
@@ -337,6 +341,19 @@ runtest() {
         $LN_CMD "$CF_KEY" "$WORKDIR/bin"
         $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
       fi
+      for inc in $INCLUDE_IN_WORKDIR; do (
+        # Copy directory structure, but make links inside. This allows tests to
+        # add additional files to the directory.
+        base=$(basename $inc)
+        mkdir -p "$WORKDIR/$base"
+        cd $inc || exit 2
+        for dir in $(find . -type d); do
+          mkdir -p "$WORKDIR/$base/$dir"
+        done
+        for file in $(find . \! -type d); do
+          $LN_CMD "$inc/$file" "$WORKDIR/$base/$file"
+        done
+      ); done
     fi
     if uname | grep MINGW > /dev/null; then
         PLATFORM_WORKDIR="$(echo $WORKDIR | sed -e 's%^/\([a-cA-Z]\)/%\1:/%' | sed -e 's%/%\\%g')"
@@ -639,6 +656,8 @@ while true; do
       BINDIR=${1#--bindir=};;
     --libtool=*)
       LIBTOOL=${1#--libtool=};;
+    --include=*)
+      INCLUDE_IN_WORKDIR="$INCLUDE_IN_WORKDIR${INCLUDE_IN_WORKDIR:+ }${1#--include=}";;
     -j*|--jobs*)
       MAKEFLAGS="$MAKEFLAGS $1";;
     --printlog)

@@ -454,13 +454,6 @@ int safe_open(const char *pathname, int flags, ...)
                 return -1;
             }
 
-            // We can't safely open(2) a FIFO without blocking infinitely
-            if (S_ISFIFO(stat_before.st_mode))
-            {
-                close(currentfd);
-                return -1;
-            }
-
             TEST_SYMLINK_SWITCH_POINT
 
             if (!next_component)
@@ -725,21 +718,27 @@ int safe_chmod(const char *path, mode_t mode)
 #ifdef __MINGW32__
     return chmod(path, mode);
 #else // !__MINGW32__
-    int fd = safe_open(path, 0);
-    if (fd < 0)
-    {
-        // Do additional checking for FIFOs
-        struct stat st;
-        if (stat(path, &st) == 0 && S_ISFIFO(st.st_mode))
-        {
-            return chmod(path, mode);
-        }
+    int dirfd = -1;
+    int ret = -1;
 
-        return -1;
-    }
+    char *parent_dir_alloc = xstrdup(path);
+    char *leaf_alloc = xstrdup(path);
+    char *parent_dir = dirname(parent_dir_alloc);
+    char *leaf = basename(leaf_alloc);
 
-    int ret = fchmod(fd, mode);
-    close(fd);
+    if ((dirfd = safe_open(parent_dir, O_RDONLY)) == -1)
+        goto bad;
+
+    if ((ret = fchmodat(dirfd, leaf, mode, 0)))
+        goto bad;
+
+bad:
+    free(parent_dir_alloc);
+    free(leaf_alloc);
+
+    if (dirfd != -1)
+        close(dirfd);
+
     return ret;
 #endif // !__MINGW32__
 }

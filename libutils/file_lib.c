@@ -26,6 +26,7 @@
 #include <dir.h>
 
 #include <alloc.h>
+#include <libgen.h>
 #include <logging.h>
 
 bool FileCanOpen(const char *path, const char *modes)
@@ -657,6 +658,32 @@ int safe_chdir(const char *path)
 #endif // !__MINGW32__
 }
 
+int safe_chown_impl(const char *path, uid_t owner, gid_t group, int flags)
+{
+    int dirfd = -1;
+    int ret = -1;
+
+    char *parent_dir_alloc = xstrdup(path);
+    char *leaf_alloc = xstrdup(path);
+    char *parent_dir = dirname(parent_dir_alloc);
+    char *leaf = basename(leaf_alloc);
+
+    if ((dirfd = safe_open(parent_dir, O_RDONLY)) == -1)
+        goto bad;
+
+    if ((ret = fchownat(dirfd, leaf, owner, group, flags)))
+        goto bad;
+
+bad:
+    free(parent_dir_alloc);
+    free(leaf_alloc);
+
+    if (dirfd != -1)
+        close(dirfd);
+
+    return ret;
+}
+
 /**
  * Use this instead of chown(). It changes file owner safely, using safe_open().
  * @param path Path to operate on.
@@ -669,22 +696,7 @@ int safe_chown(const char *path, uid_t owner, gid_t group)
 #ifdef __MINGW32__
     return chown(path, owner, group);
 #else // !__MINGW32__
-    int fd = safe_open(path, 0);
-    if (fd < 0)
-    {
-        // Do additional checking for FIFOs
-        struct stat st;
-        if (stat(path, &st) == 0 && S_ISFIFO(st.st_mode))
-        {
-            return chown(path, owner, group);
-        }
-
-        return -1;
-    }
-
-    int ret = fchown(fd, owner, group);
-    close(fd);
-    return ret;
+    return safe_chown_impl(path, owner, group, 0);
 #endif // !__MINGW32__
 }
 
@@ -698,44 +710,7 @@ int safe_chown(const char *path, uid_t owner, gid_t group)
 #ifndef __MINGW32__
 int safe_lchown(const char *path, uid_t owner, gid_t group)
 {
-    if (*path == '\0')
-    {
-        errno = EINVAL;
-        return -1;
-    }
-
-    size_t orig_size = strlen(path);
-    char parent_dir[orig_size + 1];
-    char *slash_pos = strrchr(path, '/');
-    const char *leaf;
-    if (slash_pos)
-    {
-        strcpy(parent_dir, path);
-        // Same value, but relative to parent_dir.
-        leaf = slash_pos = &parent_dir[slash_pos - path];
-        leaf++;
-        // Remove all superflous slashes, but not if it's the root slash.
-        while (*slash_pos == '/' && slash_pos != parent_dir)
-        {
-            *(slash_pos--) = '\0';
-        }
-    }
-    else
-    {
-        parent_dir[0] = '.';
-        parent_dir[1] = '\0';
-        leaf = path;
-    }
-
-    int parent_fd = safe_open(parent_dir, O_RDONLY);
-    if (parent_fd < 0)
-    {
-        return -1;
-    }
-
-    int ret = fchownat(parent_fd, leaf, owner, group, AT_SYMLINK_NOFOLLOW);
-    close(parent_fd);
-    return ret;
+    return safe_chown_impl(path, owner, group, AT_SYMLINK_NOFOLLOW);
 }
 #endif // !__MINGW32__
 

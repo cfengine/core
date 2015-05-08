@@ -210,7 +210,9 @@ static void LoadHistogram(void)
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to load histogram data from '%s' (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE,
+            "Unable to load histogram data from '%s' (fopen: %s)",
+            filename, GetErrorStr());
         return;
     }
 

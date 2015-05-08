@@ -720,6 +720,7 @@ static void CollectCallIfDue(EvalContext *ctx)
                 "Abandoning collect call attempt with queue longer than collect_window [%d > %d]",
                 waiting_queue, COLLECT_WINDOW);
             cf_closesocket(new_client);
+            CollectCallMarkProcessed();
         }
         else
         {

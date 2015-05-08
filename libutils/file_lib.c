@@ -725,21 +725,27 @@ int safe_chmod(const char *path, mode_t mode)
 #ifdef __MINGW32__
     return chmod(path, mode);
 #else // !__MINGW32__
-    int fd = safe_open(path, 0);
-    if (fd < 0)
-    {
-        // Do additional checking for FIFOs
-        struct stat st;
-        if (stat(path, &st) == 0 && S_ISFIFO(st.st_mode))
-        {
-            return chmod(path, mode);
-        }
+    int dirfd = -1;
+    int ret = -1;
 
-        return -1;
-    }
+    char *parent_dir_alloc = xstrdup(path);
+    char *leaf_alloc = xstrdup(path);
+    char *parent_dir = dirname(parent_dir_alloc);
+    char *leaf = basename(leaf_alloc);
 
-    int ret = fchmod(fd, mode);
-    close(fd);
+    if ((dirfd = safe_open(parent_dir, O_RDONLY)) == -1)
+        goto bad;
+
+    if ((ret = fchmodat(dirfd, leaf, mode, AT_SYMLINK_NOFOLLOW)))
+        goto bad;
+
+bad:
+    free(parent_dir_alloc);
+    free(leaf_alloc);
+
+    if (dirfd != -1)
+        close(dirfd);
+
     return ret;
 #endif // !__MINGW32__
 }

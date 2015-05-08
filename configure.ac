@@ -94,6 +94,7 @@ m4_ifdef([LT_INIT],
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
+AC_PATH_PROG([PERL], [perl])
 AC_CONFIG_LIBOBJ_DIR(libcompat)
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")

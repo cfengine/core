@@ -1,0 +1,41 @@
+###########################################################
+#
+# Test readdata() with YAML
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+    feature_yaml::
+      "explicit_yaml" data => readdata("$(this.promise_filename).yaml", "YAML");
+
+      "extension_yaml" data => readdata("$(this.promise_filename).yaml", "auto");
+
+      "guess_yaml" data => readdata("$(this.promise_filename).yaml.guess", "auto"); # should be empty (JSON is attempted)
+
+      "failed_explicit_yaml" data => readdata($(this.promise_filename), "YAML");
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+    feature_yaml::
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+    !feature_yaml::
+      "check"  usebundle => dcs_pass($(this.promise_filename));
+
+}

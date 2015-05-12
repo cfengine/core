@@ -161,7 +161,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             exit(EXIT_FAILURE);
         }
 
-        const char *canonified_ipaddr = CanonifyName(bootstrap_arg);
+        char canonified_ipaddr[strlen(bootstrap_arg) + 1];
+        StringCanonify(canonified_ipaddr, bootstrap_arg);
 
         bool am_policy_server =
             EvalContextClassGet(ctx, NULL, canonified_ipaddr) != NULL;

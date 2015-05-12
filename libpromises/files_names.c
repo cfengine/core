@@ -471,6 +471,7 @@ void TransformNameInPlace(char *s, char from, char to)
 
 /*********************************************************************/
 
+/* TODO remove, kill, burn this function! */
 char *CanonifyName(const char *str)
 {
     static char buffer[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */

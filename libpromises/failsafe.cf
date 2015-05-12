@@ -33,14 +33,34 @@
 
 body common control
 {
-      bundlesequence => { "cfe_internal_update", "cfe_internal_call_update" };
+      bundlesequence => {
+                          "cfe_internal_checkkeys",
+                          "cfe_internal_update",
+                          "cfe_internal_call_update"
+                        };
 }
-
-################################################################################
 
 body agent control
 {
       skipidentify => "true";
+
+      # Bootstrapping can't continue without keys
+      abortclasses => { "no_ppkeys_ABORT" };
+}
+
+################################################################################
+
+bundle agent cfe_internal_checkkeys
+{
+  classes:
+      "have_ppkeys"
+        expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub"),
+        handle     => "cfe_internal_bootstrap_checkkeys_classes_have_ppkeys";
+
+  reports:
+    !have_ppkeys::
+      "No public/private key pair is loaded, please create one by running \"cf-key\""
+        classes => kept("no_ppkeys_ABORT");
 }
 
 ################################################################################
@@ -51,29 +71,12 @@ bundle agent cfe_internal_update
 
     any::
 
-      "have_ppkeys"
-      expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub"),
-      handle => "cfe_internal_bootstrap_update_classes_have_ppkeys";
-
       "have_promises_cf"
       expression => fileexists("$(sys.inputdir)/promises.cf"),
       handle => "cfe_internal_bootstrap_update_classes_have_promises_cf";
 
-      #
-
-  commands:
-
-    !have_ppkeys::
-
-      "$(sys.cf_key)"
-      handle => "cfe_internal_bootstrap_update_commands_generate_keys";
-
-      #
 
   files:
-
-
-    have_ppkeys::
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
@@ -81,7 +84,7 @@ bundle agent cfe_internal_update
       depth_search => u_recurse("inf"),
       classes => repaired("got_policy");
 
-    !windows.have_ppkeys.got_policy_failed::
+    !windows.got_policy_failed::
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
@@ -89,7 +92,7 @@ bundle agent cfe_internal_update
       depth_search => u_recurse("inf"),
       classes => repaired("got_policy");
 
-    windows.have_ppkeys.got_policy_failed::
+    windows.got_policy_failed::
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
@@ -97,7 +100,7 @@ bundle agent cfe_internal_update
       depth_search => u_recurse("inf"),
       classes => repaired("got_policy");
 
-    windows.have_ppkeys::
+    windows::
 
       "$(sys.workdir)\\bin-twin\\."
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows",
@@ -105,7 +108,6 @@ bundle agent cfe_internal_update
       copy_from => u_cp("$(sys.workdir)\\bin\\."),
       depth_search => u_recurse("1");
 
-      #
 
   processes:
 
@@ -119,7 +121,6 @@ bundle agent cfe_internal_update
       "cf-serverd" restart_class => "start_server",
       handle => "cfe_internal_bootstrap_update_processes_start_cf_serverd";
 
-      #
 
   commands:
 
@@ -146,7 +147,6 @@ bundle agent cfe_internal_update
       handle => "cfe_internal_bootstrap_update_commands_systemd_cfe_start",
       classes => repaired_two("executor_started", "server_started");
 
-      #
 
   services:
 
@@ -158,7 +158,6 @@ bundle agent cfe_internal_update
       service_method => bootstart,
       classes => repaired("executor_started");
 
-      #
 
   reports:
 
@@ -177,7 +176,7 @@ bundle agent cfe_internal_update
       "Updated local policy from policy server"
       handle => "cfe_internal_bootstrap_update_reports_got_policy";
 
-    !got_policy.!have_promises_cf.have_ppkeys::
+    !got_policy.!have_promises_cf::
 
       "Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)
        Please check
@@ -195,7 +194,7 @@ bundle agent cfe_internal_update
       "Started the server"
       handle => "cfe_internal_bootstrap_update_reports_started_serverd";
 
-    am_policy_hub.!server_started.!have_promises_cf.have_ppkeys::
+    am_policy_hub.!server_started.!have_promises_cf::
 
       "Failed to start the server"
       handle => "cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
@@ -205,7 +204,7 @@ bundle agent cfe_internal_update
       "Started the scheduler"
       handle => "cfe_internal_bootstrap_update_reports_started_execd";
 
-    !executor_started.!have_promises_cf.have_ppkeys::
+    !executor_started.!have_promises_cf::
 
       "Did not start the scheduler"
       handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
@@ -215,7 +214,6 @@ bundle agent cfe_internal_update
       "You are running a hard-coded failsafe. Please use the following command instead.
         $(sys.cf_agent) -f $(sys.inputdir)/update.cf"
       handle => "cfe_internal_bootstrap_update_reports_run_another_failsafe_instead";
-      
 }
 
 ################################################################################
@@ -229,7 +227,11 @@ bundle agent cfe_internal_call_update
 
       "$(sys.cf_agent) -f update.cf"
       handle => "cfe_internal_call_update_commands_call_update_cf";
-
+}
+############################################
+body classes kept(x)
+{
+      promise_kept => {"$(x)"};
 }
 ############################################
 body classes repaired(x)

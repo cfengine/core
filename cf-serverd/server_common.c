@@ -405,11 +405,6 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
     int print = false, i;
     FILE *pp;
 
-    if ((CFSTARTTIME = time((time_t *) NULL)) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't read system clock. (time: %s)", GetErrorStr());
-    }
-
     if (strlen(CFRUNCOMMAND) == 0)
     {
         Log(LOG_LEVEL_VERBOSE, "cf-serverd exec request: no cfruncommand defined");

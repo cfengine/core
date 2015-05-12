@@ -166,15 +166,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         am_policy_server =
             NULL != EvalContextClassGet(ctx, NULL, canonified_bootstrap_policy_server);
 
-        {
-            char policy_server_ipv4_class[CF_BUFSIZE];
-            snprintf(policy_server_ipv4_class, CF_MAXVARSIZE, "ipv4_%s",
-                     canonified_bootstrap_policy_server);
-
-            am_policy_server |=
-                NULL != EvalContextClassGet(ctx, NULL, policy_server_ipv4_class);
-        }
-
         if (am_policy_server)
         {
             Log(LOG_LEVEL_INFO, "Assuming role as policy server,"

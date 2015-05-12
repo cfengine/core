@@ -16,21 +16,23 @@ body common control
 bundle agent test
 {
   vars:
+    feature_yaml::
       "included" string => "( included text )";
-      "options1" data => '
-{
-  "max_content": 512,
-  "verbose": 0,
-  "headers": [ "Foo: bar" ]
-}';
+      "options2" data => '---
+a: b
+c: d
+e:
+  - 1
+  - 2
+';
 
-      "options3" data => '
-{
-  "max_content": 512,
-  "verbose": "$(included)",
-  "headers": [ "Foo: bar" ]
-}';
-
+      "options4" data => '---
+a: $(included)
+c: d
+e:
+  - 1
+  - 2
+';
 }
 
 #######################################################
@@ -38,7 +40,10 @@ bundle agent test
 bundle agent check
 {
   methods:
+    feature_yaml::
       "check"  usebundle => dcs_check_state(test,
                                            "$(this.promise_filename).expected.json",
                                            $(this.promise_filename));
+    !feature_yaml::
+      "check"  usebundle => dcs_pass($(this.promise_filename));
 }

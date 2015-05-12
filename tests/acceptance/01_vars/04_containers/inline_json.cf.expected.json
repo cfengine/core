@@ -7,27 +7,11 @@
     "max_content": 512,
     "verbose": 0
   },
-  "options2": {
-    "a": "b",
-    "c": "d",
-    "e": [
-      1,
-      2
-    ]
-  },
   "options3": {
     "headers": [
       "Foo: bar"
     ],
     "max_content": 512,
     "verbose": "( included text )"
-  },
-  "options4": {
-    "a": "( included text )",
-    "c": "d",
-    "e": [
-      1,
-      2
-    ]
   }
 }

@@ -138,6 +138,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     if (config->agent_type == AGENT_TYPE_AGENT && config->agent_specific.agent.bootstrap_policy_server)
     {
+        EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
+
         if (!RemoveAllExistingPolicyInInputs(GetInputDir()))
         {
             Log(LOG_LEVEL_ERR, "Error removing existing input files prior to bootstrap");
@@ -174,6 +176,14 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             else
             {
                 Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
+
+                if (config->agent_specific.agent.bootstrap_trust_server)
+                {
+                    EvalContextClassPutHard(ctx, "trust_server", "source=agent");
+                    Log(LOG_LEVEL_NOTICE,
+                        "Bootstrap mode: implicitly trusting server, "
+                        "use --trust-server=no if server trust is already established");
+                }
             }
 
             WriteAmPolicyHubFile(am_policy_server);
@@ -1560,17 +1570,6 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         break;
     default:
         break;
-    }
-
-    if (config->agent_specific.agent.bootstrap_policy_server)
-    {
-        EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
-        if (config->agent_specific.agent.bootstrap_trust_server)
-        {
-            EvalContextClassPutHard(ctx, "trust_server", "source=agent");
-            Log(LOG_LEVEL_NOTICE, "Bootstrap mode: implicitly trusting server, "
-                "use --trust-server=no if server trust is already established");
-        }
     }
 
     if (config->color)

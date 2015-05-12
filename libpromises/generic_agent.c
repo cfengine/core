@@ -139,8 +139,11 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
 
-    if (config->agent_type == AGENT_TYPE_AGENT &&
-        config->agent_specific.agent.bootstrap_policy_server != NULL)
+    const char *bootstrap_arg =
+        config->agent_specific.agent.bootstrap_policy_server;
+
+    /* Are we bootstrapping the agent? */
+    if (config->agent_type == AGENT_TYPE_AGENT && bootstrap_arg != NULL)
     {
         EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
 
@@ -158,34 +161,30 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             exit(EXIT_FAILURE);
         }
 
-        bool am_policy_server = false;
+        const char *canonified_ipaddr = CanonifyName(bootstrap_arg);
 
-        const char *canonified_bootstrap_policy_server =
-            CanonifyName(config->agent_specific.agent.bootstrap_policy_server);
-
-        am_policy_server =
-            NULL != EvalContextClassGet(ctx, NULL, canonified_bootstrap_policy_server);
+        bool am_policy_server =
+            EvalContextClassGet(ctx, NULL, canonified_ipaddr) != NULL;
 
         if (am_policy_server)
         {
             Log(LOG_LEVEL_INFO, "Assuming role as policy server,"
-                " with policy distribution point at: %s",
-                GetMasterDir());
+                " with policy distribution point at: %s", GetMasterDir());
             MarkAsPolicyServer(ctx);
 
             if (!MasterfileExists(GetMasterDir()))
             {
                 Log(LOG_LEVEL_ERR, "In order to bootstrap as a policy server,"
-                    " the file '%s/promises.cf' must exist.",
-                    GetMasterDir());
+                    " the file '%s/promises.cf' must exist.", GetMasterDir());
                 exit(EXIT_FAILURE);
             }
+
+            CheckAndSetHAState(GetWorkDir(), ctx);
         }
         else
         {
             Log(LOG_LEVEL_INFO, "Assuming role as regular client,"
-                " bootstrapping to policy server: %s",
-                config->agent_specific.agent.bootstrap_policy_server);
+                " bootstrapping to policy server: %s", bootstrap_arg);
 
             if (config->agent_specific.agent.bootstrap_trust_server)
             {
@@ -198,14 +197,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         WriteAmPolicyHubFile(am_policy_server);
 
-        WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
-        SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
-
-        /* It makes sense to check HA status only on policy hub. */
-        if (am_policy_server)
-        {
-            CheckAndSetHAState(GetWorkDir(), ctx);
-        }
+        WritePolicyServerFile(GetWorkDir(), bootstrap_arg);
+        SetPolicyServer(ctx, bootstrap_arg);
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);
@@ -215,14 +208,16 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
         if (existing_policy_server)
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to '%s'", existing_policy_server);
+            Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
+                existing_policy_server);
             SetPolicyServer(ctx, existing_policy_server);
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped - can't find policy_server.dat in %s", GetWorkDir());
+            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped -"
+                " can't find policy_server.dat in: %s", GetWorkDir());
             return;
         }
 

@@ -20,16 +20,16 @@
 # versions of CFEngine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
+
+########## CFEngine Bootstrap / Failsafe Policy ##############################
+# This file (failsafe.cf) is re-generated inside "inputs" directory every time
+# you bootstrap. This means that custom changes will be overwritten.
 #
-################################################################################
-## CFEngine Bootstrap / Failsafe Policy ########################################
-################################################################################
-# THIS FILE REPRESENTS A FALL-BACK SOLUTION FOR THE PRIMARY FAILSAFE FILE.
-# IF THE PRIMARY FAILSAFE/UPDATE LOSES FUNCTIONALITY DUE TO MODIFICATIONS MADE
-# BY THE USER, CFENGINE WILL RECOVER BY USING THIS FALL-BACK BOOTSTRAPPED FILE.
-# NEVER EDIT THIS FILE, YOU WILL HAVE TO LOG ON TO EVERY NODE MANAGED BY
-# CFENGINE TO RECTIFY POTENTIAL ERRORS IF SOMETHING GOES WRONG.
-################################################################################
+# The role of this standalone policy file is to fetch the main promises from
+# the policy hub for the first time when bootstrapping, and to recover the
+# system by fetching policies in case the standard agent run fails.
+##############################################################################
+
 
 body common control
 {

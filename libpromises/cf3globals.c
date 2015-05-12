@@ -94,8 +94,10 @@ HashMethod CF_DEFAULT_DIGEST; /* GLOBAL_C, initialized later */
 int CF_DEFAULT_DIGEST_LEN; /* GLOBAL_C, initialized later */
 
 /*
-  Holds the "now" time captured at the moment of policy load (and in response to
-  cf-runagent command to cf-serverd?!).
+  Holds the "now" time captured at the moment of policy (re)load.
+
+  TODO: This variable should be internal to timeout.c, not exposed.
+  It should only be set by SetStartTime() and read by GetStartTime().
 
   Utilized everywhere "now" start time is needed
 */

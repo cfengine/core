@@ -171,4 +171,7 @@ bool StringNotMatchingSetCapped(const char *isp, int limit,
  */
 bool StringAppend(char *dst, const char *src, size_t n);
 
+char *StringCanonify(char *dst, const char *src);
+
+
 #endif

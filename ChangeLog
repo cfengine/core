@@ -1,5 +1,7 @@
 Cfengine Propulsion Lab
         Changes:
+	- cf-execd: agent_expireafter default was changed to 120 minutes
+	  (Redmine #7113)
         - all embedded databases are now rooted in the state/ directory.
 
         New features:

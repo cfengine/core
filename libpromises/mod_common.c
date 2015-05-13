@@ -380,7 +380,7 @@ const ConstraintSyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     ConstraintSyntaxNewStringList("schedule", "", "The class schedule used by cf-execd for activating cf-agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("executorfacility", CF_FACILITY, "Menu option for syslog facility level. Default value: LOG_USER", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("exec_command", CF_ABSPATHRANGE,"The full path and command to the executable run by default (overriding builtin)", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("agent_expireafter", "0,10080", "Maximum agent runtime (in minutes). Default value: 10080", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("agent_expireafter", "0,10080", "Maximum agent runtime (in minutes). Default value: 120", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

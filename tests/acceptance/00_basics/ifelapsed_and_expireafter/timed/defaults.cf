@@ -67,8 +67,11 @@ bundle agent check
     test_pass_2::
       "any" usebundle => dcs_wait($(this.promise_filename), 45);
     test_pass_3::
-      # Final delay is just to make sure all background echos have happened.
-      "any" usebundle => dcs_wait($(this.promise_filename), 10);
+      # Final delay is just to make sure all background echos have happened, and
+      # all sub agents have exited. Failure to do so can make the sub agents try
+      # to look for locks inside the workdir, which by that point may have been
+      # deleted.
+      "any" usebundle => dcs_wait($(this.promise_filename), 140);
 
   vars:
     test_pass_4::

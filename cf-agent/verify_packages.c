@@ -2688,7 +2688,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     }
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
-                    EvalContextStackPushPromiseFrame(ctx, pp, false);
+                    EvalContextStackPushPromiseFrame(ctx, ppi, false);
                     if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
                     {
                         if (ExecPackageCommand(ctx, command_string, verify, true, a, ppi, &result))

@@ -33,7 +33,7 @@ typedef struct
 {
     bool scheduled_run;
     char *exec_command;
-    int agent_expireafter;
+    int agent_expireafter;                                    /* in minutes */
 
     char *mail_server;
     char *mail_from_address;

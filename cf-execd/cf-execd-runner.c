@@ -257,14 +257,17 @@ void LocalExec(const ExecConfig *config)
 
     while (!IsPendingTermination())
     {
-        if (!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
+        if (!IsReadReady(fileno(pp),
+                         config->agent_expireafter * SECONDS_PER_MINUTE))
         {
-            char errmsg[CF_MAXVARSIZE];
-            snprintf(errmsg, sizeof(errmsg), "cf-execd: !! Timeout waiting for output from agent (agent_expireafter=%d) - terminating it",
-                     config->agent_expireafter);
+            char errmsg[] =
+                "cf-execd: timeout waiting for output from agent"
+                " (agent_expireafter=%d) - terminating it\n";
 
-            Log(LOG_LEVEL_ERR, "%s", errmsg);
-            fprintf(fp, "%s\n", errmsg);
+            fprintf(fp, errmsg, config->agent_expireafter);
+            /* Trim '\n' before Log()ing. */
+            errmsg[strlen(errmsg) - 1] = '\0';
+            Log(LOG_LEVEL_NOTICE, errmsg, config->agent_expireafter);
             count++;
 
             pid_t pid_agent;

@@ -34,7 +34,6 @@
 #include <generic_agent.h> // TODO: fix
 #include <item_lib.h>
 
-static const int THREE_HOURS = 3 * 60 * 60;
 
 static char *GetIpAddresses(const EvalContext *ctx)
 {
@@ -58,7 +57,7 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
 
     exec_config->scheduled_run = scheduled_run;
     exec_config->exec_command = xstrdup("");
-    exec_config->agent_expireafter = THREE_HOURS;
+    exec_config->agent_expireafter = 2 * 60;                   /* two hours */
 
     exec_config->mail_server = xstrdup("");
     exec_config->mail_from_address = xstrdup("");

@@ -35,18 +35,22 @@ bundle agent main
   vars:
 
       "csv" data => readdata("/tmp/file.csv", "auto"); # or file type "CSV"
-      "yaml" data => readdata("/tmp/file.yaml", "auto"); # or file type "YAML"
       "json" data => readdata("/tmp/file.json", "auto"); # or file type "JSON"
 
       "csv_str" string => format("%S", csv);
-      "yaml_str" string => format("%S", yaml);
       "json_str" string => format("%S", json);
 
+    feature_yaml:: # we can only test YAML data if libyaml is compiled in
+      "yaml" data => readdata("/tmp/file.yaml", "auto"); # or file type "YAML"
+      "yaml_str" string => format("%S", yaml);
   reports:
 
       "From /tmp/file.csv, got data $(csv_str)";
-      "From /tmp/file.yaml, got data $(yaml_str)";
       "From /tmp/file.json, got data $(json_str)";
+    feature_yaml::
+      "From /tmp/file.yaml, we would get data $(yaml_str)";
+    !feature_yaml:: # show the output anyway
+      'From /tmp/file.yaml, we would get data ["a","b"]';
 
 }
 #+end_src
@@ -54,7 +58,7 @@ bundle agent main
 #+begin_src example_output
 #@ ```
 #@ R: From /tmp/file.csv, got data [["1","2","3"]]
-#@ R: From /tmp/file.yaml, got data ["a","b"]
 #@ R: From /tmp/file.json, got data {"x":200}
+#@ R: From /tmp/file.yaml, we would get data ["a","b"]
 #@ ```
 #+end_src

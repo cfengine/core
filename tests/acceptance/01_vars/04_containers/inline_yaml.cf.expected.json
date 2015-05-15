@@ -1,0 +1,19 @@
+{
+  "included": "( included text )",
+  "options2": {
+    "a": "b",
+    "c": "d",
+    "e": [
+      1,
+      2
+    ]
+  },
+  "options4": {
+    "a": "( included text )",
+    "c": "d",
+    "e": [
+      1,
+      2
+    ]
+  }
+}

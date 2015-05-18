@@ -79,6 +79,8 @@ void MakeSignalPipe(void)
         exit(EXIT_FAILURE);
     }
 
+    atexit(&CloseSignalPipe);
+
     for (int c = 0; c < 2; c++)
     {
 #ifndef __MINGW32__
@@ -98,8 +100,6 @@ void MakeSignalPipe(void)
         }
 #endif // __MINGW32__
     }
-
-    atexit(&CloseSignalPipe);
 }
 
 /**

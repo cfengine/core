@@ -1600,16 +1600,20 @@ static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
         return FnFailure();
     }
 
-    char buffer[CF_EXPANDSIZE];
+    size_t buffer_size = CF_EXPANDSIZE;
+    char *buffer = xcalloc(1, buffer_size);
 
-    if (GetExecOutput(RlistScalarValue(finalargs), buffer, shelltype))
+    if (GetExecOutput(RlistScalarValue(finalargs), &buffer, &buffer_size, shelltype))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, RlistScalarValue(finalargs));
-        return FnReturn(buffer);
+        FnCallResult res = FnReturn(buffer);
+        free(buffer);
+        return res;
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE, "%s could not run '%s' successfully", fp->name, RlistScalarValue(finalargs));
+        free(buffer);
         return FnFailure();
     }
 }

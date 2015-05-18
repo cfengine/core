@@ -1,0 +1,47 @@
+# Test that bundlesmatching works correctly for parameters 3-n
+
+# Ref: https://dev.cfengine.com/issues/7192
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7192" };
+
+  vars:
+      # We expect to find 2 bundles tagged with 'tag1'
+      "bundles_matching_tag1_third_param" slist => bundlesmatching(".*", "tag0", "tag1");
+      "bundles_matching_tag1_third_param_count" int => length(bundles_matching_tag1_third_param);
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => strcmp("$(test.bundles_matching_tag1_third_param_count)", "2");
+
+  reports:
+    DEBUG::
+      "Count bundles matching tag1 '$(test.bundles_matching_tag1_third_param_count)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+bundle agent bundle_tag0_and_tag1
+{
+  meta:
+      "tags" slist => { "tag0", "tag1" };
+}
+
+bundle agent bundle_tag1
+{
+  meta:
+      "tags" slist => { "tag1" };
+}

@@ -947,3 +947,31 @@ bool StringAppend(char *dst, const char *src, size_t n)
     dst[i] = '\0';
     return (i < n || !src[j]);
 }
+
+/**
+ *  Canonify #src into #dst.
+ *
+ *  @WARNING you must make sure sizeof(dst) is adequate!
+ *
+ *  @return always #dst.
+ */
+char *StringCanonify(char *dst, const char *src)
+{
+    while (*src != '\0')
+    {
+        if (isalnum((unsigned char) *src))
+        {
+            *dst = *src;
+        }
+        else
+        {
+            *dst = '_';
+        }
+
+        src++;
+        dst++;
+    }
+    *dst = '\0';
+
+    return dst;
+}

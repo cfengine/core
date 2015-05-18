@@ -449,7 +449,7 @@ void CanonifyNameInPlace(char *s)
 {
     for (; *s != '\0'; s++)
     {
-        if ((!isalnum((int)(unsigned char)*s)) || (*s == '.'))
+        if (!isalnum((unsigned char) *s))
         {
             *s = '_';
         }
@@ -471,6 +471,7 @@ void TransformNameInPlace(char *s, char from, char to)
 
 /*********************************************************************/
 
+/* TODO remove, kill, burn this function! */
 char *CanonifyName(const char *str)
 {
     static char buffer[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */

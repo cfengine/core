@@ -403,15 +403,15 @@ char *DBPrivDiagnose(const char *dbpath)
         return StringFormat("Error seeking to end: %s\n", strerror(errno));
     }
 
-    uint64_t size = ftell(fp);
+    long size = ftell(fp);
     if(size < 256)
     {
         fclose(fp);
-        return StringFormat("Seek-to-end size less than minimum required: %zd", size);
+        return StringFormat("Seek-to-end size less than minimum required: %ld", size);
     }
 
     char hbuf[256];
-    memset(hbuf, 0, (size_t)256);
+    memset(hbuf, 0, sizeof(hbuf));
 
     if(fseek(fp, 0, SEEK_SET) != 0)
     {
@@ -432,21 +432,22 @@ char *DBPrivDiagnose(const char *dbpath)
     }
 
     uint64_t declared_size = 0;
-    memcpy(&declared_size, hbuf+56, sizeof(uint64_t));
-    if (declared_size == size)
+    /* Read file size from tchdb header. It is stored in little endian. */
+    memcpy(&declared_size, &hbuf[56], sizeof(uint64_t));
+    if (declared_size == (uint64_t) size)
     {
         return NULL; // all is well
     }
     else
     {
         declared_size = SWAB64(declared_size);
-        if (declared_size == size)
+        if (declared_size == (uint64_t) size)
         {
-            return StringFormat("Endianness mismatch, declared size SWAB64 '%zd' equals seek-to-end size '%zd'", declared_size, size);
+            return StringFormat("Endianness mismatch, declared size SWAB64 '%ju' equals seek-to-end size '%ld'", (uintmax_t) declared_size, size);
         }
         else
         {
-            return StringFormat("Size mismatch, declared size SWAB64 '%zd', seek-to-end-size '%zd'", declared_size, size);
+            return StringFormat("Size mismatch, declared size SWAB64 '%ju', seek-to-end-size '%ld'", (uintmax_t) declared_size, size);
         }
     }
 }

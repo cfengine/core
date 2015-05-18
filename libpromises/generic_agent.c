@@ -107,9 +107,11 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMe
 
 void MarkAsPolicyServer(EvalContext *ctx)
 {
-    EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap,deprecated,alias=policy_server");
+    EvalContextClassPutHard(ctx, "am_policy_hub",
+                            "source=bootstrap,deprecated,alias=policy_server");
     Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
-    EvalContextClassPutHard(ctx, "policy_server", "inventory,attribute_name=CFEngine roles,source=bootstrap");
+    EvalContextClassPutHard(ctx, "policy_server",
+                            "inventory,attribute_name=CFEngine roles,source=bootstrap");
     Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
 }
 
@@ -129,81 +131,94 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     THIS_AGENT_TYPE = config->agent_type;
     LoggingSetAgentType(CF_AGENTTYPES[config->agent_type]);
-    EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");
+    EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type],
+                            "cfe_internal,source=agent");
 
     DetectEnvironment(ctx);
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
 
-    if (config->agent_type == AGENT_TYPE_AGENT && config->agent_specific.agent.bootstrap_policy_server)
+    const char *bootstrap_arg =
+        config->agent_specific.agent.bootstrap_policy_server;
+
+    /* Are we bootstrapping the agent? */
+    if (config->agent_type == AGENT_TYPE_AGENT && bootstrap_arg != NULL)
     {
+        EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
+
         if (!RemoveAllExistingPolicyInInputs(GetInputDir()))
         {
-            Log(LOG_LEVEL_ERR, "Error removing existing input files prior to bootstrap");
+            Log(LOG_LEVEL_ERR,
+                "Error removing existing input files prior to bootstrap");
             exit(EXIT_FAILURE);
         }
 
         if (!WriteBuiltinFailsafePolicy(GetInputDir()))
         {
-            Log(LOG_LEVEL_ERR, "Error writing builtin failsafe to inputs prior to bootstrap");
+            Log(LOG_LEVEL_ERR,
+                "Error writing builtin failsafe to inputs prior to bootstrap");
             exit(EXIT_FAILURE);
         }
 
-        bool am_policy_server = false;
+        char canonified_ipaddr[strlen(bootstrap_arg) + 1];
+        StringCanonify(canonified_ipaddr, bootstrap_arg);
+
+        bool am_policy_server =
+            EvalContextClassGet(ctx, NULL, canonified_ipaddr) != NULL;
+
+        if (am_policy_server)
         {
-            const char *canonified_bootstrap_policy_server = CanonifyName(config->agent_specific.agent.bootstrap_policy_server);
-            am_policy_server = NULL != EvalContextClassGet(ctx, NULL, canonified_bootstrap_policy_server);
+            Log(LOG_LEVEL_INFO, "Assuming role as policy server,"
+                " with policy distribution point at: %s", GetMasterDir());
+            MarkAsPolicyServer(ctx);
+
+            if (!MasterfileExists(GetMasterDir()))
             {
-                char policy_server_ipv4_class[CF_BUFSIZE];
-                snprintf(policy_server_ipv4_class, CF_MAXVARSIZE, "ipv4_%s", canonified_bootstrap_policy_server);
-                am_policy_server |= NULL != EvalContextClassGet(ctx, NULL, policy_server_ipv4_class);
+                Log(LOG_LEVEL_ERR, "In order to bootstrap as a policy server,"
+                    " the file '%s/promises.cf' must exist.", GetMasterDir());
+                exit(EXIT_FAILURE);
             }
 
-            if (am_policy_server)
-            {
-                Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s", GetMasterDir());
-                MarkAsPolicyServer(ctx);
-
-                if (!MasterfileExists(GetMasterDir()))
-                {
-                    Log(LOG_LEVEL_ERR, "In order to bootstrap as a policy server, the file '%s/promises.cf' must exist.", GetMasterDir());
-                    exit(EXIT_FAILURE);
-                }
-            }
-            else
-            {
-                Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
-            }
-
-            WriteAmPolicyHubFile(am_policy_server);
-        }
-
-        WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
-        SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
-
-        if (am_policy_server) //It makes sense to check HA status only on policy hub.
-        {
             CheckAndSetHAState(GetWorkDir(), ctx);
         }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Assuming role as regular client,"
+                " bootstrapping to policy server: %s", bootstrap_arg);
+
+            if (config->agent_specific.agent.bootstrap_trust_server)
+            {
+                EvalContextClassPutHard(ctx, "trust_server", "source=agent");
+                Log(LOG_LEVEL_NOTICE,
+                    "Bootstrap mode: implicitly trusting server, "
+                    "use --trust-server=no if server trust is already established");
+            }
+        }
+
+        WriteAmPolicyHubFile(am_policy_server);
+
+        WritePolicyServerFile(GetWorkDir(), bootstrap_arg);
+        SetPolicyServer(ctx, bootstrap_arg);
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);
-        Log(LOG_LEVEL_INFO, "Bootstrapping to '%s'", POLICY_SERVER);
     }
     else
     {
         char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
         if (existing_policy_server)
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to '%s'", existing_policy_server);
+            Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
+                existing_policy_server);
             SetPolicyServer(ctx, existing_policy_server);
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped - can't find policy_server.dat in %s", GetWorkDir());
+            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped -"
+                " can't find policy_server.dat in: %s", GetWorkDir());
             return;
         }
 
@@ -1560,17 +1575,6 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         break;
     default:
         break;
-    }
-
-    if (config->agent_specific.agent.bootstrap_policy_server)
-    {
-        EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
-        if (config->agent_specific.agent.bootstrap_trust_server)
-        {
-            EvalContextClassPutHard(ctx, "trust_server", "source=agent");
-            Log(LOG_LEVEL_NOTICE, "Bootstrap mode: implicitly trusting server, "
-                "use --trust-server=no if server trust is already established");
-        }
     }
 
     if (config->color)

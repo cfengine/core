@@ -135,7 +135,7 @@ static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(const Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
-static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence type);
+static int NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
 static bool VerifyBootstrap(void);
@@ -1256,7 +1256,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 continue;
             }
 
-            if (!NewTypeContext(bp->parent_policy, ctx,type))
+            if (!NewTypeContext(type))
             {
                 continue;
             }
@@ -1591,7 +1591,7 @@ static void BannerStatus(PromiseResult status, char *type, char *name)
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(const Policy *policy, EvalContext *ctx, TypeSequence type)
+static int NewTypeContext(TypeSequence type)
 {
 // get maxconnections
 

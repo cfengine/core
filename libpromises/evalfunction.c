@@ -5934,6 +5934,88 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
 
 /*********************************************************************/
 
+JsonElement* DataExpandElement(EvalContext *ctx, const JsonElement *source)
+{
+    if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        Buffer *expbuf;
+        JsonElement *expanded_json;
+
+        switch (JsonGetPrimitiveType(source))
+        {
+        case JSON_PRIMITIVE_TYPE_STRING:
+            expbuf = BufferNew();
+            ExpandScalar(ctx, NULL, "this", JsonPrimitiveGetAsString(source), expbuf);
+            expanded_json = JsonStringCreate(BufferData(expbuf));
+            BufferDestroy(expbuf);
+            return expanded_json;
+            break;
+
+        default:
+            return JsonCopy(source);
+            break;
+        }
+    }
+    else if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        if (JsonGetContainerType(source) == JSON_CONTAINER_TYPE_OBJECT)
+        {
+            JsonElement *dest = JsonObjectCreate(JsonLength(source));
+            JsonIterator iter = JsonIteratorInit(source);
+            const char *key;
+            while ((key = JsonIteratorNextKey(&iter)))
+            {
+                Buffer *expbuf = BufferNew();
+                ExpandScalar(ctx, NULL, "this", key, expbuf);
+                JsonObjectAppendElement(dest, BufferData(expbuf), DataExpandElement(ctx, JsonObjectGet(source, key)));
+                BufferDestroy(expbuf);
+            }
+
+            return dest;
+        }
+        else
+        {
+            JsonElement *dest = JsonArrayCreate(JsonLength(source));
+            for (size_t i = 0; i < JsonLength(source); i++)
+            {
+                JsonArrayAppendElement(dest, DataExpandElement(ctx, JsonArrayGet(source, i)));
+            }
+            return dest;
+        }
+    }
+
+    ProgrammingError("DataExpandElement: unexpected container type");
+    return NULL;
+}
+
+static FnCallResult FnCallDataExpand(EvalContext *ctx,
+                                     ARG_UNUSED const Policy *policy,
+                                     ARG_UNUSED const FnCall *fp,
+                                     const Rlist *args)
+{
+    const char *varname = RlistScalarValue(args);
+    VarRef *ref = ResolveAndQualifyVarName(fp, varname);
+    if (!ref)
+    {
+        return FnFailure();
+    }
+
+    JsonElement *container = VarRefValueToJson(ctx, fp, ref, NULL, 0);
+    VarRefDestroy(ref);
+
+    if (NULL == container)
+    {
+        return FnFailure();
+    }
+
+    JsonElement *expanded = DataExpandElement(ctx, container);
+    JsonDestroy(container);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { expanded, RVAL_TYPE_CONTAINER } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallDataRead(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *args)
 {
     return DataRead(ctx, fp, args);
@@ -7949,6 +8031,11 @@ static const FnCallArg DATA_READSTRINGARRAY_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg DATA_EXPAND_ARGS[] =
+{
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, which will be expanded"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
 
 static const FnCallArg STRING_MUSTACHE_ARGS[] =
 {
@@ -8270,6 +8357,8 @@ const FnCallType CF_FNCALL_TYPES[] =
 
     // Data container functions
     FnCallTypeNew("data_regextract", CF_DATA_TYPE_CONTAINER, DATA_REGEXTRACT_ARGS, &FnCallRegExtract, "Matches the regular expression in arg 1 against the string in arg2 and returns a data container holding the backreferences by name",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("data_expand", CF_DATA_TYPE_CONTAINER, DATA_EXPAND_ARGS, &FnCallDataExpand, "Expands any CFEngine variables in a data container, keys or values",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // File parsing functions that output a data container

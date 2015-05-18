@@ -1,0 +1,14 @@
+{
+  "load_expanded": {
+    "200": "$(nosuchvar)",
+    "foo": "nothing again",
+    "plain data": "nothing"
+  },
+  "load_unexpanded": {
+    "$(x)": "nothing again",
+    "$(y)": "$(nosuchvar)",
+    "plain data": "nothing"
+  },
+  "x": "foo",
+  "y": "200"
+}

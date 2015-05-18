@@ -264,7 +264,7 @@ const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
 
 const ConstraintSyntax CFA_CONTROLBODY[] =
 {
-    ConstraintSyntaxNewStringList("abortclasses", ".*", "A list of classes which if defined lead to termination of cf-agent", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("abortclasses", ".*", "A list of classes which if defined in an agent bundle lead to termination of cf-agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("abortbundleclasses", ".*", "A list of classes which if defined lead to termination of current bundle", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("addclasses", ".*", "A list of classes to be defined always in the current context", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("agentaccess", ".*", "A list of user names allowed to execute cf-agent", SYNTAX_STATUS_NORMAL),

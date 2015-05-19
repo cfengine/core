@@ -38,7 +38,7 @@
  * Get() shall receive NULL; in contrast, any non-NULL pointer (even
  * to an empty string) shall result in Get() allocating memory in
  * which to receive a copy (even if it's just allocating one byte in
- * which to store a '\0').
+ * which to store a '\0').  Texts over 1023 bytes shall be truncated.
  *
  * Details of how the local socket is established are left to the
  * callers; one end shall need to bind() a listen()ing socket so that
@@ -54,10 +54,16 @@
  * do certain jobs but some other process to which initiating the
  * connection, or accept()ing it, is more practical.
  *
- * This can also be used for privilege separation, with a privileged
- * process sending open descriptors to a worker process that lacks
- * privileges to open the files but handles untrusted data so can't be
- * trusted to perform access control reliably.
+ * Passing local file descriptors can also be used for privilege
+ * separation, with a privileged process sending open descriptors to a
+ * worker process that lacks privileges to open the files but handles
+ * untrusted data so can't be trusted to perform access control
+ * reliably.  However (see following) this only works on Unix.
+ *
+ * On MinGW (i.e. MS-Win), the present implementation can only pass
+ * sockets, not local file descriptors.  It also may block, calling
+ * select(), in its improvised protocol for exchanging needed
+ * information over the local sockets.
  *
  * The essential activity here is the same as GNUlib's passfd, albeit
  * with a slightly different API (most notably, providing for

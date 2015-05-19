@@ -429,7 +429,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       # Some states are output by dcs.cf.sub, therefore check for both TEST
       # prefix and dcs.cf.sub prefix.
       ESCAPED_TEST="$(echo "($TEST|dcs.cf.sub)" | sed -e 's/\./\\./g')"
-      if egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null; then
+      if egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null && ! egrep "R: .*$ESCAPED_TEST Wait/" $OUTFILE > /dev/null; then
         # Check for other test case outcomes than fail. Should not happen.
         if egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null; then
           RESULT=FAIL

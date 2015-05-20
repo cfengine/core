@@ -1144,11 +1144,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         FatalError(ctx, "Errors in agent bundles");
     }
 
-        Writer *w = StringWriter();
-        WriterWrite(w, "Using bundlesequence => ");
-        RlistWrite(w, bundlesequence);
-        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        WriterClose(w);
+    Writer *w = StringWriter();
+    WriterWrite(w, "Using bundlesequence => ");
+    RlistWrite(w, bundlesequence);
+    Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+    WriterClose(w);
 
 /* If all is okay, go ahead and evaluate */
 

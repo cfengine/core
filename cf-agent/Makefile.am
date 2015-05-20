@@ -96,7 +96,9 @@ libcf_agent_la_SOURCES = \
         files_select.c files_select.h \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
+        package_module.c package_module.h \
         verify_packages.c verify_packages.h \
+        verify_new_packages.c verify_new_packages.h \
         verify_users.c verify_users.h \
         cf-agent-windows-functions.h
 

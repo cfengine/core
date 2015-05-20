@@ -22,31 +22,13 @@
   included file COSL.txt.
 */
 
-#include <pipes.h>
+#ifndef CFENGINE_VERIFY_NEW_PACKAGES_H
+#define CFENGINE_VERIFY_NEW_PACKAGES_H
 
-bool PipeTypeIsOk(const char *type)
-{
-    if (type[0] != 'r' && type[0] != 'w')
-    {
-        return false;
-    }
-    else if (type[1] != 't' && type[1] != '+')
-    {
-        if (type[1] == '\0')
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if (type[2] == '\0' || type[2] == 't')
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+#include <cf3.defs.h>
+
+PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
+                                          Attributes a, char **promise_log_msg,
+                                          LogLevel *log_lvl);
+
+#endif

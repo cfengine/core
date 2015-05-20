@@ -179,6 +179,11 @@ PackageAction PackageActionFromString(const char *s)
     return FindTypeInArray(PACKAGE_ACTION_TYPES, s, PACKAGE_ACTION_NONE, PACKAGE_ACTION_NONE);
 }
 
+NewPackageAction GetNewPackagePolicy(const char *s, const char **action_types)
+{
+    return FindTypeInArray(action_types, s, NEW_PACKAGE_ACTION_NONE, NEW_PACKAGE_ACTION_NONE);
+}
+
 PackageVersionComparator PackageVersionComparatorFromString(const char *s)
 {
     static const char *const PACKAGE_SELECT_TYPES[] =

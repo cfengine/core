@@ -412,6 +412,8 @@ typedef enum
     COMMON_CONTROL_PROTOCOL_VERSION,
     COMMON_CONTROL_TLS_CIPHERS,
     COMMON_CONTROL_TLS_MIN_VERSION,
+    COMMON_CONTROL_PACKAGE_INVENTORY,
+    COMMON_CONTROL_PACKAGE_MANAGER,
     COMMON_CONTROL_MAX
 } CommonControl;
 
@@ -752,6 +754,13 @@ typedef enum
     PACKAGE_ACTION_VERIFY,
     PACKAGE_ACTION_NONE
 } PackageAction;
+
+typedef enum
+{
+    NEW_PACKAGE_ACTION_ABSENT,
+    NEW_PACKAGE_ACTION_PRESENT,
+    NEW_PACKAGE_ACTION_NONE
+} NewPackageAction;
 
 typedef enum
 {
@@ -1488,6 +1497,7 @@ typedef struct
     FileLink link;
     EditDefaults edits;
     Packages packages;
+    NewPackages new_packages;
     ContextConstraint context;
     Measurement measure;
     Acl acl;

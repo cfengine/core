@@ -32,6 +32,7 @@
 #include <logging.h>
 #include <misc_lib.h>
 #include <known_dirs.h>
+#include <string_lib.h>
 
 
 static int DBPathLock(const char *filename);
@@ -42,6 +43,9 @@ struct DBHandle_
 {
     /* Filename of database file */
     char *filename;
+    
+    /* Name of specific sub-db */
+    char *subname;
 
     /* Actual database-specific data */
     DBPriv *priv;
@@ -57,6 +61,12 @@ struct DBCursor_
     DBCursorPriv *cursor;
 };
 
+typedef struct dynamic_db_handles_
+{
+    DBHandle *handle;
+    struct dynamic_db_handles_ *next;
+} DynamicDBHandles;
+
 /******************************************************************************/
 
 /*
@@ -66,6 +76,7 @@ struct DBCursor_
 static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP; /* GLOBAL_T */
 
 static DBHandle db_handles[dbid_max] = { { 0 } }; /* GLOBAL_X */
+static DynamicDBHandles *db_dynamic_handles;
 
 static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -93,6 +104,8 @@ static const char *const DB_PATHS_STATEDIR[] = {
     [dbid_value] = "nova_value",
     [dbid_agent_execution] = "nova_agent_execution",
     [dbid_bundles] = "bundles",
+    [dbid_packages_installed] = "packages_installed",
+    [dbid_packages_updates] = "packages_updates"
 };
 
 /*
@@ -126,6 +139,22 @@ static const char *const DB_PATHS_WORKDIR[sizeof(DB_PATHS_STATEDIR) / sizeof(con
 
 /******************************************************************************/
 
+char *DBIdToSubPath(dbid id, const char *subdb_name)
+{
+    char *filename;
+    if (xasprintf(&filename, "%s/%s_%s.%s", GetStateDir(), DB_PATHS_STATEDIR[id],
+            subdb_name, DBPrivGetFileExtension()) == -1)
+    {
+        ProgrammingError("Unable to construct sub database filename for file"
+                "%s_%s", DB_PATHS_STATEDIR[id], subdb_name);
+    }
+    
+    char *native_filename = MapNameCopy(filename);
+    free(filename);
+
+    return native_filename;
+}
+
 char *DBIdToPath(dbid id)
 {
     assert(DB_PATHS_STATEDIR[id] != NULL);
@@ -157,6 +186,50 @@ char *DBIdToPath(dbid id)
     return native_filename;
 }
 
+static
+bool IsSubHandle(DBHandle *handle, dbid id, const char *name)
+{
+    return StringSafeEqual(handle->filename, DBIdToSubPath(id, name));
+}
+
+static DBHandle *DBHandleGetSubDB(dbid id, const char *name)
+{
+    ThreadLock(&db_handles_lock);
+    
+    DynamicDBHandles *handles_list = db_dynamic_handles;
+    
+    while (handles_list)
+    {
+        if (IsSubHandle(handles_list->handle, id, name))
+        {
+            ThreadUnlock(&db_handles_lock);
+            return handles_list->handle;
+        }
+        handles_list = handles_list->next;
+    }
+    
+    DBHandle *handle = xcalloc(1, sizeof(DBHandle));
+    handle->filename = DBIdToSubPath(id, name);
+    handle->subname = SafeStringDuplicate(name);
+    
+    /* Initialize mutexes as error-checking ones. */
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+    pthread_mutex_init(&handle->lock, &attr);
+    pthread_mutexattr_destroy(&attr);
+    
+    /* Prepend handle to global list. */
+    handles_list = xcalloc(1, sizeof(DynamicDBHandles));
+    handles_list->handle = handle;
+    handles_list->next = db_dynamic_handles;
+    db_dynamic_handles = handles_list;
+    
+    ThreadUnlock(&db_handles_lock);
+    
+    return handle;
+}
+
 static DBHandle *DBHandleGet(int id)
 {
     assert(id >= 0 && id < dbid_max);
@@ -180,6 +253,40 @@ static DBHandle *DBHandleGet(int id)
     return &db_handles[id];
 }
 
+static inline
+void CloseDBInstance(DBHandle *handle)
+{
+    /* Wait until all DB users are served, or a threshold is reached */
+    int count = 0;
+    ThreadLock(&handle->lock);
+    while (handle->refcount > 0 && count < 1000) {
+        ThreadUnlock(&handle->lock);
+
+        struct timespec sleeptime = {
+            .tv_sec = 0,
+            .tv_nsec = 10000000 /* 10 ms */
+        };
+        nanosleep(&sleeptime, NULL);
+        count++;
+
+        ThreadLock(&handle->lock);
+    }
+    /* Keep mutex locked. */
+
+    /* If we exited because of timeout make sure we Log() it. */
+    if (handle->refcount != 0) {
+        Log(LOG_LEVEL_ERR,
+                "Database %s refcount is still not zero (%d), forcing CloseDB()!",
+                handle->filename, handle->refcount);
+        DBPrivCloseDB(handle->priv);
+    } else /* TODO: can we clean this up unconditionally ? */ {
+        free(handle->filename);
+        free(handle->subname);
+        handle->filename = NULL;
+    }
+}
+
+
 /**
  * @brief Wait for all users of all databases to close the DBs. Then acquire
  * the mutexes *AND KEEP THEM LOCKED* so that no background thread can open
@@ -197,39 +304,19 @@ void CloseAllDBExit()
     {
         if (db_handles[i].filename)
         {
-            /* Wait until all DB users are served, or a threshold is reached */
-            int count = 0;
-            ThreadLock(&db_handles[i].lock);
-            while (db_handles[i].refcount > 0 && count < 1000)
-            {
-                ThreadUnlock(&db_handles[i].lock);
-
-                struct timespec sleeptime = {
-                    .tv_sec = 0,
-                    .tv_nsec = 10000000                         /* 10 ms */
-                };
-                nanosleep(&sleeptime, NULL);
-                count++;
-
-                ThreadLock(&db_handles[i].lock);
-            }
-            /* Keep mutex locked. */
-
-            /* If we exited because of timeout make sure we Log() it. */
-            if (db_handles[i].refcount != 0)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Database %s refcount is still not zero (%d), forcing CloseDB()!",
-                    db_handles[i].filename, db_handles[i].refcount);
-                DBPrivCloseDB(db_handles[i].priv);
-            }
-            else /* TODO: can we clean this up unconditionally ? */
-            {
-                free(db_handles[i].filename);
-                db_handles[i].filename = NULL;
-            }
+            CloseDBInstance(&db_handles[i]);
         }
     }
+    
+    DynamicDBHandles *db_dynamic_handles_list = db_dynamic_handles;
+    while (db_dynamic_handles_list)
+    {
+        DBHandle *handle = db_dynamic_handles_list->handle;
+        CloseDBInstance(handle);
+        db_dynamic_handles_list = db_dynamic_handles_list->next;
+        free(handle);
+    }
+    db_dynamic_handles = NULL;
 }
 
 static void RegisterShutdownHandler(void)
@@ -250,10 +337,9 @@ void DBSetMaximumConcurrentTransactions(int max_txn)
     DBPrivSetMaximumConcurrentTransactions(max_txn);
 }
 
-bool OpenDB(DBHandle **dbp, dbid id)
+static inline
+bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
 {
-    DBHandle *handle = DBHandleGet(id);
-
     ThreadLock(&handle->lock);
 
     if (handle->refcount == 0)
@@ -309,6 +395,18 @@ bool OpenDB(DBHandle **dbp, dbid id)
     return *dbp != NULL;
 }
 
+bool OpenSubDB(DBHandle **dbp, dbid id, const char *sub_name)
+{
+    DBHandle *handle = DBHandleGetSubDB(id, sub_name);
+    return OpenDBInstance(dbp, id, handle);
+}
+
+bool OpenDB(DBHandle **dbp, dbid id)
+{
+    DBHandle *handle = DBHandleGet(id);
+    return OpenDBInstance(dbp, id, handle);
+}
+
 void CloseDB(DBHandle *handle)
 {
     ThreadLock(&handle->lock);
@@ -325,6 +423,17 @@ void CloseDB(DBHandle *handle)
     }
 
     ThreadUnlock(&handle->lock);
+}
+
+bool CleanDB(DBHandle *handle)
+{
+    ThreadLock(&handle->lock);
+    
+    bool ret = DBPrivClean(handle->priv);
+    
+    ThreadUnlock(&handle->lock);
+    
+    return ret;
 }
 
 /*****************************************************************************/

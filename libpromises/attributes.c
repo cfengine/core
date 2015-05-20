@@ -61,8 +61,8 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.template_method = PromiseGetConstraintAsRval(pp, "template_method", RVAL_TYPE_SCALAR);
     attr.template_data = PromiseGetConstraintAsRval(pp, "template_data", RVAL_TYPE_CONTAINER);
 
-    attr.haveeditline = PromiseBundleConstraintExists(ctx, "edit_line", pp);
-    attr.haveeditxml = PromiseBundleConstraintExists(ctx, "edit_xml", pp);
+    attr.haveeditline = PromiseBundleOrBodyConstraintExists(ctx, "edit_line", pp);
+    attr.haveeditxml = PromiseBundleOrBodyConstraintExists(ctx, "edit_xml", pp);
     attr.haveedit = (attr.haveeditline) || (attr.haveeditxml) || (attr.edit_template);
 
 /* Files, specialist */
@@ -139,7 +139,7 @@ Attributes GetServicesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
     attr.service = GetServicesConstraints(ctx, pp);
-    attr.havebundle = PromiseBundleConstraintExists(ctx, "service_bundle", pp);
+    attr.havebundle = PromiseBundleOrBodyConstraintExists(ctx, "service_bundle", pp);
 
     return attr;
 }
@@ -162,7 +162,7 @@ Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.havebundle = PromiseBundleConstraintExists(ctx, "home_bundle", pp);
+    attr.havebundle = PromiseBundleOrBodyConstraintExists(ctx, "home_bundle", pp);
 
     attr.inherit = PromiseGetConstraintAsBoolean(ctx, "home_bundle_inherit", pp);
 
@@ -279,7 +279,7 @@ Attributes GetMethodAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.havebundle = PromiseBundleConstraintExists(ctx, "usebundle", pp);
+    attr.havebundle = PromiseBundleOrBodyConstraintExists(ctx, "usebundle", pp);
 
     attr.inherit = PromiseGetConstraintAsBoolean(ctx, "inherit", pp);
 
@@ -1041,8 +1041,23 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     PackageAction action;
     PackageVersionComparator operator;
     PackageActionPolicy change_policy;
+    bool has_package_method = 
+            PromiseBundleOrBodyConstraintExists(ctx, "package_method", pp);
+    bool has_generic_package_method = false;
+    
+    if (!has_package_method)
+    {
+        /* Check if we have generic package_method. */
+        const Policy *policy = PolicyFromPromise(pp);
+        const Body *bp = EvalContextResolveBodyExpression(ctx, policy, "generic", "package_method");
+        if (bp)
+        {
+            CopyBodyConstraintsToPromise((EvalContext*)ctx, (Promise*)pp, bp);
+            has_generic_package_method = true;
+        }
+    }
 
-    p.have_package_methods = PromiseGetConstraintAsBoolean(ctx, "havepackage_method", pp);
+    
     p.package_version = PromiseGetConstraintAsRval(pp, "package_version", RVAL_TYPE_SCALAR);
     p.package_architectures = PromiseGetConstraintAsList(ctx, "package_architectures", pp);
 
@@ -1053,6 +1068,8 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     {
         p.package_policy = PACKAGE_ACTION_ADD;
     }
+    
+    p.has_package_method = has_package_method | has_generic_package_method;
 
     operator = PackageVersionComparatorFromString(PromiseGetConstraintAsRval(pp, "package_select", RVAL_TYPE_SCALAR));
 

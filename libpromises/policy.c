@@ -1338,12 +1338,6 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = pp;
 
-    // TODO: move into promise type syntax callbacks for default values
-    if (strcmp("packages", type->name) == 0)
-    {
-        PromiseAppendConstraint(pp, "package_method", RvalNew("generic", RVAL_TYPE_SCALAR), true);
-    }
-
     if (NULL != varclasses)
     {
         PromiseAppendConstraint(pp, "ifvarclass", RvalNew(varclasses, RVAL_TYPE_SCALAR), true);
@@ -2399,7 +2393,7 @@ int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq 
 
 /*****************************************************************************/
 
-bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, const Promise *pp)
+bool PromiseBundleOrBodyConstraintExists(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_UNDEFINED;
 

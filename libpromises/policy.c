@@ -1335,7 +1335,6 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     pp->parent_promise_type = type;
 
     pp->promisee = promisee;
-    pp->has_subbundles = false;
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = pp;
 

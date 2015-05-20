@@ -31,6 +31,8 @@ time_t FindLockTime(const char *name);
 
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now, TransactionContext tc, const Promise *pp, bool ignoreProcesses);
 void YieldCurrentLock(CfLock lock);
+void YieldCurrentLockAndRemoveFromCache(EvalContext *ctx, CfLock lock,
+                                        const char *operand, const Promise *pp);
 void GetLockName(char *lockname, const char *locktype, const char *base, const Rlist *params);
 
 void PurgeLocks(void);

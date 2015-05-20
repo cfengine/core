@@ -182,6 +182,30 @@ void DBPrivCommit(ARG_UNUSED DBPriv *db)
 {
 }
 
+bool DBPrivClean(DBPriv *db)
+{
+    if (!Lock(db))
+    {
+        return false;
+    }
+    
+    if (!dpiterinit(db->depot))
+    {
+        Log(LOG_LEVEL_ERR, "Could not initialize QuickDB iterator. (dpiterinit: %s)", dperrmsg(dpecode));
+        Unlock(db);
+        return false;
+    }
+    
+    char *key = NULL;
+    while((key = dpiternext(db->depot, NULL)))
+    {
+        dpout(db->depot, key, -1);
+    }
+    
+    Unlock(db);
+    return true;
+}
+
 bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
 {
     if (!Lock(db))
@@ -271,32 +295,26 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
 
 DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 {
-    if (!LockCursor(db))
+    DBCursorPriv *cursor = DBPrivOpenCursor(db);
+    
+    if (!cursor)
     {
-        return NULL;
+        return false;
     }
-
-    if (!Lock(db))
+    
+    void *key;
+    int key_size;
+    void *value;
+    int value_size;
+    
+    while ((DBPrivAdvanceCursor(cursor, &key, &key_size, &value, &value_size)))
     {
-        UnlockCursor(db);
-        return NULL;
+        DBPrivDeleteCursorEntry(cursor);
     }
-
-    if (!dpiterinit(db->depot))
-    {
-        Log(LOG_LEVEL_ERR, "Could not initialize QuickDB iterator. (dpiterinit: %s)", dperrmsg(dpecode));
-        Unlock(db);
-        UnlockCursor(db);
-        return NULL;
-    }
-
-    DBCursorPriv *cursor = xcalloc(1, sizeof(DBCursorPriv));
-    cursor->db = db;
-
-    Unlock(db);
-
-    /* Cursor remains locked */
-    return cursor;
+    
+    DBPrivCloseCursor(cursor);
+    
+    return true;
 }
 
 bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *ksize, void **value, int *vsize)

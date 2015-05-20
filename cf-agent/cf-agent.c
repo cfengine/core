@@ -76,6 +76,7 @@
 #include <loading.h>
 #include <conn_cache.h>                 /* ConnCache_Init,ConnCache_Destroy */
 #include <net.h>
+#include <package_module.h>
 
 #include <mod_common.h>
 
@@ -250,7 +251,11 @@ int main(int argc, char *argv[])
     }
 
     Nova_TrackExecution(config->input_file);
-    GenerateReports(config, ctx);
+    
+    /* Update package promise cache. */
+    UpdatePackagesCache(ctx, false);
+    
+    GenerateReports(config, ctx);    
 
     PurgeLocks();
     BackupLockDatabase();

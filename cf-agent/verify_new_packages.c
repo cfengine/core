@@ -1,0 +1,160 @@
+/*
+   Copyright (C) CFEngine AS
+
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commercial Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
+#include <verify_new_packages.h>
+#include <package_module.h>
+#include <logging.h>
+#include <string_lib.h>
+#include <locks.h>
+#include <ornaments.h>
+
+static bool NewPackagePromiseSanityCheck(Attributes a)
+{
+    if (!a.new_packages.module_body || !a.new_packages.module_body->name)
+    {
+        Log(LOG_LEVEL_ERR, "Can not find package module body in policy.");
+        return false;
+    }
+    
+    if (a.new_packages.module_body->updates_ifelapsed == CF_NOINT ||
+        a.new_packages.module_body->installed_ifelapsed == CF_NOINT)
+    {
+        Log(LOG_LEVEL_ERR, "Package module body constraints error.");
+        return false;
+    }
+    
+    if (a.new_packages.package_policy == NEW_PACKAGE_ACTION_NONE)
+    {
+        Log(LOG_LEVEL_ERR, "Not supported package policy in new package"
+            " promise.");
+        return false;
+    }
+    return true;
+}
+
+PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
+                                          Attributes a, char **promise_log_msg,
+                                          LogLevel *log_lvl)
+{
+    Log(LOG_LEVEL_DEBUG, "New package promise handler");
+    
+    
+    if (!NewPackagePromiseSanityCheck(a))
+    {
+        *promise_log_msg =
+                SafeStringDuplicate("New package promise failed sanity check.");
+        *log_lvl = LOG_LEVEL_ERR;
+        return PROMISE_RESULT_FAIL;
+    }
+    
+    PromiseBanner(ctx, pp);
+    
+    PackagePromoseGlobalLock global_lock = AcquireGlobalPackagePromiseLock(ctx);
+    
+    CfLock package_promise_lock;
+    char promise_lock[CF_BUFSIZE];
+    snprintf(promise_lock, CF_BUFSIZE - 1, "new-package-%s-%s",
+             pp->promiser, a.new_packages.module_body->name);
+
+    if (global_lock.g_lock.lock == NULL)
+    {
+        *promise_log_msg =
+                SafeStringDuplicate("Can not aquire global lock for package "
+                                    "promise. Skipping promise evaluation");
+        *log_lvl = LOG_LEVEL_INFO;
+        
+        return PROMISE_RESULT_SKIPPED;
+    }
+    
+    package_promise_lock =
+            AcquireLock(ctx, promise_lock, VUQNAME, CFSTARTTIME,
+            a.transaction, pp, false);
+    if (package_promise_lock.lock == NULL)
+    {
+        Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to locking.");
+        YieldGlobalPackagePromiseLock(global_lock);
+        
+        *promise_log_msg =
+                StringFormat("Can not aquire lock for '%s' package promise. "
+                             "Skipping promise evaluation",  pp->promiser);
+        *log_lvl = LOG_LEVEL_VERBOSE;
+        
+        return PROMISE_RESULT_SKIPPED;
+    }
+    
+    PackageModuleWrapper *package_module =
+            NewPackageModuleWrapper(a.new_packages.module_body);
+    
+    if (!package_module)
+    {
+        *promise_log_msg =
+                StringFormat("Some error occurred while contacting package "
+                             "module - promise: %s", pp->promiser);
+        *log_lvl = LOG_LEVEL_ERR;
+        
+        YieldCurrentLock(package_promise_lock);
+        YieldGlobalPackagePromiseLock(global_lock);
+    
+        return PROMISE_RESULT_FAIL;
+    }
+    
+    PromiseResult result = PROMISE_RESULT_FAIL;
+    
+    switch (a.new_packages.package_policy)
+    {
+        case NEW_PACKAGE_ACTION_ABSENT:
+            result = HandleAbsentPromiseAction(ctx, pp->promiser, 
+                                               &a.new_packages,
+                                               package_module,
+                                               a.transaction.action);
+            *log_lvl = result == PROMISE_RESULT_FAIL ?
+                                 LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE;
+            *promise_log_msg = result == PROMISE_RESULT_FAIL ?
+                StringFormat("Error removing package '%s'", pp->promiser) :
+                StringFormat("Successfully removed package '%s'", pp->promiser);
+            break;
+        case NEW_PACKAGE_ACTION_PRESENT:
+            result = HandlePresentPromiseAction(ctx, pp->promiser, 
+                                                &a.new_packages,
+                                                package_module,
+                                                a.transaction.action);
+            *log_lvl = result == PROMISE_RESULT_FAIL ?
+                                 LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE;
+            *promise_log_msg = result == PROMISE_RESULT_FAIL ?
+                StringFormat("Error installing package '%s'", pp->promiser) :
+                StringFormat("Successfully installed package '%s'", pp->promiser);
+            break;
+        case NEW_PACKAGE_ACTION_NONE:
+        default:
+            assert(0); /* This MUST be handled by sanity check. */
+            break;
+    }
+    
+    DeletePackageModuleWrapper(package_module);
+    
+    YieldCurrentLock(package_promise_lock);
+    YieldGlobalPackagePromiseLock(global_lock);
+    
+    return result;
+}

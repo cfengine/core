@@ -162,6 +162,7 @@ VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalCont
 
 bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key);
 void EvalContextPromiseLockCachePut(EvalContext *ctx, const char *key);
+void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key);
 bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out);
 void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval);
 

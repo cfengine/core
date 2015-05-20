@@ -1957,6 +1957,11 @@ void EvalContextPromiseLockCachePut(EvalContext *ctx, const char *key)
     StringSetAdd(ctx->promise_lock_cache, xstrdup(key));
 }
 
+void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key)
+{
+    StringSetRemove(ctx->promise_lock_cache, key);
+}
+
 bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out)
 {
     if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))

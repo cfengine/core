@@ -114,7 +114,6 @@ struct Promise_
     char *promiser;
     Rval promisee;
     Seq *conlist;
-    bool has_subbundles;
 
     const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
 

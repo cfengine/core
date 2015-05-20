@@ -320,7 +320,7 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
  */
 Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, const Promise *pp);
 
-bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, const Promise *pp);
+bool PromiseBundleOrBodyConstraintExists(const EvalContext *ctx, const char *lval, const Promise *pp);
 
 void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp);
 

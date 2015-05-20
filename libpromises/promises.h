@@ -33,5 +33,7 @@
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp);
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded);
 void PromiseRef(LogLevel level, const Promise *pp);
+void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
+                                  const Body *bp);
 
 #endif

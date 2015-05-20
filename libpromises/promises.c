@@ -38,6 +38,22 @@
 
 static void DereferenceComment(Promise *pp);
 
+void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
+                                  const Body *bp)
+{
+    for (size_t k = 0; k < SeqLength(bp->conlist); k++)
+    {
+        Constraint *scp = SeqAt(bp->conlist, k);
+
+        if (IsDefinedClass(ctx, scp->classes))
+        {
+            Rval returnval = ExpandPrivateRval(ctx, NULL, "body", 
+                                               scp->rval.item, scp->rval.type);
+            PromiseAppendConstraint(pp, scp->lval, returnval, false);
+        }
+    }
+}
+
 
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 {
@@ -126,12 +142,19 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
             }
 
-            /* Keep the referent body type as a boolean for convenience when checking later */
-
             if (IsDefinedClass(ctx, cp->classes))
             {
-                Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, false);
-                cp_copy->offset = cp->offset;
+                /* For new package promises we need to have name of the
+                 * package_manager body. */
+                char body_name[strlen(cp->lval) + 6];
+                xsnprintf(body_name, sizeof(body_name), "%s_name", cp->lval);
+                PromiseAppendConstraint(pcopy, body_name,
+                       (Rval) {xstrdup(bp->name), RVAL_TYPE_SCALAR }, false);
+                            
+                /* Keep the referent body type as a boolean for convenience 
+                 * when checking later */
+                PromiseAppendConstraint(pcopy, cp->lval,
+                       (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, false);
             }
 
             if (bp->args)
@@ -154,8 +177,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     if (IsDefinedClass(ctx, scp->classes))
                     {
                         Rval returnval = ExpandPrivateRval(ctx, NULL, "body", scp->rval.item, scp->rval.type);
-                        Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, false);
-                        scp_copy->offset = scp->offset;
+                        PromiseAppendConstraint(pcopy, scp->lval, returnval, false);
                     }
                 }
             }
@@ -188,8 +210,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                                 newrv.item = new_list;
                             }
 
-                            Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, newrv, false);
-                            scp_copy->offset = scp->offset;
+                            PromiseAppendConstraint(pcopy, scp->lval, newrv, false);
                         }
                     }
                 }
@@ -237,8 +258,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     newrv.item = new_list;
                 }
 
-                Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, newrv, false);
-                cp_copy->offset = cp->offset;
+                PromiseAppendConstraint(pcopy, cp->lval, newrv, false);
             }
         }
     }
@@ -293,8 +313,7 @@ static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Prom
     }
 
     char *classes = NULL;
-    Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);
-    cp_copy->offset = cp->offset;
+    PromiseAppendConstraint(pcopy, cp->lval, final, false);
     switch (final.type)
     {
     case RVAL_TYPE_SCALAR:
@@ -416,8 +435,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
             Rval final;
             if (EvaluateConstraintIteration(ctx, depends_on, &final))
             {
-                Constraint *cp_copy = PromiseAppendConstraint(pcopy, depends_on->lval, final, false);
-                cp_copy->offset = depends_on->offset;
+                PromiseAppendConstraint(pcopy, depends_on->lval, final, false);
 
                 if (MissingDependencies(ctx, pcopy))
                 {
@@ -448,8 +466,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
             continue;
         }
 
-        Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);
-        cp_copy->offset = cp->offset;
+        PromiseAppendConstraint(pcopy, cp->lval, final, false);
 
         if (strcmp(cp->lval, "comment") == 0)
         {

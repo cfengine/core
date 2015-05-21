@@ -393,6 +393,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'D':
             {
+                /* WAZA what if config->heap_soft is already defined???
+                 * e.g. we have two -D arguments? Then only the last are being
+                 * set, and we are leaking memory!
+                 * TODO fix this here, execd, serverd, promises! redmine#7191 */
                 StringSet *defined_classes = StringSetFromString(optarg, ',');
                 cfruncommand = StringSetContains(defined_classes, "cfruncommand");
                 config->heap_soft = defined_classes;

@@ -44,6 +44,7 @@
  *       does not allow empty transactions! The reason is that
  *       ReceiveTransaction() can't differentiate between that
  *       and connection closed.
+ * @NOTE (len <= CF_BUFSIZE - CF_INBAND_OFFSET)
  */
 int SendTransaction(const ConnectionInfo *conn_info,
                     const char *buffer, int len, char status)
@@ -113,6 +114,9 @@ int SendTransaction(const ConnectionInfo *conn_info,
 /*************************************************************************/
 
 /**
+ *  Receive a transaction packet of at most CF_BUFSIZE-1 bytes, and
+ *  NULL-terminate it.
+ *
  *  @return 0 in case of socket closed, -1 in case of other error, or
  *          >0 the number of bytes read.
  */

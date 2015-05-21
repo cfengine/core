@@ -125,7 +125,7 @@ static const char *const HINTS[] =
     "Define a list of comma separated classes to be sent to a remote agent",
     "Define a list of comma separated classes to be used to select remote agents by constraint",
     "Print basic information about changes made to the system, i.e. promises repaired",
-    "Pass options to a remote server process",
+    "(deprecated)",
     "Activate internal diagnostics (developers only)",
     "Hail the following comma-separated lists of hosts, overriding default list",
     "Enable interactive mode for key trust",
@@ -142,7 +142,6 @@ int OUTPUT_TO_FILE = false; /* GLOBAL_P */
 char OUTPUT_DIRECTORY[CF_BUFSIZE] = ""; /* GLOBAL_P */
 int BACKGROUND = false; /* GLOBAL_P GLOBAL_A */
 int MAXCHILD = 50; /* GLOBAL_P GLOBAL_A */
-char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
 
 const Rlist *HOSTLIST = NULL; /* GLOBAL_P GLOBAL_A */
 char SENDCLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
@@ -302,7 +301,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'o':
-            strlcpy(REMOTE_AGENT_OPTIONS, optarg, CF_MAXVARSIZE);
+            Log(LOG_LEVEL_ERR, "Option \"-o\" has been deprecated,"
+                " you can not pass arbitrary arguments to remote cf-agent");
+            exit(EXIT_FAILURE);
             break;
 
         case 'I':
@@ -394,13 +395,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 static void ThisAgentInit(void)
 {
     umask(077);
-
-    if (strstr(REMOTE_AGENT_OPTIONS, "--file") || strstr(REMOTE_AGENT_OPTIONS, "-f"))
-    {
-        Log(LOG_LEVEL_ERR,
-            "The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.");
-        exit(EXIT_FAILURE);
-    }
 }
 
 /********************************************************************/
@@ -488,16 +482,18 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
 #ifndef __MINGW32__
     if (BACKGROUND)
     {
-        Log(LOG_LEVEL_INFO, "Hailing '%s' : %s, with options '%s' (parallel)", hostname, port,
-            REMOTE_AGENT_OPTIONS);
+        Log(LOG_LEVEL_INFO, "Hailing %s : %s (in the background)",
+            hostname, port);
     }
     else
 #endif
     {
-        Log(LOG_LEVEL_INFO, "...........................................................................");
-        Log(LOG_LEVEL_INFO, " * Hailing %s : %s, with options \"%s\" (serial)", hostname, port,
-            REMOTE_AGENT_OPTIONS);
-        Log(LOG_LEVEL_INFO, "...........................................................................");
+        Log(LOG_LEVEL_INFO,
+            "........................................................................");
+        Log(LOG_LEVEL_INFO, "Hailing %s : %s",
+            hostname, port);
+        Log(LOG_LEVEL_INFO,
+            "........................................................................");
     }
 
     ConnectionFlags connflags = {
@@ -665,13 +661,13 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     char *sp;
     int n_read;
 
-    if (strlen(DEFINECLASSES))
+    if (DEFINECLASSES[0] != '\0')
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "EXEC %s -D%s", REMOTE_AGENT_OPTIONS, DEFINECLASSES);
+        snprintf(sendbuffer, CF_BUFSIZE, "EXEC -D%s", DEFINECLASSES);
     }
     else
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "EXEC %s", REMOTE_AGENT_OPTIONS);
+        snprintf(sendbuffer, CF_BUFSIZE, "EXEC");
     }
 
     if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)

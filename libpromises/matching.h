@@ -28,7 +28,7 @@
 #include <cf3.defs.h>
 
 int IsRegex(const char *str); /* Pure */
-int IsRegexItemIn(EvalContext *ctx, const Item *list, const char *regex); /* Uses context */
+int IsRegexItemIn(const EvalContext *ctx, const Item *list, const char *regex); /* Uses context */
 
 char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure, not thread-safe */
 

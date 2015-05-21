@@ -338,6 +338,9 @@ int PassOpenFile_Get(int uds, char **text)
 #error "No support for connection sharing on this platform :-("
 #endif
 
+#ifndef MSG_WAITALL /* Linux >= 2.2 */
+#define MSG_WAITALL 0
+#endif
 static const char NULL_MSG[] = "\0NULL";
 
 bool PassOpenFile_Put(int uds, int descriptor, const char *text)
@@ -451,7 +454,7 @@ int PassOpenFile_Get(int uds, char **text)
 #endif
 
     /* Receive message: */
-    if (recvmsg(uds, &message, 0) < 0)
+    if (recvmsg(uds, &message, MSG_WAITALL) < 0)
     {
         Log(LOG_LEVEL_ERR,
             "Can't receive descriptor (recvmsg: %s)",

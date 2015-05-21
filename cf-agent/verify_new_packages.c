@@ -40,14 +40,19 @@ static bool NewPackagePromiseSanityCheck(Attributes a)
     if (a.new_packages.module_body->updates_ifelapsed == CF_NOINT ||
         a.new_packages.module_body->installed_ifelapsed == CF_NOINT)
     {
-        Log(LOG_LEVEL_ERR, "Package module body constraints error.");
+        Log(LOG_LEVEL_ERR,
+                "Invalid or missing arguments in package_module body '%s':  "
+                "query_installed_ifelapsed = %d query_updates_ifelapsed = %d",
+                a.new_packages.module_body->name, 
+                a.new_packages.module_body->installed_ifelapsed,
+                a.new_packages.module_body->updates_ifelapsed);
+            return false;
         return false;
     }
     
     if (a.new_packages.package_policy == NEW_PACKAGE_ACTION_NONE)
     {
-        Log(LOG_LEVEL_ERR, "Not supported package policy in new package"
-            " promise.");
+        Log(LOG_LEVEL_ERR, "Unsupported package policy in package promise.");
         return false;
     }
     return true;
@@ -80,7 +85,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
     if (global_lock.g_lock.lock == NULL)
     {
         *promise_log_msg =
-                SafeStringDuplicate("Can not aquire global lock for package "
+                SafeStringDuplicate("Can not acquire global lock for package "
                                     "promise. Skipping promise evaluation");
         *log_lvl = LOG_LEVEL_INFO;
         

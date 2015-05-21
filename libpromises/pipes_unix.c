@@ -212,7 +212,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
     pid_t pid;
 
     fflush(NULL); /* Empty file buffers */
-    pid = CreatePipesAndFork("rt", child_pipe, parent_pipe);
+    pid = CreatePipesAndFork("r", child_pipe, parent_pipe);
 
     if (pid < 0)
     {

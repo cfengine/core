@@ -202,7 +202,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
              * package promises in policy. */
             if (result == PROMISE_RESULT_CHANGE || result == PROMISE_RESULT_FAIL)
             {
-                UpdatePackagesCache(ctx, true);
+                UpdatePackagesCache(ctx, false);
             }
             break;
         case PACKAGE_PROMISE_TYPE_NEW_ERROR:

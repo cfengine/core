@@ -57,10 +57,6 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
     assert(package_module && package_module->name);
 
     PackageModuleWrapper *wrapper = xmalloc(sizeof(PackageModuleWrapper));
-    if (!wrapper)
-    {
-        return NULL;
-    }
     
     wrapper->path = GetPackageModuleRealPath(package_module->name);
     wrapper->name = SafeStringDuplicate(package_module->name);
@@ -100,7 +96,7 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
                         
     if (package_lock.g_lock.lock == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Can not aquire global lock for package promise. "
+        Log(LOG_LEVEL_INFO, "Can not acquire global lock for package promise. "
             "Skipping updating cache.");
         return;
     }
@@ -120,7 +116,7 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
         PackageModuleBody *module = GetPackageModuleFromContext(ctx, pm_name);
         if (!module)
         {
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_ERR,
                 "Can not find body for package module: %s", pm_name);
             continue;
         }
@@ -129,7 +125,7 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
 
         if (!module_wrapper)
         {
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_ERR,
                 "Can not set up wrapper for module: %s", pm_name);
             continue;
         }
@@ -137,8 +133,8 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
         UpdateSinglePackageModuleCache(ctx, module_wrapper,
                                        UPDATE_TYPE_INSTALLED, force_update);
         UpdateSinglePackageModuleCache(ctx, module_wrapper,
-                                       force_update ? UPDATE_TYPE_LOCAL_UPDATES : 
-                                           UPDATE_TYPE_UPDATES,
+                                       force_update ? UPDATE_TYPE_UPDATES : 
+                                           UPDATE_TYPE_LOCAL_UPDATES,
                                        force_update);
 
         DeletePackageModuleWrapper(module_wrapper);
@@ -211,6 +207,8 @@ static int IsReadWriteReady(const IOData *io, int timeout_sec)
         .tv_usec = 0,
     };
 
+    //TODO: For Windows we will need different method and select might not 
+    //      work with file descriptors.
     int ret = select(io->read_fd + 1, &rset, NULL, NULL, &tv);
 
     if(ret < 0)
@@ -242,7 +240,6 @@ static int IsReadWriteReady(const IOData *io, int timeout_sec)
 static Rlist *ReadDataFromPackageScript(const IOData *io)
 {
     char buff[CF_BUFSIZE] = {0};
-    int red_data_size = 0;
     
     Buffer *data = BufferNew();
     if (!data)
@@ -276,7 +273,7 @@ static Rlist *ReadDataFromPackageScript(const IOData *io)
                 }
                 else
                 {
-                    Log(LOG_LEVEL_VERBOSE,
+                    Log(LOG_LEVEL_ERR,
                         "Unable to read output from package module: %s",
                         GetErrorStr());
                     BufferDestroy(data);
@@ -287,9 +284,8 @@ static Rlist *ReadDataFromPackageScript(const IOData *io)
             {
                 break;
             }
-            Log(LOG_LEVEL_DEBUG, "Data red from package module: %zu [%s]",
+            Log(LOG_LEVEL_DEBUG, "Data read from package module: %zu [%s]",
                 res, buff);
-            red_data_size += res;
 
             BufferAppendString(data, buff);
             memset(buff, 0, sizeof(buff));
@@ -301,9 +297,9 @@ static Rlist *ReadDataFromPackageScript(const IOData *io)
         }
     }
     
-    char *red_string = BufferClose(data);
-    Rlist *response_lines = RlistFromSplitString(red_string, '\n');
-    free(red_string);
+    char *read_string = BufferClose(data);
+    Rlist *response_lines = RlistFromSplitString(read_string, '\n');
+    free(read_string);
     
     return response_lines;
 }
@@ -467,7 +463,7 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
             {
                 /* Some error occurred as we already have name for 
                  * given package. */
-                Log(LOG_LEVEL_VERBOSE, "duplicated package name "
+                Log(LOG_LEVEL_ERR, "Duplicated package name "
                     "received: [%s] %s", line, package_data->name);
                 free(package_data);
                 return NULL;
@@ -481,7 +477,7 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
             {
                 /* Some error occurred as we already have version for 
                  * given package. */
-                Log(LOG_LEVEL_VERBOSE, "duplicated package version "
+                Log(LOG_LEVEL_ERR, "Duplicated package version "
                     "received: [%s] %s", line, package_data->version);
                 free(package_data);
                 return NULL;
@@ -495,7 +491,7 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
             {
                 /* Some error occurred as we already have arch for 
                  * given package. */
-               Log(LOG_LEVEL_VERBOSE, "duplicated package architecture "
+               Log(LOG_LEVEL_ERR, "Duplicated package architecture "
                     "received: [%s] %s", line, package_data->arch);
                 free(package_data);
                 return NULL;
@@ -619,7 +615,7 @@ static int IsPackageInCache(EvalContext *ctx,
         if (!UpdateSinglePackageModuleCache(ctx, module_wrapper,
                                             UPDATE_TYPE_INSTALLED, false))
         {
-            Log(LOG_LEVEL_INFO, "Can not update cache.");
+            Log(LOG_LEVEL_ERR, "Can not update cache.");
         }
     }
     
@@ -863,17 +859,18 @@ bool UpdateCache(Rlist* options, const PackageModuleWrapper *wrapper,
             "Received empty packages list after requesting: %s", req_type);
     }
     
+    bool ret = true;
+    
     /* We still need to update DB with empty data. */
     if (UpdatePackagesDB(response, wrapper->name, type) != 0)
     {
         Log(LOG_LEVEL_INFO, "Error parsing package cache.");
-        free(options_str);
-        return false;
+        ret = false;
     }
     
     RlistDestroy(response);
     free(options_str);
-    return true;
+    return ret;
 }
 
 
@@ -982,7 +979,7 @@ static PromiseResult InstallPackageGeneric(Rlist *options,
     else
     {
         /* If we end up here something bad has happened. */
-        assert(0 && "unsupported package type");
+        ProgrammingError("Unsupported package type");
     }
     
     Rlist *error_message = NULL;
@@ -1088,13 +1085,10 @@ Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
     Seq *updates_list = NULL;
     
     /* Make sure cache is updated. */
-    if (ctx)
+    if (!UpdateSinglePackageModuleCache(ctx, module_wrapper,
+                                        UPDATE_TYPE_UPDATES, false))
     {
-        if (!UpdateSinglePackageModuleCache(ctx, module_wrapper,
-                                            UPDATE_TYPE_UPDATES, false))
-        {
-            Log(LOG_LEVEL_INFO, "Can not update packages cache.");
-        }
+        Log(LOG_LEVEL_INFO, "Can not update packages cache.");
     }
     
     if (OpenSubDB(&db_updates, db_id, module_wrapper->package_module->name))
@@ -1328,7 +1322,7 @@ static bool CheckPolicyAndPackageInfoMatch(const NewPackages *packages_policy,
             !StringSafeEqual(info->arch, packages_policy->package_architecture))
     {
         Log(LOG_LEVEL_VERBOSE, 
-            "package arch and one specified in policy doesn't match: %s -> %s",
+            "Package arch and one specified in policy doesn't match: %s -> %s",
             info->arch, packages_policy->package_architecture);
         return false;
     }
@@ -1336,15 +1330,15 @@ static bool CheckPolicyAndPackageInfoMatch(const NewPackages *packages_policy,
     {
         if (StringSafeEqual(packages_policy->package_version, "latest"))
         {
-            Log(LOG_LEVEL_VERBOSE, "unsupported 'latest' version for package "
+            Log(LOG_LEVEL_WARNING, "Unsupported 'latest' version for package "
                     "promise of type file.");
             return false;
         }
         if (packages_policy->package_version && 
             !StringSafeEqual(info->version, packages_policy->package_version))
         {
-            Log(LOG_LEVEL_VERBOSE,
-                "package version and one specified in policy doesn't "
+            Log(LOG_LEVEL_WARNING,
+                "Package version and one specified in policy doesn't "
                 "match: %s -> %s",
                 info->version, packages_policy->package_version);
             return false;
@@ -1374,7 +1368,7 @@ PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
         {
             if (!CheckPolicyAndPackageInfoMatch(policy_data, package_info))
             {
-                Log(LOG_LEVEL_ERR, "package data and policy doesn't match");
+                Log(LOG_LEVEL_ERR, "Package data and policy doesn't match");
                 FreePackageInfo(package_info);
                 return PROMISE_RESULT_FAIL;
             }
@@ -1425,7 +1419,7 @@ PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
                 /* We shouldn't end up here. If we are having unsupported 
                  package type this should be detected and handled
                  in ParseAndCheckPackageDataReply(). */
-                assert(0 && "unsupported package type");
+                ProgrammingError("Unsupported package type");
         }
         
         FreePackageInfo(package_info);
@@ -1519,7 +1513,9 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
         if (module_wrapper->package_module->installed_ifelapsed == CF_NOINT ||
             module_wrapper->package_module->updates_ifelapsed == CF_NOINT)
         {
-            Log(LOG_LEVEL_ERR, "Package module body constraints error: %s %d %d",
+            Log(LOG_LEVEL_ERR,
+                "Invalid or missing arguments in package_module body '%s':  "
+                "query_installed_ifelapsed = %d query_updates_ifelapsed = %d",
                 module_wrapper->package_module->name, 
                 module_wrapper->package_module->installed_ifelapsed,
                 module_wrapper->package_module->updates_ifelapsed);

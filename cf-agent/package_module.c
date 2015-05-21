@@ -717,6 +717,8 @@ void WritePackageDataToDB(CF_DB *db_installed,
 int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
 {
     assert(pm_name);
+    
+    bool have_error = false;
 
     CF_DB *db_cached;
     dbid db_id = type == UPDATE_TYPE_INSTALLED ? dbid_packages_installed :
@@ -779,11 +781,20 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
             {
                 Log(LOG_LEVEL_VERBOSE, "have error: %s",
                     line + strlen("Error="));
+                have_error = true;
             }
             else if (StringStartsWith(line, "ErrorMessage="))
             {
                 Log(LOG_LEVEL_VERBOSE, "have error message: %s",
                     line + strlen("ErrorMessage="));
+                have_error = true;
+            }
+            else
+            {
+                 Log(LOG_LEVEL_INFO,
+                     "Unsupported response received form package module: %s",
+                     line);
+                 have_error = true;
             }
         }
         /* We have one more entry left. */
@@ -818,7 +829,7 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
         }
         
         CloseDB(db_cached);
-        return 0;
+        return have_error ? -1 : 0;
     }
     /* Unable to open database. */
     return -1;
@@ -864,7 +875,7 @@ bool UpdateCache(Rlist* options, const PackageModuleWrapper *wrapper,
     /* We still need to update DB with empty data. */
     if (UpdatePackagesDB(response, wrapper->name, type) != 0)
     {
-        Log(LOG_LEVEL_INFO, "Error parsing package cache.");
+        Log(LOG_LEVEL_INFO, "Error updating packages cache.");
         ret = false;
     }
     

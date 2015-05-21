@@ -286,7 +286,7 @@ PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, A
 
 // Now verify the package itself
     
-    PackagePromoseGlobalLock package_lock = AcquireGlobalPackagePromiseLock(ctx);
+    PackagePromiseGlobalLock package_lock = AcquireGlobalPackagePromiseLock(ctx);
     if (package_lock.g_lock.lock == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, 

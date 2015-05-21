@@ -66,7 +66,7 @@ typedef struct
 {
     CfLock g_lock;
     EvalContext *lock_ctx;
-} PackagePromoseGlobalLock;
+} PackagePromiseGlobalLock;
 
 typedef enum {
     UPDATE_TYPE_INSTALLED,
@@ -90,7 +90,7 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update);
 PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module);
 void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper);
 
-PackagePromoseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx);
-void YieldGlobalPackagePromiseLock(PackagePromoseGlobalLock lock);
+PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx);
+void YieldGlobalPackagePromiseLock(PackagePromiseGlobalLock lock);
 
 #endif

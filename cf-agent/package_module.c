@@ -95,7 +95,7 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
 {
     Log(LOG_LEVEL_DEBUG, "Updating package cache.");
     
-    PackagePromoseGlobalLock package_lock = 
+    PackagePromiseGlobalLock package_lock = 
             AcquireGlobalPackagePromiseLock(ctx);
                         
     if (package_lock.g_lock.lock == NULL)
@@ -146,7 +146,7 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
     YieldGlobalPackagePromiseLock(package_lock);
 }
 
-PackagePromoseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
+PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
 {
     Bundle bundle = {.name = "package_global"};
     PromiseType promise_type = {.name = "package_global",
@@ -162,11 +162,11 @@ PackagePromoseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
                                               .expireafter = VEXPIREAFTER},
                         &pp, false);
                         
-    return (PackagePromoseGlobalLock) {.g_lock = package_promise_global_lock,
+    return (PackagePromiseGlobalLock) {.g_lock = package_promise_global_lock,
                                        .lock_ctx = ctx};
 }
 
-void YieldGlobalPackagePromiseLock(PackagePromoseGlobalLock lock)
+void YieldGlobalPackagePromiseLock(PackagePromiseGlobalLock lock)
 {
     Bundle bundle = {.name = "package_global"};
     PromiseType promise_type = {.name = "package_global",

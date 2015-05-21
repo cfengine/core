@@ -70,7 +70,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
     
     PromiseBanner(ctx, pp);
     
-    PackagePromoseGlobalLock global_lock = AcquireGlobalPackagePromiseLock(ctx);
+    PackagePromiseGlobalLock global_lock = AcquireGlobalPackagePromiseLock(ctx);
     
     CfLock package_promise_lock;
     char promise_lock[CF_BUFSIZE];

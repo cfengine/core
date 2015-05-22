@@ -711,6 +711,10 @@ AC_CHECK_DECLS(getline, [], [], [#define _GNU_SOURCE 1
 AC_INCLUDES_DEFAULT])
 AC_REPLACE_FUNCS(getline)
 
+AC_CHECK_DECLS(strchrnul, [], [], [#define _GNU_SOURCE 1
+AC_INCLUDES_DEFAULT])
+AC_REPLACE_FUNCS(strchrnul)
+
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 

@@ -29,7 +29,7 @@ static const int CF_NOSIZE = -1;
 #include <server_common.h>
 
 #include <item_lib.h>                                 /* ItemList2CSV_bound */
-#include <string_lib.h>                               /* ToLower */
+#include <string_lib.h>                    /* ToLower,StringAppendDelimited */
 #include <regex.h>                                    /* StringMatchFull */
 #include <crypto.h>                                   /* EncryptString */
 #include <files_names.h>
@@ -179,18 +179,21 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        Log(LOG_LEVEL_DEBUG, "Got class buffer '%s'", recvbuffer);
-
         if (strncmp(recvbuffer, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)
         {
+            Log(LOG_LEVEL_DEBUG, "Got CFD_TERMINATOR");
             if (count == 1)
             {
+                /* This is the common case, that cf-runagent had no
+                   "-s class1,class2" argument. */
                 Log(LOG_LEVEL_DEBUG, "No classes were sent, assuming no restrictions...");
                 return true;
             }
 
             break;
         }
+
+        Log(LOG_LEVEL_DEBUG, "Got class buffer: %s", recvbuffer);
 
         classlist = SplitStringAsItemList(recvbuffer, ' ');
 
@@ -260,218 +263,167 @@ void Terminate(ConnectionInfo *connection)
 }
 
 
-static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *args)
+static bool AuthorizeClass(const ServerConnectionState *conn,
+                           const char *class)
 {
-    char *sp;
-    Auth *ap;
+    Log(LOG_LEVEL_DEBUG, "Authorizing class: %s", class);
+
+    const char *ACCEPT =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_";
+    size_t acceptable_chars = strspn(class, ACCEPT);
+    size_t class_len = strlen(class);
+
+    if (acceptable_chars < class_len)
+    {
+        Log(LOG_LEVEL_INFO,
+            "Class '%s' contains illegal character in column %zu",
+            class, acceptable_chars);
+        return false;
+    }
+
     char userid1[CF_MAXVARSIZE], userid2[CF_MAXVARSIZE];
-    Rlist *rp, *defines = NULL;
-    int permitted = false;
+    /* TODO conn->hostname is client-supplied, could be dangerous for RBAC! */
+    snprintf(userid1, sizeof(userid1), "%s@%s", conn->username, conn->hostname);
+    snprintf(userid2, sizeof(userid2), "%s@%s", conn->username, conn->ipaddr);
 
-    snprintf(userid1, CF_MAXVARSIZE, "%s@%s", conn->username, conn->hostname);
-    snprintf(userid2, CF_MAXVARSIZE, "%s@%s", conn->username, conn->ipaddr);
-
-    Log(LOG_LEVEL_VERBOSE, "Checking authorized roles in %s", args);
-
-    if (strncmp(args, "--define", strlen("--define")) == 0)
+    for (Auth *ap = SV.roles; ap != NULL; ap = ap->next)
     {
-        sp = args + strlen("--define");
-    }
-    else
-    {
-        sp = args + strlen("-D");
-    }
-
-    while (*sp == ' ')
-    {
-        sp++;
-    }
-
-    defines = RlistFromSplitRegex(sp, "[,:;]", 99, false);
-
-/* For each user-defined class attempt, check RBAC */
-
-    for (rp = defines; rp != NULL; rp = rp->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Verifying %s", RlistScalarValue(rp));
-
-        for (ap = SV.roles; ap != NULL; ap = ap->next)
+        if (StringMatchFull(ap->path, class))
         {
-            if (StringMatchFull(ap->path, RlistScalarValue(rp)))
+            /* We have a pattern covering this class,
+               so are we allowed to activate it? */
+            if (IsMatchItemIn(ap->accesslist, conn->ipaddr) ||
+                IsRegexItemIn(NULL, ap->accesslist, conn->username) ||
+                IsRegexItemIn(NULL, ap->accesslist, conn->hostname) ||
+                IsRegexItemIn(NULL, ap->accesslist, userid1) ||
+                IsRegexItemIn(NULL, ap->accesslist, userid2))
             {
-                /* We have a pattern covering this class - so are we allowed to activate it? */
-                if ((IsMatchItemIn(ap->accesslist, conn->ipaddr)) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, userid1)) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, userid2)) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, conn->username)))
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Attempt to define role/class %s is permitted", RlistScalarValue(rp));
-                    permitted = true;
-                }
-                else
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Attempt to define role/class %s is denied", RlistScalarValue(rp));
-                    RlistDestroy(defines);
-                    return false;
-                }
+                Log(LOG_LEVEL_DEBUG,
+                    "EXEC: authorized class: %s", class);
+
+                return true;
             }
         }
-
     }
 
-    if (permitted)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Role activation allowed");
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "Role activation disallowed - abort execution");
-    }
-
-    RlistDestroy(defines);
-    return permitted;
+    Log(LOG_LEVEL_INFO,
+        "EXEC: denied class: %s", class);
+    return false;
 }
 
-static int OptionFound(char *args, char *pos, char *word)
-/*
- * Returns true if the current position 'pos' in buffer
- * 'args' corresponds to the word 'word'.  Words are
- * separated by spaces.
- */
+void DoExec(const ServerConnectionState *conn, const char *args)
 {
-    size_t len;
+    /* Size that always fits in one SendTransaction(). */
+    char sendbuf[CF_BUFSIZE - CF_INBAND_OFFSET];
 
-    if (pos < args)
+    /* args came through a transaction packet, usual limits apply. */
+    assert(strlen(args) < CF_BUFSIZE);
+
+    if (CFRUNCOMMAND[0] == '\0')
     {
-        return false;
-    }
-
-/* Single options do not have to have spaces between */
-
-    if ((strlen(word) == 2) && (strncmp(pos, word, 2) == 0))
-    {
-        return true;
-    }
-
-    len = strlen(word);
-
-    if (strncmp(pos, word, len) != 0)
-    {
-        return false;
-    }
-
-    if (pos == args)
-    {
-        return true;
-    }
-    else if ((*(pos - 1) == ' ') && ((pos[len] == ' ') || (pos[len] == '\0')))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
-{
-    char ebuff[CF_EXPANDSIZE], *sp = NULL;
-    int print = false, i;
-    FILE *pp;
-
-    if (strlen(CFRUNCOMMAND) == 0)
-    {
-        Log(LOG_LEVEL_VERBOSE, "cf-serverd exec request: no cfruncommand defined");
-        char sendbuffer[CF_BUFSIZE];
-        strlcpy(sendbuffer, "Exec request: no cfruncommand defined\n", CF_BUFSIZE);
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+        char *message = "EXEC denied: no cfruncommand defined";
+        Log(LOG_LEVEL_INFO, "%s", message);
+        SendTransaction(conn->conn_info, message, 0, CF_DONE);
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Examining command string '%s'", args);
+    char cmdbuff[CF_BUFSIZE * 2];
+    int ret = snprintf(cmdbuff, CF_BUFSIZE, "%s -I -D",
+                       CFRUNCOMMAND);
+    /* TODO what if cfruncommand is not cf-agent?
+       These arguments don't apply then. */
 
-    for (sp = args; *sp != '\0'; sp++)  /* Blank out -K -f */
+    if (ret <= 0 || ret >= CF_BUFSIZE)
     {
-        if ((*sp == ';') || (*sp == '&') || (*sp == '|'))
+        snprintf(sendbuf, sizeof(sendbuf),
+                 "EXEC denied: cfruncommand too long: %s",
+                 CFRUNCOMMAND);
+        Log(LOG_LEVEL_INFO, "%s", sendbuf);
+        SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+        return;
+    }
+
+    /* Pointer to append list of classes. */
+    char  *authorized_classes     = &cmdbuff[ret];
+    size_t authorized_classes_len = 0;
+
+    StringAppendDelimited(authorized_classes, &authorized_classes_len,
+                          CF_BUFSIZE, "cfruncommand", ',');
+
+    /* Parse the EXEC arguments, which will be used as arguments to
+     * CFRUNCOMMAND. Currently we only honour -D arguments. */
+
+    const char *sp = &args[0];
+    while (*sp != '\0')
+    {
+        sp += strspn(sp,  " \t");                            /* skip spaces */
+
+        if (strncmp(sp, "-D", 2) == 0)
         {
-            char sendbuffer[CF_BUFSIZE];
-            snprintf(sendbuffer, CF_BUFSIZE,
-                     "You are not authorized to activate these classes/roles on host %s\n",
-                     VFQNAME);
-            SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+            sp += 2;
+
+            /* Skip blanks in front of -D's argument,
+               "-Dclass" and "-D class" are both valid. */
+            sp += strspn(sp,  " \t");
+
+            size_t classlist_len = strcspn(sp, " \t");
+            assert(classlist_len < CF_BUFSIZE); /* transaction packet limit */
+
+            char classlist[classlist_len + 1];
+            memcpy(classlist, sp, classlist_len);
+            classlist[classlist_len] = '\0';
+
+            sp += classlist_len;
+
+            char *class = classlist;
+            while (class < &classlist[classlist_len])
+            {
+                char *class_end = strchrnul(class, ',');
+                *class_end = '\0';
+
+                bool allow = AuthorizeClass(conn, class);
+                if (!allow)
+                {
+                    snprintf(sendbuf, sizeof(sendbuf), "EXEC denied:"
+                             " not authorized to activate class: %s",
+                             class);
+                    Log(LOG_LEVEL_INFO, "%s", sendbuf);
+                    SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+                    return;
+                }
+
+                bool truncated =
+                    !StringAppendDelimited(authorized_classes,
+                                           &authorized_classes_len,
+                                           CF_BUFSIZE, class, ',');
+                assert(!truncated);                 /* CF_BUFSIZE is enough */
+
+                class = class_end + 1;
+            }
+        }
+        else                                              /* unknown option */
+        {
+            char *message = "EXEC denied: "
+                "illegal argument, only setting classes with -D is allowed";
+            Log(LOG_LEVEL_INFO, "%s", message);
+            SendTransaction(conn->conn_info, message, 0, CF_DONE);
             return;
         }
-
-        if ((OptionFound(args, sp, "-K")) || (OptionFound(args, sp, "-f")))
-        {
-            *sp = ' ';
-            *(sp + 1) = ' ';
-        }
-        else if (OptionFound(args, sp, "--no-lock"))
-        {
-            for (i = 0; i < strlen("--no-lock"); i++)
-            {
-                *(sp + i) = ' ';
-            }
-        }
-        else if (OptionFound(args, sp, "--file"))
-        {
-            for (i = 0; i < strlen("--file"); i++)
-            {
-                *(sp + i) = ' ';
-            }
-        }
-        else if ((OptionFound(args, sp, "--define")) || (OptionFound(args, sp, "-D")))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Attempt to activate a predefined role..");
-
-            if (!AuthorizeRoles(ctx, conn, sp))
-            {
-                char sendbuffer[CF_BUFSIZE];
-                snprintf(sendbuffer, CF_BUFSIZE,
-                         "You are not authorized to activate these classes/roles on host %s\n",
-                         VFQNAME);
-                SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
-                return;
-            }
-        }
     }
 
-    snprintf(ebuff, CF_BUFSIZE, "%s -Dcfruncommand --inform", CFRUNCOMMAND);
+    snprintf(sendbuf, sizeof(sendbuf), "cf-serverd executing: %s",
+             cmdbuff);
+    SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+    Log(LOG_LEVEL_INFO, "%s", sendbuf);
 
-    if (strlen(ebuff) + strlen(args) + 6 > CF_BUFSIZE)
-    {
-        char sendbuffer[CF_BUFSIZE];
-        snprintf(sendbuffer, CF_BUFSIZE,
-                 "Command line too long with args: %s\n", ebuff);
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
-        return;
-    }
-    else
-    {
-        if ((args != NULL) && (strlen(args) > 0))
-        {
-            char sendbuffer[CF_BUFSIZE];
-            strcat(ebuff, " ");
-            strncat(ebuff, args, CF_BUFSIZE - strlen(ebuff));
-            snprintf(sendbuffer, CF_BUFSIZE,
-                     "cf-serverd Executing %s\n", ebuff);
-            SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
-        }
-    }
+    FILE *pp = cf_popen_sh(cmdbuff, "r");
 
-    Log(LOG_LEVEL_INFO, "Executing command %s", ebuff);
-
-    if ((pp = cf_popen_sh(ebuff, "r")) == NULL)
+    if (pp == NULL)
     {
-        Log(LOG_LEVEL_ERR,
-            "Couldn't open pipe to command '%s'. (pipe: %s)",
-            ebuff, GetErrorStr());
-        char sendbuffer[CF_BUFSIZE];
-        snprintf(sendbuffer, CF_BUFSIZE, "Unable to run %s\n", ebuff);
-        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+        snprintf(sendbuf, sizeof(sendbuf), "Unable to run '%s' (pipe: %s)",
+                 cmdbuff, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "%s", sendbuf);
+        SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
         return;
     }
 
@@ -485,14 +437,16 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         {
             if (!feof(pp))
             {
-                fflush(pp); /* FIXME: is it necessary? */
+                /* Error reading, discard all unconsumed input before
+                 * aborting - linux-specific! */
+                fflush(pp);
             }
             break;
         }
 
-        print = false;
+        bool print = false;
 
-        for (sp = line; *sp != '\0'; sp++)
+        for (const char *sp = line; *sp != '\0'; sp++)
         {
             if (!isspace((int) *sp))
             {
@@ -503,12 +457,12 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 
         if (print)
         {
-            char sendbuffer[CF_BUFSIZE];
-            snprintf(sendbuffer, CF_BUFSIZE, "%s\n", line);
-            if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+            snprintf(sendbuf, sizeof(sendbuf), "%s", line);
+            if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)
             {
                 Log(LOG_LEVEL_ERR,
-                    "Sending failed, aborting. (send: %s)", GetErrorStr());
+                    "Sending failed, aborting EXEC (send: %s)",
+                    GetErrorStr());
                 break;
             }
         }

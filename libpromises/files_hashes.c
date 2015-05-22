@@ -89,10 +89,17 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
         {
             Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
         }
+        else if (EVP_DigestInit(&context, md))
+        {
+            EVP_DigestUpdate(&context, (unsigned char *) buffer, (size_t) len);
+            EVP_DigestFinal(&context, digest, &md_len);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Failed to initialize digest for hashing: '%s'", buffer);
+            // TODO: handle this someway
+        }
 
-        EVP_DigestInit(&context, md);
-        EVP_DigestUpdate(&context, (unsigned char *) buffer, (size_t) len);
-        EVP_DigestFinal(&context, digest, &md_len);
         break;
     }
 }

@@ -660,10 +660,6 @@ static void SendClassData(AgentConnection *conn)
 
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer)
 {
-    FILE *fp = stdout;
-    char *sp;
-    int n_read;
-
     if (DEFINECLASSES[0] != '\0')
     {
         snprintf(sendbuffer, CF_BUFSIZE, "EXEC -D%s", DEFINECLASSES);
@@ -680,48 +676,57 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
         return;
     }
 
-    fp = NewStream(peer);
+    /* TODO we are sending class data right after EXEC, when the server might
+     * have already rejected us with BAD reply. So this class data with the
+     * CFD_TERMINATOR will be interpreted by the server as a new, bogus
+     * protocol command, and the server will complain. */
     SendClassData(conn);
 
+    FILE *fp = NewStream(peer);
     while (true)
     {
         memset(recvbuffer, 0, CF_BUFSIZE);
 
-        if ((n_read = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
-        {
-            return;
-        }
+        int n_read = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
 
-        if (n_read == 0)
+        if (n_read == -1)
+        {
+            break;
+        }
+        if (n_read == 0)                               /* connection closed */
+        {
+            break;
+        }
+        if (strncmp(recvbuffer, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)
         {
             break;
         }
 
-        if (strlen(recvbuffer) == 0)
+        const size_t recv_len = strlen(recvbuffer);
+        const char   *ipaddr  = conn->remoteip;
+
+        if (strncmp(recvbuffer, "BAD:", 4) == 0)
         {
-            continue;
+            fprintf(fp, "%s> !! %s\n", ipaddr, recvbuffer + 4);
+        }
+        /* cf-serverd >= 3.7 quotes command output with "> ". */
+        else if (strncmp(recvbuffer, "> ", 2) == 0)
+        {
+            fprintf(fp, "%s> -> %s", ipaddr, &recvbuffer[2]);
+        }
+        else
+        {
+            fprintf(fp, "%s> %s", ipaddr, recvbuffer);
         }
 
-        if ((sp = strstr(recvbuffer, CFD_TERMINATOR)) != NULL)
+        if (recv_len > 0 && recvbuffer[recv_len - 1] != '\n')
         {
-            break;
+            /* We'll be printing double newlines here with new cf-serverd
+             * versions, so check for already trailing newlines. */
+            /* TODO deprecate this path in a couple of versions. cf-serverd is
+             * supposed to munch the newlines so we must always append one. */
+            fputc('\n', fp);
         }
-
-        /* TODO VPREFIX is blank, shouldn't it be the IP address? */
-
-        if ((sp = strstr(recvbuffer, "BAD:")) != NULL)
-        {
-            fprintf(fp, "%s> !! %s\n", VPREFIX, recvbuffer + 4);
-            continue;
-        }
-
-        if (strstr(recvbuffer, "too soon"))
-        {
-            fprintf(fp, "%s> !! %s\n", VPREFIX, recvbuffer);
-            continue;
-        }
-
-        fprintf(fp, "%s> -> %s", VPREFIX, recvbuffer);
     }
 
     if (fp != stdout)

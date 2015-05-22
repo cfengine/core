@@ -411,7 +411,8 @@ void DoExec(const ServerConnectionState *conn, const char *args)
         }
     }
 
-    snprintf(sendbuf, sizeof(sendbuf), "cf-serverd executing: %s",
+    snprintf(sendbuf, sizeof(sendbuf),
+             "cf-serverd executing cfruncommand: %s\n",
              cmdbuff);
     SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
     Log(LOG_LEVEL_INFO, "%s", sendbuf);
@@ -457,7 +458,12 @@ void DoExec(const ServerConnectionState *conn, const char *args)
 
         if (print)
         {
-            snprintf(sendbuf, sizeof(sendbuf), "%s", line);
+            /* Prefixing output with "> " and postfixing with '\n' is new
+             * behaviour as of 3.7.0. Prefixing happens to avoid zero-length
+             * transaction packet. */
+            /* Old cf-runagent versions do not append a newline, so we must do
+             * it here. New ones do though, so TODO deprecate. */
+            snprintf(sendbuf, sizeof(sendbuf), "> %s\n", line);
             if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)
             {
                 Log(LOG_LEVEL_ERR,

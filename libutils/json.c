@@ -1130,7 +1130,7 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
     return NULL;
 }
 
-JsonElement *JsonArrayGet(JsonElement *array, size_t index)
+JsonElement *JsonArrayGet(const JsonElement *array, size_t index)
 {
     assert(array);
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);

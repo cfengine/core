@@ -344,7 +344,7 @@ const char *JsonArrayGetAsString(JsonElement *array, size_t index);
   */
 JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 
-JsonElement *JsonArrayGet(JsonElement *array, size_t index);
+JsonElement *JsonArrayGet(const JsonElement *array, size_t index);
 
 
 /**

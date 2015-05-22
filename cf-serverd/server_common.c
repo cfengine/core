@@ -55,33 +55,12 @@ static const int CF_NOSIZE = -1;
 
 void RefuseAccess(ServerConnectionState *conn, char *errmesg)
 {
-    char *username, *ipaddr;
-    char *def = "?";
-
-    if (strlen(conn->username) == 0)
-    {
-        username = def;
-    }
-    else
-    {
-        username = conn->username;
-    }
-
-    if (strlen(conn->ipaddr) == 0)
-    {
-        ipaddr = def;
-    }
-    else
-    {
-        ipaddr = conn->ipaddr;
-    }
-
-    char buf[CF_BUFSIZE] = "";
-    snprintf(buf, sizeof(buf), "%s", CF_FAILEDSTR);
-    SendTransaction(conn->conn_info, buf, 0, CF_DONE);
+    SendTransaction(conn->conn_info, CF_FAILEDSTR, 0, CF_DONE);
 
     Log(LOG_LEVEL_VERBOSE, "REFUSAL to (user=%s,ip=%s) of request: %s",
-        username, ipaddr, errmesg);
+        NULL_OR_EMPTY(conn->username) ? "?" : conn->username,
+        NULL_OR_EMPTY(conn->ipaddr)   ? "?" : conn->ipaddr,
+        errmesg);
 }
 
 bool IsUserNameValid(const char *username)
@@ -271,15 +250,12 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 
 void Terminate(ConnectionInfo *connection)
 {
-    char buffer[CF_BUFSIZE];
-
-    memset(buffer, 0, CF_BUFSIZE);
-
-    strcpy(buffer, CFD_TERMINATOR);
-
-    if (SendTransaction(connection, buffer, strlen(buffer) + 1, CF_DONE) == -1)
+    /* We send a trailing NULL in this transaction packet. TODO WHY? */
+    if (SendTransaction(connection, CFD_TERMINATOR,
+                        strlen(CFD_TERMINATOR) + 1, CF_DONE) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to reply with terminator. (send: %s)", GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE, "Unable to reply with terminator. (send: %s)",
+            GetErrorStr());
     }
 }
 

@@ -57,7 +57,7 @@ ENTERPRISE_FUNC_8ARG_DECLARE(PromiseResult, LogFileChange,
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_TrackExecution, const char *, input_file);
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenerateDiffReports, const GenericAgentConfig *, config, const EvalContext *, ctx);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenerateReports, const GenericAgentConfig *, config, const EvalContext *, ctx);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_NoteAgentExecutionPerformance, const char *,
                                   input_file, struct timespec, start);
 

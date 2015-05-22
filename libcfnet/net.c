@@ -59,7 +59,9 @@ int SendTransaction(const ConnectionInfo *conn_info,
         len = strlen(buffer);
     }
 
-    assert(len > 0);            /* Not allowed to send zero-payload packets */
+    /* Not allowed to send zero-payload packets, because
+       (ReceiveTransaction() == 0) currently means connection closed. */
+    assert(len > 0);
 
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
@@ -178,6 +180,8 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     }
     else if (len <= 0)
     {
+        /* Zero-length packets are disallowed, because
+         * ReceiveTransaction() == 0 currently means connection closed. */
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: packet too short (len=%d)", len);
         return -1;
@@ -214,17 +218,21 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
 
-    LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction data: ", buffer, ret);
-
-    /* Should never happen given that we are using SSL_MODE_AUTO_RETRY and
-     * that transaction payload < CF_BUFSIZE < TLS record size. */
-    if (ret > 0 && ret < len)
+    if (ret == -1 || ret == 0)
     {
+        return ret;
+    }
+    else if (ret != len)
+    {
+        /* Should never happen given that we are using SSL_MODE_AUTO_RETRY and
+         * that transaction payload < CF_BUFSIZE < TLS record size. */
         Log(LOG_LEVEL_ERR,
-            "Partial transaction read %d < %d bytes!",
+            "Partial transaction read %d != %d bytes!",
             ret, len);
         return -1;
     }
+
+    LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction data: ", buffer, ret);
 
     return ret;
 }

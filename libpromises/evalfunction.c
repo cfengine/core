@@ -5517,7 +5517,9 @@ static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy
 {
     char *input = RlistScalarValue(finalargs);
     char *type = RlistScalarValue(finalargs->next);
-    char *options = RlistScalarValue(finalargs->next->next);
+
+    /* Third argument can currently only be "infix". */
+    /* char *options = RlistScalarValue(finalargs->next->next); */
 
     const bool context_mode = (strcmp(type, "class") == 0);
 

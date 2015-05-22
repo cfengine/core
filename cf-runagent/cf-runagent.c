@@ -508,7 +508,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
 
     if (conn == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "No suitable server responded to hail");
+        Log(LOG_LEVEL_ERR, "Failed to connect to host: %s", hostname);
         return false;
     }
 

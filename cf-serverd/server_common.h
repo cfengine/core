@@ -42,7 +42,7 @@ int AllowedUser(char *user);
 bool IsUserNameValid(const char *username);
 int MatchClasses(EvalContext *ctx, ServerConnectionState *conn);
 void Terminate(ConnectionInfo *connection);
-void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args);
+void DoExec(const ServerConnectionState *conn, const char *args);
 void CfGetFile(ServerFileGetState *args);
 void CfEncryptGetFile(ServerFileGetState *args);
 int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename);

@@ -442,6 +442,9 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
         gotkey = HavePublicKey(user, ipaddr, hostkey) != NULL;
         if (!gotkey)
         {
+            /* TODO print the hash of the connecting host. But to do that we
+             * should open the connection first, and somehow pass that hash
+             * here! redmine#7212 */
             printf("WARNING - You do not have a public key from host %s = %s\n",
                    hostname, ipaddr);
             printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
@@ -704,6 +707,8 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
             break;
         }
 
+        /* TODO VPREFIX is blank, shouldn't it be the IP address? */
+
         if ((sp = strstr(recvbuffer, "BAD:")) != NULL)
         {
             fprintf(fp, "%s> !! %s\n", VPREFIX, recvbuffer + 4);
@@ -747,7 +752,7 @@ static FILE *NewStream(char *name)
 
     if (OUTPUT_TO_FILE)
     {
-        printf("Opening file...%s\n", filename);
+        printf("Opening file... %s\n", filename);
 
         if ((fp = fopen(filename, "w")) == NULL)
         {

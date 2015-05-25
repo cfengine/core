@@ -259,7 +259,8 @@ void CloseDBInstance(DBHandle *handle)
     /* Wait until all DB users are served, or a threshold is reached */
     int count = 0;
     ThreadLock(&handle->lock);
-    while (handle->refcount > 0 && count < 1000) {
+    while (handle->refcount > 0 && count < 1000)
+    {
         ThreadUnlock(&handle->lock);
 
         struct timespec sleeptime = {
@@ -274,12 +275,15 @@ void CloseDBInstance(DBHandle *handle)
     /* Keep mutex locked. */
 
     /* If we exited because of timeout make sure we Log() it. */
-    if (handle->refcount != 0) {
+    if (handle->refcount != 0)
+    {
         Log(LOG_LEVEL_ERR,
                 "Database %s refcount is still not zero (%d), forcing CloseDB()!",
                 handle->filename, handle->refcount);
         DBPrivCloseDB(handle->priv);
-    } else /* TODO: can we clean this up unconditionally ? */ {
+    }
+    else /* TODO: can we clean this up unconditionally ? */
+    {
         free(handle->filename);
         free(handle->subname);
         handle->filename = NULL;

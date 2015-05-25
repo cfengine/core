@@ -176,7 +176,7 @@ static PackagePromiseType GetPackagePromiseVersion(const Packages *packages,
 PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_FAIL;
-    char *promise_log_message;
+    char *promise_log_message = NULL;
     LogLevel level;
     
     Attributes a = GetPackageAttributes(ctx, pp);
@@ -188,6 +188,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
         case PACKAGE_PROMISE_TYPE_NEW:
             result = HandleNewPackagePromiseType(ctx, pp, a, &promise_log_message,
                     &level);
+            
+            assert(promise_log_message != NULL);
             
             if (result != PROMISE_RESULT_SKIPPED)
             {

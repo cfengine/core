@@ -63,12 +63,12 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
     wrapper->package_module = package_module;
     
     /* Check if file exists */
-    struct stat sb;
-    if (!wrapper->path || (stat(wrapper->path, &sb) != 0))
+    if (!wrapper->path || (access(wrapper->path, X_OK) != 0))
     {
         Log(LOG_LEVEL_VERBOSE,
-            "can not find package wrapper in provided location: %s",
-            wrapper->path);
+            "can not find package wrapper in provided location '%s' "
+            "or access to file is restricted: %d",
+            wrapper->path, errno);
         DeletePackageModuleWrapper(wrapper);
         return NULL;
     }
@@ -83,6 +83,11 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
         DeletePackageModuleWrapper(wrapper);
         return NULL;
     }
+    
+    Log(LOG_LEVEL_DEBUG,
+        "Successfully created package module wrapper for '%s' package module.",
+        package_module->name);
+    
     return wrapper;
 }
 
@@ -186,12 +191,12 @@ static void ParseAndLogErrorMessage(const Rlist *data)
         }
         else if (StringStartsWith(line, "ErrorMessage="))
         {
-            Log(LOG_LEVEL_VERBOSE, "Caught error message: %s", 
+            Log(LOG_LEVEL_INFO, "Caught error message: %s", 
                 line + strlen("ErrorMessage="));
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Caught unsupported error info: %s", line);
+            Log(LOG_LEVEL_INFO, "Caught unsupported error info: %s", line);
         }
     }
 }
@@ -211,28 +216,26 @@ static int IsReadWriteReady(const IOData *io, int timeout_sec)
     //      work with file descriptors.
     int ret = select(io->read_fd + 1, &rset, NULL, NULL, &tv);
 
-    if(ret < 0)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_VERBOSE, "Failed checking for data. (select: %s)",
             GetErrorStr());
         return -1;
     }
-
     else if (FD_ISSET(io->read_fd, &rset))
     {
         return io->read_fd;
     }
 
     /* We have reached timeout */
-    if(ret == 0)
+    if (ret == 0)
     {
         Log(LOG_LEVEL_DEBUG, "Timeout reading from package module.");
         return 0;
     }
 
     Log(LOG_LEVEL_VERBOSE,
-        "Unknown outcome (ret > 0 but our only fds is not set). (select: %s)",
-        GetErrorStr());
+        "Unknown outcome (ret > 0 but our only fd is not set).");
 
     return -1;
 }
@@ -251,7 +254,7 @@ static Rlist *ReadDataFromPackageScript(const IOData *io)
     
     int timeout_seconds_left = PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC;
     
-    while(!IsPendingTermination() && timeout_seconds_left > 0)
+    while (!IsPendingTermination() && timeout_seconds_left > 0)
     {
         int fd = IsReadWriteReady(io, PACKAGE_PROMISE_TERMINATION_CHECK_SEC);
         
@@ -335,7 +338,7 @@ int WriteDataToPackageModule(const char *args, const char *data,
     IOData io = cf_popen_full_duplex(command, false);
     free(command);
     
-    if (io.write_fd == 0 || io.read_fd == 0)
+    if (io.write_fd == -1 || io.read_fd == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Error occurred while opening pipes for "
             "communication with package module.");
@@ -372,7 +375,7 @@ static int ReadWriteDataToPackageScript(const char *args, const char *request,
     IOData io = cf_popen_full_duplex(command, false);
     free(command);
     
-    if (io.write_fd == 0 || io.read_fd == 0)
+    if (io.write_fd == -1 || io.read_fd == -1)
     {
         Log(LOG_LEVEL_INFO, "Some error occurred while communicating "
             "package module.");
@@ -437,11 +440,11 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
     
     for (const Rlist *rp = data; rp != NULL; rp = rp->next)
     {
-        char *line = RlistScalarValue(rp);
+        const char *line = RlistScalarValue(rp);
                    
         if (StringStartsWith(line, "PackageType="))
         {
-            char *type = line + strlen("PackageType=");
+            const char *type = line + strlen("PackageType=");
             if (StringSafeEqual(type, "file"))
             {
                 package_data->type = PACKAGE_TYPE_FILE;
@@ -463,8 +466,9 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
             {
                 /* Some error occurred as we already have name for 
                  * given package. */
-                Log(LOG_LEVEL_ERR, "Duplicated package name "
-                    "received: [%s] %s", line, package_data->name);
+                Log(LOG_LEVEL_ERR,
+                    "Extraneous package name line received: [%s] %s",
+                    line, package_data->name);
                 free(package_data);
                 return NULL;
             }
@@ -477,8 +481,9 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
             {
                 /* Some error occurred as we already have version for 
                  * given package. */
-                Log(LOG_LEVEL_ERR, "Duplicated package version "
-                    "received: [%s] %s", line, package_data->version);
+                Log(LOG_LEVEL_ERR,
+                    "Extraneous package version line received: [%s] %s",
+                    line, package_data->version);
                 free(package_data);
                 return NULL;
             }
@@ -491,8 +496,9 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
             {
                 /* Some error occurred as we already have arch for 
                  * given package. */
-               Log(LOG_LEVEL_ERR, "Duplicated package architecture "
-                    "received: [%s] %s", line, package_data->arch);
+               Log(LOG_LEVEL_ERR,
+                   "Extraneous package architecture line received: [%s] %s",
+                   line, package_data->arch);
                 free(package_data);
                 return NULL;
             }
@@ -502,12 +508,12 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
         /* For handling errors */
         else if (StringStartsWith(line, "Error="))
         {
-            Log(LOG_LEVEL_VERBOSE, "have error: %s",
+            Log(LOG_LEVEL_VERBOSE, "package_module - have error: %s",
                 line + strlen("Error="));
         }
         else if (StringStartsWith(line, "ErrorMessage="))
         {
-            Log(LOG_LEVEL_VERBOSE, "have error message: %s",
+            Log(LOG_LEVEL_VERBOSE, "package_module - have error message: %s",
                 line + strlen("ErrorMessage="));
         }
         else
@@ -521,14 +527,16 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
 
 static int NegotiateSupportedAPIVersion(PackageModuleWrapper *wrapper)
 {
+    Log(LOG_LEVEL_DEBUG, "Getting supported API version.");
+    
     int api_version = -1;
 
     Rlist *response = NULL;
     if (ReadWriteDataToPackageScript("supports-api-version", "",
                                      &response, wrapper) != 0)
     {
-        Log(LOG_LEVEL_INFO, "Some error occurred while communicating with "
-            "wrapper while getting supported API version.");
+        Log(LOG_LEVEL_INFO,
+            "Error occurred while getting supported API version.");
         return -1;
     }
     
@@ -550,6 +558,8 @@ static
 PackageInfo *GetPackageData(const char *name, Rlist *options,
                             const PackageModuleWrapper *wrapper)
 {   
+    Log(LOG_LEVEL_DEBUG, "Getting package '%s' data.", name);
+    
     char *options_str = ParseOptions(options);
     char *request = StringFormat("%sFile=%s\n", options_str, name);
     
@@ -573,10 +583,11 @@ PackageInfo *GetPackageData(const char *name, Rlist *options,
         
         if (package_data)
         {
-            /* At this point at least package name MUST be known (if no error) */
+            /* At this point at least package name and type MUST be known
+             * (if no error) */
             if (!package_data->name || package_data->type == PACKAGE_TYPE_NONE)
             {
-                Log(LOG_LEVEL_INFO, "Unknown package name.");
+                Log(LOG_LEVEL_INFO, "Unknown package name or type.");
                 FreePackageInfo(package_data);
                 package_data = NULL;
             }
@@ -603,7 +614,7 @@ static int IsPackageInCache(EvalContext *ctx,
     const char *version = ver;
     /* Handle latest version in specific way for repo packages. 
      * Please note that for file packages 'latest' version is not supported
-     * and check against that is made elsewhere. */
+     * and check against that is made in CheckPolicyAndPackageInfoMatch(). */
     if (version && StringSafeEqual(version, "latest"))
     {
         version = NULL;
@@ -648,7 +659,7 @@ static int IsPackageInCache(EvalContext *ctx,
     int is_in_cache = 0;
     char buff[1];
     
-    Log(LOG_LEVEL_DEBUG, "looking for key in cache: %s", key);
+    Log(LOG_LEVEL_DEBUG, "Looking for key in installed packages cache: %s", key);
     
     if (ReadDB(db_cached, key, buff, 1))
     {
@@ -682,24 +693,7 @@ void WritePackageDataToDB(CF_DB *db_installed,
     
     xsnprintf(package_key, sizeof(package_key),
               "N<%s>", name);
-    if ((type == UPDATE_TYPE_UPDATES || type == UPDATE_TYPE_LOCAL_UPDATES) && 
-            HasKeyDB(db_installed, package_key, strlen(package_key) + 1))
-    {
-        size_t val_size =
-                ValueSizeDB(db_installed, package_key, strlen(package_key));
-        char buff[val_size + strlen(arch) + strlen(ver) + 8];
-        
-        ReadDB(db_installed, package_key, buff, val_size);
-        xsnprintf(buff + val_size, sizeof(package_key), "V<%s>A<%s>\n", ver, arch);
-        WriteDB(db_installed, package_key, buff, strlen(buff));
-    }
-    else if (type == UPDATE_TYPE_UPDATES || type == UPDATE_TYPE_LOCAL_UPDATES)
-    {
-        char buff[strlen(arch) + strlen(ver) + 8];
-        xsnprintf(buff, sizeof(package_key), "V<%s>A<%s>\n", ver, arch);
-        WriteDB(db_installed, package_key, buff, strlen(buff));
-    }
-    else /* UPDATE_TYPE_INSTALLED */
+    if (type == UPDATE_TYPE_INSTALLED)
     {
         WriteDB(db_installed, package_key, "1", 1);
         xsnprintf(package_key, sizeof(package_key),
@@ -711,6 +705,25 @@ void WritePackageDataToDB(CF_DB *db_installed,
         xsnprintf(package_key, sizeof(package_key),
                 "N<%s>V<%s>A<%s>", name, ver, arch);
         WriteDB(db_installed, package_key, "1", 1);
+    }
+    else if (HasKeyDB(db_installed, package_key, strlen(package_key) + 1))
+    {
+        /* type == UPDATE_TYPE_UPDATES || type == UPDATE_TYPE_LOCAL_UPDATES */
+        size_t val_size =
+                ValueSizeDB(db_installed, package_key, strlen(package_key));
+        char buff[val_size + strlen(arch) + strlen(ver) + 8];
+
+        ReadDB(db_installed, package_key, buff, val_size);
+        xsnprintf(buff + val_size, sizeof(package_key), "V<%s>A<%s>\n",
+                  ver, arch);
+        WriteDB(db_installed, package_key, buff, strlen(buff));
+    }
+    else
+    {
+        /* type == UPDATE_TYPE_UPDATES || type == UPDATE_TYPE_LOCAL_UPDATES */
+        char buff[strlen(arch) + strlen(ver) + 8];
+        xsnprintf(buff, sizeof(package_key), "V<%s>A<%s>\n", ver, arch);
+        WriteDB(db_installed, package_key, buff, strlen(buff));
     }
 }
 
@@ -729,38 +742,33 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
         
         Buffer *inventory_data = BufferNewWithCapacity(INVENTORY_LIST_BUFFER_SIZE);
 
-        char *package_data[3] = {NULL, NULL, NULL};
+        const char *package_data[3] = {NULL, NULL, NULL};
 
         for (const Rlist *rp = data; rp != NULL; rp = rp->next)
         {
-            char *line = RlistScalarValue(rp);
+            const char *line = RlistScalarValue(rp);
 
             if (StringStartsWith(line, "Name="))
             {
-                /* We have all the information we need from previous loop
-                 * iteration. */
-                if (package_data[0] && package_data[1] && package_data[2])
+                if (package_data[0])
                 {
-                    WritePackageDataToDB(db_cached, package_data[0],
-                                         package_data[1], package_data[2], type);
-                    
-                    char inventory_line[strlen(package_data[0]) +
-                                        strlen(package_data[1]) +
-                                        strlen(package_data[2]) + 4];
-                    
-                    xsnprintf(inventory_line, sizeof(inventory_line),
-                              "%s,%s,%s\n", package_data[0], package_data[1],
-                              package_data[2]);
-                    BufferAppendString(inventory_data, inventory_line);
+                    if (package_data[1] && package_data[2])
+                    {
+                        WritePackageDataToDB(db_cached, package_data[0],
+                                             package_data[1], package_data[2],
+                                             type);
 
-                    package_data[1] = NULL;
-                    package_data[2] = NULL;
-                }
-                else if (package_data[0] && (!package_data[1] || !package_data[2]))
-                {
-                    /* some error occurred */
-                    Log(LOG_LEVEL_VERBOSE, "Malformed response from package "
-                        "manager for package %s", package_data[0]);
+                        BufferAppendF(inventory_data, "%s,%s,%s\n", 
+                                      package_data[0], package_data[1],
+                                      package_data[2]);
+                    }
+                    else
+                    {
+                        /* some error occurred */
+                        Log(LOG_LEVEL_VERBOSE,
+                                "Malformed response from package module for package %s",
+                                package_data[0]);
+                    }
                     package_data[1] = NULL;
                     package_data[2] = NULL;
                 }
@@ -797,20 +805,22 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
                  have_error = true;
             }
         }
-        /* We have one more entry left. */
+        /* We should have one more entry left or empty 'package_data'. */
         if (package_data[0] && package_data[1] && package_data[2])
         {
             WritePackageDataToDB(db_cached, package_data[0],
                              package_data[1], package_data[2], type);
-            
-            char inventory_line[strlen(package_data[0]) +
-                                strlen(package_data[1]) +
-                                strlen(package_data[2]) + 4];
 
-            xsnprintf(inventory_line, sizeof(inventory_line),
-                      "%s,%s,%s\n", package_data[0], package_data[1],
-                      package_data[2]);
-            BufferAppendString(inventory_data, inventory_line);
+            BufferAppendF(inventory_data, "%s,%s,%s\n", package_data[0],
+                          package_data[1], package_data[2]);
+        }
+        else if (package_data[0] || package_data[1] || package_data[2])
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Malformed response from package manager: [%s:%s:%s]",
+                package_data[0] ? package_data[0] : "",
+                package_data[1] ? package_data[1] : "",
+                package_data[2] ? package_data[2] : "");
         }
         
         char *inventory_key = "<inventory>";
@@ -839,6 +849,8 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
 bool UpdateCache(Rlist* options, const PackageModuleWrapper *wrapper,
                  UpdateType type)
 {
+    Log(LOG_LEVEL_DEBUG, "Updating cache: %d", type);
+    
     char *options_str = ParseOptions(options);
     Rlist *response = NULL;
     
@@ -890,20 +902,23 @@ PromiseResult ValidateChangedPackage(const NewPackages *policy_data,
                                      const PackageInfo *package_info,
                                      NewPackageAction action_type)
 {
+    assert(package_info && package_info->name);
+    
+    Log(LOG_LEVEL_DEBUG, "Validating package: %s", package_info->name);
     
     if (!UpdateCache(policy_data->package_options, wrapper,
                      UPDATE_TYPE_INSTALLED))
     {
-        Log(LOG_LEVEL_INFO, "Can not update installed packages cache after "
-            "package installation");
+        Log(LOG_LEVEL_INFO,
+            "Can not update installed packages cache after package installation");
         return PROMISE_RESULT_FAIL;
     }
     
     if (!UpdateCache(policy_data->package_options, wrapper,
                      UPDATE_TYPE_LOCAL_UPDATES))
     {
-        Log(LOG_LEVEL_INFO, "Can not update available updates cache after "
-            "package installation");
+        Log(LOG_LEVEL_INFO,
+            "Can not update available updates cache after package installation");
         return PROMISE_RESULT_FAIL;
     }
 
@@ -922,8 +937,8 @@ PromiseResult ValidateChangedPackage(const NewPackages *policy_data,
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Some error occurred while reading installed "
-            "packages cache.");
+        Log(LOG_LEVEL_INFO,
+            "Some error occurred while reading installed packages cache.");
         return PROMISE_RESULT_FAIL;
     }
 }
@@ -948,8 +963,8 @@ PromiseResult RemovePackage(const char *name, Rlist* options,
     if (ReadWriteDataToPackageScript("remove", request, 
             &error_message, wrapper) != 0)
     {
-        Log(LOG_LEVEL_INFO, "Some error occurred while communicating with "
-            "package module while removing package.");
+        Log(LOG_LEVEL_INFO,
+            "Error communicating package module while removing package.");
         res = PROMISE_RESULT_FAIL;
     }
     if (error_message)
@@ -973,6 +988,11 @@ static PromiseResult InstallPackageGeneric(Rlist *options,
         PackageType type, const char *packages_list_formatted,
         const PackageModuleWrapper *wrapper)
 {
+    Log(LOG_LEVEL_DEBUG,
+        "Installing %s type package: '%s'", 
+        type == PACKAGE_TYPE_FILE ? "file" : "repo",
+        packages_list_formatted);
+    
     char *options_str = ParseOptions(options);
     char *request = StringFormat("%s%s", options_str, packages_list_formatted);
     
@@ -1032,12 +1052,21 @@ PromiseResult InstallPackage(Rlist *options,
     if (type == PACKAGE_TYPE_FILE)
     {
         request = StringFormat("File=%s\n%s%s",
-            package_to_install, ver ? ver : "", arch ? arch : "");
+                               package_to_install,
+                               ver ? ver : "",
+                               arch ? arch : "");
     }
     else if (type == PACKAGE_TYPE_REPO)
     {
         request = StringFormat("Name=%s\n%s%s",
-            package_to_install, ver ? ver : "", arch ? arch : "");
+                               package_to_install,
+                               ver ? ver : "",
+                               arch ? arch : "");
+    }
+    else
+    {
+        /* If we end up here something bad has happened. */
+        ProgrammingError("Unsupported package type");
     }
     
     res = InstallPackageGeneric(options, type, request, wrapper);
@@ -1091,6 +1120,8 @@ PromiseResult FileInstallPackage(const char *package_file_path,
 Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
                             const PackageModuleWrapper *module_wrapper)
 {   
+    assert(info && info->name);
+    
     CF_DB *db_updates;
     dbid db_id = dbid_packages_updates;
     Seq *updates_list = NULL;
@@ -1126,24 +1157,25 @@ Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
             
             for (int i = 0; i < SeqLength(updates); i++)
             {
-                PackageInfo *package = calloc(1, sizeof(PackageInfo));
-
                 char *package_line = SeqAt(updates, i);
                 char version[strlen(package_line)];
                 char arch[strlen(package_line)];
 
                 if (sscanf(package_line, "V<%[^>]>A<%[^>]>", version, arch) == 2)
                 {
+                    PackageInfo *package = xcalloc(1, sizeof(PackageInfo));
+                    
+                    package->name = SafeStringDuplicate(info->name);
                     package->version = SafeStringDuplicate(version);
                     package->arch = SafeStringDuplicate(arch);
                     SeqAppend(updates_list, package);
                 }
                 else
                 {
-                    Log(LOG_LEVEL_INFO, "Not able to parse available updates "
-                        "line: %s", package_line);
                     /* Some error occurred while scanning package updates. */
-                    FreePackageInfo(package);
+                    Log(LOG_LEVEL_INFO,
+                        "Unable to parse available updates line: %s",
+                        package_line);
                 }
             }
         }
@@ -1165,6 +1197,13 @@ PromiseResult RepoInstall(EvalContext *ctx,
     /* Package is not present in cache. */
     if (is_in_cache == 0)
     {
+        /* Make sure cache is updated. */
+        if (!UpdateSinglePackageModuleCache(ctx, wrapper,
+                                            UPDATE_TYPE_UPDATES, false))
+        {
+            Log(LOG_LEVEL_INFO, "Can not update packages cache.");
+        }
+        
         const char *version = package_info->version;
         if (package_info->version &&
                 StringSafeEqual(package_info->version, "latest"))
@@ -1178,7 +1217,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
             return PROMISE_RESULT_FAIL;
         }
         
-        *verified = false; /* Verification will be done elsewhere. */
+        *verified = false; /* Verification will be done in RepoInstallPackage(). */
         return InstallPackage(policy_data->package_options, PACKAGE_TYPE_REPO,
                               package_info->name, version, package_info->arch,
                               wrapper);
@@ -1190,7 +1229,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
     
     /* We have 'latest' version in policy. */
     if (package_info->version &&
-                StringSafeEqual(package_info->version, "latest"))
+        StringSafeEqual(package_info->version, "latest"))
     {
         /* This can return more than one latest version if we have packages
          * with different architectures installed. */
@@ -1198,8 +1237,9 @@ PromiseResult RepoInstall(EvalContext *ctx,
                 GetVersionsFromUpdates(ctx, package_info, wrapper);
         if (!latest_versions)
         {
-            Log(LOG_LEVEL_VERBOSE, "Package '%s' is already in the latest "
-                "version. Skipping instalation.", package_info->name);
+            Log(LOG_LEVEL_VERBOSE,
+                "Package '%s' is already in the latest version. "
+                "Skipping instalation.", package_info->name);
 
             return PROMISE_RESULT_NOOP;
         }
@@ -1213,20 +1253,30 @@ PromiseResult RepoInstall(EvalContext *ctx,
         {
             PackageInfo *update_package = SeqAt(latest_versions, i);
             
-            Log(LOG_LEVEL_DEBUG, "Checking for package '%s' version '%s' in "
-                "available updates", package_info->name,
-                update_package->version);
+            Log(LOG_LEVEL_DEBUG,
+                "Checking for package '%s' version '%s' in available updates",
+                package_info->name, update_package->version);
             
             /* Just in case some package managers will report highest possible 
              * version in updates list instead of removing entry if package is 
              * already in the latest version. */
-            if (IsPackageInCache(ctx, wrapper, package_info->name,
-                                 update_package->version,
-                                 update_package->arch) == 1)
+            int is_in_cache = IsPackageInCache(ctx, wrapper, package_info->name,
+                                               update_package->version,
+                                               update_package->arch);
+            if (is_in_cache == 1)
             {
-                Log(LOG_LEVEL_VERBOSE, "Package version from updates matches "
-                    "one installed. Skipping package instalation.");
+                Log(LOG_LEVEL_VERBOSE,
+                    "Package version from updates matches one installed. "
+                    "Skipping package instalation.");
                 res = PromiseResultUpdate(res, PROMISE_RESULT_NOOP);
+                continue;
+            }
+            else if (is_in_cache == -1)
+            {
+                Log(LOG_LEVEL_INFO,
+                    "Skipping package installation due to error with checking "
+                    "packages cache.");
+                res = PromiseResultUpdate(res, PROMISE_RESULT_FAIL);
                 continue;
             }
             else
@@ -1267,8 +1317,9 @@ PromiseResult RepoInstall(EvalContext *ctx,
             /* If we have some packages to install. */
             if (strlen(install_formated_list) > 0)
             {
-                Log(LOG_LEVEL_DEBUG, "Formatted list of packages to be send to "
-                    "package module: %s", install_formated_list);
+                Log(LOG_LEVEL_DEBUG,
+                    "Formatted list of packages to be send to package module: "
+                    "[%s]", install_formated_list);
                 res = InstallPackageGeneric(policy_data->package_options,
                                       PACKAGE_TYPE_REPO,
                                       install_formated_list, wrapper);
@@ -1280,9 +1331,10 @@ PromiseResult RepoInstall(EvalContext *ctx,
                             ValidateChangedPackage(policy_data, wrapper,
                                                    to_verify,
                                                    NEW_PACKAGE_ACTION_PRESENT);
-                    Log(LOG_LEVEL_DEBUG, "Validating package %s:%s:%s "
-                        "installation result: %d", to_verify->name,
-                            to_verify->version, to_verify->arch, validate);
+                    Log(LOG_LEVEL_DEBUG,
+                        "Validating package %s:%s:%s installation result: %d",
+                         to_verify->name, to_verify->version,
+                         to_verify->arch, validate);
                     res = PromiseResultUpdate(res, validate);
                     *verified = true;
                 }
@@ -1519,6 +1571,10 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
 {
     assert(module_wrapper->package_module->name);
     
+    Log(LOG_LEVEL_DEBUG,
+        "Trying to %s update cache type: %d.",
+        force_update ? "force" : "", type);
+    
     if (!force_update)
     {
         if (module_wrapper->package_module->installed_ifelapsed == CF_NOINT ||
@@ -1563,26 +1619,25 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
 
     char *db_name = DBIdToSubPath(dbid_val, module_wrapper->name);
     struct stat statbuf;
-    if (!force_update && stat(db_name, &statbuf) == -1 && errno == ENOENT)
-    {
-        /* Force update if database file doesn't exist. Not strictly necessary
-         * with the locks we have, but good to have for tests that delete the
-         * database. */
-        Log(LOG_LEVEL_VERBOSE, "Forcing package list update due to "
-            "missing database");
-        force_update = true;
-    }
-    free(db_name);
-
     if (!force_update)
     {
+        if (stat(db_name, &statbuf) == -1 && errno == ENOENT)
+        {
+            /* Force update if database file doesn't exist. Not strictly 
+             * necessary with the locks we have, but good to have for tests 
+             * that delete the database. */
+            Log(LOG_LEVEL_VERBOSE,
+                "Forcing package list update due to missing database");
+            force_update = true;
+        }
+
         cache_updates_lock =
-            AcquireLock(ctx, cache_updates_lock_name, VUQNAME, CFSTARTTIME,
-                (TransactionContext) 
-                {.ifelapsed = ifelapsed_time,
-                 .expireafter = VEXPIREAFTER},
-                &pp, false);
+                AcquireLock(ctx, cache_updates_lock_name, VUQNAME, CFSTARTTIME,
+                            (TransactionContext) { .ifelapsed = ifelapsed_time,
+                                                   .expireafter = VEXPIREAFTER},
+                            &pp, false);
     }
+    free(db_name);
 
     bool ret = true;
     
@@ -1596,7 +1651,7 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
                 "Some error occurred while updating available updates cache.");
             ret = false;
         }
-        if (!force_update)
+        if (cache_updates_lock.lock != NULL)
         {
             YieldCurrentLock(cache_updates_lock);
         }

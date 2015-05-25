@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
 
     Nova_TrackExecution(config->input_file);
     
-    /* Update package promise cache. */
+    /* Update packages cache. */
     UpdatePackagesCache(ctx, false);
     
     GenerateReports(config, ctx);    

@@ -171,8 +171,9 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
 
 static pid_t CreatePipeAndFork(const char *type, int *pd)
 {
-    IOPipe pipes[2] = {{0}};
+    IOPipe pipes[2];
     pipes[0].type = type;
+    pipes[1].type = NULL; /* We don't want to create this one. */
     
     pid_t pid = GenericCreatePipeAndFork(pipes);
     
@@ -186,7 +187,7 @@ static pid_t CreatePipeAndFork(const char *type, int *pd)
 
 static pid_t CreatePipesAndFork(const char *type, int *pd, int *pdb)
 {
-    IOPipe pipes[2] = {{0}};
+    IOPipe pipes[2];
     /* Both pipes MUST have the same type. */
     pipes[0].type = type;
     pipes[1].type = type;
@@ -217,7 +218,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
     if (pid < 0)
     {
         Log(LOG_LEVEL_ERR, "Couldn't fork child process: %s", GetErrorStr());
-        return (IOData) {0, 0};
+        return (IOData) {-1, -1};
     }
     
     else if (pid > 0) // parent
@@ -225,7 +226,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
         close(child_pipe[WRITE]);
         close(parent_pipe[READ]);
         
-        IOData io_desc = {0};
+        IOData io_desc;
         io_desc.write_fd = parent_pipe[WRITE];
         io_desc.read_fd = child_pipe[READ];
         

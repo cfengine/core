@@ -79,7 +79,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
     
     CfLock package_promise_lock;
     char promise_lock[CF_BUFSIZE];
-    snprintf(promise_lock, CF_BUFSIZE - 1, "new-package-%s-%s",
+    snprintf(promise_lock, sizeof(promise_lock), "new-package-%s-%s",
              pp->promiser, a.new_packages.module_body->name);
 
     if (global_lock.g_lock.lock == NULL)
@@ -152,7 +152,8 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
             break;
         case NEW_PACKAGE_ACTION_NONE:
         default:
-            assert(0); /* This MUST be handled by sanity check. */
+            ProgrammingError("Unsupported package action: %d",
+                             a.new_packages.package_policy);
             break;
     }
     

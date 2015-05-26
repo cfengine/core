@@ -975,3 +975,42 @@ char *StringCanonify(char *dst, const char *src)
 
     return dst;
 }
+
+/**
+ * Append #src to #dst, delimiting with #sep if not at the beginning.
+ *
+ * @param #dst_len In-out parameter. If not NULL it is taken into account as
+ *                 the current length of #dst, and updated as such.
+ *
+ * @retval false if it doesn't fit, in which case nothing gets appended and
+ *               #dst remains as is.
+ */
+bool StringAppendDelimited(char *dst, size_t *dst_len, size_t dst_size,
+                           const char *src, char sep)
+{
+    size_t len     = (dst_len != NULL) ? *dst_len : strlen(dst);
+    size_t src_len = strlen(src);
+
+    if (len + src_len + 1 >= dst_size)
+    {
+        return false;
+    }
+
+    /* Append a separator if dst is not empty. */
+    if (len > 0)
+    {
+        dst[len] = sep;
+        len++;
+    }
+
+    memcpy(&dst[len], src, src_len);
+    len += src_len;
+    dst[len] = '\0';
+
+    if (dst_len != NULL)
+    {
+        *dst_len = len;
+    }
+
+    return true;
+}

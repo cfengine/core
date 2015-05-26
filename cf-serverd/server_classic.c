@@ -1168,7 +1168,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        DoExec(ctx, conn, args);
+        DoExec(conn, args);
         Terminate(conn->conn_info);
         return false;
 

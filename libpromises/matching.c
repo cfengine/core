@@ -238,11 +238,12 @@ int IsPathRegex(const char *str)
 
 /* Checks whether item matches a list of wildcards */
 
-int IsRegexItemIn(EvalContext *ctx, const Item *list, const char *regex)
+int IsRegexItemIn(const EvalContext *ctx, const Item *list, const char *regex)
 {
     for (const Item *ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if ((ptr->classes) && (!IsDefinedClass(ctx, ptr->classes)))
+        if (ctx != NULL && ptr->classes != NULL &&
+            !IsDefinedClass(ctx, ptr->classes))
         {
             continue;
         }

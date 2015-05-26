@@ -661,8 +661,8 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  * @brief Receives at most #length bytes of data from the SSL session
  *        and stores it in the buffer.
  * @param ssl SSL information.
- * @param buffer Buffer, of size at least CF_BUFSIZE, to store received data.
- * @param length Length of the data to receive, must be < CF_BUFSIZE.
+ * @param buffer Buffer, of size at least #toget + 1 to store received data.
+ * @param toget Length of the data to receive, must be < CF_BUFSIZE.
  * @return The length of the received data, which could be smaller or equal
  *         than the requested or -1 in case of error or 0 if connection was
  *         closed.
@@ -670,15 +670,15 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
  *       operation completed or an error occurred.
  */
-int TLSRecv(SSL *ssl, char *buffer, int length)
+int TLSRecv(SSL *ssl, char *buffer, int toget)
 {
-    assert(length > 0);
-    assert(length < CF_BUFSIZE);
+    assert(toget > 0);
+    assert(toget < CF_BUFSIZE);
     assert_SSLIsBlocking(ssl);
 
     /* TODO what is the return value of SSL_read in case of socket timeout? */
 
-    int received = SSL_read(ssl, buffer, length);
+    int received = SSL_read(ssl, buffer, toget);
     if (received < 0)
     {
         TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_read", received);

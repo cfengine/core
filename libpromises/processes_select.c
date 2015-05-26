@@ -833,9 +833,20 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
             {
                 Log(LOG_LEVEL_DEBUG, "End of '%s' is %d", title, offset - 1);
                 end[col++] = offset - 1;
-                if (col > CF_PROCCOLS - 1)
+                if (col >= CF_PROCCOLS) /* No space for more columns. */
                 {
-                    Log(LOG_LEVEL_ERR, "Column overflow in process table");
+                    size_t blank = strspn(sp, " \t\r\n\f\v");
+                    if (sp[blank]) /* i.e. that wasn't everything. */
+                    {
+                        /* If this happens, we have more columns in
+                         * our ps output than space to store them.
+                         * Update the #define CF_PROCCOLS (last seen
+                         * in libpromises/cf3.defs.h) to a bigger
+                         * number ! */
+                        Log(LOG_LEVEL_ERR,
+                            "Process table lacks space for last columns: %s",
+                            sp + blank);
+                    }
                     break;
                 }
             }

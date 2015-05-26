@@ -2169,40 +2169,6 @@ static void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, Def
     DeleteAllClasses(ctx, del_classes);
 }
 
-static void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, const char *reason)
-{
-    if (!IsPromiseValuableForLogging(pp))
-    {
-        return;
-    }
-
-    char compliance_status;
-
-    switch (status)
-    {
-    case PROMISE_RESULT_CHANGE:
-        compliance_status = PROMISE_STATE_REPAIRED;
-        break;
-
-    case PROMISE_RESULT_WARN:
-    case PROMISE_RESULT_TIMEOUT:
-    case PROMISE_RESULT_FAIL:
-    case PROMISE_RESULT_DENIED:
-    case PROMISE_RESULT_INTERRUPTED:
-        compliance_status = PROMISE_STATE_NOTKEPT;
-        break;
-
-    case PROMISE_RESULT_NOOP:
-        compliance_status = PROMISE_STATE_ANY;
-        break;
-
-    default:
-        ProgrammingError("Unknown status '%c' has been passed to UpdatePromiseComplianceStatus", status);
-    }
-
-    NotePromiseCompliance(pp, compliance_status, reason);
-}
-
 static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const char *logname)
 {
     if (logname && (tc.log_string))
@@ -2406,7 +2372,6 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
     /* Now complete the exits status classes and auditing */
 
     ClassAuditLog(ctx, pp, attr, status);
-    UpdatePromiseComplianceStatus(status, pp, msg);
     free(msg);
 }
 

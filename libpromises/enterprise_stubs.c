@@ -85,11 +85,6 @@ ENTERPRISE_FUNC_1ARG_DEFINE_STUB(const char *, PromiseID, ARG_UNUSED const Promi
 /* all agents: logging.c */
 
 
-ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, NotePromiseCompliance, ARG_UNUSED const Promise *, pp,
-                                      ARG_UNUSED PromiseState, state, ARG_UNUSED const char *, reason)
-{
-}
-
 ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(void, TrackValue, char *, date, double, kept, double, repaired, double, notkept)
 {
 }

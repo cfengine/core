@@ -35,6 +35,7 @@ typedef struct
 
 IOData cf_popen_full_duplex(const char *command, bool capture_stderr);
 int cf_pclose_full_duplex(IOData *data);
+int cf_pclose_full_duplex_side(int fd);
 
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr);
 FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);

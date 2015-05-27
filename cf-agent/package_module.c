@@ -314,7 +314,7 @@ static int WriteScriptData(const char *data, IOData *io)
     {
         if (io->write_fd >= 0)
         {
-            close(io->write_fd);
+            cf_pclose_full_duplex_side(io->write_fd);
             io->write_fd = -1;
         }
         return 0;
@@ -325,7 +325,7 @@ static int WriteScriptData(const char *data, IOData *io)
     /* Make sure to close write_fd after sending all data. */
     if (io->write_fd >= 0)
     {
-        close(io->write_fd);
+        cf_pclose_full_duplex_side(io->write_fd);
         io->write_fd = -1;
     }
     return wrt;

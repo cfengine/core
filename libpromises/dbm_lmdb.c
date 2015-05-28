@@ -317,6 +317,24 @@ void DBPrivCloseDB(DBPriv *db)
     free(db);
 }
 
+#define EMPTY_DB 0
+
+bool DBPrivClean(DBPriv *db)
+{
+    DBTxn *txn;
+    int rc = GetWriteTransaction(db, &txn);
+    
+    if (rc != MDB_SUCCESS)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to get write transaction: %s", mdb_strerror(rc));
+        return false;
+    }
+    
+    assert(!txn->cursor_open);
+    
+    return mdb_drop(txn->txn, db->dbi, EMPTY_DB);
+}
+
 void DBPrivCommit(DBPriv *db)
 {
     DBTxn *db_txn = pthread_getspecific(db->txn_key);

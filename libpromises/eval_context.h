@@ -162,6 +162,7 @@ VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalCont
 
 bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key);
 void EvalContextPromiseLockCachePut(EvalContext *ctx, const char *key);
+void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key);
 bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out);
 void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval);
 
@@ -207,6 +208,17 @@ bool Abort(EvalContext *ctx);
 void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result);
 bool MissingDependencies(EvalContext *ctx, const Promise *pp);
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
+
+PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
+
+void AddDefaultPackageModuleToContext(const EvalContext *ctx, char *name);
+void AddDefaultInventoryToContext(const EvalContext *ctx, Rlist *inventory);
+
+void AddPackageModuleToContext(const EvalContext *ctx, PackageModuleBody *pm);
+PackageModuleBody *GetPackageModuleFromContext(const EvalContext *ctx, const char *name);
+PackageModuleBody *GetDefaultPackageModuleFromContext(const EvalContext *ctx);
+Rlist *GetDefaultInventoryFromContext(const EvalContext *ctx);
+PackagePromiseContext *GetPackagePromiseContext(const EvalContext *ctx);
 
 /* This function is temporarily exported. It needs to be made an detail of
  * evaluator again, once variables promises are no longer specially handled */

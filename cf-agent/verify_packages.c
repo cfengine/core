@@ -23,6 +23,8 @@
 */
 
 #include <verify_packages.h>
+#include <verify_new_packages.h>
+#include <package_module.h>
 
 #include <actuator.h>
 #include <promises.h>
@@ -93,6 +95,15 @@
 #define PromiseResultUpdate_HELPER(__pp, __prior, __evidence) \
     REPORT_THIS_PROMISE(__pp) ? PromiseResultUpdate(__prior, __evidence) : __evidence
 
+typedef enum
+{
+    PACKAGE_PROMISE_TYPE_OLD = 0,
+    PACKAGE_PROMISE_TYPE_NEW,
+    PACKAGE_PROMISE_TYPE_MIXED,
+    PACKAGE_PROMISE_TYPE_OLD_ERROR,
+    PACKAGE_PROMISE_TYPE_NEW_ERROR
+} PackagePromiseType;
+
 static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp);
 
 static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **alllists, const char *default_arch, Attributes a, const Promise *pp, PromiseResult *result);
@@ -115,6 +126,8 @@ static void DeletePackageManagers(PackageManager *morituri);
 
 static const char *PrefixLocalRepository(const Rlist *repositories, const char *package);
 
+PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, Attributes a);
+
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ReportPatches, ARG_UNUSED PackageManager *, list)
 {
     Log(LOG_LEVEL_VERBOSE, "Patch reporting feature is only available in the enterprise version");
@@ -131,8 +144,93 @@ PackageManager *INSTALLED_PACKAGE_LISTS = NULL; /* GLOBAL_X */
 
 #define PACKAGE_IGNORED_CFE_INTERNAL "cfe_internal_non_existing_package"
 
+/* Returns the old or new package promise type depending on promise 
+   constraints. */
+static PackagePromiseType GetPackagePromiseVersion(const Packages *packages,
+        const NewPackages *new_packages)
+{
+    /* We have mixed packages promise constraints. */
+    if (!packages->is_empty && !new_packages->is_empty)
+    {
+        return PACKAGE_PROMISE_TYPE_MIXED;
+    }
+    else if (!new_packages->is_empty) /* new packages promise */
+    {
+        if (new_packages->package_policy == NEW_PACKAGE_ACTION_NONE)
+        {
+            return PACKAGE_PROMISE_TYPE_NEW_ERROR;
+        }
+        return PACKAGE_PROMISE_TYPE_NEW;
+    }
+    else /* old packages promise */
+    {
+        //TODO:
+        if (!packages->has_package_method)
+        {
+            return PACKAGE_PROMISE_TYPE_OLD_ERROR;
+        }
+        return PACKAGE_PROMISE_TYPE_OLD;
+    }
+}
+
+PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
+{
+    PromiseResult result = PROMISE_RESULT_FAIL;
+    char *promise_log_message = NULL;
+    LogLevel level;
+    
+    Attributes a = GetPackageAttributes(ctx, pp);
+    PackagePromiseType package_promise_type =
+            GetPackagePromiseVersion(&a.packages, &a.new_packages);
+    
+    switch (package_promise_type)
+    {
+        case PACKAGE_PROMISE_TYPE_NEW:
+            result = HandleNewPackagePromiseType(ctx, pp, a, &promise_log_message,
+                    &level);
+            
+            assert(promise_log_message != NULL);
+            
+            if (result != PROMISE_RESULT_SKIPPED)
+            {
+                cfPS(ctx, level, result, pp, a, "%s", promise_log_message);
+            }
+            free(promise_log_message);
+            break;
+        case PACKAGE_PROMISE_TYPE_OLD:
+            result = HandleOldPackagePromiseType(ctx, pp, a);
+        
+            /* Update new package promise cache in case we have mixed old and new 
+             * package promises in policy. */
+            if (result == PROMISE_RESULT_CHANGE || result == PROMISE_RESULT_FAIL)
+            {
+                UpdatePackagesCache(ctx, false);
+            }
+            break;
+        case PACKAGE_PROMISE_TYPE_NEW_ERROR:
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, 
+                         "New package promise failed sanity check.");
+            break;
+        case PACKAGE_PROMISE_TYPE_OLD_ERROR:
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, 
+                         "Old package promise failed sanity check.");
+            break;
+        case PACKAGE_PROMISE_TYPE_MIXED:
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, 
+                         "Mixed old and new package promise attributes inside "
+                         "one package promise.");
+            break;
+        default:
+            assert(0); //Shouldn't happen
+    }
+    return result;
+}
+
+
+/******************************************************************************/
+
 /**
-   @brief Verifies a single packages promise
+   @brief Executes single packages promise
 
    Called by cf-agent.
 
@@ -151,12 +249,12 @@ PackageManager *INSTALLED_PACKAGE_LISTS = NULL; /* GLOBAL_X */
    @param pp [in] the Promise for this operation
    @returns the promise result
 */
-PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
+PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, Attributes a)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
     PromiseResult result = PROMISE_RESULT_NOOP;
-
+    
     const char *reserved_vars[] = { "name", "version", "arch", "firstrepo", NULL };
     for (int c = 0; reserved_vars[c]; c++)
     {
@@ -169,9 +267,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
         }
         VarRefDestroy(var_ref);
     }
-
-    Attributes a = GetPackageAttributes(ctx, pp);
-
+    
 #ifdef __MINGW32__
 
     if(!a.packages.package_list_command)
@@ -191,12 +287,23 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     PromiseBanner(ctx, pp);
 
 // Now verify the package itself
+    
+    PackagePromiseGlobalLock package_lock = AcquireGlobalPackagePromiseLock(ctx);
+    if (package_lock.g_lock.lock == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, 
+            "Can not aquire global lock for package promise. Skipping promise "
+            "evaluation");
+        result = PROMISE_RESULT_SKIPPED;
+        goto end;
+    }
 
     snprintf(lockname, CF_BUFSIZE - 1, "package-%s-%s", pp->promiser, a.packages.package_list_command);
 
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     if (thislock.lock == NULL)
     {
+        YieldGlobalPackagePromiseLock(package_lock);
         result = PROMISE_RESULT_SKIPPED;
         goto end;
     }
@@ -214,6 +321,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     {
         cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to obtain default architecture for package manager - aborting");
         YieldCurrentLock(thislock);
+        YieldGlobalPackagePromiseLock(package_lock);
         result = PROMISE_RESULT_FAIL;
         goto end;
     }
@@ -224,6 +332,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
         cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to obtain a list of installed packages - aborting");
         free(default_arch);
         YieldCurrentLock(thislock);
+        YieldGlobalPackagePromiseLock(package_lock);
         result = PROMISE_RESULT_FAIL;
         goto end;
     }
@@ -244,6 +353,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+    YieldGlobalPackagePromiseLock(package_lock);
 
 end:
     if (!REPORT_THIS_PROMISE(pp))

@@ -420,20 +420,23 @@ static char *BodyName(const Promise *pp)
         size += strlen(sp);
     }
 
-    for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
+    if (pp->conlist)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
+        for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
         {
-            continue;
-        }
+            Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
-        {
-            strcat(name, cp->lval);
-            strcat(name, ".");
-            size += strlen(cp->lval);
+            if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
+            {
+                continue;
+            }
+
+            if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+            {
+                strcat(name, cp->lval);
+                strcat(name, ".");
+                size += strlen(cp->lval);
+            }
         }
     }
 
@@ -533,71 +536,74 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char diges
         EVP_DigestUpdate(&context, salt, strlen(salt));
     }
 
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    if (pp->conlist)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        EVP_DigestUpdate(&context, cp->lval, strlen(cp->lval));
-
-        // don't hash rvals that change (e.g. times)
-        doHash = true;
-
-        for (int j = 0; noRvalHash[j] != NULL; j++)
+        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
         {
-            if (strcmp(cp->lval, noRvalHash[j]) == 0)
+            Constraint *cp = SeqAt(pp->conlist, i);
+
+            EVP_DigestUpdate(&context, cp->lval, strlen(cp->lval));
+
+            // don't hash rvals that change (e.g. times)
+            doHash = true;
+
+            for (int j = 0; noRvalHash[j] != NULL; j++)
             {
-                doHash = false;
-                break;
-            }
-        }
-
-        if (!doHash)
-        {
-            continue;
-        }
-
-        switch (cp->rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
-            break;
-
-        case RVAL_TYPE_LIST:
-            for (rp = cp->rval.item; rp != NULL; rp = rp->next)
-            {
-                EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
-            }
-            break;
-
-        case RVAL_TYPE_FNCALL:
-
-            /* Body or bundle */
-
-            fp = (FnCall *) cp->rval.item;
-
-            EVP_DigestUpdate(&context, fp->name, strlen(fp->name));
-
-            for (rp = fp->args; rp != NULL; rp = rp->next)
-            {
-                switch (rp->val.type)
+                if (strcmp(cp->lval, noRvalHash[j]) == 0)
                 {
-                case RVAL_TYPE_SCALAR:
-                    EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
-                    break;
-
-                case RVAL_TYPE_FNCALL:
-                    EVP_DigestUpdate(&context, RlistFnCallValue(rp)->name, strlen(RlistFnCallValue(rp)->name));
-                    break;
-
-                default:
-                    ProgrammingError("Unhandled case in switch");
+                    doHash = false;
                     break;
                 }
             }
-            break;
 
-        default:
-            break;
+            if (!doHash)
+            {
+                continue;
+            }
+
+            switch (cp->rval.type)
+            {
+            case RVAL_TYPE_SCALAR:
+                EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
+                break;
+
+            case RVAL_TYPE_LIST:
+                for (rp = cp->rval.item; rp != NULL; rp = rp->next)
+                {
+                    EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
+                }
+                break;
+
+            case RVAL_TYPE_FNCALL:
+
+                /* Body or bundle */
+
+                fp = (FnCall *) cp->rval.item;
+
+                EVP_DigestUpdate(&context, fp->name, strlen(fp->name));
+
+                for (rp = fp->args; rp != NULL; rp = rp->next)
+                {
+                    switch (rp->val.type)
+                    {
+                    case RVAL_TYPE_SCALAR:
+                        EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
+                        break;
+
+                    case RVAL_TYPE_FNCALL:
+                        EVP_DigestUpdate(&context, RlistFnCallValue(rp)->name, strlen(RlistFnCallValue(rp)->name));
+                        break;
+
+                    default:
+                        ProgrammingError("Unhandled case in switch");
+                        break;
+                    }
+                }
+                break;
+
+            default:
+                break;
+            }
         }
     }
 
@@ -837,6 +843,20 @@ void YieldCurrentLock(CfLock lock)
     free(lock.lock);
     free(lock.log);
 }
+
+void YieldCurrentLockAndRemoveFromCache(EvalContext *ctx, CfLock lock,
+        const char *operand, const Promise *pp)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
+    char str_digest[CF_HOSTKEY_STRING_SIZE];
+    HashPrintSafe(str_digest, sizeof(str_digest), digest,
+                  CF_DEFAULT_DIGEST, true);
+    
+    YieldCurrentLock(lock);
+    EvalContextPromiseLockCacheRemove(ctx, str_digest);
+}
+
 
 void GetLockName(char *lockname, const char *locktype, const char *base, const Rlist *params)
 {

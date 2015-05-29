@@ -221,6 +221,30 @@ void DBPrivCommit(ARG_UNUSED DBPriv *db)
 {
 }
 
+bool DBPrivClean(DBPriv *db)
+{
+    DBCursorPriv *cursor = DBPrivOpenCursor(db);
+    
+    if (!cursor)
+    {
+        return false;
+    }
+    
+    void *key;
+    int key_size;
+    void *value;
+    int value_size;
+    
+    while ((DBPrivAdvanceCursor(cursor, &key, &key_size, &value, &value_size)))
+    {
+        DBPrivDeleteCursorEntry(cursor);
+    }
+    
+    DBPrivCloseCursor(cursor);
+    
+    return true;
+}
+
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
     // FIXME: distinguish between "entry not found" and "error occurred"

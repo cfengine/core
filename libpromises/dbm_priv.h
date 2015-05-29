@@ -51,6 +51,7 @@ void DBPrivSetMaximumConcurrentTransactions(int max_txn);
 DBPriv *DBPrivOpenDB(const char *dbpath, dbid id);
 void DBPrivCloseDB(DBPriv *hdbp);
 void DBPrivCommit(DBPriv *hdbp);
+bool DBPrivClean(DBPriv *hdbp);
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size);
 int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size);

@@ -264,6 +264,8 @@ const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
     ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: \"latest\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("tls_ciphers", "", "List of acceptable ciphers in outgoing TLS connections. For syntax help see man page for \"openssl ciphers\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("tls_min_version", "", "Minimum acceptable TLS version for outgoing connections. Default is \"1.0\"", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("package_inventory", ".*", "Name of the package manager used for software inventory management", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("package_module", ".*", "Name of the default package manager", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

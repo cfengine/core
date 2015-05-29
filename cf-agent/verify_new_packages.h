@@ -22,27 +22,13 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_LOCKS_H
-#define CFENGINE_LOCKS_H
+#ifndef CFENGINE_VERIFY_NEW_PACKAGES_H
+#define CFENGINE_VERIFY_NEW_PACKAGES_H
 
 #include <cf3.defs.h>
 
-time_t FindLockTime(const char *name);
+PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
+                                          Attributes a, char **promise_log_msg,
+                                          LogLevel *log_lvl);
 
-CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now, TransactionContext tc, const Promise *pp, bool ignoreProcesses);
-void YieldCurrentLock(CfLock lock);
-void YieldCurrentLockAndRemoveFromCache(EvalContext *ctx, CfLock lock,
-                                        const char *operand, const Promise *pp);
-void GetLockName(char *lockname, const char *locktype, const char *base, const Rlist *params);
-
-void PurgeLocks(void);
-void BackupLockDatabase(void);
-void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
-
-int WriteLock(const char *lock);
-CF_DB *OpenLock(void);
-void CloseLock(CF_DB *dbp);
-
-void WaitForCriticalSection(const char *section_id);
-void ReleaseCriticalSection(const char *section_id);
 #endif

@@ -73,6 +73,7 @@ LineSelect GetDeleteSelectConstraints(const EvalContext *ctx, const Promise *pp)
 LineSelect GetInsertSelectConstraints(const EvalContext *ctx, const Promise *pp);
 Measurement GetMeasurementConstraint(const EvalContext *ctx, const Promise *pp);
 Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp);
+NewPackages GetNewPackageConstraints(const EvalContext *ctx, const Promise *pp);
 User GetUserConstraints(const EvalContext *ctx, const Promise *pp);
 ProcessCount GetMatchesConstraints(const EvalContext *ctx, const Promise *pp);
 ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise *pp);

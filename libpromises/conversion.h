@@ -43,6 +43,7 @@ const char *DataTypeToString(DataType dtype);
 PackageActionPolicy PackageActionPolicyFromString(const char *s);
 PackageVersionComparator PackageVersionComparatorFromString(const char *s);
 PackageAction PackageActionFromString(const char *s);
+NewPackageAction GetNewPackagePolicy(const char *s, const char **action_types);
 AclMethod AclMethodFromString(const char *string);
 AclType AclTypeFromString(const char *string);
 AclDefault AclDefaultFromString(const char *string);

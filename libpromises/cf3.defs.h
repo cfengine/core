@@ -412,6 +412,8 @@ typedef enum
     COMMON_CONTROL_PROTOCOL_VERSION,
     COMMON_CONTROL_TLS_CIPHERS,
     COMMON_CONTROL_TLS_MIN_VERSION,
+    COMMON_CONTROL_PACKAGE_INVENTORY,
+    COMMON_CONTROL_PACKAGE_MANAGER,
     COMMON_CONTROL_MAX
 } CommonControl;
 
@@ -752,6 +754,13 @@ typedef enum
     PACKAGE_ACTION_VERIFY,
     PACKAGE_ACTION_NONE
 } PackageAction;
+
+typedef enum
+{
+    NEW_PACKAGE_ACTION_ABSENT,
+    NEW_PACKAGE_ACTION_PRESENT,
+    NEW_PACKAGE_ACTION_NONE
+} NewPackageAction;
 
 typedef enum
 {
@@ -1245,7 +1254,6 @@ typedef struct
 typedef struct
 {
     PackageAction package_policy;
-    int have_package_methods;
     char *package_version;
     Rlist *package_architectures;
     PackageVersionComparator package_select;
@@ -1290,7 +1298,43 @@ typedef struct
     char *package_version_equal_command;
 
     int package_noverify_returncode;
+    
+    bool has_package_method;
+    bool is_empty;
 } Packages;
+
+/*************************************************************************/
+
+typedef struct
+{
+    char *name;
+    int updates_ifelapsed;
+    int installed_ifelapsed;
+    Rlist *options;
+} PackageModuleBody;
+
+
+typedef struct
+{
+    Rlist *control_package_inventory; /* list of all inventory used package managers 
+                                       * names taken from common control */
+    char *control_package_module;    /* policy default package manager name */
+    Seq *package_modules_bodies; /* list of all discovered in policy PackageManagerBody 
+                                   * bodies taken from common control */
+} PackagePromiseContext;
+
+
+typedef struct
+{
+    NewPackageAction package_policy;
+    PackageModuleBody *module_body;
+    Rlist *package_inventory;
+    char *package_version;
+    char *package_architecture;
+    Rlist *package_options;
+    
+    bool is_empty;
+} NewPackages;
 
 /*************************************************************************/
 
@@ -1453,6 +1497,7 @@ typedef struct
     FileLink link;
     EditDefaults edits;
     Packages packages;
+    NewPackages new_packages;
     ContextConstraint context;
     Measurement measure;
     Acl acl;

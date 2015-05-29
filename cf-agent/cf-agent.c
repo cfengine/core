@@ -76,6 +76,7 @@
 #include <loading.h>
 #include <conn_cache.h>                 /* ConnCache_Init,ConnCache_Destroy */
 #include <net.h>
+#include <package_module.h>
 
 #include <mod_common.h>
 
@@ -250,7 +251,11 @@ int main(int argc, char *argv[])
     }
 
     Nova_TrackExecution(config->input_file);
-    GenerateReports(config, ctx);
+    
+    /* Update packages cache. */
+    UpdatePackagesCache(ctx, false);
+    
+    GenerateReports(config, ctx);    
 
     PurgeLocks();
     BackupLockDatabase();
@@ -1148,11 +1153,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         FatalError(ctx, "Errors in agent bundles");
     }
 
-        Writer *w = StringWriter();
-        WriterWrite(w, "Using bundlesequence => ");
-        RlistWrite(w, bundlesequence);
-        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        WriterClose(w);
+    Writer *w = StringWriter();
+    WriterWrite(w, "Using bundlesequence => ");
+    RlistWrite(w, bundlesequence);
+    Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+    WriterClose(w);
 
 /* If all is okay, go ahead and evaluate */
 

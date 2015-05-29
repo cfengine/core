@@ -30,7 +30,7 @@ bool PipeTypeIsOk(const char *type)
     {
         return false;
     }
-    else if (type[1] != 't')
+    else if (type[1] != 't' && type[1] != '+')
     {
         if (type[1] == '\0')
         {
@@ -41,7 +41,7 @@ bool PipeTypeIsOk(const char *type)
             return false;
         }
     }
-    else if (type[2] == '\0')
+    else if (type[2] == '\0' || type[2] == 't')
     {
         return true;
     }

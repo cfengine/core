@@ -243,7 +243,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
         if (dup2(parent_pipe[READ], 0) == -1 || dup2(child_pipe[WRITE],1) == -1)
         {
             Log(LOG_LEVEL_ERR, "Can not execute dup2: %s", GetErrorStr());
-            _Exit(EXIT_FAILURE);
+            _exit(EXIT_FAILURE);
         }
         
         if (capture_stderr)
@@ -253,7 +253,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
             {
                 Log(LOG_LEVEL_ERR, "Can not execute dup2 for merging stderr: %s", 
                     GetErrorStr());
-                _Exit(EXIT_FAILURE);
+                _exit(EXIT_FAILURE);
             }
         }
         else
@@ -273,7 +273,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
             Log(LOG_LEVEL_ERR, "Couldn't run '%s'. (execv: %s)", argv[0], GetErrorStr());
         }
         /* We shouldn't reach this point */
-        _Exit(EXIT_FAILURE);
+        _exit(EXIT_FAILURE);
     }
 }
 

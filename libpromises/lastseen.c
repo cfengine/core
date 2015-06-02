@@ -611,7 +611,7 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
         is_coherent = IsLastSeenCoherent();
         if (is_coherent == false)
         {
-            Log(LOG_LEVEL_ERR, "Lastseen database is incoherent. Will not proceed to remove entries from it.");
+            Log(LOG_LEVEL_ERR, "Lastseen database is incoherent (there is not a 1-to-1 relationship between hosts and keys) and coherence check is enforced. Will not proceed to remove entries from it.");
             return 254;
         }
     }

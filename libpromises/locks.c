@@ -871,6 +871,23 @@ void GetLockName(char *lockname, const char *locktype, const char *base, const R
     }
 }
 
+/**
+ * Returns pointer to the first byte in #buf that is not #c. Returns NULL if
+ * all of #buf contains only bytes of value #c.
+ */
+static void *memcchr(const void *buf, int c, size_t buf_size)
+{
+    const char *cbuf = buf;
+    for (size_t i = 0; i < buf_size; i++)
+    {
+        if (cbuf[i] != c)
+        {
+            return (void *) &cbuf[i];                    /* cast-away const */
+        }
+    }
+    return NULL;
+}
+
 static void CopyLockDatabaseAtomically(const char *from, const char *to,
                                        const char *from_pretty_name, const char *to_pretty_name)
 {
@@ -905,16 +922,36 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
             break;
         }
 
-        int write_status = write(to_fd, data, read_status);
-        if (write_status < 0)
+        /* Is the file sparse? */
+        if (memcchr(data, '\0', read_status) == NULL)    /* is file sparse? */
         {
-            Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: '%s')", to_pretty_name, GetErrorStr());
-            goto cleanup_4;
+            /*
+             * TODO seek()ing is not enough to preserve sparse-ness on
+             * windows. TODO fix according to:
+             * https://msdn.microsoft.com/en-us/library/windows/desktop/aa365566%28v=vs.85%29.aspx
+             */
+            off_t seek_status = lseek(to_fd, read_status, SEEK_CUR);
+            if (seek_status == (off_t) -1)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Could not seek in file '%s' (lseek: %s)",
+                    to_pretty_name, GetErrorStr());
+                goto cleanup_4;
+            }
         }
-        else if (write_status == 0)
+        else                                          /* file is not sparse */
         {
-            Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: 'Unknown error')", to_pretty_name);
-            goto cleanup_4;
+            int write_status = write(to_fd, data, read_status);
+            if (write_status < 0)
+            {
+                Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: '%s')", to_pretty_name, GetErrorStr());
+                goto cleanup_4;
+            }
+            else if (write_status == 0)
+            {
+                Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: 'Unknown error')", to_pretty_name);
+                goto cleanup_4;
+            }
         }
     }
 

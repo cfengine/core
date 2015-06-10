@@ -548,18 +548,84 @@ static const char *const SERVER_TYPESEQUENCE[] =
     NULL
 };
 
+static const char *const COMMON_TYPESEQUENCE[] =
+{
+    "meta",
+    "vars",
+    "classes",
+    "reports",
+    NULL
+};
+
 /* Check if promise is NOT belonging to default server types 
  * (see SERVER_TYPESEQUENCE)*/
-static bool IsPromiseTypeNotInServerTypeSequence(const char *promise_type)
+static bool IsPromiseTypeNotInTypeSequence(const char *promise_type,
+                                           const char * const *seq)
 {
-    for (int type = 0; SERVER_TYPESEQUENCE[type] != NULL; type++)
+    for (int type = 0; seq[type] != NULL; type++)
     {
-        if (strcmp(promise_type, SERVER_TYPESEQUENCE[type]) == 0)
+        if (strcmp(promise_type, seq[type]) == 0)
         {
             return false;
         }
     }
     return true;
+}
+
+static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * const *seq)
+{
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+
+    for (int type = 0; seq[type] != NULL; type++)
+    {
+        const PromiseType *sp = BundleGetPromiseType((Bundle *)bp, seq[type]);
+
+        /* Some promise types might not be there. */
+        if (!sp || SeqLength(sp->promises) == 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "No promise type %s in bundle %s",
+                                 seq[type], bp->name);
+            continue;
+        }
+
+        EvalContextStackPushPromiseTypeFrame(ctx, sp);
+        for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
+        {
+            Promise *pp = SeqAt(sp->promises, ppi);
+            ExpandPromise(ctx, pp, KeepServerPromise, NULL);
+        }
+        EvalContextStackPopFrame(ctx);
+    }
+
+    /* Check if we are having some other promise types which we
+     * should evaluate. THIS IS ONLY FOR BACKWARD COMPATIBILITY! */
+    for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+    {
+        PromiseType *sp = SeqAt(bp->promise_types, j);
+
+        /* Skipping evaluation of promise as this was evaluated in
+         * loop above. */
+        if (!IsPromiseTypeNotInTypeSequence(sp->name, seq))
+        {
+            Log(LOG_LEVEL_DEBUG, "Skipping subsequent evaluation of "
+                    "promise type %s in bundle %s", sp->name, bp->name);
+            continue;
+        }
+
+        Log(LOG_LEVEL_WARNING, "Trying to evaluate unsupported/obsolete "
+                    "promise type %s in %s bundle %s", sp->name, bp->type, bp->name);
+
+        EvalContextStackPushPromiseTypeFrame(ctx, sp);
+        for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
+        {
+            Promise *pp = SeqAt(sp->promises, ppi);
+            ExpandPromise(ctx, pp, KeepServerPromise, NULL);
+        }
+        EvalContextStackPopFrame(ctx);
+
+    }
+
+    EvalContextStackPopFrame(ctx);
 }
 
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
@@ -571,8 +637,10 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
+        bool server_bundle = strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0;
+        bool common_bundle = strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0;
 
-        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
+        if (server_bundle || common_bundle)
         {
             if (RlistLen(bp->args) > 0)
             {
@@ -581,59 +649,16 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
                     bp->type, bp->name);
                 continue;
             }
+        }
 
-            EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-            
-            for (int type = 0; SERVER_TYPESEQUENCE[type] != NULL; type++)
-            {
-                const PromiseType *sp = BundleGetPromiseType((Bundle *)bp, SERVER_TYPESEQUENCE[type]);
-                
-                /* Some promise types might not be there. */
-                if (!sp || SeqLength(sp->promises) == 0)
-                {
-                    Log(LOG_LEVEL_DEBUG, "No promise type %s in bundle %s", 
-                                         SERVER_TYPESEQUENCE[type], bp->name);
-                    continue;
-                }
-                
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
-                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-                {
-                    Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
-                }
-                EvalContextStackPopFrame(ctx);
-            }
-            
-            /* Check if we are having some other promise types which we 
-             * should evaluate. THIS IS ONLY FOR BACKWARD COMPATIBILITY! */
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-            {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-                
-                /* Skipping evaluation of promise as this was evaluated in 
-                 * loop above. */
-                if (!IsPromiseTypeNotInServerTypeSequence(sp->name))
-                {
-                    Log(LOG_LEVEL_DEBUG, "Skipping subsequent evaluation of "
-                            "promise type %s in bundle %s", sp->name, bp->name);
-                    continue;
-                }
-                
-                Log(LOG_LEVEL_WARNING, "Trying to evaluate unsupported/obsolete "
-                            "promise type %s in bundle %s", sp->name, bp->name);
+        if (server_bundle)
+        {
+            EvaluateBundle(ctx, bp, SERVER_TYPESEQUENCE);
+        }
 
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
-                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-                {
-                    Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
-                }
-                EvalContextStackPopFrame(ctx);
-
-            }
-            
-            EvalContextStackPopFrame(ctx);
+        else if (common_bundle)
+        {
+            EvaluateBundle(ctx, bp, COMMON_TYPESEQUENCE);
         }
     }
 }

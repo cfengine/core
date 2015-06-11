@@ -245,8 +245,10 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for '%s'", pp->promiser);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            PromiseResult status = killed ? PROMISE_RESULT_CHANGE : PROMISE_RESULT_NOOP;
+            cfPS(ctx, LOG_LEVEL_INFO, status, pp, a,
+                 "Setting restart class '%s' for promise '%s'", a.restart_class, pp->promiser);
+            result = PromiseResultUpdate(result, status);
             EvalContextClassPutSoft(ctx, a.restart_class, CONTEXT_SCOPE_NAMESPACE, "source=promise");
         }
     }

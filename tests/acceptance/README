@@ -198,15 +198,16 @@ possible variable names:
       not be reported as a failure in the XML output, and is
       appropriate for test cases that document incoming bug reports.
       Suppressed failures will count as a failure, but it won't block
-      the build, and is appropriate for regressions or platform
-      differences.
+      the build, and is appropriate for regressions or bad test
+      failures.
 
 The rule of thumb is:
 
 * If you are writing an acceptance test for a (not yet fixed) bug in
-Redmine: Use test_soft_fail.
+  Redmine, use test_soft_fail.
 
-* If you are fixing failures on a specific platform: Use test_suppress_fail.
+* If you need the build to work, but the bug you are suppressing cannot
+  stay unfixed for long, use test_suppress_fail.
 
 In all cases, the variable is expected to be set to a class expression
 suitable for ifvarclass, where a positive match means that the test

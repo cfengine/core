@@ -159,7 +159,7 @@ PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
     
     package_promise_global_lock =
             AcquireLock(ctx, GLOBAL_PACKAGE_PROMISE_LOCK_NAME, VUQNAME, CFSTARTTIME,
-                        (TransactionContext) {.ifelapsed = VIFELAPSED,
+                        (TransactionContext) {.ifelapsed = 0,
                                               .expireafter = VEXPIREAFTER},
                         &pp, false);
                         

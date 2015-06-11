@@ -344,6 +344,9 @@ int WriteDataToPackageModule(const char *args, const char *data,
             "communication with package module.");
         return -1;
     }
+
+    Log(LOG_LEVEL_DEBUG, "Opened fds %d and %d for command '%s'.",
+        io.read_fd, io.write_fd, args);
     
     int res = 0;
     if (WriteScriptData(data, &io) != strlen(data))
@@ -354,10 +357,12 @@ int WriteDataToPackageModule(const char *args, const char *data,
     }
     
     /* If script returns non 0 status */
-    if (cf_pclose_full_duplex(&io) != EXIT_SUCCESS)
+    int close = cf_pclose_full_duplex(&io);
+    if (close != EXIT_SUCCESS)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Package module returned with non zero return code.");
+            "Package module returned with non zero return code: %d",
+            close);
         res = -1;
     }
     return res;
@@ -381,6 +386,9 @@ static int ReadWriteDataToPackageScript(const char *args, const char *request,
             "package module.");
         return -1;
     }
+
+    Log(LOG_LEVEL_DEBUG, "Opened fds %d and %d for command '%s'.",
+        io.read_fd, io.write_fd, args);
     
     if (WriteScriptData(request, &io) != strlen(request))
     {
@@ -392,14 +400,16 @@ static int ReadWriteDataToPackageScript(const char *args, const char *request,
     Rlist *res = ReadDataFromPackageScript(&io);
     
     /* If script returns non 0 status */
-    if (cf_pclose_full_duplex(&io) != EXIT_SUCCESS)
+    int close = cf_pclose_full_duplex(&io);
+    if (close != EXIT_SUCCESS)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Package module returned with non zero return code.");
+            "Package module returned with non zero return code: %d",
+            close);
         RlistDestroy(res);
         return -1;
     }
-    
+
     *response = res;
     return 0;
 }
@@ -1012,6 +1022,10 @@ static PromiseResult InstallPackageGeneric(Rlist *options,
         /* If we end up here something bad has happened. */
         ProgrammingError("Unsupported package type");
     }
+
+    Log(LOG_LEVEL_DEBUG,
+        "Sending install command to package module: '%s'",
+        request);
     
     Rlist *error_message = NULL;
     if (ReadWriteDataToPackageScript(package_install_command, request, 
@@ -1208,6 +1222,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
         if (package_info->version &&
                 StringSafeEqual(package_info->version, "latest"))
         {
+            Log(LOG_LEVEL_DEBUG, "Clearing latest package version");
             version = NULL;
         }
         if (action == cfa_warn || DONTDO)
@@ -1572,8 +1587,8 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
     assert(module_wrapper->package_module->name);
     
     Log(LOG_LEVEL_DEBUG,
-        "Trying to %s update cache type: %d.",
-        force_update ? "force" : "", type);
+        "Trying to%s update cache type: %d.",
+        force_update ? " force" : "", type);
     
     if (!force_update)
     {

@@ -692,7 +692,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     char cflast[CF_BUFSIZE] = "";
     snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
-    Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'", PromiseGetBundle(pp)->name, cflock);
+    Log(LOG_LEVEL_DEBUG, "Locking bundle '%s' with lock '%s'", PromiseGetBundle(pp)->name, cflock);
 
     // Now see if we can get exclusivity to edit the locks
     WaitForCriticalSection(CF_CRITIAL_SECTION);

@@ -29,7 +29,7 @@ bundle agent init
 {
   # AIX useradd/usermod commands do not support numerical group arguments.
   meta:
-      "test_suppress_fail" string => "aix",
+      "test_soft_fail" string => "aix",
         meta => { "redmine6285" };
 
       # No GIDs on Windows.

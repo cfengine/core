@@ -59,7 +59,7 @@ libpromises_la_SOURCES = \
         assoc.c assoc.h \
         audit.c audit.h \
         attributes.c attributes.h \
-        bootstrap.c bootstrap.h bootstrap.inc \
+        bootstrap.c bootstrap.h bootstrap.inc failsafe.cf \
         cf3.defs.h \
         cf3.extern.h \
         cf3globals.c \

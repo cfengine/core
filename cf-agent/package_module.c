@@ -720,12 +720,16 @@ void WritePackageDataToDB(CF_DB *db_installed,
     {
         /* type == UPDATE_TYPE_UPDATES || type == UPDATE_TYPE_LOCAL_UPDATES */
         size_t val_size =
-                ValueSizeDB(db_installed, package_key, strlen(package_key));
+                ValueSizeDB(db_installed, package_key, strlen(package_key) + 1);
         char buff[val_size + strlen(arch) + strlen(ver) + 8];
 
         ReadDB(db_installed, package_key, buff, val_size);
         xsnprintf(buff + val_size, sizeof(package_key), "V<%s>A<%s>\n",
                   ver, arch);
+        Log(LOG_LEVEL_DEBUG,
+            "Updating available updates key '%s' with value '%s'",
+            package_key, buff);
+
         WriteDB(db_installed, package_key, buff, strlen(buff));
     }
     else
@@ -1172,6 +1176,9 @@ Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
             for (int i = 0; i < SeqLength(updates); i++)
             {
                 char *package_line = SeqAt(updates, i);
+                Log(LOG_LEVEL_DEBUG, "Got line in updates database: '%s",
+                    package_line);
+
                 char version[strlen(package_line)];
                 char arch[strlen(package_line)];
 
@@ -1267,6 +1274,20 @@ PromiseResult RepoInstall(EvalContext *ctx,
         for (int i = 0; i < SeqLength(latest_versions); i++)
         {
             PackageInfo *update_package = SeqAt(latest_versions, i);
+
+            /* We can have multiple packages with different architectures
+             * in updates available but we are interested only in updating
+             * package with specific architecture. */
+            if (package_info->arch &&
+                    !StringSafeEqual(package_info->arch, update_package->arch))
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "Skipping update check of package '%s' as updates"
+                    "architecure doesn't match specified in policy: %s != %s.",
+                    package_info->name, package_info->arch,
+                    update_package->arch);
+                continue;
+            }
             
             Log(LOG_LEVEL_DEBUG,
                 "Checking for package '%s' version '%s' in available updates",

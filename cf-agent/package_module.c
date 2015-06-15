@@ -344,6 +344,9 @@ int WriteDataToPackageModule(const char *args, const char *data,
             "communication with package module.");
         return -1;
     }
+
+    Log(LOG_LEVEL_DEBUG, "Opened fds %d and %d for command '%s'.",
+        io.read_fd, io.write_fd, args);
     
     int res = 0;
     if (WriteScriptData(data, &io) != strlen(data))
@@ -354,10 +357,12 @@ int WriteDataToPackageModule(const char *args, const char *data,
     }
     
     /* If script returns non 0 status */
-    if (cf_pclose_full_duplex(&io) != EXIT_SUCCESS)
+    int close = cf_pclose_full_duplex(&io);
+    if (close != EXIT_SUCCESS)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Package module returned with non zero return code.");
+            "Package module returned with non zero return code: %d",
+            close);
         res = -1;
     }
     return res;
@@ -381,6 +386,9 @@ static int ReadWriteDataToPackageScript(const char *args, const char *request,
             "package module.");
         return -1;
     }
+
+    Log(LOG_LEVEL_DEBUG, "Opened fds %d and %d for command '%s'.",
+        io.read_fd, io.write_fd, args);
     
     if (WriteScriptData(request, &io) != strlen(request))
     {
@@ -392,14 +400,16 @@ static int ReadWriteDataToPackageScript(const char *args, const char *request,
     Rlist *res = ReadDataFromPackageScript(&io);
     
     /* If script returns non 0 status */
-    if (cf_pclose_full_duplex(&io) != EXIT_SUCCESS)
+    int close = cf_pclose_full_duplex(&io);
+    if (close != EXIT_SUCCESS)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Package module returned with non zero return code.");
+            "Package module returned with non zero return code: %d",
+            close);
         RlistDestroy(res);
         return -1;
     }
-    
+
     *response = res;
     return 0;
 }
@@ -710,12 +720,16 @@ void WritePackageDataToDB(CF_DB *db_installed,
     {
         /* type == UPDATE_TYPE_UPDATES || type == UPDATE_TYPE_LOCAL_UPDATES */
         size_t val_size =
-                ValueSizeDB(db_installed, package_key, strlen(package_key));
+                ValueSizeDB(db_installed, package_key, strlen(package_key) + 1);
         char buff[val_size + strlen(arch) + strlen(ver) + 8];
 
         ReadDB(db_installed, package_key, buff, val_size);
         xsnprintf(buff + val_size, sizeof(package_key), "V<%s>A<%s>\n",
                   ver, arch);
+        Log(LOG_LEVEL_DEBUG,
+            "Updating available updates key '%s' with value '%s'",
+            package_key, buff);
+
         WriteDB(db_installed, package_key, buff, strlen(buff));
     }
     else
@@ -1012,6 +1026,10 @@ static PromiseResult InstallPackageGeneric(Rlist *options,
         /* If we end up here something bad has happened. */
         ProgrammingError("Unsupported package type");
     }
+
+    Log(LOG_LEVEL_DEBUG,
+        "Sending install command to package module: '%s'",
+        request);
     
     Rlist *error_message = NULL;
     if (ReadWriteDataToPackageScript(package_install_command, request, 
@@ -1158,6 +1176,9 @@ Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
             for (int i = 0; i < SeqLength(updates); i++)
             {
                 char *package_line = SeqAt(updates, i);
+                Log(LOG_LEVEL_DEBUG, "Got line in updates database: '%s",
+                    package_line);
+
                 char version[strlen(package_line)];
                 char arch[strlen(package_line)];
 
@@ -1208,6 +1229,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
         if (package_info->version &&
                 StringSafeEqual(package_info->version, "latest"))
         {
+            Log(LOG_LEVEL_DEBUG, "Clearing latest package version");
             version = NULL;
         }
         if (action == cfa_warn || DONTDO)
@@ -1252,6 +1274,20 @@ PromiseResult RepoInstall(EvalContext *ctx,
         for (int i = 0; i < SeqLength(latest_versions); i++)
         {
             PackageInfo *update_package = SeqAt(latest_versions, i);
+
+            /* We can have multiple packages with different architectures
+             * in updates available but we are interested only in updating
+             * package with specific architecture. */
+            if (package_info->arch &&
+                    !StringSafeEqual(package_info->arch, update_package->arch))
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "Skipping update check of package '%s' as updates"
+                    "architecure doesn't match specified in policy: %s != %s.",
+                    package_info->name, package_info->arch,
+                    update_package->arch);
+                continue;
+            }
             
             Log(LOG_LEVEL_DEBUG,
                 "Checking for package '%s' version '%s' in available updates",
@@ -1572,8 +1608,8 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
     assert(module_wrapper->package_module->name);
     
     Log(LOG_LEVEL_DEBUG,
-        "Trying to %s update cache type: %d.",
-        force_update ? "force" : "", type);
+        "Trying to%s update cache type: %d.",
+        force_update ? " force" : "", type);
     
     if (!force_update)
     {

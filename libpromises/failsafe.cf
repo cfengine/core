@@ -67,6 +67,18 @@ bundle agent cfe_internal_checkkeys
 
 bundle agent cfe_internal_update
 {
+  vars:
+
+    policy_server::
+
+      # policy server cannot use shortcut feature to resolve masterfiles since cf-serverd is not yet up
+      "masterfiles_dir_remote" string => "$(sys.masterdir)";
+
+    !policy_server::
+
+      "masterfiles_dir_remote" string => "masterfiles";
+
+
   classes:
 
     any::
@@ -80,7 +92,7 @@ bundle agent cfe_internal_update
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
-      copy_from => u_scp("masterfiles"),
+      copy_from => u_scp("$(masterfiles_dir_remote)"),
       depth_search => u_recurse("inf"),
       classes => repaired("got_policy");
 

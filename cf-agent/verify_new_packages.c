@@ -146,9 +146,31 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                                                 a.transaction.action);
             *log_lvl = result == PROMISE_RESULT_FAIL ?
                                  LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE;
-            *promise_log_msg = result == PROMISE_RESULT_FAIL ?
-                StringFormat("Error installing package '%s'", pp->promiser) :
-                StringFormat("Successfully installed package '%s'", pp->promiser);
+            switch (result)
+            {
+                case PROMISE_RESULT_FAIL:
+                    *promise_log_msg =
+                        StringFormat("Error installing package '%s'",
+                                     pp->promiser);
+                    break;
+                case PROMISE_RESULT_CHANGE:
+                    *promise_log_msg =
+                        StringFormat("Successfully installed package '%s'",
+                                     pp->promiser);
+                    break;
+                case PROMISE_RESULT_NOOP:
+                    *promise_log_msg =
+                        StringFormat("Package '%s' already installed",
+                                     pp->promiser);
+                    break;
+                default:
+                    ProgrammingError(
+                            "Present promise action evaluation returned "
+                             "unsupported result: %d",
+                            result);
+                    break;
+            }
+
             break;
         case NEW_PACKAGE_ACTION_NONE:
         default:

@@ -1,22 +1,54 @@
 Cfengine Propulsion Lab
-        Changes:
-	- cf-execd: agent_expireafter default was changed to 120 minutes
-	  (Redmine #7113)
-        - all embedded databases are now rooted in the state/ directory.
-
         New features:
         - compile time option (--with-statedir) to
           override the default state/ directory path.
         - services/methods get a default
           bundle name -> method|service_Canonify($(this.promiser)) -
           must be in the same namespace as caller
-        - "ifvarclass" now has "if" as an alias
         - Fix error messages/ hanndling in process signalling which no longer
           allowed any signals to fail silently
-        - Fix output format
         - Also enable shortcut keyword for cf-serverd classic protocol, eg to
           simplify the bootstrap process for clients that have different
           sys.masterdir settings (Redmine #3697)
+
+3.7.0:
+        New features:
+        - New package promise implementation.
+        - Full systemd support for all relevant platforms
+        - YAML support
+        - BOOTSTRAP CHANGES (JIMIS)
+        - New string_mustache() function
+        - New data_regextraxt() function
+        - New eval() option returning class name
+        - Add readdata() support for generic data input
+        - New list_ifelse() function
+        - "ifvarclass" now has "if" as an alias
+        - inlined JSON (Kristian)
+        - New data_expand() function.
+        - cf-serverd and cf-execd can handle SIGHUP signal.
+        - Fix output format
+        - Add configurable network bandwidth limit for all outgoing
+        connections.
+
+        Changes:
+        - cf-execd: agent_expireafter default was changed to 120 minutes
+          (Redmine #7113)
+        - All embedded databases are now rooted in the state/ directory.
+        - "method_" prefix removed from methods promises.
+        - TLS used as default for all outgoing connections.
+
+        Deprecations:
+        - cf-runagent -o option can not be used anymore.
+        - 3.4 is no longer supported in masterfiles.
+
+        Bug fixes (for a complete list of fixed bugs,
+                   see Redmine at https://cfengine.com/dev):
+        - Fix server common bundles evaluation order (Redmine#7211).
+        - Limit LMDB disk usage by preserving sparse areas in LMDB files
+        (Redmine#7242).
+        - Fix reporting on repaired status when system was not changed
+        (Redmine#7216).
+
 
 3.6.5:
         Features:

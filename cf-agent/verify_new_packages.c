@@ -133,32 +133,57 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                                                &a.new_packages,
                                                package_module,
                                                a.transaction.action);
-            *log_lvl = result == PROMISE_RESULT_FAIL ?
-                                 LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE;
-            *promise_log_msg = result == PROMISE_RESULT_FAIL ?
-                StringFormat("Error removing package '%s'", pp->promiser) :
-                StringFormat("Successfully removed package '%s'", pp->promiser);
+
+            switch (result)
+            {
+                case PROMISE_RESULT_FAIL:
+                    *log_lvl = LOG_LEVEL_ERR;
+                    *promise_log_msg =
+                        StringFormat("Error removing package '%s'",
+                                     pp->promiser);
+                    break;
+                case PROMISE_RESULT_CHANGE:
+                    *log_lvl = LOG_LEVEL_INFO;
+                    *promise_log_msg =
+                        StringFormat("Succesfully removed package '%s'",
+                                     pp->promiser);
+                    break;
+                case PROMISE_RESULT_NOOP:
+                    *log_lvl = LOG_LEVEL_VERBOSE;
+                    *promise_log_msg =
+                        StringFormat("Package '%s' was not installed",
+                                     pp->promiser);
+                    break;
+                default:
+                    ProgrammingError(
+                            "Absent promise action evaluation returned "
+                             "unsupported result: %d",
+                            result);
+                    break;
+            }
             break;
         case NEW_PACKAGE_ACTION_PRESENT:
             result = HandlePresentPromiseAction(ctx, pp->promiser, 
                                                 &a.new_packages,
                                                 package_module,
                                                 a.transaction.action);
-            *log_lvl = result == PROMISE_RESULT_FAIL ?
-                                 LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE;
+
             switch (result)
             {
                 case PROMISE_RESULT_FAIL:
+                    *log_lvl = LOG_LEVEL_ERR;
                     *promise_log_msg =
                         StringFormat("Error installing package '%s'",
                                      pp->promiser);
                     break;
                 case PROMISE_RESULT_CHANGE:
+                    *log_lvl = LOG_LEVEL_INFO;
                     *promise_log_msg =
                         StringFormat("Successfully installed package '%s'",
                                      pp->promiser);
                     break;
                 case PROMISE_RESULT_NOOP:
+                    *log_lvl = LOG_LEVEL_VERBOSE;
                     *promise_log_msg =
                         StringFormat("Package '%s' already installed",
                                      pp->promiser);

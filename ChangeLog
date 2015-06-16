@@ -3,7 +3,6 @@
         - New package promise implementation.
         - Full systemd support for all relevant platforms
         - YAML support
-        - BOOTSTRAP CHANGES (JIMIS)
         - New string_mustache() function
         - New data_regextraxt() function
         - New eval() option returning class name
@@ -33,9 +32,15 @@
         - inline JSON in policy files, surrounding with parsejson() is now
           optional.
         - New data_expand() function.
-        - cf-serverd and cf-execd now reloads policy on SIGHUP signal.
         - Add configurable network bandwidth limit for all outgoing
           connections.
+        - Secure bootstrap has been facilitated by use of
+          "cf-agent --boostrap HUB_ADDRESS --trust-server=no"
+        - Implement new TLS-relevant options (Redmine #6883):
+          - body common control: tls_min_version
+          - body server control: allowtlsversion
+          - body common control: tls_ciphers
+          - body server control: allowciphers (preexisting)
 
         Changes:
         - Improved output format, less verbose, and messages are grouped.
@@ -48,9 +53,18 @@
           signal is not sent, even if the restart_class is set. The old
           behavior was to set the repaired status whenever the process was not
           running. (Redmine#7216).
+        - Bootstrapping requires keys to be generated in advance using cf-key.
+        - Disable class set on reverse lookup of interfaces IP addresses.
+          (Redmine #3993, Redmine #6870)
+        - Define a hard class with just the OS major version on FreeBSD.
+        - Abort cf-agent if OpenSSL's random number generator can't
+          be seeded securely.
+        - Masterfiles source tarball now installs using the usual commands
+          "./configure; make install".
 
         Deprecations:
-        - cf-runagent -o option can not be used anymore.
+        - Arbitrary arguments to cfruncommand (using "cf-runagent -o") are
+          not acceptable any more. (Redmine #6978)
         - 3.4 is no longer supported in masterfiles.
 
         Bug fixes:
@@ -63,6 +77,14 @@
         - Fixed init script failing to stop/restart daemons on openvz/lxc
           hosts. (Redmine #3394)
         - rm_rf_depth now deletes base directory as advertised. (Redmine #7009)
+        - Refactored cf-agent's connection cache to properly differentiate
+          hosts using all needed attributes like host and port.
+          (Redmine #4646)
+        - Refactored lastseen database handling to avoid inconsistencies.
+          (Redmine #6660)
+        - cf-key --trust-key now supports new syntax to also update the
+          lastseen database, so that clients using old protocol will trust
+          the server correctly.
 
 
 3.6.5:

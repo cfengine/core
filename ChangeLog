@@ -1,16 +1,3 @@
-Cfengine Propulsion Lab
-        New features:
-        - compile time option (--with-statedir) to
-          override the default state/ directory path.
-        - services/methods get a default
-          bundle name -> method|service_Canonify($(this.promiser)) -
-          must be in the same namespace as caller
-        - Fix error messages/ hanndling in process signalling which no longer
-          allowed any signals to fail silently
-        - Also enable shortcut keyword for cf-serverd classic protocol, eg to
-          simplify the bootstrap process for clients that have different
-          sys.masterdir settings (Redmine #3697)
-
 3.7.0:
         New features:
         - New package promise implementation.
@@ -22,32 +9,60 @@ Cfengine Propulsion Lab
         - New eval() option returning class name
         - Add readdata() support for generic data input
         - New list_ifelse() function
+        - New mapjson() function as well as JSON support in maparray().
+        - filestat() function now supports "xattr" argument for extended
+          attributes.
         - "ifvarclass" now has "if" as an alias
-        - inlined JSON (Kristian)
+        - Ability to expand JSON variables directory in Mustache templates:
+          Prefix the name with '%' for multiline expansion, '$' for compact
+          expansion.
+        - New "@if version_after(x.x)" syntax in order to hide future language
+          improvements from versions that don't understand them.
+        - compile time option (--with-statedir) to
+          override the default state/ directory path.
+        - Fix error messages/ handling in process signalling which no longer
+          allowed any signals to fail silently
+        - Also enable shortcut keyword for cf-serverd classic protocol, eg to
+          simplify the bootstrap process for clients that have different
+          sys.masterdir settings (Redmine #3697)
+        - methods promises now accepts the bundle name in the promiser string,
+          as long as it doesn't have any parameters.
+        - services get a default:
+          bundle name -> service_Canonify($(this.promiser)) -
+          must be in the same namespace as caller
+        - inline JSON in policy files, surrounding with parsejson() is now
+          optional.
         - New data_expand() function.
-        - cf-serverd and cf-execd can handle SIGHUP signal.
-        - Fix output format
+        - cf-serverd and cf-execd now reloads policy on SIGHUP signal.
         - Add configurable network bandwidth limit for all outgoing
-        connections.
+          connections.
 
         Changes:
+        - Improved output format, less verbose, and messages are grouped.
         - cf-execd: agent_expireafter default was changed to 120 minutes
           (Redmine #7113)
         - All embedded databases are now rooted in the state/ directory.
         - "method_" prefix removed from methods promises.
         - TLS used as default for all outgoing connections.
+        - process promise now reports kept status instead of repaired if a
+          signal is not sent, even if the restart_class is set. The old
+          behavior was to set the repaired status whenever the process was not
+          running. (Redmine#7216).
 
         Deprecations:
         - cf-runagent -o option can not be used anymore.
         - 3.4 is no longer supported in masterfiles.
 
-        Bug fixes (for a complete list of fixed bugs,
-                   see Redmine at https://cfengine.com/dev):
+        Bug fixes:
         - Fix server common bundles evaluation order (Redmine#7211).
         - Limit LMDB disk usage by preserving sparse areas in LMDB files
-        (Redmine#7242).
-        - Fix reporting on repaired status when system was not changed
-        (Redmine#7216).
+          (Redmine#7242).
+        - Fixed LMDB corruption on HP-UX 11.23. (Redmine #6994)
+        - Fixed insert_lines failing to converge if preserve_block was used.
+          (Redmine #7094)
+        - Fixed init script failing to stop/restart daemons on openvz/lxc
+          hosts. (Redmine #3394)
+        - rm_rf_depth now deletes base directory as advertised. (Redmine #7009)
 
 
 3.6.5:

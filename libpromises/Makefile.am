@@ -74,6 +74,7 @@ libpromises_la_SOURCES = \
         dbm_lmdb.c \
         dbm_quick.c \
         dbm_tokyocab.c \
+        extensions_template.c.pre extensions_template.h.pre \
         enterprise_stubs.c enterprise_extension.c enterprise_extension.h \
         eval_context.c eval_context.h \
         evalfunction.c evalfunction.h \
@@ -204,9 +205,9 @@ BUILT_SOURCES = cf3lex.c cf3parse.h cf3parse.c \
 EXTRA_SCRIPTS = text2cstring.pl enterprise_extension.sed
 EXTRA_DIST = $(EXTRA_SCRIPTS)
 
-enterprise_extension.c: extensions_template.c enterprise_extension.sed
+enterprise_extension.c: extensions_template.c.pre enterprise_extension.sed
 	$(V_SED) $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
-enterprise_extension.h: extensions_template.h enterprise_extension.sed
+enterprise_extension.h: extensions_template.h.pre enterprise_extension.sed
 	$(V_SED) $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
 
 bootstrap.inc: failsafe.cf text2cstring.pl

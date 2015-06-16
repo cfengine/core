@@ -71,6 +71,7 @@
         `(set (make-local-variable ',var) ,val))))
 
 (autoload 'json-read "json")
+(autoload 'json-pretty-print "json")
 (autoload 'regexp-opt "regexp-opt")
 
 (defgroup cfengine ()
@@ -846,7 +847,9 @@ This includes those for cfservd as well as cfagent.")
                                             )
     "Regexp matching full defun declaration (excluding argument list).")
 
-  (defconst cfengine3-class-selector-regex "\\([[:alnum:]_().&|!:]+\\)::")
+  (defconst cfengine3-macro-regex "\\(@.+\\)")
+
+  (defconst cfengine3-class-selector-regex "\\([\"']?[[:alnum:]_().$&|!:]+[\"']?\\)::")
 
   (defconst cfengine3-category-regex "\\([[:alnum:]_]+\\):")
 
@@ -879,6 +882,14 @@ This includes those for cfservd as well as cfagent.")
 
 (defvar cfengine3-font-lock-keywords
   `(
+    ;; Macros.
+    (,(concat "^" cfengine3-macro-regex)
+     1 font-lock-preprocessor-face)
+
+    ;; Invalid macros (they must start at BOL).
+    (,(concat "^[ \t]*" cfengine3-macro-regex)
+     1 font-lock-warning-face)
+
     ;; Defuns.  This happens early so they don't get caught by looser
     ;; patterns.
     (,(concat "\\_<" cfengine3-defuns-regex "\\_>"
@@ -1057,6 +1068,10 @@ Intended as the value of `indent-line-function'."
         (message "%S" parse))
 
       (cond
+       ;; Macros start at 0.  But make sure we're not inside a string.
+       ((and (not (nth 3 parse))
+             (looking-at (concat cfengine3-macro-regex)))
+        (indent-line-to 0))
        ;; Body/bundle blocks start at 0.
        ((looking-at (concat cfengine3-defuns-regex "\\_>"))
         (indent-line-to 0))
@@ -1131,6 +1146,19 @@ Intended as the value of `indent-line-function'."
     ;; position after the indentation.  Else stay at same point in text.
     (if (> (- (point-max) pos) (point))
         (goto-char (- (point-max) pos)))))
+
+(defun cfengine3-reformat-json-string ()
+  "Reformat the current string as JSON using `json-pretty-print'."
+  (interactive)
+  ;; Are we inside a string?
+  (let* ((parse (parse-partial-sexp (point-min) (point)))
+         (terminator (nth 3 parse)))
+    (when terminator
+      (json-pretty-print
+       (1+ (nth 8 parse))
+       (save-excursion
+         (search-forward (char-to-string terminator))
+         (1- (point)))))))
 
 ;; CFEngine 3.x grammar
 

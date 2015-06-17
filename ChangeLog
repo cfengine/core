@@ -2,11 +2,13 @@
         New features:
         - New package promise implementation.
         - Full systemd support for all relevant platforms
-        - YAML support
+        - New feature classes for optional features: feature_yaml and feature_xml
+        - New readdata() support for generic data input (CSV, YAML, JSON, or auto)
+        - YAML support: new readyaml() function and in readdata()
+        - CSV support: new readcsv() function and in readdata()
         - New string_mustache() function
-        - New data_regextraxt() function
-        - New eval() option returning class name
-        - Add readdata() support for generic data input
+        - New data_regextract() function
+        - New eval() option returning class name for direct numeric checks
         - New list_ifelse() function
         - New mapjson() function as well as JSON support in maparray().
         - filestat() function now supports "xattr" argument for extended
@@ -15,6 +17,9 @@
         - Ability to expand JSON variables directory in Mustache templates:
           Prefix the name with '%' for multiline expansion, '$' for compact
           expansion.
+        - Ability to expand the iteration *key* in Mustache templates with @
+        - Canonical JSON output: JSON output has reliably sorted keys so the
+          same data structure will produce the same JSON every time.
         - New "@if version_after(x.x)" syntax in order to hide future language
           improvements from versions that don't understand them.
         - compile time option (--with-statedir) to
@@ -29,9 +34,9 @@
         - services get a default:
           bundle name -> service_Canonify($(this.promiser)) -
           must be in the same namespace as caller
-        - inline JSON in policy files, surrounding with parsejson() is now
-          optional.
-        - New data_expand() function.
+        - inline JSON in policy files: surrounding with parsejson() is now
+          optional *when creating a new data container*.
+        - New data_expand() function to interpolate variables in a data container.
         - Add configurable network bandwidth limit for all outgoing
           connections.
         - Secure bootstrap has been facilitated by use of

@@ -27,6 +27,19 @@
 #include <misc_lib.h>
 
 
+int cf_closesocket(int sd)
+{
+    int res;
+
+#ifdef __MINGW32__
+    res = closesocket(sd);
+#else
+    res = close(sd);
+#endif
+
+    return res;
+}
+
 /* Convert IP address in src (which can be struct sockaddr_storage (best
  * choice for any IP version), struct sockaddr, struct sockaddr_in or struct
  * sockaddr_in6) to string dst.

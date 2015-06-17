@@ -202,24 +202,6 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf)
 
 /*******************************************************************/
 
-int cf_closesocket(int sd)
-{
-    int res;
-
-#ifdef __MINGW32__
-    res = closesocket(sd);
-#else
-    res = close(sd);
-#endif
-
-    if (res != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Could not close socket. (cf_closesocket: %s)", GetErrorStr());
-    }
-
-    return res;
-}
-
 int LinkOrCopy(const char *from, const char *to, int sym)
 /**
  *  Creates symlink to file on platforms supporting it, copies on

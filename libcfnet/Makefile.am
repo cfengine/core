@@ -26,7 +26,7 @@ noinst_LTLIBRARIES = libcfnet.la
 AM_CPPFLAGS  = $(OPENSSL_CPPFLAGS)
 AM_CPPFLAGS += $(PCRE_CPPFLAGS)
 AM_CPPFLAGS += -I$(top_srcdir)/libutils			    # platform.h
-AM_CPPFLAGS += -I$(top_srcdir)/libpromises		    # cf3.defs.h
+AM_CPPFLAGS += -I$(top_srcdir)/libpromises		    # cf3.extern.h
 
 libcfnet_la_SOURCES = \
 	misc.c \

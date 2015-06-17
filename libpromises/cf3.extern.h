@@ -25,6 +25,11 @@
 #ifndef CFENGINE_CF3_EXTERN_H
 #define CFENGINE_CF3_EXTERN_H
 
+
+#include <cfnet.h>                          /* CF_MAX_IP_LEN */
+#include <cf3.defs.h>                       /* CF_MAXVARSIZE,CF_OBSERVABLES */
+
+
 /* See variables in cf3globals.c and syntax.c */
 
 extern pid_t ALARM_PID;

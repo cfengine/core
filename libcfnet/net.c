@@ -24,8 +24,6 @@
 
 #include <platform.h>
 #include <cfnet.h>                                            /* CF_BUFSIZE */
-#include <cf3.defs.h>
-#include <cf3.extern.h>                                    /* BINDINTERFACE */
 #include <net.h>
 #include <classic.h>
 #include <tls_generic.h>
@@ -33,6 +31,9 @@
 #include <logging.h>
 #include <misc_lib.h>
 
+
+/* TODO remove libpromises dependency. */
+extern char BINDINTERFACE[];                  /* cf3globals.c, cf3.extern.h */
 
 
 /**

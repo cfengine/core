@@ -236,6 +236,37 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
     open_flags |= MDB_WRITEMAP;
 #endif
 
+#ifndef NDEBUG
+    static enum
+    {
+        NOSYNC_UNKNOWN,
+        NOSYNC_OPTIMIZE,
+        NOSYNC_NORMAL
+    } nosync_mode = NOSYNC_UNKNOWN;
+    switch (nosync_mode)
+    {
+    case NOSYNC_UNKNOWN:
+        /*
+         * If we are doing a debug build *and* are in a test run, we
+         * turn on NOSYNC in order to improve test running times.
+         * However, in release mode we keep NOSYNC off in order to get
+         * as close as possible to the real thing.
+         */
+        if (getenv("CFENGINE_TEST_OVERRIDE_WORKDIR") == NULL)
+        {
+            nosync_mode = NOSYNC_NORMAL;
+            break;
+        }
+        nosync_mode = NOSYNC_OPTIMIZE;
+        // fall through
+    case NOSYNC_OPTIMIZE:
+        open_flags |= MDB_NOSYNC;
+        break;
+    case NOSYNC_NORMAL:
+        break;
+    }
+#endif // !NDEBUG
+
     rc = mdb_env_open(db->env, dbpath, open_flags, 0644);
     if (rc)
     {

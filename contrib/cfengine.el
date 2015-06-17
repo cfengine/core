@@ -50,6 +50,15 @@
 
 ;; (add-hook 'cfengine3-mode-hook 'eldoc-mode)
 
+;; You may also find the command `cfengine3-reformat-json-string'
+;; useful, just bind it to a key you prefer. It will take the current
+;; string and reformat it as JSON. So if you're editing JSON inside
+;; the policy, it's a quick way to make it more legible without
+;; manually reindenting it.  For instance:
+
+;; (global-set-key [(control f4)] 'cfengine3-reformat-json-string)
+
+
 ;; It's *highly* recommended that you use this mode with the latest
 ;; Emacs, or at least 24.1.
 

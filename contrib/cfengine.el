@@ -100,7 +100,7 @@ will use a fallback syntax definition."
   :group 'cfengine
   :type '(choice file (const nil)))
 
-(defcustom cfengine-parameters-indent '(promise pname 0)
+(defcustom cfengine-parameters-indent '(promise pname 2)
   "Indentation of CFEngine3 promise parameters (hanging indent).
 
 For example, say you have this code:
@@ -121,15 +121,15 @@ You can also choose to indent the start of the word
 
 Finally, you can choose the amount of the indent.
 
-The default is to anchor at promise, indent parameter name, and offset 0:
+The default is to anchor at promise, indent parameter name, and offset 2:
 
 bundle agent rcfiles
 {
   files:
     any::
       \"/tmp/netrc\"
-      comment => \"my netrc\",
-      perms => mog(\"600\", \"tzz\", \"tzz\");
+        comment => \"my netrc\",
+        perms => mog(\"600\", \"tzz\", \"tzz\");
 }
 
 Here we anchor at beginning of line, indent arrow, and offset 10:

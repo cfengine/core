@@ -1,4 +1,7 @@
 #!/bin/sh
+
+# Author: Aleksey Tsalolikhin <aleksey@verticalsysadmin.com>
+
 # Run this script on the hub to purge "ghost" hosts --
 # old entries that result when a host is re-bootstrapped (for example,
 # to fix a broken update policy on the client)

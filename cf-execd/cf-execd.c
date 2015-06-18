@@ -312,6 +312,21 @@ void ThisAgentInit(void)
 
 /*****************************************************************************/
 
+// msg should include exactly one reference to unsigned int.
+static unsigned int MaybeSleepLog(LogLevel level, const char *msg, unsigned int seconds)
+{
+    if (IsPendingTermination())
+    {
+        return seconds;
+    }
+
+    Log(level, msg, seconds);
+
+    return sleep(seconds);
+}
+
+/*****************************************************************************/
+
 /* Might be called back from NovaWin_StartExecService */
 void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config)
 {
@@ -370,8 +385,14 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         {
             if (ScheduleRun(ctx, &policy, config, execd_config, exec_config))
             {
-                Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", (*execd_config)->splay_time);
-                sleep((*execd_config)->splay_time);
+                MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %u seconds", (*execd_config)->splay_time);
+
+                // We are sleeping both above and inside ScheduleRun(), so make
+                // sure a terminating signal did not arrive during that time.
+                if (IsPendingTermination())
+                {
+                    break;
+                }
 
                 if (!LocalExecInThread(*exec_config))
                 {
@@ -501,8 +522,8 @@ static Reload CheckNewPromises(GenericAgentConfig *config)
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
                         ExecdConfig **execd_config, ExecConfig **exec_config)
 {
-    Log(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %d seconds...", CFPULSETIME);
-    sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
+    /* 1 Minute resolution is enough */
+    MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %u seconds...", CFPULSETIME);
 
     /*
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.

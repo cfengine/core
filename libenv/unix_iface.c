@@ -233,14 +233,17 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 
     struct arpreq arpreq;
 
-    ((struct sockaddr_in*)&arpreq.arp_pa)->sin_addr.s_addr =
-        ((struct sockaddr_in*)&ifp->ifr_addr)->sin_addr.s_addr;
+    ((struct sockaddr_in *) &arpreq.arp_pa)->sin_addr.s_addr =
+        ((struct sockaddr_in *) &ifp->ifr_addr)->sin_addr.s_addr;
 
     if (ioctl(fd, SIOCGARP, &arpreq) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not get interface %s addresses (ioctl(SIOCGARP): '%s')",
+        Log(LOG_LEVEL_ERR,
+            "Could not get interface '%s' addresses (ioctl(SIOCGARP): %s)",
             ifp->ifr_name, GetErrorStr());
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", CF_DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name,
+                                      "mac_unknown", CF_DATA_TYPE_STRING,
+                                      "source=agent");
         EvalContextClassPutHard(ctx, "mac_unknown", "source=agent");
         return;
     }
@@ -255,15 +258,20 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
              (unsigned char) arpreq.arp_ha.sa_data[4],
              (unsigned char) arpreq.arp_ha.sa_data[5]);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name,
+                                  hw_mac, CF_DATA_TYPE_STRING,
+                                  "source=agent");
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-    EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, name,
+                            "inventory,attribute_name=none,source=agent");
 
 # else
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name,
+                                  "mac_unknown", CF_DATA_TYPE_STRING,
+                                  "source=agent");
     EvalContextClassPutHard(ctx, "mac_unknown", "source=agent");
 # endif
 }

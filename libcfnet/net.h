@@ -31,6 +31,9 @@
 #include <cfnet.h>
 
 
+extern uint32_t bwlimit_kbytes;
+
+
 int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len, char status);
 int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more);
 
@@ -47,6 +50,5 @@ int SocketConnect(const char *host, const char *port,
 bool TryConnect(int sd, unsigned long timeout_ms,
                 const struct sockaddr *sa, socklen_t sa_len);
 
-extern uint32_t bwlimit_kbytes;
 
 #endif

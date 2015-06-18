@@ -138,7 +138,12 @@ typedef struct
 /* misc.c */
 
 const char *sockaddr_ntop(const void *src, char *dst, socklen_t size);
-
 void EnforceBwLimit(int tosend);
+int cf_closesocket(int sd);
+
+
+/* client_protocol.c */
+void SetSkipIdentify(bool enabled);
+
 
 #endif

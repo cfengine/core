@@ -27,7 +27,12 @@
 
 #include <platform.h>
 
-#define PROCESS_START_TIME_UNKNOWN ((time_t)0)
+
+/* TODO move to libutils, once windows implementation is merged. */
+
+
+#define PROCESS_START_TIME_UNKNOWN ((time_t) 0)
+
 
 /**
  * Obtain start time of specified process.
@@ -51,5 +56,6 @@ time_t GetProcessStartTime(pid_t pid);
  *               present in the first place.
  */
 bool GracefulTerminate(pid_t pid, time_t process_start_time);
+
 
 #endif

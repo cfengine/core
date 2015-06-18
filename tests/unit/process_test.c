@@ -27,23 +27,18 @@
 #include <process_lib.h>
 #include <process_unix_priv.h>
 
-#include <unistd.h>
 
-int SPAWNED_PID = -1;
+pid_t SPAWNED_PID;
+pid_t THIS_PID;
+time_t THIS_STARTTIME;
+
 
 static void test_process_start_time(void)
 {
-    int this_pid, new_pid;
-    time_t this_starttime;
-
-    this_pid = getpid();
-    this_starttime = GetProcessStartTime(this_pid);
-
     sleep(1);
-
-    new_pid = fork();
-
+    pid_t new_pid = fork();
     assert_true(new_pid >= 0);
+
     if (new_pid == 0)                                           /* child */
     {
         execl("/bin/sleep", "/bin/sleep", "5", NULL);
@@ -54,20 +49,21 @@ static void test_process_start_time(void)
 
     time_t newproc_starttime = GetProcessStartTime(new_pid);
     // We might have slipped by a few seconds, but shouldn't be much.
-    assert_true(newproc_starttime >= this_starttime + 1 && newproc_starttime <= this_starttime + 5);
+    assert_true(newproc_starttime >= THIS_STARTTIME + 1 &&
+                newproc_starttime <= THIS_STARTTIME + 5);
 
     kill(new_pid, SIGKILL);
     wait(NULL);
-    SPAWNED_PID = -1;
+    SPAWNED_PID = 0;
 }
 
 static void test_process_state(void)
 {
-    int new_pid, ret;
+    int ret;
 
-    new_pid = fork();
-
+    pid_t new_pid = fork();
     assert_true(new_pid >= 0);
+
     if (new_pid == 0)                                           /* child */
     {
         execl("/bin/sleep", "/bin/sleep", "10", NULL);
@@ -138,12 +134,15 @@ static void test_process_state(void)
     printf("Killed,  state: %d\n", state);
     assert_int_equal(state, PROCESS_STATE_DOES_NOT_EXIST);
 
-    SPAWNED_PID = -1;
+    SPAWNED_PID = 0;
 }
 
 int main()
 {
     PRINT_TEST_BANNER();
+
+    THIS_PID       = getpid();
+    THIS_STARTTIME = GetProcessStartTime(THIS_PID);
 
     const UnitTest tests[] =
     {
@@ -154,7 +153,7 @@ int main()
     int ret = run_tests(tests);
 
     /* Make sure no child is alive. */
-    if (SPAWNED_PID >= 0)
+    if (SPAWNED_PID > 0)
     {
         kill(SPAWNED_PID, SIGKILL);
     }

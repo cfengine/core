@@ -22,12 +22,17 @@
   included file COSL.txt.
 */
 
-#include <cf3.defs.h>
+
+#include <platform.h>
+
+#include <logging.h>
 #include <process_lib.h>
 #include <process_unix_priv.h>
 #include <misc_lib.h>
 
+
 #define SLEEP_POLL_TIMEOUT_NS 10000000
+
 
 /*
  * Wait until process specified by #pid is stopped due to SIGSTOP signal.
@@ -104,9 +109,9 @@ static bool ProcessWaitUntilExited(pid_t pid, long timeout_ns)
     return false;
 }
 
-/* A timeout to wait for process to stop (pause) or exit.  Note that
- * it's important that it not over-flow 32 bits; no more than nine 9s
- * in a row ! */
+/* A timeout (in nanoseconds) to wait for process to stop (pause) or exit.
+ * Note that it's important that it does not overflow 32 bits; no more than
+ * nine 9s in a row, i.e. one second. */
 #define STOP_WAIT_TIMEOUT 999999999L
 
 /*
@@ -214,6 +219,16 @@ static int Kill(pid_t pid, time_t process_start_time, int signal)
 
 int GracefulTerminate(pid_t pid, time_t process_start_time)
 {
+    /* We can't allow to kill ourselves. First it does not make sense, and
+     * second, once SafeKill() sends SIGSTOP, we will just freeze forever. */
+    if (pid == getpid())
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Ignoring request to kill ourself (pid %jd)!",
+            (intmax_t) pid);
+        return false;
+    }
+
     if (Kill(pid, process_start_time, SIGINT) < 0)
     {
         return errno == ESRCH;

@@ -19,6 +19,6 @@ bundle agent check
                                          $(this.promise_filename));
 }
 
-@if version_after(300.100)
+@if minimum_version(300.100)
 
 This text should never be seen, it's completely ignored

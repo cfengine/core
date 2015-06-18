@@ -37,8 +37,8 @@ typedef struct
 
 static bool GetProcessStat(pid_t pid, ProcessStat *state)
 {
-    char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "/proc/%d/stat", (int)pid);
+    char filename[64];
+    xsnprintf(filename, sizeof(filename), "/proc/%jd/stat", (intmax_t) pid);
 
     int fd;
     for (;;)

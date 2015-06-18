@@ -1,0 +1,48 @@
+
+# Test that variables found with variablesmatching can be double dereferenced to access their values
+
+# Ref: https://dev.cfengine.com/issues/7254
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { "init", "check" };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "myvar" string => "myvalue";
+}
+
+bundle agent check
+{
+  meta:
+      "test_soft_fail"
+        string => "any",
+        meta => { "redmine7254" };
+
+  vars:
+      "found_vars" slist => variablesmatching(".*myvar");
+
+  classes:
+      "double_deref_ok" expression => strcmp("$($(found_vars))", "myvalue");
+      "direct_deref_ok" expression => strcmp("$(default:init.myvar)", "myvalue");
+      "ok" and => { "double_deref_ok", "direct_deref_ok" };
+
+  reports:
+    DEBUG::
+    # I should be able to report on found vars
+      "Found Var: $(found_vars)";
+
+    # I should be able to directly dereference the variable i expect to find
+      "direct_deref: $(const.dollar)(default:init.myvar) = $(default:init.myvar)";
+
+    # I should be able to dereference the found vars to get their values
+      "double_deref: $(const.dollar)($(const.dollar)(found_vars)) = $($(found_vars))";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

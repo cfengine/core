@@ -1265,18 +1265,22 @@ Intended as the value of `indent-line-function'."
               "???")
             (propertize f 'face 'font-lock-function-name-face)
             (mapconcat (lambda (p)
-                         (let ((type (cdr (assq 'type p)))
+                         (let* ((type (cdr (assq 'type p)))
+                                (description (cdr (assq 'description p)))
+                                (desc-string (if (stringp description)
+                                                 (concat " /" description "/")
+                                               ""))
                                (range (cdr (assq 'range p))))
                            (cond
                             ((not (stringp type)) "???type???")
                             ((not (stringp range)) "???range???")
                             ;; options are lists of possible keywords
                             ((equal type "option")
-                             (propertize (concat "[" range "]")
+                             (propertize (concat "[" range "]" desc-string)
                                          'face
                                          'font-lock-keyword-face))
                             ;; anything else is a type name as a variable
-                            (t (propertize type
+                            (t (propertize (concat type desc-string)
                                            'face
                                            'font-lock-variable-name-face)))))
                        plist

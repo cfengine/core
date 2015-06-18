@@ -1217,6 +1217,7 @@ static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
             JsonElement *json_param = JsonObjectCreate(2);
             JsonObjectAppendString(json_param, "type", DataTypeToString(param->dtype));
             JsonObjectAppendString(json_param, "range", param->pattern);
+            JsonObjectAppendString(json_param, "description", param->description);
             JsonArrayAppendObject(params, json_param);
         }
         JsonObjectAppendArray(json_fn, "parameters", params);

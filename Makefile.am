@@ -111,6 +111,27 @@ collect-coverage:
 
 coverage: clean-coverage run-coverage collect-coverage
 
+################################################################################
+# Identical to what is in libpromises/Makefile.am.
+# This is because there is a circular dependency libcfnet <-> libpromises
+# so we need to generate it before everything else.
+################################################################################
+BUILT_SOURCES = \
+       $(srcdir)/libpromises/enterprise_extension.c \
+       $(srcdir)/libpromises/enterprise_extension.h
+libpromises/enterprise_extension.c: libpromises/extensions_template.c.pre libpromises/enterprise_extension.sed
+	$(V_SED) $(SED) -f $(srcdir)/libpromises/enterprise_extension.sed $< > $@
+libpromises/enterprise_extension.h: libpromises/extensions_template.h.pre libpromises/enterprise_extension.sed
+	$(V_SED) $(SED) -f $(srcdir)/libpromises/enterprise_extension.sed $< > $@
+V_PERL = $(cf__v_PERL_$(V))
+cf__v_PERL_ = $(cf__v_PERL_$(AM_DEFAULT_VERBOSITY))
+cf__v_PERL_0 = @echo "  PERL    " "$@";
+cf__v_PERL_1 =
+V_SED = $(cf__v_SED_$(V))
+cf__v_SED_ = $(cf__v_SED_$(AM_DEFAULT_VERBOSITY))
+cf__v_SED_0 = @echo "  SED     " "$@";
+cf__v_SED_1 =
+
 
 #
 # Get everything removed down to where rebuilding requires:

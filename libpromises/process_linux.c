@@ -27,7 +27,7 @@
 #include <process_lib.h>
 #include <process_unix_priv.h>
 #include <files_lib.h>
-
+#include <sysinfo.h>
 
 typedef struct
 {
@@ -121,6 +121,8 @@ static bool GetProcessStat(pid_t pid, ProcessStat *state)
 
     state->state = proc_state[0];
     state->starttime = (time_t)(starttime / sysconf(_SC_CLK_TCK));
+    /* Convert from seconds since boot to seconds since epoch (1970-01-01). */
+    state->starttime += GetBootTime();
 
     return true;
 }

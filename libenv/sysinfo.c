@@ -2666,103 +2666,119 @@ static void GetCPUInfo(EvalContext *ctx)
 #ifndef __MINGW32__
 
 /**
+   Return the current boot time (number of seconds since Epoch).
+*/
+time_t GetBootTime(void)
+{
+    static time_t boot_time = 0;
+    errno = 0;
+
+    if (boot_time == 0)
+    {
+#if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
+
+        time_t now = time(NULL);
+        struct sysinfo s;
+        if (sysinfo(&s) == 0)
+        {
+           // Don't return yet, sanity checking below
+           boot_time = now - s.uptime;
+        }
+
+#elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
+
+        /* From command line you can get this with:
+           kstat -p unix:0:system_misc:boot_time */
+        kstat_ctl_t *kc = kstat_open();
+        if (kc != 0)
+        {
+            kstat_t *kp = kstat_lookup(kc, "unix", 0, "system_misc");
+            if (kp != 0)
+            {
+                if (kstat_read(kc, kp, NULL) != -1)
+                {
+                    kstat_named_t *knp = kstat_data_lookup(kp, "boot_time");
+                    if (knp != NULL)
+                    {
+                        boot_time = knp->value.ui32;
+                    }
+                }
+            }
+            kstat_close(kc);
+        }
+
+#elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
+
+        struct pst_status p;
+        if (pstat_getproc(&p, sizeof(p), 0, 1) == 1)
+        {
+            boot_time = (time_t)p.pst_start;
+        }
+
+#elif defined(BOOT_TIME_WITH_SYSCTL)        // BSD-derived platforms
+
+        int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+        struct timeval boot;
+        size_t len = sizeof(boot);
+        if (sysctl(mib, 2, &boot, &len, NULL, 0) == 0)
+        {
+            boot_time = boot.tv_sec;
+        }
+
+#elif defined(BOOT_TIME_WITH_PROCFS)
+
+        struct stat p;
+        if (stat("/proc/1", &p) == 0)
+        {
+            boot_time = p.st_ctime;
+        }
+
+#elif defined(BOOT_TIME_WITH_UTMP)          /* SystemV, highly portable way */
+
+        struct utmp query = { .ut_type = BOOT_TIME };
+        struct utmp *result;
+        setutent();
+        result = getutid(&query);
+        if (result != NULL)
+        {
+            boot_time = result->ut_time;
+        }
+        endutent();
+
+#elif defined(BOOT_TIME_WITH_UTMPX)                            /* POSIX way */
+
+        struct utmpx query = { .ut_type = BOOT_TIME };
+        struct utmpx *result;
+        setutxent();
+        result = getutxid(&query);
+        if (result != NULL)
+        {
+            boot_time = result->ut_tv.tv_sec;
+        }
+        endutxent();
+
+#endif
+
+        if (errno)
+        {
+            Log(LOG_LEVEL_VERBOSE, "boot time discovery error: %s", GetErrorStr());
+        }
+    }
+
+    return boot_time;
+}
+
+/******************************************************************/
+
+/**
    Return the number of seconds the system has been online given the current
    time() as an argument, or return -1 if unavailable or unimplemented.
 */
 int GetUptimeSeconds(time_t now)
 {
-    time_t boot_time = 0;
-    errno = 0;
+    time_t boot_time = GetBootTime();
 
-#if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
-
-    struct sysinfo s;
-    if (sysinfo(&s) == 0)
-    {
-       // Don't return yet, sanity checking below
-       boot_time = now - s.uptime;
-    }
-
-#elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
-
-    /* From command line you can get this with:
-       kstat -p unix:0:system_misc:boot_time */
-    kstat_ctl_t *kc = kstat_open();
-    if(kc != 0)
-    {
-        kstat_t *kp = kstat_lookup(kc, "unix", 0, "system_misc");
-        if(kp != 0)
-        {
-            if (kstat_read(kc, kp, NULL) != -1)
-            {
-                kstat_named_t *knp = kstat_data_lookup(kp, "boot_time");
-                if (knp != NULL)
-                {
-                    boot_time = knp->value.ui32;
-                }
-            }
-        }
-        kstat_close(kc);
-    }
-
-#elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
-
-    struct pst_status p;
-    if (pstat_getproc(&p, sizeof(p), 0, 1) == 1)
-    {
-        boot_time = (time_t)p.pst_start;
-    }
-
-#elif defined(BOOT_TIME_WITH_SYSCTL)        // BSD-derived platforms
-
-    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
-    struct timeval boot;
-    size_t len = sizeof(boot);
-    if (sysctl(mib, 2, &boot, &len, NULL, 0) == 0)
-    {
-        boot_time = boot.tv_sec;
-    }
-
-#elif defined(BOOT_TIME_WITH_PROCFS)
-
-    struct stat p;
-    if (stat("/proc/1", &p) == 0)
-    {
-        boot_time = p.st_ctime;
-    }
-
-#elif defined(BOOT_TIME_WITH_UTMP)          /* SystemV, highly portable way */
-
-    struct utmp query = { .ut_type = BOOT_TIME };
-    struct utmp *result;
-    setutent();
-    result = getutid(&query);
-    if (result != NULL)
-    {
-        boot_time = result->ut_time;
-    }
-    endutent();
-
-#elif defined(BOOT_TIME_WITH_UTMPX)                            /* POSIX way */
-
-    struct utmpx query = { .ut_type = BOOT_TIME };
-    struct utmpx *result;
-    setutxent();
-    result = getutxid(&query);
-    if (result != NULL)
-    {
-        boot_time = result->ut_tv.tv_sec;
-    }
-    endutxent();
-
-#endif
-
-    if(errno)
-    {
-        Log(LOG_LEVEL_VERBOSE, "boot time discovery error: %s", GetErrorStr());
-    }
-
-    if(boot_time > now || boot_time <= 0)
+    if (boot_time > now || boot_time <= 0)
     {
         Log(LOG_LEVEL_VERBOSE, "invalid boot time found; trying uptime command");
         boot_time = GetBootTimeFromUptimeCommand(now);

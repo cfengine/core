@@ -2061,7 +2061,30 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             return JSON_PARSE_OK;
 
         default:
-            if (property_name)
+            // Note the character class excludes ':'.
+            // This will match the key from { foo : 2 } but not { -foo: 2 }
+            if (NULL == property_name &&
+                StringMatch("^\\w[-\\w]*\\s*:", *data, NULL, NULL))
+            {
+                char *colon = strchr(*data, ':');
+
+                // Step backwards until we are on the last whitespace.
+
+                // Note that this is safe because the above regex guarantees
+                // we will find at least one non-whitespace character as we
+                // go backwards.
+                char *ws = colon;
+                while (IsWhitespace(*(ws-1)))
+                {
+                    ws -= 1;
+                }
+
+                property_name = xstrndup(*data, ws - *data);
+                *data = colon;
+
+                break;
+            }
+            else if (property_name)
             {
                 if (**data == '-' || **data == '0' || IsDigit(**data))
                 {

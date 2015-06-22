@@ -1159,15 +1159,15 @@ Intended as the value of `indent-line-function'."
 (defun cfengine3-reformat-json-string ()
   "Reformat the current string as JSON using `json-pretty-print'."
   (interactive)
-  ;; Are we inside a string?
-  (let* ((parse (parse-partial-sexp (point-min) (point)))
-         (terminator (nth 3 parse)))
-    (when terminator
-      (json-pretty-print
-       (1+ (nth 8 parse))
-       (save-excursion
-         (search-forward (char-to-string terminator))
-         (1- (point)))))))
+  (let ((ppss (syntax-ppss)))
+    (when (nth 3 ppss)                  ;inside a string
+      (save-excursion
+        (goto-char (nth 8 ppss))
+        (forward-char 1)
+        (let ((start (point)))
+          (forward-sexp 1)
+          (json-pretty-print start
+                             (point)))))))
 
 ;; CFEngine 3.x grammar
 

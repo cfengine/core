@@ -13,5 +13,12 @@
     ],
     "max_content": 512,
     "verbose": "( included text )"
+  },
+  "options4": {
+    "headers": [
+      "Foo: bar"
+    ],
+    "max_content": 512,
+    "verbose": "( included text )"
   }
 }

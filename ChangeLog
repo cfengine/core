@@ -127,7 +127,7 @@
           manager (Redmine #6807)
         - Fixed a bug in users promises which would sometimes set the wrong
           password hash if the user would also be unlocked at the same time.
-        - Fixed a bug on AIX which would occationally kill the wrong process.
+        - Fixed a bug on AIX which would occasionally kill the wrong process.
         - Improved error message for functions that require an absolute path.
           (Redmine #6877)
         - Fixed some spelling errors in examples.

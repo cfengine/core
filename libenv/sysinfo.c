@@ -2117,7 +2117,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
         SetFlavour(ctx, classname);
         break;
-        /* Fall-through */
+
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);

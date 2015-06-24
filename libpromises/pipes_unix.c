@@ -269,7 +269,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
         char **argv  = ArgSplitCommand(command);
         if (execv(argv[0], argv) == -1)
         {
-            /* NOTE: exec functions return only when error have occured. */
+            /* NOTE: exec functions return only when error have occurred. */
             Log(LOG_LEVEL_ERR, "Couldn't run '%s'. (execv: %s)", argv[0], GetErrorStr());
         }
         /* We shouldn't reach this point */

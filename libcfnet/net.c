@@ -259,7 +259,7 @@ uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */
 
 /** Throttle traffic, if next packet happens too soon after the previous one
  * 
- *  This function is global, accross all network operations (and interfaces, perhaps)
+ *  This function is global, across all network operations (and interfaces, perhaps)
  *  @param tosend Length of current packet being sent out (in bytes)
  */
 

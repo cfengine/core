@@ -1,0 +1,26 @@
+# Ref: https://dev.cfengine.com/issues/7308
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7308" };
+
+  classes:
+    "ok"
+      not => returnszero("$(sys.workdir)/bin/cf-promises -f $(this.promise_filename).sub", "useshell");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

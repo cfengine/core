@@ -79,7 +79,7 @@ line       ^.*$
 
 comment    #[^\n]*
 
-macro_if    ^@if\ version_after\([0-9]{1,10}\.[0-9]{1,10}\)
+macro_if    ^@if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}\)
 macro_endif ^@endif
 
 promises   bundle
@@ -140,7 +140,7 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {macro_if}            {
-                        const char* version_text = yytext+18;
+                        const char* version_text = yytext+20;
                         ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, version_text);
                         {
                           int request_major = 0;

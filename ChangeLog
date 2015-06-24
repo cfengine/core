@@ -20,7 +20,7 @@
         - Ability to expand the iteration *key* in Mustache templates with @
         - Canonical JSON output: JSON output has reliably sorted keys so the
           same data structure will produce the same JSON every time.
-        - New "@if version_after(x.x)" syntax in order to hide future language
+        - New "@if minimum_version(x.x)" syntax in order to hide future language
           improvements from versions that don't understand them.
         - compile time option (--with-statedir) to
           override the default state/ directory path.

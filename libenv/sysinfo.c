@@ -967,17 +967,26 @@ static void OSClasses(EvalContext *ctx)
 /* First we check if init process is systemd, and set "systemd" hard class. */
 
     {
-        char init_cmdline[CF_BUFSIZE];
-        if (ReadLine("/proc/1/cmdline", init_cmdline, sizeof(init_cmdline)))
+        char init_path[CF_BUFSIZE];
+        if (ReadLine("/proc/1/cmdline", init_path, sizeof(init_path)))
         {
+            /* Follow possible symlinks. */
+
+            char resolved_path[PATH_MAX];      /* realpath() needs PATH_MAX */
+            if (realpath(init_path, resolved_path) != NULL &&
+                strlen(resolved_path) < sizeof(init_path))
+            {
+                strcpy(init_path, resolved_path);
+            }
+
+            /* Check if string ends with "/systemd". */
             char *p;
             char *next_p = NULL;
             const char *term = "/systemd";
-            // Find last component.
             do
             {
                 p = next_p;
-                next_p = strstr(next_p ? next_p+strlen(term) : init_cmdline, term);
+                next_p = strstr(next_p ? next_p+strlen(term) : init_path, term);
             }
             while (next_p);
 

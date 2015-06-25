@@ -50,6 +50,15 @@
 
 ;; (add-hook 'cfengine3-mode-hook 'eldoc-mode)
 
+;; You may also find the command `cfengine3-reformat-json-string'
+;; useful, just bind it to a key you prefer. It will take the current
+;; string and reformat it as JSON. So if you're editing JSON inside
+;; the policy, it's a quick way to make it more legible without
+;; manually reindenting it.  For instance:
+
+;; (global-set-key [(control f4)] 'cfengine3-reformat-json-string)
+
+
 ;; It's *highly* recommended that you use this mode with the latest
 ;; Emacs, or at least 24.1.
 
@@ -71,6 +80,7 @@
         `(set (make-local-variable ',var) ,val))))
 
 (autoload 'json-read "json")
+(autoload 'json-pretty-print "json")
 (autoload 'regexp-opt "regexp-opt")
 
 (defgroup cfengine ()
@@ -99,7 +109,7 @@ will use a fallback syntax definition."
   :group 'cfengine
   :type '(choice file (const nil)))
 
-(defcustom cfengine-parameters-indent '(promise pname 0)
+(defcustom cfengine-parameters-indent '(promise pname 2)
   "Indentation of CFEngine3 promise parameters (hanging indent).
 
 For example, say you have this code:
@@ -120,15 +130,15 @@ You can also choose to indent the start of the word
 
 Finally, you can choose the amount of the indent.
 
-The default is to anchor at promise, indent parameter name, and offset 0:
+The default is to anchor at promise, indent parameter name, and offset 2:
 
 bundle agent rcfiles
 {
   files:
     any::
       \"/tmp/netrc\"
-      comment => \"my netrc\",
-      perms => mog(\"600\", \"tzz\", \"tzz\");
+        comment => \"my netrc\",
+        perms => mog(\"600\", \"tzz\", \"tzz\");
 }
 
 Here we anchor at beginning of line, indent arrow, and offset 10:
@@ -846,7 +856,9 @@ This includes those for cfservd as well as cfagent.")
                                             )
     "Regexp matching full defun declaration (excluding argument list).")
 
-  (defconst cfengine3-class-selector-regex "\\([[:alnum:]_().&|!:]+\\)::")
+  (defconst cfengine3-macro-regex "\\(@.+\\)")
+
+  (defconst cfengine3-class-selector-regex "\\([\"']?[[:alnum:]_().$&|!:]+[\"']?\\)::")
 
   (defconst cfengine3-category-regex "\\([[:alnum:]_]+\\):")
 
@@ -879,6 +891,14 @@ This includes those for cfservd as well as cfagent.")
 
 (defvar cfengine3-font-lock-keywords
   `(
+    ;; Macros.
+    (,(concat "^" cfengine3-macro-regex)
+     1 font-lock-preprocessor-face)
+
+    ;; Invalid macros (they must start at BOL).
+    (,(concat "^[ \t]*" cfengine3-macro-regex)
+     1 font-lock-warning-face)
+
     ;; Defuns.  This happens early so they don't get caught by looser
     ;; patterns.
     (,(concat "\\_<" cfengine3-defuns-regex "\\_>"
@@ -1057,6 +1077,10 @@ Intended as the value of `indent-line-function'."
         (message "%S" parse))
 
       (cond
+       ;; Macros start at 0.  But make sure we're not inside a string.
+       ((and (not (nth 3 parse))
+             (looking-at (concat cfengine3-macro-regex)))
+        (indent-line-to 0))
        ;; Body/bundle blocks start at 0.
        ((looking-at (concat cfengine3-defuns-regex "\\_>"))
         (indent-line-to 0))
@@ -1131,6 +1155,19 @@ Intended as the value of `indent-line-function'."
     ;; position after the indentation.  Else stay at same point in text.
     (if (> (- (point-max) pos) (point))
         (goto-char (- (point-max) pos)))))
+
+(defun cfengine3-reformat-json-string ()
+  "Reformat the current string as JSON using `json-pretty-print'."
+  (interactive)
+  (let ((ppss (syntax-ppss)))
+    (when (nth 3 ppss)                  ;inside a string
+      (save-excursion
+        (goto-char (nth 8 ppss))
+        (forward-char 1)
+        (let ((start (point)))
+          (forward-sexp 1)
+          (json-pretty-print start
+                             (point)))))))
 
 ;; CFEngine 3.x grammar
 
@@ -1228,18 +1265,22 @@ Intended as the value of `indent-line-function'."
               "???")
             (propertize f 'face 'font-lock-function-name-face)
             (mapconcat (lambda (p)
-                         (let ((type (cdr (assq 'type p)))
+                         (let* ((type (cdr (assq 'type p)))
+                                (description (cdr (assq 'description p)))
+                                (desc-string (if (stringp description)
+                                                 (concat " /" description "/")
+                                               ""))
                                (range (cdr (assq 'range p))))
                            (cond
                             ((not (stringp type)) "???type???")
                             ((not (stringp range)) "???range???")
                             ;; options are lists of possible keywords
                             ((equal type "option")
-                             (propertize (concat "[" range "]")
+                             (propertize (concat "[" range "]" desc-string)
                                          'face
                                          'font-lock-keyword-face))
                             ;; anything else is a type name as a variable
-                            (t (propertize type
+                            (t (propertize (concat type desc-string)
                                            'face
                                            'font-lock-variable-name-face)))))
                        plist

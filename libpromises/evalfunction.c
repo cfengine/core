@@ -2170,26 +2170,35 @@ static char* JsonPrimitiveToString(const JsonElement *el)
 
 static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
-    if (!VarRefIsQualified(ref))
+    VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs));
+
+    DataType type = CF_DATA_TYPE_NONE;
+    EvalContextVariableGet(ctx, ref, &type);
+
+    if (type != CF_DATA_TYPE_CONTAINER)
     {
-        if (fp->caller)
+        VarRefDestroy(ref);
+        ref = VarRefParse(RlistScalarValue(finalargs));
+        if (!VarRefIsQualified(ref))
         {
-            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
-            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
-        }
-        else
-        {
-            Log(LOG_LEVEL_WARNING,
-                "Function '%s' was given an unqualified variable reference, "
-                "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
-                fp->name, RlistScalarValue(finalargs));
-            VarRefDestroy(ref);
-            return FnFailure();
+            if (fp->caller)
+            {
+                const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+                VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+            }
+            else
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Function '%s' was given an unqualified variable reference, "
+                    "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                    fp->name, RlistScalarValue(finalargs));
+                VarRefDestroy(ref);
+                return FnFailure();
+            }
         }
     }
 
-    DataType type = CF_DATA_TYPE_NONE;
+    type = CF_DATA_TYPE_NONE;
     const void *var_value = EvalContextVariableGet(ctx, ref, &type);
 
     Rlist *keys = NULL;
@@ -2249,26 +2258,35 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
-    if (!VarRefIsQualified(ref))
+    VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs));
+
+    DataType type = CF_DATA_TYPE_NONE;
+    EvalContextVariableGet(ctx, ref, &type);
+
+    if (type != CF_DATA_TYPE_CONTAINER)
     {
-        if (fp->caller)
+        VarRefDestroy(ref);
+        ref = VarRefParse(RlistScalarValue(finalargs));
+        if (!VarRefIsQualified(ref))
         {
-            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
-            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
-        }
-        else
-        {
-            Log(LOG_LEVEL_WARNING,
-                "Function '%s' was given an unqualified variable reference, "
-                "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
-                fp->name, RlistScalarValue(finalargs));
-            VarRefDestroy(ref);
-            return FnFailure();
+            if (fp->caller)
+            {
+                const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+                VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+            }
+            else
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Function '%s' was given an unqualified variable reference, "
+                    "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                    fp->name, RlistScalarValue(finalargs));
+                VarRefDestroy(ref);
+                return FnFailure();
+            }
         }
     }
 
-    DataType type = CF_DATA_TYPE_NONE;
+    type = CF_DATA_TYPE_NONE;
     const void *var_value = EvalContextVariableGet(ctx, ref, &type);
 
     Rlist *values = NULL;

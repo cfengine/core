@@ -101,7 +101,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
         YieldGlobalPackagePromiseLock(global_lock);
         
         *promise_log_msg =
-                StringFormat("Can not aquire lock for '%s' package promise. "
+                StringFormat("Can not acquire lock for '%s' package promise. "
                              "Skipping promise evaluation",  pp->promiser);
         *log_lvl = LOG_LEVEL_VERBOSE;
         
@@ -145,7 +145,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                 case PROMISE_RESULT_CHANGE:
                     *log_lvl = LOG_LEVEL_INFO;
                     *promise_log_msg =
-                        StringFormat("Succesfully removed package '%s'",
+                        StringFormat("Successfully removed package '%s'",
                                      pp->promiser);
                     break;
                 case PROMISE_RESULT_NOOP:

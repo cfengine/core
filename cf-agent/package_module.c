@@ -1346,19 +1346,19 @@ PromiseResult RepoInstall(EvalContext *ctx,
             }
         }
         
-        char *install_formated_list = BufferClose(install_buffer);
+        char *install_formatted_list = BufferClose(install_buffer);
         
-        if (install_formated_list)
+        if (install_formatted_list)
         {
             /* If we have some packages to install. */
-            if (strlen(install_formated_list) > 0)
+            if (strlen(install_formatted_list) > 0)
             {
                 Log(LOG_LEVEL_DEBUG,
                     "Formatted list of packages to be send to package module: "
-                    "[%s]", install_formated_list);
+                    "[%s]", install_formatted_list);
                 res = InstallPackageGeneric(policy_data->package_options,
                                       PACKAGE_TYPE_REPO,
-                                      install_formated_list, wrapper);
+                                      install_formatted_list, wrapper);
                 
                 for (int i = 0; i < SeqLength(packages_to_install); i++)
                 {
@@ -1375,7 +1375,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
                     *verified = true;
                 }
             }
-            free(install_formated_list);
+            free(install_formatted_list);
         }
         
         SeqDestroy(packages_to_install);

@@ -292,7 +292,7 @@ PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, A
     if (package_lock.g_lock.lock == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, 
-            "Can not aquire global lock for package promise. Skipping promise "
+            "Can not acquire global lock for package promise. Skipping promise "
             "evaluation");
         result = PROMISE_RESULT_SKIPPED;
         goto end;

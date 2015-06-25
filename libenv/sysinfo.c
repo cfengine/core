@@ -989,7 +989,10 @@ static void OSClasses(EvalContext *ctx)
 /* First we check if init process is systemd, and set "systemd" hard class. */
 
     {
+        bool systemd_detected = false;
+
         char init_cmdline[CF_BUFSIZE];
+        init_cmdline[0] = '\0';
         if (ReadLine("/proc/1/cmdline", init_cmdline, sizeof(init_cmdline)))
         {
             char *p;
@@ -1006,9 +1009,38 @@ static void OSClasses(EvalContext *ctx)
             if (p != NULL &&
                 p[strlen("/systemd")] == '\0')
             {
-                EvalContextClassPutHard(ctx, "systemd",
-                                        "inventory,attribute_name=none,source=agent");
+                systemd_detected = true;
             }
+        }
+
+        if (!systemd_detected && init_cmdline[0])
+        {
+            char target[PATH_MAX];
+            ssize_t size = readlink(init_cmdline, target, sizeof(target) - 1);
+            if (size >= 0)
+            {
+                target[size] = '\0';
+                const char trailing[] = "/systemd";
+                size_t trailing_size = sizeof(trailing) - 1;
+                if (size >= trailing_size
+                    && memcmp(target + size - trailing_size, trailing, trailing_size) == 0)
+                {
+                    systemd_detected = true;
+                }
+            }
+            else if (errno != EINVAL
+                     && errno != ENOENT
+                     && errno != ENOTDIR)
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read file entry '%s'. (readlink: '%s')",
+                    init_cmdline, GetErrorStr());
+            }
+        }
+
+        if (systemd_detected)
+        {
+            EvalContextClassPutHard(ctx, "systemd",
+                                    "inventory,attribute_name=none,source=agent");
         }
     }
 

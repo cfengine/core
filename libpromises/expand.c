@@ -204,7 +204,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
             // Redmine#6484 
             // Only during pre-evaluation ActOnPromise is set to be a pointer to 
             // CommonEvalPromise. While doing CommonEvalPromise check all the 
-            // handles should be not collected and dependant promises should not
+            // handles should be not collected and dependent promises should not
             // be notified.
             if (ActOnPromise != &CommonEvalPromise)
             {

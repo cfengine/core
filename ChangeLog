@@ -1,6 +1,21 @@
 3.7.0:
         New features:
         - New package promise implementation.
+          The syntax is much simpler, to try it out, check out the syntax:
+              packages:
+                  "mypackage"
+                    policy => "absent/present",
+
+                      # Optional, default taken from common control
+                    package_module => apt_get,
+
+                      # Optional, will only match exact version. May be
+                      # "latest".
+                    version => "32.0",
+
+                      # Optional.
+                    architecture => "x86_64";
+
         - Full systemd support for all relevant platforms
         - New feature classes for optional features: feature_yaml and feature_xml
         - New readdata() support for generic data input (CSV, YAML, JSON, or auto)

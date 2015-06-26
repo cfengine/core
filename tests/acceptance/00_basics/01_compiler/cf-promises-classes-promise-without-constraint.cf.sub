@@ -1,0 +1,11 @@
+bundle agent test
+{
+  classes:
+    "my_class"
+      scope => "namespace",
+      meta => { "inventory", "attribute_name=Something" };
+
+  reports:
+    my_class::
+      "HI there";
+}

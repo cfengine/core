@@ -441,6 +441,11 @@ static char *EvalVarRef(ARG_UNUSED const char *varname, ARG_UNUSED VarRefType ty
 
 /**********************************************************************/
 
+bool ClassCharIsWhitespace(char ch)
+{
+    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+}
+
 bool IsDefinedClass(const EvalContext *ctx, const char *context)
 {
     ParseResult res;
@@ -450,7 +455,10 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
         return true;
     }
 
-    res = ParseExpression(context, 0, strlen(context));
+    Buffer *condensed = BufferNewFrom(context, strlen(context));
+    BufferRewrite(condensed, &ClassCharIsWhitespace, true);
+    res = ParseExpression(BufferData(condensed), 0, BufferSize(condensed));
+    BufferDestroy(condensed);
 
     if (!res.result)
     {

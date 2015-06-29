@@ -445,6 +445,37 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode)
     buffer->mode = mode;
 }
 
+Buffer* BufferFilter(Buffer *buffer, BufferFilterFn filter, const bool invert)
+{
+    assert(buffer);
+
+    Buffer *filtered = BufferNew();
+    for (unsigned int i = 0; i < buffer->used; ++i)
+    {
+        bool test = (*filter)(buffer->buffer[i]);
+        if (invert)
+        {
+            test = !test;
+        }
+
+        if (test)
+        {
+            BufferAppendChar(filtered, buffer->buffer[i]);
+        }
+    }
+
+    return filtered;
+}
+
+void BufferRewrite(Buffer *buffer, BufferFilterFn filter, const bool invert)
+{
+    assert(buffer);
+
+    Buffer *rewrite = BufferFilter(buffer, filter, invert);
+    BufferSet(buffer, BufferData(rewrite), BufferSize(rewrite));
+    BufferDestroy(rewrite);
+}
+
 unsigned BufferCapacity(const Buffer *buffer)
 {
     assert(buffer);

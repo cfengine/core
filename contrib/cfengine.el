@@ -856,7 +856,7 @@ This includes those for cfservd as well as cfagent.")
                                             )
     "Regexp matching full defun declaration (excluding argument list).")
 
-  (defconst cfengine3-macro-regex "\\(@.+\\)")
+  (defconst cfengine3-macro-regex "\\(@[a-zA-Z].+\\)")
 
   (defconst cfengine3-class-selector-regex "\\([\"']?[[:alnum:]_().$&|!:]+[\"']?\\)::")
 

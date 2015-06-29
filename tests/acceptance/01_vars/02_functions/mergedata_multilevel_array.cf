@@ -1,0 +1,35 @@
+# Test that merging a multi level classic array works
+# Ref: https://dev.cfengine.com/issues/4566
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent check
+{
+   vars:
+      "a[0][class]"   string => "any";
+      "a[0][command]" string => "/bin/true";
+      "a[1][class]"   string => "linux";
+      "a[1][command]" string => "/bin/false";
+
+      "m" data => mergedata( a );
+
+      "i" slist => getindices( m );
+
+   classes:
+      "PASS" expression => strcmp( "any", "$(m[0][class])" );
+
+   reports:
+      PASS::
+         "$(this.promise_filename) Pass";
+      !PASS::
+         "$(this.promise_filename) FAIL";
+
+      DEBUG::
+        "i       => [$(i)]";
+        "class   => $(m[$(i)][class])";
+        "command => $(m[$(i)][command])";
+        "version => $(sys.cf_version)";
+}

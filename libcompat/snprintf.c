@@ -287,27 +287,27 @@
 #endif	/* TEST_SNPRINTF */
 
 #if !HAVE_SNPRINTF || !HAVE_VSNPRINTF || !HAVE_ASPRINTF || !HAVE_VASPRINTF
-#include <stdio.h>	/* For NULL, size_t, vsnprintf(3), and vasprintf(3). */
-#ifdef VA_START
-#undef VA_START
-#endif	/* defined(VA_START) */
-#ifdef VA_SHIFT
-#undef VA_SHIFT
-#endif	/* defined(VA_SHIFT) */
-#if HAVE_STDARG_H
-#include <stdarg.h>
-#define VA_START(ap, last) va_start(ap, last)
-#define VA_SHIFT(ap, value, type) /* No-op for ANSI C. */
-#else	/* Assume <varargs.h> is available. */
-#include <varargs.h>
-#define VA_START(ap, last) va_start(ap)	/* "last" is ignored. */
-#define VA_SHIFT(ap, value, type) value = va_arg(ap, type)
-#endif	/* HAVE_STDARG_H */
+# include <stdio.h>	/* For NULL, size_t, vsnprintf(3), and vasprintf(3). */
+# if HAVE_STDLIB_H
+#  include <stdlib.h>	/* For malloc(3). */
+# endif	/* HAVE_STDLIB_H */
+# ifdef VA_START
+#  undef VA_START
+# endif	/* defined(VA_START) */
+# ifdef VA_SHIFT
+#  undef VA_SHIFT
+# endif	/* defined(VA_SHIFT) */
+# if HAVE_STDARG_H
+#  include <stdarg.h>
+#  define VA_START(ap, last) va_start(ap, last)
+#  define VA_SHIFT(ap, value, type) /* No-op for ANSI C. */
+# else	/* Assume <varargs.h> is available. */
+#  include <varargs.h>
+#  define VA_START(ap, last) va_start(ap)	/* "last" is ignored. */
+#  define VA_SHIFT(ap, value, type) value = va_arg(ap, type)
+# endif	/* HAVE_STDARG_H */
 
 #if !HAVE_VASPRINTF
-#if HAVE_STDLIB_H
-#include <stdlib.h>	/* For malloc(3). */
-#endif	/* HAVE_STDLIB_H */
 #ifdef VA_COPY
 #undef VA_COPY
 #endif	/* defined(VA_COPY) */

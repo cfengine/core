@@ -31,9 +31,13 @@
 #include <signal.h>
 #include <errno.h>
 
-#if !HAVE_DECL_PTHREAD_SIGMASK
+
+/* MinGW #defines pthread_sigmask(A,B,C) to "0", which creates problems in the
+ * function implementation. */
+#undef pthread_sigmask
+
 int pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
-#endif
+
 
 /*
  * Stub implementation. Previously pthread_sigmask was just #ifdef'ed out.

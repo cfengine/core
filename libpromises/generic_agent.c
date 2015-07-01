@@ -821,13 +821,16 @@ static bool GeneratePolicyReleaseIDFromGit(char *release_id_out,
         // Found HEAD Reference which means we are on a checked out branch
         {
             fclose(git_file);
-            snprintf(git_filename, PATH_MAX, "%s/.git/%s", policy_dir, git_head);
+            snprintf(git_filename, PATH_MAX, "%s/.git/%s",
+                     policy_dir, git_head);
             git_file = fopen(git_filename, "r");
             Log(LOG_LEVEL_DEBUG, "Found a git HEAD ref");
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "Unable to find HEAD ref in %s. Looking for commit", git_filename);
+            Log(LOG_LEVEL_DEBUG,
+                "Unable to find HEAD ref in '%s', looking for commit instead",
+                git_filename);
             assert(out_size > 40);
             fseek(git_file, 0, SEEK_SET);
             scanned = fscanf(git_file, "%40s", release_id_out);
@@ -835,12 +838,15 @@ static bool GeneratePolicyReleaseIDFromGit(char *release_id_out,
 
             if (scanned == 1)
             {
-                Log(LOG_LEVEL_DEBUG, "Found current git checkout pointing to %s", release_id_out);
+                Log(LOG_LEVEL_DEBUG,
+                    "Found current git checkout pointing to: %s",
+                    release_id_out);
                 return true;
             }
             else
-            // We didnt find a commit sha in .git/HEAD, so we assume the git information is invalid
             {
+                /* We didnt find a commit sha in .git/HEAD, so we assume the
+                 * git information is invalid. */
                 git_file = NULL;
             }
         }

@@ -827,7 +827,7 @@ static bool GeneratePolicyReleaseIDFromGit(char *release_id_out,
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "Unable to find HEAD ref in %s. Looking for commit", git_file);
+            Log(LOG_LEVEL_DEBUG, "Unable to find HEAD ref in %s. Looking for commit", git_filename);
             assert(out_size > 40);
             fseek(git_file, 0, SEEK_SET);
             scanned = fscanf(git_file, "%40s", release_id_out);

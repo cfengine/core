@@ -1,0 +1,64 @@
+# Test that using process cmd line matching works in a process promise.
+
+body common control
+{
+    inputs => { "../../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  meta:
+      # Adding the test case revealed that these platforms do not work, but we
+      # don't know why.
+      "test_skip_needs_work" string => "solaris|hpux";
+
+  vars:
+      # Random, but unique string for this test case.
+      "unique" string => "Ni8Goobi";
+
+  commands:
+    test_pass_1.!windows::
+      "$(G.no_fds) --no-std $(G.sh) $(this.promise_filename).bat $(unique) &"
+        contain => in_shell;
+    test_pass_1.windows::
+      "$(this.promise_dirname)/../../../elevate.exe $(this.promise_filename).bat $(unique)"
+        contain => in_shell;
+}
+
+bundle agent test
+{
+  vars:
+      "escaped_process" string => escape("$(this.promise_filename).bat");
+
+  processes:
+      ".*$(init.unique).*"
+        process_count => test_range;
+}
+
+body process_count test_range
+{
+    in_range_define => { "found" };
+    out_of_range_define => { "not_found" };
+    match_range => irange(1,100);
+}
+
+bundle agent check
+{
+  methods:
+    test_pass_1::
+      "any" usebundle => dcs_wait("$(this.promise_filename)", 1);
+
+    test_pass_2.(!found|not_found)::
+      "any" usebundle => dcs_fail("$(this.promise_filename)");
+    test_pass_2.found.!not_found::
+      "any" usebundle => dcs_wait("$(this.promise_filename)", 25);
+
+    test_pass_3.(found|!not_found)::
+      "any" usebundle => dcs_fail("$(this.promise_filename)");
+    test_pass_3.!found.not_found::
+      "any" usebundle => dcs_pass("$(this.promise_filename)");
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 30

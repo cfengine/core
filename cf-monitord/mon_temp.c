@@ -86,10 +86,17 @@ void MonTempInit(void)
 {
     struct stat statbuf;
 
-    if (stat("/sys/devices/virtual/thermal", &statbuf) != -1)
+    for (int i = 0; i < 4; i++)
     {
-        Log(LOG_LEVEL_DEBUG, "Found a thermal device in /sys");
-        SYSTHERMAL = true;
+        char s[128];
+        xsnprintf(s, sizeof(s),
+                  "/sys/devices/virtual/thermal/thermal_zone%d", i);
+
+        if (stat(s, &statbuf) != -1)
+        {
+            Log(LOG_LEVEL_DEBUG, "Found a thermal device in /sys");
+            SYSTHERMAL = true;
+        }
     }
 
     if (stat("/proc/acpi/thermal_zone", &statbuf) != -1)

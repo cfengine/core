@@ -196,15 +196,15 @@ static bool GetSysThermal(double *cf_this)
 {
     FILE *fp;
     int count;
-    char path[CF_BUFSIZE];
-    char buf[CF_BUFSIZE];
     bool retval = false;
 
     for (count = 0; count < 4; count++)
     {
         double temp = 0;
 
-        snprintf(path, CF_BUFSIZE, "/sys/devices/virtual/thermal/thermal_zone%d/temp", count);
+        char path[128];
+        xsnprintf(path, sizeof(path),
+                  "/sys/devices/virtual/thermal/thermal_zone%d/temp", count);
 
         if ((fp = fopen(path, "r")) == NULL)
         {
@@ -212,6 +212,7 @@ static bool GetSysThermal(double *cf_this)
             continue;
         }
 
+        char buf[128];
         if (fgets(buf, sizeof(buf), fp) == NULL)
         {
             Log(LOG_LEVEL_INFO, "Failed to read line from stream '%s'", path);

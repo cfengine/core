@@ -198,6 +198,7 @@ static bool GetSysThermal(double *cf_this)
     int count;
     char path[CF_BUFSIZE];
     char buf[CF_BUFSIZE];
+    bool retval = false;
 
     for (count = 0; count < 4; count++)
     {
@@ -207,40 +208,48 @@ static bool GetSysThermal(double *cf_this)
 
         if ((fp = fopen(path, "r")) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't open '%s'", path);
+            Log(LOG_LEVEL_INFO, "Couldn't open '%s'", path);
             continue;
         }
 
         if (fgets(buf, sizeof(buf), fp) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Failed to read line from stream '%s'", path);
+            Log(LOG_LEVEL_INFO, "Failed to read line from stream '%s'", path);
             fclose(fp);
             continue;
         }
 
-        sscanf(buf, "%lf", &temp);
-
-        switch (count)
+        int ret = sscanf(buf, "%lf", &temp);
+        if (ret == 1)
         {
-        case 0:
-            cf_this[ob_temp0] = temp;
-            break;
-        case 1:
-            cf_this[ob_temp1] = temp;
-            break;
-        case 2:
-            cf_this[ob_temp2] = temp;
-            break;
-        case 3:
-            cf_this[ob_temp3] = temp;
-            break;
+            switch (count)
+            {
+            case 0:
+                cf_this[ob_temp0] = temp;
+                break;
+            case 1:
+                cf_this[ob_temp1] = temp;
+                break;
+            case 2:
+                cf_this[ob_temp2] = temp;
+                break;
+            case 3:
+                cf_this[ob_temp3] = temp;
+                break;
+            }
+
+            Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf", count, temp);
+            retval = true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Failed to read number from: %s", path);
         }
 
-        Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf", count, temp);
         fclose(fp);
     }
 
-    return true;
+    return retval;
 }
 
 /******************************************************************************/

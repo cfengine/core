@@ -79,27 +79,29 @@ void MakeSignalPipe(void)
         exit(EXIT_FAILURE);
     }
 
+    atexit(&CloseSignalPipe);
+
     for (int c = 0; c < 2; c++)
     {
-#ifndef __MINGW32__
-        if (fcntl(SIGNAL_PIPE[c], F_SETFL, O_NONBLOCK) != 0)
-        {
-            Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (fcntl: '%s')",
-                GetErrorStr());
-            exit(EXIT_FAILURE);
-        }
-#else // __MINGW32__
+#ifdef __MINGW32__
         u_long enable = 1;
-        if (ioctlsocket(SIGNAL_PIPE[c], FIONBIO, &enable) != 0)
+        int ret = ioctlsocket(SIGNAL_PIPE[c], FIONBIO, &enable);
+#define CNTLNAME "ioctlsocket"
+#else /* Unix: */
+        int ret = fcntl(SIGNAL_PIPE[c], F_SETFL, O_NONBLOCK);
+#define CNTLNAME "fcntl"
+#endif /* __MINGW32__ */
+
+        if (ret != 0)
         {
-            Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (ioctlsocket: '%s')",
+            Log(LOG_LEVEL_CRIT,
+                "Could not unblock internal communication pipe. "
+                "Cannot continue. (" CNTLNAME ": '%s')",
                 GetErrorStr());
             exit(EXIT_FAILURE);
         }
-#endif // __MINGW32__
+#undef CNTLNAME
     }
-
-    atexit(&CloseSignalPipe);
 }
 
 /**

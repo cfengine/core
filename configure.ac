@@ -1527,7 +1527,20 @@ AC_MSG_RESULT([-> Statedir: $STATEDIR])
 
 AC_MSG_RESULT( )
 
+dnl ######################################################################
+dnl Check how file descriptor transfers are supported between proceses.
+dnl ######################################################################
+AC_CHECK_MEMBER([struct msghdr.msg_control],
+                [AC_DEFINE([HAVE_MSGHDR_MSG_CONTROL], [1], [Define to 1 if SCM_RIGHTS supported])],
+                [AC_DEFINE([HAVE_NO_MSGHDR_MSG_CONTROL], [1], [Define to 1 if SCM_RIGHTS support])],
+                [[#include <sys/types.h>
+                  #include <sys/socket.h>]])
 
+AC_CHECK_MEMBER([struct msghdr.msg_accrights],
+                [AC_DEFINE([HAVE_MSGHDR_ACCRIGHTS], [1], [Define to 1 if BSD .msg_accrights supported])],
+                [AC_DEFINE([HAVE_NO_MSGHDR_ACCRIGHTS], [1], [Define to 1 if no BSD .msg_accrights support])],
+                [[#include <sys/types.h>
+                  #include <sys/socket.h>]])
 
 dnl ######################################################################
 dnl Now make the Makefiles

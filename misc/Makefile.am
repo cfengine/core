@@ -1,7 +1,7 @@
 # include unconditionally in the distribution tarball
 EXTRA_DIST= init.d/cfengine3.in \
 	systemd/cfengine3-web.service.in \
-	systemd/cfengine3.service
+	systemd/cfengine3.service.in
 
 
 # The following files are generated from the previous ones, during ./configure

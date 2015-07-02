@@ -94,23 +94,23 @@ bundle agent cfe_internal_update
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
       copy_from => u_scp("$(masterfiles_dir_remote)"),
       depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+      classes => scoped_classes_generic("bundle", "got_policy_using_shortcut");
 
-    !windows.got_policy_failed::
+    !windows.got_policy_using_shortcut_failed::
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
       copy_from => u_scp("$(sys.masterdir)"),
       depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+      classes => scoped_classes_generic("bundle", "got_policy_using_direct");
 
-    windows.got_policy_failed::
+    windows.got_policy_using_shortcut_failed::
 
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
       copy_from => u_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
       depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+      classes => scoped_classes_generic("bundle", "got_policy_using_direct");
 
     windows::
 
@@ -123,12 +123,12 @@ bundle agent cfe_internal_update
 
   processes:
 
-    !windows.got_policy::
+    !windows.(got_policy_using_shortcut_repaired|got_policy_using_direct_repaired)::
 
       "cf-execd" restart_class => "start_exec",
       handle => "cfe_internal_bootstrap_update_processes_start_cf_execd";
 
-    am_policy_hub.got_policy::
+    am_policy_hub.(got_policy_using_shortcut_repaired|got_policy_using_direct_repaired)::
 
       "cf-serverd" restart_class => "start_server",
       handle => "cfe_internal_bootstrap_update_processes_start_cf_serverd";
@@ -140,14 +140,14 @@ bundle agent cfe_internal_update
 
       "$(sys.cf_execd)"
       handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
-      classes => repaired("executor_started");
+      classes => scoped_classes_generic("bundle", "execd_service");
 
     start_server.!systemd::
 
       "$(sys.cf_serverd)"
       handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
       action => ifwin_bg,
-      classes => repaired("server_started");
+      classes => scoped_classes_generic("bundle", "serverd_service");
 
     start_exec.systemd::
 
@@ -162,13 +162,13 @@ bundle agent cfe_internal_update
 
   services:
 
-    windows.got_policy::
+    windows.(got_policy_using_shortcut_repaired|got_policy_using_direct_repaired)::
 
       "CfengineNovaExec"
       handle => "cfe_internal_bootstrap_update_services_windows_executor",
       service_policy => "start",
       service_method => bootstart,
-      classes => repaired("executor_started");
+      classes => scoped_classes_generic("bundle", "execd_service");
 
 
   reports:
@@ -183,12 +183,12 @@ bundle agent cfe_internal_update
       "This autonomous node assumes the role of voluntary client"
       handle => "cfe_internal_bootstrap_update_reports_assume_voluntary_client";
 
-    got_policy::
+    (got_policy_using_shortcut_repaired|got_policy_using_direct_repaired)::
 
       "Updated local policy from policy server"
       handle => "cfe_internal_bootstrap_update_reports_got_policy";
 
-    !got_policy.!have_promises_cf::
+    !(got_policy_using_shortcut_repaired|got_policy_using_direct_repaired).!have_promises_cf::
 
       "Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)
        Please check
@@ -201,27 +201,27 @@ bundle agent cfe_internal_update
        When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
       handle => "cfe_internal_bootstrap_update_reports_did_not_get_policy";
 
-    server_started::
+    server_started|serverd_service_repaired::
 
       "Started the server"
       handle => "cfe_internal_bootstrap_update_reports_started_serverd";
 
-    am_policy_hub.!server_started.!have_promises_cf::
+    am_policy_hub.!(server_started|serverd_service_failed).!have_promises_cf::
 
       "Failed to start the server"
       handle => "cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
 
-    executor_started::
+    executor_started|execd_service_repaired::
 
       "Started the scheduler"
       handle => "cfe_internal_bootstrap_update_reports_started_execd";
 
-    !executor_started.!have_promises_cf::
+    !(executor_started|execd_service_repaired).!have_promises_cf::
 
       "Did not start the scheduler"
       handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
 
-    !executor_started.have_promises_cf::
+    !(executor_started|execd_service_repaired).have_promises_cf::
 
       "You are running a hard-coded failsafe. Please use the following command instead.
         $(sys.cf_agent) -f $(sys.inputdir)/update.cf"
@@ -241,15 +241,24 @@ bundle agent cfe_internal_call_update
       handle => "cfe_internal_call_update_commands_call_update_cf";
 }
 ############################################
+body classes scoped_classes_generic(scope, x)
+# @brief Define `x` prefixed/suffixed with promise outcome
+# **See also:** `scope`
+#
+# @param scope The scope in which the class should be defined
+# @param x The unique part of the classes to be defined
+{
+      scope => "$(scope)";
+      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_reached" };
+}
+############################################
 body classes kept(x)
 {
       promise_kept => {"$(x)"};
-}
-############################################
-body classes repaired(x)
-{
-      promise_repaired => {"$(x)"};
-      repair_failed => {"$(x)_failed"};
 }
 ############################################
 body classes repaired_two(x,y)

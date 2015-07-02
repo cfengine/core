@@ -2022,28 +2022,67 @@ const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const P
     return bp;
 }
 
-const Body *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
-                                             const char *callee_reference, const char *callee_type)
+const Body *EvalContextFindFirstMatchingBody(const Policy *policy, const char *type,
+                                             const char *namespace, const char *name)
 {
-    ClassRef ref = IDRefQualify(ctx, callee_reference);
-
-    const Body *bp = NULL;
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         const Body *curr_bp = SeqAt(policy->bodies, i);
-        if ((strcmp(curr_bp->type, callee_type) != 0) ||
-            (strcmp(curr_bp->name, ref.name) != 0) ||
-            !StringSafeEqual(curr_bp->ns, ref.ns))
+        if ((strcmp(curr_bp->type, type) == 0) &&
+            (strcmp(curr_bp->name, name) == 0) &&
+            StringSafeEqual(curr_bp->ns, namespace))
         {
-            continue;
+            return curr_bp;
         }
+    }
 
-        bp = curr_bp;
-        break;
+    return NULL;
+}
+
+Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
+                                      const char *callee_reference, const char *callee_type)
+{
+    ClassRef ref = IDRefQualify(ctx, callee_reference);
+    Seq *bodies = SeqNew(2, NULL);
+
+    const Body *bp = EvalContextFindFirstMatchingBody(policy, callee_type, ref.ns, ref.name);
+    if (bp)
+    {
+        SeqAppend(bodies, (void *)bp);
+        SeqAppend(bodies, (void *)NULL);
+
+        for (size_t k = 0; bp->conlist && k < SeqLength(bp->conlist); k++)
+        {
+            Constraint *scp = SeqAt(bp->conlist, k);
+            if (strcmp("inherit_from", scp->lval) == 0)
+            {
+                char* call = NULL;
+
+                if (RVAL_TYPE_SCALAR == scp->rval.type)
+                {
+                    call = RvalScalarValue(scp->rval);
+                }
+                else if (RVAL_TYPE_FNCALL == scp->rval.type)
+                {
+                    call = RvalFnCallValue(scp->rval)->name;
+                }
+
+                ClassRef parent_ref = IDRefQualify(ctx, call);
+
+                // NOTE: this supports single-level inheritance only
+                const Body *parent = EvalContextFindFirstMatchingBody(policy, callee_type, parent_ref.ns, parent_ref.name);
+                if (parent)
+                {
+                    SeqAppend(bodies, (void *)parent);
+                    SeqAppend(bodies, &(scp->rval));
+                }
+                ClassRefDestroy(parent_ref);
+            }
+        }
     }
 
     ClassRefDestroy(ref);
-    return bp;
+    return bodies;
 }
 
 bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key)

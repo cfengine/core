@@ -15,6 +15,9 @@ body common control
 
 bundle agent init
 {
+  files:
+      "$(G.testfile).expected"
+      copy_from => local_cp("$(this.promise_filename).expected");
 }
 
 #######################################################
@@ -50,7 +53,6 @@ bundle common test_common
       "hasobject_$(all_keys)" expression => isvariable("object[$(all_keys)]");
 }
 
-
 bundle agent test
 {
   files:
@@ -58,9 +60,6 @@ bundle agent test
       "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
-
-      "$(G.testfile).expected"
-      copy_from => local_cp("$(this.promise_filename).expected");
 }
 
 bundle edit_line test_insert
@@ -87,6 +86,6 @@ bundle agent check
 {
   methods:
       "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+                                       "$(G.testfile).expected",
+                                       "$(this.promise_filename)");
 }

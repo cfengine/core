@@ -1485,7 +1485,15 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
                         if (strcmp(lval, bs2[k].lval) == 0)
                         {
-                            return CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, bs2[k].range.validation_string, 0);
+                            /* Body definitions will be checked later. */
+                            if (bs2[k].dtype != CF_DATA_TYPE_BODY)
+                            {
+                                return CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, bs2[k].range.validation_string, 0);
+                            }
+                            else
+                            {
+                                return SYNTAX_TYPE_MATCH_OK;
+                            }
                         }
                     }
                 }

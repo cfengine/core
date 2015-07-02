@@ -45,7 +45,9 @@ JsonElement *RvalContainerValue(Rval rval);
 const char *RvalTypeToString(RvalType type);
 
 Rval RvalNew(const void *item, RvalType type);
+Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map);
 Rval RvalCopy(Rval rval);
+Rval RvalCopyRewriter(Rval rval, JsonElement *map);
 void RvalDestroy(Rval rval);
 JsonElement *RvalToJson(Rval rval);
 char *RvalToString(Rval rval);
@@ -54,6 +56,7 @@ void RvalWriteParts(Writer *writer, const void* item, RvalType type);
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max);
 
 Rlist *RlistCopy(const Rlist *list);
+Rlist *RlistCopyRewriter(const Rlist *list, JsonElement *map);
 unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max);
 void RlistDestroy(Rlist *list);
 void RlistDestroyEntry(Rlist **liststart, Rlist *entry);

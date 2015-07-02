@@ -1,0 +1,48 @@
+##############################################################################
+#
+# Redmine #4309: parameterized body inheritance with inherit_from
+#
+##############################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle common test
+{
+  reports:
+      "test_inherit1" classes => scoped_classes_generic_inherit("namespace", "test_inherit");
+      "test_inherit2" classes => scoped_classes_generic_some_inherit("test_inherit_some");
+      "test_inherit3" classes => scoped_classes_generic_none_inherit;
+}
+
+body classes scoped_classes_generic_inherit(myscope, myx)
+{
+      inherit_from => scoped_classes_generic($(myscope), $(myx));
+}
+
+body classes scoped_classes_generic_some_inherit(somex)
+{
+      inherit_from => scoped_classes_generic("namespace", $(somex));
+}
+
+body classes scoped_classes_generic_none_inherit
+{
+      inherit_from => scoped_classes_generic("namespace", "test_inherit_none");
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("test_inherit_ok,test_inherit_some_ok,test_inherit_none_ok",
+                                          "",
+                                          $(this.promise_filename)),
+      inherit => "true";
+}

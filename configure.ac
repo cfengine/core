@@ -1350,10 +1350,38 @@ AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
             SYSTEMD_SERVICE_PATH="$withval"
         fi
         AC_SUBST([SYSTEMD_SERVICE_PATH])
+        AC_CONFIG_FILES([misc/systemd/cfengine3.service])
         AC_CONFIG_FILES([misc/systemd/cfengine3-web.service])
     fi
 ])
 AM_CONDITIONAL([WITH_SYSTEMD_SERVICE], [test -n "$SYSTEMD_SERVICE_PATH"])
+
+AC_ARG_WITH(environment-path, AS_HELP_STRING([--with-environment-path=PATH],
+    [Specifies the location of the environment files for the platform. Currently used only by systemd.]))
+OS_ENVIRONMENT_PATH=
+if test -z "$with_environment_path" || test "$with_environment_path" = "yes"; then
+    if test -n "$SYSTEMD_SERVICE_PATH"; then
+        for i in /etc/sysconfig /etc/default; do
+            if test -d $i; then
+                OS_ENVIRONMENT_PATH=$i
+                break
+            fi
+        done
+        if test -z "$OS_ENVIRONMENT_PATH"; then
+            AC_MSG_ERROR([Unable to detect location of environment files on the platform (e.g. '/etc/sysconfig'). Please specify it using --with-environment-path, or turn off systemd support.])
+        fi
+    fi
+else
+    if test "$with_environment_path" = "no"; then
+        if test -n "$SYSTEMD_SERVICE_PATH"; then
+            AC_MSG_ERROR([It is not possible to both specify systemd support and not provide an environment path with --without-environment-path.])
+        fi
+    else
+        OS_ENVIRONMENT_PATH="$with_environment_path"
+    fi
+fi
+AC_SUBST([OS_ENVIRONMENT_PATH])
+
 
 dnl #####################################################################
 dnl Hostname and Version stuff
@@ -1514,6 +1542,10 @@ if test -n "$SYSTEMD_SERVICE_PATH"; then
   AC_MSG_RESULT([-> Systemd service: $SYSTEMD_SERVICE_PATH])
 else
   AC_MSG_RESULT([-> Systemd service: disabled])
+fi
+
+if test -n "$OS_ENVIRONMENT_PATH"; then
+  AC_MSG_RESULT([-> Path of platform environment files: $OS_ENVIRONMENT_PATH])
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])

@@ -45,7 +45,7 @@ body agent control
       skipidentify => "true";
 
       # Bootstrapping can't continue without keys
-      abortclasses => { "no_ppkeys_ABORT" };
+      abortclasses => { "no_ppkeys_report_kept" };
 }
 
 ################################################################################
@@ -60,7 +60,7 @@ bundle agent cfe_internal_checkkeys
   reports:
     !have_ppkeys::
       "No public/private key pair is loaded, please create one by running \"cf-key\""
-        classes => kept("no_ppkeys_ABORT");
+        classes => scoped_classes_generic("namespace", "no_ppkeys_report");
 }
 
 ################################################################################
@@ -254,11 +254,6 @@ body classes scoped_classes_generic(scope, x)
       repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
       repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
       promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_reached" };
-}
-############################################
-body classes kept(x)
-{
-      promise_kept => {"$(x)"};
 }
 ############################################
 body classes repaired_two(x,y)

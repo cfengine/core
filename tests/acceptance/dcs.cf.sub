@@ -47,7 +47,6 @@ bundle common G
                         "rm",
                         "sed",
                         "seq",
-                        "sh",
                         "sleep",
                         "sort",
                         "tee",

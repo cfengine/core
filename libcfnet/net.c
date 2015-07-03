@@ -479,7 +479,7 @@ int SetReceiveTimeout(int fd, unsigned long ms)
 
     if (ret != 0)
     {
-        Log(LOG_LEVEL_INFO,
+        Log(LOG_LEVEL_VERBOSE,
             "Failed to set socket timeout to %lu milliseconds.", ms);
         return -1;
     }

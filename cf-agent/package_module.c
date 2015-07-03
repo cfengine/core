@@ -565,13 +565,23 @@ static int NegotiateSupportedAPIVersion(PackageModuleWrapper *wrapper)
 /* IMPORTANT: this might not return all the data we need like version
               or architecture but package name MUST be known. */
 static
-PackageInfo *GetPackageData(const char *name, Rlist *options,
+PackageInfo *GetPackageData(const char *name, const char *version,
+                            const char *architecture, Rlist *options,
                             const PackageModuleWrapper *wrapper)
 {   
     Log(LOG_LEVEL_DEBUG, "Getting package '%s' data.", name);
     
     char *options_str = ParseOptions(options);
-    char *request = StringFormat("%sFile=%s\n", options_str, name);
+    char *ver = version ?
+        StringFormat("Version=%s\n", version) : NULL;
+    char *arch = architecture ?
+        StringFormat("Architecture=%s\n", architecture) : NULL;
+
+    char *request =
+            StringFormat("%sFile=%s\n%s%s", options_str, name,
+                         ver ? ver : "", arch ? arch : "");
+    free(ver);
+    free(arch);
     
     Rlist *response = NULL;
     if (ReadWriteDataToPackageScript("get-package-data", request, &response,
@@ -1416,32 +1426,33 @@ PromiseResult RepoInstallPackage(EvalContext *ctx,
 static bool CheckPolicyAndPackageInfoMatch(const NewPackages *packages_policy,
                                            const PackageInfo *info)
 {
+    if (packages_policy->package_version &&
+        StringSafeEqual(packages_policy->package_version, "latest"))
+    {
+        Log(LOG_LEVEL_WARNING, "Unsupported 'latest' version for package "
+                "promise of type file.");
+        return false;
+    }
+
     /* Check if file we are having matches what we want in policy. */
     if (info->arch && packages_policy->package_architecture && 
             !StringSafeEqual(info->arch, packages_policy->package_architecture))
     {
-        Log(LOG_LEVEL_VERBOSE, 
+        Log(LOG_LEVEL_WARNING,
             "Package arch and one specified in policy doesn't match: %s -> %s",
             info->arch, packages_policy->package_architecture);
         return false;
     }
-    if (info->version)
+
+    if (info->version && packages_policy->package_version &&
+        !StringSafeEqual(info->version, packages_policy->package_version))
     {
-        if (StringSafeEqual(packages_policy->package_version, "latest"))
-        {
-            Log(LOG_LEVEL_WARNING, "Unsupported 'latest' version for package "
-                    "promise of type file.");
-            return false;
-        }
-        if (packages_policy->package_version && 
-            !StringSafeEqual(info->version, packages_policy->package_version))
-        {
-            Log(LOG_LEVEL_WARNING,
-                "Package version and one specified in policy doesn't "
-                "match: %s -> %s",
-                info->version, packages_policy->package_version);
-            return false;
-        }
+
+        Log(LOG_LEVEL_WARNING,
+            "Package version and one specified in policy doesn't "
+            "match: %s -> %s",
+            info->version, packages_policy->package_version);
+        return false;
     }
     return true;
 }
@@ -1456,6 +1467,8 @@ PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
     
     /* Figure out what kind of package we are having. */
     PackageInfo *package_info = GetPackageData(package_name,
+                                               policy_data->package_version,
+                                               policy_data->package_architecture,
                                                policy_data->package_options,
                                                wrapper);
     
@@ -1465,11 +1478,31 @@ PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
         /* Check if data in policy matches returned by wrapper (files only). */
         if (package_info->type == PACKAGE_TYPE_FILE)
         {
+
             if (!CheckPolicyAndPackageInfoMatch(policy_data, package_info))
             {
                 Log(LOG_LEVEL_ERR, "Package data and policy doesn't match");
                 FreePackageInfo(package_info);
                 return PROMISE_RESULT_FAIL;
+            }
+        }
+        else if (package_info->type == PACKAGE_TYPE_REPO)
+        {
+            /* We are expecting only package name to be returned by
+             * 'get-package-data' in case of repo package */
+            if (package_info->arch)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Unexpected package architecture received from package module. Ignoring.");
+                free(package_info->arch);
+                package_info->arch = NULL;
+            }
+            if (package_info->version)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Unexpected package version received from package module. Ignoring.");
+                free(package_info->version);
+                package_info->version = NULL;
             }
         }
         

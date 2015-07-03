@@ -186,6 +186,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     switch (package_promise_type)
     {
         case PACKAGE_PROMISE_TYPE_NEW:
+            Log(LOG_LEVEL_VERBOSE, "Using new package promise.");
+
             result = HandleNewPackagePromiseType(ctx, pp, a, &promise_log_message,
                     &level);
             
@@ -198,6 +200,9 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
             free(promise_log_message);
             break;
         case PACKAGE_PROMISE_TYPE_OLD:
+            Log(LOG_LEVEL_VERBOSE,
+                "Using old package promise. Please note that this will be obsolete in 3.8");
+
             result = HandleOldPackagePromiseType(ctx, pp, a);
         
             /* Update new package promise cache in case we have mixed old and new 

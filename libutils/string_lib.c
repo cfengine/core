@@ -223,6 +223,12 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 
 /*********************************************************************/
 
+/**
+   @TODO create a new one for already allocated arrays:
+       bool StringConcat(dest, dest_size, ...)
+   where the end of the va_args list is signified by a NULL sentinel element.
+ */
+
 char *StringConcatenate(size_t count, const char *first, ...)
 {
     if (count < 1)
@@ -789,7 +795,10 @@ int StripTrailingNewline(char *str, size_t max_length)
     return 0;
 }
 
-/* Off-by-one quirk in max_length.
+/**
+ * Removes trailing whitespace from a string.
+ *
+ * @WARNING Off-by-one quirk in max_length.
  *
  * Both StripTrailngNewline() and Chop() have long allowed callers to
  * pass (effectively) the strlen(str) rather than the size of memory
@@ -798,7 +807,8 @@ int StripTrailingNewline(char *str, size_t max_length)
  * the buffer.  It may be sensible to review all callers and change so
  * that max_length is the buffer size instead.
  *
- * TODO: assess practicality of that change in behaviour.
+ * TODO change Chop() to accept str_len parameter. It goes without saying that
+ * the callers should call it as:    Chop(s, strlen(s));
  */
 
 int Chop(char *str, size_t max_length)
@@ -808,6 +818,8 @@ int Chop(char *str, size_t max_length)
         size_t i = strnlen(str, max_length + 1);
         if (i > max_length) /* See off-by-one comment above */
         {
+            /* Given that many callers don't even check Chop's return value,
+             * we should NULL-terminate the string here. TODO. */
             return -1;
         }
 
@@ -1011,6 +1023,25 @@ bool StringAppendDelimited(char *dst, size_t *dst_len, size_t dst_size,
     {
         *dst_len = len;
     }
+
+    return true;
+}
+
+/**
+ *  Append #sep if not already there, and then append #leaf.
+ */
+bool PathAppend(char *path, size_t path_size, const char *leaf, char sep)
+{
+    size_t path_len = strlen(path);
+    size_t leaf_len = strlen(leaf);
+
+    if (path_len + 1 + leaf_len >= path_size)
+    {
+        return false;
+    }
+
+    path[path_len] = sep;
+    memcpy(&path[path_len + 1], leaf, leaf_len + 1);
 
     return true;
 }

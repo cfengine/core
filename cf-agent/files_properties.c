@@ -44,6 +44,7 @@ static const char *const SKIPFILES[] =
     NULL
 };
 
+/* TODO rework to accept only one param: path+nodename */
 static bool ConsiderFile(const char *nodename, const char *path, struct stat *stat)
 {
     int i;
@@ -145,6 +146,7 @@ bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy 
 {
     /* First check if the file should be avoided, e.g. ".." - before sending
      * anything over the network*/
+
     if (!ConsiderFile(filename, directory, NULL))
     {
         return false;
@@ -161,6 +163,8 @@ bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy 
             directory, filename);
         return false;
     }
+
+    /* Second, send the STAT command. */
 
     struct stat stat;
     if (cf_lstat(buf, &stat, fc, conn) == -1)

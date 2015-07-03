@@ -31,6 +31,7 @@
 #include <item_lib.h>
 #include <mutex.h>
 #include <policy.h>
+#include <string_lib.h>                                       /* PathAppend */
 
 /*********************************************************************/
 
@@ -110,8 +111,16 @@ int ArchiveToRepository(const char *file, Attributes attr)
     ThreadLock(cft_getaddr);
     PrependItemList(&VREPOSLIST, file);
     ThreadUnlock(cft_getaddr);
-    
-    JoinPath(destination, CanonifyName(file));
+
+    if (!PathAppend(destination, sizeof(destination),
+                    CanonifyName(file), FILE_SEPARATOR))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Internal limit reached in ArchiveToRepository(),"
+            " path too long: '%s' + '%s'",
+            destination, CanonifyName(file));
+        return false;
+    }
 
     if (!MakeParentDirectory(destination, attr.move_obstructions))
     {

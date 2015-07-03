@@ -17,18 +17,25 @@
                     architecture => "x86_64";
 
         - Full systemd support for all relevant platforms
-        - New feature classes for optional features: feature_yaml and feature_xml
+        - New classes to determine whether certain features are enabled:
+            * feature_yaml
+            * feature_xml
+          For the official CFEngine packages, these are always enabled, but
+          packages from other sources may be built without the support.
         - New readdata() support for generic data input (CSV, YAML, JSON, or auto)
         - YAML support: new readyaml() function and in readdata()
         - CSV support: new readcsv() function and in readdata()
         - New string_mustache() function
         - New data_regextract() function
-        - New eval() option returning class name for direct numeric checks
+        - eval() can now be called with "class" as the "mode" argument, which
+          will cause it to return true ("any") if the calculated result is
+          non-zero, and false ("!any") if it is zero.
         - New list_ifelse() function
         - New mapjson() function as well as JSON support in maparray().
         - filestat() function now supports "xattr" argument for extended
           attributes.
-        - "ifvarclass" now has "if" as an alias
+        - "ifvarclass" now has "if" as an alias, and "unless" as an inverse
+          alias.
         - Ability to expand JSON variables directory in Mustache templates:
           Prefix the name with '%' for multiline expansion, '$' for compact
           expansion.
@@ -46,14 +53,16 @@
           sys.masterdir settings (Redmine #3697)
         - methods promises now accepts the bundle name in the promiser string,
           as long as it doesn't have any parameters.
-        - services get a default:
-          bundle name -> service_Canonify($(this.promiser)) -
-          must be in the same namespace as caller
+        - In a services promise, if the service_method bundle is not specified,
+          it defaults to the promiser string (canonified) with "service_" as a
+          prefix. The bundle must be in the same namespace as the promise.
         - inline JSON in policy files: surrounding with parsejson() is now
           optional *when creating a new data container*.
         - New data_expand() function to interpolate variables in a data container.
         - Add configurable network bandwidth limit for all outgoing
-          connections.
+          connections ("bwlimit" attribute in "body common control") . To
+          enforce it in both directions, make sure the attribute is set on both
+          sides of the connection.
         - Secure bootstrap has been facilitated by use of
           "cf-agent --boostrap HUB_ADDRESS --trust-server=no"
         - Implement new TLS-relevant options (Redmine #6883):
@@ -67,7 +76,6 @@
         - cf-execd: agent_expireafter default was changed to 120 minutes
           (Redmine #7113)
         - All embedded databases are now rooted in the state/ directory.
-        - "method_" prefix removed from methods promises.
         - TLS used as default for all outgoing connections.
         - process promise now reports kept status instead of repaired if a
           signal is not sent, even if the restart_class is set. The old
@@ -81,6 +89,8 @@
           be seeded securely.
         - Masterfiles source tarball now installs using the usual commands
           "./configure; make install".
+        - Updated Emacs syntax highlighting template to support the latest
+          syntax enhancements in 3.7.
 
         Deprecations:
         - Arbitrary arguments to cfruncommand (using "cf-runagent -o") are
@@ -105,6 +115,14 @@
         - cf-key --trust-key now supports new syntax to also update the
           lastseen database, so that clients using old protocol will trust
           the server correctly.
+        - Fixed a bug which sometimes caused an agent or daemon to kill or stop
+          itself. (Redmine #7075, #7244)
+        - Fixed a bug which made it difficult to kill CFEngine daemons,
+          particularly cf-execd. (Redmine #6659, #7193)
+        - Fixed a bug causing systemd not to be detected correctly on Debian.
+          (Redmine #7297)
+        - "cf-promises -T" will now correctly report the checked out commit,
+          even if you haven't checked out a Git branch. (Redmine #7332)
 
 
 3.6.5:

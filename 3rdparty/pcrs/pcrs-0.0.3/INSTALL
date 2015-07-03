@@ -1,0 +1,8 @@
+
+To build PCRS, you will need pcre 3.0 or later and gcc.
+
+Installation is easy: ./configure && make && make install
+Debug mode can be enabled with --enable-debug.
+
+There is a simple demo application (pcrsed) included.
+

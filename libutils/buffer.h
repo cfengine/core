@@ -179,6 +179,17 @@ int BufferPrintf(Buffer *buffer, const char *format, ...) FUNC_ATTR_PRINTF(2, 3)
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap);
 
 /**
+  @brief Does a PCRE search and replace on the buffer data.
+
+  @param buffer
+  @param pattern
+  @param substitute (backreferences allowed)
+  @param options Perl-style gms...
+  @return NULL if successful, an error string otherwise.
+  */
+const char* BufferSearchAndReplace(Buffer *buffer, const char *pattern, const char *substitute, const char *options);
+
+/**
   @brief Clears the buffer.
 
   Clearing the buffer does not mean destroying the data. The data might be still present after this function is called, although

@@ -73,6 +73,7 @@ libutils_la_SOURCES = \
 	ring_buffer.c ring_buffer.h \
 	regex.c regex.h \
 	encode.c encode.h \
+	pcrs.c pcrs.h \
 	printsize.h
 
 if !NT

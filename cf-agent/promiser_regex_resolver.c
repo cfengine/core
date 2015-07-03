@@ -41,6 +41,7 @@
 #include <files_properties.h>
 #include <scope.h>
 #include <item_lib.h>
+#include <string_lib.h>                                       /* PathAppend */
 
 PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, const Promise *pp,
                                       PromiseResult (*fnptr) (EvalContext *ctx, char *path, const Promise *ptr))
@@ -94,8 +95,12 @@ PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, const Pr
             expandregex = false;
         }
 
-        if (!JoinPath(pbuffer, ip->name))
+        if (!PathAppend(pbuffer, sizeof(pbuffer), ip->name, FILE_SEPARATOR))
         {
+            Log(LOG_LEVEL_ERR,
+                "Internal limit reached in LocateFilePromiserGroup(),"
+                " path too long: '%s' + '%s'",
+                pbuffer, ip->name);
             Log(LOG_LEVEL_ERR, "Buffer has limited size in LocateFilePromiserGroup");
             return result;
         }

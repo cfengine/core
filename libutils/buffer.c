@@ -26,6 +26,7 @@
 #include <buffer.h>
 #include <refcount.h>
 #include <misc_lib.h>
+#include <pcre_wrap.h>
 
 Buffer *BufferNewWithCapacity(unsigned int initial_capacity)
 {
@@ -455,6 +456,36 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
     }
     va_end(aq);
     return printed;
+}
+
+// returns NULL on success, otherwise an error string
+const char* BufferSearchAndReplace(Buffer *buffer, const char *pattern, const char *substitute, const char *options)
+{
+    assert(buffer);
+    assert(pattern);
+    assert(substitute);
+    assert(options);
+
+    int err;
+
+    pcre_wrap_job *job = pcre_wrap_compile(pattern, substitute, options, &err);
+    if (NULL == job)
+    {
+        return pcre_wrap_strerror(err);
+    }
+
+    size_t length = BufferSize(buffer);
+    char *result;
+    if (0 > (err = pcre_wrap_execute(job, (char*)BufferData(buffer), length, &result, &length)))
+    {
+        return pcre_wrap_strerror(err);
+    }
+
+    BufferSet(buffer, result, length);
+    free(result);
+    pcre_wrap_free_job(job);
+
+    return NULL;
 }
 
 void BufferClear(Buffer *buffer)

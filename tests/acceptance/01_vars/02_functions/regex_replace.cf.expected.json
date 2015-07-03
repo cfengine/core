@@ -1,0 +1,19 @@
+{
+  "allofitwithTEST": "TEST",
+  "cap123": "[cap=abc][cap=def][cap=ghi]j",
+  "cap123_backslash": "[cap=abc][cap=def][cap=ghi]j",
+  "cap123_backslash2": "[cap=abc][cap=def][cap=ghi]j",
+  "cap123_backslashes1to9havesome": "[cap=abc][cap=def][cap=ghi]j",
+  "cap123_backslashes1to9missing": "[cap=][cap=][cap=]j",
+  "dots_everywhere": "-DOT--DOT--DOT--DOT--DOT--DOT--DOT--DOT--DOT--DOT-",
+  "empty1": "",
+  "empty2": "",
+  "nomatch": "abcdefghij",
+  "nomatch2": "abcdefghij",
+  "simple": "ABCdefghij",
+  "simple_nocase": "ABCdefghij",
+  "test": "abcdefghij",
+  "void": "abcdefghij",
+  "void1": "",
+  "void2": "xaxbxcxdxexfxgxhxixjx"
+}

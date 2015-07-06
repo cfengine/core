@@ -6,7 +6,7 @@ After=cfengine3-web.service
 
 [Service]
 Type=forking
-EnvironmentFile=/etc/sysconfig/cfengine3
+EnvironmentFile=@OS_ENVIRONMENT_PATH@/cfengine3
 Environment="CF_NO_WEB_SERVICES=1"
 ExecStart=/etc/init.d/cfengine3 start
 ExecStop=/etc/init.d/cfengine3 stop

@@ -1426,14 +1426,47 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
             if (strcmp(old_cp->lval, "ifvarclass") == 0 ||
                 strcmp(old_cp->lval, "if") == 0)
             {
-                Buffer *grow = BufferNew();
-                BufferAppendF(grow, "(%s).(%s)",
-                              RvalScalarValue(old_cp->rval),
-                              RvalScalarValue(rval));
-                RvalDestroy(cp->rval);
-                rval = RvalNew(BufferData(grow), RVAL_TYPE_SCALAR);
-                BufferDestroy(grow);
-                cp->rval = rval;
+                // merge two if/ifvarclass promise attributes this
+                // only happens in a variable context when we have a
+                // scalar already in the attribute (old_cp)
+                switch (rval.type)
+                {
+                case RVAL_TYPE_FNCALL: // case 1: merge FnCall with scalar
+                {
+                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: merging PREVIOUS %s string context rval %s", old_cp->lval, RvalToString(old_cp->rval));
+                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: merging NEW %s rval %s", old_cp->lval, RvalToString(old_cp->rval));
+
+                    Rlist *synthetic_args = NULL;
+                    RlistAppendScalar(&synthetic_args, xstrdup(RvalScalarValue(old_cp->rval)));
+
+                    // append the old Rval (a function call) under the arguments of the new one
+                    RlistAppend(&synthetic_args, rval.item, RVAL_TYPE_FNCALL);
+
+                    Rval replacement = (Rval) { FnCallNew(xstrdup("and"), synthetic_args), RVAL_TYPE_FNCALL };
+                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: MERGED %s rval %s", old_cp->lval, RvalToString(replacement));
+
+                    // overwrite the old Constraint rval with its replacement
+                    cp->rval = replacement;
+                }
+                break;
+
+                case RVAL_TYPE_SCALAR:  // case 2: merge scalar with scalar
+                {
+                    Buffer *grow = BufferNew();
+                    BufferAppendF(grow, "(%s).(%s)",
+                                  RvalScalarValue(old_cp->rval),
+                                  RvalScalarValue(rval));
+                    RvalDestroy(cp->rval);
+                    rval = RvalNew(BufferData(grow), RVAL_TYPE_SCALAR);
+                    BufferDestroy(grow);
+                    cp->rval = rval;
+                }
+                break;
+
+                default:
+                    ProgrammingError("PromiseAppendConstraint: unexpected rval type: %c", rval.type);
+                    break;
+                }
             }
             SeqSet(pp->conlist, i, cp);
             return cp;

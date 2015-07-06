@@ -123,6 +123,8 @@
           (Redmine #7297)
         - "cf-promises -T" will now correctly report the checked out commit,
           even if you haven't checked out a Git branch. (Redmine #7332)
+        - Reduce verbosity of harmless errors related to socket timeouts and
+          missing thermal zone files. (Redmine #6486 and #7238)
 
         Masterfiles:
 

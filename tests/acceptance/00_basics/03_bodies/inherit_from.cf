@@ -30,7 +30,7 @@ body classes classes_generic_inherit(x)
 
 body classes classes_generic_nonesuch(x)
 {
-      inherit_from => classes_generic_nonesuch;
+      inherit_from => classes_generic_missing_body;
 }
 
 # the parent uses $(x) so this tests that inheritance goes from parent to child

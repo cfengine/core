@@ -126,7 +126,7 @@ int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
 
 bool MakeParentDirectory(const char *parentandchild, bool force)
 {
-    char *spc, *sp;
+    char *sp;
     char currentpath[CF_BUFSIZE];
     char pathbuf[CF_BUFSIZE];
     struct stat statbuf;
@@ -254,75 +254,78 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
     currentpath[0] = '\0';
 
     rootlen = RootDirLength(parentandchild);
+    /* currentpath is not NULL terminated on purpose! */
     strncpy(currentpath, parentandchild, rootlen);
 
-    for (sp = (char*) parentandchild + rootlen, spc = currentpath + rootlen;
-         *sp != '\0'; sp++)
+    for (size_t z = rootlen; parentandchild[z] != '\0'; z++)
     {
-        if (!IsFileSep(*sp) && *sp != '\0')
+        const char c = parentandchild[z];
+
+        /* Copy up to the next separator. */
+        if (!IsFileSep(c))
         {
-            *spc = *sp;
-            spc++;
+            currentpath[z] = c;
+            continue;
+        }
+
+        const char path_file_separator = c;
+        currentpath[z]                 = '\0';
+
+        /* currentpath is complete path for each of the parent directories.  */
+
+        if (currentpath[0] == '\0')
+        {
+            /* We are at dir "/" of an absolute path, no need to create. */
+        }
+        else if (stat(currentpath, &statbuf) == -1)
+        {
+            if (!DONTDO)
+            {
+                mask = umask(0);
+
+                if (mkdir(currentpath, DEFAULTMODE) == -1)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Unable to make directory: %s (mkdir: %s)",
+                        currentpath, GetErrorStr());
+                    umask(mask);
+                    return false;
+                }
+                umask(mask);
+            }
         }
         else
         {
-            char Path_File_Separator = *sp;
-            *spc = '\0';
-
-            if (strlen(currentpath) == 0)
+            if (!S_ISDIR(statbuf.st_mode))
             {
-            }
-            else if (stat(currentpath, &statbuf) == -1)
-            {
-                if (!DONTDO)
-                {
-                    mask = umask(0);
-
-                    if (mkdir(currentpath, DEFAULTMODE) == -1)
-                    {
-                        Log(LOG_LEVEL_ERR,
-                            "Unable to make directory: %s (mkdir: %s)",
-                            currentpath, GetErrorStr());
-                        umask(mask);
-                        return false;
-                    }
-                    umask(mask);
-                }
-            }
-            else
-            {
-                if (!S_ISDIR(statbuf.st_mode))
-                {
 #ifdef __APPLE__
-                    /* Ck if rsrc fork */
-                    if (rsrcfork)
+                /* Ck if rsrc fork */
+                if (rsrcfork)
+                {
+                    tmpstr = xmalloc(CF_BUFSIZE);
+                    strlcpy(tmpstr, currentpath, CF_BUFSIZE);
+                    strncat(tmpstr, _PATH_FORKSPECIFIER, CF_BUFSIZE);
+
+                    /* CFEngine removed terminating slashes */
+                    DeleteSlash(tmpstr);
+
+                    if (strncmp(tmpstr, pathbuf, CF_BUFSIZE) == 0)
                     {
-                        tmpstr = xmalloc(CF_BUFSIZE);
-                        strlcpy(tmpstr, currentpath, CF_BUFSIZE);
-                        strncat(tmpstr, _PATH_FORKSPECIFIER, CF_BUFSIZE);
-
-                        /* CFEngine removed terminating slashes */
-                        DeleteSlash(tmpstr);
-
-                        if (strncmp(tmpstr, pathbuf, CF_BUFSIZE) == 0)
-                        {
-                            free(tmpstr);
-                            return true;
-                        }
                         free(tmpstr);
+                        return true;
                     }
+                    free(tmpstr);
+                }
 #endif
 
-                    Log(LOG_LEVEL_ERR,
-                        "Cannot make %s - %s is not a directory!"
-                        " (use forcedirs=true)", pathbuf, currentpath);
-                    return false;
-                }
+                Log(LOG_LEVEL_ERR,
+                    "Cannot make %s - %s is not a directory!"
+                    " (use forcedirs=true)", pathbuf, currentpath);
+                return false;
             }
-
-            *spc = Path_File_Separator;
-            spc++;
         }
+
+        currentpath[z] = path_file_separator;
     }
 
     Log(LOG_LEVEL_DEBUG, "Directory for '%s' exists. Okay", parentandchild);

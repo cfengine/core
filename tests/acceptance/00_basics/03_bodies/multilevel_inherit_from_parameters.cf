@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# Redmine #4309: parameterized body inheritance with inherit_from, 2 levels of inheritance (not working until we decide to enable this in code)
+# Redmine #4309: parameterized 2-level body inheritance with inherit_from
 #
 ##############################################################################
 

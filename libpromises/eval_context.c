@@ -2039,6 +2039,54 @@ const Body *EvalContextFindFirstMatchingBody(const Policy *policy, const char *t
     return NULL;
 }
 
+void EvalContextAppendBodyParentsAndArgs(const EvalContext *ctx, const Policy *policy,
+                                         Seq* chain, const Body *bp, const char *callee_type,
+                                         int depth)
+{
+    if (depth > 30) // sanity check
+    {
+        Log(LOG_LEVEL_ERR, "EvalContextAppendBodyParentsAndArgs: body inheritance chain depth %d in body %s is too much, aborting", depth, bp->name);
+        exit(EXIT_FAILURE);
+    }
+
+    for (size_t k = 0; bp->conlist && k < SeqLength(bp->conlist); k++)
+    {
+        Constraint *scp = SeqAt(bp->conlist, k);
+        if (strcmp("inherit_from", scp->lval) == 0)
+        {
+            char* call = NULL;
+
+            if (RVAL_TYPE_SCALAR == scp->rval.type)
+            {
+                call = RvalScalarValue(scp->rval);
+            }
+            else if (RVAL_TYPE_FNCALL == scp->rval.type)
+            {
+                call = RvalFnCallValue(scp->rval)->name;
+            }
+
+            ClassRef parent_ref = IDRefQualify(ctx, call);
+
+            // We don't do a more detailed check for circular
+            // inheritance because the depth check above will catch it
+            if (0 == strcmp(parent_ref.name, bp->name))
+            {
+                Log(LOG_LEVEL_ERR, "EvalContextAppendBodyParentsAndArgs: self body inheritance in %s->%s, aborting", bp->name, parent_ref.name);
+                exit(EXIT_FAILURE);
+            }
+
+            const Body *parent = EvalContextFindFirstMatchingBody(policy, callee_type, parent_ref.ns, parent_ref.name);
+            if (parent)
+            {
+                SeqAppend(chain, (void *)parent);
+                SeqAppend(chain, &(scp->rval));
+                EvalContextAppendBodyParentsAndArgs(ctx, policy, chain, parent, callee_type, depth+1);
+            }
+            ClassRefDestroy(parent_ref);
+        }
+    }
+}
+
 Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
                                       const char *callee_reference, const char *callee_type)
 {
@@ -2050,35 +2098,7 @@ Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *poli
     {
         SeqAppend(bodies, (void *)bp);
         SeqAppend(bodies, (void *)NULL);
-
-        for (size_t k = 0; bp->conlist && k < SeqLength(bp->conlist); k++)
-        {
-            Constraint *scp = SeqAt(bp->conlist, k);
-            if (strcmp("inherit_from", scp->lval) == 0)
-            {
-                char* call = NULL;
-
-                if (RVAL_TYPE_SCALAR == scp->rval.type)
-                {
-                    call = RvalScalarValue(scp->rval);
-                }
-                else if (RVAL_TYPE_FNCALL == scp->rval.type)
-                {
-                    call = RvalFnCallValue(scp->rval)->name;
-                }
-
-                ClassRef parent_ref = IDRefQualify(ctx, call);
-
-                // NOTE: this supports single-level inheritance only
-                const Body *parent = EvalContextFindFirstMatchingBody(policy, callee_type, parent_ref.ns, parent_ref.name);
-                if (parent)
-                {
-                    SeqAppend(bodies, (void *)parent);
-                    SeqAppend(bodies, &(scp->rval));
-                }
-                ClassRefDestroy(parent_ref);
-            }
-        }
+        EvalContextAppendBodyParentsAndArgs(ctx, policy, bodies, bp, callee_type, 1);
     }
 
     ClassRefDestroy(ref);

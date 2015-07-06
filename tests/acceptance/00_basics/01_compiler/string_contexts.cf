@@ -1,3 +1,6 @@
+# fixes https://dev.cfengine.com/issues/2504
+# using variables in string contexts
+
 body common control
 {
       inputs => { "../../default.cf.sub" };

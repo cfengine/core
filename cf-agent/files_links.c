@@ -244,7 +244,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
 PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char *sp, *commonto, *commonfrom;
-    char buff[CF_BUFSIZE], linkto[CF_BUFSIZE], add[CF_BUFSIZE];
+    char buff[CF_BUFSIZE], linkto[CF_BUFSIZE];
     int levels = 0;
 
     if (*source == '.')
@@ -297,16 +297,24 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
 
     while (--levels > 0)
     {
-        snprintf(add, CF_BUFSIZE - 1, "..%c", FILE_SEPARATOR);
+        const char add[] = ".." FILE_SEPARATOR_STR;
 
-        if (!JoinPath(buff, add))
+        if (!PathAppend(buff, sizeof(buff), add, FILE_SEPARATOR))
         {
+            Log(LOG_LEVEL_ERR,
+                "Internal limit reached in VerifyRelativeLink(),"
+                " path too long: '%s' + '%s'",
+                buff, add);
             return PROMISE_RESULT_FAIL;
         }
     }
 
-    if (!JoinPath(buff, commonto))
+    if (!PathAppend(buff, sizeof(buff), commonto, FILE_SEPARATOR))
     {
+        Log(LOG_LEVEL_ERR,
+            "Internal limit reached in VerifyRelativeLink() end,"
+            " path too long: '%s' + '%s'",
+            buff, commonto);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -634,11 +642,16 @@ int ExpandLinks(char *dest, const char *from, int level)
                 if (buff[0] == '.')
                 {
                     ChopLastNode(dest);
-
                     AddSlash(dest);
 
-                    if (!JoinPath(dest, buff))
+                    /* TODO pass and use parameter dest_size. */
+                    size_t ret = strlcat(dest, buff, CF_BUFSIZE);
+                    if (ret >= CF_BUFSIZE)
                     {
+                        Log(LOG_LEVEL_ERR,
+                            "Internal limit reached in ExpandLinks(),"
+                            " path too long: '%s' + '%s'",
+                            dest, buff);
                         return false;
                     }
                 }
@@ -662,7 +675,17 @@ int ExpandLinks(char *dest, const char *from, int level)
                 {
                     ChopLastNode(dest);
                     AddSlash(dest);
-                    strcat(dest, buff);
+
+                    /* TODO use param dest_size. */
+                    size_t ret = strlcat(dest, buff, CF_BUFSIZE);
+                    if (ret >= CF_BUFSIZE)
+                    {
+                        Log(LOG_LEVEL_ERR,
+                            "Internal limit reached in ExpandLinks end,"
+                            " path too long: '%s' + '%s'", dest, buff);
+                        return false;
+                    }
+
                     DeleteSlash(dest);
 
                     if (strcmp(dest, from) == 0)

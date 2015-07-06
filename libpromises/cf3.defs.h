@@ -1471,7 +1471,7 @@ typedef struct
     BackupOption backup;
     int stealth;
     int preserve;
-    int collapse;
+    int collapse;                               /* collapse_destination_dir */
     int check_root;
     int type_check;
     int force_update;

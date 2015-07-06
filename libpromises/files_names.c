@@ -41,7 +41,6 @@
 int IsNewerFileTree(const char *dir, time_t reftime)
 {
     const struct dirent *dirp;
-    char path[CF_BUFSIZE] = { 0 };
     Dir *dirh;
     struct stat sb;
 
@@ -77,12 +76,16 @@ int IsNewerFileTree(const char *dir, time_t reftime)
                 continue;
             }
 
-            strlcpy(path, dir, CF_BUFSIZE);
+            char path[CF_BUFSIZE];
+            size_t ret = (size_t) snprintf(path, sizeof(path), "%s%c%s",
+                                           dir, FILE_SEPARATOR, dirp->d_name);
 
-            if (!JoinPath(path, dirp->d_name))
+            if (ret >= sizeof(path))
             {
-                Log(LOG_LEVEL_ERR, "Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree", dir,
-                      path);
+                Log(LOG_LEVEL_ERR,
+                    "Internal limit reached in IsNewerFileTree(),"
+                    " path too long: '%s' + '%s'",
+                    dir, dirp->d_name);
                 DirClose(dirh);
                 return false;
             }
@@ -146,31 +149,9 @@ Returns true if so, false otherwise.
 
 /*********************************************************************/
 
-/*********************************************************************/
-
-char *JoinPath(char *path, const char *leaf)
-{
-    int len = strlen(leaf);
-
-    if (Chop(path, CF_EXPANDSIZE) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-    }
-    AddSlash(path);
-
-    if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
-    {
-        Log(LOG_LEVEL_ERR, "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s",
-              leaf, path);
-        return NULL;
-    }
-
-    strcat(path, leaf);
-    return path;
-}
-
-/*********************************************************************/
-
+/**
+ * @TODO fix the dangerous path lengths
+ */
 char *JoinSuffix(char *path, const char *leaf)
 {
     int len = strlen(leaf);
@@ -204,8 +185,10 @@ int IsAbsPath(const char *path)
     }
 }
 
-/*******************************************************************/
-
+/**
+ * Append a slash, of the kind that the string already has, only if the string
+ * doesn't end in one.
+ */
 void AddSlash(char *str)
 {
     char *sp, *sep = FILE_SEPARATOR_STR;
@@ -545,6 +528,9 @@ const char *ReadLastNode(const char *str)
 
 /*********************************************************************/
 
+/**
+ * @TODO fix the dangerous path lengths
+ */
 int CompressPath(char *dest, const char *src)
 {
     char node[CF_BUFSIZE];
@@ -592,13 +578,18 @@ int CompressPath(char *dest, const char *src)
 
             continue;
         }
-        else
-        {
-            AddSlash(dest);
-        }
 
-        if (!JoinPath(dest, node))
+        AddSlash(dest);
+
+        /* TODO use dest_size parameter instead of CF_BUFSIZE. */
+        size_t ret = strlcat(dest, node, CF_BUFSIZE);
+
+        if (ret >= CF_BUFSIZE)
         {
+            Log(LOG_LEVEL_ERR,
+                "Internal limit reached in CompressPath(),"
+                " path too long: '%s' + '%s'",
+                dest, node);
             return false;
         }
     }

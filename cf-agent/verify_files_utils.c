@@ -807,15 +807,20 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
         }
     }
 
+    /* Send OPENDIR command. */
     if ((dirh = AbstractDirOpen(from, attr.copy, conn)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, attr, "copy can't open directory '%s'", from);
         return PROMISE_RESULT_INTERRUPTED;
     }
 
+    /* No backslashes over the network. */
+    const char sep = (conn != NULL) ? '/' : FILE_SEPARATOR;
+
     PromiseResult result = PROMISE_RESULT_NOOP;
     for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
     {
+        /* This sends 1st STAT command. */
         if (!ConsiderAbstractFile(dirp->d_name, from, attr.copy, conn))
         {
             continue;
@@ -826,14 +831,20 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             AppendItem(&namecache, dirp->d_name, NULL);
         }
 
-        strlcpy(newfrom, from, sizeof(newfrom) - 2); /* Assemble pathname */
-        strlcpy(newto, to, sizeof(newto) - 2);
+        /* Assemble pathnames. TODO check overflow. */
+        strlcpy(newfrom, from, sizeof(newfrom));
+        strlcpy(newto, to, sizeof(newto));
 
-        if (!JoinPath(newfrom, dirp->d_name))
+        if (!PathAppend(newfrom, sizeof(newfrom), dirp->d_name, sep))
         {
+            Log(LOG_LEVEL_ERR, "Internal limit reached in SourceSearchAndCopy(),"
+                " source path too long: '%s' + '%s'",
+                newfrom, dirp->d_name);
             AbstractDirClose(dirh);
-            return result;
+            return result;                             /* TODO return FAIL? */
         }
+
+        /* This issues a 2nd STAT command, hopefully served from cache. */
 
         if ((attr.recursion.travlinks) || (attr.copy.link_type == FILE_LINK_TYPE_NONE))
         {
@@ -843,7 +854,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             if (cf_stat(newfrom, &sb, attr.copy, conn) == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Can't stat '%s'. (cf_stat: %s)", newfrom, GetErrorStr());
-                continue;
+                continue;                                       /* TODO FAIL? */
             }
         }
         else
@@ -851,26 +862,25 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             if (cf_lstat(newfrom, &sb, attr.copy, conn) == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Can't stat '%s'. (cf_stat: %s)", newfrom, GetErrorStr());
-                continue;
+                continue;                                       /* TODO FAIL? */
             }
         }
 
-        /* If we are tracking subdirs in copy, then join else don't add */
+        /* If "collapse_destination_dir" is set, we skip subdirectories, which
+         * means we are not creating them in the destination folder. */
 
-        if (attr.copy.collapse)
+        if (!attr.copy.collapse ||
+            (attr.copy.collapse && !S_ISDIR(sb.st_mode)))
         {
-            if ((!S_ISDIR(sb.st_mode)) && (!JoinPath(newto, dirp->d_name)))
+            if (!PathAppend(newto, sizeof(newto), dirp->d_name,
+                            FILE_SEPARATOR))
             {
+                Log(LOG_LEVEL_ERR,
+                    "Internal limit reached in SourceSearchAndCopy(),"
+                    " dest path too long: '%s' + '%s'",
+                    newto, dirp->d_name);
                 AbstractDirClose(dirh);
-                return result;
-            }
-        }
-        else
-        {
-            if (!JoinPath(newto, dirp->d_name))
-            {
-                AbstractDirClose(dirh);
-                return result;
+                return result;                         /* TODO result FAIL? */
             }
         }
 
@@ -1013,6 +1023,9 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                                                    &ssb, &dsb, attr, pp));
         }
 
+        /* No backslashes over the network. */
+        const char sep = (conn != NULL) ? '/' : FILE_SEPARATOR;
+
         for (dirp = AbstractDirRead(dirh); dirp != NULL;
              dirp = AbstractDirRead(dirh))
         {
@@ -1024,16 +1037,20 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
 
             strcpy(sourcefile, sourcedir);
 
-            if (!JoinPath(sourcefile, dirp->d_name))
+            if (!PathAppend(sourcefile, sizeof(sourcefile), dirp->d_name,
+                            sep))
             {
-                FatalError(ctx, "VerifyCopy");
+                /* TODO return FAIL */
+                FatalError(ctx, "VerifyCopy sourcefile buffer limit");
             }
 
             strcpy(destfile, destdir);
 
-            if (!JoinPath(destfile, dirp->d_name))
+            if (!PathAppend(destfile, sizeof(destfile), dirp->d_name,
+                            FILE_SEPARATOR))
             {
-                FatalError(ctx, "VerifyCopy");
+                /* TODO return FAIL */
+                FatalError(ctx, "VerifyCopy destfile buffer limit");
             }
 
             if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
@@ -1736,8 +1753,14 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
                 strcpy(newname, path);
                 ChopLastNode(newname);
 
-                if (!JoinPath(newname, attr.rename.newname))
+                if (!PathAppend(newname, sizeof(newname),
+                                attr.rename.newname, FILE_SEPARATOR))
                 {
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+                         "Internal buffer limit in rename operation,"
+                         " destination: '%s' + '%s'",
+                         newname, attr.rename.newname);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     return result;
                 }
             }
@@ -2211,10 +2234,10 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
     Dir *dirh;
     int goback;
     const struct dirent *dirp;
-    char path[CF_BUFSIZE];
     struct stat lsb;
     Seq *db_file_set = NULL;
     Seq *selected_files = NULL;
+    bool retval = true;
 
     if (!attr.havedepthsearch)  /* if the search is trivial, make sure that we are in the parent dir of the leaf */
     {
@@ -2268,6 +2291,8 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         selected_files = SeqNew(1, &free);
     }
 
+    char path[CF_BUFSIZE];
+
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!ConsiderLocalFile(dirp->d_name, name))
@@ -2279,11 +2304,16 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         if (strlcpy(path, name, sizeof(path)-2) >= sizeof(path)-2)
         {
             Log(LOG_LEVEL_ERR, "Truncated filename %s while performing depth-first search", path);
+            /* TODO return false? */
         }
+
         AddSlash(path);
 
-        if (!JoinPath(path, dirp->d_name))
+        if (strlcat(path, dirp->d_name, sizeof(path)) >= sizeof(path))
         {
+            Log(LOG_LEVEL_ERR, "Internal limit reached in DepthSearch(),"
+                " path too long: '%s' + '%s'", path, dirp->d_name);
+            retval = false;
             goto end;
         }
 
@@ -2376,7 +2406,7 @@ end:
     SeqDestroy(selected_files);
     SeqDestroy(db_file_set);
     DirClose(dirh);
-    return true;
+    return retval;
 }
 
 static int PushDirState(EvalContext *ctx, char *name, struct stat *sb)
@@ -2852,7 +2882,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
         }
     }
 
-    snprintf(promiserpath, CF_BUFSIZE, "%s/.", destination);
+    snprintf(promiserpath, sizeof(promiserpath), "%s/.", destination);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(ctx, promiserpath, pp, attr, &result))
@@ -2880,23 +2910,31 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
 
         /* Assemble pathnames */
 
-        strlcpy(promiserpath, destination, CF_BUFSIZE);
+        strlcpy(promiserpath, destination, sizeof(promiserpath));
         AddSlash(promiserpath);
 
-        if (!JoinPath(promiserpath, dirp->d_name))
+        if (strlcat(promiserpath, dirp->d_name, sizeof(promiserpath))
+            >= sizeof(promiserpath))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Can't construct filename which verifying child links");
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr,
+                 "Internal buffer limit while verifying child links,"
+                 " promiser: '%s' + '%s'",
+                 promiserpath, dirp->d_name);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             DirClose(dirh);
             return result;
         }
 
-        strlcpy(sourcepath, source, CF_BUFSIZE);
+        strlcpy(sourcepath, source, sizeof(sourcepath));
         AddSlash(sourcepath);
 
-        if (!JoinPath(sourcepath, dirp->d_name))
+        if (strlcat(sourcepath, dirp->d_name, sizeof(sourcepath))
+            >= sizeof(sourcepath))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Can't construct filename while verifying child links");
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr,
+                 "Internal buffer limit while verifying child links,"
+                 " source filename: '%s' + '%s'",
+                 sourcepath, dirp->d_name);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             DirClose(dirh);
             return result;
@@ -3403,7 +3441,9 @@ static int cf_stat(const char *file, struct stat *buf, FileCopy fc, AgentConnect
     }
     else
     {
-        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
+        assert(fc.servers != NULL &&
+               strcmp(RlistScalarValue(fc.servers), "localhost") != 0);
+
         return cf_remote_stat(conn, fc.encrypt, file, buf, "file");
     }
 }

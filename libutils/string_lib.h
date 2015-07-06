@@ -174,6 +174,7 @@ bool StringAppend(char *dst, const char *src, size_t n);
 char *StringCanonify(char *dst, const char *src);
 bool StringAppendDelimited(char *dst, size_t *dst_len, size_t dst_size,
                            const char *src, char sep);
+bool PathAppend(char *path, size_t path_size, const char *leaf, char sep);
 
 
 #endif

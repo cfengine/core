@@ -1648,12 +1648,6 @@ static FnCallResult FnCallUseModule(EvalContext *ctx,
         return FnFailure();
     }
 
-    if (!JoinPath(modulecmd, args))
-    {
-        Log(LOG_LEVEL_ERR, "Culprit: class list for module (shouldn't happen)");
-        return FnFailure();
-    }
-
     snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\" %s",
              workdir, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
 

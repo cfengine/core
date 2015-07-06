@@ -52,7 +52,9 @@ void PurgeItemList(Item **list, char *name)
     {
         if (stat(ip->name, &sb) == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Purging file '%s' from '%s' list as it no longer exists", ip->name, name);
+            Log(LOG_LEVEL_VERBOSE,
+                "Purging file '%s' from '%s' list as it no longer exists",
+                ip->name, name);
             DeleteItemLiteral(list, ip->name);
         }
     }
@@ -130,7 +132,6 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
     struct stat statbuf;
     mode_t mask;
     int rootlen;
-    char Path_File_Separator;
 
 #ifdef __APPLE__
 /* Keeps track of if dealing w. resource fork */
@@ -141,12 +142,15 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
     char *tmpstr;
 #endif
 
-    Log(LOG_LEVEL_DEBUG, "Trying to create a parent directory for '%s%s'", parentandchild, force ? " (force applied)" : "");
+    Log(LOG_LEVEL_DEBUG, "Trying to create a parent directory%s for: %s",
+        force ? " (force applied)" : "",
+        parentandchild);
 
     if (!IsAbsoluteFileName(parentandchild))
     {
-        Log(LOG_LEVEL_ERR, "Will not create directories for a relative filename '%s'. Has no invariant meaning",
-              parentandchild);
+        Log(LOG_LEVEL_ERR,
+            "Will not create directories for a relative filename: %s",
+            parentandchild);
         return false;
     }
 
@@ -160,9 +164,8 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
 #endif
 
 /* skip link name */
-/* This cast is necessary, as  you can't have (char* -> char*)
-   and (const char* -> const char*) functions in C */
-    sp = (char *) LastFileSeparator(pathbuf);
+
+    sp = (char *) LastFileSeparator(pathbuf);                /* de-constify */
 
     if (sp == NULL)
     {
@@ -176,16 +179,19 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
     {
         if (S_ISLNK(statbuf.st_mode))
         {
-            Log(LOG_LEVEL_VERBOSE, "INFO: %s is a symbolic link, not a true directory!", pathbuf);
+            Log(LOG_LEVEL_VERBOSE, "'%s' is a symbolic link, not a directory",
+                pathbuf);
         }
 
         if (force)              /* force in-the-way directories aside */
         {
             struct stat dir;
-
             stat(pathbuf, &dir);
 
-            if (!S_ISDIR(dir.st_mode))  /* if the dir exists - no problem */
+            /* If the target directory exists as a directory, no problem. */
+            /* If the target directory exists but is not a directory, then
+             * rename it to ".cf-moved": */
+            if (!S_ISDIR(dir.st_mode))
             {
                 struct stat sbuf;
 
@@ -196,32 +202,37 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
 
                 strcpy(currentpath, pathbuf);
                 DeleteSlash(currentpath);
-                strcat(currentpath, ".cf-moved");
-                Log(LOG_LEVEL_INFO, "Moving obstructing file/link %s to %s to make directory", pathbuf, currentpath);
+                /* TODO overflow check! */
+                strlcat(currentpath, ".cf-moved", sizeof(currentpath));
+                Log(LOG_LEVEL_INFO,
+                    "Moving obstructing file/link %s to %s to make directory",
+                    pathbuf, currentpath);
 
-                /* If cfagent, remove an obstructing backup object */
-
+                /* Remove possibly pre-existing ".cf-moved" backup object. */
                 if (lstat(currentpath, &sbuf) != -1)
                 {
-                    if (S_ISDIR(sbuf.st_mode))
+                    if (S_ISDIR(sbuf.st_mode))                 /* directory */
                     {
                         DeleteDirectoryTree(currentpath);
                     }
-                    else
+                    else                                 /* not a directory */
                     {
                         if (unlink(currentpath) == -1)
                         {
-                            Log(LOG_LEVEL_INFO, "Couldn't remove file/link '%s' while trying to remove a backup. (unlink: %s)",
-                                  currentpath, GetErrorStr());
+                            Log(LOG_LEVEL_INFO, "Couldn't remove file/link"
+                                " '%s' while trying to remove a backup"
+                                " (unlink: %s)",
+                                currentpath, GetErrorStr());
                         }
                     }
                 }
 
-                /* And then move the current object out of the way... */
-
+                /* And then rename the current object to ".cf-moved". */
                 if (rename(pathbuf, currentpath) == -1)
                 {
-                    Log(LOG_LEVEL_INFO, "Warning: The object '%s' is not a directory. (rename: %s)", pathbuf, GetErrorStr());
+                    Log(LOG_LEVEL_INFO,
+                        "Couldn't rename '%s' to .cf-moved"
+                        " (rename: %s)", pathbuf, GetErrorStr());
                     return false;
                 }
             }
@@ -230,21 +241,23 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
         {
             if (!S_ISLNK(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
             {
-                Log(LOG_LEVEL_INFO,
-                      "The object %s is not a directory. Cannot make a new directory without deleting it.", pathbuf);
+                Log(LOG_LEVEL_INFO, "The object '%s' is not a directory."
+                    " Cannot make a new directory without deleting it.",
+                    pathbuf);
                 return false;
             }
         }
     }
 
-/* Now we can make a new directory .. */
+/* Now we make directories descending from the root folder down to the leaf */
 
     currentpath[0] = '\0';
 
     rootlen = RootDirLength(parentandchild);
     strncpy(currentpath, parentandchild, rootlen);
 
-    for (sp = (char*) parentandchild + rootlen, spc = currentpath + rootlen; *sp != '\0'; sp++)
+    for (sp = (char*) parentandchild + rootlen, spc = currentpath + rootlen;
+         *sp != '\0'; sp++)
     {
         if (!IsFileSep(*sp) && *sp != '\0')
         {
@@ -253,7 +266,7 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
         }
         else
         {
-            Path_File_Separator = *sp;
+            char Path_File_Separator = *sp;
             *spc = '\0';
 
             if (strlen(currentpath) == 0)
@@ -267,7 +280,9 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
 
                     if (mkdir(currentpath, DEFAULTMODE) == -1)
                     {
-                        Log(LOG_LEVEL_ERR, "Unable to make directories to '%s'. (mkdir: %s)", parentandchild, GetErrorStr());
+                        Log(LOG_LEVEL_ERR,
+                            "Unable to make directory: %s (mkdir: %s)",
+                            currentpath, GetErrorStr());
                         umask(mask);
                         return false;
                     }
@@ -298,13 +313,13 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
                     }
 #endif
 
-                    Log(LOG_LEVEL_ERR, "Cannot make %s - %s is not a directory! (use forcedirs=true)", pathbuf,
-                          currentpath);
+                    Log(LOG_LEVEL_ERR,
+                        "Cannot make %s - %s is not a directory!"
+                        " (use forcedirs=true)", pathbuf, currentpath);
                     return false;
                 }
             }
 
-            /* *spc = FILE_SEPARATOR; */
             *spc = Path_File_Separator;
             spc++;
         }
@@ -359,7 +374,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
             if (!feof(fp))
             {
                 Log(LOG_LEVEL_ERR,
-                    "Unable to read contents of '%s'. (fread: %s)",
+                    "Unable to read contents of file: %s (fread: %s)",
                     file, GetErrorStr());
                 result = false;
             }

@@ -1446,6 +1446,7 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
                     Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: MERGED %s rval %s", old_cp->lval, RvalToString(replacement));
 
                     // overwrite the old Constraint rval with its replacement
+                    RvalDestroy(cp->rval);
                     cp->rval = replacement;
                 }
                 break;

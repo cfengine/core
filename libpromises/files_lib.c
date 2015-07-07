@@ -97,6 +97,9 @@ bool FileWriteOver(char *filename, char *contents)
  * Like MakeParentDirectory, but honours warn-only and dry-run mode.
  * We should eventually migrate to this function to avoid making changes
  * in these scenarios.
+ *
+ * @WARNING like MakeParentDirectory, this function will not behave right on
+ *          Windows if the path contains double (back)slashes!
  **/
 
 int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
@@ -122,6 +125,9 @@ int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
 
 /**
  * Please consider using MakeParentDirectory2() instead.
+ *
+ * @WARNING this function will not behave right on Windows if the path
+ *          contains double (back)slashes!
  **/
 
 bool MakeParentDirectory(const char *parentandchild, bool force)
@@ -277,6 +283,7 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
         {
             /* We are at dir "/" of an absolute path, no need to create. */
         }
+        /* WARNING: on Windows stat() fails if path has a trailing slash! */
         else if (stat(currentpath, &statbuf) == -1)
         {
             if (!DONTDO)

@@ -363,7 +363,8 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
 {
     if (!MakeParentDirectory(filename, true))
     {
-        Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create directory (MakeParentDirectory: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Could not write policy validated marker file: %s", filename);
         return false;
     }
 
@@ -915,7 +916,9 @@ static bool GeneratePolicyReleaseID(char *release_id_out, size_t out_size,
  */
 static void GetPromisesValidatedFile(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname)
 {
-    char dirname[PATH_MAX + 1];
+    char dirname[max_size];
+
+    /* TODO overflow error checking! */
     GetAutotagDir(dirname, max_size, maybe_dirname);
 
     if (NULL == maybe_dirname && MINUSF)
@@ -941,7 +944,7 @@ static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirn
     }
     else if (MINUSF)
     {
-        snprintf(dirname, max_size, "%s%c", GetStateDir(), FILE_SEPARATOR);
+        strlcpy(dirname, GetStateDir(), max_size);
     }
     else
     {

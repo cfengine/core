@@ -343,17 +343,17 @@ static void RenderContent(Buffer *out, const char *content, size_t len, bool htm
     }
 }
 
-static bool RenderVariablePrimitive(Buffer *out, const JsonElement *primitive, const bool escaped, const bool key_mode)
+static bool RenderVariablePrimitive(Buffer *out, const JsonElement *primitive, const bool escaped, const char* json_key)
 {
-    if (key_mode && JsonElementGetPropertyName(primitive))
+    if (NULL != json_key)
     {
         if (escaped)
         {
-            RenderHTMLContent(out, JsonElementGetPropertyName(primitive), strlen(JsonElementGetPropertyName(primitive)));
+            RenderHTMLContent(out, json_key, strlen(json_key));
         }
         else
         {
-            BufferAppendString(out, JsonElementGetPropertyName(primitive));
+            BufferAppendString(out, json_key);
         }
         return true;
     }
@@ -420,7 +420,8 @@ static bool RenderVariableContainer(Buffer *out, const JsonElement *container, b
 static bool RenderVariable(Buffer *out,
                            const char *content, size_t content_len,
                            TagType conversion,
-                           Seq *hash_stack)
+                           Seq *hash_stack,
+                           const char *json_key)
 {
     JsonElement *var = NULL;
     bool escape = conversion == TAG_TYPE_VAR;
@@ -433,10 +434,25 @@ static bool RenderVariable(Buffer *out,
     if (item_mode || key_mode)
     {
         var = SeqAt(hash_stack, SeqLength(hash_stack) - 1);
+
+        // Leave this in, it's really useful when debugging here but useless otherwise
+        // for (int i=1; i < SeqLength(hash_stack); i++)
+        // {
+        //     JsonElement *dump = SeqAt(hash_stack, i);
+        //     Writer *w = StringWriter();
+        //     JsonWrite(w, dump, 0);
+        //     Log(LOG_LEVEL_ERR, "RenderVariable: at hash_stack position %d, we found var '%s'", i, StringWriterClose(w));
+        // }
     }
     else
     {
         var = LookupVariable(hash_stack, content, content_len);
+    }
+
+    if (key_mode && NULL == json_key)
+    {
+        Log(LOG_LEVEL_WARNING, "RenderVariable: {{@}} Mustache tag must be used in a context where there's a valid key or iteration position");
+        return false;
     }
 
     if (!var)
@@ -448,17 +464,18 @@ static bool RenderVariable(Buffer *out,
     {
     case JSON_ELEMENT_TYPE_PRIMITIVE:
         // note that this also covers 'serialize' on primitives
-        return RenderVariablePrimitive(out, var, escape, key_mode);
+        return RenderVariablePrimitive(out, var, escape, key_mode ? json_key : NULL);
 
     case JSON_ELEMENT_TYPE_CONTAINER:
         if (serialize || serialize_compact)
         {
             return RenderVariableContainer(out, var, serialize_compact);
         }
-        else
+        else if (key_mode)
         {
-            assert(false);
-            return false;
+            // this will only use the JSON key property, which we know is good
+            // because we return false earlier otherwise
+            return RenderVariablePrimitive(out, var, escape, json_key);
         }
     }
 
@@ -504,6 +521,7 @@ static bool SetDelimiters(const char *content, size_t content_len,
 }
 
 static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_stack,
+                   const char *json_key,
                    char *delim_start, size_t *delim_start_len,
                    char *delim_end, size_t *delim_end_len,
                    bool skip_content,
@@ -563,7 +581,7 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
             {
                 if (tag.content_len > 0)
                 {
-                    if (!RenderVariable(out, tag.content, tag.content_len, tag.type, hash_stack))
+                    if (!RenderVariable(out, tag.content, tag.content_len, tag.type, hash_stack, json_key))
                     {
                         return false;
                     }
@@ -586,7 +604,7 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                 if (!var)
                 {
                     const char *cur_section_end = NULL;
-                    if (!Render(out, start, input, hash_stack, delim_start, delim_start_len, delim_end, delim_end_len,
+                    if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
                                 skip_content || tag.type != TAG_TYPE_INVERTED, section, &cur_section_end))
                     {
                         free(section);
@@ -607,7 +625,7 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                             bool skip = skip_content || (!JsonPrimitiveGetAsBool(var) ^ (tag.type == TAG_TYPE_INVERTED));
 
                             const char *cur_section_end = NULL;
-                            if (!Render(out, start, input, hash_stack, delim_start, delim_start_len, delim_end, delim_end_len,
+                            if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
                                         skip, section, &cur_section_end))
                             {
                                 free(section);
@@ -638,15 +656,28 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                                 JsonElement *child_hash = JsonAt(var, i);
                                 SeqAppend(hash_stack, child_hash);
 
+                                Buffer *kstring = BufferNew();
+                                if (JSON_CONTAINER_TYPE_OBJECT == JsonGetContainerType(var))
+                                {
+                                    BufferAppendString(kstring, JsonElementGetPropertyName(child_hash));
+                                }
+                                else
+                                {
+                                    BufferAppendF(kstring, "%zd", i);
+                                }
 
                                 if (!Render(out, start, input,
                                             hash_stack,
+                                            BufferData(kstring),
                                             delim_start, delim_start_len, delim_end, delim_end_len,
                                             skip_content || tag.type == TAG_TYPE_INVERTED, section, &cur_section_end))
                                 {
                                     free(section);
+                                    BufferDestroy(kstring);
                                     return false;
                                 }
+
+                                BufferDestroy(kstring);
                             }
                             input = cur_section_end;
                             free(section);
@@ -654,7 +685,7 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                         else
                         {
                             const char *cur_section_end = NULL;
-                            if (!Render(out, start, input, hash_stack, delim_start, delim_start_len, delim_end, delim_end_len,
+                            if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
                                         tag.type != TAG_TYPE_INVERTED, section, &cur_section_end))
                             {
                                 free(section);
@@ -706,10 +737,11 @@ bool MustacheRender(Buffer *out, const char *input, const JsonElement *hash)
     SeqAppend(hash_stack, (JsonElement*)hash);
 
     bool success = Render(out, input, input,
-                         hash_stack,
-                         delim_start, &delim_start_len,
-                         delim_end, &delim_end_len,
-                         false, NULL, NULL);
+                          hash_stack,
+                          NULL,
+                          delim_start, &delim_start_len,
+                          delim_end, &delim_end_len,
+                          false, NULL, NULL);
 
     SeqDestroy(hash_stack);
 

@@ -1149,12 +1149,20 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         StringAppend(cmd, u.shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
+
+#ifndef __hpux
+    // HP-UX has two variants of useradd, the normal one which does
+    // not support -M and one variant to modify default values which
+    // does take -M and yes or no
+    // Since both are output with -h SupportOption incorrectly reports
+    // -M as supported
     if (SupportsOption(USERADD, "-M"))
     {
         // Prevents creation of home_dir.
         // We want home_bundle to do that.
         StringAppend(cmd, " -M", sizeof(cmd));
     }
+#endif
     StringAppend(cmd, " ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
 

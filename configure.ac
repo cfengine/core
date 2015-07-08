@@ -44,7 +44,7 @@ AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
 define([revision], m4_esyscmd_s([git rev-list -1 --abbrev-commit HEAD]))
 
 _AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, 3.6.6.revision)
+AM_INIT_AUTOMAKE(cfengine, 3.6.6)
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")

@@ -1271,6 +1271,8 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
+#ifndef __hpux
+    // HP-UX does not support -G with empty argument
     if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
     {
         /* Work around bug on SUSE. If secondary groups contain a group that is
@@ -1281,6 +1283,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
         */
         StringAppend(cmd, " -G \"\"", sizeof(cmd));
     }
+#endif
 
     if (CFUSR_CHECKBIT (changemap, i_home) != 0)
     {
@@ -1357,9 +1360,19 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     }
     else if (changemap != 0)
     {
-        if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
+#ifdef __hpux
+        // This is to overcome the Suse hack above which does not work on HP-UX and thus we
+        // risk getting an empty command if change of secondary groups is the only change
+        // Only run for other changes than i_groups, otherwise the command will be empty
+        uint32_t changemap_without_groups = changemap;
+        CFUSR_CLEARBIT(changemap_without_groups, i_groups);
+        if(changemap_without_groups != 0)
+#endif
         {
-            return false;
+            if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
+            {
+                return false;
+            }
         }
         if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
         {

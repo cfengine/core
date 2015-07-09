@@ -1,0 +1,11 @@
+{
+  "actual1": "key a value 100 ",
+  "actual2": "value p value q ",
+  "mydata1": {
+    "a": 100
+  },
+  "mydata2": [
+    "p",
+    "q"
+  ]
+}

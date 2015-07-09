@@ -150,6 +150,11 @@ static JsonElement *LookupVariable(Seq *hash_stack, const char *name, size_t nam
         StringRef base_comp = StringGetToken(name, name_len, 0, ".");
         char *base_comp_str = xstrndup(base_comp.data, base_comp.len);
 
+        if (0 == strcmp("-top-", base_comp_str))
+        {
+            base_var = SeqAt(hash_stack, 0);
+        }
+
         for (ssize_t i = SeqLength(hash_stack) - 1; i >= 0; i--)
         {
             JsonElement *hash = SeqAt(hash_stack, i);

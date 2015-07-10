@@ -1144,26 +1144,26 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
 {
     PackageModuleBody *new_manager = xcalloc(1, sizeof(PackageModuleBody));
     new_manager->name = SafeStringDuplicate(pm_body->name);
-    
+
     for (size_t i = 0; i < SeqLength(pm_body->conlist); i++)
     {
         Constraint *cp = SeqAt(pm_body->conlist, i);
-        
+
         Rval returnval = {0};
-        
+
         if (IsDefinedClass(ctx, cp->classes))
         {
-            returnval = ExpandPrivateRval(ctx, NULL, "body", 
+            returnval = ExpandPrivateRval(ctx, NULL, "body",
                                           cp->rval.item, cp->rval.type);
         }
-        
+
         if (returnval.item == NULL || returnval.type == RVAL_TYPE_NOPROMISEE)
         {
             Log(LOG_LEVEL_VERBOSE, "have invalid constraint while resolving"
                     "package promise body: %s", cp->lval);
             continue;
         }
-        
+
         if (strcmp(cp->lval, "query_installed_ifelapsed") == 0)
         {
             new_manager->installed_ifelapsed =

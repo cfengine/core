@@ -1110,17 +1110,17 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_VERBOSE, "SET common protocol_version: %s",
                 PROTOCOL_VERSION_STRING[config->protocol_version]);
         }
-        
+
         /* Those are package_inventory and package_module common control body options */
         if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_PACKAGE_INVENTORY].lval) == 0)
         {
             AddDefaultInventoryToContext(ctx, RvalRlistValue(evaluated_rval));
             Log(LOG_LEVEL_VERBOSE, "SET common package_inventory list");
         }
-        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_PACKAGE_MANAGER].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_PACKAGE_MODULE].lval) == 0)
         {
             AddDefaultPackageModuleToContext(ctx, RvalScalarValue(evaluated_rval));
-            Log(LOG_LEVEL_VERBOSE, "SET common package_module: %s", 
+            Log(LOG_LEVEL_VERBOSE, "SET common package_module: %s",
                 RvalScalarValue(evaluated_rval));
         }
 

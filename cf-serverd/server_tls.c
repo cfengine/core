@@ -434,7 +434,8 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             return -1;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
+        Log(LOG_LEVEL_VERBOSE, "TLS version negotiated: %8s; Cipher: %s,%s",
+            SSL_get_version(ssl),
             SSL_get_cipher_name(ssl),
             SSL_get_cipher_version(ssl));
         Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");

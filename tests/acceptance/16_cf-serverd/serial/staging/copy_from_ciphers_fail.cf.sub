@@ -4,8 +4,8 @@
 # with the default TLS ciphers list and another with a non-default very
 # restricted one.
 #
-# It should succeed in both cases since default client-side cipherlist
-# is OpenSSL's default, which is very broad.
+# It should fail since we are setting "tls_ciphers" to a cipher missing
+# in both servers.
 #
 #######################################################
 
@@ -14,9 +14,9 @@ body common control
       inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
 
-      # Do not set this, just use the very broad OpenSSL default.
-      #
-      # tls_ciphers => "";
+      # This cipher doesn't match neither of the two
+      # servers "allowciphers" setting.
+      tls_ciphers => "AES128-SHA";
 }
 
 bundle agent init
@@ -47,6 +47,6 @@ bundle agent check
 
   reports:
 
-    (copy1_repaired.copy2_repaired).(exists1.exists2)::
+    (copy1_failed.copy2_failed).(!copy1_repaired.!copy2_repaired).(!exists1.!exists2)::
       "$(fn[1]) Pass";
 }

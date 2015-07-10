@@ -251,11 +251,11 @@ int main(int argc, char *argv[])
     }
 
     Nova_TrackExecution(config->input_file);
-    
+
     /* Update packages cache. */
     UpdatePackagesCache(ctx, false);
-    
-    GenerateReports(config, ctx);    
+
+    GenerateReports(config, ctx);
 
     PurgeLocks();
     BackupLockDatabase();

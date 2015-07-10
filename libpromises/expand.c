@@ -1037,7 +1037,9 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_ERR,
                 "Attribute '%s' in %s:%zu is of wrong type, skipping",
                 lval, filename, lineno);
-            goto cont;
+            VarRefDestroy(ref);
+            RvalDestroy(evaluated_rval);
+            continue;
         }
 
         bool success = EvalContextVariablePut(
@@ -1048,7 +1050,9 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_ERR,
                 "Attribute '%s' in %s:%zu can't be added, skipping",
                 lval, filename, lineno);
-            goto cont;
+            VarRefDestroy(ref);
+            RvalDestroy(evaluated_rval);
+            continue;
         }
 
         VarRefDestroy(ref);
@@ -1127,10 +1131,8 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
         if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
         {
             /* Ignored */
-            goto cont;
         }
 
-      cont:
         RvalDestroy(evaluated_rval);
     }
 

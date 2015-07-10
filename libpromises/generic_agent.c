@@ -744,9 +744,15 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
                 cwd_size *= 2;
                 continue;
             }
-            Log(LOG_LEVEL_WARNING, "Could not determine current directory. (getcwd: '%s')", GetErrorStr());
-            break;
+            else
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Could not determine current directory (getcwd: %s)",
+                    GetErrorStr());
+                break;
+            }
         }
+
         EvalContextSetLaunchDirectory(ctx, cwd);
         break;
     }

@@ -262,8 +262,8 @@ const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
     ConstraintSyntaxNewReal("bwlimit", CF_VALRANGE, "Limit outgoing protocol bandwidth in Bytes per second", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("cache_system_functions", "Cache the result of system functions. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: \"latest\"", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("tls_ciphers", "", "List of acceptable ciphers in outgoing TLS connections. For syntax help see man page for \"openssl ciphers\"", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("tls_min_version", "", "Minimum acceptable TLS version for outgoing connections. Default is \"1.0\"", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tls_ciphers", "", "List of acceptable ciphers in outgoing TLS connections. For syntax help see man page for \"openssl ciphers\"", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("tls_min_version", "", "Minimum acceptable TLS version for outgoing connections. Default is \"1.0\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("package_inventory", ".*", "Name of the package manager used for software inventory management", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("package_module", ".*", "Name of the default package manager", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
@@ -342,7 +342,7 @@ const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_MAX + 1] =
     ConstraintSyntaxNewBool("listen", "true/false enable server daemon to listen on defined port. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("allowciphers", "", "List of ciphers the server accepts. For Syntax help see man page for \"openssl ciphers\". Default is \"AES256-GCM-SHA384:AES256-SHA\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("allowlegacyconnects", "", "List of IPs from whom we accept legacy protocol connections", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("allowtlsversion", "", "Minimum TLS version allowed for incoming connections", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("allowtlsversion", "", "Minimum TLS version allowed for incoming connections", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

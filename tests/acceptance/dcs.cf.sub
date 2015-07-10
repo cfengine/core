@@ -806,3 +806,16 @@ bundle agent generate_key
         create => "true",
         copy_from => dcs_sync("$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub");
 }
+
+body copy_from dcs_remote_cp(from,server, port)
+# @brief Download a file from a remote server. They server is always trusted.
+#
+# @param from The location of the file on the remote server
+# @param server The hostname or IP of the server from which to download
+{
+      servers     => { "$(server)" };
+      portnumber  => "$(port)";
+      source      => "$(from)";
+      compare     => "mtime";
+      trustkey    => "true";
+}

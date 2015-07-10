@@ -1,0 +1,44 @@
+#######################################################
+#
+# Tries to copy using the "classic" protocol, to a server that has
+# "allowlegacyconnects" closed.
+#
+# It should fail.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+
+      # FORCE CLASSIC PROTOCOL
+      protocol_version => "classic";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  files:
+      # Copy from server with allowlegacyconnects closed.
+      "$(G.testdir)/destfile"
+          copy_from => dcs_remote_cp("simple_source", "127.0.0.1", "9892"),
+          classes   => classes_generic("copy");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy"   expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+      "exists" expression => fileexists("$(G.testdir)/destfile");
+
+  reports:
+
+    copy_failed.!exists::
+      "$(fn[1]) Pass";
+}

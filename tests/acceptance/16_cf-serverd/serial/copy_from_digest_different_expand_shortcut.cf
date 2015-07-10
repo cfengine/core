@@ -1,4 +1,3 @@
-#
 body common control
 {
       inputs => { "../../default.cf.sub", "../../run_with_server.cf.sub" };

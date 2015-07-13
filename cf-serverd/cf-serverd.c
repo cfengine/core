@@ -22,9 +22,11 @@
   included file COSL.txt.
 */
 
+
+#include <platform.h>
+
 #include <cf-serverd-functions.h>
 #include <cf-serverd-enterprise-stubs.h> /* CleanReportBookFilterSet() */
-
 #include <server_transform.h>
 #include <known_dirs.h>
 #include <loading.h>
@@ -61,7 +63,9 @@ int main(int argc, char *argv[])
         policy = LoadPolicy(ctx, config);
     }
 
+    GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
+
     KeepPromises(ctx, policy, config);
     Summarize();
 

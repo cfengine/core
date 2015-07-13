@@ -98,7 +98,7 @@ bool TLSClientInitialize(const char *tls_min_version,
 
     if (ciphers != NULL)
     {
-        Log(LOG_LEVEL_DEBUG,
+        Log(LOG_LEVEL_VERBOSE,
             "Setting cipher list for outgoing TLS connections to: %s",
             ciphers);
 

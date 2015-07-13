@@ -806,7 +806,8 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
         || strcmp(min_version, "1.0") == 0)
     {
         /* Do nothing, that's our default setting */
-        Log(LOG_LEVEL_DEBUG, "Minimum acceptable TLS version: 1.0");
+        Log(LOG_LEVEL_VERBOSE,
+            "Setting minimum acceptable TLS version: 1.0");
     }
     else if (strcmp(min_version, "1.1") == 0)
     {
@@ -817,7 +818,8 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
                 min_version, compiletime_min_version);
         }
         options |= SSL_OP_NO_TLSv1;
-        Log(LOG_LEVEL_DEBUG, "Minimum acceptable TLS version: 1.1");
+        Log(LOG_LEVEL_VERBOSE,
+            "Setting minimum acceptable TLS version: 1.1");
 
     }
     else if (strcmp(min_version, "1.2") == 0)
@@ -830,7 +832,8 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
                 min_version, compiletime_min_version);
         }
         options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
-        Log(LOG_LEVEL_DEBUG, "Minimum acceptable TLS version: 1.2");
+        Log(LOG_LEVEL_VERBOSE,
+            "Setting minimum acceptable TLS version: 1.2");
     }
     else
     {

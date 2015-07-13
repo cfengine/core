@@ -32,6 +32,7 @@
 bool TLSClientInitialize(const char *tls_min_version,
                          const char *ciphers);
 void TLSDeInitialize(void);
+bool TLSClientIsInitialized(void);
 
 int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
                                   const char *username);

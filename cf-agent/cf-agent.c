@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+
+#include <platform.h>
 #include <generic_agent.h>
 
 #include <actuator.h>
@@ -241,7 +243,9 @@ int main(int argc, char *argv[])
     }
     assert(policy);
 
+    GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
+
     BeginAudit();
     KeepPromises(ctx, policy, config);
 

@@ -164,7 +164,9 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = LoadPolicy(ctx, config);
 
+    GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
+
     KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
 
     if (BACKGROUND && INTERACTIVE)

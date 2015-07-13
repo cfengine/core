@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+
 #include <generic_agent.h>
 
 #include <bootstrap.h>
@@ -726,11 +727,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         char *bootstrapped_policy_server = ReadPolicyServerFile(workdir);
         PolicyHubUpdateKeys(bootstrapped_policy_server);
         free(bootstrapped_policy_server);
-        const char *tls_ciphers =
-            EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_CIPHERS);
-        const char *tls_min_version =
-            EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_MIN_VERSION);
-        cfnet_init(tls_min_version, tls_ciphers);
     }
 
     size_t cwd_size = PATH_MAX;
@@ -1669,4 +1665,14 @@ void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist
 {
     RlistDestroy(config->bundlesequence);
     config->bundlesequence = RlistCopy(bundlesequence);
+}
+
+bool GenericAgentPostLoadInit(const EvalContext *ctx)
+{
+    const char *tls_ciphers =
+        EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_CIPHERS);
+    const char *tls_min_version =
+        EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_MIN_VERSION);
+
+    return cfnet_init(tls_min_version, tls_ciphers);
 }

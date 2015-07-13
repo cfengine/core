@@ -141,7 +141,9 @@ int main(int argc, char *argv[])
         return PrintDigest(print_digest_arg);
     }
 
+    GenericAgentPostLoadInit(ctx);
     ThisAgentInit(HandleSignalsForAgent);
+
     if (REMOVEKEYS)
     {
         int status;

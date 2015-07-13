@@ -64,6 +64,10 @@ void cfnet_shut()
     CryptoDeInitialize();
 }
 
+bool cfnet_IsInitialized()
+{
+    return TLSClientIsInitialized();
+}
 
 int CFENGINE_PORT = 5308;
 char CFENGINE_PORT_STR[16] = "5308";

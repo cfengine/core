@@ -1,0 +1,51 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#[%+%]
+body common control
+
+{
+      bundlesequence => { "missing_packages" };
+}
+#[%-%]
+
+###########################################
+
+#[%+%]
+bundle agent missing_packages
+{
+  vars:
+    "desired" slist => { "mypackage1", "mypackage2" };
+
+    "installed" data => packagesmatching(".*",".*",".*",".*");
+    "installed_indices" slist => getindices(installed);
+    "installed_name[$(installed_indices)]" string => "$(installed[$(installed_indices)][name])";
+    "installed_names" slist => getvalues("installed_name");
+
+    "missing_list" slist => difference(desired,installed_names);
+
+  reports:
+    "Missing packages = $(missing)";
+    "Installed packages = $(installed_names)";
+    "Desired packages = $(desired)";
+}
+#[%+%]

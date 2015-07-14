@@ -97,6 +97,15 @@ int safe_lchown(const char *path, uid_t owner, gid_t group);
 int safe_creat(const char *pathname, mode_t mode);
 
 /**
+ * @brief Sets whether a file descriptor should be closed on
+ *        exec()/CreateProcess().
+ * @param fd      File descriptor.
+ * @param inherit Whether to enable close-on-exec or not.
+ * @return true on success, false otherwise.
+ */
+bool SetCloseOnExec(int fd, bool enable);
+
+/**
  * @brief Deletes directory path recursively. Symlinks are not followed.
  *        Note that this function only deletes the contents of the directory, not the directory itself.
  * @param path

@@ -747,6 +747,23 @@ int safe_creat(const char *pathname, mode_t mode)
     return safe_open(pathname, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
+// Windows implementation in Enterprise.
+#ifndef _WIN32
+bool SetCloseOnExec(int fd, bool enable)
+{
+    int flags = fcntl(fd, F_GETFD);
+    if (enable)
+    {
+        flags |= FD_CLOEXEC;
+    }
+    else
+    {
+        flags &= ~FD_CLOEXEC;
+    }
+    return (fcntl(fd, F_SETFD, flags) == 0);
+}
+#endif // !_WIN32
+
 static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 {
     Dir *dirh = DirOpen(path);

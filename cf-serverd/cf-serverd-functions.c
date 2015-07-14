@@ -618,11 +618,11 @@ static void PrepareServer(int sd)
 
         ActAsDaemon();
     }
+#endif
 
     /* Close sd on exec, needed for not passing the socket to cf-runagent
      * spawned commands. */
-    fcntl(sd, F_SETFD, FD_CLOEXEC);
-#endif
+    SetCloseOnExec(sd, true);
 
     Log(LOG_LEVEL_NOTICE, "Server is starting...");
     WritePID("cf-serverd.pid"); /* Arranges for atexit() to tidy it away */

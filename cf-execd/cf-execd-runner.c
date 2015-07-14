@@ -230,16 +230,14 @@ void LocalExec(const ExecConfig *config)
         return;
     }
 
-#if !defined(__MINGW32__)
 /*
  * Don't inherit this file descriptor on fork/exec
  */
 
     if (fileno(fp) != -1)
     {
-        fcntl(fileno(fp), F_SETFD, FD_CLOEXEC);
+        SetCloseOnExec(fileno(fp), true);
     }
-#endif
 
     Log(LOG_LEVEL_VERBOSE, "Command => %s", cmd);
 

@@ -4655,7 +4655,10 @@ static FnCallResult FnCallRegistryValue(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
 
 /*********************************************************************/
 
-static FnCallResult FnCallRemoteScalar(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallRemoteScalar(EvalContext *ctx,
+                                       ARG_UNUSED const Policy *policy,
+                                       ARG_UNUSED const FnCall *fp,
+                                       const Rlist *finalargs)
 {
     char *handle = RlistScalarValue(finalargs);
     char *server = RlistScalarValue(finalargs->next);
@@ -4674,9 +4677,14 @@ static FnCallResult FnCallRemoteScalar(EvalContext *ctx, ARG_UNUSED const Policy
     else
     {
         char buffer[CF_BUFSIZE];
-
         buffer[0] = '\0';
-        GetRemoteScalar(ctx, "VAR", handle, server, encrypted, buffer);
+
+        char *ret = GetRemoteScalar(ctx, "VAR", handle, server,
+                                    encrypted, buffer);
+        if (ret == NULL)
+        {
+            return FnFailure();
+        }
 
         if (strncmp(buffer, "BAD:", 4) == 0)
         {
@@ -4697,7 +4705,10 @@ static FnCallResult FnCallRemoteScalar(EvalContext *ctx, ARG_UNUSED const Policy
 
 /*********************************************************************/
 
-static FnCallResult FnCallHubKnowledge(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallHubKnowledge(EvalContext *ctx,
+                                       ARG_UNUSED const Policy *policy,
+                                       ARG_UNUSED const FnCall *fp,
+                                       const Rlist *finalargs)
 {
     char *handle = RlistScalarValue(finalargs);
 
@@ -4708,10 +4719,17 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, ARG_UNUSED const Policy
     else
     {
         char buffer[CF_BUFSIZE];
+        buffer[0] = '\0';
+
         Log(LOG_LEVEL_VERBOSE, "Accessing hub knowledge base for '%s'", handle);
 
-        buffer[0] = '\0';
-        GetRemoteScalar(ctx, "VAR", handle, POLICY_SERVER, true, buffer);
+        char *ret = GetRemoteScalar(ctx, "VAR", handle, POLICY_SERVER,
+                                    true, buffer);
+        if (ret == NULL)
+        {
+            return FnFailure();
+        }
+
 
         // This should always be successful - and this one doesn't cache
 
@@ -4726,7 +4744,10 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, ARG_UNUSED const Policy
 
 /*********************************************************************/
 
-static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx,
+                                                ARG_UNUSED const Policy *policy,
+                                                ARG_UNUSED const FnCall *fp,
+                                                const Rlist *finalargs)
 {
     char *regex = RlistScalarValue(finalargs);
     char *server = RlistScalarValue(finalargs->next);
@@ -4745,10 +4766,15 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, ARG_UNUSED con
     }
     else
     {
-        char buffer[CF_BUFSIZE], class_name[CF_MAXVARSIZE];
-
+        char buffer[CF_BUFSIZE];
         buffer[0] = '\0';
-        GetRemoteScalar(ctx, "CONTEXT", regex, server, encrypted, buffer);
+
+        char *ret = GetRemoteScalar(ctx, "CONTEXT", regex, server,
+                                    encrypted, buffer);
+        if (ret == NULL)
+        {
+            return FnFailure();
+        }
 
         if (strncmp(buffer, "BAD:", 4) == 0)
         {
@@ -4760,8 +4786,9 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, ARG_UNUSED con
         {
             for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
             {
-                snprintf(class_name, CF_MAXVARSIZE,
-                         "%s_%s", prefix, RlistScalarValue(rp));
+                char class_name[CF_MAXVARSIZE];
+                snprintf(class_name, sizeof(class_name), "%s_%s",
+                         prefix, RlistScalarValue(rp));
                 EvalContextClassPutSoft(ctx, class_name, CONTEXT_SCOPE_BUNDLE,
                                         "source=function,function=remoteclassesmatching");
             }

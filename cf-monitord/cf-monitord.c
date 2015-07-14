@@ -120,7 +120,9 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = LoadPolicy(ctx, config);
 
+    GenericAgentPostLoadInit(ctx);
     ThisAgentInit(ctx);
+
     KeepPromises(ctx, policy);
 
     MonitorStartServer(ctx, policy);

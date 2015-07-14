@@ -1,0 +1,52 @@
+#######################################################
+#
+# Tries to copy using TLS (which is default now), from two servers: one
+# with the default TLS ciphers list and another with a non-default very
+# restricted one.
+#
+# It should succeed in both cases since default client-side cipherlist
+# is OpenSSL's default, which is very broad.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+
+      # Do not set this, just use the very broad OpenSSL default.
+      #
+      # tls_ciphers => "";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  files:
+      # Server with non-default, very restricted "allowciphers"
+      "$(G.testdir)/destfile1"
+          copy_from => dcs_remote_cp("simple_source", "127.0.0.1", "9888"),
+          classes => classes_generic("copy1");
+      # Server with default "allowciphers"
+      "$(G.testdir)/destfile2"
+          copy_from => dcs_remote_cp("simple_source", "127.0.0.1", "9889"),
+          classes => classes_generic("copy2");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy"   expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+      "exists1" expression => fileexists("$(G.testdir)/destfile1");
+      "exists2" expression => fileexists("$(G.testdir)/destfile2");
+
+  reports:
+
+    (copy1_repaired.copy2_repaired).(exists1.exists2)::
+      "$(fn[1]) Pass";
+}

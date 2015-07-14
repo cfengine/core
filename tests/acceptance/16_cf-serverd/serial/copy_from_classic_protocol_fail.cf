@@ -1,4 +1,3 @@
-#
 body common control
 {
       inputs => { "../../default.cf.sub", "../../run_with_server.cf.sub" };
@@ -11,15 +10,14 @@ bundle agent test
   methods:
       # source file
       "any" usebundle => file_make("$(G.testdir)/source_file",
-                                   "This is the source file to copy $(sys.date) - always fresh");
+                                   "Source file to copy, always fresh, $(sys.date)");
+
       # ensure destination files are not there
-      "any" usebundle => dcs_fini("$(G.testdir)/destfile_classic");
-      "any" usebundle => dcs_fini("$(G.testdir)/destfile_latest");
+      "any" usebundle => dcs_fini("$(G.testdir)/destfile");
 
       "any" usebundle => generate_key;
-      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
 
+      "any" usebundle => start_server("$(this.promise_dirname)/allowlegacyconnects_closed.srv");
       "any" usebundle => run_test("$(this.promise_filename).sub");
-
-      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
+      "any" usebundle => stop_server("$(this.promise_dirname)/allowlegacyconnects_closed.srv");
 }

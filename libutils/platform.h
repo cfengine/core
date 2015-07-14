@@ -893,11 +893,6 @@ struct timespec
 # define S_IXOTH 00001
 #endif
 
-/* Too bad we don't have FD_CLOEXEC -- but we can fake it */
-#ifndef FD_CLOEXEC
-# define FD_CLOEXEC 0
-#endif
-
 /* kill(2) on OS X returns ETIMEDOUT instead of ESRCH */
 #ifndef ETIMEDOUT
 # define ETIMEDOUT ESRCH

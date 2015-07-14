@@ -147,6 +147,26 @@ void BufferAppendChar(Buffer *buffer, char byte);
 void BufferAppendF(Buffer *buffer, const char *format, ...);
 void BufferAppendString(Buffer *buffer, const char *str);
 
+/**
+ * @brief Concatenate string @c str to @c buf, replacing
+ *   characters @c '*' and @c '#' with their visible counterparts.
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ */
+void BufferAppendPromiseStr(Buffer *buf, const char *str);
+
+/**
+ * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
+ *   and is longer than 2*N+3, then only copy an abbreviated version
+ *   consisting of the first and last N characters, separated by @c `...`
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ * @param N      Max. length of initial/final segment of @c str to keep
+ * @note 2*N+3 is the maximum length of the appended string (excl. terminating NULL)
+ *
+ */
+void BufferAppendAbbreviatedStr(Buffer *buffer, const char *str, const int N);
+
 
 /**
   @brief Stores complex data on the buffer.

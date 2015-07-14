@@ -26,6 +26,7 @@
 #include <rlist.h>
 #include <logging.h>
 #include <fncall.h>
+#include <string_lib.h>
 
 /****************************************************************************************/
 
@@ -72,8 +73,11 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
         Log(LOG_LEVEL_VERBOSE, "P: BEGIN un-named promise of type \"%s\" (pass %d)", pp->parent_promise_type->name, EvalContextGetPass(ctx));
     }
 
-
-    Log(LOG_LEVEL_VERBOSE, "P:    Promiser/affected object: '%s'", pp->promiser);
+    const size_t n = 2*CF_MAXFRAGMENT + 3;
+    char pretty_promise_name[n+1];
+    pretty_promise_name[0] = '\0';
+    StringAppendAbbreviatedPromise(pretty_promise_name, pp->promiser, n, CF_MAXFRAGMENT);
+    Log(LOG_LEVEL_VERBOSE, "P:    Promiser/affected object: '%s'", pretty_promise_name);
 
     Rlist *params = NULL;
     char *varclass;

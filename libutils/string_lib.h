@@ -171,10 +171,30 @@ bool StringNotMatchingSetCapped(const char *isp, int limit,
  */
 bool StringAppend(char *dst, const char *src, size_t n);
 
+/**
+ * @brief Like @c StringAppend, but replace characters @c '*' and @c '#' with their visible counterparts.
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
+ */
+bool StringAppendPromise(char *dst, const char *str, size_t n);
+
+/**
+ * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
+ *   and is longer than 2*N+3, then only copy an abbreviated version
+ *   consisting of the first and last N characters, separated by @c `...`
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
+ * @param max_fragment Max. length of initial/final segment of @c str to keep
+ * @note 2*max_fragment+3 is the maximum length of the appended string (excl. terminating NULL)
+ *
+ */
+bool StringAppendAbbreviatedPromise(char *dst, const char *str, size_t n, const size_t max_fragment);
+
 char *StringCanonify(char *dst, const char *src);
 bool StringAppendDelimited(char *dst, size_t *dst_len, size_t dst_size,
                            const char *src, char sep);
 bool PathAppend(char *path, size_t path_size, const char *leaf, char sep);
-
 
 #endif

@@ -134,6 +134,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    GenericAgentPostLoadInit(ctx);
+
     if (NULL != config->tag_release_dir)
     {
         // write the validated file and the release ID

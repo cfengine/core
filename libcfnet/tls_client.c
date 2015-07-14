@@ -54,6 +54,11 @@ static SSL_CTX *SSLCLIENTCONTEXT = NULL;
 static X509 *SSLCLIENTCERT = NULL;
 
 
+bool TLSClientIsInitialized()
+{
+    return (SSLCLIENTCONTEXT != NULL);
+}
+
 /**
  * @warning Make sure you've called CryptoInitialize() first!
  *

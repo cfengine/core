@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
         policy = LoadPolicy(ctx, config);
     }
 
+    GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
 
     ExecConfig *exec_config = ExecConfigNew(!ONCE, ctx, policy);

@@ -1548,23 +1548,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
             BufferAppendChar(path, '/');
             BufferAppendChar(path, '\'');
-            for (const char *ch = frame->data.promise_iteration.owner->promiser; *ch != '\0'; ch++)
-            {
-                switch (*ch)
-                {
-                case '*':
-                    BufferAppendChar(path, ':');
-                    break;
-
-                case '#':
-                    BufferAppendChar(path, '.');
-                    break;
-
-                default:
-                    BufferAppendChar(path, *ch);
-                    break;
-                }
-            }
+            BufferAppendAbbreviatedStr(path, frame->data.promise_iteration.owner->promiser, CF_MAXFRAGMENT);
             BufferAppendChar(path, '\'');
             if (i == SeqLength(ctx->stack) - 1)
             {

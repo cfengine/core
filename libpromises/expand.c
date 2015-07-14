@@ -118,19 +118,25 @@ since these cannot be mapped into "this" without some magic.
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *ActOnPromise, void *param)
 {
-    Log(LOG_LEVEL_VERBOSE, "Evaluating promise '%s'", pp->promiser);
+    const size_t n = 2*CF_MAXFRAGMENT + 3;
+    char pretty_promise_name[n+1];
+    pretty_promise_name[0] = '\0';
+    StringAppendAbbreviatedPromise(pretty_promise_name, pp->promiser, n, CF_MAXFRAGMENT);
+
+    Log(LOG_LEVEL_VERBOSE, "Evaluating promise '%s'", pretty_promise_name);
     if (!IsDefinedClass(ctx, pp->classes))
     {
         if (LEGACY_OUTPUT)
         {
             Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant", pp->promiser,
-                  pp->classes);
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant",
+                pretty_promise_name, pp->classes);
             Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
+            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant",
+                pretty_promise_name, pp->classes);
         }
         return PROMISE_RESULT_SKIPPED;
     }

@@ -293,6 +293,55 @@ void BufferAppendChar(Buffer *buffer, char byte)
     }
 }
 
+void BufferAppendPromiseStr(Buffer *buf, const char *promiser)
+{
+    for (const char *ch = promiser; *ch != '\0'; ch++)
+    {
+        switch (*ch)
+        {
+        case '*':
+            BufferAppendChar(buf, ':');
+            break;
+
+        case '#':
+            BufferAppendChar(buf, '.');
+            break;
+
+        default:
+            BufferAppendChar(buf, *ch);
+            break;
+        }
+    }
+}
+
+void BufferAppendAbbreviatedStr(Buffer *buf, const char *promiser, const int N)
+{
+    /* check if `promiser` contains a new line (may happen for "insert_lines") */
+    const char *const nl = strchr(promiser, '\n');
+    if (NULL == nl)
+    {
+        BufferAppendPromiseStr(buf, promiser);
+    }
+    else
+    {
+        /* `promiser` contains a newline: abbreviate it by taking the first and last few characters */
+        static const char sep[] = "...";
+        char abbr[sizeof(sep) + 2 * N];
+        const int head = (nl > promiser + N) ? N : (nl - promiser);
+        const char * last_line = strrchr(promiser, '\n') + 1;
+        assert(last_line); /* not NULL, we know we have at least one '\n' */
+        const int tail = strlen(last_line);
+        if (tail > N)
+        {
+            last_line += tail - N;
+        }
+        memcpy(abbr, promiser, head);
+        strcpy(abbr + head, sep);
+        strcat(abbr, last_line);
+        BufferAppendPromiseStr(buf, abbr);
+    }
+}
+
 void BufferAppendF(Buffer *buffer, const char *format, ...)
 {
     assert(buffer);

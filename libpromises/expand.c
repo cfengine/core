@@ -1037,7 +1037,9 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_ERR,
                 "Attribute '%s' in %s:%zu is of wrong type, skipping",
                 lval, filename, lineno);
-            goto cont;
+            VarRefDestroy(ref);
+            RvalDestroy(evaluated_rval);
+            continue;
         }
 
         bool success = EvalContextVariablePut(
@@ -1048,7 +1050,9 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_ERR,
                 "Attribute '%s' in %s:%zu can't be added, skipping",
                 lval, filename, lineno);
-            goto cont;
+            VarRefDestroy(ref);
+            RvalDestroy(evaluated_rval);
+            continue;
         }
 
         VarRefDestroy(ref);
@@ -1110,27 +1114,25 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_VERBOSE, "SET common protocol_version: %s",
                 PROTOCOL_VERSION_STRING[config->protocol_version]);
         }
-        
+
         /* Those are package_inventory and package_module common control body options */
         if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_PACKAGE_INVENTORY].lval) == 0)
         {
             AddDefaultInventoryToContext(ctx, RvalRlistValue(evaluated_rval));
             Log(LOG_LEVEL_VERBOSE, "SET common package_inventory list");
         }
-        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_PACKAGE_MANAGER].lval) == 0)
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_PACKAGE_MODULE].lval) == 0)
         {
             AddDefaultPackageModuleToContext(ctx, RvalScalarValue(evaluated_rval));
-            Log(LOG_LEVEL_VERBOSE, "SET common package_module: %s", 
+            Log(LOG_LEVEL_VERBOSE, "SET common package_module: %s",
                 RvalScalarValue(evaluated_rval));
         }
 
         if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
         {
             /* Ignored */
-            goto cont;
         }
 
-      cont:
         RvalDestroy(evaluated_rval);
     }
 
@@ -1142,26 +1144,26 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
 {
     PackageModuleBody *new_manager = xcalloc(1, sizeof(PackageModuleBody));
     new_manager->name = SafeStringDuplicate(pm_body->name);
-    
+
     for (size_t i = 0; i < SeqLength(pm_body->conlist); i++)
     {
         Constraint *cp = SeqAt(pm_body->conlist, i);
-        
+
         Rval returnval = {0};
-        
+
         if (IsDefinedClass(ctx, cp->classes))
         {
-            returnval = ExpandPrivateRval(ctx, NULL, "body", 
+            returnval = ExpandPrivateRval(ctx, NULL, "body",
                                           cp->rval.item, cp->rval.type);
         }
-        
+
         if (returnval.item == NULL || returnval.type == RVAL_TYPE_NOPROMISEE)
         {
             Log(LOG_LEVEL_VERBOSE, "have invalid constraint while resolving"
                     "package promise body: %s", cp->lval);
             continue;
         }
-        
+
         if (strcmp(cp->lval, "query_installed_ifelapsed") == 0)
         {
             new_manager->installed_ifelapsed =

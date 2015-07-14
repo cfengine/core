@@ -98,7 +98,7 @@ bool TLSClientInitialize(const char *tls_min_version,
 
     if (ciphers != NULL)
     {
-        Log(LOG_LEVEL_DEBUG,
+        Log(LOG_LEVEL_VERBOSE,
             "Setting cipher list for outgoing TLS connections to: %s",
             ciphers);
 
@@ -318,7 +318,8 @@ int TLSTry(ConnectionInfo *conn_info)
         return -1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
+    Log(LOG_LEVEL_VERBOSE, "TLS version negotiated: %8s; Cipher: %s,%s",
+        SSL_get_version(conn_info->ssl),
         SSL_get_cipher_name(conn_info->ssl),
         SSL_get_cipher_version(conn_info->ssl));
     Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");

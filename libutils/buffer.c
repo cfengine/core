@@ -320,11 +320,7 @@ void BufferAppendAbbreviatedStr(Buffer *buf, const char *promiser, const int N)
     const char *const nl = strchr(promiser, '\n');
     if (NULL == nl)
     {
-        /* sprintf(buf, "/'%s'", promiser); */
-        BufferAppendChar(buf, '/');
-        BufferAppendChar(buf, '\'');
         BufferAppendPromiseStr(buf, promiser);
-        BufferAppendChar(buf, '\'');
     }
     else
     {
@@ -342,11 +338,7 @@ void BufferAppendAbbreviatedStr(Buffer *buf, const char *promiser, const int N)
         memcpy(abbr, promiser, head);
         strcpy(abbr + head, sep);
         strcat(abbr, last_line);
-        /* sprintf(buf, "/'%s'", abbr); */
-        BufferAppendChar(buf, '/');
-        BufferAppendChar(buf, '\'');
         BufferAppendPromiseStr(buf, abbr);
-        BufferAppendChar(buf, '\'');
     }
 }
 

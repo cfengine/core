@@ -1546,7 +1546,10 @@ char *EvalContextStackPath(const EvalContext *ctx)
             break;
 
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            BufferAppendChar(path, '/');
+            BufferAppendChar(path, '\'');
             BufferAppendAbbreviatedStr(path, frame->data.promise_iteration.owner->promiser, CF_MAXFRAGMENT);
+            BufferAppendChar(path, '\'');
             if (i == SeqLength(ctx->stack) - 1)
             {
                 BufferAppendF(path, "[%zd]", frame->data.promise_iteration.index);

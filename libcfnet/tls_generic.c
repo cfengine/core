@@ -628,13 +628,15 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
     {
         if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Remote peer terminated TLS session");
+            Log(LOG_LEVEL_VERBOSE,
+                "Remote peer terminated TLS session (SSL_write)");
             return 0;
         }
         else
         {
             TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "Connection unexpectedly closed. SSL_write", sent);
+                        "Connection unexpectedly closed (SSL_write)",
+                        sent);
             return 0;
         }
     }
@@ -675,12 +677,14 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     {
         if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Remote peer terminated TLS session");
+            Log(LOG_LEVEL_VERBOSE,
+                "Remote peer terminated TLS session (SSL_read)");
         }
         else
         {
             TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "Connection unexpectedly closed. SSL_read", received);
+                        "Connection unexpectedly closed (SSL_read)",
+                        received);
         }
     }
 

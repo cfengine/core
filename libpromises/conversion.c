@@ -828,9 +828,10 @@ size_t CommandArg0_bound(char *dst, const char *src, size_t dst_size)
     }
     else
     {
-        /* Check return value! If -1, the user should never use dst. */
-        strlcpy(dst, "BUG: COMMANDARG0_TOO_LONG",
-                MIN(dst_size - 1, strlen("BUG: COMMANDARG0_TOO_LONG")));
+        /* Check return value of CommandArg0_bound! If -1, the user should
+         * never use dst, but just in case we are writing a bogus string. */
+        const char trap[] = "BUG: COMMANDARG0_TOO_LONG";
+        strlcpy(dst, trap, dst_size);
         return (size_t) -1;
     }
 }

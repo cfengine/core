@@ -1,3 +1,38 @@
+3.6.6:
+        Bug fixes:
+        - Fixed insert_lines with preserve_block not converging if the block
+          contains blank lines. (Redmine #7094)
+        - Fixed incorrect message that permissions were repaired in dry-run
+          mode. (Redmine #7082)
+        - Fixed LMDB database sometimes getting corrupted on HP-UX, especially
+          under load. (Redmine #6994)
+        - Fixed and improve error messages in process promises. (Redmine #7219)
+        - Fixed "cf-agent --self-diagnostics" segfaulting. (Redmine #7288)
+        - Fixed a bug causing cf-agent to write at least 100MB to disk after
+          every execution. (Redmine #7242)
+        - Fixed a bug which caused cf-execd to react very slowly to signals.
+          (Redmine #6659 and #7193)
+        - Fixed a bug which could cause cf-execd to immediately kill itself
+          after a reboot. (Redmine #7244)
+        - Fixed systemd detection when /sbin/init is a symlink (Redmine #7297)
+        - Removed useless error messages about failure to set socket timeout.
+          The message can still be seen in verbose mode. (Redmine #6486)
+        - Fixed a bug causing user creation not to work on HP-UX. (Redmine
+          #6734)
+        - Fixed broken bootstrap on Debian 8. Note that Debian 8 is not an
+          officially supported platform with the 3.6 series. (Redmine #7042)
+        - Fixed report collection not working correctly after initial install
+          on systemd systems. (Redmine #7045)
+        - Fixed a bug which caused service script to be unable to kill daemons
+          on openvz/lxc hosts. (Redmine #3394)
+        - Fixed replace_or_add bundle which would insert an extra line if used
+          multiple times. (Redmine #7035)
+        - "redhat_pure" hosts no longer includes Oracle Linux. (Redmine #7081)
+        - Removed useless messages from "standard_services" bundle. (Redmine
+          #7196)
+        - Fixed a bug which causes "standard_services" bundle not to start a
+          service unless it was already running. (Redmine #7258)
+
 3.6.5:
         Features:
         - Introduced "systemd" hard class. (Redmine #6995)

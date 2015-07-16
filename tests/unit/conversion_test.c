@@ -23,6 +23,100 @@ static void test_double_from_string(void)
     }
 }
 
+static void test_CommandArg0_bound(void)
+{
+    char dst[128];
+    size_t zret;
+
+    zret = CommandArg0_bound(dst, "", sizeof(dst));
+    assert_string_equal(dst, "");
+    assert_int_equal(zret, 0);
+    zret = CommandArg0_bound(dst, " ", sizeof(dst));
+    assert_string_equal(dst, "");
+    assert_int_equal(zret, 0);
+    zret = CommandArg0_bound(dst, " blah", sizeof(dst));
+    assert_string_equal(dst, "");
+    assert_int_equal(zret, 0);
+    zret = CommandArg0_bound(dst, "blah", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+    zret = CommandArg0_bound(dst, "blah blue", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+
+    zret = CommandArg0_bound(dst, "\"\"", sizeof(dst));
+    assert_string_equal(dst, "");
+    assert_int_equal(zret, 0);
+    zret = CommandArg0_bound(dst, "\"blah\"", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+    zret = CommandArg0_bound(dst, "\"blah", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+    zret = CommandArg0_bound(dst, "\"blah blue", sizeof(dst));
+    assert_string_equal(dst, "blah blue");
+    assert_int_equal(zret, 9);
+
+    zret = CommandArg0_bound(dst, "\"\" blus", sizeof(dst));
+    assert_string_equal(dst, "");
+    assert_int_equal(zret, 0);
+    zret = CommandArg0_bound(dst, "\"blah\" blue", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+    zret = CommandArg0_bound(dst, "\"blah\"blue", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+
+    zret = CommandArg0_bound(dst, "blah ", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+
+    zret = CommandArg0_bound(dst, "\" \"", sizeof(dst));
+    assert_string_equal(dst, " ");
+    assert_int_equal(zret, 1);
+    zret = CommandArg0_bound(dst, "\" \" ", sizeof(dst));
+    assert_string_equal(dst, " ");
+    assert_int_equal(zret, 1);
+
+    zret = CommandArg0_bound(dst, "blah \"blue\"", sizeof(dst));
+    assert_string_equal(dst, "blah");
+    assert_int_equal(zret, 4);
+
+    zret = CommandArg0_bound(dst, "blah\"blue\"", sizeof(dst));
+    assert_string_equal(dst, "blah\"blue\"");
+    assert_int_equal(zret, 10);
+
+    zret = CommandArg0_bound(dst, "blah\"blue", sizeof(dst));
+    assert_string_equal(dst, "blah\"blue");
+    assert_int_equal(zret, 9);
+
+    /* TEST OVERFLOW */
+
+    zret = CommandArg0_bound(dst, "", 0);
+    assert_int_equal(zret, (size_t) -1);
+    zret = CommandArg0_bound(dst, "blah", 0);
+    assert_int_equal(zret, (size_t) -1);
+    zret = CommandArg0_bound(dst, " ", 0);
+    assert_int_equal(zret, (size_t) -1);
+    zret = CommandArg0_bound(dst, "\"blah\"", 0);
+    assert_int_equal(zret, (size_t) -1);
+
+    zret = CommandArg0_bound(dst, "blah", 1);
+    assert_int_equal(zret, (size_t) -1);
+    zret = CommandArg0_bound(dst, "\"blah\"", 1);
+    assert_int_equal(zret, (size_t) -1);
+
+    zret = CommandArg0_bound(dst, "b", 1);
+    assert_int_equal(zret, (size_t) -1);
+    zret = CommandArg0_bound(dst, "\"b\"", 1);
+    assert_int_equal(zret, (size_t) -1);
+
+    zret = CommandArg0_bound(dst, "", 1);
+    assert_int_equal(zret, 0);                         /* empty string fits */
+    zret = CommandArg0_bound(dst, " ", 1);
+    assert_int_equal(zret, 0);                         /* empty string fits */
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -30,6 +124,7 @@ int main()
     {
         unit_test(test_str_to_service_policy),
         unit_test(test_double_from_string),
+        unit_test(test_CommandArg0_bound),
     };
 
     return run_tests(tests);

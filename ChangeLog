@@ -125,6 +125,8 @@
           even if you haven't checked out a Git branch. (Redmine #7332)
         - Reduce verbosity of harmless errors related to socket timeouts and
           missing thermal zone files. (Redmine #6486 and #7238)
+        - Fix process_result logic to match the purpose of body process_select
+          days_older_than (Redmine #3009)
 
         Masterfiles:
 

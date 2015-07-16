@@ -32,6 +32,8 @@
           #7196)
         - Fixed a bug which causes "standard_services" bundle not to start a
           service unless it was already running. (Redmine #7258)
+        - Fix process_result logic to match the purpose of body process_select
+          days_older_than (Redmine #3009)
 
 3.6.5:
         Features:

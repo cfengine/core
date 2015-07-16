@@ -614,6 +614,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         size_t zret = CommandArg0_bound(arg0, CFRUNCOMMAND, sizeof(arg0));
         if (zret == (size_t) -1)
         {
+            Log(LOG_LEVEL_ERR, "Internal size limit for cfruncommand,"
+                " please consider using a smaller cfruncommand");
             goto protocol_error;
         }
 
@@ -1057,6 +1059,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 protocol_error:
     strcpy(sendbuffer, "BAD: Request denied");
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
-    Log(LOG_LEVEL_INFO, "Closing connection due to request: %s", recvbuffer);
+    Log(LOG_LEVEL_INFO,
+        "Closing connection due to illegal request: %s", recvbuffer);
     return false;
 }

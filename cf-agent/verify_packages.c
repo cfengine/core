@@ -1783,7 +1783,8 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Installed package is up to date, not updating");
+                cfPS_HELPER_1ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                    "Installed packaged '%s' is up to date, not updating", pp->promiser);
                 break;
             }
         }

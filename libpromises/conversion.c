@@ -818,7 +818,7 @@ size_t CommandArg0_bound(char *dst, const char *src, size_t dst_size)
         end_delimiter = ' ';
     }
 
-    char *end = strchr(start, end_delimiter);
+    char *end = strchrnul(start, end_delimiter);
     size_t len = end - start;
     if (len < dst_size)
     {

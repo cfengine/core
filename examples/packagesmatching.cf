@@ -20,7 +20,7 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-#[%+%]
+#[%-%]
 body common control
 
 {
@@ -44,7 +44,7 @@ bundle agent missing_packages
     "missing_list" slist => difference(desired,installed_names);
 
   reports:
-    "Missing packages = $(missing)";
+    "Missing packages = $(missing_list)";
     "Installed packages = $(installed_names)";
     "Desired packages = $(desired)";
 }

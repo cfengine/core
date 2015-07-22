@@ -1,0 +1,67 @@
+#######################################################
+#
+# Test iprange()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+      "expected_missing" expression => iprange("8.8.8.8/31"),
+        meta => { "collect" };
+
+      "expected_missing" expression => iprange("8.8.8.8/24"),
+        meta => { "collect" };
+
+      "expected_missing" expression => iprange("8.8.8.8/31", $(sys.interfaces)),
+        meta => { "collect" };
+
+      "expected_missing" expression => iprange("8.8.8.8/24", $(sys.interfaces)),
+        meta => { "collect" };
+
+      "expected_missing" expression => iprange("0.0.0.0/0", "dummy"),
+        meta => { "collect" };
+
+      "all_zeroes" expression => iprange("0.0.0.0/0"),
+        meta => { "collect" };
+
+      "all_zeroes_some_interfaces" expression => iprange("0.0.0.0/0", $(sys.interfaces)),
+        meta => { "collect" };
+
+      "local_range" expression => iprange("0.0.0.0/1"),
+        meta => { "collect" };
+
+      "local_range" expression => iprange("128.0.0.0/1"),
+        meta => { "collect" };
+
+      "local_range2" expression => iprange("0.0.0.0/1", $(sys.interfaces)),
+        meta => { "collect" };
+
+      "local_range2" expression => iprange("128.0.0.0/1", $(sys.interfaces)),
+        meta => { "collect" };
+
+      "just_locals" expression => iprange("$(sys.ip_addresses)/32"),
+        meta => { "collect" };
+
+  vars:
+      "found" slist => classesmatching(".*", "collect");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

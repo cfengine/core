@@ -29,8 +29,8 @@ static void run_test_in_policy(const char *policy_filename, TestFn fn)
     /* Setup global environment */
     strcpy(VFQNAME, "localhost.localdomain");
     strcpy(VIPADDRESS, "127.0.0.100");
-    EvalContextAddIpAddress(ctx, "127.0.0.100");
-    EvalContextAddIpAddress(ctx, "127.0.0.101");
+    EvalContextAddIpAddress(ctx, "127.0.0.100", "eth0");
+    EvalContextAddIpAddress(ctx, "127.0.0.101", "eth1");
 
     fn(ctx, policy);
 

@@ -166,6 +166,16 @@ static FnCallResult FnReturnContext(bool result)
     return FnReturn(result ? "any" : "!any");
 }
 
+static FnCallResult FnReturnContextTrue()
+{
+    return FnReturnContext(true);
+}
+
+static FnCallResult FnReturnContextFalse()
+{
+    return FnReturnContext(false);
+}
+
 static FnCallResult FnFailure(void)
 {
     return (FnCallResult) { FNCALL_FAILURE };

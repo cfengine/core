@@ -517,6 +517,11 @@ void GetInterfacesInfo(EvalContext *ctx)
 
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, CF_DATA_TYPE_STRING, "source=agent");
 
+                // generate the reverse mapping
+                snprintf(name, sizeof(name), "ip2iface[%s]", txtaddr);
+
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, CanonifyName(ifp->ifr_name), CF_DATA_TYPE_STRING, "source=agent");
+
                 i = 3;
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)

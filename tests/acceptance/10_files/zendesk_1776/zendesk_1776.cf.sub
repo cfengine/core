@@ -57,8 +57,8 @@ bundle agent check
     "dir_count" int => length(files);
 
   classes:
-    # Since we cant test ourself for stdout, we just make sure that the number
-    # of files is correct. A seperate policy runs this one and inspects its
+    # Since we can't test ourself for stdout, we just make sure that the number
+    # of files is correct. A separate policy runs this one and inspects its
     # output. It needs something to check for passing condition. And failing
     # condition is the errors its looking for
     "have_expected_number_of_files" expression => strcmp("$(dir_count)", "6");

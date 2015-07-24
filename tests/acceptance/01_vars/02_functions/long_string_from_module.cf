@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test that we dont crash when reading in large strings from a module
+# Test that we don't crash when reading in large strings from a module
 # Redmine:3957 (https://cfengine.com/dev/issues/3957)
 #
 #######################################################

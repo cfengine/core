@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test that we dont crash when slist has very long elements 
+# Test that we don't crash when slist has very long elements
 # Redmine:3957 (https://cfengine.com/dev/issues/3957)
 #
 #######################################################

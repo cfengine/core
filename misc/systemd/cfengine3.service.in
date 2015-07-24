@@ -1,5 +1,5 @@
 [Unit]
-Description=CFEngine 3 deamons
+Description=CFEngine 3 daemons
 After=syslog.target
 Wants=cfengine3-web.service
 After=cfengine3-web.service

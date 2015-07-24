@@ -848,7 +848,7 @@ static bool GeneratePolicyReleaseIDFromGit(char *release_id_out,
             }
             else
             {
-                /* We didnt find a commit sha in .git/HEAD, so we assume the
+                /* We didn't find a commit sha in .git/HEAD, so we assume the
                  * git information is invalid. */
                 git_file = NULL;
             }

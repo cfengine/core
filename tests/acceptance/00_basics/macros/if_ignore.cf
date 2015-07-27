@@ -1,0 +1,30 @@
+######################################################
+#
+#  Test that @if works for greater versions
+#
+#####################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test
+{
+@if minimum_version(300.600)
+      Some new function here...
+
+
+      more text...
+@endif
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("cfengine",
+                                         "",
+                                         $(this.promise_filename));
+}

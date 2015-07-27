@@ -210,9 +210,9 @@ promise_type   [a-zA-Z_]+:
                                  P.if_depth--;
                                }
 
-<if_ignore_state>.*          {
+<if_ignore_state>[^@]      {
                                ParserDebug("\tL:inside macro @if, ignoring text:%s\n", yytext);
-                             }
+                           }
 
 {promises}            {
                           /* Note this has to come before "id" since it is a subset of id */
@@ -436,7 +436,7 @@ promise_type   [a-zA-Z_]+:
 <if_ignore_state><<EOF>>     {
                                if (P.if_depth > 0)
                                {
-                                 yyerror("EOF seen while @if was waiting for @endif");
+                                 yyerror("EOF seen while @if was waiting for @endif in ignore_state");
                                  return 0;
                                }
                              }
@@ -444,7 +444,7 @@ promise_type   [a-zA-Z_]+:
 <<EOF>>     {
               if (P.if_depth > 0)
               {
-                yyerror("EOF seen while @if was waiting for @endif");
+                yyerror("EOF seen while @if was waiting for @endif without ignore_state");
               }
               return 0; // loops forever without this
             }

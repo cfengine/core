@@ -1,4 +1,4 @@
-# Test that we dont get errors about duplicate handles when using variables in
+# Test that we don't get errors about duplicate handles when using variables in
 # handle name that do not expand identically
 # Redmine:4682 (https://cfengine.com/dev/issues/4682)
 

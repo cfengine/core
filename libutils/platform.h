@@ -370,13 +370,21 @@ union mpinfou
 #endif
 
 #ifdef __linux__
-# if defined(__GLIBC__) || defined(__BIONIC__)
+# ifdef HAVE_NET_ROUTE_H
 #  include <net/route.h>
-#  include <netinet/in.h>
-#  include <netinet/ip.h>
 # else
 #  include <linux/route.h>
+# endif
+
+# ifdef HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+# else
 #  include <linux/in.h>
+# endif
+
+# ifdef HAVE_NETINET_IP_H
+#  include <netinet/ip.h>
+# else
 #  include <linux/ip.h>
 # endif
 #endif

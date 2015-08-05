@@ -596,6 +596,8 @@ AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 # include <sys/param.h>
 #endif
 ])
+AC_CHECK_HEADERS(net/route.h netinet/in.h netinet/ip.h)
+
 
 AC_HEADER_STDC
 AC_HEADER_TIME

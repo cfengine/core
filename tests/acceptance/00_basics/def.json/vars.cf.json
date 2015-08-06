@@ -1,0 +1,11 @@
+{
+ "classes":
+ {
+  "class_to_define_if": [ "one", "of", "these", "matches_classmatch" ],
+  "my_other_example": [ "server[34]", "debian.*" ],
+ },
+
+ "vars": {
+  "test_variable": "37bff81c825bd57a613ff4770b7a0679ff147bdf"
+ }
+}

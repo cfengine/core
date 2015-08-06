@@ -14,7 +14,7 @@ static const char* features[] = {
 #ifdef HAVE_LIBCURL
     "curl",
 #endif
-
+    "def_json_preparse",
     NULL
 };
 

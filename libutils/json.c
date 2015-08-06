@@ -617,6 +617,38 @@ const char *JsonPrimitiveGetAsString(const JsonElement *primitive)
     return primitive->primitive.value;
 }
 
+char* JsonPrimitiveToString(const JsonElement *primitive)
+{
+    if (JsonGetElementType(primitive) != JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        return NULL;
+    }
+
+    switch (JsonGetPrimitiveType(primitive))
+    {
+    case JSON_PRIMITIVE_TYPE_BOOL:
+        return xstrdup(JsonPrimitiveGetAsBool(primitive) ? "true" : "false");
+        break;
+
+    case JSON_PRIMITIVE_TYPE_INTEGER:
+        return StringFromLong(JsonPrimitiveGetAsInteger(primitive));
+        break;
+
+    case JSON_PRIMITIVE_TYPE_REAL:
+        return StringFromDouble(JsonPrimitiveGetAsReal(primitive));
+        break;
+
+    case JSON_PRIMITIVE_TYPE_STRING:
+        return xstrdup(JsonPrimitiveGetAsString(primitive));
+        break;
+
+    case JSON_PRIMITIVE_TYPE_NULL: // redundant
+        break;
+    }
+
+    return NULL;
+}
+
 bool JsonPrimitiveGetAsBool(const JsonElement *primitive)
 {
     assert(primitive);
@@ -1137,6 +1169,26 @@ JsonElement *JsonArrayGet(const JsonElement *array, size_t index)
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
     return JsonAt(array, index);
+}
+
+bool JsonArrayContainsOnlyPrimitives(JsonElement *array)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+
+    for (size_t i = 0; i < JsonLength(array); i++)
+    {
+        JsonElement *child = JsonArrayGet(array, i);
+
+        if (child->type != JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void JsonContainerReverse(JsonElement *array)

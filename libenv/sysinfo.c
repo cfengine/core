@@ -954,6 +954,8 @@ static void BuiltinClasses(EvalContext *ctx)
 #ifdef HAVE_LIBYAML
     CreateHardClassesFromCanonification(ctx, "feature_yaml", "source=agent");
 #endif
+
+    CreateHardClassesFromCanonification(ctx, "feature_def_json_preparse", "source=agent");
 }
 
 /*******************************************************************/

@@ -1676,6 +1676,7 @@ static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
     switch (SpecialScopeFromString(scope))
     {
     case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_DEF:
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
         assert(!ns || strcmp("default", ns) == 0);
@@ -2551,4 +2552,128 @@ void EvalContextSetIgnoreLocks(EvalContext *ctx, bool ignore)
 bool EvalContextIsIgnoringLocks(const EvalContext *ctx)
 {
     return ctx->ignore_locks;
+}
+
+StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const char* regex, const Rlist *tags, bool first_only)
+{
+    StringSet *matching = StringSetNew();
+
+    pcre *rx = CompileRegex(regex);
+
+    Class *cls;
+    while ((cls = ClassTableIteratorNext(iter)))
+    {
+        char *expr = ClassRefToString(cls->ns, cls->name);
+
+        /* FIXME: review this strcmp. Moved out from StringMatch */
+        if (!strcmp(regex, expr) ||
+            (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
+        {
+            bool pass = false;
+            StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+
+            if (tags)
+            {
+                for (const Rlist *arg = tags; arg; arg = arg->next)
+                {
+                    const char *tag_regex = RlistScalarValue(arg);
+                    const char *element;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = StringSetIteratorNext(&it)))
+                    {
+                        /* FIXME: review this strcmp. Moved out from StringMatch */
+                        if (strcmp(tag_regex, element) == 0 ||
+                            StringMatchFull(tag_regex, element))
+                        {
+                            pass = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            else                        // without any tags queried, accept class
+            {
+                pass = true;
+            }
+
+            if (pass)
+            {
+                StringSetAdd(matching, expr);
+            }
+            else
+            {
+                free(expr);
+            }
+        }
+        else
+        {
+            free(expr);
+        }
+
+        if (first_only && StringSetSize(matching) > 0)
+        {
+            break;
+        }
+    }
+
+    if (rx)
+    {
+        pcre_free(rx);
+    }
+
+    return matching;
+}
+
+JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source)
+{
+    if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        Buffer *expbuf;
+        JsonElement *expanded_json;
+
+        switch (JsonGetPrimitiveType(source))
+        {
+        case JSON_PRIMITIVE_TYPE_STRING:
+            expbuf = BufferNew();
+            ExpandScalar(ctx, NULL, "this", JsonPrimitiveGetAsString(source), expbuf);
+            expanded_json = JsonStringCreate(BufferData(expbuf));
+            BufferDestroy(expbuf);
+            return expanded_json;
+            break;
+
+        default:
+            return JsonCopy(source);
+            break;
+        }
+    }
+    else if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        if (JsonGetContainerType(source) == JSON_CONTAINER_TYPE_OBJECT)
+        {
+            JsonElement *dest = JsonObjectCreate(JsonLength(source));
+            JsonIterator iter = JsonIteratorInit(source);
+            const char *key;
+            while ((key = JsonIteratorNextKey(&iter)))
+            {
+                Buffer *expbuf = BufferNew();
+                ExpandScalar(ctx, NULL, "this", key, expbuf);
+                JsonObjectAppendElement(dest, BufferData(expbuf), JsonExpandElement(ctx, JsonObjectGet(source, key)));
+                BufferDestroy(expbuf);
+            }
+
+            return dest;
+        }
+        else
+        {
+            JsonElement *dest = JsonArrayCreate(JsonLength(source));
+            for (size_t i = 0; i < JsonLength(source); i++)
+            {
+                JsonArrayAppendElement(dest, JsonExpandElement(ctx, JsonArrayGet(source, i)));
+            }
+            return dest;
+        }
+    }
+
+    ProgrammingError("JsonExpandElement: unexpected container type");
+    return NULL;
 }

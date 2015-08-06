@@ -79,7 +79,6 @@
 
 
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const char *name, bool do_regex, bool invert, long max);
-static char* JsonPrimitiveToString(const JsonElement *el);
 
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
 static void CloseStringHole(char *s, int start, int end);
@@ -839,72 +838,6 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
 
 /*********************************************************************/
 
-static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const Rlist *args)
-{
-    StringSet *matching = StringSetNew();
-
-    const char *regex = RlistScalarValue(args);
-    pcre *rx = CompileRegex(regex);
-
-    Class *cls;
-    while ((cls = ClassTableIteratorNext(iter)))
-    {
-        char *expr = ClassRefToString(cls->ns, cls->name);
-
-        /* FIXME: review this strcmp. Moved out from StringMatch */
-        if (!strcmp(regex, expr) ||
-            (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
-        {
-            bool pass = false;
-            StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
-
-            if (args->next)
-            {
-                for (const Rlist *arg = args->next; arg; arg = arg->next)
-                {
-                    const char *tag_regex = RlistScalarValue(arg);
-                    const char *element;
-                    StringSetIterator it = StringSetIteratorInit(tagset);
-                    while ((element = StringSetIteratorNext(&it)))
-                    {
-                        /* FIXME: review this strcmp. Moved out from StringMatch */
-                        if (strcmp(tag_regex, element) == 0 ||
-                            StringMatchFull(tag_regex, element))
-                        {
-                            pass = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            else                        // without any tags queried, accept class
-            {
-                pass = true;
-            }
-
-            if (pass)
-            {
-                StringSetAdd(matching, expr);
-            }
-            else
-            {
-                free(expr);
-            }
-        }
-        else
-        {
-            free(expr);
-        }
-    }
-
-    if (rx)
-    {
-        pcre_free(rx);
-    }
-
-    return matching;
-}
-
 static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     bool count_only = false;
@@ -945,7 +878,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
 
     {
         ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        StringSet *global_matches = ClassesMatching(ctx, iter, finalargs);
+        StringSet *global_matches = ClassesMatching(ctx, iter, RlistScalarValue(finalargs), finalargs->next, check_only);
 
         StringSetIterator it = StringSetIteratorInit(global_matches);
         const char *element = NULL;
@@ -954,11 +887,6 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
             if (count_only || check_only)
             {
                 count++;
-
-                if (check_only)
-                {
-                    break;
-                }
             }
             else
             {
@@ -977,7 +905,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
 
     {
         ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        StringSet *local_matches = ClassesMatching(ctx, iter, finalargs);
+        StringSet *local_matches = ClassesMatching(ctx, iter, RlistScalarValue(finalargs), finalargs->next, check_only);
 
         StringSetIterator it = StringSetIteratorInit(local_matches);
         const char *element = NULL;
@@ -986,11 +914,6 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
             if (count_only || check_only)
             {
                 count++;
-
-                if (check_only)
-                {
-                    break;
-                }
             }
             else
             {
@@ -1861,40 +1784,6 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED const Policy *po
 
 /*********************************************************************/
 
-static char* JsonPrimitiveToString(const JsonElement *el)
-{
-    if (JsonGetElementType(el) != JSON_ELEMENT_TYPE_PRIMITIVE)
-    {
-        return NULL;
-    }
-
-    switch (JsonGetPrimitiveType(el))
-    {
-    case JSON_PRIMITIVE_TYPE_BOOL:
-        return xstrdup(JsonPrimitiveGetAsBool(el) ? "true" : "false");
-        break;
-
-    case JSON_PRIMITIVE_TYPE_INTEGER:
-        return StringFromLong(JsonPrimitiveGetAsInteger(el));
-        break;
-
-    case JSON_PRIMITIVE_TYPE_REAL:
-        return StringFromDouble(JsonPrimitiveGetAsReal(el));
-        break;
-
-    case JSON_PRIMITIVE_TYPE_STRING:
-        return xstrdup(JsonPrimitiveGetAsString(el));
-        break;
-
-    case JSON_PRIMITIVE_TYPE_NULL: // redundant
-        break;
-    }
-
-    return NULL;
-}
-
-/*********************************************************************/
-
 static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs));
@@ -2007,6 +1896,8 @@ void CollectContainerValues(EvalContext *ctx, Rlist **values, const JsonElement 
         }
     }
 }
+
+/*********************************************************************/
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
@@ -6008,60 +5899,6 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
 
 /*********************************************************************/
 
-JsonElement* DataExpandElement(EvalContext *ctx, const JsonElement *source)
-{
-    if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_PRIMITIVE)
-    {
-        Buffer *expbuf;
-        JsonElement *expanded_json;
-
-        switch (JsonGetPrimitiveType(source))
-        {
-        case JSON_PRIMITIVE_TYPE_STRING:
-            expbuf = BufferNew();
-            ExpandScalar(ctx, NULL, "this", JsonPrimitiveGetAsString(source), expbuf);
-            expanded_json = JsonStringCreate(BufferData(expbuf));
-            BufferDestroy(expbuf);
-            return expanded_json;
-            break;
-
-        default:
-            return JsonCopy(source);
-            break;
-        }
-    }
-    else if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_CONTAINER)
-    {
-        if (JsonGetContainerType(source) == JSON_CONTAINER_TYPE_OBJECT)
-        {
-            JsonElement *dest = JsonObjectCreate(JsonLength(source));
-            JsonIterator iter = JsonIteratorInit(source);
-            const char *key;
-            while ((key = JsonIteratorNextKey(&iter)))
-            {
-                Buffer *expbuf = BufferNew();
-                ExpandScalar(ctx, NULL, "this", key, expbuf);
-                JsonObjectAppendElement(dest, BufferData(expbuf), DataExpandElement(ctx, JsonObjectGet(source, key)));
-                BufferDestroy(expbuf);
-            }
-
-            return dest;
-        }
-        else
-        {
-            JsonElement *dest = JsonArrayCreate(JsonLength(source));
-            for (size_t i = 0; i < JsonLength(source); i++)
-            {
-                JsonArrayAppendElement(dest, DataExpandElement(ctx, JsonArrayGet(source, i)));
-            }
-            return dest;
-        }
-    }
-
-    ProgrammingError("DataExpandElement: unexpected container type");
-    return NULL;
-}
-
 static FnCallResult FnCallDataExpand(EvalContext *ctx,
                                      ARG_UNUSED const Policy *policy,
                                      ARG_UNUSED const FnCall *fp,
@@ -6082,7 +5919,7 @@ static FnCallResult FnCallDataExpand(EvalContext *ctx,
         return FnFailure();
     }
 
-    JsonElement *expanded = DataExpandElement(ctx, container);
+    JsonElement *expanded = JsonExpandElement(ctx, container);
     JsonDestroy(container);
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { expanded, RVAL_TYPE_CONTAINER } };

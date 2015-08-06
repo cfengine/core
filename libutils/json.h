@@ -162,6 +162,7 @@ JsonContainerType JsonGetContainerType(const JsonElement *container);
 
 JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
+char* JsonPrimitiveToString(const JsonElement *primitive);
 bool JsonPrimitiveGetAsBool(const JsonElement *primitive);
 long JsonPrimitiveGetAsInteger(const JsonElement *primitive);
 double JsonPrimitiveGetAsReal(const JsonElement *primitive);
@@ -346,6 +347,12 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 
 JsonElement *JsonArrayGet(const JsonElement *array, size_t index);
 
+/**
+  @brief Check if an array contains only primitives
+  @param array [in] The JSON array parent
+  @returns true if the array contains only primitives, false otherwise
+  */
+bool JsonArrayContainsOnlyPrimitives(JsonElement *array);
 
 /**
   @brief Parse a string to create a JsonElement
@@ -400,7 +407,5 @@ JsonElementType JsonIteratorCurrentElementType(const JsonIterator *iter);
 JsonContainerType JsonIteratorCurrentContainerType(const JsonIterator *iter);
 JsonPrimitiveType JsonIteratorCurrentPrimitiveType(const JsonIterator *iter);
 bool JsonIteratorHasMore(const JsonIterator *iter);
-
-
 
 #endif

@@ -1,0 +1,20 @@
+# full test of the def.json facility
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(def,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+  reports:
+      "augments policy = $(this.promise_filename)";
+      "domain = $(def.domain)";
+}

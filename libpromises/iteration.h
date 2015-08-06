@@ -32,6 +32,7 @@
 
 typedef struct PromiseIterator_ PromiseIterator;
 
+Rlist *ContainerToRlist(const JsonElement *container);
 PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *lists, const Rlist *containers);
 void PromiseIteratorDestroy(PromiseIterator *iter_ctx);
 

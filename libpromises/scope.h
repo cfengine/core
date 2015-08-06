@@ -38,6 +38,7 @@ typedef enum
     SPECIAL_SCOPE_SYS,
     SPECIAL_SCOPE_THIS,
     SPECIAL_SCOPE_BODY,
+    SPECIAL_SCOPE_DEF,
 
     SPECIAL_SCOPE_NONE
 } SpecialScope;

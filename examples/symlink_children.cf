@@ -1,0 +1,61 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+########################################################
+
+#+begin_src cfengine3
+body file control
+{
+  inputs => { "$(sys.libdir)/stdlib.cf" };
+}
+
+bundle agent main
+{
+  files:
+
+      # This will make symlinks to each file in /var/cfengine/bin
+      # for example:
+      # '/usr/local/sbin/cf-agent' -> '/var/cfengine/bin/cf-agent'
+      # '/usr/local/sbin/cf-serverd' -> '/var/cfengine/bin/cf-serverd'
+      "/usr/local/sbin"
+        link_from => linkchildren("/var/cfengine/bin"),
+	comment => "We like for cfengine binaries to be available inside of the
+                    common $PATH";
+}
+#+end_src
+########################################################
+#+begin_src example_output
+#@ ```
+#@    info: Linked files '/usr/local/sbin/lmmgr' -> '/var/cfengine/bin/lmmgr'
+#@    info: Linked files '/usr/local/sbin/cf-key' -> '/var/cfengine/bin/cf-key'
+#@    info: Linked files '/usr/local/sbin/mdb_copy' -> '/var/cfengine/bin/mdb_copy'
+#@    info: Linked files '/usr/local/sbin/cf-promises' -> '/var/cfengine/bin/cf-promises'
+#@    info: Linked files '/usr/local/sbin/cf-monitord' -> '/var/cfengine/bin/cf-monitord'
+#@    info: Linked files '/usr/local/sbin/cf-execd' -> '/var/cfengine/bin/cf-execd'
+#@    info: Linked files '/usr/local/sbin/cf-runagent' -> '/var/cfengine/bin/cf-runagent'
+#@    info: Linked files '/usr/local/sbin/cf-upgrade' -> '/var/cfengine/bin/cf-upgrade'
+#@    info: Linked files '/usr/local/sbin/cf-agent' -> '/var/cfengine/bin/cf-agent'
+#@    info: Linked files '/usr/local/sbin/cf-serverd' -> '/var/cfengine/bin/cf-serverd'
+#@    info: Linked files '/usr/local/sbin/mdb_stat' -> '/var/cfengine/bin/mdb_stat'
+#@    info: Linked files '/usr/local/sbin/lmdump' -> '/var/cfengine/bin/lmdump'
+#@    info: Linked files '/usr/local/sbin/cf-twin' -> '/var/cfengine/bin/cf-twin'
+#@ ```
+#+end_src

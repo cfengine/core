@@ -143,6 +143,18 @@ char *SafeStringDuplicate(const char *str)
 
 /*********************************************************************/
 
+char *SafeStringNDuplicate(const char *str, size_t size)
+{
+    if (str == NULL)
+    {
+        return NULL;
+    }
+
+    return xstrndup(str, size);
+}
+
+/*********************************************************************/
+
 int SafeStringLength(const char *str)
 {
     if (str == NULL)

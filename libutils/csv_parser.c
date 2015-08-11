@@ -75,7 +75,7 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
 {
     assert(str);
 
-    if (str == NULL || strlen(str) >= CSV_MAX_LLENGTH)
+    if (str == NULL)
     {
         return CSV_ERR_INVALID_INPUT;
     }
@@ -84,7 +84,7 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
     csv_state current_state = CSV_ST_NEW_LINE;
     csv_parser_error ret;
 
-    char snatched[CSV_MAX_LLENGTH];
+    char *snatched = xmalloc(strlen(str) + 1);
     snatched[0] = '\0';
     char *sn = snatched ;
     *sn = '\0';
@@ -300,6 +300,8 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
         goto clean;
     }
 
+    free(snatched);
+
     return CSV_ERR_OK;
 
 clean:
@@ -307,6 +309,7 @@ clean:
     {
         SeqDestroy(*newlist);
     }
+    free(snatched);
     return ret;
 }
 

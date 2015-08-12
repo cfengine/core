@@ -381,7 +381,7 @@ int SocketConnect(const char *host, const char *port,
     int ret = getaddrinfo(host, port, &query, &response);
     if (ret != 0)
     {
-        Log(LOG_LEVEL_INFO,
+        Log(LOG_LEVEL_ERR,
               "Unable to find host '%s' service '%s' (%s)",
               host, port, gai_strerror(ret));
         if (response != NULL)

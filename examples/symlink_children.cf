@@ -42,20 +42,3 @@ bundle agent main
 }
 #+end_src
 ########################################################
-#+begin_src example_output
-#@ ```
-#@    info: Linked files '/usr/local/sbin/lmmgr' -> '/var/cfengine/bin/lmmgr'
-#@    info: Linked files '/usr/local/sbin/cf-key' -> '/var/cfengine/bin/cf-key'
-#@    info: Linked files '/usr/local/sbin/mdb_copy' -> '/var/cfengine/bin/mdb_copy'
-#@    info: Linked files '/usr/local/sbin/cf-promises' -> '/var/cfengine/bin/cf-promises'
-#@    info: Linked files '/usr/local/sbin/cf-monitord' -> '/var/cfengine/bin/cf-monitord'
-#@    info: Linked files '/usr/local/sbin/cf-execd' -> '/var/cfengine/bin/cf-execd'
-#@    info: Linked files '/usr/local/sbin/cf-runagent' -> '/var/cfengine/bin/cf-runagent'
-#@    info: Linked files '/usr/local/sbin/cf-upgrade' -> '/var/cfengine/bin/cf-upgrade'
-#@    info: Linked files '/usr/local/sbin/cf-agent' -> '/var/cfengine/bin/cf-agent'
-#@    info: Linked files '/usr/local/sbin/cf-serverd' -> '/var/cfengine/bin/cf-serverd'
-#@    info: Linked files '/usr/local/sbin/mdb_stat' -> '/var/cfengine/bin/mdb_stat'
-#@    info: Linked files '/usr/local/sbin/lmdump' -> '/var/cfengine/bin/lmdump'
-#@    info: Linked files '/usr/local/sbin/cf-twin' -> '/var/cfengine/bin/cf-twin'
-#@ ```
-#+end_src

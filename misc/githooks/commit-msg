@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if grep -i '^Changelog: *TODO' "$1" > /dev/null
+then
+    echo "Aborting commit: You need to either add or delete the Changelog entry."
+    echo "This is what you wrote:"
+    grep -v "^#" "$1"
+    exit 1
+fi
+
+exit 0

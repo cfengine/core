@@ -1,0 +1,11 @@
+
+
+Changelog: TODO
+
+# Changelog: <message>
+#   -or-
+# Changelog: Title     (Will use topmost line in commit)
+#   -or-
+# Changelog: Commit    (Will use entire commit message)
+#
+# "Redmine #1234" will be detected in the commit message text.

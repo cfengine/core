@@ -1,0 +1,45 @@
+#!/bin/sh
+
+DIRNAME="$(dirname $0)"
+REPO_BASE="$DIRNAME/../../.."
+FORCE=0
+DRY_RUN=0
+
+maybe_run()
+{
+    echo "$@"
+    if [ $DRY_RUN = 0 ]
+    then
+        "$@"
+    fi
+}
+
+if [ "$1" = "-f" ]
+then
+    FORCE=1
+fi
+
+if [ $FORCE = 0 ] && [ -f "$HOME/.git-commit-template" ]
+then
+    echo "$HOME/.git-commit-template already exists. Skipping (use -f to force)..."
+else
+    maybe_run cp "$DIRNAME/git-commit-template" "$HOME/.git-commit-template"
+fi
+maybe_run git config --global commit.template "$HOME/.git-commit-template"
+
+for repo in core enterprise nova masterfiles buildscripts design-center mission-portal
+do
+    if ! [ -d "$REPO_BASE/$repo" ]
+    then
+        echo "No repository found in $REPO_BASE/$repo. Skipping..."
+        continue
+    fi
+
+    if [ $FORCE = 0 ] && [ -f "$REPO_BASE/$repo/.git/hooks/commit-msg" ]
+    then
+        echo "$REPO_BASE/$repo/.git/hooks/commit-msg already exists. Skipping (use -f to force)..."
+    else
+        maybe_run cp "$DIRNAME/commit-msg" "$REPO_BASE/$repo/.git/hooks/commit-msg"
+        maybe_run chmod ugo+x "$REPO_BASE/$repo/.git/hooks/commit-msg"
+    fi
+done

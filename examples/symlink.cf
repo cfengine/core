@@ -39,8 +39,3 @@ bundle agent main
 }
 
 #########################################################
-#+begin_src example_output
-#@ ```
-#@    info: Linked files '/etc/apache2/sites-enabled/www.cfengine.com' -> '/etc/apache2/sites-available/www.cfengine.com'
-#@ ```
-#+end_src

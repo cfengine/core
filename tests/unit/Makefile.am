@@ -183,8 +183,9 @@ check_PROGRAMS += \
 endif
 endif
 
-check_SCRIPTS = dynamic_dependency_test.sh \
-	bootstrap_inc_uptodate_test.sh
+check_SCRIPTS = bootstrap_inc_uptodate_test.sh \
+	dynamic_dependency_test.sh \
+	init_script_test.sh
 EXTRA_DIST   += $(check_SCRIPTS)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
@@ -428,3 +429,8 @@ $(CFUPGRADE)/process.c $(CFUPGRADE)/process.h $(CFUPGRADE)/update.c $(CFUPGRADE)
 cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
 
 queue_test_SOURCES = queue_test.c
+
+if !NT
+init_script_test_helper_SOURCES = init_script_test_helper.c
+init_script_test.sh: init_script_test_helper
+endif

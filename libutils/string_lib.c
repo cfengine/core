@@ -960,6 +960,63 @@ bool StringAppend(char *dst, const char *src, size_t n)
     return (i < n || !src[j]);
 }
 
+bool StringAppendPromise(char *dst, const char *src, size_t n)
+{
+    int i, j;
+    n--;
+    for (i = 0; i < n && dst[i]; i++)
+    {
+    }
+    for (j = 0; i < n && src[j]; i++, j++)
+    {
+        const char ch = src[j];
+        switch (ch)
+        {
+        case '*':
+            dst[i] = ':';
+            break;
+
+        case '#':
+            dst[i] = '.';
+            break;
+
+        default:
+            dst[i] = ch;
+            break;
+        }
+    }
+    dst[i] = '\0';
+    return (i < n || !src[j]);
+}
+
+bool StringAppendAbbreviatedPromise(char *dst, const char *src, size_t n, const size_t max_fragment)
+{
+    /* check if `src` contains a new line (may happen for "insert_lines") */
+    const char *const nl = strchr(src, '\n');
+    if (NULL == nl)
+    {
+        return StringAppendPromise(dst, src, n);
+    }
+    else
+    {
+        /* `src` contains a newline: abbreviate it by taking the first and last few characters */
+        static const char sep[] = "...";
+        char abbr[sizeof(sep) + 2 * max_fragment];
+        const int head = (nl > src + max_fragment) ? max_fragment : (nl - src);
+        const char * last_line = strrchr(src, '\n') + 1;
+        assert(last_line); /* not max_fragmentULL, we know we have at least one '\n' */
+        const int tail = strlen(last_line);
+        if (tail > max_fragment)
+        {
+            last_line += tail - max_fragment;
+        }
+        memcpy(abbr, src, head);
+        strcpy(abbr + head, sep);
+        strcat(abbr, last_line);
+        return StringAppendPromise(dst, abbr, n);
+    }
+}
+
 /**
  *  Canonify #src into #dst.
  *

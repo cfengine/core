@@ -998,6 +998,36 @@ void EvalContextClear(EvalContext *ctx)
 
 }
 
+Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx) {
+	Rlist *callers = NULL;
+
+	for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+	{
+	    StackFrame *frame = SeqAt(ctx->stack, i);
+	    switch (frame->type)
+	    {
+	    case STACK_FRAME_TYPE_BODY:
+	        break;
+
+	    case STACK_FRAME_TYPE_BUNDLE:
+	        break;
+
+	    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+	        break;
+
+	    case STACK_FRAME_TYPE_PROMISE:
+	     	if (strcmp(frame->data.promise.owner->parent_promise_type->name, "methods") == 0) {
+	     		RlistAppendScalar(&callers, frame->data.promise.owner->promiser);
+	      	}
+	        break;
+
+	    case STACK_FRAME_TYPE_PROMISE_TYPE:
+	      	break;
+	    }
+	}
+	return callers;
+}
+
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args)
 {
     if (ctx->args)
@@ -1242,6 +1272,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     xsnprintf(v, sizeof(v), "%d", (int) ctx->ppid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, CF_DATA_TYPE_INT, "source=agent");
 
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "callers_promisers", EvalContextGetPromiseCallerMethods(ctx), CF_DATA_TYPE_STRING_LIST, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");
 }

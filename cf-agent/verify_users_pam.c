@@ -1168,7 +1168,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
 
     if (action == cfa_warn || DONTDO)
     {
-        Log(LOG_LEVEL_NOTICE, "Need to create user '%s'.", puser);
+        Log(LOG_LEVEL_WARNING, "Need to create user '%s'.", puser);
         return false;
     }
     else
@@ -1237,7 +1237,7 @@ static bool DoRemoveUser (const char *puser, enum cfopaction action)
 
     if (action == cfa_warn || DONTDO)
     {
-        Log(LOG_LEVEL_NOTICE, "Need to remove user '%s'.", puser);
+        Log(LOG_LEVEL_WARNING, "Need to remove user '%s'.", puser);
         return false;
     }
 
@@ -1306,7 +1306,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     {
         if (action == cfa_warn || DONTDO)
         {
-            Log(LOG_LEVEL_NOTICE, "Need to change password for user '%s'.", puser);
+            Log(LOG_LEVEL_WARNING, "Need to change password for user '%s'.", puser);
             return false;
         }
         else
@@ -1322,7 +1322,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     {
         if (action == cfa_warn || DONTDO)
         {
-            Log(LOG_LEVEL_NOTICE, "Need to %s account for user '%s'.",
+            Log(LOG_LEVEL_WARNING, "Need to %s account for user '%s'.",
                 (u.policy == USER_STATE_LOCKED) ? "lock" : "unlock", puser);
             return false;
         }
@@ -1355,7 +1355,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     CFUSR_CLEARBIT(changemap, i_locked);
     if (action == cfa_warn || DONTDO)
     {
-        Log(LOG_LEVEL_NOTICE, "Need to update user attributes (command '%s').", cmd);
+        Log(LOG_LEVEL_WARNING, "Need to update user attributes (command '%s').", cmd);
         return false;
     }
     else if (changemap != 0)

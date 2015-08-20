@@ -306,7 +306,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Need to delete the database '%s' but only a warning was promised", database);
+            Log(LOG_LEVEL_WARNING, "Need to delete the database '%s' but only a warning was promised", database);
             return false;
         }
     }
@@ -322,7 +322,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Need to create the database '%s' but only a warning was promised", database);
+            Log(LOG_LEVEL_WARNING, "Need to create the database '%s' but only a warning was promised", database);
             return false;
         }
     }
@@ -533,7 +533,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Database.table '%s' doesn't seem to exist, but only a warning was promised",
+                Log(LOG_LEVEL_WARNING, "Database.table '%s' doesn't seem to exist, but only a warning was promised",
                       table_path);
             }
         }
@@ -687,7 +687,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                          "Promised column '%s' missing from database table '%s' but only a warning was promised",
                          name_table[i], table);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);

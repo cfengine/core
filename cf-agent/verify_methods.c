@@ -152,7 +152,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
         if (a.transaction.action == cfa_warn) // don't skip for dry-runs (ie ignore DONTDO)
         {
             result = PROMISE_RESULT_WARN;
-            cfPS(ctx, LOG_LEVEL_ERR, result, pp, a, "Bundle '%s' should be invoked, but only a warning was promised!", BufferData(method_name));
+            cfPS(ctx, LOG_LEVEL_WARNING, result, pp, a, "Bundle '%s' should be invoked, but only a warning was promised!", BufferData(method_name));
         }
         else
         {

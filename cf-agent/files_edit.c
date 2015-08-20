@@ -108,7 +108,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result) &&
             ec->num_edits > 0)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                  "Should edit file '%s' but only a warning promised",
                  ec->filename);
             *result = PROMISE_RESULT_WARN;

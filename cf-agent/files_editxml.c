@@ -1063,7 +1063,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to insert the promised tree '%s' into an empty XML document '%s' - but only a warning was promised",
              rawtree, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1136,7 +1136,7 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to delete the promised tree '%s' at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawtree, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1224,7 +1224,7 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to insert the promised tree '%s' at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawtree, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1285,7 +1285,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to delete the promised attribute '%s', at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawname, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1356,7 +1356,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to set the promised attribute, with name '%s' and value '%s', at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1417,7 +1417,7 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to delete the promised text '%s' at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawtext, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1488,7 +1488,7 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to set the promised text '%s' at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawtext, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1559,7 +1559,7 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
              "Need to insert the promised text '%s' at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawtext, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);

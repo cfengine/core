@@ -31,6 +31,14 @@ bundle agent test
   "headers": [ "Foo: bar" ]
 }';
 
+      # same as options3 but with bareword keys
+      "options4" data => '
+{
+  max_content: 512,
+  verbose: "$(included)",
+  headers: [ "Foo: bar" ]
+}';
+
 }
 
 #######################################################

@@ -1319,7 +1319,7 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
     {
     case cfa_warn:
 
-        cfPS_HELPER_3ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, *a, "Need to repair promise '%s' by '%s' package '%s'",
+        cfPS_HELPER_3ARG(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, *a, "Need to repair promise '%s' by '%s' package '%s'",
              pp->promiser, PackageAction2String(pa), name);
         return PROMISE_RESULT_WARN;
 
@@ -1367,7 +1367,7 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
     {
     case cfa_warn:
 
-        cfPS_HELPER_3ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, *a, "Need to repair promise '%s' by '%s' package '%s'",
+        cfPS_HELPER_3ARG(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, *a, "Need to repair promise '%s' by '%s' package '%s'",
              pp->promiser, PackageAction2String(pa), name);
         return PROMISE_RESULT_WARN;
 

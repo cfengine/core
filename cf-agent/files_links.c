@@ -493,7 +493,7 @@ static bool MakeLink(EvalContext *ctx, const char *from, const char *to, Attribu
 {
     if (DONTDO || (attr.transaction.action == cfa_warn))
     {
-        Log(LOG_LEVEL_ERR, "Need to link files '%s' -> '%s'", from, to);
+        Log(LOG_LEVEL_WARNING, "Need to link files '%s' -> '%s'", from, to);
         return false;
     }
     else

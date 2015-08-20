@@ -6899,6 +6899,7 @@ static int ExecModule(EvalContext *ctx, char *command)
 
     char context[CF_BUFSIZE] = "";
     StringSet *tags = StringSetNew();
+    long persistence = 0;
 
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
@@ -6915,7 +6916,7 @@ static int ExecModule(EvalContext *ctx, char *command)
             }
         }
 
-        ModuleProtocol(ctx, command, line, print, context, tags);
+        ModuleProtocol(ctx, command, line, print, context, tags, &persistence);
     }
     bool atend = feof(pp);
     cf_pclose(pp);
@@ -6931,8 +6932,7 @@ static int ExecModule(EvalContext *ctx, char *command)
     return true;
 }
 
-
-void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, StringSet *tags)
+void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, StringSet *tags, long *persistence)
 {
     assert(tags);
 
@@ -6990,6 +6990,10 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             StringSetAddSplit(tags, content, ',');
             StringSetAdd(tags, xstrdup("source=module"));
         }
+        else if (1 == sscanf(line + 1, "persistence=%ld", persistence))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Module set persistence to %ld minutes", *persistence);
+        }
         else
         {
             Log(LOG_LEVEL_INFO, "Unknown extended module command '%s'", line);
@@ -7012,6 +7016,12 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         {
             Buffer *tagbuf = StringSetToBuffer(tags, ',');
             EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
+            if (*persistence > 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Module set persistent class '%s' for %ld minutes", content, *persistence);
+                EvalContextHeapPersistentSave(ctx, content, *persistence, CONTEXT_STATE_POLICY_PRESERVE, BufferData(tagbuf));
+            }
+
             BufferDestroy(tagbuf);
         }
         break;

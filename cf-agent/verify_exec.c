@@ -323,6 +323,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         }
 
         StringSet *module_tags = StringSetNew();
+        long persistence = 0;
 
         size_t line_size = CF_BUFSIZE;
         char *line = xmalloc(line_size);
@@ -357,7 +358,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
             if (a.module)
             {
-                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, module_tags);
+                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, module_tags, &persistence);
             }
             else if ((!a.contain.nooutput) && (!EmptyString(line)))
             {

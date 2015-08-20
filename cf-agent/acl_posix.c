@@ -331,7 +331,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "%s ACL on file '%s' needs to be updated", acl_type_str, file_path);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "%s ACL on file '%s' needs to be updated", acl_type_str, file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
 
@@ -507,7 +507,7 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be cleared", file_path);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be cleared", file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
 

@@ -1031,7 +1031,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
 
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                      "Need to delete line '%s' from %s - but only a warning was promised", ip->name,
                      edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1183,7 +1183,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
 
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_WARN, pp, a,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                  "Need to replace line '%s' in '%s' - but only a warning was promised", pp->promiser,
                  edcontext->filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1836,7 +1836,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
             {
                 if (a.transaction.action == cfa_warn)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                          "Need to insert the promised line '%s' in %s - but only a warning was promised", newline,
                          edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1857,7 +1857,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
             {
                 if (a.transaction.action == cfa_warn)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                          "Need to prepend the promised line '%s' to %s - but only a warning was promised",
                          newline, edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1894,7 +1894,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                      "Need to insert line '%s' into '%s' but only a warning was promised", newline,
                      edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -1923,7 +1923,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                      "Need to insert line '%s' in '%s' but only a warning was promised", newline, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return true;
@@ -2012,7 +2012,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Need to edit field in %s but only warning promised",
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Need to edit field in %s but only warning promised",
                      edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 retval = false;
@@ -2044,7 +2044,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                      "Need to delete field field value %s in %s but only a warning was promised", RlistScalarValue(rp),
                      edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
@@ -2065,7 +2065,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                      "Need to set column field value %s to %s in %s but only a warning was promised",
                      RlistScalarValue(rp), a.column.column_value, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);

@@ -18,5 +18,8 @@
   "s6": "6",
   "s7": "augmented variable context hello!!!",
   "s8": "8",
-  "whitespace1": "whitespace1"
+  "whitespace1": "whitespace1: quoted with spaces",
+  "whitespace2": "whitespace2: unquoted with spaces, starts with valid class",
+  "whitespace4": "whitespace4: unquoted with spaces, starts with missing class but is true",
+  "whitespace5": "whitespace5: remove spaces and tabs from an expression"
 }

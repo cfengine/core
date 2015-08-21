@@ -32,7 +32,6 @@
 
 #include <buffer.h>
 
-
 #define STRING_MATCH_OVECCOUNT 30
 #define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 

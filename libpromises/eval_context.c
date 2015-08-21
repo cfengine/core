@@ -47,6 +47,9 @@
 #include <logging_priv.h>
 #include <known_dirs.h>
 #include <printsize.h>
+#include <regex.h>
+
+static pcre *context_expression_whitespace_rx = NULL;
 
 static bool BundleAborted(const EvalContext *ctx);
 static void SetBundleAborted(EvalContext *ctx);
@@ -453,6 +456,23 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
     if (!context)
     {
         return true;
+    }
+
+    if (NULL == context_expression_whitespace_rx)
+    {
+        context_expression_whitespace_rx = CompileRegex(CFENGINE_REGEX_WHITESPACE_IN_CONTEXTS);
+    }
+
+    if (NULL == context_expression_whitespace_rx)
+    {
+        Log(LOG_LEVEL_ERR, "The context expression whitespace regular expression could not be compiled, aborting.");
+        return false;
+    }
+
+    if (StringMatchFullWithPrecompiledRegex(context_expression_whitespace_rx, context))
+    {
+        Log(LOG_LEVEL_INFO, "class names can't be separated by whitespace without an intervening operator in expression '%s'", context);
+        return false;
     }
 
     Buffer *condensed = BufferNewFrom(context, strlen(context));

@@ -439,6 +439,11 @@ static char *BodyName(const Promise *pp)
                 continue;
             }
 
+            if (strcmp(cp->lval, "arglist") == 0)      /* Exception for arglist, by symmetry, for locking */
+            {
+                continue;
+            }
+
             if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
             {
                 strcat(name, cp->lval);

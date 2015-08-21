@@ -1,0 +1,30 @@
+# fixes https://dev.cfengine.com/issues/2504
+# using variables in string contexts
+# should fail: class names in string contexts must be separated by operators
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  reports:
+    cf e ngine::
+      "hello";
+
+    cf engine::
+      "hello";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_pass($(this.promise_filename));
+}

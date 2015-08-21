@@ -53,7 +53,26 @@ bundle agent test
       "iterated_$(mylist)" string => "iteration class $(mylist)";
 
     "myclass . cfengine | any"::
-      "whitespace1" string => "$(this.promiser)";
+      "whitespace1" string => "$(this.promiser): quoted with spaces";
+
+    myclass . cfengine | any::
+      "whitespace2" string => "$(this.promiser): unquoted with spaces, starts with valid class";
+
+    nosuchclass . any::
+      "whitespace3" string => "$(this.promiser): unquoted with spaces, should be missing";
+
+    nosuchclass | any::
+      "whitespace4" string => "$(this.promiser): unquoted with spaces, starts with missing class but is true";
+
+    any	 |	 ( cfengine | linux )::
+      "whitespace5" string => "$(this.promiser): remove spaces and tabs from an expression";
+
+    any	 .	 ( nosuchclass . any )::
+      "whitespace6" string => "$(this.promiser): remove spaces and tabs from an expression that is false in the end, should be missing";
+
+    "cf engine"::
+      "whitespace7" string => "$(this.promiser): quoted with spaces but no operators, should be missing with an error";
+
 }
 
 #######################################################

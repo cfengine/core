@@ -209,6 +209,7 @@ Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp)
     attr.havecontain = PromiseGetConstraintAsBoolean(ctx, "contain", pp);
 
     attr.args = PromiseGetConstraintAsRval(pp, "args", RVAL_TYPE_SCALAR);
+    attr.arglist = PromiseGetConstraintAsList(ctx, "arglist", pp);
     attr.module = PromiseGetConstraintAsBoolean(ctx, "module", pp);
 
 /* Common ("included") */

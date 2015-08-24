@@ -30,6 +30,7 @@
 #include <logging.h>
 #include <chflags.h>
 #include <audit.h>
+#include <string_lib.h> /* StringConcatenate */
 
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
@@ -607,6 +608,22 @@ TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promi
     TransactionContext t;
     char *value;
 
+    bool has_action =
+            PromiseBundleOrBodyConstraintExists(ctx, "action", pp);
+
+    if (!has_action)
+    {
+        /* Check if we have default action. */
+        const Policy *policy = PolicyFromPromise(pp);
+        char* default_body_name = StringConcatenate(2, pp->parent_promise_type->name, "_default_action");
+
+        const Body *bp = EvalContextResolveBodyExpression(ctx, policy, default_body_name, "action");
+        if (bp)
+        {
+            CopyBodyConstraintsToPromise((EvalContext*)ctx, (Promise*)pp, bp);
+        }
+    }
+    
     value = PromiseGetConstraintAsRval(pp, "action_policy", RVAL_TYPE_SCALAR);
 
     if (value && ((strcmp(value, "warn") == 0) || (strcmp(value, "nop") == 0)))

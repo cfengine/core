@@ -25,8 +25,6 @@
 #ifndef CFENGINE_CSV_PARSER_H
 #define CFENGINE_CSV_PARSER_H
 
-#define CSV_MAX_LLENGTH (4096)
-
 #include <sequence.h>
 
 Seq *SeqParseCsvString(const char *string);

@@ -58,6 +58,7 @@ size_t StringBytesToHex(char *dst, size_t dst_size,
                         const unsigned char *src_bytes, size_t src_len);
 
 char *SafeStringDuplicate(const char *str);
+char *SafeStringNDuplicate(const char *str, size_t size);
 int SafeStringLength(const char *str);
 int StringSafeCompare(const char *a, const char *b);
 bool StringSafeEqual(const char *a, const char *b);

@@ -6992,7 +6992,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         }
         else if (1 == sscanf(line + 1, "persistence=%ld", persistence))
         {
-            Log(LOG_LEVEL_VERBOSE, "Module set persistence to %jd minutes", *persistence);
+            Log(LOG_LEVEL_VERBOSE, "Module set persistence to %ld minutes", *persistence);
         }
         else
         {
@@ -7018,7 +7018,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
             if (*persistence > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "Module set persistent class '%s' for %jd minutes", content, *persistence);
+                Log(LOG_LEVEL_VERBOSE, "Module set persistent class '%s' for %ld minutes", content, *persistence);
                 EvalContextHeapPersistentSave(ctx, content, *persistence, CONTEXT_STATE_POLICY_PRESERVE, BufferData(tagbuf));
             }
 

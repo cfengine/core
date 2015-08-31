@@ -1,3 +1,20 @@
+3.7.1:
+	Bug fixes:
+	- Fix build with musl libc. (Redmine #7455)
+	- Long promiser strings with multiple lines are now
+	  abbreviated in logs. (Redmine #3964)
+	- Fixed a bug which could cause daemons to not to be killed
+	  correctly when upgrading or manually running "service cfengine3 stop".
+	  (Redmine #7193)
+	- Package promise: Fix inability to install certain packages
+	  with numbers.
+	- Fix package promise not removing dependant packages. (Redmine #7424)
+	- Fix warning "Failed to parse csv file entry" with certain very long
+	  commands promises. (Redmine #7400)
+	- Fix misaligned help output in cf-hub. (Redmine #7273)
+	- Augmenting inputs from the augments_file (Redmine #7420)
+	- Add support for failover to 3rd HA node located outside cluster.
+
 3.7.0:
         New features:
         - New package promise implementation.

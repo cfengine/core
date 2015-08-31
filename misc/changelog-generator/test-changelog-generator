@@ -1,0 +1,174 @@
+#!/bin/sh
+
+################################################################################
+# Test that the changelog-generator produces the expected output.
+################################################################################
+
+set -e
+
+rm -rf /tmp/test-changelog-generator.$$
+mkdir -p /tmp/test-changelog-generator.$$
+
+SRC_DIR="$(pwd)"
+cd /tmp/test-changelog-generator.$$
+git init
+echo dummy > dummy
+git add dummy
+git commit -m 'Dummy commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Fix for changelog
+
+Changelog: Title'
+
+################################################################################
+
+git commit --allow-empty -m 'Fix not for changelog
+
+Not for changelog'
+
+################################################################################
+
+git commit --allow-empty -m 'Complete Fix for changelog
+
+Should be included
+
+Changelog: Commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Message not for changelog
+
+Not for changelog
+
+Changelog: This should be in changelog
+And this
+
+But not this'
+
+################################################################################
+
+git commit --allow-empty -m 'Canceled fix for changelog
+
+Not for changelog
+
+Changelog: Commit'
+git commit --allow-empty -m 'Disable changelog
+
+Not for changelog
+
+Cancel-Changelog: '`git rev-parse HEAD`
+
+################################################################################
+
+git commit --allow-empty -m 'Another canceled fix for changelog
+
+Not for changelog
+
+Changelog: Canceled entry should not be in changelog
+(cherry picked from commit 3714b61bc4a139c8f58554052775699816e47b62)'
+git commit --allow-empty -m 'Disable changelog
+
+Not for changelog
+
+Cancel-Changelog: 3714b61bc4a139c8f58554052775699816e47b62'
+
+################################################################################
+
+git commit --allow-empty -m 'Reverted fix for changelog
+
+Not for changelog
+
+Changelog: Commit'
+git commit --allow-empty -m 'Disable changelog
+
+Not for changelog
+
+This reverts commit '`git rev-parse HEAD`'.'
+
+################################################################################
+
+git commit --allow-empty -m 'Another Reverted fix for changelog
+
+Not for changelog
+
+Changelog: Reverted entry should not be in changelog
+(cherry picked from commit 13cf5bea954b2d55c2bb235f61316bb57b7d4189)'
+git commit --allow-empty -m 'Disable changelog
+
+Not for changelog
+
+Changelog: Should be in changelog though.
+This reverts commit 13cf5bea954b2d55c2bb235f61316bb57b7d4189.'
+
+################################################################################
+
+git commit --allow-empty -m 'Several entries for changelog
+
+Should be included
+
+Changelog: Commit
+Changelog: Should also be included, but separately and not twice.
+
+Changelog: This too.
+Changelog: As well as this.
+
+And finally this, part of the commit message.'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine entry
+
+Redmine #645 Should be included
+
+Changelog: Commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine #76: Redmine entry in title
+
+Changelog: Title'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine 123 Several Redmine entries
+
+Changelog: Should be there
+
+Redmine: #1234'
+
+################################################################################
+
+"$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt
+cat > expected.txt <<EOF
+	- As well as this.
+	- Complete Fix for changelog
+	  
+	  Should be included
+	- Fix for changelog
+	- Redmine entry
+	  
+	  Should be included (Redmine #645)
+	- Redmine entry in title (Redmine #76)
+	- Several entries for changelog
+	  
+	  Should be included
+	  
+	  
+	  
+	  And finally this, part of the commit message.
+	- Should also be included, but separately and not twice.
+	- Should be in changelog though.
+	- Should be there (Redmine #123, #1234)
+	- This should be in changelog
+	  And this
+	- This too.
+EOF
+diff -u expected.txt result.txt
+
+################################################################################
+
+rm -rf /tmp/test-changelog-generator.$$
+
+echo PASS

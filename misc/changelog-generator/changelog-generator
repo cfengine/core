@@ -1,0 +1,224 @@
+#!/usr/bin/python
+
+# Used to generate changelogs from the repository.
+
+from __future__ import print_function
+
+import subprocess
+import re
+import sys
+import os
+import os.path
+
+# Holds each changelog entry indexed by SHA
+ENTRIES = {}
+# Links SHAs together, if we have a "X cherry-picked from Y" situation, those
+# two commits will be linked, and this will be used in cases where we have
+# reverted a commit.
+LINKED_SHAS = {}
+# A map of shas to a list of Redmine numbers, as extracted from the commit
+# messages.
+SHA_TO_REDMINE = {}
+
+# Only for testing.
+SORT_CHANGELOG = False
+
+# Type of log to generate, this is bitwise.
+LOG_TYPE = 0
+# Values for the above.
+LOG_REPO = 1
+LOG_COMMUNITY = 2
+LOG_ENTERPRISE = 4
+
+def add_entry(sha, msg):
+    sha_list = ENTRIES.get(sha)
+    if sha_list is None:
+        sha_list = []
+    sha_list.append(msg)
+    ENTRIES[sha] = sha_list
+
+
+if len(sys.argv) < 2 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
+    sys.stderr.write('''Usage:
+changelog-generator [options] <commit-range>
+
+The command accepts all the same options that git-log does.
+
+Options:
+  --community   Automatically includes all repositories for community builds.
+  --enterprise  Automatically includes Enterprise specific repositories.
+  --repo        Includes only the current repository.
+
+--community and --enterprise can be given together to generate one master log
+for both.
+''')
+    sys.exit(1)
+
+while True:
+    if sys.argv[1] == "--sort-changelog":
+        SORT_CHANGELOG = True
+        sys.argv[1:] = sys.argv[2:]
+    elif sys.argv[1] == "--community":
+        LOG_TYPE |= LOG_COMMUNITY
+        sys.argv[1:] = sys.argv[2:]
+    elif sys.argv[1] == "--enterprise":
+        LOG_TYPE |= LOG_ENTERPRISE
+        sys.argv[1:] = sys.argv[2:]
+    elif sys.argv[1] == "--repo":
+        LOG_TYPE |= LOG_REPO
+        sys.argv[1:] = sys.argv[2:]
+    else:
+        break
+
+if LOG_TYPE == 0:
+    sys.stderr.write("Must give one of --community, --enterprise or --repo\n")
+    sys.exit(1)
+
+repos = []
+base_path = os.path.dirname(sys.argv[0])
+if LOG_TYPE & LOG_COMMUNITY != 0:
+    repos.append("../buildscripts")
+    repos.append("../core")
+    repos.append("../masterfiles")
+    repos.append("../design-center")
+if LOG_TYPE & LOG_ENTERPRISE != 0:
+    repos.append("../enterprise")
+    repos.append("../nova")
+    repos.append("../mission-portal")
+if LOG_TYPE == LOG_REPO:
+    repos.append(".")
+else:
+    os.chdir(base_path + "/../..")
+
+for repo in repos:
+    os.chdir(repo)
+    sha_list = subprocess.Popen(["git", "rev-list", "--reverse"] + sys.argv[1:], stdout=subprocess.PIPE)
+    for sha in sha_list.stdout:
+        sha = sha.rstrip('\n')
+        blob = subprocess.Popen(["git", "cat-file", "-p", sha.rstrip('\n')], stdout=subprocess.PIPE)
+
+        msg_started = False
+        title_fetched = False
+        title = ""
+        commit_msg = ""
+        log_entry_commit = False
+        log_entry_local = False
+        log_entry = ""
+        for line in blob.stdout:
+            line = line.rstrip('\n')
+            if line == "":
+                if not msg_started:
+                    msg_started = True
+                    continue
+
+                if log_entry:
+                    add_entry(sha, log_entry)
+                    log_entry = ""
+                log_entry_local = False
+
+            if not msg_started:
+                continue
+
+            redmine_regex = "^ *Redmine:? *#?([0-9]+)"
+            match = re.match(redmine_regex, line, re.IGNORECASE)
+            if match:
+                if not SHA_TO_REDMINE.get(sha):
+                    SHA_TO_REDMINE[sha] = []
+                SHA_TO_REDMINE[sha].append(match.group(1))
+                redmine_removed = re.sub(redmine_regex + ":? *", "", line)
+                line = redmine_removed
+
+            if not title_fetched:
+                title = line
+                title_fetched = True
+
+            match = re.match("^ *Changelog: *(.*)", line, re.IGNORECASE)
+            if match:
+                if log_entry:
+                    add_entry(sha, log_entry)
+                    log_entry = ""
+                log_entry_local = False
+
+                if re.match("^Title *$", match.group(1), re.IGNORECASE):
+                    log_entry = title
+                elif re.match("^Commit *$", match.group(1), re.IGNORECASE):
+                    log_entry_commit = True
+                else:
+                    log_entry_local = True
+                    log_entry = match.group(1)
+                continue
+
+            for cancel_expr in ["^ *Cancel-Changelog: *([0-9a-f]+).*",
+                                "^This reverts commit ([0-9a-f]+).*"]:
+                match = re.match(cancel_expr, line, re.IGNORECASE)
+                if match:
+                    if log_entry:
+                        add_entry(sha, log_entry)
+                        log_entry = ""
+                    log_entry_local = False
+
+                    linked_shas = [match.group(1)]
+                    if LINKED_SHAS.get(match.group(1)):
+                        for linked_sha in LINKED_SHAS.get(match.group(1)):
+                            linked_shas.append(linked_sha)
+                    for linked_sha in linked_shas:
+                        if LINKED_SHAS.get(linked_sha):
+                            del LINKED_SHAS[linked_sha]
+                        if ENTRIES.get(linked_sha):
+                            del ENTRIES[linked_sha]
+                    continue
+
+            match = re.match("^\(cherry picked from commit ([0-9a-f]+)\)", line, re.IGNORECASE)
+            if match:
+                if log_entry:
+                    add_entry(sha, log_entry)
+                    log_entry = ""
+                log_entry_local = False
+
+                if not LINKED_SHAS.get(sha):
+                    LINKED_SHAS[sha] = []
+                LINKED_SHAS[sha].append(match.group(1))
+                if not LINKED_SHAS.get(match.group(1)):
+                    LINKED_SHAS[match.group(1)] = []
+                LINKED_SHAS[match.group(1)].append(sha)
+                continue
+
+            if log_entry_local:
+                log_entry += "\n" + line
+            else:
+                if commit_msg:
+                    commit_msg += "\n"
+                commit_msg += line
+
+        blob.wait()
+
+        if log_entry_commit:
+            add_entry(sha, commit_msg)
+        if log_entry:
+            add_entry(sha, log_entry)
+
+    sha_list.wait()
+
+entry_list = []
+for sha_entry in ENTRIES:
+    redmine = ""
+    if SHA_TO_REDMINE.get(sha_entry):
+        redmine = "(Redmine #" + ", #".join(SHA_TO_REDMINE[sha_entry]) + ")"
+    for entry in ENTRIES[sha_entry]:
+        entry = entry.strip("\n")
+        if redmine:
+            if len(entry) - entry.rfind("\n") + len(redmine) >= 70:
+                entry += "\n"
+            else:
+                entry += " "
+            entry += redmine
+        entry_list.append(entry)
+
+if SORT_CHANGELOG:
+    entry_list.sort()
+for entry in entry_list:
+    entry = "\t- " + entry
+    entry = entry.replace("\n", "\n\t  ")
+    print(entry)
+
+sys.exit(0)

@@ -351,6 +351,26 @@ static void test_split_string(void)
     DeleteItemList(expected); expected = NULL;
     test_progress();
 
+    /* Backslash as separator - CURRENTLY NOT SUPPORTED! */
+    /* TODO FIX. */
+
+    actual = SplitString("C:\\blah\\blue\\", '\\');
+    /*
+    for (Item *ip = actual; ip != NULL; ip = ip->next)
+    {
+        printf("%s\n", ip->name);
+    }
+    */
+    AppendItem(&expected, "C:\\blah\\blue\\", NULL);           /* TODO FIX! */
+    /* AppendItem(&expected, "C:", NULL); */
+    /* AppendItem(&expected, "blah", NULL); */
+    /* AppendItem(&expected, "blue", NULL); */
+    /* AppendItem(&expected, "", NULL); */
+    assert_true(ListsCompare(actual, expected));
+    DeleteItemList(actual);   actual   = NULL;
+    DeleteItemList(expected); expected = NULL;
+    test_progress();
+
     test_progress_end();
 }
 

@@ -540,6 +540,8 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
  *  @NOTE backslashes can be used to escape either the separator, or the
  *        backslash itself, e.g. "\:" or "\\" (ofcourse proper C strings need
  *        double backslash).
+ *
+ *  @NOTE separator can't be the backslash.
  */
 Item *SplitString(const char *string, char sep)
 {
@@ -574,7 +576,7 @@ Item *SplitString(const char *string, char sep)
             buf[buf_len] = string[z];
             buf_len++;
 
-            /* Find next backslash or separator. */
+            /* SKIP, find next backslash or separator. */
             string     += z + 1;
             string_len -= z + 1;
             continue;

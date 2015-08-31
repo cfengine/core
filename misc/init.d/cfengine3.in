@@ -4,7 +4,7 @@
 # 
 #
 # Created by Nakarin Phooripoom on 22/6/2011.
-# Copyright 2010 CFEngine AS. All rights reserved.
+# Copyright 2015 CFEngine AS. All rights reserved.
 #
 ### BEGIN INIT INFO
 # Provides:          cfengine3
@@ -21,30 +21,48 @@
 #    execution of cfengine and for environment monitoring.
 # set -e
 
+#
+# Detect and replace non-POSIX shell
+#
+try_exec() {
+    type "$1" > /dev/null 2>&1 && exec "$@"
+}
+
+broken_posix_shell()
+{
+    unset foo
+    local foo=1
+    test "$foo" != "1"
+}
+
+if broken_posix_shell >/dev/null 2>&1; then
+    try_exec /usr/xpg4/bin/sh "$0" "$@"
+    echo "No compatible shell script interpreter found."
+    echo "Please find a POSIX shell for your system."
+    exit 42
+fi
+
 ##### start: Defined variables and conditios #####
 
-PREFIX=@workdir@
+PREFIX=${CFTEST_PREFIX:-@workdir@}
 INPUTDIR=@inputdir@
 if [ "$INPUTDIR" = "default" ]; then
     INPUTDIR="$PREFIX/inputs"
 fi
 
-CFEXECD=$PREFIX/bin/cf-execd
-CFSERVD=$PREFIX/bin/cf-serverd
-CFMOND=$PREFIX/bin/cf-monitord
+CFEXECD=${CFTEST_CFEXECD:-$PREFIX/bin/cf-execd}
+CFSERVD=${CFTEST_CFSERVD:-$PREFIX/bin/cf-serverd}
+CFMOND=${CFTEST_CFMOND:-$PREFIX/bin/cf-monitord}
+CFAGENT=${CFTEST_CFAGENT:-$PREFIX/bin/cf-agent}
 
-CFEXECD_PIDFILE=$PREFIX/cf-execd.pid
-CFSERVD_PIDFILE=$PREFIX/cf-serverd.pid
-CFMOND_PIDFILE=$PREFIX/cf-monitord.pid
+PIDFILE_TEMPLATE=$PREFIX/%s.pid
+
+STOP_ATTEMPTS=6
+# From which point we start using SIGKILL.
+KILL_THRESHOLD=4
+FORCE_KILL=0
 
 CFENTERPRISE_INITD=$PREFIX/bin/cfengine3-nova-hub-init-d.sh
-
-ECHO=/bin/echo
-TOUCH=/bin/touch
-RM=/bin/rm
-KILL=/bin/kill
-PKILL=/usr/bin/pkill
-MV=/bin/mv
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PREFIX/bin
 
@@ -111,7 +129,6 @@ if [ -f /usr/bin/yum ] && [ -f /etc/rc.d/init.d/functions ]; then
     . /etc/rc.d/init.d/functions
     FUNC=1
 else
-    set -e
     FUNC=0
 fi
 
@@ -122,12 +139,421 @@ else
     SSD=0
 fi
 
-# Grep PID
-cfexecd_status=`ps waxu|grep -v grep|grep cf-execd|awk -F' ' '{print $2}'`
-cfserverd_status=`ps waxu|grep -v grep|grep cf-serverd|awk -F' ' '{print $2}'`
-cfmonitord_status=`ps waxu|grep -v grep|grep cf-monitord|awk -F' ' '{print $2}'`
+CURRENT_PS_UID=__none__
+INSIDE_CONTAINER=-1
+
+if ps --help 2>/dev/null | egrep -e '--cols\b' > /dev/null; then
+    # There is a bug in SUSE which means that ps output will be truncated even
+    # when piped to grep, if the terminal size is small. However using --cols
+    # will override it.
+    PS_OPTIONS="--cols 200"
+else
+    PS_OPTIONS=
+fi
+
+OS="$(uname)"
 
 ##### end: Defined variables and conditions #####
+
+##### start: Defined functions #####
+
+# Takes a process string to match and returns a list of PIDs.
+# Argument can optionally be preceded by "--ignore-user" to disable matching of
+# the calling user's UID.
+cf_get_matching_pids()
+{
+    # "ps" is an extremely incompatible tool, with differing options and output
+    # format almost everywhere. However, some things we can rely on: "ps -ef"
+    # seems to be supported everywhere, and we can usually rely on UID being the
+    # first field, PID and PPID the second and third, and command line the last
+    # field. In between there is a mess, and we stay away from it. We use this
+    # to match against the UID of the calling user.
+    #
+    # We also do some much more non-portable operations to try to avoid
+    # processes inside containers.
+
+    if [ "$CURRENT_PS_UID" = "__none__" ]; then
+        CURRENT_PS_UID="$(ps $PS_OPTIONS -ef |egrep "^ *[^ ]+ +$$ "|awk -F' ' '{print $1}')"
+    fi
+
+    if [ $INSIDE_CONTAINER = -1 ]; then
+        # Are we inside a container?
+        if [ -f /proc/self/cgroup ] && egrep '[0-9]+:devices:/[^:]' /proc/self/cgroup > /dev/null; then
+            INSIDE_CONTAINER=1
+        else
+            INSIDE_CONTAINER=0
+        fi
+    fi
+
+    local ignore_user=0
+    if [ "$1" = "--ignore-user" ]; then
+        ignore_user=1
+        shift
+    fi
+
+    case "$OS" in
+        SunOS)
+            local user_flag=-U
+            local user_string="$CURRENT_PS_UID"
+            if [ $ignore_user = 1 ]; then
+                user_flag=
+                user_string=
+            fi
+
+            if [ -x /usr/bin/zonename ];then
+                /usr/bin/pgrep -f -z "$(/usr/bin/zonename)" $user_flag "$user_string" "$1"
+            else
+                /usr/bin/pgrep -f $user_flag "$user_string" "$1"
+            fi
+            ;;
+        *)
+            local user_string="$CURRENT_PS_UID"
+            if [ $ignore_user = 1 ]; then
+                # Match any user.
+                user_string="[^ ]+"
+            fi
+
+            local pids="$(ps $PS_OPTIONS -ef|grep -v grep|egrep "^ *$user_string .*$1"|awk -F' ' '{print $2}')"
+
+            for pid in $pids; do
+                # If the last character of the cgroup is not the root directory,
+                # then this is a container process.
+                if [ -f /proc/$pid/cgroup ] && egrep '[0-9]+:devices:/[^:]' /proc/$pid/cgroup > /dev/null; then
+                    if [ $INSIDE_CONTAINER = 1 ]; then
+                        echo $pid
+                    fi
+                else
+                    if [ $INSIDE_CONTAINER = 0 ]; then
+                        echo $pid
+                    fi
+                fi
+            done
+            ;;
+    esac
+}
+
+cf_pidfile_pid()
+{
+    local pidfile="$1"
+    if egrep -v '^ *[0-9]+ *$' "$pidfile" > /dev/null 2>&1; then
+        echo "Malformed PID file: $pidfile." 1>&2
+    elif [ -f "$pidfile" ]; then
+        cat "$pidfile"
+    fi
+}
+
+cf_start_daemon()
+{
+    local daemon="$1"
+    shift
+    local base_daemon="$(basename "$daemon")"
+
+    if [ "$DEBIAN" != "1" ] || [ "$SSD" != "1" ]; then
+        echo "Starting $base_daemon..."
+    fi
+
+    # Redhat/Centos/Fedora
+    if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+        daemon "$daemon" "$@"
+        cf_touch "/var/lock/subsys/$base_daemon"
+    elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+        "$daemon" "$@"
+        cf_touch "/var/lock/subsys/$base_daemon"
+
+    # SUSE
+    elif [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+        /sbin/startproc "$daemon" "$@"
+        rc_status -v
+        cf_touch "/var/run/$base_daemon.pid"
+    elif [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+        "$daemon" "$@"
+        cf_touch "/var/run/$base_daemon.pid"
+
+    # Debian/Ubuntu
+    elif [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+        /sbin/start-stop-daemon --start --pidfile "$(printf "$PIDFILE_TEMPLATE" "$base_daemon")" --verbose --exec "$daemon" -- "$@"
+        cf_touch "$LOCKDIR/$base_daemon"
+    elif [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+        "$daemon" "$@"
+        cf_touch "$LOCKDIR/$base_daemon"
+
+    # All others
+    else
+        "$daemon" "$@"
+    fi
+}
+
+# Return 0 if any daemon was attempted killed, 1 otherwise.
+cf_stop_daemon()
+{
+    local daemon="$1"
+    local base_daemon="$(basename "$daemon")"
+    local pidfile="$(printf "$PIDFILE_TEMPLATE" "$base_daemon")"
+    local pidfile_pid
+    local pids
+    local ret=1
+
+    pidfile_pid="$(cf_pidfile_pid "$pidfile")"
+    if [ -n "$pidfile_pid" ]; then
+        pids="$pidfile_pid"
+    else
+        pids="$(cf_get_matching_pids "$base_daemon")"
+    fi
+
+    if [ -z "$pids" ]; then
+        return 1
+    fi
+
+    echo "Shutting down $base_daemon..."
+
+    local iter=1
+    local signal=TERM
+    while [ $iter -le $STOP_ATTEMPTS ] && [ -n "$pids" ]; do
+        ret=0
+
+        if [ $iter -ge $KILL_THRESHOLD ] || [ $FORCE_KILL = 1 ]; then
+            signal=KILL
+        fi
+
+        if [ $iter -gt 2 ]; then
+            # If we failed at first, give things time to settle.
+            sleep 2
+        fi
+
+        if [ "$signal" != "KILL" ] && [ -f "$pidfile" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+            # Debian/Ubuntu with start-stop-daemon.
+            /sbin/start-stop-daemon -o --stop --pidfile "$pidfile" --retry 5 --name "$base_daemon" >/dev/null 2>&1
+        else
+            # All others, or if there is no pidfile, or if using SIGKILL.
+            for pid in $pids; do
+                kill -$signal "$pid" >/dev/null 2>&1
+                if [ "$signal" = "KILL" ]; then
+                    # If using SIGKILL, the daemons won't be able to do this themselves.
+                    rm -f "$pidfile"
+                fi
+            done
+        fi
+
+        pidfile_pid="$(cf_pidfile_pid "$pidfile")"
+        if [ -n "$pidfile_pid" ]; then
+            pids="$pidfile_pid"
+        else
+            pids="$(cf_get_matching_pids "$base_daemon")"
+        fi
+        iter=$(($iter+1))
+    done
+
+    # Redhat/Centos/Fedora
+    if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+        if [ -f "/var/lock/subsys/$base_daemon" ]; then
+            cf_rm -f "/var/lock/subsys/$base_daemon"
+        fi
+    elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
+        if [ -f "/var/lock/subsys/$base_daemon" ]; then
+            cf_rm -f "/var/lock/subsys/$base_daemon"
+        fi
+
+    # SUSE
+    elif [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+        rc_status -v
+        if [ -f "/var/run/$base_daemon.pid" ]; then
+            cf_rm "/var/run/$base_daemon.pid"
+        fi
+    elif [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
+        if [ -f "/var/run/$base_daemon.pid" ]; then
+            cf_rm "/var/run/$base_daemon.pid"
+        fi
+
+    # Debian/Ubuntu
+    elif [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
+        if [ -f "$LOCKDIR/$base_daemon" ]; then
+            cf_rm "$LOCKDIR/$base_daemon"
+        fi
+    elif [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
+        if [ -f "$LOCKDIR/$base_daemon" ]; then
+            cf_rm "$LOCKDIR/$base_daemon"
+        fi
+    fi
+
+    return $ret
+}
+
+# Returns 0 if agents were found, 1 if not.
+cf_stop_agents()
+{
+    local base_agent="$(basename "$CFAGENT")"
+    local not_found=1
+    local ret=1
+    local signal=TERM
+    local iter=1
+
+    while [ $iter -le $STOP_ATTEMPTS ]; do
+        if [ $iter -ge $KILL_THRESHOLD ] || [ $FORCE_KILL = 1 ]; then
+            signal=KILL
+        fi
+
+        if [ $iter -gt 2 ]; then
+            # If we failed at first, give things time to settle.
+            sleep 2
+        fi
+
+        not_found=1
+        for pid in $(cf_get_matching_pids "$CFAGENT"); do
+            not_found=0
+            ret=0
+            kill -$signal $pid
+        done
+
+        if [ $not_found = 1 ]; then
+            break
+        fi
+
+        iter=$(($iter+1))
+    done
+
+    return $ret
+}
+
+cf_status_daemon()
+{
+    local daemon="$1"
+    local base_daemon="$(basename "$daemon")"
+    local pidfile="$(printf "$PIDFILE_TEMPLATE" "$base_daemon")"
+    local daemon_status="$(cf_pidfile_pid "$pidfile")"
+    local pids="$(cf_get_matching_pids "$base_daemon")"
+
+    if [ -f "$pidfile" ] && ! echo "$pids" | grep "$daemon_status" > /dev/null; then
+        echo "Warning: PID file '$pidfile' does not contain the right PID ('$pids' != '$daemon_status'). Should restart CFEngine."
+    fi
+
+    # Lack of quotes around $pids is important to eliminate newlines.
+    if [ -n "$(echo $pids | grep '[^0-9]')" ]; then
+        echo "Warning: Multiple $base_daemon processes present. Should restart CFEngine."
+    fi
+
+    if [ -n "$pids" ]; then
+        if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
+            status "$daemon"
+        elif [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
+            printf 'Checking for %s ' "$base_daemon"
+            checkproc "$daemon"
+            rc_status -v
+        else
+            # The additional "echo" is to eliminate newlines in $pids.
+            echo "$base_daemon is running..."
+        fi
+    else
+        echo "$base_daemon is not running"
+    fi
+}
+
+cf_start_core_daemons()
+{
+    # start cf-execd
+    if [ "$RUN_CF_EXECD" = "1" ]; then
+        cf_start_daemon "$CFEXECD"
+    fi
+
+    # start cf-serverd
+    if [ "$RUN_CF_SERVERD" = "1" ]; then
+        cf_start_daemon "$CFSERVD"
+    fi
+
+    # start cf-monitord
+    if [ "$RUN_CF_MONITORD" = "1" ]; then
+        cf_start_daemon "$CFMOND"
+    fi
+}
+
+cf_stop_core_daemons()
+{
+    # Stopping the CFEngine daemons is sometimes extremely tricky, because the
+    # killing of a daemon may coincide with the spawning of a new agent, which
+    # will spawn a new daemon and bring us right back to the start. So we always
+    # kill both, making sure they are dead, and once we have, we go back and do
+    # one more complete round of process detection to make *sure* that nothing
+    # is alive. As long as something is alive we will always require another
+    # round, up to STOP_ATTEMPTS times.
+
+    local iter=1
+    while [ $iter -le $STOP_ATTEMPTS ]; do
+        local any_process_present=0
+
+        if [ $iter -gt 2 ]; then
+            # If we failed at first, give things time to settle.
+            sleep 2
+        fi
+
+        if [ $iter -ge $KILL_THRESHOLD ]; then
+            # The stopping functions internally use SIGKILL if they feel the
+            # need, but only after some time, so we still force it here, in case
+            # we have a fork()-bomb-like situation where each kill results in a
+            # new daemon or agent.
+            FORCE_KILL=1
+        fi
+
+        # shutdown cf-execd
+        if [ "$RUN_CF_EXECD" = "1" ]; then
+            cf_stop_daemon "$CFEXECD" && any_process_present=1
+        fi
+
+        # shutdown cf-serverd
+        if [ "$RUN_CF_SERVERD" = "1" ]; then
+            cf_stop_daemon "$CFSERVD" && any_process_present=1
+        fi
+
+        # shutdown cf-monitord
+        if [ "$RUN_CF_MONITORD" = "1" ]; then
+            cf_stop_daemon "$CFMOND" && any_process_present=1
+        fi
+
+        # In case agents were spawned just as we were trying to kill the
+        # daemons, try killing those too.
+        cf_stop_agents && any_process_present=1
+
+        if [ $any_process_present = 0 ]; then
+            break
+        fi
+
+        iter=$(($iter+1))
+    done
+}
+
+cf_status_core_daemons()
+{
+    # status cf-execd
+    if [ "$RUN_CF_EXECD" = "1" ]; then
+        cf_status_daemon "$CFEXECD"
+    fi
+
+    # status cf-serverd
+    if [ "$RUN_CF_SERVERD" = "1" ]; then
+        cf_status_daemon "$CFSERVD"
+    fi
+
+    # status cf-monitord
+    if [ "$RUN_CF_MONITORD" = "1" ]; then
+        cf_status_daemon "$CFMOND"
+    fi
+}
+
+cf_touch()
+{
+    # Not during testing.
+    if [ -z "$CFTEST_PREFIX" ]; then
+        touch "$@"
+    fi
+}
+
+cf_rm()
+{
+    # Not during testing.
+    if [ -z "$CFTEST_PREFIX" ]; then
+        rm "$@"
+    fi
+}
+
+##### end: Defined functions #####
 
 ##### Source enterprise script, if present #####
 
@@ -156,281 +582,13 @@ case "$1" in
             exit 0
         fi
 
-        # start cf-execd
-        # Redhat/Centos/Fedora
-        if [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-            $ECHO -n "Starting `basename $CFEXECD`: "
-            daemon $CFEXECD
-            $TOUCH /var/lock/subsys/`basename $CFEXECD`
-            $ECHO
-        elif [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-            $ECHO -n "Starting `basename $CFEXECD`: "
-            $CFEXECD
-            $TOUCH /var/lock/subsys/`basename $CFEXECD`
-            $ECHO
-        fi
-        # SUSE
-        if [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-            $ECHO -n "Starting `basename $CFEXECD`: "
-            /sbin/startproc $CFEXECD
-            rc_status -v
-            $TOUCH /var/run/`basename $CFEXECD`.pid
-        elif [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
-            $ECHO -n "Starting `basename $CFEXECD`: "
-            $CFEXECD
-            $TOUCH /var/run/`basename $CFEXECD`.pid
-        fi
-        # Debian/Ubuntu
-        if [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-            $ECHO -n "Starting `basename $CFEXECD`: "
-            /sbin/start-stop-daemon --start --pidfile $CFEXECD_PIDFILE --verbose --exec $CFEXECD
-            $TOUCH $LOCKDIR/`basename $CFEXECD`
-        elif [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
-            $ECHO -n "Starting `basename $CFEXECD`: "
-            $CFEXECD
-            $TOUCH $LOCKDIR/`basename $CFEXECD`
-            $ECHO
-        fi
-        
-        # start cf-serverd
-        # Redhat/Centos/Fedora
-        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-            $ECHO -n "Starting `basename $CFSERVD`: "
-            daemon $CFSERVD
-            $TOUCH /var/lock/subsys/`basename $CFSERVD`
-            $ECHO
-        elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-            $ECHO -n "Starting `basename $CFSERVD`: "
-            $CFSERVD
-            $TOUCH /var/lock/subsys/`basename $CFSERVD`
-            $ECHO
-        fi
-        # SUSE
-        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-            $ECHO -n "Starting `basename $CFSERVD`: "
-            /sbin/startproc $CFSERVD
-            rc_status -v
-            $TOUCH /var/run/`basename $CFSERVD`.pid
-        elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
-            $ECHO -n "Starting `basename $CFSERVD`: "
-            $CFSERVD
-            $TOUCH /var/run/`basename $CFSERVD`.pid
-        fi
-        # Debian/Ubuntu
-        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-            $ECHO -n "Starting `basename $CFSERVD`: "
-            /sbin/start-stop-daemon --start --pidfile $CFSERVD_PIDFILE --verbose --exec $CFSERVD
-            $TOUCH $LOCKDIR/`basename $CFSERVD`
-        elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
-            $ECHO -n "Starting `basename $CFSERVD`: "
-            $CFSERVD
-            $TOUCH $LOCKDIR/`basename $CFSERVD`
-            $ECHO
-        fi
-        
-        # start cf-monitord
-        # Redhat/Centos/Fedora
-        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-            $ECHO -n "Starting `basename $CFMOND`: "
-            daemon $CFMOND
-            $TOUCH /var/lock/subsys/`basename $CFMOND`
-            $ECHO
-        elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-            $ECHO -n "Starting `basename $CFMOND`: "
-            $CFMOND
-            $TOUCH /var/lock/subsys/`basename $CFMOND`
-            $ECHO
-        fi
-        # SUSE
-        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-            $ECHO -n "Starting `basename $CFMOND`: "
-            /sbin/startproc $CFMOND
-            rc_status -v
-            $TOUCH /var/run/`basename $CFMOND`.pid
-        elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
-            $ECHO -n "Starting `basename $CFMOND`: "
-            $CFMOND
-            $TOUCH /var/run/`basename $CFMOND`.pid
-        fi
-        # Debian/Ubuntu
-        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-            $ECHO -n "Starting `basename $CFMOND`: "
-            /sbin/start-stop-daemon --start --pidfile $CFMOND_PIDFILE --verbose --exec $CFMOND
-            $TOUCH $LOCKDIR/`basename $CFMOND`
-        elif [ "$RUN_CF_MONTIROD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
-            $ECHO -n "Starting `basename $CFMOND`: "
-            $CFMOND
-            $TOUCH $LOCKDIR/`basename $CFMOND`
-            $ECHO
-        fi
+        cf_start_core_daemons
+
         exit 0
         ;;
     stop)
         if [ "$CF_ONLY_WEB_SERVICES" != "1" ]; then
-            # shutdown cf-execd
-            # Redhat/Centos/Fedora
-            if [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-                $ECHO -n "Shutting down `basename $CFEXECD`: "
-                killproc $CFEXECD || :
-                if [ -f /var/lock/subsys/`basename $CFEXECD` ]; then
-                    $RM -f /var/lock/subsys/`basename $CFEXECD` || true
-                fi
-                $ECHO
-            elif [ "$RUN_CF_EXECD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-                $ECHO -n "Shutting down `basename $CFEXECD`: "
-                $PKILL `basename $CFEXECD` || :
-                if [ -f /var/lock/subsys/`basename $CFEXECD` ]; then
-                    $RM -f /var/lock/subsys/`basename $CFEXECD` || true
-                fi
-                $ECHO
-            fi
-            # SUSE
-            if [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-                if [ $cfexecd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFEXECD`: "
-                    /sbin/killproc -TERM $CFEXECD || :
-                    rc_status -v
-                    if [ -f /var/run/`basename $CFEXECD`.pid ]; then
-                        $RM /var/run/`basename $CFEXECD`.pid || true
-                    fi
-                fi
-            elif [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
-                if [ $cfexecd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFEXECD`: "
-                    $PKILL `basename $CFEXECD` || :
-                    if [ -f /var/run/`basename $CFEXECD`.pid ]; then
-                        $RM /var/run/`basename $CFEXECD`.pid || true
-                    fi
-                fi
-            fi
-            # Debian/Ubuntu
-            if [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-                $ECHO -n "Shutting down `basename $CFEXECD` ... "
-                /sbin/start-stop-daemon -o --stop --pidfile $CFEXECD_PIDFILE --retry 5 --name `basename $CFEXECD` || :
-                if [ -f $LOCKDIR/`basename $CFEXECD` ]; then
-                    $RM $LOCKDIR/`basename $CFEXECD` || true
-                fi
-                $ECHO
-            elif [ "$RUN_CF_EXECD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
-                if [ $cfexecd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFEXECD` ... "
-                    $PKILL `basename $CFEXECD` || :
-                    if [ -f $LOCKDIR/`basename $CFEXECD` ]; then
-                        $RM $LOCKDIR/`basename $CFEXECD` || true
-                    fi
-                    $ECHO
-                fi
-            fi
-            
-            # shutdown cf-serverd
-            # Redhat/Centos/Fedora
-            if [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-                $ECHO -n "Shutting down `basename $CFSERVD`: "
-                killproc $CFSERVD || :
-                if [ -f /var/lock/subsys/`basename $CFSERVD` ]; then
-                    $RM -f /var/lock/subsys/`basename $CFSERVD` || true
-                fi
-                $ECHO
-            elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-                $ECHO -n "Shutting down `basename $CFSERVD`: "
-                $PKILL `basename $CFSERVD` || :
-                if [ -f /var/lock/subsys/`basename $CFSERVD` ]; then
-                    $RM -f /var/lock/subsys/`basename $CFSERVD` || true
-                fi
-                $ECHO
-            fi
-            # SUSE
-            if [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-                if [ $cfserverd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFSERVD`: "
-                    /sbin/killproc -TERM $CFSERVD || :
-                    rc_status -v
-                    if [ -f /var/run/`basename $CFSERVD`.pid ]; then
-                        $RM /var/run/`basename $CFSERVD`.pid || true
-                    fi
-                fi
-            elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
-                if [ $cfserverd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFSERVD`: "
-                    $PKILL `basename $CFSERVD` || :
-                    if [ -f /var/run/`basename $CFSERVD`.pid ]; then
-                        $RM /var/run/`basename $CFSERVD`.pid || true
-                    fi
-                fi
-            fi
-            # Debian/Ubuntu
-            if [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-                $ECHO -n "Shutting down `basename $CFSERVD` ... "
-                /sbin/start-stop-daemon -o --stop --pidfile $CFSERVD_PIDFILE --retry 5 --name `basename $CFSERVD` || :
-                if [ -f $LOCKDIR/`basename $CFSERVD` ]; then
-                    $RM $LOCKDIR/`basename $CFSERVD` || true
-                fi
-                $ECHO
-            elif [ "$RUN_CF_SERVERD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
-                if [ $cfserverd_status ]; then
-                    $ECHO -n "Shutting down `basename $CFSERVD` ... "
-                    $PKILL `basename $CFSERVD` || :
-                    if [ -f $LOCKDIR/`basename $CFSERVD` ]; then
-                        $RM $LOCKDIR/`basename $CFSERVD` || true
-                    fi
-                    $ECHO
-                fi
-            fi
-            
-            # shutdown cf-monitord
-            # Redhat/Centos/Fedora
-            if [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-                $ECHO -n "Shutting down `basename $CFMOND`: "
-                killproc $CFMOND || :
-                if [ -f /var/lock/subsys/`basename $CFMOND` ]; then
-                    $RM -f /var/lock/subsys/`basename $CFMOND` || true
-                fi
-                $ECHO
-            elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-                $ECHO -n "Shutting down `basename $CFMOND`: "
-                $PKILL `basename $CFMOND` || :
-                if [ -f /var/lock/subsys/`basename $CFMOND` ]; then
-                    $RM -f /var/lock/subsys/`basename $CFMOND` || true
-                fi
-                $ECHO
-            fi
-            # SUSE
-            if [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-                if [ $cfmonitord_status ]; then
-                    $ECHO -n "Shutting down `basename $CFMOND`: "
-                    /sbin/killproc -TERM $CFMOND || :
-                    rc_status -v
-                    if [ -f /var/run/`basename $CFMOND`.pid ]; then
-                        $RM /var/run/`basename $CFMOND`.pid || true
-                    fi
-                fi
-            elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "0" ]; then
-                if [ $cfmonitord_status ]; then
-                    $ECHO -n "Shutting down `basename $CFMOND`: "
-                    $PKILL `basename $CFMOND` || :
-                    if [ -f /var/run/`basename $CFMOND`.pid ]; then
-                        $RM /var/run/`basename $CFMOND`.pid || true
-                    fi
-                fi
-            fi
-            # Debian/Ubuntu
-            if [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-                $ECHO -n "Shutting down `basename $CFMOND` ... "
-                /sbin/start-stop-daemon -o --stop --pidfile $CFMOND_PIDFILE --retry 5 --name `basename $CFMOND` || :
-                if [ -f $LOCKDIR/`basename $CFMOND` ]; then
-                    $RM $LOCKDIR/`basename $CFMOND` || true
-                fi
-                $ECHO
-            elif [ "$RUN_CF_MONITORD" = "1" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
-                if [ $cfmonitord_status ]; then
-                    $ECHO -n "Shutting down `basename $CFMOND` ... "
-                    $PKILL `basename $CFMOND` || :
-                    if [ -f $LOCKDIR/`basename $CFMOND` ]; then
-                        $RM $LOCKDIR/`basename $CFMOND` || true
-                    fi
-                    $ECHO
-                fi
-            fi
+            cf_stop_core_daemons
         fi
 
         # Stop Enterprise services.
@@ -446,89 +604,8 @@ case "$1" in
         # Status Enterprise services.
         enterprise_status
 
-        # status cf-execd
-        # Redhat/Centos/Fedora
-        if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-            status $CFEXECD
-        elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-            if [ $cfexecd_status ]; then
-                $ECHO "cf-execd (pid $cfexecd_status) is running..."
-            else 
-                $ECHO "cf-execd is not running"
-            fi
-        fi
-        # SUSE
-        if [ "$RUN_CF_EXECD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-            if [ $cfexecd_status ]; then
-                $ECHO -n "Checking for `basename $CFEXECD` "
-                checkproc $CFEXECD
-                rc_status -v
-            fi
-        fi
-        # Debain/Ubuntu
-        if [ "$DEBIAN" = "1" ]; then
-            if [ $cfexecd_status ]; then
-                $ECHO "cf-execd (pid $cfexecd_status) is running..."
-            else 
-                $ECHO "cf-execd is not running"
-            fi
-        fi
-        
-        # status cf-serverd
-        # Redhat/Centos/Fedora
-        if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-            status $CFSERVD
-        elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-            if [ $cfserverd_status ]; then
-                $ECHO "cf-serverd (pid $cfserverd_status) is running..."
-            else
-                $ECHO "cf-serverd is not running"
-            fi
-        fi
-        # SUSE
-        if [ "$RUN_CF_SERVERD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-            if [ $cfserverd_status ]; then
-                $ECHO -n "Checking for `basename $CFSERVD` "
-                checkproc $CFSERVD
-                rc_status -v
-            fi
-        fi
-        # Debain/Ubuntu
-        if [ "$DEBIAN" = "1" ]; then
-            if [ $cfserverd_status ]; then
-                $ECHO "cf-serverd (pid $cfserverd_status) is running..."
-            else 
-                $ECHO "cf-serverd is not running"
-            fi
-        fi
-        
-        # status cf-monitord
-        # Redhat/Centos/Fedora
-        if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
-            status $CFMOND
-        elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
-            if [ $cfmonitord_status ]; then
-                $ECHO "cf-monitord (pid $cfmonitord_status) is running..."
-            else
-                $ECHO "cf-monitord is not running"
-            fi
-        fi
-        # SUSE
-        if [ "$RUN_CF_MONITORD" = "1" ] && [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
-            if [ $cfmonitord_status ]; then
-                echo -n "Checking for `basename $CFMOND` "
-                checkproc $CFMOND
-                rc_status -v
-            fi
-        fi
-        # Debain/Ubuntu
-        if [ "$DEBIAN" = "1" ]; then
-            if [ $cfmonitord_status ]; then
-                $ECHO "cf-monitord (pid $cfmonitord_status) is running..."
-            else 
-                $ECHO "cf-monitord is not running"
-            fi
-        fi
+        cf_status_core_daemons
+
         exit 0
         ;;
     restart|reload|force-reload)

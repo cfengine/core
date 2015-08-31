@@ -1318,11 +1318,11 @@ AC_ARG_WITH(init-script, AS_HELP_STRING([--with-init-script=PATH],
     if test -n "$withval" && test "x$withval" != "xno"; then
         if test "x$withval" = "xyes"; then
             AS_CASE(["$target_os"],
-            [aix],
+            [aix*],
             [
                 INIT_D_PATH=/etc/rc.d/init.d
             ],
-            [hpux],
+            [hpux*],
             [
                 INIT_D_PATH=/sbin/init.d
             ],

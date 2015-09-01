@@ -1,0 +1,40 @@
+#######################################################
+#
+# Classes type promises should work with classes bodies
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine#7537" };
+
+  vars:
+    "classes"
+      slist => classesmatching("checked_for_file.*");
+
+  classes:
+    "have_file"
+      expression => isplain("$(this.promise_filename)"),
+      classes => scoped_classes_generic("bundle", "checked_for_file");
+
+  methods:
+    "pass or fail"
+      usebundle => dcs_passif("checked_for_file_reached", $(this.promise_filename));
+
+  reports:
+    DEBUG|EXTRA::
+      "Found class: $(classes)";
+
+}

@@ -14,6 +14,9 @@
 	- Fix misaligned help output in cf-hub. (Redmine #7273)
 	- Augmenting inputs from the augments_file (Redmine #7420)
 	- Add support for failover to 3rd HA node located outside cluster.
+	- Upgrade all dependencies for patch release.
+	- Fix a bug which caused daemons not to be restarted on
+	  upgrade. (Redmine #7528)
 
 3.7.0:
         New features:

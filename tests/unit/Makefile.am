@@ -185,8 +185,12 @@ endif
 endif
 
 check_SCRIPTS = bootstrap_inc_uptodate_test.sh \
-	dynamic_dependency_test.sh \
-	init_script_test.sh
+	dynamic_dependency_test.sh
+
+if WITH_INIT_D_SCRIPT
+check_SCRIPTS += init_script_test.sh
+endif
+
 EXTRA_DIST   += $(check_SCRIPTS)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
@@ -435,3 +439,4 @@ if !NT
 init_script_test_helper_SOURCES = init_script_test_helper.c
 init_script_test.sh: init_script_test_helper
 endif
+EXTRA_DIST += init_script_test_helper.c

@@ -1,0 +1,51 @@
+#######################################################
+#
+# Test regex_replace function
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "test" string => "abcdefghij";
+
+      # replace the empty string with empty string, globally
+      "void" string => regex_replace("", $(test), "", "g");
+      # replace any character with empty string, globally
+      "void1" string => regex_replace(".", $(test), "", "g");
+      # replace the empty string with 'x', globally (matches on character boundaries)
+      "void2" string => regex_replace("", $(test), "x", "g");
+
+      # replace the whole string
+      "allofitwithTEST" string => regex_replace(".*", $(test), "TEST", "");
+      # no matches, original intact
+      "nomatch" string => regex_replace("nonesuch", $(test), "TEST", "g");
+      # replace any character with -DOT-
+      "dots_everywhere" string => regex_replace(".", $(test), "-DOT-", "g");
+      # capture any three characters and replace with a backreference
+      "cap123" string => regex_replace("(...)", $(test), "[cap=$1]", "g");
+      # match ABC case-insensitive and replace with ABC
+      "simple_nocase" string => regex_replace("ABC", $(test), "ABC", "gi"); # case-insensitive
+      # match abc and replace with ABC
+      "simple" string => regex_replace("abc", $(test), "ABC", "g");
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

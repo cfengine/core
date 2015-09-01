@@ -1,0 +1,109 @@
+dnl configure.in for pcrs --oes
+dnl Process this file with autoconf to produce a configure script.
+dnl  
+AC_INIT(pcrs.c)
+
+dnl Later
+dnl AC_CONFIG_HEADER(config.h)
+
+dnl =================================================================
+dnl Application version number
+dnl =================================================================
+
+VERSION_MAJOR=0
+VERSION_MINOR=0
+VERSION_POINT=3
+VERSION=$VERSION_MAJOR.$VERSION_MINOR.$VERSION_POINT
+
+AC_SUBST(VERSION_MAJOR)
+AC_SUBST(VERSION_MINOR)
+AC_SUBST(VERSION_POINT)
+AC_SUBST(VERSION)
+
+dnl =================================================================
+dnl Checks for programs needed to build.
+dnl =================================================================
+
+AC_PROG_CC
+
+if test "$GCC" != "yes" ; then
+  echo "************************************************"
+  echo "*** This configure script is too stupid to   ***"
+  echo "*** accomodate for compilers other than gcc. ***"
+  echo "*** Your build will most propably fail.      ***"
+  echo "************************************************"
+fi
+
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_CHECK_PROG(HAVE_GDB, gdb, yes, no)
+AC_CHECK_PROG(HAVE_GZIP, gzip, yes, no)
+AC_SUBST(HAVE_GZIP)
+
+
+dnl =================================================================
+dnl debug, gcc and gdb support 
+dnl =================================================================
+
+AC_ARG_ENABLE(debug,
+   [  --enable-debug            Enable debugging ],
+   [  if test "$enableval" = yes; then
+         if test "$HAVE_GDB" = yes; then
+            CFLAGS="-ggdb"
+         else
+            CFLAGS="-g"
+         fi
+	 PARANOID_FU=""
+      fi
+   ],
+   [  if test "X$CFLAGS" = X; then # if CFLAGS are unset
+         if test "$GCC" = yes; then
+            CFLAGS="-O2"
+	 fi
+      fi
+      PARANOID_FU="#"
+   ]
+)
+AC_SUBST(PARANOID_FU)
+
+dnl =================================================================
+dnl additional gcc flags
+dnl =================================================================
+dnl 
+
+if test "$GCC" = yes; then
+  CFLAGS="-pipe $CFLAGS"
+fi
+
+dnl =================================================================
+dnl Check for file extensions
+dnl =================================================================
+
+AC_EXEEXT
+AC_OBJEXT
+
+dnl =================================================================
+dnl Check for headers and pcre library
+dnl =================================================================
+
+AC_CHECK_HEADERS(string.h ctype.h)
+AC_CHECK_LIB(pcre, pcre_fullinfo, [AC_CHECK_HEADER(pcre.h, [pcre_h=pcre.h],
+  AC_CHECK_HEADER(pcre/pcre.h, [pcre_h=pcre/pcre.h]))])
+
+if test "x$pcre_h" = "x"; then
+   echo "****************************************************"
+   echo "*** Fatal: Could not find a PCRE library > v3.0. ***"
+   echo "*** PCRE is available from http://www.pcre.org/  ***"
+   echo "****************************************************"
+   exit 1
+else
+   LIBS="$LIBS -lpcre"
+fi
+
+AC_SUBST(pcre_h)
+
+dnl =================================================================
+dnl Output
+dnl =================================================================
+
+AC_OUTPUT(Makefile pcrs.3 pcrs.h)

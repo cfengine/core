@@ -5016,6 +5016,29 @@ static FnCallResult FnCallRegCmp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 /*********************************************************************/
 
+static FnCallResult FnCallRegReplace(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    const char *regex = RlistScalarValue(finalargs);
+    const char *data = RlistScalarValue(finalargs->next);
+    const char *replacement = RlistScalarValue(finalargs->next->next);
+    const char *options = RlistScalarValue(finalargs->next->next->next);
+
+    Buffer *rewrite = BufferNewFrom(data, strlen(data));
+    const char* error = BufferSearchAndReplace(rewrite, regex, replacement, options);
+
+    if (error)
+    {
+        BufferDestroy(rewrite);
+        Log(LOG_LEVEL_ERR, "%s: couldn't use regex '%s', replacement '%s', and options '%s': error=%s",
+            fp->name, regex, replacement, options, error);
+        return FnFailure();
+    }
+
+    return FnReturn(BufferClose(rewrite));
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     const bool container_mode = strcmp(fp->name, "data_regextract") == 0;
@@ -7794,6 +7817,15 @@ static const FnCallArg DATA_REGEXTRACT_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg REGEX_REPLACE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Match string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Replacement string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "sed/Perl-style options: gmsixUT"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg REGISTRYVALUE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Windows registry key"},
@@ -8354,6 +8386,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regex_replace", CF_DATA_TYPE_STRING, REGEX_REPLACE_ARGS, &FnCallRegReplace, "Replace occurrences of arg1 in arg2 with arg3, allowing backreferences.  Perl-style options accepted in arg4.",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Text xform functions

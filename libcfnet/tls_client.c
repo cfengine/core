@@ -45,10 +45,11 @@ extern RSA *PRIVKEY, *PUBKEY;
 /**
  * Global SSL context for initiated connections over the TLS protocol. For the
  * agent, they are written only once, *after* the common control bundles have
- * been evaluated.
+ * been evaluated. I.e. GenericAgentPostLoadInit() is called
+ * after LoadPolicy().
  *
  * 1. Common bundles evaluation: LoadPolicy()->PolicyResolve()
- * 2. Create TLS contexts:       GenericAgentDiscoverContext()->GenericAgentInitialize()->cfnet_init()
+ * 2. Create TLS contexts:       GenericAgentPostLoadInit()->cfnet_init()
  */
 static SSL_CTX *SSLCLIENTCONTEXT = NULL;
 static X509 *SSLCLIENTCERT = NULL;

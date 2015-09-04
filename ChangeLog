@@ -1,5 +1,7 @@
 3.7.1:
 	Bug fixes:
+	- Fix daemons not restarting correctly on upgrade on AIX. (Redmine #7550)
+	- Fix upgrade causing error message under systemd because of open ports.
 	- Fix build with musl libc. (Redmine #7455)
 	- Long promiser strings with multiple lines are now
 	  abbreviated in logs. (Redmine #3964)

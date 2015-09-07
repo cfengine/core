@@ -239,7 +239,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
     {
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                  "Need to keep restart promise for '%s', but only a warning is promised", pp->promiser);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
@@ -365,14 +365,14 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
         if ((a.transaction.action == cfa_warn) && promised_zero)
         {
-            Log(LOG_LEVEL_ERR, "Process alert '%s'", procdata->name);     /* legend */
-            Log(LOG_LEVEL_ERR, "Process alert '%s'", ip->name);
+            Log(LOG_LEVEL_WARNING, "Process alert '%s'", procdata->name);     /* legend */
+            Log(LOG_LEVEL_WARNING, "Process alert '%s'", ip->name);
             continue;
         }
 
         if (a.transaction.action == cfa_warn)
         {
-            Log(LOG_LEVEL_ERR, "Matched '%s'", ip->name);
+            Log(LOG_LEVEL_WARNING, "Matched '%s'", ip->name);
         }
         else
         {

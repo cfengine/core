@@ -363,21 +363,21 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 if ((ip1 == list1) || (ip2 == list2))
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "File content wants to change from from/to full/empty but only a warning promised");
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "File content wants to change from from/to full/empty but only a warning promised");
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 }
                 else
                 {
                     if (ip1 != NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (remove) %s",
+                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (remove) %s",
                              ip1->name);
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
 
                     if (ip2 != NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
                 }

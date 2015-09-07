@@ -344,7 +344,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     {
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
                  "Image file '%s' is non-existent and should be a copy of '%s'",
                  destfile, sourcefile);
             return PromiseResultUpdate(result, PROMISE_RESULT_WARN);
@@ -520,7 +520,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
         if (ok_to_copy && (attr.transaction.action == cfa_warn))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
                  "Image file '%s' exists but is not up to date wrt '%s' "
                  "(only a warning has been promised)",
                  destfile, sourcefile);
@@ -682,7 +682,7 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
 
             if (DONTDO || attr.transaction.action == cfa_warn)
             {
-                Log(LOG_LEVEL_ERR, "Need to purge '%s' from copy dest directory", filename);
+                Log(LOG_LEVEL_WARNING, "Need to purge '%s' from copy dest directory", filename);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else
@@ -1736,7 +1736,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
 
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "'%s' '%s' should be renamed",
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "'%s' '%s' should be renamed",
                  S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             return result;
@@ -1841,7 +1841,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
     {
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be truncated", path);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be truncated", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (!DONTDO)
@@ -1861,7 +1861,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
     {
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be rotated", path);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be rotated", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (!DONTDO)
@@ -1899,7 +1899,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
     {
     case cfa_warn:
 
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
              "%s '%s' should be deleted",
              S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
         return PROMISE_RESULT_WARN;
@@ -2118,7 +2118,7 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
         if (attr.transaction.action == cfa_warn || DONTDO)
         {
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
                  "'%s' has permission %04jo - [should be %04jo]", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
@@ -2168,7 +2168,7 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
                  "'%s' has flags %jo - [should be %jo]",
                  file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
                  (uintmax_t) (newflags & CHFLAGS_MASK));
@@ -3215,7 +3215,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
 
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "WARNING setuid (root) flag on '%s'", file);
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "WARNING setuid (root) flag on '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
                 break;
@@ -3255,7 +3255,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
 
             case cfa_warn:
 
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_WARN, pp, attr, "WARNING setgid (root) flag on '%s'", file);
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "WARNING setgid (root) flag on '%s'", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 break;
 
@@ -3364,7 +3364,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, co
             return retval;
 
         case cfa_warn:
-            Log(LOG_LEVEL_ERR, "Darwin FinderType does not match -- not fixing.");
+            Log(LOG_LEVEL_WARNING, "Darwin FinderType does not match -- not fixing.");
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return 0;
 
@@ -3417,7 +3417,7 @@ static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArr
         {
             if (attr.transaction.action == cfa_warn)
             {
-                Log(LOG_LEVEL_VERBOSE, "Need to remove old hard link '%s' to preserve structure", value);
+                Log(LOG_LEVEL_WARNING, "Need to remove old hard link '%s' to preserve structure", value);
             }
             else
             {
@@ -3662,21 +3662,21 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
 
             if ((pw = getpwuid(sb->st_uid)) == NULL)
             {
-                Log(LOG_LEVEL_ERR, "File '%s' is not owned by anybody in the passwd database", file);
-                Log(LOG_LEVEL_ERR, "(uid = %ju,gid = %ju)", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
+                Log(LOG_LEVEL_WARNING, "File '%s' is not owned by anybody in the passwd database", file);
+                Log(LOG_LEVEL_WARNING, "(uid = %ju,gid = %ju)", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
             if ((gp = getgrgid(sb->st_gid)) == NULL)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File '%s' is not owned by any group in group database",
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is not owned by any group in group database",
                      file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
                  gp->gr_name);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
@@ -3729,7 +3729,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create directory '%s'", file);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create directory '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
@@ -3786,7 +3786,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create file '%s'", file);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create file '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }

@@ -1125,7 +1125,7 @@ PromiseResult FileInstallPackage(const char *package_file_path,
      
     if (action == cfa_warn || DONTDO)
     {
-         Log(LOG_LEVEL_NOTICE, "Should install file type package: %s",
+         Log(LOG_LEVEL_WARNING, "Should install file type package: %s",
              package_file_path);
         res = PROMISE_RESULT_FAIL;
     }
@@ -1244,7 +1244,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
         }
         if (action == cfa_warn || DONTDO)
         {
-            Log(LOG_LEVEL_NOTICE, "Should install repo type package: %s",
+            Log(LOG_LEVEL_WARNING, "Should install repo type package: %s",
                 package_info->name);
             return PROMISE_RESULT_FAIL;
         }
@@ -1329,7 +1329,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
             {
                 if (action == cfa_warn || DONTDO)
                 {
-                    Log(LOG_LEVEL_NOTICE, "Should install repo type package: %s",
+                    Log(LOG_LEVEL_WARNING, "Should install repo type package: %s",
                         package_info->name);
                     res = PromiseResultUpdate(res, PROMISE_RESULT_FAIL);
                     continue;
@@ -1594,7 +1594,7 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
         
         if (action == cfa_warn || DONTDO)
         {
-            Log(LOG_LEVEL_NOTICE, "Need to remove package: %s", package_name);
+            Log(LOG_LEVEL_WARNING, "Need to remove package: %s", package_name);
             res = PROMISE_RESULT_FAIL;
         }
         else

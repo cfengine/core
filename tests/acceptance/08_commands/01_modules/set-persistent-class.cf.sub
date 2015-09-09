@@ -1,0 +1,17 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+}
+
+bundle agent main
+{
+  commands:
+      "$(G.echo) '^persistence=20$(const.n)+Cx4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP'"
+      module => "true";
+
+      "$(G.echo) '^persistence=$(const.n)+Bx4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP'"
+      module => "true";
+
+      "$(G.echo) '+Ax4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP'"
+      module => "true";
+}

@@ -9,9 +9,27 @@
 {{/classes.empty}}
 
 {{#vars.test.d}}
- {{.}}
+ key "{{@}}" value "{{.}}"
 {{/vars.test.d}}
 
 {{#vars.test.h}}
  key "{{@}}" value "{{.}}"
 {{/vars.test.h}}
+
+{{#vars.test.h_under_q}}
+ key "{{@}}" value "{{%.}}"
+{{/vars.test.h_under_q}}
+
+{{#vars.test.h_in_array}}
+ key "{{@}}" value "{{%.}}"
+{{/vars.test.h_in_array}}
+
+{{#vars.test.h2_in_array}}
+ key "{{@}}" value "{{%.}}"
+{{/vars.test.h2_in_array}}
+
+{{#vars.test.h2_in_array}}
+{{#vars.test.h_under_q}}
+ nested key should be "q": "{{@}}" value "{{%.}}"
+{{/vars.test.h_under_q}}
+{{/vars.test.h2_in_array}}

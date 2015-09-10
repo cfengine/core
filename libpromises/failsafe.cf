@@ -173,6 +173,19 @@ bundle agent cfe_internal_update
 
   reports:
 
+    !bootstrap_mode::
+      "Built-in failsafe policy triggered"
+        handle => "cfe_internal_bootstrap_update_reports_failsafe_notification",
+	comment => "Be sure to inform the user that the failsafe policy has
+		    been triggered. This typically indicates that the agent has
+		    recieved broken policy. It may also indicate legacy
+                    configuration in body executor control.";
+
+    bootstrap_mode::
+      "Bootstrapping from host '$(sys.policy_server):5308' via built-in policy"
+        handle => "cfe_internal_bootstrap_update_reports_bootstrap_notification",
+        comment => "Be sure to inform the user that they have triggerd a bootstrap.";
+
     bootstrap_mode.am_policy_hub::
 
       "This host assumes the role of policy server"
@@ -221,11 +234,6 @@ bundle agent cfe_internal_update
       "Did not start the scheduler"
       handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
 
-    !executor_started.have_promises_cf::
-
-      "You are running a hard-coded failsafe. Please use the following command instead.
-        $(sys.cf_agent) -f $(sys.inputdir)/update.cf"
-      handle => "cfe_internal_bootstrap_update_reports_run_another_failsafe_instead";
 }
 
 ################################################################################

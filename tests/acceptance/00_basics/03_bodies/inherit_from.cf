@@ -25,7 +25,7 @@ bundle common test
 
 body classes classes_generic_inherit(x)
 {
-      inherit_from => classes_generic;
+      inherit_from => classes_generic($(x));
 }
 
 body classes classes_generic_nonesuch(x)
@@ -36,7 +36,7 @@ body classes classes_generic_nonesuch(x)
 # the parent uses $(x) so this tests that inheritance goes from parent to child
 body classes classes_generic_overwrite(overwrite_x)
 {
-      inherit_from => classes_generic;
+      inherit_from => classes_generic($(overwrite_x));
       promise_repaired => { "promise_repaired_$(overwrite_x)", "$(overwrite_x)_repaired", "$(overwrite_x)_ok", "$(overwrite_x)_reached" };
       repair_failed => { "repair_failed_$(overwrite_x)", "$(overwrite_x)_failed", "$(overwrite_x)_not_ok", "$(overwrite_x)_error", "$(overwrite_x)_not_kept", "$(overwrite_x)_not_repaired", "$(overwrite_x)_reached" };
       repair_denied => { "repair_denied_$(overwrite_x)", "$(overwrite_x)_denied", "$(overwrite_x)_not_ok", "$(overwrite_x)_error", "$(overwrite_x)_not_kept", "$(overwrite_x)_not_repaired", "$(overwrite_x)_reached" };

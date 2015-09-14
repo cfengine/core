@@ -182,7 +182,7 @@ bundle agent cfe_internal_update
                     configuration in body executor control.";
 
     bootstrap_mode::
-      "Bootstrapping from host '$(sys.policy_server):5308' via built-in policy"
+      "Bootstrapping from host '$(sys.policy_server)' via built-in policy '$(this.promise_filename)'"
         handle => "cfe_internal_bootstrap_update_reports_bootstrap_notification",
         comment => "Be sure to inform the user that they have triggerd a bootstrap.";
 

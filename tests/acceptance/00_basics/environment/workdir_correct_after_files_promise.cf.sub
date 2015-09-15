@@ -1,0 +1,42 @@
+##############################################################################
+#
+#
+##############################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test_exec(id, cmd)
+{
+  commands:
+    "$(cmd)"
+      handle => "$(id)";
+
+  reports:
+    DEBUG|DEBUG_test_exec::
+      "DEBUG $(this.bundle): $(id) $(cmd)";
+}
+
+bundle agent test_touch(file)
+{
+  files:
+    "$(file)"
+      create => "true",
+      touch => "true";
+
+  reports:
+    DEBUG|DEBUG_test_touch::
+    "DEBUG $(this.bundle): touch '$(file)'";
+}
+
+bundle agent test
+{
+   methods:
+    "pwd_1" usebundle => test_exec("pwd_1", "/bin/pwd");
+    "touch_1" usebundle => test_touch("$(G.testfile)");
+    "pwd_2" usebundle => test_exec("pwd_2", "/bin/pwd");
+}

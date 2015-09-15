@@ -391,13 +391,13 @@ void DiscoverVersion(EvalContext *ctx)
         snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
-        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d",
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib",
                  workdir, FILE_SEPARATOR, FILE_SEPARATOR,
                  FILE_SEPARATOR, major, minor);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
-        snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
+        snprintf(workbuf, CF_BUFSIZE, "lib", FILE_SEPARATOR, major, minor);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
     }
     else

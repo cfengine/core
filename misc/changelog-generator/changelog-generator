@@ -119,6 +119,7 @@ for repo in repos:
             if not msg_started:
                 continue
 
+            # Small Redmine reference, remove from string.
             redmine_regex = "^ *Redmine:? *#?([0-9]+)"
             match = re.match(redmine_regex, line, re.IGNORECASE)
             if match:
@@ -127,6 +128,15 @@ for repo in repos:
                 SHA_TO_REDMINE[sha].append(match.group(1))
                 redmine_removed = re.sub(redmine_regex + ":? *", "", line)
                 line = redmine_removed
+
+            # Big Redmine reference, remove whole line.
+            match = re.match("^Ref:? *(Redmine:? *#?|https?://dev\.cfengine\.com/issues/)([0-9]+) *$",
+                             line, re.IGNORECASE)
+            if match:
+                if not SHA_TO_REDMINE.get(sha):
+                    SHA_TO_REDMINE[sha] = []
+                SHA_TO_REDMINE[sha].append(match.group(2))
+                continue
 
             if not title_fetched:
                 title = line

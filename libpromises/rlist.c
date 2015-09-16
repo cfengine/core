@@ -337,8 +337,8 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
             // string_replace code is merged.
             // Sorry about the CF_BUFSIZE ugliness.
             int max_size = 10*CF_BUFSIZE+1;
-            const char* buffer_from = xmalloc(max_size);
-            const char* buffer_to = xmalloc(max_size);
+            char *buffer_from = xmalloc(max_size);
+            char *buffer_to = xmalloc(max_size);
 
             Buffer *format = BufferNew();
             strncpy(buffer_from, item, max_size);

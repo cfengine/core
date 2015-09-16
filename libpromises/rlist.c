@@ -343,23 +343,61 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
             Buffer *format = BufferNew();
             strncpy(buffer_from, item, max_size);
 
-            JsonIterator iter = JsonIteratorInit(map);
-            const char *key;
-
-            for (int loop = 0; loop < 10; loop++)
+            for (int iteration = 0; iteration < 10; iteration++)
             {
-                while ((key = JsonIteratorNextKey(&iter)))
+                bool replacement_made = false;
+                int var_start = -1;
+                char closing_brace = 0;
+                for (int c = 0; c < buffer_from[c]; c++)
                 {
-                    BufferPrintf(format, "$(%s)", key);
-                    ReplaceStr(buffer_from, buffer_to, max_size, BufferData(format), JsonObjectGetAsString(map, key));
-                    strncpy(buffer_from, buffer_to, max_size);
-                    BufferPrintf(format, "${%s}", key);
-                    ReplaceStr(buffer_from, buffer_to, max_size, BufferData(format), JsonObjectGetAsString(map, key));
+                    printf("In %s at %i: '%s'\n", __func__, __LINE__, buffer_from);
+                    if (buffer_from[c] == '$')
+                    {
+                        if (buffer_from[c+1] == '(')
+                        {
+                            closing_brace = ')';
+                        }
+                        else if (buffer_from[c+1] == '{')
+                        {
+                            closing_brace = '}';
+                        }
+
+                        if (closing_brace)
+                        {
+                            c++;
+                            var_start = c-1;
+                        }
+                    }
+                    else if (var_start >= 0 && buffer_from[c] == closing_brace)
+                    {
+                        char saved = buffer_from[c];
+                        buffer_from[c] = '\0';
+                        const char *repl = JsonObjectGetAsString(map, buffer_from + var_start + 2);
+                        buffer_from[c] = saved;
+
+                        if (repl)
+                        {
+                            // Before the replacement.
+                            memcpy(buffer_to, buffer_from, var_start);
+
+                            // The actual replacement.
+                            int repl_len = strlen(repl);
+                            memcpy(buffer_to + var_start, repl, repl_len);
+
+                            // The text after.
+                            strlcpy(buffer_to + var_start + repl_len, buffer_from + c + 1, max_size - var_start - repl_len);
+
+                            // Reset location to immediately after the replacement.
+                            c = var_start + repl_len - 1;
+                            var_start = -1;
+                            strcpy(buffer_from, buffer_to);
+                            closing_brace = 0;
+                            replacement_made = true;
+                        }
+                    }
                 }
 
-                // are there unresolved variable references?
-                if (NULL == strstr(item, "$(") &&
-                    NULL == strstr(item, "${"))
+                if (!replacement_made)
                 {
                     break;
                 }

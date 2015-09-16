@@ -13,8 +13,8 @@ bundle agent init
       "expected[bindir]" string => "$(sys.workdir)$(const.dirsep)bin";
       "expected[failsafe_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)failsafe.cf";
       "expected[inputdir]" string => "$(sys.workdir)$(const.dirsep)inputs";
-      "expected[libdir]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)lib$(const.dirsep)$(sys.cf_version_major).$(sys.cf_version_minor)";
-      "expected[local_libdir]" string => "lib$(const.dirsep)$(sys.cf_version_major).$(sys.cf_version_minor)";
+      "expected[libdir]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)lib";
+      "expected[local_libdir]" string => "lib";
       "expected[masterdir]" string => "$(sys.workdir)$(const.dirsep)masterfiles";
       "expected[update_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)update.cf";
 

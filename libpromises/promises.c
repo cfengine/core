@@ -131,7 +131,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
         if (bodies_and_args && SeqLength(bodies_and_args) > 0)
         {
-            const Body *bp = SeqAt(bodies_and_args, 0);
+            const Body *bp = SeqAt(bodies_and_args, 0); // guaranteed to be non-NULL
             SeqReverse(bodies_and_args); // when we iterate, start with the furthest parent
 
             EvalContextStackPushBodyFrame(ctx, pcopy, bp, args);

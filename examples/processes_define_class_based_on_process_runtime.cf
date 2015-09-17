@@ -1,0 +1,63 @@
+########################################################
+#
+# Simple process example
+#
+# Define a class if a process has been running for more
+# than one day
+#
+# For 3.6- run with cf-agent -KIf ./processes_define_class_based_on_process_runtime.cf -b main
+# For 3.7+ run with cf-agent -KIf ./processes_define_class_based_on_process_runtime.cf
+#   - main is the default bundle executed if no bundlesequence is defined in
+#   3.7+
+########################################################
+
+bundle agent main
+
+{
+  processes:
+
+      "init"
+        process_count   => any_count("booted_over_1_day_ago"),
+        process_select  => days_older_than(1),
+	comment => "Define a class indicating we found an init process running
+                    for more than 1 day.";
+
+  reports:
+
+    booted_over_1_day_ago::
+
+      "This system was booted over 1 days ago since there is an init process
+       that is older than 1 day.";
+
+    !booted_over_1_day_ago::
+      "This system has been rebooted recently as the init process has been
+       running for less than a day";
+}
+
+########################################################
+
+########################################################
+# NOTE: These bundles were copied from the stdlib in
+# order to make this a standalone policy that requires
+# no external files.  Because the standard library is
+# constantly evolving thier definition may change
+########################################################
+
+body process_count any_count(cl)
+# @brief Define class `cl` if one or more process is running
+# @param cl Name of the class to be defined
+{
+      match_range => "0,0";
+      out_of_range_define => { "$(cl)" };
+}
+
+########################################################
+
+body process_select days_older_than(d)
+# @brief Select all processes that are older than `d` days
+# @param d Days that processes need to be old to be selected
+{
+      stime_range    => irange(ago(0,0,"$(d)",0,0,0),now);
+      process_result => "!stime";
+}
+

@@ -56,6 +56,7 @@ typedef struct
 } Buffer;
 
 
+typedef bool (*BufferFilterFn)(char item);
 
 /**
   @brief Buffer initialization routine.
@@ -241,6 +242,24 @@ BufferBehavior BufferMode(const Buffer *buffer);
   @param mode The new mode of operation.
   */
 void BufferSetMode(Buffer *buffer, BufferBehavior mode);
+
+/**
+  @brief Returns a filtered copy of a Buffer
+
+  @param buffer The buffer to operate on.
+  @param filter a function to test for inclusion
+  @param invert Whether the test should be inverted
+  */
+Buffer* BufferFilter(Buffer *buffer, BufferFilterFn filter, const bool invert);
+
+/**
+  @brief Filters a Buffer in place
+
+  @param buffer The buffer to operate on.
+  @param filter a function to test for inclusion
+  @param invert Whether the test should be inverted
+  */
+void BufferRewrite(Buffer *buffer, BufferFilterFn filter, const bool invert);
 
 /**
   @brief Provides a pointer to the internal data.

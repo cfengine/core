@@ -10,12 +10,6 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-}
-
-#######################################################
-
 bundle agent test
 {
   defaults:
@@ -57,44 +51,36 @@ bundle agent test
       ifvarclass => "nonesuch";
     "$(mylist).cfengine"::
       "iterated_$(mylist)" string => "iteration class $(mylist)";
+
+    "myclass . cfengine | any"::
+      "whitespace1" string => "$(this.promiser): quoted with spaces";
+
+    myclass . cfengine | any::
+      "whitespace2" string => "$(this.promiser): unquoted with spaces, starts with valid class";
+
+    nosuchclass . any::
+      "whitespace3" string => "$(this.promiser): unquoted with spaces, should be missing";
+
+    nosuchclass | any::
+      "whitespace4" string => "$(this.promiser): unquoted with spaces, starts with missing class but is true";
+
+    any	 |	 ( cfengine | linux )::
+      "whitespace5" string => "$(this.promiser): remove spaces and tabs from an expression";
+
+    any	 .	 ( nosuchclass . any )::
+      "whitespace6" string => "$(this.promiser): remove spaces and tabs from an expression that is false in the end, should be missing";
+
+    "cf engine"::
+      "whitespace7" string => "$(this.promiser): quoted with spaces but no operators, should be missing with an error";
+
 }
 
 #######################################################
 
 bundle agent check
 {
-  vars:
-      "expected" string => "
-hello, this is me
-any hello
-string hello
-variable context hello!!!
-variable context hello!!!
-compound variable context hello!!!
-6
-augmented variable context hello!!!
-8
-iteration class a
-iteration class b
-iteration class c
-";
-      "actual" string => "
-$(test.s1)
-$(test.s2)
-$(test.s3)
-$(test.s4)
-$(test.s4_2)
-$(test.s5)
-$(test.s6)
-$(test.s7)
-$(test.s8)
-$(test.iterated_a)
-$(test.iterated_b)
-$(test.iterated_c)
-";
   methods:
-      "" usebundle => dcs_check_strcmp($(expected),
-                                      $(actual),
-                                      $(this.promise_filename),
-                                      "no");
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

@@ -1,0 +1,1 @@
+@list_from_module={ "list_element_with_trailing_comma", }

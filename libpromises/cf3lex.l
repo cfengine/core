@@ -34,6 +34,7 @@
 #include <cf3parse.h>
 #include <parser_state.h>
 #include <file_lib.h>
+#include <regex.h>
 
 /* yyinput/input are generated and unused */
 
@@ -51,6 +52,8 @@
 
 //#define ParserDebug if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG) printf
 #define ParserDebug(...) ((void) 0)
+
+static pcre *context_expression_whitespace_rx = NULL;
 
 static int DeEscapeQuotedString(const char *from, char *to);
 
@@ -121,7 +124,7 @@ arrow      ->
 
 qstring        \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 
-class          [.|&!()a-zA-Z0-9_\200-\377:]+::
+class          [.|&!()a-zA-Z0-9_\200-\377:][\t .|&!()a-zA-Z0-9_\200-\377:]*::
 varclass       (\"[^"]*\"|\'[^']*\')::
 
 promise_type   [a-zA-Z_]+:
@@ -324,6 +327,20 @@ promise_type   [a-zA-Z_]+:
                         
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
+                          if (NULL == context_expression_whitespace_rx)
+                          {
+                              context_expression_whitespace_rx = CompileRegex(CFENGINE_REGEX_WHITESPACE_IN_CONTEXTS);
+                          }
+
+                          if (NULL == context_expression_whitespace_rx)
+                          {
+                              yyerror("The context expression whitespace regular expression could not be compiled, aborting.");
+                          }
+
+                          if (StringMatchFullWithPrecompiledRegex(context_expression_whitespace_rx, yytext))
+                          {
+                              yyerror("class names can't be separated by whitespace without an intervening operator");
+                          }
 
                           tmp = xstrdup(yytext);
                           tmp[yyleng-2] = '\0';

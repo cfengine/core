@@ -33,6 +33,7 @@
 
 #include <sequence.h>                                           /* Seq */
 
+#define CFENGINE_REGEX_WHITESPACE_IN_CONTEXTS ".*[_A-Za-z0-9][ \\t]+[_A-Za-z0-9].*"
 
 /* Try to use CompileRegex() and StringMatchWithPrecompiledRegex(). */
 pcre *CompileRegex(const char *regex);

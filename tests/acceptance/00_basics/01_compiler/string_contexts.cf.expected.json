@@ -1,0 +1,25 @@
+{
+  "iterated_a": "iteration class a",
+  "iterated_b": "iteration class b",
+  "iterated_c": "iteration class c",
+  "myclass": "any",
+  "mylist": [
+    "a",
+    "b",
+    "c"
+  ],
+  "myvar": "me",
+  "s1": "hello, this is me",
+  "s2": "any hello",
+  "s3": "string hello",
+  "s4": "variable context hello!!!",
+  "s4_2": "variable context hello!!!",
+  "s5": "compound variable context hello!!!",
+  "s6": "6",
+  "s7": "augmented variable context hello!!!",
+  "s8": "8",
+  "whitespace1": "whitespace1: quoted with spaces",
+  "whitespace2": "whitespace2: unquoted with spaces, starts with valid class",
+  "whitespace4": "whitespace4: unquoted with spaces, starts with missing class but is true",
+  "whitespace5": "whitespace5: remove spaces and tabs from an expression"
+}

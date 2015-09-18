@@ -1,0 +1,74 @@
+#######################################################
+#
+# Test that modules are allowed to emit empty lists
+# Redmine: 7577
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "any",
+        meta => { "redmine7577" };
+
+  commands:
+      "$(G.cat)"
+        args => "$(this.promise_filename).txt",
+        module => "true",
+        comment => "Module output found in this file";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "length_of_list_from_module"
+      int => length("default:cat.list_from_module");
+
+  classes:
+    "have_list_from_module"
+      expression => isvariable("default:cat.list_from_module"),
+      comment => "Modules should be able to define empty/null lists.";
+
+    "list_from_module_length_0"
+      expression => strcmp( 0, $(length_of_list_from_module) );
+
+    "ok"
+      and => { "have_list_from_module", "list_from_module_length_0" }, 
+      comment => "OK since we can both define an empty list, and its length is 0";
+      
+  reports:
+    DEBUG|DEBUG_check::
+    "DEBUG $(this.bundle): Module defined 'default:cat.list_from_module'"
+      if => "have_list_from_module";
+
+    "DEBUG $(this.bundle): Module did not define the expected list 'default:cat.list_from_module'"
+      unless => "have_list_from_module";
+
+
+    "DEBUG $(this.bundle): The list defined from the module had the expected length of 0"
+      if => "list_from_module_length_0";
+
+    "DEBUG $(this.bundle): The the list defined from the module did not have the expected length or was undefined"
+      unless => "list_from_module_length_0";
+
+
+    "DEBUG $(this.bundle): length of list from module '$(length_of_list_from_module)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

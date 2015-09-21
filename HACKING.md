@@ -238,14 +238,28 @@ macros in C code.
 * Linux: Use `__linux__`.  Don't use `LINUX`.
 * HP/UX: Use `__hpux` (two underscores!).  Don't use `hpux`.
 
-Output Message Conventions
---------------------------
+Output Message, Logging Conventions
+-----------------------------------
 
 CFEngine outputs messages about what its doing using the `Log()` function. It
 takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
 the following when writing output messages.
 
-* Do not decorate with ornamental symbols or indentation in messages. Leave
+* Log levels
+  * `LOG_LEVEL_CRIT` For critical errors, process exits immediately.
+  * `LOG_LEVEL_ERR`: For cf-agent, promise failed. For cf-serverd,
+    some system error occured that is worth logging to syslog.
+  * `LOG_LEVEL_INFO`: For cf-agent, changes that the agent performs
+    to the system, for example when a promise has been repaired. For
+    cf-serverd, `access_rules` denials for connected clients.
+  * `LOG_LEVEL_VERBOSE` :: Log *human readable* progress info useful to
+    users (i.e. sysadmins). Also errors that are unimportant or expected
+    in certain cases.
+  * `LOG_LEVEL_DEBUG`: Log anything else (for example various progress info).
+    Try to avoid "Entering function Foo()", but rather use for
+    "While copying, got reply '%s' from server".
+
+* Do not decorate with symbols or indentation in messages. Leave
   formatting to `Log()`.
 
 * When quoting strings, use single quotes, e.g. "Some stuff '%s' happened in
@@ -265,9 +279,6 @@ the following when writing output messages.
   by one call to `Log()`.
 
 * Normally, do not circumvent `Log()` by writing to stdout or stderr.
-
-* Use `LOG_LEVEL_DEBUG` for environmental situations, e.g. don't write "Entering
-  function Foo()", but rather "While copying, got reply '%s' from server".
 
 
 Testing

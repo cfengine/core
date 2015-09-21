@@ -324,4 +324,24 @@ in the top directory of the source code checkout.
 ChangeLog Entries
 -----------------
 
-blahblue
+When a new feature or a bugfix is being merged, it is necessary to be
+accompanied by a proper entry in the ChangeLog file. Besides manually editing
+the file, we have an automatic way of generating them before the release,
+by properly formatting *commit messages*
+(see [git-commit-template](misc/githooks/git-commit-template)).
+
+In short, in your pull request you should have at least one commit with
+a "Changelog:" line in it, after the title. This may be one of the following:
+
+* To write arbitrary message in the ChangeLog:
+```Changelog: <message>```
+* To use the commit title line in the ChangeLog:
+```Changelog: Title```
+* To use the entire commit message in the ChangeLog:
+```Changelog: Commit```
+
+It's worth noting that we strive to have bugtracker tickets
+for most changes, and they should be mentioned in the ChangeLog
+entries. In fact if anywhere in the commit message the
+string ```Redmine #1234``` is found, it will be automatically
+added to the ChangeLog.

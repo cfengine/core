@@ -177,19 +177,16 @@ Coding Style
   [Google C++ Style Guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
   Function names are CamelCase (with first letter capital), variable and
   parameters are under_scored.
-
   * Caution, do-while loops should have the closing brace at the same
     line with while, so that it can't be confused with empty while statement.
 
-    ```
+    ```c
     do
     {
         /* ... */
     } while (condition);
     ```
-
 * C99 is encouraged in the language, use it.
-
 * As for using C99-specific libc functions, you can mostly use them,
   because we provide replacement functions in libcompat, since many old
   Unix platforms are missing those. If there is no replacement for a
@@ -198,26 +195,18 @@ Coding Style
 
   Current functions known to be missing from libcompat (so stick to
   C89):
-
   * `[s]scanf()`
-
 * Control statements need to have braces, no matter how simple they are.
-
 * 4 spaces indentation level, no tabs.
-
 * Always use typedefs, no "struct X", or "enum Y" are allowed. Types
   defined with typedef should be in camelcase and no trailing "_t",
   "_f" etc.
-
 * Constify what can be. Don't use global variables.
-
 * Keep tidy header files and document using Doxygen (within reason).
-
 * Read
   [Linux Kernel coding style](https://www.kernel.org/doc/Documentation/CodingStyle) and
   [libabc coding style](https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README).
   They contain many good practices.
-
 * http://en.wikipedia.org/wiki/Golden_Rule
 
 

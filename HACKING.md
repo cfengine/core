@@ -2,13 +2,17 @@ How to contribute to CFEngine
 =============================
 
 Thanks for considering contributing to CFEngine! We take pull-requests
-[on GitHub](https://github.com/cfengine/core/pulls), and we have a public
-[Redmine bug-tracker](https://dev.cfengine.com).
+[on GitHub](https://github.com/cfengine/core/pulls) and we have a public
+[Redmine bug-tracker](https://dev.cfengine.com). Discussion is taking place
+on the [dev-cfengine](https://groups.google.com/forum/#!forum/dev-cfengine)
+and [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine)
+mailing lists.
 
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea
 for a new feature, it might be a good idea to open up a feature ticket in
-Redmine first to get discussion going.
+Redmine and send a message to dev-cfengine mailing list,
+before actually contributing the code, in order to get discussion going.
 
 
 

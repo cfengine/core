@@ -223,8 +223,15 @@ Coding Style
 C Platform Macros
 -----------------
 
-It's important to have portability in a consistent way.  Use these platform
-macros in C code.
+It's important to have portability in a consistent way. In general we
+use *autoconf* to test for features (like system headers, defines,
+specific functions). So try to use the autoconf macros `HAVE_DECL_X`,
+`HAVE_STRUCT_Y`, `HAVE_MYFUNCTION` etc.  See the
+[autoconf manual existing tests section](https://www.gnu.org/software/autoconf/manual/html_node/Existing-Tests.html).
+
+It is preferable to write feature-specific ifdefs, instead of
+OS-specific, but it's not always easy. If necessary use these
+platform-specific macros in C code:
 
 * Any Windows system: Use `_WIN32`.  Don't use `NT`.
 * mingw-based Win32 build: Use `__MINGW32__`.  Don't use `MINGW`.
@@ -237,6 +244,7 @@ macros in C code.
 * Solaris: Use `__sun`. Don't use `SOLARIS`.
 * Linux: Use `__linux__`.  Don't use `LINUX`.
 * HP/UX: Use `__hpux` (two underscores!).  Don't use `hpux`.
+
 
 Output Message, Logging Conventions
 -----------------------------------

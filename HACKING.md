@@ -129,14 +129,7 @@ files. Each file more or less maps to a promise type.
 As an example, the file `verify_packages.h` contains
 `VerifyPackagesPromise(EvalContext *ctx, Promise *pp)`.
 
-### cf-monitord
-
-Monitoring probes are contained in `mon_*.c` files. These all have a common
-header file `mon.h`.
-
-
-Lifecycle of cf-agent
----------------------
+#### Lifecycle of cf-agent
 
 The following outlines the normal execution of a *cf-agent* run.
 
@@ -149,8 +142,7 @@ The following outlines the normal execution of a *cf-agent* run.
 7. Write reports to disk.
 
 
-Bootstrapping cf-agent
-----------------------
+#### Bootstrapping cf-agent
 
 The following outlines the steps taken by agent during a successful bootstrap
 to a policy server.
@@ -166,6 +158,12 @@ to a policy server.
 6. Agent finishes.
 7. *cf-execd* continues to run *cf-agent* periodically with policy
    from */inputs*.
+
+### cf-monitord
+
+Monitoring probes are contained in `mon_*.c` files. These all have a common
+header file `mon.h`.
+
 
 
 Coding Style

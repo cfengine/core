@@ -15,15 +15,18 @@ Redmine first to get discussion going.
 Top reasons pull-requests are rejected or delayed
 -------------------------------------------------
 
-* Code does not follow style guidlines. (See section on Coding Style)
+* Code does not follow style guidlines.
+See [Coding Style](#coding-style).
 
 * Pull request addresses several disparate issues. In general, smaller
 pull-requests are better because they are easier to review and stay mergeable
 longer.
 
-* Messy commit log. Tidy up the commit log by squashing commits. Write good
-commit messages: One line summary at the top, followed by an optional
-detailing paragraphs. Please reference Redmine tickets, e.g. "Close #1234"
+* Messy commit log. Tidy up the commit log by squashing commits.
+
+* Missing ChangeLog description in commit message, which is mandatory
+for new features or bugfixes to be accepted.
+See [ChangeLog Entries](#changelog-entries) for details.
 
 * Code is out-of-date, does not compile, or does not pass all tests. Again,
 focused and small pull-requests are better.
@@ -268,8 +271,8 @@ mock up the environment.
 
 There are two types of tests in CFEngine. *Unit tests* are generally
 preferable to *acceptance tests* because they are more targeted and take less
-time to run. Most tests can be run using *make check* (see Unsafe tests
-below).
+time to run. Most tests can be run using `make check`.
+See [Unsafe Tests](#unsafe-tests) below.
 
 * *Unit tests*. Unit tests are a great way of testing some new module (header
   file). Ideally, the new functionality is written so that the environment can
@@ -280,7 +283,7 @@ below).
   a change and check it. See also script tests/acceptance/testall.
 
 
-Unsafe tests
+Unsafe Tests
 ------------
 
 Note that some acceptance tests are considered to be unsafe because they
@@ -316,3 +319,9 @@ and run
  ln -s contrib/dir-locals.el .dir-locals.el
 
 in the top directory of the source code checkout.
+
+
+ChangeLog Entries
+-----------------
+
+blahblue

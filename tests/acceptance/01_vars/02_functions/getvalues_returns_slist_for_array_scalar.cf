@@ -1,0 +1,63 @@
+#######################################################
+#
+# Test getvalues() returns an slist when used against
+# an array that has a scalar.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "data[foo]" string => "bar";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "!any",
+        meta => { "redmine7116" };
+
+  vars:
+    "values_data" slist => getvalues("init.data");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "expected_elements" slist => { "bar" };
+
+    "diff1" slist => difference( "test.values_data", expected_elements );
+    "diff2" slist => difference( expected_elements, "test.values_data");
+
+    "len_diff1" int => length(diff1);
+    "len_diff2" int => length(diff2);
+
+  classes:
+    "ok" expression => strcmp( $(len_diff1), $(len_diff2) );
+
+  reports:
+    DEBUG::
+      "DEBUG: data value: '$(test.values_data)'";
+      "DEBUG: expected value: '$(expected_elements)'";
+      "DEBUG: found '$(diff1)' in test.values_data, but not in expected_elements";
+      "DEBUG: found '$(diff2)' in expected_elements, but not in test.values_data";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

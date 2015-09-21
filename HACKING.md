@@ -21,6 +21,12 @@ Top reasons pull-requests are rejected or delayed
 pull-requests are better because they are easier to review and stay mergeable
 longer.
 
+* Big feature is added, but it is not configurable in compile-time.
+We are striving to keep CFEngine lightweight and fast, so big new
+features should be possible to disable with
+```./configure --disable-feature``` and linking to new libraries
+should be optional with ```./configure --without-libfoo```.
+
 * Messy commit log. Tidy up the commit log by squashing commits.
 
 * Missing ChangeLog description in commit message, which is mandatory

@@ -1,9 +1,9 @@
 How to contribute to CFEngine
 =============================
 
-Thanks for considering contributing to the CFEngine! We take pull-requests on
-GitHub at http://github.com/cfengine, and we have a public Redmine bug-tracker
-at http://bug.cfengine.com
+Thanks for considering contributing to CFEngine! We take pull-requests
+[on GitHub](https://github.com/cfengine/core/pulls), and we have a public
+[Redmine bug-tracker](https://dev.cfengine.com).
 
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea
@@ -15,8 +15,7 @@ Redmine first to get discussion going.
 Top reasons pull-requests are rejected or delayed
 -------------------------------------------------
 
-* Code does not follow style guidlines.
-See [Coding Style](#coding-style).
+* Code does not follow style guidlines. See [Coding Style](#coding-style).
 
 * Pull request addresses several disparate issues. In general, smaller
 pull-requests are better because they are easier to review and stay mergeable
@@ -32,7 +31,7 @@ See [ChangeLog Entries](#changelog-entries) for details.
 focused and small pull-requests are better.
 
 * No attached test case. Normally, all new code needs test cases. This means a
-functional test runnable with 'make check'.
+functional test runnable with `make check`.
 
 
 Code Overview
@@ -118,16 +117,16 @@ Things you should not use in *libpromises*
 
 ### cf-agent
 
-The binary *cf-agent* and contains most actuation logic in the *verify_.h*
+The binary *cf-agent* contains most actuation logic in the `verify_*.h`
 files. Each file more or less maps to a promise type.
 
-As an example, the file *verify_packages.h* contains
-*VerifyPackagesPromise(EvalContext *ctx, Promise *pp)*.
+As an example, the file `verify_packages.h` contains
+`VerifyPackagesPromise(EvalContext *ctx, Promise *pp)`.
 
 ### cf-monitord
 
-Monitoring probes are contained in *mon_.c* files. These all have a common
-header file *mon.h*.
+Monitoring probes are contained in `mon_*.c` files. These all have a common
+header file `mon.h`.
 
 
 Lifecycle of cf-agent
@@ -166,8 +165,8 @@ to a policy server.
 Coding Style
 ------------
 
-* Loosely based on Allman-4 and the Google C++ Style Guide
-  (http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
+* Loosely based on Allman-4 and the
+  [Google C++ Style Guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
   Function names are CamelCase (with first letter capital), variable and
   parameters are under_scored.
 
@@ -196,7 +195,7 @@ Coding Style
   Current functions known to be missing from libcompat (so stick to
   C89):
 
-  * [s]scanf
+  * `[s]scanf()`
 
 * Control statements need to have braces, no matter how simple they are.
 
@@ -234,12 +233,12 @@ macros in C code.
 Output Message Conventions
 --------------------------
 
-CFEngine outputs messages about what its doing using the *Log* function. It
-takes a *LogLevel* enum mapping closely to syslog priorities. Please try to do
+CFEngine outputs messages about what its doing using the `Log()` function. It
+takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
 the following when writing output messages.
 
 * Do not decorate with ornamental symbols or indentation in messages. Leave
-  formatting to *Log*.
+  formatting to `Log()`.
 
 * When quoting strings, use single quotes, e.g. "Some stuff '%s' happened in
   '%s'.
@@ -250,15 +249,16 @@ the following when writing output messages.
 * Use output sparingly, and use levels appropriately. Verbose logging tends to
   get very verbose.
 
-* Use platform-independent *GetErrorStr* for strerror(errno).  Write
-  e.g. Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr())
+* Use platform-independent `GetErrorStr()` for `strerror(errno)`.  Write
+  for example
+  ```Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr());```
 
 * Normally, try to keep each message to one line of output, produced
-  by one call to *Log*.
+  by one call to `Log()`.
 
-* Normally, do not circumvent *Log* by writing to stdout or stderr.
+* Normally, do not circumvent `Log()` by writing to stdout or stderr.
 
-* Use LOG_LEVEL_DEBUG for environmental situations, e.g. don't write "Entering
+* Use `LOG_LEVEL_DEBUG` for environmental situations, e.g. don't write "Entering
   function Foo()", but rather "While copying, got reply '%s' from server".
 
 
@@ -298,7 +298,7 @@ To run all tests, including the unsafe ones, you either need to logged in as
 root or have "sudo" configured to not ask for a password. Then run the
 following:
 
-  $ UNSAFE_TESTS=1 GAINROOT=sudo make check
+    $ UNSAFE_TESTS=1 GAINROOT=sudo make check
 
 Again: DO NOT do this on your main computer! Always use a test machine,
 preferable in a VM.
@@ -311,12 +311,12 @@ There is Elisp snippet in contrib/cfengine-code-style.el which defines the
 project's coding style. Please use it when working with source code. The
 easiest way to do so is to add
 
- (add-to-list 'load-path "<core checkout directory>/contrib")
- (require 'cfengine-code-style)
+    (add-to-list 'load-path "<core checkout directory>/contrib")
+    (require 'cfengine-code-style)
 
 and run
 
- ln -s contrib/dir-locals.el .dir-locals.el
+    ln -s contrib/dir-locals.el .dir-locals.el
 
 in the top directory of the source code checkout.
 

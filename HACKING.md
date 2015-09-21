@@ -246,6 +246,10 @@ platform-specific macros in C code:
 * Linux: Use `__linux__`.  Don't use `LINUX`.
 * HP/UX: Use `__hpux` (two underscores!).  Don't use `hpux`.
 
+Finally, it's best to avoid polluting the code logic with many ifdefs.
+Try restricting ifdefs in the header files, or in the beginning of
+the C files.
+
 
 Output Message, Logging Conventions
 -----------------------------------

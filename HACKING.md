@@ -175,34 +175,85 @@ Coding Style
 
 * Loosely based on Allman-4 and the
   [Google C++ Style Guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
-  Function names are CamelCase (with first letter capital), variable and
-  parameters are under_scored.
+* Keep in mind that code should be readable by non C experts.
+  If you are a Guru, try to restrain yourself, only do magic when
+  absolutely necessary.
+* 4 spaces indentation level, no tabs.
+* Function names are `CamelCase` (with first letter capital), variables and
+  parameters are `under_scored`.
+  * If you introduce a new namespace, you can use underscore as
+    namespace-identifier separator, for example
+    `StrList_BinarySearch()`.
+  * Avoid introducing extra long identifiers, like
+    ~~`GenericAgentConfigParseWarningOptions()`~~.
+* Try not to include assignments inside if/while expressions
+  *unless they avoid great repetition*. On the average case,
+  just put the assignment on the previous line. So try NOT to do
+  the following:
+  ~~```if ((ret = open(...)) == -1)```~~
+* Explicit comparisons are better than implicit, i.e. prefer writing
+  ```if (number == 0)``` or ```if (pointer == NULL)```
+  instead of ~~```if (!number)```~~ or ~~```if (!pointer)```~~. It only makes
+  sense to test booleans directly, for example ```if (is_valid)``` is good.
+  Furthermore have the literal last in the comparison, not first, i.e.
+  prefer writing ```if (open(...) == -1)``` instead of
+  ~~```if (-1 == open(...))```~~.
+* Control statements need to have braces on separate line,
+  no matter how simple they are.
   * Caution, do-while loops should have the closing brace at the same
     line with while, so that it can't be confused with empty while statement.
-
     ```c
     do
     {
         /* ... */
+
     } while (condition);
     ```
-* C99 is encouraged in the language, use it.
-* As for using C99-specific libc functions, you can mostly use them,
+* *C99 is encouraged in the language, use it.*
+
+  As for using C99-specific libc functions, you can mostly use them,
   because we provide replacement functions in libcompat, since many old
   Unix platforms are missing those. If there is no replacement for a
   C99-specific function, then either stick to C89, or write the
   libcompat replacement.
 
-  Current functions known to be missing from libcompat (so stick to
-  C89):
+  Current functions known to be missing from libcompat
+  (so stick to C89):
   * `[s]scanf()`
-* Control statements need to have braces, no matter how simple they are.
-* 4 spaces indentation level, no tabs.
+* Fold new code at 78 columns.
+* Do not break string literals. Prefer having strings on a single line
+  In order to improve grep-ability. If they do not fit on a single line,
+  try breaking on punctuation. In worst case scenario, you are allowed
+  to surpass the 78 columns limit.
+
+  Bad:
+  ```c
+  Log(LOG_LEVEL_INFO, "Some error occurred while reading installed "
+      "packages cache.");
+  ```
+  Good:
+  ```c
+  Log(LOG_LEVEL_INFO,
+      "Some error occurred while reading installed packages cache");
+  ```
 * Always use typedefs, no "struct X", or "enum Y" are allowed. Types
   defined with typedef should be in camelcase and no trailing "_t",
   "_f" etc.
-* Constify what can be. Don't use global variables.
-* Keep tidy header files and document using Doxygen (within reason).
+* Constify what can be `const`. Minimize use of global variables.
+  Never declare a global variable in a library (e.g. libpromises) and
+  change it in the programs.
+* Don't use `static` variables that change, since they are not thread-safe.
+* Sizes of stack-allocated buffers should be deduced using `sizeof()`.
+  Never hard-code the size (like `CF_BUFSIZE`).
+* Avoid using type casts, unless absolutely necessary. Usually a compiler
+  warning is better satisfied with correct code rather than using a type cast.
+  * Type casts should be separated with one space from the variable,
+    for example ```(struct sockaddr *) &myaddr```.
+* Avoid pointless initialisation of variables, because they
+  silence important compiler warnings. Only initialise variables
+  when there is a reason to do so.
+* Document using Doxygen (within reason), preferably in the `.c` files,
+  not the header files.
 * Read
   [Linux Kernel coding style](https://www.kernel.org/doc/Documentation/CodingStyle) and
   [libabc coding style](https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README).

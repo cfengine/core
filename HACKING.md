@@ -188,10 +188,6 @@ Coding Style
     } while (condition);
     ```
 
-* Read
-  https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README
-  It contains many good practices not only suitable for library writers.
-
 * C99 is encouraged in the language, use it.
 
 * As for using C99-specific libc functions, you can mostly use them,
@@ -216,6 +212,11 @@ Coding Style
 * Constify what can be. Don't use global variables.
 
 * Keep tidy header files and document using Doxygen (within reason).
+
+* Read
+  [Linux Kernel coding style](https://www.kernel.org/doc/Documentation/CodingStyle) and
+  [libabc coding style](https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README).
+  They contain many good practices.
 
 * http://en.wikipedia.org/wiki/Golden_Rule
 

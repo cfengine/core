@@ -1,4 +1,4 @@
-# Test that select_class is skipped when the list included is not yet expandable
+# Test that select class is actuated when it has only a single class given
 body common control {
       inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
@@ -8,12 +8,12 @@ body common control {
 bundle common test 
 {
   meta:
-      "test_soft_fail" string => "any",
+      "test_soft_fail" string => "!any",
         meta => { "redmine7482" };
 
   vars:
     any::
-      "common_classes" slist => { "common_1", "common_2" };
+      "common_classes" slist => { };
 
     common_class_selected::	
       "class_selected"
@@ -21,15 +21,14 @@ bundle common test
         if => "$(common_classes)";
   
   classes:
-      # During pre-eval classes are checked first. During that initial pass the
-      # common_classes list is undefined, and so the promise should be skipped.
       "common_class_selected"
-        select_class => { @(common_classes) };
+        select_class => { "common_1" };
+
 }
 
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_passif("common_1|common_2",
+      "any" usebundle => dcs_passif("common_1",
                                     "$(this.promise_filename)");
 }

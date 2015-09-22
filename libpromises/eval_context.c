@@ -2050,28 +2050,87 @@ const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const P
     return bp;
 }
 
-const Body *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
-                                             const char *callee_reference, const char *callee_type)
+const Body *EvalContextFindFirstMatchingBody(const Policy *policy, const char *type,
+                                             const char *namespace, const char *name)
 {
-    ClassRef ref = IDRefQualify(ctx, callee_reference);
-
-    const Body *bp = NULL;
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         const Body *curr_bp = SeqAt(policy->bodies, i);
-        if ((strcmp(curr_bp->type, callee_type) != 0) ||
-            (strcmp(curr_bp->name, ref.name) != 0) ||
-            !StringSafeEqual(curr_bp->ns, ref.ns))
+        if ((strcmp(curr_bp->type, type) == 0) &&
+            (strcmp(curr_bp->name, name) == 0) &&
+            StringSafeEqual(curr_bp->ns, namespace))
         {
-            continue;
+            return curr_bp;
         }
+    }
 
-        bp = curr_bp;
-        break;
+    return NULL;
+}
+
+void EvalContextAppendBodyParentsAndArgs(const EvalContext *ctx, const Policy *policy,
+                                         Seq* chain, const Body *bp, const char *callee_type,
+                                         int depth)
+{
+    if (depth > 30) // sanity check
+    {
+        Log(LOG_LEVEL_ERR, "EvalContextAppendBodyParentsAndArgs: body inheritance chain depth %d in body %s is too much, aborting", depth, bp->name);
+        exit(EXIT_FAILURE);
+    }
+
+    for (size_t k = 0; bp->conlist && k < SeqLength(bp->conlist); k++)
+    {
+        Constraint *scp = SeqAt(bp->conlist, k);
+        if (strcmp("inherit_from", scp->lval) == 0)
+        {
+            char* call = NULL;
+
+            if (RVAL_TYPE_SCALAR == scp->rval.type)
+            {
+                call = RvalScalarValue(scp->rval);
+            }
+            else if (RVAL_TYPE_FNCALL == scp->rval.type)
+            {
+                call = RvalFnCallValue(scp->rval)->name;
+            }
+
+            ClassRef parent_ref = IDRefQualify(ctx, call);
+
+            // We don't do a more detailed check for circular
+            // inheritance because the depth check above will catch it
+            if (0 == strcmp(parent_ref.name, bp->name))
+            {
+                Log(LOG_LEVEL_ERR, "EvalContextAppendBodyParentsAndArgs: self body inheritance in %s->%s, aborting", bp->name, parent_ref.name);
+                exit(EXIT_FAILURE);
+            }
+
+            const Body *parent = EvalContextFindFirstMatchingBody(policy, callee_type, parent_ref.ns, parent_ref.name);
+            if (parent)
+            {
+                SeqAppend(chain, (void *)parent);
+                SeqAppend(chain, &(scp->rval));
+                EvalContextAppendBodyParentsAndArgs(ctx, policy, chain, parent, callee_type, depth+1);
+            }
+            ClassRefDestroy(parent_ref);
+        }
+    }
+}
+
+Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
+                                      const char *callee_reference, const char *callee_type)
+{
+    ClassRef ref = IDRefQualify(ctx, callee_reference);
+    Seq *bodies = SeqNew(2, NULL);
+
+    const Body *bp = EvalContextFindFirstMatchingBody(policy, callee_type, ref.ns, ref.name);
+    if (bp)
+    {
+        SeqAppend(bodies, (void *)bp);
+        SeqAppend(bodies, (void *)NULL);
+        EvalContextAppendBodyParentsAndArgs(ctx, policy, bodies, bp, callee_type, 1);
     }
 
     ClassRefDestroy(ref);
-    return bp;
+    return bodies;
 }
 
 bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key)

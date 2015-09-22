@@ -1,0 +1,41 @@
+##############################################################################
+#
+# Redmine #4309: parameterized 2-level body inheritance with inherit_from
+#
+##############################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle common test
+{
+  reports:
+      "test_inherit" classes => scoped_classes_generic_none2_inherit();
+}
+
+body classes scoped_classes_generic_none_inherit
+{
+      inherit_from => scoped_classes_generic("namespace", "test_inherit_none");
+}
+
+body classes scoped_classes_generic_none2_inherit
+{
+      inherit_from => scoped_classes_generic_none_inherit;
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("test_inherit_none_ok",
+                                          "",
+                                          $(this.promise_filename)),
+      inherit => "true";
+}

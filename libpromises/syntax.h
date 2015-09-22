@@ -122,6 +122,7 @@ JsonElement *SyntaxToJson(void);
 #define FnCallTypeNew(name, return_type, arguments, implementation, description, opts, category, status) { name, return_type, arguments, implementation, description, .options = opts, category, status }
 #define FnCallTypeNewNull() FnCallTypeNew(NULL, CF_DATA_TYPE_NONE, NULL, NULL, NULL, false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL)
 
-#define CONSTRAINT_SYNTAX_GLOBAL { "meta", CF_DATA_TYPE_STRING_LIST, .range.validation_string = "", "Tags describing the body", SYNTAX_STATUS_NORMAL }
+#define CONSTRAINT_SYNTAX_GLOBAL { "meta", CF_DATA_TYPE_STRING_LIST, .range.validation_string = "", "Tags describing the body", SYNTAX_STATUS_NORMAL }, \
+                                 { "inherit_from", CF_DATA_TYPE_BODY, .range.validation_string = "", "Body from which attributes will be inherited", SYNTAX_STATUS_NORMAL }
 
 #endif

@@ -325,18 +325,64 @@ Rlist *RlistAppendRval(Rlist **start, Rval rval)
     return rp;
 }
 
-Rval RvalNew(const void *item, RvalType type)
+Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
 {
     switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        return (Rval) { xstrdup(item), RVAL_TYPE_SCALAR };
+        if (NULL != map && JsonLength(map) > 0 &&       // do we have a rewrite map?
+            (strstr(item, "$(") || strstr(item, "${"))) // are there unresolved variable references?
+        {
+            // TODO: replace with BufferSearchAndReplace when the
+            // string_replace code is merged.
+            // Sorry about the CF_BUFSIZE ugliness.
+            int max_size = 10*CF_BUFSIZE+1;
+            const char* buffer_from = xmalloc(max_size);
+            const char* buffer_to = xmalloc(max_size);
+
+            Buffer *format = BufferNew();
+            strncpy(buffer_from, item, max_size);
+
+            JsonIterator iter = JsonIteratorInit(map);
+            const char *key;
+
+            for (int loop = 0; loop < 10; loop++)
+            {
+                while ((key = JsonIteratorNextKey(&iter)))
+                {
+                    BufferPrintf(format, "$(%s)", key);
+                    ReplaceStr(buffer_from, buffer_to, max_size, BufferData(format), JsonObjectGetAsString(map, key));
+                    strncpy(buffer_from, buffer_to, max_size);
+                    BufferPrintf(format, "${%s}", key);
+                    ReplaceStr(buffer_from, buffer_to, max_size, BufferData(format), JsonObjectGetAsString(map, key));
+                }
+
+                // are there unresolved variable references?
+                if (NULL == strstr(item, "$(") &&
+                    NULL == strstr(item, "${"))
+                {
+                    break;
+                }
+            }
+
+            char *ret = xstrdup(buffer_to);
+
+            BufferDestroy(format);
+            free(buffer_to);
+            free(buffer_from);
+
+            return (Rval) { ret, RVAL_TYPE_SCALAR };
+        }
+        else
+        {
+            return (Rval) { xstrdup(item), RVAL_TYPE_SCALAR };
+        }
 
     case RVAL_TYPE_FNCALL:
-        return (Rval) { FnCallCopy(item), RVAL_TYPE_FNCALL };
+        return (Rval) { FnCallCopyRewriter(item, map), RVAL_TYPE_FNCALL };
 
     case RVAL_TYPE_LIST:
-        return (Rval) { RlistCopy(item), RVAL_TYPE_LIST };
+        return (Rval) { RlistCopyRewriter(item, map), RVAL_TYPE_LIST };
 
     case RVAL_TYPE_CONTAINER:
         return (Rval) { JsonCopy(item), RVAL_TYPE_CONTAINER };
@@ -349,6 +395,16 @@ Rval RvalNew(const void *item, RvalType type)
     return ((Rval) { NULL, RVAL_TYPE_NOPROMISEE });
 }
 
+Rval RvalNew(const void *item, RvalType type)
+{
+    return RvalNewRewriter(item, type, NULL);
+}
+
+Rval RvalCopyRewriter(Rval rval, JsonElement *map)
+{
+    return RvalNewRewriter(rval.item, rval.type, map);
+}
+
 Rval RvalCopy(Rval rval)
 {
     return RvalNew(rval.item, rval.type);
@@ -356,17 +412,22 @@ Rval RvalCopy(Rval rval)
 
 /*******************************************************************/
 
-Rlist *RlistCopy(const Rlist *rp)
+Rlist *RlistCopyRewriter(const Rlist *rp, JsonElement *map)
 {
     Rlist *start = NULL;
 
     while (rp != NULL)
     {
-        RlistAppendRval(&start, RvalCopy(rp->val));
+        RlistAppendRval(&start, RvalCopyRewriter(rp->val, map));
         rp = rp->next;
     }
 
     return start;
+}
+
+Rlist *RlistCopy(const Rlist *rp)
+{
+    return RlistCopyRewriter(rp, NULL);
 }
 
 /*******************************************************************/

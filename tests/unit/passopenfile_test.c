@@ -31,18 +31,46 @@ static bool DIALEDUP = false;
  * connect()ed to by the same user; likewise by one in its group.
  * Probably put that test in some other file ! */
 
+
+/* Ensure no stray child is running. */
 static void wait_for_child(bool impatient)
 {
-    /* Ensure no stray child is running: */
-    while (SPAWNED_PID >= 0)
+    if (SPAWNED_PID == -1)                      /* it's BAD to run kill(-1) */
     {
-        errno = 0;
-        if ((impatient && kill(SPAWNED_PID, SIGKILL) == -1 && errno == ESRCH) ||
-            waitpid(SPAWNED_PID, NULL, 0) > 0)
+        return;
+    }
+
+    while(true)
+    {
+        if (impatient)
         {
-            SPAWNED_PID = -1;
+            errno = 0;
+            int ret = kill(SPAWNED_PID, SIGKILL);
+            if (ret == -1 && errno == ESRCH);
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Child process to be killed does not exist (PID %jd)",
+                    (intmax_t) SPAWNED_PID);
+
+                break;                            /* process does not exist */
+            }
+
+            Log(LOG_LEVEL_NOTICE,
+                "Killed previous child process (PID %jd)",
+                (intmax_t) SPAWNED_PID);
+        }
+
+        if (waitpid(SPAWNED_PID, NULL, 0) > 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Child process is dead and has been reaped (PID %jd)",
+                (intmax_t) SPAWNED_PID);
+
+            break;                               /* zombie reaped properly  */
         }
     }
+
+    SPAWNED_PID = -1;
 }
 
 static bool wait_for_io(int whom, bool write)
@@ -81,44 +109,65 @@ static bool wait_for_io(int whom, bool write)
 
 static bool wait_for_dialup(bool write)
 {
-    if (DIALUP[0])
+    assert(DIALUP[0] != '\0');
+
+    for (int i = 5; i-- > 0;)
     {
-        for (int i = 5; i-- > 0;)
+        if (access(DIALUP, write ? W_OK : R_OK) == 0) /* bind() has happened */
         {
-            if (access(DIALUP, write ? W_OK : R_OK) == 0) /* bind() has happened */
-            {
-                sleep(1); /* To let listen() happen, too. */
-                return true;
-            }
-            sleep(1);
+            sleep(1); /* To let listen() happen, too. */
+            return true;
         }
-        Log(LOG_LEVEL_ERR,
-            "Failed to access %s as synchronisation file: %s",
-            DIALUP, GetErrorStr());
+        sleep(1);
     }
-    else
-    {
-        Log(LOG_LEVEL_ERR, "No synchronisation file");
-    }
+    Log(LOG_LEVEL_ERR,
+        "Failed to access %s as synchronisation file: %s",
+        DIALUP, GetErrorStr());
+
     return false;
 }
 
-/* Used, via atexit(), to ensure we delete the file if we create it. */
+/* Used, via atexit(), to ensure we delete the file if we create it at the
+ * exit of all processes, either parent or children. */
 
-static void clear_dialup(void)
+static void clear_listener(void)
 {
-    if (DIALUP[0] && DIALEDUP)
+    if (DIALEDUP)
     {
+        assert(DIALUP[0] != '\0');
+        Log(LOG_LEVEL_VERBOSE, "Cleaning up UDS file");
         unlink(DIALUP);
-        DIALUP[0] = '\0';
+        DIALEDUP = false;
     }
 }
 
-/* Chose a file by which to connect() to the bind()er. */
-
-static bool setup_dialup(void)
+static void clear_previous_test(void)
 {
-    if (!DIALUP[0])
+    /* KILL possible child. */
+    wait_for_child(true);
+
+    /* Clear possible UDS file created by this process (parent). */
+    if (DIALEDUP)
+    {
+        clear_listener();
+    }
+
+    /* What if child got KILLed and never cleaned its UDS file? */
+    struct stat statbuf;
+    if (stat(DIALUP, &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_NOTICE, "UDS file from previous test still exists, "
+            "maybe child did not clean up? Removing and continuing...");
+        unlink(DIALUP);
+    }
+}
+
+/* Choose a file for the Unix Domain Socket, by which to connect() to the
+ * bind()er. */
+
+static bool choose_dialup_UDS_file(void)
+{
+    if (DIALUP[0] == '\0')
     {
         /* Using insecure tempnam().
          *
@@ -147,12 +196,6 @@ static bool setup_dialup(void)
             strlcpy(DIALUP, using, sizeof(DIALUP));
             free(using);
             Log(LOG_LEVEL_VERBOSE, "Synchronising UDS via %s", DIALUP);
-
-            /* Need to call atexit() only once, so do here (called
-             * once, commits us to attempting all tests) instead of
-             * when each test bind()s; that can then set DIALEDUP to
-             * make clear_dialup() actually do something. */
-            atexit(clear_dialup);
         }
     }
     return DIALUP[0] != '\0';
@@ -163,8 +206,14 @@ static bool setup_dialup(void)
 static int setup_listener(void)
 {
     /* Create "server" socket, bind() it, listen() on it, return it. */
-    assert(DIALUP[0]);
-    unlink(DIALUP);
+    assert(DIALUP[0] != '\0');
+    {
+        /* The Unix Domain Socket file was cleaned up in the previous test. */
+        struct stat statbuf;
+        bool UDS_exists = (stat(DIALUP, &statbuf) != -1);
+        assert_false(UDS_exists);
+    }
+
     int server = socket(AF_UNIX, SOCK_STREAM, 0);
     if (server >= 0)
     {
@@ -877,7 +926,7 @@ static bool parent_send(int server, const char *message,
 
 static void test_take_listen_message(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     const char message[] = "verbiage";
     pid_t new_pid = fork();
     if (new_pid == 0)
@@ -923,7 +972,7 @@ static void test_take_listen_message(void)
 
 static void test_take_connect_message(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     const char message[] = "waffle";
     pid_t new_pid = fork();
     if (new_pid == 0)
@@ -969,7 +1018,7 @@ static void test_take_connect_message(void)
 
 static void test_send_listen_message(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1014,7 +1063,7 @@ static void test_send_listen_message(void)
 
 static void test_send_connect_message(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1058,7 +1107,7 @@ static void test_send_connect_message(void)
 
 static void test_take_listen_silent(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1103,7 +1152,7 @@ static void test_take_listen_silent(void)
 
 static void test_take_connect_silent(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1148,7 +1197,7 @@ static void test_take_connect_silent(void)
 
 static void test_send_listen_silent(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1193,7 +1242,7 @@ static void test_send_listen_silent(void)
 
 static void test_send_connect_silent(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1237,7 +1286,7 @@ static void test_send_connect_silent(void)
 
 static void test_connect_outlive(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1271,7 +1320,7 @@ static void test_connect_outlive(void)
 
 static void test_listen_outlive(void)
 {
-    wait_for_child(true);
+    clear_previous_test();
     pid_t new_pid = fork();
     if (new_pid == 0)
     {
@@ -1324,16 +1373,31 @@ int main(void)
         unit_test(test_connect_outlive),
         unit_test(test_listen_outlive)
     };
+
 #if 0 /* 1: toggle as needed. */
     LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
 #endif
 
-    int res = setup_dialup() ? run_tests(tests) : 1;
+    /* Needed to clean up the UDS created from the children, when they exit(),
+       for each test that the child calls setup_listener. Also cleans the last
+       socket (created by this parent process) when this testsuite exit. */
+    atexit(clear_listener);
+
+    int retval;
+    if (choose_dialup_UDS_file() == true)
+    {
+        retval = run_tests(tests);
+    }
+    else
+    {
+        retval = EXIT_FAILURE;
+    }
 
     /* Make sure no child is left behind. */
     if (SPAWNED_PID >= 0)
     {
         kill(SPAWNED_PID, SIGKILL);
     }
-    return res;
+
+    return retval;
 }

@@ -6,7 +6,9 @@ Thanks for considering contributing to CFEngine! We take pull-requests
 [Redmine bug-tracker](https://dev.cfengine.com). Discussion is taking place
 on the [dev-cfengine](https://groups.google.com/forum/#!forum/dev-cfengine)
 and [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine)
-mailing lists.
+mailing lists. You'll find us chatting on Freenode's IRC channels
+[#cfengine](https://webchat.freenode.net/?channels=cfengine&nick=) and
+[#cfengine-dev](https://webchat.freenode.net/?channels=cfengine-dev&nick=).
 
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea

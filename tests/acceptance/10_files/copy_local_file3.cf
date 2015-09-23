@@ -1,0 +1,29 @@
+#######################################################
+#
+# Test local_cp
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).expected"
+      copy_from => local_cp("$(this.promise_filename).expected");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(this.promise_filename).expected",
+                                       "$(G.testfile).expected",
+                                       "$(this.promise_filename)");
+}

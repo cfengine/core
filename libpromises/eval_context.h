@@ -176,8 +176,13 @@ const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonC
  */
 const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const Policy *policy,
                                                  const char *callee_reference, const char *callee_type);
-const Body *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
-                                             const char *callee_reference, const char *callee_type);
+/**
+  @brief Returns a Sequence of const Body* elements, first the body and then its parents
+
+  Uses `inherit_from` to figure out the parents.
+  */
+Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
+                                      const char *callee_reference, const char *callee_type);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);

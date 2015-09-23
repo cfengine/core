@@ -1,0 +1,29 @@
+##############################################################################
+#
+# Redmine #4309: body inheritance with inherit_from
+#
+##############################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test
+{
+  reports:
+      "test_inherit" classes => classes_generic_broken_inherit("test_inherit");
+}
+
+body classes classes_generic_broken_inherit(x)
+{
+      inherit_from => classes_generic("one", "two"); # should break
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_pass("$(this.promise_filename)");
+}

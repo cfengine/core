@@ -1,0 +1,34 @@
+##############################################################################
+#
+# Redmine #4309: body inheritance with inherit_from
+#
+##############################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle common test
+{
+  reports:
+      "foo" classes => classes_generic_nonesuch;
+}
+
+body classes classes_generic_nonesuch
+{
+      inherit_from => classes_generic_nonesuch;
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("any", "", $(this.promise_filename)),
+      inherit => "true";
+}

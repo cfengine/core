@@ -139,9 +139,14 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 
 /*******************************************************************/
 
+FnCall *FnCallCopyRewriter(const FnCall *f, JsonElement *map)
+{
+    return FnCallNew(f->name, RlistCopyRewriter(f->args, map));
+}
+
 FnCall *FnCallCopy(const FnCall *f)
 {
-    return FnCallNew(f->name, RlistCopy(f->args));
+    return FnCallCopyRewriter(f, NULL);
 }
 
 /*******************************************************************/

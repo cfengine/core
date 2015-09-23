@@ -1,35 +1,49 @@
 How to contribute to CFEngine
 =============================
 
-Thanks for considering contributing to the CFEngine! We take pull-requests on
-GitHub at http://github.com/cfengine, and we have a public Redmine bug-tracker
-at http://bug.cfengine.com
+Thanks for considering contributing to CFEngine! We take pull-requests
+[on GitHub](https://github.com/cfengine/core/pulls) and we have a public
+[Redmine bug-tracker](https://dev.cfengine.com). Discussion is taking place
+on the [dev-cfengine](https://groups.google.com/forum/#!forum/dev-cfengine)
+and [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine)
+mailing lists. You'll find us chatting on Freenode's IRC channels
+[#cfengine](https://webchat.freenode.net/?channels=cfengine&nick=) and
+[#cfengine-dev](https://webchat.freenode.net/?channels=cfengine-dev&nick=).
 
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea
 for a new feature, it might be a good idea to open up a feature ticket in
-Redmine first to get discussion going.
+Redmine and send a message to dev-cfengine mailing list,
+before actually contributing the code, in order to get discussion going.
 
 
 
 Top reasons pull-requests are rejected or delayed
 -------------------------------------------------
 
-* Code does not follow style guidlines. (See section on Coding Style)
+* Code does not follow style guidlines. See [Coding Style](#coding-style).
 
 * Pull request addresses several disparate issues. In general, smaller
 pull-requests are better because they are easier to review and stay mergeable
 longer.
 
-* Messy commit log. Tidy up the commit log by squashing commits. Write good
-commit messages: One line summary at the top, followed by an optional
-detailing paragraphs. Please reference Redmine tickets, e.g. "Close #1234"
+* Big feature is added, but it is not configurable in compile-time.
+We are striving to keep CFEngine lightweight and fast, so big new
+features should be possible to disable with
+```./configure --disable-feature``` and linking to new libraries
+should be optional with ```./configure --without-libfoo```.
+
+* Messy commit log. Tidy up the commit log by squashing commits.
+
+* Missing ChangeLog description in commit message, which is mandatory
+for new features or bugfixes to be accepted.
+See [ChangeLog Entries](#changelog-entries) for details.
 
 * Code is out-of-date, does not compile, or does not pass all tests. Again,
 focused and small pull-requests are better.
 
 * No attached test case. Normally, all new code needs test cases. This means a
-functional test runnable with 'make check'.
+functional test runnable with `make check`.
 
 
 Code Overview
@@ -115,20 +129,13 @@ Things you should not use in *libpromises*
 
 ### cf-agent
 
-The binary *cf-agent* and contains most actuation logic in the *verify_.h*
+The binary *cf-agent* contains most actuation logic in the `verify_*.h`
 files. Each file more or less maps to a promise type.
 
-As an example, the file *verify_packages.h* contains
-*VerifyPackagesPromise(EvalContext *ctx, Promise *pp)*.
+As an example, the file `verify_packages.h` contains
+`VerifyPackagesPromise(EvalContext *ctx, Promise *pp)`.
 
-### cf-monitord
-
-Monitoring probes are contained in *mon_.c* files. These all have a common
-header file *mon.h*.
-
-
-Lifecycle of cf-agent
----------------------
+#### Lifecycle of cf-agent
 
 The following outlines the normal execution of a *cf-agent* run.
 
@@ -141,8 +148,7 @@ The following outlines the normal execution of a *cf-agent* run.
 7. Write reports to disk.
 
 
-Bootstrapping cf-agent
-----------------------
+#### Bootstrapping cf-agent
 
 The following outlines the steps taken by agent during a successful bootstrap
 to a policy server.
@@ -159,62 +165,116 @@ to a policy server.
 7. *cf-execd* continues to run *cf-agent* periodically with policy
    from */inputs*.
 
+### cf-monitord
+
+Monitoring probes are contained in `mon_*.c` files. These all have a common
+header file `mon.h`.
+
+
 
 Coding Style
 ------------
 
-* Loosely based on Allman-4 and the Google C++ Style Guide
-  (http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
-  Function names are CamelCase (with first letter capital), variable and
-  parameters are under_scored.
-
+* Loosely based on Allman-4 and the
+  [Google C++ Style Guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
+* Keep in mind that code should be readable by non C experts.
+  If you are a Guru, try to restrain yourself, only do magic when
+  absolutely necessary.
+* 4 spaces indentation level, no tabs.
+* Function names are `CamelCase` (with first letter capital), variables and
+  parameters are `under_scored`.
+  * If you introduce a new namespace, you can use underscore as
+    namespace-identifier separator, for example
+    `StrList_BinarySearch()`.
+  * Avoid introducing extra long identifiers, like
+    ~~`GenericAgentConfigParseWarningOptions()`~~.
+* Try not to include assignments inside if/while expressions
+  *unless they avoid great repetition*. On the average case,
+  just put the assignment on the previous line. So try NOT to do
+  the following:
+  ~~```if ((ret = open(...)) == -1)```~~
+* Explicit comparisons are better than implicit, i.e. prefer writing
+  ```if (number == 0)``` or ```if (pointer == NULL)```
+  instead of ~~```if (!number)```~~ or ~~```if (!pointer)```~~. It only makes
+  sense to test booleans directly, for example ```if (is_valid)``` is good.
+  Furthermore have the literal last in the comparison, not first, i.e.
+  prefer writing ```if (open(...) == -1)``` instead of
+  ~~```if (-1 == open(...))```~~.
+* Control statements need to have braces on separate line,
+  no matter how simple they are.
   * Caution, do-while loops should have the closing brace at the same
     line with while, so that it can't be confused with empty while statement.
-
-    ```
+    ```c
     do
     {
         /* ... */
+
     } while (condition);
     ```
+* *C99 is encouraged in the language, use it.*
 
-* Read
-  https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README
-  It contains many good practices not only suitable for library writers.
-
-* C99 is encouraged in the language, use it.
-
-* As for using C99-specific libc functions, you can mostly use them,
+  As for using C99-specific libc functions, you can mostly use them,
   because we provide replacement functions in libcompat, since many old
   Unix platforms are missing those. If there is no replacement for a
   C99-specific function, then either stick to C89, or write the
   libcompat replacement.
 
-  Current functions known to be missing from libcompat (so stick to
-  C89):
+  Current functions known to be missing from libcompat
+  (so stick to C89):
+  * `[s]scanf()`
+* Fold new code at 78 columns.
+* Do not break string literals. Prefer having strings on a single line
+  In order to improve grep-ability. If they do not fit on a single line,
+  try breaking on punctuation. In worst case scenario, you are allowed
+  to surpass the 78 columns limit.
 
-  * [s]scanf
-
-* Control statements need to have braces, no matter how simple they are.
-
-* 4 spaces indentation level, no tabs.
-
+  Bad:
+  ```c
+  Log(LOG_LEVEL_INFO, "Some error occurred while reading installed "
+      "packages cache.");
+  ```
+  Good:
+  ```c
+  Log(LOG_LEVEL_INFO,
+      "Some error occurred while reading installed packages cache");
+  ```
 * Always use typedefs, no "struct X", or "enum Y" are allowed. Types
   defined with typedef should be in camelcase and no trailing "_t",
   "_f" etc.
-
-* Constify what can be. Don't use global variables.
-
-* Keep tidy header files and document using Doxygen (within reason).
-
+* Constify what can be `const`. Minimize use of global variables.
+  Never declare a global variable in a library (e.g. libpromises) and
+  change it in the programs.
+* Don't use `static` variables that change, since they are not thread-safe.
+* Sizes of stack-allocated buffers should be deduced using `sizeof()`.
+  Never hard-code the size (like `CF_BUFSIZE`).
+* Avoid using type casts, unless absolutely necessary. Usually a compiler
+  warning is better satisfied with correct code rather than using a type cast.
+  * Type casts should be separated with one space from the variable,
+    for example ```(struct sockaddr *) &myaddr```.
+* Avoid pointless initialisation of variables, because they
+  silence important compiler warnings. Only initialise variables
+  when there is a reason to do so.
+* Document using Doxygen (within reason), preferably in the `.c` files,
+  not the header files.
+* Read
+  [Linux Kernel coding style](https://www.kernel.org/doc/Documentation/CodingStyle) and
+  [libabc coding style](https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README).
+  They contain many good practices.
 * http://en.wikipedia.org/wiki/Golden_Rule
 
 
 C Platform Macros
 -----------------
 
-It's important to have portability in a consistent way.  Use these platform
-macros in C code.
+It's important to have portability in a consistent way. In general we
+use *autoconf* to test for features (like system headers, defines,
+specific functions). So try to use the autoconf macros `HAVE_DECL_X`,
+`HAVE_STRUCT_Y`, `HAVE_MYFUNCTION` etc.  See the
+[autoconf manual existing tests section](https://www.gnu.org/software/autoconf/manual/html_node/Existing-Tests.html).
+
+It is preferable to write feature-specific ifdefs, instead of
+OS-specific, but it's not always easy. If necessary use these
+platform-specific macros in C code:
 
 * Any Windows system: Use `_WIN32`.  Don't use `NT`.
 * mingw-based Win32 build: Use `__MINGW32__`.  Don't use `MINGW`.
@@ -228,15 +288,37 @@ macros in C code.
 * Linux: Use `__linux__`.  Don't use `LINUX`.
 * HP/UX: Use `__hpux` (two underscores!).  Don't use `hpux`.
 
-Output Message Conventions
---------------------------
+Finally, it's best to avoid polluting the code logic with many ifdefs.
+Try restricting ifdefs in the header files, or in the beginning of
+the C files.
 
-CFEngine outputs messages about what its doing using the *Log* function. It
-takes a *LogLevel* enum mapping closely to syslog priorities. Please try to do
+
+Output Message, Logging Conventions
+-----------------------------------
+
+CFEngine outputs messages about what its doing using the `Log()` function. It
+takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
 the following when writing output messages.
 
-* Do not decorate with ornamental symbols or indentation in messages. Leave
-  formatting to *Log*.
+* Log levels
+  * `LOG_LEVEL_CRIT` For critical errors, process exits immediately.
+  * `LOG_LEVEL_ERR`: For cf-agent, promise failed. For cf-serverd,
+    some system error occured that is worth logging to syslog.
+  * `LOG_LEVEL_NOTICE`: Important information (not errors) that must not
+    be missed by the user. For example cf-agent uses it in files promises
+    when change tracking is enabled and the file changes.
+  * `LOG_LEVEL_INFO`: For cf-agent, changes that the agent performs
+    to the system, for example when a promise has been repaired. For
+    cf-serverd, `access_rules` denials for connected clients.
+  * `LOG_LEVEL_VERBOSE` :: Log *human readable* progress info useful to
+    users (i.e. sysadmins). Also errors that are unimportant or expected
+    in certain cases.
+  * `LOG_LEVEL_DEBUG`: Log anything else (for example various progress info).
+    Try to avoid "Entering function Foo()", but rather use for
+    "While copying, got reply '%s' from server".
+
+* Do not decorate with symbols or indentation in messages. Leave
+  formatting to `Log()`.
 
 * When quoting strings, use single quotes, e.g. "Some stuff '%s' happened in
   '%s'.
@@ -247,16 +329,14 @@ the following when writing output messages.
 * Use output sparingly, and use levels appropriately. Verbose logging tends to
   get very verbose.
 
-* Use platform-independent *GetErrorStr* for strerror(errno).  Write
-  e.g. Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr())
+* Use platform-independent `GetErrorStr()` for `strerror(errno)`.  Write
+  for example
+  ```Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr());```
 
 * Normally, try to keep each message to one line of output, produced
-  by one call to *Log*.
+  by one call to `Log()`.
 
-* Normally, do not circumvent *Log* by writing to stdout or stderr.
-
-* Use LOG_LEVEL_DEBUG for environmental situations, e.g. don't write "Entering
-  function Foo()", but rather "While copying, got reply '%s' from server".
+* Normally, do not circumvent `Log()` by writing to stdout or stderr.
 
 
 Testing
@@ -268,8 +348,8 @@ mock up the environment.
 
 There are two types of tests in CFEngine. *Unit tests* are generally
 preferable to *acceptance tests* because they are more targeted and take less
-time to run. Most tests can be run using *make check* (see Unsafe tests
-below).
+time to run. Most tests can be run using `make check`.
+See [Unsafe Tests](#unsafe-tests) below.
 
 * *Unit tests*. Unit tests are a great way of testing some new module (header
   file). Ideally, the new functionality is written so that the environment can
@@ -280,7 +360,7 @@ below).
   a change and check it. See also script tests/acceptance/testall.
 
 
-Unsafe tests
+Unsafe Tests
 ------------
 
 Note that some acceptance tests are considered to be unsafe because they
@@ -295,7 +375,7 @@ To run all tests, including the unsafe ones, you either need to logged in as
 root or have "sudo" configured to not ask for a password. Then run the
 following:
 
-  $ UNSAFE_TESTS=1 GAINROOT=sudo make check
+    $ UNSAFE_TESTS=1 GAINROOT=sudo make check
 
 Again: DO NOT do this on your main computer! Always use a test machine,
 preferable in a VM.
@@ -308,11 +388,37 @@ There is Elisp snippet in contrib/cfengine-code-style.el which defines the
 project's coding style. Please use it when working with source code. The
 easiest way to do so is to add
 
- (add-to-list 'load-path "<core checkout directory>/contrib")
- (require 'cfengine-code-style)
+    (add-to-list 'load-path "<core checkout directory>/contrib")
+    (require 'cfengine-code-style)
 
 and run
 
- ln -s contrib/dir-locals.el .dir-locals.el
+    ln -s contrib/dir-locals.el .dir-locals.el
 
 in the top directory of the source code checkout.
+
+
+ChangeLog Entries
+-----------------
+
+When a new feature or a bugfix is being merged, it is necessary to be
+accompanied by a proper entry in the ChangeLog file. Besides manually editing
+the file, we have an automatic way of generating them before the release,
+by properly formatting *commit messages*
+(see [git-commit-template](misc/githooks/git-commit-template)).
+
+In short, in your pull request you should have at least one commit with
+a "Changelog:" line in it, after the title. This may be one of the following:
+
+* To write arbitrary message in the ChangeLog:
+```Changelog: <message>```
+* To use the commit title line in the ChangeLog:
+```Changelog: Title```
+* To use the entire commit message in the ChangeLog:
+```Changelog: Commit```
+
+It's worth noting that we strive to have bugtracker tickets
+for most changes, and they should be mentioned in the ChangeLog
+entries. In fact if anywhere in the commit message the
+string ```Redmine #1234``` is found, it will be automatically
+added to the ChangeLog.

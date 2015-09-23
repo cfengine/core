@@ -7,9 +7,9 @@ body common control {
 
 bundle common test 
 {
-  meta:
-      "test_soft_fail" string => "any",
-        meta => { "redmine7482" };
+#  meta:
+#      "test_soft_fail" string => "any",
+#        meta => { "redmine7482" };
 
   vars:
     any::

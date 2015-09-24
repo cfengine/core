@@ -22,10 +22,6 @@ body common control
 bundle agent check
 {
   meta:
-    "test_soft_fail"
-      string => "!windows",
-      meta => { "redmine6996" };
-
     "test_skip_unsupported"
       string => "windows",
       comment => "The test deals with symlinks which are not supported on

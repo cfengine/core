@@ -489,9 +489,9 @@ static int SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit)
         {
             // Do nothing.
         }
-        else if (S_ISDIR(statbuf.st_mode))
+        else if (!S_ISLNK(statbuf.st_mode))
         {
-            Log(LOG_LEVEL_DEBUG, "Skipping readlink() on directory %s", filename);
+            Log(LOG_LEVEL_DEBUG, "Skipping readlink() on non-symlink %s", filename);
             return false;
         }
 

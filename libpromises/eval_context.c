@@ -1027,33 +1027,33 @@ void EvalContextClear(EvalContext *ctx)
 }
 
 Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx) {
-	Rlist *callers = NULL;
+    Rlist *callers = NULL;
 
-	for (size_t i = 0; i < SeqLength(ctx->stack); i++)
-	{
-	    StackFrame *frame = SeqAt(ctx->stack, i);
-	    switch (frame->type)
-	    {
-	    case STACK_FRAME_TYPE_BODY:
-	        break;
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        switch (frame->type)
+        {
+        case STACK_FRAME_TYPE_BODY:
+            break;
 
-	    case STACK_FRAME_TYPE_BUNDLE:
-	        break;
+        case STACK_FRAME_TYPE_BUNDLE:
+            break;
 
-	    case STACK_FRAME_TYPE_PROMISE_ITERATION:
-	        break;
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            break;
 
-	    case STACK_FRAME_TYPE_PROMISE:
-	     	if (strcmp(frame->data.promise.owner->parent_promise_type->name, "methods") == 0) {
-	     		RlistAppendScalar(&callers, frame->data.promise.owner->promiser);
-	      	}
-	        break;
+        case STACK_FRAME_TYPE_PROMISE:
+            if (strcmp(frame->data.promise.owner->parent_promise_type->name, "methods") == 0) {
+                RlistAppendScalar(&callers, frame->data.promise.owner->promiser);
+            }
+            break;
 
-	    case STACK_FRAME_TYPE_PROMISE_TYPE:
-	      	break;
-	    }
-	}
-	return callers;
+        case STACK_FRAME_TYPE_PROMISE_TYPE:
+            break;
+        }
+    }
+    return callers;
 }
 
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args)

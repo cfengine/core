@@ -144,19 +144,13 @@ Redmine: #1234'
 cat > expected.txt <<EOF
 	- As well as this.
 	- Complete Fix for changelog
-	  
 	  Should be included
 	- Fix for changelog
 	- Redmine entry
-	  
 	  Should be included (Redmine #645)
 	- Redmine entry in title (Redmine #76)
 	- Several entries for changelog
-	  
 	  Should be included
-	  
-	  
-	  
 	  And finally this, part of the commit message.
 	- Should also be included, but separately and not twice.
 	- Should be in changelog though.

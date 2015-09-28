@@ -218,6 +218,10 @@ if SORT_CHANGELOG:
     entry_list.sort()
 for entry in entry_list:
     entry = "\t- " + entry
+    # Blank lines look bad in changelog because entries don't have blank lines
+    # between them, so remove that from commit messages.
+    entry = re.sub("\n\n+", "\n", entry)
+    # Indent all lines.
     entry = entry.replace("\n", "\n\t  ")
     print(entry)
 

@@ -396,7 +396,7 @@ void DoExec(const ServerConnectionState *conn, const char *args)
                     !StringAppendDelimited(authorized_classes,
                                            &authorized_classes_len,
                                            CF_BUFSIZE, class, ',');
-                assert(!truncated);                 /* CF_BUFSIZE is enough */
+                CF_ASSERT(!truncated, "Overflow in authorized_classes"); /* CF_BUFSIZE is enough */
 
                 class = class_end + 1;
             }

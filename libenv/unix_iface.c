@@ -663,7 +663,7 @@ static void InitIgnoreInterfaces()
     FILE *fin;
     char filename[CF_BUFSIZE],regex[CF_MAXVARSIZE];
 
-    snprintf(filename, sizeof(filename), "%s%cinputs%c%s", GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR, CF_IGNORE_INTERFACES);
+    snprintf(filename, sizeof(filename), "%s%c%s", GetInputDir(), FILE_SEPARATOR, CF_IGNORE_INTERFACES);
 
     if ((fin = fopen(filename,"r")) == NULL)
     {

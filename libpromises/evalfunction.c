@@ -24,7 +24,6 @@
 
 #include <evalfunction.h>
 
-#include <eval_context.h>
 #include <promises.h>
 #include <dir.h>
 #include <dbm_api.h>
@@ -7466,6 +7465,22 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 }
 
 /*********************************************************************/
+
+static FnCallResult FnCallCFEngineCallers(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
+{
+    bool promisersmode = (0 == strcmp(fp->name, "cfengine_promisers"));
+
+    if (promisersmode)
+    {
+        Rlist *returnlist = EvalContextGetPromiseCallerMethods(ctx);
+        return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+    }
+
+    JsonElement *callers = EvalContextGetPromiseCallers(ctx);
+    return (FnCallResult) { FNCALL_SUCCESS, { callers, RVAL_TYPE_CONTAINER } };
+}
+
+/*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
 
@@ -8351,6 +8366,16 @@ static const FnCallArg CURL_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg CFENGINE_PROMISERS_ARGS[] =
+{
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg CFENGINE_CALLERS_ARGS[] =
+{
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -8666,7 +8691,13 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("variance", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
-    // Data container functions
+    // CFEngine internal functions
+    FnCallTypeNew("cfengine_promisers", CF_DATA_TYPE_STRING_LIST, CFENGINE_PROMISERS_ARGS, &FnCallCFEngineCallers, "Get the list of promisers to the current promise execution path",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_INTERNAL, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("cfengine_callers", CF_DATA_TYPE_CONTAINER, CFENGINE_CALLERS_ARGS, &FnCallCFEngineCallers, "Get the current promise execution stack in detail",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_INTERNAL, SYNTAX_STATUS_NORMAL),
+
+                  // Data container functions
     FnCallTypeNew("data_regextract", CF_DATA_TYPE_CONTAINER, DATA_REGEXTRACT_ARGS, &FnCallRegExtract, "Matches the regular expression in arg 1 against the string in arg2 and returns a data container holding the backreferences by name",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("data_expand", CF_DATA_TYPE_CONTAINER, DATA_EXPAND_ARGS, &FnCallDataExpand, "Expands any CFEngine variables in a data container, keys or values",

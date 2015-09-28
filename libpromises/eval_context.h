@@ -151,6 +151,9 @@ const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
 const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 const RingBuffer *EvalContextStackCurrentMessages(const EvalContext *ctx);
 
+Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);
+JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx);
+
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags);
 const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out);

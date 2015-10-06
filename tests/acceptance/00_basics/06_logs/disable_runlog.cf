@@ -1,0 +1,96 @@
+# Tests that the runlog can be disabled by linking it to /dev/null.
+# It calls cf-agent twice with the log enabled, then a third time with the log
+# disabled.
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "test_skip_needs_work" string => "windows";
+
+  methods:
+      "any" usebundle => iteration("1");
+      "any" usebundle => iteration("2");
+      "any" usebundle => iteration("3");
+}
+
+bundle agent iteration(pass)
+{
+  methods:
+      "any" usebundle => iteration1($(pass));
+      "any" usebundle => iteration2($(pass));
+      "any" usebundle => iteration3($(pass));
+}
+
+bundle agent iteration1(pass)
+{
+  classes:
+      "pass_$(pass)" expression => "any";
+  files:
+    pass_3::
+      "$(sys.workdir)/cf3.$(sys.host).runlog"
+        create => "true",
+        link_from => linkfrom("/dev/null", "symlink"),
+        move_obstructions => "true";
+}
+
+bundle agent iteration2(pass)
+{
+  commands:
+      "$(sys.cf_agent) -f $(this.promise_filename).sub"
+        comment => "pass_$(pass)";
+}
+
+bundle agent iteration3(pass)
+{
+  classes:
+      "pass_$(pass)" expression => "any";
+
+  vars:
+      "log_name" string => "$(sys.workdir)/cf3.$(sys.host).runlog";
+
+      "passes" ilist => { 1, 2, 3 };
+
+  files:
+      "$(G.testdir)/runlog$(passes).saved"
+        copy_from => local_cp("$(log_name)"),
+        ifvarclass => "pass_$(passes)";
+
+}
+
+bundle agent check
+{
+  methods:
+      "check1";
+      "check2";
+}
+
+bundle agent check1
+{
+  methods:
+      "any" usebundle => dcs_if_diff("$(G.testdir)/runlog1.saved", "$(G.testdir)/runlog2.saved",
+                                     "first_two_same", "first_two_different");
+      "any" usebundle => dcs_if_diff("$(G.testdir)/runlog3.saved", "/dev/null",
+                                     "second_two_same", "second_two_different");
+}
+
+bundle agent check2
+{
+  vars:
+      "classes" slist => { "first_two_same", "first_two_different",
+                           "second_two_same", "second_two_different" };
+  reports:
+    DEBUG::
+      "Class set: $(classes)"
+        ifvarclass => "$(classes)";
+
+    !first_two_same.first_two_different.second_two_same.!second_two_different::
+      "$(this.promise_filename) Pass";
+    !(!first_two_same.first_two_different.second_two_same.!second_two_different)::
+      "$(this.promise_filename) FAIL";
+}

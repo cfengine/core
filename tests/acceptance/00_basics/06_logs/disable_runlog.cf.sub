@@ -1,0 +1,13 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { test };
+}
+
+bundle agent test
+{
+  # This is just to make sure we trigger at least one lock.
+  commands:
+      "$(G.echo) test"
+        action => immediate;
+}

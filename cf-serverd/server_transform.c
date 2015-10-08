@@ -60,6 +60,7 @@ static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
+static void KeepBundlesAccessPromise(EvalContext *ctx, const Promise *pp);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
 
@@ -91,51 +92,64 @@ static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp);
 
 void Summarize()
 {
-    Log(LOG_LEVEL_VERBOSE, " === BEGIN summary of access promises === ");
-
-    size_t i, j;
-    for (i = 0; i < paths_acl->len; i++)
-    {
-        Log(LOG_LEVEL_VERBOSE, "\tPath: %s",
-            StrList_At(paths_acl->resource_names, i));
-        const struct resource_acl *racl = &paths_acl->acls[i];
-
-        for (j = 0; j < StrList_Len(racl->admit.ips); j++)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tadmit_ips: %s",
-                StrList_At(racl->admit.ips, j));
-        }
-        for (j = 0; j < StrList_Len(racl->admit.hostnames); j++)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tadmit_hostnames: %s",
-                StrList_At(racl->admit.hostnames, j));
-        }
-        for (j = 0; j < StrList_Len(racl->admit.keys); j++)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tadmit_keys: %s",
-                StrList_At(racl->admit.keys, j));
-        }
-        for (j = 0; j < StrList_Len(racl->deny.ips); j++)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tdeny_ips: %s",
-                StrList_At(racl->deny.ips, j));
-        }
-        for (j = 0; j < StrList_Len(racl->deny.hostnames); j++)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tdeny_hostnames: %s",
-                StrList_At(racl->deny.hostnames, j));
-        }
-        for (j = 0; j < StrList_Len(racl->deny.keys); j++)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tdeny_keys: %s",
-                StrList_At(racl->deny.keys, j));
-        }
-    }
-
     Auth *ptr;
     Item *ip, *ipr;
 
-    Log(LOG_LEVEL_VERBOSE, "Granted access to paths for classic protocol:");
+    Log(LOG_LEVEL_VERBOSE, " === BEGIN summary of access promises === ");
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Host IPs allowed connection access (allowconnects):");
+    for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
+    }
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Host IPs denied connection access (denyconnects):");
+    for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
+    }
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Host IPs allowed multiple connection access (allowallconnects):");
+    for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
+    }
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Host IPs whose keys we shall establish trust to (trustkeysfrom):");
+    for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
+    }
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Host IPs allowed legacy connections (allowlegacyconnects):");
+    for (ip = SV.allowlegacyconnects; ip != NULL; ip = ip->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
+    }
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Users from whom we accept cf-runagent connections (allowusers):");
+    for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\tUSER: %s", ip->name);
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Access control lists:");
+    acl_Summarise(paths_acl, "Path");
+    acl_Summarise(classes_acl, "Class");
+    acl_Summarise(vars_acl, "Variable");
+    acl_Summarise(literals_acl, "Literal");
+    acl_Summarise(query_acl, "Query");
+    acl_Summarise(roles_acl, "Role");
+    acl_Summarise(bundles_acl, "Bundle");
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Access control lists for the classic network protocol:");
 
     for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
     {
@@ -156,8 +170,6 @@ void Summarize()
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Denied access to paths for classic protocol:");
-
     for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
     {
         /* Don't report empty entries. */
@@ -171,8 +183,6 @@ void Summarize()
             Log(LOG_LEVEL_VERBOSE, "\t\tdeny: %s", ip->name);
         }
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Granted access to literal/variable/query data :");
 
     for (ptr = SV.varadmit; ptr != NULL; ptr = ptr->next)
     {
@@ -188,8 +198,6 @@ void Summarize()
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Denied access to literal/variable/query data:");
-
     for (ptr = SV.vardeny; ptr != NULL; ptr = ptr->next)
     {
         Log(LOG_LEVEL_VERBOSE, "Object %s", ptr->path);
@@ -200,55 +208,14 @@ void Summarize()
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed connection access:");
-
-    for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "Host IPs denied connection access:");
-
-    for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed multiple connection access:");
-
-    for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "Host IPs whose keys we shall establish trust to:");
-
-    for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed legacy connections:");
-
-    for (ip = SV.allowlegacyconnects; ip != NULL; ip = ip->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "Users from whom we accept connections:");
-
-    for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "USERS '%s'", ip->name);
-    }
-
     Log(LOG_LEVEL_VERBOSE, " === END summary of access promises === ");
 }
 
 void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
-    if (paths_acl != NULL || classes_acl != NULL || vars_acl != NULL ||
-        literals_acl != NULL || query_acl != NULL || SV.path_shortcuts != NULL)
+    if (paths_acl    != NULL || classes_acl != NULL || vars_acl    != NULL ||
+        literals_acl != NULL || query_acl   != NULL || bundles_acl != NULL ||
+        roles_acl    != NULL || SV.path_shortcuts != NULL)
     {
         UnexpectedError("ACLs are not NULL - we are probably leaking memory!");
     }
@@ -258,11 +225,13 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
     vars_acl      = calloc(1, sizeof(*vars_acl));
     literals_acl  = calloc(1, sizeof(*literals_acl));
     query_acl     = calloc(1, sizeof(*query_acl));
+    bundles_acl   = calloc(1, sizeof(*bundles_acl));
+    roles_acl     = calloc(1, sizeof(*roles_acl));
     SV.path_shortcuts = StringMapNew();
 
-    if (paths_acl == NULL || classes_acl == NULL || vars_acl == NULL ||
-        literals_acl == NULL || query_acl == NULL ||
-        SV.path_shortcuts == NULL)
+    if (paths_acl    == NULL || classes_acl == NULL || vars_acl    == NULL ||
+        literals_acl == NULL || query_acl   == NULL || bundles_acl == NULL ||
+        roles_acl    == NULL || SV.path_shortcuts == NULL)
     {
         Log(LOG_LEVEL_CRIT, "calloc: %s", GetErrorStr());
         exit(255);
@@ -376,12 +345,20 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                     "Setting collect_window to %d (seconds)",
                     COLLECT_INTERVAL);
             }
-            else if (IsControlBody(SERVER_CONTROL_CF_RUN_COMMAND))
+            else if (IsControlBody(SERVER_CONTROL_CFRUNCOMMAND))
             {
-                strlcpy(CFRUNCOMMAND, value, sizeof(CFRUNCOMMAND));
-                Log(LOG_LEVEL_VERBOSE,
-                    "Setting cfruncommand to '%s'",
-                    CFRUNCOMMAND);
+                if (strlen(value) >= sizeof(CFRUNCOMMAND))
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "cfruncommand too long (>%zu), leaving empty",
+                        sizeof(CFRUNCOMMAND));
+                }
+                else
+                {
+                    memcpy(CFRUNCOMMAND, value, strlen(value) + 1);
+                    Log(LOG_LEVEL_VERBOSE, "Setting cfruncommand to: %s",
+                        CFRUNCOMMAND);
+                }
             }
             else if (IsControlBody(SERVER_CONTROL_ALLOW_CONNECTS))
             {
@@ -711,6 +688,11 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
             KeepLiteralAccessPromise(ctx, pp, "context");
             return PROMISE_RESULT_NOOP;
         }
+        else if (strcmp(resource_type, "bundle") == 0)
+        {
+            KeepBundlesAccessPromise(ctx, pp);
+            return PROMISE_RESULT_NOOP;
+        }
     }
     else if (strcmp(pp->parent_promise_type->name, "roles") == 0)
     {
@@ -752,7 +734,9 @@ static enum admit_type AdmitType(const char *s)
     }
 }
 
-/* Map old-style regex-or-hostname to new-style host-or-domain.
+/**
+ * Map old-style regex-or-hostname #host to new-style host-or-domain
+ * and append it to #sl.
  *
  * Old-style ACLs could include regexes to be matched against host
  * names; but new-style ones only support sub-domain matching.  If the
@@ -768,7 +752,7 @@ static enum admit_type AdmitType(const char *s)
  * @return An index at which an entry was added to the list (there may
  * be another), or -1 if nothing added.
  */
-static size_t DeRegexify(StrList **sl, const char *host)
+static size_t StrList_AppendRegexHostname(StrList **sl, const char *host)
 {
     if (IsRegex(host))
     {
@@ -844,7 +828,8 @@ static size_t DeRegexify(StrList **sl, const char *host)
             }
             return ret;
         }
-        /* IsRegex() but is actually so boring it's just a name ! */
+
+        /* IsRegex() is true but we treat it just as a name! */
     }
     /* Just a simple host name. */
 
@@ -882,7 +867,7 @@ static size_t racl_SmartAppend(struct admitdeny_acl *ad, const char *entry)
         break;
 
     case ADMIT_TYPE_HOSTNAME:
-        ret = DeRegexify(&ad->hostnames, entry);
+        ret = StrList_AppendRegexHostname(&ad->hostnames, entry);
 
         /* If any hostname rule got added,
          * turn on reverse DNS lookup in the new protocol. */
@@ -973,7 +958,7 @@ static void NewHostToOldACL(Auth *old, const char *host)
  * particular access promise.
  *
  * For legacy reasons (non-TLS connections), build also the #ap (access Auth)
- * and #dp (deny Auth).
+ * and #dp (deny Auth), if they are not NULL.
  */
 static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                                                const Promise *pp,
@@ -996,7 +981,8 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
         case RVAL_TYPE_SCALAR:
 
-            if (IsAccessBody(REMOTE_ACCESS_IFENCRYPTED))
+            if (ap != NULL &&
+                IsAccessBody(REMOTE_ACCESS_IFENCRYPTED))
             {
                 ap->encrypt = BooleanFromString(cp->rval.item);
             }
@@ -1037,12 +1023,18 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                 if (IsAccessBody(REMOTE_ACCESS_ADMITIPS))
                 {
                     ret = StrList_Append(&racl->admit.ips, RlistScalarValue(rp));
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+                    if (ap != NULL)
+                    {
+                        PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+                    }
                 }
                 else if (IsAccessBody(REMOTE_ACCESS_DENYIPS))
                 {
                     ret = StrList_Append(&racl->deny.ips, RlistScalarValue(rp));
-                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
+                    if (dp != NULL)
+                    {
+                        PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
+                    }
                 }
                 else if (IsAccessBody(REMOTE_ACCESS_ADMITHOSTNAMES))
                 {
@@ -1053,7 +1045,10 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     {
                         TurnOnReverseLookups();
                     }
-                    NewHostToOldACL(ap, RlistScalarValue(rp));
+                    if (ap != NULL)
+                    {
+                        NewHostToOldACL(ap, RlistScalarValue(rp));
+                    }
                 }
                 else if (IsAccessBody(REMOTE_ACCESS_DENYHOSTNAMES))
                 {
@@ -1064,7 +1059,10 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     {
                         TurnOnReverseLookups();
                     }
-                    NewHostToOldACL(dp, RlistScalarValue(rp));
+                    if (dp != NULL)
+                    {
+                        NewHostToOldACL(dp, RlistScalarValue(rp));
+                    }
                 }
                 else if (IsAccessBody(REMOTE_ACCESS_ADMITKEYS))
                 {
@@ -1078,14 +1076,20 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                 else if (IsAccessBody(REMOTE_ACCESS_ADMIT))
                 {
                     ret = racl_SmartAppend(&racl->admit, RlistScalarValue(rp));
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+                    if (ap != NULL)
+                    {
+                        PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+                    }
                 }
                 else if (IsAccessBody(REMOTE_ACCESS_DENY))
                 {
                     ret = racl_SmartAppend(&racl->deny, RlistScalarValue(rp));
-                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
+                    if (dp != NULL)
+                    {
+                        PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
+                    }
                 }
-                else if (IsAccessBody(REMOTE_ACCESS_MAPROOT))
+                else if (ap != NULL && IsAccessBody(REMOTE_ACCESS_MAPROOT))
                 {
                     PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                 }
@@ -1322,19 +1326,50 @@ static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp)
                                        ap, dp);
 }
 
+static void KeepBundlesAccessPromise(EvalContext *ctx, const Promise *pp)
+{
+    size_t pos = acl_SortedInsert(&bundles_acl, pp->promiser);
+    if (pos == (size_t) -1)
+    {
+        /* Should never happen, besides when allocation fails. */
+        Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
+        exit(255);
+    }
+
+    /* Last params are NULL because we don't have
+     * old-school Auth type ACLs here. */
+    AccessPromise_AddAccessConstraints(ctx, pp, &bundles_acl->acls[pos],
+                                       NULL, NULL);
+}
 /*********************************************************************/
 
-
+/**
+ * The "roles" access promise is for remote class activation by means of
+ * cf-runagent -D:
+ *
+ *     pp->promiser is a regex to match classes.
+ *     pp->conlist  is an slist of usernames.
+ */
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 {
     Auth *ap = GetOrCreateAuth(pp->promiser, &SV.roles, &SV.rolestail);
-    const char *const authorizer = CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval;
-    size_t i = SeqLength(pp->conlist);
 
+    size_t pos = acl_SortedInsert(&roles_acl, pp->promiser);
+    if (pos == (size_t) -1)
+    {
+        /* Should never happen, besides when allocation fails. */
+        Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
+        exit(255);
+    }
+
+    size_t i = SeqLength(pp->conlist);
     while (i > 0)
     {
         i--;
         Constraint *cp = SeqAt(pp->conlist, i);
+        char const * const authorizer =
+            CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval;
+
         if (strcmp(cp->lval, authorizer) == 0)
         {
             if (cp->rval.type != RVAL_TYPE_LIST)
@@ -1345,10 +1380,21 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
             }
             else if (IsDefinedClass(ctx, cp->classes))
             {
-                /* This is for remote class activation by means of cf-runagent.*/
                 for (const Rlist *rp = cp->rval.item; rp != NULL; rp = rp->next)
                 {
                     PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+
+                    /* The "roles" access promise currently only supports
+                     * listing usernames to admit access to, nothing more. */
+                    struct resource_acl *racl = &roles_acl->acls[pos];
+                    size_t zret = StrList_Append(&racl->admit.usernames,
+                                                 RlistScalarValue(rp));
+                    if (zret == (size_t) -1)
+                    {
+                        /* Should never happen, besides when allocation fails. */
+                        Log(LOG_LEVEL_CRIT, "StrList_Append: %s", GetErrorStr());
+                        exit(255);
+                    }
                 }
             }
         }

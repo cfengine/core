@@ -25,6 +25,7 @@
 #include <cf-serverd-functions.h>
 #include <cf-serverd-enterprise-stubs.h>
 
+#include "server_access.h"
 #include <client_code.h>
 #include <server_transform.h>
 #include <bootstrap.h>
@@ -47,7 +48,6 @@
 #include <loading.h>
 #include <printsize.h>
 
-#include "server_access.h"
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false; /* GLOBAL_A */
@@ -343,15 +343,15 @@ static void KeepHardClasses(EvalContext *ctx)
 /* Must not be called unless ACTIVE_THREADS is zero: */
 static void ClearAuthAndACLs(void)
 {
-    /* Old ACLs */
+    /* Must have no currently open connections to free the ACLs. */
+    assert(SV.connectionlist == NULL);
+
+    /* Bundle server access_rules legacy ACLs */
     DeleteAuthList(&SV.admit, &SV.admittail);
     DeleteAuthList(&SV.deny, &SV.denytail);
     DeleteAuthList(&SV.varadmit, &SV.varadmittail);
     DeleteAuthList(&SV.vardeny, &SV.vardenytail);
     DeleteAuthList(&SV.roles, &SV.rolestail);
-
-    /* Should be no currently open connections */
-    assert(SV.connectionlist == NULL);
 
     /* body server control ACLs */
     DeleteItemList(SV.trustkeylist);        SV.trustkeylist = NULL;
@@ -366,13 +366,15 @@ static void ClearAuthAndACLs(void)
     free(SV.allowciphers);                  SV.allowciphers    = NULL;
     free(SV.allowtlsversion);               SV.allowtlsversion = NULL;
 
-    /* New ACLs */
+    /* body server control new ACLs */
     NEED_REVERSE_LOOKUP = false;
-    acl_Free(paths_acl);    paths_acl = NULL;
-    acl_Free(classes_acl);  classes_acl = NULL;
-    acl_Free(vars_acl);     vars_acl = NULL;
+    acl_Free(paths_acl);    paths_acl    = NULL;
+    acl_Free(classes_acl);  classes_acl  = NULL;
+    acl_Free(vars_acl);     vars_acl     = NULL;
     acl_Free(literals_acl); literals_acl = NULL;
-    acl_Free(query_acl);    query_acl = NULL;
+    acl_Free(query_acl);    query_acl    = NULL;
+    acl_Free(bundles_acl);  bundles_acl  = NULL;
+    acl_Free(roles_acl);    roles_acl    = NULL;
 }
 
 static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)

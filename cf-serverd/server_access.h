@@ -28,13 +28,12 @@
 #include <platform.h>
 
 #include <map.h>                                         /* StringMap */
-#include <regex.h>                                       /* StringMatchFull */
 #include "strlist.h"                                     /* StrList */
 
 
 /**
  * Access control list referring to one resource, e.g. path, class, variable,
- * literal.
+ * literal, bundle.
  *
  * @note: Each strlist might be NULL, which is equivalent to having 0
  *        elements.
@@ -47,16 +46,7 @@ struct admitdeny_acl
     StrList *ips;                        /* admit_ips, deny_ips */
     StrList *hostnames;                  /* admit_hostnames, deny_hostnames */
     StrList *keys;                       /* admit_keys, deny_keys */
-};
-
-enum acl_type
-{
-    ACL_TYPE_PATH,
-    ACL_TYPE_CONTEXT,
-    ACL_TYPE_VARIABLE,
-    ACL_TYPE_LITERAL,
-    ACL_TYPE_QUERY
-//    ACL_TYPE_ROLES
+    StrList *usernames;      /* currently used only in roles access promise */
 };
 
 /**
@@ -73,8 +63,8 @@ enum acl_type
  */
 struct acl
 {
-//TODO    enum acl_type resource_type;
-    size_t len;                        /* Length of the following arrays */
+//    enum acl_type resource_type;
+    size_t len;                        /* Length of resource_names,acls[] */
     size_t alloc_len;                  /* Used for realloc() economy  */
     StrList *resource_names;           /* paths, class names, variables etc */
     struct resource_acl
@@ -91,12 +81,16 @@ struct acl
 /* The paths_acl should be populated with directories having a trailing '/'
  * to be able to tell apart from files. */
 extern struct acl *paths_acl;
-
-/* TODO we need the following for optimal ACL lookups in all cases. But first
- * we need to stop accepting regexes as allowed/denied mathes. */
-extern struct acl *classes_acl, *vars_acl, *literals_acl;
-extern struct acl *query_acl;                                         /* reporting */
-//extern struct acl *roles_acl;                                /* cf-runagent */
+extern struct acl *classes_acl;                    /* remoteclassesmatching */
+extern struct acl *vars_acl;                       /* remotescalar */
+extern struct acl *literals_acl;
+extern struct acl *query_acl;                     /* reporting */
+extern struct acl *bundles_acl;                   /* cf-runagent connections*/
+/* Roles ACL contains classes regexes under resource_names, but currently only
+ * lists of admit usernames under the admitdeny_acl, no
+ * ips,hostnames,keys. It's used for the "roles" access promise. TODO convert
+ * to a common access promise with resource_type=>"role". */
+extern struct acl *roles_acl;                    /* cf-runagent connections */
 
 
 size_t ReplaceSpecialVariables(char *buf, size_t buf_size,
@@ -104,20 +98,22 @@ size_t ReplaceSpecialVariables(char *buf, size_t buf_size,
                                const char *find2, const char *repl2,
                                const char *find3, const char *repl3);
 
-
-bool access_CheckResource(const struct resource_acl *acl,
-                          const char *ipaddr, const char *hostname,
-                          const char *key);
-
-
 size_t acl_SortedInsert(struct acl **a, const char *handle);
-void acl_Free(struct acl *a);
+void   acl_Free(struct acl *a);
+void   acl_Summarise(const struct acl *acl, const char *title);
+
+/* TODO instead of getting all kind of different parameters like
+ * ipaddr,hostname,key, the following functions should get a
+ * "struct peer_id" with all this plus more. */
+
 bool acl_CheckExact(const struct acl *acl, const char *req_string,
                     const char *ipaddr, const char *hostname,
                     const char *key);
 bool acl_CheckPath(const struct acl *acl, const char *reqpath,
                    const char *ipaddr, const char *hostname,
                    const char *key);
-
+bool acl_CheckRegex(const struct acl *acl, const char *req_string,
+                    const char *ipaddr, const char *hostname,
+                    const char *key, const char *username);
 
 #endif

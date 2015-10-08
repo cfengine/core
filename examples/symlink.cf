@@ -30,7 +30,7 @@ bundle agent main
 {
   files:
 
-      # We use move_obstructions becuase we want the symlink to replace a
+      # We use move_obstructions because we want the symlink to replace a
       # regular file if necessary.
       "/etc/apache2/sites-enabled/www.cfengine.com" -> { "webmaster@cfengine.com" }
         link_from => ln_s( "/etc/apache2/sites-available/www.cfengine.com" ),

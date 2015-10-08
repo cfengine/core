@@ -303,7 +303,7 @@ the following when writing output messages.
 * Log levels
   * `LOG_LEVEL_CRIT` For critical errors, process exits immediately.
   * `LOG_LEVEL_ERR`: For cf-agent, promise failed. For cf-serverd,
-    some system error occured that is worth logging to syslog.
+    some system error occurred that is worth logging to syslog.
   * `LOG_LEVEL_NOTICE`: Important information (not errors) that must not
     be missed by the user. For example cf-agent uses it in files promises
     when change tracking is enabled and the file changes.

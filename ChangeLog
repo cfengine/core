@@ -10,7 +10,7 @@
 	  (Redmine #7193)
 	- Package promise: Fix inability to install certain packages
 	  with numbers.
-	- Fix package promise not removing dependant packages. (Redmine #7424)
+	- Fix package promise not removing dependent packages. (Redmine #7424)
 	- Fix warning "Failed to parse csv file entry" with certain very long
 	  commands promises. (Redmine #7400)
 	- Fix misaligned help output in cf-hub. (Redmine #7273)

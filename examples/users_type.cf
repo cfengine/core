@@ -16,9 +16,9 @@ bundle agent main
 
 ### Home Bundle BEGIN ###
 bundle agent home_skel(user, skel)
-# @brief Initalize a users home directory with the contents of skel
-# @param user The users home directory to create
-# @param skel The directory to seed the users home with
+# @brief Initialize a user's home directory with the contents of skel
+# @param user The user's home directory to create
+# @param skel The directory to seed the user's home with
 {
   files:
     "/home/$(user)/."

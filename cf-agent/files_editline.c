@@ -266,7 +266,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                 }
 
                 int nl = StripTrailingNewline(promiser, size);
-                assert(nl != -1);
+                CF_ASSERT(nl != -1, "StripTrailingNewline failure");
 
                 np = PromiseTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
                 np->offset.line = lineno;

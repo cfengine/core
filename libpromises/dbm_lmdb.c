@@ -604,8 +604,8 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
 {
     DBTxn *txn;
     int rc = GetWriteTransaction(cursor->db, &txn);
-    assert(rc == MDB_SUCCESS);
-    assert(txn->cursor_open);
+    CF_ASSERT(rc == MDB_SUCCESS, "Could not get write transaction");
+    CF_ASSERT(txn->cursor_open, "Transaction not open");
     txn->cursor_open = false;
 
     if (cursor->curkv)

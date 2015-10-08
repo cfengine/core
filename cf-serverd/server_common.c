@@ -51,15 +51,16 @@ static const int CF_NOSIZE = -1;
 #include <cf-windows-functions.h>                  /* NovaWin_UserNameToSid */
 #include <mutex.h>                                 /* ThreadLock */
 #include <stat_cache.h>                            /* struct Stat */
+#include "server_access.h"
 
 
 void RefuseAccess(ServerConnectionState *conn, char *errmesg)
 {
     SendTransaction(conn->conn_info, CF_FAILEDSTR, 0, CF_DONE);
 
-    Log(LOG_LEVEL_VERBOSE, "REFUSAL to (user=%s,ip=%s) of request: %s",
+    /* TODO remove logging, it's done elsewhere. */
+    Log(LOG_LEVEL_VERBOSE, "REFUSAL to user='%s' of request: %s",
         NULL_OR_EMPTY(conn->username) ? "?" : conn->username,
-        NULL_OR_EMPTY(conn->ipaddr)   ? "?" : conn->ipaddr,
         errmesg);
 }
 
@@ -80,11 +81,11 @@ int AllowedUser(char *user)
 {
     if (IsItemIn(SV.allowuserlist, user))
     {
-        Log(LOG_LEVEL_VERBOSE, "User %s granted connection privileges", user);
+        Log(LOG_LEVEL_DEBUG, "User %s granted connection privileges", user);
         return true;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "User %s is not allowed on this server", user);
+    Log(LOG_LEVEL_DEBUG, "User %s is not allowed on this server", user);
     return false;
 }
 
@@ -163,7 +164,7 @@ static void ReplyNothing(ServerConnectionState *conn)
 
 /* Used only in EXEC protocol command, to check if any of the received classes
  * is defined in the server. */
-int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
+int MatchClasses(const EvalContext *ctx, ServerConnectionState *conn)
 {
     char recvbuffer[CF_BUFSIZE];
     Item *classlist = NULL, *ip;
@@ -286,6 +287,7 @@ static bool AuthorizeClass(const ServerConnectionState *conn,
 
     char userid1[CF_MAXVARSIZE], userid2[CF_MAXVARSIZE];
     /* TODO conn->hostname is client-supplied, could be dangerous for RBAC! */
+    /* Furthermore, it is always blank in the new protocol. */
     snprintf(userid1, sizeof(userid1), "%s@%s", conn->username, conn->hostname);
     snprintf(userid2, sizeof(userid2), "%s@%s", conn->username, conn->ipaddr);
 
@@ -293,8 +295,14 @@ static bool AuthorizeClass(const ServerConnectionState *conn,
     {
         if (StringMatchFull(ap->path, class))
         {
-            /* We have a pattern covering this class,
+            /* We have an entry in the roles ACL for this class
                so are we allowed to activate it? */
+
+            /*
+               TODO conn->ipaddr, conn->username and userid[12] are not
+               regular expressions.  And ROLES ACL CAN NOT CONTAIN REGEXES IN
+               THE PROMISEE, only full usernames are in ap->accesslist.
+             */
             if (IsMatchItemIn(ap->accesslist, conn->ipaddr) ||
                 IsRegexItemIn(NULL, ap->accesslist, conn->username) ||
                 IsRegexItemIn(NULL, ap->accesslist, conn->hostname) ||
@@ -365,7 +373,7 @@ void DoExec(const ServerConnectionState *conn, const char *args)
         {
             sp += 2;
 
-            /* Skip blanks in front of -D's argument,
+            /* Skip blanks before -D's argument,
                "-Dclass" and "-D class" are both valid. */
             sp += strspn(sp,  " \t");
 
@@ -407,8 +415,8 @@ void DoExec(const ServerConnectionState *conn, const char *args)
         }
         else                                              /* unknown option */
         {
-            char *message = "EXEC denied: "
-                "illegal argument, only setting classes with -D is allowed";
+            char *message = "EXEC denied: illegal argument, "
+                "only setting classes with -D is allowed";
             Log(LOG_LEVEL_INFO, "%s", message);
             SendTransaction(conn->conn_info, message, 0, CF_DONE);
             return;
@@ -451,6 +459,7 @@ void DoExec(const ServerConnectionState *conn, const char *args)
 
         bool print = false;
 
+        /* If line is empty or all characters are spaces, we don't print. */
         for (const char *sp = line; *sp != '\0'; sp++)
         {
             if (!isspace((int) *sp))
@@ -1129,7 +1138,8 @@ int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypt)
 
 void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes)
 {
-    char sendbuffer[CF_BUFSIZE];
+    char sendbuffer[CF_BUFSIZE - CF_INBAND_OFFSET];
+
     size_t ret = ItemList2CSV_bound(classes,
                                     sendbuffer, sizeof(sendbuffer), ',');
     if (ret >= sizeof(sendbuffer))
@@ -1713,4 +1723,335 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
     }
 
 #endif
+}
+
+
+static bool CharsetAcceptable(const char *s, size_t s_len)
+{
+    const char *ACCEPT =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+    size_t acceptable_chars = strspn(s, ACCEPT);
+    if (s_len == 0)
+    {
+        s_len = strlen(s);
+    }
+
+    if (acceptable_chars < s_len)
+    {
+        Log(LOG_LEVEL_INFO,
+            "llegal character in column %zu of: %s",
+            acceptable_chars, s);
+        return false;
+    }
+
+    return true;
+}
+
+
+/**
+ * @param #args_start is a comma separated list of words, which may be
+ *                    prefixed with spaces and suffixed with spaces and other
+ *                    words. Example: " asd,fgh,jk blah". In this example the
+ *                    list has 3 words, and "blah" is not one of them.
+ *
+ * Both #args_start and #args_len are in-out parameters.
+ * At the end of execution #args_start returns the real start of the list, and
+ * #args_len the real length.
+ */
+static bool AuthorizeDelimitedArgs(const ServerConnectionState *conn,
+                                   struct acl *acl,
+                                   char **args_start, size_t *args_len)
+{
+    char *s;
+    size_t s_len, skip;
+
+    assert(args_start != NULL);
+    assert(args_len != NULL);
+
+    /* Give the name s and s_len purely for ease of use. */
+    s_len = *args_len;
+    s     = *args_start;
+    /* Skip spaces in the beginning of argument list. */
+    skip  = strspn(s, " \t");
+    s    += skip;
+
+    if (s_len == 0)                        /* if end was not given, find it */
+    {
+        s_len = strcspn(s, " \t");
+    }
+    else                                                /* if end was given */
+    {
+        s_len = (skip <= s_len) ? (s_len - skip) : 0;
+    }
+
+    /* Admit, unless any token fails to be authorised. */
+    bool admit = true;
+    if (s_len > 0)
+    {
+        const char tmp_c = s[s_len];
+        s[s_len] = '\0';
+
+        /* Iterate over comma-separated list. */
+
+        char *token = &s[0];
+        while (token < &s[s_len] && admit)
+        {
+            char *token_end = strchrnul(token, ',');
+
+            const char tmp_sep = *token_end;
+            *token_end = '\0';
+
+            if (!CharsetAcceptable(token, 0) ||
+                !acl_CheckRegex(acl, token,
+                                conn->ipaddr, conn->revdns,
+                                KeyPrintableHash(conn->conn_info->remote_key),
+                                conn->username))
+            {
+                Log(LOG_LEVEL_INFO, "Access denied to: %s", token);
+                admit = false;                              /* EARLY RETURN */
+            }
+
+            *token_end = tmp_sep;
+            token      = token_end + 1;
+        }
+
+        s[s_len] = tmp_c;
+    }
+
+    *args_start = s;
+    *args_len   = s_len;
+    return admit;
+}
+
+
+/**
+ * @return #true if the connection should remain open for next requests, or
+ *         #false if the server should actively close it - for example when
+ *         protocol errors have occured.
+ */
+bool DoExec2(const EvalContext *ctx,
+             ServerConnectionState *conn,
+             char *exec_args,
+             char *sendbuf, size_t sendbuf_size)
+{
+    /* STEP 0: Verify cfruncommand was successfully configured. */
+    if (NULL_OR_EMPTY(CFRUNCOMMAND))
+    {
+        Log(LOG_LEVEL_INFO, "EXEC denied due to empty cfruncommand");
+        RefuseAccess(conn, "EXEC");
+        return false;
+    }
+
+    /* STEP 1: Resolve and check permissions of CFRUNCOMMAND's arg0. IT is
+     *         done now and not at configuration time, as the file stat may
+     *         have changed since then. */
+    {
+        char arg0[PATH_MAX];
+        if (CommandArg0_bound(arg0, CFRUNCOMMAND, sizeof(arg0)) == (size_t) -1 ||
+            PreprocessRequestPath(arg0, sizeof(arg0))           == (size_t) -1)
+        {
+            Log(LOG_LEVEL_INFO, "EXEC failed, invalid cfruncommand arg0");
+            RefuseAccess(conn, "EXEC");
+            return false;
+        }
+
+        /* Check body server access_rules, whether arg0 is authorized. */
+
+        /* TODO EXEC should not just use paths_acl access control, but
+         * specific "exec_path" ACL. Then different command execution could be
+         * allowed per host, and the host could even set argv[0] in his EXEC
+         * request, rather than only the arguments. */
+
+        if (acl_CheckPath(paths_acl, arg0,
+                          conn->ipaddr, conn->revdns,
+                          KeyPrintableHash(conn->conn_info->remote_key))
+            == false)
+        {
+            Log(LOG_LEVEL_INFO, "EXEC denied due to ACL for file: %s", arg0);
+            RefuseAccess(conn, "EXEC");
+            return false;
+        }
+    }
+
+    /* STEP 2: Check body server control "allowusers" */
+    if (!AllowedUser(conn->username))
+    {
+        Log(LOG_LEVEL_INFO, "EXEC denied due to not allowed user: %s",
+            conn->username);
+        RefuseAccess(conn, "EXEC");
+        return false;
+    }
+
+    /* STEP 3: This matches cf-runagent -s class1,class2 against classes
+     *         set during cf-serverd's policy evaluation. */
+
+    if (!MatchClasses(ctx, conn))
+    {
+        snprintf(sendbuf, sendbuf_size,
+                 "EXEC denied due to failed class match (check cf-serverd verbose output)");
+        Log(LOG_LEVEL_INFO, "%s", sendbuf);
+        SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+        return true;
+    }
+
+
+    /* STEP 4: Parse and authorise the EXEC arguments, which will be used as
+     *         arguments to CFRUNCOMMAND. Currently we only accept
+     *         [ -D classlist ] and [ -b bundlesequence ] arguments. */
+
+    char   cmdbuf[CF_BUFSIZE] = "";
+    size_t cmdbuf_len         = 0;
+
+    const char standard_args[] = " -I -Dcfruncommand";
+
+    assert(sizeof(CFRUNCOMMAND) <= sizeof(cmdbuf));
+
+    StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len, CFRUNCOMMAND, 0);
+    StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len, standard_args, 0);
+
+    exec_args += strspn(exec_args,  " \t");                  /* skip spaces */
+    while (exec_args[0] != '\0')
+    {
+        if (strncmp(exec_args, "-D", 2) == 0)
+        {
+            exec_args += 2;
+
+            char *classlist = exec_args;
+            size_t classlist_len = 0;
+            bool allow = AuthorizeDelimitedArgs(conn, roles_acl,
+                                                &classlist, &classlist_len);
+            if (!allow)
+            {
+                snprintf(sendbuf, sendbuf_size,
+                         "EXEC denied role activation (check cf-serverd verbose output)");
+                Log(LOG_LEVEL_INFO, "%s", sendbuf);
+                SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+                return true;
+            }
+
+            if (classlist_len > 0)
+            {
+                /* Append "-D classlist" to cfruncommand. */
+                StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len,
+                       " -D ", 0);
+                StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len,
+                       classlist, classlist_len);
+            }
+
+            exec_args = classlist + classlist_len;
+        }
+        else if (strncmp(exec_args, "-b", 2) == 0)
+        {
+            exec_args += 2;
+
+            char *bundlesequence = exec_args;
+            size_t bundlesequence_len = 0;
+
+            bool allow = AuthorizeDelimitedArgs(conn, bundles_acl,
+                                                &bundlesequence,
+                                                &bundlesequence_len);
+            if (!allow)
+            {
+                snprintf(sendbuf, sendbuf_size,
+                         "EXEC denied bundle activation (check cf-serverd verbose output)");
+                Log(LOG_LEVEL_INFO, "%s", sendbuf);
+                SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+                return true;
+            }
+
+            if (bundlesequence_len > 0)
+            {
+                /* Append "--bundlesequence bundlesequence" to cfruncommand. */
+                StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len,
+                       " --bundlesequence ", 0);
+                StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len,
+                       bundlesequence, bundlesequence_len);
+            }
+
+            exec_args = bundlesequence + bundlesequence_len;
+        }
+        else                                        /* disallowed parameter */
+        {
+            snprintf(sendbuf, sendbuf_size,
+                     "EXEC denied: invalid arguments: %s",
+                     exec_args);
+            Log(LOG_LEVEL_INFO, "%s", sendbuf);
+            SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+            return true;
+        }
+
+        exec_args += strspn(exec_args,  " \t");              /* skip spaces */
+    }
+
+    if (cmdbuf_len >= sizeof(cmdbuf))
+    {
+        snprintf(sendbuf, sendbuf_size,
+                 "EXEC denied: too long (%zu B) command: %s",
+                 cmdbuf_len, cmdbuf);
+        Log(LOG_LEVEL_INFO, "%s", sendbuf);
+        SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+        return false;
+    }
+
+    /* STEP 5: RUN CFRUNCOMMAND. */
+
+    snprintf(sendbuf, sendbuf_size,
+             "cf-serverd executing cfruncommand: %s\n",
+             cmdbuf);
+    SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+    Log(LOG_LEVEL_INFO, "%s", sendbuf);
+
+    FILE *pp = cf_popen_sh(cmdbuf, "r");
+    if (pp == NULL)
+    {
+        snprintf(sendbuf, sendbuf_size,
+                 "Unable to run '%s' (pipe: %s)",
+                 cmdbuf, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "%s", sendbuf);
+        SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
+        return false;
+    }
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    while (true)
+    {
+        ssize_t res = CfReadLine(&line, &line_size, pp);
+        if (res == -1)
+        {
+            if (!feof(pp))
+            {
+                /* Error reading, discard all unconsumed input before
+                 * aborting - linux-specific! */
+                fflush(pp);
+            }
+            break;
+        }
+
+        /* NOTICE: we can't SendTransaction() overlong strings, and we need to
+         * prepend and append to the string. */
+        size_t line_len = strlen(line);
+        if (line_len >= sendbuf_size - 5)
+        {
+            line[sendbuf_size - 5] = '\0';
+        }
+
+        /* Prefixing output with "> " and postfixing with '\n' is new
+         * behaviour as of 3.7.0. Prefixing happens to avoid zero-length
+         * transaction packet. */
+        /* Old cf-runagent versions do not append a newline, so we must do
+         * it here. New ones do though, so TODO deprecate. */
+        xsnprintf(sendbuf, sendbuf_size, "> %s\n", line);
+        if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)
+        {
+            Log(LOG_LEVEL_INFO,
+                "Sending failed, aborting EXEC (send: %s)",
+                GetErrorStr());
+            break;
+        }
+    }
+    free(line);
+    cf_pclose(pp);
+
+    return true;
 }

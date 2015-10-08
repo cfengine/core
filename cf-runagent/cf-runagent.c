@@ -110,6 +110,8 @@ static const struct option OPTIONS[] =
     {"timeout", required_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
+    /* Only long option for the following! */
+    {"remote-bundles", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -132,6 +134,7 @@ static const char *const HINTS[] =
     "Connection timeout, seconds",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Bundles to execute on the remote agent",
     NULL
 };
 
@@ -143,9 +146,11 @@ char OUTPUT_DIRECTORY[CF_BUFSIZE] = ""; /* GLOBAL_P */
 int BACKGROUND = false; /* GLOBAL_P GLOBAL_A */
 int MAXCHILD = 50; /* GLOBAL_P GLOBAL_A */
 
-const Rlist *HOSTLIST = NULL; /* GLOBAL_P GLOBAL_A */
-char SENDCLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
-char DEFINECLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
+const Rlist *HOSTLIST = NULL;                          /* GLOBAL_P GLOBAL_A */
+
+char   SENDCLASSES[CF_MAXVARSIZE] = "";                         /* GLOBAL_A */
+char DEFINECLASSES[CF_MAXVARSIZE] = "";                         /* GLOBAL_A */
+char REMOTEBUNDLES[CF_MAXVARSIZE] = "";
 
 /*****************************************************************************/
 
@@ -250,10 +255,13 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_RUNAGENT, GetTTYInteractive());
 
     DEFINECLASSES[0] = '\0';
-    SENDCLASSES[0] = '\0';
+    SENDCLASSES[0]   = '\0';
+    REMOTEBUNDLES[0] = '\0';
 
+    int longopt_idx;
     while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::l",
-                            OPTIONS, NULL)) != -1)
+                            OPTIONS, &longopt_idx))
+           != -1)
     {
         switch (c)
         {
@@ -297,7 +305,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                         optarg, ',');
             if (len >= sizeof(DEFINECLASSES))
             {
-                Log(LOG_LEVEL_ERR, "Argument too long (-s)");
+                Log(LOG_LEVEL_ERR, "Argument too long (-D)");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -374,6 +382,22 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'l':
             LoggingEnableTimestamps(true);
+            break;
+
+        /* long options only */
+        case 0:
+
+            if (strcmp(OPTIONS[longopt_idx].name, "remote-bundles") == 0)
+            {
+                size_t len = strlen(REMOTEBUNDLES);
+                StrCatDelim(REMOTEBUNDLES, sizeof(REMOTEBUNDLES), &len,
+                            optarg, ',');
+                if (len >= sizeof(REMOTEBUNDLES))
+                {
+                    Log(LOG_LEVEL_ERR, "Argument too long (--remote-bundles)");
+                    exit(EXIT_FAILURE);
+                }
+            }
             break;
 
         default:
@@ -663,10 +687,24 @@ static void SendClassData(AgentConnection *conn)
 static void HailExec(AgentConnection *conn, char *peer)
 {
     char sendbuf[CF_BUFSIZE - CF_INBAND_OFFSET] = "EXEC";
+    size_t sendbuf_len = strlen(sendbuf);
 
     if (!NULL_OR_EMPTY(DEFINECLASSES))
     {
-        snprintf(sendbuf, sizeof(sendbuf), "EXEC -D%s", DEFINECLASSES);
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, " -D", 0);
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, DEFINECLASSES, 0);
+    }
+    if (!NULL_OR_EMPTY(REMOTEBUNDLES))
+    {
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, " -b ", 0);
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, REMOTEBUNDLES, 0);
+    }
+
+    if (sendbuf_len >= sizeof(sendbuf))
+    {
+        Log(LOG_LEVEL_ERR, "Command longer than maximum transaction packet");
+        DisconnectServer(conn);
+        return;
     }
 
     if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)

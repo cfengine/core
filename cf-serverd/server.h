@@ -71,17 +71,16 @@ typedef struct
     /* ACL for resource_type "path". */
     Auth *admit;
     Auth *admittail;
-
     Auth *deny;
     Auth *denytail;
 
-    /* ACL for resource_types "literal", "query", "context", "variable". */
+    /* ACL for resource_type "literal", "query", "context", "variable". */
     Auth *varadmit;
     Auth *varadmittail;
-
     Auth *vardeny;
     Auth *vardenytail;
 
+    /* ACL for promise "roles". */
     Auth *roles;
     Auth *rolestail;
 
@@ -102,19 +101,22 @@ struct ServerConnectionState_
     char revdns[MAXHOSTNAMELEN];          /* only populated in new protocol */
 
 #ifdef __MINGW32__
-    /* We avoid dynamically allocated buffers due to potential memory leaks,
-     * but this is still too big at 2K! */
-    char sid[CF_MAXSIDSIZE];
+    char sid[CF_MAXSIDSIZE];                            /* 2K size too big! */
 #endif
     uid_t uid;
 
     /* TODO move username, hostname etc to a new struct identity. */
     char username[CF_MAXVARSIZE];
 
-    /* TODO the following are useless with the new protocol */
-    char hostname[CF_MAXVARSIZE]; /* hostname is copied from client-supplied CAUTH command */
+    /* The following are NOT POPULATED with the new protocol,
+     * TODO DEPRECATE! */
+
+    /* hostname is copied from client-supplied CAUTH command */
+    char hostname[CF_MAXVARSIZE];
     int user_data_set;
     int rsa_auth;
+    /* TODO DANGEROUS! this is set for the whole connection if only one path
+     * is admitted as maproot. */
     int maproot;
     unsigned char *session_key;
     char encryption_type;

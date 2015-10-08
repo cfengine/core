@@ -88,7 +88,7 @@ const ConstraintSyntax CF_REMACCESS_BODIES[REMOTE_ACCESS_NONE + 1] =
     ConstraintSyntaxNewStringList("deny_keys", "", "List of host keys that will be denied access to file objects", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("maproot", "", "List of host names or IP addresses to grant full read-privilege on the server", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable,bundle", "The type of object being granted access (the default is path and grants access to files)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("report_data_select", &report_data_select_body, "Report content filter", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("shortcut", "", "For path resource_type, the server will expand a relative path beginning with this text", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

@@ -331,7 +331,8 @@ static bool ServerIdentificationDialog(ConnectionInfo *conn_info,
     username[0] = '\0';
 
     /* Assert sscanf() is safe to use. */
-    assert(sizeof(word1)>=sizeof(input) && sizeof(word2)>=sizeof(input));
+    assert(sizeof(word1) >= sizeof(input));
+    assert(sizeof(word2) >= sizeof(input));
 
     ret = sscanf(line2, "IDENTITY %[^=]=%s%n", word1, word2, &chars_read);
     while (ret >= 2)
@@ -562,7 +563,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     /* The CF_BUFEXT extra space is there to ensure we're not *reading* out of
      * bounds in commands that carry extra binary arguments, like MD5. */
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT] = { 0 };
-    char sendbuffer[CF_BUFSIZE] = { 0 };
+    /* This size is the max we can SendTransaction(). */
+    char sendbuffer[CF_BUFSIZE - CF_INBAND_OFFSET] = { 0 };
     char filename[CF_BUFSIZE + 1];      /* +1 for appending slash sometimes */
     ServerFileGetState get_args = { 0 };
 
@@ -611,63 +613,21 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         assert(strncmp(PROTOCOL_NEW[PROTOCOL_COMMAND_EXEC],
                        recvbuffer, EXEC_len) == 0);
 
-        const char *args = &recvbuffer[EXEC_len];
+        char *args = &recvbuffer[EXEC_len];
         args += strspn(args, " \t");                       /* bypass spaces */
 
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
             "Received:", "EXEC", args);
 
-        if (!AllowedUser(conn->username))
-        {
-            Log(LOG_LEVEL_INFO, "EXEC denied due to not allowed user: %s",
-                conn->username);
-            RefuseAccess(conn, recvbuffer);
-            return true;
-        }
+        bool b = DoExec2(ctx, conn, args,
+                         sendbuffer, sizeof(sendbuffer));
 
-        char arg0[PATH_MAX];
-        size_t zret = CommandArg0_bound(arg0, CFRUNCOMMAND, sizeof(arg0));
-        /* TODO check it is always file, never directory, no end with '/' */
-        if (zret == (size_t) -1)
-        {
-            Log(LOG_LEVEL_ERR, "Internal size limit for cfruncommand,"
-                " please consider using a smaller cfruncommand");
-            goto protocol_error;
-        }
-
-        zret = PreprocessRequestPath(arg0, sizeof(arg0));
-        if (zret == (size_t) -1)
-        {
-            goto protocol_error;
-        }
-
-
-        /* TODO EXEC should not just use paths_acl access control, but
-         * specific "path_exec" ACL. Then different command execution could be
-         * allowed per host, and the host could even set argv[0] in his EXEC
-         * request, rather than only the arguments. */
-
-        if (acl_CheckPath(paths_acl, arg0,
-                          conn->ipaddr, conn->revdns,
-                          KeyPrintableHash(conn->conn_info->remote_key))
-            == false)
-        {
-            Log(LOG_LEVEL_INFO, "EXEC denied due to ACL for file: %s", arg0);
-            RefuseAccess(conn, recvbuffer);
-            return true;
-        }
-
-        /* This matches cf-runagent -s class1,class2 */
-        if (!MatchClasses(ctx, conn))
-        {
-            Log(LOG_LEVEL_INFO, "EXEC denied due to failed class match");
-            Terminate(conn->conn_info);
-            return true;
-        }
-
-        DoExec(conn, args);
+        /* In the end we might keep the connection open (return true) to be
+         * ready for next requests, but we must always send the TERMINATOR
+         * string so that the client can close the connection at will. */
         Terminate(conn->conn_info);
-        return true;
+
+        return b;
     }
     case PROTOCOL_COMMAND_VERSION:
 
@@ -960,6 +920,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Received:", "CONTEXT", client_regex);
+
         /* WARNING: this comes from legacy code and must be killed if we care
          * about performance. We should not accept regular expressions from
          * the client, but this will break backwards compatibility.
@@ -978,26 +941,17 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             /* Does this class match the regex the client sent? */
             if (StringMatchFull(client_regex, class_name))
             {
-                /* For all ACLs */
-                for (size_t i = 0; i < classes_acl->len; i++)
+                /* Is this class allowed to be given to the specific
+                 * host, according to the regexes in the ACLs? */
+                if (acl_CheckRegex(classes_acl, class_name,
+                                   conn->ipaddr, conn->revdns,
+                                   KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+                                   NULL)
+                    == true)
                 {
-                    struct resource_acl *racl = &classes_acl->acls[i];
-
-                    /* Does this ACL apply to this host? */
-                    if (access_CheckResource(racl, conn->ipaddr, conn->revdns,
-                                             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-                        == true)
-                    {
-                        const char *allowed_classes_regex =
-                            classes_acl->resource_names->list[i]->str;
-
-                        /* Does this ACL admits access for this class to the
-                         * connected host? */
-                        if (StringMatchFull(allowed_classes_regex, class_name))
-                        {
-                            PrependItem(&matched_classes, class_name, NULL);
-                        }
-                    }
+                    Log(LOG_LEVEL_DEBUG, "Access granted to class: %s",
+                        class_name);
+                    PrependItem(&matched_classes, class_name, NULL);
                 }
             }
         }

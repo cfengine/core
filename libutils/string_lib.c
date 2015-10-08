@@ -235,12 +235,6 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 
 /*********************************************************************/
 
-/**
-   @TODO create a new one for already allocated arrays:
-       bool StringConcat(dest, dest_size, ...)
-   where the end of the va_args list is signified by a NULL sentinel element.
- */
-
 char *StringConcatenate(size_t count, const char *first, ...)
 {
     if (count < 1)
@@ -1102,7 +1096,7 @@ void StrCat(char *dst, size_t dst_size, size_t *dst_len,
 
     size_t needed_len = dlen + slen;
 
-    if (dlen >= dst_size)                          /* dst already overflown */
+    if (dlen + 1 >= dst_size)              /* dst already full or overflown */
     {
         /* Append nothing, only update *dst_len. */
     }
@@ -1146,7 +1140,7 @@ void StrCatDelim(char *dst, size_t dst_size, size_t *dst_len,
         needed_len++;                        /* separator must be prepended */
     }
 
-    if (dlen >= dst_size)                          /* dst already overflown */
+    if (dlen + 1 >= dst_size)              /* dst already full or overflown */
     {
         /* Append nothing, only update *dst_len. */
     }

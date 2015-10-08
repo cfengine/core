@@ -178,7 +178,7 @@ bundle agent cfe_internal_update
         handle => "cfe_internal_bootstrap_update_reports_failsafe_notification",
 	comment => "Be sure to inform the user that the failsafe policy has
 		    been triggered. This typically indicates that the agent has
-		    recieved broken policy. It may also indicate legacy
+		    received broken policy. It may also indicate legacy
                     configuration in body executor control.";
 
     bootstrap_mode::

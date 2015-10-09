@@ -223,9 +223,19 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
 {
     LoggingContext *lctx = GetCurrentThreadContext();
 
+    bool log_to_console = ( level <= lctx->report_level );
+    bool log_to_syslog  = ( level <= lctx->log_level &&
+                            level < LOG_LEVEL_VERBOSE );
+
+    if (!log_to_console && !log_to_syslog)
+    {
+        return;                            /* early return - save resources */
+    }
+
     char *msg = StringVFormat(fmt, ap);
     char *hooked_msg = NULL;
 
+    /* Remove ending EOLN. */
     for (char *sp = msg; *sp != '\0'; sp++)
     {
         if (*sp == '\n' && *(sp+1) == '\0')
@@ -244,12 +254,11 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
         hooked_msg = msg;
     }
 
-    if (level <= lctx->report_level)
+    if (log_to_console)
     {
         LogToConsole(hooked_msg, level, lctx->color);
     }
-
-    if (level <= lctx->log_level && level < LOG_LEVEL_VERBOSE)
+    if (log_to_syslog)
     {
         LogToSystemLog(hooked_msg, level);
     }

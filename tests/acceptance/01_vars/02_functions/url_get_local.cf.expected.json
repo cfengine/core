@@ -1,0 +1,8 @@
+{
+  "kept": {
+    "res4": "###########################################################\n#\n# Test url_get() locally\n#\n###########################################################\n\nbody common control\n{\n    inputs => { \"../../defau",
+    "res4/rc": 0,
+    "res4/returncode": 0,
+    "res4/success": true
+  }
+}

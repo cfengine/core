@@ -25,7 +25,7 @@ bundle agent test
   files:
       "$(G.testfile)"
       create => "true",
-      edit_template => "$(this.promise_filename).nonexistant",
+      edit_template => "$(this.promise_filename).nonexistent",
       classes => scoped_classes_generic("namespace", "test_file_template");
 
   methods:

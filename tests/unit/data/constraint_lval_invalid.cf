@@ -3,5 +3,5 @@ bundle agent test
   files:
       "$(G.testdir)/shouldnotexist"
       create => "true",
-      nonexistant_attribute => "abc";
+      nonexistent_attribute => "abc";
 }

@@ -64,7 +64,7 @@ struct arg_struct {
 static void *fct2(void *arguments)
 {
     struct arg_struct *args = (struct arg_struct *)arguments;
-    int base = (int)((Seq *)args->base);
+    int base = args->base;
 
     CF_DB *db;
     char key[256];

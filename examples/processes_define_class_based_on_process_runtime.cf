@@ -40,7 +40,7 @@ bundle agent main
 # NOTE: These bundles were copied from the stdlib in
 # order to make this a standalone policy that requires
 # no external files.  Because the standard library is
-# constantly evolving thier definition may change
+# constantly evolving their definition may change
 ########################################################
 
 body process_count any_count(cl)

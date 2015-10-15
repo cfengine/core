@@ -84,7 +84,7 @@ line       ^.*$
 
 comment    #[^\n]*
 
-macro_if_version    ^@if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}\)
+macro_if_version    ^@if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
 macro_if_feature    ^@if\ feature\([a-zA-Z0-9_]+\)
 macro_endif ^@endif
 
@@ -151,6 +151,8 @@ promise_type   [a-zA-Z_]+:
                         {
                           int request_major = 0;
                           int request_minor = 0;
+                          int request_patch = 0;
+                          int request_level = 0;
                           int major = 0;
                           int minor = 0;
                           int patch = 0;
@@ -165,18 +167,28 @@ promise_type   [a-zA-Z_]+:
 
                           if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
                           {
-                            if (2 == sscanf(version_text, "%d.%d", &request_major, &request_minor))
+                            request_level=sscanf(version_text, "%d.%d.%d", &request_major, &request_minor, &request_patch);
+                            if (request_level >= 1)
                             {
-                            if ((request_major > major) ||
-                                (request_major == major && request_minor > minor))
-                              {
-                                /* ignore to the next @endif */
+                              if (request_major > major) {
                                 ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
                                 BEGIN(if_ignore_state);
-                              }
-                              else /* we're OK with the version */
-                              {
+                              } else if (request_major < major || request_level == 1) {
                                 ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                              } else { // request_major==major && request_level > 1
+                                if (request_minor > minor) {
+                                  ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                                  BEGIN(if_ignore_state);
+                                } else if (request_minor < minor || request_level == 2) {
+                                  ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                                } else { // request_minor==minor && request_level > 2
+                                  if (request_patch > patch) {
+                                    ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                                    BEGIN(if_ignore_state);
+                                  } else { // request_patch <= patch
+                                    ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                                  }
+                                }
                               }
                             }
                             else

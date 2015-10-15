@@ -1,26 +1,23 @@
 #include <syntax.h>
-
 #include <string.h>
+#include <cfnet.h>
+#include <sysinfo.h>
 
 static const char* features[] = {
-// the parser leaves a trailing ')' 
 #ifdef HAVE_LIBYAML
-  "yaml)",
+  "yaml",
 #endif
 #ifdef HAVE_LIBXML2
-  "xml2)",
+  "xml2",
 #endif
 
-  ")" // This terminates the array and declares empty as an always existing feature
+  NULL
 };
 
 int KnownFeature(const char *feature)
 {
-  int feature_count = sizeof(features)/sizeof(const char*);
-  char copy[200];
-
   // dumb algorithm, but still effective for a small number of features
-  for(int i=0 ; i<feature_count ; i++) {
+  for(int i=0 ; features[i]!=NULL ; i++) {
     int r = strcmp(feature, features[i]);
     printf("%d: %s <-> %s\n", r, feature, features[i]);
     if(r==0) {
@@ -30,3 +27,12 @@ int KnownFeature(const char *feature)
   return 0;
 }
 
+void CreateHardClassesFromfeatures(EvalContext *ctx, char *tags)
+{
+  char vbuff[CF_BUFSIZE];
+
+  for(int i=0 ; features[i]!=NULL ; i++) {
+    snprintf(vbuff, CF_BUFSIZE, "feature_%s", features[i]);
+    CreateHardClassesFromCanonification(ctx, vbuff, tags);
+  }
+}

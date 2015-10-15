@@ -194,7 +194,9 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {macro_if_feature}    {
-                        const char* feature_text = yytext+12;
+                        char* feature_text = yytext+12;
+                        // remove trailing ')'
+                        feature_text[strlen(feature_text)-1] = 0;
                         ParserDebug("\tL:macro @if %d:feature=%s\n", P.line_pos, feature_text);
                         {
                           if (P.if_depth > 0)

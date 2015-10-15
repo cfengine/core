@@ -1,0 +1,43 @@
+######################################################
+#
+#  Test that @if feature() wirks
+#
+#####################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test
+{
+@if feature(xml)
+  classes:
+      "expected" expression => "any";
+@endif
+
+@if feature(yaml)
+  classes:
+      "expected2" expression => "any";
+@endif
+
+@if feature(unknown_123)
+  classes:
+      "not_expected" expression => "any";
+@endif
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("expected,expected2,expected2",
+                                         "not_expected",
+                                         $(this.promise_filename));
+}
+
+@if feature(ABCD)
+
+This text should never be seen, it's completely ignored
+@endif

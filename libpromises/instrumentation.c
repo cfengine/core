@@ -42,7 +42,7 @@ bool TIMING = false;
 
 struct timespec BeginMeasure()
 {
-    struct timespec start;
+    struct timespec start = { 0 };
 
     if (clock_gettime(CLOCK_REALTIME, &start) == -1)
     {

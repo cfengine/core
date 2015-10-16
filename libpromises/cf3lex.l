@@ -167,7 +167,7 @@ promise_type   [a-zA-Z_]+:
 
                           if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
                           {
-                            request_level=sscanf(version_text, "%d.%d.%d", &request_major, &request_minor, &request_patch);
+                            request_level = sscanf(version_text, "%d.%d.%d", &request_major, &request_minor, &request_patch);
                             if (request_level >= 1)
                             {
                               if (request_major > major) {

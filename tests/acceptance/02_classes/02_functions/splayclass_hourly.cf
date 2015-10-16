@@ -1,0 +1,64 @@
+# Test that hourly splay class works as expected
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      version => "1.0";
+}
+
+bundle agent main
+{
+  meta:
+    "test_suppress_fail"
+      string => "!any",
+      meta => { "zendesk2548" };
+
+  vars:
+    "hourly[Min00_05]" string => "1";
+    "hourly[Min05_10]" string => "2";
+    "hourly[Min10_15]" string => "3";
+    "hourly[Min15_20]" string => "14";
+    "hourly[Min20_25]" string => "23";
+    "hourly[Min25_30]" string => "4";
+    "hourly[Min30_35]" string => "12";
+    "hourly[Min35_40]" string => "13";
+    "hourly[Min40_45]" string => "6";
+    "hourly[Min45_50]" string => "7";
+    "hourly[Min50_55]" string => "10";
+    "hourly[Min55_00]" string => "24";
+    "hourly_idx" slist => getindices(hourly);
+    "hourly_inputs" slist => getvalues(hourly);
+    
+    "splay_classes" slist => classesmatching("splayclass_hourly_.*");
+
+  classes:
+
+    "splayclass_hourly_$(hourly_inputs)"
+      expression => splayclass( $(hourly_inputs), hourly);
+
+    "ok" 
+      and => { "$(hourly_idx)", "splayclass_hourly_$(hourly[$(hourly_idx)])"};
+
+  reports:
+    DEBUG::
+      # Show the current time window
+      "DEBUG $(this.bundle): Current time window '$(hourly_idx)'"
+        if => "$(hourly_idx)";
+
+      # Show the currently defined splay class (found with classesmatching)
+      "DEBUG $(this.bundle): Defined splay class '$(splay_classes)'";
+
+      # Show the class expression that is satisfied
+      "DEBUG $(this.bundle): $(hourly_idx).splayclass_hourly_$(hourly[$(hourly_idx)])"
+        if => and("$(hourly_idx)", "splayclass_hourly_$(hourly[$(hourly_idx)])");
+
+      # Show the time with the splay class defined
+      "DEBUG $(this.bundle): $(sys.date) splayclass_hourly_$(hourly_inputs) defined"
+        ifvarclass => "splayclass_hourly_$(hourly_inputs)";
+
+    ok::
+      # We pass when the splay class is defined during the expected window
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+}

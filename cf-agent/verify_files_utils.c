@@ -2655,6 +2655,10 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
         EndMeasure(eventname, start);
     }
+    else
+    {
+        EndMeasure(NULL, start);
+    }
 
     BufferDestroy(source);
     return result;

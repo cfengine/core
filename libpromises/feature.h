@@ -4,7 +4,7 @@
 
 int KnownFeature(const char *feature);
 
-void CreateHardClassesFromfeatures(EvalContext *ctx, char *tags);
+void CreateHardClassesFromFeatures(EvalContext *ctx, char *tags);
 
 #endif
 

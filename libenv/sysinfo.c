@@ -946,7 +946,7 @@ static void BuiltinClasses(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
     CreateHardClassesFromCanonification(ctx, vbuff, "inventory,attribute_name=none,source=agent");
 
-    CreateHardClassesFromfeatures(ctx, "source=agent");
+    CreateHardClassesFromFeatures(ctx, "source=agent");
 }
 
 /*******************************************************************/

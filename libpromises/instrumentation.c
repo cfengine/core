@@ -48,6 +48,10 @@ struct timespec BeginMeasure()
     {
         Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
     }
+    else if (TIMING)
+    {
+        Log(LOG_LEVEL_VERBOSE, "T: Starting measuring time");
+    }
 
     return start;
 }

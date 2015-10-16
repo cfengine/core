@@ -416,7 +416,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     char *hostname, *port;
     ParseHostPort(host, &hostname, &port);
 
-    if (hostname == NULL || strcmp(hostname, "localhost") == 0)
+    if (hostname == NULL)
     {
         Log(LOG_LEVEL_INFO, "No remote hosts were specified to connect to");
         return false;

@@ -1272,7 +1272,14 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     xsnprintf(v, sizeof(v), "%d", (int) ctx->ppid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, CF_DATA_TYPE_INT, "source=agent");
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "callers_promisers", EvalContextGetPromiseCallerMethods(ctx), CF_DATA_TYPE_STRING_LIST, "source=promise");
+    Rlist *metas = PromiseGetConstraintAsList(ctx, "meta", frame->data.promise.owner);
+    for (Rlist *ptr = metas; ptr; ptr = ptr->next)
+    {
+        if (strcmp(RvalScalarValue(ptr->val), "cfengine:callers_promisers") == 0)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "callers_promisers", EvalContextGetPromiseCallerMethods(ctx), CF_DATA_TYPE_STRING_LIST, "source=promise");
+        }
+    }
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");
 }

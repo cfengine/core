@@ -126,7 +126,7 @@ static const char *const HINTS[] =
     "Define a list of comma separated classes to be used to select remote agents by constraint",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "(deprecated)",
-    "Activate internal diagnostics (developers only)",
+    "(deprecated)",
     "Hail the following comma-separated lists of hosts, overriding default list",
     "Enable interactive mode for key trust",
     "Connection timeout, seconds",
@@ -354,8 +354,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         }
 
         case 'x':
-            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(EXIT_SUCCESS);
+            Log(LOG_LEVEL_ERR, "Option \"-x\" has been deprecated");
+            exit(EXIT_FAILURE);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))

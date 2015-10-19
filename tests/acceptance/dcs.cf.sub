@@ -184,10 +184,11 @@ bundle agent default(filename)
 
       "tests" slist => { "default:init",
                          "default:test",
-                         "default:check"
+                         "default:check",
+                         "default:destroy"
       };
 
-      "bundles" slist => bundlesmatching("default:(init|test|check)");
+      "bundles" slist => bundlesmatching("default:(init|test|check|destroy)");
 
   methods:
       "any" usebundle => collect_stories_metadata;

@@ -451,13 +451,11 @@ static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const 
             if(!PromiseBundleOrBodyConstraintExists(ctx, constraint_type, promise)) {
                 const Policy *policy = PolicyFromPromise(promise);
                 // default format is <promise_type>_<body_type>_default
-                char* default_body_name = StringConcatenate(4, promise->parent_promise_type->name, "_", constraint_type, "_default");
-                Seq *bodies_and_args = EvalContextResolveBodyExpression(ctx, policy, default_body_name, constraint_type);
-                // If a default has been defined
-                if (bodies_and_args && SeqLength(bodies_and_args) > 0) {
-                    printf("Found %s\n", default_body_name);
-                    const Body *bp = SeqAt(bodies_and_args, 0);
-                    CopyBodyConstraintsToPromise(ctx, promise, bp);
+                char* default_body_name = StringConcatenate(4, "default:", promise->parent_promise_type->name, "_", constraint_type);
+                const Body *bp = EvalContextFindFirstMatchingBody(policy, constraint_type, "default", default_body_name);
+                if(bp) {
+                  printf("Found %s\n", default_body_name);
+                  CopyBodyConstraintsToPromise(ctx, promise, bp);
                 }
             }
         }

@@ -1,0 +1,45 @@
+body common control
+{
+      bundlesequence => { "access_rules" };
+      inputs => { "../../default.cf.sub" };
+
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control
+
+{
+      port => "22004";
+
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
+
+      # Authorize "root" users to execute cfruncommand
+      allowusers            => { "blah", "root" };
+      cfruncommand          =>
+        "$(G.write_args_sh) $(G.testdir)/exec_args.txt";
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+
+  access:
+
+  # ACCESS IS DENIED
+
+    "$(G.write_args_sh)"
+      deny  => { "127.0.0.1", "::1" };
+
+  # Authorize "root" users to activate all classes
+  # roles:
+  #   ".*" authorize => { "root" };
+
+}
+

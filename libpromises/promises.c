@@ -450,11 +450,11 @@ static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const 
             // if there is no matching body in this promise
             if(!PromiseBundleOrBodyConstraintExists(ctx, constraint_type, promise)) {
                 const Policy *policy = PolicyFromPromise(promise);
-                // default format is <promise_type>_<body_type>_default
+                // default format is default:<promise_type>_<body_type>
                 char* default_body_name = StringConcatenate(4, "default:", promise->parent_promise_type->name, "_", constraint_type);
                 const Body *bp = EvalContextFindFirstMatchingBody(policy, constraint_type, "default", default_body_name);
                 if(bp) {
-                  printf("Found %s\n", default_body_name);
+                  Log(LOG_LEVEL_VERBOSE, "Using the default body: %60s", default_body_name);
                   CopyBodyConstraintsToPromise(ctx, promise, bp);
                 }
             }

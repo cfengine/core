@@ -123,7 +123,7 @@ int SendTransaction(const ConnectionInfo *conn_info,
  *  @return 0 in case of socket closed, -1 in case of other error, or
  *          >0 the number of bytes read.
  */
-int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
+int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
 {
     char proto[CF_INBAND_OFFSET + 1] = { 0 };
     int ret;
@@ -143,8 +143,15 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
 
-    if (ret == -1 || ret == 0)
+    if (ret <= 0)
     {
+        /* We are experiencing problems with receiving data from server.
+         * This might lead to packages being not delivered in correct
+         * order and unexpected issues like directories being replaced
+         * with files. 
+         * In order to make sure that file transfer is reliable we have to
+         * close connection to avoid broken packages being received. */
+        conn_info->is_broken = true;
         return ret;
     }
     else if (ret != CF_INBAND_OFFSET)
@@ -152,6 +159,7 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: bogus short header (%d bytes: '%s')",
             ret, proto);
+        conn_info->is_broken = true;
         return -1;
     }
 
@@ -165,18 +173,21 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     {
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: bogus header: %s", proto);
+        conn_info->is_broken = true;
         return -1;
     }
     if (status != CF_MORE && status != CF_DONE)
     {
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: bogus header (more='%c')", status);
+        conn_info->is_broken = true;
         return -1;
     }
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: packet too long (len=%d)", len);
+        conn_info->is_broken = true;
         return -1;
     }
     else if (len <= 0)
@@ -185,6 +196,7 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
          * ReceiveTransaction() == 0 currently means connection closed. */
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: packet too short (len=%d)", len);
+        conn_info->is_broken = true;
         return -1;
     }
 
@@ -219,8 +231,9 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
 
-    if (ret == -1 || ret == 0)
+    if (ret <= 0)
     {
+        conn_info->is_broken = true;
         return ret;
     }
     else if (ret != len)
@@ -230,6 +243,7 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         Log(LOG_LEVEL_ERR,
             "Partial transaction read %d != %d bytes!",
             ret, len);
+        conn_info->is_broken = true;
         return -1;
     }
 

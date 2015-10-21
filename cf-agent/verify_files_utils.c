@@ -823,7 +823,16 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
         /* This sends 1st STAT command. */
         if (!ConsiderAbstractFile(dirp->d_name, from, attr.copy, conn))
         {
-            continue;
+            if (conn != NULL && conn->conn_info->is_broken)
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp,
+                     attr, "connection timeout");
+                return PROMISE_RESULT_INTERRUPTED;
+            }
+            else
+            {
+                continue;
+            }
         }
 
         if (attr.copy.purge)    /* Purge this file */
@@ -854,7 +863,16 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             if (cf_stat(newfrom, &sb, attr.copy, conn) == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Can't stat '%s'. (cf_stat: %s)", newfrom, GetErrorStr());
-                continue;                                       /* TODO FAIL? */
+                if (conn != NULL && conn->conn_info->is_broken)
+                {
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp,
+                         attr, "connection timeout");
+                    return PROMISE_RESULT_INTERRUPTED;
+                }
+                else
+                {
+                    continue;
+                }
             }
         }
         else
@@ -862,7 +880,17 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             if (cf_lstat(newfrom, &sb, attr.copy, conn) == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Can't stat '%s'. (cf_stat: %s)", newfrom, GetErrorStr());
-                continue;                                       /* TODO FAIL? */
+                if (conn != NULL && conn->conn_info->is_broken)
+                {
+                    cfPS(ctx, LOG_LEVEL_INFO,
+                         PROMISE_RESULT_INTERRUPTED, pp, attr,
+                         "connection timeout");
+                    return PROMISE_RESULT_INTERRUPTED;
+                }
+                else
+                {
+                    continue;
+                }
             }
         }
 
@@ -1032,7 +1060,16 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
             if (!ConsiderAbstractFile(dirp->d_name, sourcedir,
                                       attr.copy, conn))
             {
-                continue;
+                if (conn != NULL && conn->conn_info->is_broken)
+                {
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED,
+                         pp, attr, "connection timeout");
+                    return PROMISE_RESULT_INTERRUPTED;
+                }
+                else
+                {
+                    continue;
+                }
             }
 
             strcpy(sourcefile, sourcedir);

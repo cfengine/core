@@ -1,0 +1,34 @@
+###########################################################
+#
+# Test findprocesses()
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle common test
+{
+  classes:
+      # this will be set only if we find our own exact PID
+      "descartes" expression => strcmp($(found_pids), $(this.promiser_pid));
+  vars:
+      # find our own PID, using \b to make sure we match whole words
+      "found" data => findprocesses(".+\b$(this.promiser_pid)\b.+");
+      # pluck the "pid" field out into a list
+      "found_pids" data => mapdata("none", "$(found[$(this.k)][pid])", found);
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("descartes", "", $(this.promise_filename));
+}

@@ -1,0 +1,37 @@
+# Test that select class is actuated when it has multiple classes given as a
+# variable
+body common control {
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test 
+{
+  vars:
+    any::
+      "common_classes" slist => { "common_1", "common_2" };
+
+    common_class_selected::	
+      "class_selected"
+        string => "$(common_classes)",
+        if => "$(common_classes)";
+  
+  classes:
+      # When you iterate on a list using $() it should iterate in the order of
+      # the list. So the first time this is actuated, the value of
+      # $(common_classes) should be "common_1". "common_2" should never be
+      # defined, because the promise will be skipped on subsequent passes since
+      # the "common_class_selected" is already defined.
+      "common_class_selected"
+        select_class => { $(common_classes) };
+
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_passif("common_1",
+                                    "$(this.promise_filename)"),
+            unless => "common_2";
+}

@@ -1,0 +1,31 @@
+# Test that select class is skipped when the list of classes is empty
+body common control {
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test 
+{
+  vars:
+    any::
+      "common_classes" slist => { };
+
+    common_class_selected::	
+      "class_selected"
+        string => "$(common_classes)",
+        if => "$(common_classes)";
+  
+  classes:
+      "common_class_selected"
+        select_class => { @(common_classes) };
+
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_passif("any",
+                                    "$(this.promise_filename)"),
+        unless => "common_class_selected";
+}

@@ -56,6 +56,7 @@ struct ConnectionInfo {
     socklen_t ss_len;
     struct sockaddr_storage ss;
     bool is_call_collect;       /* Maybe replace with a bitfield later ... */
+    bool is_broken; /* used to propagate connection errors up in function calls */
 };
 
 typedef struct ConnectionInfo ConnectionInfo;

@@ -53,7 +53,11 @@ static bool LastRecvTimedOut(void)
  * @param buffer Buffer into which to read data
  * @param toget Number of bytes to read; a '\0' shall be written after
  *        the data; buffer must have space for that.
- * @return -1 on error; or actual length read.
+ *
+ * @return number of bytes actually received, might be less than #toget
+ *         <toget  when connection has been gracefully closed while we
+ *             were expecting more data.
+ *         -1  in case of timeout or error - socket is unusable
  */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
@@ -83,7 +87,26 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Couldn't receive. (recv: %s)", GetErrorStr());
+                if (LastRecvTimedOut())
+                {
+                    Log(LOG_LEVEL_ERR, "Receive timeout"
+                        " (received=%dB, expecting=%dB) (recv: %s)",
+                        already, toget, GetErrorStr());
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Consider increasing body agent control"
+                        " \"default_timeout\" setting");
+
+                    /* Shutdown() TCP connection despite of EAGAIN error, in
+                     * order to avoid receiving this delayed response later on
+                     * (Redmine #6027). */
+                    shutdown(sd, SHUT_RDWR);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Couldn't receive (recv: %s)",
+                        GetErrorStr());
+                }
+                return -1;
             }
             return -1;
         }

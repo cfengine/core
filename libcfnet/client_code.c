@@ -685,6 +685,8 @@ static void FlushFileStream(int sd, int toget)
     }
 }
 
+/* TODO finalise socket or TLS session in all cases that this function fails
+ * and the transaction protocol is out of sync. */
 int CopyRegularFileNet(const char *source, const char *dest, off_t size,
                        bool encrypt, AgentConnection *conn)
 {
@@ -770,6 +772,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
             n_read = -1;
         }
 
+        /* TODO what if 0 < n_read < toget? Might happen with TLS. */
+
         if (n_read <= 0)
         {
             /* This may happen on race conditions, where the file has shrunk
@@ -778,6 +782,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_ERR,
                 "Error in client-server stream, has %s:%s shrunk? (code %d)",
                 conn->this_server, source, n_read);
+
             close(dd);
             free(buf);
             return false;

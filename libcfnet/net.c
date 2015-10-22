@@ -120,8 +120,12 @@ int SendTransaction(const ConnectionInfo *conn_info,
  *  Receive a transaction packet of at most CF_BUFSIZE-1 bytes, and
  *  NULL-terminate it.
  *
- *  @return 0 in case of socket closed, -1 in case of other error, or
- *          >0 the number of bytes read.
+ *  @return 0 in case of socket closed, -1 in case of other error or timeout.
+ *              In both cases the connection MAY NOT BE FINALISED!
+ *          >0 the number of bytes read, transaction was successfully received.
+ *
+ *  @TODO shutdown() the connection in all cases were this function returns -1,
+ *        in order to protect against future garbage reads.
  */
 int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
 {
@@ -143,12 +147,16 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
 
+    /* If error occured or recv() timeout or if connection was gracefully
+     * closed. Connection has been finalised. */
     if (ret == -1 || ret == 0)
     {
         return ret;
     }
     else if (ret != CF_INBAND_OFFSET)
     {
+        /* If we received less bytes than expected. Might happen
+         * with TLSRecv(). */
         Log(LOG_LEVEL_ERR,
             "ReceiveTransaction: bogus short header (%d bytes: '%s')",
             ret, proto);
@@ -225,8 +233,14 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     }
     else if (ret != len)
     {
-        /* Should never happen given that we are using SSL_MODE_AUTO_RETRY and
-         * that transaction payload < CF_BUFSIZE < TLS record size. */
+        /*
+         * Should never happen except with TLS, given that we are using
+         * SSL_MODE_AUTO_RETRY and that transaction payload < CF_BUFSIZE < TLS
+         * record size, it can currently only happen if the other side does
+         * TLSSend(wrong_number) for the transaction.
+         *
+         * TODO IMPORTANT terminate TLS session in that case.
+         */
         Log(LOG_LEVEL_ERR,
             "Partial transaction read %d != %d bytes!",
             ret, len);

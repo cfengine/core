@@ -668,21 +668,22 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  * @param buffer Buffer, of size at least #toget + 1 to store received data.
  * @param toget Length of the data to receive, must be < CF_BUFSIZE.
  *
- * @return The length of the received data, which could be smaller or equal
- *         than the requested amount.
+ * @return The length of the received data, which should be equal or less
+ *         to the requested amount.
  *         -1 in case of timeout or error - SSL session is unusable
  *         0  if connection was closed
  *
  * @note Use only for *blocking* sockets. Set
  *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
  *       operation completed or an error occurred.
+ * @note Still, it may happen for #retval to be less than #toget, if the
+ *       opposite side completed a TLSSend() with number smaller than #toget.
  */
 int TLSRecv(SSL *ssl, char *buffer, int toget)
 {
     assert(toget > 0);
     assert(toget < CF_BUFSIZE);
     assert_SSLIsBlocking(ssl);
-
 
     int received = SSL_read(ssl, buffer, toget);
     if (received < 0)

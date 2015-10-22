@@ -1,0 +1,63 @@
+# Tests whether you can insert the same text into two regions.
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  meta:
+      "test_soft_fail" string => "any",
+        meta => { "redmine7460" };
+
+  methods:
+      "any" usebundle => file_make("$(G.testfile)", "block1
+block2
+block3
+block4");
+
+      "any" usebundle => file_make("$(G.testfile).expected", "block1
+test1
+block2
+block3
+test1
+block4");
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testfile)"
+        edit_line => insert_in_two_regions;
+}
+
+bundle edit_line insert_in_two_regions
+{
+  insert_lines:
+      "test1"
+        select_region => sel1;
+      "test1"
+        select_region => sel2;
+}
+
+body select_region sel1
+{
+      select_start => "block1";
+      select_end   => "block2";
+}
+
+body select_region sel2
+{
+      select_start => "block3";
+      select_end   => "block4";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile)",
+                                        "$(G.testfile).expected",
+                                        "$(this.promise_filename)");
+}

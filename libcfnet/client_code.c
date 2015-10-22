@@ -723,8 +723,6 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
         return false;
     }
 
-
-
     workbuf[0] = '\0';
     int tosend = snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
     if (tosend <= 0 || tosend >= CF_BUFSIZE)

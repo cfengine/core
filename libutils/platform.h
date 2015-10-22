@@ -63,6 +63,9 @@
 # include <iphlpapi.h>
 # include <ws2tcpip.h>
 # include <objbase.h>           // for disphelper
+# ifndef SHUT_RDWR              // for shutdown()
+#  define SHUT_RDWR SD_BOTH
+# endif
 #endif
 
 /* Standard C. */

@@ -669,7 +669,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  * @param toget Length of the data to receive, must be < CF_BUFSIZE.
  *
  * @return The length of the received data, which should be equal or less
- *         to the requested amount.
+ *         than the requested amount.
  *         -1 in case of timeout or error - SSL session is unusable
  *         0  if connection was closed
  *

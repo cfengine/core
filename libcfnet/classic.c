@@ -54,10 +54,11 @@ static bool LastRecvTimedOut(void)
  * @param toget Number of bytes to read; a '\0' shall be written after
  *        the data; buffer must have space for that.
  *
- * @return number of bytes actually received, might be less than #toget
- *         <toget  when connection has been gracefully closed while we
- *             were expecting more data.
+ * @return number of bytes actually received, must be equal to #toget
  *         -1  in case of timeout or error - socket is unusable
+ *         -1  also in case of early proper connection close
+ *         0       NEVER
+ *         <toget  NEVER
  */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
@@ -100,12 +101,17 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
                 return -1;
             }
         }
-        else if (got == 0)                /* peer has closed the connection */
+        else if (got == 0)          /* peer has closed the connection early */
         {
-            break;
+            Log(LOG_LEVEL_ERR,
+                "Peer closed connection early (received=%dB, expecting=%dB)",
+                already, toget);
+            buffer[already] = '\0';
+            /* TODO Why return 0? Early close is an error so -1 is better. */
+            return 0;
         }
     }
-    assert(already <= toget);
+    assert(already == toget);
 
     buffer[already] = '\0';
     return already;

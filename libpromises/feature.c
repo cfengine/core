@@ -9,7 +9,7 @@ static const char* features[] = {
     "yaml",
 #endif
 #ifdef HAVE_LIBXML2
-    "xml2",
+    "xml",
 #endif
 
     NULL

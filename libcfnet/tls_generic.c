@@ -679,8 +679,11 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  */
 int TLSRecv(SSL *ssl, char *buffer, int toget)
 {
-    assert(toget > 0);
-    assert(toget < CF_BUFSIZE);
+    if (toget > CF_BUFSIZE || toget <= 0)
+    {
+        Log(LOG_LEVEL_ERR, "Bad software request to receive %d bytes", toget);
+        return -1;
+    }
     assert_SSLIsBlocking(ssl);
 
 

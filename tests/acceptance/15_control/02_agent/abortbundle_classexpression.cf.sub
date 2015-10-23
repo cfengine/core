@@ -1,0 +1,42 @@
+##########################################################################
+#
+# Test that bundles will abort when a class expression is used with
+# abortbundleclass and found to match . Only the one bundle should be aborted,
+# not the entire agent execution.
+#
+##########################################################################
+body agent control
+{
+  abortbundleclasses => { "abort_bundle.something_else" };
+}
+
+body common control
+{
+      inputs => {
+                  "../../default.cf.sub",
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+      "abort_bundle" expression => "any";
+      "something_else" expression => "abort_bundle";
+
+  reports:
+    "Should Never Reach"
+      comment => "This report should not happen since the bundle should abort
+                  first";
+}
+
+bundle agent check
+{
+  reports:
+    "PASS"
+      comment => "This should be reported, as only the previous bundle was
+                  aborted not the whole agent execution";
+}

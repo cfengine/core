@@ -1,0 +1,14 @@
+body file control {
+	namespace => "ns1";
+	inputs => { "$(ns1:d.dir)/ns2.cf" };
+}
+
+bundle common d {
+	vars:
+		"dir" string => "$(this.promise_dirname)";
+}
+
+bundle agent ns1 {
+	methods:
+		"c" usebundle => ns2:ns2;
+}

@@ -1670,9 +1670,16 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
         memcpy(conn->username, username, username_len + 1);
     }
 
-#ifdef __MINGW32__            /* NT uses security identifier instead of uid */
-
     bool is_root = strcmp(conn->username, "root") == 0;
+    if (is_root)
+    {
+        /* If the remote user identifies himself as root, even on Windows
+         * cf-serverd must grant access to all files. uid==0 is checked later
+         * in TranferRights() for that. */
+        conn->uid = 0;
+    }
+
+#ifdef __MINGW32__            /* NT uses security identifier instead of uid */
 
     if (!NovaWin_UserNameToSid(conn->username, (SID *) conn->sid,
                                CF_MAXSIDSIZE, !is_root))
@@ -1680,27 +1687,25 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
         memset(conn->sid, 0, CF_MAXSIDSIZE);  /* is invalid sid - discarded */
     }
 
-    if (is_root)
-    {
-        /* It the remote user identifies himself as root, even on Windows
-         * cf-serverd must grant access to all files. uid==0 is checked later
-         * in TranferRights() for that. */
-        conn->uid = 0;
-    }
-
 #else                                                 /* UNIX - common path */
 
-    static pthread_mutex_t pwnam_mtx = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-    struct passwd *pw = NULL;
-
-    if (ThreadLock(&pwnam_mtx))
+    if (conn->uid == CF_UNKNOWN_OWNER)      /* skip looking up UID for root */
     {
-        pw = getpwnam(conn->username);
-        if (pw != NULL)
+        static pthread_mutex_t pwnam_mtx = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+        struct passwd *pw = NULL;
+
+        if (ThreadLock(&pwnam_mtx))
         {
-            conn->uid = pw->pw_uid;
+            /* TODO Redmine#7643: looking up the UID is expensive and should
+             * not be needed, since today's agent machine VS hub most probably
+             * do not share the accounts. */
+            pw = getpwnam(conn->username);
+            if (pw != NULL)
+            {
+                conn->uid = pw->pw_uid;
+            }
+            ThreadUnlock(&pwnam_mtx);
         }
-        ThreadUnlock(&pwnam_mtx);
     }
 
 #endif

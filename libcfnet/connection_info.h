@@ -25,9 +25,11 @@
 #ifndef CONNECTION_INFO_H
 #define CONNECTION_INFO_H
 
+
 #include <platform.h>
 #include <openssl/ssl.h>
 #include <key.h>
+
 
 /**
   @brief ConnectionInfo Structure and support routines
@@ -35,6 +37,7 @@
   ConnectionInfo is used to abstract the underlying type of connection from our protocol implementation.
   It can hold both a normal socket connection and a TLS stream.
  */
+
 
 /**
   @brief States of the connection.
@@ -67,17 +70,20 @@ typedef struct ConnectionInfo ConnectionInfo;
   @return A initialized ConnectionInfo structure, needs to be populated.
   */
 ConnectionInfo *ConnectionInfoNew(void);
+
 /**
   @brief Destroys a ConnectionInfo structure.
   @param info Pointer to the ConectionInfo structure to be destroyed.
   */
 void ConnectionInfoDestroy(ConnectionInfo **info);
+
 /**
   @brief Protocol Version
   @param info ConnectionInfo structure
   @return Returns the protocol version or CF_PROTOCOL_UNDEFINED in case of error.
   */
 ProtocolVersion ConnectionInfoProtocolVersion(const ConnectionInfo *info);
+
 /**
   @brief Sets the protocol version
 
@@ -86,18 +92,7 @@ ProtocolVersion ConnectionInfoProtocolVersion(const ConnectionInfo *info);
   @param version New protocol version
   */
 void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion version);
-/**
-  @brief Connection status
-  @param info ConnectionInfo structure
-  @return Returns the status of the connection or CONNECTIONINFO_STATUS_NOT_ESTABLISHED in case of error.
-*/
-ConnectionStatus ConnectionInfoConnectionStatus(const ConnectionInfo *info);
-/**
-  @brief Sets the connection status.
-  @param info ConnectionInfo structure.
-  @param status New status
-  */
-void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus status);
+
 /**
   @brief Connection socket
 
@@ -106,30 +101,35 @@ void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus st
   @return Returns the connection socket or -1 in case of error.
   */
 int ConnectionInfoSocket(const ConnectionInfo *info);
+
 /**
   @brief Sets the connection socket.
   @param info ConnectionInfo structure.
   @param s New connection socket.
   */
 void ConnectionInfoSetSocket(ConnectionInfo *info, int s);
+
 /**
   @brief SSL structure.
   @param info ConnectionInfo structure.
   @return The SSL structure attached to this connection or NULL in case of error.
   */
 SSL *ConnectionInfoSSL(const ConnectionInfo *info);
+
 /**
   @brief Sets the SSL structure.
   @param info ConnectionInfo structure.
   @param ssl SSL structure to attached to this connection.
   */
 void ConnectionInfoSetSSL(ConnectionInfo *info, SSL *ssl);
+
 /**
   @brief RSA key
   @param info ConnectionInfo structure.
   @return Returns the RSA key or NULL in case of error.
   */
 const Key *ConnectionInfoKey(const ConnectionInfo *info);
+
 /**
   @brief Sets the key for the connection structure.
 
@@ -138,6 +138,7 @@ const Key *ConnectionInfoKey(const ConnectionInfo *info);
   @param key RSA key.
   */
 void ConnectionInfoSetKey(ConnectionInfo *info, Key *key);
+
 /**
   @brief A constant pointer to the binary hash of the key
   @param info ConnectionInfo structure
@@ -145,11 +146,13 @@ void ConnectionInfoSetKey(ConnectionInfo *info, Key *key);
   @return Returns a constant pointer to the binary hash and if length is not NULL the size is stored there.
   */
 const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned int *length);
+
 /**
   @brief A constant pointer to the binary hash of the key
   @param info ConnectionInfo structure
   @return Returns a printable representation of the hash. The string is '\0' terminated or NULL in case of failure.
   */
 const char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info);
+
 
 #endif // CONNECTION_INFO_H

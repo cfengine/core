@@ -1,0 +1,29 @@
+##########################################################################
+#
+# Test that bundles will abort when a class expression is used with
+# abortbundleclass and found to match . Only the one bundle should be aborted,
+# not the entire agent execution.
+#
+##########################################################################
+
+
+body common control
+{
+      inputs => {
+                  "../../default.cf.sub",
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO";
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*Setting abort for 'abort_bundle.something_else' when setting class 'something_else'.*PASS.*", ".*Should Never Reach.*", $(command), $(this.promise_filename));
+}

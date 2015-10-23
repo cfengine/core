@@ -1,0 +1,34 @@
+##########################################################################
+#
+# Test that bundles will not abort when a class expression used in
+# abortbundleclass does not match.
+##########################################################################
+
+
+body agent control
+{
+  abortbundleclasses => { "abort_bundle.something_else" };
+}
+
+body common control
+{
+      inputs => {
+                  "../../default.cf.sub",
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+      "abort_bundle" expression => "!any";
+      "something_else" expression => "any";
+
+  reports:
+    "PASS"
+      comment => "This report should happen as abort_bundle.something_else is
+                  not valid and the bundle should not abort.";
+}

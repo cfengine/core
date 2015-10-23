@@ -617,13 +617,13 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
             {
                 if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, a, edcontext->new_line_mode))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from mustache template '%s'",
                          pp->promiser, a.edit_template);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Updated rendering of '%s' from template mustache template '%s'",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to update rendering of '%s' from mustache template '%s'",
                          pp->promiser, a.edit_template);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }

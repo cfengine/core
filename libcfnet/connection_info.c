@@ -75,27 +75,6 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
     }
 }
 
-ConnectionStatus ConnectionInfoConnectionStatus(const ConnectionInfo *info)
-{
-    return info ? info->status : CONNECTIONINFO_STATUS_NOT_ESTABLISHED;
-}
-
-void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus status)
-{
-    if (!info)
-    {
-        return;
-    }
-    switch (status)
-    {
-    case CONNECTIONINFO_STATUS_NOT_ESTABLISHED:
-    case CONNECTIONINFO_STATUS_ESTABLISHED:
-        info->status = status;
-    default:
-        break;
-    }
-}
-
 int ConnectionInfoSocket(const ConnectionInfo *info)
 {
     return info ? info->sd : -1;

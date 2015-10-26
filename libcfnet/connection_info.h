@@ -40,15 +40,13 @@
 
 
 /**
- * @brief Status of the connection, for the connection cache and for
- *        propagating errors up in function callers.
- */
+  @brief States of the connection.
+  @note  Status of the connection so we can detect if we need to negotiate a new connection or not
+  */
 typedef enum
 {
     CONNECTIONINFO_STATUS_NOT_ESTABLISHED,
-    CONNECTIONINFO_STATUS_ESTABLISHED,
-    /* used to propagate connection errors up in function calls */
-    CONNECTIONINFO_STATUS_BROKEN
+    CONNECTIONINFO_STATUS_ESTABLISHED
     /* TODO ESTABLISHED==IDLE, BUSY, OFFLINE */
 } ConnectionStatus;
 
@@ -61,6 +59,7 @@ struct ConnectionInfo {
     socklen_t ss_len;
     struct sockaddr_storage ss;
     bool is_call_collect;       /* Maybe replace with a bitfield later ... */
+    bool is_broken; /* used to propagate connection errors up in function calls */
 };
 
 typedef struct ConnectionInfo ConnectionInfo;

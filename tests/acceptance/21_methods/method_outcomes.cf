@@ -1,0 +1,147 @@
+# Test method outcomes as expected
+# Worst promise outcome inside bundle results in that outcome for entire
+# bundle.
+body file control
+{
+      inputs => { "../default.cf.sub" };
+}
+
+bundle agent main
+{
+  methods:
+    "init"
+      usebundle => init;
+    "check"
+      usebundle => check;
+}
+
+bundle agent init
+{
+  classes:
+  #  "method_FORCE_UNEXPECTED_FAIL" expression => "any";
+
+  vars:
+    "method_outcome_classes"
+      slist => classesmatching("method_.*");
+
+    "sorted_method_outcome_classes"
+      slist => sort(method_outcome_classes, lex);
+
+  methods:
+    "test kept bundle"
+      usebundle => method_kept,
+      classes => scoped_classes_generic("namespace", "method_kept_outcome");
+
+    "test repaired bundle"
+      usebundle => method_repaired,
+      classes => scoped_classes_generic("namespace", "method_repaired_outcome");
+
+    "test repaired bundle"
+      usebundle => method_not_kept,
+      classes => scoped_classes_generic("namespace", "method_not_kept_outcome");
+
+    "test repaired bundle"
+      usebundle => method_worst,
+      classes => scoped_classes_generic("namespace", "method_worst_outcome");
+
+
+  reports:
+    "$(sorted_method_outcome_classes)";
+}
+
+bundle agent check
+{
+  vars:
+    "expected_classes"
+      slist => {
+                 "method_kept_outcome_kept",
+                 "method_kept_outcome_not_repaired",
+                 "method_kept_outcome_ok",
+                 "method_kept_outcome_reached",
+                 "method_not_kept_outcome_error",
+                 "method_not_kept_outcome_failed",
+                 "method_not_kept_outcome_not_kept",
+                 "method_not_kept_outcome_not_ok",
+                 "method_not_kept_outcome_not_repaired",
+                 "method_not_kept_outcome_reached",
+                 "method_repaired_outcome_ok",
+                 "method_repaired_outcome_reached",
+                 "method_repaired_outcome_repaired",
+                 "method_worst_outcome_error",
+                 "method_worst_outcome_failed",
+                 "method_worst_outcome_not_kept",
+                 "method_worst_outcome_not_ok",
+                 "method_worst_outcome_not_repaired",
+                 "method_worst_outcome_reached",
+                #"method_FORCE_UNEXPECTED_FAILURE",
+               };
+
+     # Find classes that we expect to find but do not
+     "missing_expected_classes"
+       slist => difference( "expected_classes", "init.method_outcome_classes");
+
+     # Find classes that we did not expect to find
+     "unexpected_classes"
+       slist => difference( "init.method_outcome_classes", "expected_classes" );
+
+     # Count up the number of missing and extra classes
+     "num_missing"
+       int => length("missing_expected_classes");
+     "num_unexpected"
+       int => length("unexpected_classes");
+
+  classes:
+      # Fail if the counts are not as expected
+      "fail"
+        expression => isgreaterthan( "$(num_missing)", "0");
+      "fail"
+        expression => isgreaterthan( "$(num_unexpected)", "0");
+
+      # Pass if we found all expected classes and did not fail
+      "ok" and => { @(expected_classes), "!fail" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    fail::
+      "$(this.promise_filename) FAIL";
+
+}
+
+bundle agent method_kept
+{
+  reports:
+    "$(this.bundle)"
+      comment => "This promsie should have a kept outcome";
+}
+
+bundle agent method_repaired
+{
+# This bundle runs a command that retuns 0 and is by default considered
+# repaired, so the bundle will be considered repaired
+  commands:
+    "$(G.true)"
+      comment => "This promsie should have a repaired outcome";
+}
+
+bundle agent method_not_kept
+{
+  commands:
+    "$(G.false)"
+      comment => "This promise should have a not_kept outcome";
+}
+
+bundle agent method_worst
+# @brief This bundle activates a promise that is repaired (/bin/true), a promise that is not kept (/bin/false), and a promise that is kept (report)
+{
+  commands:
+    "$(G.true)"
+      comment => "This promsie should have a repaired outcome";
+
+    "$(G.false)"
+      comment => "This promise should have a not_kept outcome";
+
+  reports:
+    "$(this.bundle)"
+      comment => "This promsie should have a kept outcome";
+}

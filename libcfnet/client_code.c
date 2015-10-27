@@ -754,7 +754,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
     {
         int toget = MIN(size - n_read_total, buf_size);
 
-        assert(toget != 0);
+        assert(toget > 0);
 
         /* Stage C1 - receive */
         int n_read;

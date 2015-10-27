@@ -1358,6 +1358,11 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
         {
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "callers_promisers", EvalContextGetPromiseCallerMethods(ctx), CF_DATA_TYPE_STRING_LIST, "source=promise");
         }
+
+        if (strcmp(RvalScalarValue(ptr->val), "cfengine:callers") == 0)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "callers", EvalContextGetPromiseCallers(ctx), CF_DATA_TYPE_CONTAINER, "source=promise");
+        }
     }
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");

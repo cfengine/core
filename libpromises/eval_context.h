@@ -131,6 +131,8 @@ ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx
 
 void EvalContextClear(EvalContext *ctx);
 
+Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);
+
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, const Rlist *args);
 void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner);

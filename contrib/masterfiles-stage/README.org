@@ -1,0 +1,134 @@
+#+Title: Masterfiles Stage
+
+This script is designed to stage masterfiles from an upstream
+location.
+
+"staging" is the process of preparing a temporary location with the
+content of masterfiles sourced from an upstream location. Once the
+temporary location has been updated it is "staged" through various
+means.
+
+The following are common and minimal staging actions:
+  - `cf-promises` is used to validate the policy
+    - This is done to try and prevent broken policy from being made
+      available to remote agents.
+  - restrictive permissions are applied
+
+Once masterfiles have been successfully staged they are deployed to
+the final location where clients expect to source the policy from. In
+the most simple environments this will be `$(sys.masterdir)` on the
+policy server.
+
+* Current Features
+- Stage masterfiles from a git branch (VCS_TYPE="GIT")
+- Stage masterfiles from a git tag or commit
+  (VCS_TYPE="GIT_TAG_OR_COMMIT")
+
+* Configuration
+
+The `masterfiles-stage.sh` script takes two parameters, `MASTERDIR`
+and `PARAMS`.
+
+- `MASTERDIR` is the fully qualified path to the location that you
+  want masterfiles to be deployed to after successful staging.
+
+- `PARAMS` is the fully qualified path to the location of the
+  parameter set that describes information needed by the selected
+  staging method (currently reffered to as `VCS_TYPE`). The format of
+  the file is a simple KEY="VALUE". It is sourced by the
+  `masterfiles-stage.sh` script. Each staging method or `VCS_TYPE`
+  defines may define its own parameters. It is reccomended that the
+  parameters defined by the `VCS_TYPE` be prefixed with the `VCS_TYPE`
+  so as not to conflict with other staging methods.
+
+*** Reserved Parameters
+The following parameters are in use, be sure to avoid their collision
+when developing new staging methods.
+
+- VCS_TYPE - The staging method to use
+  - Currently supported: (GIT|GIT_TAG_OR_COMMIT|SVN)
+
+- GIT_URL - The URL to the git repository
+  - Example values:
+    - https://gitlab.com/nickanderson/masterfiles_demo_3.7.git
+    - git@gitlab.com:nickanderson/masterfiles_demo_3.7.git
+
+- GIT_BRANCH - The git branch to checkout
+  - master
+
+- GIT_TAG_OR_COMMIT
+  - Example values:
+    - 88335d36b48c8808b12b48667a463182dc8d0338
+    - mytag
+
+- SVN_URL - The URL to the svn repository
+
+- SVN_BRANCH - The svn branch to checkout
+
+- ROOT - Location where policy is staged.
+  - /opt/cfengine/masterfiles_staging
+
+The following attributes are used by CFEngine Enterprise and currently
+have no effect on functionality of `masterfiles-stage.sh`
+
+- GIT_WORKING_BRANCH - Branch for integrating write operations
+  - This is used by Design Center in CFEngine Enterprise
+
+- GIT_EMAIL - Email address used to associate commits wit
+  - This is used by Design Center in CFEngine Enterprise
+
+- GIT_AUTHOR - The author that should be set when integrating write
+  operations (not used by `masterfiles-stage.sh`)
+  - This is used by Design Center in CFEngine Enterprise
+
+- PKEY - Private SSH Key used for authrorization when pushing
+  integrated write operations
+  - This is used by Design Center in CFEngine Enterprise
+
+- SCRIPT_DIR - Directory contianing supporting scripts
+  - This is used by Design Center in CFEngine Enterprise
+
+
+* Example Usage
+
+`masterfiles-stage.sh` can be invoked manually as shown in the
+following example.
+
+#+begin_example
+  ./masterfiles-stage.sh /tmp/deployed_masterfiles "$(pwd)/example_parmas/PARAMS_example_git_branch.sh"
+  tail -n1 /var/cfengine/outputs/dc-scripts.log
+  Successfully staged a policy release on Tue Oct 27 12:13:38 CDT 2015
+#+end_example
+
+It's best to avoid un-necessary manual steps, and CFEngine can be used
+to automatically invoke the `masterfiles-stage.sh` script. In fact,
+this execution has been included in the masterfiles policy framework
+for some time as a CFEngine Enterprise feature. While this script is
+*NOT* currently the same script that ships with CFEngine Enterprise,
+it is the logical extension of the script that ships with CFEngine
+Enteprise and is a drop in replacement.
+
+At the time of this writing the bundle that activates the
+`masterfiles-stage.sh` script can be found [[https://github.com/cfengine/masterfiles/blob/master/cfe_internal/update/cfe_internal_update_from_repository.cf][here]].
+
+
+* Phased Rollout with Multiple Staged Masterfiles
+
+The `masterfiles-stage.sh` script can support an implementation for
+phased rollout. Phased Rollout is the process of releasing a *policy*
+change to a population in a controlled manner.
+
+This can be accomplished with policy that allows remote agents to
+determine which phase they are part of. Each phase can be associated
+with the proper path to consider for upstream masterfiles. For
+example, hosts in the phase `population_a` could get policy from
+`/var/cfengine/masterfiles` and hosts in phase `population_b` could
+get policy from `/var/cfengine/next_masterfiles`.
+
+In order to allow for hosts to be moved from one phase to another
+*WITHOUT* making a change to policy, and releasing a change to many
+hosts it is reccomended that the data agents use to determine the path
+for masterfiles be *OUTSIDE* of your masterfiles repository. This can
+allow very fine grained control over which hosts get which set of
+policy and making a change to that will not require releasing a full
+policy change to other hosts.

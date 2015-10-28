@@ -2224,19 +2224,10 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
                 }
             }
         }
-        else if (JsonGetElementType(var_value) == JSON_ELEMENT_TYPE_PRIMITIVE)
-        {
-            char *value = JsonPrimitiveToString(var_value);
-            if (NULL != value)
-            {
-                RlistAppendScalar(&values, value);
-                free(value);
-            }
-        }
     }
     else
     {
-        VariableTableIterator *iter = 
+        VariableTableIterator *iter =
                 EvalContextVariableTableFromRefIteratorNew(ctx, ref);
         const Variable *var;
         while ((var = VariableTableIteratorNext(iter)))
@@ -2255,6 +2246,40 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
 }
 
 /*********************************************************************/
+
+void CollectContainerValues(EvalContext *ctx, Rlist **values, const JsonElement *container)
+{
+    if (JsonGetElementType(container) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        JsonIterator iter = JsonIteratorInit(container);
+        const JsonElement *el;
+        while ((el = JsonIteratorNextValue(&iter)))
+        {
+            if (JsonGetElementType(el) == JSON_ELEMENT_TYPE_CONTAINER)
+            {
+                CollectContainerValues(ctx, values, el);
+            }
+            else
+            {
+                char *value = JsonPrimitiveToString(el);
+                if (NULL != value)
+                {
+                    RlistAppendScalar(values, value);
+                    free(value);
+                }
+            }
+        }
+    }
+    else if (JsonGetElementType(container) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        char *value = JsonPrimitiveToString(container);
+        if (NULL != value)
+        {
+            RlistAppendScalar(values, value);
+            free(value);
+        }
+    }
+}
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
@@ -2290,22 +2315,10 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
     const void *var_value = EvalContextVariableGet(ctx, ref, &type);
 
     Rlist *values = NULL;
+
     if (type == CF_DATA_TYPE_CONTAINER)
     {
-        if (JsonGetElementType(var_value) == JSON_ELEMENT_TYPE_CONTAINER)
-        {
-            JsonIterator iter = JsonIteratorInit(var_value);
-            const JsonElement *el;
-            while ((el = JsonIteratorNextValue(&iter)))
-            {
-                char *value = JsonPrimitiveToString(el);
-                if (NULL != value)
-                {
-                    RlistAppendScalar(&values, value);
-                    free(value);
-                }
-            }
-        }
+        CollectContainerValues(ctx, &values, var_value);
     }
     else
     {

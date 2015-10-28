@@ -1,0 +1,17 @@
+{
+  "values_data": [
+    "alpha",
+    "bravo",
+    "zulu"
+  ],
+  "values_data2": [
+    "bravo",
+    "something else",
+    "1233333"
+  ],
+  "values_data3": [
+    "foo",
+    "bravo",
+    "barista"
+  ]
+}

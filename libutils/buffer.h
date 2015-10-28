@@ -262,6 +262,19 @@ Buffer* BufferFilter(Buffer *buffer, BufferFilterFn filter, const bool invert);
 void BufferRewrite(Buffer *buffer, BufferFilterFn filter, const bool invert);
 
 /**
+  @brief Trim a buffer to be at most max bytes.
+
+  If the buffer is below the max bytes, nothing happens. Otherwise,
+  it's trimmed to that many bytes. This is not persistent, the buffer
+  could grow beyond the max bytes in the future.
+
+  @param buffer
+  @param max the maximum number of bytes to trim to
+  @return A const char pointer to the data contained on the buffer.
+  */
+void BufferTrimToMaxLength(Buffer *buffer, unsigned int max);
+
+/**
   @brief Provides a pointer to the internal data.
 
   This is a const pointer and it is not supposed to be used to write data to the buffer, doing so will lead to undefined behavior and

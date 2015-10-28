@@ -35,22 +35,29 @@ time_t THIS_STARTTIME;
 
 static void test_process_start_time(void)
 {
-    sleep(1);
+    /* Wait a couple of seconds so that process start time differs. */
+    printf("Sleeping 2 seconds...\n");
+    sleep(2);
+
     pid_t new_pid = fork();
     assert_true(new_pid >= 0);
 
     if (new_pid == 0)                                           /* child */
     {
-        execl("/bin/sleep", "/bin/sleep", "5", NULL);
+        execl("/bin/sleep", "/bin/sleep", "15", NULL);
         assert_true(false);                                  /* unreachable */
     }
 
     SPAWNED_PID = new_pid;
-
     time_t newproc_starttime = GetProcessStartTime(new_pid);
+
+    printf("Spawned a \"sleep\" child with PID %jd and start_time %jd\n",
+           (intmax_t) new_pid, (intmax_t) newproc_starttime);
+
     // We might have slipped by a few seconds, but shouldn't be much.
-    assert_true(newproc_starttime >= THIS_STARTTIME + 1 &&
-                newproc_starttime <= THIS_STARTTIME + 5);
+    assert_int_not_equal(newproc_starttime, PROCESS_START_TIME_UNKNOWN);
+    assert_true(newproc_starttime >= THIS_STARTTIME + 1);
+    assert_true(newproc_starttime <= THIS_STARTTIME + 5);
 
     kill(new_pid, SIGKILL);
     wait(NULL);
@@ -66,7 +73,7 @@ static void test_process_state(void)
 
     if (new_pid == 0)                                           /* child */
     {
-        execl("/bin/sleep", "/bin/sleep", "10", NULL);
+        execl("/bin/sleep", "/bin/sleep", "15", NULL);
         assert_true(false);                                  /* unreachable */
     }
 
@@ -143,6 +150,9 @@ int main()
 
     THIS_PID       = getpid();
     THIS_STARTTIME = GetProcessStartTime(THIS_PID);
+
+    printf("This parent process has PID %jd and start_time %jd\n",
+           (intmax_t) THIS_PID, (intmax_t) THIS_STARTTIME);
 
     const UnitTest tests[] =
     {

@@ -1,0 +1,48 @@
+######################################################
+#
+#  Test that @if works with patch level
+#
+#####################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test
+{
+@if minimum_version(3.7.100)
+  classes:
+      "expected" expression => "any";
+@endif
+
+@if minimum_version(3.8.0)
+  classes:
+      "expected2" expression => "any";
+@endif
+
+@if minimum_version(2.100.0)
+  classes:
+      "expected_2_100" expression => "any";
+@endif
+
+@if minimum_version(3.8.300)
+  classes:
+      "not_expected" expression => "any";
+@endif
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("expected,expected2,expected_2_100",
+                                         "not_expected",
+                                         $(this.promise_filename));
+}
+
+@if minimum_version(300.600.0)
+
+This text should never be seen, it's completely ignored
+@endif

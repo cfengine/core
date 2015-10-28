@@ -49,6 +49,7 @@
 #include <printsize.h>
 #include <cf-windows-functions.h>
 #include <ornaments.h>
+#include <feature.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -945,13 +946,7 @@ static void BuiltinClasses(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
     CreateHardClassesFromCanonification(ctx, vbuff, "inventory,attribute_name=none,source=agent");
 
-#ifdef HAVE_LIBXML2
-    CreateHardClassesFromCanonification(ctx, "feature_xml", "source=agent");
-#endif
-
-#ifdef HAVE_LIBYAML
-    CreateHardClassesFromCanonification(ctx, "feature_yaml", "source=agent");
-#endif
+    CreateHardClassesFromFeatures(ctx, "source=agent");
 }
 
 /*******************************************************************/

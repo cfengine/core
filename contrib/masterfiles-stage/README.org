@@ -1,28 +1,40 @@
 #+Title: Masterfiles Stage
 
-This script is designed to stage masterfiles from an upstream
-location.
+This script is designed to run on the Policy Server and safely deploy
+policy from upstream locations to a directory on the Policy Server for
+distribution to clients.
 
-"staging" is the process of preparing a temporary location with the
+[[file:images/basic_cfengine_architecture.png]]
+
+As it is recommended to store and manage CFEngine policy in a version
+control system like git or subversion, the typical and recomended
+"upstream" source is a version control repository.
+
+Deployment is done in a safe manner by first "staging" the deployment
+and validating the policy before moving it to the distribution
+directory."
+
+"Staging" is the process of preparing a temporary location with the
 content of masterfiles sourced from an upstream location. Once the
-temporary location has been updated it is "staged" through various
-means.
+temporary location has been updated it is validated and prepared for
+deployment through various means.
 
-The following are common and minimal staging actions:
+The following are the common minimal staging actions:
   - `cf-promises` is used to validate the policy
     - This is done to try and prevent broken policy from being made
       available to remote agents.
   - restrictive permissions are applied
 
-Once masterfiles have been successfully staged they are deployed to
-the final location where clients expect to source the policy from. In
-the most simple environments this will be `$(sys.masterdir)` on the
-policy server.
+Once the policy has been successfully staged the policy is deployed to
+the final location for distribution to remote agents. In the most
+simple environments this will be `$(sys.masterdir)` (typically
+/var/cfengine/masterfiles) on the policy server.
 
 * Current Features
 - Stage masterfiles from a git branch (VCS_TYPE="GIT")
 - Stage masterfiles from a git tag or commit
   (VCS_TYPE="GIT_TAG_OR_COMMIT")
+- Stage masterfiles from a subversion branch (VCS_TYPE="SVN")
 
 * Configuration
 
@@ -40,6 +52,8 @@ and `PARAMS`.
   defines may define its own parameters. It is reccomended that the
   parameters defined by the `VCS_TYPE` be prefixed with the `VCS_TYPE`
   so as not to conflict with other staging methods.
+
+  Example PARAMS files can be found [[file:example_params/][here]].
 
 *** Reserved Parameters
 The following parameters are in use, be sure to avoid their collision
@@ -106,7 +120,7 @@ this execution has been included in the masterfiles policy framework
 for some time as a CFEngine Enterprise feature. While this script is
 *NOT* currently the same script that ships with CFEngine Enterprise,
 it is the logical extension of the script that ships with CFEngine
-Enteprise and is a drop in replacement.
+Enteprise and can be used in it's place with minor modifications.
 
 At the time of this writing the bundle that activates the
 `masterfiles-stage.sh` script can be found [[https://github.com/cfengine/masterfiles/blob/master/cfe_internal/update/cfe_internal_update_from_repository.cf][here]].
@@ -118,17 +132,5 @@ The `masterfiles-stage.sh` script can support an implementation for
 phased rollout. Phased Rollout is the process of releasing a *policy*
 change to a population in a controlled manner.
 
-This can be accomplished with policy that allows remote agents to
-determine which phase they are part of. Each phase can be associated
-with the proper path to consider for upstream masterfiles. For
-example, hosts in the phase `population_a` could get policy from
-`/var/cfengine/masterfiles` and hosts in phase `population_b` could
-get policy from `/var/cfengine/next_masterfiles`.
-
-In order to allow for hosts to be moved from one phase to another
-*WITHOUT* making a change to policy, and releasing a change to many
-hosts it is reccomended that the data agents use to determine the path
-for masterfiles be *OUTSIDE* of your masterfiles repository. This can
-allow very fine grained control over which hosts get which set of
-policy and making a change to that will not require releasing a full
-policy change to other hosts.
+Read [[file:phased_rollout/README.org][this document]] for further information on using the
+`masterfiles-stage.sh` to help accomplish a phased roll out.

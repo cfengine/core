@@ -1,0 +1,11 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { "main" };
+  version => "1.0";
+}
+
+bundle agent main {
+  classes:
+	"test" expression => returnszero("$(G.echo) Pass", "noshell");
+}

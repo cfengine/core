@@ -1,0 +1,16 @@
+# My custom minimal failsafe, only touches a file in $(sys.inputdir)
+
+
+body common control
+{
+    bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+  vars:
+      "outfile" string => "$(sys.inputdir)/failsafe_output.txt";
+
+  files:
+    "$(outfile)" create => true;
+}

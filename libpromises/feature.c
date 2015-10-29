@@ -11,6 +11,9 @@ static const char* features[] = {
 #ifdef HAVE_LIBXML2
     "xml",
 #endif
+#ifdef HAVE_LIBCURL
+    "curl",
+#endif
 
     NULL
 };

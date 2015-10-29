@@ -24,6 +24,7 @@
 
 #include <unix.h>
 #include <exec_tools.h>
+#include <file_lib.h>
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -202,6 +203,24 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
         else
         {
             char **argv = ArgSplitCommand(command);
+            int devnull;
+
+            if (LogGetGlobalLevel() < LOG_LEVEL_INFO)
+            {
+                if ((devnull = safe_open("/dev/null", O_WRONLY)) == -1)
+                {
+                    Log(LOG_LEVEL_ERR, "Command '%s' failed. (open: %s)", command, GetErrorStr());
+                    exit(EXIT_FAILURE);
+                }
+
+                if (dup2(devnull, STDOUT_FILENO) == -1 || dup2(devnull, STDERR_FILENO) == -1)
+                {
+                    Log(LOG_LEVEL_ERR, "Command '%s' failed. (dup2: %s)", command, GetErrorStr());
+                    exit(EXIT_FAILURE);
+                }
+
+                close(devnull);
+            }
 
             if (execv(argv[0], argv) == -1)
             {

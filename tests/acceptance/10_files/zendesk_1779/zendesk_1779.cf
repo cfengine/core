@@ -32,7 +32,7 @@ bundle agent check
                   windows";
 
   vars:
-    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO";
+    "command" string => "$(sys.cf_agent) -KIf $(this.promise_filename).sub -DAUTO";
 
   methods:
     "check"

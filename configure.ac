@@ -567,6 +567,7 @@ dnl ######################################################################
 
 AC_CHECK_HEADERS(unistd.h stdlib.h sys/loadavg.h)
 AC_CHECK_HEADERS(sys/param.h)
+AC_CHECK_HEADERS(poll.h)
 
 # sys/param.h is required for sys/mount.h on OpenBSD
 AC_CHECK_HEADERS(sys/mount.h, [], [], [AC_INCLUDES_DEFAULT
@@ -1036,6 +1037,9 @@ cf3_FUNC_FCHMODAT
 
 AC_CHECK_DECLS([log2], [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(log2)
+
+AC_CHECK_DECLS([poll], [], [], [[#include <poll.h>]])
+AC_REPLACE_FUNCS(poll)
 
 dnl ######################################################################
 dnl Required by cf-upgrade. It cannot be implemented in libcompat because

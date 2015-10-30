@@ -967,6 +967,10 @@ struct timespec
 # include <direct.h>
 #endif
 
+#ifdef HAVE_POLL_H
+# include <poll.h>
+#endif
+
 /* Must be always the last one! */
 #include <deprecated.h>
 #include <config.post.h>

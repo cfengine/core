@@ -196,11 +196,33 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            config->heap_soft = StringSetFromString(optarg, ',');
+            {
+                StringSet *defined_classes = StringSetFromString(optarg, ',');
+                if (! config->heap_soft)
+                {
+                    config->heap_soft = defined_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_soft, defined_classes);
+                    free(defined_classes);
+                }
+            }
             break;
 
         case 'N':
-            config->heap_negated = StringSetFromString(optarg, ',');
+            {
+                StringSet *negated_classes = StringSetFromString(optarg, ',');
+                if (! config->heap_negated)
+                {
+                    config->heap_negated = negated_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_negated, negated_classes);
+                    free(negated_classes);
+                }
+            }
             break;
 
         case 'I':

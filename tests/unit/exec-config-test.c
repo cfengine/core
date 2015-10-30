@@ -21,8 +21,7 @@ typedef void (*TestFn)(const EvalContext *ctx, const Policy *policy);
 
 static void run_test_in_policy(const char *policy_filename, TestFn fn)
 {
-    GenericAgentConfig *agent_config = GenericAgentConfigNewDefault(
-        AGENT_TYPE_EXECUTOR);
+    GenericAgentConfig *agent_config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR, false);
     EvalContext *ctx = EvalContextNew();
     Policy *policy = TestParsePolicy(policy_filename);
     PolicyResolve(ctx, policy, agent_config);

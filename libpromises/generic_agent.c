@@ -63,6 +63,7 @@
 #include <constants.h>
 #include <ornaments.h>
 #include <cf-windows-functions.h>
+#include <loading.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -114,6 +115,34 @@ void MarkAsPolicyServer(EvalContext *ctx)
     EvalContextClassPutHard(ctx, "policy_server",
                             "inventory,attribute_name=CFEngine roles,source=bootstrap");
     Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
+}
+
+Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy)
+{
+    Policy *policy = NULL;
+    
+    if (GenericAgentCheckPolicy(config, validate_policy, true))
+    {
+        policy = LoadPolicy(ctx, config);
+    }
+    else if (config->tty_interactive)
+    {
+        Log(LOG_LEVEL_ERR,
+               "Failsafe condition triggered. Interactive session detected, skipping failsafe.cf execution.");
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
+        EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
+        
+        if (CheckAndGenerateFailsafe(GetInputDir(), "failsafe.cf"))
+        {
+            GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
+            Log(LOG_LEVEL_ERR, "CFEngine failsafe.cf: %s %s", config->input_dir, config->input_file);
+            policy = LoadPolicy(ctx, config);
+        }
+    }
+    return policy;
 }
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
@@ -1496,15 +1525,18 @@ bool GenericAgentConfigParseColor(GenericAgentConfig *config, const char *mode)
     }
 }
 
-GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
+bool GetTTYInteractive(void)
+{
+    return isatty(0) || isatty(1) || isatty(2);
+}
+
+GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_interactive)
 {
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
 
     LoggingSetAgentType(CF_AGENTTYPES[agent_type]);
     config->agent_type = agent_type;
-
-    // TODO: system state, perhaps pull out as param
-    config->tty_interactive = isatty(0) && isatty(1);
+    config->tty_interactive = tty_interactive;
 
     const char *color_env = getenv("CFENGINE_COLOR");
     config->color = (color_env && 0 == strcmp(color_env, "1"));
@@ -1515,7 +1547,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->input_file = NULL;
     config->input_dir = NULL;
 
-    config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON && !config->tty_interactive;
+    config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;

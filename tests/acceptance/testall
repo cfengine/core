@@ -684,6 +684,13 @@ while true; do
   shift
 done
 
+#
+# Close stdin file descriptor to avoid tty_interactive check in cf-agent being success.
+#
+if [ "$GDB" != 1 ] || [ "$USE_VALGRIND" != 1 ]; then
+  exec <&-
+fi
+
 if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&
     ! "$WHOAMI" -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
   # On Windows we run the entire test run under GAINROOT, because doing it for

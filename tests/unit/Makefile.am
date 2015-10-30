@@ -437,7 +437,7 @@ queue_test_SOURCES = queue_test.c
 
 if !NT
 init_script_test_helper_SOURCES = init_script_test_helper.c
-noinst_PROGRAMS = init_script_test_helper
+init_script_test.sh: init_script_test_helper
 endif
 EXTRA_DIST += init_script_test_helper.c
 EXTRA_DIST += init_script_test.sh

@@ -78,10 +78,10 @@ fi
 # Fail on any error.
 set -e
 
-cp .libs/init_script_test_helper $CFTEST_PREFIX/bin/cf-test-execd
-cp .libs/init_script_test_helper $CFTEST_PREFIX/bin/cf-test-serverd
-cp .libs/init_script_test_helper $CFTEST_PREFIX/bin/cf-test-monitord
-cp .libs/init_script_test_helper $CFTEST_PREFIX/bin/cf-test-agent
+cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-execd
+cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-serverd
+cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-monitord
+cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-agent
 
 touch $CFTEST_PREFIX/inputs/promises.cf
 

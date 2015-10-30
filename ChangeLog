@@ -1,3 +1,109 @@
+3.8.0:
+	New features/additions:
+	- New feature: Bodies can now inherit attribute values from
+	  other bodies by specifying "inherit_from" with the name of the body to
+	  inherit from, plus any arguments it accepts. For example:
+	    body classes myclasses
+	    {
+	        inherit_from => classes_generic("myname");
+	    }
+	    (Redmine #4309)
+	- Add url_get() function. (Redmine #6480)
+	- Add @if feature() syntax
+	  @if feature work like @if minimum_version but allows distinguishing
+	  between features choosen at compile time.
+	- Extend module protocol to create persistent classes.
+	  To use it, have the module print a line with "^persistence=<minutes>"
+	  before printing any class names. "persistence=0" goes back to non-
+	  persistent classes. (Redmine #7302)
+	- Add: New `results` classes body (Redmine #7418)
+	- Add: Debug reports in cfe_internal_cleanup_agent_reports
+	- Add: Path to svcprop in stdlib
+	- Add: masterfiles-stage script to contrib
+	- Whitespace is now allowed in class expressions for
+	  readability, between class names and operators. (Redmine #7152)
+
+	Changes:
+	- Change: Clarify bootstrap/failsafe reports
+	- Change: Improve in-line docs for internal log maintenance
+	- Change: Improve efficiency and debug reports (Redmine #7527)
+	- Remove: 3.5 support from masterfiles policy framework
+	- Long promiser strings with multiple lines are now
+	  abbreviated in logs. (Redmine #3964)
+	- Change: Reunify Version based policy split
+	- Change: Seperate binary details from policy update (Redmine #7662)
+	- Remove /var/cfengine/cf3.<host>.runlog. (Redmine #6957)
+	- Change: sys.libdir and sys.local_libdir to non version specific path
+	    - sys.libdir now resolves to $(sys.inputdir)/lib
+	    - sys.local_libdir now resolves to lib (Redmine #7559)
+	- Moved the following files to /var/cfengine/log/:
+	    - /var/cfengine/promise_summary.log
+	    - /var/cfengine/cfagent.<host>.log
+
+	Bug fixes:
+	- Fix broken HA policy for 3rd disaster-recovery node.
+	- Fix: Policy errors for 3.5 and 3.6
+	- Mustache templates: Fix {{@}} key when value is not a
+	  primitive. The old behavior, when iterating across a map or array of
+	  maps, was to abort if the key was requested with {{@}}. The new
+	  behavior is to always replace {{@}} with either the key name or the
+	  iteration position in the array. An error is printed if {{@}} is used
+	  outside of a Mustache iteration section.
+	- Fix build with musl libc. (Redmine #7455)
+	- Fixed a bug which could cause daemons to not to be killed
+	  correctly when upgrading or manually running "service cfengine3 stop".
+	  (Redmine #7193)
+	- Fix daemons not restarting correctly on upgrade on AIX.
+	- Package promise: Fix inability to install certain packages
+	  with numbers. (Redmine #7421)
+	- Redmine #6027 Directories should no more be changed randomly
+	  into files. (Redmine #6027)
+	- Improve cf-serverd's lock contention because of getpwnam()
+	             call. (Redmine #7643) (Redmine #7643)
+	- action_policy "warn" now correctly produces warnings instead
+	  of various other verbosity levels. (Redmine #7274)
+	- If there is an error saving a mustache template file
+	  it is now logged with log-level error (was inform).
+	- The JSON parser now supports unquoted strings as keys.
+	- Reduce malloc() thread contention on heavily loaded
+	  cf-serverd, by not exiting early in the logging function, if no message
+	  is to be printed. (Redmine #7624) (Redmine #7624)
+	- Fix a bug which caused daemons not to be restarted on
+	  upgrade. (Redmine #7528)
+	- Include latest security updates for dependencies.
+	- Fixed bug which would cause bff and depot packages not to
+	  run package scripts on removal. (Redmine #7193)
+	- Fix upgrade causing error message under systemd because of open ports.
+	- Fixed several bugs which prevented CFEngine from loading
+	  libraries from the correct location. This affected several platforms.
+	  (Redmine #6708)
+	- Legacy package promise: Result classes are now defined if
+	  the package being promised is already up to date. (Redmine #7399)
+	- failsafe.cf will be created when needed. (Redmine #7634)
+	  (Redmine #7634)
+	- If file_select.file_types is set to symlink and there
+	  are regular files in the scanned directory, CFEngine no longer
+	  produces an unneccessary error message. (Redmine #6996)
+	- Fix 'AIX_PREINSTALL_ALREADY_DONE.txt: cannot create' error
+	  message on AIX.
+	- Fix package promise not removing dependant packages. (Redmine #7424)
+	- Fix: Solaris packages no longer contain duplicate library
+	  files, but instead symlinks to them. (Redmine #7591)
+	- Fix select_class not setting class when used in common bundle with slist.
+	  (Redmine #7482)
+	- Fix "@endif" keyword sometimes being improperly processed
+	  by policy parser. (Redmine #7413)
+	- Fix noise from internal policy to upgrade windows agents
+	  (Redmine #7456)
+	- cfruncommand now works if it contains spaces, with the TLS protocol.
+	  (Redmine #7405)
+	- Fix warning "Failed to parse csv file entry" with certain very long
+	  commands promises. (Redmine #7400)
+	- CFEngine no longer erronously passes -M to useradd on HP-UX. (Redmine #6734)
+	- cf-monitord no longer complains about missing thermal zone files.
+	  (Redmine #7238)
+	- systemd is now detected correctly if it is a symlink (Redmine #7297)
+
 3.7.1:
 	Bug fixes:
 	- Fix daemons not restarting correctly on upgrade on AIX. (Redmine #7550)

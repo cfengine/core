@@ -62,6 +62,60 @@ void test_stringset_serialization(void)
     }
 }
 
+void test_stringset_join(void)
+{
+    {
+        StringSet *set1 = StringSetNew();
+        StringSet *set2 = StringSetNew();
+        StringSetJoin(set1, set2);
+
+        assert_int_equal(0, StringSetSize(set1));
+
+        Buffer *buff = StringSetToBuffer(set1, ',');
+
+        assert_true(buff);
+        assert_string_equal(BufferData(buff), "");
+
+        BufferDestroy(buff);
+        StringSetDestroy(set1);
+        StringSetDestroy(set2);
+    }
+
+    {
+        StringSet *set = StringSetNew();
+        StringSetAdd(set, xstrdup("foo"));
+        StringSetJoin(set, set);
+
+        assert_int_equal(1, StringSetSize(set));
+
+        Buffer *buff = StringSetToBuffer(set, ',');
+
+        assert_true(buff);
+        assert_string_equal(BufferData(buff), "foo");
+
+        StringSetDestroy(set);
+        BufferDestroy(buff);
+    }
+
+    {
+        StringSet *set1 = StringSetNew();
+        StringSet *set2 = StringSetNew();
+        StringSetAdd(set1, xstrdup("foo"));
+        StringSetAdd(set2, xstrdup("bar"));
+        StringSetJoin(set1, set2);
+
+        assert_int_equal(2, StringSetSize(set1));
+
+        Buffer *buff = StringSetToBuffer(set1, ',');
+
+        assert_true(buff);
+        assert_string_equal(BufferData(buff), "foo,bar");
+
+        StringSetDestroy(set1);
+        BufferDestroy(buff);
+    }
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -69,7 +123,8 @@ int main()
     {
         unit_test(test_stringset_from_string),
         unit_test(test_stringset_serialization),
-        unit_test(test_stringset_clear)
+        unit_test(test_stringset_clear),
+        unit_test(test_stringset_join)
     };
 
     return run_tests(tests);

@@ -49,13 +49,17 @@ void test_have_tty_interactive_failsafe_is_not_created(void)
                                                         GetInputDir(),
                                                         FILE_SEPARATOR, 
                                                         "failsafe.cf");
-    SelectAndLoadPolicy(config, ctx, false);
+    Policy *policy = SelectAndLoadPolicy(config, ctx, false);
     struct stat buf;
     
     /* failsafe.cf shouldn't be created as we have tty_interactive. */
     assert_int_equal(stat(failsafe_file, &buf), -1);
     
     free(failsafe_file);
+
+    PolicyDestroy(policy);
+    GenericAgentFinalize(ctx, config);
+
 }
 
 void test_dont_have_tty_interactive_failsafe_is_created(void)
@@ -77,7 +81,7 @@ void test_dont_have_tty_interactive_failsafe_is_created(void)
     /* This is where failsafe.cf will be created. */
     char *failsafe_file =
         StringFormat("%s%c%s", GetInputDir(), FILE_SEPARATOR,  "failsafe.cf");
-    SelectAndLoadPolicy(config, ctx, false);
+    Policy *policy = SelectAndLoadPolicy(config, ctx, false);
     struct stat buf;
  
     /* failsafe.cf should be created as we don't have tty_interactive. */
@@ -85,6 +89,10 @@ void test_dont_have_tty_interactive_failsafe_is_created(void)
     
     unlink(failsafe_file);
     free(failsafe_file);
+
+    PolicyDestroy(policy);
+    GenericAgentFinalize(ctx, config);
+
 }
 
 void test_resolve_absolute_input_path(void)

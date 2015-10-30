@@ -203,35 +203,36 @@ static void ParseAndLogErrorMessage(const Rlist *data)
 
 static int IsReadWriteReady(const IOData *io, int timeout_sec)
 {
-    fd_set  rset;
-    FD_ZERO(&rset);
-    FD_SET(io->read_fd, &rset);
+    int timeout = timeout_sec * 1000;
+    if (timeout < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Integer overflow setting timeout.");
+        return -1;
+    }
 
-    struct timeval tv = {
-        .tv_sec = timeout_sec,
-        .tv_usec = 0,
+    struct pollfd fds[] = {
+        {
+            .fd = io->read_fd,
+            .events = POLLIN
+        }
     };
 
-    //TODO: For Windows we will need different method and select might not 
-    //      work with file descriptors.
-    int ret = select(io->read_fd + 1, &rset, NULL, NULL, &tv);
-
+    int ret = poll(fds, 1, timeout);
     if (ret < 0)
     {
         Log(LOG_LEVEL_VERBOSE, "Failed checking for data. (select: %s)",
             GetErrorStr());
         return -1;
     }
-    else if (FD_ISSET(io->read_fd, &rset))
-    {
-        return io->read_fd;
-    }
-
     /* We have reached timeout */
-    if (ret == 0)
+    else if (ret == 0)
     {
         Log(LOG_LEVEL_DEBUG, "Timeout reading from package module.");
         return 0;
+    }
+    else
+    {
+        return io->read_fd;
     }
 
     Log(LOG_LEVEL_VERBOSE,

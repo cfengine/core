@@ -230,7 +230,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int c;
-    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN, GetTTYInteractive());
 
     while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::",
                             OPTIONS, NULL))

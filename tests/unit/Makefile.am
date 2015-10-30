@@ -37,6 +37,9 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I$(srcdir)/../../cf-key \
 	-DTESTDATADIR='"$(srcdir)/data"'
 
+# Needed for init_script_test.sh which installs files in a temporary location.
+TESTS_ENVIRONMENT = INSTALL="$(INSTALL)"
+
 LDADD = ../../libpromises/libpromises.la libtest.la
 
 # automake does not support "maude_LIBS" variables. We can only alter
@@ -207,7 +210,7 @@ endif
 #
 # OS X uses real system calls instead of our stubs unless this option is used
 #
-TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
+TESTS_ENVIRONMENT += DYLD_FORCE_FLAT_NAMESPACE=yes
 
 atexit_test_SOURCES = atexit_test.c
 atexit_test_LDADD = libtest.la libdb.la
@@ -437,7 +440,7 @@ queue_test_SOURCES = queue_test.c
 
 if !NT
 init_script_test_helper_SOURCES = init_script_test_helper.c
-init_script_test.sh: init_script_test_helper
+noinst_PROGRAMS = init_script_test_helper
 endif
 EXTRA_DIST += init_script_test_helper.c
 EXTRA_DIST += init_script_test.sh

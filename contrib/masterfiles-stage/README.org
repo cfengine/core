@@ -10,9 +10,9 @@ As it is recommended to store and manage CFEngine policy in a version
 control system like git or subversion, the typical and recomended
 "upstream" source is a version control repository.
 
-Deployment is done in a safe manner by first "staging" the deployment
-and validating the policy before moving it to the distribution
-directory."
+Deployment is done in a safe manner by first preparing masterfiles in
+a staging area before deploying the policy to the directory where
+clients expect it to be distributed from.
 
 "Staging" is the process of preparing a temporary location with the
 content of masterfiles sourced from an upstream location. Once the
@@ -22,8 +22,10 @@ deployment through various means.
 The following are the common minimal staging actions:
   - `cf-promises` is used to validate the policy
     - This is done to try and prevent broken policy from being made
-      available to remote agents.
-  - restrictive permissions are applied
+      available to remote agents
+  - apply restrictive permissions
+    - This is done because version control systems are notoriously
+      poor at preserving correct and restrictive permissions.
 
 Once the policy has been successfully staged the policy is deployed to
 the final location for distribution to remote agents. In the most
@@ -31,10 +33,28 @@ simple environments this will be `$(sys.masterdir)` (typically
 /var/cfengine/masterfiles) on the policy server.
 
 * Current Features
-- Stage masterfiles from a git branch (VCS_TYPE="GIT")
-- Stage masterfiles from a git tag or commit
-  (VCS_TYPE="GIT_TAG_OR_COMMIT")
-- Stage masterfiles from a subversion branch (VCS_TYPE="SVN")
+- Supported upstreams
+  - VCS_TYPE="GIT"
+  - VCS_TYPE="GIT_TAG_OR_COMMIT"
+  - VCS_TYPE="SVN"
+
+* Dependancies
+This script has the following dependancies
+- bash
+- rsync
+- git|svn
+
+* Installation
+Installation simply consists of saving `masterfiles-stage.sh` and its
+supporting `common.sh` to the same directory on your hub and making
+sure that `masterfiles-stage.sh` is executable.
+
+#+begin_src example
+  wget  https://github.com/cfengine/core/blob/master/contrib/masterfiles-stage/masterfiles-stage.sh -O /var/cfengine/bin/
+  wget  https://github.com/cfengine/core/blob/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/
+  chown root:root /var/cfengine/bin/masterfiles-stage.sh
+  chmod 555 /var/cfengine/bin/masterfiles-stage.sh
+#+end_src
 
 * Configuration
 
@@ -102,29 +122,52 @@ have no effect on functionality of `masterfiles-stage.sh`
 - SCRIPT_DIR - Directory contianing supporting scripts
   - This is used by Design Center in CFEngine Enterprise
 
+*** Special Note
+The executing user may require addational configuration in order to
+successfully authenticate. The specifics depend on the specifics of
+your upstream repository. For example, an upstream repository over
+http or https that allows anonymous access may need no addtional
+configuration, but an upstream that uses ssh keys for authentication
+may require trust establishment (accepting the host key fingerprint),
+and the presence of an ssh key for authentication. Depending on the
+security requirements of your orginization, you may use a
+passphraseless key, or you may use something like ssh-agent.
+
 
 * Example Usage
 
-`masterfiles-stage.sh` can be invoked manually as shown in the
-following example.
+The script can be invoked manually:
 
 #+begin_example
-  ./masterfiles-stage.sh /tmp/deployed_masterfiles "$(pwd)/example_parmas/PARAMS_example_git_branch.sh"
+  /var/cfengine/bin/masterfiles-stage.sh /tmp/deployed_masterfiles "/var/cfengine/masterfiles-stage_parmas/PARAMS_example_git_branch.sh"
   tail -n1 /var/cfengine/outputs/dc-scripts.log
   Successfully staged a policy release on Tue Oct 27 12:13:38 CDT 2015
 #+end_example
 
-It's best to avoid un-necessary manual steps, and CFEngine can be used
-to automatically invoke the `masterfiles-stage.sh` script. In fact,
-this execution has been included in the masterfiles policy framework
-for some time as a CFEngine Enterprise feature. While this script is
-*NOT* currently the same script that ships with CFEngine Enterprise,
-it is the logical extension of the script that ships with CFEngine
-Enteprise and can be used in it's place with minor modifications.
+Or execution can be automated with CFEngine.
+
+#+begin_src cfengine3
+bundle agent stage_masterfiles
+{
+  vars:
+      policy_server::
+      "deploy_script"
+        string => "/var/cfengine/bin/masterfiles-stage.sh";
+
+      "masterfiles_deploy_destination"
+        string => "/var/cfengine/masterfiles";
+
+  commands:
+      policy_server::
+      # masterfiles-stage.sh DESTINATION PARAMS
+      "$(deploy_script)"
+        args => "$(masterfiles_deploy_destination) /var/cfengine/deploy_params/PARAMS_masterfiles.sh",
+        comment => "Masterfiles should be deployed to $(masterfiles_deploy_destination) using ";
+}
+#+end_src
 
 At the time of this writing the bundle that activates the
 `masterfiles-stage.sh` script can be found [[https://github.com/cfengine/masterfiles/blob/master/cfe_internal/update/cfe_internal_update_from_repository.cf][here]].
-
 
 * Phased Rollout with Multiple Staged Masterfiles
 

@@ -12,7 +12,7 @@ control system like git or subversion, the typical and recomended
 
 Deployment is done in a safe manner by first preparing masterfiles in
 a staging area before deploying the policy to the directory where
-clients expect it to be distributed from.
+clients [[https://docs.cfengine.com/latest/reference-promise-types-access.html#top][have access]] and expect it to be distributed from.
 
 "Staging" is the process of preparing a temporary location with the
 content of masterfiles sourced from an upstream location. Once the

@@ -688,7 +688,7 @@ done
 # Close stdin file descriptor to avoid tty_interactive check in cf-agent being success.
 #
 if [ "$GDB" != 1 ] || [ "$USE_VALGRIND" != 1 ]; then
-  exec <&-
+  exec </dev/null
 fi
 
 if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&

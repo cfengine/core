@@ -46,25 +46,7 @@ int main(int argc, char *argv[])
 
     GenericAgentDiscoverContext(ctx, config);
 
-    Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, false, false))
-    {
-        policy = LoadPolicy(ctx, config);
-    }
-    else if (config->tty_interactive)
-    {
-        exit(EXIT_FAILURE);
-    }
-    else
-    {
-        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
-        EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
-        if (CheckAndGenerateFailsafe(GetInputDir(), "failsafe.cf"))
-        {
-            GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
-            policy = LoadPolicy(ctx, config);
-        }
-    }
+    Policy *policy = SelectAndLoadPolicy(config, ctx, false);
     
     if (!policy)
     {

@@ -117,11 +117,11 @@ void MarkAsPolicyServer(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
 }
 
-Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy)
+Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy, bool write_validated_file)
 {
     Policy *policy = NULL;
     
-    if (GenericAgentCheckPolicy(config, validate_policy, true))
+    if (GenericAgentCheckPolicy(config, validate_policy, write_validated_file))
     {
         policy = LoadPolicy(ctx, config);
     }

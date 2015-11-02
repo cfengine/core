@@ -117,7 +117,7 @@ bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char
 bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options);
 bool GenericAgentConfigParseColor(GenericAgentConfig *config, const char *mode);
 
-Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy);
+Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy, bool write_validated_file);
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_interactive);
 bool GetTTYInteractive(void);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);

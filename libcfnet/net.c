@@ -94,7 +94,7 @@ int SendTransaction(const ConnectionInfo *conn_info,
  *  @return 0 in case of socket closed, -1 in case of other error, or
  *          >0 the number of bytes read.
  */
-int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
+int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
 {
     char proto[CF_INBAND_OFFSET + 1] = { 0 };
     char status = 'x';
@@ -116,7 +116,26 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
     if (ret == -1 || ret == 0)
+    {
+        /* We are experiencing problems with receiving data from server.
+         * This might lead to packages being not delivered in correct
+         * order and unexpected issues like directories being replaced
+         * with files.
+         * In order to make sure that file transfer is reliable we have to
+         * close connection to avoid broken packages being received. */
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
         return ret;
+    }
+    else if (ret != CF_INBAND_OFFSET)
+    {
+        /* If we received less bytes than expected. Might happen
+         * with TLSRecv(). */
+        Log(LOG_LEVEL_ERR,
+            "ReceiveTransaction: bogus short header (%d bytes: '%s')",
+            ret, proto);
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
+        return -1;
+    }
 
     LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction header: ", proto, ret);
 
@@ -124,20 +143,29 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     if (ret != 2)
     {
         Log(LOG_LEVEL_ERR,
-            "ReceiveTransaction: Bad packet -- bogus header: %s", proto);
-        return -1;
-    }
-    if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
-    {
-        Log(LOG_LEVEL_ERR,
-            "ReceiveTransaction: Bad packet -- too long (len=%d)", len);
+            "ReceiveTransaction: bogus header: %s", proto);
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
         return -1;
     }
     if (status != CF_MORE && status != CF_DONE)
     {
         Log(LOG_LEVEL_ERR,
-            "ReceiveTransaction: Bad packet -- bogus header (more='%c')",
-            status);
+            "ReceiveTransaction: bogus header (more='%c')", status);
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
+        return -1;
+    }
+    if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
+    {
+        Log(LOG_LEVEL_ERR,
+            "ReceiveTransaction: packet too long (len=%d)", len);
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
+        return -1;
+    }
+    if (len <= 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "ReceiveTransaction: packet too short (len=%d)", len);
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
         return -1;
     }
 
@@ -170,6 +198,28 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
         UnexpectedError("ReceiveTransaction: ProtocolVersion %d!",
                         ConnectionInfoProtocolVersion(conn_info));
         ret = -1;
+    }
+
+    if (ret <= 0)
+    {
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
+        return ret;
+    }
+    else if (ret != len)
+    {
+        /*
+         * Should never happen except with TLS, given that we are using
+         * SSL_MODE_AUTO_RETRY and that transaction payload < CF_BUFSIZE < TLS
+         * record size, it can currently only happen if the other side does
+         * TLSSend(wrong_number) for the transaction.
+         *
+         * TODO IMPORTANT terminate TLS session in that case.
+         */
+        Log(LOG_LEVEL_ERR,
+            "Partial transaction read %d != %d bytes!",
+            ret, len);
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
+        return -1;
     }
 
     LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction data: ", buffer, ret);

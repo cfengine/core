@@ -929,7 +929,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
-    int tosend, value;
+    int value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
     off_t n_read_total = 0;
@@ -963,14 +963,18 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         return false;
     }
 
-    workbuf[0] = '\0';
-
     buf_size = 2048;
 
 /* Send proposition C0 */
-
-    snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
-    tosend = strlen(workbuf);
+    workbuf[0] = '\0';
+    int tosend = snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
+    if (tosend <= 0 || tosend >= CF_BUFSIZE)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to compose GET command for file %s",
+            source);
+        close(dd);
+        return false;
+    }
 
     if (SendTransaction(conn->conn_info, workbuf, tosend, CF_DONE) == -1)
     {

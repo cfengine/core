@@ -666,7 +666,7 @@ static void PrepareServer(int sd)
     }
 #else
     {
-        if (fork() != 0)
+        if (fork() != 0)                                        /* parent */
         {
             _exit(EXIT_SUCCESS);
         }

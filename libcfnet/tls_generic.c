@@ -530,7 +530,7 @@ static const char *TLSPrimarySSLError(int code)
  * @warning Use only for SSL_connect(), SSL_accept(), SSL_do_handshake(),
  *          SSL_read(), SSL_peek(), SSL_write(), see SSL_get_error man page.
  */
-void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int retcode)
+int TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int retcode)
 {
     assert(prepend != NULL);
 
@@ -584,6 +584,8 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int retcode)
             (errstr2 == NULL) ? "" : errstr2,          /* most likely empty */
             syserr);
     }
+
+    return errcode;
 }
 
 static void assert_SSLIsBlocking(const SSL *ssl)
@@ -665,12 +667,17 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  * @param ssl SSL information.
  * @param buffer Buffer, of size at least #toget + 1 to store received data.
  * @param toget Length of the data to receive, must be < CF_BUFSIZE.
- * @return The length of the received data, which could be smaller or equal
- *         than the requested or -1 in case of error or 0 if connection was
- *         closed.
+ *
+ * @return The length of the received data, which should be equal or less
+ *         than the requested amount.
+ *         -1 in case of timeout or error - SSL session is unusable
+ *         0  if connection was closed
+ *
  * @note Use only for *blocking* sockets. Set
  *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
  *       operation completed or an error occurred.
+ * @note Still, it may happen for #retval to be less than #toget, if the
+ *       opposite side completed a TLSSend() with number smaller than #toget.
  */
 int TLSRecv(SSL *ssl, char *buffer, int toget)
 {
@@ -678,12 +685,32 @@ int TLSRecv(SSL *ssl, char *buffer, int toget)
     assert(toget < CF_BUFSIZE);
     assert_SSLIsBlocking(ssl);
 
-    /* TODO what is the return value of SSL_read in case of socket timeout? */
-
     int received = SSL_read(ssl, buffer, toget);
     if (received < 0)
     {
-        TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_read", received);
+        int errcode = TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_read", received);
+
+        /* SSL_read() might get an internal recv() timeout, since we've set
+         * SO_RCVTIMEO. In that case, the internal socket returns EAGAIN or
+         * EWOULDBLOCK and SSL_read() returns SSL_ERROR_WANT_READ. */
+        if (errcode == SSL_ERROR_WANT_READ)               /* recv() timeout */
+        {
+            /* Make sure that the peer will send us no more data. */
+            SSL_shutdown(ssl);
+            shutdown(SSL_get_fd(ssl), SHUT_RDWR);
+
+            /* Empty possible SSL_read() buffers. */
+
+            int ret = 1;
+            int bytes_still_buffered = SSL_pending(ssl);
+            while (bytes_still_buffered > 0 && ret > 0)
+            {
+                char tmpbuf[bytes_still_buffered];
+                ret = SSL_read(ssl, tmpbuf, bytes_still_buffered);
+                bytes_still_buffered -= ret;
+            }
+        }
+
         return -1;
     }
     else if (received == 0)

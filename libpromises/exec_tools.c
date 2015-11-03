@@ -117,28 +117,50 @@ void ActAsDaemon()
     int fd;
 
 #ifdef HAVE_SETSID
-    setsid();
+    if (setsid() == (pid_t) -1)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Failed to become a session leader while daemonising (setsid: %s)",
+            GetErrorStr());
+    }
 #endif
 
     CloseNetwork();
     CloseLog();
 
     fflush(NULL);
-    fd = open(NULLFILE, O_RDWR, 0);
 
-    if (fd != -1)
+    /* Close descriptors 0,1,2 and reopen them with /dev/null. */
+
+    fd = open(NULLFILE, O_RDWR, 0);
+    if (fd == -1)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not open '%s', "
+            "stdin/stdout/stderr are still open (open: %s)",
+            NULLFILE, GetErrorStr());
+    }
+    else
     {
         if (dup2(fd, STDIN_FILENO) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Could not dup. (dup2: %s)", GetErrorStr());
+            Log(LOG_LEVEL_WARNING,
+                "Could not close stdin while daemonising (dup2: %s)",
+                GetErrorStr());
         }
 
         if (dup2(fd, STDOUT_FILENO) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Could not dup. (dup2: %s)", GetErrorStr());
+            Log(LOG_LEVEL_WARNING,
+                "Could not close stdout while daemonising (dup2: %s)",
+                GetErrorStr());
         }
 
-        dup2(fd, STDERR_FILENO);
+        if (dup2(fd, STDERR_FILENO) == -1);
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Could not close stderr while daemonising (dup2: %s)",
+                GetErrorStr());
+        }
 
         if (fd > STDERR_FILENO)
         {
@@ -148,7 +170,9 @@ void ActAsDaemon()
 
     if (chdir("/"))
     {
-        UnexpectedError("Failed to chdir into '/'");
+        Log(LOG_LEVEL_WARNING,
+            "Failed to chdir into '/' directory while daemonising (chdir: %s)",
+            GetErrorStr());
     }
 }
 

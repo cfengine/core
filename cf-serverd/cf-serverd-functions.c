@@ -654,7 +654,8 @@ static void PrepareServer(int sd)
 {
     if (sd != -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
+        Log(LOG_LEVEL_VERBOSE,
+            "Listening for connections on socket descriptor %d ...", sd);
     }
 
     if (!NO_FORK)

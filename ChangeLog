@@ -22,6 +22,7 @@
 	- Add: masterfiles-stage script to contrib
 	- Whitespace is now allowed in class expressions for
 	  readability, between class names and operators. (Redmine #7152)
+	- Add: New `results` classes body [Redmine#7481] (Redmine #7418)
 
 	Changes:
 	- Change: Clarify bootstrap/failsafe reports
@@ -39,6 +40,7 @@
 	- Moved the following files to /var/cfengine/log/:
 	    - /var/cfengine/promise_summary.log
 	    - /var/cfengine/cfagent.<host>.log
+	- Change: Seperate binary details from policy update (Redmine #7662)
 
 	Bug fixes:
 	- Fix broken HA policy for 3rd disaster-recovery node.
@@ -103,6 +105,8 @@
 	- cf-monitord no longer complains about missing thermal zone files.
 	  (Redmine #7238)
 	- systemd is now detected correctly if it is a symlink (Redmine #7297)
+	- TTY detection should be more reliable. (Redmine #7606)
+	  (Redmine #7606)
 
 3.7.1:
 	Bug fixes:

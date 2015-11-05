@@ -45,7 +45,7 @@ static void test_process_start_time(void)
 
     if (new_pid == 0)                                           /* child */
     {
-        execl("/bin/sleep", "/bin/sleep", "15", NULL);
+        execl("/bin/sleep", "/bin/sleep", "30", NULL);
         assert_true(false);                                  /* unreachable */
     }
 
@@ -58,7 +58,7 @@ static void test_process_start_time(void)
     // We might have slipped by a few seconds, but shouldn't be much.
     assert_int_not_equal(newproc_starttime, PROCESS_START_TIME_UNKNOWN);
     assert_true(newproc_starttime >= THIS_STARTTIME + 1);
-    assert_true(newproc_starttime <= THIS_STARTTIME + 5);
+    assert_true(newproc_starttime <= THIS_STARTTIME + 15);
 
     kill(new_pid, SIGKILL);
     wait(NULL);
@@ -74,7 +74,7 @@ static void test_process_state(void)
 
     if (new_pid == 0)                                           /* child */
     {
-        execl("/bin/sleep", "/bin/sleep", "15", NULL);
+        execl("/bin/sleep", "/bin/sleep", "30", NULL);
         assert_true(false);                                  /* unreachable */
     }
 
@@ -154,7 +154,7 @@ static void test_graceful_terminate(void)
 
     if (new_pid == 0)                                           /* child */
     {
-        execl("/bin/sleep", "/bin/sleep", "15", NULL);
+        execl("/bin/sleep", "/bin/sleep", "30", NULL);
         assert_true(false);                                  /* unreachable */
     }
 

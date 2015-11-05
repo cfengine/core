@@ -41,6 +41,7 @@
 	    - /var/cfengine/promise_summary.log
 	    - /var/cfengine/cfagent.<host>.log
 	- Change: Seperate binary details from policy update (Redmine #7662)
+	- Remove: Support for email settings from augments_file (Redmine #7682)
 
 	Bug fixes:
 	- Fix broken HA policy for 3rd disaster-recovery node.

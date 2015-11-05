@@ -79,12 +79,14 @@ if($line =~ /^.*> /) {
 	prelude_v2();
 	bundles_v2();
 }
+$data{stop} = Time::HiRes::gettimeofday();
 
 if(defined($opts{c}) or defined($opts{a})){
 	print "===============================================================================\n";
 	print "Classes defined:\n";
 	print "$data{all_classes}\n";
 }
+
 if(defined($opts{t}) or defined($opts{a})){
 	print "===============================================================================\n";
 	print "Execution tree\n";
@@ -122,20 +124,33 @@ if(defined($opts{t}) or defined($opts{a})){
 		print "|\n";
 	}
 
-	$data{stop} = Time::HiRes::gettimeofday();
 	print "|\n";
 	print "Stop: $data{stop} s\n";
 }
 
-#if(defined($opts{s}) or defined($opts{a})){
-#	print "===============================================================================\n";
-#	print "Summary\n";
-#	print "===============================================================================\n";
-#	print "Top 10 worst, bundles:\n";
-#	print "Top 10 worst, promise types:\n";
-#}
+if(defined($opts{s}) or defined($opts{a})){
+	print "===============================================================================\n";
+	print "Summary\n";
+	print "===============================================================================\n";
+	print "Total elapsed: ".sprintf("%.5f", $data{stop} - $data{start})." s\n";
+	my %times = ();
+	foreach my $b(@b_log){
+		my $elapsed = sprintf("%.5f", $data{bundles}{$b}{stop} - $data{bundles}{$b}{start});
+		$times{$b} = $elapsed;
+	}
+	my $no_bundles  = scalar keys %{$data{bundles}};
+	print "Total number of bundles: $no_bundles\n";
+	print "Top 10 worst, bundles:\n";
+	my $iter = 0;
+	foreach my $b(sort {$times{$b} cmp $times{$a}} keys %times){
+		last if $iter == 10;
+		my $t = $times{$b};
+		$iter++;
+		$b =~ s/:l\d+$//g;	
+		print "$tabber$iter.\t${t}s  : $b\n";
+	}
+}
 print "===============================================================================\n";
-print "\n";
 
 exit(0);
 

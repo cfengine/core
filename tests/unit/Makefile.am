@@ -63,6 +63,7 @@ libtest_la_LIBADD = ../../libcompat/libcompat.la
 check_LTLIBRARIES += libstr.la
 libstr_la_SOURCES = \
 	../../libutils/buffer.c \
+	../../libutils/pcre_wrap.c \
 	../../libutils/encode.c \
 	../../libutils/logging.c \
 	../../libutils/misc_lib.c \

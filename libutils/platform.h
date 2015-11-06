@@ -704,14 +704,24 @@ char *rpl_ctime(const time_t *t);
 
 #if !HAVE_DECL_OPENAT
 int openat(int dirfd, const char *pathname, int flags, ...);
+#endif
+#if !HAVE_DECL_FSTATAT
 int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
+#endif
+#if !HAVE_DECL_FCHOWNAT
 int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
+#endif
+#if !HAVE_DECL_FCHMODAT
+int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
+#endif
+#if !HAVE_DECL_READLINKAT
+int readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
+#endif
 #ifndef AT_SYMLINK_NOFOLLOW
 #define AT_SYMLINK_NOFOLLOW 0x1000
 #endif
 #ifndef AT_FDCWD
 #define AT_FDCWD (-2)
-#endif
 #endif
 
 #if !HAVE_DECL_LOG2

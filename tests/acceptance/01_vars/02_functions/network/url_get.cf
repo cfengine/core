@@ -33,6 +33,9 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "!feature_curl";
+
   vars:
       "kept" data => mergedata(
                                '{ "res1/returncode": init.res1[returncode] }',

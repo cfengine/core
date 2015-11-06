@@ -60,4 +60,14 @@
 #endif  /* gcc >= 3.0 */
 
 
+
+/**
+ *  If you have a variable or function parameter unused under specific
+ *  conditions (like ifdefs), you can suppress the "unused variable" warning
+ *  by just doing UNUSED(x).
+ */
+#define UNUSED(x) (void)(x)
+
+
+
 #endif  /* CFENGINE_COMPILER_H */

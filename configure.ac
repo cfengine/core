@@ -1023,10 +1023,16 @@ AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
 
-AC_CHECK_DECLS([openat], [], [], [[#include <fcntl.h>]])
-AC_CHECK_DECLS([fstatat], [], [], [[#include <sys/stat.h>]])
-AC_CHECK_DECLS([fchownat], [], [], [[#include <unistd.h>]])
-AC_REPLACE_FUNCS(openat fstatat fchownat)
+AC_CHECK_DECLS([openat], [], [], [[#define _GNU_SOURCE 1
+                                   #include <fcntl.h>]])
+AC_CHECK_DECLS([fstatat], [], [], [[#define _GNU_SOURCE 1
+                                    #include <sys/stat.h>]])
+AC_CHECK_DECLS([fchownat], [], [], [[#define _GNU_SOURCE 1
+                                     #include <unistd.h>]])
+AC_CHECK_DECLS([readlinkat], [], [], [[#define _GNU_SOURCE 1
+                                       #include <unistd.h>]])
+AC_REPLACE_FUNCS(openat fstatat fchownat readlinkat)
+cf3_FUNC_FCHMODAT
 
 AC_CHECK_DECLS([log2], [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(log2)

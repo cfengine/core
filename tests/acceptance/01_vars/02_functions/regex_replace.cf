@@ -1,0 +1,61 @@
+#######################################################
+#
+# Test regex_replace function
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "test" string => "abcdefghij";
+
+      # replace the empty string with empty string, globally
+      "void" string => regex_replace($(test), "", "", "g");
+      # replace any character with empty string, globally
+      "void1" string => regex_replace($(test), ".", "", "g");
+      # replace the empty string with 'x', globally (matches on character boundaries)
+      "void2" string => regex_replace($(test), "", "x", "g");
+
+      # replace the whole string
+      "allofitwithTEST" string => regex_replace($(test), ".*", "TEST", "");
+      # no matches, original intact
+      "nomatch" string => regex_replace($(test), "nonesuch", "TEST", "g");
+      "nomatch2" string => regex_replace($(test), "nonesuch", "TEST\1\2\3\4\5\6\7\8\9", "g");
+      # replace any character with -DOT-
+      "dots_everywhere" string => regex_replace($(test), ".", "-DOT-", "g");
+      # capture any three characters and replace with a backreference
+      "cap123" string => regex_replace($(test), "(...)", "[cap=$1]", "g");
+      # capture any three characters and replace with a backreference
+      "cap123_backslash" string => regex_replace($(test), "(...)", "[cap=\1]", "g");
+      # note that this is the same as above because the CFE parser tries to be clever in this case, converting \\1 to \1
+      "cap123_backslash2" string => regex_replace($(test), "(...)", "[cap=\\1]", "g");
+      "cap123_backslashes1to9missing" string => regex_replace($(test), "...", "[cap=\1\2\3\4\5\6\7\8\9]", "g");
+      "cap123_backslashes1to9havesome" string => regex_replace($(test), "(.)(.)(.)", "[cap=\1\2\3\4\5\6\7\8\9]", "g");
+      # match ABC case-insensitive and replace with ABC
+      "simple_nocase" string => regex_replace($(test), "ABC", "ABC", "gi"); # case-insensitive
+      # match abc and replace with ABC
+      "simple" string => regex_replace($(test), "abc", "ABC", "g");
+
+      # empty cases
+      "empty1" string => regex_replace("", "abc", "ABC", "g");
+      "empty2" string => regex_replace("", "abc", "", "g");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

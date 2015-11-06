@@ -1,0 +1,41 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that data containers defined with parsejson that conatains unexpanded variables does NOT define a new datacontainer";
+}
+
+bundle agent check
+{
+  vars:
+    "data"
+      data => parsejson('{
+                           "key1": "$(sys.fqhost)",
+                           "key2" : "$(undefined_namespace:undefined_bundle.undefined_variable)"
+                         }');
+  classes:
+    "fail"
+      expression => isvariable("data");
+
+    "ok"
+      not => isvariable("data");
+
+    "exception"
+      and => { "fail", "ok" };
+
+  reports:
+     fail::
+       "$(this.promise_filename) FAIL";
+
+     ok.!fail::
+       "$(this.promise_filename) Pass";
+
+     exception::
+       "$(this.promise_filename) EXCEPTION";
+}

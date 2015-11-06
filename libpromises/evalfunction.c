@@ -81,8 +81,10 @@
 #include <curl/curl.h>
 #endif
 
+#ifdef HAVE_LIBCURL
 static bool CURL_INITIALIZED = false; /* GLOBAL */
 static JsonElement *CURL_CACHE = NULL;
+#endif
 
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const char *name, bool do_regex, bool invert, long max);
 static char* JsonPrimitiveToString(const JsonElement *el);
@@ -1757,7 +1759,9 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
                                  const FnCall *fp,
                                  const Rlist *finalargs)
 {
+
 #ifdef HAVE_LIBCURL
+
     char *url = RlistScalarValue(finalargs);
     VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs->next));
     if (!ref)
@@ -1951,10 +1955,14 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
 
     JsonDestroy(options);
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+
 #else
+
+    UNUSED(finalargs);                 /* suppress unused parameter warning */
     Log(LOG_LEVEL_ERR,
         "%s: libcurl integration is not compiled into CFEngine, sorry", fp->name);
     return FnFailure();
+
 #endif
 }
 

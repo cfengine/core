@@ -15,12 +15,12 @@ bundle common test
 {
 @if feature(xml)
   classes:
-      "expected" expression => "any";
+      "xml" expression => "any";
 @endif
 
 @if feature(yaml)
   classes:
-      "expected2" expression => "any";
+      "yaml" expression => "any";
 @endif
 
 @if feature(unknown_123)
@@ -31,8 +31,17 @@ bundle common test
 
 bundle agent check
 {
+  vars:
+    !feature_yaml.!feature_xml::
+      "result" string => "";
+    feature_yaml.!feature_xml::
+      "result" string => "yaml";
+    !feature_yaml.feature_xml::
+      "result" string => "xml";
+    feature_yaml.feature_xml::
+      "result" string => "yaml,xml";
   methods:
-      "" usebundle => dcs_passif_expected("expected,expected2",
+      "" usebundle => dcs_passif_expected("$(result)",
                                          "not_expected",
                                          $(this.promise_filename));
 }

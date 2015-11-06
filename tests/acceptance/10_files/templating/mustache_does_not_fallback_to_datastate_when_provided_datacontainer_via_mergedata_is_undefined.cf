@@ -1,0 +1,92 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that a mustache template does not fallback to datastate when its given an invalid container via mergedata";
+}
+
+bundle agent init
+{
+    # First we make sure to start with an empty target file
+    files:
+    "$(G.testfile)"
+      handle => "init_testfile_absent",
+      delete => tidy;
+    
+    "$(G.testfile)"
+      handle => "init_testfile_present",
+      create => "true",
+      depends_on => { "init_testfile_absent" },
+      comment => "We first remove the file, and then re-create it so that we
+                  know that it is empty to start with.";
+}
+
+bundle agent test
+{
+  # Second we try to render the template using the result of mergedata with a non existing container
+  vars:
+    "classes"
+      slist => classesmatching("template_render_with_non_existing_data_container.*");
+
+  files:
+    "$(G.testfile)"
+      edit_template => "$(this.promise_filename).mustache",
+      template_method => "mustache",
+      template_data => mergedata("missing_ns:missing_bundle.missing_data"),
+      classes => scoped_classes_generic("bundle", "template_render_with_non_existing_data_container");
+
+  reports:
+    DEBUG::
+      "$(this.bundle): Found class '$(classes)'";
+}
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail" string => "any", meta => { "redmine7699" };
+
+  # Finally we check to see what classes were defined, and inspect the target file for changes.
+  vars:
+     "expected" string => "";
+     "actual" string => readfile($(G.testfile), inf);
+   
+  classes:
+    # I assume here that the promise should not even be actuated when invalid
+    # data is provided thus we should have found 0 classes
+    "fail_classes"
+      expression => isgreaterthan(length("test.classes"), 0);
+
+    # Another failure condition is if the rendered file is not empty as
+    # expected
+    "fail_content"
+      not => strcmp($(expected), $(actual));
+
+    "fail"
+      or => { "fail_classes", "fail_content" };
+
+    "exception"
+      and => { "fail", "ok" };
+
+  reports:
+    DEBUG::
+      "DEBUG $(this.bundle): Found '$(test.classes)' that should not have been found"
+        ifvarclass => "fail_classes";
+
+      "DEBUG $(this.bundle): Found the content of $(G.testfile) was not as expected"
+        ifvarclass => "fail_content";
+
+     fail::
+       "$(this.promise_filename) FAIL";
+
+     !fail|exception::
+       "$(this.promise_filename) Pass";
+
+     exception::
+       "$(this.promise_filename) EXCEPTION";
+}

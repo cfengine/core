@@ -10,10 +10,10 @@ body common control
 bundle agent init
 {
   methods:
-    # Remove the custom failsafe output file
-    "any" usebundle => dcs_fini("$(sys.inputdir)/failsafe_output.txt");
+      # Remove the custom failsafe output file
+      "any" usebundle => dcs_fini("$(sys.inputdir)/failsafe_output.txt");
   files:
-     "$(sys.inputdir)/failsafe.cf"
+      "$(sys.inputdir)/failsafe.cf"
          create    => "true",
          perms     => m("600"),
          copy_from => dcs_sync("$(this.promise_dirname)/preexisting_failsafe_preserved.failsafe.cf.sub");

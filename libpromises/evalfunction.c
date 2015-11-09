@@ -5593,6 +5593,8 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         return FnReturnNoCopy(contents);
     }
 
+    Log(LOG_LEVEL_ERR, "Function '%s' failed to read file: %s",
+        fp->name, filename);
     return FnFailure();
 }
 
@@ -5609,6 +5611,8 @@ static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCal
     char *file_buffer = CfReadFile(filename, maxsize);
     if (!file_buffer)
     {
+        Log(LOG_LEVEL_ERR, "Function '%s' failed to read file: %s",
+            fp->name, filename);
         return FnFailure();
     }
 

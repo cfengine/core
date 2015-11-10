@@ -91,6 +91,22 @@ void *SetIteratorNext(SetIterator *i)
     return kv ? kv->key : NULL;
 }
 
+void SetJoin(Set *set, Set *otherset)
+{
+    assert(set != NULL);
+    assert(otherset != NULL);
+    if (set == otherset)
+        return;
+
+    SetIterator si = SetIteratorInit(otherset);
+    void *ptr = NULL;
+
+    for (ptr = SetIteratorNext(&si); ptr != NULL; ptr = SetIteratorNext(&si))
+    {
+        SetAdd(set, ptr);
+    }
+}
+
 Buffer *StringSetToBuffer(StringSet *set, const char delimiter)
 {
     assert(set != NULL);

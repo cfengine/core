@@ -1,0 +1,6 @@
+body runagent control
+{
+    # A list of hosts to contact when using cf-runagent.
+    # In the acceptance tests we give the list of hosts on the command line.
+    hosts => { };
+}

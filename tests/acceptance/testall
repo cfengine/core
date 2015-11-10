@@ -101,6 +101,8 @@ CF_SERVERD=${CF_SERVERD:-}
 export CF_SERVERD
 CF_KEY=${CF_KEY:-}
 export CF_KEY
+CF_RUNAGENT=${CF_RUNAGENT:-}
+export CF_RUNAGENT
 RPMVERCMP=${RPMVERCMP:-}
 export RPMVERCMP
 LIBTOOL=${LIBTOOL:-}
@@ -227,6 +229,8 @@ usage() {
   echo "           and defaults to $DEFCF_SERVERD."
   echo " --cfkey   provides a way to specify non-default cf-key location,"
   echo "           and defaults to $DEFCF_KEY."
+  echo " --cfrunagent  provides a way to specify non-default cf-runagent location,"
+  echo "           and defaults to $DEFCF_RUNAGENT."
   echo " --rpmvercmp  provides a way to specify non-default rpmvercmp location,"
   echo "           and defaults to $DEFRPMVERCMP."
   echo " --bindir  specifies the directory containing all the binaries."
@@ -342,6 +346,7 @@ runtest() {
         $LN_CMD "$CF_PROMISES" "$WORKDIR/bin"
         $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
         $LN_CMD "$CF_KEY" "$WORKDIR/bin"
+        $LN_CMD "$CF_RUNAGENT" "$WORKDIR/bin"
         $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
       fi
       for inc in $INCLUDE_IN_WORKDIR; do (
@@ -653,6 +658,8 @@ while true; do
       CF_SERVERD=${1#--cfserverd=};;
     --cfkey=*)
       CF_KEY=${1#--cfkey=};;
+    --cfrunagent=*)
+      CF_RUNAGENT=${1#--cfrunagent=};;
     --rpmvercmp=*)
       RPMVERCMP=${1#--rpmvercmp=};;
     --bindir=*)
@@ -718,7 +725,7 @@ do
   esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" -o -n "$RPMVERCMP" ]; then
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]; then
   if [ -n "$BINDIR" ]; then
     echo "--bindir is mutually exclusive with specifying individual binaries."
     exit 2
@@ -739,6 +746,7 @@ find_default_binary DEFAGENT cf-agent
 find_default_binary DEFCF_PROMISES cf-promises
 find_default_binary DEFCF_SERVERD cf-serverd
 find_default_binary DEFCF_KEY cf-key
+find_default_binary DEFCF_RUNAGENT cf-runagent
 find_default_binary DEFRPMVERCMP rpmvercmp
 
 [ -x "`pwd`/libtool" ] && DEFLIBTOOL="`pwd`/libtool"
@@ -748,12 +756,13 @@ AGENT=${AGENT:-${DEFAGENT}}
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
+CF_RUNAGENT=${CF_RUNAGENT:-${DEFCF_RUNAGENT}}
 RPMVERCMP=${RPMVERCMP:-${DEFRPMVERCMP}}
 LIBTOOL=${LIBTOOL:-${DEFLIBTOOL}}
 
-if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" -o ! -x "$RPMVERCMP" ]
+if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" -o ! -x "$CF_RUNAGENT" -o ! -x "$RPMVERCMP" ]
 then
-	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?  Check '$AGENT', '$CF_PROMISES', '$CF_SERVERD', '$CF_KEY' and '$RPMVERCMP'"
+	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?  Check '$AGENT', '$CF_PROMISES', '$CF_SERVERD', '$CF_KEY', '$CF_RUNAGENT' and '$RPMVERCMP'"
 	exit 1
 fi
 

@@ -71,7 +71,7 @@ bool DENYBADCLOCKS = true; /* GLOBAL_P */
 int MAXTRIES = 5; /* GLOBAL_P */
 bool LOGENCRYPT = false; /* GLOBAL_P */
 int COLLECT_INTERVAL = 0; /* GLOBAL_P */
-int COLLECT_WINDOW = 10; /* GLOBAL_P */
+int COLLECT_WINDOW = 30; /* GLOBAL_P */
 bool SERVER_LISTEN = true; /* GLOBAL_P */
 
 ServerAccess SV = { 0 }; /* GLOBAL_P */

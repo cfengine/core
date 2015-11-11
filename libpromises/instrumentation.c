@@ -42,11 +42,15 @@ bool TIMING = false;
 
 struct timespec BeginMeasure()
 {
-    struct timespec start;
+    struct timespec start = { 0 };
 
     if (clock_gettime(CLOCK_REALTIME, &start) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
+    }
+    else if (TIMING)
+    {
+        Log(LOG_LEVEL_VERBOSE, "T: Starting measuring time");
     }
 
     return start;

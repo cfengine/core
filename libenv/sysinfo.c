@@ -558,7 +558,7 @@ static void GetNameInfo3(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s", VSYSNAME.machine);
-    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "CFEngine detected operating system description is %s", workbuf);
     Log(LOG_LEVEL_VERBOSE, "The time is now %s", ctime(&tloc));
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));

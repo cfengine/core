@@ -393,18 +393,33 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'D':
             {
-                /* WAZA what if config->heap_soft is already defined???
-                 * e.g. we have two -D arguments? Then only the last are being
-                 * set, and we are leaking memory!
-                 * TODO fix this here, execd, serverd, promises! redmine#7191 */
                 StringSet *defined_classes = StringSetFromString(optarg, ',');
-                cfruncommand = StringSetContains(defined_classes, "cfruncommand");
-                config->heap_soft = defined_classes;
+                cfruncommand = StringSetContains(defined_classes, "cfruncommand") || cfruncommand;
+                if (! config->heap_soft)
+                {
+                    config->heap_soft = defined_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_soft, defined_classes);
+                    free(defined_classes);
+                }
             }
             break;
 
         case 'N':
-            config->heap_negated = StringSetFromString(optarg, ',');
+            {
+                StringSet *negated_classes = StringSetFromString(optarg, ',');
+                if (! config->heap_negated)
+                {
+                    config->heap_negated = negated_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_negated, negated_classes);
+                    free(negated_classes);
+                }
+            }
             break;
 
         case 'I':
@@ -1879,13 +1894,13 @@ static int AutomaticBootstrap(GenericAgentConfig *config)
         ret = -1;
     };
 
-	if (avahi_handle)
-	{
-		/*
-		 * This case happens when dlopen does not manage to open the library.
-		 */
-    	dlclose(avahi_handle);
-	}
+    if (avahi_handle)
+    {
+        /*
+         * This case happens when dlopen does not manage to open the library.
+         */
+        dlclose(avahi_handle);
+    }
     ListDestroy(&foundhubs);
 
     return ret;

@@ -1228,7 +1228,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (received != len + CF_PROTO_OFFSET)
         {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error SGET");
+            Log(LOG_LEVEL_INFO, "Protocol error SGET");
             RefuseAccess(conn, recvbuffer);
             return false;
         }
@@ -1293,7 +1293,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error OPENDIR: %d", len);
+            Log(LOG_LEVEL_INFO, "Protocol error OPENDIR: %d", len);
             RefuseAccess(conn, recvbuffer);
             return false;
         }
@@ -1364,7 +1364,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error SSYNCH: %d", len);
+            Log(LOG_LEVEL_INFO, "Protocol error SSYNCH: %d", len);
             RefuseAccess(conn, recvbuffer);
             return false;
         }

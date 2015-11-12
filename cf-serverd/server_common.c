@@ -54,6 +54,8 @@ static const int CF_NOSIZE = -1;
 #include "server_access.h"
 
 
+/* NOTE: Always Log(LOG_LEVEL_INFO) before calling RefuseAccess(), so that
+ * some clue is printed in the cf-serverd logs. */
 void RefuseAccess(ServerConnectionState *conn, char *errmesg)
 {
     SendTransaction(conn->conn_info, CF_FAILEDSTR, 0, CF_DONE);
@@ -531,7 +533,7 @@ static int TransferRights(const ServerConnectionState *conn,
         /* If "maproot" we've already granted access. */
         assert(!conn->maproot);
 
-        Log(LOG_LEVEL_VERBOSE,
+        Log(LOG_LEVEL_INFO,
             "Remote user '%s' is not the owner of the file, access denied, "
             "consider maproot", conn->username);
 
@@ -548,7 +550,7 @@ static int TransferRights(const ServerConnectionState *conn,
     {
         if (!(sb->st_mode & S_IROTH))            /* file not world readable */
         {
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_INFO,
                 "Remote user '%s' is not owner of the file, access denied, "
                 "consider maproot or making file world-readable",
                 conn->username);
@@ -580,7 +582,7 @@ static int TransferRights(const ServerConnectionState *conn,
     /* OR file is owned by the same username the user claimed - useless or
      * even dangerous outside NIS, KERBEROS or LDAP authenticated domains,  */
            (sb->st_uid == conn->uid) ||
-    /* file is readable by everyone */
+    /* OR file is readable by everyone */
            (sb->st_mode & S_IROTH));
 
 #endif
@@ -639,6 +641,7 @@ void CfGetFile(ServerFileGetState *args)
 
     if (!TransferRights(args->conn, filename, &sb))
     {
+        Log(LOG_LEVEL_INFO, "REFUSE access to file: %s", filename);
         RefuseAccess(args->conn, args->replyfile);
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
         if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
@@ -798,6 +801,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
     if (!TransferRights(args->conn, filename, &sb))
     {
+        Log(LOG_LEVEL_INFO, "REFUSE access to file: %s", filename);
         RefuseAccess(args->conn, args->replyfile);
         FailedTransfer(conn_info);
     }

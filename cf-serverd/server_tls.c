@@ -788,8 +788,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         zret = PreprocessRequestPath(filename, sizeof(filename) - 1);
         if (zret == (size_t) -1)
         {
-            RefuseAccess(conn, recvbuffer);
-            return true;
+            goto protocol_error;
         }
 
         if (IsDirReal(filename) == 1)

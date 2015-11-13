@@ -732,8 +732,11 @@ if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" -o -n 
   fi
 fi
 
-# We assume we're running this script from $objdir, $objdir/tests/acceptance,
-# or /var/cfengine/tests/acceptance.
+# We assume we're running this script from one of the following
+#   $objdir
+#   $objdir/tests/acceptance
+#   /var/cfengine/tests/acceptance or from
+#   $core_objdir/../{enterprise,masterfiles}/tests/acceptance
 find_default_binary()
 {
     [ -n "$BINDIR" -a -x "$BINDIR/$2" ] && eval $1=\""$BINDIR/$2"\"
@@ -741,6 +744,7 @@ find_default_binary()
     [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
     [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
     [ -x "`pwd`/../../ext/$2" ] && eval $1=\""`pwd`/../../ext/$2"\"
+    [ -x "`pwd`/../../../core/$2/$2" ] && eval $1=\""`pwd`/../../../core/$2/$2"\"
 }
 find_default_binary DEFAGENT cf-agent
 find_default_binary DEFCF_PROMISES cf-promises
@@ -762,8 +766,16 @@ LIBTOOL=${LIBTOOL:-${DEFLIBTOOL}}
 
 if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" -o ! -x "$CF_RUNAGENT" -o ! -x "$RPMVERCMP" ]
 then
-	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?  Check '$AGENT', '$CF_PROMISES', '$CF_SERVERD', '$CF_KEY', '$CF_RUNAGENT' and '$RPMVERCMP'"
-	exit 1
+    echo "ERROR: can't find cf-agent or other binary;"     \
+         " Are you sure you're running this from OBJDIR"   \
+         " or {core,masterfiles,enterprise}_OBJDIR/tests/acceptance ?"
+    echo '$AGENT        =' "$AGENT"
+    echo '$CF_PROMISES  =' "$CF_PROMISES"
+    echo '$CF_SERVERD   =' "$CF_SERVERD"
+    echo '$CF_KEY       =' "$CF_KEY"
+    echo '$CF_RUNAGENT  =' "$CF_RUNAGENT"
+    echo '$RPMVERCMP    =' "$RPMVERCMP"
+    exit 1
 fi
 
 if [ "$UNSAFE_TESTS" = "1" ]; then

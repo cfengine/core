@@ -1,0 +1,44 @@
+# https://dev.cfengine.com/issues/7030
+#
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "!has_mkfifo";
+
+  vars:
+      "test_fifo" string => "$(G.testfile).fifo";
+
+  commands:
+      "$(G.mkfifo) $(test_fifo)";
+}
+
+bundle agent test
+{
+  files:
+      "$(init.test_fifo)"
+        create => "false",
+        perms => m("0700");
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => isexecutable("$(init.test_fifo)");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+}
+
+

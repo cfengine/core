@@ -888,7 +888,10 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
 
     if (a.location.before_after == EDIT_ORDER_BEFORE)
     {
-        for (ip = *start; ip != NULL; ip = ip->next)
+        /* As region was already selected by SelectRegion() and we know
+         * what are the region boundaries (begin_ptr and end_ptr) there
+         * is no reason to iterate over whole file. */
+        for (ip = begin_ptr; ip != NULL; ip = ip->next)
         {
             if (ip == begin_ptr)
             {
@@ -903,7 +906,13 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
 
     if (a.location.before_after == EDIT_ORDER_AFTER)
     {
-        for (ip = *start; ip != NULL; ip = ip->next)
+        /* As region was already selected by SelectRegion() and we know
+         * what are the region boundaries (begin_ptr and end_ptr) there
+         * is no reason to iterate over whole file. It is safe to start from
+         * begin_ptr. 
+         * As a bonus Redmine #7640 is fixed as we are not interested in
+         * matching values outside of the region we are iterating over. */
+        for (ip = begin_ptr; ip != NULL; ip = ip->next)
         {
             if (!allow_multi_lines && MatchRegion(ctx, pp->promiser, ip, end_ptr, false))
             {

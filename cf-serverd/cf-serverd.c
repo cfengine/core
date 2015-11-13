@@ -40,6 +40,18 @@ static void ThisAgentInit(void)
 
 int main(int argc, char *argv[])
 {
+    /* Ensure that if fd 0,1,2 are closed, we reserve them to avoid opening
+     * the listening socket on them and closing it later when daemonising. */
+    int fd = -1;
+    do
+    {
+        fd = open(NULLFILE, O_RDWR, 0);
+
+    } while (fd == STDIN_FILENO  ||
+             fd == STDOUT_FILENO ||
+             fd == STDERR_FILENO);
+    close(fd);
+
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);

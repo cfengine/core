@@ -500,14 +500,14 @@ int SocketConnect(const char *host, const char *port,
     if (connected)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Connected to host %s address %s port %s",
-            host, txtaddr, port);
+            "Connected to host %s address %s port %s (socket descriptor %d)",
+            host, txtaddr, port, sd);
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Unable to connect to host %s port %s",
-            host, port);
+            "Unable to connect to host %s port %s (socket descriptor %d)",
+            host, port, sd);
     }
 
     return sd;
@@ -544,12 +544,14 @@ int SocketConnect(const char *host, const char *port,
 bool TryConnect(int sd, unsigned long timeout_ms,
                 const struct sockaddr *sa, socklen_t sa_len)
 {
+    assert(sd != -1);
     assert(sa != NULL);
 
     if (sd >= FD_SETSIZE)
     {
-        Log(LOG_LEVEL_ERR, "Open connections exceed FD_SETSIZE limit of %d",
-            FD_SETSIZE);
+        Log(LOG_LEVEL_ERR,
+            "Open connections exceed FD_SETSIZE limit (%d >= %d)",
+            sd, FD_SETSIZE);
         return false;
     }
 

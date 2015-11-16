@@ -1058,45 +1058,6 @@ char *StringCanonify(char *dst, const char *src)
 }
 
 /**
- * Append #src to #dst, delimiting with #sep if not at the beginning.
- *
- * @param #dst_len In-out parameter. If not NULL it is taken into account as
- *                 the current length of #dst, and updated as such.
- *
- * @retval false if it doesn't fit, in which case nothing gets appended and
- *               #dst remains as is.
- */
-bool StringAppendDelimited(char *dst, size_t *dst_len, size_t dst_size,
-                           const char *src, char sep)
-{
-    size_t len     = (dst_len != NULL) ? *dst_len : strlen(dst);
-    size_t src_len = strlen(src);
-
-    if (len + src_len + 1 >= dst_size)
-    {
-        return false;
-    }
-
-    /* Append a separator if dst is not empty. */
-    if (len > 0)
-    {
-        dst[len] = sep;
-        len++;
-    }
-
-    memcpy(&dst[len], src, src_len);
-    len += src_len;
-    dst[len] = '\0';
-
-    if (dst_len != NULL)
-    {
-        *dst_len = len;
-    }
-
-    return true;
-}
-
-/**
  *  Append #sep if not already there, and then append #leaf.
  */
 bool PathAppend(char *path, size_t path_size, const char *leaf, char sep)
@@ -1113,4 +1074,100 @@ bool PathAppend(char *path, size_t path_size, const char *leaf, char sep)
     memcpy(&path[path_len + 1], leaf, leaf_len + 1);
 
     return true;
+}
+
+/**
+ * Append #src string to #dst, useful for static allocated buffers.
+ *
+ * @param #dst_len if not NULL then it must contain the lenth of #dst and must
+ *                 return the total needed length of the result in #dst, even
+ *                 when truncation occurs.
+ * @param #src_len if not 0, then this many bytes
+ *                 from #src shall be concatenated to #dst.
+ *
+ * @NOTE if truncation happened, then the value returned in #dst_len shall be
+ *       greater than or equal to #dst_size (indicating the real size needed
+ *       for successful concatenation), and the real length of the truncated
+ *       string in #dst shall be #dst_size - 1.
+ *
+ * @NOTE it is legal for #dst_len to be >= dst_size already when the function
+ *       is called. In that case nothing will be appended, only #dst_len will
+ *       be updated with the extra size needed.
+ */
+void StrCat(char *dst, size_t dst_size, size_t *dst_len,
+            const char *src, size_t src_len)
+{
+    size_t dlen = (dst_len != NULL) ? *dst_len : strlen(dst);
+    size_t slen = (src_len != 0)    ?  src_len : strlen(src);
+
+    size_t needed_len = dlen + slen;
+
+    if (dlen >= dst_size)                          /* dst already overflown */
+    {
+        /* Append nothing, only update *dst_len. */
+    }
+    else if (needed_len < dst_size)                             /* it fits */
+    {
+        memcpy(&dst[dlen], src, slen);
+        dst[needed_len] = '\0';
+    }
+    else                                                      /* truncation */
+    {
+        assert(dlen + slen >= dst_size);
+        memcpy(&dst[dlen], src, dst_size - dlen - 1);
+        dst[dst_size - 1] = '\0';
+    }
+
+    if (dst_len != NULL)
+    {
+        *dst_len = needed_len;
+    }
+}
+
+/**
+ * Append #src to #dst, delimited with #sep if #dst was not empty.
+ *
+ * @param #dst_len In-out parameter. If not NULL it is taken into account as
+ *                 the current length of #dst, and updated as such.
+ *
+ * @NOTE if after returning *dst_len>=dst_size, this indicates that *nothing
+ *       was appended*, and the value is the size needed for success.
+ *
+ */
+void StrCatDelim(char *dst, size_t dst_size, size_t *dst_len,
+                 const char *src, char sep)
+{
+    size_t dlen = (dst_len != NULL) ? *dst_len : strlen(dst);
+    size_t slen = strlen(src);
+
+    size_t needed_len = dlen + slen;
+    if (dlen > 0)
+    {
+        needed_len++;                        /* separator must be prepended */
+    }
+
+    if (dlen >= dst_size)                          /* dst already overflown */
+    {
+        /* Append nothing, only update *dst_len. */
+    }
+    else if (needed_len < dst_size)                             /* it fits */
+    {
+        /* Prepend separator if not empty. */
+        if (dlen > 0)
+        {
+            dst[dlen] = sep;;
+            dlen++;
+        }
+        memcpy(&dst[dlen], src, slen);
+        dst[needed_len] = '\0';
+    }
+    else                                                    /* does not fit */
+    {
+        /* Append nothing, only update *dst_len. */
+    }
+
+    if (dst_len != NULL)
+    {
+        *dst_len = needed_len;
+    }
 }

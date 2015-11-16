@@ -29,7 +29,7 @@ static const int CF_NOSIZE = -1;
 #include <server_common.h>
 
 #include <item_lib.h>                                 /* ItemList2CSV_bound */
-#include <string_lib.h>                    /* ToLower,StringAppendDelimited */
+#include <string_lib.h>                              /* ToLower,StrCatDelim */
 #include <regex.h>                                    /* StringMatchFull */
 #include <crypto.h>                                   /* EncryptString */
 #include <files_names.h>
@@ -350,8 +350,8 @@ void DoExec(const ServerConnectionState *conn, const char *args)
     char  *authorized_classes     = &cmdbuff[ret];
     size_t authorized_classes_len = 0;
 
-    StringAppendDelimited(authorized_classes, &authorized_classes_len,
-                          CF_BUFSIZE, "cfruncommand", ',');
+    StrCatDelim(authorized_classes, CF_BUFSIZE, &authorized_classes_len,
+                "cfruncommand", ',');
 
     /* Parse the EXEC arguments, which will be used as arguments to
      * CFRUNCOMMAND. Currently we only honour -D arguments. */
@@ -395,11 +395,12 @@ void DoExec(const ServerConnectionState *conn, const char *args)
                     return;
                 }
 
-                bool truncated =
-                    !StringAppendDelimited(authorized_classes,
-                                           &authorized_classes_len,
-                                           CF_BUFSIZE, class, ',');
-                CF_ASSERT(!truncated, "Overflow in authorized_classes"); /* CF_BUFSIZE is enough */
+                StrCatDelim(authorized_classes, CF_BUFSIZE, &authorized_classes_len,
+                            class, ',');
+
+                /* CF_BUFSIZE is enough because of ReceiveTransaction(). */
+                CF_ASSERT(authorized_classes_len < CF_BUFSIZE,
+                          "Overflow in authorized_classes");
 
                 class = class_end + 1;
             }

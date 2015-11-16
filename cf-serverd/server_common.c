@@ -251,6 +251,9 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
     return false;
 }
 
+/* TODO deprecate this function, only a simple SendTransaction(CFD_TERMINATOR)
+ * should be enough, without even error printing (it's already done in
+ * SendTransaction()). */
 void Terminate(ConnectionInfo *connection)
 {
     /* We send a trailing NULL in this transaction packet. TODO WHY? */

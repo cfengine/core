@@ -279,21 +279,29 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 's':
-            if (strlcat(SENDCLASSES, optarg, sizeof(SENDCLASSES)) >= sizeof(SENDCLASSES))
+        {
+            size_t len = strlen(SENDCLASSES);
+            StrCatDelim(SENDCLASSES, sizeof(SENDCLASSES), &len,
+                        optarg, ',');
+            if (len >= sizeof(SENDCLASSES))
             {
                 Log(LOG_LEVEL_ERR, "Argument too long (-s)");
                 exit(EXIT_FAILURE);
             }
             break;
-
+        }
         case 'D':
-            if (strlcat(DEFINECLASSES, optarg, sizeof(DEFINECLASSES)) >= sizeof(DEFINECLASSES))
+        {
+            size_t len = strlen(DEFINECLASSES);
+            StrCatDelim(DEFINECLASSES, sizeof(DEFINECLASSES), &len,
+                        optarg, ',');
+            if (len >= sizeof(DEFINECLASSES))
             {
-                Log(LOG_LEVEL_ERR, "Argument too long (-D)");
+                Log(LOG_LEVEL_ERR, "Argument too long (-s)");
                 exit(EXIT_FAILURE);
             }
             break;
-
+        }
         case 'H':
             HOSTLIST = RlistFromSplitString(optarg, ',');
             break;

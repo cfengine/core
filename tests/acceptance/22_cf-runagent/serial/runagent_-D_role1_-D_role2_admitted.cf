@@ -1,0 +1,48 @@
+body common control
+{
+      inputs => {
+        "../../default.cf.sub",
+        "../../run_with_server.cf.sub"
+      };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  methods:
+      # Expected output in the exec_args.txt file
+      "any" usebundle => file_make("$(G.testdir)/expected_args.txt",
+                                   "-I -Dcfruncommand -D role1,role2");
+      # Ensure execution output file is not there
+      "any" usebundle => dcs_fini("$(G.testdir)/exec_args.txt");
+
+      "any" usebundle => generate_key;
+      "any" usebundle => trust_key;
+
+      "any" usebundle => start_server("$(this.promise_dirname)/role1_role2_root_allowed.22008.srv");
+}
+
+bundle agent test
+{
+  vars:
+      "runagent_cf" string =>
+        "$(this.promise_dirname)/empty_config.runagent.cf.sub";
+  methods:
+      "any" usebundle =>
+        # Port 22008 is role1_role2_root_allowed.22008.srv
+        run_runagent("-H 127.0.0.1:22008 -D role1 -D role2 $(runagent_cf)");
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testdir)/expected_args.txt",
+                                        "$(G.testdir)/exec_args.txt",
+                                        "$(this.promise_filename)");
+}
+
+bundle agent destroy
+{
+  methods:
+      "any" usebundle => stop_server("$(this.promise_dirname)/role1_role2_root_allowed.22008.srv");
+}

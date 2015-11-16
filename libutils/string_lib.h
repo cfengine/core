@@ -194,8 +194,12 @@ bool StringAppendPromise(char *dst, const char *str, size_t n);
 bool StringAppendAbbreviatedPromise(char *dst, const char *str, size_t n, const size_t max_fragment);
 
 char *StringCanonify(char *dst, const char *src);
-bool StringAppendDelimited(char *dst, size_t *dst_len, size_t dst_size,
-                           const char *src, char sep);
 bool PathAppend(char *path, size_t path_size, const char *leaf, char sep);
+
+void StrCat(char *dst, size_t dst_size, size_t *dst_len,
+            const char *src, size_t src_len);
+void StrCatDelim(char *dst, size_t dst_size, size_t *dst_len,
+                 const char *src, char sep);
+
 
 #endif

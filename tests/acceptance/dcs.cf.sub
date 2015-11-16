@@ -129,12 +129,12 @@ bundle common G
 
     temp_declared::
       "testroot" string => getenv("TEMP", "65535");
-      "testdir" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
+      "testdir" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TESTDIR.cfengine");
       "testfile" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
 
     !temp_declared::
       "testroot" string => "$(const.dirsep)tmp";
-      "testdir" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
+      "testdir" string => "$(const.dirsep)tmp$(const.dirsep)TESTDIR.cfengine";
       "testfile" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
 
   classes:
@@ -182,6 +182,7 @@ bundle agent default(filename)
 {
   classes:
       "have_test_run_$(bundles)" expression => "any";
+
   vars:
 
       "tests" slist => { "default:init",
@@ -191,6 +192,9 @@ bundle agent default(filename)
       };
 
       "bundles" slist => bundlesmatching("default:(init|test|check|destroy)");
+
+  files:
+      "$(G.testdir)/."    create => "true";
 
   methods:
       "any" usebundle => collect_stories_metadata;

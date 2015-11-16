@@ -46,6 +46,11 @@ extern char BINDINTERFACE[];                  /* cf3globals.c, cf3.extern.h */
  *       ReceiveTransaction() can't differentiate between that
  *       and connection closed.
  * @NOTE (len <= CF_BUFSIZE - CF_INBAND_OFFSET)
+ *
+ * @TODO Currently only transactions up to CF_BUFSIZE-CF_INBAND_OFFSET are
+ *       allowed to be sent. This function should be changed to allow up to
+ *       CF_BUFSIZE-1 (since '\0' is not sent, but the receiver needs space to
+ *       append it). So transaction length will be at most 4095!
  */
 int SendTransaction(const ConnectionInfo *conn_info,
                     const char *buffer, int len, char status)
@@ -119,6 +124,8 @@ int SendTransaction(const ConnectionInfo *conn_info,
 /**
  *  Receive a transaction packet of at most CF_BUFSIZE-1 bytes, and
  *  NULL-terminate it.
+ *
+ *  @param #buffer must be of size at least CF_BUFSIZE.
  *
  *  @return 0 in case of socket closed, -1 in case of other error or timeout.
  *              In both cases the connection MAY NOT BE FINALISED!

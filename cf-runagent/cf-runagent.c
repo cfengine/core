@@ -71,7 +71,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
                       char *host);
 static void SendClassData(AgentConnection *conn);
-static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
+static void HailExec(AgentConnection *conn, char *peer);
 static FILE *NewStream(char *name);
 
 /*******************************************************************/
@@ -403,8 +403,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     assert(host != NULL);
 
     AgentConnection *conn;
-    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE],
-        hostkey[CF_HOSTKEY_STRING_SIZE], user[CF_SMALLBUF];
+    char hostkey[CF_HOSTKEY_STRING_SIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
     bool trustkey = false;
@@ -511,7 +510,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     }
 
     /* Send EXEC command. */
-    HailExec(conn, hostname, recvbuffer, sendbuffer);
+    HailExec(conn, hostname);
 
     return true;
 }
@@ -632,7 +631,6 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 static void SendClassData(AgentConnection *conn)
 {
     Rlist *classes, *rp;
-    char sendbuffer[CF_BUFSIZE];
 
     classes = RlistFromSplitRegex(SENDCLASSES, "[,: ]", 99, false);
 
@@ -645,9 +643,7 @@ static void SendClassData(AgentConnection *conn)
         }
     }
 
-    snprintf(sendbuffer, CF_MAXVARSIZE, "%s", CFD_TERMINATOR);
-
-    if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, CFD_TERMINATOR, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
         return;
@@ -656,18 +652,16 @@ static void SendClassData(AgentConnection *conn)
 
 /********************************************************************/
 
-static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer)
+static void HailExec(AgentConnection *conn, char *peer)
 {
-    if (DEFINECLASSES[0] != '\0')
+    char sendbuf[CF_BUFSIZE - CF_INBAND_OFFSET] = "EXEC";
+
+    if (!NULL_OR_EMPTY(DEFINECLASSES))
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "EXEC -D%s", DEFINECLASSES);
-    }
-    else
-    {
-        snprintf(sendbuffer, CF_BUFSIZE, "EXEC");
+        snprintf(sendbuf, sizeof(sendbuf), "EXEC -D%s", DEFINECLASSES);
     }
 
-    if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
         DisconnectServer(conn);
@@ -680,10 +674,11 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
      * protocol command, and the server will complain. */
     SendClassData(conn);
 
+    char recvbuffer[CF_BUFSIZE];
     FILE *fp = NewStream(peer);
     while (true)
     {
-        memset(recvbuffer, 0, CF_BUFSIZE);
+        memset(recvbuffer, 0, sizeof(recvbuffer));
 
         int n_read = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
 

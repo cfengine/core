@@ -13,6 +13,7 @@ body action in_background
       background => "true";
 }
 
+
 bundle agent start_server(server_config)
 {
   classes:
@@ -48,6 +49,7 @@ bundle agent start_server(server_config)
       "$(sys.cf_serverd) was run in debug mode, the logs will be in $(dlog)";
 }
 
+
 bundle agent run_test(test_name)
 {
   classes:
@@ -55,6 +57,7 @@ bundle agent run_test(test_name)
 
   vars:
       "dlog" string => "$(sys.workdir)/agent-debug.log";
+
   commands:
     !debug_client::
       "$(sys.cf_agent) -KIf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
@@ -66,6 +69,28 @@ bundle agent run_test(test_name)
   reports:
     debug_client::
       "$(sys.cf_agent) was run in debug mode, the logs will be in $(dlog)";
+}
+
+
+bundle agent run_runagent(runagent_params)
+{
+  classes:
+      "debug_client" expression => "debug_mode";
+
+  vars:
+      "dlog" string => "$(sys.workdir)/runagent-debug.log";
+
+  commands:
+    !debug_client::
+      "$(sys.cf_runagent) -I $(runagent_params) 2>&1 | $(G.tee) $(dlog)"
+        contain => run_under_shell;
+    debug_client::
+      "$(sys.cf_runagent) -d $(runagent_params) 2>&1 | $(G.tee) $(dlog)"
+        contain => run_under_shell;
+
+  reports:
+    debug_client::
+      "$(sys.cf_runagent) was run in debug mode, the logs will be in $(dlog)";
 }
 
 

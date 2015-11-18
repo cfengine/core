@@ -1,0 +1,45 @@
+body common control
+{
+      inputs => {
+        "../../default.cf.sub",
+        "../../run_with_server.cf.sub"
+      };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  methods:
+      # ensure execution output file is not there
+      "any" usebundle => dcs_fini("$(G.testdir)/exec_args.txt");
+
+      "any" usebundle => generate_key;
+      "any" usebundle => trust_key;
+
+      "any" usebundle => start_server("$(this.promise_dirname)/cfruncommand_open.22000.srv");
+}
+
+bundle agent test
+{
+  vars:
+      "runagent_cf" string =>
+        "$(this.promise_dirname)/empty_config.runagent.cf.sub";
+  methods:
+      "any" usebundle =>
+        # Port 22000 is cfruncommand_open.22000.srv
+        run_runagent("-H 127.0.0.1:22000 -o custom_option $(runagent_cf)");
+}
+
+bundle agent check
+{
+  # Execution output file should still not be there.
+  methods:
+      "any"  usebundle => dcs_passif_file_absent("$(G.testdir)/exec_args.txt",
+                                                 "$(this.promise_filename)");
+}
+
+bundle agent destroy
+{
+  methods:
+      "any" usebundle => stop_server("$(this.promise_dirname)/cfruncommand_open.22000.srv");
+}

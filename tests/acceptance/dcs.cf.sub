@@ -161,13 +161,13 @@ END";
 END";
 }
 
-bundle common paths_init(filename)
+bundle agent paths_init(filename)
 {
   classes:
       "filename_absolute" expression => regcmp("/.*", "$(filename)");
 }
 
-bundle common paths_absolute(filename)
+bundle agent paths_absolute(filename)
 {
   vars:
     filename_absolute::

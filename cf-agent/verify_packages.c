@@ -201,8 +201,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
             break;
         case PACKAGE_PROMISE_TYPE_OLD:
             Log(LOG_LEVEL_VERBOSE,
-                "Using old package promise. Please note that the old "
-                "implementation is considered obsolete as of 3.8. The old "
+                "Using old package promise. Please note that this old "
+                "implementation is being phased out. The old "
                 "implementation will continue to work, but forward development "
                 "will be directed toward the new implementation.");
 

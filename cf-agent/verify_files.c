@@ -173,6 +173,13 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
         return false;
     }
 
+    if ((a.haveedit) && (a.file_type) && (!strncmp(a.file_type, "fifo", 5)))
+    {
+        Log(LOG_LEVEL_ERR, "Editing is not allowed on fifos");
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
     return true;
 }
 

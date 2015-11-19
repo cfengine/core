@@ -1507,6 +1507,7 @@ typedef struct
     Environments env;
     char *transformer;
     char *pathtype;
+    char *file_type;
     char *repository;
     char *edit_template;
     char *template_method;

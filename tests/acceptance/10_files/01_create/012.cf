@@ -1,0 +1,71 @@
+#######################################################
+#
+# Create a file, change perms
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+bundle agent test
+{
+  vars:
+      "mode" int => "0644";
+
+  files:
+      "$(G.testfile)"
+      create => "true",
+      file_type => "fifo",
+      perms => test_perms;
+}
+
+body perms test_perms
+{
+      mode => "$(test.mode)";
+      owners => { "3" };
+      groups => { "3" };
+}
+
+bundle agent check
+{
+  vars:
+    !windows::
+      "expect[permoct]" string => "$(test.mode)";
+    any::
+      "expect[nlink]" string => "1";
+      "expect[uid]" string => "\d+";
+      "expect[gid]" string => "\d+";
+      "expect[size]" string => "0";
+
+      "fields" slist => getindices("expect");
+      "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
+
+  classes:
+      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+
+  reports:
+    DEBUG::
+      "expected: $(fields) = '$(expect[$(fields)])'";
+      "got:      $(fields) = '$(result[$(fields)])'";
+    !not_ok::
+      "$(this.promise_filename) Pass";
+    not_ok::
+      "$(this.promise_filename) FAIL";
+}

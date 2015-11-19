@@ -45,6 +45,13 @@
 
 #define CF_CRITIAL_SECTION "CF_CRITICAL_SECTION"
 
+#define LOG_LOCK_ENTRY(__lock, __lock_sum, __lock_data)         \
+    log_lock("Entering", __FUNCTION__, __lock, __lock_sum, __lock_data)
+#define LOG_LOCK_EXIT(__lock, __lock_sum, __lock_data)          \
+    log_lock("Exiting", __FUNCTION__, __lock, __lock_sum, __lock_data)
+#define LOG_LOCK_OP(__lock, __lock_sum, __lock_data)            \
+    log_lock("Performing", __FUNCTION__, __lock, __lock_sum, __lock_data)
+
 typedef struct CfLockStack_ {
     char lock[CF_BUFSIZE];
     char last[CF_BUFSIZE];
@@ -76,8 +83,35 @@ static CfLockStack *PopLock()
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_X */
 
-
 #ifdef LMDB
+static inline void log_lock(const char *op,
+                            const char *function,
+                            const char *lock,
+                            const char *lock_sum,
+                            const LockData *lock_data)
+{
+    /* Check log level first to save cycles when not in debug mode. */
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        if (lock_data)
+        {
+            Log(LOG_LEVEL_DEBUG, "%s lock operation in '%s()'. "
+                "lock_id = '%s', lock_checksum = '%s', "
+                "lock.pid = '%d', lock.time = '%d', "
+                "lock.process_start_time = '%d'",
+                op, function, lock, lock_sum,
+                (int)lock_data->pid, (int)lock_data->time,
+                (int)lock_data->process_start_time);
+        }
+        else
+        {
+            Log(LOG_LEVEL_DEBUG, "%s lock operation in '%s()'. "
+                "lock_id = '%s', lock_checksum = '%s'",
+                op, function, lock, lock_sum);
+        }
+    }
+}
+
 static void GenerateMd5Hash(const char *istring, char *ohash)
 {
     if (!strcmp(istring, "CF_CRITICAL_SECTION"))
@@ -106,6 +140,8 @@ static void GenerateMd5Hash(const char *istring, char *ohash)
 
 static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {
+    bool ret;
+
 #ifdef LMDB
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
@@ -118,17 +154,14 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
         GenerateMd5Hash(lock_id, digest2);
     }
 
-    if(WriteDB(dbp, digest2, lock_data, sizeof(LockData)))
+    LOG_LOCK_ENTRY(lock_id, digest2, lock_data);
+    ret = WriteDB(dbp, digest2, lock_data, sizeof(LockData));
+    LOG_LOCK_EXIT(lock_id, digest2, lock_data);
 #else
-    if(WriteDB(dbp, lock_id, lock_data, sizeof(LockData)))
+    ret = WriteDB(dbp, lock_id, lock_data, sizeof(LockData));
 #endif
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+
+    return ret;
 }
 
 static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
@@ -144,6 +177,7 @@ static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
 
 time_t FindLockTime(const char *name)
 {
+    bool ret;
     CF_DB *dbp;
     LockData entry = {
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
@@ -158,10 +192,14 @@ time_t FindLockTime(const char *name)
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(name, ohash);
 
-    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+    LOG_LOCK_ENTRY(name, ohash, &entry);
+    ret = ReadDB(dbp, ohash, &entry, sizeof(entry));
+    LOG_LOCK_EXIT(name, ohash, &entry);
 #else
-    if (ReadDB(dbp, name, &entry, sizeof(entry)))
+    ret = ReadDB(dbp, name, &entry, sizeof(entry));
 #endif
+
+    if (ret)
     {
         CloseLock(dbp);
         return entry.time;
@@ -260,7 +298,9 @@ static int RemoveLock(const char *name)
         GenerateMd5Hash(name, digest2);
     }
 
+    LOG_LOCK_ENTRY(name, digest2, NULL);
     DeleteDB(dbp, digest2);
+    LOG_LOCK_EXIT(name, digest2, NULL);
 #else
     DeleteDB(dbp, name);
 #endif
@@ -317,6 +357,7 @@ static time_t FindLock(char *last)
 
 static pid_t FindLockPid(char *name)
 {
+    bool ret;
     CF_DB *dbp;
     LockData entry = {
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
@@ -331,10 +372,14 @@ static pid_t FindLockPid(char *name)
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(name, ohash);
 
-    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+    LOG_LOCK_ENTRY(name, ohash, &entry);
+    ret = ReadDB(dbp, ohash, &entry, sizeof(entry));
+    LOG_LOCK_EXIT(name, ohash, &entry);
 #else
-    if (ReadDB(dbp, name, &entry, sizeof(entry)))
+    ret = ReadDB(dbp, name, &entry, sizeof(entry));
 #endif
+
+    if (ret)
     {
         CloseLock(dbp);
         return entry.pid;
@@ -419,6 +464,7 @@ static bool KillLockHolder(ARG_UNUSED const char *lock)
 
 static bool KillLockHolder(const char *lock)
 {
+    bool ret;
     CF_DB *dbp = OpenLock();
     if (dbp == NULL)
     {
@@ -434,10 +480,14 @@ static bool KillLockHolder(const char *lock)
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(lock, ohash);
 
-    if (!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
+    LOG_LOCK_ENTRY(lock, ohash, &lock_data);
+    ret = ReadDB(dbp, ohash, &lock_data, sizeof(lock_data));
+    LOG_LOCK_EXIT(lock, ohash, &lock_data);
 #else
-    if (!ReadDB(dbp, lock, &lock_data, sizeof(lock_data)))
+    ret = ReadDB(dbp, lock, &lock_data, sizeof(lock_data));
 #endif
+
+    if (!ret)
     {
         /* No lock found */
         CloseLock(dbp);
@@ -1035,6 +1085,8 @@ void PurgeLocks(void)
     while (NextDB(dbcp, &key, &ksize, (void **)&entry, &vsize))
     {
 #ifdef LMDB
+        LOG_LOCK_OP("<unknown>", key, entry);
+
         if (key[0] == 'X')
         {
             continue;
@@ -1054,11 +1106,15 @@ void PurgeLocks(void)
         }
     }
 
+    Log(LOG_LEVEL_DEBUG, "Finished purging locks in '%s()'", __FUNCTION__);
+
     lock_horizon.time = now;
     DeleteDBCursor(dbcp);
 
     WriteDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
     CloseLock(dbp);
+
+    Log(LOG_LEVEL_DEBUG, "Exiting '%s()'", __FUNCTION__);
 }
 
 int WriteLock(const char *name)

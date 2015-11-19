@@ -23,6 +23,16 @@ fi
 
 source $PARAMS
 
+  # We probably want a different temporary location for each remote repository
+  # so that we can avoid conflicts and potential confusion.
+  # Example: 
+  # ROOT="/opt/cfengine/masterfiles_staging"
+  # PARAMS="/var/cfengine/policychannel/production_1.sh"
+  # TMP=/opt/cfengine/masterfiles/staging/_tmp_var_cfengine_policychannel_production_1_sh
+
+  TRANSLATED_PARAMS=$(echo $PARAMS | tr [./] _)
+  STAGING_DIR="${ROOT}/_tmp${TRANSLATED_PARAMS}"
+
 case "${VCS_TYPE}" in
     GIT_TAG_OR_COMMIT)
         git_tag_or_commit_masterstage

@@ -905,7 +905,7 @@ static bool GeneratePolicyReleaseIDFromTree(char *release_id_out, size_t out_siz
     EVP_DigestInit(&crypto_ctx, EVP_get_digestbyname(HashNameFromId(GENERIC_AGENT_CHECKSUM_METHOD)));
 
     bool success = HashDirectoryTree(policy_dir,
-                                     (const char *[]) { ".cf", ".dat", ".txt", ".conf", NULL},
+                                     (const char *[]) { ".cf", ".dat", ".txt", ".conf", ".mustache", ".json", ".yaml", NULL},
                                      &crypto_ctx);
 
     int md_len;

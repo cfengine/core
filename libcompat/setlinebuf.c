@@ -32,7 +32,19 @@
 void setlinebuf(FILE *stream);
 #endif
 
+#ifdef _WIN32
+/*
+  Line buffered mode doesn't work on Windows, as documented here:
+  https://msdn.microsoft.com/en-us/library/86cebhfs.aspx (setvbuf)
+  It will fall back to block buffering, so in that case it is better to select
+  no buffering.
+*/
+# define IO_MODE _IONBF
+#else
+# define IO_MODE _IOLBF
+#endif
+
 void setlinebuf(FILE *stream)
 {
-    setvbuf(stream, (char *) NULL, _IOLBF, 0);
+    setvbuf(stream, (char *) NULL, IO_MODE, 0);
 }

@@ -23,8 +23,10 @@
 #+begin_src prep
 #@ ```
 #@ echo a,b,c > /tmp/cfe_array
+#@ echo "# This is a comment" >> /tmp/cfe_array
 #@ echo d,e,f >> /tmp/cfe_array
 #@ echo g,h,i >> /tmp/cfe_array
+#@ echo "# This is another comment" >> /tmp/cfe_array
 #@ echo j,k,l >> /tmp/cfe_array
 #@ ```
 #+end_src
@@ -38,8 +40,12 @@ body common control
 bundle agent example
 {
   vars:
-      "bykey" data => data_readstringarray("/tmp/cfe_array","#.*",",",10,400);
-      "byint" data => data_readstringarrayidx("/tmp/cfe_array","#.*",",",10,400);
+      # The comment regex warrents an explination:
+      # # matches the character # literally
+      # [^\n]* match a single character not including the newline character
+      # between zero and unlimited times, as many times as possible
+      "bykey" data => data_readstringarray("/tmp/cfe_array","#[^\n]*",",",10,400);
+      "byint" data => data_readstringarrayidx("/tmp/cfe_array","#[^\n]*",",",10,400);
 
       "bykey_str" string => format("%S", bykey);
       "byint_str" string => format("%S", byint);

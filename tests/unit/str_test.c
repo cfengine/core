@@ -529,6 +529,73 @@ static void test_stringscanfcapped(void)
     assert_string_equal(buf, "123456789012345");
 }
 
+static void test_PathAppend(void)
+{
+    char dst[10];
+    bool ret;
+
+    {                                                           /* fits */
+        dst[0] = '\0';
+        ret = PathAppend(dst, sizeof(dst), "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, sizeof(dst), "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                                                 /* trailing separator */
+        dst[0] = '\0';
+        ret = PathAppend(dst, sizeof(dst), "blah/", '/');
+        assert_string_equal(dst, "/blah/");
+        assert_true(ret);
+    }
+    {                       /* SAME, but string already has separator ahead */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, sizeof(dst), "blah/", '/');
+        assert_string_equal(dst, "/blah/");
+        assert_true(ret);
+    }
+    {                                                        /* barely fits */
+        dst[0] = '\0';
+        ret = PathAppend(dst, 6, "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, 6, "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                           /* barely not fits (off by one), do nothing */
+        dst[0] = '\0';
+        ret = PathAppend(dst, 5, "blah", '/');
+        assert_string_equal(dst, "");
+        assert_false(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, 5, "blah", '/');
+        assert_string_equal(dst, "/");
+        assert_false(ret);
+    }
+    {                                               /* overflow, do nothing */
+        dst[0] = '\0';
+        ret = PathAppend(dst, 2, "blah", '/');
+        assert_string_equal(dst, "");
+        assert_false(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, 2, "blah", '/');
+        assert_string_equal(dst, "/");
+        assert_false(ret);
+    }
+}
+
 static void test_StrCat(void)
 {
     char dst[10];
@@ -713,6 +780,7 @@ int main()
 
         unit_test(test_stringscanfcapped),
 
+        unit_test(test_PathAppend),
         unit_test(test_StrCat),
         unit_test(test_StrCatDelim),
     };

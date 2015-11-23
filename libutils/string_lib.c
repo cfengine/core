@@ -1059,9 +1059,15 @@ bool PathAppend(char *path, size_t path_size, const char *leaf, char sep)
     size_t path_len = strlen(path);
     size_t leaf_len = strlen(leaf);
 
+    if (path_len > 0 && path[path_len - 1] == sep)
+    {
+        /* Path already has separator. */
+        path_len--;
+    }
+
     if (path_len + 1 + leaf_len >= path_size)
     {
-        return false;
+        return false;                                           /* overflow */
     }
 
     path[path_len] = sep;

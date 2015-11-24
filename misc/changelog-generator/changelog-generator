@@ -120,22 +120,22 @@ for repo in repos:
                 continue
 
             # Small Redmine reference, remove from string.
-            redmine_regex = "^ *Redmine:? *#?([0-9]+)"
-            match = re.match(redmine_regex, line, re.IGNORECASE)
+            redmine_regex = "\(?Redmine:? *#?([0-9]+)\)?:? *"
+            match = re.search(redmine_regex, line, re.IGNORECASE)
             if match:
                 if not SHA_TO_REDMINE.get(sha):
-                    SHA_TO_REDMINE[sha] = []
-                SHA_TO_REDMINE[sha].append(match.group(1))
-                redmine_removed = re.sub(redmine_regex + ":? *", "", line)
-                line = redmine_removed
+                    SHA_TO_REDMINE[sha] = set()
+                SHA_TO_REDMINE[sha].add(match.group(1))
+                redmine_removed = re.sub(redmine_regex, "", line)
+                line = redmine_removed.strip(' ')
 
             # Big Redmine reference, remove whole line.
             match = re.match("^Ref:? *(Redmine:? *#?|https?://dev\.cfengine\.com/issues/)([0-9]+) *$",
                              line, re.IGNORECASE)
             if match:
                 if not SHA_TO_REDMINE.get(sha):
-                    SHA_TO_REDMINE[sha] = []
-                SHA_TO_REDMINE[sha].append(match.group(2))
+                    SHA_TO_REDMINE[sha] = set()
+                SHA_TO_REDMINE[sha].add(match.group(2))
                 continue
 
             if not title_fetched:
@@ -213,7 +213,7 @@ entry_list = []
 for sha_entry in ENTRIES:
     redmine = ""
     if SHA_TO_REDMINE.get(sha_entry):
-        redmine = "(Redmine #" + ", #".join(SHA_TO_REDMINE[sha_entry]) + ")"
+        redmine = "(Redmine #" + ", #".join(sorted(SHA_TO_REDMINE[sha_entry])) + ")"
     for entry in ENTRIES[sha_entry]:
         entry = entry.strip("\n")
         if redmine:

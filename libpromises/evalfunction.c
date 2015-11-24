@@ -6021,7 +6021,11 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
     }
     else
     {
-        size_max = args->next ? IntFromString(RlistScalarValue(args->next)) : 0;
+        if (RlistLen(args) == 0)
+        {
+            FatalError(ctx, "Function '%s' requires at least one argument", fp->name);
+        }
+        size_max = args->next ? IntFromString(RlistScalarValue(args->next)) : IntFromString("inf");
         if (0 == strcmp(fp->name, "readyaml"))
         {
             requested_mode = "YAML";
@@ -6101,13 +6105,6 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
     bool yaml_mode = (0 == strcmp(requested_mode, "YAML"));
     const char* data_type = requested_mode;
 
-    // TODO: eliminate truncation limits in json.c
-    if (0 == size_max)
-    {
-        size_max = 50 * (1024 * 1024);
-    }
-
-    /* FIXME: fail if truncated? */
     JsonElement *json = NULL;
     JsonParseError res;
     if (yaml_mode)
@@ -8606,7 +8603,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("readintlist", CF_DATA_TYPE_INT_LIST, READSTRINGLIST_ARGS, &FnCallReadIntList, "Read and assign a list variable from a file of separated ints",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readjson", CF_DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadData, "Read a JSON data container from a file",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readrealarray", CF_DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadRealArray, "Read an array of real numbers from a file, indexed by first entry on line and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readreallist", CF_DATA_TYPE_REAL_LIST, READSTRINGLIST_ARGS, &FnCallReadRealList, "Read and assign a list variable from a file of separated real numbers",
@@ -8618,7 +8615,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("readstringlist", CF_DATA_TYPE_STRING_LIST, READSTRINGLIST_ARGS, &FnCallReadStringList, "Read and assign a list variable from a file of separated strings",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readyaml", CF_DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadData, "Read a data container from a YAML file",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readtcp", CF_DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regarray", CF_DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegArray, "True if arg1 matches any item in the associative array with id=arg2",

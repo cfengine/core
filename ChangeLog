@@ -109,6 +109,64 @@
 	- TTY detection should be more reliable. (Redmine #7606)
 	  (Redmine #7606)
 
+3.7.2:
+	Bug fixes:
+	- readfile() and read*list() should print an error if they fail to read file.
+	  (Redmine #7702)
+	- Fix 'AIX_PREINSTALL_ALREADY_DONE.txt: cannot create' error
+	  message on AIX.
+	- If there is an error saving a mustache template file
+	  it is now logged with log-level error (was inform).
+	- Change: Clarify bootstrap/failsafe reports
+	- Fixed several bugs which prevented CFEngine from loading
+	  libraries from the correct location. This affected several platforms.
+	  (Redmine #6708)
+	- If file_select.file_types is set to symlink and there
+	  are regular files in the scanned directory, CFEngine no longer
+	  produces an unneccessary error message. (Redmine #6996)
+	- Fix: Solaris packages no longer contain duplicate library
+	  files, but instead symlinks to them. (Redmine #7591)
+	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor
+	  multiple -D, -N and -s arguments (Redmine #7191)
+	- Fix "@endif" keyword sometimes being improperly processed
+	  by policy parser. (Redmine #7413)
+	- It is possible to edit the same value in multiple regions
+	  of one file. (Redmine #7460)
+	- Fix select_class not setting class when used in common bundle with slist.
+	  (Redmine #7482)
+	- Fix broken HA policy for 3rd disaster-recovery node.
+	- Directories should no more be changed randomly
+	  into files. (Redmine #6027)
+	- Include latest security updates for 3.7.
+	- Reduce malloc() thread contention on heavily loaded
+	  cf-serverd, by not exiting early in the logging function, if no message
+	  is to be printed. (Redmine #7624)
+	- Improve cf-serverd's lock contention because of getpwnam()
+	  call. (Redmine #7643)
+	- action_policy "warn" now correctly produces warnings instead
+	  of various other verbosity levels. (Redmine #7274)
+	- Change: Improve efficiency and debug reports (Redmine #7527)
+	- Change package modules permissions on hub package so that
+	  hub can execute package promises. (Redmine #7602)
+	- No longer hang when changing permissions/ownership on fifos
+	  (Redmine #7030)
+	- Fix exporting CSV reports through HTTPS. (Redmine #7267)
+	- failsafe.cf will be created when needed. (Redmine #7634)
+	- Mustache templates: Fix {{@}} key when value is not a
+	  primitive. The old behavior, when iterating across a map or array of
+	  maps, was to abort if the key was requested with {{@}}. The new
+	  behavior is to always replace {{@}} with either the key name or the
+	  iteration position in the array. An error is printed if {{@}} is used
+	  outside of a Mustache iteration section.
+	- Legacy package promise: Result classes are now defined if
+	  the package being promised is already up to date. (Redmine #7399)
+	- TTY detection should be more reliable. (Redmine #7606)
+
+	Masterfiles:
+	- Add: Path to svcprop in stdlib
+	- Add: New `results` classes body [] (Redmine #7418, #7481)
+	- Remove: Support for email settings from augments_file (Redmine #7682)
+
 3.7.1:
 	Bug fixes:
 	- Fix daemons not restarting correctly on upgrade on AIX. (Redmine #7550)

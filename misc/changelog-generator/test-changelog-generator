@@ -140,15 +140,73 @@ Redmine: #1234'
 
 ################################################################################
 
+git commit --allow-empty -m 'Redmine entries in parentheses (title)
+
+Changelog: Title
+
+Stuff. (Redmine: #1234)'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine entries inline (title)
+
+Changelog: Title
+
+Stuff Redmine: #2345'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine entries in parentheses (commit)
+
+Changelog: Commit
+
+Stuff. (Redmine: #1234)'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine entries inline (commit)
+
+Changelog: Commit
+
+Stuff Redmine: #2345'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine #1234: Redmine twice (commit)
+
+Changelog: Commit
+
+More stuff. (Redmine: #2345)'
+
+################################################################################
+
+git commit --allow-empty -m 'Redmine #1234: Redmine duplicate (commit)
+
+Changelog: Commit
+
+More stuff. (Redmine: #1234)'
+
+################################################################################
+
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt
 cat > expected.txt <<EOF
 	- As well as this.
 	- Complete Fix for changelog
 	  Should be included
 	- Fix for changelog
+	- Redmine duplicate (commit)
+	  More stuff. (Redmine #1234)
+	- Redmine entries in parentheses (commit)
+	  Stuff. (Redmine #1234)
+	- Redmine entries in parentheses (title) (Redmine #1234)
+	- Redmine entries inline (commit)
+	  Stuff (Redmine #2345)
+	- Redmine entries inline (title) (Redmine #2345)
 	- Redmine entry
 	  Should be included (Redmine #645)
 	- Redmine entry in title (Redmine #76)
+	- Redmine twice (commit)
+	  More stuff. (Redmine #1234, #2345)
 	- Several entries for changelog
 	  Should be included
 	  And finally this, part of the commit message.

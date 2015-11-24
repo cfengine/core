@@ -1,0 +1,100 @@
+#######################################################
+#
+# Test data creation through readyaml() with just 1 arg
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle common yaml_check
+{
+  classes:
+      "no_yaml_support"
+        not => regline(" *# *define *HAVE_LIBYAML.*", "$(this.promise_dirname)/../../../../libutils/config.h");
+}
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "no_yaml_support";
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert_lines;
+
+      "$(G.testfile).yaml"
+      create => "true",
+      edit_line => init_insert_yaml;
+}
+
+bundle edit_line init_insert_yaml
+{
+  insert_lines:
+      "- hello
+- there
+- where: 1
+- where_else: 1.0023E2
+- nowhere: true
+  boolean_spears: yes
+  string_spears: \"yes\"
+  bows: maybe";
+}
+
+bundle edit_line init_insert_lines
+{
+  insert_lines:
+      '[
+  "hello",
+  "there",
+  {
+    "where": 1
+  },
+  {
+    "where_else": 100.2300
+  },
+  {
+    "boolean_spears": true,
+    "bows": "maybe",
+    "nowhere": true,
+    "string_spears": "yes"
+  }
+]';
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "load" data => readyaml("$(G.testfile).yaml");
+      "load_s" string => storejson(load);
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "$(test.load_s)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
+                                       "$(G.testfile).expected",
+                                       "$(this.promise_filename)");
+}

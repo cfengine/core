@@ -164,7 +164,7 @@ static unsigned PromiseHash(const Promise *pp, unsigned seed, unsigned max)
     unsigned hash = seed;
 
     hash = StringHash(pp->promiser, seed, max);
-    hash = RvalHash(pp->promisee, seed, max);
+    hash = RvalHash(pp->promisee, hash, max);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {

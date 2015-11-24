@@ -44,6 +44,17 @@
 	- Remove: Support for email settings from augments_file (Redmine #7682)
 
 	Bug fixes:
+	- It is possible to edit the same value in multiple regions
+	  of one file. (Redmine #7460)
+	- Change package modules permissions on hub package so that
+	  hub can execute package promises. (Rednime #7602) (Redmine #7602)
+	- Fix exporting CSV reports through HTTPS. (Redmine #7267)
+	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor
+	  multiple -D, -N and -s arguments (Redmine #7191)
+	- readfile() and read*list() should print an error if they fail to read file.
+	  (Redmine #7702)
+	- No longer hang when changing permissions/ownership on fifos
+	  (Redmine #7030)
 	- Fix broken HA policy for 3rd disaster-recovery node.
 	- Fix: Policy errors for 3.5 and 3.6
 	- Mustache templates: Fix {{@}} key when value is not a

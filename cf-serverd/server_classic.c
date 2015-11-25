@@ -1043,7 +1043,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     time_t tloc, trem = 0;
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT], check[CF_BUFSIZE];
     char sendbuffer[CF_BUFSIZE] = { 0 };
-    char filename[CF_BUFSIZE], buffer[CF_BUFSIZE], args[CF_BUFSIZE], out[CF_BUFSIZE];
+    char filename[CF_BUFSIZE], buffer[CF_BUFSIZE], out[CF_BUFSIZE];
     long time_no_see = 0;
     unsigned int len = 0;
     int drift, plainlen, received, encrypted = 0;
@@ -1142,36 +1142,28 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     switch (command)
     {
     case PROTOCOL_COMMAND_EXEC:
-        memset(args, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "EXEC %255[^\n]", args);
+    {
+        const size_t EXEC_len = strlen(PROTOCOL_CLASSIC[PROTOCOL_COMMAND_EXEC]);
+        /* Assert recvbuffer starts with EXEC. */
+        assert(strncmp(PROTOCOL_CLASSIC[PROTOCOL_COMMAND_EXEC],
+                       recvbuffer, EXEC_len) == 0);
 
-        if (!AllowedUser(conn->username))
-        {
-            Log(LOG_LEVEL_INFO, "REFUSAL due to non-allowed user");
-            RefuseAccess(conn, recvbuffer);
-            return false;
-        }
+        char *args = &recvbuffer[EXEC_len];
+        args += strspn(args, " \t");                       /* bypass spaces */
 
-        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false))
-        {
-            Log(LOG_LEVEL_INFO,
-                "REFUSAL due to denied access to requested object");
-            RefuseAccess(conn, recvbuffer);
-            return false;
-        }
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Received:", "EXEC", args);
 
-        if (!MatchClasses(ctx, conn))
-        {
-            Log(LOG_LEVEL_INFO,
-                "REFUSAL due to failed class/context match");
-            Terminate(conn->conn_info);
-            return false;
-        }
+        bool b = DoExec2(ctx, conn, args,
+                         sendbuffer, sizeof(sendbuffer));
 
-        DoExec(conn, args);
+        /* In the end we might keep the connection open (return true) to be
+         * ready for next requests, but we must always send the TERMINATOR
+         * string so that the client can close the connection at will. */
         Terminate(conn->conn_info);
-        return false;
 
+        return b;
+    }
     case PROTOCOL_COMMAND_VERSION:
         snprintf(sendbuffer, sizeof(sendbuffer), "OK: %s", Version());
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);

@@ -1352,8 +1352,6 @@ static void KeepBundlesAccessPromise(EvalContext *ctx, const Promise *pp)
  */
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 {
-    Auth *ap = GetOrCreateAuth(pp->promiser, &SV.roles, &SV.rolestail);
-
     size_t pos = acl_SortedInsert(&roles_acl, pp->promiser);
     if (pos == (size_t) -1)
     {
@@ -1382,8 +1380,6 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
             {
                 for (const Rlist *rp = cp->rval.item; rp != NULL; rp = rp->next)
                 {
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
-
                     /* The "roles" access promise currently only supports
                      * listing usernames to admit access to, nothing more. */
                     struct resource_acl *racl = &roles_acl->acls[pos];

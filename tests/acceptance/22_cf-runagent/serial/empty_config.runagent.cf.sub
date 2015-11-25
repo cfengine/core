@@ -1,3 +1,14 @@
+#
+# Uncomment if you want to test the classic protocol. The code paths for
+# EXEC on cf-serverd have been unified so it should not make any
+# difference.
+#
+#body common control
+#{
+#    protocol_version => "classic";
+#}
+
+
 body runagent control
 {
     # A list of hosts to contact when using cf-runagent.

@@ -219,6 +219,9 @@ char *StrList_At(const StrList *sl, size_t idx)
  *
  * @return index of the newly inserted string. If -1 (i.e. MAXINT) is returned
  *         then something went horribly wrong.
+ *
+ * @note It is valid for sl to be NULL, which is equivalent to being empty.
+ *
  */
 size_t StrList_Insert(StrList **sl, const char *s, size_t idx)
 {
@@ -290,7 +293,7 @@ size_t StrList_Insert(StrList **sl, const char *s, size_t idx)
  * if reallocation failed, in which case the initial strlist is still valid.
  * Else it returns a pointer to the newly appended string.
  *
- * @note It is valid for sl to be NULL, which is equivalent to being empty.
+ * @note It is valid for *sl to be NULL, which is equivalent to being empty.
  */
 size_t StrList_Append(StrList **sl, const char *s)
 {

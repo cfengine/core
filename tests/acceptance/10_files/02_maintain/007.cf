@@ -18,7 +18,9 @@ bundle agent init
 {
   files:
       "$(G.testfile)"
-      delete => init_delete;
+        delete => init_delete;
+      "$(G.testdir)"
+        delete => init_delete;
 }
 
 body delete init_delete

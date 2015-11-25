@@ -71,7 +71,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
                       char *host);
 static void SendClassData(AgentConnection *conn);
-static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
+static void HailExec(AgentConnection *conn, char *peer);
 static FILE *NewStream(char *name);
 
 /*******************************************************************/
@@ -110,6 +110,8 @@ static const struct option OPTIONS[] =
     {"timeout", required_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
+    /* Only long option for the following! */
+    {"remote-bundles", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -132,6 +134,7 @@ static const char *const HINTS[] =
     "Connection timeout, seconds",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Bundles to execute on the remote agent",
     NULL
 };
 
@@ -143,9 +146,11 @@ char OUTPUT_DIRECTORY[CF_BUFSIZE] = ""; /* GLOBAL_P */
 int BACKGROUND = false; /* GLOBAL_P GLOBAL_A */
 int MAXCHILD = 50; /* GLOBAL_P GLOBAL_A */
 
-const Rlist *HOSTLIST = NULL; /* GLOBAL_P GLOBAL_A */
-char SENDCLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
-char DEFINECLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
+const Rlist *HOSTLIST = NULL;                          /* GLOBAL_P GLOBAL_A */
+
+char   SENDCLASSES[CF_MAXVARSIZE] = "";                         /* GLOBAL_A */
+char DEFINECLASSES[CF_MAXVARSIZE] = "";                         /* GLOBAL_A */
+char REMOTEBUNDLES[CF_MAXVARSIZE] = "";
 
 /*****************************************************************************/
 
@@ -250,10 +255,13 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_RUNAGENT, GetTTYInteractive());
 
     DEFINECLASSES[0] = '\0';
-    SENDCLASSES[0] = '\0';
+    SENDCLASSES[0]   = '\0';
+    REMOTEBUNDLES[0] = '\0';
 
+    int longopt_idx;
     while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::l",
-                            OPTIONS, NULL)) != -1)
+                            OPTIONS, &longopt_idx))
+           != -1)
     {
         switch (c)
         {
@@ -279,21 +287,29 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 's':
-            if (strlcat(SENDCLASSES, optarg, sizeof(SENDCLASSES)) >= sizeof(SENDCLASSES))
+        {
+            size_t len = strlen(SENDCLASSES);
+            StrCatDelim(SENDCLASSES, sizeof(SENDCLASSES), &len,
+                        optarg, ',');
+            if (len >= sizeof(SENDCLASSES))
             {
                 Log(LOG_LEVEL_ERR, "Argument too long (-s)");
                 exit(EXIT_FAILURE);
             }
             break;
-
+        }
         case 'D':
-            if (strlcat(DEFINECLASSES, optarg, sizeof(DEFINECLASSES)) >= sizeof(DEFINECLASSES))
+        {
+            size_t len = strlen(DEFINECLASSES);
+            StrCatDelim(DEFINECLASSES, sizeof(DEFINECLASSES), &len,
+                        optarg, ',');
+            if (len >= sizeof(DEFINECLASSES))
             {
                 Log(LOG_LEVEL_ERR, "Argument too long (-D)");
                 exit(EXIT_FAILURE);
             }
             break;
-
+        }
         case 'H':
             HOSTLIST = RlistFromSplitString(optarg, ',');
             break;
@@ -368,6 +384,22 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             LoggingEnableTimestamps(true);
             break;
 
+        /* long options only */
+        case 0:
+
+            if (strcmp(OPTIONS[longopt_idx].name, "remote-bundles") == 0)
+            {
+                size_t len = strlen(REMOTEBUNDLES);
+                StrCatDelim(REMOTEBUNDLES, sizeof(REMOTEBUNDLES), &len,
+                            optarg, ',');
+                if (len >= sizeof(REMOTEBUNDLES))
+                {
+                    Log(LOG_LEVEL_ERR, "Argument too long (--remote-bundles)");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            break;
+
         default:
         {
             Writer *w = FileWriter(stdout);
@@ -403,8 +435,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     assert(host != NULL);
 
     AgentConnection *conn;
-    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE],
-        hostkey[CF_HOSTKEY_STRING_SIZE], user[CF_SMALLBUF];
+    char hostkey[CF_HOSTKEY_STRING_SIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
     bool trustkey = false;
@@ -511,7 +542,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     }
 
     /* Send EXEC command. */
-    HailExec(conn, hostname, recvbuffer, sendbuffer);
+    HailExec(conn, hostname);
 
     return true;
 }
@@ -632,7 +663,6 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 static void SendClassData(AgentConnection *conn)
 {
     Rlist *classes, *rp;
-    char sendbuffer[CF_BUFSIZE];
 
     classes = RlistFromSplitRegex(SENDCLASSES, "[,: ]", 99, false);
 
@@ -645,9 +675,7 @@ static void SendClassData(AgentConnection *conn)
         }
     }
 
-    snprintf(sendbuffer, CF_MAXVARSIZE, "%s", CFD_TERMINATOR);
-
-    if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, CFD_TERMINATOR, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
         return;
@@ -656,18 +684,30 @@ static void SendClassData(AgentConnection *conn)
 
 /********************************************************************/
 
-static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer)
+static void HailExec(AgentConnection *conn, char *peer)
 {
-    if (DEFINECLASSES[0] != '\0')
+    char sendbuf[CF_BUFSIZE - CF_INBAND_OFFSET] = "EXEC";
+    size_t sendbuf_len = strlen(sendbuf);
+
+    if (!NULL_OR_EMPTY(DEFINECLASSES))
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "EXEC -D%s", DEFINECLASSES);
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, " -D", 0);
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, DEFINECLASSES, 0);
     }
-    else
+    if (!NULL_OR_EMPTY(REMOTEBUNDLES))
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "EXEC");
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, " -b ", 0);
+        StrCat(sendbuf, sizeof(sendbuf), &sendbuf_len, REMOTEBUNDLES, 0);
     }
 
-    if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+    if (sendbuf_len >= sizeof(sendbuf))
+    {
+        Log(LOG_LEVEL_ERR, "Command longer than maximum transaction packet");
+        DisconnectServer(conn);
+        return;
+    }
+
+    if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
         DisconnectServer(conn);
@@ -680,10 +720,11 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
      * protocol command, and the server will complain. */
     SendClassData(conn);
 
+    char recvbuffer[CF_BUFSIZE];
     FILE *fp = NewStream(peer);
     while (true)
     {
-        memset(recvbuffer, 0, CF_BUFSIZE);
+        memset(recvbuffer, 0, sizeof(recvbuffer));
 
         int n_read = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
 

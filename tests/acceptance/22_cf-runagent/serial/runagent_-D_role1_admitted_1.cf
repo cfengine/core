@@ -12,7 +12,7 @@ bundle agent init
   methods:
       # Expected output in the exec_args.txt file
       "any" usebundle => file_make("$(G.testdir)/expected_args.txt",
-                                   "-I -Dcfruncommand,role1");
+                                   "-I -Dcfruncommand -D role1");
       # Ensure execution output file is not there
       "any" usebundle => dcs_fini("$(G.testdir)/exec_args.txt");
 

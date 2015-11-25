@@ -40,7 +40,7 @@ void RefuseAccess(ServerConnectionState *conn, char *errmesg);
 int AllowedUser(char *user);
 /* Checks whatever user name contains characters we are considering to be invalid */
 bool IsUserNameValid(const char *username);
-int MatchClasses(EvalContext *ctx, ServerConnectionState *conn);
+int MatchClasses(const EvalContext *ctx, ServerConnectionState *conn);
 void Terminate(ConnectionInfo *connection);
 void DoExec(const ServerConnectionState *conn, const char *args);
 void CfGetFile(ServerFileGetState *args);
@@ -67,6 +67,10 @@ size_t ShortcutsExpand(char *path, size_t path_size,
                        const char *key);
 size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size);
 void SetConnIdentity(ServerConnectionState *conn, const char *username);
+bool DoExec2(const EvalContext *ctx,
+             ServerConnectionState *conn,
+             char *exec_args,
+             char *sendbuf, size_t sendbuf_size);
 
 
 #endif  /* CFENGINE_SERVER_COMMON_H */

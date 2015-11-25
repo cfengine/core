@@ -529,6 +529,191 @@ static void test_stringscanfcapped(void)
     assert_string_equal(buf, "123456789012345");
 }
 
+static void test_PathAppend(void)
+{
+    char dst[10];
+    bool ret;
+
+    {                                                           /* fits */
+        dst[0] = '\0';
+        ret = PathAppend(dst, sizeof(dst), "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, sizeof(dst), "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                                                 /* trailing separator */
+        dst[0] = '\0';
+        ret = PathAppend(dst, sizeof(dst), "blah/", '/');
+        assert_string_equal(dst, "/blah/");
+        assert_true(ret);
+    }
+    {                       /* SAME, but string already has separator ahead */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, sizeof(dst), "blah/", '/');
+        assert_string_equal(dst, "/blah/");
+        assert_true(ret);
+    }
+    {                                                        /* barely fits */
+        dst[0] = '\0';
+        ret = PathAppend(dst, 6, "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, 6, "blah", '/');
+        assert_string_equal(dst, "/blah");
+        assert_true(ret);
+    }
+    {                           /* barely not fits (off by one), do nothing */
+        dst[0] = '\0';
+        ret = PathAppend(dst, 5, "blah", '/');
+        assert_string_equal(dst, "");
+        assert_false(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, 5, "blah", '/');
+        assert_string_equal(dst, "/");
+        assert_false(ret);
+    }
+    {                                               /* overflow, do nothing */
+        dst[0] = '\0';
+        ret = PathAppend(dst, 2, "blah", '/');
+        assert_string_equal(dst, "");
+        assert_false(ret);
+    }
+    {                             /* SAME, but string already has separator */
+        strcpy(dst, "/");
+        ret = PathAppend(dst, 2, "blah", '/');
+        assert_string_equal(dst, "/");
+        assert_false(ret);
+    }
+}
+
+static void test_StrCat(void)
+{
+    char dst[10];
+    size_t dst_len;
+
+    {
+        dst[0] = '\0';
+        dst_len = 0;
+        StrCat(dst, sizeof(dst), &dst_len, "blah", 0);
+        assert_string_equal(dst, "blah");
+        assert_int_equal(dst_len, 4);
+        StrCat(dst, sizeof(dst), &dst_len, "", 0);
+        assert_string_equal(dst, "blah");
+        assert_int_equal(dst_len, 4);
+        StrCat(dst, sizeof(dst), &dst_len, " ", 0);
+        assert_string_equal(dst, "blah ");
+        assert_int_equal(dst_len, 5);
+        StrCat(dst, sizeof(dst), &dst_len, "blue", 0);
+        assert_string_equal(dst, "blah blue");
+        assert_int_equal(dst_len, 9);
+        /* Append one OVERFLOWing character. */
+        StrCat(dst, sizeof(dst), &dst_len, "1", 0);
+        /* It should protect against overflow. */
+        assert_string_equal(dst, "blah blue");
+        /* But the length indicates the needed length. */
+        assert_int_equal(dst_len, 10);
+    }
+    {                        /* The string to append is not '\0'-terminated */
+        const char *src = "blah blue";
+        dst[0] = '\0';
+        dst_len = 0;
+        StrCat(dst, sizeof(dst), &dst_len, src, 4);
+        assert_string_equal(dst, "blah");
+        assert_int_equal(dst_len, 4);
+        StrCat(dst, sizeof(dst), &dst_len, src, 4);
+        assert_string_equal(dst, "blahblah");
+        assert_int_equal(dst_len, 8);
+        StrCat(dst, sizeof(dst), &dst_len, src, 2);
+        assert_string_equal(dst, "blahblahb");                  /* overflow */
+        assert_int_equal(dst_len, 10);
+    }
+    {
+        dst[0] = '\0';
+        dst_len = 0;
+        StrCat(dst, 4, &dst_len, "blah", 0);
+        assert_string_equal(dst, "bla");
+        /* Overflow so dst_len indicates the needed length. */
+        assert_int_equal(dst_len, 4);
+        StrCat(dst, 4, &dst_len, "", 0);
+        assert_string_equal(dst, "bla");
+        assert_int_equal(dst_len, 4);
+        StrCat(dst, 4, &dst_len, "blue", 0);
+        assert_string_equal(dst, "bla");
+        assert_int_equal(dst_len, 8);
+    }
+    {                                      /* SAME but pass NULL as dst_len */
+        dst[0] = '\0';
+        StrCat(dst, 4, NULL, "blah", 0);
+        assert_string_equal(dst, "bla");
+        StrCat(dst, 4, NULL, "", 0);
+        assert_string_equal(dst, "bla");
+        StrCat(dst, 4, NULL, "blue", 0);
+        assert_string_equal(dst, "bla");
+    }
+
+    {                           /* Do not reset dst but reset only dst_len. */
+        dst_len = 0;
+        StrCat(dst, sizeof(dst), &dst_len, "1", 0);
+        assert_string_equal(dst, "1");
+        assert_int_equal(dst_len, 1);
+    }
+}
+
+static void test_StrCatDelim(void)
+{
+    char dst[10];
+    size_t dst_len;
+
+    {                    /* Simple appends, we don't care about truncation. */
+        dst[0] = '\0';
+        StrCatDelim(dst, sizeof(dst), NULL, "blah", ',');
+        StrCatDelim(dst, sizeof(dst), NULL, "blah", ',');
+        assert_string_equal(dst, "blah,blah");
+        StrCatDelim(dst, sizeof(dst), NULL, "blah", ',');
+        assert_string_equal(dst, "blah,blah");
+        StrCatDelim(dst, sizeof(dst), NULL, "1", ',');
+        assert_string_equal(dst, "blah,blah");
+    }
+    {                                        /* SAME, but check truncation. */
+        dst[0] = '\0';
+        dst_len = 0;
+        StrCatDelim(dst, sizeof(dst), &dst_len, "blah", ',');
+        assert_int_equal(dst_len, 4);
+        StrCatDelim(dst, sizeof(dst), &dst_len, "blah", ',');
+        assert_string_equal(dst, "blah,blah");
+        assert_int_equal(dst_len, 9);
+        StrCatDelim(dst, sizeof(dst), &dst_len, "blah", ',');
+        assert_string_equal(dst, "blah,blah");
+        assert_int_equal(dst_len, 14);                     /* needed length */
+        StrCatDelim(dst, sizeof(dst), &dst_len, "1", ',');
+        assert_string_equal(dst, "blah,blah");
+        assert_int_equal(dst_len, 16);
+    }
+    {                                               /* Only the comma fits. */
+        strcpy(dst, "12345678");
+        StrCatDelim(dst, sizeof(dst), NULL, "1", ',');
+        assert_string_equal(dst, "12345678");
+    }
+    {                                        /* SAME, but check truncation. */
+        strcpy(dst, "12345678");
+        dst_len = 8;
+        StrCatDelim(dst, sizeof(dst), &dst_len, "1", ',');
+        assert_string_equal(dst, "12345678");
+        assert_int_equal(dst_len, 10);           /* 10 is the needed length */
+    }
+}
+
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -594,6 +779,10 @@ int main()
         unit_test(test_stringvformat),
 
         unit_test(test_stringscanfcapped),
+
+        unit_test(test_PathAppend),
+        unit_test(test_StrCat),
+        unit_test(test_StrCatDelim),
     };
 
     return run_tests(tests);

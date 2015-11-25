@@ -351,7 +351,6 @@ static void ClearAuthAndACLs(void)
     DeleteAuthList(&SV.deny, &SV.denytail);
     DeleteAuthList(&SV.varadmit, &SV.varadmittail);
     DeleteAuthList(&SV.vardeny, &SV.vardenytail);
-    DeleteAuthList(&SV.roles, &SV.rolestail);
 
     /* body server control ACLs */
     DeleteItemList(SV.trustkeylist);        SV.trustkeylist = NULL;

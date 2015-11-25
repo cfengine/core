@@ -80,10 +80,6 @@ typedef struct
     Auth *vardeny;
     Auth *vardenytail;
 
-    /* ACL for promise "roles". */
-    Auth *roles;
-    Auth *rolestail;
-
     int logconns;
 
     /* bundle server access_rules: shortcut for ACL entries, which expands to

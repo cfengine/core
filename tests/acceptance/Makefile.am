@@ -77,7 +77,7 @@ check-local:
 
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \
-	testall dummy_etc write_args.sh \
+	testall dummy_etc \
 	root-MD5=617eb383deffef843ea856b129d0a423.pub \
 	root-MD5=617eb383deffef843ea856b129d0a423.priv
 

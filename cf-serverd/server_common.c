@@ -1780,7 +1780,7 @@ bool DoExec2(const EvalContext *ctx,
     SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
     Log(LOG_LEVEL_INFO, "%s", sendbuf);
 
-    FILE *pp = cf_popen_sh(cmdbuf, "r");
+    FILE *pp = cf_popen(cmdbuf, "r", true);
     if (pp == NULL)
     {
         snprintf(sendbuf, sendbuf_size,

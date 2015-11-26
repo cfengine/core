@@ -783,6 +783,8 @@ static void StackFrameDestroy(StackFrame *frame)
     }
 }
 
+
+
 EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xcalloc(1, sizeof(EvalContext));
@@ -805,7 +807,6 @@ EvalContext *EvalContextNew(void)
     ctx->promise_lock_cache = StringSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
-
     {
         LoggingPrivContext *pctx = LoggingPrivGetContext();
         assert(!pctx && "Logging context bound to something else");
@@ -813,7 +814,7 @@ EvalContext *EvalContextNew(void)
         pctx = xcalloc(1, sizeof(LoggingPrivContext));
         pctx->param = ctx;
         pctx->log_hook = &LogHook;
-
+        pctx->always = true;       /* report messages even when not printed */
         LoggingPrivSetContext(pctx);
     }
 

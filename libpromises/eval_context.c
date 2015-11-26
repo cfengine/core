@@ -280,20 +280,6 @@ const char *EvalContextStackToString(EvalContext *ctx)
     return "";
 }
 
-static char *LogHook(LoggingPrivContext *pctx, LogLevel level, const char *message)
-{
-    const EvalContext *ctx = pctx->param;
-
-    StackFrame *last_frame = LastStackFrame(ctx, 0);
-    if (last_frame
-        && last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION
-        && level <= LOG_LEVEL_INFO)
-    {
-        RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
-    }
-    return xstrdup(message);
-}
-
 static const char *GetAgentAbortingContext(const EvalContext *ctx)
 {
     for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
@@ -840,6 +826,28 @@ void FreePackagePromiseContext(PackagePromiseContext *pp_ctx)
     free(pp_ctx);
 }
 
+/* Keeps the last 5 messages of each promise in a ring buffer in the
+ * EvalContext, which are written to a JSON file from the Enterprise function
+ * EvalContextLogPromiseIterationOutcome() at the end of each promise. */
+char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char *message)
+{
+    const EvalContext *ctx = pctx->param;
+
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    if (last_frame
+        && last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION
+        && level <= LOG_LEVEL_INFO)
+    {
+        RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
+    }
+    return xstrdup(message);
+}
+
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, EvalContextSetupMissionPortalLogHook,
+                                      ARG_UNUSED EvalContext *, ctx)
+{
+}
+
 EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xcalloc(1, sizeof(EvalContext));
@@ -863,17 +871,8 @@ EvalContext *EvalContextNew(void)
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
 
-    {
-        LoggingPrivContext *pctx = LoggingPrivGetContext();
-        assert(!pctx && "Logging context bound to something else");
+    EvalContextSetupMissionPortalLogHook(ctx);
 
-        pctx = xcalloc(1, sizeof(LoggingPrivContext));
-        pctx->param = ctx;
-        pctx->log_hook = &LogHook;
-
-        LoggingPrivSetContext(pctx);
-    }
-                                    
     ctx->package_promise_context = PackagePromiseConfigNew();
 
     return ctx;

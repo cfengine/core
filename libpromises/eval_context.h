@@ -231,4 +231,9 @@ ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, EvalContextLogPromiseIterationOutcome,
                                   const Promise *, pp,
                                   PromiseResult, result);
 
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EvalContextSetupMissionPortalLogHook,
+                                  EvalContext *, ctx);
+char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char *message);
+
+
 #endif

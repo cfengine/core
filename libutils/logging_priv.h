@@ -36,8 +36,10 @@ typedef char *(*LoggingPrivLogHook)(LoggingPrivContext *context, LogLevel level,
 struct LoggingPrivContext
 {
     LoggingPrivLogHook log_hook;
-
     void *param;
+    /* Call the log_hook even if the message is neither printed to syslog nor
+     * to console? */
+    bool always;
 };
 
 /**

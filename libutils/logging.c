@@ -226,10 +226,11 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     bool log_to_console = ( level <= lctx->report_level );
     bool log_to_syslog  = ( level <= lctx->log_level &&
                             level < LOG_LEVEL_VERBOSE );
-    bool always_run_hook= ( lctx->pctx &&
-                            lctx->pctx->always );
+    bool force_hook     = ( lctx->pctx &&
+                            lctx->pctx->log_hook &&
+                            lctx->pctx->force_hook_level >= level );
 
-    if (!log_to_console && !log_to_syslog && !always_run_hook)
+    if (!log_to_console && !log_to_syslog && !force_hook)
     {
         return;                            /* early return - save resources */
     }

@@ -40,7 +40,6 @@ body common control
 {
       bundlesequence  => { "example" };
       version => "1.2.3";
-      #fips_mode => "true";
 }
 
 ########################################################
@@ -54,14 +53,13 @@ bundle agent example
 # Server config
 #########################################################
 
-body server control 
+body server control
 
 {
       allowconnects         => { "127.0.0.1" , "::1" };
       allowallconnects      => { "127.0.0.1" , "::1" };
       trustkeysfrom         => { "127.0.0.1" , "::1" };
-      call_collect_interval => "1";
-      # allowusers
+      call_collect_interval => "5";
 }
 
 #########################################################
@@ -72,23 +70,25 @@ bundle server access_rules()
 
   access:
 
-      # On the policy hub
+    # On the policy hub
+    am_policy_hub::
 
       "collect_calls"
+      comment       => "Enable call-collect report collection for the specific client",
       resource_type => "query",
-      admit   => { "127.0.0.1" };
+      admit         => { "1.2.3.4" };
 
-      # On the isolated client in the field
-
+    # On the isolated clients in the field
+    any::
 
       "delta"
-      comment => "Grant access to cfengine hub to collect report deltas",
+      comment       => "Grant access to cfengine hub to collect report deltas",
       resource_type => "query",
-      admit   => { "127.0.0.1"  };
+      admit         => { "$(sys.policy_hub)"  };
       "full"
-      comment => "Grant access to cfengine hub to collect full report dump",
+      comment       => "Grant access to cfengine hub to collect full report dump",
       resource_type => "query",
-      admit   => { "127.0.0.1"  };
+      admit         => { "$(sys.policy_hub)"  };
 }
 
 

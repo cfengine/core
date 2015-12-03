@@ -281,9 +281,17 @@ void BufferRewrite(Buffer *buffer, BufferFilterFn filter, const bool invert);
 
   @param buffer
   @param max the maximum number of bytes to trim to
-  @return A const char pointer to the data contained on the buffer.
   */
 void BufferTrimToMaxLength(Buffer *buffer, unsigned int max);
+
+/**
+  @brief Canonify a buffer in place: replace [^0-9a-zA-Z] with '_'
+
+  @see CanonifyNameInPlace
+
+  @param buffer
+  */
+void BufferCanonify(Buffer *buffer);
 
 /**
   @brief Provides a pointer to the internal data.

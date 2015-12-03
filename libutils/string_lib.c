@@ -1171,3 +1171,16 @@ void StrCatDelim(char *dst, size_t dst_size, size_t *dst_len,
         *dst_len = needed_len;
     }
 }
+
+/*********************************************************************/
+
+void CanonifyNameInPlace(char *s)
+{
+    for (; *s != '\0'; s++)
+    {
+        if (!isalnum((unsigned char) *s))
+        {
+            *s = '_';
+        }
+    }
+}

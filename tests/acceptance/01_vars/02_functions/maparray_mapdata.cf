@@ -57,6 +57,7 @@ bundle agent test
 
       "maparray_$(X)_$(Y)" slist => maparray("$(spec$(Y))", "load$(X)");
       "mapdata_none_$(X)_$(Y)" data => mapdata("none", "$(spec$(Y))", "load$(X)");
+      "mapdata_canonify_$(X)_$(Y)" data => mapdata("canonify", "$(spec$(Y))", "load$(X)");
       "mapdata_json_$(X)_$(Y)" data => mapdata("json", "$(jsonspec$(Y))", "load$(X)");
 
       "bad1" data => mapdata("json", "", missingvar);

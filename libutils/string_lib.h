@@ -201,5 +201,6 @@ void StrCat(char *dst, size_t dst_size, size_t *dst_len,
 void StrCatDelim(char *dst, size_t dst_size, size_t *dst_len,
                  const char *src, char sep);
 
+void CanonifyNameInPlace(char *str);
 
 #endif

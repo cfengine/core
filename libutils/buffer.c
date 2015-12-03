@@ -27,6 +27,7 @@
 #include <refcount.h>
 #include <misc_lib.h>
 #include <pcre_wrap.h>
+#include <string_lib.h>
 
 Buffer *BufferNewWithCapacity(unsigned int initial_capacity)
 {
@@ -505,6 +506,15 @@ const char *BufferData(const Buffer *buffer)
 {
     assert(buffer);
     return buffer ? buffer->buffer : NULL;
+}
+
+void BufferCanonify(Buffer *buffer)
+{
+    assert(buffer);
+    if (NULL != buffer && NULL != buffer->buffer)
+    {
+        CanonifyNameInPlace(buffer->buffer);
+    }
 }
 
 BufferBehavior BufferMode(const Buffer *buffer)

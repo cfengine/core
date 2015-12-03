@@ -103,7 +103,9 @@ git_tag_or_commit_masterstage() {
           git fetch -q origin || error_exit "Failed: git fetch -q origin"
           git stash -q  || error_exit "Failed: git stash -q"
           git checkout -q "${GIT_TAG_OR_COMMIT}" || error_exit "Failed: git checkout -q ${GIT_TAG_OR_COMMIT}"
-          git pull --rebase origin "${GIT_TAG_OR_COMMIT}" || error_exit "Failed: git pull --rebase origin ${GIT_TAG_OR_COMMIT}"
+          # git pull --rebase origin "${GIT_TAG_OR_COMMIT}" || error_exit "Failed: git pull --rebase origin ${GIT_TAG_OR_COMMIT}"
+          # The above line appears to be a mistake as it will ALWAYS fail if given a tagname or commit hash.
+          # It will succeed if given "tags/tagname" or if given a branch name, but never with a bare tagname or commit hash.
           git reset -q --hard "${GIT_TAG_OR_COMMIT}" || error_exit "Failed: git reset -q --hard ${GIT_TAG_OR_COMMIT}"
           git clean -f || error_exit "Failed: git clean -f"
           git clean -fd || error_exit "Failed: git clean -fd"

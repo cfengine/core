@@ -66,6 +66,7 @@
 #include <json-yaml.h>
 #include <known_dirs.h>
 #include <mustache.h>
+#include <processes_select.h>
 
 #include <math_eval.h>
 
@@ -7188,6 +7189,52 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
 
 /*********************************************************************/
 
+static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    char *regex = RlistScalarValue(finalargs);
+
+    const bool is_context_processexists = strcmp(fp->name, "processexists") == 0;
+
+    Item* procdata = NULL;
+    if (!LoadProcessTable(&procdata))
+    {
+        Log(LOG_LEVEL_ERR, "%s: could not load the process table?!?!", fp->name);
+        return FnFailure();
+    }
+
+    ProcessSelect ps;
+    Item *matched = SelectProcesses(procdata, regex, ps, false);
+    DeleteItemList(procdata);
+
+    if (is_context_processexists)
+    {
+        const bool ret = (NULL != matched);
+        DeleteItemList(matched);
+        return FnReturnContext(ret);
+    }
+
+    JsonElement *json = JsonArrayCreate(50);
+    // we're in process gathering mode
+    for (Item *ip = matched; ip != NULL; ip = ip->next)
+    {
+        // we only have the ps line and PID
+
+        // TODO: this properly, by including more properties of the
+        // processes, when the underlying code stops using a plain
+        // ItemList
+        JsonElement *pobj = JsonObjectCreate(2);
+        JsonObjectAppendString(pobj, "line", ip->name);
+        JsonObjectAppendInteger(pobj, "pid", ip->counter);
+
+        JsonArrayAppendObject(json, pobj);
+    }
+    DeleteItemList(matched);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+}
+
+/*********************************************************************/
+
 static int ExecModule(EvalContext *ctx, char *command)
 {
     FILE *pp = cf_popen(command, "rt", true);
@@ -8395,6 +8442,12 @@ static const FnCallArg CURL_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg PROCESSEXISTS_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression to match process name"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -8467,6 +8520,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("findfiles", CF_DATA_TYPE_STRING_LIST, FINDFILES_ARGS, &FnCallFindfiles, "Find files matching a shell glob pattern",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("findprocesses", CF_DATA_TYPE_CONTAINER, PROCESSEXISTS_ARGS, &FnCallProcessExists, "Returns data container of processes matching the regular expression",
+                  FNCALL_OPTION_CACHED, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("format", CF_DATA_TYPE_STRING, FORMAT_ARGS, &FnCallFormat, "Applies a list of string values in arg2,arg3... to a string format in arg1 with sprintf() rules",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getclassmetatags", CF_DATA_TYPE_STRING_LIST, GETCLASSMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a class's meta tags into an slist",
@@ -8591,6 +8646,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("peerleaders", CF_DATA_TYPE_STRING_LIST, PEERLEADERS_ARGS, &FnCallPeerLeaders, "Get a list of peer leaders from the named partitioning",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("processexists", CF_DATA_TYPE_CONTEXT, PROCESSEXISTS_ARGS, &FnCallProcessExists, "True if the regular expression matches a process",
+                  FNCALL_OPTION_CACHED, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("product", CF_DATA_TYPE_REAL, PRODUCT_ARGS, &FnCallProduct, "Return the product of a list of reals",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("randomint", CF_DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits, excluding the upper",

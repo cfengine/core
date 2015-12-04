@@ -1,0 +1,28 @@
+###########################################################
+#
+# Test processexists()
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle common test
+{
+  classes:
+      "descartes" expression => processexists(".+agent.+");
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("descartes", "", $(this.promise_filename));
+}

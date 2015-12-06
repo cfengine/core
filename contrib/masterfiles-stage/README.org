@@ -32,6 +32,7 @@ the final location for distribution to remote agents. In the most
 simple environments this will be `$(sys.masterdir)` (typically
 /var/cfengine/masterfiles) on the policy server.
 
+
 * Current Features
 - Supported upstreams
   - VCS_TYPE="GIT"
@@ -50,16 +51,21 @@ supporting `common.sh` to the same directory on your hub and making
 sure that `masterfiles-stage.sh` is executable.
 
 #+begin_src example
-  wget  https://github.com/cfengine/core/blob/master/contrib/masterfiles-stage/masterfiles-stage.sh -O /var/cfengine/bin/
-  wget  https://github.com/cfengine/core/blob/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/
+  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/masterfiles-stage.sh -O /var/cfengine/bin/masterfiles-stage.sh
+  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/common.sh
   chown root:root /var/cfengine/bin/masterfiles-stage.sh
   chmod 555 /var/cfengine/bin/masterfiles-stage.sh
 #+end_src
 
+*Warning:* The above commands may not work out of the box depending on
+ how new your ssl certificates are.
+
 * Configuration
 
-The `masterfiles-stage.sh` script takes two parameters, `MASTERDIR`
-and `PARAMS`.
+The `masterfiles-stage.sh` script takes options in order to specify the
+directory where the masterfiles should be deployed after staging, as well as
+the file that contains the paramaters that should be used in order to interface
+with the given upstream source implementation (git url, branch etc ..)
 
 - `MASTERDIR` is the fully qualified path to the location that you
   want masterfiles to be deployed to after successful staging.
@@ -139,9 +145,9 @@ passphraseless key, or you may use something like ssh-agent.
 The script can be invoked manually:
 
 #+begin_example
-  /var/cfengine/bin/masterfiles-stage.sh /tmp/deployed_masterfiles "/var/cfengine/masterfiles-stage_parmas/PARAMS_example_git_branch.sh"
+  /var/cfengine/bin/masterfiles-stage.sh -d /tmp/deployed_masterfiles -p /var/cfengine/masterfiles-stage_parmas/PARAMS_example_git_branch.sh
   tail -n1 /var/cfengine/outputs/dc-scripts.log
-  Successfully staged a policy release on Tue Oct 27 12:13:38 CDT 2015
+  Successfully deployed branch 'master' from 'https://gitlab.com/nickanderson/masterfiles_demo_3.7.git' to '/var/cfengine/masterfiles' on Sun Dec  6 23:00:34 UTC 2015
 #+end_example
 
 Or execution can be automated with CFEngine.
@@ -161,13 +167,10 @@ bundle agent stage_masterfiles
       policy_server::
       # masterfiles-stage.sh DESTINATION PARAMS
       "$(deploy_script)"
-        args => "$(masterfiles_deploy_destination) /var/cfengine/deploy_params/PARAMS_masterfiles.sh",
+        args => "-d '$(masterfiles_deploy_destination)' -p '/var/cfengine/deploy_params/PARAMS_masterfiles.sh'",
         comment => "Masterfiles should be deployed to $(masterfiles_deploy_destination) using ";
 }
 #+end_src
-
-At the time of this writing the bundle that activates the
-`masterfiles-stage.sh` script can be found [[https://github.com/cfengine/masterfiles/blob/master/cfe_internal/update/cfe_internal_update_from_repository.cf][here]].
 
 * Phased Rollout with Multiple Staged Masterfiles
 

@@ -1,24 +1,20 @@
-#!/bin/bash
-# Authors: Ted Zlatanov <tzz@lifelogs.com>, Nick Anderson <nick@cmdln.org>
-
+#!/usr/bin/env bash
+# Authors: Ted Zlatanov <tzz@lifelogs.com>, Nick Anderson <nick@cmdln.org>, Mike Weilgart
 DIRNAME=$(dirname $0);
 
-# Check that the required arguments are provided
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 MASTERDIR PARAMS" 1>&2
-    echo "Example: $0 /var/cfengine/masterfiles /opt/cfengine/dc-scripts/params.sh" 1>&2
-    exit 1
-fi
+# Load option parsing
+source "${DIRNAME}/options.sh"
 
+# Load common functionaly, upstream implementations
 source "${DIRNAME}/common.sh"
 
-MASTERDIR=$1
-PARAMS=$2
+MASTERDIR=$opt_deploy_dir
+PARAMS=$opt_params_file
 
 # If PARAMS is unset, then we look to the default location
-PARAMS=${PARAMS:-/opt/cfengine/dc-scripts/params.sh}
-if [ ! -f $PARAMS ]; then
-  error_exit "common.sh" "ERROR: Missing '$PARAMS'"
+#PARAMS=${PARAMS:-/opt/cfengine/dc-scripts/params.sh}
+if [ ! -f "$PARAMS" ]; then
+  error_exit "ERROR: Missing '$PARAMS'"
 fi
 
 source $PARAMS

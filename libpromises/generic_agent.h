@@ -117,10 +117,13 @@ bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char
 bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options);
 bool GenericAgentConfigParseColor(GenericAgentConfig *config, const char *mode);
 
-GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
+Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy, bool write_validated_file);
+GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_interactive);
+bool GetTTYInteractive(void);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);
 void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config);
 
+bool CheckAndGenerateFailsafe(const char *inputdir, const char *input_file);
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inputdir, const char *input_file);
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
 bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname, bool write_validated, bool write_release);

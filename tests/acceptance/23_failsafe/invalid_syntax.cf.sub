@@ -1,0 +1,13 @@
+#INVALID POLICY SYNTAX!
+
+
+body common control
+{
+  bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  my_non_existing_promise_type:
+    "non_existing" => "not_there";
+}

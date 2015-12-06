@@ -63,6 +63,7 @@
 #include <constants.h>
 #include <ornaments.h>
 #include <cf-windows-functions.h>
+#include <loading.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -116,6 +117,34 @@ void MarkAsPolicyServer(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
 }
 
+Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy, bool write_validated_file)
+{
+    Policy *policy = NULL;
+    
+    if (GenericAgentCheckPolicy(config, validate_policy, write_validated_file))
+    {
+        policy = LoadPolicy(ctx, config);
+    }
+    else if (config->tty_interactive)
+    {
+        Log(LOG_LEVEL_ERR,
+               "Failsafe condition triggered. Interactive session detected, skipping failsafe.cf execution.");
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
+        EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
+        
+        if (CheckAndGenerateFailsafe(GetInputDir(), "failsafe.cf"))
+        {
+            GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
+            Log(LOG_LEVEL_ERR, "CFEngine failsafe.cf: %s %s", config->input_dir, config->input_file);
+            policy = LoadPolicy(ctx, config);
+        }
+    }
+    return policy;
+}
+
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
     strcpy(VPREFIX, "");
@@ -161,6 +190,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
                 "Error writing builtin failsafe to inputs prior to bootstrap");
             exit(EXIT_FAILURE);
         }
+        GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
 
         char canonified_ipaddr[strlen(bootstrap_arg) + 1];
         StringCanonify(canonified_ipaddr, bootstrap_arg);
@@ -759,20 +789,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     setlinebuf(stdout);
-
-    if (config->agent_specific.agent.bootstrap_policy_server)
-    {
-        snprintf(vbuff, CF_BUFSIZE, "%s%cfailsafe.cf", GetInputDir(), FILE_SEPARATOR);
-
-        if (stat(vbuff, &statbuf) == -1)
-        {
-            GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
-        }
-        else
-        {
-            GenericAgentConfigSetInputFile(config, GetInputDir(), vbuff);
-        }
-    }
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)
@@ -1509,15 +1525,18 @@ bool GenericAgentConfigParseColor(GenericAgentConfig *config, const char *mode)
     }
 }
 
-GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
+bool GetTTYInteractive(void)
+{
+    return isatty(0) || isatty(1) || isatty(2);
+}
+
+GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_interactive)
 {
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
 
     LoggingSetAgentType(CF_AGENTTYPES[agent_type]);
     config->agent_type = agent_type;
-
-    // TODO: system state, perhaps pull out as param
-    config->tty_interactive = isatty(0) && isatty(1);
+    config->tty_interactive = tty_interactive;
 
     const char *color_env = getenv("CFENGINE_COLOR");
     config->color = (color_env && 0 == strcmp(color_env, "1"));
@@ -1528,7 +1547,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->input_file = NULL;
     config->input_dir = NULL;
 
-    config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON && !config->tty_interactive;
+    config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
@@ -1634,6 +1653,30 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     {
         EvalContextClassPutHard(ctx, "opt_dry_run", "cfe_internal,source=environment");
     }
+}
+
+bool CheckAndGenerateFailsafe(const char *inputdir, const char *input_file)
+{
+    char failsafe_path[CF_BUFSIZE];
+    
+    if (strlen(inputdir) + strlen(input_file) > sizeof(failsafe_path) - 2)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Unable to generate path for %s/%s file. Path too long.",
+            inputdir, input_file);
+        /* We could create dynamically allocated buffer able to hold the 
+           whole content of the path but this should be unlikely that we
+           will end up here. */
+        return false;
+    }
+    snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/%s", inputdir, input_file);
+    MapName(failsafe_path);
+    
+    if (access(failsafe_path, R_OK) != 0)
+    {
+        return WriteBuiltinFailsafePolicyToPath(failsafe_path);
+    }
+    return true;
 }
 
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inputdir, const char *input_file)

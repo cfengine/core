@@ -142,7 +142,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int c;
-    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER, GetTTYInteractive());
 
     while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhAC::l",
                             OPTIONS, NULL))
@@ -165,11 +165,33 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            config->heap_soft = StringSetFromString(optarg, ',');
+            {
+                StringSet *defined_classes = StringSetFromString(optarg, ',');
+                if (! config->heap_soft)
+                {
+                    config->heap_soft = defined_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_soft, defined_classes);
+                    free(defined_classes);
+                }
+            }
             break;
 
         case 'N':
-            config->heap_negated = StringSetFromString(optarg, ',');
+            {
+                StringSet *negated_classes = StringSetFromString(optarg, ',');
+                if (! config->heap_negated)
+                {
+                    config->heap_negated = negated_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_negated, negated_classes);
+                    free(negated_classes);
+                }
+            }
             break;
 
         case 'I':
@@ -632,7 +654,8 @@ static void PrepareServer(int sd)
 {
     if (sd != -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
+        Log(LOG_LEVEL_VERBOSE,
+            "Listening for connections on socket descriptor %d ...", sd);
     }
 
     if (!NO_FORK)
@@ -643,7 +666,7 @@ static void PrepareServer(int sd)
     }
 #else
     {
-        if (fork() != 0)
+        if (fork() != 0)                                        /* parent */
         {
             _exit(EXIT_SUCCESS);
         }

@@ -1,0 +1,66 @@
+###########################################################
+#
+# Test url_get()
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent init
+{
+  vars:
+      "options_limit" data => '
+{
+  "url.max_content": 200,
+  "nosuchoption": 100,
+  "url.verbose": 0,
+  "url.headers": [ "Foo: bar" ]
+}';
+
+      "options_clean" data => '{}';
+      "res1" data => url_get("http://cfengine.com", options_clean);
+      "res2" data => url_get("http://nosuchcfenginehost.com", options_clean);
+      # static content, we hope won't change much
+      "res3" data => url_get("http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js", options_limit);
+}
+
+bundle agent test
+{
+  meta:
+      "test_skip_unsupported" string => "!feature_curl";
+
+  vars:
+      "kept" data => mergedata(
+                               '{ "res1/returncode": init.res1[returncode] }',
+                               '{ "res1/rc": init.res1[rc] }',
+                               '{ "res1/success": init.res1[success] }',
+
+                               '{ "res2": init.res2[content] }',
+                               '{ "res2/returncode": init.res2[returncode] }',
+                               '{ "res2/rc": init.res2[rc] }',
+                               '{ "res2/error_message": init.res2[error_message] }',
+                               '{ "res2/success": init.res2[success] }',
+
+                               '{ "res3": init.res3[content] }',
+                               '{ "res3/returncode": init.res3[returncode] }',
+                               '{ "res3/rc": init.res3[rc] }',
+                               '{ "res3/success": init.res3[success] }'
+      );
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

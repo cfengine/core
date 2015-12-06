@@ -200,6 +200,17 @@ int BufferPrintf(Buffer *buffer, const char *format, ...) FUNC_ATTR_PRINTF(2, 3)
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap);
 
 /**
+  @brief Does a PCRE search and replace on the buffer data.
+
+  @param buffer
+  @param pattern
+  @param substitute (backreferences allowed)
+  @param options Perl-style gms...
+  @return NULL if successful, an error string otherwise.
+  */
+const char* BufferSearchAndReplace(Buffer *buffer, const char *pattern, const char *substitute, const char *options);
+
+/**
   @brief Clears the buffer.
 
   Clearing the buffer does not mean destroying the data. The data might be still present after this function is called, although
@@ -260,6 +271,19 @@ Buffer* BufferFilter(Buffer *buffer, BufferFilterFn filter, const bool invert);
   @param invert Whether the test should be inverted
   */
 void BufferRewrite(Buffer *buffer, BufferFilterFn filter, const bool invert);
+
+/**
+  @brief Trim a buffer to be at most max bytes.
+
+  If the buffer is below the max bytes, nothing happens. Otherwise,
+  it's trimmed to that many bytes. This is not persistent, the buffer
+  could grow beyond the max bytes in the future.
+
+  @param buffer
+  @param max the maximum number of bytes to trim to
+  @return A const char pointer to the data contained on the buffer.
+  */
+void BufferTrimToMaxLength(Buffer *buffer, unsigned int max);
 
 /**
   @brief Provides a pointer to the internal data.

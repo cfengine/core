@@ -1,0 +1,16 @@
+{
+  "kept": {
+    "res1/rc": 0,
+    "res1/returncode": 200,
+    "res1/success": true,
+    "res2": "",
+    "res2/error_message": "Couldn't resolve host name",
+    "res2/rc": 6,
+    "res2/returncode": 0,
+    "res2/success": false,
+    "res3": "/*! jQuery v2.1.4 | (c) 2005, 2015 jQuery Foundation, Inc. | jquery.org/license */\n!function(a,b){\"object\"==typeof module&&\"object\"==typeof module.exports?module.exports=a.document?b(a,!0):function(a)",
+    "res3/rc": 0,
+    "res3/returncode": 200,
+    "res3/success": true
+  }
+}

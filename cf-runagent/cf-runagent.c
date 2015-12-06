@@ -247,7 +247,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int c;
-    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_RUNAGENT);
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_RUNAGENT, GetTTYInteractive());
 
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
@@ -279,9 +279,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 's':
-            strlcpy(SENDCLASSES, optarg, CF_MAXVARSIZE);
-
-            if (strlen(optarg) > CF_MAXVARSIZE)
+            if (strlcat(SENDCLASSES, optarg, sizeof(SENDCLASSES)) >= sizeof(SENDCLASSES))
             {
                 Log(LOG_LEVEL_ERR, "Argument too long (-s)");
                 exit(EXIT_FAILURE);
@@ -289,9 +287,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            strlcpy(DEFINECLASSES, optarg, CF_MAXVARSIZE);
-
-            if (strlen(optarg) > CF_MAXVARSIZE)
+            if (strlcat(DEFINECLASSES, optarg, sizeof(DEFINECLASSES)) >= sizeof(DEFINECLASSES))
             {
                 Log(LOG_LEVEL_ERR, "Argument too long (-D)");
                 exit(EXIT_FAILURE);

@@ -1236,7 +1236,7 @@ static void test_safe_chmod_unsafe_link(void)
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
     assert_int_equal(statbuf.st_mode & 0777, 0777);
     assert_int_equal(safe_chmod(TEST_FILE, 0644), -1);
-    assert_int_equal(errno, ENOLINK);
+    assert_int_equal(errno, EPERM);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
     assert_int_equal(statbuf.st_mode & 0777, 0777);
 
@@ -1268,6 +1268,66 @@ static void test_safe_creat_doesnt_exist(void)
     assert_int_equal(fstat(fd, &buf), 0);
     assert_int_equal(buf.st_size, 0);
     close(fd);
+
+    return_to_test_dir();
+}
+
+static void test_symlink_loop(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
+    switch_symlink_hook();
+
+    assert_int_equal(safe_open(TEST_FILE, O_RDONLY), -1);
+    assert_int_equal(errno, ELOOP);
+    assert_int_equal(safe_chown(TEST_FILE, 100, 100), -1);
+    assert_int_equal(errno, ELOOP);
+    assert_int_equal(safe_chmod(TEST_FILE, 0644), -1);
+    assert_int_equal(errno, ELOOP);
+    assert_int_equal(safe_lchown(TEST_FILE, 100, 100), 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chmod_chown_fifos(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = TEST_SUBDIR "/" TEST_FILE;
+    switch_symlink_hook();
+
+    unlink(TEST_SUBDIR "/" TEST_FILE);
+    assert_int_equal(mkfifo(TEST_SUBDIR "/" TEST_FILE, 0644), 0);
+
+    // Link owner != target owner
+    assert_int_equal(safe_chown(TEST_FILE, 100, 100), -1);
+    assert_int_equal(errno, ENOLINK);
+    assert_int_equal(safe_chmod(TEST_FILE, 0755), -1);
+    // Would be ENOLINK, but safe_chmod lacks support for detecting this.
+    assert_int_equal(errno, EPERM);
+    assert_int_equal(safe_chown(TEST_SUBDIR "/" TEST_FILE, 100, 100), 0);
+
+    // Now the owner is correct
+    assert_int_equal(safe_chmod(TEST_FILE, 0755), 0);
+    assert_int_equal(safe_chown(TEST_FILE, 0, 0), 0);
+    assert_int_equal(safe_chmod(TEST_SUBDIR "/" TEST_FILE, 0644), 0);
 
     return_to_test_dir();
 }
@@ -1352,6 +1412,10 @@ int main(int argc, char **argv)
 
             unit_test(test_safe_creat_exists),
             unit_test(test_safe_creat_doesnt_exist),
+
+            unit_test(test_symlink_loop),
+
+            unit_test(test_safe_chmod_chown_fifos),
 
             unit_test(close_test_dir),
             unit_test(clear_tempfiles),

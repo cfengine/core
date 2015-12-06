@@ -41,11 +41,11 @@
 #ifdef _WIN32
 # define MAX_FILENAME 227
 # define WINVER 0x501
-#if defined(__CYGWIN__)
-# undef FD_SETSIZE
-#endif
- /* Increase select(2) FD limit from 64. It's documented and valid to do it
-  * like that provided that we define it *before* including winsock2.h. */
+# if defined(__CYGWIN__)
+#  undef FD_SETSIZE
+# endif
+  /* Increase select(2) FD limit from 64. It's documented and valid to do it
+   * like that provided that we define it *before* including winsock2.h. */
 # define FD_SETSIZE 4096
 #else
 # define MAX_FILENAME 254
@@ -704,14 +704,24 @@ char *rpl_ctime(const time_t *t);
 
 #if !HAVE_DECL_OPENAT
 int openat(int dirfd, const char *pathname, int flags, ...);
+#endif
+#if !HAVE_DECL_FSTATAT
 int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
+#endif
+#if !HAVE_DECL_FCHOWNAT
 int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
+#endif
+#if !HAVE_DECL_FCHMODAT
+int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
+#endif
+#if !HAVE_DECL_READLINKAT
+int readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
+#endif
 #ifndef AT_SYMLINK_NOFOLLOW
 #define AT_SYMLINK_NOFOLLOW 0x1000
 #endif
 #ifndef AT_FDCWD
 #define AT_FDCWD (-2)
-#endif
 #endif
 
 #if !HAVE_DECL_LOG2

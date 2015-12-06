@@ -1,0 +1,48 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that a data container defined by using parsejson(storejson()) against a non existing data container will not define a new data container.";
+}
+
+bundle agent init
+{
+  vars:
+    "data"
+      data => parsejson(storejson("missing_ns:missing_bundle.missing_var"));
+
+    "serialized_data" string => format("%S", data);
+
+  reports:
+    DEBUG::
+    "DEBUG $(this.bundle): serialized_data: '$(serialized_data)'";
+}
+
+bundle agent check
+{
+  classes:
+    "fail"
+      expression => isvariable("init.data");
+
+    "ok"
+      not => isvariable("init.data");
+
+    "exception"
+      and => { "fail", "ok" };
+
+  reports:
+     fail::
+       "$(this.promise_filename) FAIL";
+
+     ok.!fail::
+       "$(this.promise_filename) Pass";
+
+     exception::
+       "$(this.promise_filename) EXCEPTION";
+}

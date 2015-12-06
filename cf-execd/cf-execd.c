@@ -130,21 +130,12 @@ int main(int argc, char *argv[])
 
     GenericAgentDiscoverContext(ctx, config);
 
-    Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, false, false))
+    Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
+    
+    if (!policy)
     {
-        policy = LoadPolicy(ctx, config);
-    }
-    else if (config->tty_interactive)
-    {
+        Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
         exit(EXIT_FAILURE);
-    }
-    else
-    {
-        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
-        EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
-        GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
-        policy = LoadPolicy(ctx, config);
     }
 
     GenericAgentPostLoadInit(ctx);
@@ -181,7 +172,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     extern char *optarg;
     int c;
     char ld_library_path[CF_BUFSIZE];
-    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR);
+    
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR, GetTTYInteractive());
+
 
     while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMWC::l",
                             OPTIONS, NULL))
@@ -203,11 +196,33 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            config->heap_soft = StringSetFromString(optarg, ',');
+            {
+                StringSet *defined_classes = StringSetFromString(optarg, ',');
+                if (! config->heap_soft)
+                {
+                    config->heap_soft = defined_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_soft, defined_classes);
+                    free(defined_classes);
+                }
+            }
             break;
 
         case 'N':
-            config->heap_negated = StringSetFromString(optarg, ',');
+            {
+                StringSet *negated_classes = StringSetFromString(optarg, ',');
+                if (! config->heap_negated)
+                {
+                    config->heap_negated = negated_classes;
+                }
+                else
+                {
+                    StringSetJoin(config->heap_negated, negated_classes);
+                    free(negated_classes);
+                }
+            }
             break;
 
         case 'I':

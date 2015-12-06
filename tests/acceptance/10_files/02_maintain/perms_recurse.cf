@@ -1,0 +1,98 @@
+# https://dev.cfengine.com/issues/7808
+#
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  meta:
+      # Permissions test doesn't work with fakeroot.
+      # It also doesn't work on non-Linux due to the use of GNU specific find
+      # options.
+      "test_skip_needs_work" string => "using_fakeroot|!linux";
+
+  vars:
+      "directory" string => "$(G.testdir)";
+
+      "mode"      string => "750";
+      "owner"     string => "bin";
+      "group"     string => "bin";
+
+  files:
+      "$(directory)/."
+          perms  => mog("000", "root", "0"),
+          create => "true";
+
+      "$(directory)/dir1/."
+          perms  => mog("000", "root", "0"),
+          create => "true";
+
+      "$(directory)/dir2/."
+          perms  => mog("000", "root", "0"),
+          create => "true";
+
+}
+
+bundle agent test
+{
+  files:
+      "$(init.directory)"
+          create       => "false",
+          perms        => mog("${init.mode}", "${init.owner}", "${init.group}"),
+          depth_search => recurse_with_base("inf"),
+          file_select  => dirs;
+}
+
+body file_select dirs
+# @brief Select directories
+{
+    file_types  => { "dir" };
+    file_result => "file_types";
+}
+
+
+bundle agent check
+{
+
+  vars:
+    "permissions_test_mode"  string => "/usr/bin/test \"`/usr/bin/find ${init.directory} -perm ${init.mode} | wc -l`\" = \"3\"";
+    "permissions_test_owner" string => "/usr/bin/test \"`/usr/bin/find ${init.directory} -user ${init.owner} | wc -l`\" = \"3\"";
+    "permissions_test_group" string => "/usr/bin/test \"`/usr/bin/find ${init.directory} -group ${init.group} | wc -l`\" = \"3\"";
+
+  commands:
+    "${permissions_test_mode}"
+        contain => in_shell,
+        classes => ok("permissions_test_mode_ok");
+    "${permissions_test_owner}"
+        contain => in_shell,
+        classes => ok("permissions_test_owner_ok");
+    "${permissions_test_group}"
+        contain => in_shell,
+        classes => ok("permissions_test_group_ok");
+
+  reports:
+    DEBUG.!permissions_test_mode_ok::
+      "Didn't find 3 files with mode ${init.mode}";
+    DEBUG.!permissions_test_owner_ok::
+      "Didn't find 3 files with owner${init.owner}";
+    DEBUG.!permissions_test_group_ok::
+      "Didn't find 3 files with group ${init.group}";
+    permissions_test_mode_ok.permissions_test_owner_ok.permissions_test_group_ok::
+      "$(this.promise_filename) Pass";
+    !(permissions_test_mode_ok.permissions_test_owner_ok.permissions_test_group_ok)::
+      "$(this.promise_filename) FAIL";
+
+}
+
+body classes ok(classname)
+{
+    promise_repaired => { "$(classname)" };
+    promise_kept => { "$(classname)" };
+}
+
+

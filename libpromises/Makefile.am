@@ -30,22 +30,22 @@ else
 endif
 
 AM_LDFLAGS += $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDFLAGS) \
-	$(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS) $(SQLITE3_LDFLAGS) $(LIBACL_LDFLAGS) $(LIBYAML_LDFLAGS)
+	$(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS) $(SQLITE3_LDFLAGS) $(LIBACL_LDFLAGS) $(LIBYAML_LDFLAGS) $(LIBCURL_LDFLAGS)
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libutils -I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv $(ENTERPRISE_CPPFLAGS) \
 	$(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS) \
-	$(PCRE_CPPFLAGS) $(OPENSSL_CPPFLAGS) $(SQLITE3_CPPFLAGS) $(LIBACL_CPPFLAGS) $(LIBYAML_CPPFLAGS)
+	$(PCRE_CPPFLAGS) $(OPENSSL_CPPFLAGS) $(SQLITE3_CPPFLAGS) $(LIBACL_CPPFLAGS) $(LIBYAML_CPPFLAGS) $(LIBCURL_CPPFLAGS)
 
 AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
 	$(LMDB_CFLAGS) $(TOKYOCABINET_CFLAGS) $(QDBM_CFLAGS) \
-	$(PCRE_CFLAGS) $(OPENSSL_CFLAGS) $(SQLITE3_CFLAGS) $(LIBACL_CFLAGS) $(LIBYAML_CFLAGS)
+	$(PCRE_CFLAGS) $(OPENSSL_CFLAGS) $(SQLITE3_CFLAGS) $(LIBACL_CFLAGS) $(LIBYAML_CFLAGS) $(LIBCURL_CFLAGS)
 
 AM_YFLAGS = -d
 
 LIBS = $(LMDB_LIBS) $(TOKYOCABINET_LIBS) $(QDBM_LIBS) \
-	$(PCRE_LIBS) $(OPENSSL_LIBS) $(SQLITE3_LIBS) $(LIBACL_LIBS) $(LIBYAML_LIBS)
+	$(PCRE_LIBS) $(OPENSSL_LIBS) $(SQLITE3_LIBS) $(LIBACL_LIBS) $(LIBYAML_LIBS) $(LIBCURL_LIBS)
 
 libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la \
 	../libenv/libenv.la $(ENTERPRISE_LDADD)
@@ -81,6 +81,7 @@ libpromises_la_SOURCES = \
         exec_tools.c exec_tools.h \
         expand.c expand.h \
         extensions.c extensions.h \
+        feature.c feature.h \
         files_copy.c files_copy.h \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \

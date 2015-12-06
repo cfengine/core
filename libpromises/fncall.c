@@ -314,8 +314,24 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
     Rlist *expargs = NewExpArgs(ctx, policy, fp);
 
+    Writer *fncall_writer;
+    const char *fncall_string;
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        fncall_writer = StringWriter();
+        FnCallWrite(fncall_writer, fp);
+        fncall_string = StringWriterData(fncall_writer);
+    }
+
     if (RlistIsUnresolved(expargs))
     {
+        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        {
+            Log(LOG_LEVEL_DEBUG, "Skipping function evaluation for now,"
+                " arguments contain unresolved variables: %s",
+                fncall_string);
+            WriterClose(fncall_writer);
+        }
         RlistDestroy(expargs);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
@@ -323,13 +339,26 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     Rval cached_rval;
     if ((fp_type->options & FNCALL_OPTION_CACHED) && EvalContextFunctionCacheGet(ctx, fp, expargs, &cached_rval))
     {
+        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "Using previously cached result for function: %s",
+                fncall_string);
+            WriterClose(fncall_writer);
+        }
         Writer *w = StringWriter();
         FnCallWrite(w, fp);
-        Log(LOG_LEVEL_DEBUG, "Using previously cached result for function '%s'", StringWriterData(w));
         WriterClose(w);
         RlistDestroy(expargs);
 
         return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
+    }
+
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        Log(LOG_LEVEL_DEBUG, "Evaluating function: %s",
+            fncall_string);
+        WriterClose(fncall_writer);
     }
 
     FnCallResult result = CallFunction(ctx, policy, fp, expargs);

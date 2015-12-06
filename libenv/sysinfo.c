@@ -49,6 +49,7 @@
 #include <printsize.h>
 #include <cf-windows-functions.h>
 #include <ornaments.h>
+#include <feature.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -556,7 +557,7 @@ static void GetNameInfo3(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s", VSYSNAME.machine);
-    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "CFEngine detected operating system description is %s", workbuf);
     Log(LOG_LEVEL_VERBOSE, "The time is now %s", ctime(&tloc));
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));
@@ -945,13 +946,7 @@ static void BuiltinClasses(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
     CreateHardClassesFromCanonification(ctx, vbuff, "inventory,attribute_name=none,source=agent");
 
-#ifdef HAVE_LIBXML2
-    CreateHardClassesFromCanonification(ctx, "feature_xml", "source=agent");
-#endif
-
-#ifdef HAVE_LIBYAML
-    CreateHardClassesFromCanonification(ctx, "feature_yaml", "source=agent");
-#endif
+    CreateHardClassesFromFeatures(ctx, "source=agent");
 }
 
 /*******************************************************************/

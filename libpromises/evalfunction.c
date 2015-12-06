@@ -77,6 +77,14 @@
 
 #include <ctype.h>
 
+#ifdef HAVE_LIBCURL
+#include <curl/curl.h>
+#endif
+
+#ifdef HAVE_LIBCURL
+static bool CURL_INITIALIZED = false; /* GLOBAL */
+static JsonElement *CURL_CACHE = NULL;
+#endif
 
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const char *name, bool do_regex, bool invert, long max);
 static char* JsonPrimitiveToString(const JsonElement *el);
@@ -1691,6 +1699,271 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx,
     }
 
     return FnReturnContext(IsDefinedClass(ctx, class_name));
+}
+
+/*********************************************************************/
+
+#ifdef HAVE_LIBCURL
+struct _curl_userdata
+{
+    const FnCall *fp;
+    const char *desc;
+    size_t max_size;
+    Buffer* content;
+};
+
+static size_t cfengine_curl_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+    struct _curl_userdata *options = (struct _curl_userdata*) userdata;
+    unsigned int old = BufferSize(options->content);
+    size_t requested = size*nmemb;
+    size_t granted = requested;
+
+    if (old + requested > options->max_size)
+    {
+        granted = options->max_size - old;
+        Log(LOG_LEVEL_VERBOSE, "%s: while receiving %s, current %u + requested %zd bytes would be over the maximum %zd; only accepting %zd bytes", options->fp->name, options->desc, old, requested, options->max_size, granted);
+    }
+
+    BufferAppend(options->content, ptr, granted);
+
+    // `written` is actually (BufferSize(options->content) - old) but
+    // libcurl doesn't like that
+    size_t written = requested;
+
+    // extra caution
+    BufferTrimToMaxLength(options->content, options->max_size);
+    return written;
+}
+
+static void CurlCleanup()
+{
+    if (NULL == CURL_CACHE)
+    {
+        JsonElement *temp = CURL_CACHE;
+        CURL_CACHE = NULL;
+        JsonDestroy(temp);
+    }
+
+    if (CURL_INITIALIZED)
+    {
+        curl_global_cleanup();
+        CURL_INITIALIZED = false;
+    }
+
+}
+#endif
+
+static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
+                                 ARG_UNUSED const Policy *policy,
+                                 const FnCall *fp,
+                                 const Rlist *finalargs)
+{
+
+#ifdef HAVE_LIBCURL
+
+    char *url = RlistScalarValue(finalargs);
+    VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs->next));
+    if (!ref)
+    {
+        return FnFailure();
+    }
+
+    JsonElement *options = VarRefValueToJson(ctx, fp, ref, NULL, 0);
+    VarRefDestroy(ref);
+    if (NULL == options)
+    {
+        return FnFailure();
+    }
+
+    if (JsonGetElementType(options) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonGetContainerType(options) != JSON_CONTAINER_TYPE_OBJECT)
+    {
+        JsonDestroy(options);
+        return FnFailure();
+    }
+
+    Writer *cache_w = StringWriter();
+    WriterWriteF(cache_w, "url = %s; options = ", url);
+    JsonWriteCompact(cache_w, options);
+
+    if (NULL == CURL_CACHE)
+    {
+        CURL_CACHE = JsonObjectCreate(10);
+        atexit(&CurlCleanup);
+    }
+
+    JsonElement *old_result = JsonObjectGetAsObject(CURL_CACHE, StringWriterData(cache_w));
+
+    if (NULL != old_result)
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s: found cached request for %s", fp->name, url);
+        WriterClose(cache_w);
+        JsonDestroy(options);
+        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { JsonCopy(old_result), RVAL_TYPE_CONTAINER } };
+    }
+
+    if (!CURL_INITIALIZED && curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "%s: libcurl initialization failed, sorry", fp->name);
+
+        WriterClose(cache_w);
+        JsonDestroy(options);
+        return FnFailure();
+    }
+
+    CURL_INITIALIZED = true;
+
+    CURL *curl = curl_easy_init();
+    if (!curl)
+    {
+        Log(LOG_LEVEL_ERR, "%s: libcurl easy_init failed, sorry", fp->name);
+
+        WriterClose(cache_w);
+        JsonDestroy(options);
+        return FnFailure();
+    }
+
+    Buffer *content = BufferNew();
+    Buffer *headers = BufferNew();
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1); // do not use signals
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3L); // set default timeout
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
+    curl_easy_setopt(curl,
+                     CURLOPT_PROTOCOLS,
+
+                     // Allowed protocols
+                     CURLPROTO_FILE |
+                     CURLPROTO_FTP |
+                     CURLPROTO_FTPS |
+                     CURLPROTO_HTTP |
+                     CURLPROTO_HTTPS);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cfengine_curl_write_callback);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, cfengine_curl_write_callback);
+
+    size_t max_content = 4096;
+    size_t max_headers = 4096;
+    JsonIterator iter = JsonIteratorInit(options);
+    const JsonElement *e;
+    while ((e = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+    {
+        const char *key = JsonIteratorCurrentKey(&iter);
+        const char *value = JsonPrimitiveGetAsString(e);
+
+        if (0 == strcmp(key, "url.timeout"))
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: setting timeout to %ld seconds", fp->name, IntFromString(value));
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT, IntFromString(value));
+        }
+        else if (0 == strcmp(key, "url.verbose"))
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: setting verbosity to %ld", fp->name, IntFromString(value));
+            curl_easy_setopt(curl, CURLOPT_VERBOSE, IntFromString(value));
+        }
+        else if (0 == strcmp(key, "url.header"))
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: setting inline headers to %ld", fp->name, IntFromString(value));
+            curl_easy_setopt(curl, CURLOPT_HEADER, IntFromString(value));
+        }
+        else if (0 == strcmp(key, "url.referer"))
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: setting referer to %s", fp->name, value);
+            curl_easy_setopt(curl, CURLOPT_REFERER, value);
+        }
+        else if (0 == strcmp(key, "url.user-agent"))
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: setting user agent string to %s", fp->name, value);
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, value);
+        }
+        else if (0 == strcmp(key, "url.max_content"))
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: setting max contents to %ld", fp->name, IntFromString(value));
+            max_content = IntFromString(value);
+        }
+        else if (0 == strcmp(key, "url.max_headers"))
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s: setting max headers to %ld", fp->name, IntFromString(value));
+            max_headers = IntFromString(value);
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "%s: unknown option %s", fp->name, key);
+        }
+    }
+
+    struct _curl_userdata data = { fp, "content", max_content, content };
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+
+    struct _curl_userdata header_data = { fp, "headers", max_headers, headers };
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_data);
+
+    JsonElement *options_headers = JsonObjectGetAsArray(options, "url.headers");
+    struct curl_slist *header_list = NULL;
+
+    if (NULL != options_headers)
+    {
+        iter = JsonIteratorInit(options_headers);
+        while ((e = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+        {
+            header_list = curl_slist_append(header_list, JsonPrimitiveGetAsString(e));
+        }
+    }
+
+    if (NULL != header_list)
+    {
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
+    }
+
+    JsonElement *result = JsonObjectCreate(10);
+    CURLcode res = curl_easy_perform(curl);
+    if (NULL != header_list)
+    {
+        curl_slist_free_all(header_list);
+        header_list = NULL;
+    }
+
+    long returncode = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &returncode);
+    JsonObjectAppendInteger(result, "returncode",  returncode);
+
+    curl_easy_cleanup(curl);
+
+    JsonObjectAppendInteger(result, "rc",  0+res);
+
+    bool success = (CURLE_OK == res);
+    JsonObjectAppendBool(result, "success", success);
+
+    if (!success)
+    {
+        JsonObjectAppendString(result, "error_message", curl_easy_strerror(res));
+    }
+
+
+
+    BufferTrimToMaxLength(content, max_content);
+    JsonObjectAppendString(result, "content",  BufferData(content));
+    BufferDestroy(content);
+
+    BufferTrimToMaxLength(headers, max_headers);
+    JsonObjectAppendString(result, "headers",  BufferData(headers));
+    BufferDestroy(headers);
+
+    JsonObjectAppendObject(CURL_CACHE, StringWriterData(cache_w), JsonCopy(result));
+    WriterClose(cache_w);
+
+    JsonDestroy(options);
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+
+#else
+
+    UNUSED(finalargs);                 /* suppress unused parameter warning */
+    Log(LOG_LEVEL_ERR,
+        "%s: libcurl integration is not compiled into CFEngine, sorry", fp->name);
+    return FnFailure();
+
+#endif
 }
 
 /*********************************************************************/
@@ -5016,6 +5289,29 @@ static FnCallResult FnCallRegCmp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 /*********************************************************************/
 
+static FnCallResult FnCallRegReplace(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    const char *data = RlistScalarValue(finalargs);
+    const char *regex = RlistScalarValue(finalargs->next);
+    const char *replacement = RlistScalarValue(finalargs->next->next);
+    const char *options = RlistScalarValue(finalargs->next->next->next);
+
+    Buffer *rewrite = BufferNewFrom(data, strlen(data));
+    const char* error = BufferSearchAndReplace(rewrite, regex, replacement, options);
+
+    if (error)
+    {
+        BufferDestroy(rewrite);
+        Log(LOG_LEVEL_ERR, "%s: couldn't use regex '%s', replacement '%s', and options '%s': error=%s",
+            fp->name, regex, replacement, options, error);
+        return FnFailure();
+    }
+
+    return FnReturn(BufferClose(rewrite));
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     const bool container_mode = strcmp(fp->name, "data_regextract") == 0;
@@ -5593,6 +5889,8 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         return FnReturnNoCopy(contents);
     }
 
+    Log(LOG_LEVEL_ERR, "Function '%s' failed to read file: %s",
+        fp->name, filename);
     return FnFailure();
 }
 
@@ -5609,6 +5907,8 @@ static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCal
     char *file_buffer = CfReadFile(filename, maxsize);
     if (!file_buffer)
     {
+        Log(LOG_LEVEL_ERR, "Function '%s' failed to read file: %s",
+            fp->name, filename);
         return FnFailure();
     }
 
@@ -7804,6 +8104,15 @@ static const FnCallArg DATA_REGEXTRACT_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg REGEX_REPLACE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Source string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression pattern"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Replacement string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "sed/Perl-style options: gmsixUT"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg REGISTRYVALUE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Windows registry key"},
@@ -8079,6 +8388,13 @@ static const FnCallArg STRING_MUSTACHE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg CURL_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "URL to retrieve"},
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "Options data container name, can be blank"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -8117,6 +8433,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("countlinesmatching", CF_DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching, "Count the number of lines matching regex arg1 in file arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("url_get", CF_DATA_TYPE_CONTAINER, CURL_ARGS, &FnCallUrlGet, "Retrieve the contents at a URL with libcurl",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("datastate", CF_DATA_TYPE_CONTAINER, DATASTATE_ARGS, &FnCallDatastate, "Construct a container of the variable and class state",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("difference", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are not in list arg2",
@@ -8364,6 +8682,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regex_replace", CF_DATA_TYPE_STRING, REGEX_REPLACE_ARGS, &FnCallRegReplace, "Replace occurrences of arg1 in arg2 with arg3, allowing backreferences.  Perl-style options accepted in arg4.",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Text xform functions

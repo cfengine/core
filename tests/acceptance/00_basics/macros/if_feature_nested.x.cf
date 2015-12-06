@@ -1,0 +1,47 @@
+######################################################
+#
+#  Test that nested @if with features fails
+#
+#####################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test
+{
+@if minimum_version(3.7)
+@if feature(xml)
+  classes:
+      "expected" expression => "any";
+@endif
+@endif
+
+@if feature(xml)
+@if minimum_version(3.7)
+  classes:
+      "expected2" expression => "any";
+@endif
+@endif
+
+@if minimum_version(300.700)
+  classes:
+      "not_expected" expression => "any";
+@endif
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("expected,expected2",
+                                         "not_expected",
+                                         $(this.promise_filename));
+}
+
+@if minimum_version(300.600)
+
+This text should never be seen, it's completely ignored
+@endif

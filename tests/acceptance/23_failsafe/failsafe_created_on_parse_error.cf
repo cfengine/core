@@ -1,0 +1,41 @@
+# Test that failsafe.cf is created when dosn't exist
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  methods:
+      # Remove any failsafe.cf
+      "any" usebundle => dcs_fini("$(sys.inputdir)/failsafe.cf");
+  classes:
+      "failsafe_before_test_not_exists" not =>
+        fileexists("$(sys.inputdir)/failsafe.cf"),
+        scope => "namespace";
+}
+
+bundle agent test
+{
+  commands:
+      "$(sys.cf_agent) -f $(this.promise_dirname)/invalid_syntax.cf.sub";
+
+      # TODO this sub-agent fails to run invalid_syntax.cf and writes
+      #      failsafe.cf, which then executes. The execute bit is
+      #      redundant, can we avoid it?
+}
+
+bundle agent check
+{
+  classes:
+    "failsafe_after_test_exists" expression => fileexists("$(sys.inputdir)/failsafe.cf");
+    "ok" expression => "failsafe_after_test_exists.failsafe_before_test_not_exists";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

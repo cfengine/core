@@ -40,27 +40,30 @@ static void ThisAgentInit(void)
 
 int main(int argc, char *argv[])
 {
+    /* Ensure that if fd 0,1,2 are closed, we reserve them to avoid opening
+     * the listening socket on them and closing it later when daemonising. */
+    int fd = -1;
+    do
+    {
+        fd = open(NULLFILE, O_RDWR, 0);
+
+    } while (fd == STDIN_FILENO  ||
+             fd == STDOUT_FILENO ||
+             fd == STDERR_FILENO);
+    close(fd);
+
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
 
-    Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, false, false))
+    Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
+    
+    if (!policy)
     {
-        policy = LoadPolicy(ctx, config);
-    }
-    else if (config->tty_interactive)
-    {
+        Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
         exit(EXIT_FAILURE);
-    }
-    else
-    {
-        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
-        EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
-        GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
-        policy = LoadPolicy(ctx, config);
     }
 
     GenericAgentPostLoadInit(ctx);

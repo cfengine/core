@@ -63,6 +63,7 @@ libtest_la_LIBADD = ../../libcompat/libcompat.la
 check_LTLIBRARIES += libstr.la
 libstr_la_SOURCES = \
 	../../libutils/buffer.c \
+	../../libutils/pcre_wrap.c \
 	../../libutils/encode.c \
 	../../libutils/logging.c \
 	../../libutils/misc_lib.c \
@@ -438,6 +439,7 @@ queue_test_SOURCES = queue_test.c
 if !NT
 init_script_test_helper_SOURCES = init_script_test_helper.c
 init_script_test.sh: init_script_test_helper
+CLEANFILES += init_script_test_helper
 endif
 EXTRA_DIST += init_script_test_helper.c
 EXTRA_DIST += init_script_test.sh

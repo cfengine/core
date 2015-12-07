@@ -1,0 +1,65 @@
+bundle common test_meta
+{
+  vars:
+      "description"
+	string => "The agent should behave consistently with regard to erroring
+                   when attempting to read a file that does not exist.";
+}
+
+
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+      "test_soft_fail"
+        string => "any",
+        meta => { "redmine7724" };
+
+  vars:
+      "sub_tests"
+         slist => {
+                    "commands",
+                    "countlinesmatching",
+                    "data_readstringarray",
+                    "data_readstringarrayidx",
+                    "edit_line",
+                    "file_hash",
+                    "getfields",
+                    "peerleader",
+                    "peerleaders",
+                    "peers",
+                    "readcsv",
+                    "readdata",
+                    "readintarray",
+                    "readintlist",
+                    "readjson",
+                    "readrealarray",
+                    "readreallist",
+                    "readstringarray",
+                    "readstringarrayidx",
+                    "readstringlist",
+                    "readyaml",
+                    "usemodule",
+                  };
+
+  methods:
+      # We simply look for output of 'error:' in the subtest. It's not very
+      # specific, but should be unlikely to fail in other conditions.
+      "check"
+        # Stub in case we decide that suppressing all of these errors is the correct thing
+        # Pass with any output, except in case of error:
+        #usebundle => dcs_passif_output(".*", ".*error:.*", 
+        # Pass when there is error: in the output
+        usebundle => dcs_passif_output(".*error:.*", ".*NOTLOOKINGFORANYTHINGTOFAIL.*", 
+                                       "$(sys.cf_agent) -Kf $(this.promise_filename).sub_$(sub_tests) -DAUTO,DEBUG", $(this.promise_filename));
+}
+
+

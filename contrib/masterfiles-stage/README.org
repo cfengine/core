@@ -1,33 +1,71 @@
 #+Title: Masterfiles Stage
 
-This script is designed to stage masterfiles from an upstream
-location.
+This script is designed to run on the Policy Server and safely deploy
+policy from upstream locations to a directory on the Policy Server for
+distribution to clients.
 
-"staging" is the process of preparing a temporary location with the
+[[file:images/basic_cfengine_architecture.png]]
+
+As it is recommended to store and manage CFEngine policy in a version
+control system like git or subversion, the typical and recomended
+"upstream" source is a version control repository.
+
+Deployment is done in a safe manner by first preparing masterfiles in
+a staging area before deploying the policy to the directory where
+clients [[https://docs.cfengine.com/latest/reference-promise-types-access.html#top][have access]] and expect it to be distributed from.
+
+"Staging" is the process of preparing a temporary location with the
 content of masterfiles sourced from an upstream location. Once the
-temporary location has been updated it is "staged" through various
-means.
+temporary location has been updated it is validated and prepared for
+deployment through various means.
 
-The following are common and minimal staging actions:
+The following are the common minimal staging actions:
   - `cf-promises` is used to validate the policy
     - This is done to try and prevent broken policy from being made
-      available to remote agents.
-  - restrictive permissions are applied
+      available to remote agents
+  - apply restrictive permissions
+    - This is done because version control systems are notoriously
+      poor at preserving correct and restrictive permissions.
 
-Once masterfiles have been successfully staged they are deployed to
-the final location where clients expect to source the policy from. In
-the most simple environments this will be `$(sys.masterdir)` on the
-policy server.
+Once the policy has been successfully staged the policy is deployed to
+the final location for distribution to remote agents. In the most
+simple environments this will be `$(sys.masterdir)` (typically
+/var/cfengine/masterfiles) on the policy server.
+
 
 * Current Features
-- Stage masterfiles from a git branch (VCS_TYPE="GIT")
-- Stage masterfiles from a git tag or commit
-  (VCS_TYPE="GIT_TAG_OR_COMMIT")
+- Supported upstreams
+  - VCS_TYPE="GIT"
+  - VCS_TYPE="GIT_TAG_OR_COMMIT"
+  - VCS_TYPE="SVN"
+
+* Dependancies
+This script has the following dependancies
+- bash
+- rsync
+- git|svn
+
+* Installation
+Installation simply consists of saving `masterfiles-stage.sh` and its
+supporting `common.sh` to the same directory on your hub and making
+sure that `masterfiles-stage.sh` is executable.
+
+#+begin_src example
+  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/masterfiles-stage.sh -O /var/cfengine/bin/masterfiles-stage.sh
+  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/common.sh
+  chown root:root /var/cfengine/bin/masterfiles-stage.sh
+  chmod 555 /var/cfengine/bin/masterfiles-stage.sh
+#+end_src
+
+*Warning:* The above commands may not work out of the box depending on
+ how new your ssl certificates are.
 
 * Configuration
 
-The `masterfiles-stage.sh` script takes two parameters, `MASTERDIR`
-and `PARAMS`.
+The `masterfiles-stage.sh` script takes options in order to specify the
+directory where the masterfiles should be deployed after staging, as well as
+the file that contains the paramaters that should be used in order to interface
+with the given upstream source implementation (git url, branch etc ..)
 
 - `MASTERDIR` is the fully qualified path to the location that you
   want masterfiles to be deployed to after successful staging.
@@ -40,6 +78,8 @@ and `PARAMS`.
   defines may define its own parameters. It is reccomended that the
   parameters defined by the `VCS_TYPE` be prefixed with the `VCS_TYPE`
   so as not to conflict with other staging methods.
+
+  Example PARAMS files can be found [[file:example_params/][here]].
 
 *** Reserved Parameters
 The following parameters are in use, be sure to avoid their collision
@@ -88,29 +128,49 @@ have no effect on functionality of `masterfiles-stage.sh`
 - SCRIPT_DIR - Directory contianing supporting scripts
   - This is used by Design Center in CFEngine Enterprise
 
+*** Special Note
+The executing user may require addational configuration in order to
+successfully authenticate. The specifics depend on the specifics of
+your upstream repository. For example, an upstream repository over
+http or https that allows anonymous access may need no addtional
+configuration, but an upstream that uses ssh keys for authentication
+may require trust establishment (accepting the host key fingerprint),
+and the presence of an ssh key for authentication. Depending on the
+security requirements of your orginization, you may use a
+passphraseless key, or you may use something like ssh-agent.
+
 
 * Example Usage
 
-`masterfiles-stage.sh` can be invoked manually as shown in the
-following example.
+The script can be invoked manually:
 
 #+begin_example
-  ./masterfiles-stage.sh /tmp/deployed_masterfiles "$(pwd)/example_parmas/PARAMS_example_git_branch.sh"
+  /var/cfengine/bin/masterfiles-stage.sh -d /tmp/deployed_masterfiles -p /var/cfengine/masterfiles-stage_parmas/PARAMS_example_git_branch.sh
   tail -n1 /var/cfengine/outputs/dc-scripts.log
-  Successfully staged a policy release on Tue Oct 27 12:13:38 CDT 2015
+  Successfully deployed branch 'master' from 'https://gitlab.com/nickanderson/masterfiles_demo_3.7.git' to '/var/cfengine/masterfiles' on Sun Dec  6 23:00:34 UTC 2015
 #+end_example
 
-It's best to avoid un-necessary manual steps, and CFEngine can be used
-to automatically invoke the `masterfiles-stage.sh` script. In fact,
-this execution has been included in the masterfiles policy framework
-for some time as a CFEngine Enterprise feature. While this script is
-*NOT* currently the same script that ships with CFEngine Enterprise,
-it is the logical extension of the script that ships with CFEngine
-Enteprise and is a drop in replacement.
+Or execution can be automated with CFEngine.
 
-At the time of this writing the bundle that activates the
-`masterfiles-stage.sh` script can be found [[https://github.com/cfengine/masterfiles/blob/master/cfe_internal/update/cfe_internal_update_from_repository.cf][here]].
+#+begin_src cfengine3
+bundle agent stage_masterfiles
+{
+  vars:
+      policy_server::
+      "deploy_script"
+        string => "/var/cfengine/bin/masterfiles-stage.sh";
 
+      "masterfiles_deploy_destination"
+        string => "/var/cfengine/masterfiles";
+
+  commands:
+      policy_server::
+      # masterfiles-stage.sh DESTINATION PARAMS
+      "$(deploy_script)"
+        args => "-d '$(masterfiles_deploy_destination)' -p '/var/cfengine/deploy_params/PARAMS_masterfiles.sh'",
+        comment => "Masterfiles should be deployed to $(masterfiles_deploy_destination) using ";
+}
+#+end_src
 
 * Phased Rollout with Multiple Staged Masterfiles
 
@@ -118,17 +178,5 @@ The `masterfiles-stage.sh` script can support an implementation for
 phased rollout. Phased Rollout is the process of releasing a *policy*
 change to a population in a controlled manner.
 
-This can be accomplished with policy that allows remote agents to
-determine which phase they are part of. Each phase can be associated
-with the proper path to consider for upstream masterfiles. For
-example, hosts in the phase `population_a` could get policy from
-`/var/cfengine/masterfiles` and hosts in phase `population_b` could
-get policy from `/var/cfengine/next_masterfiles`.
-
-In order to allow for hosts to be moved from one phase to another
-*WITHOUT* making a change to policy, and releasing a change to many
-hosts it is reccomended that the data agents use to determine the path
-for masterfiles be *OUTSIDE* of your masterfiles repository. This can
-allow very fine grained control over which hosts get which set of
-policy and making a change to that will not require releasing a full
-policy change to other hosts.
+Read [[file:phased_rollout/README.org][this document]] for further information on using the
+`masterfiles-stage.sh` to help accomplish a phased roll out.

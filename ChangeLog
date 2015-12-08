@@ -22,7 +22,6 @@
 	- Add: masterfiles-stage script to contrib
 	- Whitespace is now allowed in class expressions for
 	  readability, between class names and operators. (Redmine #7152)
-	- Add: New `results` classes body [Redmine#7481] (Redmine #7418)
 
 	Changes:
 	- Change: Clarify bootstrap/failsafe reports

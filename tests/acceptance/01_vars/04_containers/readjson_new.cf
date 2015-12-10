@@ -1,0 +1,68 @@
+#######################################################
+#
+# Test data creation through readjson() with just 1 arg
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert_lines;
+
+      "$(G.testfile).json"
+      create => "true",
+      edit_line => init_insert_json;
+}
+
+bundle edit_line init_insert_json
+{
+  insert_lines:
+      '[ "hello", "there" ]';
+}
+
+bundle edit_line init_insert_lines
+{
+  insert_lines:
+      "hello";
+      "there";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "load" data => readjson("$(G.testfile).json");
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "$(test.load)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

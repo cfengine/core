@@ -1,0 +1,119 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      create => "true";
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Test that null keys, and mixed datatypes in json data are
+                 handeled appropriately.";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7821" };
+
+  methods:
+      "ec2"
+	comment => "We activate the bundle so that we can grab its state";
+}
+
+bundle agent check
+{
+  methods:
+      "check"
+        usebundle => dcs_check_state("ec2",
+                                     "$(this.promise_filename).expected.json",
+                                     $(this.promise_filename));
+}
+bundle agent ec2
+{
+  vars:
+
+      # This data has nulls in it, and consists of a single data type for
+      # values (strings)
+      "data"
+        data => '{
+                   "instanceId" : "i-f444554e",
+                   "billingProducts" : null,
+                   "instanceType" : "m3.large",
+                   "accountId" : "444444444444",
+                   "pendingTime" : "2015-12-02T19:47:57Z",
+                   "imageId" : "ami-44444444",
+                   "kernelId" : "aki-44444444",
+                   "ramdiskId" : null,
+                   "architecture" : "x86_64",
+                   "region" : "eu-west-1",
+                   "version" : "2010-08-31",
+                   "availabilityZone" : "eu-west-1c",
+                   "privateIp" : "10.44.44.4",
+                   "devpayProductCodes" : null
+                }';
+
+      "keys" slist => getindices("data");
+      "data_$(keys)" string => "$(data[$(keys)])";
+
+
+      # This data has no nulls in it and consists of a single type for values
+      # (strings)
+      "data2"
+        data => '{
+                   "instanceId" : "i-f444554e",
+                   "instanceType" : "m3.large",
+                   "accountId" : "444444444444",
+                   "pendingTime" : "2015-12-02T19:47:57Z",
+                   "imageId" : "ami-44444444",
+                   "kernelId" : "aki-44444444",
+                   "architecture" : "x86_64",
+                   "region" : "eu-west-1",
+                   "version" : "2010-08-31",
+                   "availabilityZone" : "eu-west-1c",
+                   "privateIp" : "10.44.44.4",
+                 }';
+
+      "keys2" slist => getindices("data2");
+      "data2_$(keys2)" string => "$(data2[$(keys2)])";
+
+
+      # The values in this data contain nulls and are of mixed types
+      # (strings, lists)
+      "data3"
+        data => '{
+                   "a": [],
+                   "b": ["one", "two"],
+                   "c": null,
+                   "d": "should be here"
+                 }';
+
+      "keys3" slist => getindices("data3");
+      # I expect that data3_a will not be defined
+      # - because the list is empty and there is nothing to iterate over
+      # - potentially it would make sense to be cf_null (thats what 
+      #   iterating over empty slist does) or null
+      # I expect that data3_b will contain 'two'
+      # - because the list will be iterated over  and two is the last
+      #   element.
+      # I expect data3_c to not be defined
+      # - potentially cf_null or null would make sense as with data3_a
+      # I expect data3_d to be 'should be here'
+      "data3_$(keys3)" string => "$(data3[$(keys3)])";
+
+  reports:
+    DEBUG::
+      "Key from 'data': $(keys)";
+      "key from 'data2': $(keys2)";
+      "key from 'data3': $(keys3)";
+      "Value from 'data': $(data_$(keys)) = $(data[$(keys)])";
+      "Value from 'data2': $(data_$(keys2)) = $(data2[$(keys2)])";
+      "Value from 'data3': $(data_$(keys3)) = $(data3[$(keys3)])";
+}

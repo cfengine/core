@@ -3,7 +3,7 @@ bundle agent main
 {
   reports:
       "It's reccomended that you always guard reports"
-        comment => "Remember by default output from cf-agent when run
+	comment => "Remember by default output from cf-agent when run
 		    from cf-execd will be emailed";
 
     DEBUG|DEBUG_main::
@@ -14,7 +14,7 @@ bundle agent main
 	usebundle => bundle_with_return_value,
 	useresult => "return_array",
 	comment => "Reports can be used to return data into a parent bundle.
-                    This is useful in some re-usable bundle patterns.";
+		    This is useful in some re-usable bundle patterns.";
 
   reports:
       "I got '$(return_array[key])' returned from bundle_with_return_value";
@@ -22,7 +22,7 @@ bundle agent main
       "Reports can be redirected and appended to files"
 	report_to_file => "$(sys.workdir)/report_output.txt",
 	comment => "It's important to note that this will suppress the report
-                   from stdout.";
+		   from stdout.";
 
       "Report content of a file:$(const.n)$(const.n)------------------------"
 	printfile => cat( $(this.promise_filename) );

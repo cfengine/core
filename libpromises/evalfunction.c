@@ -2133,75 +2133,6 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED const Policy *po
     return FnReturnContext(found);
 }
 
-
-static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
-{
-    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
-    if (!VarRefIsQualified(ref))
-    {
-        if (fp->caller)
-        {
-            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
-            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
-        }
-        else
-        {
-            Log(LOG_LEVEL_WARNING,
-                "Function '%s' was given an unqualified variable reference, "
-                "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
-                fp->name, RlistScalarValue(finalargs));
-            VarRefDestroy(ref);
-            return FnFailure();
-        }
-    }
-
-    DataType type = CF_DATA_TYPE_NONE;
-    const void *value = EvalContextVariableGet(ctx, ref, &type);
-
-    Rlist *keys = NULL;
-    if (type == CF_DATA_TYPE_CONTAINER)
-    {
-        if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
-        {
-            if (JsonGetContainerType(value) == JSON_CONTAINER_TYPE_OBJECT)
-            {
-                JsonIterator iter = JsonIteratorInit(value);
-                const char *key;
-                while ((key = JsonIteratorNextKey(&iter)))
-                {
-                    RlistAppendScalar(&keys, key);
-                }
-            }
-            else
-            {
-                for (size_t i = 0; i < JsonLength(value); i++)
-                {
-                    Rval key = (Rval) { StringFromLong(i), RVAL_TYPE_SCALAR };
-                    RlistAppendRval(&keys, key);
-                }
-            }
-        }
-    }
-    else
-    {
-        VariableTableIterator *iter = 
-                EvalContextVariableTableFromRefIteratorNew(ctx, ref);
-        const Variable *var;
-        while ((var = VariableTableIteratorNext(iter)))
-        {
-            if (ref->num_indices < var->ref->num_indices)
-            {
-                RlistAppendScalarIdemp(&keys, var->ref->indices[ref->num_indices]);
-            }
-        }
-        VariableTableIteratorDestroy(iter);
-    }
-
-    VarRefDestroy(ref);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { keys, RVAL_TYPE_LIST } };
-}
-
 /*********************************************************************/
 
 static char* JsonPrimitiveToString(const JsonElement *el)
@@ -2236,47 +2167,159 @@ static char* JsonPrimitiveToString(const JsonElement *el)
     return NULL;
 }
 
-static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+/*********************************************************************/
+
+static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
-    if (!VarRefIsQualified(ref))
+    VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs));
+
+    DataType type = CF_DATA_TYPE_NONE;
+    EvalContextVariableGet(ctx, ref, &type);
+
+    if (type != CF_DATA_TYPE_CONTAINER)
     {
-        if (fp->caller)
+        VarRefDestroy(ref);
+        ref = VarRefParse(RlistScalarValue(finalargs));
+        if (!VarRefIsQualified(ref))
         {
-            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
-            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
-        }
-        else
-        {
-            Log(LOG_LEVEL_WARNING,
-                "Function '%s' was given an unqualified variable reference, "
-                "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
-                fp->name, RlistScalarValue(finalargs));
-            VarRefDestroy(ref);
-            return FnFailure();
+            if (fp->caller)
+            {
+                const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+                VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+            }
+            else
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Function '%s' was given an unqualified variable reference, "
+                    "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                    fp->name, RlistScalarValue(finalargs));
+                VarRefDestroy(ref);
+                return FnFailure();
+            }
         }
     }
 
-    DataType type = CF_DATA_TYPE_NONE;
-    const void *value = EvalContextVariableGet(ctx, ref, &type);
+    type = CF_DATA_TYPE_NONE;
+    const void *var_value = EvalContextVariableGet(ctx, ref, &type);
 
-    Rlist *values = NULL;
+    Rlist *keys = NULL;
     if (type == CF_DATA_TYPE_CONTAINER)
     {
-        if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
+        if (JsonGetElementType(var_value) == JSON_ELEMENT_TYPE_CONTAINER)
         {
-            JsonIterator iter = JsonIteratorInit(value);
-            const JsonElement *el;
-            while ((el = JsonIteratorNextValue(&iter)))
+            if (JsonGetContainerType(var_value) == JSON_CONTAINER_TYPE_OBJECT)
+            {
+                JsonIterator iter = JsonIteratorInit(var_value);
+                const char *key;
+                while ((key = JsonIteratorNextKey(&iter)))
+                {
+                    RlistAppendScalar(&keys, key);
+                }
+            }
+            else
+            {
+                for (size_t i = 0; i < JsonLength(var_value); i++)
+                {
+                    Rval key = (Rval) { StringFromLong(i), RVAL_TYPE_SCALAR };
+                    RlistAppendRval(&keys, key);
+                }
+            }
+        }
+    }
+    else
+    {
+        VariableTableIterator *iter =
+                EvalContextVariableTableFromRefIteratorNew(ctx, ref);
+        const Variable *var;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            if (ref->num_indices < var->ref->num_indices)
+            {
+                RlistAppendScalarIdemp(&keys, var->ref->indices[ref->num_indices]);
+            }
+        }
+        VariableTableIteratorDestroy(iter);
+    }
+
+    VarRefDestroy(ref);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { keys, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+void CollectContainerValues(EvalContext *ctx, Rlist **values, const JsonElement *container)
+{
+    if (JsonGetElementType(container) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        JsonIterator iter = JsonIteratorInit(container);
+        const JsonElement *el;
+        while ((el = JsonIteratorNextValue(&iter)))
+        {
+            if (JsonGetElementType(el) == JSON_ELEMENT_TYPE_CONTAINER)
+            {
+                CollectContainerValues(ctx, values, el);
+            }
+            else
             {
                 char *value = JsonPrimitiveToString(el);
                 if (NULL != value)
                 {
-                    RlistAppendScalar(&values, value);
+                    RlistAppendScalar(values, value);
                     free(value);
                 }
             }
         }
+    }
+    else if (JsonGetElementType(container) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        char *value = JsonPrimitiveToString(container);
+        if (NULL != value)
+        {
+            RlistAppendScalar(values, value);
+            free(value);
+        }
+    }
+}
+
+static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs));
+
+    DataType type = CF_DATA_TYPE_NONE;
+    EvalContextVariableGet(ctx, ref, &type);
+
+    if (type != CF_DATA_TYPE_CONTAINER)
+    {
+        VarRefDestroy(ref);
+        ref = VarRefParse(RlistScalarValue(finalargs));
+        if (!VarRefIsQualified(ref))
+        {
+            if (fp->caller)
+            {
+                const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+                VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+            }
+            else
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Function '%s' was given an unqualified variable reference, "
+                    "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                    fp->name, RlistScalarValue(finalargs));
+                VarRefDestroy(ref);
+                return FnFailure();
+            }
+        }
+    }
+
+    type = CF_DATA_TYPE_NONE;
+    const void *var_value = EvalContextVariableGet(ctx, ref, &type);
+
+    Rlist *values = NULL;
+
+    if (type == CF_DATA_TYPE_CONTAINER)
+    {
+        CollectContainerValues(ctx, &values, var_value);
     }
     else
     {

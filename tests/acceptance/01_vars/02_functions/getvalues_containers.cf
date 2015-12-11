@@ -1,0 +1,32 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "arr" data => '["a", [], { "x": 1 }, 2, 5.30, true]';
+}
+
+bundle agent test
+{
+  vars:
+      "arr_v" slist => getvalues("init.arr");
+
+reports:
+  DEBUG::
+    "arr_v $(arr_v)";
+}
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

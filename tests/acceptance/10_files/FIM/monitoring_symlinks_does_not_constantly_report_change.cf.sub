@@ -1,0 +1,31 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      version => "1.0";
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testfile)"
+      changes => detect_all_change;
+
+  vars:
+    "classes"
+      slist => classesmatching("fim_.*");
+
+  reports:
+    "$(classes)";
+}
+
+body changes detect_all_change
+# @brief Detect all file changes using the best hash method
+#
+# This is fierce, and will cost disk cycles
+#
+{
+      hash           => "best";
+      report_changes => "all";
+      update_hashes  => "yes";
+}
+

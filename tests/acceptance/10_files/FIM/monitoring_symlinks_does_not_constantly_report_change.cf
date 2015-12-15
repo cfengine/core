@@ -1,0 +1,61 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  
+  files:
+    "$(G.testfile)"
+      link_from => ln_s( $(this.promise_filename) );
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Test that monitoring a symlink does not constantly report changes";
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "Windows does not support symlinks, so it makes no sense to
+                  test there";
+ 
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7692" };
+}
+
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+
+  commands:
+    "$(command)"
+      handle => "first_agent_run",
+      comment => "We must run the agent at least once so that the file can be
+                  added to the FIM database. The second run we scan for output.",
+      classes => scoped_classes_generic("bundle", "first_agent_run");
+
+  methods:
+    first_agent_run_reached::
+      # We fail if we see Permissions, inode or mtime changes
+      "Check second run"
+        usebundle => dcs_passif_output(".*fim_kept.*", ".*(Permissions for|inode for|Last modified time for).*$(G.testfile).*changed.*", $(command), $(this.promise_filename));
+}
+
+body link_from ln_s(x)
+# @brief Create a symbolink link to `x`
+# The link is created even if the source of the link does not exist.
+# @param x The source of the link
+{
+      link_type => "symlink";
+      source => "$(x)";
+      when_no_source => "force";
+}
+

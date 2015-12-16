@@ -176,9 +176,9 @@ bundle agent cfe_internal_update
     !bootstrap_mode::
       "Built-in failsafe policy triggered"
         handle => "cfe_internal_bootstrap_update_reports_failsafe_notification",
-	comment => "Be sure to inform the user that the failsafe policy has
-		    been triggered. This typically indicates that the agent has
-		    recieved broken policy. It may also indicate legacy
+        comment => "Be sure to inform the user that the failsafe policy has
+                    been triggered. This typically indicates that the agent has
+                    received broken policy. It may also indicate legacy
                     configuration in body executor control.";
 
     bootstrap_mode::
@@ -239,14 +239,21 @@ bundle agent cfe_internal_update
 ################################################################################
 bundle agent cfe_internal_call_update
 {
+  vars:
+
+    "mode" string => ifelse("bootstrap_mode", "bootstrap_mode", "failsafe_mode");
+
   commands:
 
     # On Windows we need cf-execd to call update.cf, otherwise the daemons will
     # not run under the SYSTEM account.
     !windows::
+      "$(sys.cf_agent) -f $(sys.update_policy_path) --define $(mode)"
+        handle => "cfe_internal_call_update_commands_call_update_cf",
+        if => fileexists( $(sys.update_policy_path) ),
+        comment => "We run update.cf in order to prepare system information for
+                    collection into CFEngine Enterprise more quickly.";
 
-      "$(sys.cf_agent) -f update.cf"
-      handle => "cfe_internal_call_update_commands_call_update_cf";
 }
 ############################################
 body classes kept(x)

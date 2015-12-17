@@ -82,32 +82,22 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
             }
             else if (LastRecvTimedOut())
             {
-                Log(LOG_LEVEL_ERR,
-                    "Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d). (recv: %s)",
+                Log(LOG_LEVEL_ERR, "Receive timeout"
+                    " (received=%dB, expecting=%dB) (recv: %s)",
                     already, toget, GetErrorStr());
+                Log(LOG_LEVEL_VERBOSE,
+                    "Consider increasing body agent control"
+                    " \"default_timeout\" setting");
+
+                /* Shutdown() TCP connection despite of EAGAIN error, in
+                 * order to avoid receiving this delayed response later on
+                 * (Redmine #6027). */
+                shutdown(sd, SHUT_RDWR);
             }
             else
             {
-                if (LastRecvTimedOut())
-                {
-                    Log(LOG_LEVEL_ERR, "Receive timeout"
-                        " (received=%dB, expecting=%dB) (recv: %s)",
-                        already, toget, GetErrorStr());
-                    Log(LOG_LEVEL_VERBOSE,
-                        "Consider increasing body agent control"
-                        " \"default_timeout\" setting");
-
-                    /* Shutdown() TCP connection despite of EAGAIN error, in
-                     * order to avoid receiving this delayed response later on
-                     * (Redmine #6027). */
-                    shutdown(sd, SHUT_RDWR);
-                }
-                else
-                {
-                    Log(LOG_LEVEL_ERR, "Couldn't receive (recv: %s)",
-                        GetErrorStr());
-                }
-                return -1;
+                Log(LOG_LEVEL_ERR, "Couldn't receive (recv: %s)",
+                    GetErrorStr());
             }
             return -1;
         }

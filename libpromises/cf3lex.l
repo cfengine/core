@@ -82,6 +82,7 @@ comment    #[^\n]*
 
 macro_if    ^@if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}\)
 macro_endif ^@endif
+macro_line ^[^@].*$
 
 promises   bundle
 
@@ -199,6 +200,11 @@ promise_type   [a-zA-Z_]+:
                         P.if_depth--;
                       }
 
+
+<if_ignore_state>{macro_line}  {
+                                  ParserDebug("\tL:inside macro @if, ignoring text:%s\n", yytext);
+                               }
+
 <if_ignore_state>{macro_endif} {
                                  ParserDebug("\tL:macro @endif %d\n", P.line_pos);
                                  BEGIN(INITIAL);
@@ -208,11 +214,11 @@ promise_type   [a-zA-Z_]+:
                                    return 0;
                                  }
                                  P.if_depth--;
-                               }
-
-<if_ignore_state>[^@]      {
-                               ParserDebug("\tL:inside macro @if, ignoring text:%s\n", yytext);
-                           }
+                               }\
+<if_ignore_state>.    {
+                          /* eat up al unknown chars when line starts with @*/
+                          ParserDebug("\tL:inside macro @if, ignoring text:%s\n", yytext);
+                      }
 
 {promises}            {
                           /* Note this has to come before "id" since it is a subset of id */

@@ -9,19 +9,21 @@ bundle agent motd {
     "template_path" string => "$(this.promise_filename).mustache";
 
     ## This is to extract the cf-engine role ( hub or client )
-    "cf_role" string => ifelse ( "policy_server", "Policy Server", "Policy Client");
+    "cf_role"
+      string => ifelse( "policy_server", "Policy Server", "Policy Client");
 
     ## This is to extract the available package updates status
-    "updates_available" data => packageupdatesmatching(".*", ".*", ".*", ".*");
+    "updates_available"
+      data => packageupdatesmatching(".*", ".*", ".*", ".*");
     "amount_updates" int => length("updates_available");
 
     ## This is to define a production / stage example role for the server
     "environment_list" slist => { "/etc/prod", "/etc/staging" };
     "environment"
       string => ifelse( filesexist( @(environment_list) ), "unknown",
-      			fileexists("/etc/prod"), "production",
-			fileexists("/etc/staging"), "staging",
-			"unknown" );
+                        fileexists("/etc/prod"), "production",
+                        fileexists("/etc/staging"), "staging",
+                        "unknown" );
 
     ## Based on the prod /stage role, we define different contacts details.
     "admin_contact"
@@ -36,11 +38,13 @@ bundle agent motd {
       slist => { "root@localhost" },
       if => strcmp( $(environment), "unknown" );
 
-  ## We define a class to conditionally render the role status in the final motd.
+  ## We define a class to conditionally render the role status in the final
+  ## motd.
   classes:
     "env_$(environment)" expression => "any";
 
-  ## In order to get package inventory, we need to have a legacy package promise.
+  ## In order to get package inventory, we need to have a legacy package
+  ## promise.
   packages:
     "vim" -> { "https://dev.cfengine.com/issues/7864" }
       package_policy => "add";
@@ -59,7 +63,7 @@ bundle agent motd {
       "DEBUG $(this.bundle): $(sys.cf_version) is the detected version";
       "DEBUG $(this.bundle): $(sys.fqhost) is the detected hostname";
       "DEBUG $(this.bundle): $(sys.ipv4) is the ipv4 address for $(sys.fqhost)";
-      "DEBUG $(this.bundle): $(motd.cf_role) is the detected role for $(sys.fqhost)";
+      "DEBUG $(this.bundle): $(motd.cf_role) is the detected role";
       "DEBUG $(this.bundle): $(amount_updates) packages can be updated";
       "DEBUG $(this.bundle): This host is managed by $(admin_contact)";
 }

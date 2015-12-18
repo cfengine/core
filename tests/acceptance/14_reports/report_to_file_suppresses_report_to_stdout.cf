@@ -1,0 +1,53 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that report_to_file attribute suppresses report on stdout.";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      delete => tidy;
+}
+
+bundle agent test
+{
+  vars:
+    "subout" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO", "noshell");
+}
+
+bundle agent check
+{
+
+  classes:
+    "not_found_report_in_agent_output"
+      not => regcmp(".*This should not be reported to stdout.*", "$(test.subout)");
+
+    "sub_ok" expression => regcmp(".*Pass", "$(test.subout)");
+
+    "ok" and => { "sub_ok", "not_found_report_in_agent_output" }; 
+
+  reports:
+    DEBUG::
+      "DEBUG: sub output $(const.n)$(test.subout)";
+
+    sub_ok.DEBUG::
+      "DEBUG: subtest passed";
+
+    not_found_report_in_agent_output.DEBUG::
+      "DEBUG: Did not find report in agent output as expected";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

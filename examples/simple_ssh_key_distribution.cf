@@ -9,7 +9,7 @@ bundle common ssh_key_info
     "key_server" string => "$(sys.policy_hub)";
 
     # We set the path to the repo in a common bundle so that we can reference
-    # the same path when defining access rules and when copying files. 
+    # the same path when defining access rules and when copying files.
     # This directory is expected to contain one file for each users authorized
     # keys, named for the username. For example: /srv/ssh_authorized_keys/kelly
     "repo_path" string => "/srv/ssh_authorized_keys";
@@ -21,7 +21,7 @@ bundle agent autorun_ssh_key_distribution
     # Here we simply tag the bundle for use with the `services_autorun`
     # feature.
     "tags" slist => { "autorun" };
-  
+
   vars:
     "users" slist => { "bob", "frank", "kelly" };
 
@@ -30,7 +30,7 @@ bundle agent autorun_ssh_key_distribution
       usebundle => ssh_key_distribution( $(users) ),
       if => userexists( $(users) ),
       comment => "It's important that we make sure each of these users
-		  ssh_authorized_keys file has the correct content and
+                  ssh_authorized_keys file has the correct content and
                   permissions so that they can successfully log in, if
                   the user exists on the executing agents host.";
 }
@@ -50,7 +50,7 @@ bundle agent ssh_key_distribution(users)
       create => "true",
       perms => mo( 700, "$(uid[$(users)])"),
       comment => "It is important to set the proper restrictive permissions and
-		  ownership so that the ssh authorized_keys feature works
+                  ownership so that the ssh authorized_keys feature works
                   correctly.";
 
     "/home/$(users)/.ssh/authorized_keys"
@@ -73,8 +73,8 @@ bundle server ssh_key_access_rules
     # Only hosts with class `policy_server` should share the path to ssh
     # authorized_keys
     policy_server::
-      "$(ssh_key_info.repo_path)" 
+      "$(ssh_key_info.repo_path)"
         admit => { @(def.acl) },
-	comment => "We share the ssh authorized keys with all authorized
+        comment => "We share the ssh authorized keys with all authorized
                     hosts.";
 }

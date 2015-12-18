@@ -1,0 +1,56 @@
+bundle common test_meta
+{
+  vars:
+      "description" -> { "Mustache Specification" }
+        string => "Missed variables should be empty strings by
+		   default in rendered mustache templates as described in the
+                   Mustache Manual.",
+        comment => "https://mustache.github.io/mustache.5.html";
+}
+
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "template_target" string => "$(G.testfile)";
+    "template_data" data => '{ "key1": "value1", "key3": "value3" }';
+
+  files:
+      "$(template_target)"
+        create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+    "$(init.template_target)"
+      edit_template => "$(this.promise_filename).mustache",
+      template_method => "mustache",
+      template_data => @(init.template_data);
+}
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) -KIf $(this.promise_filename).sub -DAUTO";
+    "actual" string => "$(init.template_target)";
+    "expected" string => "$(this.promise_filename).mustache.expected";
+    "test" string => "$(this.promise_filename)";
+
+  methods:
+    "check" usebundle => dcs_check_diff( $(actual), $(expected), $(test) );
+
+  reports:
+    DEBUG::
+      "Comparing render of '$(actual)' with expected output '$(expected)'";
+}

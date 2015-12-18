@@ -1,0 +1,68 @@
+#######################################################
+#
+# Test that modules are allowed to define lists with trailing commas
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "any",
+        meta => { "redmine7578" };
+
+  commands:
+      "$(G.cat)"
+        args => "$(this.promise_filename).txt",
+        module => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "length_of_list_from_module"
+      int => length("default:cat.list_from_module");
+
+  classes:
+    "have_list_from_module"
+      expression => isvariable("default:cat.list_from_module"),
+      comment => "Modules should be able to define empty/null lists.";
+
+    "list_from_module_length_1"
+      expression => strcmp(1, $(length_of_list_from_module));
+
+    "ok"
+      and => { "have_list_from_module", "list_from_module_length_1" }, 
+      comment => "OK since we can both define a list with a trailing comma, and
+                  its length is 1 as expected";
+      
+  reports:
+    DEBUG|DEBUG_check::
+    "DEBUG $(this.bundle): Module defined 'default:cat.list_from_module'"
+      if => "have_list_from_module";
+
+    "DEBUG $(this.bundle): The list defined from the module had the expected length of 0"
+      if => "list_from_module_length_1";
+
+    "DEBUG $(this.bundle): length of list from module '$(length_of_list_from_module)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

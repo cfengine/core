@@ -1,0 +1,76 @@
+#######################################################
+#
+# Test basics of meta promises
+#
+#######################################################
+bundle common test_meta
+{
+  vars:
+      "description" string => "Can dereference meta vars.";
+}
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7803" };
+
+    "string" string => "value";
+    "list" slist => { "element1", "element2" }; 
+
+  classes:
+      "can_deref_this_bundle_meta_string"
+        expression => strcmp("$($(this.bundle)_meta.string)", "value");
+
+      "can_deref_direct_meta_list_element1"
+        #expression => strcmp("$($(this.bundle)_meta.list)", "element1");
+        expression => strcmp("$(check_meta.list)", "element1");
+
+      "can_deref_direct_meta_list_element2"
+        #expression => strcmp("$($(this.bundle)_meta.list)", "element2");
+        expression => strcmp("$(check_meta.list)", "element2");
+
+      "can_deref_this_bundle_meta_list_element1"
+        expression => strcmp("$($(this.bundle)_meta.list)", "element1");
+
+      "can_deref_this_bundle_meta_list_element2"
+        expression => strcmp("$($(this.bundle)_meta.list)", "element2");
+
+      "ok" and => {
+                    "can_deref_this_bundle_meta_string",
+                    "can_deref_direct_meta_list_element1",
+                    "can_deref_direct_meta_list_element2",
+                    "can_deref_this_bundle_meta_list_element1",
+                    "can_deref_this_bundle_meta_list_element2",
+                  };
+
+  reports:
+    DEBUG::
+      "DEBUG $(this.bundle): meta var = '$($(this.bundle)_meta.string)'";
+      "DEBUG $(this.bundle): meta list direct = '$(check_meta.list)'";
+      "DEBUG $(this.bundle): meta list this.bundle = '$($(this.bundle)_meta.list)'";
+
+      "DEBUG $(this.bundle): Can't dereference meta string var with this.bundle"
+        unless => "can_deref_this_bundle_meta_string";
+      "DEBUG $(this.bundle): Can't dereference meta list directly"
+        unless => "can_deref_direct_meta_list_element1.can_deref_direct_meta_list_element2";
+      "DEBUG $(this.bundle): Can't dereference meta list with this.bundle"
+        unless => "can_deref_this_bundle_meta_list_element1.can_deref_this_bundle_meta_list_element2";
+
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

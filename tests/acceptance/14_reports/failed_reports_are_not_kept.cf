@@ -1,0 +1,68 @@
+# Check that reports are printed just once (Redmine#3446 https://cfengine.com/dev/issues/3446)
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      create => "true",
+      handle => "init_testfile";
+
+  commands:
+    "/usr/bin/chattr"
+      args => "+i $(G.testfile)",
+      comment => "The file needs to be immutable so that we can accurately test it.";
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Test that we do not conisder failure to report to a file a kept outcome";
+
+    "test_skip_unsupported"
+      string => "!linux",
+      comment => "I am unsure exactly where chattr is supported other than linux";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7833" };
+
+  reports:
+    "Hello World"
+      report_to_file => "$(G.testfile)",
+      classes => scoped_classes_generic("namespace", "report_to_file");
+}
+
+
+bundle agent check
+{
+  classes:
+      "ok" not => "report_to_file_kept";
+
+  commands:
+    "/usr/bin/chattr"
+      args => "-i $(G.testfile)",
+      handle => "remove_immutable_bit",
+      comment => "So that we don't mess up other tests lets be sure to clean up
+                  after ourselves";
+
+  files:
+    "$(G.testfile)"
+      depends_on => { "remove_immutable_bit" },
+      delete => tidy;
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 2

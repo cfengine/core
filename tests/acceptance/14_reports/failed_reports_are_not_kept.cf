@@ -26,10 +26,7 @@ bundle agent test
     "description"
       string => "Test that we do not conisder failure to report to a file a kept outcome";
 
-    "test_skip_unsupported"
-      string => "!linux",
-      comment => "I am unsure exactly where chattr is supported other than linux";
-
+    # this test should be skipped on platforms that do not have chattr!
     "test_soft_fail"
       string => "any",
       meta => { "redmine7833" };

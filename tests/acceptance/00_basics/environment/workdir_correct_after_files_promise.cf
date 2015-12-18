@@ -13,9 +13,9 @@ body common control
 bundle agent check
 {
   meta:
-    "test_skip_unsupported"
-      string => "!linux";
 
+    # This test should be skipped on non linux hosts when its fixed (or
+    # improved to do something similar on platforms that dont have /bin/pwd
     "test_soft_fail"
       string => "any",
       meta =>  { "redmine7569" };

@@ -1,0 +1,31 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent test
+{
+  reports:
+    "This should not be reported to stdout"
+      report_to_file => "$(G.testfile)";
+}
+
+bundle agent check
+{
+  vars:
+    "count_reports_in_file"
+      int => countlinesmatching("This should not be reported to stdout", "$(G.testfile)");
+
+  classes:
+    "ok" expression => isgreaterthan($(count_reports_in_file), 0);
+
+  reports:
+    DEBUG::
+      "DEBUG: Found '$(count_reports_in_file)' lines matching 'This should not be reported to stdout' in '$(G.testfile)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+}
+

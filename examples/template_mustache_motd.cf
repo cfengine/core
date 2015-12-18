@@ -1,4 +1,6 @@
 body file control {
+  # To make this policy "standalone" we load parts of the standard library that
+  # we use
   inputs => { "$(sys.libdir)/files.cf", "$(sys.libdir)/packages.cf" };
 }
 
@@ -25,7 +27,7 @@ bundle agent motd {
                         fileexists("/etc/staging"), "staging",
                         "unknown" );
 
-    ## Based on the prod /stage role, we define different contacts details.
+    ## Based on the environment we define different contatcs.
     "admin_contact"
       slist => { "admin@acme.com", "oncall@acme.com" },
       if => strcmp( $(environment), "production" );

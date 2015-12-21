@@ -30,6 +30,8 @@
 #include <policy.h>
 #include <eval_context.h>
 #include <file_lib.h>
+#include <signals.h>
+#include <string_lib.h>
 
 static int CfSetuid(uid_t uid, gid_t gid);
 
@@ -203,7 +205,7 @@ static pid_t CreatePipesAndFork(const char *type, int *pd, int *pdb)
 
 /*****************************************************************************/
 
-IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
+IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool require_full_path)
 {
 /* For simplifying reading and writing directions */
 #define READ  0
@@ -267,11 +269,26 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
         CloseChildrenFD();
         
         char **argv  = ArgSplitCommand(command);
-        if (execv(argv[0], argv) == -1)
+        int res = -1;
+
+        if (require_full_path)
+        {
+            res = execv(argv[0], argv);
+        }
+        else
+        {
+            res = execvp(argv[0], argv);
+        }
+
+        if (res == -1)
         {
             /* NOTE: exec functions return only when error have occurred. */
-            Log(LOG_LEVEL_ERR, "Couldn't run '%s'. (execv: %s)", argv[0], GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Couldn't run '%s'. (%s: %s)",
+                argv[0],
+                require_full_path ? "execv" : "execvp",
+                GetErrorStr());
         }
+
         /* We shouldn't reach this point */
         _exit(EXIT_FAILURE);
     }
@@ -892,4 +909,3 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
     return true;
 }
-

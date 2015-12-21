@@ -1,0 +1,37 @@
+#######################################################
+#
+# Test mapdata('json_pipe')
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      # Skip on Windows because we use shell script below.
+      "test_skip_needs_work" string => "windows";
+
+  vars:
+      "items" data => '{"user":"stedolan","titles":["JQ Primer", "More JQ"]}';
+      "items_passthrough" data => mapdata("json_pipe", "$(G.cat)", items);
+      "items_jqinput" data => mapdata("json_pipe", "$(this.promise_dirname)/mapdata_json_pipe.cat_consume_input.sh $(this.promise_filename).jqinput.json", items);
+      "items_input" data => mapdata("json_pipe", "$(this.promise_dirname)/mapdata_json_pipe.cat_consume_input.sh $(this.promise_filename).input.json", items);
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

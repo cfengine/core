@@ -2578,6 +2578,70 @@ bool EvalContextVariablePutSpecialEscaped(EvalContext *ctx, SpecialScope scope, 
     return EvalContextVariablePutSpecial(ctx, scope, lval, value, type, tags);
 }
 
+/*********************************************************************/
+
+static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
+{
+    IOData io = cf_popen_full_duplex(cmd, false, false);
+
+    if (io.write_fd == -1 || io.read_fd == -1)
+    {
+        Log(LOG_LEVEL_INFO, "An error occurred while communicating with '%s'", cmd);
+        return NULL;
+    }
+
+    Log(LOG_LEVEL_DEBUG, "Opened fds %d and %d for command '%s'.",
+        io.read_fd, io.write_fd, cmd);
+
+    // write the container to a string
+    Writer *w = StringWriter();
+    JsonWrite(w, container, 0);
+    char *container_str = StringWriterClose(w);
+
+    if (PipeWrite(&io, container_str) != strlen(container_str))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Couldn't send whole container data to '%s'.", cmd);
+        free(container_str);
+        return NULL;
+    }
+
+    free(container_str);
+
+    /* We can have some error message here. */
+    Rlist *returnlist = PipeReadData(&io, 5, 5);
+
+    /* If script returns non 0 status */
+    int close = cf_pclose_full_duplex(&io);
+    if (close != EXIT_SUCCESS)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "%s returned with non zero return code: %d",
+            cmd, close);
+    }
+
+    JsonElement *returnjq = JsonArrayCreate(5);
+
+    for (const Rlist *rp = returnlist; rp != NULL; rp = rp->next)
+    {
+        const char *data = RlistScalarValue(rp);
+        JsonElement *parsed = NULL;
+        if (JsonParse(&data, &parsed) == JSON_PARSE_OK)
+        {
+            JsonArrayAppendElement(returnjq, parsed);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "'%s' generated invalid JSON '%s', skipping it", cmd, data);
+        }
+    }
+
+    RlistDestroy(returnlist);
+
+    return returnjq;
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     if (!fp->caller)
@@ -2611,6 +2675,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     bool jsonmode = (0 == strcmp(conversion, "json"));
     bool canonifymode = (0 == strcmp(conversion, "canonify"));
+    bool json_pipemode = (0 == strcmp(conversion, "json_pipe"));
 
     bool allocated = false;
     JsonElement *container = VarNameOrInlineToJson(ctx, fp, varpointer, false, &allocated);
@@ -2626,6 +2691,21 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         JsonDestroyMaybe(container, allocated);
 
         return FnFailure();
+    }
+
+    if (mapdatamode && json_pipemode)
+    {
+        JsonElement *returnjson_pipe = ExecJSON_Pipe(arg_map, container);
+
+        if (NULL == returnjson_pipe)
+        {
+            Log(LOG_LEVEL_ERR, "Function %s failed to get output from 'json_pipe' execution", fp->name);
+            return FnFailure();
+        }
+
+        JsonDestroy(container);
+
+        return (FnCallResult) { FNCALL_SUCCESS, { returnjson_pipe, RVAL_TYPE_CONTAINER } };
     }
 
     Buffer *expbuf = BufferNew();
@@ -7818,7 +7898,7 @@ static const FnCallArg MAPARRAY_ARGS[] =
 
 static const FnCallArg MAPDATA_ARGS[] =
 {
-    {"none,canonify,json", CF_DATA_TYPE_OPTION, "Conversion to apply to the mapped string"},
+    {"none,canonify,json,json_pipe", CF_DATA_TYPE_OPTION, "Conversion to apply to the mapped string"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
     {NULL, CF_DATA_TYPE_NONE, NULL}

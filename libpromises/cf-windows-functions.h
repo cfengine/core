@@ -34,7 +34,6 @@ int NovaWin_chmod(const char *path, mode_t mode);
 
 /* win_file.c */
 
-FILE *NovaWin_FileHandleToStream(HANDLE fHandle, char *mode);
 int NovaWin_rename(const char *oldpath, const char *newpath);
 int NovaWin_FileExists(const char *fileName);
 int NovaWin_IsDir(char *fileName);
@@ -52,7 +51,6 @@ void LogToSystemLog(const char *msg, LogLevel level);
 /* win_proc.c */
 
 int NovaWin_IsProcessRunning(pid_t pid);
-int NovaWin_RunCmd(const char *comm, ShellType shell, int inheritHandles, char *startDir, STARTUPINFO *si, HANDLE *procHandle);
 int NovaWin_GetCurrentProcessOwner(SID *sid, int sidSz);
 int NovaWin_SetTokenPrivilege(HANDLE token, char *privilegeName, int enablePriv);
 

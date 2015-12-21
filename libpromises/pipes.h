@@ -33,7 +33,7 @@ typedef struct
     int read_fd;
 } IOData;
 
-IOData cf_popen_full_duplex(const char *command, bool capture_stderr);
+IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool require_full_path);
 int cf_pclose_full_duplex(IOData *data);
 int cf_pclose_full_duplex_side(int fd);
 
@@ -44,6 +44,13 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
 int cf_pclose(FILE *pp);
 bool PipeToPid(pid_t *pid, FILE *pp);
 bool PipeTypeIsOk(const char *type);
+
+int PipeIsReadWriteReady(const IOData *io, int timeout_sec);
+Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_termination_check_secs);
+int PipeWrite(IOData *io, const char *data);
+int PipeWriteData(const char *base_cmd, const char *args, const char *data);
+int PipeReadWriteData(const char *base_command, const char *args, const char *request,
+                             Rlist **response, int pipe_timeout_secs, int pipe_termination_check_secs);
 
 #ifdef __MINGW32__
 FILE *cf_popen_powershell(const char *command, const char *type);

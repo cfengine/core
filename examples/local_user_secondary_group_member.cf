@@ -1,0 +1,8 @@
+bundle agent main
+{
+  users:
+    linux::
+      "jill"
+        policy => "present",
+        groups_secondary => { "cfengineers" };
+}

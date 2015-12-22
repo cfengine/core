@@ -1,0 +1,10 @@
+bundle agent main
+{
+  vars:
+    "users" slist => { "jack", "jill" };
+
+  users:
+    linux::
+      "$(users)"
+        policy => "absent";
+}

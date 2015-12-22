@@ -1,0 +1,17 @@
+body file control
+{
+  # This policy uses parts of the standard library.
+  inputs => { "$(sys.libdir)/paths.cf" };
+}
+
+bundle agent main
+{
+  classes:
+      "group_cfengineers_absent"
+        not => groupexists("cfengineers");
+
+  commands:
+    linux.group_cfengineers_absent::
+      "$(paths.groupadd)"
+        args => "cfengineers";
+}

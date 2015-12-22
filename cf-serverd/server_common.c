@@ -1508,7 +1508,7 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
 static bool CharsetAcceptable(const char *s, size_t s_len)
 {
     const char *ACCEPT =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:";
     size_t acceptable_chars = strspn(s, ACCEPT);
     if (s_len == 0)
     {

@@ -1,0 +1,31 @@
+body file control
+{
+  # This policy uses parts of the standard library.
+  inputs => { "$(sys.libdir)/files.cf" };
+}
+
+bundle agent main
+{
+  vars:
+    "users" slist => { "jack", "jill" };
+    "skel" string => "/etc/skel";
+
+  users:
+    linux::
+      "$(users)"
+        home_dir => "/home/$(users)",
+        policy => "present",
+        home_bundle => home_skel( $(users), $(skel) );
+}
+
+bundle agent home_skel(user, skel)
+# @brief Initialize a user's home directory with the contents of skel
+# @param user The user's home directory to create
+# @param skel The directory to seed the user's home with
+{
+  files:
+    "/home/$(user)/."
+      create => "true",
+      copy_from => seed_cp( $(skel) ),
+      depth_search => recurse( "inf" );
+}

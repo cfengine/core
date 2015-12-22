@@ -1681,12 +1681,9 @@ bool DoExec2(const EvalContext *ctx,
     char   cmdbuf[CF_BUFSIZE] = "";
     size_t cmdbuf_len         = 0;
 
-    const char standard_args[] = " -I -Dcfruncommand";
-
     assert(sizeof(CFRUNCOMMAND) <= sizeof(cmdbuf));
 
     StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len, CFRUNCOMMAND, 0);
-    StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len, standard_args, 0);
 
     exec_args += strspn(exec_args,  " \t");                  /* skip spaces */
     while (exec_args[0] != '\0')

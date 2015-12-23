@@ -320,6 +320,36 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
     return convert;
 }
 
+static JsonElement* VarNameOrInlineToJson(EvalContext *ctx, const FnCall *fp, const char *data)
+{
+    JsonElement *inline_data = NULL;
+    JsonParseError res = JsonParse(&data, &inline_data);
+
+    if (res != JSON_PARSE_OK)
+    {
+    }
+    else if (JsonGetElementType(inline_data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        JsonDestroy(inline_data);
+        inline_data = NULL;
+    }
+    else
+    {
+        return inline_data;
+    }
+
+    VarRef *ref = ResolveAndQualifyVarName(fp, data);
+    if (!ref)
+    {
+        return NULL;
+    }
+
+    JsonElement *vardata = VarRefValueToJson(ctx, fp, ref, NULL, 0);
+    VarRefDestroy(ref);
+
+    return vardata;
+}
+
 static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool return_address, bool return_recent)
 {
     Rlist *recent = NULL, *aged = NULL;
@@ -1687,14 +1717,8 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
 #ifdef HAVE_LIBCURL
 
     char *url = RlistScalarValue(finalargs);
-    VarRef *ref = ResolveAndQualifyVarName(fp, RlistScalarValue(finalargs->next));
-    if (!ref)
-    {
-        return FnFailure();
-    }
+    JsonElement *options = VarNameOrInlineToJson(ctx, fp, RlistScalarValue(finalargs->next));
 
-    JsonElement *options = VarRefValueToJson(ctx, fp, ref, NULL, 0);
-    VarRefDestroy(ref);
     if (NULL == options)
     {
         return FnFailure();
@@ -2646,13 +2670,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     bool jsonmode = (0 == strcmp(conversion, "json"));
     bool canonifymode = (0 == strcmp(conversion, "canonify"));
 
-    VarRef *ref = ResolveAndQualifyVarName(fp, varname);
-    if (!ref)
-    {
-        return FnFailure();
-    }
-
-    JsonElement *container = VarRefValueToJson(ctx, fp, ref, NULL, 0);
+    JsonElement *container = VarNameOrInlineToJson(ctx, fp, varname);
 
     if (NULL == container)
     {
@@ -2976,61 +2994,62 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
         Buffer *wrap_map_key = NULL;
         Buffer *name = NULL;
 
-        if (name_len > 2 && name_str[0] == '[')
-        {
-            Seq *s = StringMatchCaptures("^\\[ *([^ ]+) *\\]$", name_str, false);
+        // try to load directly
+        JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str);
 
-            if (s && SeqLength(s) == 2)
+        // if that failed, try the wrappers
+        if (NULL == json)
+        {
+            if (name_len > 2 && name_str[0] == '[')
             {
-                wrap_array_mode = true;
-                name = BufferCopy((const Buffer*) SeqAt(s, 1));
+                Seq *s = StringMatchCaptures("^\\[ *([^ ]+) *\\]$", name_str, false);
+
+                if (s && SeqLength(s) == 2)
+                {
+                    wrap_array_mode = true;
+                    name = BufferCopy((const Buffer*) SeqAt(s, 1));
+                }
+
+                SeqDestroy(s);
+            }
+            else if (name_len > 0 && name_str[0] == '{' && name_str[name_len-1] == '}')
+            {
+                Seq *s = StringMatchCaptures("^\\{ *\"([^\"]+)\" *: *([^ ]+) *\\}$", name_str, false);
+
+                if (s && SeqLength(s) == 3)
+                {
+                    wrap_map_key = BufferCopy((const Buffer*) SeqAt(s, 1));
+                    name = BufferCopy((const Buffer*) SeqAt(s, 2));
+                }
+
+                SeqDestroy(s);
+            }
+            else
+            {
+                name = BufferNewFrom(name_str, name_len);
+            }
+        }
+
+        // try to use `name` a second time
+        if (NULL == json && NULL != name)
+        {
+            json = VarNameOrInlineToJson(ctx, fp, BufferData(name));
+        }
+
+        // we failed to produce a valid JsonElement, so give up
+        if (NULL == json)
+        {
+            if (NULL != wrap_map_key)
+            {
+                BufferDestroy(wrap_map_key);
             }
 
-            SeqDestroy(s);
-        }
-        else if (name_len > 0 && name_str[0] == '{' && name_str[name_len-1] == '}')
-        {
-            Seq *s = StringMatchCaptures("^\\{ *\"([^\"]+)\" *: *([^ ]+) *\\}$", name_str, false);
-
-            if (s && SeqLength(s) == 3)
+            if (NULL != name)
             {
-                wrap_map_key = BufferCopy((const Buffer*) SeqAt(s, 1));
-                name = BufferCopy((const Buffer*) SeqAt(s, 2));
+                BufferDestroy(name);
             }
 
-            SeqDestroy(s);
-        }
-        else
-        {
-            name = BufferNewFrom(name_str, name_len);
-        }
-
-        VarRef *ref = NULL;
-
-        if (NULL != name)
-        {
-            ref = ResolveAndQualifyVarName(fp, BufferData(name));
-            BufferDestroy(name);
-        }
-
-        if (!ref)
-        {
             SeqDestroy(containers);
-
-            if (NULL != wrap_map_key) BufferDestroy(wrap_map_key);
-
-            return FnFailure();
-        }
-
-        JsonElement *json = VarRefValueToJson(ctx, fp, ref, NULL, 0);
-
-        VarRefDestroy(ref);
-
-        if (!json)
-        {
-            SeqDestroy(containers);
-
-            if (NULL != wrap_map_key) BufferDestroy(wrap_map_key);
 
             return FnFailure();
         }
@@ -4199,14 +4218,7 @@ static FnCallResult FnCallFold(EvalContext *ctx,
     bool max_mode = strcmp(fp->name, "max") == 0;
     bool min_mode = strcmp(fp->name, "min") == 0;
 
-    VarRef *ref = ResolveAndQualifyVarName(fp, name);
-    if (!ref)
-    {
-        return FnFailure();
-    }
-
-    JsonElement *json = VarRefValueToJson(ctx, fp, ref, NULL, 0);
-    VarRefDestroy(ref);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name);
 
     if (!json)
     {
@@ -6211,14 +6223,7 @@ static FnCallResult FnCallDataExpand(EvalContext *ctx,
                                      const Rlist *args)
 {
     const char *varname = RlistScalarValue(args);
-    VarRef *ref = ResolveAndQualifyVarName(fp, varname);
-    if (!ref)
-    {
-        return FnFailure();
-    }
-
-    JsonElement *container = VarRefValueToJson(ctx, fp, ref, NULL, 0);
-    VarRefDestroy(ref);
+    JsonElement *container = VarNameOrInlineToJson(ctx, fp, varname);
 
     if (NULL == container)
     {
@@ -7854,7 +7859,7 @@ static const FnCallArg MAPDATA_ARGS[] =
 {
     {"none,canonify,json", CF_DATA_TYPE_OPTION, "Conversion to apply to the mapped string"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, the array variable to map"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, the array variable to map, or inline JSON"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -8236,7 +8241,7 @@ static const FnCallArg SHUFFLE_ARGS[] =
 
 static const FnCallArg STAT_FOLD_ARGS[] =
 {
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine list identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine list or data container identifier, or inline JSON"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -8315,7 +8320,7 @@ static const FnCallArg DATA_READSTRINGARRAY_ARGS[] =
 
 static const FnCallArg DATA_EXPAND_ARGS[] =
 {
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, which will be expanded"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier or inline JSON, which will be expanded"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -8327,7 +8332,7 @@ static const FnCallArg STRING_MUSTACHE_ARGS[] =
 static const FnCallArg CURL_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "URL to retrieve"},
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "Options data container name, can be blank"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Options data container name or inline JSON, can be blank"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

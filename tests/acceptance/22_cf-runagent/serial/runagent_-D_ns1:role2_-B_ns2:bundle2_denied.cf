@@ -10,9 +10,6 @@ body common control
 bundle agent init
 {
   methods:
-      # Expected output in the exec_args.txt file
-      "any" usebundle => file_make("$(G.testdir)/expected_args.txt",
-                                   "-D role2 --bundlesequence bundle2");
       # Ensure execution output file is not there
       "any" usebundle => dcs_fini("$(G.testdir)/exec_args.txt");
 
@@ -30,15 +27,15 @@ bundle agent test
   methods:
       "any" usebundle =>
         # Port 22012 is bundle2_role2_only_allowed.22012.srv
-        run_runagent("-H 127.0.0.1:22012 -D role2 --remote-bundles bundle2 $(runagent_cf)");
+        run_runagent("-H 127.0.0.1:22012 -D ns1:role2 --remote-bundles ns2:bundle2 $(runagent_cf)");
 }
 
 bundle agent check
 {
+  # Execution output file should still not be there.
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testdir)/expected_args.txt",
-                                        "$(G.testdir)/exec_args.txt",
-                                        "$(this.promise_filename)");
+      "any"  usebundle => dcs_passif_file_absent("$(G.testdir)/exec_args.txt",
+                                                 "$(this.promise_filename)");
 }
 
 bundle agent destroy

@@ -2874,6 +2874,13 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
 
 /*****************************************************************************/
 
+void GetDefVars(EvalContext *ctx)
+{
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, "jq", "jq --compact-output --monochrome-output --ascii-output --unbuffered --sort-keys",
+                                  CF_DATA_TYPE_STRING, "invocation,source=agent,command_name=jq");
+}
+/*****************************************************************************/
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
@@ -2882,4 +2889,5 @@ void DetectEnvironment(EvalContext *ctx)
     Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);
+    GetDefVars(ctx);
 }

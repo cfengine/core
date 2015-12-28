@@ -1537,7 +1537,7 @@ void JsonWriteCompact(Writer *w, const JsonElement *element)
 // Parsing
 // *******************************************************************************************
 
-static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_out);
+static JsonParseError JsonParseAsObject(void *lookup_context, JsonLookup *lookup_function, const char **data, JsonElement **json_out);
 
 static JsonElement *JsonParseAsBoolean(const char **data)
 {
@@ -1852,7 +1852,7 @@ static JsonParseError JsonParseAsPrimitive(const char **data, JsonElement **json
     }
 }
 
-static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out)
+static JsonParseError JsonParseAsArray(void *lookup_context, JsonLookup *lookup_function, const char **data, JsonElement **json_out)
 {
     if (**data != '[')
     {
@@ -1893,7 +1893,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                     return JSON_PARSE_ERROR_ARRAY_START;
                 }
                 JsonElement *child_array = NULL;
-                JsonParseError err = JsonParseAsArray(data, &child_array);
+                JsonParseError err = JsonParseAsArray(lookup_context, lookup_function, data, &child_array);
                 if (err != JSON_PARSE_OK)
                 {
                     JsonDestroy(array);
@@ -1913,7 +1913,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                     return JSON_PARSE_ERROR_ARRAY_START;
                 }
                 JsonElement *child_object = NULL;
-                JsonParseError err = JsonParseAsObject(data, &child_object);
+                JsonParseError err = JsonParseAsObject(lookup_context, lookup_function, data, &child_object);
                 if (err != JSON_PARSE_OK)
                 {
                     JsonDestroy(array);
@@ -1967,6 +1967,16 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                 break;
             }
 
+            if (lookup_function)
+            {
+                JsonElement *child_ref = (*lookup_function)(lookup_context, data);
+                if (child_ref)
+                {
+                    JsonArrayAppendElement(array, child_ref);
+                    break;
+                }
+            }
+
             *json_out = NULL;
             JsonDestroy(array);
             return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
@@ -1980,7 +1990,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
     return JSON_PARSE_ERROR_ARRAY_END;
 }
 
-static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_out)
+static JsonParseError JsonParseAsObject(void *lookup_context, JsonLookup *lookup_function, const char **data, JsonElement **json_out)
 {
     if (**data != '{')
     {
@@ -2055,7 +2065,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             if (property_name != NULL)
             {
                 JsonElement *child_array = NULL;
-                JsonParseError err = JsonParseAsArray(data, &child_array);
+                JsonParseError err = JsonParseAsArray(lookup_context, lookup_function, data, &child_array);
                 if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
@@ -2079,7 +2089,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             if (property_name != NULL)
             {
                 JsonElement *child_object = NULL;
-                JsonParseError err = JsonParseAsObject(data, &child_object);
+                JsonParseError err = JsonParseAsObject(lookup_context, lookup_function, data, &child_object);
                 if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
@@ -2171,6 +2181,19 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                     property_name = NULL;
                     break;
                 }
+
+                if (lookup_function)
+                {
+                    JsonElement *child_ref = (*lookup_function)(lookup_context, data);
+                    if (child_ref)
+                    {
+                        JsonObjectAppendElement(object, property_name, child_ref);
+                        free(property_name);
+                        property_name = NULL;
+                        break;
+                    }
+                }
+
             }
 
             *json_out = NULL;
@@ -2190,6 +2213,11 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
 
 JsonParseError JsonParse(const char **data, JsonElement **json_out)
 {
+    return JsonParseWithLookup(NULL, NULL, data, json_out);
+}
+
+JsonParseError JsonParseWithLookup(void *lookup_context, JsonLookup *lookup_function, const char **data, JsonElement **json_out)
+{
     assert(data && *data);
     if (data == NULL || *data == NULL)
     {
@@ -2200,11 +2228,11 @@ JsonParseError JsonParse(const char **data, JsonElement **json_out)
     {
         if (**data == '{')
         {
-            return JsonParseAsObject(data, json_out);
+            return JsonParseAsObject(lookup_context, lookup_function, data, json_out);
         }
         else if (**data == '[')
         {
-            return JsonParseAsArray(data, json_out);
+            return JsonParseAsArray(lookup_context, lookup_function, data, json_out);
         }
         else if (IsWhitespace(**data))
         {

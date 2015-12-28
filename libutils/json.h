@@ -354,6 +354,8 @@ JsonElement *JsonArrayGet(const JsonElement *array, size_t index);
   */
 bool JsonArrayContainsOnlyPrimitives(JsonElement *array);
 
+typedef JsonElement *JsonLookup(void *ctx, const char **data);
+
 /**
   @brief Parse a string to create a JsonElement
   @param data [in] Pointer to the string to parse
@@ -361,6 +363,19 @@ bool JsonArrayContainsOnlyPrimitives(JsonElement *array);
   @returns See JsonParseError and JsonParseErrorToString
   */
 JsonParseError JsonParse(const char **data, JsonElement **json_out);
+
+/**
+  @brief Parse a string to create a JsonElement
+  @param lookup_data [in] Evaluation context for variable lookups
+  @param lookup_function [in] Callback function for variable lookups
+  @param data [in] Pointer to the string to parse
+  @param json_out Resulting JSON object
+  @returns See JsonParseError and JsonParseErrorToString
+
+  The lookup_context type is void so we don't have to include
+  eval_context.h from libpromises into libutil
+  */
+JsonParseError JsonParseWithLookup(void *lookup_data, JsonLookup *lookup_function, const char **data, JsonElement **json_out);
 
 /**
  * @brief Convenience function to parse JSON from a file

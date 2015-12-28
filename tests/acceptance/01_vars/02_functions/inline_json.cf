@@ -1,0 +1,67 @@
+###########################################################
+#
+# Test inline JSON expansion
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+      "z" string => "100";
+      "foo" string => "bar";
+
+      # test mergedata() as well
+      "var" data => mergedata('[]', '["x"]');
+
+      # test mapdata() as well
+      "var2" data => mapdata("none", '$(this.v)', '["x"]');
+
+      # the basic building block
+      "var3" data => data_expand('["linux"]');
+
+      # variable references with a bundle
+      "var4" data => data_expand('[test.var3]');
+      "var5" data => data_expand('[test.var3,]');
+
+      # make sure bareword keys are not expanded
+      "var6" data => data_expand('[foo]');
+      "var7" data => data_expand('{foo:var3}');
+
+      # variable references without a bundle
+      "var8" data => data_expand('[var3]');
+      "var9" data => data_expand('{ "x": var3 }');
+
+      # regular lookup with bundle name into a map value
+      "varA" data => data_expand('{ "fullx": test.var3 }');
+
+      # try to trigger off-by-one errors
+      "varB" data => data_expand('[z]');
+
+      # intentionally broken to try to trigger off-by-one errors
+      "varC" data => data_expand('[z');
+
+      # inline array lookup
+      "varD" data => data_expand('[var3[0]]');
+      "varE" data => data_expand('[varA[fullx]]');
+      "varF" data => data_expand('[var9[x]]');
+
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

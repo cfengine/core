@@ -188,9 +188,23 @@ More stuff. (Redmine: #1234)'
 
 ################################################################################
 
+git commit --allow-empty -m 'Changelog commit with trailing dot.
+
+Changelog: Commit.'
+
+################################################################################
+
+git commit --allow-empty -m 'Changelog title with trailing dot.
+
+Changelog: Title.'
+
+################################################################################
+
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt
 cat > expected.txt <<EOF
 	- As well as this.
+	- Changelog commit with trailing dot.
+	- Changelog title with trailing dot.
 	- Complete Fix for changelog
 	  Should be included
 	- Fix for changelog

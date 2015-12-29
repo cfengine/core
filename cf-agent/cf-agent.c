@@ -79,6 +79,7 @@
 #include <conn_cache.h>                 /* ConnCache_Init,ConnCache_Destroy */
 #include <net.h>
 #include <package_module.h>
+#include <string_lib.h>
 
 #include <mod_common.h>
 
@@ -134,7 +135,7 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv);
 static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
-static void FreeStringArray(int size, char **array);
+static void FreeFixedStringArray(int size, char **array);
 static void CheckAgentAccess(const Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
@@ -168,6 +169,7 @@ static const struct option OPTIONS[] =
 {
     {"bootstrap", required_argument, 0, 'B'},
     {"bundlesequence", required_argument, 0, 'b'},
+    {"workdir", required_argument, 0, 'w'},
     {"debug", no_argument, 0, 'd'},
     {"define", required_argument, 0, 'D'},
     {"self-diagnostics", optional_argument, 0, 'x'},
@@ -191,6 +193,7 @@ static const char *const HINTS[] =
 {
     "Bootstrap CFEngine to the given policy server IP, hostname or :avahi (automatic detection)",
     "Set or override bundlesequence from command line",
+    "Override the default /var/cfengine work directory for testing (same as setting CFENGINE_TEST_OVERRIDE_WORKDIR)",
     "Enable debugging output",
     "Define a list of comma separated classes to be defined at the start of execution",
     "Run checks to diagnose a CFEngine agent installation",
@@ -296,9 +299,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int argc_new = argc;
     char **argv_tmp = TranslateOldBootstrapOptionsSeparate(&argc_new, argv);
     char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
-    FreeStringArray(argc_new, argv_tmp);
+    FreeFixedStringArray(argc_new, argv_tmp);
 
-    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:D:N:VxMB:b:hC::ElT::",
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:w:D:N:VxMB:b:hC::ElT::",
                             OPTIONS, NULL))
            != -1)
     {
@@ -306,6 +309,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         {
         case 't':
             TIMING = true;
+            break;
+
+        case 'w':
+            Log(LOG_LEVEL_INFO, "Setting workdir to '%s'", optarg);
+            putenv(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
             break;
 
         case 'f':
@@ -529,7 +537,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    FreeStringArray(argc_new, argv_new);
+    FreeFixedStringArray(argc_new, argv_new);
 
     return config;
 }
@@ -633,7 +641,7 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv)
 }
 
 
-static void FreeStringArray(int size, char **array)
+static void FreeFixedStringArray(int size, char **array)
 {
     for(int i = 0; i < size; i++)
     {

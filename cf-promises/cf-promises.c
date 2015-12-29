@@ -64,6 +64,7 @@ enum
 
 static const struct option OPTIONS[] =
 {
+    {"workdir", required_argument, 0, 'w'},
     {"eval-functions", optional_argument, 0, OPT_EVAL_FUNCTIONS },
     {"show-classes", no_argument, 0, OPT_SHOW_CLASSES },
     {"show-vars", no_argument, 0, OPT_SHOW_VARS },
@@ -91,6 +92,7 @@ static const struct option OPTIONS[] =
 
 static const char *const HINTS[] =
 {
+    "Override the work directory for testing (same as setting CFENGINE_TEST_OVERRIDE_WORKDIR)",
     "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'yes'",
     "Show discovered classes, including those defined in common bundles in policy",
     "Show discovered variables, including those defined without dependency to user-defined classes in policy",
@@ -213,7 +215,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, GetTTYInteractive());
     config->tag_release_dir = NULL;
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
+    while ((c = getopt_long(argc, argv, "dvnIw:f:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
                             OPTIONS, NULL))
            != -1)
     {
@@ -233,6 +235,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case OPT_SHOW_VARS:
             config->agent_specific.common.show_variables = true;
+            break;
+
+        case 'w':
+            Log(LOG_LEVEL_INFO, "Setting workdir to '%s'", optarg);
+            putenv(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
             break;
 
         case 'c':

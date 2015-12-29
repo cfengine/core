@@ -49,7 +49,6 @@ const char *FirstFileSeparator(const char *str);
 const char *LastFileSeparator(const char *str);
 bool ChopLastNode(char *str);
 char *CanonifyName(const char *str);
-void CanonifyNameInPlace(char *str);
 void TransformNameInPlace(char *s, char from, char to);
 char *CanonifyChar(const char *str, char ch);
 const char *ReadLastNode(const char *str);

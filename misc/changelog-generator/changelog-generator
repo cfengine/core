@@ -149,9 +149,9 @@ for repo in repos:
                     log_entry = ""
                 log_entry_local = False
 
-                if re.match("^Title *$", match.group(1), re.IGNORECASE):
+                if re.match("^Title[ .]*$", match.group(1), re.IGNORECASE):
                     log_entry = title
-                elif re.match("^Commit *$", match.group(1), re.IGNORECASE):
+                elif re.match("^Commit[ .]*$", match.group(1), re.IGNORECASE):
                     log_entry_commit = True
                 else:
                     log_entry_local = True

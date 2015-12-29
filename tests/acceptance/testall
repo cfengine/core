@@ -268,6 +268,7 @@ usage() {
     echo " -j[n]"
     echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
     echo "           tests will always run one by one."
+    echo " --verbose  Run tests with verbose logging"
 }
 
 workdir() {
@@ -741,6 +742,8 @@ do
             GDB=1;;
         --no-clean)
             NO_CLEAN=1;;
+        --verbose)
+            VERBOSE="-v";;
         --stay-in-workdir)
             # Internal option. Meant to keep sub invocations from interfering by
             # writing files only into the workdir.

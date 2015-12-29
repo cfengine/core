@@ -1,0 +1,18 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent check {
+  vars:
+    "command" string => "$(sys.cf_agent) -KIf $(this.promise_filename).sub -DAUTO";
+    "silent_command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO";
+
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*Pass.*", "", $(command), $(this.promise_filename));
+    "check"
+      usebundle => dcs_passif_output("", ".*Pass.*", $(silent_command), $(this.promise_filename));
+}

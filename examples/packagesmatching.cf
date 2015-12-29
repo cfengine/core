@@ -34,16 +34,28 @@ body common control
 bundle agent missing_packages
 {
   vars:
+    # List of desired packages
     "desired" slist => { "mypackage1", "mypackage2" };
 
+    # Get info on all installed packages
     "installed" data => packagesmatching(".*",".*",".*",".*");
     "installed_indices" slist => getindices(installed);
-    "installed_name[$(installed_indices)]" string => "$(installed[$(installed_indices)][name])";
+ 
+    # Build a simple array of the package names so that we can use
+    # getvalues to pull a unified list of package names that are installed.
+    "installed_name[$(installed_indices)]"
+      string => "$(installed[$(installed_indices)][name])";
+
+    # Get unified list of installed packages
     "installed_names" slist => getvalues("installed_name");
 
+    # Determine packages that are missing my differencing the list of
+    # desired packages, against the list of installed packages
     "missing_list" slist => difference(desired,installed_names);
 
   reports:
+    # Report on packages that are missing, installed
+    # and what we were looking for
     "Missing packages = $(missing_list)";
     "Installed packages = $(installed_names)";
     "Desired packages = $(desired)";

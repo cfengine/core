@@ -428,19 +428,6 @@ bool ChopLastNode(char *str)
 
 /*********************************************************************/
 
-void CanonifyNameInPlace(char *s)
-{
-    for (; *s != '\0'; s++)
-    {
-        if (!isalnum((unsigned char) *s))
-        {
-            *s = '_';
-        }
-    }
-}
-
-/*********************************************************************/
-
 void TransformNameInPlace(char *s, char from, char to)
 {
     for (; *s != '\0'; s++)
@@ -454,7 +441,7 @@ void TransformNameInPlace(char *s, char from, char to)
 
 /*********************************************************************/
 
-/* TODO remove, kill, burn this function! */
+/* TODO remove, kill, burn this function! Replace with BufferCanonify or CanonifyNameInPlace */
 char *CanonifyName(const char *str)
 {
     static char buffer[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */

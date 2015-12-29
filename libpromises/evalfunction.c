@@ -2752,7 +2752,8 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         varname = RlistScalarValue(finalargs->next);
     }
 
-    bool jsonmode = 0 == strcmp(conversion, "json");
+    bool jsonmode = (0 == strcmp(conversion, "json"));
+    bool canonifymode = (0 == strcmp(conversion, "canonify"));
 
     VarRef *ref = ResolveAndQualifyVarName(fp, varname);
     if (!ref)
@@ -2817,6 +2818,11 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
                 return FnFailure();
             }
 
+            if (canonifymode)
+            {
+                BufferCanonify(expbuf);
+            }
+
             RlistAppendScalar(&returnlist, BufferData(expbuf));
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
 
@@ -2860,6 +2866,11 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
                     BufferDestroy(expbuf);
                     JsonDestroy(container);
                     return FnFailure();
+                }
+
+                if (canonifymode)
+                {
+                    BufferCanonify(expbuf);
                 }
 
                 RlistAppendScalarIdemp(&returnlist, BufferData(expbuf));
@@ -8004,7 +8015,7 @@ static const FnCallArg MAPARRAY_ARGS[] =
 
 static const FnCallArg MAPDATA_ARGS[] =
 {
-    {"none,json", CF_DATA_TYPE_OPTION, "Conversion to apply to the mapped string"},
+    {"none,canonify,json", CF_DATA_TYPE_OPTION, "Conversion to apply to the mapped string"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, the array variable to map"},
     {NULL, CF_DATA_TYPE_NONE, NULL}

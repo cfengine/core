@@ -635,6 +635,12 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     InitializeWindows();
 #endif
 
+    /* Bug on HP-UX: Buffered output is discarded if you switch buffering mode
+       without flushing the buffered output first. This will happen anyway when
+       switching modes, so no performance is lost. */
+    fflush(stdout);
+    setlinebuf(stdout);
+
     DetermineCfenginePort();
 
     EvalContextClassPutHard(ctx, "any", "source=agent");
@@ -787,8 +793,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
     }
-
-    setlinebuf(stdout);
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)

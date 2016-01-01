@@ -1,0 +1,3 @@
+{
+ "inputs": [ "$(sys.inputdir)/secondary.cf" ]
+}

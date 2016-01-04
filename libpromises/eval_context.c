@@ -1480,13 +1480,15 @@ bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope sc
 {
     bool ret;
     char *ns = NULL;
+    char *delim = strchr(name, ':');
 
-    if (strchr(name, ':'))
+    if (delim)
     {
-        ns = xstrndup(name, strchr(name, ':') - name);
+        ns = xstrndup(name, delim - name);
     }
 
-    ret = EvalContextClassPut(ctx, ns ? ns : EvalContextCurrentNamespace(ctx), ns ? strchr(name, ':') + 1 : name, true, scope, tags);
+    ret = EvalContextClassPut(ctx, ns ? ns : EvalContextCurrentNamespace(ctx),
+                              ns ? delim + 1 : name, true, scope, tags);
     free(ns);
     return ret;
 }

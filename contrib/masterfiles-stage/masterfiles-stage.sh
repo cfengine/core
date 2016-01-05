@@ -13,9 +13,7 @@ PARAMS="$opt_params_file"
 
 # If PARAMS is unset, then we look to the default location
 #PARAMS=${PARAMS:-/opt/cfengine/dc-scripts/params.sh}
-if [ ! -f "$PARAMS" ]; then
-  error_exit "ERROR: Missing '$PARAMS'"
-fi
+[ -f "$PARAMS" ] || error_exit "ERROR: Missing '$PARAMS'"
 
 source "$PARAMS"
 
@@ -40,6 +38,6 @@ case "${VCS_TYPE}" in
         svn_branch
         ;;
     *)
-        error_exit $(basename $0) "Unknown VCS TYPE: '${VCS_TYPE}'."
+        error_exit "Unknown VCS TYPE: '${VCS_TYPE}'."
         ;;
 esac

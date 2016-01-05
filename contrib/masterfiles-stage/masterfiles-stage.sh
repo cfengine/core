@@ -24,9 +24,6 @@ source "$PARAMS"
   # PARAMS="/var/cfengine/policychannel/production_1.sh"
   # TMP=/opt/cfengine/masterfiles/staging/_tmp_var_cfengine_policychannel_production_1_sh
 
-  TRANSLATED_PARAMS=$(echo $PARAMS | tr [./] _)
-  STAGING_DIR="${ROOT}/_tmp${TRANSLATED_PARAMS}"
-
   # The VCS_TYPE based function calls in the case switch below
   # can count on the following environment variables to be set:
   #

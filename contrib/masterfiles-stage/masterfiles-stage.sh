@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Authors: Ted Zlatanov <tzz@lifelogs.com>, Nick Anderson <nick@cmdln.org>, Mike Weilgart
-DIRNAME=$(dirname $0);
+# Authors: Ted Zlatanov <tzz@lifelogs.com>, Nick Anderson <nick@cmdln.org>, Mike Weilgart <mikeweilgart@gmail.com>
+mydirname="$(dirname "$0")";
 
 # Load option parsing
-source "${DIRNAME}/options.sh"
+source "${mydirname}/options.sh"
 
 # Load common functionaly, upstream implementations
-source "${DIRNAME}/common.sh"
+source "${mydirname}/common.sh"
 
-MASTERDIR=$opt_deploy_dir
-PARAMS=$opt_params_file
+MASTERDIR="$opt_deploy_dir"
+PARAMS="$opt_params_file"
 
 # If PARAMS is unset, then we look to the default location
 #PARAMS=${PARAMS:-/opt/cfengine/dc-scripts/params.sh}
@@ -17,7 +17,7 @@ if [ ! -f "$PARAMS" ]; then
   error_exit "ERROR: Missing '$PARAMS'"
 fi
 
-source $PARAMS
+source "$PARAMS"
 
   # We probably want a different temporary location for each remote repository
   # so that we can avoid conflicts and potential confusion.

@@ -27,6 +27,16 @@ source "$PARAMS"
   TRANSLATED_PARAMS=$(echo $PARAMS | tr [./] _)
   STAGING_DIR="${ROOT}/_tmp${TRANSLATED_PARAMS}"
 
+  # The VCS_TYPE based function calls in the case switch below
+  # can count on the following environment variables to be set:
+  #
+  # MASTERDIR (set in this script based on options.sh)
+  # PARAMS (set in this script based on options.sh)
+  # ROOT (set in the PARAMS file)
+  # GIT_URL (set in the PARAMS file)
+  # and, of course,
+  # VCS_TYPE (set in the PARAMS file)
+
 case "${VCS_TYPE}" in
     GIT_TAG_OR_COMMIT)
         git_tag_or_commit_masterstage

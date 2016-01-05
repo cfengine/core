@@ -1,6 +1,6 @@
 # Nice option parsing with nk412/optparse
 # Source the optparse.bash file ---------------------------------------------------
-source "${DIRNAME}/lib/optparse/optparse.bash"
+source "${mydirname}/lib/optparse/optparse.bash"
 # Define options
 optparse.define short=d long=deploy-dir desc="The directory where masterfiles should be deployed after successful staging" variable=opt_deploy_dir  default=/var/cfengine/masterfiles
 optparse.define short=p long=params-file desc="The file that contains the paramaters necessary to interface with UPSTREAM" variable=opt_params_file default=/opt/cfengine/dc-scripts/params.sh

@@ -1,0 +1,26 @@
+# test of the def.json facility: complain if a bad JSON file is found
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)/def.json");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_promises) -v|$(G.grep) JSON";
+
+  methods:
+      "" usebundle => dcs_passif_output(".*Could not parse JSON file $(sys.inputdir)/def.json.*", "", $(command), $(this.promise_filename));
+}

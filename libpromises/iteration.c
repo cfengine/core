@@ -71,7 +71,7 @@ static void RlistAppendContainerPrimitive(Rlist **list, const JsonElement *primi
     }
 }
 
-static Rlist *ContainerToRlist(const JsonElement *container)
+Rlist *ContainerToRlist(const JsonElement *container)
 {
     Rlist *list = NULL;
 

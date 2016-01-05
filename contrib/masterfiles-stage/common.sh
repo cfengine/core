@@ -32,6 +32,8 @@ git_branch_masterstage() {
   #     synchronize to final location (should we sync anyway to make sure the
   #     distribution point is good?)
 
+  STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
+
   if ! type "git" > /dev/null; then
     error_exit "git not found on path: ${PATH}"
   fi
@@ -103,6 +105,8 @@ git_tag_or_commit_masterstage() {
   #     synchronize to final location (should we sync anyway to make sure the
   #     distribution point is good?)
 
+  STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
+
   if ! type "git" > /dev/null; then
     error_exit "git not found on path: ${PATH}"
   fi
@@ -151,6 +155,8 @@ git_tag_or_commit_masterstage() {
 
 svn_branch() {
 # Contributed by John Farrar
+
+    STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
 
     if ! type "svn" >/dev/null ; then
 	error_exit "svn not found on path: ${PATH}"

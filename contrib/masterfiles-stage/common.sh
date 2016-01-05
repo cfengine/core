@@ -29,6 +29,10 @@ set_staging_dir_from_params() {
   STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
 }
 
+check_git_installed() {
+  git --version >/dev/null 2>&1 || error_exit "git not found on path: '${PATH}'"
+}
+
 ######################################################
 ##           VCS_TYPE-based main functions           #
 ######################################################
@@ -48,10 +52,7 @@ git_branch_masterstage() {
   #     distribution point is good?)
 
   set_staging_dir_from_params
-
-  if ! type "git" > /dev/null; then
-    error_exit "git not found on path: ${PATH}"
-  fi
+  check_git_installed
 
   # If we have a git checkout ensure the origin is set properly, update it and
   # make sure all modified, extra, or missing files are reset so that we have a
@@ -121,10 +122,7 @@ git_tag_or_commit_masterstage() {
   #     distribution point is good?)
 
   set_staging_dir_from_params
-
-  if ! type "git" > /dev/null; then
-    error_exit "git not found on path: ${PATH}"
-  fi
+  check_git_installed
 
   # If we have a git checkout ensure the origin is set properly, update it and
   # make sure all modified, extra, or missing files are reset so that we have a

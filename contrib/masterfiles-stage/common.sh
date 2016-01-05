@@ -12,11 +12,26 @@ if [ ! "$debug_mode" == "true" ]; then
   exec 2>&1
 fi
 
-function error_exit {
+error_exit() {
     # Display error message and exit
     echo "${0}: ${1:-"Unknown Error"}" 1>&2
     exit 1
 }
+
+set_staging_dir_from_params() {
+  # We probably want a different temporary location for each remote repository
+  # so that we can avoid conflicts and potential confusion.
+  # Example:
+  # ROOT="/opt/cfengine/masterfiles_staging"
+  # PARAMS="/var/cfengine/policychannel/production_1.sh"
+  # STAGING_DIR=/opt/cfengine/masterfiles/staging/_tmp_var_cfengine_policychannel_production_1_sh
+
+  STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
+}
+
+######################################################
+##           VCS_TYPE-based main functions           #
+######################################################
 
 git_branch_masterstage() {
   # This function is designed to stage masterfiles from a git BRANCH
@@ -32,7 +47,7 @@ git_branch_masterstage() {
   #     synchronize to final location (should we sync anyway to make sure the
   #     distribution point is good?)
 
-  STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
+  set_staging_dir_from_params
 
   if ! type "git" > /dev/null; then
     error_exit "git not found on path: ${PATH}"
@@ -105,7 +120,7 @@ git_tag_or_commit_masterstage() {
   #     synchronize to final location (should we sync anyway to make sure the
   #     distribution point is good?)
 
-  STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
+  set_staging_dir_from_params
 
   if ! type "git" > /dev/null; then
     error_exit "git not found on path: ${PATH}"
@@ -156,7 +171,7 @@ git_tag_or_commit_masterstage() {
 svn_branch() {
 # Contributed by John Farrar
 
-    STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
+    set_staging_dir_from_params
 
     if ! type "svn" >/dev/null ; then
 	error_exit "svn not found on path: ${PATH}"

@@ -194,49 +194,10 @@ git_stage_policy_channels_from_mirror() {
 }
 
 git_branch_masterstage() {
-  # This function is designed to stage masterfiles from a git BRANCH
-  #   - Ensure git checkout exists, if it does not remove
-  #     obstructions and create new clone
-  #   - Ensure the origin is set properly
-  #   - Fetch updates
-  #   - Stash any local changes
-  #   - Checkout the proper branch
-  #   - Hard reset to remove any changes
-  #   - Validate the staged policy
-  #   - If Staged policy has validated and the release IDs are different
-  #     synchronize to final location (should we sync anyway to make sure the
-  #     distribution point is good?)
-
   set_staging_dir_from_params
   check_git_installed
-
-  # If we have a git checkout ensure the origin is set properly, update it and
-  # make sure all modified, extra, or missing files are reset so that we have a
-  # clean checkout
-
-  if [ -d "${STAGING_DIR}/.git" ]; then
-      cd "${STAGING_DIR}" && git remote set-url origin "${GIT_URL}" && (
-          git fetch -q origin || error_exit "Failed: git fetch -q origin"
-          git stash -q  || error_exit "Failed: git stash -q"
-          git checkout -q "${GIT_BRANCH}" || error_exit "Failed: git checkout -q ${GIT_BRANCH}"
-          git reset -q --hard "origin/${GIT_BRANCH}" || error_exit "Failed: git reset -q --hard origin/${GIT_BRANCH}"
-      ) || error_exit "Failed staging git branch"
-  else
-      if [ "$debug_mode" == "true" ]; then
-        echo "No git repo found in '${STAGING_DIR}'. Purging directory contents to clear path for fresh clone."
-      fi
-      rm -rf "${STAGING_DIR}"/* "${STAGING_DIR}"/.??*
-      if [ "$debug_mode" == "true" ]; then
-        echo "Cloning git repository '${GIT_URL}' '${GIT_BRANCH}' branch into '${STAGING_DIR}'"
-      fi
-      git clone --no-hardlinks "${GIT_URL}" "${STAGING_DIR}"
-
-      if [ "$debug_mode" == "true" ]; then
-        echo "Checking out '${GIT_BRANCH}' branch."
-      fi
-      cd "${STAGING_DIR}" && git checkout "${GIT_BRANCH}"
-  fi
-
+  git_setup_local_mirrored_repo
+  git_stage_refspec "${GIT_BRANCH}"
   validate_staged_policy
   avoid_triggering_unneeded_policy_updates
   rollout_staged_policy_to_masterdir
@@ -245,46 +206,10 @@ git_branch_masterstage() {
 }
 
 git_tag_or_commit_masterstage() {
-  # This function is designed to stage masterfiles from a git TAG or COMMIT
-  #   - Ensure git checkout exists, if it does not remove
-  #     obstructions and create new clone
-  #   - Ensure the origin is set properly
-  #   - Fetch updates
-  #   - Stash any local changes
-  #   - Checkout the proper branch
-  #   - Hard reset to remove any changes
-  #   - Validate the staged policy
-  #   - If Staged policy has validated and the release IDs are different
-  #     synchronize to final location (should we sync anyway to make sure the
-  #     distribution point is good?)
-
   set_staging_dir_from_params
   check_git_installed
-
-  # If we have a git checkout ensure the origin is set properly, update it and
-  # make sure all modified, extra, or missing files are reset so that we have a
-  # clean checkout
-  if [ -d "${STAGING_DIR}/.git" ]; then
-      cd "${STAGING_DIR}" && git remote set-url origin "${GIT_URL}" && (
-          git fetch -q origin || error_exit "Failed: git fetch -q origin"
-          git stash -q  || error_exit "Failed: git stash -q"
-          git checkout -q "${GIT_TAG_OR_COMMIT}" || error_exit "Failed: git checkout -q ${GIT_TAG_OR_COMMIT}"
-          # git pull --rebase origin "${GIT_TAG_OR_COMMIT}" || error_exit "Failed: git pull --rebase origin ${GIT_TAG_OR_COMMIT}"
-	  # Not sure we would want to rebase changes either, we want a clean sync with the upstream
-          # The above line appears to be a mistake as it will ALWAYS fail if given a tagname or commit hash.
-          # It will succeed if given "tags/tagname" or if given a branch name, but never with a bare tagname or commit hash.
-          git reset -q --hard "${GIT_TAG_OR_COMMIT}" || error_exit "Failed: git reset -q --hard ${GIT_TAG_OR_COMMIT}"
-          git clean -f || error_exit "Failed: git clean -f"
-          git clean -fd || error_exit "Failed: git clean -fd"
-      ) || error_exit "Failed to stage '${GIT_TAG_OR_COMMIT}' in '${STAGING_DIR}' from '${GIT_URL}'" 
-
-  # If we don't have a git clone wipe the directory and create a new clone and
-  # ensure the proper branch/tag is checked out.
-  else
-      rm -rf "${STAGING_DIR}"/* "${STAGING_DIR}"/.??*
-      git clone --no-hardlinks "${GIT_URL}" "${STAGING_DIR}" && cd "${STAGING_DIR}" && git checkout "${GIT_TAG_OR_COMMIT}" || error_exit "Failed to stage '${GIT_TAG_OR_COMMIT}' from '${GIT_URL}'"
-  fi
-
+  git_setup_local_mirrored_repo
+  git_stage_refspec "${GIT_TAG_OR_COMMIT}"
   validate_staged_policy
   avoid_triggering_unneeded_policy_updates
   rollout_staged_policy_to_masterdir

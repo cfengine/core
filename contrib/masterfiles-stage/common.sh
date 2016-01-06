@@ -33,6 +33,34 @@ check_git_installed() {
   git --version >/dev/null 2>&1 || error_exit "git not found on path: '${PATH}'"
 }
 
+git_setup_local_mirrored_repo() {
+  # This function sets the variable local_mirrored_repo to a directory path
+  # based on the value of GIT_URL and ROOT, and if that directory doesn't exist,
+  # creates it as a mirrored clone of the repo at GIT_URL.  If it does exist,
+  # update it with git fetch.
+  #
+  # This code could be improved if there is an inexpensive way to check that
+  # a local bare repository is in fact a *mirrored* repository of a specified
+  # GIT_URL, but for now if the local_mirrored_repo is in fact a bare git
+  # repo (guaranteed by the success of the "git fetch" command) then we just
+  # assume it is a *mirrored* repository.
+  #
+  # Since the pathname is directly based on GIT_URL, there is no chance
+  # of *accidental* name collision.
+
+  local_mirrored_repo="${ROOT}/$(printf '%s' "${GIT_URL}" | sed 's/[^A-Za-z0-9._-]/_/g')"
+
+  if [ -d "${local_mirrored_repo}" ] ; then
+    git --git-dir="${local_mirrored_repo}" fetch && return 0
+
+    # If execution arrives here, the local_mirrored_repo exists but is messed up somehow
+    # (or there is network trouble).  Easiest is to wipe it and start fresh.
+    rm -rf "${local_mirrored_repo}"
+  fi
+  git clone --mirror "${GIT_URL}" "${local_mirrored_repo}" ||
+    error_exit "Failed: git clone --mirror '${GIT_URL}' '${local_mirrored_repo}'"
+}
+
 validate_staged_policy() {
   # If you use this function, ensure you have set STAGING_DIR.
   # Also see function "avoid_triggering_unneeded_policy_updates"

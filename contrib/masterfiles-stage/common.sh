@@ -184,6 +184,7 @@ git_stage_policy_channels_from_mirror() {
       validate_staged_policy
       avoid_triggering_unneeded_policy_updates
       rollout_staged_policy_to_masterdir
+      echo "Successfully deployed a policy release of '${refspec}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 
     done
 }

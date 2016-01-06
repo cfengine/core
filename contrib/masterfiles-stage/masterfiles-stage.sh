@@ -26,6 +26,9 @@ source "$PARAMS"
   # VCS_TYPE (set in the PARAMS file)
 
 case "${VCS_TYPE}" in
+    GIT_MIRROR_POLICY_CHANNELS)
+        git_stage_policy_channels_from_mirror
+	;;
     GIT_TAG_OR_COMMIT)
         git_tag_or_commit_masterstage
         ;;

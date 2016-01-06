@@ -35,9 +35,68 @@ check_git_installed() {
 
 validate_staged_policy() {
   # If you use this function, ensure you have set STAGING_DIR.
+  # Also see function "avoid_triggering_unneeded_policy_updates"
   /var/cfengine/bin/cf-promises -T "${STAGING_DIR}" &&
   /var/cfengine/bin/cf-promises -cf "${STAGING_DIR}/update.cf" ||
   error_exit "Update policy staged in ${STAGING_DIR} could not be validated, aborting."
+}
+
+avoid_triggering_unneeded_policy_updates() {
+  # cf_promises_validated gets updated by any run of cf-promises,
+  # but hosts use cf_promises_validated as the flag file to see
+  # if they need to update everything else (the full policy set.)
+  #
+  # cf_promises_release_id is the same for a given policy set
+  # unless changes have actually been made to the policy, so it
+  # can be used to check if we want to trigger an update.
+  #
+  # In other words, update is triggered by putting the
+  # newly created copy of cf_promises_validated into the MASTERDIR
+  # and update is avoided either by:
+  #
+  # 1. Completely skipping the rollout_staged_policy_to_masterdir
+  # function, or
+  #
+  # 2. Copying the MASTERDIR's copy of cf_promises_validated
+  # *back* into the STAGING_DIR *before* performing the rollout,
+  # so that after the rollout the MASTERDIR's copy of the flag
+  # file is the same as it was before the rollout.
+  #
+  # This function uses the second approach.  --Mike Weilgart
+
+  if [ -f "${MASTERDIR}/cf_promises_validated" ] &&
+     /usr/bin/cmp -s "${STAGING_DIR}/cf_promises_release_id" \
+                       "${MASTERDIR}/cf_promises_release_id"
+  then
+    cp -a "${MASTERDIR}/cf_promises_validated" "${STAGING_DIR}/" ||
+      error_exit "Unable to copy existing file ${MASTERDIR}/cf_promises_validated to ${STAGING_DIR}/"
+  fi
+}
+
+rollout_staged_policy_to_masterdir() {
+  # Put STAGING_DIR to MASTERDIR with a mv command rather than
+  # an rsync command so it is one atomic operation.
+  #
+  # If MASTERDIR was already there, we move it out of the way
+  # first.  Then we need to do something with it -- so we put
+  # it in the old STAGING_DIR location and let the next round
+  # of git checkout -f and git clean -dff (next time the staging
+  # script is run) handle any cruft.
+
+  chown -R root:root "${STAGING_DIR}" || error_exit "Unable to chown '${STAGING_DIR}'"
+  chmod -R go-rwx    "${STAGING_DIR}" || error_exit "Unable to chmod '${STAGING_DIR}'"
+
+  if [ -d "${MASTERDIR}" ] ; then
+    # Put tmpdir in MASTERDIR's parent dir to avoid crossing filesystem boundaries
+    third_dir="$(mktemp -d --tmpdir="${MASTERDIR%/*}" )"
+
+    mv "${MASTERDIR}" "${third_dir}/momentary"  || error_exit "Can't mv ${MASTERDIR} to ${third_dir}"
+    mv "${STAGING_DIR}" "${MASTERDIR}"          || error_exit "Can't mv ${STAGING_DIR} to ${MASTERDIR}"
+    mv "${third_dir}/momentary" "${STAGING_DIR}"   # We don't care if this fails;
+    rm -rf "${third_dir}"                          # we're going to remove third_dir anyways.
+  else
+    mv "${STAGING_DIR}" "${MASTERDIR}"          || error_exit "Can't mv ${STAGING_DIR} to ${MASTERDIR}"
+  fi
 }
 
 ######################################################

@@ -61,6 +61,28 @@ git_setup_local_mirrored_repo() {
     error_exit "Failed: git clone --mirror '${GIT_URL}' '${local_mirrored_repo}'"
 }
 
+git_stage_refspec() {
+  # This function depends on git_setup_local_mirrored_repo
+  # having been run, such that the variable local_mirrored_repo
+  # contains the (local) path to a bare git repository.
+  #
+  # (A mirror repository is a special case of a bare repository;
+  # either will work for this function but a bare non-mirror
+  # repository will have edge cases that are mishandled.)
+  #
+  # This function accepts a single argument: refspec,
+  # which should be a git tagname, branch, or commit hash.
+  #
+  # This function stages the refspec to the STAGING_DIR
+  # from local_mirrored_repo
+
+  mkdir -p "${STAGING_DIR}" || error_exit "Failed: mkdir -p '$STAGING_DIR'"
+  git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" checkout -q -f "$1" ||
+    error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
+  git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" clean -q -dff ||
+    error_exit "Failed: git --git-dir='${local_mirrored_repo}' --work-tree='${STAGING_DIR}' clean -q -dff"
+}
+
 validate_staged_policy() {
   # If you use this function, ensure you have set STAGING_DIR.
   # Also see function "avoid_triggering_unneeded_policy_updates"

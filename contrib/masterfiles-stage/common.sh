@@ -33,6 +33,13 @@ check_git_installed() {
   git --version >/dev/null 2>&1 || error_exit "git not found on path: '${PATH}'"
 }
 
+validate_staged_policy() {
+  # If you use this function, ensure you have set STAGING_DIR.
+  /var/cfengine/bin/cf-promises -T "${STAGING_DIR}" &&
+  /var/cfengine/bin/cf-promises -cf "${STAGING_DIR}/update.cf" ||
+  error_exit "Update policy staged in ${STAGING_DIR} could not be validated, aborting."
+}
+
 ######################################################
 ##           VCS_TYPE-based main functions           #
 ######################################################
@@ -81,10 +88,7 @@ git_branch_masterstage() {
       cd "${STAGING_DIR}" && git checkout "${GIT_BRANCH}"
   fi
 
-  if /var/cfengine/bin/cf-promises -T "${STAGING_DIR}"; then
-    if ! /var/cfengine/bin/cf-promises -cf "${STAGING_DIR}/update.cf"; then
-        error_exit "Update policy staged in ${STAGING_DIR} could not be validated, aborting."
-    fi
+  validate_staged_policy
 
       # you could abort here if DIFFLINES is over 100, for instance (too many changes)
       #DIFFLINES=$(/usr/bin/diff -r  -x .git -x cf_promises_validated -x cf_promises_release_id "${STAGING_DIR}" "${MASTERDIR}" |/usr/bin/wc -l)
@@ -102,9 +106,6 @@ git_branch_masterstage() {
           rsync -rltDE -c --delete-after --chmod=u+rwX,go-rwx "${STAGING_DIR}/" "${MASTERDIR}/" && echo "Successfully deployed branch '${GIT_BRANCH}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
       )
       #fi
-  else
-    error_exit "The staged policies in ${STAGING_DIR} could not be validated, aborting."
-  fi
 }
 
 git_tag_or_commit_masterstage() {
@@ -148,10 +149,8 @@ git_tag_or_commit_masterstage() {
       git clone --no-hardlinks "${GIT_URL}" "${STAGING_DIR}" && cd "${STAGING_DIR}" && git checkout "${GIT_TAG_OR_COMMIT}" || error_exit "Failed to stage '${GIT_TAG_OR_COMMIT}' from '${GIT_URL}'"
   fi
 
-  if /var/cfengine/bin/cf-promises -T "${STAGING_DIR}"; then
-    if ! /var/cfengine/bin/cf-promises -cf "${STAGING_DIR}/update.cf"; then
-        error_exit "Update policy staged in ${STAGING_DIR} could not be validated, aborting."
-    fi
+  validate_staged_policy
+
       # roll out the release if the release IDs are different
 #      if /usr/bin/diff -q "${STAGING_DIR}/cf_promises_release_id" "${MASTERDIR}/cf_promises_release_id" ; then
 #          #echo "No release needs to be made, the release IDs are the same."
@@ -161,9 +160,6 @@ git_tag_or_commit_masterstage() {
           chown -R root:root "${STAGING_DIR}" && rsync -rltDE -c --delete-after --chmod=u+rwX,go-rwx "${STAGING_DIR}/" "${MASTERDIR}/" && echo "Successfully deployed commit '${GIT_TAG_OR_COMMIT}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
       )
 #      fi
-  else
-    error_exit "The staged policies in ${STAGING_DIR} could not be validated, aborting."
-  fi
 }
 
 svn_branch() {

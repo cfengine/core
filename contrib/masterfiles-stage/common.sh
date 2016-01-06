@@ -130,15 +130,19 @@ rollout_staged_policy_to_masterdir() {
   # If MASTERDIR was already there, we move it out of the way
   # first.  Then we need to do something with it -- so we put
   # it in the old STAGING_DIR location and let the next round
-  # of git checkout -f and git clean -dff (next time the staging
-  # script is run) handle any cruft.
+  # of staging, during the next run of the script, handle any
+  # leftover cruft.
+  # (git_stage_refspec includes "checkout -f" and "clean",
+  # which would handle this cruft; any other staging functions
+  # that are built must be designed to handle cruft also.)
 
   chown -R root:root "${STAGING_DIR}" || error_exit "Unable to chown '${STAGING_DIR}'"
   chmod -R go-rwx    "${STAGING_DIR}" || error_exit "Unable to chmod '${STAGING_DIR}'"
 
   if [ -d "${MASTERDIR}" ] ; then
     # Put tmpdir in MASTERDIR's parent dir to avoid crossing filesystem boundaries
-    third_dir="$(mktemp -d --tmpdir="${MASTERDIR%/*}" )"
+    # (which could be a danger if we used /tmp).
+    third_dir="$(mktemp -d --tmpdir="$(dirname "${MASTERDIR}")" )"
 
     mv "${MASTERDIR}" "${third_dir}/momentary"  || error_exit "Can't mv ${MASTERDIR} to ${third_dir}"
     mv "${STAGING_DIR}" "${MASTERDIR}"          || error_exit "Can't mv ${STAGING_DIR} to ${MASTERDIR}"
@@ -234,23 +238,10 @@ git_branch_masterstage() {
   fi
 
   validate_staged_policy
+  avoid_triggering_unneeded_policy_updates
+  rollout_staged_policy_to_masterdir
 
-      # you could abort here if DIFFLINES is over 100, for instance (too many changes)
-      #DIFFLINES=$(/usr/bin/diff -r  -x .git -x cf_promises_validated -x cf_promises_release_id "${STAGING_DIR}" "${MASTERDIR}" |/usr/bin/wc -l)
-
-      # roll out the release if the release IDs are different
-      # ALWALSY SYNC THEM but what is the negative side effect? POTENTIALY CLIENTS ALWWAYS UPDATE?
-      # BUT CPV only triggered on change, so maybe thats what we want.
-      #if /usr/bin/diff -q "${STAGING_DIR}/cf_promises_release_id" "${MASTERDIR}/cf_promises_release_id" ; then
-      #    echo "No release needs to be made, the release IDs are the same."
-      #    touch "${STAGING_DIR}"
-      #else
-          /bin/mkdir -p "${MASTERDIR}" || error_exit "Failed: Creating '${MASTERDIR}'"
-          cd "${STAGING_DIR}" && (
-          chown -R root:root "${STAGING_DIR}" && \
-          rsync -rltDE -c --delete-after --chmod=u+rwX,go-rwx "${STAGING_DIR}/" "${MASTERDIR}/" && echo "Successfully deployed branch '${GIT_BRANCH}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
-      )
-      #fi
+  echo "Successfully deployed branch '${GIT_BRANCH}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 }
 
 git_tag_or_commit_masterstage() {
@@ -295,16 +286,10 @@ git_tag_or_commit_masterstage() {
   fi
 
   validate_staged_policy
+  avoid_triggering_unneeded_policy_updates
+  rollout_staged_policy_to_masterdir
 
-      # roll out the release if the release IDs are different
-#      if /usr/bin/diff -q "${STAGING_DIR}/cf_promises_release_id" "${MASTERDIR}/cf_promises_release_id" ; then
-#          #echo "No release needs to be made, the release IDs are the same."
-#          touch "${STAGING_DIR}"
-#      else
-          cd "${STAGING_DIR}" && (
-          chown -R root:root "${STAGING_DIR}" && rsync -rltDE -c --delete-after --chmod=u+rwX,go-rwx "${STAGING_DIR}/" "${MASTERDIR}/" && echo "Successfully deployed commit '${GIT_TAG_OR_COMMIT}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
-      )
-#      fi
+  echo "Successfully deployed commit '${GIT_TAG_OR_COMMIT}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 }
 
 svn_branch() {

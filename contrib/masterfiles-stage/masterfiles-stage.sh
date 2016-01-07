@@ -3,13 +3,11 @@
 mydirname="$(dirname "$0")";
 
 # Load option parsing
-source "${mydirname}/options.sh"
+# Sets vars: PARAMS, MASTERDIR, verbose_mode, debug_mode
+source "${mydirname}/options.sh" || { echo "options.sh couldn't be sourced" >&2 ; exit 17 ; }
 
 # Load common functionality, upstream implementations
-source "${mydirname}/common.sh"
-
-MASTERDIR="$opt_deploy_dir"
-PARAMS="$opt_params_file"
+source "${mydirname}/common.sh" || { echo "common.sh couldn't be sourced" >&2 ; exit 17 ; }
 
 [ -f "$PARAMS" ] || error_exit "ERROR: Missing '$PARAMS'"
 
@@ -18,22 +16,23 @@ source "$PARAMS"
   # The VCS_TYPE based function calls in the case switch below
   # can count on the following environment variables to be set:
   #
-  # MASTERDIR (set in this script based on options.sh)
-  # PARAMS (set in this script based on options.sh)
+  # MASTERDIR (set in options.sh)
+  # PARAMS (set in options.sh)
   # ROOT (set in the PARAMS file)
-  # GIT_URL (set in the PARAMS file)
-  # and, of course,
   # VCS_TYPE (set in the PARAMS file)
+  # and, depending on the VCS_TYPE,
+  # some of the following vars may also be set in the PARAMS file:
+  # GIT_URL, GIT_TAG_OR_COMMIT, GIT_BRANCH, channel_config_file, SVN_URL, SVN_BRANCH
 
 case "${VCS_TYPE}" in
     GIT_MIRROR_POLICY_CHANNELS)
         git_stage_policy_channels_from_mirror
 	;;
     GIT_TAG_OR_COMMIT)
-        git_tag_or_commit_masterstage
+        git_masterstage "${GIT_TAG_OR_COMMIT}"
         ;;
     GIT)
-        git_branch_masterstage
+        git_masterstage "${GIT_BRANCH}"
         ;;
     SVN)
         svn_branch

@@ -161,8 +161,8 @@ git_stage_policy_channels_from_mirror() {
   # This "VCS_TYPE-based" function is called from masterfiles-stage.sh.
   #
   # This function stages multiple policy channels each to its masterdir,
-  # all based on the simple two field config_file.  (See that file for
-  # documentation of its format.)
+  # all based on the simple two-field channel_config_file.
+  # (See that file for further documentation of its format.)
   #
   # The GIT_URL is set in the params.sh file;
   # ROOT (the dir in which to put staging dirs) is also set in params.sh
@@ -171,14 +171,16 @@ git_stage_policy_channels_from_mirror() {
   # is ****IGNORED**** by this function, since there is a separate
   # MASTERDIR for each separate policy channel.
 
-  config_file="/var/cfengine/policy_channels/channel_to_source.txt"
-  [ -f "${config_file}" ] || error_exit "${config_file} not found"
+  # channel_config_file should be set in the PARAMS file.
+  # Example value:
+  # channel_config_file="/var/cfengine/policy_channels/channel_to_source.txt"
+  [ -f "${channel_config_file}" ] || error_exit "${channel_config_file} not found"
 
   check_git_installed
   git_setup_local_mirrored_repo
 
   # sed removes comments, including trailing comments, and skips empty/whitespace only lines.
-  sed -e 's/#.*//; /^[[:space:]]*$/d' "${config_file}" |
+  sed -e 's/#.*//; /^[[:space:]]*$/d' "${channel_config_file}" |
     while read channel_name refspec ; do
 
       STAGING_DIR="${ROOT}/${channel_name}"
@@ -193,28 +195,16 @@ git_stage_policy_channels_from_mirror() {
     done
 }
 
-git_branch_masterstage() {
+git_masterstage() {
   set_staging_dir_from_params
   check_git_installed
   git_setup_local_mirrored_repo
-  git_stage_refspec "${GIT_BRANCH}"
+  git_stage_refspec "$1"
   validate_staged_policy
   avoid_triggering_unneeded_policy_updates
   rollout_staged_policy_to_masterdir
 
-  echo "Successfully deployed branch '${GIT_BRANCH}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
-}
-
-git_tag_or_commit_masterstage() {
-  set_staging_dir_from_params
-  check_git_installed
-  git_setup_local_mirrored_repo
-  git_stage_refspec "${GIT_TAG_OR_COMMIT}"
-  validate_staged_policy
-  avoid_triggering_unneeded_policy_updates
-  rollout_staged_policy_to_masterdir
-
-  echo "Successfully deployed commit '${GIT_TAG_OR_COMMIT}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
+  echo "Successfully deployed '$1' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 }
 
 svn_branch() {

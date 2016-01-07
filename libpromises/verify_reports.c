@@ -92,7 +92,7 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_WARN, pp, a, "Need to repair reports promise: %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Need to repair reports promise: %s", pp->promiser);
         YieldCurrentLock(thislock);
         return PROMISE_RESULT_WARN;
     }

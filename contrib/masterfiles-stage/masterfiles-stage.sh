@@ -25,8 +25,8 @@ source "$PARAMS"
   # GIT_URL, GIT_TAG_OR_COMMIT, GIT_BRANCH, channel_config_file, SVN_URL, SVN_BRANCH
 
 case "${VCS_TYPE}" in
-    GIT_MIRROR_POLICY_CHANNELS)
-        git_stage_policy_channels_from_mirror
+    GIT_POLICY_CHANNELS)
+        git_stage_policy_channels
 	;;
     GIT_TAG_OR_COMMIT)
         git_masterstage "${GIT_TAG_OR_COMMIT}"

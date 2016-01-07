@@ -38,7 +38,7 @@ simple environments this will be `$(sys.masterdir)` (typically
   - VCS_TYPE="GIT"
   - VCS_TYPE="GIT_TAG_OR_COMMIT"
   - VCS_TYPE="SVN"
-  - VCS_TYPE="GIT_MIRROR_POLICY_CHANNELS"
+  - VCS_TYPE="GIT_POLICY_CHANNELS"
 
 * Dependencies
 This script has the following dependencies
@@ -90,7 +90,7 @@ The following parameters are in use, be sure to avoid their collision
 when developing new staging methods.
 
 - VCS_TYPE - The staging method to use
-  - Currently supported: (GIT|GIT_TAG_OR_COMMIT|GIT_MIRROR_POLICY_CHANNELS|SVN)
+  - Currently supported: (GIT|GIT_TAG_OR_COMMIT|GIT_POLICY_CHANNELS|SVN)
 
 - GIT_URL - The URL to the git repository
   - Example values:

@@ -157,7 +157,9 @@ rollout_staged_policy_to_masterdir() {
 ##           VCS_TYPE-based main functions           #
 ######################################################
 
-git_stage_policy_channels_from_mirror() {
+git_stage_policy_channels() {
+  # Created by Mike Weilgart
+  #
   # This "VCS_TYPE-based" function is called from masterfiles-stage.sh.
   #
   # This function stages multiple policy channels each to its masterdir,

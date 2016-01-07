@@ -88,7 +88,7 @@ dist-hook:
 	chmod -R go-w $(distdir)
 
 
-CLEANFILES = *.gcno *.gcda
+CLEANFILES = *.gcno *.gcda Makefile.testall
 
 pluck:
 	echo '### This is an auto-generated file, see Makefile.am and `make pluck` ###' > plucked.cf.sub

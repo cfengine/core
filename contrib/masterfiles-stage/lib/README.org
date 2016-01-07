@@ -1,4 +1,0 @@
-* External Libraries
-
- - [[https://github.com/nk412/optparse][nk412/optparse]] bash option parsing library
-   - at commit c927f7d29dba330c8f8dd707e962f59196263e7d

@@ -38,23 +38,26 @@ simple environments this will be `$(sys.masterdir)` (typically
   - VCS_TYPE="GIT"
   - VCS_TYPE="GIT_TAG_OR_COMMIT"
   - VCS_TYPE="SVN"
+  - VCS_TYPE="GIT_MIRROR_POLICY_CHANNELS"
 
-* Dependancies
-This script has the following dependancies
+* Dependencies
+This script has the following dependencies
 - bash
-- rsync
+- rsync (SVN only)
 - git|svn
 
 * Installation
 Installation simply consists of saving `masterfiles-stage.sh` and its
-supporting `common.sh` to the same directory on your hub and making
-sure that `masterfiles-stage.sh` is executable.
+supporting `common.sh` and `options.sh` to the same directory on your hub
+and making sure that `masterfiles-stage.sh` is executable.
 
 #+begin_src example
   wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/masterfiles-stage.sh -O /var/cfengine/bin/masterfiles-stage.sh
   wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/common.sh
-  chown root:root /var/cfengine/bin/masterfiles-stage.sh
+  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/options.sh -O /var/cfengine/bin/options.sh
+  chown root:root /var/cfengine/bin/masterfiles-stage.sh /var/cfengine/bin/common.sh /var/cfengine/bin/options.sh
   chmod 555 /var/cfengine/bin/masterfiles-stage.sh
+  chmod 444 /var/cfengine/bin/common.sh /var/cfengine/bin/options.sh
 #+end_src
 
 *Warning:* The above commands may not work out of the box depending on
@@ -64,8 +67,9 @@ sure that `masterfiles-stage.sh` is executable.
 
 The `masterfiles-stage.sh` script takes options in order to specify the
 directory where the masterfiles should be deployed after staging, as well as
-the file that contains the paramaters that should be used in order to interface
+the file that contains the parameters that should be used in order to interface
 with the given upstream source implementation (git url, branch etc ..)
+Run masterfiles-stage.sh --help to see exact option flags.
 
 - `MASTERDIR` is the fully qualified path to the location that you
   want masterfiles to be deployed to after successful staging.
@@ -75,7 +79,7 @@ with the given upstream source implementation (git url, branch etc ..)
   staging method (currently reffered to as `VCS_TYPE`). The format of
   the file is a simple KEY="VALUE". It is sourced by the
   `masterfiles-stage.sh` script. Each staging method or `VCS_TYPE`
-  defines may define its own parameters. It is reccomended that the
+  defined may define its own parameters. It is recommended that the
   parameters defined by the `VCS_TYPE` be prefixed with the `VCS_TYPE`
   so as not to conflict with other staging methods.
 
@@ -86,7 +90,7 @@ The following parameters are in use, be sure to avoid their collision
 when developing new staging methods.
 
 - VCS_TYPE - The staging method to use
-  - Currently supported: (GIT|GIT_TAG_OR_COMMIT|SVN)
+  - Currently supported: (GIT|GIT_TAG_OR_COMMIT|GIT_MIRROR_POLICY_CHANNELS|SVN)
 
 - GIT_URL - The URL to the git repository
   - Example values:
@@ -100,6 +104,10 @@ when developing new staging methods.
   - Example values:
     - 88335d36b48c8808b12b48667a463182dc8d0338
     - mytag
+
+- channel_config_file - The path to the config file for multiple policy channels
+  - Example value:
+    - /var/cfengine/policy_channels/channel_to_source.txt
 
 - SVN_URL - The URL to the svn repository
 
@@ -121,7 +129,7 @@ have no effect on functionality of `masterfiles-stage.sh`
   operations (not used by `masterfiles-stage.sh`)
   - This is used by Design Center in CFEngine Enterprise
 
-- PKEY - Private SSH Key used for authrorization when pushing
+- PKEY - Private SSH Key used for authorization when pushing
   integrated write operations
   - This is used by Design Center in CFEngine Enterprise
 
@@ -129,14 +137,14 @@ have no effect on functionality of `masterfiles-stage.sh`
   - This is used by Design Center in CFEngine Enterprise
 
 *** Special Note
-The executing user may require addational configuration in order to
+The executing user may require additional configuration in order to
 successfully authenticate. The specifics depend on the specifics of
 your upstream repository. For example, an upstream repository over
 http or https that allows anonymous access may need no addtional
 configuration, but an upstream that uses ssh keys for authentication
 may require trust establishment (accepting the host key fingerprint),
 and the presence of an ssh key for authentication. Depending on the
-security requirements of your orginization, you may use a
+security requirements of your organization, you may use a
 passphraseless key, or you may use something like ssh-agent.
 
 

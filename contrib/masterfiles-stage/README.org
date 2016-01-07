@@ -109,6 +109,11 @@ when developing new staging methods.
   - Example value:
     - /var/cfengine/policy_channels/channel_to_source.txt
 
+- channel_deployment_dir - The directory in which to deploy each policy channel
+  (each in a separate subdirectory named according to channel name)
+  - Example value:
+    - /var/cfengine/policy_channels/masterfiles_dirs
+
 - SVN_URL - The URL to the svn repository
 
 - SVN_BRANCH - The svn branch to checkout

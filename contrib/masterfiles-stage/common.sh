@@ -79,8 +79,8 @@ git_stage_refspec() {
   mkdir -p "${STAGING_DIR}" || error_exit "Failed: mkdir -p '$STAGING_DIR'"
   git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" checkout -q -f "$1" ||
     error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
-  git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" clean -q -dff ||
-    error_exit "Failed: git --git-dir='${local_mirrored_repo}' --work-tree='${STAGING_DIR}' clean -q -dff"
+  git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" clean -q -dffx ||
+    error_exit "Failed: git --git-dir='${local_mirrored_repo}' --work-tree='${STAGING_DIR}' clean -q -dffx"
 }
 
 validate_staged_policy() {
@@ -172,11 +172,20 @@ git_stage_policy_channels() {
   # The value of MASTERDIR that is assigned in masterfiles-stage.sh
   # is ****IGNORED**** by this function, since there is a separate
   # MASTERDIR for each separate policy channel.
-
-  # channel_config_file should be set in the PARAMS file.
-  # Example value:
+  #
+  # Instead, the variable channel_deployment_dir is used
+  # as the directory in which to place all channels.  Each
+  # channel directory is named according to the channel name that is
+  # read in from channel_config_file.
+  #
+  # channel_config_file and channel_deployment_dir should be set
+  # in the PARAMS file.
+  # Example values:
   # channel_config_file="/var/cfengine/policy_channels/channel_to_source.txt"
-  [ -f "${channel_config_file}" ] || error_exit "${channel_config_file} not found"
+  # channel_deployment_dir="/var/cfengine/policy_channels/masterfiles_dirs"
+
+  [ -f "${channel_config_file}" ]      || error_exit "${channel_config_file} not found"
+  mkdir -p "${channel_deployment_dir}" || error_exit "Unable to mkdir -p '${channel_deployment_dir}'"
 
   check_git_installed
   git_setup_local_mirrored_repo
@@ -186,7 +195,7 @@ git_stage_policy_channels() {
     while read channel_name refspec ; do
 
       STAGING_DIR="${ROOT}/${channel_name}"
-      MASTERDIR="/var/cfengine/policy_channels/masterfiles_dirs/${channel_name}"
+      MASTERDIR="${channel_deployment_dir}/${channel_name}"
 
       git_stage_refspec "$refspec"
       validate_staged_policy

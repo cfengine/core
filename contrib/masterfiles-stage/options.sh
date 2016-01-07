@@ -64,8 +64,8 @@ set -- "${params[@]}"
 
 # Set default variable values
 # (Don't change these without updating usage.)
-opt_deploy_dir=/var/cfengine/masterfiles
-opt_params_file=/opt/cfengine/dc-scripts/params.sh
+MASTERDIR=/var/cfengine/masterfiles
+PARAMS=/opt/cfengine/dc-scripts/params.sh
 verbose_mode=false
 debug_mode=false
 
@@ -73,10 +73,10 @@ debug_mode=false
 while getopts ":d:p:vD" option; do
   case "$option" in
     d)
-      opt_deploy_dir="$OPTARG"
+      MASTERDIR="$OPTARG"
       ;;
     p)
-      opt_params_file="$OPTARG"
+      PARAMS="$OPTARG"
       ;;
     v)
       verbose_mode="true"
@@ -103,12 +103,12 @@ shift "$((OPTIND-1))"
 [ "$#" -gt 0 ] && { echo "Too many arguments." ; usage ; exit 3 ; }
 
 if [ "$debug_mode" == "true" ]; then
-  echo "Option Deploy Dir: $opt_deploy_dir";
-  echo "Option Params File: $opt_params_file";
+  echo "Option Deploy Dir: $MASTERDIR";
+  echo "Option Params File: $PARAMS";
 fi
 
 # To test this option parsing file by itself, uncomment the below lines.
-# printf '%s\n' "opt_deploy_dir is $opt_deploy_dir"
-# printf '%s\n' "opt_params_file is $opt_params_file"
+# printf '%s\n' "MASTERDIR is $MASTERDIR"
+# printf '%s\n' "PARAMS is $PARAMS"
 # printf '%s\n' "verbose_mode is $verbose_mode"
 # printf '%s\n' "debug_mode is $debug_mode"

@@ -1,0 +1,76 @@
+#######################################################
+#
+# Test default body action and overriding with specific action
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+body file control
+{
+   namespace => "bodydefault"; 
+}
+
+body action files_action
+{
+    action_policy => "warn";
+}
+
+body file control
+{
+    namespace => "default"; 
+}
+
+body action specific
+{
+    action_policy => "fix";
+}
+
+#######################################################
+
+bundle agent test_specified_action
+{
+  files:
+	  "$(G.testdir)/specified"
+	     create => "true",
+       action => specific;
+}
+
+bundle agent test_default_action
+{
+  files:
+	  "$(G.testdir)/default"
+	     create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "specified"
+        usebundle => test_specified_action;
+      "default"
+        usebundle => test_default_action;
+}
+
+bundle agent check
+{
+  classes:
+    "default_created" expression => fileexists("$(G.testdir)/default");
+    "specified_created" expression => fileexists("$(G.testdir)/specified");
+    "ok" expression => "specified_created.!default_created";
+
+  reports:   
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

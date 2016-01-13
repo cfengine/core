@@ -1079,9 +1079,9 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
 }
 
 
-static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterator *iter, const Rlist *args)
+static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, VariableTableIterator *iter, const Rlist *args, bool collect_full_data)
 {
-    StringSet *matching = StringSetNew();
+    JsonElement *matching = JsonObjectCreate(10);
 
     const char *regex = RlistScalarValue(args);
     pcre *rx = CompileRegex(regex);
@@ -1124,7 +1124,36 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
 
             if (pass)
             {
-                StringSetAdd(matching, expr);
+                JsonElement *data = NULL;
+                bool allocated = false;
+                if (collect_full_data)
+                {
+                    data = VarRefValueToJson(ctx, fp, v->ref, NULL, 0, true, &allocated);
+                }
+
+                /*
+                 * When we don't collect the full variable data
+                 * (collect_full_data is false), we still create a JsonObject
+                 * with empty strings as the values. It will be destroyed soon
+                 * afterwards, but the code is cleaner if we do it this way than
+                 * if we make a JsonArray in one branch and a JsonObject in the
+                 * other branch. The empty strings provide assurance that
+                 * serializing this JsonObject (e.g. for logging) will not
+                 * create problems. The extra memory usage from the empty
+                 * strings is negligible.
+                 */
+                if (data == NULL)
+                {
+                    JsonObjectAppendString(matching, expr, "");
+                }
+                else
+                {
+                    if (!allocated)
+                    {
+                        data = JsonCopy(data);
+                    }
+                    JsonObjectAppendElement(matching, expr, data);
+                }
             }
             else
             {
@@ -1147,6 +1176,8 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
 
 static FnCallResult FnCallVariablesMatching(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    bool fulldata = (strcmp(fp->name, "variablesmatching_as_data") == 0);
+
     if (!finalargs)
     {
         FatalError(ctx, "Function '%s' requires at least one argument", fp->name);
@@ -1165,17 +1196,25 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, ARG_UNUSED const P
 
     {
         VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
-        StringSet *global_matches = VariablesMatching(ctx, iter, finalargs);
+        JsonElement *global_matches = VariablesMatching(ctx, fp, iter, finalargs, fulldata);
+        VariableTableIteratorDestroy(iter);
 
-        StringSetIterator it = StringSetIteratorInit(global_matches);
-        const char *element = NULL;
-        while ((element = StringSetIteratorNext(&it)))
+        assert (JsonGetContainerType(global_matches) == JSON_CONTAINER_TYPE_OBJECT);
+
+        if (fulldata)
         {
-            RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
+            return (FnCallResult) { FNCALL_SUCCESS, (Rval) { global_matches, RVAL_TYPE_CONTAINER } };
         }
 
-        StringSetDestroy(global_matches);
-        VariableTableIteratorDestroy(iter);
+        JsonIterator jiter = JsonIteratorInit(global_matches);
+        const char *key;
+        while ((key = JsonIteratorNextKey(&jiter)) != NULL)
+        {
+            assert (key != NULL);
+            RlistPrepend(&matches, key, RVAL_TYPE_SCALAR);
+        }
+
+        JsonDestroy(global_matches);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
@@ -8905,7 +8944,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("userexists", CF_DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Functions section following new naming convention
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",
@@ -8956,6 +8995,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("data_expand", CF_DATA_TYPE_CONTAINER, DATA_EXPAND_ARGS, &FnCallDataExpand, "Expands any CFEngine variables in a list or array or data container, converting to a data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("variablesmatching_as_data", CF_DATA_TYPE_CONTAINER, CLASSMATCH_ARGS, &FnCallVariablesMatching, "Capture the variables matching regex arg1 and tag regexes arg2,arg3,... with their data",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // File parsing functions that output a data container
     FnCallTypeNew("data_readstringarray", CF_DATA_TYPE_CONTAINER, DATA_READSTRINGARRAY_ARGS, &FnCallDataRead, "Read an array of strings from a file into a data container map, using the first element as a key",

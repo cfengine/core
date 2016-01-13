@@ -154,6 +154,13 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                         StringFormat("Package '%s' was not installed",
                                      pp->promiser);
                     break;
+                case PROMISE_RESULT_WARN:
+                    *log_lvl = LOG_LEVEL_WARNING;
+                    *promise_log_msg =
+                        StringFormat("Package '%s' needs to be removed,"
+                                     "but only warning was promised",
+                                     pp->promiser);
+                    break;
                 default:
                     ProgrammingError(
                             "Absent promise action evaluation returned "
@@ -186,6 +193,13 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                     *log_lvl = LOG_LEVEL_VERBOSE;
                     *promise_log_msg =
                         StringFormat("Package '%s' already installed",
+                                     pp->promiser);
+                    break;
+                case PROMISE_RESULT_WARN:
+                    *log_lvl = LOG_LEVEL_WARNING;
+                    *promise_log_msg =
+                        StringFormat("Package '%s' needs to be installed,"
+                                     "but only warning was promised",
                                      pp->promiser);
                     break;
                 default:

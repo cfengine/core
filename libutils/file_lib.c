@@ -831,54 +831,52 @@ int safe_chmod(const char *path, mode_t mode)
         goto cleanup;
     }
 
-    /* save old euid */
-    olduid = geteuid();
-
-#ifndef CHMOD_SETEUID_WORKS
-    if (mode & 07000 && statbuf.st_uid != 0)
+    if (S_ISFIFO(statbuf.st_mode))
     {
-        /* If we get here, we are on a platform where the high bit flags (sticky
-           bit and suid) flags cannot be set by any other users than root. But
-           doing so is insecure because someone can replace the file with a link
-           to a sensitive file. Fall back to opening the file with safe_open
-           first. If the file is a FIFO, we give up because opening it might
-           block, in that case it's not possible to do it securely. Setting the
-           mentioned flags on a FIFO should be extremely rare though.
-        */
-        if (S_ISFIFO(statbuf.st_mode))
+#ifdef CHMOD_SETEUID_WORKS
+        /* save old euid */
+        olduid = geteuid();
+
+        if ((ret = seteuid(statbuf.st_uid)) == -1)
         {
+            goto cleanup;
+        }
+
+        ret = fchmodat(dirfd, leaf, mode, 0);
+
+        // Make sure EUID is set back before we check error condition, so that we
+        // never return with lowered privileges.
+        if (seteuid(olduid) == -1)
+        {
+            ProgrammingError("safe_chmod: Could not set EUID back. Should never happen.");
+        }
+
+        goto cleanup;
+#endif // CHMOD_SETEUID_WORKS
+
+        if (mode & 07000 && statbuf.st_uid != 0)
+        {
+            /* If we get here, we are on a platform where the high bit flags (sticky
+               bit and suid) flags cannot be set by any other users than root. As the
+               file is a FIFO, we give up because opening it might block, in that
+               case it's not possible to do it securely. Setting the mentioned flags
+               on a FIFO should be extremely rare though.
+            */
             errno = ENOTSUP;
             ret = -1;
             goto cleanup;
         }
-
-        int file_fd = safe_open(path, 0);
-        if (file_fd < 0)
-        {
-            ret = -1;
-            goto cleanup;
-        }
-
-        ret = fchmod(file_fd, mode);
-        close(file_fd);
-        goto cleanup;
     }
-#endif // !CHMOD_SETEUID_WORKS
 
-    if ((ret = seteuid(statbuf.st_uid)) == -1)
+    int file_fd = safe_open(path, 0);
+    if (file_fd < 0)
     {
+        ret = -1;
         goto cleanup;
     }
 
-    ret = fchmodat(dirfd, leaf, mode, 0);
-
-    // Make sure EUID is set back before we check error condition, so that we
-    // never return with lowered privileges.
-    if (seteuid(olduid) == -1)
-    {
-        ProgrammingError("safe_chmod: Could not set EUID back. Should never happen.");
-    }
-
+    ret = fchmod(file_fd, mode);
+    close(file_fd);
 
 cleanup:
     free(parent_dir_alloc);

@@ -12,6 +12,10 @@ bundle common init
       "test_fbeae67f3e347b5e0032302200141131" string => "abc", meta => { "x" };
       "test_fbeae67f3e347b5e0032302200141131_1" string => "def", meta => { "x" };
       "test_fbeae67f3e347b5e0032302200141131_2" string => "ghi", meta => { "y" };
+
+      "test_b37ce1b03955522848f0a82d0b2b2e21_1" slist => { "a", "b" }, meta => { "x" };
+      "test_b37ce1b03955522848f0a82d0b2b2e21_2" data => '{ "a": "b" }', meta => { "x" };
+      "test_b37ce1b03955522848f0a82d0b2b2e21_3" string => 'mydata', meta => { "y" };
 }
 
 bundle agent test
@@ -21,25 +25,15 @@ bundle agent test
       "x_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "x");
       "z_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "z");
 
-      "count" int => length(vars);
-      "x_count" int => length(x_vars);
-      "z_count" int => length(z_vars);
+      "fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*");
+      "x_fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "x");
+      "z_fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "z");
 }
 
 bundle agent check
 {
-  classes:
-      "ok" and => { strcmp("$(test.count)", "3"),
-                    strcmp("$(test.x_count)", "2"),
-                    strcmp("$(test.z_count)", "0") };
-
-  reports:
-    DEBUG::
-      "Found variables $(test.vars)";
-      "Found x variables $(test.x_vars)";
-      "Found z variables $(test.z_vars)";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

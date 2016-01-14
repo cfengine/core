@@ -398,7 +398,7 @@ const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 
 const ConstraintSyntax file_control_constraints[] =  /* enum cfh_control */
 {
-    ConstraintSyntaxNewString("namespace", CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("namespace", "[a-zA-Z0-9_]+", "Switch to a private namespace to protect current file from duplicate definitions", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

@@ -1,0 +1,29 @@
+######################################################
+#
+#  Issue 375 setup (precursor to actual tickle of bug)
+#
+#####################################################
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent check
+{
+  reports:
+    # This should NEVER be reported because we have a body file control that
+    # contains illegal characters.
+    "$(this.promise_filename) FAIL";
+}
+
+body file control
+{
+  # Variable dereferences should work
+  namespace => "{}()$:[]";
+}
+
+

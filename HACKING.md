@@ -16,6 +16,11 @@ for a new feature, it might be a good idea to open up a feature ticket in
 Redmine and send a message to dev-cfengine mailing list,
 before actually contributing the code, in order to get discussion going.
 
+Merged features and larger changes will be released in the first minor release
+(i.e. x.y.0). Please note that such pull requests should be ready for merging
+(i.e. adjusted for any feedback) at least two months before
+[the scheduled release date](https://cfengine.com/product/supported-versions/)
+in order to make it to the first minor release.
 
 
 Top reasons pull-requests are rejected or delayed

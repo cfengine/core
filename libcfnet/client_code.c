@@ -348,6 +348,13 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
             goto err;
         }
 
+        if (encrypt)
+        {
+            memcpy(in, recvbuffer, nbytes);
+            DecryptString(conn->encryption_type, in, recvbuffer,
+                          conn->session_key, nbytes);
+        }
+
         if (recvbuffer[0] == '\0')
         {
             Log(LOG_LEVEL_ERR,
@@ -355,13 +362,6 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
                 (start == NULL) ? " first" : "",
                 dirname);
             goto err;
-        }
-
-        if (encrypt)
-        {
-            memcpy(in, recvbuffer, nbytes);
-            DecryptString(conn->encryption_type, in, recvbuffer,
-                          conn->session_key, nbytes);
         }
 
         if (FailedProtoReply(recvbuffer))

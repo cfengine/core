@@ -6,82 +6,12 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
 }
 
-#######################################################
-
-bundle agent init
-{
-  vars:
-      "results" slist => {
-                           'This filtering of d1 should have only exact "." entries: { --empty-list-- }',
-                           'This filtering of d1 should have only one-character entries: { "1", "2", "3" }',
-                           'This filtering of d2 should have only exact "." entries: { --empty-list-- }',
-                           'This filtering of d2 should have only one-character entries: { "1", "2", "3", "y", "b", "q" }',
-                           'This filtering of dempty should have only exact "." entries: { --empty-list-- }',
-                           'This filtering of dempty should have only one-character entries: { --empty-list-- }',
-                           'This filtering of s1 should have only exact "." entries: { --empty-list-- }',
-                           'This filtering of s1 should have only one-character entries: { "1", "2", "3" }',
-
-                           'filter-bound d1, matching at most 2 items = { "1", "2" }',
-                           'filter-bound d2, matching at most 2 items = { "1", "2" }',
-                           'filter-bound dempty, matching at most 2 items = { --empty-list-- }',
-                           'filter-bound s1, matching at most 2 items = { "1", "2" }',
-
-                           'filter-exact d1, looking for "one" = { "one", "one" }',
-                           'filter-exact d2, looking for "one" = { --empty-list-- }',
-                           'filter-exact dempty, looking for "one" = { --empty-list-- }',
-                           'filter-exact s1, looking for "one" = { "one", "one" }',
-
-                           'filter-grep09 d1 = { "1", "2", "3" }',
-                           'filter-grep09 d2 = { "1", "2", "3" }',
-                           'filter-grep09 dempty = { --empty-list-- }',
-                           'filter-grep09 s1 = { "1", "2", "3" }',
-
-                           'filter-invert d1, looking for non-digits = { "one", "two", "three", "long string", "four", "fix", "six", "one", "two", "three" }',
-                           'filter-invert d2, looking for non-digits = { "y", "b", "q" }',
-                           'filter-invert dempty, looking for non-digits = { --empty-list-- }',
-                           'filter-invert s1, looking for non-digits = { "one", "two", "three", "long string", "one", "two", "three" }',
-
-                           'grep09 d1 = { "1", "2", "3" }',
-                           'grep09 d2 = { "1", "2", "3" }',
-                           'grep09 dempty = { --empty-list-- }',
-                           'grep09 s1 = { "1", "2", "3" }',
-
-                           'max0 filtering of d1 should be empty: { --empty-list-- }',
-                           'max0 filtering of d2 should be empty: { --empty-list-- }',
-                           'max0 filtering of dempty should be empty: { --empty-list-- }',
-                           'max0 filtering of s1 should be empty: { --empty-list-- }',
-
-                           'starting d1 = [1,2,3,"one","two","three","long string","four","fix","six","one","two","three"]',
-                           'starting d2 = {"a":"b","one":1,"p":"q","three":3,"two":2,"x":"y"}',
-                           'starting dempty = []',
-                           'starting s1 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }'
-      };
-
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_defaults => init_empty,
-      edit_line => init_insert;
-}
-
-body edit_defaults init_empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
-bundle edit_line init_insert
-{
-  insert_lines:
-      "$(init.results)";
-}
-
-#######################################################
+###########################################################
 
 bundle agent test
 {
@@ -118,30 +48,16 @@ bundle agent test
       "$(lists)_max0" slist => filter(".*", $(lists), "true", "false", 0);
       "$(lists)_grep09" slist => grep("[0-9]", $(lists));
 
-      "$(lists)_str" string => format("%S", "$(lists)");
-      "$(lists)_$(tests)_str" string => format("%S", "$(lists)_$(tests)");
+      # with inline JSON
+      "inline_fgrep09" slist => filter("[0-9]", '[1,2,3]', "true", "false", 999);
+      "inline_exact1" slist => filter("one", '[1,2,3]', "false", "false", 999);
+      "inline_exactdot" slist => filter(".", '[1,2,3]', "false", "false", 999);
+      "inline_regexdot" slist => filter(".", '[1,2,3]', "true", "false", 999);
+      "inline_invert" slist => filter("[0-9]", '[1,2,3]', "true", "true", 999);
+      "inline_max2" slist => filter(".*", '[1,2,3]', "true", "false", 2);
+      "inline_max0" slist => filter(".*", '[1,2,3]', "true", "false", 0);
+      "inline_grep09" slist => grep("[0-9]", '[1,2,3]');
 
-  files:
-      "$(G.testfile).actual"
-      create => "true",
-      edit_line => test_insert;
-}
-
-bundle edit_line test_insert
-{
-  vars:
-      "lists" slist => { @(test.lists) };
-
-  insert_lines:
-      "starting $(lists) = $(test.$(lists)_str)";
-      "grep09 $(lists) = $(test.$(lists)_grep09_str)";
-      "filter-grep09 $(lists) = $(test.$(lists)_fgrep09_str)";
-      "filter-exact $(lists), looking for \"one\" = $(test.$(lists)_exact1_str)";
-      "This filtering of $(lists) should have only exact \".\" entries: $(test.$(lists)_exactdot_str)";
-      "This filtering of $(lists) should have only one-character entries: $(test.$(lists)_regexdot_str)";
-      "filter-invert $(lists), looking for non-digits = $(test.$(lists)_invert_str)";
-      "filter-bound $(lists), matching at most 2 items = $(test.$(lists)_max2_str)";
-      "max0 filtering of $(lists) should be empty: $(test.$(lists)_max0_str)";
 }
 
 #######################################################
@@ -149,7 +65,7 @@ bundle edit_line test_insert
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

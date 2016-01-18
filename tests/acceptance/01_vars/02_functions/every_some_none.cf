@@ -13,71 +13,14 @@ body common control
 
 #######################################################
 
-bundle agent init
+bundle agent test
 {
-  vars:
-      "results" slist => {
-                           "starting list = 1",
-                           "starting list = 2",
-                           "starting list = 3",
-                           "starting list = one",
-                           "starting list = two",
-                           "starting list = three",
-                           "starting list = long string",
-                           "starting list = four",
-                           "starting list = fix",
-                           "starting list = six",
-                           "starting list = one",
-                           "starting list = two",
-                           "starting list = three",
-                           "every() test 1 passed",
-                           "every() test 2 passed",
-                           "every() test d11 passed",
-                           "every() test d12 passed",
-                           "every() test d21 passed",
-                           "every() test d22 passed",
-                           "none() dempty test passed",
-                           "none() test 1 passed",
-                           "none() test 2 passed",
-                           "none() test d11 passed",
-                           "none() test d12 passed",
-                           "none() test d21 passed",
-                           "none() test d22 passed",
-                           "some() dempty test passed",
-                           "some() test 1 passed",
-                           "some() test 2 passed",
-                           "some() test d11 passed",
-                           "some() test d12 passed",
-                           "some() test d21 passed",
-                           "some() test d22 passed",
-                           "every() dempty test passed",
-                           "every() empty test passed",
-                           "some() empty test passed",
-                           "none() empty test passed",
-      };
-
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_defaults => init_empty,
-      edit_line => init_insert;
+  methods:
+      "pretest";
+      "collect";
 }
 
-body edit_defaults init_empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
-bundle edit_line init_insert
-{
-  insert_lines:
-      "$(init.results)";
-}
-
-#######################################################
-
-bundle common testaide
+bundle common pretest
 {
   vars:
       "test" slist => {
@@ -103,147 +46,62 @@ bundle common testaide
 
       "dempty" data => parsejson('[]');
 
+      "collected" slist => classesmatching(".*", "collect");
+      "collected_sorted" slist => sort(collected, "lex");
+
   classes:
-      "every1" expression => every(".*", "test");
-      "every2" expression => every(".", "test");
+      "every1" meta => { "collect" }, expression => every(".*", "test");
+      "every2" meta => { "collect" }, expression => every(".", "test");
 
-      "some1" expression => some("long string", "test");
-      "some2" expression => some("none", "test");
+      "some1" meta => { "collect" }, expression => some("long string", "test");
+      "some2" meta => { "collect" }, expression => some("none", "test");
 
-      "none1" expression => none("jebadiah", "test");
-      "none2" expression => none("2", "test");
+      "none1" meta => { "collect" }, expression => none("jebadiah", "test");
+      "none2" meta => { "collect" }, expression => none("2", "test");
 
-      "every_empty" expression => every(".*", "empty");
-      "some_empty" expression => some(".*", "empty");
-      "none_empty" expression => none(".*", "empty");
+      "every_empty" meta => { "collect" }, expression => every(".*", "empty");
+      "some_empty" meta => { "collect" }, expression => some(".*", "empty");
+      "none_empty" meta => { "collect" }, expression => none(".*", "empty");
 
-      "everyd11" expression => every(".*", d1);
-      "everyd12" expression => every(".", d1);
+      "everyd11" meta => { "collect" }, expression => every(".*", d1);
+      "everyd12" meta => { "collect" }, expression => every(".", d1);
 
-      "somed11" expression => some("long string", d1);
-      "somed12" expression => some("none", d1);
+      "somed11" meta => { "collect" }, expression => some("long string", d1);
+      "somed12" meta => { "collect" }, expression => some("none", d1);
 
-      "noned11" expression => none("jebadiah", d1);
-      "noned12" expression => none("2", d1);
+      "noned11" meta => { "collect" }, expression => none("jebadiah", d1);
+      "noned12" meta => { "collect" }, expression => none("2", d1);
 
-      "everyd21" expression => every(".*", d2);
-      "everyd22" expression => every(".", d2);
+      "everyd21" meta => { "collect" }, expression => every(".*", d2);
+      "everyd22" meta => { "collect" }, expression => every(".", d2);
 
-      "somed21" expression => some("long string", d2);
-      "somed22" expression => some("none", d2);
+      "somed21" meta => { "collect" }, expression => some("long string", d2);
+      "somed22" meta => { "collect" }, expression => some("none", d2);
 
-      "noned21" expression => none("jebadiah", d2);
-      "noned22" expression => none("2", d2);
+      "noned21" meta => { "collect" }, expression => none("jebadiah", d2);
+      "noned22" meta => { "collect" }, expression => none("2", d2);
 
-      "every_dempty" expression => every(".*", dempty);
-      "some_dempty" expression => some(".*", dempty);
-      "none_dempty" expression => none(".*", dempty);
+      "every_dempty" meta => { "collect" }, expression => every(".*", dempty);
+      "some_dempty" meta => { "collect" }, expression => some(".*", dempty);
+      "none_dempty" meta => { "collect" }, expression => none(".*", dempty);
+
+      # with inline JSON
+      "inline_every_empty" meta => { "collect" }, expression => every(".*", '[]');
+      "inline_some_data" meta => { "collect" }, expression => every(".*", '[ "foo", "bar" ]');
+      "inline_none_data" meta => { "collect" }, expression => none("jebadiah", '[ "foo", "bar" ]');
+
 }
 
-bundle agent test
+bundle common collect
 {
-  files:
-      "$(G.testfile).actual"
-      create => "true",
-      edit_line => test_insert;
+  vars:
+      "collected" slist => { @(pretest.collected_sorted) };
 }
-
-bundle edit_line test_insert
-{
-  insert_lines:
-      "starting list = $(testaide.test)";
-    every1::
-      "every() test 1 passed";
-    !every1::
-      "every() test 1 failed";
-    every2::
-      "every() test 2 failed";
-    !every2::
-      "every() test 2 passed";
-    some1::
-      "some() test 1 passed";
-    !some1::
-      "some() test 1 failed";
-    some2::
-      "some() test 2 failed";
-    !some2::
-      "some() test 2 passed";
-    none1::
-      "none() test 1 passed";
-    !none1::
-      "none() test 1 failed";
-    none2::
-      "none() test 2 failed";
-    !none2::
-      "none() test 2 passed";
-    !every_empty::
-      "every() empty test passed";
-    !some_empty::
-      "some() empty test passed";
-    none_empty::
-      "none() empty test passed";
-    everyd11::
-      "every() test d11 passed";
-    !everyd11::
-      "every() test d11 failed";
-    everyd12::
-      "every() test d12 failed";
-    !everyd12::
-      "every() test d12 passed";
-    somed11::
-      "some() test d11 passed";
-    !somed11::
-      "some() test d11 failed";
-    somed12::
-      "some() test d12 failed";
-    !somed12::
-      "some() test d12 passed";
-    noned11::
-      "none() test d11 passed";
-    !noned11::
-      "none() test d11 failed";
-    noned12::
-      "none() test d12 failed";
-    !noned12::
-      "none() test d12 passed";
-    everyd21::
-      "every() test d21 passed";
-    !everyd21::
-      "every() test d21 failed";
-    everyd22::
-      "every() test d22 passed";
-    !everyd22::
-      "every() test d22 failed";
-    somed21::
-      "some() test d21 failed";
-    !somed21::
-      "some() test d21 passed";
-    somed22::
-      "some() test d22 failed";
-    !somed22::
-      "some() test d22 passed";
-    noned21::
-      "none() test d21 passed";
-    !noned21::
-      "none() test d21 failed";
-    noned22::
-      "none() test d22 failed";
-    !noned22::
-      "none() test d22 passed";
-    !every_dempty::
-      "every() dempty test passed";
-    !some_dempty::
-      "some() dempty test passed";
-    none_dempty::
-      "none() dempty test passed";
-}
-
-#######################################################
 
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+      "check"  usebundle => dcs_check_state(collect,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

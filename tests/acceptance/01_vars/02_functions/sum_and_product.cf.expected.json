@@ -1,0 +1,28 @@
+{
+  "empty_list": [
+    "cf_null"
+  ],
+  "empty_list_product": "1.000000",
+  "empty_list_sum": "0.000000",
+  "empty_object": {
+  },
+  "empty_object_product": "1.000000",
+  "empty_object_sum": "0.000000",
+  "inline_array_product": "0.000000",
+  "inline_array_sum": "3.000000",
+  "inline_object_product": "2.000000",
+  "inline_object_sum": "3.000000",
+  "normal_list": [
+    "1",
+    "2",
+    "3"
+  ],
+  "normal_list_product": "6.000000",
+  "normal_list_sum": "6.000000",
+  "normal_object": {
+    "a": 1,
+    "b": 2
+  },
+  "normal_object_product": "2.000000",
+  "normal_object_sum": "3.000000"
+}

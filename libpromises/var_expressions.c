@@ -311,23 +311,11 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
 
     assert(lval);
 
-    if (!scope && !_scope)
-    {
-        assert(ns == NULL && "A variable missing a scope should not have a namespace");
-    }
-
     if (scope)
     {
         if (SpecialScopeFromString(scope) != SPECIAL_SCOPE_NONE)
         {
             _ns = NULL;
-        }
-    }
-    else
-    {
-        if (!_scope)
-        {
-            assert(ns == NULL && "A variable missing a scope should not have a namespace");
         }
     }
 

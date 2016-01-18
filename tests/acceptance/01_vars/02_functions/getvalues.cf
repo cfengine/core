@@ -1,7 +1,6 @@
 #######################################################
 #
-# Test that getindices() returns the expected list from
-# a data container
+# Test getvalues()
 #
 #######################################################
 
@@ -14,29 +13,20 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-  vars:
-    "data" data => parsejson('{
-  "foo": [
-          "alpha",
-          "bravo"
-         ],
-  "bar": { "one": "1"  "two": "2" }
-}');
-}
-
-#######################################################
-
 bundle agent test
 {
-  meta:
-      "test_soft_fail" string => "!any",
-        meta => { "redmine7116" };
-
   vars:
-      # expected: one, two
-      "values_data" slist => getindices("init.data[bar]");
+      "user[name]"              string => "zamboni";
+      "user[fullname][first]"   string => "Diego";
+      "user[fullname][last]"    string => "Zamboni";
+      "user[dirs]"              slist => { "/home/zamboni",
+                                           "/tmp/zamboni",
+                                           "/export/home/zamboni" };
+
+      "values"     slist => getvalues("user");
+      "uservalues" slist => getvalues("user[fullname]");
+      "inline_values_map" slist => getvalues('{ "foo": 1, "bar": 2 }');
+      "inline_values_array" slist => getvalues('[ "foo", 1, "bar", 2 ]');
 }
 
 #######################################################

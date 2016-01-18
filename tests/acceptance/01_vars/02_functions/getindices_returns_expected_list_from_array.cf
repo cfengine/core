@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test that getincides() returns the expected list from
+# Test that getindices() returns the expected list from
 # an array
 #
 #######################################################
@@ -53,6 +53,6 @@ bundle agent check
 {
   methods:
       "any" usebundle => dcs_check_state(test,
-                                         "$(this.promise_filename).json",
+                                         "$(this.promise_filename).expected.json",
                                          $(this.promise_filename));
 }

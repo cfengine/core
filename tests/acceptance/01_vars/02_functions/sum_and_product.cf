@@ -1,0 +1,58 @@
+#######################################################
+#
+# Test 'sum' and 'product' functions
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "normal_list" slist => { "1", "2", "3" };
+      "empty_list" slist => { };
+      "normal_object" data => parsejson('{ "a": 1, "b": 2 }');
+      "empty_object" data => parsejson('{}');
+
+      "normal_list_sum" real => sum(normal_list); # 6
+      "empty_list_sum" real => sum(empty_list); # 0
+      "normal_object_sum" real => sum(normal_object); # 3
+      "empty_object_sum" real => sum(empty_object); # 0
+
+      "inline_object_sum" real => sum('{ "a": 1, "b": 2 }'); # 3
+      "inline_array_sum" real => sum('[ "a", 1, "b", 2 ]'); # 3
+
+      "normal_list_product" real => product(normal_list); # 6
+      "empty_list_product" real => product(empty_list); # 1
+      "normal_object_product" real => product(normal_object); # 2
+      "empty_object_product" real => product(empty_object); # 1
+
+      "inline_object_product" real => product('{ "a": 1, "b": 2 }'); # 2
+      "inline_array_product" real => product('[ "a", 1, "b", 2 ]'); # 0
+}
+
+
+#######################################################
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

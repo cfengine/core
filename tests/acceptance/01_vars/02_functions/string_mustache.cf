@@ -9,40 +9,29 @@ bundle agent init
 {
   vars:
       "desert" string => "Sahara";
+      "state2" data => parsejson('{"x": 1, "y": [{"item": 2}, {"item": 3}, {"item": 4}]}');
 }
 
 bundle agent test
 {
   vars:
-      "state1" data => datastate();
-      "out11" string => string_mustache("desert = {{vars.init.desert}}", state1);
-      "out12" string => string_mustache("desert = {{vars.init.desert}}");
+      "out11" string => string_mustache("desert = {{vars.init.desert}}");
 
-      "state2" data => parsejson('{"x": 1, "y": [{"item": 2}, {"item": 3}, {"item": 4}]}');
-      "out21" string => string_mustache("desert = {{vars.init.desert}}", state2);
-      "out22" string => string_mustache("x = {{x}}", state2);
-      "out23" string => string_mustache("{{#y}}{{item}} {{/y}}", state2);
+      "out21" string => string_mustache("desert = {{vars.init.desert}}", "init.state2");
+      "out22" string => string_mustache("x = {{x}}", "init.state2");
+      "out23" string => string_mustache("{{#y}}{{item}} {{/y}}", "init.state2");
+
+      "inline" string => string_mustache("{{#y}}{{item}} {{/y}}", '{ "y": [{"item": 2}, {"item": 3}, {"item": 4}]}');
+
+      "badref" string => string_mustache("desert = {{vars.init.desert}}", nosuch);
 }
+
+#######################################################
 
 bundle agent check
 {
-  vars:
-      "actual" string => "
-out11 = $(test.out11)
-out12 = $(test.out12)
-out21 = $(test.out21)
-out22 = $(test.out22)
-out23 = $(test.out23)
-";
-      "expected" string => "
-out11 = desert = Sahara
-out12 = desert = Sahara
-out21 = desert = 
-out22 = x = 1
-out23 = 2 3 4 
-";
-
   methods:
-      "" usebundle => dcs_check_strcmp($(actual), $(expected), $(this.promise_filename), "no");
-
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

@@ -163,47 +163,74 @@ git_stage_policy_channels() {
   # This "VCS_TYPE-based" function is called from masterfiles-stage.sh.
   #
   # This function stages multiple policy channels each to its masterdir,
-  # all based on the simple two-field channel_config_file.
-  # (See that file for further documentation of its format.)
+  # based on the values specified in the bash array "channel_config"
+  # defined in the params file, and the GIT_URL value also set in that file.
   #
-  # The GIT_URL is set in the params.sh file;
-  # ROOT (the dir in which to put staging dirs) is also set in params.sh
+  # (See the example git policy channels params file.)
   #
   # The value of MASTERDIR that is assigned in masterfiles-stage.sh
   # is ****IGNORED**** by this function, since there is a separate
   # MASTERDIR for each separate policy channel.
   #
-  # Instead, the variable channel_deployment_dir is used
-  # as the directory in which to place all channels.  Each
-  # channel directory is named according to the channel name that is
-  # read in from channel_config_file.
+  # Example value for channel_config:
+  # (This is a single value, split into three lines for readability.)
   #
-  # channel_config_file and channel_deployment_dir should be set
-  # in the PARAMS file.
-  # Example values:
-  # channel_config_file="/var/cfengine/policy_channels/channel_to_source.txt"
-  # channel_deployment_dir="/var/cfengine/policy_channels/masterfiles_dirs"
+  # channel_config=()
+  # channel_config+=( "/var/cfengine/masterfiles" "my_git_tag" )
+  # channel_config+=( "/var/cfengine/policy_channels/channel_1" "my_git_branch" )
 
-  [ -f "${channel_config_file}" ]      || error_exit "${channel_config_file} not found"
-  mkdir -p "${channel_deployment_dir}" || error_exit "Unable to mkdir -p '${channel_deployment_dir}'"
+  # Simplest validation check first
+  set -- "${channel_config[@]}"
+  [ "$#" -gt 1 ] ||
+    error_exit "The channel_config array must have at least two elements."
 
   check_git_installed
   git_setup_local_mirrored_repo
 
-  # sed removes comments, including trailing comments, and skips empty/whitespace only lines.
-  sed -e 's/#.*//; /^[[:space:]]*$/d' "${channel_config_file}" |
-    while read channel_name refspec ; do
+  while [ "$#" -gt 1 ] ; do
+    # At start of every loop, "$1" contains deploy dir and "$2" is refspec.
 
-      STAGING_DIR="${ROOT}/${channel_name}"
-      MASTERDIR="${channel_deployment_dir}/${channel_name}"
+    # Ensure absolute pathname is given
+    [ "$1" != "${1#/}" ] ||
+      error_exit "You must specify absolute pathnames in channel_config: '$1'"
+    mkdir -p "$(dirname "$1")" || error_exit "Failed to mkdir -p dirname $1"
+      # We don't mkdir $1 directly, just its parent dir if that doesn't exist.
 
-      git_stage_refspec "$refspec"
-      validate_staged_policy
-      avoid_triggering_unneeded_policy_updates
-      rollout_staged_policy_to_masterdir
-      echo "Successfully deployed a policy release of '${refspec}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
+    # Put staging dir right next to deploy dir to ensure it's on same filesystem
+    STAGING_DIR="$(mktemp -d --tmpdir="$(dirname "$1")" )"
 
-    done
+    git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" checkout -q -f "$2" ||
+      error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
+
+    # Grab HEAD so it can be used to populate cf_promises_release_id
+    mkdir -p "${STAGING_DIR}/.git"
+    cp "${local_mirrored_repo}/HEAD" "${STAGING_DIR}/.git/"
+
+    chown -R root:root "${STAGING_DIR}" || error_exit "Unable to chown '${STAGING_DIR}'"
+    chmod -R go-rwx    "${STAGING_DIR}" || error_exit "Unable to chmod '${STAGING_DIR}'"
+    validate_staged_policy
+
+    if ! [ -d "$1" ] ; then
+      # deploy dir doesn't exist yet
+      mv "${STAGING_DIR}" "$1" || error_exit "Failed to mv $STAGING_DIR to $1."
+    else
+      if /usr/bin/cmp -s "${STAGING_DIR}/cf_promises_release_id" \
+                                   "${1}/cf_promises_release_id" ; then
+        # release id is the same in stage and deploy dir
+        # so prevent triggering update on hosts by keeping old "validated" flag file
+        # (See also comment under avoid_triggering_unneeded_policy_updates)
+        cp -a "${1}/cf_promises_validated" "${STAGING_DIR}/"
+      fi
+      third_dir="$(mktemp -d --tmpdir="$(dirname "$1")" )"
+      mv "${1}" "${third_dir}"  || error_exit "Can't mv ${1} to ${third_dir}"
+      mv "${STAGING_DIR}" "${1}"          || error_exit "Can't mv ${STAGING_DIR} to ${1}"
+      rm -rf "${third_dir}"
+    fi
+    echo "Successfully deployed a policy release of '${2}' from '${GIT_URL}' to '${1}' on $(date)"
+    shift 2
+  done
+
+  [ "$#" -eq 1 ] && error_exit "Trailing parameter found, please fix params file: '$1'"
 }
 
 git_masterstage() {

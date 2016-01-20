@@ -481,15 +481,19 @@ static void ShowVariablesFormatted(EvalContext *ctx)
         char *varname = VarRefToString(v->ref, true);
 
         Writer *w = StringWriter();
-        RvalWrite(w, v->rval);
 
-        StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
-        Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+        switch (DataTypeToRvalType(v->type))
+        {
+        case RVAL_TYPE_CONTAINER:
+            JsonWriteCompact(w, RvalContainerValue(v->rval));
+            break;
 
-        char *line;
+        default:
+            RvalWrite(w, v->rval);
+        }
+
         const char *var_value;
-
-        if(StringIsPrintable(StringWriterData(w)))
+        if (StringIsPrintable(StringWriterData(w)))
         {
             var_value = StringWriterData(w);
         }
@@ -498,6 +502,11 @@ static void ShowVariablesFormatted(EvalContext *ctx)
             var_value = "<non-printable>";
         }
 
+
+        StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+        Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+
+        char *line;
         xasprintf(&line, "%-40s %-60s %-40s", varname, var_value, BufferData(tagbuf));
 
         SeqAppend(seq, line);

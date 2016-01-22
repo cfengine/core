@@ -109,7 +109,8 @@ git_deploy_refspec() {
 
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
-  chmod -R go-rwx    "${temp_stage}" || error_exit "Unable to chmod '${temp_stage}'"
+  find "${temp_stage}" \( -type f -exec chmod 600 {} + \) -o \
+                       \( -type d -exec chmod 700 {} + \)
 
   ########################## 4. VALIDATE POLICY SET
   /var/cfengine/bin/cf-promises -T "${temp_stage}" &&

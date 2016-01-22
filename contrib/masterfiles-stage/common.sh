@@ -72,6 +72,56 @@ git_setup_local_mirrored_repo() {
     error_exit "Failed: git clone --mirror '${GIT_URL}' '${local_mirrored_repo}'"
 }
 
+git_deploy_refspec() {
+  # Depends on $local_mirrored_repo
+  # Accepts two args:
+  # $1 - dir to deploy to
+  # $2 - refspec to deploy
+
+  # Ensure absolute pathname is given
+  [ "${1:0:1}" = / ] ||
+    error_exit "You must specify absolute pathnames in channel_config: '$1'"
+  mkdir -p "$(dirname "$1")" || error_exit "Failed to mkdir -p dirname $1"
+    # We don't mkdir $1 directly, just its parent dir if that doesn't exist.
+
+  # Put staging dir right next to deploy dir to ensure it's on same filesystem
+  local temp_stage
+  temp_stage="$(mktemp -d --tmpdir="$(dirname "$1")" )"
+
+  # The '^0' at the end of the refspec
+  # populates HEAD with the SHA of the commit
+  # rather than potentially using a git branch name.
+  # Also see http://stackoverflow.com/a/13293010/5419599
+  git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" checkout -q -f "${2}^0" ||
+    error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
+
+  # Grab HEAD so it can be used to populate cf_promises_release_id
+  mkdir -p "${temp_stage}/.git"
+  cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
+
+  chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
+  chmod -R go-rwx    "${temp_stage}" || error_exit "Unable to chmod '${temp_stage}'"
+  validate_staged_policy "$temp_stage"
+
+  if ! [ -d "$1" ] ; then
+    # deploy dir doesn't exist yet
+    mv "${temp_stage}" "$1" || error_exit "Failed to mv $temp_stage to $1."
+  else
+    if /usr/bin/cmp -s "${temp_stage}/cf_promises_release_id" \
+                                 "${1}/cf_promises_release_id" ; then
+      # release id is the same in stage and deploy dir
+      # so prevent triggering update on hosts by keeping old "validated" flag file
+      # (See also comment under avoid_triggering_unneeded_policy_updates)
+      cp -a "${1}/cf_promises_validated" "${temp_stage}/"
+    fi
+    third_dir="$(mktemp -d --tmpdir="$(dirname "$1")" )"
+    mv "${1}" "${third_dir}"  || error_exit "Can't mv ${1} to ${third_dir}"
+    mv "${temp_stage}" "${1}"          || error_exit "Can't mv ${temp_stage} to ${1}"
+    rm -rf "${third_dir}"
+  fi
+
+}
+
 git_stage_refspec() {
   # Depends on $STAGING_DIR and $local_mirrored_repo
   # Accepts one arg:
@@ -99,12 +149,13 @@ git_stage_refspec() {
 }
 
 validate_staged_policy() {
-  # Depends on $STAGING_DIR
+  # Accepts one arg:
+  # $1 - the directory to be validated
 
   # Also see function "avoid_triggering_unneeded_policy_updates"
-  /var/cfengine/bin/cf-promises -T "${STAGING_DIR}" &&
-  /var/cfengine/bin/cf-promises -cf "${STAGING_DIR}/update.cf" ||
-  error_exit "Update policy staged in ${STAGING_DIR} could not be validated, aborting."
+  /var/cfengine/bin/cf-promises -T "${1}" &&
+  /var/cfengine/bin/cf-promises -cf "${1}/update.cf" ||
+  error_exit "Update policy staged in ${1} could not be validated, aborting."
 }
 
 avoid_triggering_unneeded_policy_updates() {
@@ -180,8 +231,7 @@ rollout_staged_policy_to_masterdir() {
 
 git_stage_policy_channels() {
   # Depends on ${channel_config[@]} and $dir_to_hold_mirror
-  # Sets $STAGING_DIR
-  # Calls functions dependent on $GIT_URL and $STAGING_DIR
+  # Calls functions dependent on $GIT_URL
 
   # Created by Mike Weilgart
   #
@@ -214,47 +264,7 @@ git_stage_policy_channels() {
 
   while [ "$#" -gt 1 ] ; do
     # At start of every loop, "$1" contains deploy dir and "$2" is refspec.
-
-    # Ensure absolute pathname is given
-    [ "${1:0:1}" = / ] ||
-      error_exit "You must specify absolute pathnames in channel_config: '$1'"
-    mkdir -p "$(dirname "$1")" || error_exit "Failed to mkdir -p dirname $1"
-      # We don't mkdir $1 directly, just its parent dir if that doesn't exist.
-
-    # Put staging dir right next to deploy dir to ensure it's on same filesystem
-    STAGING_DIR="$(mktemp -d --tmpdir="$(dirname "$1")" )"
-
-    # The '^0' at the end of the refspec forces git into detached head state
-    # which populates HEAD with the SHA of the commit
-    # rather than potentially using a git branch name.
-    # Also see http://stackoverflow.com/a/13293010/5419599
-    git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" checkout -q -f "${2}^0" ||
-      error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
-
-    # Grab HEAD so it can be used to populate cf_promises_release_id
-    mkdir -p "${STAGING_DIR}/.git"
-    cp "${local_mirrored_repo}/HEAD" "${STAGING_DIR}/.git/"
-
-    chown -R root:root "${STAGING_DIR}" || error_exit "Unable to chown '${STAGING_DIR}'"
-    chmod -R go-rwx    "${STAGING_DIR}" || error_exit "Unable to chmod '${STAGING_DIR}'"
-    validate_staged_policy
-
-    if ! [ -d "$1" ] ; then
-      # deploy dir doesn't exist yet
-      mv "${STAGING_DIR}" "$1" || error_exit "Failed to mv $STAGING_DIR to $1."
-    else
-      if /usr/bin/cmp -s "${STAGING_DIR}/cf_promises_release_id" \
-                                   "${1}/cf_promises_release_id" ; then
-        # release id is the same in stage and deploy dir
-        # so prevent triggering update on hosts by keeping old "validated" flag file
-        # (See also comment under avoid_triggering_unneeded_policy_updates)
-        cp -a "${1}/cf_promises_validated" "${STAGING_DIR}/"
-      fi
-      third_dir="$(mktemp -d --tmpdir="$(dirname "$1")" )"
-      mv "${1}" "${third_dir}"  || error_exit "Can't mv ${1} to ${third_dir}"
-      mv "${STAGING_DIR}" "${1}"          || error_exit "Can't mv ${STAGING_DIR} to ${1}"
-      rm -rf "${third_dir}"
-    fi
+    git_deploy_refspec "$1" "$2"
     echo "Successfully deployed a policy release of '${2}' from '${GIT_URL}' to '${1}' on $(date)"
     shift 2
   done
@@ -267,7 +277,7 @@ git_masterstage() {
   check_git_installed
   git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
   git_stage_refspec "$1"
-  validate_staged_policy
+  validate_staged_policy "$STAGING_DIR"
   avoid_triggering_unneeded_policy_updates
   rollout_staged_policy_to_masterdir
 

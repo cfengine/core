@@ -7,7 +7,7 @@ dir_to_hold_mirror="/opt/cfengine"
 # ROOT is not used for this VCS_TYPE but must be present
 # for integration with Design Center.
 
-chan_deploy="/var/cfengine/policy_channels/masterfiles_dirs"
+chan_deploy="/var/cfengine/policy_channels"
 # chan_deploy is not used outside this file
 # and is just for convenience in defining the channel_config array.
 

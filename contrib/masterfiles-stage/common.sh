@@ -208,14 +208,11 @@ git_stage_policy_channels() {
 }
 
 git_masterstage() {
-  # Depends on $GIT_URL, $ROOT and $MASTERDIR
-  # Accepts one arg:
-  # $1 - refspec to stage
-
+  # Depends on $GIT_URL, $ROOT, $MASTERDIR, $GIT_BRANCH
   check_git_installed
   git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
-  git_deploy_refspec "$MASTERDIR" "$1"
-  echo "Successfully deployed '$1' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
+  git_deploy_refspec "$MASTERDIR" "${GIT_BRANCH}"
+  echo "Successfully deployed '${GIT_BRANCH}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 }
 
 svn_branch() {

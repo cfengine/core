@@ -19,6 +19,9 @@ error_exit() {
 }
 
 set_staging_dir_from_params() {
+  # Depends on $ROOT and $PARAMS
+  # Sets $STAGING_DIR
+
   # We probably want a different temporary location for each remote repository
   # so that we can avoid conflicts and potential confusion.
   # Example:
@@ -34,8 +37,11 @@ check_git_installed() {
 }
 
 git_setup_local_mirrored_repo() {
-  # Accepts a single argument: The absolute path in which to place the mirror.
-  #
+  # Depends on $GIT_URL
+  # Sets $local_mirrored_repo
+  # Accepts one arg:
+  # $1 - absolute path in which to place the mirror.
+
   # This function sets the variable local_mirrored_repo to a directory path
   # based on the value of GIT_URL, and if that directory doesn't exist,
   # creates it as a mirrored clone of the repo at GIT_URL.  If it does exist,
@@ -67,6 +73,10 @@ git_setup_local_mirrored_repo() {
 }
 
 git_stage_refspec() {
+  # Depends on $STAGING_DIR and $local_mirrored_repo
+  # Accepts one arg:
+  # $1 - refspec
+
   # This function depends on git_setup_local_mirrored_repo
   # having been run, such that the variable local_mirrored_repo
   # contains the (local) path to a bare git repository.
@@ -89,7 +99,8 @@ git_stage_refspec() {
 }
 
 validate_staged_policy() {
-  # If you use this function, ensure you have set STAGING_DIR.
+  # Depends on $STAGING_DIR
+
   # Also see function "avoid_triggering_unneeded_policy_updates"
   /var/cfengine/bin/cf-promises -T "${STAGING_DIR}" &&
   /var/cfengine/bin/cf-promises -cf "${STAGING_DIR}/update.cf" ||
@@ -97,6 +108,8 @@ validate_staged_policy() {
 }
 
 avoid_triggering_unneeded_policy_updates() {
+  # Depends on $STAGING_DIR and $MASTERDIR
+
   # cf_promises_validated gets updated by any run of cf-promises,
   # but hosts use cf_promises_validated as the flag file to see
   # if they need to update everything else (the full policy set.)
@@ -129,6 +142,8 @@ avoid_triggering_unneeded_policy_updates() {
 }
 
 rollout_staged_policy_to_masterdir() {
+  # Depends on STAGING_DIR and MASTERDIR
+
   # Put STAGING_DIR to MASTERDIR with a mv command rather than
   # an rsync command so it is one atomic operation.
   #
@@ -147,6 +162,7 @@ rollout_staged_policy_to_masterdir() {
   if [ -d "${MASTERDIR}" ] ; then
     # Put tmpdir in MASTERDIR's parent dir to avoid crossing filesystem boundaries
     # (which could be a danger if we used /tmp).
+    local third_dir
     third_dir="$(mktemp -d --tmpdir="$(dirname "${MASTERDIR}")" )"
 
     mv "${MASTERDIR}" "${third_dir}/momentary"  || error_exit "Can't mv ${MASTERDIR} to ${third_dir}"
@@ -163,6 +179,10 @@ rollout_staged_policy_to_masterdir() {
 ######################################################
 
 git_stage_policy_channels() {
+  # Depends on ${channel_config[@]} and $dir_to_hold_mirror
+  # Sets $STAGING_DIR
+  # Calls functions dependent on $GIT_URL and $STAGING_DIR
+
   # Created by Mike Weilgart
   #
   # This "VCS_TYPE-based" function is called from masterfiles-stage.sh.

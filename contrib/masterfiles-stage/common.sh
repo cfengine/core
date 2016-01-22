@@ -18,25 +18,13 @@ error_exit() {
     exit 1
 }
 
-set_staging_dir_from_params() {
-  # Depends on $ROOT and $PARAMS
-  # Sets $STAGING_DIR
-
-  # We probably want a different temporary location for each remote repository
-  # so that we can avoid conflicts and potential confusion.
-  # Example:
-  # ROOT="/opt/cfengine/masterfiles_staging"
-  # PARAMS="/var/cfengine/policychannel/production_1.sh"
-  # STAGING_DIR=/opt/cfengine/masterfiles/staging/_tmp_var_cfengine_policychannel_production_1_sh
-
-  STAGING_DIR="${ROOT}_tmp$(echo "$PARAMS" | tr [./] _)"
-}
-
 check_git_installed() {
   git --version >/dev/null 2>&1 || error_exit "git not found on path: '${PATH}'"
 }
 
 git_setup_local_mirrored_repo() {
+# Contributed by Mike Weilgart
+
   # Depends on $GIT_URL
   # Sets $local_mirrored_repo
   # Accepts one arg:
@@ -73,10 +61,23 @@ git_setup_local_mirrored_repo() {
 }
 
 git_deploy_refspec() {
+# Contributed by Mike Weilgart
+
   # Depends on $local_mirrored_repo
   # Accepts two args:
   # $1 - dir to deploy to
-  # $2 - refspec to deploy
+  # $2 - refspec to deploy - a git tagname, branch, or commit hash.
+
+  # This function
+  # 1. creates an empty temp dir,
+  # 2. checks out the refspec into the empty temp dir,
+  #    (including populating .git/HEAD in the temp dir),
+  # 3. sets appropriate permissions on the policy set,
+  # 4. validates the policy set using cf-promises,
+  # 5. moves the temp dir policy set into the given deploy dir,
+  #    avoiding triggering policy updates unnecessarily
+  #    by comparing the cf_promises_validated flag file.
+  #    (See long comment at end of function def.)
 
   # Ensure absolute pathname is given
   [ "${1:0:1}" = / ] ||
@@ -84,25 +85,33 @@ git_deploy_refspec() {
   mkdir -p "$(dirname "$1")" || error_exit "Failed to mkdir -p dirname $1"
     # We don't mkdir $1 directly, just its parent dir if that doesn't exist.
 
+  ########################## 1. CREATE EMPTY TEMP DIR
   # Put staging dir right next to deploy dir to ensure it's on same filesystem
   local temp_stage
   temp_stage="$(mktemp -d --tmpdir="$(dirname "$1")" )"
 
+  ########################## 2. CHECKOUT INTO TEMP DIR
   # The '^0' at the end of the refspec
   # populates HEAD with the SHA of the commit
   # rather than potentially using a git branch name.
   # Also see http://stackoverflow.com/a/13293010/5419599
+  # and https://github.com/cfengine/core/pull/2465#issuecomment-173656475
   git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" checkout -q -f "${2}^0" ||
     error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
-
   # Grab HEAD so it can be used to populate cf_promises_release_id
   mkdir -p "${temp_stage}/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
 
+  ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
   chmod -R go-rwx    "${temp_stage}" || error_exit "Unable to chmod '${temp_stage}'"
-  validate_staged_policy "$temp_stage"
 
+  ########################## 4. VALIDATE POLICY SET
+  /var/cfengine/bin/cf-promises -T "${temp_stage}" &&
+  /var/cfengine/bin/cf-promises -cf "${temp_stage}/update.cf" ||
+  error_exit "Update policy staged in ${temp_stage} could not be validated, aborting."
+
+  ########################## 5. ROLL OUT POLICY SET FROM TEMP DIR TO DEPLOY DIR
   if ! [ -d "$1" ] ; then
     # deploy dir doesn't exist yet
     mv "${temp_stage}" "$1" || error_exit "Failed to mv $temp_stage to $1."
@@ -114,53 +123,15 @@ git_deploy_refspec() {
       # (See also comment under avoid_triggering_unneeded_policy_updates)
       cp -a "${1}/cf_promises_validated" "${temp_stage}/"
     fi
+    local third_dir
     third_dir="$(mktemp -d --tmpdir="$(dirname "$1")" )"
     mv "${1}" "${third_dir}"  || error_exit "Can't mv ${1} to ${third_dir}"
     mv "${temp_stage}" "${1}"          || error_exit "Can't mv ${temp_stage} to ${1}"
     rm -rf "${third_dir}"
   fi
 
-}
-
-git_stage_refspec() {
-  # Depends on $STAGING_DIR and $local_mirrored_repo
-  # Accepts one arg:
-  # $1 - refspec
-
-  # This function depends on git_setup_local_mirrored_repo
-  # having been run, such that the variable local_mirrored_repo
-  # contains the (local) path to a bare git repository.
+  # Note about triggering policy updates:
   #
-  # (A mirror repository is a special case of a bare repository;
-  # either will work for this function but a bare non-mirror
-  # repository will have edge cases that are mishandled.)
-  #
-  # This function accepts a single argument: refspec,
-  # which should be a git tagname, branch, or commit hash.
-  #
-  # This function stages the refspec to the STAGING_DIR
-  # from local_mirrored_repo
-
-  mkdir -p "${STAGING_DIR}" || error_exit "Failed: mkdir -p '$STAGING_DIR'"
-  git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" checkout -q -f "$1" ||
-    error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
-  git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" clean -q -dffx ||
-    error_exit "Failed: git --git-dir='${local_mirrored_repo}' --work-tree='${STAGING_DIR}' clean -q -dffx"
-}
-
-validate_staged_policy() {
-  # Accepts one arg:
-  # $1 - the directory to be validated
-
-  # Also see function "avoid_triggering_unneeded_policy_updates"
-  /var/cfengine/bin/cf-promises -T "${1}" &&
-  /var/cfengine/bin/cf-promises -cf "${1}/update.cf" ||
-  error_exit "Update policy staged in ${1} could not be validated, aborting."
-}
-
-avoid_triggering_unneeded_policy_updates() {
-  # Depends on $STAGING_DIR and $MASTERDIR
-
   # cf_promises_validated gets updated by any run of cf-promises,
   # but hosts use cf_promises_validated as the flag file to see
   # if they need to update everything else (the full policy set.)
@@ -182,47 +153,6 @@ avoid_triggering_unneeded_policy_updates() {
   # file is the same as it was before the rollout.
   #
   # This function uses the second approach.  --Mike Weilgart
-
-  if [ -f "${MASTERDIR}/cf_promises_validated" ] &&
-     /usr/bin/cmp -s "${STAGING_DIR}/cf_promises_release_id" \
-                       "${MASTERDIR}/cf_promises_release_id"
-  then
-    cp -a "${MASTERDIR}/cf_promises_validated" "${STAGING_DIR}/" ||
-      error_exit "Unable to copy existing file ${MASTERDIR}/cf_promises_validated to ${STAGING_DIR}/"
-  fi
-}
-
-rollout_staged_policy_to_masterdir() {
-  # Depends on STAGING_DIR and MASTERDIR
-
-  # Put STAGING_DIR to MASTERDIR with a mv command rather than
-  # an rsync command so it is one atomic operation.
-  #
-  # If MASTERDIR was already there, we move it out of the way
-  # first.  Then we need to do something with it -- so we put
-  # it in the old STAGING_DIR location and let the next round
-  # of staging, during the next run of the script, handle any
-  # leftover cruft.
-  # (git_stage_refspec includes "checkout -f" and "clean",
-  # which would handle this cruft; any other staging functions
-  # that are built must be designed to handle cruft also.)
-
-  chown -R root:root "${STAGING_DIR}" || error_exit "Unable to chown '${STAGING_DIR}'"
-  chmod -R go-rwx    "${STAGING_DIR}" || error_exit "Unable to chmod '${STAGING_DIR}'"
-
-  if [ -d "${MASTERDIR}" ] ; then
-    # Put tmpdir in MASTERDIR's parent dir to avoid crossing filesystem boundaries
-    # (which could be a danger if we used /tmp).
-    local third_dir
-    third_dir="$(mktemp -d --tmpdir="$(dirname "${MASTERDIR}")" )"
-
-    mv "${MASTERDIR}" "${third_dir}/momentary"  || error_exit "Can't mv ${MASTERDIR} to ${third_dir}"
-    mv "${STAGING_DIR}" "${MASTERDIR}"          || error_exit "Can't mv ${STAGING_DIR} to ${MASTERDIR}"
-    mv "${third_dir}/momentary" "${STAGING_DIR}"   # We don't care if this fails;
-    rm -rf "${third_dir}"                          # we're going to remove third_dir anyways.
-  else
-    mv "${STAGING_DIR}" "${MASTERDIR}"          || error_exit "Can't mv ${STAGING_DIR} to ${MASTERDIR}"
-  fi
 }
 
 ######################################################
@@ -230,21 +160,21 @@ rollout_staged_policy_to_masterdir() {
 ######################################################
 
 git_stage_policy_channels() {
+# Contributed by Mike Weilgart
+
   # Depends on ${channel_config[@]} and $dir_to_hold_mirror
   # Calls functions dependent on $GIT_URL
-
-  # Created by Mike Weilgart
-  #
-  # This "VCS_TYPE-based" function is called from masterfiles-stage.sh.
-  #
-  # This function stages multiple policy channels each to its masterdir,
-  # based on the values specified in the bash array "channel_config"
-  # defined in the params file, and the GIT_URL value also set in that file.
-  #
   # (See the example git policy channels params file.)
   #
+  # Stages multiple policy channels from a specified GIT_URL,
+  # each to the specified path.
+  #
+  # The paths to stage to as well as the policy sets to stage
+  # are both specified in the "channel_config" array in the
+  # PARAMS file.
+  #
   # The value of MASTERDIR that is assigned in masterfiles-stage.sh
-  # is ****IGNORED**** by this function, since there is a separate
+  # is ignored by this function, since there is effectively a separate
   # MASTERDIR for each separate policy channel.
   #
   # Example value for channel_config:
@@ -273,51 +203,57 @@ git_stage_policy_channels() {
 }
 
 git_masterstage() {
-  set_staging_dir_from_params
+  # Depends on $GIT_URL, $ROOT and $MASTERDIR
+  # Accepts one arg:
+  # $1 - refspec to stage
+
   check_git_installed
   git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
-  git_stage_refspec "$1"
-  validate_staged_policy "$STAGING_DIR"
-  avoid_triggering_unneeded_policy_updates
-  rollout_staged_policy_to_masterdir
-
+  git_deploy_refspec "$MASTERDIR" "$1"
   echo "Successfully deployed '$1' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 }
 
 svn_branch() {
 # Contributed by John Farrar
 
-    set_staging_dir_from_params
+    # We probably want a different temporary location for each remote repository
+    # so that we can avoid conflicts and potential confusion.
+    # Example:
+    # ROOT="/opt/cfengine/masterfiles_staging"
+    # PARAMS="/var/cfengine/policychannel/production_1.sh"
+    # STAGING_DIR=/opt/cfengine/masterfiles/staging/_tmp_var_cfengine_policychannel_production_1_sh
+
+    STAGING_DIR="${ROOT}_tmp$(echo "$PARAMS" | tr [./] _)"
 
     if ! type "svn" >/dev/null ; then
-	error_exit "svn not found on path: ${PATH}"
+        error_exit "svn not found on path: ${PATH}"
     fi
 
     CHECKSUM_FILE="svn_promise_checksums"
 
     # If we already have a checkout, update it, else make a new checkout.
     if [ -d "${STAGING_DIR}/.svn" ] ; then
-	svn update --quiet ${STAGING_DIR}
+        svn update --quiet ${STAGING_DIR}
     else
-	rm -rf "${STAGING_DIR}"
-	svn checkout --quiet "${SVN_URL}"/"${SVN_BRANCH}"/inputs "${STAGING_DIR}"
+        rm -rf "${STAGING_DIR}"
+        svn checkout --quiet "${SVN_URL}"/"${SVN_BRANCH}"/inputs "${STAGING_DIR}"
     fi
 
     rm -f "${STAGING_DIR}/cf_promises_release_id"
 
     if /var/cfengine/bin/cf-promises -T "${STAGING_DIR}"; then
-	md5sum `find ${STAGING_DIR} -type f -name \*.cf` >"${STAGING_DIR}/${CHECKSUM_FILE}"
-	if /usr/bin/diff -q "${STAGING_DIR}/${CHECKSUM_FILE}" "${MASTERDIR}/${CHECKSUM_FILE}" ; then
+        md5sum `find ${STAGING_DIR} -type f -name \*.cf` >"${STAGING_DIR}/${CHECKSUM_FILE}"
+        if /usr/bin/diff -q "${STAGING_DIR}/${CHECKSUM_FILE}" "${MASTERDIR}/${CHECKSUM_FILE}" ; then
             # echo "No release needs to be made, the checksum files are the same"
             touch "${STAGING_DIR}"
-	else
+        else
             cd "${STAGING_DIR}" && (
-		chown -R root:root "${STAGING_DIR}" && \
+                chown -R root:root "${STAGING_DIR}" && \
                 rsync -CrltDE -c --delete-after --chmod=u+rwX,go-rwx "${STAGING_DIR}/" "${MASTERDIR}/" && \
                 rm -rf ${STAGING_DIR}/.svn && \
                 echo "Successfully staged a policy release on $(date)"
-	    )
-	fi
+            )
+        fi
     else
        error_exit "The staged policies in ${STAGING_DIR} could not be validated, aborting."
     fi

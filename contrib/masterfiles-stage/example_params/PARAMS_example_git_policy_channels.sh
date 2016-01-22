@@ -1,8 +1,9 @@
 #!/bin/bash
 VCS_TYPE="GIT_POLICY_CHANNELS"
 GIT_URL="git@mygitserver.net:joeblow/my_policy_repo.git"
+dir_to_hold_mirror="/opt/cfengine"
 
-# ROOT="/opt/cfengine"
+# ROOT="/opt/cfengine/masterfiles_staging"
 # ROOT is not used for this VCS_TYPE but must be present
 # for integration with Design Center.
 

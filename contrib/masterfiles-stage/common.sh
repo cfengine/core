@@ -125,7 +125,6 @@ git_deploy_refspec() {
                                  "${1}/cf_promises_release_id" ; then
       # release id is the same in stage and deploy dir
       # so prevent triggering update on hosts by keeping old "validated" flag file
-      # (See also comment under avoid_triggering_unneeded_policy_updates)
       cp -a "${1}/cf_promises_validated" "${temp_stage}/"
     fi
     local third_dir

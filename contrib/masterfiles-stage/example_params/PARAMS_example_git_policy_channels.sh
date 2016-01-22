@@ -14,7 +14,7 @@ chan_deploy="/var/cfengine/policy_channels/masterfiles_dirs"
 channel_config=()
 channel_config+=( "$chan_deploy/channel_1"    "my_branch_name" )
 channel_config+=( "$chan_deploy/channel_2"    "my_tag_name" )
-channel_config+=( "/var/cfengine/masterfiles" "v_1.0.0" )
+channel_config+=( "/var/cfengine/masterfiles" "362e11b705" )
 # Note that channel_config must have an even number of elements
 # and that absolute pathnames must be used.
 # The format is, after the initial empty array value is set:

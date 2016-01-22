@@ -48,6 +48,11 @@ git_setup_local_mirrored_repo() {
   [ "${1:0:1}" = / ] ||
     error_exit "Improper path passed to git_setup_local_mirrored_repo"
   local_mirrored_repo="${1}/$(printf '%s' "${GIT_URL}" | sed 's/[^A-Za-z0-9._-]/_/g')"
+  ########### Example value:
+  # GIT_URL="git@mygitserver.net:joeblow/my_policy_repo.git"
+  # parameter passed in: /opt/cfengine
+  # value of local_mirrored_repo that is set:
+  # /opt/cfengine/git_mygitserver.net_joeblow_my_policy_repo.git
 
   if [ -d "${local_mirrored_repo}" ] ; then
     git --git-dir="${local_mirrored_repo}" fetch && return 0

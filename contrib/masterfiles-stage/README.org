@@ -59,7 +59,7 @@ and making sure that `masterfiles-stage.sh` is executable.
   wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/common.sh
   chown root:root /var/cfengine/bin/masterfiles-stage.sh /var/cfengine/bin/common.sh
   chmod 555 /var/cfengine/bin/masterfiles-stage.sh
-  chmod 444 /var/cfengine/bin/common.sh /var/cfengine/bin/options.sh
+  chmod 444 /var/cfengine/bin/common.sh
 #+end_src
 
 *Warning:* The above commands may not work out of the box depending on

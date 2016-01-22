@@ -204,7 +204,11 @@ git_stage_policy_channels() {
     # Put staging dir right next to deploy dir to ensure it's on same filesystem
     STAGING_DIR="$(mktemp -d --tmpdir="$(dirname "$1")" )"
 
-    git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" checkout -q -f "$2" ||
+    # The '^0' at the end of the refspec forces git into detached head state
+    # which populates HEAD with the SHA of the commit
+    # rather than potentially using a git branch name.
+    # Also see http://stackoverflow.com/a/13293010/5419599
+    git --git-dir="${local_mirrored_repo}" --work-tree="${STAGING_DIR}" checkout -q -f "${2}^0" ||
       error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
 
     # Grab HEAD so it can be used to populate cf_promises_release_id

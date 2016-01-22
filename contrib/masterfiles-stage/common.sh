@@ -26,7 +26,7 @@ set_staging_dir_from_params() {
   # PARAMS="/var/cfengine/policychannel/production_1.sh"
   # STAGING_DIR=/opt/cfengine/masterfiles/staging/_tmp_var_cfengine_policychannel_production_1_sh
 
-  STAGING_DIR="${ROOT}/_tmp$(echo "$PARAMS" | tr [./] _)"
+  STAGING_DIR="${ROOT}_tmp$(echo "$PARAMS" | tr [./] _)"
 }
 
 check_git_installed() {
@@ -34,8 +34,10 @@ check_git_installed() {
 }
 
 git_setup_local_mirrored_repo() {
+  # Accepts a single argument: The absolute path in which to place the mirror.
+  #
   # This function sets the variable local_mirrored_repo to a directory path
-  # based on the value of GIT_URL and ROOT, and if that directory doesn't exist,
+  # based on the value of GIT_URL, and if that directory doesn't exist,
   # creates it as a mirrored clone of the repo at GIT_URL.  If it does exist,
   # update it with git fetch.
   #
@@ -48,7 +50,10 @@ git_setup_local_mirrored_repo() {
   # Since the pathname is directly based on GIT_URL, there is no chance
   # of *accidental* name collision.
 
-  local_mirrored_repo="${ROOT}/$(printf '%s' "${GIT_URL}" | sed 's/[^A-Za-z0-9._-]/_/g')"
+  # Check first char of the argument to ensure it's an absolute path
+  [ "${1:0:1}" = / ] ||
+    error_exit "Improper path passed to git_setup_local_mirrored_repo"
+  local_mirrored_repo="${1}/$(printf '%s' "${GIT_URL}" | sed 's/[^A-Za-z0-9._-]/_/g')"
 
   if [ -d "${local_mirrored_repo}" ] ; then
     git --git-dir="${local_mirrored_repo}" fetch && return 0
@@ -185,13 +190,13 @@ git_stage_policy_channels() {
     error_exit "The channel_config array must have at least two elements."
 
   check_git_installed
-  git_setup_local_mirrored_repo
+  git_setup_local_mirrored_repo "$dir_to_hold_mirror"
 
   while [ "$#" -gt 1 ] ; do
     # At start of every loop, "$1" contains deploy dir and "$2" is refspec.
 
     # Ensure absolute pathname is given
-    [ "$1" != "${1#/}" ] ||
+    [ "${1:0:1}" = / ] ||
       error_exit "You must specify absolute pathnames in channel_config: '$1'"
     mkdir -p "$(dirname "$1")" || error_exit "Failed to mkdir -p dirname $1"
       # We don't mkdir $1 directly, just its parent dir if that doesn't exist.
@@ -236,7 +241,7 @@ git_stage_policy_channels() {
 git_masterstage() {
   set_staging_dir_from_params
   check_git_installed
-  git_setup_local_mirrored_repo
+  git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
   git_stage_refspec "$1"
   validate_staged_policy
   avoid_triggering_unneeded_policy_updates

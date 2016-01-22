@@ -1,3 +1,33 @@
+3.8.1:
+	Changes:
+	- Upgrade CFEngine dependencies to the following versions:
+	  - OpenSSL   1.0.2e
+	  - PCRE      8.38
+	  - libxml2   2.9.3
+	  - OpenLDAP  2.4.43
+	  - libcurl   7.46.0
+	- Upgrade LMDB to version 0.9.17. (Redmine #7879)
+
+	Bug fixes:
+	- @if minimum_version now correctly ignores lines starting with '@'
+	  (Redmine #7862)
+	- Add guard for binary upgrade during bootstrap (Redmine #7861)
+	- Namespaced classes can now be specified on the command line.
+	- Fix bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
+	- Fix two cases where action_policy warn still produces errors
+	  (Redmine #7274)
+	- Parse def.json vars, classes and inputs from the C
+	  code. This fixes a bug where certain entries in this file would be
+	  parsed too late to have any effect on the evaluation.
+	  (Redmine #7453, #7615)
+	- Fix HP-UX specific bug that caused a lot of log output to disappear.
+	- Check for empty server response in RemoteDirList after decryption
+	  (Redmine #7908)
+	- getvalues() will now return a list also for data containers,
+	  and will descend recursively into the containers. (Redmine #7116)
+	- Define (bootstrap|failsafe)_mode during update.cf when triggerd from failsafe.cf
+	  (Redmine #7861)
+
 3.8.0:
 	New features/additions:
 	- New feature: Bodies can now inherit attribute values from

@@ -94,6 +94,7 @@ git_deploy_refspec() {
   # Put staging dir right next to deploy dir to ensure it's on same filesystem
   local temp_stage
   temp_stage="$(mktemp -d --tmpdir="$(dirname "$1")" )"
+  trap 'rm -rf "$temp_stage"' EXIT
 
   ########################## 2. CHECKOUT INTO TEMP DIR
   # The '^0' at the end of the refspec
@@ -121,6 +122,7 @@ git_deploy_refspec() {
   if ! [ -d "$1" ] ; then
     # deploy dir doesn't exist yet
     mv "${temp_stage}" "$1" || error_exit "Failed to mv $temp_stage to $1."
+    trap -- EXIT
   else
     if /usr/bin/cmp -s "${temp_stage}/cf_promises_release_id" \
                                  "${1}/cf_promises_release_id" ; then
@@ -130,9 +132,12 @@ git_deploy_refspec() {
     fi
     local third_dir
     third_dir="$(mktemp -d --tmpdir="$(dirname "$1")" )"
+    trap 'rm -rf "$third_dir"' EXIT
     mv "${1}" "${third_dir}"  || error_exit "Can't mv ${1} to ${third_dir}"
+      # If the above command fails we will have an extra temp dir left.  Otherwise not.
     mv "${temp_stage}" "${1}"          || error_exit "Can't mv ${temp_stage} to ${1}"
     rm -rf "${third_dir}"
+    trap -- EXIT
   fi
 
   # Note about triggering policy updates:

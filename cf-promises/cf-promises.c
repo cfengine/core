@@ -34,12 +34,14 @@
 #include <bootstrap.h>
 #include <string_lib.h>
 #include <loading.h>
+#include <regex.h>                                        /* CompileRegex */
+#include <match_scope.h>
 
 #include <time.h>
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
-static void ShowContextsFormatted(EvalContext *ctx);
-static void ShowVariablesFormatted(EvalContext *ctx);
+static void ShowContextsFormatted(EvalContext *ctx, const char *regexp);
+static void ShowVariablesFormatted(EvalContext *ctx, const char *regexp);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -66,8 +68,8 @@ static const struct option OPTIONS[] =
 {
     {"workdir", required_argument, 0, 'w'},
     {"eval-functions", optional_argument, 0, OPT_EVAL_FUNCTIONS },
-    {"show-classes", no_argument, 0, OPT_SHOW_CLASSES },
-    {"show-vars", no_argument, 0, OPT_SHOW_VARS },
+    {"show-classes", optional_argument, 0, OPT_SHOW_CLASSES },
+    {"show-vars", optional_argument, 0, OPT_SHOW_VARS },
     {"help", no_argument, 0, 'h'},
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
@@ -95,8 +97,8 @@ static const char *const HINTS[] =
 {
     "Override the work directory for testing (same as setting CFENGINE_TEST_OVERRIDE_WORKDIR)",
     "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'yes'",
-    "Show discovered classes, including those defined in common bundles in policy",
-    "Show discovered variables, including those defined without dependency to user-defined classes in policy",
+    "Show discovered classes, including those defined in common bundles in policy. Optionally can take a regular expression.",
+    "Show discovered variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
     "Print the help message",
     "Use the specified bundlesequence for verification",
     "Enable debugging output",
@@ -211,14 +213,14 @@ int main(int argc, char *argv[])
         break;
     }
 
-    if(config->agent_specific.common.show_classes)
+    if(config->agent_specific.common.show_classes != NULL)
     {
-        ShowContextsFormatted(ctx);
+        ShowContextsFormatted(ctx, config->agent_specific.common.show_classes);
     }
 
-    if(config->agent_specific.common.show_variables)
+    if(config->agent_specific.common.show_variables != NULL)
     {
-        ShowVariablesFormatted(ctx);
+        ShowVariablesFormatted(ctx, config->agent_specific.common.show_variables);
     }
 
     PolicyDestroy(policy);
@@ -244,7 +246,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch (c)
         {
         case OPT_EVAL_FUNCTIONS:
-            if (!optarg)
+            if (optarg == NULL)
             {
                 optarg = "yes";
             }
@@ -252,11 +254,19 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case OPT_SHOW_CLASSES:
-            config->agent_specific.common.show_classes = true;
+            if (optarg == NULL)
+            {
+                optarg = ".*";
+            }
+            config->agent_specific.common.show_classes = optarg;
             break;
 
         case OPT_SHOW_VARS:
-            config->agent_specific.common.show_variables = true;
+            if (optarg == NULL)
+            {
+                optarg = ".*";
+            }
+            config->agent_specific.common.show_variables = optarg;
             break;
 
         case 'w':
@@ -477,16 +487,33 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     return config;
 }
 
-static void ShowContextsFormatted(EvalContext *ctx)
+static void ShowContextsFormatted(EvalContext *ctx, const char *regexp)
 {
+    assert(regexp != NULL);
+
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
     Class *cls = NULL;
 
     Seq *seq = SeqNew(1000, free);
 
+    pcre *rx = CompileRegex(regexp);
+
+    if (rx == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Sorry, we could not compile regular expression %s", regexp);
+        return;
+    }
+
     while ((cls = ClassTableIteratorNext(iter)))
     {
         char *class_name = ClassRefToString(cls->ns, cls->name);
+
+        if (!PartialMatch(rx, class_name))
+        {
+            free(class_name);
+            continue;
+        }
+
         StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
 
@@ -497,6 +524,8 @@ static void ShowContextsFormatted(EvalContext *ctx)
         BufferDestroy(tagbuf);
         free(class_name);
     }
+
+    pcre_free(rx);
 
     SeqSort(seq, (SeqItemComparator)strcmp, NULL);
 
@@ -513,16 +542,32 @@ static void ShowContextsFormatted(EvalContext *ctx)
     ClassTableIteratorDestroy(iter);
 }
 
-static void ShowVariablesFormatted(EvalContext *ctx)
+static void ShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 {
+    assert(regexp != NULL);
+
     VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
     Variable *v = NULL;
 
     Seq *seq = SeqNew(2000, free);
 
+    pcre *rx = CompileRegex(regexp);
+
+    if (rx == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Sorry, we could not compile regular expression %s", regexp);
+        return;
+    }
+
     while ((v = VariableTableIteratorNext(iter)))
     {
         char *varname = VarRefToString(v->ref, true);
+
+        if (!PartialMatch(rx, varname))
+        {
+            free(varname);
+            continue;
+        }
 
         Writer *w = StringWriter();
 
@@ -559,6 +604,8 @@ static void ShowVariablesFormatted(EvalContext *ctx)
         WriterClose(w);
         free(varname);
     }
+
+    pcre_free(rx);
 
     SeqSort(seq, (SeqItemComparator)strcmp, NULL);
 

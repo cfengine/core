@@ -81,9 +81,10 @@ Creating/editing test cases
 
 Each test should be 100% standalone, and must contain at least 1 of the main
 bundles:
-	init		setup, create initial and hoped-for final states
-	test		the actual test code
-	check		the comparison of expected and actual results
+
+* init - setup, create initial and hoped-for final states
+* test - the actual test code
+* check - the comparison of expected and actual results
 
 Look in default.cf for some standard check bundles (for example, to compare
 files when testing file edits, or for cleaning up temporary files).
@@ -223,22 +224,43 @@ Example:
   bundle agent test
   {
     meta:
-      # Class expression giving platforms that should be skipped.
+
+      # Indicate that this test should be skipped on hpux because the
+      # functionality is unsupported on that platform.
       "test_skip_unsupported" string => "hpux";
   }
 
   bundle agent test
   {
     meta:
-      # Class expression giving platforms that should be skipped.
+
+      # Indicates that the test should be skipped on hpux because the
+      # test needs to be adapted for the platform.
       "test_skip_needs_work" string => "hpux";
   }
 
   bundle agent test
   {
     meta:
-      # Class expression giving platforms where we suppress a failure.
-      "test_suppress_fail" string => "hpux",
+
+      # Indicate the test is expected to fail on hpux and aix, but
+      # should not cause the build to change from green. This is
+      # appropriate for test cases that document incoming bug reports.
+      "test_soft_fail"
+        string => "hpux|aix",
+        meta => { "redmine1234" };
+  }
+
+  bundle agent test
+  {
+    meta:
+
+      # Indicate the test is expected to fail on hpux but will not
+      # block the build. This is appropriate for regressions or very
+      # bad bad test failures.
+
+      "test_suppress_fail"
+        string => "hpux",
         meta => { "redmine1234" };
   }
 
@@ -263,3 +285,39 @@ Soft fail: the test failed as expected by a "test_soft_fail" promise.
 
 Skipped: test is skipped due to be either explicitly disabled or being
 Nova-specific and being run on Community cf-agent.
+
+------------------------------------------------------------------------------
+Example Test Skeleton
+------------------------------------------------------------------------------
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+# Initalize the environment and prepare for test
+{
+
+}
+
+bundle agent test
+# Activate policy for behaviour you wish to inspect
+{
+  meta:
+    "description" string => "What does this test?";
+
+    "test_soft_fail"
+      string => "any"
+      meta => { "redmine7803" };
+}
+
+bundle agent check
+# Check the result of the test
+{
+
+}
+------------------------------------------------------------------------------

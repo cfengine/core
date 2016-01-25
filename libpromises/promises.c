@@ -38,6 +38,7 @@
 #include <audit.h>
 
 static void DereferenceComment(Promise *pp);
+static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const PromiseTypeSyntax *syntax);
 
 void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
                                   const Body *bp)
@@ -423,8 +424,48 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
         SeqDestroy(bodies_and_args);
     }
+    
+    // Add default body for promise body types that are not present
+    char *bundle_type = pcopy->parent_promise_type->parent_bundle->type;
+    char *promise_type = pcopy->parent_promise_type->name;
+    const PromiseTypeSyntax *syntax = PromiseTypeSyntaxGet(bundle_type, promise_type);
+    AddDefaultBodiesToPromise(ctx, pcopy, syntax);
+
+    // Add default body for global body types that are not present
+    const PromiseTypeSyntax *global_syntax = PromiseTypeSyntaxGet("*", "*");
+    AddDefaultBodiesToPromise(ctx, pcopy, global_syntax);
 
     return pcopy;
+}
+
+// Try to add default bodies to promise for every body type found in syntax
+static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const PromiseTypeSyntax *syntax)
+{
+    // do nothing if syntax is not defined
+    if (syntax == NULL) {
+        return;
+    }
+
+    // iterate over possible constraints
+    for (int i = 0; syntax->constraints[i].lval; i++)
+    {
+        // of type body
+        if(syntax->constraints[i].dtype == CF_DATA_TYPE_BODY) {
+            const char *constraint_type = syntax->constraints[i].lval;
+            // if there is no matching body in this promise
+            if(!PromiseBundleOrBodyConstraintExists(ctx, constraint_type, promise)) {
+                const Policy *policy = PolicyFromPromise(promise);
+                // default format is <promise_type>_<body_type>
+                char* default_body_name = StringConcatenate(3, promise->parent_promise_type->name, "_", constraint_type);
+                const Body *bp = EvalContextFindFirstMatchingBody(policy, constraint_type, "bodydefault", default_body_name);
+                if(bp) {
+                    Log(LOG_LEVEL_VERBOSE, "Using the default body: %60s", default_body_name);
+                    CopyBodyConstraintsToPromise(ctx, promise, bp);
+                }
+                free(default_body_name);
+            }
+        }
+    }
 }
 
 /*****************************************************************************/

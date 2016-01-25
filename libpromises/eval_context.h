@@ -176,6 +176,10 @@ const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonC
  */
 const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const Policy *policy,
                                                  const char *callee_reference, const char *callee_type);
+
+const Body *EvalContextFindFirstMatchingBody(const Policy *policy, const char *type,
+                                             const char *namespace, const char *name);
+
 /**
   @brief Returns a Sequence of const Body* elements, first the body and then its parents
 

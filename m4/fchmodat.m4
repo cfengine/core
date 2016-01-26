@@ -17,7 +17,7 @@ AC_DEFUN([cf3_FUNC_FCHMODAT],
   # when executing as an alternative user. We need to be an alternative user
   # for security reasons, so check that feature here. See file_lib.c for more
   # information.
-  AC_CACHE_CHECK([whether chmod works with seteuid], [cf3_cv_func_chmod_seteuid_works],
+  AC_CACHE_CHECK([whether chmod works with seteuid], [cf3_cv_func_chmod_seteuid_highbits_work],
     [AC_RUN_IFELSE([
       AC_LANG_PROGRAM([[#include <sys/types.h>
                         #include <sys/stat.h>
@@ -107,14 +107,14 @@ cleanup:
   unlink(TEST_FILE);
 
   return ret;]])],
-      [cf3_cv_func_chmod_seteuid_works=yes],
-      [cf3_cv_func_chmod_seteuid_works=no],
+      [cf3_cv_func_chmod_seteuid_highbits_work=yes],
+      [cf3_cv_func_chmod_seteuid_highbits_work=no],
       [
          AS_CASE([$host_os],
            [aix|hpux], [
-             cf3_cv_func_chmod_seteuid_works=yes
+             cf3_cv_func_chmod_seteuid_highbits_work=yes
            ], [
-             cf3_cv_func_chmod_seteuid_works=no
+             cf3_cv_func_chmod_seteuid_highbits_work=no
            ]
          )
       ]
@@ -122,9 +122,9 @@ cleanup:
     ]
   )
 
-  AS_CASE([$cf3_cv_func_chmod_seteuid_works],
+  AS_CASE([$cf3_cv_func_chmod_seteuid_highbits_work],
     [yes], [
-      AC_DEFINE(CHMOD_SETEUID_WORKS, 1, [Whether chmod supports higher bit flags in mode argument when running as alternative user.])
+      AC_DEFINE(CHMOD_SETEUID_HIGHBITS_WORK, 1, [Whether chmod supports higher bit flags in mode argument when running as alternative user.])
     ]
   )
 ])

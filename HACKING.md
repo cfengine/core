@@ -401,14 +401,20 @@ in the top directory of the source code checkout.
 ChangeLog Entries
 -----------------
 
-When a new feature or a bugfix is being merged, it is necessary to be
+When a new feature or a bugfix is being merged, it is often necessary to be
 accompanied by a proper entry in the ChangeLog file. Besides manually editing
 the file, we have an automatic way of generating them before the release,
 by properly formatting *commit messages*
-(see [git-commit-template](misc/githooks/git-commit-template)).
+(see [git-commit-template](misc/githooks/git-commit-template)). Keep in mind
+that changelog entries should be written in a way that is understandable by non-
+programmers. This means that references to implementation details are not
+appropriate, leave this for the non-changelog part of the commit message. It is
+the behavior change which is important. This implies that refactorings that have
+no visible effect on behavior don't need a changelog entry.
 
-In short, in your pull request you should have at least one commit with
-a "Changelog:" line in it, after the title. This may be one of the following:
+If a changelog entry is needed, your pull request should have at least one
+commit with a "Changelog:" line in it, after the title. This may be one of the
+following:
 
 * To write arbitrary message in the ChangeLog:
 ```Changelog: <message>```

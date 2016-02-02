@@ -1,0 +1,27 @@
+# basic test of the def.json facility: classes
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)/def.json");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_promises) --show-vars -w $(sys.workdir)|$(G.grep) test_var";
+
+  methods:
+      "" usebundle => dcs_passif_output('default:def.test_var\\s+\\{"387c108886725091c6fe2433a9fcafa0820dd61f":\\["8e92eeab70dbef876aeac9d97a74cfdde6f53e86"\\]\\}.*', "", $(command), $(this.promise_filename));
+}

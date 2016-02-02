@@ -1,0 +1,69 @@
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
+}
+
+bundle agent init
+{
+   meta:
+     "description" string => "ensure clean starting point before test";
+
+   files:
+     "$(G.testdir)/$(test.file[$(test.idx)])"
+       delete => tidy;
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Test that file paths with spaces can be created without special treatment";
+
+    "test_soft_fail"
+      string => "windows",
+      meta => { "redmine7934" };
+
+  vars:
+    "file[1]" string => "file with space.txt";
+    "file[2]" string => "path with/a space.txt";
+
+    "idx" slist => getindices( file );
+
+  files:
+    "$(G.testdir)/$(file[$(idx)])"
+      classes => scoped_classes_generic("namespace", "file_$(idx)"),
+      create => "true";
+}
+
+bundle agent check
+{
+  vars:
+    "expected_classes" slist => maplist( "file_$(this)_repaired", "test.idx" );
+    "expected_files" slist => maplist( "$(G.testdir)/$(test.file[$(this)])", "test.idx");
+
+    "classes" slist => classesmatching("file_.*");
+  classes:
+    "have_expected_classes" and => { @(expected_classes) };
+    "have_expected_files" expression => filesexist( @(expected_files) );
+
+  methods:
+    "Report Test Result"
+       usebundle => dcs_passif_expected("have_expected_classes,have_expected_files", "FAIL", $(this.promise_filename) ),
+       inherit => "true";
+
+  reports:
+    DEBUG::
+    "Expecting class: '$(expected_classes)'";
+    "Expecting file: '$(expected_files)'";
+
+    "Have expected classes"
+      ifvarclass => "have_expected_classes";
+
+    "Have expected files"
+      ifvarclass => "have_expected_files";
+}
+
+
+

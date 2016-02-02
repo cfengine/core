@@ -1236,7 +1236,7 @@ static void test_safe_chmod_unsafe_link(void)
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
     assert_int_equal(statbuf.st_mode & 0777, 0777);
     assert_int_equal(safe_chmod(TEST_FILE, 0644), -1);
-    assert_int_equal(errno, EPERM);
+    assert_int_equal(errno, ENOLINK);
     assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
     assert_int_equal(statbuf.st_mode & 0777, 0777);
 
@@ -1320,8 +1320,7 @@ static void test_safe_chmod_chown_fifos(void)
     assert_int_equal(safe_chown(TEST_FILE, 100, 100), -1);
     assert_int_equal(errno, ENOLINK);
     assert_int_equal(safe_chmod(TEST_FILE, 0755), -1);
-    // Would be ENOLINK, but safe_chmod lacks support for detecting this.
-    assert_int_equal(errno, EPERM);
+    assert_int_equal(errno, ENOLINK);
     assert_int_equal(safe_chown(TEST_SUBDIR "/" TEST_FILE, 100, 100), 0);
 
     // Now the owner is correct

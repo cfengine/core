@@ -49,6 +49,7 @@ const char *remove_keys_host = NULL;                            /* GLOBAL_A */
 static char *print_digest_arg = NULL;                           /* GLOBAL_A */
 static char *trust_key_arg = NULL;                              /* GLOBAL_A */
 static char *KEY_PATH = NULL;                                   /* GLOBAL_A */
+bool LOOKUP_HOSTS = true;                                       /* GLOBAL_A */
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
@@ -78,6 +79,7 @@ static const struct option OPTIONS[] =
     {"trust-key", required_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, TIMESTAMP_VAL},
+    {"numeric", no_argument, 0, 'n'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -96,6 +98,7 @@ static const char *const HINTS[] =
     "Make cf-serverd/cf-agent trust the specified public key. Argument value is of the form [[USER@]IPADDR:]FILENAME where FILENAME is the local path of the public key for client at IPADDR address.",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Do not lookup host names",
     NULL
 };
 
@@ -232,7 +235,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::",
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::n",
                             OPTIONS, NULL))
            != -1)
     {
@@ -313,6 +316,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case TIMESTAMP_VAL:
             LoggingEnableTimestamps(true);
+            break;
+
+        case 'n':
+            LOOKUP_HOSTS = false;
             break;
 
         default:

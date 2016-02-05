@@ -232,12 +232,23 @@ bool ShowHost(const char *hostkey, const char *address, bool incoming,
     char timebuf[26];
 
     char hostname[MAXHOSTNAMELEN];
-    int ret = IPString2Hostname(hostname, address, sizeof(hostname));
+    if (LOOKUP_HOSTS)
+    {
+        int ret = IPString2Hostname(hostname, address, sizeof(hostname));
+        if (ret == -1)
+        {
+            strcpy(hostname, "-");
+        }
+    }
+    else
+    {
+        strlcpy(hostname, address, sizeof(hostname));
+    }
 
     (*count)++;
     printf("%-10.10s %-40.40s %-25.25s %-26.26s %-s\n",
            incoming ? "Incoming" : "Outgoing",
-           address, (ret != -1) ? hostname : "-",
+           address, hostname,
            cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
 
     return !cf_key_interrupted;

@@ -986,10 +986,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
              statedir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
-    snprintf(ebuff, sizeof(ebuff), "%s%cpromise_log%c",
-            statedir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(ebuff, force);
-
     OpenNetwork();
     CryptoInitialize();
 

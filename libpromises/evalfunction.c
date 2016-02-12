@@ -7691,7 +7691,7 @@ static const FnCallArg ISNEWERTHAN_ARGS[] =
 
 static const FnCallArg ISVARIABLE_ARGS[] =
 {
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "Variable identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Variable identifier"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

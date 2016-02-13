@@ -59,7 +59,6 @@
 #include <verify_vars.h>
 #include <timeout.h>
 #include <time_classes.h>
-#include <unix_iface.h>
 #include <constants.h>
 #include <ornaments.h>
 #include <cf-windows-functions.h>

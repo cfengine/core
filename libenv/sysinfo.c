@@ -44,7 +44,6 @@
 #include <audit.h>
 #include <pipes.h>
 #include <known_dirs.h>
-#include <unix_iface.h>
 #include <files_lib.h>
 #include <printsize.h>
 #include <cf-windows-functions.h>
@@ -2879,6 +2878,7 @@ void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
     GetInterfacesInfo(ctx);
+    GetNetworkingInfo(ctx);
     Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);

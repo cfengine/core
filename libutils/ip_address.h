@@ -40,6 +40,14 @@ typedef enum
   @return A fully formed IPAddress object or NULL if there was an error parsing the source.
   */
 IPAddress *IPAddressNew(Buffer *source);
+
+/**
+  @brief Creates a new IPAddress object from a hex string (as in procfs).
+  @param source Buffer containing the string representation of the ip address.
+  @return A fully formed IPAddress object or NULL if there was an error parsing the source.
+  */
+IPAddress *IPAddressNewHex(Buffer *source);
+
 /**
   @brief Destroys an IPAddress object.
   @param address IPAddress object to be destroyed.

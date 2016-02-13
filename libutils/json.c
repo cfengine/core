@@ -1019,7 +1019,6 @@ const char *JsonObjectGetAsString(const JsonElement *object, const char *key)
     if (childPrimitive)
     {
         assert(childPrimitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
-        assert(childPrimitive->primitive.type == JSON_PRIMITIVE_TYPE_STRING);
         return childPrimitive->primitive.value;
     }
 

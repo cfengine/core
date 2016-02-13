@@ -34,5 +34,6 @@
 
 
 void GetInterfacesInfo(EvalContext *ctx);
+void GetNetworkingInfo(EvalContext *ctx);
 
 #endif

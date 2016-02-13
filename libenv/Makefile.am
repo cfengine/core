@@ -27,8 +27,12 @@ libenv_la_SOURCES = \
 	constants.c constants.h \
         sysinfo.c sysinfo.h sysinfo_priv.h \
         time_classes.c time_classes.h \
-	unix_iface.c unix_iface.h \
         zones.c zones.h
+
+if !NT
+libenv_la_SOURCES += \
+	unix_iface.c
+endif
 
 if SOLARIS
 libenv_la_LIBADD = -lkstat

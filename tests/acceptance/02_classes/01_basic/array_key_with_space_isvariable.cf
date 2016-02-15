@@ -1,0 +1,39 @@
+# isvariable should be able to check array indexes that have spaces
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+    "array[one]" string => "1";
+    "array[twenty one]" string => "21";
+
+  classes:
+    "have_one"
+      expression => isvariable("array[one]"),
+      scope => "namespace";
+
+    "have_twenty_one"
+      expression => isvariable("array[twenty one]"),
+      scope => "namespace";
+
+  reports:
+    have_one.DEBUG::
+      "Have array key 'one' as expected containing value '$(array[one])'";
+    have_twenty_one.DEBUG::
+      "Have array key 'twenty one' as expected containing value '$(array[twenty one])'";
+}
+
+bundle agent check
+{
+  methods:
+    have_one.have_twenty_one::
+      "result" usebundle => dcs_pass("$(this.promise_filename)");
+
+    !(have_one.have_twenty_one)::
+      "result" usebundle => dcs_fail("$(this.promise_filename)");
+}

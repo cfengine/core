@@ -1,0 +1,14 @@
+body common control
+{
+        inputs => {
+                    "../../default.cf.sub",
+                    "classes_attribute_not_skipped_if_body_defined_in_seperate_file.cf.sub"};
+      bundlesequence => { "init", "test", "check" };
+      version => "1.0";
+}
+
+body classes local_if_kept_or_repaired(x)
+{
+        promise_repaired => { "$(x)" };
+        promise_kept => { "$(x)" };
+}

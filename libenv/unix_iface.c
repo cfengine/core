@@ -902,6 +902,19 @@ static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(ARG_UNUSED void *pa
     return NULL;
 }
 
+static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+{
+    JsonElement *entry = json;
+
+    JsonRewriteParsedIPAddress(entry, "raw_address", "address", false);
+
+    JsonExtractParsedNumber(entry, "raw_device_number", "device_number", true, false);
+    JsonExtractParsedNumber(entry, "raw_prefix_length", "prefix_length", true, false);
+    JsonExtractParsedNumber(entry, "raw_scope", "scope", true, false);
+
+    return NULL;
+}
+
 /*******************************************************************/
 
 static const char* GetPortStateString(int state)
@@ -1106,6 +1119,16 @@ void GetNetworkingInfo(EvalContext *ctx)
                     "(?<raw_source>[[:xdigit:]]+)\\s+(?<source_prefix>[[:xdigit:]]+)\\s+"
                     "(?<raw_next_hop>[[:xdigit:]]+)\\s+(?<raw_metric>[[:xdigit:]]+)\\s+"
                     "(?<refcnt>\\d+)\\s+(?<use>\\d+)\\s+"
+                    "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
+
+    BufferPrintf(pbuf, "%s/proc/net/if_inet6", procdir);
+    GetProcFileInfo(ctx, BufferData(pbuf),  "ipv6_addresses", "interface", (ProcPostProcessFn) &NetworkingIPv6AddressesPostProcessInfo,
+                    // format: address device_number prefix_length scope flags interface_name
+                    // 00000000000000000000000000000001 01 80 10 80       lo
+                    // fe80000000000000004249fffebdd7b4 04 40 20 80  docker0
+                    // fe80000000000000c27cd1fffe3eada6 02 40 20 80   enp4s0
+                    "^(?<raw_address>[[:xdigit:]]+)\\s+(?<raw_device_number>[[:xdigit:]]+)\\s+"
+                    "(?<raw_prefix_length>[[:xdigit:]]+)\\s+(?<raw_scope>[[:xdigit:]]+)\\s+"
                     "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
 
     // Inter-|   Receive                                                |  Transmit

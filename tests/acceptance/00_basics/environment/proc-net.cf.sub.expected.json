@@ -58,6 +58,32 @@
       "transmit_packets": "0"
     }
   },
+  "ipv6_addresses": {
+    "docker0": {
+      "address": "d7b4:febd:49ff:42:0:0:0:fe80",
+      "device_number": 4,
+      "interface": "docker0",
+      "prefix_length": 64,
+      "raw_flags": "80",
+      "scope": 32
+    },
+    "enp4s0": {
+      "address": "ada6:fe3e:d1ff:c27c:0:0:0:fe80",
+      "device_number": 2,
+      "interface": "enp4s0",
+      "prefix_length": 64,
+      "raw_flags": "80",
+      "scope": 32
+    },
+    "lo": {
+      "address": "1:0:0:0:0:0:0:0",
+      "device_number": 1,
+      "interface": "lo",
+      "prefix_length": 128,
+      "raw_flags": "80",
+      "scope": 16
+    }
+  },
   "ipv6_routes": [
     {
       "dest": "0:0:0:0:0:0:0:0",
@@ -283,6 +309,7 @@
   "todo": [
     "routes",
     "ipv6_routes",
+    "ipv6_addresses",
     "proc_stats",
     "dev"
   ]

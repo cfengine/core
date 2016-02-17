@@ -17,9 +17,9 @@ bundle agent test
 {
   vars:
     freebsd|solaris::
-      "modes" slist => { "1", "333", "100", "200", "777" };
+      "modes" slist => { "1", "333", "100", "200", "777", "o=x", "ugo=wx", "u=x", "u=w", "ugo=rwx" };
     !freebsd.!solaris::
-      "modes" slist => { "1", "333", "100", "200", "777", "1111", "1010", "13400", "22222" };
+      "modes" slist => { "1", "333", "100", "200", "777", "1111", "1010", "13400", "22222", "o=x", "ugo=wx", "u=x", "u=w", "ugo=rwx" };
 
   files:
       "$(G.testdir)/$(modes)"
@@ -50,6 +50,11 @@ bundle agent check
   "1010": "$(win_r)",
   "13400": "$(win_r)",
   "22222": "$(win_r)",
+  "o=x": "$(win_r)",
+  "ugo=wx": "$(win_w)",
+  "u=x": "$(win_r)",
+  "u=w": "$(win_w)",
+  "ugo=rwx": "$(win_w)",
 }');
 
     freebsd|solaris::
@@ -60,6 +65,11 @@ bundle agent check
   "100": "100100",
   "200": "100200",
   "777": "100777",
+  "o=x": "100001",
+  "ugo=wx": "100333",
+  "u=x": "100100",
+  "u=w": "100200",
+  "ugo=rwx": "100777",
 }');
 
     !freebsd.!solaris.!windows::
@@ -74,24 +84,30 @@ bundle agent check
   "1010": "101010",
   "13400": "103400",
   "22222": "102222",
+  "o=x": "100001",
+  "ugo=wx": "100333",
+  "u=x": "100100",
+  "u=w": "100200",
+  "ugo=rwx": "100777",
 }');
 
     any::
       "actual[$(modes)]" string => filestat("$(G.testdir)/$(modes)", "modeoct");
+      "canonified[$(modes)]" string => canonify("$(modes)");
 
   classes:
-      "ok_$(modes)" expression => strcmp("$(expected[$(modes)])", "$(actual[$(modes)])");
+      "ok_$(canonified[$(modes)])" expression => strcmp("$(expected[$(modes)])", "$(actual[$(modes)])");
 
       freebsd|solaris::
-      "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777" };
+      "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777", classify("ok_o=x"), classify("ok_ugo=wx"), classify("ok_u=x"), classify("ok_u=w"), classify("ok_ugo=rwx") };
 
       !freebsd.!solaris::
-      "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777", "ok_1111", "ok_1010", "ok_13400", "ok_22222" };
+      "ok" and => { "ok_1", "ok_333", "ok_100", "ok_200", "ok_777", "ok_1111", "ok_1010", "ok_13400", "ok_22222", classify("ok_o=x"), classify("ok_ugo=wx"), classify("ok_u=x"), classify("ok_u=w"), classify("ok_ugo=rwx") };
 
   reports:
     DEBUG::
-      "Permission $(modes) worked, got $(expected[$(modes)])" ifvarclass => "ok_$(modes)";
-      "Permission $(modes) failed, expected $(expected[$(modes)]) != actual $(actual[$(modes)])" ifvarclass => "!ok_$(modes)";
+      "Permission $(modes) worked, got $(expected[$(modes)])" ifvarclass => "ok_$(canonified[$(modes)])";
+      "Permission $(modes) failed, expected $(expected[$(modes)]) != actual $(actual[$(modes)])" ifvarclass => "!ok_$(canonified[$(modes)])";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

@@ -364,6 +364,10 @@ See [Unsafe Tests](#unsafe-tests) below.
   that contains *test* and *check* bundles, i.e. it uses CFEngine to both make
   a change and check it. See also script tests/acceptance/testall.
 
+Tip: In order to trigger assert() calls in the code, build with
+`--enable-debug` (passed to either `./autogen.sh` or `./configure`). If you get
+very large binary sizes you can also pass `CFLAGS='-g -O0'` to reduce that.
+
 
 Unsafe Tests
 ------------

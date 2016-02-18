@@ -814,6 +814,7 @@ static long JsonExtractParsedNumber(JsonElement* element, const char* raw_key, c
 
 static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void *json)
 {
+# if defined (__linux__)
     EvalContext *ctx = passed_ctx;
     JsonElement *route = json;
 
@@ -842,8 +843,10 @@ static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void 
     // These flags are always included on Linux in platform.h
     JsonArrayAppendString(decoded_flags, is_up ? "up":"down");
     JsonArrayAppendString(decoded_flags, is_host ? "host":"net");
+    JsonArrayAppendString(decoded_flags, is_default_route ? "default" : "not_default");
     JsonArrayAppendString(decoded_flags, gw_type);
     JsonObjectAppendElement(route, "flags", decoded_flags);
+    JsonObjectAppendBool(route, "active_default_gateway", is_default_route && is_up && is_gw);
 
     if (is_up && is_gw)
     {
@@ -851,21 +854,14 @@ static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void 
         BufferPrintf(formatter, "ipv4_gw_%s", JsonObjectGetAsString(route, "gateway"));
         EvalContextClassPutHard(ctx, BufferData(formatter), "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
         BufferDestroy(formatter);
-
-        if (is_default_route)
-        {
-            EvalContextVariablePutSpecial(ctx,
-                                          SPECIAL_SCOPE_SYS, "default_gateway",
-                                          JsonObjectGetAsString(route, "gateway"), CF_DATA_TYPE_STRING,
-                                          "inventory,networking,/proc,source=agent,attribute_name=Default gateway,procfs");
-        }
     }
-
+# endif
     return NULL;
 }
 
 static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
 {
+# if defined (__linux__)
     JsonElement *route = json;
 
     JsonRewriteParsedIPAddress(route, "raw_dest", "dest", false);
@@ -894,6 +890,7 @@ static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(ARG_UNUSED void *pa
     // TODO: figure out if we can grab any default gateway info here
     // like we do with IPv4 routes
 
+# endif
     return NULL;
 }
 
@@ -1015,8 +1012,9 @@ static void GetNetworkingStatsInfo(EvalContext *ctx, const char *filename, const
 
 /*******************************************************************/
 
-static void GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, const char* regex)
+static JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, const char* regex)
 {
+    JsonElement *ret = NULL;
     FILE *fin = safe_fopen(filename, "rt");
     if (fin)
     {
@@ -1068,17 +1066,24 @@ static void GetProcFileInfo(EvalContext *ctx, const char* filename, const char* 
 
             free(line);
 
-            Buffer *varname = BufferNew();
-            BufferPrintf(varname, "%s", key);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, BufferData(varname), info, CF_DATA_TYPE_CONTAINER,
-                                          "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
-            BufferDestroy(varname);
+            ret = info;
+
+            if (key)
+            {
+                Buffer *varname = BufferNew();
+                BufferPrintf(varname, "%s", key);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, BufferData(varname), info, CF_DATA_TYPE_CONTAINER,
+                                              "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+                BufferDestroy(varname);
+            }
 
             pcre_free(pattern);
         }
 
         fclose(fin);
     }
+
+    return ret;
 }
 
 /*******************************************************************/
@@ -1101,10 +1106,46 @@ void GetNetworkingInfo(EvalContext *ctx)
     GetNetworkingStatsInfo(ctx, BufferData(pbuf), "proc_stats");
 
     BufferPrintf(pbuf, "%s/proc/net/route", procdir);
-    GetProcFileInfo(ctx, BufferData(pbuf),  "routes", NULL, (ProcPostProcessFn) &NetworkingRoutesPostProcessInfo,
+    JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  "routes", NULL, (ProcPostProcessFn) &NetworkingRoutesPostProcessInfo,
                     // format: Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
                     //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0 
                     "^(?<interface>\\S+)\\t(?<raw_dest>[[:xdigit:]]+)\\t(?<raw_gw>[[:xdigit:]]+)\\t(?<raw_flags>[[:xdigit:]]+)\\t(?<refcnt>\\d+)\\t(?<use>\\d+)\\t(?<metric>[[:xdigit:]]+)\\t(?<raw_mask>[[:xdigit:]]+)\\t(?<mtu>\\d+)\\t(?<window>\\d+)\\t(?<irtt>[[:xdigit:]]+)");
+
+    if (NULL != routes &&
+        JsonGetElementType(routes) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        JsonIterator iter = JsonIteratorInit(routes);
+        const JsonElement *default_route = NULL;
+        long lowest_metric = 0;
+        const JsonElement *route = NULL;
+        while ((route = JsonIteratorNextValue(&iter)))
+        {
+            JsonElement *active = JsonObjectGet(route, "active_default_gateway");
+            if (NULL != active &&
+                JsonGetElementType(active) == JSON_ELEMENT_TYPE_PRIMITIVE &&
+                JsonGetPrimitiveType(active) == JSON_PRIMITIVE_TYPE_BOOL &&
+                JsonPrimitiveGetAsBool(active))
+            {
+                JsonElement *metric = JsonObjectGet(route, "metric");
+                if (NULL != metric &&
+                    JsonGetElementType(metric) == JSON_ELEMENT_TYPE_PRIMITIVE &&
+                    JsonGetPrimitiveType(metric) == JSON_PRIMITIVE_TYPE_INTEGER &&
+                    (NULL == default_route ||
+                     JsonPrimitiveGetAsInteger(metric) < lowest_metric))
+                {
+                    default_route = route;
+                }
+            }
+        }
+
+        if (NULL != default_route)
+        {
+            EvalContextVariablePutSpecial(ctx,
+                                          SPECIAL_SCOPE_SYS, "default_gateway",
+                                          JsonObjectGetAsString(default_route, "gateway"), CF_DATA_TYPE_STRING,
+                                          "inventory,networking,/proc,source=agent,attribute_name=Default gateway,procfs");
+        }
+    }
 
     BufferPrintf(pbuf, "%s/proc/net/ipv6_route", procdir);
     GetProcFileInfo(ctx, BufferData(pbuf),  "ipv6_routes", NULL, (ProcPostProcessFn) &NetworkingIPv6RoutesPostProcessInfo,

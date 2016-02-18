@@ -1,4 +1,5 @@
 {
+  "default_gateway": "192.168.2.1",
   "dev": {
     "enp4s0": {
       "device": "enp4s0",
@@ -255,10 +256,12 @@
   },
   "routes": [
     {
+      "active_default_gateway": true,
       "dest": "0.0.0.0",
       "flags": [
         "up",
         "net",
+        "default",
         "gateway"
       ],
       "gateway": "192.168.2.1",
@@ -272,10 +275,12 @@
       "window": 0
     },
     {
+      "active_default_gateway": false,
       "dest": "169.254.0.0",
       "flags": [
         "up",
         "net",
+        "not_default",
         "local"
       ],
       "gateway": "0.0.0.0",
@@ -289,10 +294,12 @@
       "window": 0
     },
     {
+      "active_default_gateway": false,
       "dest": "192.168.2.0",
       "flags": [
         "up",
         "net",
+        "not_default",
         "local"
       ],
       "gateway": "0.0.0.0",

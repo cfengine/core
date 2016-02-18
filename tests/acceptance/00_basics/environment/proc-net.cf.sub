@@ -20,6 +20,7 @@ bundle agent test
       };
 
       "$(todo)" data => mergedata("sys.$(todo)");
+      "default_gateway" string => "$(sys.default_gateway)";
 }
 
 bundle agent check

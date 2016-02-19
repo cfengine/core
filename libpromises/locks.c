@@ -709,20 +709,25 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     time_t lastcompleted = FindLock(cflast);
     time_t elapsedtime = (time_t) (now - lastcompleted) / 60;
 
-    if (elapsedtime < 0)
+    // For promises/locks with ifelapsed == 0, skip all detection logic of
+    // previously acquired locks, whether in this agent or a parallel one.
+    if (tc.ifelapsed != 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
-              (intmax_t) elapsedtime);
-        ReleaseCriticalSection(CF_CRITIAL_SECTION);
-        return CfLockNull();
-    }
+        if (elapsedtime < 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
+                (intmax_t) elapsedtime);
+            ReleaseCriticalSection(CF_CRITIAL_SECTION);
+            return CfLockNull();
+        }
 
-    if (elapsedtime < tc.ifelapsed)
-    {
-        Log(LOG_LEVEL_VERBOSE, "XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
-              (intmax_t) elapsedtime, tc.ifelapsed);
-        ReleaseCriticalSection(CF_CRITIAL_SECTION);
-        return CfLockNull();
+        if (elapsedtime < tc.ifelapsed)
+        {
+            Log(LOG_LEVEL_VERBOSE, "XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
+                (intmax_t) elapsedtime, tc.ifelapsed);
+            ReleaseCriticalSection(CF_CRITIAL_SECTION);
+            return CfLockNull();
+        }
     }
 
     // Look for existing (current) processes

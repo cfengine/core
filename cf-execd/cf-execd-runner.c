@@ -126,37 +126,28 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
 
 static bool IsReadReady(int fd, int timeout_sec)
 {
-    fd_set  rset;
-    FD_ZERO(&rset);
-    FD_SET(fd, &rset);
+    int timeout = timeout_sec * 1000;
+    if (timeout < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Integer overflow setting timeout.");
+        return -1;
+    }
 
-    struct timeval tv = {
-        .tv_sec = timeout_sec,
-        .tv_usec = 0,
+    struct pollfd fds[] = {
+        {
+            .fd = fd,
+            .events = POLLIN
+        }
     };
 
-    int ret = select(fd + 1, &rset, NULL, NULL, &tv);
-
-    if(ret < 0)
+    int ret = poll(fds, sizeof(fds), timeout);
+    if (ret < 0)
     {
-        Log(LOG_LEVEL_ERR, "IsReadReady: Failed checking for data. (select: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "IsReadReady: Failed checking for data. (poll: %s)", GetErrorStr());
         return false;
     }
 
-    if(FD_ISSET(fd, &rset))
-    {
-        return true;
-    }
-
-    if(ret == 0)  // timeout
-    {
-        return false;
-    }
-
-    // can we get here?
-    Log(LOG_LEVEL_ERR, "IsReadReady: Unknown outcome (ret > 0 but our only fd is not set). (select: %s)", GetErrorStr());
-
-    return false;
+    return (ret != 0);
 }
 #if defined(__hpux) && defined(__GNUC__)
 #pragma GCC diagnostic warning "-Wstrict-aliasing"

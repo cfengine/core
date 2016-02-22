@@ -914,51 +914,6 @@ static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void 
 
 /*******************************************************************/
 
-static const char* GetPortStateString(int state)
-{
-# if defined (__linux__)
-    switch (state)
-    {
-    case TCP_ESTABLISHED: return "ESTABLISHED";
-    case TCP_SYN_SENT:    return "SYN_SENT";
-    case TCP_SYN_RECV:    return "SYN_RECV";
-    case TCP_FIN_WAIT1:   return "FIN_WAIT1";
-    case TCP_FIN_WAIT2:   return "FIN_WAIT2";
-    case TCP_TIME_WAIT:   return "TIME_WAIT";
-    case TCP_CLOSE:       return "CLOSE";
-    case TCP_CLOSE_WAIT:  return "CLOSE_WAIT";
-    case TCP_LAST_ACK:    return "LAST_ACK";
-    case TCP_LISTEN:      return "LISTEN";
-    case TCP_CLOSING:     return "CLOSING";
-    }
-
-# endif
-    return "UNKNOWN";
-}
-
-static ProcPostProcessFn NetworkingPortsPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
-{
-    JsonElement *conn = json;
-
-    if (NULL != conn)
-    {
-        JsonRewriteParsedIPAddress(conn, "raw_local", "local", true);
-        JsonRewriteParsedIPAddress(conn, "raw_remote", "remote", true);
-
-        long num_state = JsonExtractParsedNumber(conn, "raw_state", "temp_state", false, false);
-
-        if (NULL != JsonObjectGetAsString(conn, "temp_state"))
-        {
-            JsonObjectRemoveKey(conn, "temp_state");
-            JsonObjectAppendString(conn, "state", GetPortStateString(num_state));
-        }
-    }
-
-    return NULL;
-}
-
-/*******************************************************************/
-
 static void GetNetworkingStatsInfo(EvalContext *ctx, const char *filename, const char *varname)
 {
     assert(filename);

@@ -579,16 +579,17 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     const int received = ReceiveTransaction(conn->conn_info,
                                             recvbuffer, NULL);
 
+    if (received == -1)
+    {
+        /* Already logged in case of error. */
+        return false;
+    }
     if (received > CF_BUFSIZE - 1)
     {
         UnexpectedError("Received transaction of size %d", received);
         return false;
     }
-    if (received == -1 || received == 0)
-    {
-        /* Already logged in case of error. */
-        return false;
-    }
+
     if (strlen(recvbuffer) == 0)
     {
         Log(LOG_LEVEL_WARNING,

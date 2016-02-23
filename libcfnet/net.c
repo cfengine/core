@@ -38,13 +38,11 @@ extern char BINDINTERFACE[];                  /* cf3globals.c, cf3.extern.h */
 
 /**
  * @param len is the number of bytes to send, or 0 if buffer is a
- *        '\0'-terminated string so strlen(buffer) can used.
+ *        '\0'-terminated string so strlen(buffer) can be used.
  * @return -1 in case of error or connection closed
  *         (also currently returns 0 for success but don't count on it)
  * @NOTE #buffer can't be of zero length, our protocol
- *       does not allow empty transactions! The reason is that
- *       ReceiveTransaction() can't differentiate between that
- *       and connection closed.
+ *       does not allow empty transactions!
  * @NOTE (len <= CF_BUFSIZE - CF_INBAND_OFFSET)
  *
  * @TODO Currently only transactions up to CF_BUFSIZE-CF_INBAND_OFFSET are
@@ -65,8 +63,7 @@ int SendTransaction(const ConnectionInfo *conn_info,
         len = strlen(buffer);
     }
 
-    /* Not allowed to send zero-payload packets, because
-       (ReceiveTransaction() == 0) currently means connection closed. */
+    /* Not allowed to send zero-payload packets */
     assert(len > 0);
 
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
@@ -127,8 +124,8 @@ int SendTransaction(const ConnectionInfo *conn_info,
  *
  *  @param #buffer must be of size at least CF_BUFSIZE.
  *
- *  @return 0 in case of socket closed, -1 in case of other error or timeout.
- *              In both cases the connection MAY NOT BE FINALISED!
+ *  @return -1 in case of closed socket, other error or timeout.
+ *              The connection MAY NOT BE FINALISED!
  *          >0 the number of bytes read, transaction was successfully received.
  *
  *  @TODO shutdown() the connection in all cases were this function returns -1,
@@ -156,7 +153,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
 
     /* If error occured or recv() timeout or if connection was gracefully
      * closed. Connection has been finalised. */
-    if (ret == -1 || ret == 0)
+    if (ret == -1)
     {
         /* We are experiencing problems with receiving data from server.
          * This might lead to packages being not delivered in correct
@@ -165,7 +162,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
          * In order to make sure that file transfer is reliable we have to
          * close connection to avoid broken packages being received. */
         conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
-        return ret;
+        return -1;
     }
     else if (ret != CF_INBAND_OFFSET)
     {
@@ -246,10 +243,10 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
 
-    if (ret <= 0)
+    if (ret == -1)
     {
         conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
-        return ret;
+        return -1;
     }
     else if (ret != len)
     {

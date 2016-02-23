@@ -50,7 +50,7 @@ extern char BINDINTERFACE[];                  /* cf3globals.c, cf3.extern.h */
  *       CF_BUFSIZE-1 (since '\0' is not sent, but the receiver needs space to
  *       append it). So transaction length will be at most 4095!
  */
-int SendTransaction(const ConnectionInfo *conn_info,
+int SendTransaction(ConnectionInfo *conn_info,
                     const char *buffer, int len, char status)
 {
     assert(status == CF_MORE || status == CF_DONE);
@@ -105,7 +105,14 @@ int SendTransaction(const ConnectionInfo *conn_info,
 
     if (ret == -1)
     {
-        return -1;                                              /* error */
+        /* We are experiencing problems with sending data to server.
+         * This might lead to packages being not delivered in correct
+         * order and unexpected issues like directories being replaced
+         * with files.
+         * In order to make sure that file transfer is reliable we have to
+         * close connection to avoid broken packages being received. */
+        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
+        return -1;
     }
     else
     {

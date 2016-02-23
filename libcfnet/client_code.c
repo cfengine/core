@@ -342,7 +342,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         int nbytes = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
 
         /* If recv error or socket closed before receiving CFD_TERMINATOR. */
-        if (nbytes == -1 || nbytes == 0)
+        if (nbytes == -1)
         {
             /* TODO mark connection in the cache as closed. */
             goto err;

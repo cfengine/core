@@ -63,7 +63,7 @@ bundle agent test
 
       # convert the result to lowercase because some platforms use 'inf'
       # and others 'Inf' and others... you don't wanna know
-      "eval[$(indices)]" string => string_downcase(eval("$(init.values[$(indices)])", "math", "infix"));
+      "eval[$(indices)]" string => string_downcase(eval("$(init.values[$(indices)])"));
 }
 
 

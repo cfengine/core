@@ -312,11 +312,15 @@ size_t SeqLength(const Seq *seq)
 
 void SeqShuffle(Seq *seq, unsigned int seed)
 {
+    if (0 == SeqLength(seq))
+    {
+        return;
+    }
+
     /* Store current random number state for being reset at the end of function */
     int rand_state = rand();
 
     srand(seed);
-
     for (size_t i = SeqLength(seq) - 1; i > 0; i--)
     {
         size_t j = rand() % (i + 1);

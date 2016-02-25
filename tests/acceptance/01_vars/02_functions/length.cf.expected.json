@@ -1,0 +1,22 @@
+{
+  "empty_list": [
+    "cf_null"
+  ],
+  "empty_list_len": "0",
+  "empty_object": {
+  },
+  "empty_object_len": "0",
+  "inline_array_len": "4",
+  "inline_object_len": "2",
+  "normal_list": [
+    "b",
+    "c",
+    "a"
+  ],
+  "normal_list_len": "3",
+  "normal_object": {
+    "a": 1,
+    "b": 2
+  },
+  "normal_object_len": "2"
+}

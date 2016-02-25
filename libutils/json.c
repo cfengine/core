@@ -368,6 +368,14 @@ void JsonDestroy(JsonElement *element)
     }
 }
 
+void JsonDestroyMaybe(JsonElement *element, bool allocated)
+{
+    if (allocated)
+    {
+        JsonDestroy(element);
+    }
+}
+
 JsonElement *JsonArrayMergeArray(const JsonElement *a, const JsonElement *b)
 {
     assert(JsonGetElementType(a) == JsonGetElementType(b));

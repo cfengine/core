@@ -150,6 +150,13 @@ JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b);
 void JsonDestroy(JsonElement *element);
 
 /**
+  @brief Destroy a JSON element if needed
+  @param element [in] The JSON element to destroy.
+  @param allocated [in] Whether the element was allocated and needs to be destroyed.
+  */
+void JsonDestroyMaybe(JsonElement *element, bool allocated);
+
+/**
   @brief Get the length of a JsonElement. This is the number of elements or fields in an array or object respectively.
   @param element [in] The JSON element.
   */

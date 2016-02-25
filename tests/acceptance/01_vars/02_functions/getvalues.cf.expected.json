@@ -1,0 +1,32 @@
+{
+  "inline_values_array": [
+    "foo",
+    "1",
+    "bar",
+    "2"
+  ],
+  "inline_values_map": [
+    "1",
+    "2"
+  ],
+  "user[dirs]": [
+    "/home/zamboni",
+    "/tmp/zamboni",
+    "/export/home/zamboni"
+  ],
+  "user[fullname][first]": "Diego",
+  "user[fullname][last]": "Zamboni",
+  "user[name]": "zamboni",
+  "uservalues": [
+    "Diego",
+    "Zamboni"
+  ],
+  "values": [
+    "/home/zamboni",
+    "/tmp/zamboni",
+    "/export/home/zamboni",
+    "Diego",
+    "Zamboni",
+    "zamboni"
+  ]
+}

@@ -1,0 +1,394 @@
+{
+  "difference_a_a": [
+    "cf_null"
+  ],
+  "difference_a_b": [
+    "x",
+    "y",
+    "z"
+  ],
+  "difference_a_c": [
+    "x",
+    "y",
+    "z"
+  ],
+  "difference_a_d": [
+    "x",
+    "y",
+    "z"
+  ],
+  "difference_a_e": [
+    "y",
+    "z"
+  ],
+  "difference_a_f": [
+    "x",
+    "y",
+    "z"
+  ],
+  "difference_b_a": [
+    "100",
+    "9",
+    "10"
+  ],
+  "difference_b_b": [
+    "cf_null"
+  ],
+  "difference_b_c": [
+    "100",
+    "9",
+    "10"
+  ],
+  "difference_b_d": [
+    "100",
+    "9",
+    "10"
+  ],
+  "difference_b_e": [
+    "100",
+    "9",
+    "10"
+  ],
+  "difference_b_f": [
+    "100",
+    "9",
+    "10"
+  ],
+  "difference_c_a": [
+    "cf_null"
+  ],
+  "difference_c_b": [
+    "cf_null"
+  ],
+  "difference_c_c": [
+    "cf_null"
+  ],
+  "difference_c_d": [
+    "cf_null"
+  ],
+  "difference_c_e": [
+    "cf_null"
+  ],
+  "difference_c_f": [
+    "cf_null"
+  ],
+  "difference_d_a": [
+    ""
+  ],
+  "difference_d_b": [
+    ""
+  ],
+  "difference_d_c": [
+    ""
+  ],
+  "difference_d_d": [
+    "cf_null"
+  ],
+  "difference_d_e": [
+    ""
+  ],
+  "difference_d_f": [
+    ""
+  ],
+  "difference_e_a": [
+    "cf_null"
+  ],
+  "difference_e_b": [
+    "x"
+  ],
+  "difference_e_c": [
+    "x"
+  ],
+  "difference_e_d": [
+    "x"
+  ],
+  "difference_e_e": [
+    "cf_null"
+  ],
+  "difference_e_f": [
+    "x"
+  ],
+  "difference_f_a": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "four",
+    "fix",
+    "six"
+  ],
+  "difference_f_b": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "four",
+    "fix",
+    "six"
+  ],
+  "difference_f_c": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "four",
+    "fix",
+    "six"
+  ],
+  "difference_f_d": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "four",
+    "fix",
+    "six"
+  ],
+  "difference_f_e": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "four",
+    "fix",
+    "six"
+  ],
+  "difference_f_f": [
+    "cf_null"
+  ],
+  "difference_inline_a": [
+    "b",
+    "q"
+  ],
+  "difference_inline_b": [
+    "b",
+    "q"
+  ],
+  "difference_inline_c": [
+    "b",
+    "q"
+  ],
+  "difference_inline_d": [
+    "b",
+    "q"
+  ],
+  "difference_inline_e": [
+    "b",
+    "q"
+  ],
+  "difference_inline_f": [
+    "b",
+    "q"
+  ],
+  "intersection_a_a": [
+    "x",
+    "y",
+    "z"
+  ],
+  "intersection_a_b": [
+    "cf_null"
+  ],
+  "intersection_a_c": [
+    "cf_null"
+  ],
+  "intersection_a_d": [
+    "cf_null"
+  ],
+  "intersection_a_e": [
+    "x"
+  ],
+  "intersection_a_f": [
+    "cf_null"
+  ],
+  "intersection_a_inline": [
+    "cf_null"
+  ],
+  "intersection_b_a": [
+    "cf_null"
+  ],
+  "intersection_b_b": [
+    "100",
+    "9",
+    "10"
+  ],
+  "intersection_b_c": [
+    "cf_null"
+  ],
+  "intersection_b_d": [
+    "cf_null"
+  ],
+  "intersection_b_e": [
+    "cf_null"
+  ],
+  "intersection_b_f": [
+    "cf_null"
+  ],
+  "intersection_b_inline": [
+    "cf_null"
+  ],
+  "intersection_c_a": [
+    "cf_null"
+  ],
+  "intersection_c_b": [
+    "cf_null"
+  ],
+  "intersection_c_c": [
+    "cf_null"
+  ],
+  "intersection_c_d": [
+    "cf_null"
+  ],
+  "intersection_c_e": [
+    "cf_null"
+  ],
+  "intersection_c_f": [
+    "cf_null"
+  ],
+  "intersection_c_inline": [
+    "cf_null"
+  ],
+  "intersection_d_a": [
+    "cf_null"
+  ],
+  "intersection_d_b": [
+    "cf_null"
+  ],
+  "intersection_d_c": [
+    "cf_null"
+  ],
+  "intersection_d_d": [
+    ""
+  ],
+  "intersection_d_e": [
+    "cf_null"
+  ],
+  "intersection_d_f": [
+    "cf_null"
+  ],
+  "intersection_d_inline": [
+    "cf_null"
+  ],
+  "intersection_e_a": [
+    "x"
+  ],
+  "intersection_e_b": [
+    "cf_null"
+  ],
+  "intersection_e_c": [
+    "cf_null"
+  ],
+  "intersection_e_d": [
+    "cf_null"
+  ],
+  "intersection_e_e": [
+    "x"
+  ],
+  "intersection_e_f": [
+    "cf_null"
+  ],
+  "intersection_e_inline": [
+    "cf_null"
+  ],
+  "intersection_f_a": [
+    "cf_null"
+  ],
+  "intersection_f_b": [
+    "cf_null"
+  ],
+  "intersection_f_c": [
+    "cf_null"
+  ],
+  "intersection_f_d": [
+    "cf_null"
+  ],
+  "intersection_f_e": [
+    "cf_null"
+  ],
+  "intersection_f_f": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "four",
+    "fix",
+    "six"
+  ],
+  "intersection_f_inline": [
+    "one"
+  ],
+  "list1": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f"
+  ],
+  "list2": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f"
+  ],
+  "unique_a": [
+    "x",
+    "y",
+    "z"
+  ],
+  "unique_b": [
+    "100",
+    "9",
+    "10"
+  ],
+  "unique_c": [
+    "cf_null"
+  ],
+  "unique_d": [
+    ""
+  ],
+  "unique_e": [
+    "x"
+  ],
+  "unique_f": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "four",
+    "fix",
+    "six"
+  ],
+  "unique_inline_array": [
+    "one",
+    "b",
+    "q"
+  ],
+  "unique_inline_object": [
+    "b",
+    "q",
+    "one"
+  ]
+}

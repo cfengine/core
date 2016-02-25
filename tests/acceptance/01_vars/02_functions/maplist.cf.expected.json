@@ -1,0 +1,27 @@
+{
+  "empty": [
+    "cf_null"
+  ],
+  "mapped_empty": [
+    "cf_null"
+  ],
+  "mapped_inline": [
+    "value=a",
+    "value=b",
+    "value=c"
+  ],
+  "mapped_testlist": [
+    "value=zero",
+    "value=two",
+    "value=three's",
+    "value=four-fore:quatre",
+    "value=last"
+  ],
+  "testlist": [
+    "zero",
+    "two",
+    "three's",
+    "four-fore:quatre",
+    "last"
+  ]
+}

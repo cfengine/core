@@ -1,0 +1,65 @@
+{
+  "lists": [
+    "a",
+    "b"
+  ],
+  "seeds": [
+    "skruf",
+    "cormorant",
+    "dollhouse"
+  ],
+  "shuffle_a_cormorant": [
+    "e",
+    "d",
+    "b",
+    "a",
+    "c",
+    "g",
+    "f"
+  ],
+  "shuffle_a_dollhouse": [
+    "b",
+    "f",
+    "a",
+    "e",
+    "g",
+    "c",
+    "d"
+  ],
+  "shuffle_a_skruf": [
+    "f",
+    "d",
+    "b",
+    "e",
+    "c",
+    "g",
+    "a"
+  ],
+  "shuffle_b_cormorant": [
+    "cf_null"
+  ],
+  "shuffle_b_dollhouse": [
+    "cf_null"
+  ],
+  "shuffle_b_skruf": [
+    "cf_null"
+  ],
+  "shuffle_inline_cormorant": [
+    "delta",
+    "a",
+    "farmer",
+    "b"
+  ],
+  "shuffle_inline_dollhouse": [
+    "delta",
+    "farmer",
+    "a",
+    "b"
+  ],
+  "shuffle_inline_skruf": [
+    "b",
+    "a",
+    "delta",
+    "farmer"
+  ]
+}

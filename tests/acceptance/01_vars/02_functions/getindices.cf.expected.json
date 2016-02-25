@@ -1,0 +1,29 @@
+{
+  "fields": [
+    "dirs",
+    "fullname",
+    "name"
+  ],
+  "inline_fields": [
+    "foo",
+    "bar"
+  ],
+  "inline_numfields": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "user[dirs]": [
+    "/home/zamboni",
+    "/tmp/zamboni",
+    "/export/home/zamboni"
+  ],
+  "user[fullname][first]": "Diego",
+  "user[fullname][last]": "Zamboni",
+  "user[name]": "zamboni",
+  "userfields": [
+    "first",
+    "last"
+  ]
+}

@@ -44,6 +44,26 @@ bundle agent init
 
 bundle agent test
 {
+      # "expected_a" string => "b:c:a";
+      # "expected_b" string => "100:9:10";
+      # "expected_c" string => "";
+      # "expected_d" string => ":a::b";
+      # "expected_e" string => "a:1:b";
+      # "expected_f" string => "100:200:300";
+      # "expected_g" string => "1.11:-2.22:-3.33";
+      # "expected_h" string => "-10:0:200";
+      # "expected_i" string => "1:2::3000:";
+      # "expected_j" string => "1:2:true:false";
+      # "expected_k" string => "";
+      # "expected_l" string => "100:200";
+      # "expected_m" string => "";
+      # "expected_n" string => "a:b:c";
+      # "expected_o" string => "b:c:a";
+      # "expected_p" string => "";
+      # "expected_q" string => ":::";
+      # "expected_r" string => ":";
+      # "expected_s" string => ":";
+      # "expected_t" string => "a:b:c:a:b:c::";
   vars:
       "lists" slist => { @(init.lists) };
       "join_$(lists)" string => join(":", "init.$(lists)");
@@ -54,47 +74,8 @@ bundle agent test
 
 bundle agent check
 {
-  vars:
-      "lists" slist => { @(init.lists) };
-
-      "expected_a" string => "b:c:a";
-      "expected_b" string => "100:9:10";
-      "expected_c" string => "";
-      "expected_d" string => ":a::b";
-      "expected_e" string => "a:1:b";
-      "expected_f" string => "100:200:300";
-      "expected_g" string => "1.11:-2.22:-3.33";
-      "expected_h" string => "-10:0:200";
-      "expected_i" string => "1:2::3000:";
-      "expected_j" string => "1:2:true:false";
-      "expected_k" string => "";
-      "expected_l" string => "100:200";
-      "expected_m" string => "";
-      "expected_n" string => "a:b:c";
-      "expected_o" string => "b:c:a";
-      "expected_p" string => "";
-      "expected_q" string => ":::";
-      "expected_r" string => ":";
-      "expected_s" string => ":";
-      "expected_t" string => "a:b:c:a:b:c::";
-
-  classes:
-      "ok_$(lists)" expression => strcmp("$(expected_$(lists))",
-                                         "$(test.join_$(lists))");
-      "not_ok_$(lists)" not => strcmp("$(expected_$(lists))",
-                                      "$(test.join_$(lists))");
-
-      "ok" and => { "ok_a", "ok_b", "ok_c", "ok_d", "ok_e", "ok_f",
-                    "ok_g", "ok_h", "ok_i", "ok_j", "ok_k", "ok_l",
-                    "ok_m", "ok_n", "ok_o", "ok_p", "ok_q", "ok_r", "ok_s", "ok_t" };
-
-  reports:
-    DEBUG::
-      "mismatch: expected '$(expected_$(lists))' vs. actual '$(test.join_$(lists))'"
-      ifvarclass => "not_ok_$(lists)";
-
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

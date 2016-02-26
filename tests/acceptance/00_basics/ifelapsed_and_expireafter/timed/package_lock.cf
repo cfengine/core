@@ -1,0 +1,56 @@
+# Test whether successive package locks can be grabbed, both immediately
+# following each other and after a time delay. (Redmine #7933).
+
+body common control
+{
+    inputs => { "../../../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  meta:
+      # "no_fds" won't work correctly on Windows.
+      # Also Solaris 9 and 10 don't seem to handle the backgrounding used in
+      # this test. But it seems unrelated to the actual fix.
+      "test_skip_needs_work" string => "windows|sunos_5_9|sunos_5_10";
+
+      # The backgrounding doesn't work well under fakeroot.
+      "test_skip_unsupported" string => "using_fakeroot";
+
+  files:
+    test_pass_1::
+      "$(sys.workdir)/modules/packages/."
+        create => "true";
+      "$(sys.workdir)/modules/packages/test_module"
+        copy_from => local_cp("$(this.promise_filename).module"),
+        perms => m("ugo+x");
+}
+
+bundle agent test
+{
+  commands:
+    test_pass_1::
+      # Note: No -K. We need locks.
+      # Also get rid of file descriptor ties to the parent with no_fds.
+      # Note that we need to redirect descriptors 0, 1 and 2, since there is
+      # apparently some unrelated bug in the output if we close them (otherwise
+      # we would have used --no-std argument to no_fds).
+      "$(G.no_fds) $(sys.cf_agent) -f $(this.promise_filename).sub < /dev/null > /dev/null 2>&1 &"
+        contain => in_shell;
+}
+
+bundle agent check
+{
+  methods:
+    test_pass_1::
+      # We wait 61 seconds in the sub invocation, but in practice test platforms
+      # experience all sorts of timing delays, let's give it plenty of time to
+      # make sure it finishes.
+      "any" usebundle => dcs_wait($(this.promise_filename), 120);
+
+    test_pass_2::
+      "any" usebundle => dcs_check_diff($(G.testfile),
+                                        "$(this.promise_filename).expected",
+                                        $(this.promise_filename));
+}

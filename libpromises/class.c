@@ -43,33 +43,25 @@ struct ClassTableIterator_
     bool is_soft;
 };
 
-static size_t ClassRefHash(const char *ns, const char *name)
+static size_t ClassRefHash(const char *ns, const char *name, bool is_collision)
 {
-    unsigned h = 0;
+    ns = ns ? ns : "default";
 
-    h = StringHash(ns ? ns : "default", h, INT_MAX);
+    // if there's collision, append "__"
+    char *str = is_collision ? StringConcatenate(3, ns, name, "__") : StringConcatenate(2, ns, name);
+    CanonifyNameInPlace(str);
 
-    size_t len = strlen(name);
-    for (size_t i = 0; i < len; i++)
-    {
-        h += (!isalnum(name[i]) || (name[i] == '.')) ? '_' : name[i];
-        h += (h << 10);
-        h ^= (h >> 6);
-    }
-
-    h += (h << 3);
-    h ^= (h >> 11);
-    h += (h << 15);
-
-    return (h & (INT_MAX - 1));
+    // no need to mask, we are generating 32bit integer anyway
+    return MurmurHash3_32(str, 0);
 }
 
 /**
  * @param #tags is a comma separated string of words.
  *              Both "" or NULL are equivalent.
+ * @param #hash is the hash generated for the class + namespace
  */
 void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft,
-               ContextScope scope, const char *tags)
+               ContextScope scope, const char *tags, size_t hash)
 {
     if (ns)
     {
@@ -85,7 +77,7 @@ void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft,
 
     cls->is_soft = is_soft;
     cls->scope = scope;
-    cls->hash = ClassRefHash(cls->ns, cls->name);
+    cls->hash = hash;
 
     cls->tags = StringSetFromString(tags, ',');
     if (!is_soft && !StringSetContains(cls->tags, "hardclass"))
@@ -131,6 +123,42 @@ void ClassTableDestroy(ClassTable *table)
     }
 }
 
+Class *ClassTableGetCollision(const ClassTable *table, const char *ns, const char *name, unsigned int *hashp)
+{
+    size_t hash = ClassRefHash(ns, name, false);
+    Class *cls = RBTreeGet(table->classes, (void *)hash);
+
+    if (hashp)
+    {
+        *hashp = hash;
+    }
+
+    const char *classns = cls && cls->ns ? cls->ns : "default";
+    ns = ns ? ns : "default";
+
+    if (cls && !strcmp(cls->name, name) && !strcmp(classns, ns))
+    {
+        return cls;
+    }
+
+    // we detect a collision if hash matches but class name and namespace do not
+    Class *cls2;
+    hash = ClassRefHash(ns, name, true);
+    cls2 = RBTreeGet(table->classes, (void *)hash);
+
+    // 1st level collision resolution
+    if (cls)
+    {
+        if (hashp)
+        {
+            *hashp = hash;
+        }
+        return cls2;
+    }
+
+    return cls;
+}
+
 bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
 {
     assert(name);
@@ -142,12 +170,14 @@ bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_
         ns = NULL;
     }
 
-    Class *cls = ClassTableGet(table, ns, name);
+    size_t hash = 0;
+    Class *cls = ClassTableGetCollision(table, ns, name, (unsigned int *)&hash);
+
     if (cls)
     {
         /* Saves a malloc() and an RBTreePut() call. */
         ClassDestroySoft(cls);
-        ClassInit(cls, ns, name, is_soft, scope, tags);
+        ClassInit(cls, ns, name, is_soft, scope, tags, hash);
         return true;
     }
     else
@@ -167,15 +197,15 @@ bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_
         }
 
         cls = xmalloc(sizeof(Class));
-        ClassInit(cls, ns, name, is_soft, scope, tags);
+        // use the already generated hash, saves duplicate hash function calls
+        ClassInit(cls, ns, name, is_soft, scope, tags, hash);
         return RBTreePut(table->classes, (void *)cls->hash, cls);
     }
 }
 
 Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name)
 {
-    size_t hash = ClassRefHash(ns, name);
-    return RBTreeGet(table->classes, (void *)hash);
+    return ClassTableGetCollision(table, ns, name, NULL);
 }
 
 Class *ClassTableMatch(const ClassTable *table, const char *regex)
@@ -219,8 +249,13 @@ Class *ClassTableMatch(const ClassTable *table, const char *regex)
 
 bool ClassTableRemove(ClassTable *table, const char *ns, const char *name)
 {
-    size_t hash = ClassRefHash(ns, name);
-    return RBTreeRemove(table->classes, (void *)hash);
+    Class *cls = ClassTableGet(table, ns, name);
+    if (!cls)
+    {
+        return false;
+    }
+
+    return RBTreeRemove(table->classes, (void *)cls->hash);
 }
 
 bool ClassTableClear(ClassTable *table)

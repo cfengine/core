@@ -47,6 +47,13 @@
 #define MAX_ZONENAME_SIZE 64
 # endif
 
+#ifdef _WIN32
+#define TABLE_STORAGE
+#else
+#define TABLE_STORAGE static
+#endif
+TABLE_STORAGE Item *PROCESSTABLE = NULL;
+
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
 static int SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
@@ -184,8 +191,9 @@ static int SelectProcess(const char *procentry, time_t pstime, char **names, int
     return result;
 }
 
-Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
+Item *SelectProcesses(const char *process_name, ProcessSelect a, bool attrselect)
 {
+    const Item *processes = PROCESSTABLE;
     Item *result = NULL;
 
     if (processes == NULL)
@@ -1220,7 +1228,20 @@ static void CheckPsLineLimitations(void)
 #endif
 }
 
-int LoadProcessTable(Item **procdata)
+const char *GetProcessTableLegend(void)
+{
+    if (PROCESSTABLE)
+    {
+        // First entry in the table is legend.
+        return PROCESSTABLE->name;
+    }
+    else
+    {
+        return "<Process table not loaded>";
+    }
+}
+
+int LoadProcessTable()
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE];
@@ -1312,7 +1333,7 @@ int LoadProcessTable(Item **procdata)
         }
 
 # endif
-        AppendItem(procdata, vbuff, "");
+        AppendItem(&PROCESSTABLE, vbuff, "");
     }
 
     cf_pclose(prp);
@@ -1321,19 +1342,19 @@ int LoadProcessTable(Item **procdata)
     const char* const statedir = GetStateDir();
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_procs", statedir, FILE_SEPARATOR);
-    RawSaveItemList(*procdata, vbuff, NewLineMode_Unix);
+    RawSaveItemList(PROCESSTABLE, vbuff, NewLineMode_Unix);
 
 # ifdef HAVE_GETZONEID
     if (global_zone) /* pidlist and rootpidlist are empty if we're not in the global zone */
     {
-        Item *ip = *procdata;
+        Item *ip = PROCESSTABLE;
         while (ip != NULL)
         {
             ZCopyProcessList(&rootprocs, ip, rootpidlist, names, end);
             ip = ip->next;
         }
         ReverseItemList(rootprocs);
-        ip = *procdata;
+        ip = PROCESSTABLE;
         while (ip != NULL)
         {
             ZCopyProcessList(&otherprocs, ip, pidlist, names, end);
@@ -1344,8 +1365,8 @@ int LoadProcessTable(Item **procdata)
     else
 # endif
     {
-        CopyList(&rootprocs, *procdata);
-        CopyList(&otherprocs, *procdata);
+        CopyList(&rootprocs, PROCESSTABLE);
+        CopyList(&otherprocs, PROCESSTABLE);
 
         while (DeleteItemNotContaining(&rootprocs, "root"))
         {
@@ -1372,3 +1393,9 @@ int LoadProcessTable(Item **procdata)
     return true;
 }
 # endif
+
+void ClearProcessTable(void)
+{
+    DeleteItemList(PROCESSTABLE);
+    PROCESSTABLE = NULL;
+}

@@ -459,7 +459,7 @@ static void Apoptosis(void)
     snprintf(promiser_buf, sizeof(promiser_buf), "%s%cbin%ccf-execd",
              GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR);
 
-    if (LoadProcessTable(&PROCESSTABLE))
+    if (LoadProcessTable())
     {
         char myuid[PRINTSIZE(unsigned)];
         xsnprintf(myuid, sizeof(myuid), "%u", (unsigned) getuid());
@@ -472,7 +472,7 @@ static void Apoptosis(void)
             .process_result = "process_owner",
         };
 
-        Item *killlist = SelectProcesses(PROCESSTABLE, promiser_buf, process_select, true);
+        Item *killlist = SelectProcesses(promiser_buf, process_select, true);
         RlistDestroy(owners);
 
         for (Item *ip = killlist; ip != NULL; ip = ip->next)
@@ -494,7 +494,7 @@ static void Apoptosis(void)
         }
     }
 
-    DeleteItemList(PROCESSTABLE);
+    ClearProcessTable();
 
     Log(LOG_LEVEL_VERBOSE, "Pruning complete");
 }

@@ -27,9 +27,16 @@
 
 #include <cf3.defs.h>
 
-int LoadProcessTable(Item **procdata);
+#ifdef _WIN32
+extern Item *PROCESSTABLE;
+#endif
 
-Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect);
+int LoadProcessTable(void);
+void ClearProcessTable(void);
+
+Item *SelectProcesses(const char *process_name, ProcessSelect a, bool attrselect);
 bool IsProcessNameRunning(char *procNameRegex);
+
+const char *GetProcessTableLegend(void);
 
 #endif

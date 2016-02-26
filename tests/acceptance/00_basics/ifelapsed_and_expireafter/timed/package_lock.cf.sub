@@ -1,0 +1,66 @@
+body common control
+{
+    inputs => { "../../../default.cf.sub" };
+    bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  methods:
+    debug_package_lock::
+      # Normally done by parent test.
+      "debug_init";
+    any::
+      "test1";
+      "test2";
+      "test3";
+}
+
+body package_module test_module
+{
+    query_installed_ifelapsed => "60";
+    query_updates_ifelapsed => "14400";
+    default_options => { "$(G.testfile)" };
+}
+
+bundle agent debug_init
+{
+  files:
+      "$(sys.workdir)/modules/packages/."
+        create => "true";
+      "$(sys.workdir)/modules/packages/test_module"
+        copy_from => local_cp("$(this.promise_dirname)/package_lock.cf.module"),
+        perms => m("ugo+x");
+}
+
+bundle agent test1
+{
+  packages:
+      "first_pkg"
+        policy => "present",
+        package_module => test_module,
+        action => immediate;
+      "second_pkg"
+        policy => "present",
+        package_module => test_module,
+        action => immediate;
+}
+
+bundle agent test2
+{
+  commands:
+      "$(G.sleep) 61";
+}
+
+bundle agent test3
+{
+  packages:
+      "third_pkg"
+        policy => "present",
+        package_module => test_module,
+        action => immediate;
+      "fourth_pkg"
+        policy => "present",
+        package_module => test_module,
+        action => immediate;
+}

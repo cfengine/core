@@ -254,48 +254,6 @@ Seq *StringMatchCaptures(const char *regex, const char *str, const bool return_n
     return ret;
 }
 
-/*******************************************************************/
-
-// returns NULL on any failure
-// takes either a pre-compiled pattern OR a regex (one of the two shouldn't be NULL)
-JsonElement* StringCaptureData(pcre *pattern, const char* regex, const char* data)
-{
-    assert(regex || pattern);
-    assert(data);
-
-    Seq *s;
-
-    if (NULL != pattern)
-    {
-        s = StringMatchCapturesWithPrecompiledRegex(pattern, data, true);
-    }
-    else
-    {
-        s = StringMatchCaptures(regex, data, true);
-    }
-
-    if (!s || SeqLength(s) == 0)
-    {
-        SeqDestroy(s);
-        return NULL;
-    }
-
-    JsonElement *json = JsonObjectCreate(SeqLength(s)/2);
-
-    for (int i = 1; i < SeqLength(s); i+=2)
-    {
-        Buffer *key = SeqAt(s, i-1);
-        Buffer *value = SeqAt(s, i);
-
-        JsonObjectAppendString(json, BufferData(key), BufferData(value));
-    }
-
-    SeqDestroy(s);
-
-    JsonObjectRemoveKey(json, "0");
-    return json;
-}
-
 bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex)
 {
     if (regex)

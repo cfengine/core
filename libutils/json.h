@@ -25,6 +25,8 @@
 #ifndef CFENGINE_JSON_H
 #define CFENGINE_JSON_H
 
+#include <regex.h>
+
 /**
   @brief JSON data-structure.
 
@@ -422,5 +424,7 @@ JsonElementType JsonIteratorCurrentElementType(const JsonIterator *iter);
 JsonContainerType JsonIteratorCurrentContainerType(const JsonIterator *iter);
 JsonPrimitiveType JsonIteratorCurrentPrimitiveType(const JsonIterator *iter);
 bool JsonIteratorHasMore(const JsonIterator *iter);
+
+JsonElement* StringCaptureData(pcre *pattern, const char* regex, const char* data);
 
 #endif

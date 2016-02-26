@@ -97,7 +97,8 @@ static JsonElement *ReadJsonFile(const char *filename, LogLevel log_level)
     }
 
     JsonElement *doc = NULL;
-    JsonParseError err = JsonParseFile(filename, 4096, &doc);
+    // 5 MB should be enough for most reasonable def.json data
+    JsonParseError err = JsonParseFile(filename, 5 * 1024 * 1024, &doc);
 
     if (err != JSON_PARSE_OK
         || NULL == doc)

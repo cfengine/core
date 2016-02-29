@@ -13,13 +13,13 @@ bundle agent test
 {
   vars:
       "todo" slist => {
-                       "routes", "ipv6_routes",
-                       "ipv6_addresses",
-                       "proc_stats",
+                       "inet", "inet6",
                        "dev"
       };
 
       "$(todo)" data => mergedata("sys.$(todo)");
+      # make sure deep lookups work
+      "docker" string => "$(sys.inet6[addresses][docker0][address])";
       "default_gateway" string => "$(sys.default_gateway)";
 }
 

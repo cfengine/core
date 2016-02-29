@@ -30,16 +30,6 @@
 # system by fetching policies in case the standard agent run fails.
 ##############################################################################
 
-
-body common control
-{
-      bundlesequence => {
-                          "failsafe_cfe_internal_checkkeys",
-                          "failsafe_cfe_internal_update",
-                          "failsafe_cfe_internal_call_update"
-                        };
-}
-
 body agent control
 {
       skipidentify => "true";
@@ -49,6 +39,36 @@ body agent control
 }
 
 ################################################################################
+
+bundle agent main
+{
+  meta:
+
+      "purpose"
+        string => "Perform bootstrap or failsafe recovery operations.";
+
+  methods:
+
+      "Check Keys"
+        usebundle => failsafe_cfe_internal_checkkeys,
+        comment => "Without a valid keypair we aren't going to be able
+                    to establish trust";
+
+      "Fetch Inputs"
+        usebundle => failsafe_cfe_internal_update,
+        comment => "We need to fetch policy from upstream if we are
+                    bootstrapping or if we are performing failsafe
+                    recovery.";
+
+      "Actuate Update Policy"
+        usebundle => failsafe_cfe_internal_call_update,
+        comment => "In order to speed up convergence and reporting we
+                    trigger the update policy right after initial
+                    bootstrap. This allows the first scheduled run to
+                    happen with the most up to date and complete
+                    information.";
+
+}
 
 bundle agent failsafe_cfe_internal_checkkeys
 {

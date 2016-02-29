@@ -26,22 +26,22 @@ static void test_insert(void)
     StringMap *map = StringMapNew();
 
     assert_false(StringMapHasKey(map, "one"));
-    StringMapInsert(map, xstrdup("one"), xstrdup("first"));
+    assert_false(StringMapInsert(map, xstrdup("one"), xstrdup("first")));
     assert_true(StringMapHasKey(map, "one"));
     assert_int_equal(StringMapSize(map), 1);
-    StringMapInsert(map, xstrdup("one"), xstrdup("duplicate"));
+    assert_true(StringMapInsert(map, xstrdup("one"), xstrdup("duplicate")));
     assert_int_equal(StringMapSize(map), 1);
 
     assert_false(StringMapHasKey(map, "two"));
-    StringMapInsert(map, xstrdup("two"), xstrdup("second"));
+    assert_false(StringMapInsert(map, xstrdup("two"), xstrdup("second")));
     assert_true(StringMapHasKey(map, "two"));
     assert_int_equal(StringMapSize(map), 2);
 
     assert_false(StringMapHasKey(map, "third"));
-    StringMapInsert(map, xstrdup("third"), xstrdup("first"));
+    assert_false(StringMapInsert(map, xstrdup("third"), xstrdup("first")));
     assert_true(StringMapHasKey(map, "third"));
 
-    StringMapInsert(map, xstrdup("third"), xstrdup("stuff"));
+    assert_true(StringMapInsert(map, xstrdup("third"), xstrdup("stuff")));
     assert_true(StringMapHasKey(map, "third"));
     assert_int_equal(StringMapSize(map), 3);
 
@@ -70,7 +70,7 @@ static void test_insert_jumbo(void)
         s[i] = '\0';
 
         assert_false(StringMapHasKey(jumbo_map, s));
-        StringMapInsert(jumbo_map, xstrdup(s), xstrdup(s));
+        assert_false(StringMapInsert(jumbo_map, xstrdup(s), xstrdup(s)));
         assert_true(StringMapHasKey(jumbo_map, s));
         /* free(s); */
     }
@@ -98,7 +98,7 @@ static void test_get(void)
 {
     StringMap *map = StringMapNew();
 
-    StringMapInsert(map, xstrdup("one"), xstrdup("first"));
+    assert_false(StringMapInsert(map, xstrdup("one"), xstrdup("first")));
     assert_string_equal(StringMapGet(map, "one"), "first");
     assert_int_equal(StringMapGet(map, "two"), NULL);
 
@@ -109,11 +109,11 @@ static void test_has_key(void)
 {
     StringMap *map = StringMapNew();
 
-    StringMapInsert(map, xstrdup("one"), xstrdup("first"));
+    assert_false(StringMapInsert(map, xstrdup("one"), xstrdup("first")));
     assert_true(StringMapHasKey(map, "one"));
 
     assert_false(StringMapHasKey(map, NULL));
-    StringMapInsert(map, NULL, xstrdup("null"));
+    assert_false(StringMapInsert(map, NULL, xstrdup("null")));
     assert_true(StringMapHasKey(map, NULL));
 
     StringMapDestroy(map);
@@ -123,7 +123,7 @@ static void test_clear(void)
 {
     StringMap *map = StringMapNew();
 
-    StringMapInsert(map, xstrdup("one"), xstrdup("first"));
+    assert_false(StringMapInsert(map, xstrdup("one"), xstrdup("first")));
     assert_true(StringMapHasKey(map, "one"));
 
     StringMapClear(map);
@@ -139,7 +139,7 @@ static void test_soft_destroy(void)
     char *key = xstrdup("one");
     char *value = xstrdup("first");
 
-    StringMapInsert(map, key, value);
+    assert_false(StringMapInsert(map, key, value));
     assert_true(StringMapHasKey(map, "one"));
     assert_string_equal(StringMapGet(map, "one"),"first");
 
@@ -185,7 +185,7 @@ static void test_hashmap_degenerate_hash_fn(void)
 
     for (int i = 0; i < 100; i++)
     {
-        HashMapInsert(hashmap, CharTimes('a', i), CharTimes('a', i));
+        assert_false(HashMapInsert(hashmap, CharTimes('a', i), CharTimes('a', i)));
     }
 
     MapKeyValue *item = HashMapGet(hashmap, "aaaa");

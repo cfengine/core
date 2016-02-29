@@ -1106,10 +1106,8 @@ void GetNetworkingInfo(EvalContext *ctx)
 
         if (NULL != default_route)
         {
-            EvalContextVariablePutSpecial(ctx,
-                                          SPECIAL_SCOPE_SYS, "default_gateway",
-                                          JsonObjectGetAsString(default_route, "gateway"), CF_DATA_TYPE_STRING,
-                                          "inventory,networking,/proc,source=agent,attribute_name=Default gateway,procfs");
+            JsonObjectAppendString(inet, "default_gateway", JsonObjectGetAsString(default_route, "gateway"));
+            JsonObjectAppendElement(inet, "default_route", JsonCopy(default_route));
         }
     }
 

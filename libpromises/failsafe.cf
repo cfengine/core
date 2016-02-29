@@ -68,6 +68,11 @@ bundle agent main
                     happen with the most up to date and complete
                     information.";
 
+      "Report"
+        usebundle => failsafe_cfe_internal_report,
+        comment => "It's important to let the user know what happened
+                    as the result of the bootstrap or failsafe
+                    operation.";
 }
 
 bundle agent failsafe_cfe_internal_checkkeys
@@ -104,6 +109,7 @@ bundle agent failsafe_cfe_internal_update
     any::
 
       "have_promises_cf"
+      scope => "namespace",
       expression => fileexists("$(sys.inputdir)/promises.cf"),
       handle => "failsafe_cfe_internal_bootstrap_update_classes_have_promises_cf";
 
@@ -189,10 +195,18 @@ bundle agent failsafe_cfe_internal_update
       service_policy => "start",
       service_method => failsafe_bootstart,
       classes => failsafe_repaired("executor_started");
+}
 
+################################################################################
+
+bundle agent failsafe_cfe_internal_report
+{
+  meta:
+      "description"
+        string => "Report the outcome of the embedded
+                   bootstrap/failsafe operation.";
 
   reports:
-
     !bootstrap_mode::
       "Built-in failsafe policy triggered"
         handle => "failsafe_cfe_internal_bootstrap_update_reports_failsafe_notification",
@@ -253,10 +267,10 @@ bundle agent failsafe_cfe_internal_update
 
       "Did not start the scheduler"
       handle => "failsafe_cfe_internal_bootstrap_update_reports_failed_to_start_execd";
-
 }
 
 ################################################################################
+
 bundle agent failsafe_cfe_internal_call_update
 {
   vars:
@@ -273,8 +287,8 @@ bundle agent failsafe_cfe_internal_call_update
         if => fileexists( $(sys.update_policy_path) ),
         comment => "We run update.cf in order to prepare system information for
                     collection into CFEngine Enterprise more quickly.";
-
 }
+
 ############################################
 body classes failsafe_kept(x)
 {

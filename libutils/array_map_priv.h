@@ -46,10 +46,13 @@ ArrayMap *ArrayMapNew(MapKeyEqualFn equal_fn,
                       MapDestroyDataFn destroy_key_fn,
                       MapDestroyDataFn destroy_value_fn);
 
-/*
- * Returns false if the limit of the array size has been reached.
+/**
+ * @retval 0 if the limit of the array size has been reached,
+ *           and no insertion took place.
+ * @retval 1 if the key was found and the value was replaced.
+ * @retval 2 if the key-value pair was not found and inserted as new.
  */
-bool ArrayMapInsert(ArrayMap *map, void *key, void *value);
+int ArrayMapInsert(ArrayMap *map, void *key, void *value);
 
 bool ArrayMapRemove(ArrayMap *map, const void *key);
 MapKeyValue *ArrayMapGet(const ArrayMap *map, const void *key);

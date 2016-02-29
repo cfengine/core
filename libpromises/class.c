@@ -23,56 +23,53 @@
 */
 #include <class.h>
 
-#include <rb-tree.h>
+#include <map.h>
 #include <alloc.h>
-#include <string_lib.h> /* StringHash,StringConcatenate */
+#include <string_lib.h> /* StringHash,StringSafeEqual,StringConcatenate */
 #include <regex.h>      /* CompileRegex,StringMatchFullWithPrecompiledRegex */
 #include <files_names.h>
 
 
+static void ClassDestroy(Class *cls);                /* forward declaration */
+
+
+/**
+   Define ClassMap.
+   Key: a string which is always the fully qualified class name,
+        for example "default:127_0_0_1"
+*/
+
+TYPED_MAP_DECLARE(Class, char *, Class *)
+
+TYPED_MAP_DEFINE(Class, char *, Class *,
+                 (MapHashFn) &StringHash,
+                 (MapKeyEqualFn) &StringSafeEqual,
+                 free,
+                 (MapDestroyDataFn) &ClassDestroy)
+
 struct ClassTable_
 {
-    RBTree *classes;
+    ClassMap *classes;
 };
 
 struct ClassTableIterator_
 {
-    RBTreeIterator *iter;
+    MapIterator iter;
     char *ns;
     bool is_hard;
     bool is_soft;
 };
 
-static size_t ClassRefHash(const char *ns, const char *name)
-{
-    unsigned h = 0;
-
-    h = StringHash(ns ? ns : "default", h, INT_MAX);
-
-    size_t len = strlen(name);
-    for (size_t i = 0; i < len; i++)
-    {
-        h += (!isalnum(name[i]) || (name[i] == '.')) ? '_' : name[i];
-        h += (h << 10);
-        h ^= (h >> 6);
-    }
-
-    h += (h << 3);
-    h ^= (h >> 11);
-    h += (h << 15);
-
-    return (h & (INT_MAX - 1));
-}
 
 void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, ContextScope scope)
 {
-    if (ns)
+    if (ns == NULL || strcmp(ns, "default") == 0)
     {
-        cls->ns = xstrdup(ns);
+        cls->ns = NULL;
     }
     else
     {
-        cls->ns = NULL;
+        cls->ns = xstrdup(ns);
     }
 
     cls->name = xstrdup(name);
@@ -81,8 +78,6 @@ void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, Conte
     cls->is_soft = is_soft;
     cls->scope = scope;
     cls->tags = NULL;
-
-    cls->hash = ClassRefHash(cls->ns, cls->name);
 }
 
 static void ClassDestroySoft(Class *cls)
@@ -95,7 +90,7 @@ static void ClassDestroySoft(Class *cls)
     }
 }
 
-void ClassDestroy(Class *cls)
+static void ClassDestroy(Class *cls)
 {
     if (cls)
     {
@@ -106,9 +101,9 @@ void ClassDestroy(Class *cls)
 
 ClassTable *ClassTableNew(void)
 {
-    ClassTable *table = xmalloc(sizeof(ClassTable));
+    ClassTable *table = xmalloc(sizeof(*table));
 
-    table->classes = RBTreeNew(NULL, NULL, NULL, NULL, NULL, (RBTreeValueDestroyFn *)ClassDestroy);
+    table->classes = ClassMapNew();
 
     return table;
 }
@@ -117,7 +112,7 @@ void ClassTableDestroy(ClassTable *table)
 {
     if (table)
     {
-        RBTreeDestroy(table->classes);
+        ClassMapDestroy(table->classes);
         free(table);
     }
 }
@@ -130,44 +125,41 @@ bool ClassTablePut(ClassTable *table,
     assert(is_soft || (!ns || strcmp("default", ns) == 0)); // hard classes should have default namespace
     assert(is_soft || scope == CONTEXT_SCOPE_NAMESPACE); // hard classes cannot be local
 
-    if (ns != NULL &&
-        strcmp("default", ns) == 0)
+    if (ns == NULL)
     {
-        ns = NULL;
+        ns = "default";
     }
 
-    Class *cls = ClassTableGet(table, ns, name);
-    if (cls)
-    {
-        ClassDestroySoft(cls);
-        ClassInit(cls, ns, name, is_soft, scope);
-        return true;
-    }
-    else
-    {
-        Log(LOG_LEVEL_DEBUG, "Setting %sclass %s%s%s",
-            is_soft ? "" : "hard ",
-            (ns != NULL) ? ns  : "",
-            (ns != NULL) ? ":" : "",
-            name);
+    Class *cls = xmalloc(sizeof(*cls));
+    ClassInit(cls, ns, name, is_soft, scope);
+    cls->tags = StringSetFromString(tags, ',');
 
-        cls = xmalloc(sizeof(Class));
-        ClassInit(cls, ns, name, is_soft, scope);
-        // NULL tags are OK (but you want to give good tags, don't you?)
-        cls->tags = StringSetFromString(tags, ',');
-        if (!is_soft && !StringSetContains(cls->tags, "hardclass"))
-        {
-            StringSetAdd(cls->tags, xstrdup("hardclass"));
-        }
-
-        return RBTreePut(table->classes, (void *)cls->hash, cls);
+    if (!is_soft && !StringSetContains(cls->tags, "hardclass"))
+    {
+        StringSetAdd(cls->tags, xstrdup("hardclass"));
     }
+
+    /* (cls->name != name) because canonification has happened. */
+    char *fullname = StringConcatenate(3, ns, ":", cls->name);
+
+    Log(LOG_LEVEL_DEBUG, "Setting %sclass: %s",
+        is_soft ? "" : "hard ",
+        fullname);
+
+    return ClassMapInsert(table->classes, fullname, cls);
 }
 
 Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name)
 {
-    size_t hash = ClassRefHash(ns, name);
-    return RBTreeGet(table->classes, (void *)hash);
+    if (ns == NULL)
+    {
+        ns = "default";
+    }
+
+    char fullname[ strlen(ns) + 1 + strlen(name) + 1 ];
+    xsnprintf(fullname, sizeof(fullname), "%s:%s", ns, name);
+
+    return ClassMapGet(table->classes, fullname);
 }
 
 Class *ClassTableMatch(const ClassTable *table, const char *regex)
@@ -211,23 +203,32 @@ Class *ClassTableMatch(const ClassTable *table, const char *regex)
 
 bool ClassTableRemove(ClassTable *table, const char *ns, const char *name)
 {
-    size_t hash = ClassRefHash(ns, name);
-    return RBTreeRemove(table->classes, (void *)hash);
+    if (ns == NULL)
+    {
+        ns = "default";
+    }
+
+    char fullname[ strlen(ns) + 1 + strlen(name) + 1 ];
+    xsnprintf(fullname, sizeof(fullname), "%s:%s", ns, name);
+
+    return ClassMapRemove(table->classes, fullname);
 }
 
 bool ClassTableClear(ClassTable *table)
 {
-    bool has_classes = RBTreeSize(table->classes) > 0;
-    RBTreeClear(table->classes);
+    bool has_classes = (ClassMapSize(table->classes) > 0);
+    ClassMapClear(table->classes);
     return has_classes;
 }
 
-ClassTableIterator *ClassTableIteratorNew(const ClassTable *table, const char *ns, bool is_hard, bool is_soft)
+ClassTableIterator *ClassTableIteratorNew(const ClassTable *table,
+                                          const char *ns,
+                                          bool is_hard, bool is_soft)
 {
-    ClassTableIterator *iter = xmalloc(sizeof(ClassTableIterator));
+    ClassTableIterator *iter = xmalloc(sizeof(*iter));
 
     iter->ns = ns ? xstrdup(ns) : NULL;
-    iter->iter = RBTreeIteratorNew(table->classes);
+    iter->iter = MapIteratorInit(table->classes->impl);
     iter->is_soft = is_soft;
     iter->is_hard = is_hard;
 
@@ -236,11 +237,17 @@ ClassTableIterator *ClassTableIteratorNew(const ClassTable *table, const char *n
 
 Class *ClassTableIteratorNext(ClassTableIterator *iter)
 {
-    void *key_ref = NULL;
-    Class *cls = NULL;
+    MapKeyValue *keyvalue;
 
-    while (RBTreeIteratorNext(iter->iter, &key_ref, (void **)&cls))
+    while ((keyvalue = MapIteratorNext(&iter->iter)) != NULL)
     {
+        Class *cls = keyvalue->value;
+
+        /* Make sure we never store "default" as namespace in the ClassTable,
+         * instead we have always ns==NULL in that case. */
+        assert((cls->ns == NULL ||
+                strcmp(cls->ns, "default") != 0));
+
         const char *key_ns = cls->ns ? cls->ns : "default";
 
         if (iter->ns && strcmp(key_ns, iter->ns) != 0)
@@ -268,7 +275,6 @@ void ClassTableIteratorDestroy(ClassTableIterator *iter)
     if (iter)
     {
         free(iter->ns);
-        RBTreeIteratorDestroy(iter->iter);
         free(iter);
     }
 }
@@ -299,7 +305,10 @@ ClassRef ClassRefParse(const char *expr)
 
 char *ClassRefToString(const char *ns, const char *name)
 {
-    if (!ns || strcmp("default", ns) == 0)
+    assert(name != NULL);
+
+    if (ns == NULL ||
+        strcmp("default", ns) == 0)
     {
         return xstrdup(name);
     }

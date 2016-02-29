@@ -47,6 +47,9 @@ static unsigned int HashMapGetBucket(const HashMap *map, const void *key)
     return map->hash_fn(key, 0, HASHMAP_BUCKETS);
 }
 
+/**
+ * @retval true if value was preexisting in the map and got replaced.
+ */
 bool HashMapInsert(HashMap *map, void *key, void *value)
 {
     unsigned bucket = HashMapGetBucket(map, key);

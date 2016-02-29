@@ -38,10 +38,13 @@ Map *MapNew(MapHashFn hash_fn,
             MapDestroyDataFn destroy_key_fn,
             MapDestroyDataFn destroy_value_fn);
 
-/*
+/**
+ * Insert a key-value pair in the map.
  * If the key is in the map, value get replaced. Old value is destroyed.
+ *
+ * @retval true if key exists already.
  */
-void MapInsert(Map *map, void *key, void *value);
+bool MapInsert(Map *map, void *key, void *value);
 
 /*
  * Returns whether the key is in the map.
@@ -117,7 +120,7 @@ void MapPrintStats(const Map *map, FILE *f);
     } Prefix##Map;                                                      \
                                                                         \
     Prefix##Map *Prefix##MapNew(void);                                  \
-    void Prefix##MapInsert(const Prefix##Map *map, KeyType key, ValueType value); \
+    bool Prefix##MapInsert(const Prefix##Map *map, KeyType key, ValueType value); \
     bool Prefix##MapHasKey(const Prefix##Map *map, const KeyType key);  \
     ValueType Prefix##MapGet(const Prefix##Map *map, const KeyType key); \
     bool Prefix##MapRemove(const Prefix##Map *map, const KeyType key);  \
@@ -139,9 +142,9 @@ void MapPrintStats(const Map *map, FILE *f);
         return map;                                                     \
     }                                                                   \
                                                                         \
-    void Prefix##MapInsert(const Prefix##Map *map, KeyType key, ValueType value) \
+    bool Prefix##MapInsert(const Prefix##Map *map, KeyType key, ValueType value) \
     {                                                                   \
-        MapInsert(map->impl, key, value);                               \
+        return MapInsert(map->impl, key, value);                        \
     }                                                                   \
                                                                         \
     bool Prefix##MapHasKey(const Prefix##Map *map, const KeyType key)   \

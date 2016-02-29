@@ -20,7 +20,7 @@ bundle agent test
       "$(todo)" data => mergedata("sys.$(todo)");
       # make sure deep lookups work
       "docker" string => "$(sys.inet6[addresses][docker0][address])";
-      "default_gateway" string => "$(sys.default_gateway)";
+      "default_gateway" string => "$(sys.inet[default_gateway])";
 }
 
 bundle agent check

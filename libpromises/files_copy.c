@@ -205,7 +205,7 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
     ssize_t attr_raw_names_size;
     char attr_raw_names[CF_BUFSIZE];
 
-    attr_raw_names_size = listxattr(source, attr_raw_names, sizeof(attr_raw_names));
+    attr_raw_names_size = llistxattr(source, attr_raw_names, sizeof(attr_raw_names));
     if (attr_raw_names_size < 0)
     {
         if (errno == ENOTSUP || errno == ENODATA)
@@ -214,7 +214,7 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (listxattr: %s)",
+            Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (llistxattr: %s)",
                 source, destination, GetErrorStr());
             return false;
         }
@@ -227,7 +227,7 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
         pos += strlen(current) + 1;
 
         char data[CF_BUFSIZE];
-        int datasize = getxattr(source, current, data, sizeof(data));
+        int datasize = lgetxattr(source, current, data, sizeof(data));
         if (datasize < 0)
         {
             if (errno == ENOTSUP)
@@ -236,13 +236,13 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (getxattr: %s: %s)",
+                Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (lgetxattr: %s: %s)",
                     source, destination, GetErrorStr(), current);
                 return false;
             }
         }
 
-        int ret = setxattr(destination, current, data, datasize, 0);
+        int ret = lsetxattr(destination, current, data, datasize, 0);
         if (ret < 0)
         {
             if (errno == ENOTSUP)
@@ -251,7 +251,7 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (setxattr: %s: %s)",
+                Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (lsetxattr: %s: %s)",
                     source, destination, GetErrorStr(), current);
                 return false;
             }

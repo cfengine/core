@@ -19,10 +19,6 @@ bundle agent test
       string => "Test that namespaces cannot be defined with
                  characters that are invalid in bundle names.";
 
-    "test_soft_fail"
-      string => "any",
-      meta => { "redmine7903" };
-
   vars:
      "command" string => "$(sys.cf_agent) -KI --define AUTO,DEBUG $(this.promise_filename).sub";
 

@@ -726,13 +726,7 @@ static void HailExec(AgentConnection *conn, char *peer)
     {
         memset(recvbuffer, 0, sizeof(recvbuffer));
 
-        int n_read = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
-
-        if (n_read == -1)
-        {
-            break;
-        }
-        if (n_read == 0)                               /* connection closed */
+        if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
         {
             break;
         }

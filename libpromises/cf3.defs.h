@@ -543,7 +543,7 @@ typedef enum
 #define CF_CHARRANGE "^.$"
 #define CF_NULL_VALUE "cf_null"
 
-#define CF_MODERANGE   "[0-7augorwxst,+-]+"
+#define CF_MODERANGE   "[0-7augorwxst,+-=]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
 #define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+"
 #define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].:]+"

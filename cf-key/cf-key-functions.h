@@ -39,6 +39,8 @@
 #include <eval_context.h>
 #include <crypto.h>
 
+extern bool LOOKUP_HOSTS;
+
 RSA *LoadPublicKey(const char *filename);
 char *LoadPubkeyDigest(const char *pubkey);
 char *GetPubkeyDigest(RSA *pubkey);

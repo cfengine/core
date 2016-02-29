@@ -100,7 +100,7 @@ const char *const VPSOPTS[] =
     [PLATFORM_CONTEXT_BUSYBOX] = "",                  /* linux / busybox */
     [PLATFORM_CONTEXT_SOLARIS] = "auxww",     /* solaris >= 11 */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxww", /* solaris < 11 */
-    [PLATFORM_CONTEXT_FREEBSD] = "auxw",              /* freebsd */
+    [PLATFORM_CONTEXT_FREEBSD] = "auxw -J 0",              /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",   /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "-elyf",              /* cray */
     [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",            /* NT */

@@ -342,7 +342,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         int nbytes = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
 
         /* If recv error or socket closed before receiving CFD_TERMINATOR. */
-        if (nbytes == -1 || nbytes == 0)
+        if (nbytes == -1)
         {
             /* TODO mark connection in the cache as closed. */
             goto err;
@@ -463,15 +463,16 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
     if (SendTransaction(conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Failed send. (SendTransaction: %s)", GetErrorStr());
-        return false;
+        Log(LOG_LEVEL_VERBOSE, "Networking error, assuming different checksum");
+        return true;
     }
 
     if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
     {
         /* TODO mark connection in the cache as closed. */
         Log(LOG_LEVEL_ERR, "Failed receive. (ReceiveTransaction: %s)", GetErrorStr());
-        Log(LOG_LEVEL_VERBOSE,  "No answer from host, assuming checksum ok to avoid remote copy for now...");
-        return false;
+        Log(LOG_LEVEL_VERBOSE, "No answer from host, assuming different checksum");
+        return true;
     }
 
     if (strcmp(CFD_TRUE, recvbuffer) == 0)

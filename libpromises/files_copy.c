@@ -214,7 +214,7 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "Can't copy extended attributes from '%s' to '%s'. (listxattr: %s)",
+            Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (listxattr: %s)",
                 source, destination, GetErrorStr());
             return false;
         }
@@ -236,7 +236,7 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "Can't copy extended attributes from '%s' to '%s'. (getxattr: %s: %s)",
+                Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (getxattr: %s: %s)",
                     source, destination, GetErrorStr(), current);
                 return false;
             }
@@ -251,7 +251,7 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "Can't copy extended attributes from '%s' to '%s'. (setxattr: %s: %s)",
+                Log(LOG_LEVEL_ERR, "Can't copy extended attributes from '%s' to '%s'. (setxattr: %s: %s)",
                     source, destination, GetErrorStr(), current);
                 return false;
             }

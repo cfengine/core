@@ -1168,7 +1168,7 @@ case "$target_os" in
    aix*)
         CPPFLAGS="$CPPFLAGS -w"
         ;;
-   linux*|*bsd*gnu)
+   linux*|*bsd*|*gnu*)
         AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
@@ -1182,8 +1182,6 @@ case "$target_os" in
    qnx*)
         ;;
    openbsd*|obsd*)
-        ;;
-   gnu*)
         ;;
    sysv4.2MP|unix_sv*)
         ;;

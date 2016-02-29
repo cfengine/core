@@ -30,25 +30,40 @@
 # system by fetching policies in case the standard agent run fails.
 ##############################################################################
 
-
-body common control
-{
-      bundlesequence => {
-                          "cfe_internal_checkkeys",
-                          "cfe_internal_update",
-                          "cfe_internal_call_update"
-                        };
-}
-
 body agent control
 {
-      skipidentify => "true";
-
       # Bootstrapping can't continue without keys
       abortclasses => { "no_ppkeys_ABORT" };
 }
 
-################################################################################
+##############################################################################
+
+bundle agent main
+{
+  meta:
+      "description"
+        string => "Perform bootstrap or failsafe recovery operations";
+
+  methods:
+
+      "Check Keys"
+        usebundle => cfe_internal_checkkeys,
+        comment => "Without a valid keypair we aren't going to be able
+                    to establish trust";
+
+      "Fetch Inputs"
+        usebundle => cfe_internal_update,
+        comment => "We need to fetch policy from upstream if we are
+                    bootstrapping or if we are performing failsafe
+                    recovery";
+
+      "Activate Update Policy" -> { "CFEngine Enterprise", "Mission Portal" }
+        usebundle => cfe_internal_call_update,
+        comment => "In order to speed up convergence and reporting we
+                    trigger the update policy right after initial
+                    bootstrap. This allows the first scheduled run to
+                    happen with the most complete information.";
+}
 
 bundle agent cfe_internal_checkkeys
 {
@@ -63,7 +78,7 @@ bundle agent cfe_internal_checkkeys
         classes => kept("no_ppkeys_ABORT");
 }
 
-################################################################################
+##############################################################################
 
 bundle agent cfe_internal_update
 {
@@ -71,10 +86,16 @@ bundle agent cfe_internal_update
 
     policy_server::
 
-      # policy server cannot use shortcut feature to resolve masterfiles since cf-serverd is not yet up
+      # policy server cannot use shortcut feature to resolve
+      # masterfiles since cf-serverd may not be available
+
       "masterfiles_dir_remote" string => "$(sys.masterdir)";
 
     !policy_server::
+
+      # The unqualified path is used for non policy servers so that
+      # the policy server can use a shortcut is used so that the
+      # policy server can choose which policy to serve by default
 
       "masterfiles_dir_remote" string => "masterfiles";
 
@@ -84,80 +105,116 @@ bundle agent cfe_internal_update
     any::
 
       "have_promises_cf"
-      expression => fileexists("$(sys.inputdir)/promises.cf"),
-      handle => "cfe_internal_bootstrap_update_classes_have_promises_cf";
-
+        expression => fileexists("$(sys.inputdir)/promises.cf"),
+        scope => "namespace",
+        handle => "cfe_internal_bootstrap_update_classes_have_promises_cf",
+        comment => "We expect to find promises.cf after policy has
+                    been successfully copied from the policy
+                    server. If promises.cf is missing, then the
+                    bootstrap or failsafe recovery has likely
+                    failed.";
 
   files:
 
+    any::
+
       "$(sys.inputdir)"
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
-      copy_from => u_scp("$(masterfiles_dir_remote)"),
-      depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+        handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
+        copy_from => u_scp("$(masterfiles_dir_remote)"),
+        depth_search => u_recurse("inf"),
+        classes => repaired("got_policy"),
+        comment => "If we don't copy the policy into our inputdir we
+                    won't have anything to do.";
 
     !windows.got_policy_failed::
 
       "$(sys.inputdir)"
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
-      copy_from => u_scp("$(sys.masterdir)"),
-      depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+        handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
+        copy_from => u_scp("$(sys.masterdir)"),
+        depth_search => u_recurse("inf"),
+        classes => repaired("got_policy"),
+        comment => "If we failed to fetch policy we try again using
+                    the legacy default in case we are fetching policy
+                    from a hub that is not serving mastefiles via a
+                    shortcut.";
 
     windows.got_policy_failed::
 
       "$(sys.inputdir)"
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
-      copy_from => u_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
-      depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+        handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
+        copy_from => u_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
+        depth_search => u_recurse("inf"),
+        classes => repaired("got_policy"),
+        comment => "If we failed to fetch policy we try again using
+                    the legacy default in case we are fetching policy
+                    from a hub that is not serving mastefiles via a
+                    shortcut.";
 
     windows::
 
-      "$(sys.workdir)\\bin-twin\\."
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows",
-      comment => "Make sure we maintain a clone of the binaries and libraries for updating",
-      copy_from => u_cp("$(sys.workdir)\\bin\\."),
-      depth_search => u_recurse("1");
-
+      # TODO: Remove the use of bin-twin
+      "$(sys.workdir)\\bin-twin\\." -> { "redmine7364" }
+        handle => "cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows",
+        copy_from => u_cp("$(sys.workdir)\\bin\\."),
+        depth_search => u_recurse("1"),
+        comment => "Make sure we maintain a clone of the binaries and
+                    libraries for updating. While bin-twin has been
+                    deprecated there are still remenants that need to
+                    be removed before this can be safely removed";
 
   processes:
 
     !windows.got_policy::
 
-      "cf-execd" restart_class => "start_exec",
-      handle => "cfe_internal_bootstrap_update_processes_start_cf_execd";
+      # We don't define cf_execd_not_running on windows because we use
+      # the service ientifier.
 
-    am_policy_hub.got_policy::
+      "cf-execd"
+        restart_class => "cf_execd_not_running",
+        handle => "cfe_internal_bootstrap_update_processes_start_cf_execd",
+        comment => "The service";
 
-      "cf-serverd" restart_class => "start_server",
-      handle => "cfe_internal_bootstrap_update_processes_start_cf_serverd";
+    any::
 
+      # We need to know if cf-serverd isn't running so that we can
+      # start it when necessary.
+
+      "$(sys.cf_serverd)"
+        restart_class => "cf_serverd_not_running",
+        handle => "cfe_internal_bootstrap_update_processes_start_cf_serverd";
 
   commands:
 
-    start_exec.!windows.!systemd::
+    cf_execd_not_running.!(windows|systemd)::
+      # Windows and systemd do not launch the cf-execd process directly
 
       "$(sys.cf_execd)"
-      handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
-      classes => repaired("executor_started");
+        handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
+        classes => repaired("executor_started");
 
-    start_server.!systemd::
+    (policy_server.cf_serverd_not_running).!systemd::
+      # We have slightly different handling for cf-serverd on systemd.
 
       "$(sys.cf_serverd)"
-      handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
-      action => ifwin_bg,
-      classes => repaired("server_started");
+        handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
+        action => ifwin_bg,
+        classes => repaired("server_started"),
+        comment => "We need to start cf-serverd on policy servers if
+                    it's not running or clients will not be able to
+                    get policy. Clients on the other hand do not have
+                    a strong dependancy on cf-serverd and it will be
+                    started by the policy if needed";
 
-    start_exec.systemd::
+    cf_execd_not_running.systemd::
 
       # We explicitly use "restart", because it is possible that cf-serverd
       # is running, even if cf-execd isn't, for example. Here we want to be
       # sure we relaunch everything.
+      # TODO: Switch to individual unit files
 
       "/bin/systemctl restart cfengine3"
-      handle => "cfe_internal_bootstrap_update_commands_systemd_cfe_start",
-      classes => repaired_two("executor_started", "server_started");
+        handle => "cfe_internal_bootstrap_update_commands_systemd_cfe_start",
+        classes => repaired_two("executor_started", "server_started");
 
 
   services:
@@ -165,11 +222,41 @@ bundle agent cfe_internal_update
     windows.got_policy::
 
       "CfengineNovaExec"
-      handle => "cfe_internal_bootstrap_update_services_windows_executor",
-      service_policy => "start",
-      service_method => bootstart,
-      classes => repaired("executor_started");
+        handle => "cfe_internal_bootstrap_update_services_windows_executor",
+        service_policy => "start",
+        service_method => bootstart,
+        classes => repaired("executor_started");
 
+}
+
+##############################################################################
+
+bundle agent cfe_internal_call_update
+{
+  vars:
+
+    "mode" string => ifelse("bootstrap_mode", "bootstrap_mode", "failsafe_mode");
+
+  commands:
+
+    # On Windows we need cf-execd to call update.cf, otherwise the daemons will
+    # not run under the SYSTEM account.
+    !windows::
+      "$(sys.cf_agent) -f $(sys.update_policy_path) --define $(mode)"
+        handle => "cfe_internal_call_update_commands_call_update_cf",
+        if => fileexists( $(sys.update_policy_path) ),
+        comment => "We run update.cf in order to prepare system information for
+                    collection into CFEngine Enterprise more quickly.";
+
+}
+
+##############################################################################
+
+bundle agent cfe_internal_update_report
+{
+  meta:
+      "description"
+        string => "Report the outcome of the embedded bootstrap/failsafe operation";
 
   reports:
 
@@ -212,50 +299,31 @@ bundle agent cfe_internal_update
        * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny
        It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.
        When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
-      handle => "cfe_internal_bootstrap_update_reports_did_not_get_policy";
+        handle => "cfe_internal_bootstrap_update_reports_did_not_get_policy";
 
     server_started::
 
       "Started the server"
-      handle => "cfe_internal_bootstrap_update_reports_started_serverd";
+        handle => "cfe_internal_bootstrap_update_reports_started_serverd";
 
-    am_policy_hub.!server_started.!have_promises_cf::
+   server_started_failed::
 
       "Failed to start the server"
-      handle => "cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
+        handle => "cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
 
     executor_started::
 
       "Started the scheduler"
-      handle => "cfe_internal_bootstrap_update_reports_started_execd";
+        handle => "cfe_internal_bootstrap_update_reports_started_execd";
 
-    !executor_started.!have_promises_cf::
+    executor_started_failed::
 
-      "Did not start the scheduler"
-      handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
-
+      "Failed to start the scheduler"
+        handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
 }
 
-################################################################################
-bundle agent cfe_internal_call_update
-{
-  vars:
+##############################################################################
 
-    "mode" string => ifelse("bootstrap_mode", "bootstrap_mode", "failsafe_mode");
-
-  commands:
-
-    # On Windows we need cf-execd to call update.cf, otherwise the daemons will
-    # not run under the SYSTEM account.
-    !windows::
-      "$(sys.cf_agent) -f $(sys.update_policy_path) --define $(mode)"
-        handle => "cfe_internal_call_update_commands_call_update_cf",
-        if => fileexists( $(sys.update_policy_path) ),
-        comment => "We run update.cf in order to prepare system information for
-                    collection into CFEngine Enterprise more quickly.";
-
-}
-############################################
 body classes kept(x)
 {
       promise_kept => {"$(x)"};

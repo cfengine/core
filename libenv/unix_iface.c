@@ -909,8 +909,9 @@ static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void 
 
 /*******************************************************************/
 
-static void GetNetworkingStatsInfo(EvalContext *ctx, const char *filename, const char *varname)
+static JsonElement* GetNetworkingStatsInfo(const char *filename)
 {
+    JsonElement *stats = NULL;
     assert(filename);
 
     FILE *fin = safe_fopen(filename, "rt");
@@ -919,7 +920,7 @@ static void GetNetworkingStatsInfo(EvalContext *ctx, const char *filename, const
         Log(LOG_LEVEL_VERBOSE, "Reading netstat info from %s", filename);
         size_t header_line_size = CF_BUFSIZE;
         char *header_line = xmalloc(header_line_size);
-        JsonElement *stats = JsonObjectCreate(2);
+        stats = JsonObjectCreate(2);
 
         while (CfReadLine(&header_line, &header_line_size, fin) != -1)
         {
@@ -959,10 +960,10 @@ static void GetNetworkingStatsInfo(EvalContext *ctx, const char *filename, const
 
         free(header_line);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, varname, stats, CF_DATA_TYPE_CONTAINER,
-                                      "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
         fclose(fin);
     }
+
+    return stats;
 }
 
 /*******************************************************************/
@@ -1009,6 +1010,7 @@ static JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, cons
                         }
                         else
                         {
+                            Log(LOG_LEVEL_DEBUG, "While parsing %s, got key %s from line %s", filename, JsonObjectGetAsString(item, extracted_key), line);
                             JsonObjectAppendElement(info, JsonObjectGetAsString(item, extracted_key), item);
                         }
                     }
@@ -1057,11 +1059,18 @@ void GetNetworkingInfo(EvalContext *ctx)
 
     Buffer *pbuf = BufferNew();
 
+    JsonElement *inet = JsonObjectCreate(2);
+
     BufferPrintf(pbuf, "%s/proc/net/netstat", procdir);
-    GetNetworkingStatsInfo(ctx, BufferData(pbuf), "proc_stats");
+    JsonElement *inet_stats = GetNetworkingStatsInfo(BufferData(pbuf));
+
+    if (NULL != inet_stats)
+    {
+        JsonObjectAppendElement(inet, "stats", inet_stats);
+    }
 
     BufferPrintf(pbuf, "%s/proc/net/route", procdir);
-    JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  "routes", NULL, (ProcPostProcessFn) &NetworkingRoutesPostProcessInfo,
+    JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, (ProcPostProcessFn) &NetworkingRoutesPostProcessInfo,
                     // format: Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
                     //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0 
                     "^(?<interface>\\S+)\\t(?<raw_dest>[[:xdigit:]]+)\\t(?<raw_gw>[[:xdigit:]]+)\\t(?<raw_flags>[[:xdigit:]]+)\\t(?<refcnt>\\d+)\\t(?<use>\\d+)\\t(?<metric>[[:xdigit:]]+)\\t(?<raw_mask>[[:xdigit:]]+)\\t(?<mtu>\\d+)\\t(?<window>\\d+)\\t(?<irtt>[[:xdigit:]]+)");
@@ -1069,6 +1078,8 @@ void GetNetworkingInfo(EvalContext *ctx)
     if (NULL != routes &&
         JsonGetElementType(routes) == JSON_ELEMENT_TYPE_CONTAINER)
     {
+        JsonObjectAppendElement(inet, "routes", routes);
+
         JsonIterator iter = JsonIteratorInit(routes);
         const JsonElement *default_route = NULL;
         long lowest_metric = 0;
@@ -1102,8 +1113,39 @@ void GetNetworkingInfo(EvalContext *ctx)
         }
     }
 
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet", inet, CF_DATA_TYPE_CONTAINER,
+                                  "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+
+
+    JsonElement *inet6 = JsonObjectCreate(3);
+
+    BufferPrintf(pbuf, "%s/proc/net/snmp6", procdir);
+    JsonElement *inet6_stats = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, NULL,
+                                               "^\\s*(?<key>\\S+)\\s+(?<value>\\d+)");
+
+    if (NULL != inet6_stats)
+    {
+        // map the key to the value (as a number) in the "stats" map
+        JsonElement *rewrite = JsonObjectCreate(JsonLength(inet6_stats));
+        JsonIterator iter = JsonIteratorInit(inet6_stats);
+        const JsonElement *stat = NULL;
+        while ((stat = JsonIteratorNextValue(&iter)))
+        {
+            long num = 0;
+            const char* key = JsonObjectGetAsString(stat, "key");
+            const char* value = JsonObjectGetAsString(stat, "value");
+            if (key && value && (1 == sscanf(value, "%ld", &num)))
+            {
+                JsonObjectAppendInteger(rewrite, key, num);
+            }
+        }
+
+        JsonObjectAppendElement(inet6, "stats", rewrite);
+        JsonDestroy(inet6_stats);
+    }
+
     BufferPrintf(pbuf, "%s/proc/net/ipv6_route", procdir);
-    GetProcFileInfo(ctx, BufferData(pbuf),  "ipv6_routes", NULL, (ProcPostProcessFn) &NetworkingIPv6RoutesPostProcessInfo,
+    JsonElement *inet6_routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, (ProcPostProcessFn) &NetworkingIPv6RoutesPostProcessInfo,
                     // format: dest                    dest_prefix source                source_prefix next_hop                         metric   refcnt   use      flags        interface
                     //         fe800000000000000000000000000000 40 00000000000000000000000000000000 00 00000000000000000000000000000000 00000100 00000000 00000000 00000001     eth0
                     "^(?<raw_dest>[[:xdigit:]]+)\\s+(?<dest_prefix>[[:xdigit:]]+)\\s+"
@@ -1112,8 +1154,13 @@ void GetNetworkingInfo(EvalContext *ctx)
                     "(?<refcnt>\\d+)\\s+(?<use>\\d+)\\s+"
                     "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
 
+    if (NULL != inet6_routes)
+    {
+        JsonObjectAppendElement(inet6, "routes", inet6_routes);
+    }
+
     BufferPrintf(pbuf, "%s/proc/net/if_inet6", procdir);
-    GetProcFileInfo(ctx, BufferData(pbuf),  "ipv6_addresses", "interface", (ProcPostProcessFn) &NetworkingIPv6AddressesPostProcessInfo,
+    JsonElement *inet6_addresses = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, "interface", (ProcPostProcessFn) &NetworkingIPv6AddressesPostProcessInfo,
                     // format: address device_number prefix_length scope flags interface_name
                     // 00000000000000000000000000000001 01 80 10 80       lo
                     // fe80000000000000004249fffebdd7b4 04 40 20 80  docker0
@@ -1121,6 +1168,14 @@ void GetNetworkingInfo(EvalContext *ctx)
                     "^(?<raw_address>[[:xdigit:]]+)\\s+(?<raw_device_number>[[:xdigit:]]+)\\s+"
                     "(?<raw_prefix_length>[[:xdigit:]]+)\\s+(?<raw_scope>[[:xdigit:]]+)\\s+"
                     "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
+
+    if (NULL != inet6_addresses)
+    {
+        JsonObjectAppendElement(inet6, "addresses", inet6_addresses);
+    }
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet6", inet6, CF_DATA_TYPE_CONTAINER,
+                                  "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
 
     // Inter-|   Receive                                                |  Transmit
     //  face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed

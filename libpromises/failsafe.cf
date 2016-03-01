@@ -33,7 +33,7 @@
 body agent control
 {
       # Bootstrapping can't continue without keys
-      abortclasses => { "no_ppkeys_ABORT" };
+      abortclasses => { "no_ppkeys_ABORT_kept" };
 }
 
 ################################################################################
@@ -83,7 +83,7 @@ bundle agent failsafe_cfe_internal_checkkeys
   reports:
     !have_ppkeys::
       "No public/private key pair is loaded, please create one by running \"cf-key\""
-        classes => failsafe_kept("no_ppkeys_ABORT");
+        classes => failsafe_results("namespace", "no_ppkeys_ABORT");
 }
 
 ################################################################################
@@ -397,4 +397,37 @@ body copy_from failsafe_cp(from)
       source          => "$(from)";
       compare         => "digest";
       copy_backup     => "false";
+}
+
+############################################
+body classes failsafe_results(scope, class_prefix)
+# @brief Define classes prefixed with `class_prefix` and suffixed with
+# appropriate outcomes: _kept, _repaired, _not_kept, _error, _failed,
+# _denied, _timeout, _reached
+#
+# @param scope The scope in which the class should be defined (`bundle` or `namespace`)
+# @param class_prefix The prefix for the classes defined
+{
+  scope => "$(scope)";
+
+  promise_kept => { "$(class_prefix)_reached",
+                    "$(class_prefix)_kept" };
+
+  promise_repaired => { "$(class_prefix)_reached",
+                        "$(class_prefix)_repaired" };
+
+  repair_failed => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_failed" };
+
+  repair_denied => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_denied" };
+
+  repair_timeout => { "$(class_prefix)_reached",
+                      "$(class_prefix)_error",
+                      "$(class_prefix)_not_kept",
+                      "$(class_prefix)_timeout" };
 }

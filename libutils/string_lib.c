@@ -77,6 +77,10 @@ unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
     return (h & (max - 1));
 }
 
+unsigned int StringHash_untyped(const void *str, unsigned int seed, unsigned int max)
+{
+    return StringHash(str, seed, max);
+}
 
 char ToLower(char ch)
 {
@@ -196,6 +200,11 @@ bool StringSafeEqual(const char *a, const char *b)
     }
 
     return strcmp(a, b) == 0;
+}
+
+bool StringSafeEqual_untyped(const void *a, const void *b)
+{
+    return StringSafeEqual(a, b);
 }
 
 /*********************************************************************/

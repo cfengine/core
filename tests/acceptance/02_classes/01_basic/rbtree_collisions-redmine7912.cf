@@ -1,0 +1,63 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  classes:
+
+      "legumes" expression => "any";
+      "kumiss"  expression => "any";
+      "range_class_prod_ltx1_seas_groupdiscussions_indexer_4_PRODUCTVERSION__0_1_86_" expression => "any";
+
+      "right_classes_set" expression => "legumes.kumiss.range_class_prod_ltx1_seas_groupdiscussions_indexer_4_PRODUCTVERSION__0_1_86_";
+      "wrong_classes_set" expression => "goosey|ungoverned|ipv4_10_132_60";
+
+      "ok" expression => "right_classes_set.!wrong_classes_set";
+
+
+  reports:
+
+    DEBUG.legumes::
+      "Pass legumes";
+    DEBUG.goosey::
+      "FAIL goosey";
+
+    DEBUG.kumiss::
+      "Pass kumiss";
+    DEBUG.ungoverned::
+      "FAIL ungoverned";
+
+    DEBUG.range_class_prod_ltx1_seas_groupdiscussions_indexer_4_PRODUCTVERSION__0_1_86_::
+      "PASS range_class_prod_ltx1_seas_groupdiscussions_indexer_4_PRODUCTVERSION__0_1_86_";
+    DEBUG.ipv4_10_132_60::
+      "FAIL ipv4_10_132_60";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+}

@@ -80,7 +80,7 @@ static void test_insert_jumbo(void)
 
 static void test_remove(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, (MapKeyEqualFn)StringSafeEqual, free, free);
+    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free);
 
     HashMapInsert(hashmap, xstrdup("a"), xstrdup("b"));
 
@@ -181,7 +181,7 @@ static void test_hashmap_new_destroy(void)
 
 static void test_hashmap_degenerate_hash_fn(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, (MapKeyEqualFn)StringSafeEqual, free, free);
+    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free);
 
     for (int i = 0; i < 100; i++)
     {

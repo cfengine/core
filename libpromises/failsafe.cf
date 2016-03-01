@@ -42,7 +42,7 @@ bundle agent main
 {
   meta:
 
-      "purpose"
+      "description"
         string => "Perform bootstrap or failsafe recovery operations.";
 
   methods:

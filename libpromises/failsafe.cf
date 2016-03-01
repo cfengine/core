@@ -32,8 +32,6 @@
 
 body agent control
 {
-      skipidentify => "true";
-
       # Bootstrapping can't continue without keys
       abortclasses => { "no_ppkeys_ABORT" };
 }

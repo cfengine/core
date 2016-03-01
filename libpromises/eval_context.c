@@ -99,7 +99,7 @@ struct EvalContext_
 
     // Full path to directory that the binary was launched from.
     char *launch_directory;
-    
+
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
 };
@@ -109,7 +109,7 @@ void AddDefaultPackageModuleToContext(const EvalContext *ctx, char *name)
 {
     assert(ctx);
     assert(ctx->package_promise_context);
-    
+
     free(ctx->package_promise_context->control_package_module);
     ctx->package_promise_context->control_package_module =
             SafeStringDuplicate(name);
@@ -945,7 +945,7 @@ void EvalContextDestroy(EvalContext *ctx)
             RBTreeIteratorDestroy(it);
             RBTreeDestroy(ctx->function_cache);
         }
-        
+
         FreePackagePromiseContext(ctx->package_promise_context);
 
         free(ctx);

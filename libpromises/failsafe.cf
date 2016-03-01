@@ -112,9 +112,9 @@ bundle agent failsafe_cfe_internal_update
         handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
         copy_from => failsafe_scp("$(masterfiles_dir_remote)"),
         depth_search => failsafe_recurse("inf"),
-        classes => failsafe_repaired("got_policy");
+        classes => failsafe_results("namespace", "inputdir_update");
 
-    !windows.got_policy_failed::
+    !windows.inputdir_update_error::
 
       # When running on a *nix platform with homogeneous packages
       # $(sys.masterdir) is a good guess. This is never the case for
@@ -125,13 +125,13 @@ bundle agent failsafe_cfe_internal_update
         handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
         copy_from => failsafe_scp("$(sys.masterdir)"),
         depth_search => failsafe_recurse("inf"),
-        classes => failsafe_repaired("got_policy"),
+        classes => failsafe_results("namespace", "inputdir_update"),
         comment => "If we failed to fetch policy we try again using
                     the legacy default in case we are fetching policy
                     from a hub that is not serving mastefiles via a
                     shortcut.";
 
-    windows.got_policy_failed::
+    windows.inputdir_update_error::
 
       # Note: Windows can't use $(sys.masterdir) because no one runs a
       # hub on windows and the copy_from needs the remote path.
@@ -139,7 +139,7 @@ bundle agent failsafe_cfe_internal_update
         handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
         copy_from => failsafe_scp("/var/cfengine/masterfiles"),
         depth_search => failsafe_recurse("inf"),
-        classes => failsafe_repaired("got_policy");
+        classes => failsafe_results("namespace", "inputdir_update"),
         comment => "If we failed to fetch policy we try again using
                     the legacy default in case we are fetching policy
                     from a hub that is not serving mastefiles via a
@@ -158,18 +158,22 @@ bundle agent failsafe_cfe_internal_update
 
   processes:
 
-    !windows.got_policy::
+      # TODO: Decide if this class guard is appropriate. Should we
+      # guard checking of cf-execd process runnning to when inputs are
+      # repaired
+    !windows.inputdir_update_repaired::
 
-      # We don't define the start_exec class on windows because we use
-      # the service identifier.
+      # We need to know when cf-execd is not running so that we can
+      # start it when necessary. Windows uses the service manager
+      # instead of keying on individual processes.
 
       "cf-execd" restart_class => "start_exec",
         handle => "failsafe_cfe_internal_bootstrap_update_processes_start_cf_execd";
 
     am_policy_hub.got_policy::
 
-      # Non hubs don't require cf-serverd, if required it is expected
-      # to be started by a separate policy.
+      # We need to know if cf-serverd isn't running so that we can
+      # start it when necessary.
 
       "cf-serverd" restart_class => "start_server",
         handle => "failsafe_cfe_internal_bootstrap_update_processes_start_cf_serverd";
@@ -183,7 +187,7 @@ bundle agent failsafe_cfe_internal_update
 
       "$(sys.cf_execd)"
         handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
-        classes => failsafe_repaired("executor_started");
+        classes => failsafe_results("namespace", "cf_execd_running");
 
     start_server.!systemd::
 
@@ -193,7 +197,7 @@ bundle agent failsafe_cfe_internal_update
       "$(sys.cf_serverd)"
         handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
         action => failsafe_ifwin_bg,
-        classes => failsafe_repaired("server_started"),
+        classes => failsafe_results("namespace", "cf_serverd_running"),
         comment => "cf-serverd is needed on policy hubs or remote
                     clients will not be able to get policy. Clients do
                     not have a strong dependancy on cf-serverd and if
@@ -208,18 +212,20 @@ bundle agent failsafe_cfe_internal_update
 
       "/bin/systemctl restart cfengine3"
         handle => "failsafe_cfe_internal_bootstrap_update_commands_systemd_cfe_start",
-        classes => failsafe_repaired_two("executor_started", "server_started");
-
+        classes => failsafe_results("namespace", "systemctl_restart_cfengine3");
 
   services:
 
-    windows.got_policy::
+      # TODO: Is this restriction to only promise the service running
+      # when inputs are repaired appropriate? Perhaps it should always
+      # be checked.
+    windows.inputdir_update_repaired::
 
       "CfengineNovaExec"
         handle => "failsafe_cfe_internal_bootstrap_update_services_windows_executor",
         service_policy => "start",
         service_method => failsafe_bootstart,
-        classes => failsafe_repaired("executor_started");
+        classes => failsafe_results("namespace", "cf_execd_running");
 }
 
 ################################################################################
@@ -235,9 +241,8 @@ bundle agent failsafe_cfe_internal_report
   classes:
 
       # TODO: Determine if this is necessary and/or useful.  Pre-eval
-      # probably resolves this before policy update occurs, and this
-      # is probably most useful after policy update has been
-      # attempted.
+      # might resolve this before policy update occurs, and this is
+      # probably most useful after policy update has been attempted.
 
       "have_promises_cf"
         scope => "namespace",
@@ -276,12 +281,21 @@ bundle agent failsafe_cfe_internal_report
       "This autonomous node assumes the role of voluntary client"
       handle => "failsafe_cfe_internal_bootstrap_update_reports_assume_voluntary_client";
 
-    got_policy::
+    inputdir_update_repaired::
 
       "Updated local policy from policy server"
-      handle => "failsafe_cfe_internal_bootstrap_update_reports_got_policy";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_inputdir_update_repaired";
 
-    !got_policy.!have_promises_cf::
+
+    inputdir_update_repaired.!have_promises_cf::
+
+      # We used to display this report when we have fetched new
+      # policy, but still can not find promises.cf in
+      # sys.inputdir. However if the hub being bootstrapped to is down
+      # we may never repair inputs and this may not be triggered
+      #
+      # TODO: Come up with better conditions. These seem weak.
+      #  - Potentially use returnszero() with cf-promises?
 
       "Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)
        Please check
@@ -294,24 +308,34 @@ bundle agent failsafe_cfe_internal_report
        When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
       handle => "failsafe_cfe_internal_bootstrap_update_reports_did_not_get_policy";
 
-    server_started::
+    systemctl_restart_cfengine3_repaired::
+
+      "Restarted systemd unit cfengine3"
+        handle => "failsafe_cfe_intrnal_bootstrap_update_reports_systemd_unit_restarted";
+
+     systemctl_restart_cfengine3_error::
+
+      "Error restarting systemd unit cfengine3"
+        handle => "failsafe_cfe_intrnal_bootstrap_update_reports_systemd_unit_restarted";
+
+    cf_serverd_running_repaired::
 
       "Started the server"
       handle => "failsafe_cfe_internal_bootstrap_update_reports_started_serverd";
 
-    am_policy_hub.!server_started.!have_promises_cf::
+    cf_serverd_running_failed::
 
       "Failed to start the server"
       handle => "failsafe_cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
 
-    executor_started::
+    cf_execd_running_repaired::
 
       "Started the scheduler"
       handle => "failsafe_cfe_internal_bootstrap_update_reports_started_execd";
 
-    !executor_started.!have_promises_cf::
+    cf_execd_running_failed::
 
-      "Did not start the scheduler"
+      "Failed to start the scheduler"
       handle => "failsafe_cfe_internal_bootstrap_update_reports_failed_to_start_execd";
 }
 

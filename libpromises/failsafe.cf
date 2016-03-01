@@ -167,20 +167,20 @@ bundle agent failsafe_cfe_internal_update
       # start it when necessary. Windows uses the service manager
       # instead of keying on individual processes.
 
-      "cf-execd" restart_class => "start_exec",
+      "cf-execd" restart_class => "cf_execd_not_running",
         handle => "failsafe_cfe_internal_bootstrap_update_processes_start_cf_execd";
 
-    am_policy_hub.got_policy::
+    any::
 
       # We need to know if cf-serverd isn't running so that we can
       # start it when necessary.
 
-      "cf-serverd" restart_class => "start_server",
+      "cf-serverd" restart_class => "cf_serverd_not_running",
         handle => "failsafe_cfe_internal_bootstrap_update_processes_start_cf_serverd";
 
   commands:
 
-    start_exec.!windows.!systemd::
+    cf_execd_not_running.!(windows|systemd)::
 
       # Windows and systemd do not launch cf-execd directly and are
       # handeled separately.
@@ -189,7 +189,7 @@ bundle agent failsafe_cfe_internal_update
         handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
         classes => failsafe_results("namespace", "cf_execd_running");
 
-    start_server.!systemd::
+    cf_serverd_not_running.!systemd::
 
       # cf-serverd is not launched directly on systemd and is handled
       # seperately.
@@ -204,7 +204,7 @@ bundle agent failsafe_cfe_internal_update
                     the component is necessay it is expected to be
                     started by a separate policy.";
 
-    start_exec.systemd::
+    cf_execd_not_running.systemd::
 
       # We explicitly use "restart", because it is possible that cf-serverd
       # is running, even if cf-execd isn't, for example. Here we want to be
@@ -245,7 +245,7 @@ bundle agent failsafe_cfe_internal_report
       # probably most useful after policy update has been attempted.
 
       "have_promises_cf"
-        scope => "namespace",
+        scope => "bundle",
         expression => fileexists("$(sys.inputdir)/promises.cf"),
         handle => "failsafe_cfe_internal_bootstrap_update_classes_have_promises_cf",
         comment => "We expect to find promises.cf after policy has
@@ -360,28 +360,6 @@ bundle agent failsafe_cfe_internal_call_update
 }
 
 ############################################
-body classes failsafe_kept(x)
-{
-      promise_kept => {"$(x)"};
-}
-############################################
-body classes failsafe_repaired(x)
-{
-      promise_repaired => {"$(x)"};
-      repair_failed => {"$(x)_failed"};
-}
-############################################
-body classes failsafe_repaired_two(x,y)
-{
-      promise_repaired => {"$(x)", "$(y)"};
-      repair_failed => {"$(x)_failed"};
-}
-############################################
-body perms failsafe_p(p)
-{
-      mode  => "$(p)";
-}
-#############################################
 body copy_from failsafe_scp(from)
 {
       source      => "$(from)";
@@ -392,11 +370,6 @@ body copy_from failsafe_scp(from)
       trustkey    => "true";
     !policy_server::
       servers => { "$(sys.policy_hub)" };
-}
-############################################
-body action failsafe_background
-{
-      background => "true";
 }
 ############################################
 body depth_search failsafe_recurse(d)

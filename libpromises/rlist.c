@@ -37,6 +37,7 @@
 #include <assoc.h>
 #include <eval_context.h>
 #include <json.h>
+#include <vars.h>                                         /* IsCf3VarString */
 
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);
@@ -485,6 +486,11 @@ void RlistDestroy(Rlist *rl)
         free(rl);
         rl = next;
     }
+}
+
+void RlistDestroy_untyped(void *rl)
+{
+    RlistDestroy(rl);
 }
 
 /*******************************************************************/
@@ -1282,7 +1288,7 @@ unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
     }
 }
 
-unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max)
+unsigned int RlistHash(const Rlist *list, unsigned seed, unsigned max)
 {
     unsigned hash = seed;
     for (const Rlist *rp = list; rp; rp = rp->next)
@@ -1290,6 +1296,11 @@ unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max)
         hash = RvalHash(rp->val, hash, max);
     }
     return hash;
+}
+
+unsigned int RlistHash_untyped(const void *list, unsigned seed, unsigned max)
+{
+    return RlistHash(list, seed, max);
 }
 
 
@@ -1378,6 +1389,10 @@ JsonElement *RvalToJson(Rval rval)
     return NULL;
 }
 
+/**
+ * @brief Flattens an Rlist by expanding naked scalar list-variable
+ *        members. Flattening is only one-level deep.
+ */
 void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
     Rlist *prev = NULL, *next;
@@ -1442,3 +1457,58 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
         prev = rp;
     }
 }
+
+bool RlistEqual(const Rlist *list1, const Rlist *list2)
+{
+    const Rlist *rp1, *rp2;
+
+    for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2 != NULL; rp1 = rp1->next, rp2 = rp2->next)
+    {
+        if (rp1->val.item && rp2->val.item)
+        {
+            const Rlist *rc1, *rc2;
+
+            if (rp1->val.type == RVAL_TYPE_FNCALL || rp2->val.type == RVAL_TYPE_FNCALL)
+            {
+                return false;      // inconclusive
+            }
+
+            rc1 = rp1;
+            rc2 = rp2;
+
+            // Check for list nesting with { fncall(), "x" ... }
+
+            if (rp1->val.type == RVAL_TYPE_LIST)
+            {
+                rc1 = rp1->val.item;
+            }
+
+            if (rp2->val.type == RVAL_TYPE_LIST)
+            {
+                rc2 = rp2->val.item;
+            }
+
+            if (IsCf3VarString(rc1->val.item) || IsCf3VarString(rp2->val.item))
+            {
+                return false;      // inconclusive
+            }
+
+            if (strcmp(rc1->val.item, rc2->val.item) != 0)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool RlistEqual_untyped(const void *list1, const void *list2)
+{
+    return RlistEqual(list1, list2);
+}
+

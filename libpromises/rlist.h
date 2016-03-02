@@ -57,8 +57,10 @@ unsigned RvalHash(Rval rval, unsigned seed, unsigned max);
 
 Rlist *RlistCopy(const Rlist *list);
 Rlist *RlistCopyRewriter(const Rlist *list, JsonElement *map);
-unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max);
-void RlistDestroy(Rlist *list);
+unsigned int RlistHash        (const Rlist *list, unsigned seed, unsigned max);
+unsigned int RlistHash_untyped(const void *list, unsigned seed, unsigned max);
+void RlistDestroy        (Rlist *list);
+void RlistDestroy_untyped(void *rl);
 void RlistDestroyEntry(Rlist **liststart, Rlist *entry);
 char *RlistScalarValue(const Rlist *rlist);
 FnCall *RlistFnCallValue(const Rlist *rlist);
@@ -88,10 +90,9 @@ void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
 void RlistReverse(Rlist **list);
-
-/**
- * @brief Flattens an Rlist by expanding naked scalar list-variable members. Flattening is only one-level deep.
- */
 void RlistFlatten(EvalContext *ctx, Rlist **list);
+bool RlistEqual        (const Rlist *list1, const Rlist *list2);
+bool RlistEqual_untyped(const void *list1, const void *list2);
+
 
 #endif

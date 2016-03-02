@@ -260,22 +260,22 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
             {
                 VariableTableIterator *iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
                 convert = JsonObjectCreate(10);
+                const size_t ref_num_indices = ref->num_indices;
+                char *last_key = NULL;
                 Variable *var;
 
-                char *last_key = NULL;
-                while ((var = VariableTableIteratorNext(iter)))
+                while ((var = VariableTableIteratorNext(iter)) != NULL)
                 {
-                    size_t index_offset = ref->name_index_count;
                     JsonElement *holder = convert;
-                    if (var->ref->num_indices - index_offset == 1)
+                    if (var->ref->num_indices - ref_num_indices == 1)
                     {
-                        last_key = var->ref->indices[index_offset];
+                        last_key = var->ref->indices[ref_num_indices];
                     }
-                    else if (var->ref->num_indices - index_offset > 1)
+                    else if (var->ref->num_indices - ref_num_indices > 1)
                     {
-                        Log(LOG_LEVEL_DEBUG, "%s: got ref with starting depth %zd and index count %zd",
-                            fp_name, index_offset, var->ref->num_indices);
-                        for (int index = index_offset; index < var->ref->num_indices-1; index++)
+                        Log(LOG_LEVEL_DEBUG, "%s: got ref with starting depth %zu and index count %zu",
+                            fp_name, ref_num_indices, var->ref->num_indices);
+                        for (int index = ref_num_indices; index < var->ref->num_indices-1; index++)
                         {
                             JsonElement *local = JsonObjectGet(holder, var->ref->indices[index]);
                             if (NULL == local)

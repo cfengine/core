@@ -83,11 +83,18 @@ bundle common G
     any::
       "paths_indices" slist => getindices("paths");
 
+      # dereferenced path of the executable
+      "deref_paths[$(paths[$(paths_indices)])][$(cmds)]" string =>
+          filestat("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
+                   "linktarget");
+
   classes:
       # General commands.
-      "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)");
-      "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)"),
-      scope => "namespace";
+      "$(paths_indices)_$(cmds)$(exeext)" expression =>
+          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)])");
+      "has_$(cmds)"                       expression =>
+          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)])"),
+          scope => "namespace";
 
       # Special cases.
       "$(paths_indices)_$(make_cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)");

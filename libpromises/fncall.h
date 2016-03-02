@@ -58,7 +58,8 @@ typedef enum
 {
     FNCALL_OPTION_NONE = 0,
     FNCALL_OPTION_VARARG = 1 << 0,
-    FNCALL_OPTION_CACHED = 1 << 1
+    FNCALL_OPTION_CACHED = 1 << 1,
+    FNCALL_OPTION_COLLECTING = 1 << 2
 } FnCallOption;
 
 typedef struct

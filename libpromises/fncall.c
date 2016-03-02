@@ -59,8 +59,8 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 
 static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp)
 {
+    const FnCallType *fn = FnCallTypeGet(fp->name);
     {
-        const FnCallType *fn = FnCallTypeGet(fp->name);
         int len = RlistLen(fp->args);
 
         if (!(fn->options & FNCALL_OPTION_VARARG))
@@ -85,7 +85,9 @@ static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *f
         case RVAL_TYPE_FNCALL:
             {
                 FnCall *subfp = RlistFnCallValue(rp);
+
                 rval = FnCallEvaluate(ctx, policy, subfp, fp->caller).rval;
+
                 assert(rval.item);
             }
             break;
@@ -95,7 +97,9 @@ static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *f
             break;
         }
 
-        RlistAppend(&expanded_args, rval.item, rval.type);
+        // Collect compound values into containers only if the function supports it
+        RlistAppendAllTypes(&expanded_args, rval.item, rval.type,
+                            (fn->options & FNCALL_OPTION_COLLECTING));
         RvalDestroy(rval);
     }
 
@@ -244,10 +248,9 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
         rp = rp->next;
     }
 
-    char output[CF_BUFSIZE];
     if (argnum != RlistLen(expargs) && !(fncall_type->options & FNCALL_OPTION_VARARG))
     {
-        snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
+        fprintf(stderr, "Argument template mismatch handling function %s(", fp->name);
         {
             Writer *w = FileWriter(stderr);
             RlistWrite(w, expargs);
@@ -276,7 +279,6 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
 
         FatalError(ctx, "Bad arguments");
     }
-
 
     return (*fncall_type->impl) (ctx, policy, fp, expargs);
 }

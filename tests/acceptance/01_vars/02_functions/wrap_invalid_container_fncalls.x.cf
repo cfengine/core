@@ -1,0 +1,29 @@
+#######################################################
+#
+# Test wrapped fncalls with mismatched data types
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+      "base_list" slist => { "a", "b", "c", "aaa", "bbb", "ccc" };
+
+      # this should be a function call failure
+      "canonify" string => canonify(reverse(base_list));
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check" usebundle => dcs_pass($(this.promise_filename));
+}

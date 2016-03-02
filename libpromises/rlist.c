@@ -84,6 +84,16 @@ char *RlistScalarValue(const Rlist *rlist)
     return rlist->val.item;
 }
 
+char *RlistScalarValueSafe(const Rlist *rlist)
+{
+    if (rlist->val.type != RVAL_TYPE_SCALAR)
+    {
+        return "[not printable]";
+    }
+
+    return RlistScalarValue(rlist);
+}
+
 /*******************************************************************/
 
 FnCall *RlistFnCallValue(const Rlist *rlist)
@@ -516,6 +526,11 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
 
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 {
+    return RlistAppendAllTypes(start, item, type, false);
+}
+
+Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool allow_all_types)
+{
     Rlist *lp = *start;
 
     switch (type)
@@ -527,12 +542,31 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         break;
 
     case RVAL_TYPE_LIST:
+        if (allow_all_types)
+        {
+            JsonElement* store = JsonArrayCreate(RlistLen(item));
+            for (const Rlist *rp = item; rp; rp = rp->next)
+            {
+                JsonArrayAppendElement(store, RvalToJson(rp->val));
+            }
+
+            return RlistAppendRval(start, (Rval) { store, RVAL_TYPE_CONTAINER });
+        }
+
         for (const Rlist *rp = item; rp; rp = rp->next)
         {
             lp = RlistAppendRval(start, RvalCopy(rp->val));
         }
 
         return lp;
+
+    case RVAL_TYPE_CONTAINER:
+        if (allow_all_types)
+        {
+            return RlistAppendRval(start, (Rval) { JsonCopy((JsonElement*) item), RVAL_TYPE_CONTAINER });
+        }
+
+        // note falls through!
 
     default:
         Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);

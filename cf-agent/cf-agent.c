@@ -137,7 +137,7 @@ static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv);
 static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeFixedStringArray(int size, char **array);
 static void CheckAgentAccess(const Rlist *list, const Policy *policy);
-static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
 static int NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
@@ -691,7 +691,7 @@ static void ThisAgentInit(void)
 
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
-    KeepControlPromises(ctx, policy);
+    KeepControlPromises(ctx, policy, config);
     KeepPromiseBundles(ctx, policy, config);
 }
 
@@ -699,7 +699,7 @@ static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentCon
 /* Level 2                                                         */
 /*******************************************************************/
 
-static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_AGENT);
     if (constraints)
@@ -1027,6 +1027,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                     }
                 }
 
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORTCLASSLOG].lval) == 0)
+            {
+                config->agent_specific.agent.report_class_log = BooleanFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting report_class_log to %s", 
+                    config->agent_specific.agent.report_class_log? "true" : "false");
                 continue;
             }
         }

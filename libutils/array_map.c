@@ -41,11 +41,11 @@ ArrayMap *ArrayMapNew(MapKeyEqualFn equal_fn,
     return map;
 }
 
-bool ArrayMapInsert(ArrayMap *map, void *key, void *value)
+int ArrayMapInsert(ArrayMap *map, void *key, void *value)
 {
     if (map->size == TINY_LIMIT)
     {
-        return false;
+        return 0;
     }
 
     for (int i = 0; i < map->size; ++i)
@@ -55,12 +55,12 @@ bool ArrayMapInsert(ArrayMap *map, void *key, void *value)
             map->destroy_key_fn(key);
             map->destroy_value_fn(map->values[i].value);
             map->values[i].value = value;
-            return true;
+            return 1;
         }
     }
 
     map->values[map->size++] = (MapKeyValue) { key, value };
-    return true;
+    return 2;
 }
 
 bool ArrayMapRemove(ArrayMap *map, const void *key)

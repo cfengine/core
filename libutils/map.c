@@ -155,23 +155,25 @@ static void ConvertToHashMap(Map *map)
     map->hash_fn = NULL;
 }
 
-void MapInsert(Map *map, void *key, void *value)
+bool MapInsert(Map *map, void *key, void *value)
 {
     assert(map != NULL);
 
     if (IsArrayMap(map))
     {
-        if (ArrayMapInsert(map->arraymap, key, value))
+        int ret = ArrayMapInsert(map->arraymap, key, value);
+        if (ret != 0)
         {
-            return;
+            /* Return true if value was replaced, false if key-value was
+             * inserted as new. */
+            return (ret == 1);
         }
-        else
-        {
-            ConvertToHashMap(map);
-        }
+
+        /* Does not fit in ArrayMap, must convert to HashMap. */
+        ConvertToHashMap(map);
     }
 
-    HashMapInsert(map->hashmap, key, value);
+    return HashMapInsert(map->hashmap, key, value);
 }
 
 /*

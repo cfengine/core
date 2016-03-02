@@ -62,6 +62,7 @@ static void test_default_ns(void)
         ClassTable *t = ClassTableNew();
         assert_false(ClassTablePut(t, NULL, "127.0.0.1", false, CONTEXT_SCOPE_NAMESPACE, NULL));
         Class *cls = ClassTableGet(t, NULL, "127_0_0_1");
+        assert_true(cls != NULL);
         assert_true(cls->ns == NULL);
         cls = ClassTableGet(t, "default", "127_0_0_1");
         assert_true(cls->ns == NULL);

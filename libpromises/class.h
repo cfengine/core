@@ -29,14 +29,14 @@
 
 typedef struct
 {
-    char *ns;
-    char *name;
-    size_t hash;
+    char *ns;                          /* NULL in case of default namespace */
+    char *name;                        /* class name */
 
     ContextScope scope;
     bool is_soft;
     StringSet *tags;
 } Class;
+
 
 typedef struct ClassTable_ ClassTable;
 typedef struct ClassTableIterator_ ClassTableIterator;
@@ -54,7 +54,6 @@ bool ClassTableClear(ClassTable *table);
 ClassTableIterator *ClassTableIteratorNew(const ClassTable *table, const char *ns, bool is_hard, bool is_soft);
 Class *ClassTableIteratorNext(ClassTableIterator *iter);
 void ClassTableIteratorDestroy(ClassTableIterator *iter);
-
 
 typedef struct
 {

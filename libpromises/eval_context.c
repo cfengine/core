@@ -47,6 +47,31 @@
 #include <logging_priv.h>
 #include <known_dirs.h>
 #include <printsize.h>
+#include <map.h>
+
+
+/**
+   Define FuncCacheMap.
+   Key:   an Rlist (which is linked list of Rvals)
+          listing all the argument of the function
+   Value: an Rval, the result of the function
+ */
+
+static void RvalDestroy2(void *p)
+{
+    Rval *rv = p;
+    RvalDestroy(*rv);
+    free(rv);
+}
+
+TYPED_MAP_DECLARE(FuncCache, Rlist *, Rval *)
+
+TYPED_MAP_DEFINE(FuncCache, Rlist *, Rval *,
+                 RlistHash_untyped,
+                 RlistEqual_untyped,
+                 RlistDestroy_untyped,
+                 RvalDestroy2)
+
 
 static bool BundleAborted(const EvalContext *ctx);
 static void SetBundleAborted(EvalContext *ctx);
@@ -87,7 +112,7 @@ struct EvalContext_
 
     StringSet *promise_lock_cache;
     StringSet *dependency_handles;
-    RBTree *function_cache;
+    FuncCacheMap *function_cache;
 
     uid_t uid;
     uid_t gid;
@@ -116,7 +141,7 @@ void AddDefaultInventoryToContext(const EvalContext *ctx, Rlist *inventory)
 {
     assert(ctx);
     assert(ctx->package_promise_context);
-    
+
     RlistDestroy(ctx->package_promise_context->control_package_inventory);
     ctx->package_promise_context->control_package_inventory =
             RlistCopy(inventory);
@@ -868,8 +893,7 @@ EvalContext *EvalContextNew(void)
 #endif
 
     ctx->promise_lock_cache = StringSetNew();
-    ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
-                                    NULL, NULL, NULL);
+    ctx->function_cache = FuncCacheMapNew();
 
     EvalContextSetupMissionPortalLogHook(ctx);
 
@@ -906,18 +930,8 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->dependency_handles);
         StringSetDestroy(ctx->promise_lock_cache);
 
-        {
-            RBTreeIterator *it = RBTreeIteratorNew(ctx->function_cache);
-            Rval *rval = NULL;
-            while (RBTreeIteratorNext(it, NULL, (void **)&rval))
-            {
-                RvalDestroy(*rval);
-                free(rval);
-            }
-            RBTreeIteratorDestroy(it);
-            RBTreeDestroy(ctx->function_cache);
-        }
-        
+        FuncCacheMapDestroy(ctx->function_cache);
+
         FreePackagePromiseContext(ctx->package_promise_context);
 
         free(ctx);
@@ -982,19 +996,7 @@ void EvalContextClear(EvalContext *ctx)
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
     StringSetClear(ctx->promise_lock_cache);
     SeqClear(ctx->stack);
-
-    {
-        RBTreeIterator *it = RBTreeIteratorNew(ctx->function_cache);
-        Rval *rval = NULL;
-        while (RBTreeIteratorNext(it, NULL, (void **)&rval))
-        {
-            RvalDestroy(*rval);
-            free(rval);
-        }
-        RBTreeIteratorDestroy(it);
-        RBTreeClear(ctx->function_cache);
-    }
-
+    FuncCacheMapClear(ctx->function_cache);
 }
 
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args)
@@ -2072,15 +2074,16 @@ void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key)
     StringSetRemove(ctx->promise_lock_cache, key);
 }
 
-bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out)
+bool EvalContextFunctionCacheGet(const EvalContext *ctx,
+                                 const FnCall *fp ARG_UNUSED,
+                                 const Rlist *args, Rval *rval_out)
 {
     if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
     {
         return false;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
-    Rval *rval = RBTreeGet(ctx->function_cache, (void*)hash);
+    Rval *rval = FuncCacheMapGet(ctx->function_cache, args);
     if (rval)
     {
         if (rval_out)
@@ -2095,17 +2098,18 @@ bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const
     }
 }
 
-void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval)
+void EvalContextFunctionCachePut(EvalContext *ctx,
+                                 const FnCall *fp ARG_UNUSED,
+                                 const Rlist *args, const Rval *rval)
 {
     if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
     {
         return;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
     Rval *rval_copy = xmalloc(sizeof(Rval));
     *rval_copy = RvalCopy(*rval);
-    RBTreePut(ctx->function_cache, (void*)hash, rval_copy);
+    FuncCacheMapInsert(ctx->function_cache, RlistCopy(args), rval_copy);
 }
 
 /* cfPS and associated machinery */

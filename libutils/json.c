@@ -77,7 +77,7 @@ const char *JsonPrimitiveTypeToString(JsonPrimitiveType type)
     case JSON_PRIMITIVE_TYPE_BOOL:
         return "boolean";
     default:
-        assert(false && "Never reach");
+        UnexpectedError("Unknown JSON primitive type: %d", type);
         return "(null)";
     }
 }
@@ -180,7 +180,8 @@ static JsonElement *JsonContainerCopy(const JsonElement *container)
         return JsonObjectCopy(container);
     }
 
-    assert(false);
+    UnexpectedError("Unknown JSON container type: %d",
+                    container->container.type);
     return NULL;
 }
 
@@ -205,7 +206,8 @@ static JsonElement *JsonPrimitiveCopy(const JsonElement *primitive)
         return JsonStringCreate(JsonPrimitiveGetAsString(primitive));
     }
 
-    assert(false);
+    UnexpectedError("Unknown JSON primitive type: %d",
+                    primitive->primitive.type);
     return NULL;
 }
 
@@ -219,7 +221,8 @@ JsonElement *JsonCopy(const JsonElement *element)
         return JsonPrimitiveCopy(element);
     }
 
-    assert(false);
+    UnexpectedError("Unknown JSON element type: %d",
+                    element->type);
     return NULL;
 }
 
@@ -311,7 +314,8 @@ static int JsonContainerCompare(const JsonElement *a, const JsonElement *b)
         return JsonObjectCompare(a, b);
     }
 
-    assert(false);
+    UnexpectedError("Unknown JSON container type: %d",
+                    a->container.type);
     return -1;
 }
 
@@ -330,7 +334,8 @@ int JsonCompare(const JsonElement *a, const JsonElement *b)
         return strcmp(a->primitive.value, b->primitive.value);
     }
 
-    assert(false);
+    UnexpectedError("Unknown JSON element type: %d",
+                    a->type);
     return -1;
 }
 
@@ -357,6 +362,10 @@ void JsonDestroy(JsonElement *element)
             }
             element->primitive.value = NULL;
             break;
+
+        default:
+            UnexpectedError("Unknown JSON element type: %d",
+                            element->type);
         }
 
         if (element->propertyName)
@@ -443,12 +452,13 @@ JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
     case JSON_CONTAINER_TYPE_ARRAY:
         switch (JsonGetContainerType(b))
         {
-        case JSON_CONTAINER_TYPE_ARRAY:
-            return JsonArrayMergeArray(a, b);
         case JSON_CONTAINER_TYPE_OBJECT:
             return JsonObjectMergeArray(b, a);
+        case JSON_CONTAINER_TYPE_ARRAY:
+            return JsonArrayMergeArray(a, b);
         }
-        assert(false && "never reach");
+        UnexpectedError("Unknown JSON container type: %d",
+                        JsonGetContainerType(b));
         break;
 
     case JSON_CONTAINER_TYPE_OBJECT:
@@ -459,11 +469,13 @@ JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
         case JSON_CONTAINER_TYPE_ARRAY:
             return JsonObjectMergeArray(a, b);
         }
-        assert(false && "never reach");
+        UnexpectedError("Unknown JSON container type: %d",
+                        JsonGetContainerType(b));
         break;
     }
 
-    assert(false && "never reach");
+    UnexpectedError("Unknown JSON container type: %d",
+                    JsonGetContainerType(a));
     return NULL;
 }
 
@@ -479,9 +491,13 @@ size_t JsonLength(const JsonElement *element)
 
     case JSON_ELEMENT_TYPE_PRIMITIVE:
         return strlen(element->primitive.value);
+
+    default:
+        UnexpectedError("Unknown JSON element type: %d",
+                        element->type);
     }
 
-    return -1;                  // appease gcc
+    return (size_t) -1;                  // appease gcc
 }
 
 JsonIterator JsonIteratorInit(const JsonElement *container)
@@ -748,12 +764,12 @@ JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices
                     }
                 }
             }
+        default:
+            UnexpectedError("Unknown JSON container type: %d",
+                            JsonGetContainerType(element));
             return NULL;
         }
     }
-
-    assert(false);
-    return NULL;
 }
 
 // *******************************************************************************************
@@ -1300,7 +1316,7 @@ static void JsonPrimitiveWrite(Writer *writer, const JsonElement *primitiveEleme
     default:
         PrintIndent(writer, indent_level);
         WriterWrite(writer, primitiveElement->primitive.value);
-        break;        
+        break;
     }
 }
 
@@ -1330,6 +1346,10 @@ static void JsonArrayWrite(Writer *writer, const JsonElement *array, size_t inde
             PrintIndent(writer, indent_level + 1);
             JsonContainerWrite(writer, child, indent_level + 1);
             break;
+
+        default:
+            UnexpectedError("Unknown JSON element type: %d",
+                            child->type);
         }
 
         if (i < array->container.children->length - 1)
@@ -1386,6 +1406,10 @@ void JsonObjectWrite(Writer *writer, const JsonElement *object, size_t indent_le
         case JSON_ELEMENT_TYPE_CONTAINER:
             JsonContainerWrite(writer, child, indent_level + 1);
             break;
+
+        default:
+            UnexpectedError("Unknown JSON element type: %d",
+                            child->type);
         }
 
         if (i < object->container.children->length - 1)
@@ -1428,6 +1452,10 @@ void JsonWrite(Writer *writer, const JsonElement *element, size_t indent_level)
     case JSON_ELEMENT_TYPE_PRIMITIVE:
         JsonPrimitiveWrite(writer, element, indent_level);
         break;
+
+    default:
+        UnexpectedError("Unknown JSON element type: %d",
+                        element->type);
     }
 }
 
@@ -1456,6 +1484,10 @@ static void JsonArrayWriteCompact(Writer *writer, const JsonElement *array)
         case JSON_ELEMENT_TYPE_CONTAINER:
             JsonContainerWriteCompact(writer, child);
             break;
+
+        default:
+            UnexpectedError("Unknown JSON element type: %d",
+                            child->type);
         }
 
         if (i < array->container.children->length - 1)
@@ -1498,6 +1530,10 @@ void JsonObjectWriteCompact(Writer *writer, const JsonElement *object)
         case JSON_ELEMENT_TYPE_CONTAINER:
             JsonContainerWriteCompact(writer, child);
             break;
+
+        default:
+            UnexpectedError("Unknown JSON element type: %d",
+                            child->type);
         }
 
         if (i < object->container.children->length - 1)
@@ -1538,6 +1574,10 @@ void JsonWriteCompact(Writer *w, const JsonElement *element)
     case JSON_ELEMENT_TYPE_PRIMITIVE:
         JsonPrimitiveWrite(w, element, 0);
         break;
+
+    default:
+        UnexpectedError("Unknown JSON element type: %d",
+                        element->type);
     }
 }
 

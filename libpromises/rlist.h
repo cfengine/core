@@ -61,6 +61,7 @@ unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max);
 void RlistDestroy(Rlist *list);
 void RlistDestroyEntry(Rlist **liststart, Rlist *entry);
 char *RlistScalarValue(const Rlist *rlist);
+char *RlistScalarValueSafe(const Rlist *rlist);
 FnCall *RlistFnCallValue(const Rlist *rlist);
 Rlist *RlistRlistValue(const Rlist *rlist);
 Rlist *RlistParseShown(const char *string);
@@ -80,6 +81,7 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
 
 Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
+Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool all_types);
 
 Rlist *RlistFromSplitString(const char *string, char sep);
 Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_entries, bool allow_blanks);

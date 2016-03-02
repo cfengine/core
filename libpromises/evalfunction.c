@@ -87,7 +87,7 @@ static bool CURL_INITIALIZED = false; /* GLOBAL */
 static JsonElement *CURL_CACHE = NULL;
 #endif
 
-static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const char *name_str, bool do_regex, bool invert, long max);
+static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const Rlist* rp, bool do_regex, bool invert, long max);
 
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
 static void CloseStringHole(char *s, int start, int end);
@@ -238,7 +238,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
             break;
 
         case RVAL_TYPE_CONTAINER:
-            convert = value;
+            convert = (JsonElement*) value;
             *allocated = false;
             break;
 
@@ -387,9 +387,19 @@ static JsonElement *LookupVarRefToJson(void *ctx, const char **data)
     return vardata;
 }
 
-static JsonElement* VarNameOrInlineToJson(EvalContext *ctx, const FnCall *fp, const char *data, bool allow_scalars, bool *allocated)
+static JsonElement* VarNameOrInlineToJson(EvalContext *ctx, const FnCall *fp, const Rlist* rp, bool allow_scalars, bool *allocated)
 {
     JsonElement *inline_data = NULL;
+
+    assert(rp);
+
+    if (rp->val.type == RVAL_TYPE_CONTAINER)
+    {
+        return (JsonElement*) rp->val.item;
+    }
+
+    const char* data = RlistScalarValue(rp);
+
     JsonParseError res = JsonParseWithLookup(ctx, &LookupVarRefToJson, &data, &inline_data);
 
     if (res == JSON_PARSE_OK)
@@ -1786,7 +1796,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
 
     char *url = RlistScalarValue(finalargs);
     bool allocated = false;
-    JsonElement *options = VarNameOrInlineToJson(ctx, fp, RlistScalarValue(finalargs->next), false, &allocated);
+    JsonElement *options = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
     if (NULL == options)
     {
@@ -2202,7 +2212,7 @@ static FnCallResult FnCallGetIndicesClassic(EvalContext *ctx, ARG_UNUSED const P
 
 static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
     VarRef *ref = ResolveAndQualifyVarName(fp, name_str);
     DataType type = CF_DATA_TYPE_NONE;
@@ -2218,7 +2228,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, true, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, true, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -2296,11 +2306,9 @@ void CollectContainerValues(EvalContext *ctx, Rlist **values, const JsonElement 
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char *name_str = RlistScalarValue(finalargs);
-
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, true, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, true, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -2328,7 +2336,7 @@ static FnCallResult FnCallGrep(EvalContext *ctx, ARG_UNUSED const Policy *policy
     return FilterInternal(ctx,
                           fp,
                           RlistScalarValue(finalargs), // regex
-                          RlistScalarValue(finalargs->next), // list identifier
+                          finalargs->next, // list identifier
                           1, // regex match = TRUE
                           0, // invert matches = FALSE
                           LONG_MAX); // max results = max int
@@ -2360,11 +2368,11 @@ static FnCallResult JoinContainer(const JsonElement *container, const char *deli
 static FnCallResult FnCallJoin(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     const char *delimiter = RlistScalarValue(finalargs);
-    const char *name_str = RlistScalarValue(finalargs->next);
+    const char *name_str = RlistScalarValueSafe(finalargs->next);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -2602,24 +2610,27 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     const char *arg_map;
     const char *varname;
 
+    Rlist *varpointer = NULL;
     if (mapdatamode)
     {
         conversion = RlistScalarValue(finalargs);
         arg_map = RlistScalarValue(finalargs->next);
-        varname = RlistScalarValue(finalargs->next->next);
+        varpointer = finalargs->next->next;
     }
     else
     {
         conversion = "none";
         arg_map = RlistScalarValue(finalargs);
-        varname = RlistScalarValue(finalargs->next);
+        varpointer = finalargs->next;
     }
+
+    varname = RlistScalarValueSafe(varpointer);
 
     bool jsonmode = (0 == strcmp(conversion, "json"));
     bool canonifymode = (0 == strcmp(conversion, "canonify"));
 
     bool allocated = false;
-    JsonElement *container = VarNameOrInlineToJson(ctx, fp, varname, false, &allocated);
+    JsonElement *container = VarNameOrInlineToJson(ctx, fp, varpointer, false, &allocated);
 
     if (NULL == container)
     {
@@ -2799,11 +2810,11 @@ static FnCallResult FnCallMapList(EvalContext *ctx,
                                   const Rlist *finalargs)
 {
     const char *arg_map = RlistScalarValue(finalargs);
-    const char *name_str = RlistScalarValue(finalargs->next);
+    const char *name_str = RlistScalarValueSafe(finalargs->next);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -2917,9 +2928,10 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
 
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
-        if (args->val.type != RVAL_TYPE_SCALAR)
+        if (args->val.type != RVAL_TYPE_SCALAR &&
+            args->val.type != RVAL_TYPE_CONTAINER)
         {
-            Log(LOG_LEVEL_ERR, "%s: argument '%s' is not a variable reference", fp->name, RlistScalarValue(arg));
+            Log(LOG_LEVEL_ERR, "%s: argument '%s' is not a variable reference", fp->name, RlistScalarValueSafe(arg));
             return FnFailure();
         }
     }
@@ -2928,11 +2940,9 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
 
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
-        const char *name_str = RlistScalarValue(arg);
-
         // try to load directly
         bool allocated = false;
-        JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+        JsonElement *json = VarNameOrInlineToJson(ctx, fp, arg, false, &allocated);
 
         // we failed to produce a valid JsonElement, so give up
         if (NULL == json)
@@ -3265,11 +3275,11 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, ARG_UNUSED const Policy *pol
 {
     const char *seed_str = RlistScalarValue(finalargs->next);
 
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -3747,7 +3757,7 @@ static FnCallResult FnCallFilter(EvalContext *ctx, ARG_UNUSED const Policy *poli
     return FilterInternal(ctx,
                           fp,
                           RlistScalarValue(finalargs), // regex or string
-                          RlistScalarValue(finalargs->next), // list identifier
+                          finalargs->next, // list identifier
                           BooleanFromString(RlistScalarValue(finalargs->next->next)), // match as regex or exactly
                           BooleanFromString(RlistScalarValue(finalargs->next->next->next)), // invert matches
                           IntFromString(RlistScalarValue(finalargs->next->next->next->next))); // max results
@@ -3800,7 +3810,7 @@ static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const
 static FnCallResult FilterInternal(EvalContext *ctx,
                                    const FnCall *fp,
                                    const char *regex,
-                                   const char *name_str,
+                                   const Rlist* rp,
                                    bool do_regex,
                                    bool invert,
                                    long max)
@@ -3816,7 +3826,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     }
 
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, rp, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -3827,7 +3837,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     else if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
     {
         Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' was not a data container or list",
-            fp->name, name_str);
+            fp->name, RlistScalarValueSafe(rp));
         JsonDestroyMaybe(json, allocated);
         pcre_free(rx);
         return FnFailure();
@@ -3922,11 +3932,11 @@ static FnCallResult FilterInternal(EvalContext *ctx,
 
 static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -3996,9 +4006,9 @@ static FnCallResult FnCallSetop(EvalContext *ctx,
     bool difference_mode = (0 == strcmp(fp->name, "difference"));
     bool unique_mode = (0 == strcmp(fp->name, "unique"));
 
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -4017,8 +4027,8 @@ static FnCallResult FnCallSetop(EvalContext *ctx,
     bool allocated_b = false;
     if (!unique_mode)
     {
-        const char *name_str_b = RlistScalarValue(finalargs->next);
-        json_b = VarNameOrInlineToJson(ctx, fp, name_str_b, false, &allocated_b);
+        const char *name_str_b = RlistScalarValueSafe(finalargs->next);
+        json_b = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated_b);
 
         // we failed to produce a valid JsonElement, so give up
         if (NULL == json_b)
@@ -4083,11 +4093,11 @@ static FnCallResult FnCallLength(EvalContext *ctx,
                                  ARG_UNUSED const Policy *policy,
                                  const FnCall *fp, const Rlist *finalargs)
 {
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -4111,7 +4121,6 @@ static FnCallResult FnCallFold(EvalContext *ctx,
                                ARG_UNUSED const Policy *policy,
                                const FnCall *fp, const Rlist *finalargs)
 {
-    const char *name = RlistScalarValue(finalargs);
     const char *sort_type = finalargs->next ? RlistScalarValue(finalargs->next) : NULL;
 
     size_t count = 0;
@@ -4129,7 +4138,7 @@ static FnCallResult FnCallFold(EvalContext *ctx,
     bool product_mode = strcmp(fp->name, "product") == 0;
 
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     if (!json)
     {
@@ -4377,7 +4386,7 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, ARG_UNUSED const Polic
     return FilterInternal(ctx,
                           fp,
                           RlistScalarValue(finalargs), // regex or string
-                          RlistScalarValue(finalargs->next), // list identifier
+                          finalargs->next, // list identifier
                           1,
                           0,
                           LONG_MAX);
@@ -4387,11 +4396,11 @@ static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy
 {
     const char *sort_type = RlistScalarValue(finalargs->next); // list identifier
 
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -5414,11 +5423,11 @@ static FnCallResult FnCallRRange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 static FnCallResult FnCallReverse(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -6080,11 +6089,11 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
 
 static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char *name_str = RlistScalarValue(finalargs);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
@@ -6167,9 +6176,8 @@ static FnCallResult FnCallDataExpand(EvalContext *ctx,
                                      ARG_UNUSED const FnCall *fp,
                                      const Rlist *args)
 {
-    const char *name_str = RlistScalarValue(args);
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, args, false, &allocated);
 
     if (NULL == json)
     {
@@ -6360,10 +6368,8 @@ static FnCallResult FnCallStringMustache(EvalContext *ctx, ARG_UNUSED const Poli
 
     if (finalargs->next) // we have a variable name...
     {
-        const char *name_str = RlistScalarValue(finalargs->next);
-
         // try to load directly
-        json = VarNameOrInlineToJson(ctx, fp, name_str, false, &allocated);
+        json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
         // we failed to produce a valid JsonElement, so give up
         if (NULL == json)
@@ -8333,7 +8339,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("datastate", CF_DATA_TYPE_CONTAINER, DATASTATE_ARGS, &FnCallDatastate, "Construct a container of the variable and class state",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("difference", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are not in list arg2",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("dirname", CF_DATA_TYPE_STRING, DIRNAME_ARGS, &FnCallDirname, "Return the parent directory name for given path",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("diskfree", CF_DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree, "Return the free space (in KB) available on the directory's current partition (0 if not found)",
@@ -8343,7 +8349,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("eval", CF_DATA_TYPE_STRING, EVAL_ARGS, &FnCallEval, "Evaluate a mathematical expression",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("every", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the named list matches the given regular expression",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
@@ -8359,7 +8365,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("filestat", CF_DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filter", CF_DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter, "Similarly to grep(), filter the list arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5.",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("findfiles", CF_DATA_TYPE_STRING_LIST, FINDFILES_ARGS, &FnCallFindfiles, "Find files matching a shell glob pattern",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("findprocesses", CF_DATA_TYPE_CONTAINER, PROCESSEXISTS_ARGS, &FnCallProcessExists, "Returns data container of processes matching the regular expression",
@@ -8375,17 +8381,17 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("getgid", CF_DATA_TYPE_INT, GETGID_ARGS, &FnCallGetGid, "Return the integer group id of the named group on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getindices", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetIndices, "Get a list of keys to the array whose id is the argument and assign to variable",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getuid", CF_DATA_TYPE_INT, GETUID_ARGS, &FnCallGetUid, "Return the integer user id of the named user on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getusers", CF_DATA_TYPE_STRING_LIST, GETUSERS_ARGS, &FnCallGetUsers, "Get a list of all system users defined, minus those names defined in arg1 and uids in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a variable's meta tags into an slist",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("grep", CF_DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("groupexists", CF_DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists, "True if group or numerical id exists on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hash", CF_DATA_TYPE_STRING, HASH_ARGS, &FnCallHandlerHash, "Return the hash of arg1, type arg2 and assign to a variable",
@@ -8409,7 +8415,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("ifelse", CF_DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are also in list arg2",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", CF_DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use",
@@ -8431,7 +8437,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("isvariable", CF_DATA_TYPE_CONTEXT, ISVARIABLE_ARGS, &FnCallIsVariable, "True if the named variable is defined",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("join", CF_DATA_TYPE_STRING, JOIN_ARGS, &FnCallJoin, "Join the items of arg2 into a string, using the conjunction in arg1",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("lastnode", CF_DATA_TYPE_STRING, LASTNODE_ARGS, &FnCallLastNode, "Extract the last of a separated string, e.g. filename from a path",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("laterthan", CF_DATA_TYPE_CONTEXT, LATERTHAN_ARGS, &FnCallLaterThan, "True if the current time is later than the given date",
@@ -8445,17 +8451,17 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("lsdir", CF_DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("makerule", CF_DATA_TYPE_STRING, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
-                      FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapData, "Return a list with each element mapped from a CFEngine array or data container by a pattern based on $(this.k) and $(this.v)",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("mapdata", CF_DATA_TYPE_CONTAINER, MAPDATA_ARGS, &FnCallMapData, "Return a data container with each element parsed from a JSON string applied to every key-value pair of the given CFEngine array or data container, given as $(this.k) and $(this.v)",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maplist", CF_DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("mergedata", CF_DATA_TYPE_CONTAINER, MERGEDATA_ARGS, &FnCallMergeData, "Merge two or more data containers or lists",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING|FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("none", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if no element in the named list matches the given regular expression",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("not", CF_DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("now", CF_DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation",
@@ -8541,31 +8547,31 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("rrange", CF_DATA_TYPE_REAL_RANGE, RRANGE_ARGS, &FnCallRRange, "Define a range of real numbers for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("reverse", CF_DATA_TYPE_STRING_LIST, REVERSE_ARGS, &FnCallReverse, "Reverse a string list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("selectservers", CF_DATA_TYPE_INT, SELECTSERVERS_ARGS, &FnCallSelectServers, "Select tcp servers which respond correctly to a query and return their number, set array of names",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("shuffle", CF_DATA_TYPE_STRING_LIST, SHUFFLE_ARGS, &FnCallShuffle, "Shuffle a string list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("some", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if an element in the named list matches the given regular expression",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("sort", CF_DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort, "Sort a string list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splayclass", CF_DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass, "True if the first argument's time-slot has arrived, according to a policy in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splitstring", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_DEPRECATED),
     FnCallTypeNew("storejson", CF_DATA_TYPE_STRING, STOREJSON_ARGS, &FnCallStoreJson, "Convert a data container to a JSON string",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strcmp", CF_DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strftime", CF_DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("sublist", CF_DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list arg1.",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("translatepath", CF_DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath, "Translate path separators from Unix style to the host's native",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("unique", CF_DATA_TYPE_STRING_LIST, UNIQUE_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("usemodule", CF_DATA_TYPE_CONTEXT, USEMODULE_ARGS, &FnCallUseModule, "Execute cfengine module script and set class if successful",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("userexists", CF_DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host",
@@ -8575,7 +8581,7 @@ const FnCallType CF_FNCALL_TYPES[] =
 
     // Functions section following new naming convention
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING|FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regex_replace", CF_DATA_TYPE_STRING, REGEX_REPLACE_ARGS, &FnCallRegReplace, "Replace occurrences of arg1 in arg2 with arg3, allowing backreferences.  Perl-style options accepted in arg4.",
@@ -8597,25 +8603,25 @@ const FnCallType CF_FNCALL_TYPES[] =
 
     // List folding functions
     FnCallTypeNew("length", CF_DATA_TYPE_INT, STAT_FOLD_ARGS, &FnCallLength, "Return the length of a list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("max", CF_DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the maximum of a list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("mean", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the mean (average) of a list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("min", CF_DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the minimum of a list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("product", CF_DATA_TYPE_REAL, PRODUCT_ARGS, &FnCallFold, "Return the product of a list of reals",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("sum", CF_DATA_TYPE_REAL, SUM_ARGS, &FnCallFold, "Return the sum of a list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variance", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Data container functions
     FnCallTypeNew("data_regextract", CF_DATA_TYPE_CONTAINER, DATA_REGEXTRACT_ARGS, &FnCallRegExtract, "Matches the regular expression in arg 1 against the string in arg2 and returns a data container holding the backreferences by name",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("data_expand", CF_DATA_TYPE_CONTAINER, DATA_EXPAND_ARGS, &FnCallDataExpand, "Expands any CFEngine variables in a data container, keys or values",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // File parsing functions that output a data container
     FnCallTypeNew("data_readstringarray", CF_DATA_TYPE_CONTAINER, DATA_READSTRINGARRAY_ARGS, &FnCallDataRead, "Read an array of strings from a file into a data container map, using the first element as a key",

@@ -55,13 +55,13 @@ bundle agent check
       "ok4" expression => makerule("$(G.testfile).nosuchfile", "$(G.etc_passwd)");
 
       # A new file does not need to be rebuilt from an older file (fails)
-      "ok5" expression => makerule("$(G.testfile)", "@(test.lold)");
+      "ok5" expression => makerule("$(G.testfile)", "test.lold");
 
       # An old file does need to be rebuilt from an newer file in a list
-      "ok6" expression => makerule("$(G.etc_passwd)", "@(test.lnew)");
+      "ok6" expression => makerule("$(G.etc_passwd)", "test.lnew");
 
       # An old file does not need to be rebuilt from sources with a missing file (fails)
-      "ok7" expression => makerule("$(G.etc_passwd)", "@(test.lnon)");
+      "ok7" expression => makerule("$(G.etc_passwd)", "test.lnon");
 
       "ok" and => { "!ok1", "ok2", "!ok3", "ok4", "!ok5", "ok6", "!ok7" };
 

@@ -59,6 +59,9 @@ char *StringFormat(const char *fmt, ...)
 
 unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
 {
+    CF_ASSERT(ISPOW2(max),
+              "StringHash() called with non power-of-2 max: %u", max);
+
     unsigned const char *p = str;
     unsigned int h = seed;
     size_t len = strlen(str);

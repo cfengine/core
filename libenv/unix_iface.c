@@ -54,7 +54,7 @@
 #define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
-#ifndef __MINGW32__
+#ifndef _WIN32
 
 # if defined(HAVE_STRUCT_SOCKADDR_SA_LEN) && !defined(__NetBSD__)
 #  ifdef _SIZEOF_ADDR_IFREQ
@@ -1203,4 +1203,10 @@ void GetNetworkingInfo(EvalContext *ctx)
     BufferDestroy(pbuf);
 }
 
-#endif /* !__MINGW32__ */
+#else // _WIN32
+
+void GetNetworkingInfo(EvalContext *ctx)
+{
+}
+
+#endif // _WIN32

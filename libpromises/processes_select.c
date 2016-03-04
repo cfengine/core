@@ -1087,7 +1087,6 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
     int start[CF_PROCCOLS];
     int end[CF_PROCCOLS];
 
-    int index = 0;
     const char *pscmd = "/usr/bin/ps -Aleo zone,user,pid";
 
     FILE *psf = cf_popen(pscmd, "r", false);

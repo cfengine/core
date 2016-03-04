@@ -40,6 +40,13 @@ bundle agent test
       "concat_sort_mapdata_mergedata_inline_json" string => concat(sort(mapdata('none', $(mapdata_spec), '[1,2,3]'), lex));
       "concat_sort_mapdata_mergedata_slist" string => concat(sort(mapdata('none', $(mapdata_spec), mergedata(base_list)), lex));
       "concat_sort_mapdata_mergedata_data" string => concat(sort(mapdata('none', $(mapdata_spec), mergedata(base_data)), lex));
+
+      "nth_sort_mapdata_mergedata_inline_json" string => nth(sort(mapdata('none', $(mapdata_spec), '[1,2,3]'), lex), 0);
+      "nth_mapdata_mergedata_slist" string => nth(mapdata('none', $(mapdata_spec), mergedata(base_list)), 1);
+      "nth_inline_json" string => nth('{ "x": "88888888" }', "x");
+      "nth_missing_inline_json" string => nth('{ "x": "88888888" }', "y");
+      "nth_data" string => nth(base_data, "x");
+      "nth_list" string => nth(base_list, 3);
 }
 
 #######################################################

@@ -4304,79 +4304,65 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
 
 static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char* const varname = RlistScalarValue(finalargs);
-
     const char* const key = RlistScalarValue(finalargs->next);
 
-    VarRef *ref = VarRefParse(varname);
-    DataType type = CF_DATA_TYPE_NONE;
-    const void *value = EvalContextVariableGet(ctx, ref, &type);
-    VarRefDestroy(ref);
+    const char *name_str = RlistScalarValueSafe(finalargs);
 
-    if (type == CF_DATA_TYPE_CONTAINER)
+    // try to load directly
+    bool allocated = false;
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
+
+    // we failed to produce a valid JsonElement, so give up
+    if (NULL == json)
     {
-        Rlist *return_list = NULL;
-
-        const char *jstring = NULL;
-        if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
-        {
-            JsonElement* jholder = (JsonElement*) value;
-            JsonContainerType ct = JsonGetContainerType(value);
-            JsonElement* jelement = NULL;
-
-            if (JSON_CONTAINER_TYPE_OBJECT == ct)
-            {
-                jelement = JsonObjectGet(jholder, key);
-            }
-            else if (JSON_CONTAINER_TYPE_ARRAY == ct)
-            {
-                long index = IntFromString(key);
-                if (index >= 0 && index < JsonLength(value))
-                {
-                    jelement = JsonAt(jholder, index);
-                }
-            }
-            else
-            {
-                ProgrammingError("JSON Container is neither array nor object but type %d", (int) ct);
-            }
-
-            if (NULL != jelement && JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
-            {
-                jstring = JsonPrimitiveGetAsString(jelement);
-            }
-        }
-
-        if (NULL != jstring)
-        {
-            Log(LOG_LEVEL_DEBUG, "%s: from data container %s, got JSON data '%s'", fp->name, varname, jstring);
-            RlistAppendScalar(&return_list, jstring);
-        }
-
-        if (!return_list)
-        {
-            return FnFailure();
-        }
-
-        FnCallResult result = FnReturn(RlistScalarValue(return_list));
-        RlistDestroy(return_list);
-        return result;
+        return FnFailure();
     }
-    else
+    else if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
     {
-        const Rlist *input_list = GetListReferenceArgument(ctx, fp, varname, NULL);
+        Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' was not a data container or list",
+            fp->name, name_str);
+        JsonDestroyMaybe(json, allocated);
+        return FnFailure();
+    }
 
-        const Rlist *return_list = NULL;
-        long index = IntFromString(key);
-        for (return_list = input_list; return_list && index--; return_list = return_list->next);
 
-        if (!return_list)
+    char *jstring = NULL;
+    if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        JsonContainerType ct = JsonGetContainerType(json);
+        JsonElement* jelement = NULL;
+
+        if (JSON_CONTAINER_TYPE_OBJECT == ct)
         {
-            return FnFailure();
+            jelement = JsonObjectGet(json, key);
+        }
+        else if (JSON_CONTAINER_TYPE_ARRAY == ct)
+        {
+            long index = IntFromString(key);
+            if (index >= 0 && index < JsonLength(json))
+            {
+                jelement = JsonAt(json, index);
+            }
+        }
+        else
+        {
+            ProgrammingError("JSON Container is neither array nor object but type %d", (int) ct);
         }
 
-        return FnReturn(RlistScalarValue(return_list));
+        if (NULL != jelement && JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            jstring = xstrdup(JsonPrimitiveGetAsString(jelement));
+        }
     }
+
+    JsonDestroyMaybe(json, allocated);
+
+    if (NULL == jstring)
+    {
+        return FnFailure();
+    }
+
+    return FnReturn(jstring);
 }
 
 /*********************************************************************/
@@ -6613,39 +6599,8 @@ static FnCallResult FnCallDiskFree(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     const char *target = RlistScalarValue(finalargs);
-    const char *listvar = RlistScalarValue(finalargs->next);
-    Rlist *list = NULL;
 
-    // TODO: replace IsVarList with GetListReferenceArgument
-    if (!IsVarList(listvar))
-    {
-        RlistPrepend(&list, listvar, RVAL_TYPE_SCALAR);
-    }
-    else
-    {
-        char naked[CF_MAXVARSIZE] = "";
-        GetNaked(naked, listvar);
-
-        VarRef *ref = VarRefParse(naked);
-
-        DataType input_list_type = CF_DATA_TYPE_NONE;
-        const Rlist *input_list = EvalContextVariableGet(ctx, ref, &input_list_type);
-        VarRefDestroy(ref);
-
-        if (!input_list)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Function 'makerule' was promised a list called '%s' but this was not found", listvar);
-            return FnFailure();
-        }
-
-       if (DataTypeToRvalType(input_list_type) != RVAL_TYPE_LIST)
-       {
-           Log(LOG_LEVEL_WARNING, "Function 'makerule' was promised a list called '%s' but this variable is not a list", listvar);
-           return FnFailure();
-       }
-
-       list = RlistCopy(input_list);
-    }
+    const char *name_str = RlistScalarValueSafe(finalargs->next);
 
     time_t target_time = 0;
     bool stale = false;
@@ -6658,33 +6613,62 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
     {
         if (!S_ISREG(statbuf.st_mode))
         {
-            Log(LOG_LEVEL_WARNING, "Function 'makerule' target-file '%s' exists and is not a plain file", target);
+            Log(LOG_LEVEL_WARNING, "Function '%s' target-file '%s' exists and is not a plain file", fp->name, target);
             // Not a probe's responsibility to fix - but have this for debugging
         }
 
         target_time = statbuf.st_mtime;
     }
 
-    // For each file in sources, check they exist and are older than target
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    // Check if the file name is explicit
+    if (lstat(name_str, &statbuf) != -1)
     {
-        if (lstat(RvalScalarValue(rp->val), &statbuf) == -1)
+        if (statbuf.st_mtime > target_time)
         {
-            Log(LOG_LEVEL_VERBOSE, "Function MAKERULE, source dependency %s was not (yet) readable",  RvalScalarValue(rp->val));
-            RlistDestroy(list);
-            return FnReturnContext(false);
-        }
-        else
-        {
-            if (statbuf.st_mtime > target_time)
-            {
-                stale = true;
-            }
+            stale = true;
         }
     }
+    else
+    {
+        // try to load directly
+        bool allocated = false;
+        JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
-    RlistDestroy(list);
+        // we failed to produce a valid JsonElement, so give up
+        if (NULL == json)
+        {
+            return FnFailure();
+        }
+        else if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' was not a data container or list",
+                fp->name, name_str);
+            JsonDestroyMaybe(json, allocated);
+            return FnFailure();
+        }
+
+        JsonIterator iter = JsonIteratorInit(json);
+        const JsonElement *e;
+        while ((e = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+        {
+            const char *value = JsonPrimitiveGetAsString(e);
+            if (lstat(value, &statbuf) == -1)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Function '%s', source dependency %s was not (yet) readable",  fp->name, value);
+                JsonDestroyMaybe(json, allocated);
+                return FnReturnContext(false);
+            }
+            else
+            {
+                if (statbuf.st_mtime > target_time)
+                {
+                    stale = true;
+                }
+            }
+        }
+
+        JsonDestroyMaybe(json, allocated);
+    }
 
     return stale ? FnReturnContext(true) : FnReturnContext(false);
 }
@@ -8032,7 +8016,7 @@ static const FnCallArg REGLIST_ARGS[] =
 static const FnCallArg MAKERULE_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Target filename"},
-    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Source filename or CFEngine list identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Source filename or CFEngine variable identifier or inline JSON"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -8155,7 +8139,7 @@ static const FnCallArg UNIQUE_ARGS[] =
 
 static const FnCallArg NTH_ARGS[] =
 {
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine list or data container identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Offset or key of element to return"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
@@ -8451,7 +8435,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("lsdir", CF_DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("makerule", CF_DATA_TYPE_STRING, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapData, "Return a list with each element mapped from a CFEngine array or data container by a pattern based on $(this.k) and $(this.v)",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("mapdata", CF_DATA_TYPE_CONTAINER, MAPDATA_ARGS, &FnCallMapData, "Return a data container with each element parsed from a JSON string applied to every key-value pair of the given CFEngine array or data container, given as $(this.k) and $(this.v)",
@@ -8467,7 +8451,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("now", CF_DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("nth", CF_DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list or data container arg1",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("on", CF_DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("or", CF_DATA_TYPE_STRING, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true",

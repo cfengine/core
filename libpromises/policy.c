@@ -1891,15 +1891,13 @@ static void IndentPrint(Writer *writer, int indent_level)
 static void AttributeToString(Writer *writer, Constraint *attribute, bool symbolic_reference)
 {
     WriterWriteF(writer, "%s => ", attribute->lval);
-    if (attribute->rval.type == RVAL_TYPE_SCALAR && !symbolic_reference)
+    if(symbolic_reference)
     {
-        WriterWriteChar(writer, '"');
         RvalWrite(writer, attribute->rval);
-        WriterWriteChar(writer, '"');
     }
     else
     {
-        RvalWrite(writer, attribute->rval);
+        RvalWriteQuoted(writer, attribute->rval);
     }
 }
 
@@ -1948,9 +1946,10 @@ void BodyToString(Writer *writer, Body *body)
             }
         }
 
-        WriterWriteChar(writer, '\n');
         IndentPrint(writer, 1);
         AttributeToString(writer, cp, false);
+        WriterWriteChar(writer, ';');
+        WriterWriteChar(writer, '\n');
     }
 
     WriterWrite(writer, "\n}\n");
@@ -1969,24 +1968,20 @@ void BundleToString(Writer *writer, Bundle *bundle)
 
         WriterWriteF(writer, "\n%s:\n", promise_type->name);
 
+        char *current_class = NULL;
         for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
         {
             Promise *pp = SeqAt(promise_type->promises, ppi);
-            char *current_class = NULL;
 
             if (current_class == NULL || strcmp(pp->classes, current_class) != 0)
             {
                 current_class = pp->classes;
-
-                if (strcmp(current_class, "any") != 0)
-                {
-                    IndentPrint(writer, 1);
-                    WriterWriteF(writer, "%s::", current_class);
-                }
+                IndentPrint(writer, 1);
+                WriterWriteF(writer, "%s::\n", current_class);
             }
 
             IndentPrint(writer, 2);
-            WriterWriteF(writer, "\"%s\"", pp->promiser);
+            ScalarWrite(writer, pp->promiser, true);
 
             /* FIX: add support
              *
@@ -2000,10 +1995,15 @@ void BundleToString(Writer *writer, Bundle *bundle)
             {
                 Constraint *cp = SeqAt(pp->conlist, k);
 
-                WriterWriteChar(writer, '\n');
                 IndentPrint(writer, 4);
                 AttributeToString(writer, cp, cp->references_body);
+                if(k < SeqLength(pp->conlist)-1) {
+                    WriterWriteChar(writer, ',');
+                    WriterWriteChar(writer, '\n');
+                }
             }
+            WriterWriteChar(writer, ';');
+            WriterWriteChar(writer, '\n');
         }
 
         if (i == (SeqLength(bundle->promise_types) - 1))

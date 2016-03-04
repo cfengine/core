@@ -980,7 +980,15 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
         }
         else if (start[col] == -1)
         {
-            start[col] = offset;
+            if (col == 0)
+            {
+                // The first column always extends all the way to the left.
+                start[col] = 0;
+            }
+            else
+            {
+                start[col] = offset;
+            }
             sscanf(sp, "%15s", title);
             Log(LOG_LEVEL_DEBUG, "Start of '%s' is %d", title, offset);
             names[col] = xstrdup(title);

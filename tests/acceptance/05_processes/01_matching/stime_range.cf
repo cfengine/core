@@ -129,21 +129,22 @@ bundle agent test
       "pid" ilist => { @(init.pid) };
 
   processes:
-      "^\s*\S+\s+\b$(pid)\b"
-        process_select => is_newer_than("$(init.days[$(pid)])"),
+      ""
+        process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
         process_count => any_procs("early_$(pid)"),
         ifvarclass => "early_$(pid)";
 
-      "^\s*\S+\s+\b$(pid)\b"
-        process_select => is_newer_than("$(init.days[$(pid)])"),
+      ""
+        process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
         process_count => any_procs("late_$(pid)"),
         ifvarclass => "late_$(pid)";
 }
 
-body process_select is_newer_than(days)
+body process_select pid_is_newer_than(pid, days)
 {
+      pid => irange($(pid), $(pid));
       stime_range => irange(ago(0, 0, $(days), 0, 0, 0), now());
-      process_result => "stime";
+      process_result => "pid.stime";
 }
 
 body process_count any_procs(prefix)

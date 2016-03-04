@@ -358,6 +358,144 @@ static void test_split_line(void)
     }
 }
 
+typedef struct
+{
+    FILE *fp;
+    const char **lines;
+} LWData;
+
+static void *ListWriter(void *arg)
+{
+    LWData *data = (LWData *)arg;
+    for (int i = 0; data->lines[i]; i++)
+    {
+        fprintf(data->fp, "%s\n", data->lines[i]);
+    }
+    fclose(data->fp);
+
+    return NULL;
+}
+
+static void test_platform_extra_table(void)
+{
+#ifndef __sun
+    return;
+
+#else // __sun
+    static const char *lines[] = {
+        "    USER   PID %CPU %MEM   SZ  RSS TT      S    STIME        TIME COMMAND",
+        " johndoe  8263  0.0  0.2 19890 116241 ?       S   Jan_16    08:41:40 /usr/java/bin/java -server -Xmx128m -XX:+UseParallelGC -XX:ParallelGCThreads=4",
+        "noaccess  8264  0.0  0.2 19890 116242 ?       S   Jan_16    08:41:40 /usr/java/bin/java -server -Xmx128m -XX:+UseParallelGC -XX:ParallelGCThreads=4",
+        "noaccess  8265  0.0  0.2 19890 116243 ?       S   Jan_16    08:41:40 /usr/java/bin/java -server -Xmx128m -XX:+UseParallelGC -XX:ParallelGCThreads=4",
+        NULL
+    };
+    static const char *ucb_lines[] = {
+        // Takes from Solaris 10. Yep, the line really is that long.
+        "   PID TT       S  TIME COMMAND",
+        "  8263 ?        S 521:40 /usr/java/bin/java blahblah",
+        "  8264 ?        S 521:40 /usr/java/bin/java -server -Xmx128m -XX:+UseParallelGC -XX:ParallelGCThreads=4 -classpath /usr/share/webconsole/private/container/bin/bootstrap.jar:/usr/share/webconsole/private/container/bin/commons-logging.jar:/usr/share/webconsole/private/container/bin/log4j.jar:/usr/java/lib/tools.jar:/usr/java/jre/lib/jsse.jar -Djava.security.manager -Djava.security.policy==/var/webconsole/domains/console/conf/console.policy -Djavax.net.ssl.trustStore=/var/webconsole/domains/console/conf/keystore.jks -Djava.security.auth.login.config=/var/webconsole/domains/console/conf/consolelogin.conf -Dcatalina.home=/usr/share/webconsole/private/container -Dcatalina.base=/var/webconsole/domains/console -Dcom.sun.web.console.home=/usr/share/webconsole -Dcom.sun.web.console.conf=/etc/webconsole/console -Dcom.sun.web.console.base=/var/webconsole/domains/console -Dcom.sun.web.console.logdir=/var/log/webconsole/console -Dcom.sun.web.console.native=/usr/lib/webconsole -Dcom.sun.web.console.appbase=/var/webconsole/domains/console/webapps -Dcom.sun.web.console.secureport=6789 -Dcom.sun.web.console.unsecureport=6788 -Dcom.sun.web.console.unsecurehost=127.0.0.1 -Dwebconsole.default.file=/etc/webconsole/console/default.properties -Dwebconsole.config.file=/etc/webconsole/console/service.properties -Dcom.sun.web.console.startfile=/var/webconsole/tmp/console_start.tmp -Djava.awt.headless=true -Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.NoOpLog org.apache.catalina.startup.Bootstrap start",
+        "  8265 ?        S 521:40 /usr/java/bin/java blahblah",
+        NULL
+    };
+    char *name[CF_PROCCOLS]; /* Headers */
+    char *field[CF_PROCCOLS]; /* Content */
+    int start[CF_PROCCOLS] = { 0 };
+    int end[CF_PROCCOLS] = { 0 };
+    int user = 0, pid = 1, sz = 4, rss = 5, command = 10;
+    time_t pstime = 1410000000;
+
+    // Prepare to fill "/usr/ucb/ps" table with data.
+    ClearPlatformExtraTable();
+    int pipefd[2];
+    assert_int_equal(pipe(pipefd), 0);
+    LWData data;
+    data.fp = fdopen(pipefd[1], "w");
+    data.lines = ucb_lines;
+
+    // Feed the pipe from a separate thread.
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_t tid;
+    pthread_create(&tid, &attr, &ListWriter, &data);
+    pthread_attr_destroy(&attr);
+
+    FILE *cmd_output = fdopen(pipefd[0], "r");
+
+    UCB_PS_MAP = StringMapNew();
+    ReadFromUcbPsPipe(cmd_output);
+
+    /* Prepare data needed by tests and assert things tests can then assume: */
+    GetProcessColumnNames(lines[0], name, start, end);
+    assert_string_equal(name[user], "USER");
+    assert_string_equal(name[pid], "PID");
+    assert_string_equal(name[sz], "SZ");
+    assert_string_equal(name[rss], "RSS");
+    assert_string_equal(name[command], "COMMAND");
+    assert_int_equal(start[command], 66);
+
+    // Test content
+    {
+        assert_true(SplitProcLine(lines[1], pstime, name, start, end, field));
+        assert_string_equal(field[user], "johndoe");
+        assert_string_equal(field[pid], "8263");
+        assert_string_equal(field[sz], "19890");
+        // TODO: This is currently incorrectly parsed as "1162".
+        //assert_string_equal(field[rss], "116241");
+        assert_string_equal(field[command], lines[1] + 69);
+
+        ApplyPlatformExtraTable(name, field);
+        // Now check new and corrected values.
+        assert_string_equal(field[user], "johndoe");
+        assert_string_equal(field[pid], "8263");
+        assert_string_equal(field[sz], "19890");
+        // TODO: This is currently incorrectly parsed as "1162".
+        //assert_string_equal(field[rss], "116241");
+        assert_string_equal(field[command], ucb_lines[1] + 25);
+    }
+
+    {
+        assert_true(SplitProcLine(lines[2], pstime, name, start, end, field));
+        assert_string_equal(field[user], "noaccess");
+        assert_string_equal(field[pid], "8264");
+        assert_string_equal(field[sz], "19890");
+        // TODO: This is currently incorrectly parsed as "1162".
+        //assert_string_equal(field[rss], "116242");
+        assert_string_equal(field[command], lines[2] + 69);
+
+        ApplyPlatformExtraTable(name, field);
+        // Now check new and corrected values.
+        assert_string_equal(field[user], "noaccess");
+        assert_string_equal(field[pid], "8264");
+        assert_string_equal(field[sz], "19890");
+        // TODO: This is currently incorrectly parsed as "1162".
+        //assert_string_equal(field[rss], "116242");
+        assert_string_equal(field[command], ucb_lines[2] + 25);
+    }
+
+    {
+        assert_true(SplitProcLine(lines[3], pstime, name, start, end, field));
+        assert_string_equal(field[user], "noaccess");
+        assert_string_equal(field[pid], "8265");
+        assert_string_equal(field[sz], "19890");
+        // TODO: This is currently incorrectly parsed as "1162".
+        //assert_string_equal(field[rss], "116243");
+        assert_string_equal(field[command], lines[3] + 69);
+
+        ApplyPlatformExtraTable(name, field);
+        // Now check new and corrected values.
+        assert_string_equal(field[user], "noaccess");
+        assert_string_equal(field[pid], "8265");
+        assert_string_equal(field[sz], "19890");
+        // TODO: This is currently incorrectly parsed as "1162".
+        //assert_string_equal(field[rss], "116243");
+        assert_string_equal(field[command], ucb_lines[3] + 25);
+    }
+
+    fclose(cmd_output);
+#endif // __sun
+}
+
 int main(void)
 {
     PRINT_TEST_BANNER();
@@ -367,7 +505,8 @@ int main(void)
             unit_test(test_split_line_noelapsed),
             unit_test(test_split_line_elapsed),
             unit_test(test_split_line_longcmd),
-            unit_test(test_split_line)
+            unit_test(test_split_line),
+            unit_test(test_platform_extra_table),
         };
 
     return run_tests(tests);

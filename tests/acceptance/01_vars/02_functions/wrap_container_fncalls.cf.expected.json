@@ -15,6 +15,11 @@
   "concat_sort_mapdata_mergedata_inline_json": "<<< 0=1 >>><<< 1=2 >>><<< 2=3 >>>",
   "concat_sort_mapdata_mergedata_slist": "<<< 0=a >>><<< 1=b >>><<< 2=c >>><<< 3=aaa >>><<< 4=bbb >>><<< 5=ccc >>>",
   "mapdata_spec": "<<< $(this.k)=$(this.v) >>>",
+  "nth_data": "100",
+  "nth_inline_json": "88888888",
+  "nth_list": "aaa",
+  "nth_mapdata_mergedata_slist": "<<< 1=b >>>",
+  "nth_sort_mapdata_mergedata_inline_json": "<<< 0=1 >>>",
   "reverse_sort_slist": [
     "ccc",
     "c",

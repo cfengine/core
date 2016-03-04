@@ -23,7 +23,7 @@ bundle common test
       "descartes" expression => strcmp($(found_pids), $(this.promiser_pid));
   vars:
       # find our own PID, using \b to make sure we match whole words
-      "found" data => findprocesses(".+\b$(this.promiser_pid)\b.+");
+      "found" data => findprocesses("\bfindprocesses\.cf\b");
       # pluck the "pid" field out into a list
       "found_pids" data => mapdata("none", "$(found[$(this.k)][pid])", found);
 }

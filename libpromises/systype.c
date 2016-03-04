@@ -73,7 +73,7 @@ const char *const VPSCOMM[] =
     [PLATFORM_CONTEXT_LINUX] = "/bin/ps",                   /* linux */
     [PLATFORM_CONTEXT_BUSYBOX] = "/bin/ps",                 /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/bin/ps",                 /* solaris >= 11 */
-    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/ucb/ps",         /* solaris  < 11 */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/bin/ps",             /* solaris  < 11 */
     [PLATFORM_CONTEXT_FREEBSD] = "/bin/ps",                 /* freebsd */
     [PLATFORM_CONTEXT_NETBSD] = "/bin/ps",                  /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "/bin/ps",                  /* cray */
@@ -101,8 +101,8 @@ const char *const VPSOPTS[] =
     /* Note: keep in sync with GetProcessOptions()'s hack for Linux 2.4 */
     [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss:9,nlwp,stime,etime,time,args",/* linux */
     [PLATFORM_CONTEXT_BUSYBOX] = "",                  /* linux / busybox */
-    [PLATFORM_CONTEXT_SOLARIS] = "auxww",     /* solaris >= 11 */
-    [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxww", /* solaris < 11 */
+    [PLATFORM_CONTEXT_SOLARIS] = "-eo user,pid,pcpu,pmem,osz,rss,tty,s,stime,time,args",                  /* solaris >= 11 */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "-eo user,pid,pcpu,pmem,osz,rss,tty,s,stime,time,args",              /* solaris < 11 */
 #if __FreeBSD_version >= 903000
     [PLATFORM_CONTEXT_FREEBSD] = "auxw -J 0",              /* freebsd 9.3 and newer */
 #else

@@ -54,22 +54,38 @@
 #endif
 TABLE_STORAGE Item *PROCESSTABLE = NULL;
 
+#ifdef __sun
+static StringMap *UCB_PS_MAP = NULL;
+#define UCB_PS "/usr/ucb/ps"
+#define UCB_PS_ARGS "axwww"
+#endif
+
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
-static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
+static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, bool anchored, char **colNames, char **line);
 static int SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
+static void ApplyPlatformExtraTable(char **names, char **columns);
 
 /***************************************************************************/
 
-static int SelectProcess(const char *procentry, time_t pstime, char **names, int *start, int *end, ProcessSelect a)
+static bool SelectProcess(const char *procentry,
+                          time_t pstime,
+                          char **names,
+                          int *start,
+                          int *end,
+                          const char *process_regex,
+                          ProcessSelect a,
+                          bool attrselect)
 {
-    int result = true, i;
+    bool result = true;
     char *column[CF_PROCCOLS];
     Rlist *rp;
+
+    assert(process_regex);
 
     StringSet *process_select_attributes = StringSetNew();
 
@@ -78,14 +94,28 @@ static int SelectProcess(const char *procentry, time_t pstime, char **names, int
         return false;
     }
 
-    for (i = 0; names[i] != NULL; i++)
+    ApplyPlatformExtraTable(names, column);
+
+    for (int i = 0; names[i] != NULL; i++)
     {
         Log(LOG_LEVEL_DEBUG, "In SelectProcess, COL[%s] = '%s'", names[i], column[i]);
     }
 
+    if (!SelectProcRegexMatch("CMD", "COMMAND", process_regex, false, names, column))
+    {
+        result = false;
+        goto cleanup;
+    }
+
+    if (!attrselect)
+    {
+        // If we are not considering attributes, then the matching is done.
+        goto cleanup;
+    }
+
     for (rp = a.owner; rp != NULL; rp = rp->next)
     {
-        if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), names, column))
+        if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), true, names, column))
         {
             StringSetAdd(process_select_attributes, xstrdup("process_owner"));
             break;
@@ -138,17 +168,17 @@ static int SelectProcess(const char *procentry, time_t pstime, char **names, int
         StringSetAdd(process_select_attributes, xstrdup("threads"));
     }
 
-    if (SelectProcRegexMatch("S", "STAT", a.status, names, column))
+    if (SelectProcRegexMatch("S", "STAT", a.status, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("status"));
     }
 
-    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, names, column))
+    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("command"));
     }
 
-    if (SelectProcRegexMatch("TTY", "TTY", a.tty, names, column))
+    if (SelectProcRegexMatch("TTY", "TTY", a.tty, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("tty"));
     }
@@ -181,9 +211,10 @@ static int SelectProcess(const char *procentry, time_t pstime, char **names, int
         result = EvalProcessResult(a.process_result, process_select_attributes);
     }
 
+cleanup:
     StringSetDestroy(process_select_attributes);
 
-    for (i = 0; column[i] != NULL; i++)
+    for (int i = 0; column[i] != NULL; i++)
     {
         free(column[i]);
     }
@@ -207,42 +238,31 @@ Item *SelectProcesses(const char *process_name, ProcessSelect a, bool attrselect
 
     GetProcessColumnNames(processes->name, &names[0], start, end);
 
-    pcre *rx = CompileRegex(process_name);
-    if (rx)
+    /* TODO: use actual time of ps-run, as time(NULL) may be later. */
+    time_t pstime = time(NULL);
+
+    for (Item *ip = processes->next; ip != NULL; ip = ip->next)
     {
-        /* TODO: use actual time of ps-run, as time(NULL) may be later. */
-        time_t pstime = time(NULL);
-
-        for (Item *ip = processes->next; ip != NULL; ip = ip->next)
+        if (NULL_OR_EMPTY(ip->name))
         {
-            int s, e;
-
-            if (StringMatchWithPrecompiledRegex(rx, ip->name, &s, &e))
-            {
-                if (NULL_OR_EMPTY(ip->name))
-                {
-                    continue;
-                }
-
-                if (attrselect && !SelectProcess(ip->name, pstime, names, start, end, a))
-                {
-                    continue;
-                }
-
-                pid_t pid = ExtractPid(ip->name, names, end);
-
-                if (pid == -1)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Unable to extract pid while looking for %s", process_name);
-                    continue;
-                }
-
-                PrependItem(&result, ip->name, "");
-                result->counter = (int)pid;
-            }
+            continue;
         }
 
-        pcre_free(rx);
+        if (!SelectProcess(ip->name, pstime, names, start, end, process_name, a, attrselect))
+        {
+            continue;
+        }
+
+        pid_t pid = ExtractPid(ip->name, names, end);
+
+        if (pid == -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Unable to extract pid while looking for %s", process_name);
+            continue;
+        }
+
+        PrependItem(&result, ip->name, "");
+        result->counter = (int)pid;
     }
 
     for (int i = 0; i < CF_PROCCOLS; i++)
@@ -480,7 +500,8 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 /***************************************************************************/
 
 static bool SelectProcRegexMatch(const char *name1, const char *name2,
-                                 const char *regex, char **colNames, char **line)
+                                 const char *regex, bool anchored,
+                                 char **colNames, char **line)
 {
     int i;
 
@@ -491,14 +512,14 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
 
     if ((i = GetProcColumnIndex(name1, name2, colNames)) != -1)
     {
-
-        if (StringMatchFull(regex, line[i]))
+        if (anchored)
         {
-            return true;
+            return StringMatchFull(regex, line[i]);
         }
         else
         {
-            return false;
+            int s, e;
+            return StringMatch(regex, line[i], &s, &e);
         }
     }
 
@@ -917,7 +938,9 @@ bool IsProcessNameRunning(char *procNameRegex)
             continue;
         }
 
-        if (SelectProcRegexMatch("CMD", "COMMAND", procNameRegex, colHeaders, lineSplit))
+        ApplyPlatformExtraTable(colHeaders, lineSplit);
+
+        if (SelectProcRegexMatch("CMD", "COMMAND", procNameRegex, true, colHeaders, lineSplit))
         {
             matched = true;
         }
@@ -1003,7 +1026,7 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
     }
 }
 
-#ifndef __MINGW32__
+#ifndef _WIN32
 static const char *GetProcessOptions(void)
 {
 
@@ -1062,7 +1085,7 @@ static int ExtractPid(char *psentry, char **names, int *end)
     return -1;
 }
 
-# ifndef __MINGW32__
+# ifndef _WIN32
 # ifdef HAVE_GETZONEID
 /* ListLookup with the following return semantics
  * -1 if the first argument is smaller than the second
@@ -1232,8 +1255,9 @@ static void CheckPsLineLimitations(void)
 
     free(buf);
     fclose(ps_fd);
-#endif
+#endif // __hpux
 }
+#endif // _WIN32
 
 const char *GetProcessTableLegend(void)
 {
@@ -1248,6 +1272,187 @@ const char *GetProcessTableLegend(void)
     }
 }
 
+#ifdef __sun
+static FILE *OpenUcbPsPipe(void)
+{
+    struct stat statbuf;
+    if (stat(UCB_PS, &statbuf) < 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "%s not found, extra process information not available",
+            UCB_PS);
+        return NULL;
+    }
+    if (!(statbuf.st_mode & 0111))
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "%s not executable, extra process information not available",
+            UCB_PS);
+        return NULL;
+    }
+
+    FILE *cmd = cf_popen(UCB_PS " " UCB_PS_ARGS, "rt", false);
+    if (!cmd)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not execute \"%s %s\", extra process "
+            "information not available.", UCB_PS, UCB_PS_ARGS);
+    }
+    return cmd;
+}
+
+static void ReadFromUcbPsPipe(FILE *cmd)
+{
+    char *names[CF_PROCCOLS];
+    memset(names, 0, sizeof(names));
+    int start[CF_PROCCOLS];
+    int end[CF_PROCCOLS];
+    char *line = NULL;
+    size_t linesize = 0;
+    bool header = true;
+    time_t pstime = time(NULL);
+    int pidcol = -1;
+    int cmdcol = -1;
+    while (CfReadLine(&line, &linesize, cmd) > 0)
+    {
+        if (header)
+        {
+            GetProcessColumnNames(line, &names[0], start, end);
+
+            for (int i = 0; names[i]; i++)
+            {
+                if (strcmp(names[i], "PID") == 0)
+                {
+                    pidcol = i;
+                }
+                else if (strcmp(names[i], "COMMAND") == 0
+                           || strcmp(names[i], "CMD") == 0)
+                {
+                    cmdcol = i;
+                }
+            }
+
+            if (pidcol < 0 || cmdcol < 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Could not find PID and/or CMD/COMMAND column in "
+                    "%s output: \"%s\"",
+                    UCB_PS, line);
+                break;
+            }
+
+            header = false;
+            continue;
+        }
+
+
+        char *columns[CF_PROCCOLS];
+        memset(columns, 0, sizeof(columns));
+        if (!SplitProcLine(line, pstime, names, start, end, columns))
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Not able to parse %s output: \"%s\"",
+                UCB_PS, line);
+        }
+
+        StringMapInsert(UCB_PS_MAP, columns[pidcol], columns[cmdcol]);
+        // We avoid strdup'ing these strings by claiming ownership here.
+        columns[pidcol] = NULL;
+        columns[cmdcol] = NULL;
+
+        for (int i = 0; i < CF_PROCCOLS; i++)
+        {
+            // There may be some null entries here, but since we "steal"
+            // strings in the section above, we may have set some of them to
+            // NULL and there may be following non-NULL fields.
+            free(columns[i]);
+        }
+    }
+
+    if (!feof(cmd) && ferror(cmd))
+    {
+        Log(LOG_LEVEL_ERR, "Error while reading output from %s: %s",
+            UCB_PS, GetErrorStr());
+    }
+
+    for (int i = 0; names[i] && i < CF_PROCCOLS; i++)
+    {
+        free(names[i]);
+    }
+
+    free(line);
+}
+
+static void LoadPlatformExtraTable(void)
+{
+    if (UCB_PS_MAP)
+    {
+        return;
+    }
+
+    UCB_PS_MAP = StringMapNew();
+
+    FILE *cmd = OpenUcbPsPipe();
+    if (!cmd)
+    {
+        return;
+    }
+    ReadFromUcbPsPipe(cmd);
+    cf_pclose(cmd);
+}
+
+static void ClearPlatformExtraTable(void)
+{
+    if (UCB_PS_MAP)
+    {
+        StringMapDestroy(UCB_PS_MAP);
+        UCB_PS_MAP = NULL;
+    }
+}
+
+static void ApplyPlatformExtraTable(char **names, char **columns)
+{
+    int pidcol = -1;
+
+    for (int i = 0; names[i] && columns[i]; i++)
+    {
+        if (strcmp(names[i], "PID") == 0)
+        {
+            pidcol = i;
+            break;
+        }
+    }
+
+    if (!StringMapHasKey(UCB_PS_MAP, columns[pidcol]))
+    {
+        return;
+    }
+
+    for (int i = 0; names[i] && columns[i]; i++)
+    {
+        if (strcmp(names[i], "COMMAND") == 0 || strcmp(names[i], "CMD") == 0)
+        {
+            free(columns[i]);
+            columns[i] = xstrdup(StringMapGet(UCB_PS_MAP, columns[pidcol]));
+            break;
+        }
+    }
+}
+
+#else // !__sun
+static inline void LoadPlatformExtraTable(void)
+{
+}
+
+static inline void ClearPlatformExtraTable(void)
+{
+}
+
+static inline void ApplyPlatformExtraTable(ARG_UNUSED char **names, ARG_UNUSED char **columns)
+{
+}
+#endif
+
+#ifndef _WIN32
 int LoadProcessTable()
 {
     FILE *prp;
@@ -1261,6 +1466,8 @@ int LoadProcessTable()
         Log(LOG_LEVEL_VERBOSE, "Reusing cached process table");
         return true;
     }
+
+    LoadPlatformExtraTable();
 
     CheckPsLineLimitations();
 
@@ -1403,6 +1610,8 @@ int LoadProcessTable()
 
 void ClearProcessTable(void)
 {
+    ClearPlatformExtraTable();
+
     DeleteItemList(PROCESSTABLE);
     PROCESSTABLE = NULL;
 }

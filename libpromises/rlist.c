@@ -1276,6 +1276,7 @@ unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
     case RVAL_TYPE_LIST:
         return RlistHash(RvalRlistValue(rval), seed, max);
     case RVAL_TYPE_NOPROMISEE:
+        /* TODO modulus operation is biasing results. */
         return (seed + 1) % max;
     default:
         ProgrammingError("Unhandled case in switch: %d", rval.type);

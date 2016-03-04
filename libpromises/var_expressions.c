@@ -100,6 +100,8 @@ unsigned int VarRefHash_untyped(const void *ref,
                                 unsigned int seed ARG_UNUSED,
                                 unsigned int max)
 {
+    assert(ISPOW2(max));
+
     return VarRefHash(ref) & (max - 1);
 }
 

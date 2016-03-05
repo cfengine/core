@@ -7789,7 +7789,7 @@ static const FnCallArg EXPANDRANGE_ARGS[] =
 static const FnCallArg MAPARRAY_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array or data container identifier, the array variable to map"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON, the array variable to map"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

@@ -527,23 +527,23 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
 }
 
 /*******************************************************************/
-/* line must be char *line[CF_PROCCOLS] in fact. */
+/* fields must be char *fields[CF_PROCCOLS] in fact. */
 /* pstime should be the time at which ps was run. */
 
-static int SplitProcLine(const char *proc, time_t pstime,
+static int SplitProcLine(const char *line, time_t pstime,
                          char **names, int *start, int *end,
-                         char **line)
+                         char **fields)
 {
-    if (proc == NULL || proc[0] == '\0')
+    if (line == NULL || line[0] == '\0')
     {
         return false;
     }
 
-    memset(line, 0, sizeof(char *) * CF_PROCCOLS);
+    memset(fields, 0, sizeof(char *) * CF_PROCCOLS);
 
     int prior = -1; /* End of last header-selected field. */
-    const size_t linelen = strlen(proc);
-    const char *sp = proc; /* Just after last space-separated field. */
+    const size_t linelen = strlen(line);
+    const char *sp = line; /* Just after last space-separated field. */
     /* Scan in parallel for two heuristics: space-delimited fields
      * found using sp, and ones inferred from the column headers. */
 
@@ -565,7 +565,10 @@ static int SplitProcLine(const char *proc, time_t pstime,
         }
         const char *ep = sp;
 
-        /* Header-driven heuristic, field from proc[s] to proc[e].
+        Log(LOG_LEVEL_DEBUG, "Starting with field '%s' start position %td",
+            names[i], sp - line);
+
+        /* Header-driven heuristic, field from line[s] to line[e].
          * Start with the column header's position and maybe grow
          * outwards. */
         int s = start[i], e;
@@ -580,11 +583,14 @@ static int SplitProcLine(const char *proc, time_t pstime,
          * (mistakenly) think it includes the present. */
         if (s <= prior &&
             prior + 2 <= end[i] &&
-            proc[prior + 1] == ' ' &&
-            proc[prior + 2] != '\0' &&
-            !isspace((unsigned char) proc[prior + 2]))
+            line[prior + 1] == ' ' &&
+            line[prior + 2] != '\0' &&
+            !isspace((unsigned char) line[prior + 2]))
         {
             s = prior + 2;
+            Log(LOG_LEVEL_DEBUG, "Assuming start of field '%s' is at position "
+                "%d, based on prior = %d and header end = %d", names[i], s+1,
+                prior, end[i]);
         }
 
         if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
@@ -614,22 +620,25 @@ static int SplitProcLine(const char *proc, time_t pstime,
              * should move e left a bit: this is a conservative check,
              * that'll be revisited below. */
             int back = start[i + 1];
-            while (back > s && !isspace((unsigned char) proc[back]))
+            while (back > s && !isspace((unsigned char) line[back]))
             {
                 back--;
             }
             if (back > s && back <= e &&
-                /* back > s implies isspace(proc[back]), with no
+                /* back > s implies isspace(line[back]), with no
                  * further space before the next field; if this is a
                  * single space, it's credibly the separator between
                  * our field, shunted left, and this over-spilled
                  * field: */
-                proc[back] == ' ' &&
-                !isspace((unsigned char) proc[back - 1]))
+                line[back] == ' ' &&
+                !isspace((unsigned char) line[back - 1]))
             {
                 /* So we have a non-empty field that ends under our
                  * header but before e; adjust e. */
                 e = back - 1;
+                Log(LOG_LEVEL_DEBUG, "Moved end of field '%s' to %d, based on "
+                    "field '%s' left spilling to %d", names[i], e+1, names[i+1],
+                    back);
             }
 
             /* Extend space-delimited to next space: */
@@ -637,6 +646,8 @@ static int SplitProcLine(const char *proc, time_t pstime,
             {
                 ep++;
             }
+            Log(LOG_LEVEL_DEBUG, "Found end of field '%s' at %td",
+                names[i], ep - line);
         }
         /* ep points at the space (or '\0') *following* the word or
          * final field. */
@@ -658,13 +669,15 @@ static int SplitProcLine(const char *proc, time_t pstime,
                 } while (isdigit((unsigned char) np[0]));
                 ep = np;
             }
+            Log(LOG_LEVEL_DEBUG, "For time based field '%s', moved end pointer "
+                "to %td.", names[i], ep - line);
         }
 
         /* Numeric columns, including times, are apt to grow leftwards
          * and be right-aligned; identify candidates for this by
-         * proc[e] being a digit.  Text columns are typically
+         * line[e] being a digit.  Text columns are typically
          * left-aligned and may grow rightwards; identify candidates
-         * for this by proc[s] being alphabetic.  Some columns shall
+         * for this by line[s] being alphabetic.  Some columns shall
          * match both (e.g. STIME).  Some numeric columns may grow
          * left even as far as under the heading of the next column
          * (seen with ps -fel's SZ spilling left into ADDR's space on
@@ -682,18 +695,22 @@ static int SplitProcLine(const char *proc, time_t pstime,
 
         /* Right-aligned numeric: move s left until we run outside the
          * field or find space. */
-        if (IsNumberish(proc[e]))
+        if (IsNumberish(line[e]))
         {
             bool number = i > 0; /* Should we check for under-spill ? */
             int outer = number ? end[i - 1] + 1 : 0;
-            while (s >= outer && !isspace((unsigned char) proc[s]))
+            int orig_s = s;
+            while (s >= outer && !isspace((unsigned char) line[s]))
             {
-                if (number && !IsNumberish(proc[s]))
+                if (number && !IsNumberish(line[s]))
                 {
                     number = false;
                 }
                 s--;
             }
+            Log(LOG_LEVEL_DEBUG, "Moved start of field '%s' to %d, based on "
+                "not finding space between %d and %d", names[i],
+                s+1, s+1, orig_s+1);
 
             /* Numeric field might overspill under previous header: */
             if (s < outer)
@@ -701,7 +718,7 @@ static int SplitProcLine(const char *proc, time_t pstime,
                 int spill = s;
                 s = outer; /* By default, don't overlap previous column. */
 
-                if (number && IsNumberish(proc[spill]))
+                if (number && IsNumberish(line[spill]))
                 {
                     outer = start[i - 1];
                     /* Explore all the way to the start-column of the
@@ -717,7 +734,7 @@ static int SplitProcLine(const char *proc, time_t pstime,
                     while (spill > outer)
                     {
                         spill--;
-                        if (!IsNumberish(proc[spill]))
+                        if (!IsNumberish(line[spill]))
                         {
                             s = spill + 1; /* Confirmed overlap. */
                             break;
@@ -725,17 +742,19 @@ static int SplitProcLine(const char *proc, time_t pstime,
                     }
                 }
             }
+            Log(LOG_LEVEL_DEBUG, "Moved field '%s' start to %d, based on "
+                "following digits backwards", names[i], s+1);
 
-            overspilt = IsNumberish(proc[e + 1]);
+            overspilt = IsNumberish(line[e + 1]);
         }
 #undef IsNumberish
 
         bool abut = false;
         /* Left-aligned text or numeric misaligned by overspill; move
          * e right (if there's any right to move into; last column
-         * already reaches end of proc): */
-        if (proc[e + 1] &&
-            (overspilt || isalpha((unsigned char) proc[s])))
+         * already reaches end of line): */
+        if (line[e + 1] &&
+            (overspilt || isalpha((unsigned char) line[s])))
         {
             assert(i + 1 < CF_PROCCOLS && names[i + 1]);
             int outer = start[i + 1]; /* Start of next field's header. */
@@ -752,13 +771,16 @@ static int SplitProcLine(const char *proc, time_t pstime,
             do
             {
                 out++;
-            } while (out < beyond && !isspace((unsigned char) proc[out]));
+            } while (out < beyond && !isspace((unsigned char) line[out]));
 
             if (out < outer)
             {
                 /* Simple extension to the right, no overlap: we're on
                  * a space just before the next field's header. */
                 e = out - 1;
+                Log(LOG_LEVEL_DEBUG, "Moved end of field '%s' to %d, based on "
+                    "it being text and there being no space before position.",
+                    names[i], e+1);
             }
             else if (out == beyond)
             {
@@ -773,6 +795,11 @@ static int SplitProcLine(const char *proc, time_t pstime,
                 abut = true;
                 prior = e; /* Before adjusting it: */
                 e = outer - 1;
+                char fmt[CF_BUFSIZE];
+                xsnprintf(fmt, sizeof(fmt), "Overlap detected, field '%%s' will "
+                          "take on value '%%.%ds', based on next field spilling "
+                          "into this one.", e - s);
+                Log(LOG_LEVEL_DEBUG, fmt, names[i], line + s + 1);
             }
             else
             {
@@ -784,11 +811,11 @@ static int SplitProcLine(const char *proc, time_t pstime,
                  * has enough space to fit under its header after more
                  * than one space. */
 
-                assert(out < beyond && isspace((unsigned char) proc[out]));
-                if ((proc[out] == ' ' && proc[out + 1] &&
-                     !isspace((unsigned char) proc[out + 1])) ||
-                    (isdigit((unsigned char) proc[beyond]) &&
-                     isspace((unsigned char) proc[beyond + 1])))
+                assert(out < beyond && isspace((unsigned char) line[out]));
+                if ((line[out] == ' ' && line[out + 1] &&
+                     !isspace((unsigned char) line[out + 1])) ||
+                    (isdigit((unsigned char) line[beyond]) &&
+                     isspace((unsigned char) line[beyond + 1])))
                 {
                     e = out - 1;
                 }
@@ -796,6 +823,8 @@ static int SplitProcLine(const char *proc, time_t pstime,
                 {
                     e = outer - 1;
                 }
+                Log(LOG_LEVEL_DEBUG, "Field '%s' end moved to %d after "
+                    "checking overspill to the right", names[i], e+1);
             }
         }
         if (!abut)
@@ -804,19 +833,19 @@ static int SplitProcLine(const char *proc, time_t pstime,
         }
 
         /* Strip off any leading and trailing spaces: */
-        while (isspace((unsigned char) proc[s]))
+        while (isspace((unsigned char) line[s]))
         {
             s++;
         }
         /* ... but stop if the field is empty ! */
-        while (s <= e && isspace((unsigned char) proc[e]))
+        while (s <= e && isspace((unsigned char) line[e]))
         {
             e--;
         }
 
         /* Grumble if the two heuristics don't agree: */
         size_t wordlen = ep - sp;
-        if (e < s ? ep > sp : (sp != proc + s || ep != proc + e + 1))
+        if (e < s ? ep > sp : (sp != line + s || ep != line + e + 1))
         {
             char word[CF_SMALLBUF];
             if (wordlen >= CF_SMALLBUF)
@@ -829,9 +858,9 @@ static int SplitProcLine(const char *proc, time_t pstime,
             char column[CF_SMALLBUF];
             if (s <= e)
             {
-                /* Copy proc[s through e] inclusive:  */
+                /* Copy line[s through e] inclusive:  */
                 const size_t len = MIN(1 + e - s, CF_SMALLBUF - 1);
-                memcpy(column, proc + s, len);
+                memcpy(column, line + s, len);
                 column[len] = '\0';
             }
             else
@@ -841,11 +870,13 @@ static int SplitProcLine(const char *proc, time_t pstime,
 
             Log(LOG_LEVEL_VERBOSE,
                 "Unreliable fuzzy parsing of ps output (%s) %s: '%s' != '%s'",
-                proc, names[i], word, column);
+                line, names[i], word, column);
+            Log(LOG_LEVEL_DEBUG, "sp = '%.4s...', ep = '%.4s...', s = %d, e = %d",
+                sp, ep, s, e);
         }
 
         /* Fall back on word if column got an empty answer: */
-        line[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(proc + s, 1 + e - s);
+        fields[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(line + s, 1 + e - s);
         sp = ep;
     }
 
@@ -855,28 +886,28 @@ static int SplitProcLine(const char *proc, time_t pstime,
     int k = GetProcColumnIndex("ELAPSED", "ELAPSED", names);
     if (k != -1)
     {
-        const long elapsed = TimeCounter2Int(line[k]);
+        const long elapsed = TimeCounter2Int(fields[k]);
         if (elapsed != CF_NOINT) /* Only use if parsed successfully ! */
         {
             int j = GetProcColumnIndex("STIME", "START", names), ns[3];
             /* Trust the reported value if it matches hh:mm[:ss], though: */
-            if (sscanf(line[j], "%d:%d:%d", ns, ns + 1, ns + 2) < 2)
+            if (sscanf(fields[j], "%d:%d:%d", ns, ns + 1, ns + 2) < 2)
             {
                 time_t value = pstime - (time_t) elapsed;
 
                 Log(LOG_LEVEL_DEBUG,
                     "SplitProcLine: Replacing parsed start time %s with %s",
-                    line[j], ctime(&value));
+                    fields[j], ctime(&value));
 
-                free(line[j]);
-                xasprintf(line + j, "%ld", value);
+                free(fields[j]);
+                xasprintf(fields + j, "%ld", value);
             }
         }
-        else if (line[k])
+        else if (fields[k])
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Parsing problem was in ELAPSED field of '%s'",
-                proc);
+                line);
         }
     }
 

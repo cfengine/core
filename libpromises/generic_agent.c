@@ -83,6 +83,8 @@ static char* ReadReleaseIdFromReleaseIdFileMasterfiles(const char *maybe_dirname
 
 static bool MissingInputFile(const char *input_file);
 
+bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
+
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
@@ -196,8 +198,10 @@ bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
     return IsDefinedClass(ctx, c);
 }
 
-void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const JsonElement* augment)
+bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const JsonElement* augment)
 {
+    bool loaded = false;
+
     if (JsonGetElementType(augment) != JSON_ELEMENT_TYPE_CONTAINER ||
         JsonGetContainerType(augment) != JSON_CONTAINER_TYPE_OBJECT)
     {
@@ -205,6 +209,7 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
     }
     else
     {
+        loaded = true;
         Log(LOG_LEVEL_VERBOSE, "Loaded augments file '%s', installing contents", BufferData(filename_buffer));
 
         JsonIterator iter = JsonIteratorInit(augment);
@@ -349,6 +354,38 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
 
                 JsonDestroy(inputs);
             }
+            else if (0 == strcmp("augments", key))
+            {
+                // load further def.json files
+                JsonElement* further_augments = JsonObjectGet(augment, key);
+
+                if (JsonGetElementType(further_augments) == JSON_ELEMENT_TYPE_CONTAINER &&
+                    JsonGetContainerType(further_augments) == JSON_CONTAINER_TYPE_ARRAY &&
+                    JsonArrayContainsOnlyPrimitives(further_augments))
+                {
+                    JsonIterator iter = JsonIteratorInit(further_augments);
+                    const JsonElement *el;
+                    while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+                    {
+                        char *filename = JsonPrimitiveToString(el);
+                        bool further_loaded = LoadAugmentsFiles(ctx, filename);
+                        if (further_loaded)
+                        {
+                            Log(LOG_LEVEL_VERBOSE, "Installed further augments from file '%s'", filename);
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "Could not load requested further augments from file '%s'", filename);
+                        }
+                        free(filename);
+                    }
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
+                        BufferData(filename_buffer));
+                }
+            }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
@@ -356,28 +393,31 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
             }
         }
     }
+
+    return loaded;
 }
 
-void LoadAugmentsFiles(EvalContext *ctx, const char* filename)
+bool LoadAugmentsFiles(EvalContext *ctx, const char* filename)
 {
-    Buffer *filebuf = BufferNewFrom(filename, strlen(filename));
+    bool loaded = false;
+
     Buffer *expbuf = BufferNew();
-    ExpandScalar(ctx, NULL, "this", BufferData(filebuf), expbuf);
+    ExpandScalar(ctx, NULL, "this", filename, expbuf);
     if (strstr(BufferData(expbuf), "/.json"))
     {
         Log(LOG_LEVEL_DEBUG, "Skipping augments file '%s' because it failed to expand the base filename, resulting in '%s'",
-            BufferData(filebuf),
+            filename,
             BufferData(expbuf));
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s'", BufferData(expbuf));
+        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s' (original '%s')", BufferData(expbuf), filename);
         if (FileCanOpen(BufferData(expbuf), "r"))
         {
             JsonElement* augment = ReadJsonFile(BufferData(expbuf), LOG_LEVEL_ERR);
             if (NULL != augment )
             {
-                LoadAugmentsData(ctx, expbuf, augment);
+                loaded = LoadAugmentsData(ctx, expbuf, augment);
                 JsonDestroy(augment);
             }
         }
@@ -386,21 +426,13 @@ void LoadAugmentsFiles(EvalContext *ctx, const char* filename)
             Log(LOG_LEVEL_VERBOSE, "could not load JSON augments from '%s'", BufferData(expbuf));
         }
     }
-    BufferDestroy(filebuf);
     BufferDestroy(expbuf);
+
+    return loaded;
 }
 
 void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
 {
-    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.flavor).json");
-    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.ostype).json");
-    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.domain).json");
-    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.uqhost).json");
-    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.fqhost).json");
-    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.key_digest).json");
-    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def.json");
-    // LoadAugmentsFiles(ctx, "$(sys.inputdir)/def.json");
-
     char* def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def.json");
     Log(LOG_LEVEL_VERBOSE, "Loading JSON augments from '%s' (input dir '%s', input file '%s'", def_json, config->input_dir, config->input_file);
     LoadAugmentsFiles(ctx, def_json);
@@ -430,6 +462,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
+
+    LoadAugments(ctx, config);
 
     const char *bootstrap_arg =
         config->agent_specific.agent.bootstrap_policy_server;
@@ -1030,8 +1064,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
     }
-
-    LoadAugments(ctx, config);
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)

@@ -3292,7 +3292,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, ARG_UNUSED const Policy *pol
         SeqAppend(seq, (void*)JsonPrimitiveGetAsString(e));
     }
 
-    SeqShuffle(seq, StringHash(seed_str, 0, RAND_MAX));
+    SeqShuffle(seq, StringHash(seed_str, 0, (unsigned) INT_MAX + 1));
 
     Rlist *shuffled = NULL;
     for (size_t i = 0; i < SeqLength(seq); i++)

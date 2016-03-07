@@ -2167,7 +2167,8 @@ bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const
         return false;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
+    size_t hash = RlistHash(args, FnCallHash(fp, 0, (unsigned) INT_MAX + 1),
+                            (unsigned) INT_MAX + 1);
     Rval *rval = RBTreeGet(ctx->function_cache, (void*)hash);
     if (rval)
     {
@@ -2190,7 +2191,8 @@ void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist
         return;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
+    size_t hash = RlistHash(args, FnCallHash(fp, 0, (unsigned) INT_MAX + 1),
+                            (unsigned) INT_MAX + 1);
     Rval *rval_copy = xmalloc(sizeof(Rval));
     *rval_copy = RvalCopy(*rval);
     RBTreePut(ctx->function_cache, (void*)hash, rval_copy);

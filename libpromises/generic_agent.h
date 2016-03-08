@@ -80,6 +80,9 @@ typedef struct
         {
             char *bootstrap_policy_server;
             bool bootstrap_trust_server;
+
+            // BODY AGENT CONTROL
+            bool report_class_log;
         } agent;
         struct
         {

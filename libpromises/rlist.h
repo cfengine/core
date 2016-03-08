@@ -52,7 +52,7 @@ void RvalDestroy(Rval rval);
 JsonElement *RvalToJson(Rval rval);
 char *RvalToString(Rval rval);
 void RvalWrite(Writer *writer, Rval rval);
-void RvalWriteParts(Writer *writer, const void* item, RvalType type);
+void RvalWriteQuoted(Writer *writer, Rval rval);
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max);
 
 Rlist *RlistCopy(const Rlist *list);
@@ -88,6 +88,8 @@ void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
 void RlistReverse(Rlist **list);
+
+void ScalarWrite(Writer *w, const char *s, bool quote);
 
 /**
  * @brief Flattens an Rlist by expanding naked scalar list-variable members. Flattening is only one-level deep.

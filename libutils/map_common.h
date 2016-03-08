@@ -36,7 +36,8 @@ typedef struct
     void *value;
 } MapKeyValue;
 
-typedef bool (*MapKeyEqualFn)(const void *key1, const void *key2);
-typedef void (*MapDestroyDataFn)(void *key);
+typedef unsigned int (*MapHashFn) (const void *p, unsigned int seed, unsigned int max);
+typedef bool     (*MapKeyEqualFn) (const void *key1, const void *key2);
+typedef void  (*MapDestroyDataFn) (void *key);
 
 #endif

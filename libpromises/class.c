@@ -25,12 +25,17 @@
 
 #include <map.h>
 #include <alloc.h>
-#include <string_lib.h> /* StringHash,StringSafeEqual,StringConcatenate */
+#include <string_lib.h> /* String*() */
 #include <regex.h>      /* CompileRegex,StringMatchFullWithPrecompiledRegex */
 #include <files_names.h>
 
 
 static void ClassDestroy(Class *cls);                /* forward declaration */
+
+static void ClassDestroy_untyped(void *p)
+{
+    ClassDestroy(p);
+}
 
 
 /**
@@ -42,10 +47,10 @@ static void ClassDestroy(Class *cls);                /* forward declaration */
 TYPED_MAP_DECLARE(Class, char *, Class *)
 
 TYPED_MAP_DEFINE(Class, char *, Class *,
-                 (MapHashFn) &StringHash,
-                 (MapKeyEqualFn) &StringSafeEqual,
+                 StringHash_untyped,
+                 StringSafeEqual_untyped,
                  free,
-                 (MapDestroyDataFn) &ClassDestroy)
+                 ClassDestroy_untyped)
 
 struct ClassTable_
 {

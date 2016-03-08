@@ -99,7 +99,7 @@ struct EvalContext_
 
     // Full path to directory that the binary was launched from.
     char *launch_directory;
-    
+
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
 };
@@ -109,7 +109,7 @@ void AddDefaultPackageModuleToContext(const EvalContext *ctx, char *name)
 {
     assert(ctx);
     assert(ctx->package_promise_context);
-    
+
     free(ctx->package_promise_context->control_package_module);
     ctx->package_promise_context->control_package_module =
             SafeStringDuplicate(name);
@@ -945,7 +945,7 @@ void EvalContextDestroy(EvalContext *ctx)
             RBTreeIteratorDestroy(it);
             RBTreeDestroy(ctx->function_cache);
         }
-        
+
         FreePackagePromiseContext(ctx->package_promise_context);
 
         free(ctx);
@@ -2167,7 +2167,8 @@ bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const
         return false;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
+    size_t hash = RlistHash(args, FnCallHash(fp, 0, (unsigned) INT_MAX + 1),
+                            (unsigned) INT_MAX + 1);
     Rval *rval = RBTreeGet(ctx->function_cache, (void*)hash);
     if (rval)
     {
@@ -2190,7 +2191,8 @@ void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist
         return;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
+    size_t hash = RlistHash(args, FnCallHash(fp, 0, (unsigned) INT_MAX + 1),
+                            (unsigned) INT_MAX + 1);
     Rval *rval_copy = xmalloc(sizeof(Rval));
     *rval_copy = RvalCopy(*rval);
     RBTreePut(ctx->function_cache, (void*)hash, rval_copy);

@@ -43,7 +43,7 @@ static VariableTable *ReferenceTable(void)
         assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
         VarRefDestroy(ref);
     }
-    
+
     {
         VarRef *ref = VarRefParse("scope3.array[te][st]");
         Rval rval = (Rval) { "scope3.array[te][st]", RVAL_TYPE_SCALAR };
@@ -256,18 +256,18 @@ static void test_iterate_indices(void)
     {
         VarRef *ref = VarRefParse("default:scope1.array");
         VariableTableIterator *iter = VariableTableIteratorNewFromVarRef(t, ref);
-        
+
         unsigned short number_of_entries = 0;
         while (VariableTableIteratorNext(iter))
         {
             number_of_entries++;
         }
         assert_int_equal(4, number_of_entries);
-        
+
         VariableTableIteratorDestroy(iter);
         VarRefDestroy(ref);
     }
-    
+
     {
         VarRef *ref = VarRefParse("default:scope1.array[two]");
         VariableTableIterator *iter = VariableTableIteratorNewFromVarRef(t, ref);
@@ -277,9 +277,9 @@ static void test_iterate_indices(void)
         {
             number_of_entries++;
         }
-        
+
         assert_int_equal(3, number_of_entries);
-        
+
         VariableTableIteratorDestroy(iter);
         VarRefDestroy(ref);
     }
@@ -287,11 +287,13 @@ static void test_iterate_indices(void)
 
 // Below test relies on the ordering items in RB tree which is strongly
 // related to the hash function used.
+/* No more relevant, RBTree has been replaced with Map. */
+#if 0
 static void test_iterate_indices_ordering_related(void)
 {
     VariableTable *t = ReferenceTable();
-    
-    {    
+
+    {
         VarRef *ref = VarRefParse("default:scope1.array");
         VariableTableIterator *iter = VariableTableIteratorNewFromVarRef(t, ref);
 
@@ -305,7 +307,7 @@ static void test_iterate_indices_ordering_related(void)
         assert_int_equal(2, v->ref->num_indices);
         assert_string_equal("two", v->ref->indices[0]);
         assert_string_equal("three", v->ref->indices[1]);
-        
+
         v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
         assert_int_equal(2, v->ref->num_indices);
@@ -331,7 +333,7 @@ static void test_iterate_indices_ordering_related(void)
         assert_true(v != NULL);
         assert_int_equal(1, v->ref->num_indices);
         assert_string_equal("two", v->ref->indices[0]);
-        
+
         v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
         assert_int_equal(2, v->ref->num_indices);
@@ -352,6 +354,7 @@ static void test_iterate_indices_ordering_related(void)
 
     VariableTableDestroy(t);
 }
+#endif
 
 int main()
 {
@@ -361,7 +364,7 @@ int main()
         unit_test(test_get_in_default_namespace),
         unit_test(test_get_different_namespaces),
         unit_test(test_get_indices),
-        unit_test(test_iterate_indices_ordering_related),
+//        unit_test(test_iterate_indices_ordering_related),
         unit_test(test_multi_index_array_conflation),
         unit_test(test_replace),
         unit_test(test_remove),

@@ -31,11 +31,12 @@
 #include <hashes.h>
 #include <scope.h>
 
-// This is not allowed to be the part of VarRef.indices so looks safe 
-// to be used as multi array indices separator while hashing.
-#define ARRAY_SEPARATOR_HASH ']' 
 
-static size_t VarRefHash(const VarRef *ref)
+// This is not allowed to be the part of VarRef.indices so looks safe
+// to be used as multi array indices separator while hashing.
+#define ARRAY_SEPARATOR_HASH ']'
+
+static unsigned VarRefHash(const VarRef *ref)
 {
     unsigned int h = 0;
 
@@ -74,12 +75,12 @@ static size_t VarRefHash(const VarRef *ref)
     for (size_t k = 0; k < ref->num_indices; k++)
     {
         // Fixing multi index arrays hashing collisions - Redmine 6674
-        // Multi index arrays with indexes expanded to the same string 
+        // Multi index arrays with indexes expanded to the same string
         // (e.g. v[te][st], v[t][e][s][t]) will not be hashed to the same value.
         h += ARRAY_SEPARATOR_HASH;
         h += (h << 10);
         h ^= (h >> 6);
-        
+
         for (int i = 0; ref->indices[k][i] != '\0'; i++)
         {
             h += ref->indices[k][i];
@@ -92,7 +93,16 @@ static size_t VarRefHash(const VarRef *ref)
     h ^= (h >> 11);
     h += (h << 15);
 
-    return (h & (INT_MAX - 1));
+    return h;
+}
+
+unsigned int VarRefHash_untyped(const void *ref,
+                                unsigned int seed ARG_UNUSED,
+                                unsigned int max)
+{
+    assert(ISPOW2(max));
+
+    return VarRefHash(ref) & (max - 1);
 }
 
 VarRef VarRefConst(const char *ns, const char *scope, const char *lval)
@@ -105,8 +115,6 @@ VarRef VarRefConst(const char *ns, const char *scope, const char *lval)
     ref.num_indices = 0;
     ref.indices = NULL;
 
-    ref.hash = VarRefHash(&ref);
-
     return ref;
 }
 
@@ -114,7 +122,6 @@ VarRef *VarRefCopy(const VarRef *ref)
 {
     VarRef *copy = xmalloc(sizeof(VarRef));
 
-    copy->hash = ref->hash;
     copy->ns = ref->ns ? xstrdup(ref->ns) : NULL;
     copy->scope = ref->scope ? xstrdup(ref->scope) : NULL;
     copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
@@ -158,8 +165,6 @@ VarRef *VarRefCopyLocalized(const VarRef *ref)
         copy->indices = NULL;
     }
 
-    copy->hash = VarRefHash(copy);
-
     return copy;
 }
 
@@ -172,8 +177,6 @@ VarRef *VarRefCopyIndexless(const VarRef *ref)
     copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
     copy->num_indices = 0;
     copy->indices = NULL;
-
-    copy->hash = VarRefHash(copy);
 
     return copy;
 }
@@ -328,8 +331,6 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
     ref->indices = indices;
     ref->num_indices = num_indices;
 
-    ref->hash = VarRefHash(ref);
-
     return ref;
 }
 
@@ -390,6 +391,11 @@ void VarRefDestroy(VarRef *ref)
         free(ref);
     }
 
+}
+
+void VarRefDestroy_untyped(void *ref)
+{
+    VarRefDestroy(ref);
 }
 
 char *VarRefToString(const VarRef *ref, bool qualified)
@@ -477,8 +483,6 @@ void VarRefSetMeta(VarRef *ref, bool enabled)
             free(tmp);
         }
     }
-
-    ref->hash = VarRefHash(ref);
 }
 
 bool VarRefIsQualified(const VarRef *ref)
@@ -498,8 +502,6 @@ void VarRefQualify(VarRef *ref, const char *ns, const char *scope)
 
     ref->ns = ns ? xstrdup(ns) : NULL;
     ref->scope = xstrdup(scope);
-
-    ref->hash = VarRefHash(ref);
 }
 
 void VarRefAddIndex(VarRef *ref, const char *index)
@@ -517,8 +519,6 @@ void VarRefAddIndex(VarRef *ref, const char *index)
 
     ref->indices[ref->num_indices] = xstrdup(index);
     ref->num_indices++;
-
-    ref->hash = VarRefHash(ref);
 }
 
 int VarRefCompare(const VarRef *a, const VarRef *b)
@@ -560,4 +560,9 @@ int VarRefCompare(const VarRef *a, const VarRef *b)
     }
 
     return 0;
+}
+
+bool VarRefEqual_untyped(const void *a, const void *b)
+{
+    return (VarRefCompare(a, b) == 0);
 }

@@ -2214,19 +2214,25 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
 {
     const char *name_str = RlistScalarValueSafe(finalargs);
 
-    VarRef *ref = ResolveAndQualifyVarName(fp, name_str);
-    DataType type = CF_DATA_TYPE_NONE;
-    EvalContextVariableGet(ctx, ref, &type);
-    VarRefDestroy(ref);
-
-    // special case to preserve legacy behavior for array lookups
-    if (type != CF_DATA_TYPE_CONTAINER &&
-        StringMatchFull(".*[a-zA-Z0-9_](\\[[a-zA-Z0-9_]+\\])+$", name_str))
+    // Protect against collected args (their rval type will be data
+    // container). This is a special case to preserve legacy behavior
+    // for array lookups that requires a scalar in finalargs.
+    if (RlistValueIsType(finalargs, RVAL_TYPE_SCALAR))
     {
-        return FnCallGetIndicesClassic(ctx, policy, fp, finalargs);
+        VarRef *ref = ResolveAndQualifyVarName(fp, name_str);
+        DataType type = CF_DATA_TYPE_NONE;
+        EvalContextVariableGet(ctx, ref, &type);
+        VarRefDestroy(ref);
+
+        if (type != CF_DATA_TYPE_CONTAINER &&
+            StringMatchFull(".*[a-zA-Z0-9_](\\[[a-zA-Z0-9_]+\\])+$", name_str))
+        {
+            return FnCallGetIndicesClassic(ctx, policy, fp, finalargs);
+        }
     }
 
-    // try to load directly
+    // Try to load directly. This case will behave correctly whether
+    // finalrgs holds a scalar or not.
     bool allocated = false;
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, true, &allocated);
 
@@ -2931,7 +2937,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
         if (args->val.type != RVAL_TYPE_SCALAR &&
             args->val.type != RVAL_TYPE_CONTAINER)
         {
-            Log(LOG_LEVEL_ERR, "%s: argument '%s' is not a variable reference", fp->name, RlistScalarValueSafe(arg));
+            Log(LOG_LEVEL_ERR, "%s: argument is not a variable reference", fp->name);
             return FnFailure();
         }
     }
@@ -6620,8 +6626,9 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
         target_time = statbuf.st_mtime;
     }
 
-    // Check if the file name is explicit
-    if (lstat(name_str, &statbuf) != -1)
+    // Check if the file name (which should be a scalar if given directly) is explicit
+    if (RlistValueIsType(finalargs->next, RVAL_TYPE_SCALAR) &&
+        lstat(name_str, &statbuf) != -1)
     {
         if (statbuf.st_mtime > target_time)
         {
@@ -6630,7 +6637,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
     }
     else
     {
-        // try to load directly
+        // try to load directly from a container of collected values
         bool allocated = false;
         JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 

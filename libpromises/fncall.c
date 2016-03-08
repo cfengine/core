@@ -97,7 +97,25 @@ static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *f
             break;
         }
 
-        // Collect compound values into containers only if the function supports it
+        /*
+
+          Collect compound values into containers only if the function
+          supports it.
+
+          Functions without FNCALL_OPTION_COLLECTING don't collect
+          Rlist elements. So in the policy, you call
+          and(splitstring("a b")) and it ends up as and("a", "b").
+          This expansion happens once per FnCall, not for all
+          arguments.
+
+          Functions with FNCALL_OPTION_COLLECTING instead collect all
+          the results of a FnCall into a single JSON array object. It
+          requires functions to expect it, but it's the only
+          reasonable way to preserve backwards compatibility for
+          functions like and() and allow nesting of calls to functions
+          that take and return compound data types.
+
+        */
         RlistAppendAllTypes(&expanded_args, rval.item, rval.type,
                             (fn->options & FNCALL_OPTION_COLLECTING));
         RvalDestroy(rval);

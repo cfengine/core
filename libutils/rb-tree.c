@@ -402,6 +402,8 @@ bool RBTreePut(RBTree *tree, const void *key, const void *value)
         int cmp = tree->KeyCompare(key, x->key);
         if (cmp == 0)
         {
+            tree->KeyDestroy(x->key);
+            x->key = tree->KeyCopy(key);
             tree->ValueDestroy(x->value);
             x->value = tree->ValueCopy(value);
             return true;

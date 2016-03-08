@@ -1806,6 +1806,9 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     /* By default we trust the network when bootstrapping. */
     config->agent_specific.agent.bootstrap_trust_server = true;
 
+    /* Log classes */
+    config->agent_specific.agent.report_class_log = false;
+
     switch (agent_type)
     {
     case AGENT_TYPE_COMMON:

@@ -198,7 +198,7 @@ void FnCallWrite(Writer *writer, const FnCall *call)
         switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
-            WriterWrite(writer, RlistScalarValue(rp));
+            ScalarWrite(writer, RlistScalarValue(rp), true);
             break;
 
         case RVAL_TYPE_FNCALL:

@@ -1193,9 +1193,7 @@ void RlistWrite(Writer *writer, const Rlist *list)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        WriterWriteChar(writer, '\'');
-        RvalWrite(writer, rp->val);
-        WriterWriteChar(writer, '\'');
+        RvalWriteQuoted(writer, rp->val);
 
         if (rp->next != NULL)
         {
@@ -1206,35 +1204,27 @@ void RlistWrite(Writer *writer, const Rlist *list)
     WriterWriteChar(writer, '}');
 }
 
-/* Note: only single quotes are escaped, as they are used in RlistWrite to
-   delimit strings. If double quotes would be escaped, they would be mangled by
-   RlistParseShown */
-
-static void ScalarWrite(Writer *w, const char *s)
+void ScalarWrite(Writer *writer, const char *s, bool quote)
 {
+    if (quote)
+    {
+        WriterWriteChar(writer, '"');
+    }
     for (; *s; s++)
     {
-        if (*s == '\'')
+        if (*s == '"')
         {
-            WriterWriteChar(w, '\\');
+            WriterWriteChar(writer, '\\');
         }
-        WriterWriteChar(w, *s);
+        WriterWriteChar(writer, *s);
+    }
+    if (quote)
+    {
+        WriterWriteChar(writer, '"');
     }
 }
 
-void RvalWrite(Writer *writer, Rval rval)
-{
-    RvalWriteParts(writer, rval.item, rval.type);
-}
-
-char *RvalToString(Rval rval)
-{
-    Writer *w = StringWriter();
-    RvalWrite(w, rval);
-    return StringWriterClose(w);
-}
-
-void RvalWriteParts(Writer *writer, const void* item, RvalType type)
+static void RvalWriteParts(Writer *writer, const void* item, RvalType type, bool quote)
 {
     if (item == NULL)
     {
@@ -1244,7 +1234,7 @@ void RvalWriteParts(Writer *writer, const void* item, RvalType type)
     switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        ScalarWrite(writer, item);
+        ScalarWrite(writer, item, quote);
         break;
 
     case RVAL_TYPE_LIST:
@@ -1263,6 +1253,23 @@ void RvalWriteParts(Writer *writer, const void* item, RvalType type)
         JsonWrite(writer, item, 0);
         break;
     }
+}
+
+void RvalWrite(Writer *writer, Rval rval)
+{
+    RvalWriteParts(writer, rval.item, rval.type, false);
+}
+
+void RvalWriteQuoted(Writer *writer, Rval rval)
+{
+    RvalWriteParts(writer, rval.item, rval.type, true);
+}
+
+char *RvalToString(Rval rval)
+{
+    Writer *w = StringWriter();
+    RvalWrite(w, rval);
+    return StringWriterClose(w);
 }
 
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max)

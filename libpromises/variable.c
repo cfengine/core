@@ -107,23 +107,11 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
                       const char *tags, const Promise *promise)
 {
     assert(VarRefIsQualified(ref));
-    bool result;
 
-    Variable *var = VariableTableGet(table, ref);
-    if (var == NULL)
-    {
-        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
-                          StringSetFromString(tags, ','), promise);
-        result = RBTreePut(table->vars, (void *)var->ref->hash, var);
-    }
-    else // if (!RvalsEqual(var->rval *rval) // TODO: implement-me !
-    {
-        RvalDestroy(var->rval);
-        var->rval = RvalCopy(*rval);
-        var->type = type;
-        var->promise = promise;
-        result = true;
-    }
+    Variable *var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
+                                StringSetFromString(tags, ','), promise);
+    bool result = RBTreePut(table->vars, (void *) var->ref->hash, var);
+
     return result;
 }
 

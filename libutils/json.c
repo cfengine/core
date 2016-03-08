@@ -472,10 +472,12 @@ JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
         UnexpectedError("Unknown JSON container type: %d",
                         JsonGetContainerType(b));
         break;
+
+    default:
+        UnexpectedError("Unknown JSON container type: %d",
+                        JsonGetContainerType(a));
     }
 
-    UnexpectedError("Unknown JSON container type: %d",
-                    JsonGetContainerType(a));
     return NULL;
 }
 
@@ -764,11 +766,13 @@ JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices
                     }
                 }
             }
+            break;
+
         default:
             UnexpectedError("Unknown JSON container type: %d",
                             JsonGetContainerType(element));
-            return NULL;
         }
+        return NULL;
     }
 }
 

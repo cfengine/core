@@ -33,6 +33,15 @@
 #define GENERIC_AGENT_CHECKSUM_SIZE ((2*CF_SHA1_LEN) + 1)
 #define GENERIC_AGENT_CHECKSUM_METHOD HASH_METHOD_SHA1
 
+enum generic_agent_config_common_policy_output_format
+{
+    GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE,
+    GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF,
+    GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON,
+    GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF_FULL,
+    GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON_FULL
+};
+ 
 typedef struct
 {
     AgentType agent_type;
@@ -64,12 +73,7 @@ typedef struct
     {
         struct
         {
-            enum
-            {
-                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE,
-                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF,
-                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON
-            } policy_output_format;
+            enum generic_agent_config_common_policy_output_format policy_output_format;
             unsigned int parser_warnings;
             unsigned int parser_warnings_error;
             bool eval_functions;

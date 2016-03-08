@@ -39,7 +39,6 @@
 */
 typedef struct
 {
-    size_t name_index_count;                /* TODO not hashed nor compared */
     char *ns;
     char *scope;
     char *lval;

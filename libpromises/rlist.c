@@ -74,6 +74,12 @@ RvalType DataTypeToRvalType(DataType datatype)
     ProgrammingError("DataTypeToRvalType, unhandled");
 }
 
+bool RlistValueIsType(const Rlist *rlist, RvalType type)
+{
+    return (NULL != rlist &&
+            rlist->val.type == type);
+}
+
 char *RlistScalarValue(const Rlist *rlist)
 {
     if (rlist->val.type != RVAL_TYPE_SCALAR)
@@ -529,6 +535,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
     return RlistAppendAllTypes(start, item, type, false);
 }
 
+// See fncall.c for the usage of allow_all_types.
 Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool allow_all_types)
 {
     Rlist *lp = *start;

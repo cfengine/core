@@ -37,6 +37,7 @@ struct Rlist_
 
 RvalType DataTypeToRvalType(DataType datatype);
 
+bool RlistValueIsType(const Rlist *rlist, RvalType type);
 char *RvalScalarValue(Rval rval);
 FnCall *RvalFnCallValue(Rval rval);
 Rlist *RvalRlistValue(Rval rval);

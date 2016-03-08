@@ -86,6 +86,9 @@
 #endif
 
 
+#define ISPOW2(n)     (  (n)>0  &&  ((((n) & ((n)-1)) == 0))  )
+
+
 /*
   In contrast to the standard C modulus operator (%), this gives
   you an unsigned modulus. So where -1 % 3 => -1,
@@ -94,6 +97,7 @@
 unsigned long UnsignedModulus(long dividend, long divisor);
 
 size_t UpperPowerOfTwo(size_t v);
+
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...) \
     FUNC_ATTR_PRINTF(3, 4) FUNC_ATTR_NORETURN;

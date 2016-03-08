@@ -3292,7 +3292,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, ARG_UNUSED const Policy *pol
         SeqAppend(seq, (void*)JsonPrimitiveGetAsString(e));
     }
 
-    SeqShuffle(seq, StringHash(seed_str, 0, RAND_MAX));
+    SeqShuffle(seq, StringHash(seed_str, 0, (unsigned) INT_MAX + 1));
 
     Rlist *shuffled = NULL;
     for (size_t i = 0; i < SeqLength(seq); i++)
@@ -3400,7 +3400,8 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                                           const FnCall *fp,
                                           const Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE], *path = RlistScalarValue(finalargs);
+    char buffer[CF_BUFSIZE];
+    const char *path = RlistScalarValue(finalargs);
     char *detail = RlistScalarValue(finalargs->next);
     struct stat statbuf;
 
@@ -3608,7 +3609,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                 break;
             }
 
-            Log(LOG_LEVEL_VERBOSE, "%s resolving link '%s', cycle %d", fp->name, path_buffer, cycles+1);
+            Log(LOG_LEVEL_VERBOSE, "%s cycle %d, resolving link: %s", fp->name, cycles+1, path_buffer);
 
             /* Note we subtract 1 since we may need an extra char for '\0'. */
             ssize_t got = readlink(path_buffer, buffer, CF_BUFSIZE - 1);
@@ -3619,11 +3620,25 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                 path_buffer[0] = '\0';
                 break;
             }
-            buffer[got] = '\0'; /* readlink() doesn't terminate */
+            buffer[got] = '\0';             /* readlink() doesn't terminate */
 
-            Log(LOG_LEVEL_VERBOSE, "%s resolved link '%s' to %s", fp->name, path_buffer, buffer);
+            /* If it is a relative path, then in order to follow it further we
+             * need to prepend the directory. */
+            if (!IsAbsoluteFileName(buffer) &&
+                strcmp(detail, "linktarget") == 0)
+            {
+                DeleteSlash(path_buffer);
+                ChopLastNode(path_buffer);
+                AddSlash(path_buffer);
+                strlcat(path_buffer, buffer, sizeof(path_buffer));
+                /* Use buffer again as a tmp buffer. */
+                CompressPath(buffer, path_buffer);
+            }
+
             // We got a good link target into buffer.  Copy it to path_buffer.
             strlcpy(path_buffer, buffer, CF_MAXVARSIZE);
+
+            Log(LOG_LEVEL_VERBOSE, "Link resolved to: %s", path_buffer);
 
             if (!recurse)
             {

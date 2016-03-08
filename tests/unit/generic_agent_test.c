@@ -151,7 +151,7 @@ int main()
 
     char rm_rf[] = "rm -rf ";
     char cmd[sizeof(rm_rf) + sizeof(TEMPDIR)];
-    sprintf(cmd, "%s%s", rm_rf, TEMPDIR);
+    xsnprintf(cmd, sizeof(cmd), "%s%s", rm_rf, TEMPDIR);
     ARG_UNUSED int ignore = system(cmd);
 
     return ret;

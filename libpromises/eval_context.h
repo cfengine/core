@@ -163,8 +163,11 @@ VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalCont
 bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key);
 void EvalContextPromiseLockCachePut(EvalContext *ctx, const char *key);
 void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key);
-bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out);
+bool EvalContextFunctionCacheGet(EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out);
 void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval);
+long long EvalContextFunctionCacheMisses(const EvalContext *ctx);
+long long EvalContextFunctionCacheHits(const EvalContext *ctx);
+size_t EvalContextFunctionCacheSize(const EvalContext *ctx);
 
 const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval);
 

@@ -58,7 +58,7 @@ struct timespec BeginMeasure()
 
 /***************************************************************/
 
-void EndMeasurePromise(struct timespec start, const Promise *pp)
+void EndMeasurePromise(EvalContext *ctx, struct timespec start, const Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 
@@ -89,6 +89,13 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
     if (TIMING)
     {
         Log(LOG_LEVEL_VERBOSE, "T: .........................................................");
+        if (ctx)
+        {
+            Log(LOG_LEVEL_VERBOSE, "T: function cache hits %lld misses %lld size %ld",
+                EvalContextFunctionCacheMisses(ctx),
+                EvalContextFunctionCacheHits(ctx),
+                EvalContextFunctionCacheSize(ctx));
+        }
     }
 }
 

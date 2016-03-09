@@ -116,6 +116,8 @@ struct EvalContext_
     StringSet *promise_lock_cache;
     StringSet *dependency_handles;
     FuncCacheMap *function_cache;
+    long function_cache_misses;
+    long function_cache_hits;
 
     uid_t uid;
     uid_t gid;
@@ -922,6 +924,8 @@ EvalContext *EvalContextNew(void)
 
     ctx->promise_lock_cache = StringSetNew();
     ctx->function_cache = FuncCacheMapNew();
+    ctx->function_cache_misses = 0;
+    ctx->function_cache_hits = 0;
 
     EvalContextSetupMissionPortalLogHook(ctx);
 
@@ -1025,6 +1029,8 @@ void EvalContextClear(EvalContext *ctx)
     StringSetClear(ctx->promise_lock_cache);
     SeqClear(ctx->stack);
     FuncCacheMapClear(ctx->function_cache);
+    ctx->function_cache_misses = 0;
+    ctx->function_cache_hits = 0;
 }
 
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args)
@@ -2162,7 +2168,7 @@ void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key)
     StringSetRemove(ctx->promise_lock_cache, key);
 }
 
-bool EvalContextFunctionCacheGet(const EvalContext *ctx,
+bool EvalContextFunctionCacheGet(EvalContext *ctx,
                                  const FnCall *fp ARG_UNUSED,
                                  const Rlist *args, Rval *rval_out)
 {
@@ -2178,12 +2184,29 @@ bool EvalContextFunctionCacheGet(const EvalContext *ctx,
         {
             *rval_out = *rval;
         }
+        ctx->function_cache_hits++;
         return true;
     }
     else
     {
+        ctx->function_cache_misses++;
         return false;
     }
+}
+
+long long EvalContextFunctionCacheMisses(const EvalContext *ctx)
+{
+    return ctx->function_cache_misses;
+}
+
+long long EvalContextFunctionCacheHits(const EvalContext *ctx)
+{
+    return ctx->function_cache_hits;
+}
+
+size_t EvalContextFunctionCacheSize(const EvalContext *ctx)
+{
+    return FuncCacheMapSize(ctx->function_cache);
 }
 
 void EvalContextFunctionCachePut(EvalContext *ctx,

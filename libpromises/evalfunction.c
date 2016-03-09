@@ -3494,13 +3494,13 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
 #if defined(WITH_XATTR)
         // Extended attributes include both POSIX ACLs and SELinux contexts.
         char attr_raw_names[CF_BUFSIZE];
-        ssize_t attr_raw_names_size = listxattr(path, attr_raw_names, sizeof(attr_raw_names));
+        ssize_t attr_raw_names_size = llistxattr(path, attr_raw_names, sizeof(attr_raw_names));
 
         if (attr_raw_names_size < 0)
         {
             if (errno != ENOTSUP && errno != ENODATA)
             {
-                Log(LOG_LEVEL_ERR, "Can't read extended attributes of '%s'. (listxattr: %s)",
+                Log(LOG_LEVEL_ERR, "Can't read extended attributes of '%s'. (llistxattr: %s)",
                     path, GetErrorStr());
             }
         }
@@ -3520,7 +3520,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                 }
 
                 char data[CF_BUFSIZE];
-                int datasize = getxattr(path, current, data, sizeof(data));
+                int datasize = lgetxattr(path, current, data, sizeof(data));
                 if (datasize < 0)
                 {
                     if (errno == ENOTSUP)
@@ -3529,7 +3529,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                     }
                     else
                     {
-                        Log(LOG_LEVEL_ERR, "Can't read extended attribute '%s' of '%s'. (getxattr: %s)",
+                        Log(LOG_LEVEL_ERR, "Can't read extended attribute '%s' of '%s'. (lgetxattr: %s)",
                             path, current, GetErrorStr());
                     }
                 }

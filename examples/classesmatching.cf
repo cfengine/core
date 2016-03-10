@@ -29,10 +29,16 @@ body common control
 bundle agent run
 {
   vars:
-      "all" slist => classesmatching(".*");
-      "c" slist => classesmatching("cfengine");
-      "internal_environment" slist => classesmatching(".*", 'cfe_internal', 'source=environment');
+      "all" slist         => classesmatching(".*");
+      "c" slist           => classesmatching("cfengine");
       "c_plus_plus" slist => classesmatching("cfengine", "plus");
+
+      # order of classes is not guaranteed
+      "internal_environment_unsorted" slist =>
+          classesmatching(".*", 'cfe_internal', 'source=environment');
+      "internal_environment" slist =>
+          sort(internal_environment_unsorted, lex);
+
   reports:
       # you may find this list of all classes interesting but it
       # produces different output every time, so it's commented out here
@@ -51,8 +57,8 @@ bundle agent run
 #+begin_src example_output
 #@ ```
 #@ R: All classes with the 'cfe_internal' and 'source=environment' tags = '_cfe_output_testing'
-#@ R: All classes with the 'cfe_internal' and 'source=environment' tags = 'opt_dry_run'
 #@ R: All classes with the 'cfe_internal' and 'source=environment' tags = 'agent'
+#@ R: All classes with the 'cfe_internal' and 'source=environment' tags = 'opt_dry_run'
 #@ R: Classes matching 'cfengine' = 'cfengine'
 #@ ```
 #+end_src

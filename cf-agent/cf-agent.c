@@ -1442,6 +1442,59 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     return VerifyVarPromise(ctx, pp, true);
 }
 
+static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
+{
+    VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+    DataType type;
+    char *out = NULL;
+    size_t siz = CF_BUFSIZE;
+    size_t len = 0;
+    Writer *w;
+
+    const void *var = EvalContextVariableGet(ctx, ref, &type);
+    switch (type)
+    {
+        case CF_DATA_TYPE_INT:
+        case CF_DATA_TYPE_REAL:
+        case CF_DATA_TYPE_STRING:
+            out = xstrdup((char *)var);
+            break;
+        case CF_DATA_TYPE_INT_LIST:
+        case CF_DATA_TYPE_REAL_LIST:
+        case CF_DATA_TYPE_STRING_LIST:
+            out = xcalloc(1, CF_BUFSIZE);
+
+            for (Rlist *rp = (Rlist *)var; rp != NULL; rp = rp->next)
+            {
+                if (strlen((char *)rp->val.item) + len + 3  >= siz)  // ", " + NULL
+                {
+                    out = xrealloc(out, siz + CF_BUFSIZE);
+                    siz += CF_BUFSIZE;
+                }
+
+                if (len)
+                {
+                    len += strlcat(out, ", ", siz);
+                }
+
+                len += strlcat(out, (char *)rp->val.item, siz);
+            }
+            break;
+        case CF_DATA_TYPE_CONTAINER:
+            w = StringWriter();
+            JsonWriteCompact(w, (JsonElement *)var);
+            out = StringWriterClose(w);
+            break;
+        default:
+            assert(false && "Unknown variable type");
+            out = xstrdup("NYI");
+            break;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "V:     \"%s\" set to \"%s\"", pp->promiser, out);
+    free(out);
+}
+
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
@@ -1451,9 +1504,10 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
     {
         result = VerifyVarPromise(ctx, pp, true);
-        if (result != PROMISE_RESULT_FAIL)
+        if (result != PROMISE_RESULT_FAIL && LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
         {
             Log(LOG_LEVEL_VERBOSE, "V:     Computing value of \"%s\"", pp->promiser);
+            LogVariableValue(ctx, pp);
         }
     }
     else if (strcmp("defaults", pp->parent_promise_type->name) == 0)

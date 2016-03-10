@@ -3699,12 +3699,14 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
 
         const char* r_candidates[] = { "*", "*/*", "*/*/*", "*/*/*/*", "*/*/*/*/*", "*/*/*/*/*/*" };
         bool starstar = strstr(pattern, "**");
-        const char** candidates = starstar ? r_candidates : NULL;
-        const int candidate_count = strstr(pattern, "**") ? 6 : 1;
+        const char** candidates   = starstar ? r_candidates : NULL;
+        const int candidate_count = starstar ? 6 : 1;
 
         for (int pi = 0; pi < candidate_count; pi++)
         {
-            char* expanded = starstar ? SearchAndReplace(pattern, "**", candidates[pi]) : (char*) pattern;
+            char *expanded = starstar ?
+                SearchAndReplace(pattern, "**", candidates[pi]) :
+                xstrdup(pattern);
 
 #ifdef _WIN32
             if (strchr(expanded, '\\'))
@@ -3714,7 +3716,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
             }
 #endif
 
-            if (0 == glob(expanded, globflags, NULL, &globbuf))
+            if (glob(expanded, globflags, NULL, &globbuf) == 0)
             {
                 for (int i = 0; i < globbuf.gl_pathc; i++)
                 {
@@ -3730,10 +3732,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
                 globfree(&globbuf);
             }
 
-            if (starstar)
-            {
-                free(expanded);
-            }
+            free(expanded);
         }
     }
 

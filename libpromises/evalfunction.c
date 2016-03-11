@@ -173,7 +173,18 @@ static FnCallResult FnFailure(void)
 
 static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
 {
-    VarRef *ref = VarRefParse(varname);
+    VarRef *ref = NULL;
+    if (NULL != varname && IsVarList(varname) && strlen(varname) < CF_MAXVARSIZE)
+    {
+        char naked[CF_MAXVARSIZE] = "";
+        GetNaked(naked, varname);
+        ref = VarRefParse(naked);
+    }
+    else
+    {
+        ref = VarRefParse(varname);
+    }
+
     if (!VarRefIsQualified(ref))
     {
         if (fp->caller)

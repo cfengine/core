@@ -29,19 +29,20 @@ body common control
 bundle agent run
 {
   vars:
-      "all" slist => variablesmatching(".*");
-      "v" slist => variablesmatching("default:sys.cf_version.*");
+      "all" slist      => variablesmatching(".*");
+      "v" slist        => variablesmatching("default:sys.cf_version.*");
+      "v_sorted" slist => sort(v, lex);
   reports:
-      "Variables matching 'default:sys.cf_version.*' = $(v)";
+      "Variables matching 'default:sys.cf_version.*' = $(v_sorted)";
 }
 
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_major
-#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_patch
 #@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version
+#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_major
 #@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_minor
+#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_patch
 #@ ```
 #+end_src

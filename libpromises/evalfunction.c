@@ -2083,64 +2083,6 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
-static FnCallResult FnCallRegList(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
-    const char *listvar = RlistScalarValue(finalargs);
-
-    if (!IsVarList(listvar))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called '%s' but this was not found", listvar);
-        return FnFailure();
-    }
-
-    char naked[CF_MAXVARSIZE] = "";
-    GetNaked(naked, listvar);
-
-    VarRef *ref = VarRefParse(naked);
-
-    DataType value_type = CF_DATA_TYPE_NONE;
-    const Rlist *value = EvalContextVariableGet(ctx, ref, &value_type);
-    VarRefDestroy(ref);
-
-    if (!value)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function REGLIST was promised a list called '%s' but this was not found", listvar);
-        return FnFailure();
-    }
-
-    if (DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called '%s' but this variable is not a list",
-            listvar);
-        return FnFailure();
-    }
-
-    pcre *rx = CompileRegex(RlistScalarValue(finalargs->next));
-    if (!rx)
-    {
-        return FnFailure();
-    }
-
-    for (const Rlist *rp = value; rp != NULL; rp = rp->next)
-    {
-        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
-        {
-            continue;
-        }
-
-        if (StringMatchFullWithPrecompiledRegex(rx, RlistScalarValue(rp)))
-        {
-            pcre_free(rx);
-            return FnReturnContext(true);
-        }
-    }
-
-    pcre_free(rx);
-    return FnReturnContext(false);
-}
-
-/*********************************************************************/
-
 static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     char *arrayname = RlistScalarValue(finalargs);
@@ -2357,6 +2299,19 @@ static FnCallResult FnCallGrep(EvalContext *ctx, ARG_UNUSED const Policy *policy
                           1, // regex match = TRUE
                           0, // invert matches = FALSE
                           LONG_MAX); // max results = max int
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallRegList(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    return FilterInternal(ctx,
+                          fp,
+                          RlistScalarValue(finalargs->next), // regex or string
+                          finalargs, // list identifier
+                          1,
+                          0,
+                          LONG_MAX);
 }
 
 /*********************************************************************/
@@ -3926,6 +3881,11 @@ static FnCallResult FilterInternal(EvalContext *ctx,
         ret = (match_count == 0);
     }
     else if (0 == strcmp(fp->name, "some"))
+    {
+        contextmode = 1;
+        ret = (match_count > 0);
+    }
+    else if (0 == strcmp(fp->name, "reglist"))
     {
         contextmode = 1;
         ret = (match_count > 0);
@@ -8026,7 +7986,7 @@ static const FnCallArg REGLINE_ARGS[] =
 
 static const FnCallArg REGLIST_ARGS[] =
 {
-    {CF_NAKEDLRANGE, CF_DATA_TYPE_STRING, "CFEngine list identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
@@ -8537,7 +8497,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("regline", CF_DATA_TYPE_CONTEXT, REGLINE_ARGS, &FnCallRegLine, "True if the regular expression in arg1 matches a line in file arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("reglist", CF_DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList, "True if the regular expression in arg2 matches any item in the list whose id is arg1",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regldap", CF_DATA_TYPE_CONTEXT, REGLDAP_ARGS, &FnCallRegLDAP, "True if the regular expression in arg6 matches a value item in an ldap search",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("remotescalar", CF_DATA_TYPE_STRING, REMOTESCALAR_ARGS, &FnCallRemoteScalar, "Read a scalar value from a remote cfengine server",

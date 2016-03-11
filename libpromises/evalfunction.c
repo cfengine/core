@@ -249,8 +249,9 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
             break;
 
         case RVAL_TYPE_CONTAINER:
-            convert = (JsonElement*) value;
-            *allocated = false;
+            // TODO: look into optimizing this if necessary
+            convert = JsonCopy(value);
+            *allocated = true;
             break;
 
         case RVAL_TYPE_SCALAR:

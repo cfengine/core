@@ -173,7 +173,18 @@ static FnCallResult FnFailure(void)
 
 static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
 {
-    VarRef *ref = VarRefParse(varname);
+    VarRef *ref = NULL;
+    if (NULL != varname && IsVarList(varname) && strlen(varname) < CF_MAXVARSIZE)
+    {
+        char naked[CF_MAXVARSIZE] = "";
+        GetNaked(naked, varname);
+        ref = VarRefParse(naked);
+    }
+    else
+    {
+        ref = VarRefParse(varname);
+    }
+
     if (!VarRefIsQualified(ref))
     {
         if (fp->caller)
@@ -238,8 +249,8 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
             break;
 
         case RVAL_TYPE_CONTAINER:
-            convert = value;
-            *allocated = false;
+            convert = JsonCopy(value);
+            *allocated = true;
             break;
 
         case RVAL_TYPE_SCALAR:
@@ -3699,12 +3710,14 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
 
         const char* r_candidates[] = { "*", "*/*", "*/*/*", "*/*/*/*", "*/*/*/*/*", "*/*/*/*/*/*" };
         bool starstar = strstr(pattern, "**");
-        const char** candidates = starstar ? r_candidates : NULL;
-        const int candidate_count = strstr(pattern, "**") ? 6 : 1;
+        const char** candidates   = starstar ? r_candidates : NULL;
+        const int candidate_count = starstar ? 6 : 1;
 
         for (int pi = 0; pi < candidate_count; pi++)
         {
-            char* expanded = starstar ? SearchAndReplace(pattern, "**", candidates[pi]) : (char*) pattern;
+            char *expanded = starstar ?
+                SearchAndReplace(pattern, "**", candidates[pi]) :
+                xstrdup(pattern);
 
 #ifdef _WIN32
             if (strchr(expanded, '\\'))
@@ -3714,7 +3727,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
             }
 #endif
 
-            if (0 == glob(expanded, globflags, NULL, &globbuf))
+            if (glob(expanded, globflags, NULL, &globbuf) == 0)
             {
                 for (int i = 0; i < globbuf.gl_pathc; i++)
                 {
@@ -3730,10 +3743,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
                 globfree(&globbuf);
             }
 
-            if (starstar)
-            {
-                free(expanded);
-            }
+            free(expanded);
         }
     }
 

@@ -100,7 +100,7 @@ bundle agent appgroups(name, g)
       "$(cname)_grouplist[$(groups_$(apps))]" string => "1",
       ifvarclass => "have_app_$(apps)";
 
-      "$(cname)_grouplist" slist => getvalues("$(cname)_grouplist");
+      "$(cname)_grouplist_slist" slist => getvalues("$(cname)_grouplist");
 
       # get the keys of the array and sort them, then join with spaces
       "$(cname)_list" slist => getindices("$(cname)_grouplist");

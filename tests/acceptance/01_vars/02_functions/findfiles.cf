@@ -49,6 +49,9 @@ bundle agent test
       "patterns[c]" string => "$(G.testdir)/?/*";
       "patterns[d]" string => "$(G.testdir)/[ab]*";
       "patterns[e]" string => "$(G.testdir)/nosuch/*";
+      "patterns[relative_path_1]" string => "./*";
+      "patterns[relative_path_2]" string => "**";
+      "patterns[relative_path_3]" string => "../**";
 
     !windows::
       "patterns[f]" string => "$(G.testdir)/tu/\\*";
@@ -88,6 +91,10 @@ bundle agent check
       "expected[f]" string => "$(G.testdir)/tu/*";
       "expected[g]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu,$(G.testdir)/d/e,$(G.testdir)/g/h,$(G.testdir)/klm/nop,$(G.testdir)/tu/*,$(G.testdir)/d/e/f,$(G.testdir)/g/h/i,$(G.testdir)/klm/nop/qrs,$(G.testdir)/g/h/i/j";
       "expected[h]" string => "$(G.testdir)/g/h/i/j";
+      # relative paths are skipped, thus return empty list
+      "expected[relative_path_1]" string => "";
+      "expected[relative_path_2]" string => "";
+      "expected[relative_path_3]" string => "";
 
     any::
       "expects" slist => getindices("expected");

@@ -57,8 +57,16 @@ typedef struct
 typedef enum
 {
     FNCALL_OPTION_NONE = 0,
+    // Functions with variable arguments don't require a fixed number
+    // of arguments.
     FNCALL_OPTION_VARARG = 1 << 0,
-    FNCALL_OPTION_CACHED = 1 << 1
+    // Cached functions are evaluated once per run (memoized). The
+    // hash key is the function name and all the arguments.
+    FNCALL_OPTION_CACHED = 1 << 1,
+    // Collecting functions take a variable reference OR can accept a
+    // nested function call. Either way, those parameters are
+    // collected into a data container.
+    FNCALL_OPTION_COLLECTING = 1 << 2
 } FnCallOption;
 
 typedef struct

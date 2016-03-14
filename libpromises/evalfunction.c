@@ -3705,6 +3705,15 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
          arg = arg->next)  /* arg steps forward every time. */
     {
         const char *pattern = RlistScalarValue(arg);
+
+        if (!IsAbsoluteFileName(pattern))
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Non-absolute path in findfiles(), skipping: %s",
+                pattern);
+            continue;
+        }
+
         glob_t globbuf;
         int globflags = 0; // TODO: maybe add GLOB_BRACE later
 

@@ -164,8 +164,8 @@ bundle agent failsafe_cfe_internal_update
     !windows.inputdir_update_repaired::
 
       # We need to know when cf-execd is not running so that we can
-      # start it when necessary. Windows uses the service manager
-      # instead of keying on individual processes.
+      # start it when necessary. Windows and systemd hosts uses the service
+      # manager instead of keying on individual processes.
 
       "cf-execd" restart_class => "cf_execd_not_running",
         handle => "failsafe_cfe_internal_bootstrap_update_processes_start_cf_execd";
@@ -313,7 +313,7 @@ bundle agent failsafe_cfe_internal_report
       "Restarted systemd unit cfengine3"
         handle => "failsafe_cfe_intrnal_bootstrap_update_reports_systemd_unit_restarted";
 
-     systemctl_restart_cfengine3_error::
+    systemctl_restart_cfengine3_error::
 
       "Error restarting systemd unit cfengine3"
         handle => "failsafe_cfe_intrnal_bootstrap_update_reports_systemd_unit_restarted";

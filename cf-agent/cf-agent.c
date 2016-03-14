@@ -1501,6 +1501,7 @@ static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
 
     Log(LOG_LEVEL_VERBOSE, "V: '%s' => '%s'", pp->promiser, out);
     free(out);
+    VarRefDestroy(ref);
 }
 
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)

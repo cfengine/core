@@ -1,3 +1,7 @@
+3.8.2:
+	Changes:
+	- Change: classesmatching(): order of classes changed
+
 3.8.1:
 	Changes:
 	- Upgrade CFEngine dependencies to the following versions:

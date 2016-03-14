@@ -1,3 +1,7 @@
+3.7.3
+	Changes:
+	- Change: classesmatching(): order of classes changed
+
 3.7.2:
 	Bug fixes:
 	- readfile() and read*list() should print an error if they fail to read file.

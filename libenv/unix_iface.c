@@ -451,7 +451,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     assert(sizeof(ip) >= sizeof(VIPADDRESS) + sizeof("ipv4_"));
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
-                    EvalContextAddIpAddress(ctx, VIPADDRESS);
+                    EvalContextAddIpAddress(ctx, VIPADDRESS, NULL); // we don't know the interface
                     RlistAppendScalar(&ips, VIPADDRESS);
 
                     for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
@@ -497,7 +497,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     address_set = true;
                 }
 
-                EvalContextAddIpAddress(ctx, txtaddr);
+                EvalContextAddIpAddress(ctx, txtaddr, CanonifyName(ifp->ifr_name));
                 RlistAppendScalar(&ips, txtaddr);
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
@@ -516,6 +516,11 @@ void GetInterfacesInfo(EvalContext *ctx)
                 snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
 
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, CF_DATA_TYPE_STRING, "source=agent");
+
+                // generate the reverse mapping
+                snprintf(name, sizeof(name), "ip2iface[%s]", txtaddr);
+
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, CanonifyName(ifp->ifr_name), CF_DATA_TYPE_STRING, "source=agent");
 
                 i = 3;
 
@@ -644,7 +649,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                 if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
-                    EvalContextAddIpAddress(ctx, ip->name);
+                    EvalContextAddIpAddress(ctx, ip->name, NULL); // interface unknown
                     EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
                 }
             }

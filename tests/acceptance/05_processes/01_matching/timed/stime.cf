@@ -52,7 +52,7 @@ bundle agent check
     test_pass_2.(!found|not_found)::
       "any" usebundle => dcs_fail("$(this.promise_filename)");
     test_pass_2.found.!not_found::
-      "any" usebundle => dcs_wait("$(this.promise_filename)", 25);
+      "any" usebundle => dcs_wait("$(this.promise_filename)", 65);
 
     test_pass_3.(found|!not_found)::
       "any" usebundle => dcs_fail("$(this.promise_filename)");

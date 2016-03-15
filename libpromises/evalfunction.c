@@ -1302,7 +1302,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
 static bool AddPackagesMatchingJsonLine(pcre *matcher, JsonElement *json, char *line)
 {
-    
+
     if (strlen(line) > CF_BUFSIZE - 80)
     {
         Log(LOG_LEVEL_ERR,
@@ -1310,7 +1310,7 @@ static bool AddPackagesMatchingJsonLine(pcre *matcher, JsonElement *json, char *
             strlen(line));
         return false;
     }
-    
+
 
     if (StringMatchFullWithPrecompiledRegex(matcher, line))
     {
@@ -1329,7 +1329,7 @@ static bool AddPackagesMatchingJsonLine(pcre *matcher, JsonElement *json, char *
         JsonObjectAppendString(line_obj, "version", SeqAt(list, 1));
         JsonObjectAppendString(line_obj, "arch",    SeqAt(list, 2));
         JsonObjectAppendString(line_obj, "method",  SeqAt(list, 3));
-                
+
         SeqDestroy(list);
         JsonArrayAppendObject(json, line_obj);
     }
@@ -1350,7 +1350,7 @@ static bool GetLegacyPackagesMatching(pcre *matcher, JsonElement *json, const bo
     }
 
     Log(LOG_LEVEL_DEBUG, "Reading inventory from '%s'", filename);
-    
+
     FILE *const fin = fopen(filename, "r");
     if (fin == NULL)
     {
@@ -1367,7 +1367,7 @@ static bool GetLegacyPackagesMatching(pcre *matcher, JsonElement *json, const bo
 
         return true;
     }
-    
+
     char *line;
     while (NULL != (line = GetCsvLineNext(fin)))
     {
@@ -1381,7 +1381,7 @@ static bool GetLegacyPackagesMatching(pcre *matcher, JsonElement *json, const bo
 
     bool ret = (feof(fin) != 0);
     fclose(fin);
-    
+
     return ret;
 }
 
@@ -1393,15 +1393,15 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
     {
         const char *pm_name =  RlistScalarValue(rp);
         size_t pm_name_size = strlen(pm_name);
-        
-        Log(LOG_LEVEL_DEBUG, "Reading packages (%d) for package module [%s]", 
+
+        Log(LOG_LEVEL_DEBUG, "Reading packages (%d) for package module [%s]",
                 database, pm_name);
-        
+
         if (StringSafeEqual(pm_name, "cf_null"))
         {
             continue;
         }
-        
+
         CF_DB *db_cached;
         if (!OpenSubDB(&db_cached, database, pm_name))
         {
@@ -1411,9 +1411,9 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
 
         char *key = "<inventory>";
         int data_size = ValueSizeDB(db_cached, key, strlen(key) + 1);
-        
+
         Log(LOG_LEVEL_DEBUG, "Reading inventory from database: %d", data_size);
-        
+
         /* For empty list we are storing one byte value in database. */
         if (data_size > 1)
         {
@@ -1425,22 +1425,22 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
                     "for '%s' package module.", pm_name);
                 continue;
             }
-            
+
             Seq *packages_from_module = SeqStringFromString(buff, '\n');
             free(buff);
-            
+
             if (packages_from_module)
             {
                 // Iterate over and see where match is.
                 for (int i = 0; i < SeqLength(packages_from_module); i++)
                 {
-                    // With the new package promise we are storing inventory 
+                    // With the new package promise we are storing inventory
                     // information it the database. This set of lines ('\n' separated)
-                    // containing packages information. Each line is comma 
+                    // containing packages information. Each line is comma
                     // separated set of data containing name, version and architecture.
                     //
                     // Legacy package promise is using 4 values, where the last one
-                    // is package method. In our case, method is simply package 
+                    // is package method. In our case, method is simply package
                     // module name. To make sure regex matching is working as
                     // expected (we are comparing whole lines, containing package
                     // method) we need to extend the line to contain package
@@ -1451,7 +1451,7 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
                     strcpy(new_line, line);
                     strcat(new_line, ",");
                     strcat(new_line, pm_name);
-                    
+
                     if (!AddPackagesMatchingJsonLine(matcher, json, new_line))
                     {
                         break;
@@ -1463,7 +1463,7 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
             {
                  Log(LOG_LEVEL_WARNING, "Can not parse packages database for '%s' "
                      "package module.", pm_name);
-                 
+
             }
         }
         CloseDB(db_cached);
@@ -1491,10 +1491,10 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
             return FnFailure();
         }
     }
-    
+
     JsonElement *json = JsonArrayCreate(50);
     bool ret = false;
-    
+
     Rlist *default_inventory = GetDefaultInventoryFromContext(ctx);
     if (!default_inventory)
     {
@@ -2199,37 +2199,6 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
         maxbytes, n_read, txtaddr);
 
     return FnReturn(recvbuf);
-}
-
-/*********************************************************************/
-
-static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
-    char *arrayname = RlistScalarValue(finalargs);
-    pcre *rx = CompileRegex(RlistScalarValue(finalargs->next));
-    if (!rx)
-    {
-        return FnFailure();
-    }
-
-    VarRef *ref = VarRefParse(arrayname);
-    bool found = false;
-
-    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
-    VarRefDestroy(ref);
-    Variable *var;
-    while ((var = VariableTableIteratorNext(iter)))
-    {
-        if (StringMatchFullWithPrecompiledRegex(rx, RvalScalarValue(var->rval)))
-        {
-            found = true;
-            break;
-        }
-    }
-    VariableTableIteratorDestroy(iter);
-    pcre_free(rx);
-
-    return FnReturnContext(found);
 }
 
 /*********************************************************************/
@@ -4075,7 +4044,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                 RlistAppendScalar(&returnlist, val);
                 match_count++;
 
-                if (0 == strcmp(fp->name, "some"))
+                if (0 == strcmp(fp->name, "some") || 0 == strcmp(fp->name, "regarray"))
                 {
                     free(val);
                     break;
@@ -4112,12 +4081,9 @@ static FnCallResult FilterInternal(EvalContext *ctx,
         contextmode = 1;
         ret = (match_count == 0);
     }
-    else if (0 == strcmp(fp->name, "some"))
-    {
-        contextmode = 1;
-        ret = (match_count > 0);
-    }
-    else if (0 == strcmp(fp->name, "reglist"))
+    else if (0 == strcmp(fp->name, "some") ||
+             0 == strcmp(fp->name, "regarray") ||
+             0 == strcmp(fp->name, "reglist"))
     {
         contextmode = 1;
         ret = (match_count > 0);
@@ -8251,7 +8217,7 @@ static const FnCallArg READTCP_ARGS[] =
 
 static const FnCallArg REGARRAY_ARGS[] =
 {
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
@@ -8632,7 +8598,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("datastate", CF_DATA_TYPE_CONTAINER, DATASTATE_ARGS, &FnCallDatastate, "Construct a container of the variable and class state",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("difference", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are not in list arg2",
+    FnCallTypeNew("difference", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1 that are not in list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("dirname", CF_DATA_TYPE_STRING, DIRNAME_ARGS, &FnCallDirname, "Return the parent directory name for given path",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
@@ -8642,7 +8608,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("eval", CF_DATA_TYPE_STRING, EVAL_ARGS, &FnCallEval, "Evaluate a mathematical expression",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("every", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the named list matches the given regular expression",
+    FnCallTypeNew("every", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the list or array or data container matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
@@ -8658,7 +8624,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filestat", CF_DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("filter", CF_DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter, "Similarly to grep(), filter the list arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5.",
+    FnCallTypeNew("filter", CF_DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter, "Similarly to grep(), filter the list or array or data container arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5.",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("findfiles", CF_DATA_TYPE_STRING_LIST, FINDFILES_ARGS, &FnCallFindfiles, "Find files matching a shell glob pattern",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
@@ -8674,17 +8640,17 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getgid", CF_DATA_TYPE_INT, GETGID_ARGS, &FnCallGetGid, "Return the integer group id of the named group on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("getindices", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetIndices, "Get a list of keys to the array whose id is the argument and assign to variable",
+    FnCallTypeNew("getindices", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetIndices, "Get a list of keys to the list or array or data container whose id is the argument and assign to variable",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getuid", CF_DATA_TYPE_INT, GETUID_ARGS, &FnCallGetUid, "Return the integer user id of the named user on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getusers", CF_DATA_TYPE_STRING_LIST, GETUSERS_ARGS, &FnCallGetUsers, "Get a list of all system users defined, minus those names defined in arg1 and uids in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable",
+    FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values in the list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a variable's meta tags into an slist",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("grep", CF_DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2",
+    FnCallTypeNew("grep", CF_DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("groupexists", CF_DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists, "True if group or numerical id exists on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
@@ -8708,7 +8674,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ifelse", CF_DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are also in list arg2",
+    FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1 that are also in list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified (can be narrowed to specific interfaces)",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
@@ -8730,7 +8696,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isvariable", CF_DATA_TYPE_CONTEXT, ISVARIABLE_ARGS, &FnCallIsVariable, "True if the named variable is defined",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("join", CF_DATA_TYPE_STRING, JOIN_ARGS, &FnCallJoin, "Join the items of arg2 into a string, using the conjunction in arg1",
+    FnCallTypeNew("join", CF_DATA_TYPE_STRING, JOIN_ARGS, &FnCallJoin, "Join the items of list or array or data container arg2 into a string, using the conjunction in arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("lastnode", CF_DATA_TYPE_STRING, LASTNODE_ARGS, &FnCallLastNode, "Extract the last of a separated string, e.g. filename from a path",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
@@ -8744,23 +8710,23 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("lsdir", CF_DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("makerule", CF_DATA_TYPE_STRING, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
+    FnCallTypeNew("makerule", CF_DATA_TYPE_STRING, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file arg2 or the list or array or data container arg2 is newer",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapData, "Return a list with each element mapped from a CFEngine array or data container by a pattern based on $(this.k) and $(this.v)",
+    FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapData, "Return a list with each element mapped from a list or array or data container by a pattern based on $(this.k) and $(this.v)",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("mapdata", CF_DATA_TYPE_CONTAINER, MAPDATA_ARGS, &FnCallMapData, "Return a data container with each element parsed from a JSON string applied to every key-value pair of the given CFEngine array or data container, given as $(this.k) and $(this.v)",
+    FnCallTypeNew("mapdata", CF_DATA_TYPE_CONTAINER, MAPDATA_ARGS, &FnCallMapData, "Return a data container with each element parsed from a JSON string applied to every key-value pair of the list or array or data container, given as $(this.k) and $(this.v)",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("maplist", CF_DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)",
+    FnCallTypeNew("maplist", CF_DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a mapping of the list or array or data container with each element modified by a pattern based $(this)",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("mergedata", CF_DATA_TYPE_CONTAINER, MERGEDATA_ARGS, &FnCallMergeData, "Merge two or more data containers or lists",
+    FnCallTypeNew("mergedata", CF_DATA_TYPE_CONTAINER, MERGEDATA_ARGS, &FnCallMergeData, "Merge two or more items, each a list or array or data container",
                   FNCALL_OPTION_COLLECTING|FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("none", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if no element in the named list matches the given regular expression",
+    FnCallTypeNew("none", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if no element in the list or array or data container matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("not", CF_DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("now", CF_DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("nth", CF_DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list or data container arg1",
+    FnCallTypeNew("nth", CF_DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("on", CF_DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
@@ -8818,8 +8784,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readtcp", CF_DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("regarray", CF_DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegArray, "True if arg1 matches any item in the associative array with id=arg2",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regarray", CF_DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegList, "True if the regular expression in arg1 matches any item in the list or array or data container arg2",
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regcmp", CF_DATA_TYPE_CONTEXT, REGCMP_ARGS, &FnCallRegCmp, "True if arg1 is a regular expression matching that matches string arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regextract", CF_DATA_TYPE_CONTEXT, REGEXTRACT_ARGS, &FnCallRegExtract, "True if the regular expression in arg 1 matches the string in arg2 and sets a non-empty array of backreferences named arg3",
@@ -8828,7 +8794,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regline", CF_DATA_TYPE_CONTEXT, REGLINE_ARGS, &FnCallRegLine, "True if the regular expression in arg1 matches a line in file arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("reglist", CF_DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList, "True if the regular expression in arg2 matches any item in the list whose id is arg1",
+    FnCallTypeNew("reglist", CF_DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList, "True if the regular expression in arg2 matches any item in the list or array or data container whose id is arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regldap", CF_DATA_TYPE_CONTEXT, REGLDAP_ARGS, &FnCallRegLDAP, "True if the regular expression in arg6 matches a value item in an ldap search",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
@@ -8840,31 +8806,31 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("rrange", CF_DATA_TYPE_REAL_RANGE, RRANGE_ARGS, &FnCallRRange, "Define a range of real numbers for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("reverse", CF_DATA_TYPE_STRING_LIST, REVERSE_ARGS, &FnCallReverse, "Reverse a string list",
+    FnCallTypeNew("reverse", CF_DATA_TYPE_STRING_LIST, REVERSE_ARGS, &FnCallReverse, "Reverse a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("selectservers", CF_DATA_TYPE_INT, SELECTSERVERS_ARGS, &FnCallSelectServers, "Select tcp servers which respond correctly to a query and return their number, set array of names",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("shuffle", CF_DATA_TYPE_STRING_LIST, SHUFFLE_ARGS, &FnCallShuffle, "Shuffle a string list",
+    FnCallTypeNew("shuffle", CF_DATA_TYPE_STRING_LIST, SHUFFLE_ARGS, &FnCallShuffle, "Shuffle the items in a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("some", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if an element in the named list matches the given regular expression",
+    FnCallTypeNew("some", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if an element in the list or array or data container matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("sort", CF_DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort, "Sort a string list",
+    FnCallTypeNew("sort", CF_DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort, "Sort a list or array or data container",
                   FNCALL_OPTION_COLLECTING | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splayclass", CF_DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass, "True if the first argument's time-slot has arrived, according to a policy in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splitstring", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_DEPRECATED),
-    FnCallTypeNew("storejson", CF_DATA_TYPE_STRING, STOREJSON_ARGS, &FnCallStoreJson, "Convert a data container to a JSON string",
+    FnCallTypeNew("storejson", CF_DATA_TYPE_STRING, STOREJSON_ARGS, &FnCallStoreJson, "Convert a list or array or data container to a JSON string",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strcmp", CF_DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strftime", CF_DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("sublist", CF_DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list arg1.",
+    FnCallTypeNew("sublist", CF_DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list or array or data container arg1.",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("translatepath", CF_DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath, "Translate path separators from Unix style to the host's native",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("unique", CF_DATA_TYPE_STRING_LIST, UNIQUE_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1",
+    FnCallTypeNew("unique", CF_DATA_TYPE_STRING_LIST, UNIQUE_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("usemodule", CF_DATA_TYPE_CONTEXT, USEMODULE_ARGS, &FnCallUseModule, "Execute cfengine module script and set class if successful",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
@@ -8896,19 +8862,19 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // List folding functions
-    FnCallTypeNew("length", CF_DATA_TYPE_INT, STAT_FOLD_ARGS, &FnCallLength, "Return the length of a list",
+    FnCallTypeNew("length", CF_DATA_TYPE_INT, STAT_FOLD_ARGS, &FnCallLength, "Return the length of a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("max", CF_DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the maximum of a list",
+    FnCallTypeNew("max", CF_DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the maximum value in a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("mean", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the mean (average) of a list",
+    FnCallTypeNew("mean", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the mean (average) in a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("min", CF_DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the minimum of a list",
+    FnCallTypeNew("min", CF_DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the minimum in a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("product", CF_DATA_TYPE_REAL, PRODUCT_ARGS, &FnCallFold, "Return the product of a list of reals",
+    FnCallTypeNew("product", CF_DATA_TYPE_REAL, PRODUCT_ARGS, &FnCallFold, "Return the product of a list or array or data container of reals",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("sum", CF_DATA_TYPE_REAL, SUM_ARGS, &FnCallFold, "Return the sum of a list",
+    FnCallTypeNew("sum", CF_DATA_TYPE_REAL, SUM_ARGS, &FnCallFold, "Return the sum of a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("variance", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
+    FnCallTypeNew("variance", CF_DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list or array or data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // CFEngine internal functions
@@ -8920,7 +8886,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   // Data container functions
     FnCallTypeNew("data_regextract", CF_DATA_TYPE_CONTAINER, DATA_REGEXTRACT_ARGS, &FnCallRegExtract, "Matches the regular expression in arg 1 against the string in arg2 and returns a data container holding the backreferences by name",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("data_expand", CF_DATA_TYPE_CONTAINER, DATA_EXPAND_ARGS, &FnCallDataExpand, "Expands any CFEngine variables in a data container, keys or values",
+    FnCallTypeNew("data_expand", CF_DATA_TYPE_CONTAINER, DATA_EXPAND_ARGS, &FnCallDataExpand, "Expands any CFEngine variables in a list or array or data container, converting to a data container",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // File parsing functions that output a data container

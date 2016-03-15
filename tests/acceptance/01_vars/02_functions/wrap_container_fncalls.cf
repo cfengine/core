@@ -1,0 +1,60 @@
+#######################################################
+#
+# Test wrapped fncalls that return data containers
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common init
+{
+  classes:
+      "predefined" expression => "any";
+}
+
+bundle agent test
+{
+  vars:
+      "base_list" slist => { "a", "b", "c", "aaa", "bbb", "ccc" };
+      "base_data" data => '{ "x": 100, "y": "z"  }';
+      "mapdata_spec" string => "<<< $(this.k)=$(this.v) >>>";
+
+      "sort_mapdata_inline_json" slist => sort(mapdata('none', $(mapdata_spec), '[1,2,3]'), lex);
+      "sort_mapdata_slist" slist => sort(mapdata('none', $(mapdata_spec), base_list), lex);
+      "sort_mapdata_data" slist => sort(mapdata('none', $(mapdata_spec), base_data), lex);
+
+      "sort_mapdata_mergedata_inline_json" slist => sort(mapdata('none', $(mapdata_spec), '[1,2,3]'), lex);
+      "sort_mapdata_mergedata_slist" slist => sort(mapdata('none', $(mapdata_spec), mergedata(base_list)), lex);
+      "sort_mapdata_mergedata_data" slist => sort(mapdata('none', $(mapdata_spec), mergedata(base_data)), lex);
+
+      # we can nest functions that return slists too!
+      "sort_mapdata_sort_slist" slist => sort(mapdata('none', $(mapdata_spec), sort(base_list, int)), lex);
+      "sort_mapdata_mergedata_sort_slist" slist => sort(mapdata('none', $(mapdata_spec), mergedata(sort(base_list, int))), lex);
+      "reverse_sort_slist" slist => reverse(sort(base_list, int));
+
+      "concat_sort_mapdata_mergedata_inline_json" string => concat(sort(mapdata('none', $(mapdata_spec), '[1,2,3]'), lex));
+      "concat_sort_mapdata_mergedata_slist" string => concat(sort(mapdata('none', $(mapdata_spec), mergedata(base_list)), lex));
+      "concat_sort_mapdata_mergedata_data" string => concat(sort(mapdata('none', $(mapdata_spec), mergedata(base_data)), lex));
+
+      "nth_sort_mapdata_mergedata_inline_json" string => nth(sort(mapdata('none', $(mapdata_spec), '[1,2,3]'), lex), 0);
+      "nth_mapdata_mergedata_slist" string => nth(mapdata('none', $(mapdata_spec), mergedata(base_list)), 1);
+      "nth_inline_json" string => nth('{ "x": "88888888" }', "x");
+      "nth_missing_inline_json" string => nth('{ "x": "88888888" }', "y");
+      "nth_data" string => nth(base_data, "x");
+      "nth_list" string => nth(base_list, 3);
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

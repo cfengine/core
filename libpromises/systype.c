@@ -23,6 +23,9 @@
 */
 
 #include <systype.h>
+#if defined __FreeBSD__
+#include <sys/param.h>
+#endif
 
 /* Set in libenv/sysinfo.c::DetectEnvironment (called every time environment
    reload is performed).
@@ -100,7 +103,11 @@ const char *const VPSOPTS[] =
     [PLATFORM_CONTEXT_BUSYBOX] = "",                  /* linux / busybox */
     [PLATFORM_CONTEXT_SOLARIS] = "auxww",     /* solaris >= 11 */
     [PLATFORM_CONTEXT_SUN_SOLARIS] = "auxww", /* solaris < 11 */
-    [PLATFORM_CONTEXT_FREEBSD] = "auxw -J 0",              /* freebsd */
+#if __FreeBSD_version >= 903000
+    [PLATFORM_CONTEXT_FREEBSD] = "auxw -J 0",              /* freebsd 9.3 and newer */
+#else
+    [PLATFORM_CONTEXT_FREEBSD] = "auxw",              /* freebsd 9.2 and older*/
+#endif
     [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",   /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "-elyf",              /* cray */
     [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",            /* NT */

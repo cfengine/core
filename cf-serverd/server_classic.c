@@ -917,7 +917,8 @@ RSA *newkey = RSA_new();
         if (recv_len == -1)
         {
             Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "error receiving counter-challenge response");
+                "error receiving counter-challenge response; "
+                "maybe the client does not trust our key?");
         }
         else                                      /* 0 < recv_len < expected_len */
         {

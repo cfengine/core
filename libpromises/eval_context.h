@@ -202,7 +202,7 @@ bool GetChecksumUpdatesDefault(const EvalContext *ctx);
 
 /* IP addresses */
 Item *EvalContextGetIpAddresses(const EvalContext *ctx);
-void EvalContextAddIpAddress(EvalContext *ctx, const char *address);
+void EvalContextAddIpAddress(EvalContext *ctx, const char *address, const char *iface);
 void EvalContextDeleteIpAddresses(EvalContext *ctx);
 
 /* - Rest - */

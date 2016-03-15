@@ -166,6 +166,16 @@ static FnCallResult FnReturnContext(bool result)
     return FnReturn(result ? "any" : "!any");
 }
 
+static FnCallResult FnReturnContextTrue()
+{
+    return FnReturnContext(true);
+}
+
+static FnCallResult FnReturnContextFalse()
+{
+    return FnReturnContext(false);
+}
+
 static FnCallResult FnFailure(void)
 {
     return (FnCallResult) { FNCALL_FAILURE };
@@ -4666,14 +4676,40 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     for (const Item *ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
     {
-        if (FuzzySetMatch(range, VIPADDRESS) == 0 ||
-            FuzzySetMatch(range, ip->name) == 0)
+        Rlist *ifaces = finalargs->next;
+        // we match on VIPADDRESS iff no interfaces were requested
+        if (FuzzySetMatch(range, VIPADDRESS) == 0 && NULL == ifaces)
         {
-            return FnReturnContext(true);
+            Log(LOG_LEVEL_DEBUG, "%s: found range %s on hostip %s, no interface", fp->name, range, ip->name);
+            return FnReturnContextTrue();
+        }
+        else if (FuzzySetMatch(range, ip->name) == 0)
+        {
+            if (NULL == ifaces) // no interfaces requested
+            {
+                Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, any interface", fp->name, range, ip->name);
+                return FnReturnContextTrue();
+            }
+            else // check the specific interfaces given as arguments
+            {
+                for (; ifaces != NULL; ifaces = ifaces->next)
+                {
+                    Buffer *iface = BufferNewFrom(RlistScalarValue(ifaces), strlen(RlistScalarValue(ifaces)));
+                    BufferCanonify(iface);
+                    Log(LOG_LEVEL_DEBUG, "%s: checking range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                    if (0 == strcmp(BufferData(iface), ip->classes))
+                    {
+                        Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                        BufferDestroy(iface);
+                        return FnReturnContextTrue();
+                    }
+                    BufferDestroy(iface);
+                }
+            }
         }
     }
 
-    return FnReturnContext(false);
+    return FnReturnContextFalse();
 }
 
 /*********************************************************************/
@@ -8387,8 +8423,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are also in list arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified (can be narrowed to specific interfaces)",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", CF_DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isdir", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory",

@@ -2592,9 +2592,9 @@ bool GetChecksumUpdatesDefault(const EvalContext *ctx)
     return ctx->checksum_updates_default;
 }
 
-void EvalContextAddIpAddress(EvalContext *ctx, const char *ip_address)
+void EvalContextAddIpAddress(EvalContext *ctx, const char *ip_address, const char *iface)
 {
-    AppendItem(&ctx->ip_addresses, ip_address, "");
+    AppendItem(&ctx->ip_addresses, ip_address, (NULL == iface ? "" : iface));
 }
 
 void EvalContextDeleteIpAddresses(EvalContext *ctx)

@@ -67,6 +67,7 @@
 #include <mustache.h>
 #include <processes_select.h>
 #include <sysinfo.h>
+#include <ip_address.h>
 
 #include <math_eval.h>
 
@@ -4860,6 +4861,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
 static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
+    const bool iprange_mode = (strcmp(fp->name, "iprange") == 0);
     char *range = RlistScalarValue(finalargs);
 
     if (!FuzzyMatchParse(range))
@@ -4867,16 +4869,40 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
-    for (const Item *ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
+    /* Case 1: iprange(): No second argument, just arg1: check arg1 (a range) against VIPADDRESS */
+    if (iprange_mode && finalargs->next == NULL)
     {
-        Rlist *ifaces = finalargs->next;
-        // we match on VIPADDRESS iff no interfaces were requested
-        if (FuzzySetMatch(range, VIPADDRESS) == 0 && NULL == ifaces)
+        if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "%s: found range %s on hostip %s, no interface", fp->name, range, ip->name);
+            Log(LOG_LEVEL_DEBUG, "%s: found range %s on hostip %s, no interface", fp->name, range, VIPADDRESS);
             return FnReturnContextTrue();
         }
-        else if (FuzzySetMatch(range, ip->name) == 0)
+
+        return FnReturnContextFalse();
+    }
+
+    /* Case 2: isipinsubnet(): check arg1 (a range) against arg2, arg3, ... if they are IPs */
+    for (Rlist *ip = finalargs->next; !iprange_mode && ip != NULL; ip = ip->next)
+    {
+        Buffer *ipb = BufferNewFrom(RlistScalarValue(ip), strlen(RlistScalarValue(ip)));
+        bool is_ip = IPAddressIsIPAddress(ipb, NULL);
+        if (is_ip && FuzzySetMatch(range, BufferData(ipb)) == 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "%s: found range %s on given IP %s", fp->name, range, BufferData(ipb));
+            BufferDestroy(ipb);
+            return FnReturnContextTrue();
+        }
+        BufferDestroy(ipb);
+    }
+
+    /* Case 3: iprange(): check arg1 (a range) against arg2, arg3, ... if
+     * they are interface names, inspecting the IP for that interface. Check all
+     * IPs if no interface names are given. */
+    for (const Item *ip = EvalContextGetIpAddresses(ctx); iprange_mode && ip != NULL; ip = ip->next)
+    {
+        Rlist *ifaces = finalargs->next;
+
+        if (FuzzySetMatch(range, ip->name) == 0)
         {
             if (NULL == ifaces) // no interfaces requested
             {
@@ -8676,8 +8702,6 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1 that are also in list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified (can be narrowed to specific interfaces)",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", CF_DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isdir", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory",
@@ -8898,6 +8922,10 @@ const FnCallType CF_FNCALL_TYPES[] =
     // Network probe functions
     FnCallTypeNew("network_connections", CF_DATA_TYPE_CONTAINER, NETWORK_CONNECTIONS_ARGS, &FnCallNetworkConnections, "Get the full list of TCP, TCP6, UDP, and UDP6 connections from /proc/net",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified in arg1 (can be narrowed to specific interfaces with arg2).",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isipinsubnet", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if an IP address specified in arg2, arg3, ... lies in the range of IP addresses specified in arg1",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
 
     FnCallTypeNewNull()
 };

@@ -31,6 +31,9 @@ bundle agent test
       "expected_missing" expression => iprange("0.0.0.0/0", "dummy"),
         meta => { "collect" };
 
+      "all_zeroes_on_ip" expression => isipinsubnet("0.0.0.0/0", "1.2.3.4"),
+        meta => { "collect" };
+
       "all_zeroes" expression => iprange("0.0.0.0/0"),
         meta => { "collect" };
 
@@ -50,6 +53,9 @@ bundle agent test
         meta => { "collect" };
 
       "just_locals" expression => iprange("$(sys.ip_addresses)/32"),
+        meta => { "collect" };
+
+      "ip_range" expression => isipinsubnet("1.2.3.4/32", "1.2.3.4"),
         meta => { "collect" };
 
   vars:

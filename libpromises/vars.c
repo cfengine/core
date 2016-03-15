@@ -43,6 +43,13 @@ bool RlistIsUnresolved(const Rlist *list)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
+        // JSON data container values are never expanded, except with the
+        // data_expand() function which see.
+        if (rp->val.type == RVAL_TYPE_CONTAINER)
+        {
+            continue;
+        }
+
         if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             return true;

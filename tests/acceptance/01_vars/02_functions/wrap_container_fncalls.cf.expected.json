@@ -1,0 +1,81 @@
+{
+  "base_data": {
+    "x": 100,
+    "y": "z"
+  },
+  "base_list": [
+    "a",
+    "b",
+    "c",
+    "aaa",
+    "bbb",
+    "ccc"
+  ],
+  "concat_sort_mapdata_mergedata_data": "<<< x=100 >>><<< y=z >>>",
+  "concat_sort_mapdata_mergedata_inline_json": "<<< 0=1 >>><<< 1=2 >>><<< 2=3 >>>",
+  "concat_sort_mapdata_mergedata_slist": "<<< 0=a >>><<< 1=b >>><<< 2=c >>><<< 3=aaa >>><<< 4=bbb >>><<< 5=ccc >>>",
+  "mapdata_spec": "<<< $(this.k)=$(this.v) >>>",
+  "nth_data": "100",
+  "nth_inline_json": "88888888",
+  "nth_list": "aaa",
+  "nth_mapdata_mergedata_slist": "<<< 1=b >>>",
+  "nth_sort_mapdata_mergedata_inline_json": "<<< 0=1 >>>",
+  "reverse_sort_slist": [
+    "ccc",
+    "c",
+    "bbb",
+    "b",
+    "aaa",
+    "a"
+  ],
+  "sort_mapdata_data": [
+    "<<< x=100 >>>",
+    "<<< y=z >>>"
+  ],
+  "sort_mapdata_inline_json": [
+    "<<< 0=1 >>>",
+    "<<< 1=2 >>>",
+    "<<< 2=3 >>>"
+  ],
+  "sort_mapdata_mergedata_data": [
+    "<<< x=100 >>>",
+    "<<< y=z >>>"
+  ],
+  "sort_mapdata_mergedata_inline_json": [
+    "<<< 0=1 >>>",
+    "<<< 1=2 >>>",
+    "<<< 2=3 >>>"
+  ],
+  "sort_mapdata_mergedata_slist": [
+    "<<< 0=a >>>",
+    "<<< 1=b >>>",
+    "<<< 2=c >>>",
+    "<<< 3=aaa >>>",
+    "<<< 4=bbb >>>",
+    "<<< 5=ccc >>>"
+  ],
+  "sort_mapdata_mergedata_sort_slist": [
+    "<<< 0=a >>>",
+    "<<< 1=aaa >>>",
+    "<<< 2=b >>>",
+    "<<< 3=bbb >>>",
+    "<<< 4=c >>>",
+    "<<< 5=ccc >>>"
+  ],
+  "sort_mapdata_slist": [
+    "<<< 0=a >>>",
+    "<<< 1=b >>>",
+    "<<< 2=c >>>",
+    "<<< 3=aaa >>>",
+    "<<< 4=bbb >>>",
+    "<<< 5=ccc >>>"
+  ],
+  "sort_mapdata_sort_slist": [
+    "<<< 0=a >>>",
+    "<<< 1=aaa >>>",
+    "<<< 2=b >>>",
+    "<<< 3=bbb >>>",
+    "<<< 4=c >>>",
+    "<<< 5=ccc >>>"
+  ]
+}

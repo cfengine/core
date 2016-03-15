@@ -3690,7 +3690,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
 
         if (!IsAbsoluteFileName(pattern))
         {
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_WARNING,
                 "Non-absolute path in findfiles(), skipping: %s",
                 pattern);
             continue;

@@ -160,7 +160,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
 
     /* If error occured or recv() timeout or if connection was gracefully
      * closed. Connection has been finalised. */
-    if (ret == -1)
+    if (ret <= 0)
     {
         /* We are experiencing problems with receiving data from server.
          * This might lead to packages being not delivered in correct
@@ -195,6 +195,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
         conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
         return -1;
     }
+
     if (status != CF_MORE && status != CF_DONE)
     {
         Log(LOG_LEVEL_ERR,
@@ -250,12 +251,9 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
 
-    if (ret == -1)
-    {
-        conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
-        return -1;
-    }
-    else if (ret != len)
+    /* Connection gracefully closed (ret==0) or connection error (ret==-1) or
+     * just partial receive of bytestream.*/
+    if (ret != len)
     {
         /*
          * Should never happen except with TLS, given that we are using

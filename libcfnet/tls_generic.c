@@ -717,7 +717,7 @@ int TLSRecv(SSL *ssl, char *buffer, int toget)
     {
         if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
         {
-            Log(LOG_LEVEL_ERR,
+            Log(LOG_LEVEL_VERBOSE,
                 "Remote peer terminated TLS session (SSL_read)");
         }
         else

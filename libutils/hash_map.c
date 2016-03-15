@@ -58,8 +58,12 @@ bool HashMapInsert(HashMap *map, void *key, void *value)
     {
         if (map->equal_fn(i->value.key, key))
         {
-            map->destroy_key_fn(key);
+            /* Replace the key with the new one despite those two being the
+             * same, since the new key might be referenced somewhere inside
+             * the new value. */
+            map->destroy_key_fn(i->value.key);
             map->destroy_value_fn(i->value.value);
+            i->value.key   = key;
             i->value.value = value;
             return true;
         }

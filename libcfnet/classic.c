@@ -56,8 +56,8 @@ static bool LastRecvTimedOut(void)
  *
  * @return number of bytes actually received, must be equal to #toget
  *         -1  in case of timeout or error - socket is unusable
- *         -1  also in case of early proper connection close
- *         0       NEVER
+ *         0   connection was closed (not an error, that's how clients
+ *             normally terminate)
  *         <toget  NEVER
  */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
@@ -101,13 +101,10 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
                 return -1;
             }
         }
-        else if (got == 0)          /* peer has closed the connection early */
+        else if (got == 0)
         {
-            Log(LOG_LEVEL_ERR,
-                "Peer closed connection early (received=%dB, expecting=%dB)",
-                already, toget);
+            Log(LOG_LEVEL_VERBOSE, "Peer has closed the connection");
             buffer[already] = '\0';
-            /* TODO Why return 0? Early close is an error so -1 is better. */
             return 0;
         }
     }

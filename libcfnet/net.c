@@ -184,6 +184,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
         conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
         return -1;
     }
+
     if (status != CF_MORE && status != CF_DONE)
     {
         Log(LOG_LEVEL_ERR,

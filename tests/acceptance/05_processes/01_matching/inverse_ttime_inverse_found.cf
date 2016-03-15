@@ -1,6 +1,7 @@
 #######################################################
 #
-# Set a class if a process does exist, more complex matches
+# Set a class if a process with !any time does not exist, and
+# we wanted not to (irange(0,0))
 #
 #######################################################
 
@@ -40,8 +41,8 @@ bundle agent test
 
 body process_count test_range
 {
-      in_range_define => { "found" };
-      out_of_range_define => { "not_found" };
+      in_range_define => { "none_found" };
+      out_of_range_define => { "some_found" };
       match_range => irange(0,0);
 }
 
@@ -57,7 +58,7 @@ body process_select test_select_high_users
 bundle agent check
 {
   classes:
-      "ok" expression => "found.!not_found";
+      "ok" expression => "none_found.!some_found";
 
   reports:
     ok::

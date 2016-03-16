@@ -155,7 +155,7 @@ void ActAsDaemon()
                 GetErrorStr());
         }
 
-        if (dup2(fd, STDERR_FILENO) == -1);
+        if (dup2(fd, STDERR_FILENO) == -1)
         {
             Log(LOG_LEVEL_WARNING,
                 "Could not close stderr while daemonising (dup2: %s)",

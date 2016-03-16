@@ -27,7 +27,7 @@ bundle agent test
                    own.";
 
       "test_skip_unsupported"
-        string => "!windows";
+        string => "windows";
 
   vars:
     !windows::

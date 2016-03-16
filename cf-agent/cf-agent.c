@@ -1499,8 +1499,9 @@ static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
             break;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "V: '%s' => '%s'", pp->promiser, out);
+    Log(LOG_LEVEL_DEBUG, "V: '%s' => '%s'", pp->promiser, out);
     free(out);
+    VarRefDestroy(ref);
 }
 
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
@@ -1513,10 +1514,13 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         strcmp("vars", pp->parent_promise_type->name) == 0)
     {
         result = VerifyVarPromise(ctx, pp, true);
-        if (result != PROMISE_RESULT_FAIL &&
-            LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+        if (result != PROMISE_RESULT_FAIL)
         {
-            LogVariableValue(ctx, pp);
+            Log(LOG_LEVEL_VERBOSE, "V:     Computing value of \"%s\"", pp->promiser);
+            if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+            {
+                LogVariableValue(ctx, pp);
+            }
         }
     }
     else if (strcmp("defaults", pp->parent_promise_type->name) == 0)

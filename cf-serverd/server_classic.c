@@ -937,7 +937,8 @@ RSA *newkey = RSA_new();
         else if (recv_len == 0)
         {
             Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "connection was closed while receiving counter-challenge response");
+                "connection was closed while receiving counter-challenge response; "
+                "maybe the client does not trust our key?");
         }
         else                                      /* 0 < recv_len < expected_len */
         {

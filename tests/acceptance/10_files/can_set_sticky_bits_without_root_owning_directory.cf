@@ -27,7 +27,9 @@ bundle agent test
                    own.";
 
       "test_skip_unsupported"
-        string => "!windows";
+        string => "windows";
+      "test_skip_needs_work"
+        string => "!has_stat";
 
   vars:
     !windows::
@@ -52,7 +54,7 @@ bundle agent check
   vars:
     test_sgid_dir_reached::
       "expect_permoct" string => "$(test.mode)";
-      "result_permoct" string => execresult('/usr/bin/stat -c %a $(G.testdir)/test_sgid', "useshell");
+      "result_permoct" string => execresult('$(G.stat) -c %a $(G.testdir)/test_sgid', "useshell");
 
   methods:
       "Compare Results"

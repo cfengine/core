@@ -1,0 +1,107 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "users" slist => { "user01", "user02" };
+    "modes" slist => {
+                       "2700",
+                       "2750",
+                       "2755",
+                       "2770",
+                       "2771",
+                       "2775",
+                       "2751",
+                      };
+
+  users:
+    "$(users)"
+      policy => "present";
+
+}
+
+bundle agent cleanup
+{
+  users:
+    "$(init.users)"
+      policy => "absent",
+      comment => "Purge the users we created to test with";
+}
+
+#######################################################
+
+bundle agent test
+{ 
+  meta:
+    "description" string => "Test that sgid can be set when ownership is non root";
+
+    "test_skip_unsupported"
+      string => "windows";
+    "test_skip_needs_work"
+      string => "!has_stat",
+      meta => { "redmine7989", "zendesk2797" };
+
+  files:
+    linux::
+      "$(G.testdir)/test_sgid/$(init.modes)/."
+      create => "true",
+      perms => test_perms( $(init.modes), "user01", "user02"),
+      classes => scoped_classes_generic("namespace", "file_$(init.modes)"),
+      comment => "Make sure a directory named for each desired mode we want to test exists.";
+}
+
+body perms test_perms(m, o, g)
+{
+      mode => "$(m)";
+      owners => { "$(o)" };
+      groups => { "$(g)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  vars:
+      # We expect to find an ok_ prefixed class for each of the modes defined in
+      # init.
+      "expected_classes" slist => maplist("ok_$(this)", @(init.modes));
+
+      # Get the octal mode for each of the files
+      "result_permoct_$(init.modes)"
+        string => execresult('$(G.stat) -c %a $(G.testdir)/test_sgid/$(init.modes)', "useshell"),
+        ifvarclass => "file_$(init.modes)_reached";
+
+    DEBUG|DEBUG_check::
+      # We collect up the classes that match our expected pattern for debug
+      # reports
+      "classes" slist => classesmatching("ok_.*");
+
+  classes:
+      # Define an ok_ prefixed class for each of the modes defined in init if it
+      # matches what we observed with stat.
+      "ok_$(init.modes)" expression => strcmp("$(init.modes)", "$(result_permoct_$(init.modes))");
+
+
+      # And here we define the class to pass or fail the test.
+      "ok" and => { @(expected_classes) };
+      "not_ok" not => "ok";
+
+  reports:
+    DEBUG|DEBUG_check::
+      "Found '$(G.testdir)/test_sgid/$(init.modes)' = '$(result_permoct_$(init.modes))' expected '$(init.modes)'";
+      "Found class: '$(classes)')";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    not_ok::
+      "$(this.promise_filename) FAIL";
+}

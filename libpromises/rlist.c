@@ -351,7 +351,6 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
                 char closing_brace = 0;
                 for (int c = 0; c < buffer_from[c]; c++)
                 {
-                    printf("In %s at %i: '%s'\n", __func__, __LINE__, buffer_from);
                     if (buffer_from[c] == '$')
                     {
                         if (buffer_from[c+1] == '(')

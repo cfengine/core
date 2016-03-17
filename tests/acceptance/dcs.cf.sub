@@ -767,21 +767,21 @@ bundle agent dcs_passif_output(wanted, unwanted, command, test)
 
   reports:
     DEBUG::
-      "$(this.bundle): bad: $(wanted) was NOT found in the output of $(command)"
+      "$(this.bundle): bad: '$(wanted)' was NOT found in the output of '$(command)'"
       ifvarclass => "!__passif_output_wanted";
 
-      "$(this.bundle): bad: $(unwanted) WAS found in the output of $(command)"
+      "$(this.bundle): bad: '$(unwanted)' WAS found in the output of '$(command)'"
       ifvarclass => "__passif_output_unwanted";
 
     EXTRA::
-      "$(this.bundle): good: $(wanted) WAS found in the output of $(command)"
+      "$(this.bundle): good: '$(wanted)' WAS found in the output of '$(command)'"
       ifvarclass => "__passif_output_wanted";
 
-      "$(this.bundle): good: $(unwanted) was NOT found in the output of $(command)"
+      "$(this.bundle): good: '$(unwanted)' was NOT found in the output of '$(command)'"
       ifvarclass => "!__passif_output_unwanted";
 
     DEBUG::
-      "$(this.bundle): the output of command '$(command)' was: $(subout)";
+      "$(this.bundle): the output of command '$(command)' was: '$(subout)'";
 }
 
 bundle agent dcs_passif_output1(wanted, command, test)

@@ -334,10 +334,10 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                     JsonGetContainerType(inputs) == JSON_CONTAINER_TYPE_ARRAY &&
                     JsonArrayContainsOnlyPrimitives(inputs))
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Installing augments def.augment_inputs from file '%s'",
+                    Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
                         BufferData(filename_buffer));
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                  "augment_inputs", JsonCopy(inputs),
+                                                  "augments_inputs", JsonCopy(inputs),
                                                   CF_DATA_TYPE_CONTAINER,
                                                   "source=augments_file");
                 }

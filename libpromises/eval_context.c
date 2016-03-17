@@ -1649,6 +1649,9 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
     return promisees;
 }
 
+/*
+ * Copies value, so you need to free your own copy afterwards.
+ */
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
     if (strchr(lval, '['))
@@ -1824,6 +1827,9 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
     }
 }
 
+/*
+ * Copies value, so you need to free your own copy afterwards.
+ */
 bool EvalContextVariablePut(EvalContext *ctx,
                             const VarRef *ref, const void *value,
                             DataType type, const char *tags)

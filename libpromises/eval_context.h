@@ -182,6 +182,7 @@ const Body *EvalContextResolveBodyExpression(const EvalContext *ctx, const Polic
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const EvalContext *ctx, const char *context);
+StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const char* regex, const Rlist *tags, bool first_only);
 
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
@@ -235,5 +236,6 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EvalContextSetupMissionPortalLogHook,
                                   EvalContext *, ctx);
 char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char *message);
 
+JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source);
 
 #endif

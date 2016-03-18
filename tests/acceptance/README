@@ -88,6 +88,11 @@ bundles:
 Look in default.cf for some standard check bundles (for example, to compare
 files when testing file edits, or for cleaning up temporary files).
 
+For a test named XYZ, if the test runner finds the file XYZ.def.json,
+that file will be copied to the input directory so it will be loaded
+on startup. That lets you set hard classes and def variables and add
+inputs before the test ever runs.
+
 Tests should be named with short names describing what they test, using lower-
 case letters and underscores only. If the test is expected to generate an error
 (that is, if they contan syntax errors or other faults), it should have an

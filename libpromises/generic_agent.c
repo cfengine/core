@@ -64,6 +64,7 @@
 #include <ornaments.h>
 #include <cf-windows-functions.h>
 #include <loading.h>
+#include <iteration.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -85,6 +86,28 @@ static bool MissingInputFile(const char *input_file);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
+
+static JsonElement *ReadJsonFile(const char *filename, LogLevel log_level)
+{
+    struct stat sb;
+    if (stat(filename, &sb) == -1)
+    {
+        Log(log_level, "Could not open JSON file %s", filename);
+        return NULL;
+    }
+
+    JsonElement *doc = NULL;
+    // 5 MB should be enough for most reasonable def.json data
+    JsonParseError err = JsonParseFile(filename, 5 * 1024 * 1024, &doc);
+
+    if (err != JSON_PARSE_OK
+        || NULL == doc)
+    {
+        Log(log_level, "Could not parse JSON file %s: %s", filename, JsonParseErrorToString(err));
+    }
+
+    return doc;
+}
 
 /*****************************************************************************/
 
@@ -143,6 +166,247 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
         }
     }
     return policy;
+}
+
+bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
+{
+    ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+    StringSet *global_matches = ClassesMatching(ctx, iter, c, NULL, true); // returns early
+
+    bool found = (StringSetSize(global_matches) > 0);
+
+    StringSetDestroy(global_matches);
+    ClassTableIteratorDestroy(iter);
+
+    if (found)
+    {
+        return found;
+    }
+
+    // does it look like a regex? It's not a class expression then
+    // (these characters are invalid in class expressions and will
+    // give errors)
+    if (strchr(c, '*') ||
+        strchr(c, '+') ||
+        strchr(c, '['))
+    {
+        return false;
+    }
+
+    return IsDefinedClass(ctx, c);
+}
+
+void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const JsonElement* augment)
+{
+    if (JsonGetElementType(augment) != JSON_ELEMENT_TYPE_CONTAINER ||
+        JsonGetContainerType(augment) != JSON_CONTAINER_TYPE_OBJECT)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid augments file contents in '%s', must be a JSON object", BufferData(filename_buffer));
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Loaded augments file '%s', installing contents", BufferData(filename_buffer));
+
+        JsonIterator iter = JsonIteratorInit(augment);
+        const char *key;
+        while ((key = JsonIteratorNextKey(&iter)))
+        {
+            if (0 == strcmp("vars", key))
+            {
+                // load variables
+                JsonElement* vars = JsonExpandElement(ctx, JsonObjectGet(augment, key));
+
+                if (NULL == vars ||
+                    JsonGetElementType(vars) != JSON_ELEMENT_TYPE_CONTAINER ||
+                    JsonGetContainerType(vars) != JSON_CONTAINER_TYPE_OBJECT)
+                {
+                    Log(LOG_LEVEL_ERR, "Invalid augments vars in '%s', must be a JSON object", BufferData(filename_buffer));
+                    goto vars_cleanup;
+                }
+
+                JsonIterator iter = JsonIteratorInit(vars);
+                const char *vkey;
+                while ((vkey = JsonIteratorNextKey(&iter)))
+                {
+                    JsonElement *data = JsonObjectGet(vars, vkey);
+                    if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                    {
+                        char *value = JsonPrimitiveToString(data);
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, BufferData(filename_buffer));
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
+                        free(value);
+                    }
+                    else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
+                             JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
+                             JsonArrayContainsOnlyPrimitives(data))
+                    {
+                        // map to slist if the data only has primitives
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, BufferData(filename_buffer));
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                      vkey, ContainerToRlist(data),
+                                                      CF_DATA_TYPE_STRING_LIST,
+                                                      "source=augments_file");
+                    }
+                    else // install as a data container
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, BufferData(filename_buffer));
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                      vkey, data,
+                                                      CF_DATA_TYPE_CONTAINER,
+                                                      "source=augments_file");
+                    }
+                }
+
+              vars_cleanup:
+                JsonDestroy(vars);
+            }
+            else if (0 == strcmp("classes", key))
+            {
+                // load classes
+                JsonElement* classes = JsonExpandElement(ctx, JsonObjectGet(augment, key));
+
+                if (JsonGetElementType(classes) != JSON_ELEMENT_TYPE_CONTAINER ||
+                    JsonGetContainerType(classes) != JSON_CONTAINER_TYPE_OBJECT)
+                {
+                    Log(LOG_LEVEL_ERR, "Invalid augments classes in '%s', must be a JSON object", BufferData(filename_buffer));
+                    goto classes_cleanup;
+                }
+
+                const char tags[] = "source=augments_file";
+                JsonIterator iter = JsonIteratorInit(classes);
+                const char *ckey;
+                while ((ckey = JsonIteratorNextKey(&iter)))
+                {
+                    JsonElement *data = JsonObjectGet(classes, ckey);
+                    if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                    {
+                        char *check = JsonPrimitiveToString(data);
+                        // check if class is true
+                        if (CheckContextOrClassmatch(ctx, check))
+                        {
+                            Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
+                                ckey, check, BufferData(filename_buffer));
+                            EvalContextClassPutHard(ctx, ckey, tags);
+                        }
+                        free(check);
+                    }
+                    else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
+                             JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
+                             JsonArrayContainsOnlyPrimitives(data))
+                    {
+                        // check if each class is true
+                        JsonIterator iter = JsonIteratorInit(data);
+                        const JsonElement *el;
+                        while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+                        {
+                            char *check = JsonPrimitiveToString(el);
+                            if (CheckContextOrClassmatch(ctx, check))
+                            {
+                                Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
+                                    ckey, check, BufferData(filename_buffer));
+                                EvalContextClassPutHard(ctx, ckey, tags);
+                                free(check);
+                                break;
+                            }
+
+                            free(check);
+                        }
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s', must be a JSON object",
+                            ckey, BufferData(filename_buffer));
+                    }
+                }
+
+              classes_cleanup:
+                JsonDestroy(classes);
+            }
+            else if (0 == strcmp("inputs", key))
+            {
+                // load inputs
+                JsonElement* inputs = JsonExpandElement(ctx, JsonObjectGet(augment, key));
+
+                if (JsonGetElementType(inputs) == JSON_ELEMENT_TYPE_CONTAINER &&
+                    JsonGetContainerType(inputs) == JSON_CONTAINER_TYPE_ARRAY &&
+                    JsonArrayContainsOnlyPrimitives(inputs))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
+                        BufferData(filename_buffer));
+                    Rlist *rlist = ContainerToRlist(inputs);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                  "augments_inputs", rlist,
+                                                  CF_DATA_TYPE_STRING_LIST,
+                                                  "source=augments_file");
+                    RlistDestroy(rlist);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
+                        BufferData(filename_buffer));
+                }
+
+                JsonDestroy(inputs);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
+                    key, BufferData(filename_buffer));
+            }
+        }
+    }
+}
+
+void LoadAugmentsFiles(EvalContext *ctx, const char* filename)
+{
+    Buffer *filebuf = BufferNewFrom(filename, strlen(filename));
+    Buffer *expbuf = BufferNew();
+    ExpandScalar(ctx, NULL, "this", BufferData(filebuf), expbuf);
+    if (strstr(BufferData(expbuf), "/.json"))
+    {
+        Log(LOG_LEVEL_DEBUG, "Skipping augments file '%s' because it failed to expand the base filename, resulting in '%s'",
+            BufferData(filebuf),
+            BufferData(expbuf));
+    }
+    else
+    {
+        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s'", BufferData(expbuf));
+        if (FileCanOpen(BufferData(expbuf), "r"))
+        {
+            JsonElement* augment = ReadJsonFile(BufferData(expbuf), LOG_LEVEL_ERR);
+            if (NULL != augment )
+            {
+                LoadAugmentsData(ctx, expbuf, augment);
+                JsonDestroy(augment);
+            }
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "could not load JSON augments from '%s'", BufferData(expbuf));
+        }
+    }
+    BufferDestroy(filebuf);
+    BufferDestroy(expbuf);
+}
+
+void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
+{
+    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.flavor).json");
+    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.ostype).json");
+    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.domain).json");
+    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.uqhost).json");
+    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.fqhost).json");
+    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def/$(sys.key_digest).json");
+    // LoadAugmentsFiles(ctx, "$(sys.workdir)/def.json");
+    // LoadAugmentsFiles(ctx, "$(sys.inputdir)/def.json");
+
+    char* def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def.json");
+    Log(LOG_LEVEL_VERBOSE, "Loading JSON augments from '%s' (input dir '%s', input file '%s'", def_json, config->input_dir, config->input_file);
+    LoadAugmentsFiles(ctx, def_json);
+    free(def_json);
 }
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
@@ -328,27 +592,6 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
     return false;
 }
 
-static JsonElement *ReadJsonFile(const char *filename)
-{
-    struct stat sb;
-    if (stat(filename, &sb) == -1)
-    {
-        Log(LOG_LEVEL_DEBUG, "Could not open JSON file %s", filename);
-        return NULL;
-    }
-
-    JsonElement *doc = NULL;
-    JsonParseError err = JsonParseFile(filename, 4096, &doc);
-
-    if (err != JSON_PARSE_OK
-        || NULL == doc)
-    {
-        Log(LOG_LEVEL_DEBUG, "Could not parse JSON file %s", filename);
-    }
-
-    return doc;
-}
-
 static JsonElement *ReadPolicyValidatedFile(const char *filename)
 {
     bool missing = true;
@@ -358,7 +601,7 @@ static JsonElement *ReadPolicyValidatedFile(const char *filename)
         missing = false;
     }
 
-    JsonElement *validated_doc = ReadJsonFile(filename);
+    JsonElement *validated_doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG);
     if (NULL == validated_doc)
     {
         Log(missing ? LOG_LEVEL_DEBUG : LOG_LEVEL_VERBOSE, "Could not parse policy_validated JSON file '%s', using dummy data", filename);
@@ -793,6 +1036,8 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
     }
+
+    LoadAugments(ctx, config);
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)
@@ -992,7 +1237,7 @@ static JsonElement *ReadReleaseIdFileFromMasterfiles(const char *maybe_dirname)
     GetReleaseIdFile(NULL == maybe_dirname ? GetMasterDir() : maybe_dirname,
                      filename, sizeof(filename));
 
-    JsonElement *doc = ReadJsonFile(filename);
+    JsonElement *doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG);
     if (NULL == doc)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not parse release_id JSON file %s", filename);

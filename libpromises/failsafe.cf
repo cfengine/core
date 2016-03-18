@@ -34,9 +34,9 @@
 body common control
 {
       bundlesequence => {
-                          "cfe_internal_checkkeys",
-                          "cfe_internal_update",
-                          "cfe_internal_call_update"
+                          "failsafe_cfe_internal_checkkeys",
+                          "failsafe_cfe_internal_update",
+                          "failsafe_cfe_internal_call_update"
                         };
 }
 
@@ -50,22 +50,22 @@ body agent control
 
 ################################################################################
 
-bundle agent cfe_internal_checkkeys
+bundle agent failsafe_cfe_internal_checkkeys
 {
   classes:
       "have_ppkeys"
         expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub"),
-        handle     => "cfe_internal_bootstrap_checkkeys_classes_have_ppkeys";
+        handle     => "failsafe_cfe_internal_bootstrap_checkkeys_classes_have_ppkeys";
 
   reports:
     !have_ppkeys::
       "No public/private key pair is loaded, please create one by running \"cf-key\""
-        classes => kept("no_ppkeys_ABORT");
+        classes => failsafe_kept("no_ppkeys_ABORT");
 }
 
 ################################################################################
 
-bundle agent cfe_internal_update
+bundle agent failsafe_cfe_internal_update
 {
   vars:
 
@@ -85,40 +85,40 @@ bundle agent cfe_internal_update
 
       "have_promises_cf"
       expression => fileexists("$(sys.inputdir)/promises.cf"),
-      handle => "cfe_internal_bootstrap_update_classes_have_promises_cf";
+      handle => "failsafe_cfe_internal_bootstrap_update_classes_have_promises_cf";
 
 
   files:
 
       "$(sys.inputdir)"
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
-      copy_from => u_scp("$(masterfiles_dir_remote)"),
-      depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+      handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
+      copy_from => failsafe_scp("$(masterfiles_dir_remote)"),
+      depth_search => failsafe_recurse("inf"),
+      classes => failsafe_repaired("got_policy");
 
     !windows.got_policy_failed::
 
       "$(sys.inputdir)"
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
-      copy_from => u_scp("$(sys.masterdir)"),
-      depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+      handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
+      copy_from => failsafe_scp("$(sys.masterdir)"),
+      depth_search => failsafe_recurse("inf"),
+      classes => failsafe_repaired("got_policy");
 
     windows.got_policy_failed::
 
       "$(sys.inputdir)"
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
-      copy_from => u_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
-      depth_search => u_recurse("inf"),
-      classes => repaired("got_policy");
+      handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
+      copy_from => failsafe_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
+      depth_search => failsafe_recurse("inf"),
+      classes => failsafe_repaired("got_policy");
 
     windows::
 
       "$(sys.workdir)\\bin-twin\\."
-      handle => "cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows",
+      handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows",
       comment => "Make sure we maintain a clone of the binaries and libraries for updating",
-      copy_from => u_cp("$(sys.workdir)\\bin\\."),
-      depth_search => u_recurse("1");
+      copy_from => failsafe_cp("$(sys.workdir)\\bin\\."),
+      depth_search => failsafe_recurse("1");
 
 
   processes:
@@ -126,12 +126,12 @@ bundle agent cfe_internal_update
     !windows.got_policy::
 
       "cf-execd" restart_class => "start_exec",
-      handle => "cfe_internal_bootstrap_update_processes_start_cf_execd";
+      handle => "failsafe_cfe_internal_bootstrap_update_processes_start_cf_execd";
 
     am_policy_hub.got_policy::
 
       "cf-serverd" restart_class => "start_server",
-      handle => "cfe_internal_bootstrap_update_processes_start_cf_serverd";
+      handle => "failsafe_cfe_internal_bootstrap_update_processes_start_cf_serverd";
 
 
   commands:
@@ -139,15 +139,15 @@ bundle agent cfe_internal_update
     start_exec.!windows.!systemd::
 
       "$(sys.cf_execd)"
-      handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
-      classes => repaired("executor_started");
+      handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
+      classes => failsafe_repaired("executor_started");
 
     start_server.!systemd::
 
       "$(sys.cf_serverd)"
-      handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
-      action => ifwin_bg,
-      classes => repaired("server_started");
+      handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
+      action => failsafe_ifwin_bg,
+      classes => failsafe_repaired("server_started");
 
     start_exec.systemd::
 
@@ -156,8 +156,8 @@ bundle agent cfe_internal_update
       # sure we relaunch everything.
 
       "/bin/systemctl restart cfengine3"
-      handle => "cfe_internal_bootstrap_update_commands_systemd_cfe_start",
-      classes => repaired_two("executor_started", "server_started");
+      handle => "failsafe_cfe_internal_bootstrap_update_commands_systemd_cfe_start",
+      classes => failsafe_repaired_two("executor_started", "server_started");
 
 
   services:
@@ -165,17 +165,17 @@ bundle agent cfe_internal_update
     windows.got_policy::
 
       "CfengineNovaExec"
-      handle => "cfe_internal_bootstrap_update_services_windows_executor",
+      handle => "failsafe_cfe_internal_bootstrap_update_services_windows_executor",
       service_policy => "start",
-      service_method => bootstart,
-      classes => repaired("executor_started");
+      service_method => failsafe_bootstart,
+      classes => failsafe_repaired("executor_started");
 
 
   reports:
 
     !bootstrap_mode::
       "Built-in failsafe policy triggered"
-        handle => "cfe_internal_bootstrap_update_reports_failsafe_notification",
+        handle => "failsafe_cfe_internal_bootstrap_update_reports_failsafe_notification",
         comment => "Be sure to inform the user that the failsafe policy has
                     been triggered. This typically indicates that the agent has
                     received broken policy. It may also indicate legacy
@@ -183,23 +183,23 @@ bundle agent cfe_internal_update
 
     bootstrap_mode::
       "Bootstrapping from host '$(sys.policy_hub)' via built-in policy '$(this.promise_filename)'"
-        handle => "cfe_internal_bootstrap_update_reports_bootstrap_notification",
+        handle => "failsafe_cfe_internal_bootstrap_update_reports_bootstrap_notification",
         comment => "Be sure to inform the user that they have triggerd a bootstrap.";
 
     bootstrap_mode.am_policy_hub::
 
       "This host assumes the role of policy server"
-      handle => "cfe_internal_bootstrap_update_reports_assume_policy_hub";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_assume_policy_hub";
 
     bootstrap_mode.!am_policy_hub::
 
       "This autonomous node assumes the role of voluntary client"
-      handle => "cfe_internal_bootstrap_update_reports_assume_voluntary_client";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_assume_voluntary_client";
 
     got_policy::
 
       "Updated local policy from policy server"
-      handle => "cfe_internal_bootstrap_update_reports_got_policy";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_got_policy";
 
     !got_policy.!have_promises_cf::
 
@@ -212,32 +212,32 @@ bundle agent cfe_internal_update
        * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny
        It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.
        When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
-      handle => "cfe_internal_bootstrap_update_reports_did_not_get_policy";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_did_not_get_policy";
 
     server_started::
 
       "Started the server"
-      handle => "cfe_internal_bootstrap_update_reports_started_serverd";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_started_serverd";
 
     am_policy_hub.!server_started.!have_promises_cf::
 
       "Failed to start the server"
-      handle => "cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
 
     executor_started::
 
       "Started the scheduler"
-      handle => "cfe_internal_bootstrap_update_reports_started_execd";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_started_execd";
 
     !executor_started.!have_promises_cf::
 
       "Did not start the scheduler"
-      handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
+      handle => "failsafe_cfe_internal_bootstrap_update_reports_failed_to_start_execd";
 
 }
 
 ################################################################################
-bundle agent cfe_internal_call_update
+bundle agent failsafe_cfe_internal_call_update
 {
   vars:
 
@@ -249,36 +249,36 @@ bundle agent cfe_internal_call_update
     # not run under the SYSTEM account.
     !windows::
       "$(sys.cf_agent) -f $(sys.update_policy_path) --define $(mode)"
-        handle => "cfe_internal_call_update_commands_call_update_cf",
+        handle => "failsafe_cfe_internal_call_update_commands_call_update_cf",
         if => fileexists( $(sys.update_policy_path) ),
         comment => "We run update.cf in order to prepare system information for
                     collection into CFEngine Enterprise more quickly.";
 
 }
 ############################################
-body classes kept(x)
+body classes failsafe_kept(x)
 {
       promise_kept => {"$(x)"};
 }
 ############################################
-body classes repaired(x)
+body classes failsafe_repaired(x)
 {
       promise_repaired => {"$(x)"};
       repair_failed => {"$(x)_failed"};
 }
 ############################################
-body classes repaired_two(x,y)
+body classes failsafe_repaired_two(x,y)
 {
       promise_repaired => {"$(x)", "$(y)"};
       repair_failed => {"$(x)_failed"};
 }
 ############################################
-body perms u_p(p)
+body perms failsafe_p(p)
 {
       mode  => "$(p)";
 }
 #############################################
-body copy_from u_scp(from)
+body copy_from failsafe_scp(from)
 {
       source      => "$(from)";
       compare     => "digest";
@@ -290,29 +290,29 @@ body copy_from u_scp(from)
       servers => { "$(sys.policy_hub)" };
 }
 ############################################
-body action u_background
+body action failsafe_background
 {
       background => "true";
 }
 ############################################
-body depth_search u_recurse(d)
+body depth_search failsafe_recurse(d)
 {
       depth => "$(d)";
       exclude_dirs => { "\.svn", "\.git" };
 }
 ############################################
-body service_method bootstart
+body service_method failsafe_bootstart
 {
       service_autostart_policy => "boot_time";
 }
 ############################################
-body action ifwin_bg
+body action failsafe_ifwin_bg
 {
     windows::
       background => "true";
 }
 ############################################
-body copy_from u_cp(from)
+body copy_from failsafe_cp(from)
 {
       source          => "$(from)";
       compare         => "digest";

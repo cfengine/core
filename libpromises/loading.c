@@ -311,35 +311,6 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
     PolicyResolve(ctx, policy, config);
 
-    DataType def_inputs_type = CF_DATA_TYPE_NONE;
-    VarRef *inputs_ref = VarRefParse("def.augment_inputs");
-    const void *def_inputs = EvalContextVariableGet(ctx, inputs_ref, &def_inputs_type);
-    VarRefDestroy(inputs_ref);
-
-    if (RVAL_TYPE_CONTAINER == DataTypeToRvalType(def_inputs_type) && NULL != def_inputs)
-    {
-        const JsonElement *el;
-        JsonIterator iter = JsonIteratorInit((JsonElement*) def_inputs);
-        while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
-        {
-            char *input = JsonPrimitiveToString(el);
-
-            Log(LOG_LEVEL_VERBOSE, "Loading augments from def.augment_inputs: %s", input);
-
-            Rlist* inputs_rlist = NULL;
-            RlistAppendScalar(&inputs_rlist, input);
-            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, inputs_rlist,
-                                                      parsed_files_and_checksums, failed_files);
-            if (aux_policy)
-            {
-                policy = PolicyMerge(policy, aux_policy);
-            }
-
-            RlistDestroy(inputs_rlist);
-            free(input);
-        }
-    }
-
     Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
     Body *body_file_control = PolicyGetBody(policy, NULL, "file", "control");
 

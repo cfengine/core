@@ -1030,7 +1030,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
         VarRef *ref = VarRefParseFromScope(lval, scope);
         EvalContextVariableRemove(ctx, ref);
 
-        RvalType rval_proper_datatype =
+        DataType rval_proper_datatype =
             ConstraintSyntaxGetDataType(body_syntax, lval);
         if (evaluated_rval.type != DataTypeToRvalType(rval_proper_datatype))
         {

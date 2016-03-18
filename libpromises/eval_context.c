@@ -48,6 +48,7 @@
 #include <known_dirs.h>
 #include <printsize.h>
 #include <map.h>
+#include <regex.h>
 
 
 /**

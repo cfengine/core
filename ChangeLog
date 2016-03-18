@@ -1,4 +1,54 @@
 3.8.2:
+	Fixes:
+	- Update library dependencies to latest version.
+	  Libraries upgraded:
+	  - curl 7.47.0
+	  - LMDB 0.9.18
+	  - MySQL 5.1.72
+	  - OpenLDAP 2.4.44
+	  - OpenSSL 1.0.2g
+	  - PHP 5.6.19
+	  - PostgreSQL 9.3.11
+	  - Redis 3.0.7
+	  - rsync 3.1.2
+	- The `isvariable()` function call now correctly accepts all
+	  array variables when specified inline. Previously it would not accept
+	  certain special characters, even though they could be specified
+	  indirectly by using a variable to hold it. (Redmine #7088)
+	- Don't follow symbolic links when copying extended attributes.
+	- Fix a bug which sometimes caused package promises to be
+	  skipped with "XX Another cf-agent seems to have done this since I
+	  started" messages in the log, most notably in long running cf-agent
+	  runs (longer than one minute). (Redmine #7933)
+	- Fix bug which could render host unable to recover from a
+	  syntax error, even if failsafe.cf was utilized. This could happen if
+	  the file containing the syntax error was specified in the def.json
+	  special file. (Redmine #7961)
+	- Change: Policy files specified in the "inputs" section of
+	  def.json will no longer be auto-loaded. One has to refer to the
+	  $(def.augments_inputs) variable in the policy (the standard
+	  masterfiles policies include this by default). This only affects
+	  installations which are not based on the standard masterfiles, and
+	  which are using the "inputs" field inside def.json. (Redmine #7961)
+	- Fix file descriptor leak when there are network errors.
+	- Fix cf-serverd error messages with classic protocol clients
+	  (Redmine #7818)
+	- Installing packages containing version numbers using yum
+	  now works correctly. (Redmine #7825)
+	- Fix ps options for FreeBSD to check processes only in current host and not in jails
+	- fix build failure on FreeBSD 7.1 (Redmine #7415)
+	- Show errors regarding failure to copy extended attributes
+	  when doing a local file copy. Errors could happen when copying
+	  across two different mount points where the support for extended
+	  attributes is different between the mount points.
+	- Fix classes being set because of hash collision in the implementation.
+	  (Redmine #7912)
+	- Allow def.json up to 5MB instead of 4K.
+	- Fix a regression which would sometimes cause "Permission
+	  denied" errors on files inside directories with very restricted
+	  permissions. (Redmine #7808)
+	- Change: Suppress standard services noise on SUSE (Redmine #6968)
+
 	Changes:
 	- Change: classesmatching(): order of classes changed
 

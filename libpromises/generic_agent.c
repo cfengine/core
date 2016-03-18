@@ -336,10 +336,12 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                 {
                     Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
                         BufferData(filename_buffer));
+                    Rlist *rlist = ContainerToRlist(inputs);
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                  "augments_inputs", JsonCopy(inputs),
-                                                  CF_DATA_TYPE_CONTAINER,
+                                                  "augments_inputs", rlist,
+                                                  CF_DATA_TYPE_STRING_LIST,
                                                   "source=augments_file");
+                    RlistDestroy(rlist);
                 }
                 else
                 {

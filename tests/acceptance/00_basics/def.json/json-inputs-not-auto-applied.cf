@@ -1,4 +1,4 @@
-# basic test of the def.json facility: inputs
+# Test that def.json:inputs is not auto loaded.
 body common control
 {
       inputs => { "../../default.cf.sub" };
@@ -14,14 +14,14 @@ bundle agent test
       "" usebundle => file_make("$(sys.inputdir)/promises.cf", '
 body common control
 {
-    inputs => { @(def.augments_inputs) };
+    inputs => {  };
 }
 ');
       "" usebundle => file_make("$(sys.inputdir)/secondary.cf", '
 bundle common x
 {
   classes:
-    "test_class_9f606e44752ce34ef39ee7d4754c5c84890d2b14" expression => "any";
+    "test_class_8f606e44752ce34ef39ee7d4754c5c84890d2b14" expression => "any";
 }
 ');
 
@@ -36,5 +36,5 @@ bundle agent check
     "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf|$(G.grep) test_class";
 
   methods:
-      "" usebundle => dcs_passif_output("test_class_9f606e44752ce34ef39ee7d4754c5c84890d2b14\s+source=promise", "", $(command), $(this.promise_filename));
+      "" usebundle => dcs_passif_output("", ".*test_class_8f606e44752ce34ef39ee7d4754c5c84890d2b14.*", $(command), $(this.promise_filename));
 }

@@ -1,4 +1,62 @@
 3.7.3
+	Fixes:
+	- Upgrade dependencies to latest patch versions.
+	  Upgraded libraries:
+	  - curl 7.47.0
+	  - libxml2 2.9.3
+	  - LMDB 0.9.18
+	  - MySQL 5.1.72
+	  - OpenLDAP 2.4.44
+	  - OpenSSL 1.0.2g
+	  - PCRE 8.38
+	  - PHP 5.6.19
+	  - PostgreSQL 9.3.11
+	  - Redis 2.8.24
+	  - rsync 3.1.2
+	- parse def.json vars, classes, and inputs in C (Redmine #7453)
+	- Namespaced classes can now be specified on the command line.
+	- getvalues() will now return a list also for data containers,
+	  and will descend recursively into the containers. (Redmine #7116)
+	- @if minimum_version now correctly ignores lines starting with '@'
+	  (Redmine #7862)
+	- Fix definition of classes from augments file
+	- Don't follow symbolic links when copying extended attributes.
+	- Fix ps options for FreeBSD to check processes only in current host and not in jails
+	- Fix cf-serverd error messages with classic protocol clients
+	  (Redmine #7818)
+	- Change: Suppress standard services noise on SUSE (Redmine #6968)
+	- The `isvariable()` function call now correctly accepts all
+	  array variables when specified inline. Previously it would not accept
+	  certain special characters, even though they could be specified
+	  indirectly by using a variable to hold it. (Redmine #7088)
+	- Show errors regarding failure to copy extended attributes
+	  when doing a local file copy. Errors could happen when copying
+	  across two different mount points where the support for extended
+	  attributes is different between the mount points.
+	- Fix bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
+	- Fix file descriptor leak when there are network errors.
+	- Fix a regression which would sometimes cause "Permission
+	  denied" errors on files inside directories with very restricted
+	  permissions. (Redmine #7808)
+	- Check for empty server response in RemoteDirList after decryption
+	  (Redmine #7908)
+	- Allow def.json up to 5MB instead of 4K.
+	- Add guard for binary upgrade during bootstrap (Redmine #7861)
+	- Fix HP-UX specific bug that caused a lot of log output to disappear.
+	- Fix a bug which sometimes caused package promises to be
+	  skipped with "XX Another cf-agent seems to have done this since I
+	  started" messages in the log, most notably in long running cf-agent
+	  runs (longer than one minute). (Redmine #7933)
+	- Define (bootstrap|failsafe)_mode during update.cf when triggerd from failsafe.cf
+	  (Redmine #7861)
+	- Fix two cases where action_policy warn still produces errors
+	  (Redmine #7274)
+	- Fix classes being set because of hash collision in the implementation.
+	  (Redmine #7912)
+	- fix build failure on FreeBSD 7.1 (Redmine #7415)
+	- Installing packages containing version numbers using yum
+	  now works correctly. (Redmine #7825)
+
 	Changes:
 	- Change: classesmatching(): order of classes changed
 

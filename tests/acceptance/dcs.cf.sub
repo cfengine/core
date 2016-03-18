@@ -52,6 +52,7 @@ bundle common G
                         "sh",
                         "sleep",
                         "sort",
+                        "stat",
                         "tee",
                         "touch",
                         "true",

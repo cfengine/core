@@ -11,7 +11,7 @@
 	  - PostgreSQL 9.3.11
 	  - Redis 3.0.7
 	  - rsync 3.1.2
-	- The `isvariable()` function call now correctly accepts all
+	- The isvariable() function call now correctly accepts all
 	  array variables when specified inline. Previously it would not accept
 	  certain special characters, even though they could be specified
 	  indirectly by using a variable to hold it. (Redmine #7088)

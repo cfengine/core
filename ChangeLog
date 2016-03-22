@@ -1,6 +1,84 @@
 3.6.7:
 	Changes:
-	- Change: classesmatching(): order of classes changed
+	- classesmatching(): order of classes changed
+
+	Fixes:
+	- Don't limit CSV line length to 4096 bytes (Redmine #7400)
+	- Legacy package promise: Result classes are now defined if
+	  the package being promised is already up to date. (Redmine #7399)
+	- Reduce malloc() thread contention on heavily loaded
+	  cf-serverd, by not exiting early in the logging function, if
+	  no message is to be printed (Redmine #7624)
+	- If file_select.file_types is set to symlink and there
+	  are regular files in the scanned directory, CFEngine no longer
+	  produces an unneccessary error message (Redmine #6996)
+	- For call collect in Enterprise, default collect_window
+	  setting increased from 10 to 30 seconds for reliability reasons
+	  in large-scale environments.
+	- Fix ps options for FreeBSD to check processes only in current
+	  host and not in jails
+	- Fix HP-UX specific bug that caused a lot of log output to disappear
+	- fix build failure on FreeBSD 7.1 (Redmine #7415)
+	- Fix noise from internal policy to upgrade windows agents
+	  (Redmine #7456)
+	- fix cfruncommand not working if it does not contain spaces,
+	  with the TLS protocol (Redmine #7405)
+	- Fix cf-serverd error messages with classic protocol clients
+	  (Redmine #7818)
+	- Fix two cases where action_policy warn still produces errors
+	  (Redmine #7274)
+	- action_policy "warn" now correctly produces warnings instead
+	  of various other verbosity levels. (Redmine #7274)
+	- No longer hang when changing permissions/ownership on fifos
+	  (Redmine #7030)
+	- Fix a regression which would sometimes cause "Permission
+	  denied" errors on files inside directories with very restricted
+	  permissions. (Redmine #7808)
+	- Fix classes being set because of hash collision in the implementation.
+	  (Redmine #7912)
+	- redmine#7952: Fix use-after-free in ArrayMap and HashMap
+	  (Redmine #7952)
+	- CFEngine on Windows no longer truncates log messages if the
+	  program in question is killed halfway through.
+	- If there is an error saving a mustache template file
+	  it is now logged with log-level error (was inform)
+	- Fix build with musl libc (Redmine #7455)
+	- Show errors regarding failure to copy extended attributes
+	  when doing a local file copy. Errors could happen when copying
+	  across two different mount points where the support for extended
+	  attributes is different between the mount points.
+	- The `isvariable()` function call now correctly accepts all
+	  array variables when specified inline. Previously it would not accept
+	  certain special characters, even though they could be specified
+	  indirectly by using a variable to hold it (Redmine #7088)
+	- Fix bad option nlwp to vzps on Proxmox / OpenVZ (Redmine #6961)
+	- Namespaced classes can now be specified on the command line.
+	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor
+	  multiple -D, -N and -s arguments
+	  (Redmine #7191)
+	- Fix file descriptor leak when there are network errors
+	- Fix package not installing on Windows 2008 32-bit (Redmine #7478)
+	- Fixed several bugs which prevented CFEngine from loading
+	  libraries from the correct location. This affected several platforms.
+	  (Redmine #6708)
+	- It is possible to edit the same value in multiple regions
+	  of one file (Redmine #7460)
+	- Upgrade LMDB to version 0.9.17. (Redmine #7879)
+	- Upgrade dependencies to following patch versions:
+	  - Apache 2.2.31
+	  - apr-util 1.5.4
+	  - Git 1.8.5.6
+	  - Curl 7.47.0
+	  - Libvirt 1.1.3.9
+	  - LibXML 2.9.3
+	  - LMDB 0.9.18
+	  - MySQL 5.1.72
+	  - OpenLDAP 2.4.44
+	  - OpenSSL 0.9.8zh
+	  - PCRE 8.38
+	  - PostgreSQL 9.0.22 (Agent)
+	  - PostgreSQL 9.3.11 (Hub)
+	  - PHP 5.4.45
 
 3.6.6:
         Bug fixes:

@@ -7,10 +7,12 @@
 	  - MySQL 5.1.72
 	  - OpenLDAP 2.4.44
 	  - OpenSSL 1.0.2g
-	  - PHP 5.6.19
 	  - PostgreSQL 9.3.11
 	  - Redis 3.0.7
 	  - rsync 3.1.2
+	  PHP was kept at 5.6.17 because of problems with the 5.6.19 version.
+	- Reduce verbosity of apt_get package module (Redmine #7485)
+	- Reduce verbosity of yum package module (Redmine #7485)
 	- The isvariable() function call now correctly accepts all
 	  array variables when specified inline. Previously it would not accept
 	  certain special characters, even though they could be specified

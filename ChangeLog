@@ -1,5 +1,7 @@
 3.7.3
 	Fixes:
+	- Reduce verbosity of yum package module (Redmine #7485)
+	- Reduce verbosity of apt_get package module (Redmine #7485)
 	- Upgrade dependencies to latest patch versions.
 	  Upgraded libraries:
 	  - curl 7.47.0
@@ -9,10 +11,10 @@
 	  - OpenLDAP 2.4.44
 	  - OpenSSL 1.0.2g
 	  - PCRE 8.38
-	  - PHP 5.6.19
 	  - PostgreSQL 9.3.11
 	  - Redis 2.8.24
 	  - rsync 3.1.2
+	  PHP was kept at 5.6.17 because of problems with the 5.6.19 version.
 	- parse def.json vars, classes, and inputs in C (Redmine #7453)
 	- Namespaced classes can now be specified on the command line.
 	- getvalues() will now return a list also for data containers,

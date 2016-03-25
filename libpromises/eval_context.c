@@ -319,7 +319,7 @@ static const char *GetAgentAbortingContext(const EvalContext *ctx)
 
             if (cls)
             {
-                return regex;
+                return cls->name;
             }
         }
     }
@@ -752,9 +752,11 @@ void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *
         AppendItem(&ctx->heap_abort, context, activated_on_context);
     }
 
-    if (GetAgentAbortingContext(ctx))
+    const char *aborting_context = GetAgentAbortingContext(ctx);
+
+    if (aborting_context)
     {
-        FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
+        FatalError(ctx, "cf-agent aborted on defined class '%s'", aborting_context);
     }
 }
 

@@ -53,11 +53,11 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
     {
         if (S_ISLNK(stat->st_mode))
         {
-            Log(LOG_LEVEL_INFO, "'%s' is a symbolic link", nodename);
+            Log(LOG_LEVEL_VERBOSE, "'%s' is a symbolic link", nodename);
         }
         else if (S_ISDIR(stat->st_mode))
         {
-            Log(LOG_LEVEL_INFO, "'%s' is a directory", nodename);
+            Log(LOG_LEVEL_VERBOSE, "'%s' is a directory", nodename);
         }
         
         Log(LOG_LEVEL_VERBOSE, "'%s' has size %ld and full mode %o", nodename, (unsigned long) (stat->st_size),

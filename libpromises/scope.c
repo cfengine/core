@@ -327,24 +327,6 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
 /* Utility functions                                               */
 /*******************************************************************/
 
-void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_out[CF_MAXVARSIZE])
-{
-    assert(scope);
-
-    char *split_point = strchr(scope, CF_NS);
-    if (split_point)
-    {
-        strncpy(ns_out, scope, split_point - scope);
-        strlcpy(bundle_out, split_point + 1, CF_MAXVARSIZE);
-    }
-    else
-    {
-        strlcpy(bundle_out, scope, CF_MAXVARSIZE);
-    }
-}
-
-/*******************************************************************/
-
 void JoinScopeName(const char *ns, const char *bundle, char scope_out[CF_MAXVARSIZE])
 {
     assert(bundle);

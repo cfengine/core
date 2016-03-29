@@ -285,11 +285,11 @@ void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname
 {
     if (strstr(dnsname, "."))
     {
-        strlcpy(fqname, dnsname, CF_BUFSIZE);
+        strlcpy(fqname, dnsname, CF_MAXVARSIZE);
     }
     else
     {
-        strlcpy(fqname, nodename, CF_BUFSIZE);
+        strlcpy(fqname, nodename, CF_MAXVARSIZE);
     }
 
     if ((strncmp(nodename, fqname, strlen(nodename)) == 0) && (fqname[strlen(nodename)] == '.'))

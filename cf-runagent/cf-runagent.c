@@ -462,7 +462,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     }
 
     Address2Hostkey(hostkey, sizeof(hostkey), ipaddr);
-    GetCurrentUserName(user, CF_SMALLBUF);
+    GetCurrentUserName(user, sizeof(user));
 
     if (INTERACTIVE)
     {

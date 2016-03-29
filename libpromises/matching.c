@@ -289,10 +289,13 @@ void EscapeSpecialChars(const char *str, char *strEsc, int strEscSz, char *noEsc
         {
             if (strEscSz <= strEscPos + strlen(noEscSeq))
             {
+                Log(LOG_LEVEL_ERR,
+                      "EscapeSpecialChars: Output string truncated. in='%s' out='%s'",
+                      str, strEsc);
                 break;
             }
 
-            strcat(strEsc, noEscSeq);
+            strlcat(strEsc, noEscSeq, strEscSz);
             strEscPos += strlen(noEscSeq);
             sp += strlen(noEscSeq);
         }

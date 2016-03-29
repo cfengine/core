@@ -30,6 +30,6 @@ bundle agent check
     "command" string => "$(sys.cf_promises) -f $(sys.inputdir)/promises.cf";
 
   methods:
-      "" usebundle => dcs_passif_output(".*Trying to augment inputs in [^\n]* but the value was not a list of strings.*",
+      "" usebundle => dcs_passif_output(".*Trying to augment inputs in [^\n]* but the value was not a list of string.*",
                                         "", $(command), $(this.promise_filename));
 }

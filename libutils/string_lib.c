@@ -747,8 +747,14 @@ char *EscapeCharCopy(const char *str, char to_escape, char escape_with)
 {
     assert(str);
 
-    int in_size = strlen(str);
-    int out_size = in_size + CountChar(str, to_escape) + 1;
+    size_t in_size = strlen(str);
+
+    if(in_size > (SIZE_MAX / 2) - 1)
+    {
+        ProgrammingError("Buffer passed to EscapeCharCopy() too large (in_size=%ld)", in_size);
+    }
+
+    size_t out_size = in_size + CountChar(str, to_escape) + 1;
 
     char *out = xcalloc(1, out_size);
 

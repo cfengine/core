@@ -14,7 +14,7 @@ bundle agent test
   vars:
       "todo" slist => {
                        "inet", "inet6",
-                       "dev"
+                       "interfaces_data"
       };
 
       "$(todo)" data => mergedata("sys.$(todo)");

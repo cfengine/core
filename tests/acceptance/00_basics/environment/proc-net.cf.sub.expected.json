@@ -1,64 +1,5 @@
 {
   "default_gateway": "192.168.2.1",
-  "dev": {
-    "enp4s0": {
-      "device": "enp4s0",
-      "receive_bytes": "446377831179",
-      "receive_compressed": "0",
-      "receive_drop": "0",
-      "receive_errors": "0",
-      "receive_fifo": "0",
-      "receive_frame": "0",
-      "receive_multicast": "0",
-      "receive_packets": "492136556",
-      "transmit_bytes": "428200856331",
-      "transmit_compressed": "0",
-      "transmit_drop": "0",
-      "transmit_errors": "0",
-      "transmit_fifo": "0",
-      "transmit_frame": "0",
-      "transmit_multicast": "0",
-      "transmit_packets": "499195545"
-    },
-    "lo": {
-      "device": "lo",
-      "receive_bytes": "1210580426",
-      "receive_compressed": "0",
-      "receive_drop": "0",
-      "receive_errors": "0",
-      "receive_fifo": "0",
-      "receive_frame": "0",
-      "receive_multicast": "0",
-      "receive_packets": "1049790",
-      "transmit_bytes": "1210580426",
-      "transmit_compressed": "0",
-      "transmit_drop": "0",
-      "transmit_errors": "0",
-      "transmit_fifo": "0",
-      "transmit_frame": "0",
-      "transmit_multicast": "0",
-      "transmit_packets": "1049790"
-    },
-    "wlp3s0": {
-      "device": "wlp3s0",
-      "receive_bytes": "0",
-      "receive_compressed": "0",
-      "receive_drop": "0",
-      "receive_errors": "0",
-      "receive_fifo": "0",
-      "receive_frame": "0",
-      "receive_multicast": "0",
-      "receive_packets": "0",
-      "transmit_bytes": "0",
-      "transmit_compressed": "0",
-      "transmit_drop": "0",
-      "transmit_errors": "0",
-      "transmit_fifo": "0",
-      "transmit_frame": "0",
-      "transmit_multicast": "0",
-      "transmit_packets": "0"
-    }
-  },
   "docker": "d7b4:febd:49ff:42:0:0:0:fe80",
   "inet": {
     "default_gateway": "192.168.2.1",
@@ -430,9 +371,68 @@
       "UdpLite6SndbufErrors": 0
     }
   },
+  "interfaces_data": {
+    "enp4s0": {
+      "device": "enp4s0",
+      "receive_bytes": "446377831179",
+      "receive_compressed": "0",
+      "receive_drop": "0",
+      "receive_errors": "0",
+      "receive_fifo": "0",
+      "receive_frame": "0",
+      "receive_multicast": "0",
+      "receive_packets": "492136556",
+      "transmit_bytes": "428200856331",
+      "transmit_compressed": "0",
+      "transmit_drop": "0",
+      "transmit_errors": "0",
+      "transmit_fifo": "0",
+      "transmit_frame": "0",
+      "transmit_multicast": "0",
+      "transmit_packets": "499195545"
+    },
+    "lo": {
+      "device": "lo",
+      "receive_bytes": "1210580426",
+      "receive_compressed": "0",
+      "receive_drop": "0",
+      "receive_errors": "0",
+      "receive_fifo": "0",
+      "receive_frame": "0",
+      "receive_multicast": "0",
+      "receive_packets": "1049790",
+      "transmit_bytes": "1210580426",
+      "transmit_compressed": "0",
+      "transmit_drop": "0",
+      "transmit_errors": "0",
+      "transmit_fifo": "0",
+      "transmit_frame": "0",
+      "transmit_multicast": "0",
+      "transmit_packets": "1049790"
+    },
+    "wlp3s0": {
+      "device": "wlp3s0",
+      "receive_bytes": "0",
+      "receive_compressed": "0",
+      "receive_drop": "0",
+      "receive_errors": "0",
+      "receive_fifo": "0",
+      "receive_frame": "0",
+      "receive_multicast": "0",
+      "receive_packets": "0",
+      "transmit_bytes": "0",
+      "transmit_compressed": "0",
+      "transmit_drop": "0",
+      "transmit_errors": "0",
+      "transmit_fifo": "0",
+      "transmit_frame": "0",
+      "transmit_multicast": "0",
+      "transmit_packets": "0"
+    }
+  },
   "todo": [
     "inet",
     "inet6",
-    "dev"
+    "interfaces_data"
   ]
 }

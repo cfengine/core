@@ -1185,7 +1185,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     //   eth0: 74850544807 75236137    0    0    0     0          0   1108775 63111535625 74696758    0    0    0     0       0          0
 
     BufferPrintf(pbuf, "%s/proc/net/dev", procdir);
-    GetProcFileInfo(ctx, BufferData(pbuf), "dev", "device", NULL,
+    GetProcFileInfo(ctx, BufferData(pbuf), "interfaces_data", "device", NULL,
                     "^\\s*(?<device>[^:]+)\\s*:\\s*"
                     // All of the below are just decimal digits separated by spaces
                     "(?<receive_bytes>\\d+)\\s+"

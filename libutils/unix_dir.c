@@ -189,7 +189,7 @@ static size_t GetDirentBufferSize(size_t name_len)
 {
     size_t name_end = (size_t) offsetof(struct dirent, d_name) + name_len + 1;
 
-    return (name_end > sizeof(struct dirent) ? name_end : sizeof(struct dirent));
+    return MAX(name_end, sizeof(struct dirent));
 }
 
 struct dirent *AllocateDirentForFilename(const char *filename)

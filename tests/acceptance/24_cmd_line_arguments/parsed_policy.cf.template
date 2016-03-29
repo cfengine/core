@@ -1,0 +1,279 @@
+bundle agent test()
+{
+vars:
+  any::
+    "testvar"        string => "string";
+    "testlist"        slist =>  {"list"};
+
+
+}
+
+body common control()
+{
+  inputs =>  {"parsed_policy.cf.sub.sub"};
+  bundlesequence =>  {"test"};
+
+}
+
+{
+      "bodies": [
+        {
+          "arguments": [],
+          "bodyType": "common",
+          "contexts": [
+            {
+              "attributes": [
+                {
+                  "line": 3,
+                  "lval": "inputs",
+                  "rval": {
+                    "type": "list",
+                    "value": [
+                      {
+                        "type": "string",
+                        "value": "parsed_policy.cf.sub.sub"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "line": 4,
+                  "lval": "bundlesequence",
+                  "rval": {
+                    "type": "list",
+                    "value": [
+                      {
+                        "type": "string",
+                        "value": "test"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "name": "any"
+            }
+          ],
+          "line": 1,
+          "name": "control",
+          "namespace": "default",
+          "sourcePath": "{{testdir}}/parsed_policy.cf.sub"
+        }
+      ],
+      "bundles": [
+        {
+          "arguments": [],
+          "bundleType": "agent",
+          "line": 7,
+          "name": "test",
+          "namespace": "default",
+          "promiseTypes": [
+            {
+              "contexts": [
+                {
+                  "name": "any",
+                  "promises": [
+                    {
+                      "attributes": [
+                        {
+                          "line": 10,
+                          "lval": "string",
+                          "rval": {
+                            "type": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "line": 10,
+                      "promiser": "testvar"
+                    },
+                    {
+                      "attributes": [
+                        {
+                          "line": 11,
+                          "lval": "slist",
+                          "rval": {
+                            "type": "list",
+                            "value": [
+                              {
+                                "type": "string",
+                                "value": "list"
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "line": 11,
+                      "promiser": "testlist"
+                    }
+                  ]
+                }
+              ],
+              "line": 9,
+              "name": "vars"
+            }
+          ],
+          "sourcePath": "{{testdir}}/parsed_policy.cf.sub"
+        }
+      ]
+    }bundle agent test()
+{
+vars:
+  any::
+    "testvar"        string => "string";
+    "testlist"        slist =>  {"list"};
+
+
+}
+
+bundle common extra()
+{
+vars:
+  any::
+    "extra_var"        string => "extra";
+
+
+}
+
+body common control()
+{
+  inputs =>  {"parsed_policy.cf.sub.sub"};
+  bundlesequence =>  {"test"};
+
+}
+
+{
+      "bodies": [
+        {
+          "arguments": [],
+          "bodyType": "common",
+          "contexts": [
+            {
+              "attributes": [
+                {
+                  "line": 3,
+                  "lval": "inputs",
+                  "rval": {
+                    "type": "list",
+                    "value": [
+                      {
+                        "type": "string",
+                        "value": "parsed_policy.cf.sub.sub"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "line": 4,
+                  "lval": "bundlesequence",
+                  "rval": {
+                    "type": "list",
+                    "value": [
+                      {
+                        "type": "string",
+                        "value": "test"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "name": "any"
+            }
+          ],
+          "line": 1,
+          "name": "control",
+          "namespace": "default",
+          "sourcePath": "{{testdir}}/parsed_policy.cf.sub"
+        }
+      ],
+      "bundles": [
+        {
+          "arguments": [],
+          "bundleType": "agent",
+          "line": 7,
+          "name": "test",
+          "namespace": "default",
+          "promiseTypes": [
+            {
+              "contexts": [
+                {
+                  "name": "any",
+                  "promises": [
+                    {
+                      "attributes": [
+                        {
+                          "line": 10,
+                          "lval": "string",
+                          "rval": {
+                            "type": "string",
+                            "value": "string"
+                          }
+                        }
+                      ],
+                      "line": 10,
+                      "promiser": "testvar"
+                    },
+                    {
+                      "attributes": [
+                        {
+                          "line": 11,
+                          "lval": "slist",
+                          "rval": {
+                            "type": "list",
+                            "value": [
+                              {
+                                "type": "string",
+                                "value": "list"
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "line": 11,
+                      "promiser": "testlist"
+                    }
+                  ]
+                }
+              ],
+              "line": 9,
+              "name": "vars"
+            }
+          ],
+          "sourcePath": "{{testdir}}/parsed_policy.cf.sub"
+        },
+        {
+          "arguments": [],
+          "bundleType": "common",
+          "line": 1,
+          "name": "extra",
+          "namespace": "default",
+          "promiseTypes": [
+            {
+              "contexts": [
+                {
+                  "name": "any",
+                  "promises": [
+                    {
+                      "attributes": [
+                        {
+                          "line": 4,
+                          "lval": "string",
+                          "rval": {
+                            "type": "string",
+                            "value": "extra"
+                          }
+                        }
+                      ],
+                      "line": 4,
+                      "promiser": "extra_var"
+                    }
+                  ]
+                }
+              ],
+              "line": 3,
+              "name": "vars"
+            }
+          ],
+          "sourcePath": "{{testdir}}/parsed_policy.cf.sub.sub"
+        }
+      ]
+    }

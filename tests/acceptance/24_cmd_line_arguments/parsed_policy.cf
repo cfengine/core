@@ -1,0 +1,38 @@
+# Tests that the '-p' option works properly in all its modes.
+
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent init
+{
+  vars:
+      "testdir" data => '{ testdir: "$(this.promise_dirname)" }';
+
+  files:
+      "$(G.testdir)/output.expected"
+        create => "true",
+        edit_template => "$(this.promise_filename).template",
+        template_method => "mustache",
+        template_data => @(testdir);
+}
+
+bundle agent test
+{
+  vars:
+      "arg_list" slist => { "none", "cf", "json", "cf-full", "json-full" };
+
+  commands:
+      "$(sys.cf_promises) -f $(this.promise_filename).sub -p $(arg_list) >> $(G.testdir)/output.actual"
+        contain => in_shell;
+}
+
+bundle agent check
+{
+  methods:
+      "check" usebundle => dcs_check_diff("$(G.testdir)/output.actual",
+                                          "$(G.testdir)/output.expected",
+                                          $(this.promise_filename));
+}

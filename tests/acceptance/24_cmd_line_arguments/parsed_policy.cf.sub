@@ -1,0 +1,12 @@
+body common control
+{
+    inputs => { "parsed_policy.cf.sub.sub" };
+    bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  vars:
+      "testvar" string => "string";
+      "testlist" slist => { "list" };
+}

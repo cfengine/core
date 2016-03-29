@@ -673,7 +673,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 static void InitIgnoreInterfaces()
 {
     FILE *fin;
-    char filename[CF_BUFSIZE],regex[CF_MAXVARSIZE];
+    char filename[CF_BUFSIZE],regex[256];
 
     snprintf(filename, sizeof(filename), "%s%c%s", GetInputDir(), FILE_SEPARATOR, CF_IGNORE_INTERFACES);
 
@@ -686,7 +686,7 @@ static void InitIgnoreInterfaces()
     while (!feof(fin))
     {
         regex[0] = '\0';
-        int scanCount = fscanf(fin,"%s",regex);
+        int scanCount = fscanf(fin,"%255s",regex);
 
         if (scanCount != 0 && *regex != '\0')
         {

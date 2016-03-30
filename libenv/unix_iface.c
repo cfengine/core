@@ -34,6 +34,7 @@
 #include <files_interfaces.h>
 #include <files_names.h>
 #include <known_dirs.h>
+#include <ip_address.h>
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>
@@ -80,6 +81,8 @@ static bool IgnoreInterface(char *name);
 static void InitIgnoreInterfaces(void);
 
 static Rlist *IGNORE_INTERFACES = NULL; /* GLOBAL_E */
+
+typedef void (*ProcPostProcessFn)(void *ctx, void *json);
 
 
 /*********************************************************************/
@@ -756,5 +759,453 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
     return -1;
 }
 #endif /* _AIX */
+
+// TODO: perhaps rename and move these to json.c and ip_address.c?  Or even let JsonElements store IPAddress structs?
+static Buffer* ParsedIPAddressHex(const char *data, const bool with_port)
+{
+    Buffer *addr = NULL;
+    Buffer *buffer = BufferNewFrom(data, strlen(data));
+    if (NULL != buffer)
+    {
+        IPAddress *ip = IPAddressNewHex(buffer);
+        if (NULL != ip)
+        {
+            addr = IPAddressGetAddress(ip);
+            int port = IPAddressGetPort(ip);
+            if (with_port)
+            {
+                BufferAppendF(addr, ":%d", port);
+            }
+            IPAddressDestroy(&ip);
+        }
+        BufferDestroy(buffer);
+    }
+
+    return addr;
+}
+
+static void JsonRewriteParsedIPAddress(JsonElement* element, const char* raw_key, const char *new_key, const bool with_port)
+{
+    Buffer *addr = ParsedIPAddressHex(JsonObjectGetAsString(element, raw_key), with_port);
+    if (NULL != addr)
+    {
+        JsonObjectAppendString(element, new_key, BufferData(addr));
+        JsonObjectRemoveKey(element, raw_key);
+        BufferDestroy(addr);
+    }
+}
+
+static long JsonExtractParsedNumber(JsonElement* element, const char* raw_key, const char *new_key, const bool hex_mode, const bool keep_number)
+{
+    long num = 0;
+
+    if (1 == sscanf(JsonObjectGetAsString(element, raw_key), hex_mode ? "%lx" : "%ld", &num))
+    {
+        if (!keep_number)
+        {
+            JsonObjectRemoveKey(element, raw_key);
+        }
+
+        if (NULL != new_key)
+        {
+            JsonObjectAppendInteger(element, new_key, num);
+        }
+    }
+
+    return num;
+}
+
+/*******************************************************************/
+
+static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void *json)
+{
+# if defined (__linux__)
+    EvalContext *ctx = passed_ctx;
+    JsonElement *route = json;
+
+    JsonRewriteParsedIPAddress(route, "raw_dest", "dest", false);
+    JsonRewriteParsedIPAddress(route, "raw_gw", "gateway", false);
+    JsonRewriteParsedIPAddress(route, "raw_mask", "mask", false);
+
+    // TODO: check that the metric and the others are decimal (ipv6_route uses hex for metric and others maybe)
+    JsonExtractParsedNumber(route, "metric", "metric", false, false);
+    JsonExtractParsedNumber(route, "mtu", "mtu", false, false);
+    JsonExtractParsedNumber(route, "refcnt", "refcnt", false, false);
+    JsonExtractParsedNumber(route, "use", "use", false, false);
+    JsonExtractParsedNumber(route, "window", "window", false, false);
+    JsonExtractParsedNumber(route, "irtt", "irtt", false, false);
+
+    JsonElement *decoded_flags = JsonArrayCreate(3);
+    long num_flags = JsonExtractParsedNumber(route, "raw_flags", NULL, true, false);
+
+    bool is_up = (num_flags & RTF_UP);
+    bool is_gw = (num_flags & RTF_GATEWAY);
+    bool is_host = (num_flags & RTF_HOST);
+    bool is_default_route = (0 == strcmp(JsonObjectGetAsString(route, "dest"), "0.0.0.0"));
+
+    const char* gw_type = is_gw ? "gateway":"local";
+
+    // These flags are always included on Linux in platform.h
+    JsonArrayAppendString(decoded_flags, is_up ? "up":"down");
+    JsonArrayAppendString(decoded_flags, is_host ? "host":"net");
+    JsonArrayAppendString(decoded_flags, is_default_route ? "default" : "not_default");
+    JsonArrayAppendString(decoded_flags, gw_type);
+    JsonObjectAppendElement(route, "flags", decoded_flags);
+    JsonObjectAppendBool(route, "active_default_gateway", is_default_route && is_up && is_gw);
+
+    if (is_up && is_gw)
+    {
+        Buffer *formatter = BufferNew();
+        BufferPrintf(formatter, "ipv4_gw_%s", JsonObjectGetAsString(route, "gateway"));
+        EvalContextClassPutHard(ctx, BufferData(formatter), "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+        BufferDestroy(formatter);
+    }
+# endif
+    return NULL;
+}
+
+static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+{
+# if defined (__linux__)
+    JsonElement *route = json;
+
+    JsonRewriteParsedIPAddress(route, "raw_dest", "dest", false);
+    JsonRewriteParsedIPAddress(route, "raw_next_hop", "next_hop", false);
+    JsonRewriteParsedIPAddress(route, "raw_source", "dest", false);
+
+    JsonExtractParsedNumber(route, "raw_metric", "metric", true, false);
+    JsonExtractParsedNumber(route, "refcnt", "refcnt", false, false);
+    JsonExtractParsedNumber(route, "use", "use", false, false);
+
+    JsonElement *decoded_flags = JsonArrayCreate(3);
+    long num_flags = JsonExtractParsedNumber(route, "raw_flags", NULL, true, false);
+
+    bool is_up = (num_flags & RTF_UP);
+    bool is_gw = (num_flags & RTF_GATEWAY);
+    bool is_host = (num_flags & RTF_HOST);
+
+    const char* gw_type = is_gw ? "gateway":"local";
+
+    // These flags are always included on Linux in platform.h
+    JsonArrayAppendString(decoded_flags, is_up ? "up":"down");
+    JsonArrayAppendString(decoded_flags, is_host ? "host":"net");
+    JsonArrayAppendString(decoded_flags, gw_type);
+    JsonObjectAppendElement(route, "flags", decoded_flags);
+
+    // TODO: figure out if we can grab any default gateway info here
+    // like we do with IPv4 routes
+
+# endif
+    return NULL;
+}
+
+static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+{
+    JsonElement *entry = json;
+
+    JsonRewriteParsedIPAddress(entry, "raw_address", "address", false);
+
+    JsonExtractParsedNumber(entry, "raw_device_number", "device_number", true, false);
+    JsonExtractParsedNumber(entry, "raw_prefix_length", "prefix_length", true, false);
+    JsonExtractParsedNumber(entry, "raw_scope", "scope", true, false);
+
+    return NULL;
+}
+
+/*******************************************************************/
+
+static JsonElement* GetNetworkingStatsInfo(const char *filename)
+{
+    JsonElement *stats = NULL;
+    assert(filename);
+
+    FILE *fin = safe_fopen(filename, "rt");
+    if (fin)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Reading netstat info from %s", filename);
+        size_t header_line_size = CF_BUFSIZE;
+        char *header_line = xmalloc(header_line_size);
+        stats = JsonObjectCreate(2);
+
+        while (CfReadLine(&header_line, &header_line_size, fin) != -1)
+        {
+            char* colon_ptr = strchr(header_line, ':');
+            if (NULL != colon_ptr &&
+                colon_ptr+2 < header_line + strlen(header_line))
+            {
+                JsonElement *stat = JsonObjectCreate(3);
+                Buffer *type = BufferNewFrom(header_line, colon_ptr - header_line);
+                size_t type_length = BufferSize(type);
+                Rlist *info = RlistFromSplitString(colon_ptr+2, ' ');
+                size_t line_size = CF_BUFSIZE;
+                char *line = xmalloc(line_size);
+                if (CfReadLine(&line, &line_size, fin) != -1)
+                {
+                    if (strlen(line) > type_length+2)
+                    {
+                        Rlist *data = RlistFromSplitString(line+type_length+2, ' ');
+                        for (const Rlist *rp = info, *rdp = data;
+                             rp != NULL && rdp != NULL;
+                             rp = rp->next, rdp = rdp->next)
+                        {
+                            JsonObjectAppendString(stat, RlistScalarValue(rp), RlistScalarValue(rdp));
+                        }
+                        RlistDestroy(data);
+                    }
+                }
+
+                JsonObjectAppendElement(stats, BufferData(type), stat);
+
+                free(line);
+                RlistDestroy(info);
+                BufferDestroy(type);
+            }
+
+        }
+
+        free(header_line);
+
+        fclose(fin);
+    }
+
+    return stats;
+}
+
+/*******************************************************************/
+
+static JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, const char* regex)
+{
+    JsonElement *ret = NULL;
+    FILE *fin = safe_fopen(filename, "rt");
+    if (fin)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Reading %s info from %s", key, filename);
+
+        pcre *pattern = NULL;
+        {
+            const char *errorstr;
+            int erroffset;
+            pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL,
+                                   &errorstr, &erroffset, NULL);
+        }
+
+        if (pattern != NULL)
+        {
+            size_t line_size = CF_BUFSIZE;
+            char *line = xmalloc(line_size);
+            bool extract_key_mode = (NULL != extracted_key);
+            JsonElement *info = extract_key_mode ? JsonObjectCreate(10) : JsonArrayCreate(10);
+
+            while (CfReadLine(&line, &line_size, fin) != -1)
+            {
+                JsonElement *item = StringCaptureData(pattern, regex, line);
+
+                if (NULL != item)
+                {
+                    if (NULL != post)
+                    {
+                        (*post)(ctx, item);
+                    }
+
+                    if (extract_key_mode)
+                    {
+                        if (NULL == JsonObjectGetAsString(item, extracted_key))
+                        {
+                            Log(LOG_LEVEL_ERR, "While parsing %s, looked to extract key %s but couldn't find it in line %s", filename, extracted_key, line);
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_DEBUG, "While parsing %s, got key %s from line %s", filename, JsonObjectGetAsString(item, extracted_key), line);
+                            JsonObjectAppendElement(info, JsonObjectGetAsString(item, extracted_key), item);
+                        }
+                    }
+                    else
+                    {
+                        JsonArrayAppendElement(info, item);
+                    }
+                }
+            }
+
+            free(line);
+
+            ret = info;
+
+            if (key)
+            {
+                Buffer *varname = BufferNew();
+                BufferPrintf(varname, "%s", key);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, BufferData(varname), info, CF_DATA_TYPE_CONTAINER,
+                                              "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+                BufferDestroy(varname);
+            }
+
+            pcre_free(pattern);
+        }
+
+        fclose(fin);
+    }
+
+    return ret;
+}
+
+/*******************************************************************/
+
+void GetNetworkingInfo(EvalContext *ctx)
+{
+    const char *procdir = getenv("CFENGINE_TEST_OVERRIDE_PROCDIR");
+    if (NULL == procdir)
+    {
+        procdir = "";
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Overriding /proc location to be %s", procdir);
+    }
+
+    Buffer *pbuf = BufferNew();
+
+    JsonElement *inet = JsonObjectCreate(2);
+
+    BufferPrintf(pbuf, "%s/proc/net/netstat", procdir);
+    JsonElement *inet_stats = GetNetworkingStatsInfo(BufferData(pbuf));
+
+    if (NULL != inet_stats)
+    {
+        JsonObjectAppendElement(inet, "stats", inet_stats);
+    }
+
+    BufferPrintf(pbuf, "%s/proc/net/route", procdir);
+    JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, (ProcPostProcessFn) &NetworkingRoutesPostProcessInfo,
+                    // format: Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
+                    //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0 
+                    "^(?<interface>\\S+)\\t(?<raw_dest>[[:xdigit:]]+)\\t(?<raw_gw>[[:xdigit:]]+)\\t(?<raw_flags>[[:xdigit:]]+)\\t(?<refcnt>\\d+)\\t(?<use>\\d+)\\t(?<metric>[[:xdigit:]]+)\\t(?<raw_mask>[[:xdigit:]]+)\\t(?<mtu>\\d+)\\t(?<window>\\d+)\\t(?<irtt>[[:xdigit:]]+)");
+
+    if (NULL != routes &&
+        JsonGetElementType(routes) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        JsonObjectAppendElement(inet, "routes", routes);
+
+        JsonIterator iter = JsonIteratorInit(routes);
+        const JsonElement *default_route = NULL;
+        long lowest_metric = 0;
+        const JsonElement *route = NULL;
+        while ((route = JsonIteratorNextValue(&iter)))
+        {
+            JsonElement *active = JsonObjectGet(route, "active_default_gateway");
+            if (NULL != active &&
+                JsonGetElementType(active) == JSON_ELEMENT_TYPE_PRIMITIVE &&
+                JsonGetPrimitiveType(active) == JSON_PRIMITIVE_TYPE_BOOL &&
+                JsonPrimitiveGetAsBool(active))
+            {
+                JsonElement *metric = JsonObjectGet(route, "metric");
+                if (NULL != metric &&
+                    JsonGetElementType(metric) == JSON_ELEMENT_TYPE_PRIMITIVE &&
+                    JsonGetPrimitiveType(metric) == JSON_PRIMITIVE_TYPE_INTEGER &&
+                    (NULL == default_route ||
+                     JsonPrimitiveGetAsInteger(metric) < lowest_metric))
+                {
+                    default_route = route;
+                }
+            }
+        }
+
+        if (NULL != default_route)
+        {
+            JsonObjectAppendString(inet, "default_gateway", JsonObjectGetAsString(default_route, "gateway"));
+            JsonObjectAppendElement(inet, "default_route", JsonCopy(default_route));
+        }
+    }
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet", inet, CF_DATA_TYPE_CONTAINER,
+                                  "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+
+
+    JsonElement *inet6 = JsonObjectCreate(3);
+
+    BufferPrintf(pbuf, "%s/proc/net/snmp6", procdir);
+    JsonElement *inet6_stats = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, NULL,
+                                               "^\\s*(?<key>\\S+)\\s+(?<value>\\d+)");
+
+    if (NULL != inet6_stats)
+    {
+        // map the key to the value (as a number) in the "stats" map
+        JsonElement *rewrite = JsonObjectCreate(JsonLength(inet6_stats));
+        JsonIterator iter = JsonIteratorInit(inet6_stats);
+        const JsonElement *stat = NULL;
+        while ((stat = JsonIteratorNextValue(&iter)))
+        {
+            long num = 0;
+            const char* key = JsonObjectGetAsString(stat, "key");
+            const char* value = JsonObjectGetAsString(stat, "value");
+            if (key && value && (1 == sscanf(value, "%ld", &num)))
+            {
+                JsonObjectAppendInteger(rewrite, key, num);
+            }
+        }
+
+        JsonObjectAppendElement(inet6, "stats", rewrite);
+        JsonDestroy(inet6_stats);
+    }
+
+    BufferPrintf(pbuf, "%s/proc/net/ipv6_route", procdir);
+    JsonElement *inet6_routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, (ProcPostProcessFn) &NetworkingIPv6RoutesPostProcessInfo,
+                    // format: dest                    dest_prefix source                source_prefix next_hop                         metric   refcnt   use      flags        interface
+                    //         fe800000000000000000000000000000 40 00000000000000000000000000000000 00 00000000000000000000000000000000 00000100 00000000 00000000 00000001     eth0
+                    "^(?<raw_dest>[[:xdigit:]]+)\\s+(?<dest_prefix>[[:xdigit:]]+)\\s+"
+                    "(?<raw_source>[[:xdigit:]]+)\\s+(?<source_prefix>[[:xdigit:]]+)\\s+"
+                    "(?<raw_next_hop>[[:xdigit:]]+)\\s+(?<raw_metric>[[:xdigit:]]+)\\s+"
+                    "(?<refcnt>\\d+)\\s+(?<use>\\d+)\\s+"
+                    "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
+
+    if (NULL != inet6_routes)
+    {
+        JsonObjectAppendElement(inet6, "routes", inet6_routes);
+    }
+
+    BufferPrintf(pbuf, "%s/proc/net/if_inet6", procdir);
+    JsonElement *inet6_addresses = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, "interface", (ProcPostProcessFn) &NetworkingIPv6AddressesPostProcessInfo,
+                    // format: address device_number prefix_length scope flags interface_name
+                    // 00000000000000000000000000000001 01 80 10 80       lo
+                    // fe80000000000000004249fffebdd7b4 04 40 20 80  docker0
+                    // fe80000000000000c27cd1fffe3eada6 02 40 20 80   enp4s0
+                    "^(?<raw_address>[[:xdigit:]]+)\\s+(?<raw_device_number>[[:xdigit:]]+)\\s+"
+                    "(?<raw_prefix_length>[[:xdigit:]]+)\\s+(?<raw_scope>[[:xdigit:]]+)\\s+"
+                    "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
+
+    if (NULL != inet6_addresses)
+    {
+        JsonObjectAppendElement(inet6, "addresses", inet6_addresses);
+    }
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet6", inet6, CF_DATA_TYPE_CONTAINER,
+                                  "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+
+    // Inter-|   Receive                                                |  Transmit
+    //  face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    //   eth0: 74850544807 75236137    0    0    0     0          0   1108775 63111535625 74696758    0    0    0     0       0          0
+
+    BufferPrintf(pbuf, "%s/proc/net/dev", procdir);
+    GetProcFileInfo(ctx, BufferData(pbuf), "interfaces_data", "device", NULL,
+                    "^\\s*(?<device>[^:]+)\\s*:\\s*"
+                    // All of the below are just decimal digits separated by spaces
+                    "(?<receive_bytes>\\d+)\\s+"
+                    "(?<receive_packets>\\d+)\\s+"
+                    "(?<receive_errors>\\d+)\\s+"
+                    "(?<receive_drop>\\d+)\\s+"
+                    "(?<receive_fifo>\\d+)\\s+"
+                    "(?<receive_frame>\\d+)\\s+"
+                    "(?<receive_compressed>\\d+)\\s+"
+                    "(?<receive_multicast>\\d+)\\s+"
+                    "(?<transmit_bytes>\\d+)\\s+"
+                    "(?<transmit_packets>\\d+)\\s+"
+                    "(?<transmit_errors>\\d+)\\s+"
+                    "(?<transmit_drop>\\d+)\\s+"
+                    "(?<transmit_fifo>\\d+)\\s+"
+                    "(?<transmit_frame>\\d+)\\s+"
+                    "(?<transmit_compressed>\\d+)\\s+"
+                    "(?<transmit_multicast>\\d+)");
+
+    BufferDestroy(pbuf);
+}
 
 #endif /* !__MINGW32__ */

@@ -2879,6 +2879,7 @@ void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
     GetInterfacesInfo(ctx);
+    GetNetworkingInfo(ctx);
     Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);

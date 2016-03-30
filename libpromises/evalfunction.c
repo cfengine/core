@@ -2714,7 +2714,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
             return FnFailure();
         }
 
-        JsonDestroy(container);
+        JsonDestroyMaybe(container, allocated);
 
         return (FnCallResult) { FNCALL_SUCCESS, { returnjson_pipe, RVAL_TYPE_CONTAINER } };
     }

@@ -108,7 +108,7 @@ static const char *const HINTS[] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Generate reports about configuration and insert into CFDB",
-    "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
+    "Output the parsed policy. Possible values: 'none', 'cf', 'json' (this file only), 'cf-full', 'json-full' (all parsed promises). Default is 'none'. (experimental)",
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
@@ -125,6 +125,31 @@ static const char *const HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    enum generic_agent_config_common_policy_output_format format = config->agent_specific.common.policy_output_format;
+
+    if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF ||
+        format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON)
+    {
+        // Just parse and write content to output
+        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
+                                                config->agent_specific.common.parser_warnings,
+                                                config->agent_specific.common.parser_warnings_error);
+        Writer *writer = FileWriter(stdout);
+        if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF)
+        {
+            PolicyToString(output_policy, writer);
+        }
+        else
+        {
+            JsonElement *json_policy = PolicyToJson(output_policy);
+            JsonWrite(writer, json_policy, 2);
+            JsonDestroy(json_policy);
+        }
+        WriterClose(writer);
+        PolicyDestroy(output_policy);
+        return EXIT_SUCCESS;
+    }
+
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
@@ -160,32 +185,27 @@ int main(int argc, char *argv[])
 
     switch (config->agent_specific.common.policy_output_format)
     {
-    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF_FULL:
     {
-        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
-                                                config->agent_specific.common.parser_warnings,
-                                                config->agent_specific.common.parser_warnings_error);
         Writer *writer = FileWriter(stdout);
         PolicyToString(policy, writer);
         WriterClose(writer);
-        PolicyDestroy(output_policy);
     }
     break;
 
-    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON_FULL:
     {
-        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
-                                                config->agent_specific.common.parser_warnings,
-                                                config->agent_specific.common.parser_warnings_error);
-        JsonElement *json_policy = PolicyToJson(output_policy);
         Writer *writer = FileWriter(stdout);
+        JsonElement *json_policy = PolicyToJson(policy);
         JsonWrite(writer, json_policy, 2);
-        WriterClose(writer);
         JsonDestroy(json_policy);
-        PolicyDestroy(output_policy);
+        WriterClose(writer);
     }
     break;
 
+    // already handled, but avoids compiler warnings
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
         break;
     }
@@ -277,9 +297,17 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON;
             }
+             else if (strcmp("cf-full", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF_FULL;
+            }
+            else if (strcmp("json-full", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON_FULL;
+            }
             else
             {
-                Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json', 'cf-full', 'json-full'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;

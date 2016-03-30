@@ -1524,6 +1524,7 @@ typedef struct
 
     ExecContain contain;
     char *args;
+    Rlist *arglist;
     int module;
 
     Rlist *signals;

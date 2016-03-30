@@ -1,0 +1,5 @@
+bundle common extra
+{
+  vars:
+      "extra_var" string => "extra";
+}

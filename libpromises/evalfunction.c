@@ -2587,6 +2587,7 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
     if (io.write_fd == -1 || io.read_fd == -1)
     {
         Log(LOG_LEVEL_INFO, "An error occurred while communicating with '%s'", cmd);
+
         return NULL;
     }
 
@@ -2602,13 +2603,17 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
     {
         Log(LOG_LEVEL_VERBOSE, "Couldn't send whole container data to '%s'.", cmd);
         free(container_str);
-        return NULL;
+
+        container_str = NULL;
     }
 
-    free(container_str);
-
-    /* We can have some error message here. */
-    Rlist *returnlist = PipeReadData(&io, 5, 5);
+    Rlist *returnlist = NULL;
+    if (container_str)
+    {
+        free(container_str);
+        /* We can have some error message here. */
+        returnlist = PipeReadData(&io, 5, 5);
+    }
 
     /* If script returns non 0 status */
     int close = cf_pclose_full_duplex(&io);
@@ -2617,6 +2622,12 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
         Log(LOG_LEVEL_VERBOSE,
             "%s returned with non zero return code: %d",
             cmd, close);
+    }
+
+    // Exit if no data was obtained from the pipe
+    if (NULL == returnlist)
+    {
+        return NULL;
     }
 
     JsonElement *returnjq = JsonArrayCreate(5);

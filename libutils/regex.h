@@ -43,7 +43,7 @@ bool StringMatchWithPrecompiledRegex(pcre *regex, const char *str,
 bool StringMatchFull(const char *regex, const char *str);
 bool StringMatchFullWithPrecompiledRegex(pcre *regex, const char *str);
 Seq *StringMatchCaptures(const char *regex, const char *str, const bool return_names);
+Seq *StringMatchCapturesWithPrecompiledRegex(const pcre *pattern, const char *str, const bool return_names);
 bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex);
-
 
 #endif  /* CFENGINE_REGEX_H */

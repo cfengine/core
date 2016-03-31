@@ -1,0 +1,38 @@
+# you can run this test directly with
+
+# CFENGINE_TEST_OVERRIDE_PROCDIR=`pwd`/00_basics/environment/proc-net.cf.proc testall 00_basics/environment/proc-net.cf.sub
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+      "todo" slist => {
+                       "inet", "inet6",
+                       "interfaces_data"
+      };
+
+      "$(todo)" data => mergedata("sys.$(todo)");
+      # make sure deep lookups work
+      "docker" string => "$(sys.inet6[addresses][docker0][address])";
+      "default_gateway" string => "$(sys.inet[default_gateway])";
+}
+
+bundle agent check
+{
+  vars:
+      "testname" string => regex_replace($(this.promise_filename), "\\.sub$", "", "");
+
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(testname));
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

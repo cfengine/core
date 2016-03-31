@@ -2632,19 +2632,32 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
 
     JsonElement *returnjq = JsonArrayCreate(5);
 
+    Buffer *buf = BufferNew();
     for (const Rlist *rp = returnlist; rp != NULL; rp = rp->next)
     {
         const char *data = RlistScalarValue(rp);
+
+        if (0 != BufferSize(buf))
+        {
+            // simulate the newline
+            BufferAppendString(buf, "\n");
+        }
+
+        BufferAppendString(buf, data);
+        const char *bufdata = BufferData(buf);
         JsonElement *parsed = NULL;
-        if (JsonParse(&data, &parsed) == JSON_PARSE_OK)
+        if (JsonParse(&bufdata, &parsed) == JSON_PARSE_OK)
         {
             JsonArrayAppendElement(returnjq, parsed);
+            BufferClear(buf);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "'%s' generated invalid JSON '%s', skipping it", cmd, data);
+            Log(LOG_LEVEL_DEBUG, "'%s' generated invalid JSON '%s', appending next line", cmd, data);
         }
     }
+
+    BufferDestroy(buf);
 
     RlistDestroy(returnlist);
 

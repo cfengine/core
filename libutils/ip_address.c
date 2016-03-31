@@ -73,11 +73,53 @@ static int Char2Hex(int beginning, char increment)
 
 /*
  * This function parses the source pointer and checks if it conforms to the
+ * 0a0b0c0d or 0a0b0c0d:0e0f formats (commonly used in procfs)
+ *
+ * If address is not NULL and the address is IPV4, then the result is copied there.
+ *
+ * Returns 0 on success.
+ */
+static int IPV4_hex_parser(const char *source, struct IPV4Address *address)
+{
+    {
+        // shortcut for the 0a0b0c0d format
+        unsigned int a, b, c, d, pport = 0;
+        if (strlen(source) == 8 &&
+            4 == sscanf(source, "%2x%2x%2x%2x", &a, &b, &c, &d))
+        {
+            address->octets[3] = a;
+            address->octets[2] = b;
+            address->octets[1] = c;
+            address->octets[0] = d;
+            address->port = pport;
+            return 0;
+        }
+
+        // shortcut for the 0a0b0c0d:0e0f format
+        if (strlen(source) == 8+1+4 &&
+            5 == sscanf(source, "%2x%2x%2x%2x:%4x", &a, &b, &c, &d, &pport))
+        {
+            address->octets[3] = a;
+            address->octets[2] = b;
+            address->octets[1] = c;
+            address->octets[0] = d;
+            address->port = pport;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+/*
+ * This function parses the source pointer and checks if it conforms to the
  * RFC 791.
  *
  * xxx.xxx.xxx.xxx[:ppppp]
  *
  * If address is not NULL and the address is IPV4, then the result is copied there.
+ *
+ * Returns 0 on success.
  */
 static int IPV4_parser(const char *source, struct IPV4Address *address)
 {
@@ -325,12 +367,59 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
 
 /*
  * This function parses the address and checks if it conforms to the
+ * 0a0b0c0d0e0f0g0h or 0a0b0c0d0e0f0g0h:0i0j format (commonly used in procfs)
+ *
+ * Returns 0 on success.
+ */
+static int IPV6_hex_parser(const char *source, struct IPV6Address *address)
+{
+    {
+        // shortcut for the 0a0b0c0d0e0f0g0h format
+        unsigned int a, b, c, d, e, f, g, h, pport = 0;
+
+        if (strlen(source) == 32 &&
+            8 == sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x", &a, &b, &c, &d, &e, &f, &g, &h))
+        {
+            address->sixteen[7] = a;
+            address->sixteen[6] = b;
+            address->sixteen[5] = c;
+            address->sixteen[4] = d;
+            address->sixteen[3] = e;
+            address->sixteen[2] = f;
+            address->sixteen[1] = g;
+            address->sixteen[0] = h;
+            return 0;
+        }
+
+        if (strlen(source) == 32+1+4 &&
+            9 == sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x:%4x", &a, &b, &c, &d, &e, &f, &g, &h, &pport))
+        {
+            address->sixteen[7] = a;
+            address->sixteen[6] = b;
+            address->sixteen[5] = c;
+            address->sixteen[4] = d;
+            address->sixteen[3] = e;
+            address->sixteen[2] = f;
+            address->sixteen[1] = g;
+            address->sixteen[0] = h;
+            address->port = pport;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+/*
+ * This function parses the address and checks if it conforms to the
  * RFCs 2373, 2460 and 5952.
  * We do not support Microsoft UNC encoding, i.e.
  * hhhh-hhhh-hhhh-hhhh-hhhh-hhhh-hhhh-hhhh.ipv6-literal.net
  * Despite following RFC 5292 we do not signal errors derived from bad
  * zero compression although this might change on time, so please do not
  * trust that we will honor address with wrong zero compression.
+ *
+ * Returns 0 on success.
  */
 static int IPV6_parser(const char *source, struct IPV6Address *address)
 {
@@ -882,6 +971,45 @@ IPAddress *IPAddressNew(Buffer *source)
         address->address = (void *)ipv4;
     }
     else if (IPV6_parser(pad, ipv6) == 0)
+    {
+        free (ipv4);
+        address = (IPAddress *)xmalloc(sizeof(IPAddress));
+        address->type = IP_ADDRESS_TYPE_IPV6;
+        address->address = (void *)ipv6;
+    }
+    else
+    {
+        /*
+         * It was not a valid IP address.
+         */
+        free (ipv4);
+        free (ipv6);
+        return NULL;
+    }
+    return address;
+}
+
+IPAddress *IPAddressNewHex(Buffer *source)
+{
+    if (!source || !BufferData(source))
+    {
+        return NULL;
+    }
+    IPAddress *address = NULL;
+    const char *pad = BufferData(source);
+    struct IPV4Address *ipv4 = NULL;
+    struct IPV6Address *ipv6 = NULL;
+    ipv4 = (struct IPV4Address *)xmalloc(sizeof(struct IPV4Address));
+    ipv6 = (struct IPV6Address *)xmalloc(sizeof(struct IPV6Address));
+
+    if (IPV4_hex_parser(pad, ipv4) == 0)
+    {
+        free (ipv6);
+        address = (IPAddress *)xmalloc(sizeof(IPAddress));
+        address->type = IP_ADDRESS_TYPE_IPV4;
+        address->address = (void *)ipv4;
+    }
+    else if (IPV6_hex_parser(pad, ipv6) == 0)
     {
         free (ipv4);
         address = (IPAddress *)xmalloc(sizeof(IPAddress));

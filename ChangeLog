@@ -1,4 +1,7 @@
 3.7.3
+	Behaviour changes:
+	- classesmatching(): order of classes changed
+
 	Fixes:
 	- Reduce verbosity of yum package module (Redmine #7485)
 	- Reduce verbosity of apt_get package module (Redmine #7485)
@@ -58,9 +61,6 @@
 	- fix build failure on FreeBSD 7.1 (Redmine #7415)
 	- Installing packages containing version numbers using yum
 	  now works correctly. (Redmine #7825)
-
-	Changes:
-	- Change: classesmatching(): order of classes changed
 
 3.7.2:
 	Bug fixes:

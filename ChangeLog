@@ -1,6 +1,7 @@
 3.7.3
 	Behaviour changes:
 	- classesmatching(): order of classes changed
+	- Suppress standard services noise on SUSE (Redmine #6968)
 
 	Fixes:
 	- Reduce verbosity of yum package module (Redmine #7485)
@@ -29,7 +30,6 @@
 	- Fix ps options for FreeBSD to check processes only in current host and not in jails
 	- Fix cf-serverd error messages with classic protocol clients
 	  (Redmine #7818)
-	- Change: Suppress standard services noise on SUSE (Redmine #6968)
 	- The isvariable() function call now correctly accepts all
 	  array variables when specified inline. Previously it would not accept
 	  certain special characters, even though they could be specified

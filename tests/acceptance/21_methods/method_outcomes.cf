@@ -55,14 +55,12 @@ bundle agent check
     "expected_classes"
       slist => {
                  "method_kept_outcome_kept",
-                 "method_kept_outcome_not_repaired",
                  "method_kept_outcome_ok",
                  "method_kept_outcome_reached",
                  "method_not_kept_outcome_error",
                  "method_not_kept_outcome_failed",
                  "method_not_kept_outcome_not_kept",
                  "method_not_kept_outcome_not_ok",
-                 "method_not_kept_outcome_not_repaired",
                  "method_not_kept_outcome_reached",
                  "method_repaired_outcome_ok",
                  "method_repaired_outcome_reached",
@@ -71,7 +69,6 @@ bundle agent check
                  "method_worst_outcome_failed",
                  "method_worst_outcome_not_kept",
                  "method_worst_outcome_not_ok",
-                 "method_worst_outcome_not_repaired",
                  "method_worst_outcome_reached",
                 #"method_FORCE_UNEXPECTED_FAILURE",
                };

@@ -1,0 +1,39 @@
+bundle agent init
+{
+  vars:
+      "data"
+        data => readjson("$(this.promise_filename).json", inf),
+        classes => local_if_kept_or_repaired("init_data_loaded");
+}
+
+bundle agent test
+{
+  meta:
+
+      "description" string => "Test that pre-eval doesn't skip the use
+                               of classes bodies when they are defined
+                               in a seperate file.";
+      "test_soft_fail"
+        string => "any",
+        meta => { "redmine7947" };
+
+  classes:
+      "init_data_loaded_class_not_found"
+        expression => "!init_data_loaded";
+
+  reports:
+    DEBUG.init_data_loaded_class_not_found::
+      "Unexpected: Did not find init_data_loaded class defined"
+        comment => "This should have been defined in the first pass of
+                    the init bundle";
+
+    DEBUG.init_data_loaded::
+      "Expected: Found init_data_loaded";
+
+}
+
+bundle agent check
+{
+  methods:
+      "check" usebundle => dcs_passif_expected("init_data_loaded", "init_data_loaded_class_not_found", $(this.promise_filename));
+}

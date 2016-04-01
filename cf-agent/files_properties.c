@@ -48,46 +48,32 @@ static const char *const SKIPFILES[] =
 static bool ConsiderFile(const char *nodename, const char *path, struct stat *stat)
 {
     int i;
-    
-    if (stat != NULL)
-    {
-        if (S_ISLNK(stat->st_mode))
-        {
-            Log(LOG_LEVEL_INFO, "'%s' is a symbolic link", nodename);
-        }
-        else if (S_ISDIR(stat->st_mode))
-        {
-            Log(LOG_LEVEL_INFO, "'%s' is a directory", nodename);
-        }
-        
-        Log(LOG_LEVEL_VERBOSE, "'%s' has size %ld and full mode %o", nodename, (unsigned long) (stat->st_size),
-              (unsigned int) (stat->st_mode));
-    }
 
-    if (strlen(nodename) < 1)
+    if (nodename[0] == '\0')
     {
-        Log(LOG_LEVEL_ERR, "Empty (null) filename detected in '%s'", path);
+        Log(LOG_LEVEL_ERR, "Empty (null) filename detected in '%s', skipping", path);
         return false;
     }
 
     if (stat != NULL && (S_ISREG(stat->st_mode) || S_ISLNK(stat->st_mode)) &&
         IsItemIn(SUSPICIOUSLIST, nodename))
     {
-        Log(LOG_LEVEL_ERR, "Suspicious file '%s' found in '%s'", nodename, path);
+        Log(LOG_LEVEL_WARNING, "Filename '%s/%s' is classified as suspiscious, skipping", path, nodename);
         return false;
     }
 
+    /* A file named '...' is likely to be a path traversal attempt, see http://cwe.mitre.org/data/definitions/32.html */
     if (strcmp(nodename, "...") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Possible DFS/FS cell node detected in '%s' ...", path);
-        return true;
+        Log(LOG_LEVEL_WARNING, "Possible path traversal attempt detected in '%s/%s', skipping", path, nodename);
+        return false;
     }
 
     for (i = 0; SKIPFILES[i] != NULL; i++)
     {
         if (strcmp(nodename, SKIPFILES[i]) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "Filename '%s/%s' is classified as ignorable", path, nodename);
+            Log(LOG_LEVEL_VERBOSE, "Filename '%s/%s' is classified as ignorable, skipping", path, nodename);
             return false;
         }
     }

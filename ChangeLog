@@ -1,4 +1,14 @@
 3.8.2:
+	Behaviour changes:
+	- classesmatching(): order of classes changed
+	- Policy files specified in the "inputs" section of
+	  def.json will no longer be auto-loaded. One has to refer to the
+	  $(def.augments_inputs) variable in the policy (the standard
+	  masterfiles policies include this by default). This only affects
+	  installations which are not based on the standard masterfiles, and
+	  which are using the "inputs" field inside def.json. (Redmine #7961)
+	- Suppress standard services noise on SUSE (Redmine #6968)
+
 	Fixes:
 	- Update library dependencies to latest version.
 	  Libraries upgraded:
@@ -26,12 +36,6 @@
 	  syntax error, even if failsafe.cf was utilized. This could happen if
 	  the file containing the syntax error was specified in the def.json
 	  special file. (Redmine #7961)
-	- Change: Policy files specified in the "inputs" section of
-	  def.json will no longer be auto-loaded. One has to refer to the
-	  $(def.augments_inputs) variable in the policy (the standard
-	  masterfiles policies include this by default). This only affects
-	  installations which are not based on the standard masterfiles, and
-	  which are using the "inputs" field inside def.json. (Redmine #7961)
 	- Fix file descriptor leak when there are network errors.
 	- Fix cf-serverd error messages with classic protocol clients
 	  (Redmine #7818)
@@ -49,10 +53,6 @@
 	- Fix a regression which would sometimes cause "Permission
 	  denied" errors on files inside directories with very restricted
 	  permissions. (Redmine #7808)
-	- Change: Suppress standard services noise on SUSE (Redmine #6968)
-
-	Changes:
-	- Change: classesmatching(): order of classes changed
 
 3.8.1:
 	Changes:

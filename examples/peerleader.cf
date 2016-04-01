@@ -22,12 +22,10 @@
 #+begin_src prep
 #@ ```
 #@ echo alpha > /tmp/cfe_hostlist
-#@ echo "# COMMENT" > /tmp/cfe_hostlist
 #@ echo beta >> /tmp/cfe_hostlist
 #@ echo gamma >> /tmp/cfe_hostlist
 #@ echo "Set HOSTNAME appropriately beforehand"
 #@ echo "$HOSTNAME" >> /tmp/cfe_hostlist
-#@ echo "# COMMENT" > /tmp/cfe_hostlist
 #@ echo "Delta Delta Delta may I help ya help ya help ya"
 #@ echo delta1 >> /tmp/cfe_hostlist
 #@ echo delta2 >> /tmp/cfe_hostlist
@@ -48,11 +46,11 @@ bundle agent peers
 {
   vars:
 
-      "mygroup" slist => peers("/tmp/cfe_hostlist","#[^\n]*",4);
+      "mygroup" slist => peers("/tmp/cfe_hostlist","#.*",4);
 
-      "myleader" string => peerleader("/tmp/cfe_hostlist","#[^\n]*",4);
+      "myleader" string => peerleader("/tmp/cfe_hostlist","#.*",4);
 
-      "all_leaders" slist => peerleaders("/tmp/cfe_hostlist","#[^\n]*",4);
+      "all_leaders" slist => peerleaders("/tmp/cfe_hostlist","#.*",4);
 
   reports:
 

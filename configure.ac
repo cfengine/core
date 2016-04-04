@@ -41,11 +41,27 @@ dnl AM_INIT_AUTOMAKE.
 dnl
 AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
 
-define([revision], m4_esyscmd_s([git rev-list -1 --abbrev-commit HEAD]))
+m4_define([revision], m4_esyscmd_s([git rev-list -1 --abbrev-commit HEAD]))
+
+m4_define([version_from_env], m4_esyscmd_s([echo $EXPLICIT_VERSION]))
+m4_ifblank(version_from_env, [
+    m4_define([version_from_detect], m4_esyscmd_s([misc/determine-version.py]))
+    m4_if(m4_sysval, 0, [], [
+        m4_fatal([Could not determine CFEngine version. Please set EXPLICIT_VERSION in the environment or make sure all git tags are up to date.])
+    ])
+    m4_define([version], version_from_detect[]a1.revision)
+    m4_undefine([version_from_detect])
+], [
+    m4_define([version], version_from_env)
+])
 
 _AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, 3.8.2)
+AM_INIT_AUTOMAKE(cfengine, version)
 AM_MAINTAINER_MODE([enable])
+
+m4_undefine([revision])
+m4_undefine([version])
+m4_undefine([version_from_env])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 

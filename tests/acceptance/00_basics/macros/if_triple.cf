@@ -8,38 +8,24 @@ body common control
 {
       inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
 }
 
-bundle common test
+bundle agent init
 {
-@if minimum_version(3.7.100)
-  classes:
-      "expected" expression => "any";
-@endif
-
-@if minimum_version(3.8.0)
-  classes:
-      "expected2" expression => "any";
-@endif
-
-@if minimum_version(2.100.0)
-  classes:
-      "expected_2_100" expression => "any";
-@endif
-
-@if minimum_version(3.8.300)
-  classes:
-      "not_expected" expression => "any";
-@endif
+  files:
+      "$(G.testdir)/test.cf"
+        create => "true",
+        edit_template => "$(this.promise_filename).sub.template",
+        template_method => "mustache";
 }
 
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_expected("expected,expected2,expected_2_100",
-                                         "not_expected",
-                                         $(this.promise_filename));
+      "check" usebundle => dcs_passif_output(".*$(G.testdir)/test.cf Pass.*",
+                                             ".*FAIL.*",
+                                             "$(sys.cf_agent) -D AUTO -Kf $(G.testdir)/test.cf",
+                                             $(this.promise_filename));
 }
 
 @if minimum_version(300.600.0)

@@ -1,0 +1,45 @@
+######################################################
+#
+#  Test that @if works with patch level
+#
+#####################################################
+
+body common control
+{
+      bundlesequence  => { check };
+}
+
+bundle common test
+{
+@if minimum_version(3.7.100)
+  classes:
+      "expected" expression => "any";
+@endif
+
+@if minimum_version({{vars.sys.cf_version_major}}.{{vars.sys.cf_version_minor}}.0)
+  classes:
+      "expected2" expression => "any";
+@endif
+
+@if minimum_version(2.100.0)
+  classes:
+      "expected_2_100" expression => "any";
+@endif
+
+@if minimum_version({{vars.sys.cf_version_major}}.{{vars.sys.cf_version_minor}}.300)
+  classes:
+      "not_expected" expression => "any";
+@endif
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "expected.expected2.expected_2_100.!not_expected";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

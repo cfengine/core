@@ -247,7 +247,24 @@ Changelog: commit'
 
 ################################################################################
 
-"$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt
+git commit --allow-empty -m 'Changelog with suspicious number in it. N62
+
+1234
+
+Changelog: commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Changelog with suspicious number outside of it. N63
+
+2345
+
+Changelog: title'
+
+################################################################################
+
+"$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt
+cat stderr.txt >> result.txt
 cat > expected.txt <<EOF
 	- As well as this. N34
 	- Changelog commit with trailing dot. N53

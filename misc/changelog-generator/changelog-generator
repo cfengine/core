@@ -16,9 +16,13 @@ ENTRIES = {}
 # two commits will be linked, and this will be used in cases where we have
 # reverted a commit.
 LINKED_SHAS = {}
-# A map of shas to a list of Redmine numbers, as extracted from the commit
+# A map of shas to a list of bugtracker numbers, as extracted from the commit
 # messages.
-SHA_TO_REDMINE = {}
+SHA_TO_TRACKER = {}
+
+REDMINE_REGEX = "(?:Redmine:? *#?|(?:Redmine:? *)?https?://dev\.cfengine\.com/issues/)([0-9]+)"
+JIRA_REGEX = "(?:Jira:?)? *(?:https?://tracker.mender.io/browse/)?((?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+)"
+TRACKER_REGEX = "\(?(?:Ref:? *)?(?:(?:%s)|(?:%s))\)?:? *" % (REDMINE_REGEX, JIRA_REGEX)
 
 # Only for testing.
 SORT_CHANGELOG = False
@@ -119,24 +123,14 @@ for repo in repos:
             if not msg_started:
                 continue
 
-            # Small Redmine reference, remove from string.
-            redmine_regex = "\(?Redmine:? *#?([0-9]+)\)?:? *"
-            match = re.search(redmine_regex, line, re.IGNORECASE)
+            # Tracker reference, remove from string.
+            match = re.search(TRACKER_REGEX, line, re.IGNORECASE)
             if match:
-                if not SHA_TO_REDMINE.get(sha):
-                    SHA_TO_REDMINE[sha] = set()
-                SHA_TO_REDMINE[sha].add(match.group(1))
-                redmine_removed = re.sub(redmine_regex, "", line)
-                line = redmine_removed.strip(' ')
-
-            # Big Redmine reference, remove whole line.
-            match = re.match("^Ref:? *(Redmine:? *#?|https?://dev\.cfengine\.com/issues/)([0-9]+) *$",
-                             line, re.IGNORECASE)
-            if match:
-                if not SHA_TO_REDMINE.get(sha):
-                    SHA_TO_REDMINE[sha] = set()
-                SHA_TO_REDMINE[sha].add(match.group(2))
-                continue
+                if not SHA_TO_TRACKER.get(sha):
+                    SHA_TO_TRACKER[sha] = set()
+                SHA_TO_TRACKER[sha].add("".join(match.groups("")))
+                tracker_removed = re.sub(TRACKER_REGEX, "", line, flags=re.IGNORECASE)
+                line = tracker_removed.strip(' ')
 
             if not title_fetched:
                 title = line
@@ -211,17 +205,25 @@ for repo in repos:
 
 entry_list = []
 for sha_entry in ENTRIES:
-    redmine = ""
-    if SHA_TO_REDMINE.get(sha_entry):
-        redmine = "(Redmine #" + ", #".join(sorted(SHA_TO_REDMINE[sha_entry])) + ")"
+    tracker = ""
+    if SHA_TO_TRACKER.get(sha_entry):
+        redmines = [ticket for ticket in SHA_TO_TRACKER[sha_entry] if ticket[0].isdigit()]
+        jiras = [ticket.upper() for ticket in SHA_TO_TRACKER[sha_entry] if not ticket[0].isdigit()]
+        tracker = ""
+        if len(redmines) > 0:
+            tracker = "(Redmine #" + ", #".join(sorted(redmines)) + ")"
+            if len(jiras) > 0:
+                tracker += " "
+        if len(jiras) > 0:
+            tracker += "(Jira " + ", ".join(sorted(jiras)) + ")"
     for entry in ENTRIES[sha_entry]:
         entry = entry.strip("\n")
-        if redmine:
-            if len(entry) - entry.rfind("\n") + len(redmine) >= 70:
+        if tracker:
+            if len(entry) - entry.rfind("\n") + len(tracker) >= 70:
                 entry += "\n"
             else:
                 entry += " "
-            entry += redmine
+            entry += tracker
         entry_list.append(entry)
 
 if SORT_CHANGELOG:

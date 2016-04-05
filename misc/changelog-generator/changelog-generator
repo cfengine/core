@@ -24,6 +24,8 @@ REDMINE_REGEX = "(?:Redmine:? *#?|(?:Redmine:? *)?https?://dev\.cfengine\.com/is
 JIRA_REGEX = "(?:Jira:?)? *(?:https?://tracker.mender.io/browse/)?((?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+)"
 TRACKER_REGEX = "\(?(?:Ref:? *)?(?:(?:%s)|(?:%s))\)?:? *" % (REDMINE_REGEX, JIRA_REGEX)
 
+POSSIBLE_MISSED_TICKETS = {}
+
 # Only for testing.
 SORT_CHANGELOG = False
 
@@ -217,6 +219,12 @@ for sha_entry in ENTRIES:
         if len(jiras) > 0:
             tracker += "(Jira " + ", ".join(sorted(jiras)) + ")"
     for entry in ENTRIES[sha_entry]:
+        # Safety check. See if there are still numbers at least four digits long in
+        # the output, and if so, warn about it. This may be ticket references that
+        # we missed.
+        match = re.search("[0-9]{4,}", entry)
+        if match:
+            POSSIBLE_MISSED_TICKETS[sha_entry] = match.group(0)
         entry = entry.strip("\n")
         if tracker:
             if len(entry) - entry.rfind("\n") + len(tracker) >= 70:
@@ -236,5 +244,9 @@ for entry in entry_list:
     # Indent all lines.
     entry = entry.replace("\n", "\n\t  ")
     print(entry)
+
+for missed in POSSIBLE_MISSED_TICKETS:
+    sys.stderr.write("*** Commit %s had a number %s which may be a ticket reference we missed. Should be manually checked.\n"
+                     % (missed, POSSIBLE_MISSED_TICKETS[missed]))
 
 sys.exit(0)

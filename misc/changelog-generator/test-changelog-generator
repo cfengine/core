@@ -16,220 +16,282 @@ echo dummy > dummy
 git add dummy
 git commit -m 'Dummy commit'
 
+# The numbers that are sprinkled about below are just to make it easier to
+# pinpoint where a particular line came from.
+
 ################################################################################
 
-git commit --allow-empty -m 'Fix for changelog
+git commit --allow-empty -m 'Fix for changelog N1
 
 Changelog: Title'
 
 ################################################################################
 
-git commit --allow-empty -m 'Fix not for changelog
+git commit --allow-empty -m 'Fix not for changelog N2
 
-Not for changelog'
+Not for changelog N3'
 
 ################################################################################
 
-git commit --allow-empty -m 'Complete Fix for changelog
+git commit --allow-empty -m 'Complete Fix for changelog N4
 
-Should be included
+Should be included N5
 
 Changelog: Commit'
 
 ################################################################################
 
-git commit --allow-empty -m 'Message not for changelog
+git commit --allow-empty -m 'Message not for changelog N6
 
-Not for changelog
+Not for changelog N7
 
-Changelog: This should be in changelog
-And this
+Changelog: This should be in changelog N8
+And this N9
 
-But not this'
+But not this N10'
 
 ################################################################################
 
-git commit --allow-empty -m 'Canceled fix for changelog
+git commit --allow-empty -m 'Canceled fix for changelog N11
 
-Not for changelog
+Not for changelog N12
 
 Changelog: Commit'
-git commit --allow-empty -m 'Disable changelog
+git commit --allow-empty -m 'Disable changelog N13
 
-Not for changelog
+Not for changelog N14
 
 Cancel-Changelog: '`git rev-parse HEAD`
 
 ################################################################################
 
-git commit --allow-empty -m 'Another canceled fix for changelog
+git commit --allow-empty -m 'Another canceled fix for changelog N15
 
-Not for changelog
+Not for changelog N16
 
-Changelog: Canceled entry should not be in changelog
+Changelog: Canceled entry should not be in changelog N17
 (cherry picked from commit 3714b61bc4a139c8f58554052775699816e47b62)'
-git commit --allow-empty -m 'Disable changelog
+git commit --allow-empty -m 'Disable changelog N18
 
-Not for changelog
+Not for changelog N19
 
 Cancel-Changelog: 3714b61bc4a139c8f58554052775699816e47b62'
 
 ################################################################################
 
-git commit --allow-empty -m 'Reverted fix for changelog
+git commit --allow-empty -m 'Reverted fix for changelog N20
 
-Not for changelog
+Not for changelog N21
 
 Changelog: Commit'
-git commit --allow-empty -m 'Disable changelog
+git commit --allow-empty -m 'Disable changelog N22
 
-Not for changelog
+Not for changelog N23
 
 This reverts commit '`git rev-parse HEAD`'.'
 
 ################################################################################
 
-git commit --allow-empty -m 'Another Reverted fix for changelog
+git commit --allow-empty -m 'Another Reverted fix for changelog N24
 
-Not for changelog
+Not for changelog N25
 
-Changelog: Reverted entry should not be in changelog
+Changelog: Reverted entry should not be in changelog N26
 (cherry picked from commit 13cf5bea954b2d55c2bb235f61316bb57b7d4189)'
-git commit --allow-empty -m 'Disable changelog
+git commit --allow-empty -m 'Disable changelog N27
 
-Not for changelog
+Not for changelog N28
 
-Changelog: Should be in changelog though.
+Changelog: Should be in changelog though. N29
 This reverts commit 13cf5bea954b2d55c2bb235f61316bb57b7d4189.'
 
 ################################################################################
 
-git commit --allow-empty -m 'Several entries for changelog
+git commit --allow-empty -m 'Several entries for changelog N30
 
-Should be included
+Should be included N31
 
 Changelog: Commit
-Changelog: Should also be included, but separately and not twice.
+Changelog: Should also be included, but separately and not twice. N32
 
-Changelog: This too.
-Changelog: As well as this.
+Changelog: This too. N33
+Changelog: As well as this. N34
 
-And finally this, part of the commit message.'
+And finally this, part of the commit message. N35'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entry
+git commit --allow-empty -m 'Redmine entry N36
 
-Redmine #645 Should be included
+Redmine #645 Should be included N37
 
 Changelog: Commit'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine #76: Redmine entry in title
+git commit --allow-empty -m 'Redmine #76: Redmine entry in title N38
 
 Changelog: Title'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine 123 Several Redmine entries
+git commit --allow-empty -m 'Redmine 123 Several Redmine entries N39
 
-Changelog: Should be there
+Changelog: Should be there N40
 
 Redmine: #1234'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries in parentheses (title)
+git commit --allow-empty -m 'Redmine entries in parentheses (title) N41
 
 Changelog: Title
 
-Stuff. (Redmine: #1234)'
+Stuff. (Redmine: #1234) N42'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries inline (title)
+git commit --allow-empty -m 'Redmine entries inline (title) N43
 
 Changelog: Title
 
-Stuff Redmine: #2345'
+Stuff Redmine: #2345 N44'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries in parentheses (commit)
+git commit --allow-empty -m 'Redmine entries in parentheses (commit) N45
 
 Changelog: Commit
 
-Stuff. (Redmine: #1234)'
+Stuff. (Redmine: #1234) N46'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries inline (commit)
+git commit --allow-empty -m 'Redmine entries inline (commit) N47
 
 Changelog: Commit
 
-Stuff Redmine: #2345'
+Stuff Redmine: #2345 N48'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine #1234: Redmine twice (commit)
+git commit --allow-empty -m 'Redmine #1234: Redmine twice (commit) N49
 
 Changelog: Commit
 
-More stuff. (Redmine: #2345)'
+More stuff. (Redmine: #2345) N50'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine #1234: Redmine duplicate (commit)
+git commit --allow-empty -m 'Redmine #1234: Redmine duplicate (commit) N51
 
 Changelog: Commit
 
-More stuff. (Redmine: #1234)'
+More stuff. (Redmine: #1234) N52'
 
 ################################################################################
 
-git commit --allow-empty -m 'Changelog commit with trailing dot.
+git commit --allow-empty -m 'Changelog commit with trailing dot. N53
 
 Changelog: Commit.'
 
 ################################################################################
 
-git commit --allow-empty -m 'Changelog title with trailing dot.
+git commit --allow-empty -m 'Changelog title with trailing dot. N54
 
 Changelog: Title.'
 
 ################################################################################
 
+git commit --allow-empty -m 'Jira CFE-1111: Changelog with Jira. N55
+
+jira archive-2
+cfe-9
+https://tracker.mender.io/browse/ent-1
+
+Changelog: commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Jira CFE-1111: Changelog with Jira and Redmine. N56
+
+jira archive-2
+cfe-9
+https://tracker.mender.io/browse/ent-1
+https://dev.cfengine.com/issues/5555
+Redmine #12345
+
+Changelog: commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Jira CFE-1111: Changelog with Jira and Redmine ref. N57
+
+Ref: jira: archive-2
+Ref: cfe-9
+Ref: https://tracker.mender.io/browse/ent-1
+Ref: https://dev.cfengine.com/issues/5555
+Ref: Redmine #12345
+
+Changelog: commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Changelog with inline Jira and Redmine ref. N57
+
+Changelog: Some inline jira cfe-80 reference. N58
+Changelog: Some other Redmine #7777 reference. N59
+Changelog: Some inline (jira cfe-81) reference. N60
+Changelog: Some other (Redmine #7778) reference. N61
+Changelog: commit'
+
+################################################################################
+
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt
 cat > expected.txt <<EOF
-	- As well as this.
-	- Changelog commit with trailing dot.
-	- Changelog title with trailing dot.
-	- Complete Fix for changelog
-	  Should be included
-	- Fix for changelog
-	- Redmine duplicate (commit)
-	  More stuff. (Redmine #1234)
-	- Redmine entries in parentheses (commit)
-	  Stuff. (Redmine #1234)
-	- Redmine entries in parentheses (title) (Redmine #1234)
-	- Redmine entries inline (commit)
-	  Stuff (Redmine #2345)
-	- Redmine entries inline (title) (Redmine #2345)
-	- Redmine entry
-	  Should be included (Redmine #645)
-	- Redmine entry in title (Redmine #76)
-	- Redmine twice (commit)
-	  More stuff. (Redmine #1234, #2345)
-	- Several entries for changelog
-	  Should be included
-	  And finally this, part of the commit message.
-	- Should also be included, but separately and not twice.
-	- Should be in changelog though.
-	- Should be there (Redmine #123, #1234)
-	- This should be in changelog
-	  And this
-	- This too.
+	- As well as this. N34
+	- Changelog commit with trailing dot. N53
+	- Changelog title with trailing dot. N54
+	- Changelog with Jira and Redmine ref. N57
+	  (Redmine #12345, #5555) (Jira ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	- Changelog with Jira and Redmine. N56
+	  (Redmine #12345, #5555) (Jira ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	- Changelog with Jira. N55 (Jira ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	- Changelog with inline Jira and Redmine ref. N57
+	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	- Complete Fix for changelog N4
+	  Should be included N5
+	- Fix for changelog N1
+	- Redmine duplicate (commit) N51
+	  More stuff. N52 (Redmine #1234)
+	- Redmine entries in parentheses (commit) N45
+	  Stuff. N46 (Redmine #1234)
+	- Redmine entries in parentheses (title) N41 (Redmine #1234)
+	- Redmine entries inline (commit) N47
+	  Stuff N48 (Redmine #2345)
+	- Redmine entries inline (title) N43 (Redmine #2345)
+	- Redmine entry N36
+	  Should be included N37 (Redmine #645)
+	- Redmine entry in title N38 (Redmine #76)
+	- Redmine twice (commit) N49
+	  More stuff. N50 (Redmine #1234, #2345)
+	- Several entries for changelog N30
+	  Should be included N31
+	  And finally this, part of the commit message. N35
+	- Should also be included, but separately and not twice. N32
+	- Should be in changelog though. N29
+	- Should be there N40 (Redmine #123, #1234)
+	- Some inline reference. N58
+	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	- Some inline reference. N60
+	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	- Some other reference. N59
+	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	- Some other reference. N61
+	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	- This should be in changelog N8
+	  And this N9
+	- This too. N33
 EOF
 diff -u expected.txt result.txt
 

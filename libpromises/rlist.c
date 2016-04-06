@@ -37,6 +37,7 @@
 #include <assoc.h>
 #include <eval_context.h>
 #include <json.h>
+#include <vars.h>                                         /* IsCf3VarString */
 
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);
@@ -74,6 +75,12 @@ RvalType DataTypeToRvalType(DataType datatype)
     ProgrammingError("DataTypeToRvalType, unhandled");
 }
 
+bool RlistValueIsType(const Rlist *rlist, RvalType type)
+{
+    return (NULL != rlist &&
+            rlist->val.type == type);
+}
+
 char *RlistScalarValue(const Rlist *rlist)
 {
     if (rlist->val.type != RVAL_TYPE_SCALAR)
@@ -82,6 +89,16 @@ char *RlistScalarValue(const Rlist *rlist)
     }
 
     return rlist->val.item;
+}
+
+char *RlistScalarValueSafe(const Rlist *rlist)
+{
+    if (rlist->val.type != RVAL_TYPE_SCALAR)
+    {
+        return "[not printable]";
+    }
+
+    return RlistScalarValue(rlist);
 }
 
 /*******************************************************************/
@@ -350,7 +367,6 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
                 char closing_brace = 0;
                 for (int c = 0; c < buffer_from[c]; c++)
                 {
-                    printf("In %s at %i: '%s'\n", __func__, __LINE__, buffer_from);
                     if (buffer_from[c] == '$')
                     {
                         if (buffer_from[c+1] == '(')
@@ -487,6 +503,11 @@ void RlistDestroy(Rlist *rl)
     }
 }
 
+void RlistDestroy_untyped(void *rl)
+{
+    RlistDestroy(rl);
+}
+
 /*******************************************************************/
 
 Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar)
@@ -516,6 +537,12 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
 
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 {
+    return RlistAppendAllTypes(start, item, type, false);
+}
+
+// See fncall.c for the usage of allow_all_types.
+Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool allow_all_types)
+{
     Rlist *lp = *start;
 
     switch (type)
@@ -527,12 +554,31 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         break;
 
     case RVAL_TYPE_LIST:
+        if (allow_all_types)
+        {
+            JsonElement* store = JsonArrayCreate(RlistLen(item));
+            for (const Rlist *rp = item; rp; rp = rp->next)
+            {
+                JsonArrayAppendElement(store, RvalToJson(rp->val));
+            }
+
+            return RlistAppendRval(start, (Rval) { store, RVAL_TYPE_CONTAINER });
+        }
+
         for (const Rlist *rp = item; rp; rp = rp->next)
         {
             lp = RlistAppendRval(start, RvalCopy(rp->val));
         }
 
         return lp;
+
+    case RVAL_TYPE_CONTAINER:
+        if (allow_all_types)
+        {
+            return RlistAppendRval(start, (Rval) { JsonCopy((JsonElement*) item), RVAL_TYPE_CONTAINER });
+        }
+
+        // note falls through!
 
     default:
         Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);
@@ -1193,9 +1239,7 @@ void RlistWrite(Writer *writer, const Rlist *list)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        WriterWriteChar(writer, '\'');
-        RvalWrite(writer, rp->val);
-        WriterWriteChar(writer, '\'');
+        RvalWriteQuoted(writer, rp->val);
 
         if (rp->next != NULL)
         {
@@ -1206,35 +1250,27 @@ void RlistWrite(Writer *writer, const Rlist *list)
     WriterWriteChar(writer, '}');
 }
 
-/* Note: only single quotes are escaped, as they are used in RlistWrite to
-   delimit strings. If double quotes would be escaped, they would be mangled by
-   RlistParseShown */
-
-static void ScalarWrite(Writer *w, const char *s)
+void ScalarWrite(Writer *writer, const char *s, bool quote)
 {
+    if (quote)
+    {
+        WriterWriteChar(writer, '"');
+    }
     for (; *s; s++)
     {
-        if (*s == '\'')
+        if (*s == '"')
         {
-            WriterWriteChar(w, '\\');
+            WriterWriteChar(writer, '\\');
         }
-        WriterWriteChar(w, *s);
+        WriterWriteChar(writer, *s);
+    }
+    if (quote)
+    {
+        WriterWriteChar(writer, '"');
     }
 }
 
-void RvalWrite(Writer *writer, Rval rval)
-{
-    RvalWriteParts(writer, rval.item, rval.type);
-}
-
-char *RvalToString(Rval rval)
-{
-    Writer *w = StringWriter();
-    RvalWrite(w, rval);
-    return StringWriterClose(w);
-}
-
-void RvalWriteParts(Writer *writer, const void* item, RvalType type)
+static void RvalWriteParts(Writer *writer, const void* item, RvalType type, bool quote)
 {
     if (item == NULL)
     {
@@ -1244,7 +1280,7 @@ void RvalWriteParts(Writer *writer, const void* item, RvalType type)
     switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        ScalarWrite(writer, item);
+        ScalarWrite(writer, item, quote);
         break;
 
     case RVAL_TYPE_LIST:
@@ -1265,6 +1301,23 @@ void RvalWriteParts(Writer *writer, const void* item, RvalType type)
     }
 }
 
+void RvalWrite(Writer *writer, Rval rval)
+{
+    RvalWriteParts(writer, rval.item, rval.type, false);
+}
+
+void RvalWriteQuoted(Writer *writer, Rval rval)
+{
+    RvalWriteParts(writer, rval.item, rval.type, true);
+}
+
+char *RvalToString(Rval rval)
+{
+    Writer *w = StringWriter();
+    RvalWrite(w, rval);
+    return StringWriterClose(w);
+}
+
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
 {
     switch (rval.type)
@@ -1276,13 +1329,14 @@ unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
     case RVAL_TYPE_LIST:
         return RlistHash(RvalRlistValue(rval), seed, max);
     case RVAL_TYPE_NOPROMISEE:
+        /* TODO modulus operation is biasing results. */
         return (seed + 1) % max;
     default:
         ProgrammingError("Unhandled case in switch: %d", rval.type);
     }
 }
 
-unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max)
+unsigned int RlistHash(const Rlist *list, unsigned seed, unsigned max)
 {
     unsigned hash = seed;
     for (const Rlist *rp = list; rp; rp = rp->next)
@@ -1290,6 +1344,11 @@ unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max)
         hash = RvalHash(rp->val, hash, max);
     }
     return hash;
+}
+
+unsigned int RlistHash_untyped(const void *list, unsigned seed, unsigned max)
+{
+    return RlistHash(list, seed, max);
 }
 
 
@@ -1378,6 +1437,10 @@ JsonElement *RvalToJson(Rval rval)
     return NULL;
 }
 
+/**
+ * @brief Flattens an Rlist by expanding naked scalar list-variable
+ *        members. Flattening is only one-level deep.
+ */
 void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
     Rlist *prev = NULL, *next;
@@ -1442,3 +1505,58 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
         prev = rp;
     }
 }
+
+bool RlistEqual(const Rlist *list1, const Rlist *list2)
+{
+    const Rlist *rp1, *rp2;
+
+    for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2 != NULL; rp1 = rp1->next, rp2 = rp2->next)
+    {
+        if (rp1->val.item && rp2->val.item)
+        {
+            const Rlist *rc1, *rc2;
+
+            if (rp1->val.type == RVAL_TYPE_FNCALL || rp2->val.type == RVAL_TYPE_FNCALL)
+            {
+                return false;      // inconclusive
+            }
+
+            rc1 = rp1;
+            rc2 = rp2;
+
+            // Check for list nesting with { fncall(), "x" ... }
+
+            if (rp1->val.type == RVAL_TYPE_LIST)
+            {
+                rc1 = rp1->val.item;
+            }
+
+            if (rp2->val.type == RVAL_TYPE_LIST)
+            {
+                rc2 = rp2->val.item;
+            }
+
+            if (IsCf3VarString(rc1->val.item) || IsCf3VarString(rp2->val.item))
+            {
+                return false;      // inconclusive
+            }
+
+            if (strcmp(rc1->val.item, rc2->val.item) != 0)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool RlistEqual_untyped(const void *list1, const void *list2)
+{
+    return RlistEqual(list1, list2);
+}
+

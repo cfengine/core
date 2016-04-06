@@ -1225,6 +1225,7 @@ static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
 
     JsonObjectAppendBool(json_fn, "variadic", fn_syntax->options & FNCALL_OPTION_VARARG);
     JsonObjectAppendBool(json_fn, "cached", fn_syntax->options & FNCALL_OPTION_CACHED);
+    JsonObjectAppendBool(json_fn, "collecting", fn_syntax->options & FNCALL_OPTION_COLLECTING);
     JsonObjectAppendString(json_fn, "category", FnCallCategoryToString(fn_syntax->category));
 
     return json_fn;

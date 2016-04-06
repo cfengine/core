@@ -40,24 +40,25 @@ bundle agent example
       "ps[inet_protocols]"             string => "all";
       "ps[inet_interfaces]"            string => "127.0.0.1";
 
-      "parameter_name" slist => getindices("ps");
+      "parameter_name"        slist => getindices("ps");
+      "parameter_name_sorted" slist => sort(parameter_name, lex);
 
   reports:
 
-      "Found key $(parameter_name)";
+      "Found key $(parameter_name_sorted)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: Found key inet_protocols
-#@ R: Found key mydomain
-#@ R: Found key smtp_use_tls
-#@ R: Found key smtp_sasl_password_maps
-#@ R: Found key smtp_sasl_security_options
-#@ R: Found key relayhost
 #@ R: Found key default_privs
 #@ R: Found key inet_interfaces
+#@ R: Found key inet_protocols
+#@ R: Found key mydomain
+#@ R: Found key relayhost
 #@ R: Found key smtp_sasl_auth_enable
+#@ R: Found key smtp_sasl_password_maps
+#@ R: Found key smtp_sasl_security_options
+#@ R: Found key smtp_use_tls
 #@ ```
 #+end_src

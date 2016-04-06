@@ -59,6 +59,9 @@ char *StringFormat(const char *fmt, ...)
 
 unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
 {
+    CF_ASSERT(ISPOW2(max),
+              "StringHash() called with non power-of-2 max: %u", max);
+
     unsigned const char *p = str;
     unsigned int h = seed;
     size_t len = strlen(str);
@@ -77,6 +80,10 @@ unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
     return (h & (max - 1));
 }
 
+unsigned int StringHash_untyped(const void *str, unsigned int seed, unsigned int max)
+{
+    return StringHash(str, seed, max);
+}
 
 char ToLower(char ch)
 {
@@ -196,6 +203,11 @@ bool StringSafeEqual(const char *a, const char *b)
     }
 
     return strcmp(a, b) == 0;
+}
+
+bool StringSafeEqual_untyped(const void *a, const void *b)
+{
+    return StringSafeEqual(a, b);
 }
 
 /*********************************************************************/

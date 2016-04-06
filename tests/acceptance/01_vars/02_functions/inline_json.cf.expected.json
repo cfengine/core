@@ -1,0 +1,62 @@
+{
+  "foo": "bar",
+  "var": [
+    "x"
+  ],
+  "var2": [
+    "x"
+  ],
+  "var3": [
+    "linux"
+  ],
+  "var4": [
+    [
+      "linux"
+    ]
+  ],
+  "var5": [
+    [
+      "linux"
+    ]
+  ],
+  "var6": [
+    "bar"
+  ],
+  "var7": {
+    "foo": [
+      "linux"
+    ]
+  },
+  "var8": [
+    [
+      "linux"
+    ]
+  ],
+  "var9": {
+    "x": [
+      "linux"
+    ]
+  },
+  "varA": {
+    "fullx": [
+      "linux"
+    ]
+  },
+  "varB": [
+    "100"
+  ],
+  "varD": [
+    "linux"
+  ],
+  "varE": [
+    [
+      "linux"
+    ]
+  ],
+  "varF": [
+    [
+      "linux"
+    ]
+  ],
+  "z": "100"
+}

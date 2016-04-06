@@ -10,24 +10,7 @@
 #include <crypto.h>
 #include <string_lib.h>
 
-char CFWORKDIR[CF_BUFSIZE];
-
-void test_load_masterfiles(void)
-{
-    EvalContext *ctx = EvalContextNew();
-    DiscoverVersion(ctx);
-
-    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, false);
-
-    GenericAgentConfigSetInputFile(config, NULL,
-                                   ABS_TOP_SRCDIR "/masterfiles/promises.cf");
-
-    Policy *masterfiles = LoadPolicy(ctx, config);
-    assert_true(masterfiles);
-
-    PolicyDestroy(masterfiles);
-    GenericAgentFinalize(ctx, config);
-}
+char TEMPDIR[] = "/tmp/generic_agent_test_XXXXXX";
 
 void test_have_tty_interactive_failsafe_is_not_created(void)
 {
@@ -102,30 +85,34 @@ void test_resolve_absolute_input_path(void)
 
 void test_resolve_non_anchored_base_path(void)
 {
-    static char inputdir[CF_BUFSIZE] = "";
+    char inputdir[CF_BUFSIZE] = "";
 
-    /*
-     * Can not use GetInputDir() because that will return the configured $(sys.inputdir) as
-     * the environment variable CFENGINE_TEST_OVERRIDE_WORKDIR is not set.
-    */
-    xsnprintf(inputdir, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
+    strlcpy(inputdir, GetInputDir(), sizeof(inputdir));
 
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, false);
     GenericAgentConfigSetInputFile(config, inputdir, "promises.cf");
 
-    assert_string_equal("/workdir/inputs", config->input_dir);
-    assert_string_equal("/workdir/inputs/promises.cf", config->input_file);
+    char testpath[CF_BUFSIZE];
 
-    assert_string_equal("/workdir/inputs/aux.cf", GenericAgentResolveInputPath(config, "aux.cf"));
-    assert_string_equal("/workdir/inputs/rel/aux.cf", GenericAgentResolveInputPath(config, "rel/aux.cf"));
-    assert_string_equal("/workdir/inputs/./aux.cf", GenericAgentResolveInputPath(config, "./aux.cf"));
-    assert_string_equal("/workdir/inputs/./rel/aux.cf", GenericAgentResolveInputPath(config, "./rel/aux.cf"));
+    xsnprintf(testpath, sizeof(testpath), "%s%s", TEMPDIR, "/inputs");
+    assert_string_equal(testpath, config->input_dir);
+    xsnprintf(testpath, sizeof(testpath), "%s%s", TEMPDIR, "/inputs/promises.cf");
+    assert_string_equal(testpath, config->input_file);
+
+    xsnprintf(testpath, sizeof(testpath), "%s%s", TEMPDIR, "/inputs/aux.cf");
+    assert_string_equal(testpath, GenericAgentResolveInputPath(config, "aux.cf"));
+    xsnprintf(testpath, sizeof(testpath), "%s%s", TEMPDIR, "/inputs/rel/aux.cf");
+    assert_string_equal(testpath, GenericAgentResolveInputPath(config, "rel/aux.cf"));
+    xsnprintf(testpath, sizeof(testpath), "%s%s", TEMPDIR, "/inputs/./aux.cf");
+    assert_string_equal(testpath, GenericAgentResolveInputPath(config, "./aux.cf"));
+    xsnprintf(testpath, sizeof(testpath), "%s%s", TEMPDIR, "/inputs/./rel/aux.cf");
+    assert_string_equal(testpath, GenericAgentResolveInputPath(config, "./rel/aux.cf"));
 }
 
 void test_resolve_relative_base_path(void)
 {
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, false);
-    GenericAgentConfigSetInputFile(config, CFWORKDIR, "./inputs/promises.cf");
+    GenericAgentConfigSetInputFile(config, GetWorkDir(), "./inputs/promises.cf");
 
     assert_string_equal("./inputs/aux.cf", GenericAgentResolveInputPath(config, "aux.cf"));
     assert_string_equal("./inputs/rel/aux.cf", GenericAgentResolveInputPath(config, "rel/aux.cf"));
@@ -135,21 +122,37 @@ void test_resolve_relative_base_path(void)
 
 int main()
 {
-    strcpy(CFWORKDIR, "/workdir");
+    if (mkdtemp(TEMPDIR) == NULL)
+    {
+        fprintf(stderr, "Could not create temporary directory\n");
+        return 1;
+    }
+    char *inputs = NULL;
+    xasprintf(&inputs, "%s/inputs", TEMPDIR);
+    mkdir(inputs, 0755);
+    free(inputs);
+
+    char *env_var = NULL;
+    xasprintf(&env_var, "CFENGINE_TEST_OVERRIDE_WORKDIR=%s", TEMPDIR);
+    // Will leak, but that's how crappy putenv() is.
+    putenv(env_var);
 
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        // disabled masterfiles load test for now
-        /* unit_test(test_load_masterfiles),*/
         unit_test(test_resolve_absolute_input_path),
         unit_test(test_resolve_non_anchored_base_path),
         unit_test(test_resolve_relative_base_path),
         unit_test(test_have_tty_interactive_failsafe_is_not_created),
-        //skip creating failsafe test for now as this is broken in Jenkins
-        //because of lack of /var/cfengine/inputs directory to create failsafe.cf there.
-        //unit_test(test_dont_have_tty_interactive_failsafe_is_created),
+        unit_test(test_dont_have_tty_interactive_failsafe_is_created),
     };
 
-    return run_tests(tests);
+    int ret = run_tests(tests);
+
+    char rm_rf[] = "rm -rf ";
+    char cmd[sizeof(rm_rf) + sizeof(TEMPDIR)];
+    xsnprintf(cmd, sizeof(cmd), "%s%s", rm_rf, TEMPDIR);
+    ARG_UNUSED int ignore = system(cmd);
+
+    return ret;
 }

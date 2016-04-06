@@ -378,7 +378,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     memset(in, 0, CF_BUFSIZE);
     encrypted_len = ReceiveTransaction(conn->conn_info, in, NULL);
 
-    if (encrypted_len <= 0)
+    if (encrypted_len == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction sent illegal cipher length");
         RSA_free(server_pubkey);
@@ -426,7 +426,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         Log(LOG_LEVEL_VERBOSE, "Collecting public key from server!");
 
         /* proposition S4 - conditional */
-        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) == -1)
         {
             Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP '%s'", conn->this_server);
             return false;
@@ -443,7 +443,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         /* proposition S5 - conditional */
 
-        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) == -1)
         {
             Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);

@@ -783,14 +783,6 @@ RSA *newkey = RSA_new();
         return false;
     }
 
-    if (len_n == 0)
-    {
-        Log(LOG_LEVEL_ERR, "Authentication failure: "
-            "connection was closed while receiving public key modulus");
-        RSA_free(newkey);
-        return false;
-    }
-
     if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
@@ -808,13 +800,6 @@ RSA *newkey = RSA_new();
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "error while receiving public key exponent");
-        RSA_free(newkey);
-        return false;
-    }
-    if (len_e == 0)
-    {
-        Log(LOG_LEVEL_ERR, "Authentication failure: "
-            "connection was closed while receiving public key exponent");
         RSA_free(newkey);
         return false;
     }
@@ -929,15 +914,11 @@ RSA *newkey = RSA_new();
     int recv_len = ReceiveTransaction(conn->conn_info, recv_buf, NULL);
     if (recv_len < digestLen)
     {
-        if (recv_len < 0)
+        if (recv_len == -1)
         {
             Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "error receiving counter-challenge response");
-        }
-        else if (recv_len == 0)
-        {
-            Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "connection was closed while receiving counter-challenge response");
+                "error receiving counter-challenge response; "
+                "maybe the client does not trust our key?");
         }
         else                                      /* 0 < recv_len < expected_len */
         {
@@ -976,25 +957,18 @@ RSA *newkey = RSA_new();
         "should decrypt to %d bytes",
         keylen, session_key_size);
 
-    if ((keylen <= 0) || (keylen > CF_BUFSIZE / 2))
+    if (keylen == -1)
     {
-        if (keylen == 0)
-        {
-            Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "connection was closed while receiving session key");
-        }
-        else if (keylen > CF_BUFSIZE / 2)
-        {
-            Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "session key received is too long (%d bytes)",
-                keylen);
-        }
-        else                                                  /* keylen < 0 */
-        {
-            Log(LOG_LEVEL_ERR, "Authentication failure: "
-                "error receiving session key");
-        }
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "error receiving session key");
+        return false;
+    }
 
+    if (keylen > CF_BUFSIZE / 2)
+    {
+        Log(LOG_LEVEL_ERR, "Authentication failure: "
+            "session key received is too long (%d bytes)",
+            keylen);
         return false;
     }
 
@@ -1055,7 +1029,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     memset(&get_args, 0, sizeof(get_args));
 
     received = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
-    if (received == -1 || received == 0)
+    if (received == -1)
     {
         return false;
     }

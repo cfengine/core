@@ -70,10 +70,11 @@ bundle agent test
       "sort" slist => { "lex", "int", "real", "IP", "MAC" };
 
       "$(sort)_sorted_$(test)" slist => sort("init.$(test)", $(sort));
+      "inline_$(sort)_sorted" slist => sort('["b", "c", "a", "100", "9", "10"]', $(sort));
       "sorted_$(test)" slist => sort("init.$(test)"); # implicit "lex"
 }
 
-###########################################################
+#######################################################
 
 bundle agent check
 {

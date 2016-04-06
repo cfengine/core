@@ -23,27 +23,52 @@
 */
 #include <variable.h>
 
-#include <alloc.h>
-#include <rb-tree.h>
+#include <map.h>
 #include <rlist.h>
 #include <writer.h>
 
+
+static void VariableDestroy(Variable *var);                 /* forward declaration */
+
+static void VariableDestroy_untyped(void *var)
+{
+    VariableDestroy(var);
+}
+
+
+/**
+   Define VarMap.
+   Key:   VarRef
+   Value: Variable
+*/
+
+TYPED_MAP_DECLARE(Var, VarRef *, Variable *)
+
+TYPED_MAP_DEFINE(Var, VarRef *, Variable *,
+                 VarRefHash_untyped,
+                 VarRefEqual_untyped,
+                 VarRefDestroy_untyped,
+                 VariableDestroy_untyped)
+
+
 struct VariableTable_
 {
-    RBTree *vars;
+    VarMap *vars;
 };
 
 struct VariableTableIterator_
 {
     VarRef *ref;
-    RBTreeIterator *iter;
+    MapIterator iter;
 };
 
-void VariableDestroy(Variable *var)
+/* DO NOT EXPORT, this is for internal (hash table) use only, and it doesn't
+ * free everything in Variable, in particular it leaves var->ref to be handled
+ * by the Map implementation calling the key-destroy function. */
+static void VariableDestroy(Variable *var)
 {
     if (var)
     {
-        VarRefDestroy(var->ref);
         RvalDestroy(var->rval);
         StringSetDestroy(var->tags);
         // Nothing to do for ->promise
@@ -56,8 +81,7 @@ VariableTable *VariableTableNew(void)
 {
     VariableTable *table = xmalloc(sizeof(VariableTable));
 
-    table->vars = RBTreeNew(NULL, NULL, NULL,
-                            NULL, NULL, (RBTreeValueDestroyFn*)VariableDestroy);
+    table->vars = VarMapNew();
 
     return table;
 }
@@ -66,19 +90,19 @@ void VariableTableDestroy(VariableTable *table)
 {
     if (table)
     {
-        RBTreeDestroy(table->vars);
+        VarMapDestroy(table->vars);
         free(table);
     }
 }
 
 Variable *VariableTableGet(const VariableTable *table, const VarRef *ref)
 {
-    return RBTreeGet(table->vars, (void *)ref->hash);
+    return VarMapGet(table->vars, ref);
 }
 
 bool VariableTableRemove(VariableTable *table, const VarRef *ref)
 {
-    return RBTreeRemove(table->vars, (void *)ref->hash);
+    return VarMapRemove(table->vars, ref);
 }
 
 static Variable *VariableNew(VarRef *ref, Rval rval, DataType type,
@@ -107,70 +131,58 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
                       const char *tags, const Promise *promise)
 {
     assert(VarRefIsQualified(ref));
-    bool result;
 
-    Variable *var = VariableTableGet(table, ref);
-    if (var == NULL)
-    {
-        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
-                          StringSetFromString(tags, ','), promise);
-        result = RBTreePut(table->vars, (void *)var->ref->hash, var);
-    }
-    else // if (!RvalsEqual(var->rval *rval) // TODO: implement-me !
-    {
-        RvalDestroy(var->rval);
-        var->rval = RvalCopy(*rval);
-        var->type = type;
-        var->promise = promise;
-        result = true;
-    }
-    return result;
+    Variable *var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
+                                StringSetFromString(tags, ','), promise);
+    return VarMapInsert(table->vars, var->ref, var);
 }
 
 bool VariableTableClear(VariableTable *table, const char *ns, const char *scope, const char *lval)
 {
+    const size_t vars_num = VarMapSize(table->vars);
+
     if (!ns && !scope && !lval)
     {
-        bool has_vars = RBTreeSize(table->vars) > 0;
-        RBTreeClear(table->vars);
+        VarMapClear(table->vars);
+        bool has_vars = (vars_num > 0);
         return has_vars;
     }
 
-    RBTree *remove_set = RBTreeNew(NULL, NULL, NULL, NULL, NULL, NULL);
+    /* We can't remove elements from the hash table while we are iterating
+     * over it. So we first store the VarRef pointers on a list. */
+
+    VarRef **to_remove = xmalloc(vars_num * sizeof(*to_remove));
+    size_t remove_count = 0;
 
     {
         VariableTableIterator *iter = VariableTableIteratorNew(table, ns, scope, lval);
-        for (Variable *v = VariableTableIteratorNext(iter); v; v = VariableTableIteratorNext(iter))
+
+        for (Variable *v = VariableTableIteratorNext(iter);
+             v != NULL;
+             v = VariableTableIteratorNext(iter))
         {
-            RBTreePut(remove_set, (void *)v->ref->hash, v);
+            to_remove[remove_count] = v->ref;
+            remove_count++;
         }
         VariableTableIteratorDestroy(iter);
     }
 
-    size_t remove_count = RBTreeSize(remove_set);
     if (remove_count == 0)
     {
-        RBTreeDestroy(remove_set);
+        free(to_remove);
         return false;
     }
 
     size_t removed = 0;
-
+    for(size_t i = 0; i < remove_count; i++)
     {
-        RBTreeIterator *iter = RBTreeIteratorNew(remove_set);
-        void *ref_key = NULL;
-        Variable *var = NULL;
-        while (RBTreeIteratorNext(iter, &ref_key, (void **)&var))
+        if (VariableTableRemove(table, to_remove[i]))
         {
-            if (VariableTableRemove(table, var->ref))
-            {
-                removed++;
-            }
+            removed++;
         }
-        RBTreeIteratorDestroy(iter);
     }
 
-    RBTreeDestroy(remove_set);
+    free(to_remove);
     assert(removed == remove_count);
     return true;
 }
@@ -179,7 +191,7 @@ size_t VariableTableCount(const VariableTable *table, const char *ns, const char
 {
     if (!ns && !scope && !lval)
     {
-        return RBTreeSize(table->vars);
+        return VarMapSize(table->vars);
     }
 
     VariableTableIterator *iter = VariableTableIteratorNew(table, ns, scope, lval);
@@ -197,7 +209,7 @@ VariableTableIterator *VariableTableIteratorNewFromVarRef(const VariableTable *t
     VariableTableIterator *iter = xmalloc(sizeof(VariableTableIterator));
 
     iter->ref = VarRefCopy(ref);
-    iter->iter = RBTreeIteratorNew(table->vars);
+    iter->iter = MapIteratorInit(table->vars->impl);
 
     return iter;
 }
@@ -214,11 +226,11 @@ VariableTableIterator *VariableTableIteratorNew(const VariableTable *table, cons
 
 Variable *VariableTableIteratorNext(VariableTableIterator *iter)
 {
-    void *key_ref = NULL;
-    Variable *var = NULL;
+    MapKeyValue *keyvalue;
 
-    while (RBTreeIteratorNext(iter->iter, &key_ref, (void **)&var))
+    while ((keyvalue = MapIteratorNext(&iter->iter)) != NULL)
     {
+        Variable *var = keyvalue->value;
         const char *key_ns = var->ref->ns ? var->ref->ns : "default";
 
         if (iter->ref->ns && strcmp(key_ns, iter->ref->ns) != 0)
@@ -270,7 +282,6 @@ void VariableTableIteratorDestroy(VariableTableIterator *iter)
     if (iter)
     {
         VarRefDestroy(iter->ref);
-        RBTreeIteratorDestroy(iter->iter);
         free(iter);
     }
 }
@@ -288,7 +299,7 @@ VariableTable *VariableTableCopyLocalized(const VariableTable *table, const char
         Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref),
                                               RvalCopy(foreign_var->rval), foreign_var->type,
                                               NULL, foreign_var->promise);
-        RBTreePut(localized_copy->vars, (void *)localized_var->ref->hash, localized_var);
+        VarMapInsert(localized_copy->vars, localized_var->ref, localized_var);
     }
     VariableTableIteratorDestroy(iter);
 

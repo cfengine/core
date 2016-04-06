@@ -1,0 +1,35 @@
+#######################################################
+#
+# Demo of Mustache templates with top-level iteration
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "mydata1" data => '{ "a": 100 }';
+      "mydata2" data => '[ "p", "q" ]';
+
+      "actual1" string => string_mustache("{{#-top-}}key {{@}} value {{.}} {{/-top-}}", mydata1);
+      "actual2" string => string_mustache("{{#-top-}}value {{.}} {{/-top-}}", mydata2);
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

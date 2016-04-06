@@ -54,6 +54,8 @@ const char *SpecialScopeToString(SpecialScope scope)
         return "mon";
     case SPECIAL_SCOPE_SYS:
         return "sys";
+    case SPECIAL_SCOPE_DEF:
+        return "def";
     case SPECIAL_SCOPE_THIS:
         return "this";
     case SPECIAL_SCOPE_BODY:
@@ -84,6 +86,10 @@ SpecialScope SpecialScopeFromString(const char *scope)
     else if (strcmp("sys", scope) == 0)
     {
         return SPECIAL_SCOPE_SYS;
+    }
+    else if (strcmp("def", scope) == 0)
+    {
+        return SPECIAL_SCOPE_DEF;
     }
     else if (strcmp("this", scope) == 0)
     {

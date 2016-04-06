@@ -25,12 +25,16 @@
 #ifndef CFENGINE_SYSINFO_H
 #define CFENGINE_SYSINFO_H
 
-#include <cf3.defs.h>
+/* TODO libpromises depends on libenv, the opposite should not happen! */
+#include <eval_context.h>
 
 void DetectEnvironment(EvalContext *ctx);
 
 void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified, char *tags);
 int GetUptimeMinutes(time_t now);
 int GetUptimeSeconds(time_t now);
+
+void GetInterfacesInfo(EvalContext *ctx);
+void GetNetworkingInfo(EvalContext *ctx);
 
 #endif

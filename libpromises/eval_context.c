@@ -48,6 +48,31 @@
 #include <known_dirs.h>
 #include <printsize.h>
 #include <regex.h>
+#include <map.h>
+
+
+/**
+   Define FuncCacheMap.
+   Key:   an Rlist (which is linked list of Rvals)
+          listing all the argument of the function
+   Value: an Rval, the result of the function
+ */
+
+static void RvalDestroy2(void *p)
+{
+    Rval *rv = p;
+    RvalDestroy(*rv);
+    free(rv);
+}
+
+TYPED_MAP_DECLARE(FuncCache, Rlist *, Rval *)
+
+TYPED_MAP_DEFINE(FuncCache, Rlist *, Rval *,
+                 RlistHash_untyped,
+                 RlistEqual_untyped,
+                 RlistDestroy_untyped,
+                 RvalDestroy2)
+
 
 static pcre *context_expression_whitespace_rx = NULL;
 
@@ -90,7 +115,7 @@ struct EvalContext_
 
     StringSet *promise_lock_cache;
     StringSet *dependency_handles;
-    RBTree *function_cache;
+    FuncCacheMap *function_cache;
 
     uid_t uid;
     uid_t gid;
@@ -99,7 +124,7 @@ struct EvalContext_
 
     // Full path to directory that the binary was launched from.
     char *launch_directory;
-    
+
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
 };
@@ -109,7 +134,7 @@ void AddDefaultPackageModuleToContext(const EvalContext *ctx, char *name)
 {
     assert(ctx);
     assert(ctx->package_promise_context);
-    
+
     free(ctx->package_promise_context->control_package_module);
     ctx->package_promise_context->control_package_module =
             SafeStringDuplicate(name);
@@ -119,7 +144,7 @@ void AddDefaultInventoryToContext(const EvalContext *ctx, Rlist *inventory)
 {
     assert(ctx);
     assert(ctx->package_promise_context);
-    
+
     RlistDestroy(ctx->package_promise_context->control_package_inventory);
     ctx->package_promise_context->control_package_inventory =
             RlistCopy(inventory);
@@ -294,7 +319,7 @@ static const char *GetAgentAbortingContext(const EvalContext *ctx)
 
             if (cls)
             {
-                return regex;
+                return cls->name;
             }
         }
     }
@@ -727,9 +752,11 @@ void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *
         AppendItem(&ctx->heap_abort, context, activated_on_context);
     }
 
-    if (GetAgentAbortingContext(ctx))
+    const char *aborting_context = GetAgentAbortingContext(ctx);
+
+    if (aborting_context)
     {
-        FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
+        FatalError(ctx, "cf-agent aborted on defined class '%s'", aborting_context);
     }
 }
 
@@ -896,8 +923,7 @@ EvalContext *EvalContextNew(void)
 #endif
 
     ctx->promise_lock_cache = StringSetNew();
-    ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
-                                    NULL, NULL, NULL);
+    ctx->function_cache = FuncCacheMapNew();
 
     EvalContextSetupMissionPortalLogHook(ctx);
 
@@ -934,18 +960,8 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->dependency_handles);
         StringSetDestroy(ctx->promise_lock_cache);
 
-        {
-            RBTreeIterator *it = RBTreeIteratorNew(ctx->function_cache);
-            Rval *rval = NULL;
-            while (RBTreeIteratorNext(it, NULL, (void **)&rval))
-            {
-                RvalDestroy(*rval);
-                free(rval);
-            }
-            RBTreeIteratorDestroy(it);
-            RBTreeDestroy(ctx->function_cache);
-        }
-        
+        FuncCacheMapDestroy(ctx->function_cache);
+
         FreePackagePromiseContext(ctx->package_promise_context);
 
         free(ctx);
@@ -1010,19 +1026,7 @@ void EvalContextClear(EvalContext *ctx)
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
     StringSetClear(ctx->promise_lock_cache);
     SeqClear(ctx->stack);
-
-    {
-        RBTreeIterator *it = RBTreeIteratorNew(ctx->function_cache);
-        Rval *rval = NULL;
-        while (RBTreeIteratorNext(it, NULL, (void **)&rval))
-        {
-            RvalDestroy(*rval);
-            free(rval);
-        }
-        RBTreeIteratorDestroy(it);
-        RBTreeClear(ctx->function_cache);
-    }
-
+    FuncCacheMapClear(ctx->function_cache);
 }
 
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args)
@@ -1506,7 +1510,19 @@ bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tag
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags)
 {
-    return EvalContextClassPut(ctx, EvalContextCurrentNamespace(ctx), name, true, scope, tags);
+    bool ret;
+    char *ns = NULL;
+    char *delim = strchr(name, ':');
+
+    if (delim)
+    {
+        ns = xstrndup(name, delim - name);
+    }
+
+    ret = EvalContextClassPut(ctx, ns ? ns : EvalContextCurrentNamespace(ctx),
+                              ns ? delim + 1 : name, true, scope, tags);
+    free(ns);
+    return ret;
 }
 
 
@@ -1635,6 +1651,9 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
     return promisees;
 }
 
+/*
+ * Copies value, so you need to free your own copy afterwards.
+ */
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
     if (strchr(lval, '['))
@@ -1690,6 +1709,7 @@ static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
     switch (SpecialScopeFromString(scope))
     {
     case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_DEF:
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
         assert(!ns || strcmp("default", ns) == 0);
@@ -1809,6 +1829,9 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
     }
 }
 
+/*
+ * Copies value, so you need to free your own copy afterwards.
+ */
 bool EvalContextVariablePut(EvalContext *ctx,
                             const VarRef *ref, const void *value,
                             DataType type, const char *tags)
@@ -2147,15 +2170,16 @@ void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key)
     StringSetRemove(ctx->promise_lock_cache, key);
 }
 
-bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out)
+bool EvalContextFunctionCacheGet(const EvalContext *ctx,
+                                 const FnCall *fp ARG_UNUSED,
+                                 const Rlist *args, Rval *rval_out)
 {
     if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
     {
         return false;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
-    Rval *rval = RBTreeGet(ctx->function_cache, (void*)hash);
+    Rval *rval = FuncCacheMapGet(ctx->function_cache, args);
     if (rval)
     {
         if (rval_out)
@@ -2170,17 +2194,18 @@ bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const
     }
 }
 
-void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval)
+void EvalContextFunctionCachePut(EvalContext *ctx,
+                                 const FnCall *fp ARG_UNUSED,
+                                 const Rlist *args, const Rval *rval)
 {
     if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
     {
         return;
     }
 
-    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
     Rval *rval_copy = xmalloc(sizeof(Rval));
     *rval_copy = RvalCopy(*rval);
-    RBTreePut(ctx->function_cache, (void*)hash, rval_copy);
+    FuncCacheMapInsert(ctx->function_cache, RlistCopy(args), rval_copy);
 }
 
 /* cfPS and associated machinery */
@@ -2575,9 +2600,9 @@ bool GetChecksumUpdatesDefault(const EvalContext *ctx)
     return ctx->checksum_updates_default;
 }
 
-void EvalContextAddIpAddress(EvalContext *ctx, const char *ip_address)
+void EvalContextAddIpAddress(EvalContext *ctx, const char *ip_address, const char *iface)
 {
-    AppendItem(&ctx->ip_addresses, ip_address, "");
+    AppendItem(&ctx->ip_addresses, ip_address, (NULL == iface ? "" : iface));
 }
 
 void EvalContextDeleteIpAddresses(EvalContext *ctx)
@@ -2622,4 +2647,128 @@ void EvalContextSetIgnoreLocks(EvalContext *ctx, bool ignore)
 bool EvalContextIsIgnoringLocks(const EvalContext *ctx)
 {
     return ctx->ignore_locks;
+}
+
+StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const char* regex, const Rlist *tags, bool first_only)
+{
+    StringSet *matching = StringSetNew();
+
+    pcre *rx = CompileRegex(regex);
+
+    Class *cls;
+    while ((cls = ClassTableIteratorNext(iter)))
+    {
+        char *expr = ClassRefToString(cls->ns, cls->name);
+
+        /* FIXME: review this strcmp. Moved out from StringMatch */
+        if (!strcmp(regex, expr) ||
+            (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
+        {
+            bool pass = false;
+            StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+
+            if (tags)
+            {
+                for (const Rlist *arg = tags; arg; arg = arg->next)
+                {
+                    const char *tag_regex = RlistScalarValue(arg);
+                    const char *element;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = StringSetIteratorNext(&it)))
+                    {
+                        /* FIXME: review this strcmp. Moved out from StringMatch */
+                        if (strcmp(tag_regex, element) == 0 ||
+                            StringMatchFull(tag_regex, element))
+                        {
+                            pass = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            else                        // without any tags queried, accept class
+            {
+                pass = true;
+            }
+
+            if (pass)
+            {
+                StringSetAdd(matching, expr);
+            }
+            else
+            {
+                free(expr);
+            }
+        }
+        else
+        {
+            free(expr);
+        }
+
+        if (first_only && StringSetSize(matching) > 0)
+        {
+            break;
+        }
+    }
+
+    if (rx)
+    {
+        pcre_free(rx);
+    }
+
+    return matching;
+}
+
+JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source)
+{
+    if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        Buffer *expbuf;
+        JsonElement *expanded_json;
+
+        switch (JsonGetPrimitiveType(source))
+        {
+        case JSON_PRIMITIVE_TYPE_STRING:
+            expbuf = BufferNew();
+            ExpandScalar(ctx, NULL, "this", JsonPrimitiveGetAsString(source), expbuf);
+            expanded_json = JsonStringCreate(BufferData(expbuf));
+            BufferDestroy(expbuf);
+            return expanded_json;
+            break;
+
+        default:
+            return JsonCopy(source);
+            break;
+        }
+    }
+    else if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        if (JsonGetContainerType(source) == JSON_CONTAINER_TYPE_OBJECT)
+        {
+            JsonElement *dest = JsonObjectCreate(JsonLength(source));
+            JsonIterator iter = JsonIteratorInit(source);
+            const char *key;
+            while ((key = JsonIteratorNextKey(&iter)))
+            {
+                Buffer *expbuf = BufferNew();
+                ExpandScalar(ctx, NULL, "this", key, expbuf);
+                JsonObjectAppendElement(dest, BufferData(expbuf), JsonExpandElement(ctx, JsonObjectGet(source, key)));
+                BufferDestroy(expbuf);
+            }
+
+            return dest;
+        }
+        else
+        {
+            JsonElement *dest = JsonArrayCreate(JsonLength(source));
+            for (size_t i = 0; i < JsonLength(source); i++)
+            {
+                JsonArrayAppendElement(dest, JsonExpandElement(ctx, JsonArrayGet(source, i)));
+            }
+            return dest;
+        }
+    }
+
+    ProgrammingError("JsonExpandElement: unexpected container type");
+    return NULL;
 }

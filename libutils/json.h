@@ -25,6 +25,8 @@
 #ifndef CFENGINE_JSON_H
 #define CFENGINE_JSON_H
 
+#include <regex.h>
+
 /**
   @brief JSON data-structure.
 
@@ -150,6 +152,13 @@ JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b);
 void JsonDestroy(JsonElement *element);
 
 /**
+  @brief Destroy a JSON element if needed
+  @param element [in] The JSON element to destroy.
+  @param allocated [in] Whether the element was allocated and needs to be destroyed.
+  */
+void JsonDestroyMaybe(JsonElement *element, bool allocated);
+
+/**
   @brief Get the length of a JsonElement. This is the number of elements or fields in an array or object respectively.
   @param element [in] The JSON element.
   */
@@ -162,6 +171,7 @@ JsonContainerType JsonGetContainerType(const JsonElement *container);
 
 JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);
+char* JsonPrimitiveToString(const JsonElement *primitive);
 bool JsonPrimitiveGetAsBool(const JsonElement *primitive);
 long JsonPrimitiveGetAsInteger(const JsonElement *primitive);
 double JsonPrimitiveGetAsReal(const JsonElement *primitive);
@@ -346,6 +356,14 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 
 JsonElement *JsonArrayGet(const JsonElement *array, size_t index);
 
+/**
+  @brief Check if an array contains only primitives
+  @param array [in] The JSON array parent
+  @returns true if the array contains only primitives, false otherwise
+  */
+bool JsonArrayContainsOnlyPrimitives(JsonElement *array);
+
+typedef JsonElement *JsonLookup(void *ctx, const char **data);
 
 /**
   @brief Parse a string to create a JsonElement
@@ -354,6 +372,19 @@ JsonElement *JsonArrayGet(const JsonElement *array, size_t index);
   @returns See JsonParseError and JsonParseErrorToString
   */
 JsonParseError JsonParse(const char **data, JsonElement **json_out);
+
+/**
+  @brief Parse a string to create a JsonElement
+  @param lookup_data [in] Evaluation context for variable lookups
+  @param lookup_function [in] Callback function for variable lookups
+  @param data [in] Pointer to the string to parse
+  @param json_out Resulting JSON object
+  @returns See JsonParseError and JsonParseErrorToString
+
+  The lookup_context type is void so we don't have to include
+  eval_context.h from libpromises into libutil
+  */
+JsonParseError JsonParseWithLookup(void *lookup_data, JsonLookup *lookup_function, const char **data, JsonElement **json_out);
 
 /**
  * @brief Convenience function to parse JSON from a file
@@ -401,6 +432,6 @@ JsonContainerType JsonIteratorCurrentContainerType(const JsonIterator *iter);
 JsonPrimitiveType JsonIteratorCurrentPrimitiveType(const JsonIterator *iter);
 bool JsonIteratorHasMore(const JsonIterator *iter);
 
-
+JsonElement* StringCaptureData(pcre *pattern, const char* regex, const char* data);
 
 #endif

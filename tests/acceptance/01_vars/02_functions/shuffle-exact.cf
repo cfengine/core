@@ -1,0 +1,47 @@
+#######################################################
+#
+# Test shuffle()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  meta:
+      "test_soft_fail" string => "!linux",
+        meta => { "redmine7950" };
+
+  vars:
+      "a" slist => { "a", "b", "c", "d", "e", "f", "g" };
+      "b" slist => { };
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "lists" slist => { "a", "b" };
+      "seeds" slist => { "skruf", "cormorant", "dollhouse" };
+
+      "shuffle_$(lists)_$(seeds)" slist => shuffle("init.$(lists)", $(seeds));
+      "shuffle_inline_$(seeds)" slist => shuffle('["a", "b", "delta", "farmer"]', $(seeds));
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

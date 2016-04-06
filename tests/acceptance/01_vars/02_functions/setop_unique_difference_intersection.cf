@@ -1,0 +1,66 @@
+#######################################################
+#
+# Test unique(), difference() and intersection()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "a" slist => { "x", "y", "z" };
+      "b" slist => { "100", "9", "10" };
+      "c" slist => { };
+      "d" slist => { "" };
+      "e" slist => { "x" };
+      "f" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+      };
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "list1" slist => { "a", "b", "c", "d", "e", "f" };
+      "list2" slist => { "a", "b", "c", "d", "e", "f" };
+
+      "unique_$(list1)" slist => unique("init.$(list1)");
+      "difference_$(list1)_$(list2)" slist => difference("init.$(list1)",
+                                                         "init.$(list2)");
+
+      "intersection_$(list1)_$(list2)" slist => intersection("init.$(list1)",
+                                                             "init.$(list2)");
+
+      "unique_inline_array" slist => unique('[ "one", "b", "one", "q" ]');
+      "unique_inline_object" slist => unique('{ "one": "b", "c": "q", "d": "one" }');
+
+      "difference_inline_$(list1)" slist => difference('[ "one", "b", "one", "q" ]',
+                                                      "init.$(list2)");
+
+      "intersection_$(list1)_inline" slist => intersection("init.$(list1)",
+                                                          '[ "one", "b", "one", "q" ]');
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

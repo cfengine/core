@@ -143,31 +143,12 @@ bool StringMatchFullWithPrecompiledRegex(pcre *pattern, const char *str)
 
 // If return_names is not set, only the captured data is returned (so
 // for N captures you can expect N elements in the Sequence).
-
-Seq *StringMatchCaptures(const char *regex, const char *str, const bool return_names)
+Seq *StringMatchCapturesWithPrecompiledRegex(const pcre *pattern, const char *str, const bool return_names)
 {
-    assert(regex);
-    assert(str);
-
-    pcre *pattern = NULL;
-    {
-        const char *errorstr;
-        int erroffset;
-        pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL,
-                               &errorstr, &erroffset, NULL);
-    }
-    assert(pattern);
-
-    if (pattern == NULL)
-    {
-        return NULL;
-    }
-
     int captures;
     int res = pcre_fullinfo(pattern, NULL, PCRE_INFO_CAPTURECOUNT, &captures);
     if (res != 0)
     {
-        pcre_free(pattern);
         return NULL;
     }
 
@@ -195,7 +176,6 @@ Seq *StringMatchCaptures(const char *regex, const char *str, const bool return_n
     if (result <= 0)
     {
         free(ovector);
-        pcre_free(pattern);
         return NULL;
     }
 
@@ -238,6 +218,38 @@ Seq *StringMatchCaptures(const char *regex, const char *str, const bool return_n
     }
 
     free(ovector);
+    return ret;
+}
+
+// Returns a Sequence with Buffer elements.
+
+// If return_names is set, the even positions will be the name or
+// number of the capturing group, followed by the captured data in the
+// odd positions (so for N captures you can expect 2N elements in the
+// Sequence).
+
+// If return_names is not set, only the captured data is returned (so
+// for N captures you can expect N elements in the Sequence).
+
+Seq *StringMatchCaptures(const char *regex, const char *str, const bool return_names)
+{
+    assert(regex);
+    assert(str);
+
+    pcre *pattern = NULL;
+    {
+        const char *errorstr;
+        int erroffset;
+        pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL,
+                               &errorstr, &erroffset, NULL);
+    }
+
+    if (pattern == NULL)
+    {
+        return NULL;
+    }
+
+    Seq *ret = StringMatchCapturesWithPrecompiledRegex(pattern, str, return_names);
     pcre_free(pattern);
     return ret;
 }

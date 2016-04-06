@@ -4374,9 +4374,23 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, ARG_UNUSED const Polic
                           LONG_MAX);
 }
 
-static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char *sort_type = RlistScalarValue(finalargs->next); // list identifier
+    if (NULL == finalargs)
+    {
+        FatalError(ctx, "in built-in FnCall %s: missing first argument, a list name", fp->name);
+    }
+
+    const char *sort_type = NULL;
+
+    if (finalargs->next)
+    {
+        sort_type = RlistScalarValue(finalargs->next); // sort mode
+    }
+    else
+    {
+        sort_type = "lex";
+    }
 
     const char *name_str = RlistScalarValueSafe(finalargs);
 
@@ -5746,11 +5760,26 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
 
 static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    char *input = RlistScalarValue(finalargs);
-    char *type = RlistScalarValue(finalargs->next);
+    if (NULL == finalargs)
+    {
+        FatalError(ctx, "in built-in FnCall %s: missing first argument, an evaluation input", fp->name);
+    }
+
+    const char *input =  RlistScalarValue(finalargs);
+
+    const char *type = NULL;
+
+    if (finalargs->next)
+    {
+        type = RlistScalarValue(finalargs->next);
+    }
+    else
+    {
+        type = "math";
+    }
 
     /* Third argument can currently only be "infix". */
-    /* char *options = RlistScalarValue(finalargs->next->next); */
+    // So we completely ignore finalargs->next->next
 
     const bool context_mode = (strcmp(type, "class") == 0);
 
@@ -8354,7 +8383,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("escape", CF_DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("eval", CF_DATA_TYPE_STRING, EVAL_ARGS, &FnCallEval, "Evaluate a mathematical expression",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("every", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the named list matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
@@ -8562,7 +8591,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("some", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if an element in the named list matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("sort", CF_DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort, "Sort a string list",
-                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splayclass", CF_DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass, "True if the first argument's time-slot has arrived, according to a policy in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splitstring", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2",

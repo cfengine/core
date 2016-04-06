@@ -248,13 +248,13 @@ bundle agent test_precheck
       "test_skip_needs_work" slist => variablesmatching(".*_meta\.test_skip_needs_work");
       "test_$(fail_types)_fail" slist => variablesmatching(".*_meta\.test_$(fail_types)_fail");
       "test_$(fail_types)_fail_metatags" slist => getvariablemetatags("$(test_$(fail_types)_fail)");
-      "test_$(fail_types)_fail_redmine" slist => filter("redmine.*", "test_$(fail_types)_fail_metatags", "true", "false", 1);
+      "test_$(fail_types)_fail_ticket" slist => filter("(redmine|CFE-|ENT-|ARCHIVE-|QA-).*", "test_$(fail_types)_fail_metatags", "true", "false", 1);
 
   classes:
       "test_skip_unsupported_set" expression => some(".*", "test_skip_unsupported");
       "test_skip_needs_work_set" expression => some(".*", "test_skip_needs_work");
       "test_$(fail_types)_fail_set" expression => some(".*", "test_$(fail_types)_fail");
-      "test_$(fail_types)_fail_redmine_set" expression => some(".*", "test_$(fail_types)_fail_redmine");
+      "test_$(fail_types)_fail_ticket_set" expression => some(".*", "test_$(fail_types)_fail_ticket");
 
       "test_skip_unsupported_match" and => { "test_skip_unsupported_set", "$($(test_skip_unsupported))" };
       "test_skip_needs_work_match" and => { "test_skip_needs_work_set", "$($(test_skip_needs_work))" };
@@ -269,14 +269,14 @@ bundle agent test_precheck
       "$(this.promise_filename) Skip/unsupported";
     test_skip_needs_work_match::
       "$(this.promise_filename) Skip/needs_work";
-    test_suppress_fail_match.test_suppress_fail_redmine_set::
-      "$(this.promise_filename) XFAIL/$(test_suppress_fail_redmine)";
-    test_suppress_fail_match.!test_suppress_fail_redmine_set::
-      "$(this.promise_filename) FAIL/no_redmine_number";
-    test_soft_fail_match.test_soft_fail_redmine_set::
-      "$(this.promise_filename) SFAIL/$(test_soft_fail_redmine)";
-    test_soft_fail_match.!test_soft_fail_redmine_set::
-      "$(this.promise_filename) FAIL/no_redmine_number";
+    test_suppress_fail_match.test_suppress_fail_ticket_set::
+      "$(this.promise_filename) XFAIL/$(test_suppress_fail_ticket)";
+    test_suppress_fail_match.!test_suppress_fail_ticket_set::
+      "$(this.promise_filename) FAIL/no_ticket_number";
+    test_soft_fail_match.test_soft_fail_ticket_set::
+      "$(this.promise_filename) SFAIL/$(test_soft_fail_ticket)";
+    test_soft_fail_match.!test_soft_fail_ticket_set::
+      "$(this.promise_filename) FAIL/no_ticket_number";
 }
 
 #######################################################

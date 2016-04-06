@@ -1,17 +1,17 @@
-#######################################################
+###########################################################
 #
 # Test sort()
 #
-#######################################################
+###########################################################
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
 }
 
-#######################################################
+###########################################################
 
 bundle agent init
 {
@@ -58,8 +58,6 @@ bundle agent init
                        "-1", "where are the MAC addresses?" };
 }
 
-#######################################################
-
 bundle agent test
 {
   meta:
@@ -73,6 +71,7 @@ bundle agent test
 
       "$(sort)_sorted_$(test)" slist => sort("init.$(test)", $(sort));
       "inline_$(sort)_sorted" slist => sort('["b", "c", "a", "100", "9", "10"]', $(sort));
+      "sorted_$(test)" slist => sort("init.$(test)"); # implicit "lex"
 }
 
 #######################################################

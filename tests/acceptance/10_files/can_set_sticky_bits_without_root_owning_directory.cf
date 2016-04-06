@@ -1,0 +1,67 @@
+#######################################################
+#
+# Acceptance test for Zendesk issue #2745
+# Ensure that cfengine creates a
+# directory not owned by root and the setgid
+# is set on the directory
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+
+      "description"
+        string => "Test that the agent can set the sticky
+                   bit on a directory that root does not
+                   own.";
+
+      "test_skip_unsupported"
+        string => "windows";
+      "test_skip_needs_work"
+        string => "!has_stat";
+
+  vars:
+    !windows::
+      #"test_dir" string => "/tmp/test_setgid";
+      "mode" int => "2700";
+      "owner" string => "daemon";
+      "group" string => "daemon";
+
+  files:
+    !windows::
+      "$(G.testdir)/test_sgid/."
+      create => "true",
+      perms => mog( $(mode), $(owner), $(group) ),
+      classes => scoped_classes_generic("namespace", "test_sgid_dir");
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  vars:
+    test_sgid_dir_reached::
+      "expect_permoct" string => "$(test.mode)";
+      "result_permoct" string => execresult('$(G.stat) -c %a $(G.testdir)/test_sgid', "useshell");
+
+  methods:
+      "Compare Results"
+        usebundle => dcs_check_strcmp( "$(expect_permoct)", "$(result_permoct)", $(this.promise_filename), "false");
+
+  reports:
+    DEBUG::
+      "expected: permoct = '$(check.expect_permoct)'";
+      "got:      permoct = '$(check.result_permoct)'";
+}

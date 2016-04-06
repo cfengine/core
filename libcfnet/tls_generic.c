@@ -640,7 +640,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
     {
         if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
         {
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_ERR,
                 "Remote peer terminated TLS session (SSL_write)");
             return 0;
         }

@@ -1,0 +1,35 @@
+# Test that a def.json inputs section that doesn't contain an array produces an
+# error message.
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '
+body common control
+{
+    inputs => { @(def.augments_inputs) };
+}
+');
+
+      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)/def.json");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_promises) -f $(sys.inputdir)/promises.cf";
+
+  methods:
+      "" usebundle => dcs_passif_output(".*Trying to augment inputs in [^\n]* but the value was not a list of string.*",
+                                        "", $(command), $(this.promise_filename));
+}

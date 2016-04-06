@@ -176,6 +176,10 @@ const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonC
  */
 const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const Policy *policy,
                                                  const char *callee_reference, const char *callee_type);
+
+const Body *EvalContextFindFirstMatchingBody(const Policy *policy, const char *type,
+                                             const char *namespace, const char *name);
+
 /**
   @brief Returns a Sequence of const Body* elements, first the body and then its parents
 
@@ -187,6 +191,7 @@ Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *poli
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const EvalContext *ctx, const char *context);
+StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const char* regex, const Rlist *tags, bool first_only);
 
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
@@ -197,7 +202,7 @@ bool GetChecksumUpdatesDefault(const EvalContext *ctx);
 
 /* IP addresses */
 Item *EvalContextGetIpAddresses(const EvalContext *ctx);
-void EvalContextAddIpAddress(EvalContext *ctx, const char *address);
+void EvalContextAddIpAddress(EvalContext *ctx, const char *address, const char *iface);
 void EvalContextDeleteIpAddresses(EvalContext *ctx);
 
 /* - Rest - */
@@ -240,5 +245,6 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EvalContextSetupMissionPortalLogHook,
                                   EvalContext *, ctx);
 char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char *message);
 
+JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source);
 
 #endif

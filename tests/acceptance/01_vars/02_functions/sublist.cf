@@ -13,73 +13,6 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-  vars:
-      "results" slist => {
-                           "starting list = 1",
-                           "starting list = 2",
-                           "starting list = 3",
-                           "starting list = one",
-                           "starting list = two",
-                           "starting list = three",
-                           "starting list = long string",
-                           "head(1) = 1",
-                           "head(9999) = 1",
-                           "head(9999) = 2",
-                           "head(9999) = 3",
-                           "head(9999) = long string",
-                           "head(9999) = one",
-                           "head(9999) = three",
-                           "head(9999) = two",
-                           "tail(1) = three",
-                           "tail(10) = 1",
-                           "tail(10) = 2",
-                           "tail(10) = 3",
-                           "tail(10) = long string",
-                           "tail(10) = one",
-                           "tail(10) = three",
-                           "tail(10) = two",
-                           "tail(2) = three",
-                           "tail(2) = two",
-                           "tail(9999) = 1",
-                           "tail(9999) = 2",
-                           "tail(9999) = 3",
-                           "tail(9999) = long string",
-                           "tail(9999) = one",
-                           "tail(9999) = three",
-                           "tail(9999) = two",
-                           'string version of default:test.test_head0 = { --empty-list-- }',
-                           'string version of default:test.test_head1 = { "1" }',
-                           'string version of default:test.test_head9999 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }',
-                           'string version of default:test.test_tail0 = { --empty-list-- }',
-                           'string version of default:test.test_tail1 = { "three" }',
-                           'string version of default:test.test_tail10 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }',
-                           'string version of default:test.test_tail2 = { "two", "three" }',
-                           'string version of default:test.test_tail9999 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }',
-      };
-
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_defaults => init_empty,
-      edit_line => init_insert;
-}
-
-body edit_defaults init_empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
-bundle edit_line init_insert
-{
-  insert_lines:
-      "$(init.results)";
-}
-
-#######################################################
-
 bundle agent test
 {
   vars:
@@ -100,32 +33,7 @@ bundle agent test
       "test_tail1" slist => sublist("test", "tail", 1);
       "test_tail0" slist => sublist("test", "tail", 0);
 
-      "strings" slist => variablesmatching("default:test\.test_(head|tail)[0-9]+");
-      "format[$(strings)]" string => format("%S", $(strings));
-
-  files:
-      "$(G.testfile).actual"
-      create => "true",
-      edit_line => test_insert;
-
-  reports:
-    EXTRA::
-      "Found strings: $(strings) = $(format[$(strings)])";
-}
-
-bundle edit_line test_insert
-{
-  insert_lines:
-      "starting list = $(test.test)";
-      "This line should not appear: $(test.test_head0)";
-      "head(1) = $(test.test_head1)";
-      "head(9999) = $(test.test_head9999)";
-      "This line should not appear: $(test.test_tail0)";
-      "tail(1) = $(test.test_tail1)";
-      "tail(10) = $(test.test_tail10)";
-      "tail(2) = $(test.test_tail2)";
-      "tail(9999) = $(test.test_tail9999)";
-      "string version of $(test.strings) = $(test.format[$(test.strings)])";
+      "test_inline" slist => sublist('[1,2,3,4,5,6,7]', "tail", 3);
 }
 
 #######################################################
@@ -133,7 +41,7 @@ bundle edit_line test_insert
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

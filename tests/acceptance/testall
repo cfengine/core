@@ -268,6 +268,7 @@ usage() {
     echo " -j[n]"
     echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
     echo "           tests will always run one by one."
+    echo " --verbose  Run tests with verbose logging"
 }
 
 workdir() {
@@ -473,11 +474,16 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             ESCAPED_TEST="$(echo "($TEST|dcs.cf.sub)" | sed -e 's/\./\\./g')"
             if egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null && ! egrep "R: .*$ESCAPED_TEST Wait/" $OUTFILE > /dev/null
             then
-                # Check for other test case outcomes than fail. Should not happen.
-                if egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null
+                # Check for passed outcome, which should not happen.
+                if egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep "R: .*$ESCAPED_TEST Pass" > /dev/null
                 then
                     RESULT=FAIL
                     RESULT_MSG="${COLOR_FAILURE}FAIL (The test Passed, but failure was expected)${COLOR_NORMAL}"
+                elif egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null
+                then
+                    # Other test case outcomes than fail. Should not happen.
+                    RESULT=FAIL
+                    RESULT_MSG="${COLOR_FAILURE}FAIL (Failure was expected, but the test had an unexpected test outcome, check test output, Pass/FAIL need to match exactly)${COLOR_NORMAL}"
                 else
                     REDMINE="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine[^0-9]*\([0-9][0-9]*\).*,\1,")"
                     RESULT="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
@@ -741,6 +747,8 @@ do
             GDB=1;;
         --no-clean)
             NO_CLEAN=1;;
+        --verbose)
+            VERBOSE="-v";;
         --stay-in-workdir)
             # Internal option. Meant to keep sub invocations from interfering by
             # writing files only into the workdir.

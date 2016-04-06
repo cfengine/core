@@ -1,0 +1,33 @@
+######################################################
+#
+#  Issue 375 setup (precursor to actual tickle of bug)
+#
+#####################################################
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Test that namespaces cannot be defined with
+                 characters that are invalid in bundle names.";
+
+  vars:
+     "command" string => "$(sys.cf_agent) -KI --define AUTO,DEBUG $(this.promise_filename).sub";
+
+  methods:
+    # We check the output of a sub policy that we expect to be syntatically
+    # invalid. So we pass if the subtest output says syntax error. We fail the
+    # test if the output of the subtest includes FAIL. We never expect that
+    # report to print, because the policy should not be syntatically valid and
+    # should never run.
+    "check"
+      usebundle => dcs_passif_output(".*syntax error.*", ".*FAIL", $(command), $(this.promise_filename));
+}

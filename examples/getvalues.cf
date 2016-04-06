@@ -33,15 +33,18 @@ bundle agent example
       "v[index_1]" string => "value_1";
       "v[index_2]" string => "value_2";
 
-      "values" slist => getvalues("v");
+      "values"        slist => getvalues("v");
+      "values_sorted" slist => sort(values, lex);
 
       # works with data containers too
       "d" data => parsejson('{ "k": [ 1, 2, 3, "a", "b", "c" ] }');
-      "cvalues" slist => getvalues("d[k]");
+
+      "cvalues"        slist => getvalues("d[k]");
+      "cvalues_sorted" slist => sort(cvalues, lex);
 
   reports:
-      "Found values: $(values)";
-      "Found container values: $(cvalues)";
+      "Found values: $(values_sorted)";
+      "Found container values: $(cvalues_sorted)";
 
 }
 #+end_src

@@ -1,0 +1,71 @@
+{
+  "test": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "one",
+    "two",
+    "three"
+  ],
+  "test_head0": [
+    "cf_null"
+  ],
+  "test_head1": [
+    "1"
+  ],
+  "test_head9999": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "one",
+    "two",
+    "three"
+  ],
+  "test_inline": [
+    "5",
+    "6",
+    "7"
+  ],
+  "test_tail0": [
+    "cf_null"
+  ],
+  "test_tail1": [
+    "three"
+  ],
+  "test_tail10": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "one",
+    "two",
+    "three"
+  ],
+  "test_tail2": [
+    "two",
+    "three"
+  ],
+  "test_tail9999": [
+    "1",
+    "2",
+    "3",
+    "one",
+    "two",
+    "three",
+    "long string",
+    "one",
+    "two",
+    "three"
+  ]
+}

@@ -60,6 +60,38 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, const Promise *pp
 
 static void PreviewProtocolLine(char *line, char *comm);
 
+char* BuildCommandLine(Attributes a, const Promise *pp)
+{
+    Writer *w = StringWriter();
+    WriterWriteF(w, "%s", pp->promiser);
+
+    if (a.args)
+    {
+        WriterWrite(w, " ");
+        WriterWrite(w, a.args);
+    }
+
+    if (a.arglist)
+    {
+        for (const Rlist *rp = a.arglist; rp != NULL; rp = rp->next)
+        {
+            switch (rp->val.type)
+            {
+            case RVAL_TYPE_SCALAR:
+                WriterWrite(w, " ");
+                WriterWrite(w, RlistScalarValue(rp));
+                break;
+
+            default:
+                Log(LOG_LEVEL_INFO, "GetLockNameExec: invalid rval (not a scalar) in arglist of commands promise '%s'", pp->promiser);
+                break;
+            }
+        }
+    }
+
+    return StringWriterClose(w);
+}
+
 PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetExecAttributes(ctx, pp);
@@ -163,17 +195,7 @@ static bool PromiseKeptExec(ARG_UNUSED Attributes a, ARG_UNUSED const Promise *p
 
 static char *GetLockNameExec(Attributes a, const Promise *pp)
 {
-    Writer *w = StringWriter();
-    if (a.args)
-    {
-        WriterWriteF(w, "%s %s", pp->promiser, a.args);
-    }
-    else
-    {
-        WriterWrite(w, pp->promiser);
-    }
-
-    return StringWriterClose(w);
+    return BuildCommandLine(a, pp);
 }
 
 /*****************************************************************************/
@@ -238,7 +260,9 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         snprintf(group_str, CF_BUFSIZE, ",gid=%ju", (uintmax_t)a.contain.group);
     }
 
-    snprintf(cmdline, CF_BUFSIZE, "%s%s%s", pp->promiser, a.args ? " " : "", a.args ? a.args : "");
+    char* temp = BuildCommandLine(a, pp);
+    snprintf(cmdline, CF_BUFSIZE, "%s", temp); // TODO: remove CF_BUFSIZE limitation
+    free(temp);
 
     Log(LOG_LEVEL_INFO, "Executing '%s%s%s' ... '%s'", timeout_str, owner_str, group_str, cmdline);
 
@@ -253,7 +277,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
     if (a.transaction.action != cfa_fix)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Command '%s' needs to be executed, but only warning was promised", cmdline);
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Command '%s' needs to be executed, but only warning was promised", cmdline);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }

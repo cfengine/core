@@ -143,7 +143,6 @@ check_PROGRAMS = \
 	refcount_test \
 	list_test \
 	buffer_test \
-	cf_key_functions_test \
 	connection_management_test \
 	expand_test \
 	string_expressions_test \
@@ -252,8 +251,6 @@ csv_parser_test_SOURCES = csv_parser_test.c ../../libutils/csv_parser.c
 csv_parser_test_LDADD = libtest.la ../../libutils/libutils.la
 
 regex_test_SOURCES = regex_test.c ../../cf-agent/match_scope.c
-
-cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-functions.c
 
 ipaddress_test_SOURCES = ipaddress_test.c
 

@@ -1,0 +1,73 @@
+#######################################################
+#
+# Test filestat(linktarget) follows relative symlinks - redmine#7404
+# Also filestat(linktarget_shallow) should output the first relative symlink itself
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+
+  # Create chain of links first_link -> second_link -> final_target
+
+  commands:
+      "$(G.touch) $(G.testdir)/final_target";
+      "$(G.ln) -s final_target $(G.testdir)/second_link";
+      "$(G.ln) -s second_link  $(G.testdir)/first_link";
+
+  reports:
+    DEBUG::
+      "Init: created chain of links first_link -> second_link -> final_target";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      # windows don't support symlinks
+      "test_skip_unsupported" string => "windows";
+
+  vars:
+      "fields" slist => splitstring("linktarget,linktarget_shallow", ",", 999);
+
+      "stat[$(fields)]" string => filestat("$(G.testdir)/first_link", $(fields));
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected[linktarget_shallow]" string => "second_link";
+      "expected[linktarget]"         string => "$(G.testdir)/final_target";
+
+  classes:
+
+      "test1_ok" expression => strcmp("$(test.stat[linktarget])",
+                                      "$(expected[linktarget])");
+      "test2_ok" expression => strcmp("$(test.stat[linktarget_shallow])",
+                                      "$(expected[linktarget_shallow])");
+      "ok" expression => "test1_ok.test2_ok";
+
+  reports:
+    DEBUG::
+      "linktarget        : expected '$(expected[linktarget])'         returned '$(test.stat[linktarget])'";
+      "linktarget_shallow: expected '$(expected[linktarget_shallow])' returned '$(test.stat[linktarget_shallow])'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

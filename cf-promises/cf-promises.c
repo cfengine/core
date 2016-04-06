@@ -64,6 +64,7 @@ enum
 
 static const struct option OPTIONS[] =
 {
+    {"workdir", required_argument, 0, 'w'},
     {"eval-functions", optional_argument, 0, OPT_EVAL_FUNCTIONS },
     {"show-classes", no_argument, 0, OPT_SHOW_CLASSES },
     {"show-vars", no_argument, 0, OPT_SHOW_VARS },
@@ -91,6 +92,7 @@ static const struct option OPTIONS[] =
 
 static const char *const HINTS[] =
 {
+    "Override the work directory for testing (same as setting CFENGINE_TEST_OVERRIDE_WORKDIR)",
     "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'yes'",
     "Show discovered classes, including those defined in common bundles in policy",
     "Show discovered variables, including those defined without dependency to user-defined classes in policy",
@@ -106,7 +108,7 @@ static const char *const HINTS[] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Generate reports about configuration and insert into CFDB",
-    "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
+    "Output the parsed policy. Possible values: 'none', 'cf', 'json' (this file only), 'cf-full', 'json-full' (all parsed promises). Default is 'none'. (experimental)",
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
@@ -123,6 +125,31 @@ static const char *const HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    enum generic_agent_config_common_policy_output_format format = config->agent_specific.common.policy_output_format;
+
+    if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF ||
+        format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON)
+    {
+        // Just parse and write content to output
+        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
+                                                config->agent_specific.common.parser_warnings,
+                                                config->agent_specific.common.parser_warnings_error);
+        Writer *writer = FileWriter(stdout);
+        if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF)
+        {
+            PolicyToString(output_policy, writer);
+        }
+        else
+        {
+            JsonElement *json_policy = PolicyToJson(output_policy);
+            JsonWrite(writer, json_policy, 2);
+            JsonDestroy(json_policy);
+        }
+        WriterClose(writer);
+        PolicyDestroy(output_policy);
+        return EXIT_SUCCESS;
+    }
+
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
@@ -158,32 +185,27 @@ int main(int argc, char *argv[])
 
     switch (config->agent_specific.common.policy_output_format)
     {
-    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF_FULL:
     {
-        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
-                                                config->agent_specific.common.parser_warnings,
-                                                config->agent_specific.common.parser_warnings_error);
         Writer *writer = FileWriter(stdout);
         PolicyToString(policy, writer);
         WriterClose(writer);
-        PolicyDestroy(output_policy);
     }
     break;
 
-    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON_FULL:
     {
-        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
-                                                config->agent_specific.common.parser_warnings,
-                                                config->agent_specific.common.parser_warnings_error);
-        JsonElement *json_policy = PolicyToJson(output_policy);
         Writer *writer = FileWriter(stdout);
+        JsonElement *json_policy = PolicyToJson(policy);
         JsonWrite(writer, json_policy, 2);
-        WriterClose(writer);
         JsonDestroy(json_policy);
-        PolicyDestroy(output_policy);
+        WriterClose(writer);
     }
     break;
 
+    // already handled, but avoids compiler warnings
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
         break;
     }
@@ -213,7 +235,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, GetTTYInteractive());
     config->tag_release_dir = NULL;
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
+    while ((c = getopt_long(argc, argv, "dvnIw:f:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
                             OPTIONS, NULL))
            != -1)
     {
@@ -233,6 +255,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case OPT_SHOW_VARS:
             config->agent_specific.common.show_variables = true;
+            break;
+
+        case 'w':
+            Log(LOG_LEVEL_INFO, "Setting workdir to '%s'", optarg);
+            putenv(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
             break;
 
         case 'c':
@@ -270,9 +297,17 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON;
             }
+             else if (strcmp("cf-full", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF_FULL;
+            }
+            else if (strcmp("json-full", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON_FULL;
+            }
             else
             {
-                Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json', 'cf-full', 'json-full'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -474,15 +509,19 @@ static void ShowVariablesFormatted(EvalContext *ctx)
         char *varname = VarRefToString(v->ref, true);
 
         Writer *w = StringWriter();
-        RvalWrite(w, v->rval);
 
-        StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
-        Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+        switch (DataTypeToRvalType(v->type))
+        {
+        case RVAL_TYPE_CONTAINER:
+            JsonWriteCompact(w, RvalContainerValue(v->rval));
+            break;
 
-        char *line;
+        default:
+            RvalWrite(w, v->rval);
+        }
+
         const char *var_value;
-
-        if(StringIsPrintable(StringWriterData(w)))
+        if (StringIsPrintable(StringWriterData(w)))
         {
             var_value = StringWriterData(w);
         }
@@ -491,6 +530,11 @@ static void ShowVariablesFormatted(EvalContext *ctx)
             var_value = "<non-printable>";
         }
 
+
+        StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+        Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+
+        char *line;
         xasprintf(&line, "%-40s %-60s %-40s", varname, var_value, BufferData(tagbuf));
 
         SeqAppend(seq, line);

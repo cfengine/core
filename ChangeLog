@@ -1,3 +1,9 @@
+3.9.0:
+	Changes:
+	- Change: classesmatching(): order of classes changed
+	- Change: getindices(), getvalues(), variablesmatching(), maparray():
+	  order of variables returned has changed
+
 3.8.0:
 	New features/additions:
 	- New feature: Bodies can now inherit attribute values from

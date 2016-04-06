@@ -23,7 +23,7 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "test", "test2" };
+      bundlesequence => { "test", "test2", "test3" };
 }
 
 bundle agent test
@@ -89,6 +89,20 @@ bundle agent cmerge(varlist)
       "all_str" string => format("%S", all),        policy => "free";
 }
 
+bundle agent test3
+{
+    vars:
+       "dest_files" slist => { "/tmp/default.json", "/tmp/epel.json" };
+       "template_file" string => "repository.mustache";
+
+       "process_templates" data => mergedata('{ "$(template_file)" : dest_files }');
+       "process__templates_str" string => format("%S", "process_templates");
+
+    reports:
+        "$(this.bundle) $(process__templates_str)";
+        "$(this.bundle) $(process_templates[$(template_file)])";
+}
+
 #+end_src
 ###############################################################################
 #+begin_src example_output
@@ -101,5 +115,8 @@ bundle agent cmerge(varlist)
 #@ R: merging {"a":[1,2,3],"b":[]} with array1 produced {"a":[1,2,3],"b":[],"mykey":["array_element1","array_element2"]}
 #@ R: merging {"b":[4,5,6]} with array2 produced {"b":[4,5,6],"otherkey":"hello"}
 #@ R: test2: merged containers with cmerge = {"a":"1","b":"2","c":"3","d":"4"}
+#@ R: test3 {"repository.mustache":["/tmp/default.json","/tmp/epel.json"]}
+#@ R: test3 /tmp/default.json
+#@ R: test3 /tmp/epel.json
 #@ ```
 #+end_src

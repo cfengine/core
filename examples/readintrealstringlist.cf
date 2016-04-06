@@ -23,13 +23,19 @@
 #+begin_src prep
 #@ ```
 #@ echo 1 > /tmp/cfe_list_ints
+#@ echo # Comment >> /tmp/cfe_list_ints
 #@ echo 2 >> /tmp/cfe_list_ints
+#@ echo # Another Comment >> /tmp/cfe_list_ints
 #@ echo 3 >> /tmp/cfe_list_ints
 #@ echo 1.1 > /tmp/cfe_list_reals
+#@ echo # Comment >> /tmp/cfe_list_reals
 #@ echo 2.2 >> /tmp/cfe_list_reals
+#@ echo # Another Comment >> /tmp/cfe_list_reals
 #@ echo 3 >> /tmp/cfe_list_reals
 #@ echo alpha > /tmp/cfe_list_strings
+#@ echo # Comment >> /tmp/cfe_list_strings
 #@ echo beta >> /tmp/cfe_list_strings
+#@ echo # Another Comment >> /tmp/cfe_list_strings
 #@ echo gamma >> /tmp/cfe_list_strings
 #@ ```
 #+end_src
@@ -44,9 +50,9 @@ bundle agent example
 {
   vars:
 
-      "integers" ilist => readintlist("/tmp/cfe_list_ints","#.*","[\n]",10,400);
-      "strings" slist => readstringlist("/tmp/cfe_list_strings", "#.*", "\s", 10, 400);
-      "reals" rlist => readreallist("/tmp/cfe_list_reals","#.*","[\n]",10,400);
+      "integers" ilist => readintlist("/tmp/cfe_list_ints","#[^\n]*","[\n]",10,400);
+      "strings" slist => readstringlist("/tmp/cfe_list_strings", "#[^\n]*", "\s", 10, 400);
+      "reals" rlist => readreallist("/tmp/cfe_list_reals","#[^\n]*","[\n]",10,400);
 
   reports:
 

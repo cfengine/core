@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test that getincides() returns the expected list from
+# Test that getindices() returns the expected list from
 # an array
 #
 #######################################################
@@ -21,6 +21,16 @@ bundle agent init
     "data[bar]" string => "zulu";
     "data[bar][one]" string => "1";
     "data[bar][two]" string => "2";
+
+    "data[zebra][gazelle]" slist => { "alpha", "bravo" };
+    "data[zebra][lion]" string => "zulu";
+    "data[zebra][lion][first]" string => "1st";
+    "data[zebra][lion][second]" string => "2nd";
+
+    "data[one][two][zero]" slist => { "alpha", "bravo" };
+    "data[one][two][three]" string => "zulu";
+    "data[one][two][three][a]" string => "c";
+    "data[one][two][three][b]" string => "d";
 }
 
 #######################################################
@@ -32,37 +42,17 @@ bundle agent test
         meta => { "redmine7116" };
 
   vars:
-    "values_data" slist => getindices("init.data[bar]");
+    "values_data_1" slist => getindices("init.data[bar]");
+    "values_data_2" slist => getindices("init.data[zebra][lion]");
+    "values_data_3" slist => getindices("init.data[one][two][three]");
 }
 
 #######################################################
 
 bundle agent check
 {
-  vars:
-    "expected_elements" slist => { "one", "two" };
-
-    "diff1" slist => difference( "test.values_data", expected_elements );
-    "diff2" slist => difference( expected_elements, "test.values_data");
-
-    "len_values_data" int => length( "test.values_data" );
-    "len_diff1" int => length(diff1);
-    "len_diff2" int => length(diff2);
-
-  classes:
-    "ok" expression => strcmp( $(len_diff1), $(len_diff2) );
-
-  reports:
-    DEBUG::
-      "DEBUG: data value: '$(test.values_data)'";
-      "DEBUG: expected value: '$(expected_elements)'";
-      "DEBUG: length of test.values_data: '$(len_values_data)'";
-      "DEBUG: found '$(diff1)' in test.values_data, but not in expected_elements";
-      "DEBUG: found '$(diff2)' in expected_elements, but not in test.values_data";
-
-    ok::
-      "$(this.promise_filename) Pass";
-
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "any" usebundle => dcs_check_state(test,
+                                         "$(this.promise_filename).expected.json",
+                                         $(this.promise_filename));
 }

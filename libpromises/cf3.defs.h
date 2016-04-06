@@ -465,6 +465,7 @@ typedef enum
     AGENT_CONTROL_TIMEZONE,
     AGENT_CONTROL_TIMEOUT,
     AGENT_CONTROL_VERBOSE,
+    AGENT_CONTROL_REPORTCLASSLOG,
     AGENT_CONTROL_NONE
 } AgentControl;
 
@@ -543,7 +544,7 @@ typedef enum
 #define CF_CHARRANGE "^.$"
 #define CF_NULL_VALUE "cf_null"
 
-#define CF_MODERANGE   "[0-7augorwxst,+-]+"
+#define CF_MODERANGE   "[0-7augorwxst,+-=]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
 #define CF_CLASSRANGE  "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+"
 #define CF_IDRANGE     "[a-zA-Z0-9_$(){}\\[\\].:]+"
@@ -1523,6 +1524,7 @@ typedef struct
 
     ExecContain contain;
     char *args;
+    Rlist *arglist;
     int module;
 
     Rlist *signals;

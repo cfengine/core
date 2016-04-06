@@ -657,10 +657,13 @@ int safe_chdir(const char *path)
 #ifndef __MINGW32__
 
 /**
- * Implementation of safe_chown.
- * @param path Path to chown.
- * @param owner          Owner to set on path.
- * @param group          Group to set on path.
+ * Opens the true parent dir of the file in the path given. The notable
+ * difference from doing it the naive way (open(dirname(path))) is that it
+ * can follow the symlinks of the path, ending up in the true parent dir of the
+ * path. It follows the same safe mechanisms as `safe_open()` to do so. If
+ * AT_SYMLINK_NOFOLLOW is given, it is equivalent to doing it the naive way (but
+ * still following "safe" semantics).
+ * @param path           Path to open parent directory of.
  * @param flags          Flags to use for fchownat.
  * @param link_user      If we have traversed a link already, which user was it.
  * @param link_group     If we have traversed a link already, which group was it.
@@ -670,10 +673,15 @@ int safe_chdir(const char *path)
  *                       Initially this is false, but will be set to true in
  *                       sub invocations if we follow a link.
  * @param loop_countdown Protection against infinite loop following.
+ * @return File descriptor pointing to the parent directory of path, or -1 on
+ *         error.
  */
-int safe_chown_impl(const char *path, uid_t owner, gid_t group, int flags,
-                    uid_t link_user, gid_t link_group, bool traversed_link,
-                    int loop_countdown)
+static int safe_open_true_parent_dir(const char *path,
+                                     int flags,
+                                     uid_t link_user,
+                                     gid_t link_group,
+                                     bool traversed_link,
+                                     int loop_countdown)
 {
     int dirfd = -1;
     int ret = -1;
@@ -738,21 +746,17 @@ int safe_chown_impl(const char *path, uid_t owner, gid_t group, int flags,
             free(link);
         }
 
-        ret = safe_chown_impl(resolved_link, owner, group, flags,
-                              statbuf.st_uid, statbuf.st_gid, true, loop_countdown);
+        ret = safe_open_true_parent_dir(resolved_link, flags, statbuf.st_uid,
+                                        statbuf.st_gid, true, loop_countdown);
 
         free(resolved_link);
         goto cleanup;
     }
 
     // We now know it either isn't a link, or we don't want to follow it if it
-    // is. In either case make sure we don't try to follow it.
-    flags |= AT_SYMLINK_NOFOLLOW;
-
-    if ((ret = fchownat(dirfd, leaf, owner, group, flags)) == -1)
-    {
-        goto cleanup;
-    }
+    // is. Return the parent dir.
+    ret = dirfd;
+    dirfd = -1;
 
 cleanup:
     free(parent_dir_alloc);
@@ -763,6 +767,42 @@ cleanup:
         close(dirfd);
     }
 
+    return ret;
+}
+
+/**
+ * Implementation of safe_chown.
+ * @param path Path to chown.
+ * @param owner          Owner to set on path.
+ * @param group          Group to set on path.
+ * @param flags          Flags to use for fchownat.
+ * @param link_user      If we have traversed a link already, which user was it.
+ * @param link_group     If we have traversed a link already, which group was it.
+ * @param traversed_link Whether we have traversed a link. If this is false the
+ *                       two previus arguments are ignored. This is used enforce
+ *                       the correct UID/GID combination when following links.
+ *                       Initially this is false, but will be set to true in
+ *                       sub invocations if we follow a link.
+ * @param loop_countdown Protection against infinite loop following.
+ */
+int safe_chown_impl(const char *path, uid_t owner, gid_t group, int flags)
+{
+    int dirfd = safe_open_true_parent_dir(path, flags, 0, 0, false, SYMLINK_MAX_DEPTH);
+    if (dirfd < 0)
+    {
+        return -1;
+    }
+
+    char *leaf_alloc = xstrdup(path);
+    char *leaf = basename(leaf_alloc);
+
+    // We now know it either isn't a link, or we don't want to follow it if it
+    // is. In either case make sure we don't try to follow it.
+    flags |= AT_SYMLINK_NOFOLLOW;
+
+    int ret = fchownat(dirfd, leaf, owner, group, flags);
+    free(leaf_alloc);
+    close(dirfd);
     return ret;
 }
 
@@ -780,8 +820,7 @@ int safe_chown(const char *path, uid_t owner, gid_t group)
 #ifdef __MINGW32__
     return chown(path, owner, group);
 #else // !__MINGW32__
-    return safe_chown_impl(path, owner, group, 0,
-                           0, 0, false, SYMLINK_MAX_DEPTH);
+    return safe_chown_impl(path, owner, group, 0);
 #endif // !__MINGW32__
 }
 
@@ -795,8 +834,7 @@ int safe_chown(const char *path, uid_t owner, gid_t group)
 #ifndef __MINGW32__
 int safe_lchown(const char *path, uid_t owner, gid_t group)
 {
-    return safe_chown_impl(path, owner, group, AT_SYMLINK_NOFOLLOW,
-                           0, 0, false, SYMLINK_MAX_DEPTH);
+    return safe_chown_impl(path, owner, group, AT_SYMLINK_NOFOLLOW);
 }
 #endif // !__MINGW32__
 
@@ -814,14 +852,12 @@ int safe_chmod(const char *path, mode_t mode)
     int dirfd = -1;
     int ret = -1;
 
-    char *parent_dir_alloc = xstrdup(path);
     char *leaf_alloc = xstrdup(path);
-    char *parent_dir = dirname(parent_dir_alloc);
     char *leaf = basename(leaf_alloc);
     struct stat statbuf;
     uid_t olduid = 0;
 
-    if ((dirfd = safe_open(parent_dir, O_RDONLY)) == -1)
+    if ((dirfd = safe_open_true_parent_dir(path, 0, 0, 0, false, SYMLINK_MAX_DEPTH)) == -1)
     {
         goto cleanup;
     }
@@ -831,57 +867,61 @@ int safe_chmod(const char *path, mode_t mode)
         goto cleanup;
     }
 
-    /* save old euid */
-    olduid = geteuid();
-
-#ifndef CHMOD_SETEUID_WORKS
-    if (mode & 07000 && statbuf.st_uid != 0)
+    if (S_ISFIFO(statbuf.st_mode))
     {
-        /* If we get here, we are on a platform where the high bit flags (sticky
-           bit and suid) flags cannot be set by any other users than root. But
-           doing so is insecure because someone can replace the file with a link
-           to a sensitive file. Fall back to opening the file with safe_open
-           first. If the file is a FIFO, we give up because opening it might
-           block, in that case it's not possible to do it securely. Setting the
-           mentioned flags on a FIFO should be extremely rare though.
+        /* For FIFOs we cannot resort to the method of opening the file first,
+           since it might block. But we also cannot use chmod directly, because
+           the file may be switched with a symlink to a sensitive file under our
+           feet, and there is no way to avoid following it. So instead, switch
+           effective UID to the owner of the FIFO, and then use chmod.
         */
-        if (S_ISFIFO(statbuf.st_mode))
+
+        /* save old euid */
+        olduid = geteuid();
+
+        if ((ret = seteuid(statbuf.st_uid)) == -1)
         {
+            goto cleanup;
+        }
+
+        ret = fchmodat(dirfd, leaf, mode, 0);
+
+        // Make sure EUID is set back before we check error condition, so that we
+        // never return with lowered privileges.
+        if (seteuid(olduid) == -1)
+        {
+            ProgrammingError("safe_chmod: Could not set EUID back. Should never happen.");
+        }
+
+        goto cleanup;
+
+#ifndef CHMOD_SETEUID_HIGHBITS_WORK
+        if (mode & 07000 && statbuf.st_uid != 0)
+        {
+            /* If we get here, we are on a platform where the high bit flags (sticky
+               bit and suid) flags cannot be set by any other users than root. As the
+               file is a FIFO, we give up because opening it might block, in that
+               case it's not possible to do it securely. Setting the mentioned flags
+               on a FIFO should be extremely rare though.
+            */
             errno = ENOTSUP;
             ret = -1;
             goto cleanup;
         }
-
-        int file_fd = safe_open(path, 0);
-        if (file_fd < 0)
-        {
-            ret = -1;
-            goto cleanup;
-        }
-
-        ret = fchmod(file_fd, mode);
-        close(file_fd);
-        goto cleanup;
+#endif // !CHMOD_SETEUID_HIGHBITS_WORK
     }
-#endif // !CHMOD_SETEUID_WORKS
 
-    if ((ret = seteuid(statbuf.st_uid)) == -1)
+    int file_fd = safe_open(path, 0);
+    if (file_fd < 0)
     {
+        ret = -1;
         goto cleanup;
     }
 
-    ret = fchmodat(dirfd, leaf, mode, 0);
-
-    // Make sure EUID is set back before we check error condition, so that we
-    // never return with lowered privileges.
-    if (seteuid(olduid) == -1)
-    {
-        ProgrammingError("safe_chmod: Could not set EUID back. Should never happen.");
-    }
-
+    ret = fchmod(file_fd, mode);
+    close(file_fd);
 
 cleanup:
-    free(parent_dir_alloc);
     free(leaf_alloc);
 
     if (dirfd != -1)

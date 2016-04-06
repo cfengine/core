@@ -1,0 +1,46 @@
+# Test that this.promiser works in ifvarclass
+# Redmine:7880 (https://cfengine.com/dev/issues/7880)
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      create => "true";
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Test that it is possible to use this.promiser in ifvarclass.";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7880" };
+
+  files:
+    # I should be able to use this.promiser to check if the file is a plain
+    # file
+    "$(G.testfile)"
+      delete => tidy,
+      ifvarclass => isplain( $(this.promiser) );
+}
+
+bundle agent check
+{
+  classes:
+    "ok" not => fileexists("$(G.testfile)");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

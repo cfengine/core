@@ -30,7 +30,7 @@ bundle agent check
 {
   vars:
       "expect" string => "dest";
-      "result" string => filestat("$(G.testdir)/b/link", "linktarget");
+      "result" string => filestat("$(G.testdir)/b/link", "linktarget_shallow");
 
   classes:
       "ok" expression => strcmp("$(result)", "$(expect)");

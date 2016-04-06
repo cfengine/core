@@ -32,7 +32,9 @@
 double drand48(void);
 #endif
 
+/* Return a random value between in [0,1). */
 double drand48(void)
 {
-    return (double) rand();
+    return (double) rand() /
+          ((double) (RAND_MAX) + 1.0);
 }

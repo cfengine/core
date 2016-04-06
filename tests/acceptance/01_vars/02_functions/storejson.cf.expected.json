@@ -1,0 +1,16 @@
+{
+  "data": {
+    "x": [
+      1,
+      2,
+      3
+    ]
+  },
+  "data_from_inline": "{\n  \"a\": \"b\"\n}",
+  "data_from_slist": "[\n  \"x\",\n  \"y\"\n]",
+  "datas": "{\n  \"x\": [\n    1,\n    2,\n    3\n  ]\n}",
+  "mylist": [
+    "x",
+    "y"
+  ]
+}

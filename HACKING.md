@@ -16,6 +16,11 @@ for a new feature, it might be a good idea to open up a feature ticket in
 Redmine and send a message to dev-cfengine mailing list,
 before actually contributing the code, in order to get discussion going.
 
+Merged features and larger changes will be released in the first minor release
+(i.e. x.y.0). Please note that such pull requests should be ready for merging
+(i.e. adjusted for any feedback) at least two months before
+[the scheduled release date](https://cfengine.com/product/supported-versions/)
+in order to make it to the first minor release.
 
 
 Top reasons pull-requests are rejected or delayed
@@ -359,6 +364,10 @@ See [Unsafe Tests](#unsafe-tests) below.
   that contains *test* and *check* bundles, i.e. it uses CFEngine to both make
   a change and check it. See also script tests/acceptance/testall.
 
+Tip: In order to trigger assert() calls in the code, build with
+`--enable-debug` (passed to either `./autogen.sh` or `./configure`). If you get
+very large binary sizes you can also pass `CFLAGS='-g -O0'` to reduce that.
+
 
 Unsafe Tests
 ------------
@@ -401,14 +410,20 @@ in the top directory of the source code checkout.
 ChangeLog Entries
 -----------------
 
-When a new feature or a bugfix is being merged, it is necessary to be
+When a new feature or a bugfix is being merged, it is often necessary to be
 accompanied by a proper entry in the ChangeLog file. Besides manually editing
 the file, we have an automatic way of generating them before the release,
 by properly formatting *commit messages*
-(see [git-commit-template](misc/githooks/git-commit-template)).
+(see [git-commit-template](misc/githooks/git-commit-template)). Keep in mind
+that changelog entries should be written in a way that is understandable by non-
+programmers. This means that references to implementation details are not
+appropriate, leave this for the non-changelog part of the commit message. It is
+the behavior change which is important. This implies that refactorings that have
+no visible effect on behavior don't need a changelog entry.
 
-In short, in your pull request you should have at least one commit with
-a "Changelog:" line in it, after the title. This may be one of the following:
+If a changelog entry is needed, your pull request should have at least one
+commit with a "Changelog:" line in it, after the title. This may be one of the
+following:
 
 * To write arbitrary message in the ChangeLog:
 ```Changelog: <message>```

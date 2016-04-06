@@ -60,16 +60,17 @@ bundle agent check
       "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
       "Lresult" string => filestat("$(G.testfile)", "ino");
 
-      # This tells us where the link points
-      "link_target" string => filestat("$(G.testfile)", "linktarget");
+      # This tells us where the link points, but don't follow it
+      "link_target" string => filestat("$(G.testfile)", "linktarget_shallow");
 
   classes:
       "okL" not => strcmp("$(test.inode)", "$(Lresult)");
       "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
       "ok" and => { "okL", "okT",
                     strcmp("$(test.inode)", "$(result)"),
+                    # Test that the symlink target starts with dot
                     regcmp("\..*", "$(link_target)")
-      };
+                  };
 
   reports:
     DEBUG::

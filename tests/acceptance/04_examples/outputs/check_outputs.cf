@@ -15,7 +15,7 @@ body common control
 bundle agent init
 {
   vars:
-      "basedir" string => "../../examples";
+      "basedir" string => "$(G.cwd)/../../examples";
       "checker" string => "$(basedir)/remake_outputs.pl";
       "all_examples" slist => findfiles("$(basedir)/*.cf");
 

@@ -44,9 +44,10 @@ fi
 #
 # Explicitly use POSIX tools if needed
 #
-if [ -f /usr/xpg4/bin/grep ]; then
-  PATH=/usr/xpg4/bin:$PATH
-  export PATH
+if [ -f /usr/xpg4/bin/grep ]
+then
+    PATH=/usr/xpg4/bin:$PATH
+    export PATH
 fi
 
 #
@@ -121,23 +122,24 @@ TESTS_TIMED_COUNT=0
 TESTS_TIMED_REMAINING=0
 
 case "$OSTYPE" in
-  msys)
-    if "$WHOAMI" -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
-      # Don't use elevate if we already have the privileges. It is slower and
-      # pops up a flashing window for every single test.
-      DEFAULT_GAINROOT=
-    else
-      DEFAULT_GAINROOT="`dirname $0`/tool_wrappers/elevate.sh"
-    fi
-    # Use hardlinks on Windows. Using symbolic links will work, but Msys creates a
-    # real copy, which eats disk space very quickly when you multiply with the number
-    # of tests.
-    LN_CMD="ln -f"
-    ;;
-  *)
-    DEFAULT_GAINROOT=fakeroot
-    LN_CMD="ln -sf"
-    ;;
+    msys)
+        if "$WHOAMI" -priv | grep SeTakeOwnershipPrivilege > /dev/null
+        then
+            # Don't use elevate if we already have the privileges. It is slower and
+            # pops up a flashing window for every single test.
+            DEFAULT_GAINROOT=
+        else
+            DEFAULT_GAINROOT="`dirname $0`/tool_wrappers/elevate.sh"
+        fi
+        # Use hardlinks on Windows. Using symbolic links will work, but Msys creates a
+        # real copy, which eats disk space very quickly when you multiply with the number
+        # of tests.
+        LN_CMD="ln -f"
+        ;;
+    *)
+        DEFAULT_GAINROOT=fakeroot
+        LN_CMD="ln -sf"
+        ;;
 esac
 
 GAINROOT=${GAINROOT:-$DEFAULT_GAINROOT}
@@ -154,13 +156,15 @@ SKIPPED_TESTS=0
 #
 HAVE_DATE_PCT_S=
 date +%s | grep %s >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-  HAVE_DATE_PCT_S=1
+if [ $? -ne 0 ]
+then
+    HAVE_DATE_PCT_S=1
 fi
 PERL=`which perl 2>/dev/null`
 
 # color!
-if [ "${CFENGINE_COLOR}" = "1" ]; then
+if [ "${CFENGINE_COLOR}" = "1" ]
+then
     COLOR_SUCCESS="\\033[1;32m"
     COLOR_FAILURE="\\033[1;31m"
     COLOR_WARNING="\\033[1;33m"
@@ -176,87 +180,90 @@ fi
 # Obtain UNIX time(), using date +%s, Perl, or POSIX-compatible approach.
 #
 unix_seconds() {
-  if [ "$HAVE_DATE_PCT_S" ]; then
-    date +%s
-    return 0
-  fi
-
-  if [ "$PERL" ]; then
-    $PERL -e 'print time() . "\n"' 2>/dev/null
-    if [ $? -eq 0 ] ; then
-      return 0
+    if [ "$HAVE_DATE_PCT_S" ]
+    then
+        date +%s
+        return 0
     fi
-  fi
 
-  # Last resort if Perl fails - the extended cpio interchange format has
-  # the file modification timestamp in columns 48-59, in octal.
-  : > $BASE_WORKDIR/x
-  echo "ibase=8;$(pax -wx cpio $BASE_WORKDIR/$$.seconds | cut -c 48-59)" | bc 2>/dev/null
-  rm $BASE_WORKDIR/x
+    if [ "$PERL" ]
+    then
+        $PERL -e 'print time() . "\n"' 2>/dev/null
+        if [ $? -eq 0 ]
+        then
+            return 0
+        fi
+    fi
+
+    # Last resort if Perl fails - the extended cpio interchange format has
+    # the file modification timestamp in columns 48-59, in octal.
+    : > $BASE_WORKDIR/x
+    echo "ibase=8;$(pax -wx cpio $BASE_WORKDIR/$$.seconds | cut -c 48-59)" | bc 2>/dev/null
+    rm $BASE_WORKDIR/x
 }
 
 usage() {
-  echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
-  echo
-  echo "If no test is given, all standard tests are run:"
-  echo "  Tests with names of form <file>.cf are expected to run successfully"
-  echo "  Tests with names of form <file>.x.cf are expected to crash"
-  echo "Set ${COLOR_SUCCESS}CFENGINE_COLOR=1${COLOR_NORMAL} to get ANSI color markers where appropriate."
-  echo
-  echo "If arguments are given, those are executed as tests"
-  echo
-  echo " -h"
-  echo " --help    prints usage"
-  echo " -q"
-  echo " --quiet   makes script much quieter"
-  echo " --gainroot=<command>  forces use of command to gain root privileges,"
-  echo "           otherwise fakeroot is used.  Use --gainroot=env to make this"
-  echo "           option a no-op (e.g. you're running inside fakeroot already)"
-  echo " --agent   provides a way to specify non-default cf-agent location,"
-  echo "           and defaults to $DEFAGENT."
-  echo " --baseclasses  provides a way to override the default cf-agent classes,"
-  echo "           and defaults to ${BASECLASSES}.  Also can use --bc"
-  echo " --extraclasses  provides a way to append to the default cf-agent classes,"
-  echo "           and defaults to ${EXTRACLASSES}.  Also can use --ec"
-  echo " --cfpromises  provides a way to specify non-default cf-promises location,"
-  echo "           and defaults to $DEFCF_PROMISES."
-  echo " --cfserverd  provides a way to specify non-default cf-serverd location,"
-  echo "           and defaults to $DEFCF_SERVERD."
-  echo " --cfkey   provides a way to specify non-default cf-key location,"
-  echo "           and defaults to $DEFCF_KEY."
-  echo " --rpmvercmp  provides a way to specify non-default rpmvercmp location,"
-  echo "           and defaults to $DEFRPMVERCMP."
-  echo " --bindir  specifies the directory containing all the binaries."
-  echo "           Mutually exclusive with --agent and --cf* arguments."
-  echo " --libtool specify non-default libtool location (only needed for --gdb)."
-  echo "               defaults to $DEFLIBTOOL."
-  echo " --include Include the file or directory given in the workdir before the test"
-  echo "           starts. This option may be given several times."
-  echo " --staging enable tests in staging directories. They are not expected to pass."
-  echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
-  echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
-  echo "           this option without a backup."
-  echo "           If you use this option you should also use --gainroot=sudo,"
-  echo "           otherwise you will get incorrect results."
-  echo " --no-network disable tests in network directories."
-  echo " --no-libxml2 disable tests involving xml file editing."
-  echo " --no-crashing disable tests that are expected to crash (for use with valgrind)."
-  echo " --no-timed disable timed tests that may introduce wait times."
-  echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
-  echo " --gdb          Run test under GDB"
-  echo " --valgrind     Run test under Valgrind"
-  echo " --callgrind    Run test under valgrind --tool=callgrind"
-  echo " --inotifywatch Run tests and log filesystem statistics"
-  echo " --inotifywait  Run tests and log filesystem events"
-  echo " --no-clean does not clean workdir after test finishes"
-  echo "            (by default it gets cleaned only if test passed)."
-  echo " -j[n]"
-  echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
-  echo "           tests will always run one by one."
+    echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
+    echo
+    echo "If no test is given, all standard tests are run:"
+    echo "  Tests with names of form <file>.cf are expected to run successfully"
+    echo "  Tests with names of form <file>.x.cf are expected to crash"
+    echo "Set ${COLOR_SUCCESS}CFENGINE_COLOR=1${COLOR_NORMAL} to get ANSI color markers where appropriate."
+    echo
+    echo "If arguments are given, those are executed as tests"
+    echo
+    echo " -h"
+    echo " --help    prints usage"
+    echo " -q"
+    echo " --quiet   makes script much quieter"
+    echo " --gainroot=<command>  forces use of command to gain root privileges,"
+    echo "           otherwise fakeroot is used.  Use --gainroot=env to make this"
+    echo "           option a no-op (e.g. you're running inside fakeroot already)"
+    echo " --agent   provides a way to specify non-default cf-agent location,"
+    echo "           and defaults to $DEFAGENT."
+    echo " --baseclasses  provides a way to override the default cf-agent classes,"
+    echo "           and defaults to ${BASECLASSES}.  Also can use --bc"
+    echo " --extraclasses  provides a way to append to the default cf-agent classes,"
+    echo "           and defaults to ${EXTRACLASSES}.  Also can use --ec"
+    echo " --cfpromises  provides a way to specify non-default cf-promises location,"
+    echo "           and defaults to $DEFCF_PROMISES."
+    echo " --cfserverd  provides a way to specify non-default cf-serverd location,"
+    echo "           and defaults to $DEFCF_SERVERD."
+    echo " --cfkey   provides a way to specify non-default cf-key location,"
+    echo "           and defaults to $DEFCF_KEY."
+    echo " --rpmvercmp  provides a way to specify non-default rpmvercmp location,"
+    echo "           and defaults to $DEFRPMVERCMP."
+    echo " --bindir  specifies the directory containing all the binaries."
+    echo "           Mutually exclusive with --agent and --cf* arguments."
+    echo " --libtool specify non-default libtool location (only needed for --gdb)."
+    echo "               defaults to $DEFLIBTOOL."
+    echo " --include Include the file or directory given in the workdir before the test"
+    echo "           starts. This option may be given several times."
+    echo " --staging enable tests in staging directories. They are not expected to pass."
+    echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
+    echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
+    echo "           this option without a backup."
+    echo "           If you use this option you should also use --gainroot=sudo,"
+    echo "           otherwise you will get incorrect results."
+    echo " --no-network disable tests in network directories."
+    echo " --no-libxml2 disable tests involving xml file editing."
+    echo " --no-crashing disable tests that are expected to crash (for use with valgrind)."
+    echo " --no-timed disable timed tests that may introduce wait times."
+    echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
+    echo " --gdb          Run test under GDB"
+    echo " --valgrind     Run test under Valgrind"
+    echo " --callgrind    Run test under valgrind --tool=callgrind"
+    echo " --inotifywatch Run tests and log filesystem statistics"
+    echo " --inotifywait  Run tests and log filesystem events"
+    echo " --no-clean does not clean workdir after test finishes"
+    echo "            (by default it gets cleaned only if test passed)."
+    echo " -j[n]"
+    echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
+    echo "           tests will always run one by one."
 }
 
 workdir() {
-  echo "$BASE_WORKDIR/$(echo "$1" | sed 's,[./],_,g')"
+    echo "$BASE_WORKDIR/$(echo "$1" | sed 's,[./],_,g')"
 }
 
 # Takes the following arguments:
@@ -266,109 +273,124 @@ workdir() {
 # 4. Timeout variable - [Optional] The name of the variable to put the next
 #        timeout into. Used by timed tests.
 runtest() {
-  # Clear local variables
-  unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE TEST_DESCRIPTION TEST_STORY TEST_COVERS
+    # Clear local variables
+    unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE TEST_DESCRIPTION TEST_STORY TEST_COVERS
 
-  AGENT="$1"
-  TEST="$2"
-  PASS_NUM="$3"
-  NEXT_TIMEOUT_VAR="$4"
-  # With STAY_IN_WORKDIR we may be running alongside others, and need to print everything at once
-  # on one line, so that we don't risk mixing lines together.
-  if [ -z "$QUIET" -a -z "$STAY_IN_WORKDIR" ]; then
-    printf "$TEST "
-  fi
-
-  if echo "$TEST" | fgrep -e .x.cf > /dev/null; then
-    EXPECTED_CRASH=1
-  else
-    EXPECTED_CRASH=
-  fi
-
-  if [ "x$CRASHING_TESTS" = "x0" ] && [ "x$EXPECTED_CRASH" = "x1" ]; then
-    SKIP=1
-    SKIPREASON="${COLOR_WARNING}Crashing tests are disabled${COLOR_NORMAL}"
-  elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep '/staging/' > /dev/null; then
-    SKIP=1
-    SKIPREASON="${COLOR_WARNING}Staging tests are disabled${COLOR_NORMAL}"
-  elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep '/unsafe/' > /dev/null; then
-    SKIP=1
-    SKIPREASON="${COLOR_WARNING}Unsafe tests are disabled${COLOR_NORMAL}"
-  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep '/network/' > /dev/null; then
-    SKIP=1
-    SKIPREASON="${COLOR_WARNING}Network-dependent tests are disabled${COLOR_NORMAL}"
-  elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep '/11_xml_edits/' > /dev/null; then
-    SKIP=1
-    SKIPREASON="XML file editing tests are disabled"
-  else
-    SKIP=
-    SKIPREASON=
-  fi
-
-  TEST_START_TIME=$(unix_seconds)
-
-  # Create workdir
-  WORKDIR="$(workdir "$TEST")"
-  OUTFILE="$WORKDIR/output.log"
-  rm -f "$OUTFILE"
-  if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]; then
-    # Don't reset workdir if this is a subsequent pass.
-    $GAINROOT rm -rf "$WORKDIR"
-    mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
-    chmod ugo+rwxt "$WORKDIR/tmp"
-  fi
-
-  if [ -n "$NEXT_TIMEOUT_VAR" ]; then
-    eval $NEXT_TIMEOUT_VAR=
-  fi
-
-  if [ -n "$SKIP" ]; then
-    TEST_END_TIME=$TEST_START_TIME
-    RESULT=Skip
-    RESULT_MSG="${COLOR_WARNING}Skipped ($SKIPREASON)${COLOR_NORMAL}"
-  else
-
-    # Prepare workdir
-    if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]; then
-      # Don't copy into workdir if this is a subsequent pass.
-      if [ -n "$BINDIR" ]; then
-        # Copy everything, because Windows depends on DLLs.
-        $LN_CMD "$BINDIR"/* "$WORKDIR/bin"
-      else
-        $LN_CMD "$AGENT" "$WORKDIR/bin"
-        $LN_CMD "$CF_PROMISES" "$WORKDIR/bin"
-        $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
-        $LN_CMD "$CF_KEY" "$WORKDIR/bin"
-        $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
-      fi
-      for inc in $INCLUDE_IN_WORKDIR; do (
-        # Copy directory structure, but make links inside. This allows tests to
-        # add additional files to the directory.
-        base=$(basename $inc)
-        mkdir -p "$WORKDIR/$base"
-        cd $inc || exit 2
-        for dir in $(find . -type d); do
-          mkdir -p "$WORKDIR/$base/$dir"
-        done
-        for file in $(find . \! -type d); do
-          $LN_CMD "$inc/$file" "$WORKDIR/$base/$file"
-        done
-      ); done
+    AGENT="$1"
+    TEST="$2"
+    PASS_NUM="$3"
+    NEXT_TIMEOUT_VAR="$4"
+    # With STAY_IN_WORKDIR we may be running alongside others, and need to print everything at once
+    # on one line, so that we don't risk mixing lines together.
+    if [ -z "$QUIET" -a -z "$STAY_IN_WORKDIR" ]
+    then
+        printf "$TEST "
     fi
-    if uname | grep MINGW > /dev/null; then
-        PLATFORM_WORKDIR="$(echo $WORKDIR | sed -e 's%^/\([a-cA-Z]\)/%\1:/%' | sed -e 's%/%\\%g')"
-        DS="\\"
+
+    if echo "$TEST" | fgrep -e .x.cf > /dev/null
+    then
+        EXPECTED_CRASH=1
     else
-        PLATFORM_WORKDIR="$WORKDIR"
-        DS="/"
+        EXPECTED_CRASH=
     fi
 
-  ( echo ----------------------------------------------------------------------
-    echo "$TEST"${EXPECTED_CRASH:+ \(expected to crash\)}${SKIPREASON:+ \($SKIPREASON\)}
-    echo ----------------------------------------------------------------------
-  ) >> "$WORKDIR/$LOG"
+    if [ "x$CRASHING_TESTS" = "x0" ] && [ "x$EXPECTED_CRASH" = "x1" ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}Crashing tests are disabled${COLOR_NORMAL}"
+    elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep '/staging/' > /dev/null
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}Staging tests are disabled${COLOR_NORMAL}"
+    elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep '/unsafe/' > /dev/null
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}Unsafe tests are disabled${COLOR_NORMAL}"
+    elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep '/network/' > /dev/null
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}Network-dependent tests are disabled${COLOR_NORMAL}"
+    elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep '/11_xml_edits/' > /dev/null
+    then
+        SKIP=1
+        SKIPREASON="XML file editing tests are disabled"
+    else
+        SKIP=
+        SKIPREASON=
+    fi
 
-    echo "#!/bin/sh
+    TEST_START_TIME=$(unix_seconds)
+
+    # Create workdir
+    WORKDIR="$(workdir "$TEST")"
+    OUTFILE="$WORKDIR/output.log"
+    rm -f "$OUTFILE"
+    if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]
+    then
+        # Don't reset workdir if this is a subsequent pass.
+        $GAINROOT rm -rf "$WORKDIR"
+        mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
+        chmod ugo+rwxt "$WORKDIR/tmp"
+    fi
+
+    if [ -n "$NEXT_TIMEOUT_VAR" ]
+    then
+        eval $NEXT_TIMEOUT_VAR=
+    fi
+
+    if [ -n "$SKIP" ]
+    then
+        TEST_END_TIME=$TEST_START_TIME
+        RESULT=Skip
+        RESULT_MSG="${COLOR_WARNING}Skipped ($SKIPREASON)${COLOR_NORMAL}"
+    else
+
+        # Prepare workdir
+        if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]
+        then
+            # Don't copy into workdir if this is a subsequent pass.
+            if [ -n "$BINDIR" ]
+            then
+                # Copy everything, because Windows depends on DLLs.
+                $LN_CMD "$BINDIR"/* "$WORKDIR/bin"
+            else
+                $LN_CMD "$AGENT" "$WORKDIR/bin"
+                $LN_CMD "$CF_PROMISES" "$WORKDIR/bin"
+                $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
+                $LN_CMD "$CF_KEY" "$WORKDIR/bin"
+                $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
+            fi
+            for inc in $INCLUDE_IN_WORKDIR; do (
+                # Copy directory structure, but make links inside. This allows tests to
+                # add additional files to the directory.
+                base=$(basename $inc)
+                mkdir -p "$WORKDIR/$base"
+                cd $inc || exit 2
+                for dir in $(find . -type d)
+                do
+                    mkdir -p "$WORKDIR/$base/$dir"
+                done
+                for file in $(find . \! -type d)
+                do
+                    $LN_CMD "$inc/$file" "$WORKDIR/$base/$file"
+                done
+            ); done
+        fi
+        if uname | grep MINGW > /dev/null
+        then
+            PLATFORM_WORKDIR="$(echo $WORKDIR | sed -e 's%^/\([a-cA-Z]\)/%\1:/%' | sed -e 's%/%\\%g')"
+            DS="\\"
+        else
+            PLATFORM_WORKDIR="$WORKDIR"
+            DS="/"
+        fi
+
+        ( echo ----------------------------------------------------------------------
+            echo "$TEST"${EXPECTED_CRASH:+ \(expected to crash\)}${SKIPREASON:+ \($SKIPREASON\)}
+            echo ----------------------------------------------------------------------
+        ) >> "$WORKDIR/$LOG"
+
+        echo "#!/bin/sh
 CFENGINE_TEST_OVERRIDE_WORKDIR=\"$PLATFORM_WORKDIR\"
 TEMP=\"$PLATFORM_WORKDIR${DS}tmp\"
 CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR=\"$CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR\"
@@ -376,350 +398,409 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
 " > "$WORKDIR/runtest"
 
-    if [ "$GDB" = 1 ]; then
-      if grep libtool < "$AGENT" > /dev/null; then
-        printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
-      fi
-      printf "gdb --args " >> "$WORKDIR/runtest"
-    fi
-
-    if [ -n "$USE_VALGRIND" ] && [ x"$EXPECTED_CRASH" = "x" ]; then
-      if grep libtool < "$AGENT" > /dev/null; then
-        printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
-      fi
-      printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
-    else
-      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
-    fi
-
-    chmod +x "$WORKDIR/runtest"
-
-    if [ "$GDB" = 1 ]; then
-      $GAINROOT "$WORKDIR/runtest"
-    else
-      eval $GAINROOT "$WORKDIR/runtest" >>$OUTFILE 2>&1
-    fi
-    RETVAL=$?
-    cat $OUTFILE >> "$WORKDIR/$LOG"
-    echo >> "$WORKDIR/$LOG"
-    echo "Return code is $RETVAL." >> "$WORKDIR/$LOG"
-
-    TEST_END_TIME=$(unix_seconds)
-
-    # Try to collect test metadata if any
-    if egrep "R: test description: " $OUTFILE > /dev/null; then
-      TEST_DESCRIPTION="$(egrep "R: test description" $OUTFILE | sed -e "s,.*test description: \([A-Za-z0-9_]*\),\1,")"
-    fi
-    if egrep -e "R: test story_id: " $OUTFILE > /dev/null; then
-      TEST_STORY="$(egrep "R: test story_id" $OUTFILE | sed -e "s,.*test story_id: \([0-9][0-9]*\),\1,")"
-    fi
-    if egrep -e "R: test covers: " $OUTFILE > /dev/null; then
-      TEST_COVERS="$(egrep "R: test covers" $OUTFILE | sed -e "s,.*test covers: \([A-Za-z0-9_]*\),\1,")"
-    fi
-
-
-    RESULT_MSG=
-    if [ -z "$EXPECTED_CRASH" ]; then
-      # We need to be careful when matching test outcomes. Because of convergence
-      # passes, a test may output FAIL before it outputs Pass; in this case the
-      # latter trumps the former. Also be careful when matching an [XS]FAIL; the
-      # test should not be allowed to output any other outcome in the same run,
-      # except for FAIL.
-
-      # Some states are output by dcs.cf.sub, therefore check for both TEST
-      # prefix and dcs.cf.sub prefix.
-      ESCAPED_TEST="$(echo "($TEST|dcs.cf.sub)" | sed -e 's/\./\\./g')"
-      if egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null && ! egrep "R: .*$ESCAPED_TEST Wait/" $OUTFILE > /dev/null; then
-        # Check for other test case outcomes than fail. Should not happen.
-        if egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null; then
-          RESULT=FAIL
-          RESULT_MSG="${COLOR_FAILURE}FAIL (The test Passed, but failure was expected)${COLOR_NORMAL}"
-        else
-          REDMINE="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine[^0-9]*\([0-9][0-9]*\).*,\1,")"
-          RESULT="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
-          if [ "$RESULT" = "XFAIL" ]; then
-            RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
-          else
-            RESULT_MSG="${COLOR_WARNING}Soft fail (Redmine #$REDMINE)${COLOR_NORMAL}"
-          fi
+        if [ "$GDB" = 1 ]
+        then
+            if grep libtool < "$AGENT" > /dev/null
+            then
+                printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
+            fi
+            printf "gdb --args " >> "$WORKDIR/runtest"
         fi
-      elif [ $RETVAL -ne 0 ]; then
-        RESULT=FAIL
-      elif egrep "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE > /dev/null; then
-        RESULT=FAIL
-        RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"
-      elif egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE > /dev/null; then
-        if [ -z "$NEXT_TIMEOUT_VAR" ]; then
-          RESULT=FAIL
-          RESULT_MSG="${COLOR_FAILURE}FAIL (Test tried to wait but is not in \"timed\" directory)${COLOR_NORMAL}"
+
+        if [ -n "$USE_VALGRIND" ] && [ x"$EXPECTED_CRASH" = "x" ]
+        then
+            if grep libtool < "$AGENT" > /dev/null
+            then
+                printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
+            fi
+            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
         else
-          WAIT_TIME=$(egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -e 's,.*Wait/\([0-9][0-9]*\).*,\1,')
-          eval $NEXT_TIMEOUT_VAR=$(($TEST_END_TIME+$WAIT_TIME))
-          RESULT=Wait
-          RESULT_MSG="Awaiting ($WAIT_TIME seconds)..."
+            printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
         fi
-      elif egrep "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null; then
-        RESULT=Pass
-        RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-      elif egrep "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null; then
-        RESULT=Skip
-        RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
-      elif egrep "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE > /dev/null; then
-        RESULT=Skip
-        RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
-      else
-        RESULT=FAIL
-        RESULT_MSG="${COLOR_FAILURE}FAIL${COLOR_NORMAL}"
-      fi
+
+        chmod +x "$WORKDIR/runtest"
+
+        if [ "$GDB" = 1 ]
+        then
+            $GAINROOT "$WORKDIR/runtest"
+        else
+            eval $GAINROOT "$WORKDIR/runtest" >>$OUTFILE 2>&1
+        fi
+        RETVAL=$?
+        cat $OUTFILE >> "$WORKDIR/$LOG"
+        echo >> "$WORKDIR/$LOG"
+        echo "Return code is $RETVAL." >> "$WORKDIR/$LOG"
+
+        TEST_END_TIME=$(unix_seconds)
+
+        # Try to collect test metadata if any
+        if egrep "R: test description: " $OUTFILE > /dev/null
+        then
+            TEST_DESCRIPTION="$(egrep "R: test description" $OUTFILE | sed -e "s,.*test description: \([A-Za-z0-9_]*\),\1,")"
+        fi
+        if egrep -e "R: test story_id: " $OUTFILE > /dev/null
+        then
+            TEST_STORY="$(egrep "R: test story_id" $OUTFILE | sed -e "s,.*test story_id: \([0-9][0-9]*\),\1,")"
+        fi
+        if egrep -e "R: test covers: " $OUTFILE > /dev/null
+        then
+            TEST_COVERS="$(egrep "R: test covers" $OUTFILE | sed -e "s,.*test covers: \([A-Za-z0-9_]*\),\1,")"
+        fi
+
+
+        RESULT_MSG=
+        if [ -z "$EXPECTED_CRASH" ]
+        then
+            # We need to be careful when matching test outcomes. Because of convergence
+            # passes, a test may output FAIL before it outputs Pass; in this case the
+            # latter trumps the former. Also be careful when matching an [XS]FAIL; the
+            # test should not be allowed to output any other outcome in the same run,
+            # except for FAIL.
+
+            # Some states are output by dcs.cf.sub, therefore check for both TEST
+            # prefix and dcs.cf.sub prefix.
+            ESCAPED_TEST="$(echo "($TEST|dcs.cf.sub)" | sed -e 's/\./\\./g')"
+            if egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE > /dev/null && ! egrep "R: .*$ESCAPED_TEST Wait/" $OUTFILE > /dev/null
+            then
+                # Check for other test case outcomes than fail. Should not happen.
+                if egrep "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v "R: .*$ESCAPED_TEST [XS]?FAIL" > /dev/null
+                then
+                    RESULT=FAIL
+                    RESULT_MSG="${COLOR_FAILURE}FAIL (The test Passed, but failure was expected)${COLOR_NORMAL}"
+                else
+                    REDMINE="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*[XS]FAIL/redmine[^0-9]*\([0-9][0-9]*\).*,\1,")"
+                    RESULT="$(egrep "R: .*$ESCAPED_TEST [XS]FAIL" $OUTFILE | sed -e "s,.*\([XS]FAIL\).*,\1,")"
+                    if [ "$RESULT" = "XFAIL" ]
+                    then
+                        RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
+                    else
+                        RESULT_MSG="${COLOR_WARNING}Soft fail (Redmine #$REDMINE)${COLOR_NORMAL}"
+                    fi
+                fi
+            elif [ $RETVAL -ne 0 ]
+            then
+                RESULT=FAIL
+            elif egrep "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE > /dev/null
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"
+            elif egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE > /dev/null
+            then
+                if [ -z "$NEXT_TIMEOUT_VAR" ]
+                then
+                    RESULT=FAIL
+                    RESULT_MSG="${COLOR_FAILURE}FAIL (Test tried to wait but is not in \"timed\" directory)${COLOR_NORMAL}"
+                else
+                    WAIT_TIME=$(egrep "R: .*$ESCAPED_TEST Wait/[0-9]+" $OUTFILE | sed -e 's,.*Wait/\([0-9][0-9]*\).*,\1,')
+                    eval $NEXT_TIMEOUT_VAR=$(($TEST_END_TIME+$WAIT_TIME))
+                    RESULT=Wait
+                    RESULT_MSG="Awaiting ($WAIT_TIME seconds)..."
+                fi
+            elif egrep "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
+            then
+                RESULT=Pass
+                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+            elif egrep "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null
+            then
+                RESULT=Skip
+                RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
+            elif egrep "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE > /dev/null
+            then
+                RESULT=Skip
+                RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
+            else
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL${COLOR_NORMAL}"
+            fi
+        else
+            if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ]
+            then
+                RESULT=Pass
+                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+            elif [ $RETVAL -ge 128 ]
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (Crashed)${COLOR_NORMAL}"
+            else
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (Failed to exit with non-zero status)${COLOR_NORMAL}"
+            fi
+        fi
+
+        if [ "x$RESULT_MSG" = "x" ]
+        then
+            RESULT_MSG=$RESULT
+        fi
+
+        if [ "$RESULT" = "FAIL" ] && [ -e .succeeded/"$FLATNAME" ]
+        then
+            RESULT_MSG="${COLOR_FAILURE}$RESULT_MSG (UNEXPECTED FAILURE)${COLOR_NORMAL}"
+        fi
+    fi
+
+
+    if [ "$RESULT" = "XFAIL" -o "$RESULT" = "SFAIL" ]
+    then
+        echo "    <testcase name=\"$(basename $TEST)\""
+        echo "              classname=\"$TEST $RESULT_MSG\""
+        echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
+    elif [ "$RESULT" != Wait ]
+    then
+        echo "    <testcase name=\"$(basename $TEST)\""
+        echo "              classname=\"$TEST\""
+        echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
+    fi >> "$WORKDIR/$XML"
+
+    
+    # Fill test metadata if any
+    if [ ! -z "$TEST_DESCRIPTION" ] || [ ! -z "$TEST_STORY" ] || [ ! -z "$TEST_COVERS" ]
+    then
+        if [ ! -z "$TEST_DESCRIPTION" ]
+        then
+            TEST_DESCRIPTION_METATAG="name=\"$TEST_DESCRIPTION\""
+        fi
+        if [ ! -z "$TEST_STORY" ]
+        then
+            TEST_STORY_METATAG="story_id=\"$TEST_STORY\""
+        fi
+        if [ ! -z "$TEST_COVERS" ]
+        then
+            TEST_COVERS_METATAG="covers=\"$TEST_COVERS\""
+        fi
+        echo "        <system-out>$TEST_DESCRIPTION_METATAG $TEST_STORY_METATAG $TEST_COVERS_METATAG</system-out>"
+    fi >> "$WORKDIR/$XML"
+
+
+    echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
+    case "$RESULT" in
+        Pass)
+            PASSED_TESTS=$(($PASSED_TESTS + 1))
+
+            mkdir -p '.succeeded'
+            touch .succeeded/"$FLATNAME"
+            ;;
+
+        FAIL|XFAIL)
+            ( echo "        <failure type=\"$RESULT\""
+                echo "                 message=\"$RESULT_MSG $TEST\">"
+                cat $OUTFILE | sed -e "s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/'/\&quot;/g"
+                echo "        </failure>"
+            ) >> "$WORKDIR/$XML"
+            FAILED_TESTS=$(($FAILED_TESTS + 1))
+            if [ "$RESULT" = "XFAIL" ]
+            then
+                SUPPRESSED_FAILURES=$(($SUPPRESSED_FAILURES + 1))
+            fi
+            ;;
+
+        SFAIL)
+            ( echo "        <skipped type=\"$RESULT_MSG\">"
+                echo "                 message=\"$RESULT_MSG $TEST\">"
+                cat $OUTFILE | sed -e "s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/'/\&quot;/g"
+                echo "        </skipped>"
+            ) >> "$WORKDIR/$XML"
+            SOFT_FAILURES=$(($SOFT_FAILURES + 1))
+            ;;
+
+        Skip)
+            ( echo "        <skipped type=\"$RESULT_MSG\">"
+                echo "        </skipped>"
+            ) >> "$WORKDIR/$XML"
+            SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
+            ;;
+    esac
+
+    if [ "$RESULT" != Wait ]
+    then
+        echo "    </testcase>" >> "$WORKDIR/$XML"
+    fi
+
+    if [ -e "$WORKDIR" -a "$RESULT" != "FAIL" -a "$RESULT" != "Wait" -a "$NO_CLEAN" = "0" ]
+    then
+        # Delete everything except the logs from the workdir.
+        ls -1 "$WORKDIR" | while read s
+        do
+            case "$s" in
+                "$LOG"|"$SUMMARY"|"$XML")
+                    ;;
+                *)
+                    $GAINROOT rm -fr "$WORKDIR/$s"
+                    ;;
+            esac
+        done
+    fi
+
+    if [ -z "$QUIET" ]
+    then
+        if [ -n "$STAY_IN_WORKDIR" ]
+        then
+            # See comment about STAY_IN_WORKDIR near start of runtest.
+            echo "$TEST $RESULT_MSG"
+        else
+            echo $RESULT_MSG
+        fi
     else
-      if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ]; then
-        RESULT=Pass
-        RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-      elif [ $RETVAL -ge 128 ]; then
-        RESULT=FAIL
-        RESULT_MSG="${COLOR_FAILURE}FAIL (Crashed)${COLOR_NORMAL}"
-      else
-        RESULT=FAIL
-        RESULT_MSG="${COLOR_FAILURE}FAIL (Failed to exit with non-zero status)${COLOR_NORMAL}"
-      fi
+        if [ "$RESULT" = Pass ]
+        then
+            printf '.'
+        elif [ "$RESULT" = Skip ]
+        then
+            printf '-'
+        elif [ "$RESULT" = FAIL ]
+        then
+            if [ -n "$EXPECTED_CRASH" ]
+            then
+                printf '!'
+            else
+                printf 'x'
+            fi
+        fi
     fi
 
-    if [ "x$RESULT_MSG" = "x" ]; then
-      RESULT_MSG=$RESULT
-    fi
-
-    if [ "$RESULT" = "FAIL" ] && [ -e .succeeded/"$FLATNAME" ]; then
-      RESULT_MSG="${COLOR_FAILURE}$RESULT_MSG (UNEXPECTED FAILURE)${COLOR_NORMAL}"
-    fi
-  fi
-
-
-  if [ "$RESULT" = "XFAIL" -o "$RESULT" = "SFAIL" ]; then
-    echo "    <testcase name=\"$(basename $TEST)\""
-    echo "              classname=\"$TEST $RESULT_MSG\""
-    echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
-  elif [ "$RESULT" != Wait ]; then
-    echo "    <testcase name=\"$(basename $TEST)\""
-    echo "              classname=\"$TEST\""
-    echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
-  fi >> "$WORKDIR/$XML"
-
- 
-  # Fill test metadata if any
-  if [ ! -z "$TEST_DESCRIPTION" ] || [ ! -z "$TEST_STORY" ] || [ ! -z "$TEST_COVERS" ]; then
-    if [ ! -z "$TEST_DESCRIPTION" ]; then
-      TEST_DESCRIPTION_METATAG="name=\"$TEST_DESCRIPTION\""
-    fi
-    if [ ! -z "$TEST_STORY" ]; then
-      TEST_STORY_METATAG="story_id=\"$TEST_STORY\""
-    fi
-    if [ ! -z "$TEST_COVERS" ]; then
-      TEST_COVERS_METATAG="covers=\"$TEST_COVERS\""
-    fi
-    echo "        <system-out>$TEST_DESCRIPTION_METATAG $TEST_STORY_METATAG $TEST_COVERS_METATAG</system-out>"
-  fi >> "$WORKDIR/$XML"
-
-
-  echo $RESULT $TEST >> "$WORKDIR/$SUMMARY"
-  case "$RESULT" in
-    Pass)
-      PASSED_TESTS=$(($PASSED_TESTS + 1))
-
-      mkdir -p '.succeeded'
-      touch .succeeded/"$FLATNAME"
-      ;;
-
-    FAIL|XFAIL)
-      ( echo "        <failure type=\"$RESULT\""
-        echo "                 message=\"$RESULT_MSG $TEST\">"
-        cat $OUTFILE | sed -e "s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/'/\&quot;/g"
-        echo "        </failure>"
-      ) >> "$WORKDIR/$XML"
-      FAILED_TESTS=$(($FAILED_TESTS + 1))
-      if [ "$RESULT" = "XFAIL" ]; then
-        SUPPRESSED_FAILURES=$(($SUPPRESSED_FAILURES + 1))
-      fi
-      ;;
-
-    SFAIL)
-      ( echo "        <skipped type=\"$RESULT_MSG\">"
-        echo "                 message=\"$RESULT_MSG $TEST\">"
-        cat $OUTFILE | sed -e "s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/'/\&quot;/g"
-        echo "        </skipped>"
-      ) >> "$WORKDIR/$XML"
-      SOFT_FAILURES=$(($SOFT_FAILURES + 1))
-      ;;
-
-    Skip)
-      ( echo "        <skipped type=\"$RESULT_MSG\">"
-        echo "        </skipped>"
-      ) >> "$WORKDIR/$XML"
-      SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
-      ;;
-  esac
-
-  if [ "$RESULT" != Wait ]; then
-    echo "    </testcase>" >> "$WORKDIR/$XML"
-  fi
-
-  if [ -e "$WORKDIR" -a "$RESULT" != "FAIL" -a "$RESULT" != "Wait" -a "$NO_CLEAN" = "0" ]; then
-    # Delete everything except the logs from the workdir.
-    ls -1 "$WORKDIR" | while read s; do
-      case "$s" in
-        "$LOG"|"$SUMMARY"|"$XML")
-          ;;
-        *)
-          $GAINROOT rm -fr "$WORKDIR/$s"
-          ;;
-      esac
-    done
-  fi
-
-  if [ -z "$QUIET" ]; then
-    if [ -n "$STAY_IN_WORKDIR" ]; then
-      # See comment about STAY_IN_WORKDIR near start of runtest.
-      echo "$TEST $RESULT_MSG"
-    else
-      echo $RESULT_MSG
-    fi
-  else
-    if [ "$RESULT" = Pass ]; then
-      printf '.'
-    elif [ "$RESULT" = Skip ]; then
-      printf '-'
-    elif [ "$RESULT" = FAIL ]; then
-      if [ -n "$EXPECTED_CRASH" ]; then
-        printf '!'
-      else
-        printf 'x'
-      fi
-    fi
-  fi
-
-  (
-    echo
-    echo '  ==>' "$RESULT_MSG"
-    echo
-  ) >> "$WORKDIR/$LOG"
+    (
+        echo
+        echo '  ==>' "$RESULT_MSG"
+        echo
+    ) >> "$WORKDIR/$LOG"
 }
 
 ORIG_ARGS=
-while true; do
-  case "$1" in
-    -h|--help)
-      usage
-      exit;;
-    -q|--quiet)
-      QUIET=1;;
-    --gainroot=*)
-      GAINROOT=${1#--gainroot=};;
-    --valgrind)
-      USE_VALGRIND=1;;
-    --callgrind)
-      USE_VALGRIND=1
-      VALGRIND_OPTS="--suppressions=valgrind-suppressions --tool=callgrind";;
-    --inotifywatch)
-      USE_INOTIFYWATCH=1;;
-    --inotifywait)
-      USE_INOTIFYWAIT=1;;
-    --staging)
-      STAGING_TESTS=1;;
-    --unsafe)
-      UNSAFE_TESTS=1;;
-    --no-network)
-      NETWORK_TESTS=0;;
-    --no-libxml2)
-      LIBXML2_TESTS=0;;
-    --no-crashing)
-      CRASHING_TESTS=0;;
-    --no-timed)
-      TIMED_TESTS=0;;
-    --agent=*)
-      AGENT=${1#--agent=};;
-    --baseclasses=*)
-      BASECLASSES=${1#--baseclasses=};;
-    --bc=*)
-      BASECLASSES=${1#--bc=};;
-    --extraclasses=*)
-      EXTRACLASSES=${1#--extraclasses=};;
-    --ec=*)
-      EXTRACLASSES=${1#--ec=};;
-    --cfpromises=*)
-      CF_PROMISES=${1#--cfpromises=};;
-    --cfserverd=*)
-      CF_SERVERD=${1#--cfserverd=};;
-    --cfkey=*)
-      CF_KEY=${1#--cfkey=};;
-    --rpmvercmp=*)
-      RPMVERCMP=${1#--rpmvercmp=};;
-    --bindir=*)
-      BINDIR=${1#--bindir=};;
-    --libtool=*)
-      LIBTOOL=${1#--libtool=};;
-    --include=*)
-      INCLUDE_IN_WORKDIR="$INCLUDE_IN_WORKDIR${INCLUDE_IN_WORKDIR:+ }${1#--include=}";;
-    -j*|--jobs*)
-      MAKEFLAGS="$MAKEFLAGS $1";;
-    --printlog)
-      PRINTLOG=1;;
-    --gdb)
-      GDB=1;;
-    --no-clean)
-      NO_CLEAN=1;;
-    --stay-in-workdir)
-      # Internal option. Meant to keep sub invocations from interfering by
-      # writing files only into the workdir.
-      STAY_IN_WORKDIR=1;;
-    -*)
-      echo "Unknown option: $1"
-      exit 1;;
-    *)
-      break;;
-  esac
-  # Make sure spaces are preserved by escaping them.
-  ORIG_ARGS="$ORIG_ARGS $(echo "$1" | sed -e 's/ /\\ /g')"
-  shift
+while true
+do
+    case "$1" in
+        -h|--help)
+            usage
+            exit;;
+        -q|--quiet)
+            QUIET=1;;
+        --gainroot=*)
+            GAINROOT=${1#--gainroot=};;
+        --valgrind)
+            USE_VALGRIND=1;;
+        --callgrind)
+            USE_VALGRIND=1
+            VALGRIND_OPTS="--suppressions=valgrind-suppressions --tool=callgrind";;
+        --inotifywatch)
+            USE_INOTIFYWATCH=1;;
+        --inotifywait)
+            USE_INOTIFYWAIT=1;;
+        --staging)
+            STAGING_TESTS=1;;
+        --unsafe)
+            UNSAFE_TESTS=1;;
+        --no-network)
+            NETWORK_TESTS=0;;
+        --no-libxml2)
+            LIBXML2_TESTS=0;;
+        --no-crashing)
+            CRASHING_TESTS=0;;
+        --no-timed)
+            TIMED_TESTS=0;;
+        --agent=*)
+            AGENT=${1#--agent=};;
+        --baseclasses=*)
+            BASECLASSES=${1#--baseclasses=};;
+        --bc=*)
+            BASECLASSES=${1#--bc=};;
+        --extraclasses=*)
+            EXTRACLASSES=${1#--extraclasses=};;
+        --ec=*)
+            EXTRACLASSES=${1#--ec=};;
+        --cfpromises=*)
+            CF_PROMISES=${1#--cfpromises=};;
+        --cfserverd=*)
+            CF_SERVERD=${1#--cfserverd=};;
+        --cfkey=*)
+            CF_KEY=${1#--cfkey=};;
+        --rpmvercmp=*)
+            RPMVERCMP=${1#--rpmvercmp=};;
+        --bindir=*)
+            BINDIR=${1#--bindir=};;
+        --libtool=*)
+            LIBTOOL=${1#--libtool=};;
+        --include=*)
+            INCLUDE_IN_WORKDIR="$INCLUDE_IN_WORKDIR${INCLUDE_IN_WORKDIR:+ }${1#--include=}";;
+        -j*|--jobs*)
+            MAKEFLAGS="$MAKEFLAGS $1";;
+        --printlog)
+            PRINTLOG=1;;
+        --gdb)
+            GDB=1;;
+        --no-clean)
+            NO_CLEAN=1;;
+        --stay-in-workdir)
+            # Internal option. Meant to keep sub invocations from interfering by
+            # writing files only into the workdir.
+            STAY_IN_WORKDIR=1;;
+        -*)
+            echo "Unknown option: $1"
+            exit 1;;
+        *)
+            break;;
+    esac
+    # Make sure spaces are preserved by escaping them.
+    ORIG_ARGS="$ORIG_ARGS $(echo "$1" | sed -e 's/ /\\ /g')"
+    shift
 done
 
 #
 # Close stdin file descriptor to avoid tty_interactive check in cf-agent being success.
 #
-if [ "$GDB" != 1 ] || [ "$USE_VALGRIND" != 1 ]; then
-  exec </dev/null
+if [ "$GDB" != 1 ] || [ "$USE_VALGRIND" != 1 ]
+then
+    exec </dev/null
 fi
 
 if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&
-    ! "$WHOAMI" -priv | grep SeTakeOwnershipPrivilege > /dev/null; then
-  # On Windows we run the entire test run under GAINROOT, because doing it for
-  # each test is horribly slow.
-  echo "export GAINROOT=" > runtests.sh
-  echo "export TESTALL_DO_NOT_RECURSE=1" >> runtests.sh
-  echo "export VERBOSE='$VERBOSE'" >> runtests.sh
-  echo "$0 $ORIG_ARGS $@ &" >> runtests.sh
-  # Note quote change. We want to keep below variables unexpanded.
-  echo 'trap "kill $!" INT' >> runtests.sh
-  echo 'trap "kill $!" TERM' >> runtests.sh
-  # Traps do not fire during commands, but *do* fire during wait.
-  echo 'wait $!' >> runtests.sh
-  $GAINROOT "./runtests.sh"
-  exit $?
+    ! "$WHOAMI" -priv | grep SeTakeOwnershipPrivilege > /dev/null
+    then
+    # On Windows we run the entire test run under GAINROOT, because doing it for
+    # each test is horribly slow.
+    echo "export GAINROOT=" > runtests.sh
+    echo "export TESTALL_DO_NOT_RECURSE=1" >> runtests.sh
+    echo "export VERBOSE='$VERBOSE'" >> runtests.sh
+    echo "$0 $ORIG_ARGS $@ &" >> runtests.sh
+    # Note quote change. We want to keep below variables unexpanded.
+    echo 'trap "kill $!" INT' >> runtests.sh
+    echo 'trap "kill $!" TERM' >> runtests.sh
+    # Traps do not fire during commands, but *do* fire during wait.
+    echo 'wait $!' >> runtests.sh
+    $GAINROOT "./runtests.sh"
+    exit $?
 fi
 
 # Check last -j flag, and check if it is -j1.
 for arg in $MAKEFLAGS
 do
-  case "$arg" in
-    -j|--jobs) PARALLEL=1 ;;
-    -j*) if [ 1 -eq "${arg#-j}" ]; then PARALLEL=; else PARALLEL=1; fi ;;
-    --jobs=*) if [ 1 -eq "${arg#--jobs=}" ]; then PARALLEL=; else PARALLEL=1; fi ;;
-  esac
+    case "$arg" in
+        -j|--jobs)
+            PARALLEL=1 ;;
+        -j*)
+            if [ 1 -eq "${arg#-j}" ]
+            then
+                PARALLEL=
+            else
+                PARALLEL=1
+            fi
+            ;;
+        --jobs=*)
+            if [ 1 -eq "${arg#--jobs=}" ]
+            then
+                PARALLEL=
+            else
+                PARALLEL=1
+            fi
+            ;;
+    esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" -o -n "$RPMVERCMP" ]; then
-  if [ -n "$BINDIR" ]; then
-    echo "--bindir is mutually exclusive with specifying individual binaries."
-    exit 2
-  fi
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" -o -n "$RPMVERCMP" ]
+then
+    if [ -n "$BINDIR" ]
+    then
+        echo "--bindir is mutually exclusive with specifying individual binaries."
+        exit 2
+    fi
 fi
 
 # We assume we're running this script from $objdir, $objdir/tests/acceptance,
@@ -750,12 +831,14 @@ LIBTOOL=${LIBTOOL:-${DEFLIBTOOL}}
 
 if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" -o ! -x "$RPMVERCMP" ]
 then
-	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?  Check '$AGENT', '$CF_PROMISES', '$CF_SERVERD', '$CF_KEY' and '$RPMVERCMP'"
-	exit 1
+    echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?  Check '$AGENT', '$CF_PROMISES', '$CF_SERVERD', '$CF_KEY' and '$RPMVERCMP'"
+    exit 1
 fi
 
-if [ "$UNSAFE_TESTS" = "1" ]; then
-    if [ "$GAINROOT" = "fakeroot" ]; then
+if [ "$UNSAFE_TESTS" = "1" ]
+then
+    if [ "$GAINROOT" = "fakeroot" ]
+    then
         echo "Unsafe tests do not play well together with fakeroot. Please use a different"
         echo "--gainroot (like \"sudo\"), or you will get incorrect results."
         exit 1
@@ -764,43 +847,52 @@ if [ "$UNSAFE_TESTS" = "1" ]; then
     # Make sure test dir is accessible to everyone, because unsafe tests may
     # switch user during the test (users promises do this).
     DIR="$(cd "$(dirname "$0")"; pwd)"
-    while [ "$DIR" != "/" -a "$DIR" != "" ]; do
+    while [ "$DIR" != "/" -a "$DIR" != "" ]
+    do
         $GAINROOT chmod go+rx "$DIR"
         DIR="$(dirname "$DIR")"
     done
 fi
 
-if [ $# -gt 0 ]; then
-  # We run all specified tests according to the defaults (no unsafe ones).
-  for test in "$@"; do
-    if ! expr "$test" : '[/.]' >/dev/null; then
-      test="./$test"
-    fi
+if [ $# -gt 0 ]
+then
+    # We run all specified tests according to the defaults (no unsafe ones).
+    for test in "$@"
+    do
+        if ! expr "$test" : '[/.]' >/dev/null
+        then
+            test="./$test"
+        fi
 
-    if [ -f $test ]; then
-      ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$test"
-    elif [ -d $test ]; then
-      ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find "$test" -name workdir -prune -o -name '*.cf' -print | sort)"
-    else
-      echo "Unable to open test file/directory: $test"
-    fi
-  done
+        if [ -f $test ]
+        then
+            ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$test"
+        elif [ -d $test ]
+        then
+            ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find "$test" -name workdir -prune -o -name '*.cf' -print | sort)"
+        else
+            echo "Unable to open test file/directory: $test"
+        fi
+    done
 else
-  ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . -name workdir -prune -o -name '*.cf' -print | sort)"
+    ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . -name workdir -prune -o -name '*.cf' -print | sort)"
 fi
 
-for addtest in $ALL_TESTS; do
-  if echo "$addtest" | fgrep "/timed/" > /dev/null; then
-    if [ "$TIMED_TESTS" = 1 ]; then
-      eval TESTS_TIMED_$TEST_TIMED_INDEX="$addtest"
-      eval TESTS_TIMEOUT_$TEST_TIMED_INDEX=0
-      eval TESTS_PASSES_$TEST_TIMED_INDEX=0
-      TEST_TIMED_INDEX=$(($TEST_TIMED_INDEX+1))
+for addtest in $ALL_TESTS
+do
+    if echo "$addtest" | fgrep "/timed/" > /dev/null
+    then
+        if [ "$TIMED_TESTS" = 1 ]
+        then
+            eval TESTS_TIMED_$TEST_TIMED_INDEX="$addtest"
+            eval TESTS_TIMEOUT_$TEST_TIMED_INDEX=0
+            eval TESTS_PASSES_$TEST_TIMED_INDEX=0
+            TEST_TIMED_INDEX=$(($TEST_TIMED_INDEX+1))
+        fi
+    else
+        eval TESTS_$TEST_INDEX="$addtest"
+        TEST_INDEX=$(($TEST_INDEX+1))
     fi
-  else
-    eval TESTS_$TEST_INDEX="$addtest"
-    TEST_INDEX=$(($TEST_INDEX+1))
-  fi
 
 done
 
@@ -812,64 +904,69 @@ TESTS_TIMED_REMAINING=$TEST_TIMED_INDEX
 #
 # fd 7 is a /dev/null for quiet execution and stdout for default one
 #
-if [ -z "$QUIET" ]; then
-  exec 7>&1
+if [ -z "$QUIET" ]
+then
+    exec 7>&1
 else
-  exec 7>/dev/null
+    exec 7>/dev/null
 fi
 
 print_header() {
-  ( echo ======================================================================
-    echo Testsuite started at $(date "+%Y-%m-%d %T")
-    echo ----------------------------------------------------------------------
-    echo Total tests: $TESTS_COUNT
-    echo
-    for feature in CRASHING_TESTS NETWORK_TESTS STAGING_TESTS UNSAFE_TESTS LIBXML2_TESTS; do
-      if eval "[ \${$feature} -ne 0 ]"; then
-        echo $feature: enabled
-      else
-        echo $feature: disabled
-      fi
-    done
-    echo
-  ) | tee "$LOG" | tee "$SUMMARY" >&7
+    ( echo ======================================================================
+        echo Testsuite started at $(date "+%Y-%m-%d %T")
+        echo ----------------------------------------------------------------------
+        echo Total tests: $TESTS_COUNT
+        echo
+        for feature in CRASHING_TESTS NETWORK_TESTS STAGING_TESTS UNSAFE_TESTS LIBXML2_TESTS
+        do
+            if eval "[ \${$feature} -ne 0 ]"
+            then
+                echo $feature: enabled
+            else
+                echo $feature: disabled
+            fi
+        done
+        echo
+    ) | tee "$LOG" | tee "$SUMMARY" >&7
 }
 
 print_footer() {
-  # Recalculate results since sub invocations may not have been recorded.
-  PASSED_TESTS=`egrep '^Pass ' $SUMMARY | wc -l | tr -d ' '`
-  FAILED_TESTS=`egrep '^(FAIL|XFAIL) ' $SUMMARY | wc -l | tr -d ' '`
-  SUPPRESSED_FAILURES=`egrep '^XFAIL ' $SUMMARY | wc -l | tr -d ' '`
-  SOFT_FAILURES=`egrep '^SFAIL ' $SUMMARY | wc -l | tr -d ' '`
-  SKIPPED_TESTS=`egrep '^Skip ' $SUMMARY | wc -l | tr -d ' '`
+    # Recalculate results since sub invocations may not have been recorded.
+    PASSED_TESTS=`egrep '^Pass ' $SUMMARY | wc -l | tr -d ' '`
+    FAILED_TESTS=`egrep '^(FAIL|XFAIL) ' $SUMMARY | wc -l | tr -d ' '`
+    SUPPRESSED_FAILURES=`egrep '^XFAIL ' $SUMMARY | wc -l | tr -d ' '`
+    SOFT_FAILURES=`egrep '^SFAIL ' $SUMMARY | wc -l | tr -d ' '`
+    SKIPPED_TESTS=`egrep '^Skip ' $SUMMARY | wc -l | tr -d ' '`
 
-  ( echo
-    echo ======================================================================
-    echo "Testsuite finished at $(date  "+%F %T") ($(($END_TIME - $START_TIME)) seconds)"
-  ) | tee -a "$LOG" | tee -a "$SUMMARY" >&7
+    ( echo
+        echo ======================================================================
+        echo "Testsuite finished at $(date  "+%F %T") ($(($END_TIME - $START_TIME)) seconds)"
+    ) | tee -a "$LOG" | tee -a "$SUMMARY" >&7
 
-  ( echo
-    echo   "Passed tests:  $PASSED_TESTS"
-    printf "Failed tests:  $FAILED_TESTS"
-    if [ $SUPPRESSED_FAILURES -gt 0 ]; then
-      echo " ($SUPPRESSED_FAILURES are known and suppressed)"
-    else
-      echo
+    ( echo
+        echo   "Passed tests:  $PASSED_TESTS"
+        printf "Failed tests:  $FAILED_TESTS"
+        if [ $SUPPRESSED_FAILURES -gt 0 ]
+        then
+            echo " ($SUPPRESSED_FAILURES are known and suppressed)"
+        else
+            echo
+        fi
+        echo   "Skipped tests: $SKIPPED_TESTS"
+        echo   "Soft failures: $SOFT_FAILURES"
+        echo   "Total tests:   $TESTS_COUNT"
+    ) | tee -a "$LOG" | tee -a "$SUMMARY"
+
+    if [ -n "$PRINTLOG" ]
+    then
+        cat "$LOG"
     fi
-    echo   "Skipped tests: $SKIPPED_TESTS"
-    echo   "Soft failures: $SOFT_FAILURES"
-    echo   "Total tests:   $TESTS_COUNT"
-  ) | tee -a "$LOG" | tee -a "$SUMMARY"
-
-  if [ -n "$PRINTLOG" ]; then
-    cat "$LOG"
-  fi
 }
 
 finish_xml() {
-  mv "$XML" xml.tmp
-  (
-    cat <<EOF
+    mv "$XML" xml.tmp
+    (
+        cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="$(pwd)"
            timestamp="$(date "+%F %T")"
@@ -883,130 +980,147 @@ EOF
     cat <<EOF
 </testsuite>
 EOF
-  ) > "$XML"
-  rm -f xml.tmp
+    ) > "$XML"
+    rm -f xml.tmp
 }
 
 collect_results()
 {
-  if [ -n "$STAY_IN_WORKDIR" ]; then
-    return 0;
-  fi
-
-  WORKDIR="$(workdir "$1")"
-  for file in "$LOG" "$SUMMARY" "$XML"; do
-    if [ -e "$WORKDIR/$file" ]; then
-      cat "$WORKDIR/$file" >> "$file"
-      if [ "$NO_CLEAN" = "0" ]; then
-        rm -f "$WORKDIR/$file"
-      fi
+    if [ -n "$STAY_IN_WORKDIR" ]
+    then
+        return 0;
     fi
-  done
-  rmdir "$WORKDIR" >/dev/null 2>&1 || true
+
+    WORKDIR="$(workdir "$1")"
+    for file in "$LOG" "$SUMMARY" "$XML"
+    do
+        if [ -e "$WORKDIR/$file" ]
+        then
+            cat "$WORKDIR/$file" >> "$file"
+            if [ "$NO_CLEAN" = "0" ]
+            then
+                rm -f "$WORKDIR/$file"
+            fi
+        fi
+    done
+    rmdir "$WORKDIR" >/dev/null 2>&1 || true
 }
 
 check_and_run_timed_tests() {
-  TEST_TIMED_INDEX=0
-  time=$(unix_seconds)
-  # Run timed tests if any deadlines have expired.
-  while [ $TEST_TIMED_INDEX -lt $TESTS_TIMED_COUNT ]; do
-    eval test=\$TESTS_TIMED_$TEST_TIMED_INDEX
-    eval timeout=\$TESTS_TIMEOUT_$TEST_TIMED_INDEX
-    if [ -n "$timeout" ] && [ "$time" -ge "$timeout" ]; then
-      eval TESTS_PASSES_$TEST_TIMED_INDEX="\$((\$TESTS_PASSES_$TEST_TIMED_INDEX+1))"
-      eval pass=\$TESTS_PASSES_$TEST_TIMED_INDEX
-      runtest "$AGENT" "$test" "$pass" "TESTS_TIMEOUT_$TEST_TIMED_INDEX"
-      collect_results "$test"
-      eval timeout=\$TESTS_TIMEOUT_$TEST_TIMED_INDEX
-      if [ -z "$timeout" ]; then
-        TESTS_TIMED_REMAINING=$(($TESTS_TIMED_REMAINING - 1))
-      fi
-    fi
-    TEST_TIMED_INDEX=$(($TEST_TIMED_INDEX+1))
-  done
+    TEST_TIMED_INDEX=0
+    time=$(unix_seconds)
+    # Run timed tests if any deadlines have expired.
+    while [ $TEST_TIMED_INDEX -lt $TESTS_TIMED_COUNT ]
+    do
+        eval test=\$TESTS_TIMED_$TEST_TIMED_INDEX
+        eval timeout=\$TESTS_TIMEOUT_$TEST_TIMED_INDEX
+        if [ -n "$timeout" ] && [ "$time" -ge "$timeout" ]
+        then
+            eval TESTS_PASSES_$TEST_TIMED_INDEX="\$((\$TESTS_PASSES_$TEST_TIMED_INDEX+1))"
+            eval pass=\$TESTS_PASSES_$TEST_TIMED_INDEX
+            runtest "$AGENT" "$test" "$pass" "TESTS_TIMEOUT_$TEST_TIMED_INDEX"
+            collect_results "$test"
+            eval timeout=\$TESTS_TIMEOUT_$TEST_TIMED_INDEX
+            if [ -z "$timeout" ]
+            then
+                TESTS_TIMED_REMAINING=$(($TESTS_TIMED_REMAINING - 1))
+            fi
+        fi
+        TEST_TIMED_INDEX=$(($TEST_TIMED_INDEX+1))
+    done
 }
 
 run_all_tests() {
-  TEST_INDEX=0
-  while [ $TEST_INDEX -lt $TESTS_NORMAL_COUNT -o $TESTS_TIMED_REMAINING -gt 0 ]; do
-    check_and_run_timed_tests
+    TEST_INDEX=0
+    while [ $TEST_INDEX -lt $TESTS_NORMAL_COUNT -o $TESTS_TIMED_REMAINING -gt 0 ]
+    do
+        check_and_run_timed_tests
 
-    # Run normal test.
-    if [ $TEST_INDEX -lt $TESTS_NORMAL_COUNT ]; then
-      eval test=\$TESTS_$TEST_INDEX
-      runtest "$AGENT" "$test"
-      collect_results "$test"
-      TEST_INDEX=$(($TEST_INDEX+1))
-    elif [ $TESTS_TIMED_REMAINING -gt 0 ]; then
-      sleep 1
-    fi
-  done
+        # Run normal test.
+        if [ $TEST_INDEX -lt $TESTS_NORMAL_COUNT ]
+        then
+            eval test=\$TESTS_$TEST_INDEX
+            runtest "$AGENT" "$test"
+            collect_results "$test"
+            TEST_INDEX=$(($TEST_INDEX+1))
+        elif [ $TESTS_TIMED_REMAINING -gt 0 ]
+        then
+            sleep 1
+        fi
+    done
 }
 
 run_all_tests_using_make() {
-  MAKEFILE=Makefile.testall
+    MAKEFILE=Makefile.testall
 
-  TEST_BLOCKS=1
-  LAST_WAS_SERIAL=0
+    TEST_BLOCKS=1
+    LAST_WAS_SERIAL=0
 
-  for curr_test in $ALL_TESTS; do
-    # Keep serial tests after preceding tests and before following tests.
-    case "$curr_test" in
-      */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*)
-        if [ $LAST_WAS_SERIAL = 0 ]; then
-          TEST_BLOCKS=$(($TEST_BLOCKS + 1))
-          LAST_WAS_SERIAL=1
-        fi
-        ;;
-      *)
-        if [ $LAST_WAS_SERIAL = 1 ]; then
-          TEST_BLOCKS=$(($TEST_BLOCKS + 1))
-          LAST_WAS_SERIAL=0
-        fi
-        ;;
-    esac
-    case "$curr_test" in
-      */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*|*/timed/*)
-        eval MAKE_RECIPE_LIST$TEST_BLOCKS='$MAKE_RECIPE_LIST'$TEST_BLOCKS'${MAKE_RECIPE_LIST'$TEST_BLOCKS':+ }$curr_test'
-        ;;
-      *)
-        # Separate make target list (notice the "_rule"), because we do not want the target to be a
-        # file name, since make will skip it if it exists (which of course it does).
-        eval MAKE_TARGET_LIST$TEST_BLOCKS='$MAKE_TARGET_LIST'$TEST_BLOCKS'${MAKE_TARGET_LIST'$TEST_BLOCKS':+ }${curr_test}_rule'
-        ;;
-    esac
-  done
-
-  # Redirect to makefile all at once.
-  (
-    printf "tests:\n\n"
-    printf "parallel_block0:\n\n"
-    printf "serial_block0:\n\n"
-    printf "tests: serial_block0 parallel_block0\n\n"
-
-    i=1
-    while [ $i -le $TEST_BLOCKS ]; do
-      if eval test -n '"$MAKE_RECIPE_LIST'$i'"'; then
-        eval printf '"serial_block$i:\n\t@-$0 --stay-in-workdir -j1 $MAKE_RECIPE_LIST'$i'\n\n"'
-      fi
-      printf "serial_block$i: serial_block$(($i-1)) parallel_block$(($i-1))\n\n"
-      eval printf '"parallel_block$i: $MAKE_TARGET_LIST'$i'\n\n"'
-      if eval test -n '"$MAKE_TARGET_LIST'$i'"'; then
-        eval printf '"$MAKE_TARGET_LIST'$i': serial_block$(($i-1)) parallel_block$(($i-1))\n\n"'
-      fi
-      printf "tests: serial_block$i parallel_block$i\n\n"
-
-      i=$(($i + 1))
+    for curr_test in $ALL_TESTS
+    do
+        # Keep serial tests after preceding tests and before following tests.
+        case "$curr_test" in
+            */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*)
+                if [ $LAST_WAS_SERIAL = 0 ]
+                then
+                    TEST_BLOCKS=$(($TEST_BLOCKS + 1))
+                    LAST_WAS_SERIAL=1
+                fi
+                ;;
+            *)
+                if [ $LAST_WAS_SERIAL = 1 ]
+                then
+                    TEST_BLOCKS=$(($TEST_BLOCKS + 1))
+                    LAST_WAS_SERIAL=0
+                fi
+                ;;
+        esac
+        case "$curr_test" in
+            */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*|*/timed/*)
+                eval MAKE_RECIPE_LIST$TEST_BLOCKS='$MAKE_RECIPE_LIST'$TEST_BLOCKS'${MAKE_RECIPE_LIST'$TEST_BLOCKS':+ }$curr_test'
+                ;;
+            *)
+                # Separate make target list (notice the "_rule"), because we do not want the target to be a
+                # file name, since make will skip it if it exists (which of course it does).
+                eval MAKE_TARGET_LIST$TEST_BLOCKS='$MAKE_TARGET_LIST'$TEST_BLOCKS'${MAKE_TARGET_LIST'$TEST_BLOCKS':+ }${curr_test}_rule'
+                ;;
+        esac
     done
 
-    printf "%%_rule: %%\n\t@-$0 --stay-in-workdir -j1 \$<\n\n"
-  ) > $MAKEFILE
+    # Redirect to makefile all at once.
+    (
+        printf "tests:\n\n"
+        printf "parallel_block0:\n\n"
+        printf "serial_block0:\n\n"
+        printf "tests: serial_block0 parallel_block0\n\n"
 
-  ${MAKE:-make} -k -f $MAKEFILE
+        i=1
+        while [ $i -le $TEST_BLOCKS ]
+        do
+            if eval test -n '"$MAKE_RECIPE_LIST'$i'"'
+            then
+                eval printf '"serial_block$i:\n\t@-$0 --stay-in-workdir -j1 $MAKE_RECIPE_LIST'$i'\n\n"'
+            fi
+            printf "serial_block$i: serial_block$(($i-1)) parallel_block$(($i-1))\n\n"
+            eval printf '"parallel_block$i: $MAKE_TARGET_LIST'$i'\n\n"'
+            if eval test -n '"$MAKE_TARGET_LIST'$i'"'
+            then
+                eval printf '"$MAKE_TARGET_LIST'$i': serial_block$(($i-1)) parallel_block$(($i-1))\n\n"'
+            fi
+            printf "tests: serial_block$i parallel_block$i\n\n"
 
-  for curr_test in $ALL_TESTS; do
-    collect_results "$curr_test"
-  done
+            i=$(($i + 1))
+        done
+
+        printf "%%_rule: %%\n\t@-$0 --stay-in-workdir -j1 \$<\n\n"
+    ) > $MAKEFILE
+
+    ${MAKE:-make} -k -f $MAKEFILE
+
+    for curr_test in $ALL_TESTS
+    do
+        collect_results "$curr_test"
+    done
 }
 
 #
@@ -1014,64 +1128,74 @@ run_all_tests_using_make() {
 #
 
 # isEnabled? USE_INOTIFYWATCH
-if [ -n "$USE_INOTIFYWATCH" ]; then
-  if which inotifywatch 2>&1 > /dev/null; then
-    mkdir -p "$BASE_WORKDIR" 2> /dev/null
-    inotifywatch ${INOTIFYWATCH_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWATCH_LOG} &
-    INOTIFYWATCH_PID=$!
-  else
-    echo "info: inotifywatch not detected."
-    exit 0
-  fi
+if [ -n "$USE_INOTIFYWATCH" ]
+then
+    if which inotifywatch 2>&1 > /dev/null
+    then
+        mkdir -p "$BASE_WORKDIR" 2> /dev/null
+        inotifywatch ${INOTIFYWATCH_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWATCH_LOG} &
+        INOTIFYWATCH_PID=$!
+    else
+        echo "info: inotifywatch not detected."
+        exit 0
+    fi
 fi
 
 # isEnabled? USE_INOTIFYWAIT
-if [ -n "$USE_INOTIFYWAIT" ]; then
-  if which inotifywait 2>&1 > /dev/null; then
-    mkdir -p "$BASE_WORKDIR" 2> /dev/null
-    inotifywait ${INOTIFYWAIT_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWAIT_LOG} &
-    INOTIFYWAIT_PID=$!
-  else
-    echo "info: inotifywait not detected."
-    exit 0
-  fi
+if [ -n "$USE_INOTIFYWAIT" ]
+then
+    if which inotifywait 2>&1 > /dev/null
+    then
+        mkdir -p "$BASE_WORKDIR" 2> /dev/null
+        inotifywait ${INOTIFYWAIT_OPTS} $BASE_WORKDIR < /dev/null 2>&1 > ${INOTIFYWAIT_LOG} &
+        INOTIFYWAIT_PID=$!
+    else
+        echo "info: inotifywait not detected."
+        exit 0
+    fi
 fi
 
 trap_handler() {
-  [ -n "$INOTIFYWATCH_PID" ] && kill -9 ${INOTIFYWATCH_PID} 2>&1 > /dev/null
-  [ -n "$INOTIFYWAIT_PID"  ] && kill -9 ${INOTIFYWAIT_PID}  2>&1 > /dev/null
-  exit 0
+    [ -n "$INOTIFYWATCH_PID" ] && kill -9 ${INOTIFYWATCH_PID} 2>&1 > /dev/null
+    [ -n "$INOTIFYWAIT_PID"  ] && kill -9 ${INOTIFYWAIT_PID}  2>&1 > /dev/null
+    exit 0
 }
-if [ -n "$USE_INOTIFYWATCH" -o -n "$USE_INOTIFYWAIT"  ]; then
-  trap trap_handler EXIT INT TERM
+if [ -n "$USE_INOTIFYWATCH" -o -n "$USE_INOTIFYWAIT"  ]
+then
+    trap trap_handler EXIT INT TERM
 fi
 
 START_TIME=$(unix_seconds)
-if [ -z "$STAY_IN_WORKDIR" ]; then
-  # This is top level invocation.
-  print_header
-  rm -f "$XML"
+if [ -z "$STAY_IN_WORKDIR" ]
+then
+    # This is top level invocation.
+    print_header
+    rm -f "$XML"
 fi
-if [ -z "$PARALLEL" -o "$TESTS_COUNT" -eq 1 ]; then
-  run_all_tests
+if [ -z "$PARALLEL" -o "$TESTS_COUNT" -eq 1 ]
+then
+    run_all_tests
 else
-  run_all_tests_using_make
+    run_all_tests_using_make
 fi
 END_TIME=$(unix_seconds)
-if [ -z "$STAY_IN_WORKDIR" ]; then
-  # This is top level invocation.
-  print_footer
-  finish_xml
+if [ -z "$STAY_IN_WORKDIR" ]
+then
+    # This is top level invocation.
+    print_footer
+    finish_xml
 fi
 
-if [ $(($PASSED_TESTS+$FAILED_TESTS+$SOFT_FAILURES+$SKIPPED_TESTS)) -ne $TESTS_COUNT ]; then
-  echo "WARNING: Number of test results does not match number of tests!"
-  echo "Did something go wrong during execution?"
-  exit 2
+if [ $(($PASSED_TESTS+$FAILED_TESTS+$SOFT_FAILURES+$SKIPPED_TESTS)) -ne $TESTS_COUNT ]
+then
+    echo "WARNING: Number of test results does not match number of tests!"
+    echo "Did something go wrong during execution?"
+    exit 2
 fi
-if [ "$FAILED_TESTS" -gt "$SUPPRESSED_FAILURES" ]; then
-  exit 1
+if [ "$FAILED_TESTS" -gt "$SUPPRESSED_FAILURES" ]
+then
+    exit 1
 else
-  exit 0
+    exit 0
 fi
 

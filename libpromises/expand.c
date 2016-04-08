@@ -1406,11 +1406,6 @@ PromiseResult CommonEvalPromise(EvalContext *ctx, const Promise *pp,
 {
     assert(param == NULL);
 
-    if (SHOWREPORTS)
-    {
-        ShowPromise(pp);
-    }
-
     PromiseRecheckAllConstraints(ctx, pp);
 
     return PROMISE_RESULT_NOOP;

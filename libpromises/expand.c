@@ -165,17 +165,17 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
 
     EvalContextStackPushPromiseFrame(ctx, pp, true);
 
-    PromiseIterator *iter_ctx = NULL;
-    size_t i = 0;
     PromiseResult result = PROMISE_RESULT_SKIPPED;
     Buffer *expbuf = BufferNew();
-    iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers);
+    PromiseIterator *iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers);
     /*
      If any of the lists we iterate is null or contains only cf_null values,
      then skip the entire promise.
     */
-    if (!NullIterators(iter_ctx))
+    if (!PromiseIteratorHasNullIterators(iter_ctx))
     {
+        /* TODO no need to iterate for non vars/classes promises during
+         * pre-eval, i.e. if ActOnPromise is CommonEvalPromise(). */
         do
         {
             if (handle)
@@ -191,7 +191,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
             }
 
-            const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
+            const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
             if (!pexp)
             {
                 // excluded
@@ -219,7 +219,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
             }
 
             EvalContextStackPopFrame(ctx);
-            ++i;
+
         } while (PromiseIteratorNext(iter_ctx));
     }
 

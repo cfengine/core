@@ -25,12 +25,15 @@
 #ifndef CFENGINE_ITERATION_H
 #define CFENGINE_ITERATION_H
 
+
 #include <cf3.defs.h>
 
 #include <rlist.h>
 #include <variable.h>
 
+
 typedef struct PromiseIterator_ PromiseIterator;
+
 
 Rlist *ContainerToRlist(const JsonElement *container);
 PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *lists, const Rlist *containers);
@@ -39,8 +42,11 @@ void PromiseIteratorDestroy(PromiseIterator *iter_ctx);
 bool PromiseIteratorHasMore(const PromiseIterator *iter_ctx);
 bool PromiseIteratorNext(PromiseIterator *iter_ctx);
 
-bool NullIterators(const PromiseIterator *iter_ctx);
+bool PromiseIteratorHasNullIterators(const PromiseIterator *iter_ctx);
 
 void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter_ctx);
+
+size_t PromiseIteratorIndex(const PromiseIterator *iter_ctx);
+
 
 #endif

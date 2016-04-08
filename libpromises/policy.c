@@ -2831,52 +2831,66 @@ void *PromiseGetConstraintAsRval(const Promise *pp, const char *lval, RvalType r
 
 /*****************************************************************************/
 
+/*
+ * Check promise constraints while iterating through all slist/containers
+ * combinations, called from ExpandPromiseAndDo() during PRE-EVAL.  This is
+ * currently running also in cf-promises, but it's enough if such errors are
+ * detected in the agent run.
+ *
+ * TODO remove CommonEvalPromise() actuator, that all it does is call this
+ * function, and call this one at the beginning of the main actuators, like
+ * KeepAgentPromise().
+ */
 void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
 {
-    static Item *EDIT_ANCHORS = NULL; /* GLOBAL_X */
-
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
         SyntaxTypeMatch err = ConstraintCheckType(cp);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            PolicyError *error = PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp, "In attribute '%s', %s", cp->lval, SyntaxTypeMatchToString(err));
+            PolicyError *error =
+                PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                               "In attribute '%s', %s",
+                               cp->lval, SyntaxTypeMatchToString(err));
             char *error_str = PolicyErrorToString(error);
-            PolicyErrorDestroy(error);
 
             Log(LOG_LEVEL_ERR, "%s", error_str);
+            PolicyErrorDestroy(error);
             free(error_str);
 
             FatalError(ctx, "Cannot continue");
         }
     }
 
+    /* Check and warn for non-convergence, see commits
+       4f8c19b84327b8f3c2e269173196282ccedfdad9 and
+       30c109d22e170a781a647b04b4b0a4a2f7244871. */
     if (strcmp(pp->parent_promise_type->name, "insert_lines") == 0)
     {
-        /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
+        /* TODO without static var, actually remove this check from here
+         * completely, do it at the end of PRE-EVAL promise iterations
+         * (ExpandPromiseAndDo() after the main loop). */
+        static Item *EDIT_ANCHORS = NULL; /* GLOBAL_X */
 
-        const char *sp = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR);
-        if (sp)
+        const char *sp = PromiseGetConstraintAsRval(pp, "select_line_matching",
+                                                    RVAL_TYPE_SCALAR);
+        if (sp != NULL && !IsExpandable(sp))
         {
-            if (!IsExpandable(sp))
+            /* Avoid adding twice the same select_line_matching anchor. */
+            const char *bun = PromiseGetBundle(pp)->name;
+            const Item *ptr = ReturnItemInClass(EDIT_ANCHORS, sp, bun);
+            if (ptr != NULL)
             {
-                const Item *ptr = NULL;
-                if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
-                {
-                    if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)
-                    {
-                        Log(LOG_LEVEL_INFO,
-                            "insert_lines promise uses the same select_line_matching anchor '%s' as another promise. This will lead to non-convergent behaviour unless 'empty_file_before_editing' is set",
-                            sp);
-                        PromiseRef(LOG_LEVEL_INFO, pp);
-                    }
-                }
-                else
-                {
-                    PrependItem(&EDIT_ANCHORS, sp, PromiseGetBundle(pp)->name);
-                }
+                Log(LOG_LEVEL_INFO,
+                    "insert_lines promise uses the same select_line_matching anchor '%s' as another promise."
+                    " This will lead to non-convergent behaviour unless 'empty_file_before_editing' is set",
+                    sp);
+                PromiseRef(LOG_LEVEL_INFO, pp);
+                return;
             }
+
+            PrependItem(&EDIT_ANCHORS, sp, bun);
         }
     }
 }

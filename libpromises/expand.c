@@ -184,36 +184,42 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
                 BufferClear(expbuf);
                 ExpandScalar(ctx, NULL, "this", handle, expbuf);
                 CanonifyNameInPlace(BufferGet(expbuf));
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), CF_DATA_TYPE_STRING, "source=promise");
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS,
+                                              "handle", BufferData(expbuf),
+                                              CF_DATA_TYPE_STRING, "source=promise");
             }
             else
             {
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS,
+                                              "handle", PromiseID(pp),
+                                              CF_DATA_TYPE_STRING, "source=promise");
             }
 
-            const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
-            if (!pexp)
+            const Promise *pexp =
+                EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
+            if (pexp == NULL)
             {
                 // excluded
                 result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
                 continue;
             }
 
+            /* ACTUAL WORK */
             PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
 
-            // Redmine#6484
-            // Only during pre-evaluation ActOnPromise is set to be a pointer to
-            // CommonEvalPromise. While doing CommonEvalPromise check all the
-            // handles should be not collected and dependent promises should not
-            // be notified.
+            /* iteration_result is always NOOP for PRE-EVAL. */
+            result = PromiseResultUpdate(result, iteration_result);
+
+            /* Redmine#6484: Do not store promise handles during PRE-EVAL, to
+             *               avoid package promise always running. */
             if (ActOnPromise != &CommonEvalPromise)
             {
                 NotifyDependantPromises(ctx, pexp, iteration_result);
             }
 
-            result = PromiseResultUpdate(result, iteration_result);
-
-            if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
+            /* EVALUATE VARS PROMISES -- TODO WHY? */
+            if (strcmp(pp->parent_promise_type->name, "vars") == 0 ||
+                strcmp(pp->parent_promise_type->name, "meta") == 0)
             {
                 VerifyVarPromise(ctx, pexp, true);
             }

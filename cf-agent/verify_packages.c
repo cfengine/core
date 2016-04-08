@@ -2636,7 +2636,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             PromiseResult result = PROMISE_RESULT_NOOP;
 
             EvalContextStackPushPromiseFrame(ctx, pp, false);
-            if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+            if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
             {
                 if (ExecPackageCommand(ctx, command_string, verify, true, a, pp, &result))
                 {
@@ -2689,7 +2689,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
                     EvalContextStackPushPromiseFrame(ctx, ppi, false);
-                    if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+                    if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
                     {
                         if (ExecPackageCommand(ctx, command_string, verify, true, a, ppi, &result))
                         {
@@ -2750,7 +2750,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
                     EvalContextStackPushPromiseFrame(ctx, pp, false);
-                    if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+                    if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
                     {
                         bool ok = ExecPackageCommand(ctx, command_string, verify, true, a, pp, &result);
 
@@ -2907,7 +2907,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
             PromiseResult result = PROMISE_RESULT_NOOP;
             EvalContextStackPushPromiseFrame(ctx, pp, false);
-            if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+            if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
             {
                 if (ExecPackageCommand(ctx, command_string, false, true, a, pp, &result))
                 {
@@ -2940,7 +2940,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
                     EvalContextStackPushPromiseFrame(ctx, pp, false);
-                    if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+                    if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
                     {
                         if (ExecPackageCommand(ctx, command_string, false, true, a, pp, &result))
                         {
@@ -2979,7 +2979,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
                 PromiseResult result = PROMISE_RESULT_NOOP;
                 EvalContextStackPushPromiseFrame(ctx, pp, false);
-                if (EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL))
+                if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
                 {
                     bool ok = ExecPackageCommand(ctx, command_string, false, true, a, pp, &result);
 

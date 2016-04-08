@@ -34,9 +34,13 @@
 
 struct PromiseIterator_
 {
-    Seq *vars; // list of (list-)variables (CfAssoc) to iterate over
-    Seq *var_states; // list of expanded values (Rlist) for each variable
-    bool has_null_list; // true if any list is empty
+    size_t idx;                                /* current iteration index */
+    bool has_null_list;                        /* true if any list is empty */
+    /* list of slist/container variables (of type CfAssoc) to iterate over. */
+    Seq *vars;
+    /* List of expanded values (Rlist) for each variable. The list can contain
+     * NULLs if the slist has cf_null values. */
+    Seq *var_states;
 };
 
 static void RlistAppendContainerPrimitive(Rlist **list, const JsonElement *primitive)
@@ -123,11 +127,14 @@ static bool AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
 
 PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *lists, const Rlist *containers)
 {
-    PromiseIterator *iter = xmalloc(sizeof(PromiseIterator));
+    int lists_len      = RlistLen(lists);
+    int containers_len = RlistLen(containers);
+    PromiseIterator *iter = xcalloc(1, sizeof(*iter));
 
-    iter->vars = SeqNew(RlistLen(lists), DeleteAssoc);
-    iter->var_states = SeqNew(RlistLen(lists), NULL);
+    iter->idx           = 0;
     iter->has_null_list = false;
+    iter->vars       = SeqNew(lists_len + containers_len, DeleteAssoc);
+    iter->var_states = SeqNew(lists_len + containers_len, NULL);
 
     for (const Rlist *rp = lists; rp != NULL; rp = rp->next)
     {
@@ -174,12 +181,20 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
         iter->has_null_list |= !AppendIterationVariable(iter, new_var);
     }
 
+    Log(LOG_LEVEL_DEBUG,
+        "Start iterating over %3d slists and %3d containers,"
+        " for promise:  '%s'",
+        lists_len, containers_len, pp->promiser);
+
     // We now have a control list of list-variables, with internal state in state_ptr
     return iter;
 }
 
 void PromiseIteratorDestroy(PromiseIterator *iter)
 {
+    Log(LOG_LEVEL_DEBUG, "Completed %5zu iterations over the promise",
+        iter->idx + 1);
+
     if (iter)
     {
         for (size_t i = 0; i < SeqLength(iter->vars); i++)
@@ -199,7 +214,7 @@ void PromiseIteratorDestroy(PromiseIterator *iter)
     }
 }
 
-bool NullIterators(const PromiseIterator *iter)
+bool PromiseIteratorHasNullIterators(const PromiseIterator *iter)
 {
     return iter->has_null_list;
 }
@@ -265,60 +280,66 @@ static bool VariableStateHasMore(const PromiseIterator *iter, size_t index)
     case RVAL_TYPE_LIST:
         {
             const Rlist *state = SeqAt(iter->var_states, index);
-            return state && state->next;
+            assert(state != NULL);
+
+            return (state->next != NULL);
         }
 
-    case RVAL_TYPE_CONTAINER:
-    case RVAL_TYPE_FNCALL:
-    case RVAL_TYPE_NOPROMISEE:
-    case RVAL_TYPE_SCALAR:
-        ProgrammingError("Unhandled case in switch %d", var->rval.type);
+    default:
+        ProgrammingError("Variable is not an slist (variable type: %d)",
+                         var->rval.type);
     }
 
     return false;
 }
 
-static bool IncrementIterationContextInternal(PromiseIterator *iter, size_t index)
+static bool IncrementIterationContextInternal(PromiseIterator *iter, size_t wheel_idx)
 {
-    if (index == SeqLength(iter->vars))
+    /* How many wheels (slists) we have. */
+    size_t wheel_max = SeqLength(iter->vars);
+
+    if (wheel_idx == wheel_max)
     {
         return false;
     }
 
+    assert(wheel_idx < wheel_max);
+
     // Go ahead and increment
-    if (!VariableStateHasMore(iter, index))
+    if (VariableStateHasMore(iter, wheel_idx))
     {
-        /* This wheel has come to full revolution, so move to next */
-        if (index < SeqLength(iter->vars))
+        /* Update the current wheel, i.e. get the next slist item. */
+        // printf("%*c\n", (int) wheel_idx + 1, 'I');
+        return VariableStateIncrement(iter, wheel_idx);
+    }
+    else                          /* this wheel has come to full revolution */
+    {
+        if (IncrementIterationContextInternal(iter, wheel_idx + 1))
         {
-            /* Increment next wheel */
-            if (IncrementIterationContextInternal(iter, index + 1))
-            {
-                /* Not at end yet, so reset this wheel */
-                return VariableStateReset(iter, index);
-            }
-            else
-            {
-                /* Reached last variable wheel - pass up */
-                return false;
-            }
+            /* We successfully increased one of the next wheels, so reset this
+             * one to iterate over all possible states. */
+            // printf("%*c\n", (int) wheel_idx + 1, 'R');
+            return VariableStateReset(iter, wheel_idx);
         }
         else
         {
-            /* Reached last variable wheel - pass up */
+            /* Reached last slist wheel - pass up. */
             return false;
         }
-    }
-    else
-    {
-        /* Update the current wheel */
-        return VariableStateIncrement(iter, index);
     }
 }
 
 bool PromiseIteratorNext(PromiseIterator *iter_ctx)
 {
-    return IncrementIterationContextInternal(iter_ctx, 0);
+    if (IncrementIterationContextInternal(iter_ctx, 0))
+    {
+        iter_ctx->idx++;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter)
@@ -352,4 +373,9 @@ void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter
             break;
         }
     }
+}
+
+size_t PromiseIteratorIndex(const PromiseIterator *iter_ctx)
+{
+    return iter_ctx->idx;
 }

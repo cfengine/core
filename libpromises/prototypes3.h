@@ -78,9 +78,6 @@ ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TranslatePath, char *, new, const char *
 ENTERPRISE_VOID_FUNC_4ARG_DECLARE(void, TrackValue, char *, date, double, kept, double, repaired, double, notkept);
 ENTERPRISE_FUNC_4ARG_DECLARE(bool, ListHostsWithClass, EvalContext *, ctx, Rlist **, return_list, char *, class_name, char *, return_format);
 
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, ShowPromises, const Seq *, bundles, const Seq *, bodies);
-ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ShowPromise, const Promise *, pp);
-
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, GetObservable, int, i, char *, name, char *, desc);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, SetMeasurementPromises, Item **, classlist);
 

@@ -866,7 +866,7 @@ static void Get3Environment(EvalContext *ctx)
     FILE *fp = fopen(env, "r");
     if (fp == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "\nUnable to detect environment from cf-monitord");
+        Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
         return;
     }
 

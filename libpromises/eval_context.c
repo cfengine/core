@@ -2349,12 +2349,6 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int persistence_ttl,
                           PersistentClassPolicy policy, ContextScope context_scope)
 {
-
-    if (list)
-    {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-    }
-
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         char *classname = xstrdup(RlistScalarValue(rp));
@@ -2404,12 +2398,6 @@ static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int pers
         }
         free(classname);
     }
-
-    if (list)
-    {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-    }
-
 }
 
 static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)

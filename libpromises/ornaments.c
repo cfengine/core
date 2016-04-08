@@ -36,13 +36,11 @@ void SpecialTypeBanner(TypeSequence type, int pass)
     {
         Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
         Log(LOG_LEVEL_VERBOSE, "C: BEGIN classes / conditions (pass %d)", pass);
-        Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
     }
     if (type == TYPE_SEQUENCE_VARS)
     {
         Log(LOG_LEVEL_VERBOSE, "V: .........................................................");
         Log(LOG_LEVEL_VERBOSE, "V: BEGIN variables (pass %d)", pass);
-        Log(LOG_LEVEL_VERBOSE, "V: .........................................................");
     }
 }
 
@@ -125,9 +123,6 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
         Log(LOG_LEVEL_VERBOSE, "P:\n");
         Log(LOG_LEVEL_VERBOSE, "P:    Comment:  %s", pp->comment);
     }
-
-    Log(LOG_LEVEL_VERBOSE, "P: .........................................................");
-    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 /****************************************************************************************/

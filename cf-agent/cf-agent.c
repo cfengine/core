@@ -1674,7 +1674,9 @@ static void BannerStatus(PromiseResult status, char *type, char *name)
         break;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "P: END %s promise (%.30s...)\n", type, name);
+    Log(LOG_LEVEL_VERBOSE, "P: END %s promise (%.30s%s)\n",
+        type, name,
+        (strlen(name) > 30) ? "..." : "");
 }
 
 /*********************************************************************/

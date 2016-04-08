@@ -1674,7 +1674,7 @@ static void BannerStatus(PromiseResult status, char *type, char *name)
         break;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "P: END %s promise (%.30s%s)\n",
+    Log(LOG_LEVEL_VERBOSE, "P: END %s promise (%.30s%s)",
         type, name,
         (strlen(name) > 30) ? "..." : "");
 }
@@ -1866,7 +1866,6 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
-    Log(LOG_LEVEL_VERBOSE, "\n");
     Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
     Log(LOG_LEVEL_VERBOSE, "A: Bundle Accounting Summary for '%s' in namespace %s", bundle->name, bundle->ns);
 
@@ -1874,7 +1873,6 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     {
         Log(LOG_LEVEL_VERBOSE, "A: Zero promises executed for bundle '%s'", bundle->name);
         Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
-        Log(LOG_LEVEL_VERBOSE, "\n");
         return PROMISE_RESULT_NOOP;
     }
     else
@@ -1899,7 +1897,6 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
             EndMeasure(NULL, start);
         }
         Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
-        Log(LOG_LEVEL_VERBOSE, "\n");
     }
 
     // return the worst case for the bundle status

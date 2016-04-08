@@ -548,6 +548,29 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
     return false;
 }
 
+static void PrintStringIndexLine(int prefix_spaces, int len)
+{
+    char arrow_str[CF_BUFSIZE];
+    arrow_str[0] = '^';
+    arrow_str[1] = '\0';
+    char index_str[CF_BUFSIZE];
+    index_str[0] = '0';
+    index_str[1] = '\0';
+    for (int lineindex = 10; lineindex <= len; lineindex += 10)
+    {
+        char num[11];
+        xsnprintf(num, sizeof(num), "% 10d", lineindex);
+        strlcat(index_str, num, sizeof(index_str));
+        strlcat(arrow_str, "         ^", sizeof(arrow_str));
+    }
+
+    // Prefix the beginning of the indexes with the given number.
+    char fmt[100];
+    xsnprintf(fmt, sizeof(fmt), "%% %ds%%s", prefix_spaces);
+    Log(LOG_LEVEL_DEBUG, fmt, "", arrow_str);
+    Log(LOG_LEVEL_DEBUG, fmt, "Index: ", index_str);
+}
+
 static void MaybeFixStartTime(const char *line,
                               time_t pstime,
                               char **names,
@@ -601,7 +624,14 @@ static bool SplitProcLine(const char *line,
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Trying to match ps line '%s'", line);
+    size_t linelen = strlen(line);
+
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        Log(LOG_LEVEL_DEBUG, "Parsing ps line: '%s'", line);
+        // Makes the entry line up with the line above.
+        PrintStringIndexLine(18, linelen);
+    }
 
     /*
       All platforms have been verified to not produce overlapping fields with
@@ -652,7 +682,6 @@ Solaris 9:
         * The process is a zombie.
     */
 
-    size_t linelen = strlen(line);
     bool zombie = false;
 
     if (ZombiesCanHaveEmptyColumns())
@@ -890,6 +919,13 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
 {
     char title[16];
     int col, offset = 0;
+
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        Log(LOG_LEVEL_DEBUG, "Parsing ps line: '%s'", proc);
+        // Makes the entry line up with the line above.
+        PrintStringIndexLine(18, strlen(proc));
+    }
 
     for (col = 0; col < CF_PROCCOLS; col++)
     {

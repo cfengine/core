@@ -54,7 +54,7 @@
 #endif
 TABLE_STORAGE Item *PROCESSTABLE = NULL;
 
-#ifdef __sun
+#if defined(__sun) || defined(TEST_UNIT_TEST)
 static StringMap *UCB_PS_MAP = NULL;
 #define UCB_PS "/usr/ucb/ps"
 #define UCB_PS_ARGS "axwww"
@@ -62,15 +62,35 @@ static StringMap *UCB_PS_MAP = NULL;
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, bool anchored, char **colNames, char **line);
-static int SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
+static bool SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
 static void ApplyPlatformExtraTable(char **names, char **columns);
+static bool ZombiesCanHaveEmptyColumns(void);
 
 /***************************************************************************/
+
+// For unit testing
+#ifndef TEST_UNIT_TEST
+
+static bool ZombiesCanHaveEmptyColumns(void)
+{
+#ifdef _AIX
+    /*
+      Ideally this should be autoconf-tested, but it's really hard to do so. ATM
+      AIX is the only platform known to produce empty columns in ps output. See
+      SplitProcLine() to see the exact effects this has.
+    */
+    return true;
+#else
+    return false;
+#endif
+}
+
+#endif // TEST_UNIT_TEST
 
 static bool SelectProcess(const char *procentry,
                           time_t pstime,
@@ -88,6 +108,8 @@ static bool SelectProcess(const char *procentry,
     assert(process_regex);
 
     StringSet *process_select_attributes = StringSetNew();
+
+    memset(column, 0, sizeof(column));
 
     if (!SplitProcLine(procentry, pstime, names, start, end, column))
     {
@@ -236,7 +258,7 @@ Item *SelectProcesses(const char *process_name, ProcessSelect a, bool attrselect
     int start[CF_PROCCOLS];
     int end[CF_PROCCOLS];
 
-    GetProcessColumnNames(processes->name, &names[0], start, end);
+    GetProcessColumnNames(processes->name, names, start, end);
 
     /* TODO: use actual time of ps-run, as time(NULL) may be later. */
     time_t pstime = time(NULL);
@@ -526,360 +548,11 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
     return false;
 }
 
-/*******************************************************************/
-/* fields must be char *fields[CF_PROCCOLS] in fact. */
-/* pstime should be the time at which ps was run. */
-
-static int SplitProcLine(const char *line, time_t pstime,
-                         char **names, int *start, int *end,
-                         char **fields)
+static void MaybeFixStartTime(const char *line,
+                              time_t pstime,
+                              char **names,
+                              char **fields)
 {
-    if (line == NULL || line[0] == '\0')
-    {
-        return false;
-    }
-
-    memset(fields, 0, sizeof(char *) * CF_PROCCOLS);
-
-    int prior = -1; /* End of last header-selected field. */
-    const size_t linelen = strlen(line);
-    const char *sp = line; /* Just after last space-separated field. */
-    /* Scan in parallel for two heuristics: space-delimited fields
-     * found using sp, and ones inferred from the column headers. */
-
-    /* TODO: we test with isspace() mostly, which makes sense as TAB
-     * might be used to enable field alignment; but we make no attempt
-     * to account for the alignment offsets this may introduce, that
-     * would mess up the heuristic based on column headers.  Hard to
-     * do robustly, as we'd need to assume a tab-width and apply the
-     * same accounting to the headers (where start and end are indices
-     * of bytes, we'd need a third array for tab-induced offsets
-     * between headers). */
-
-    for (int i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
-    {
-        /* Space-delimited heuristic, from sp to just before ep: */
-        while (isspace((unsigned char) sp[0]))
-        {
-            sp++;
-        }
-        const char *ep = sp;
-
-        Log(LOG_LEVEL_DEBUG, "Starting with field '%s' start position %td",
-            names[i], sp - line);
-
-        /* Header-driven heuristic, field from line[s] to line[e].
-         * Start with the column header's position and maybe grow
-         * outwards. */
-        int s = start[i], e;
-
-        /* If the previous field over-spilled into this one, our start
-         * may be under our header, not directly below the header's
-         * start; but only believe this if the earlier field is
-         * followed by one space and the subsequent field does start
-         * under our header.  Otherwise, allow that the prior field
-         * may be abutting this field, or this field may have
-         * overflowed left into the prior field causing the prior to
-         * (mistakenly) think it includes the present. */
-        if (s <= prior &&
-            prior + 2 <= end[i] &&
-            line[prior + 1] == ' ' &&
-            line[prior + 2] != '\0' &&
-            !isspace((unsigned char) line[prior + 2]))
-        {
-            s = prior + 2;
-            Log(LOG_LEVEL_DEBUG, "Assuming start of field '%s' is at position "
-                "%d, based on prior = %d and header end = %d", names[i], s+1,
-                prior, end[i]);
-        }
-
-        if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
-        {
-            e = linelen - 1;
-            /* Extend space-delimited field to line end: */
-            while (ep[0] && ep[0] != '\n')
-            {
-                ep++;
-            }
-            /* But trim trailing hspace: */
-            while (isspace((unsigned char)ep[-1]))
-            {
-                ep--;
-            }
-        }
-        else
-        {
-            e = end[i];
-
-            /* It's possible the present field has been shunted left
-             * to make way for an over-sized number or date to the
-             * right.  This can confuse the numeric check below, on
-             * which left-overspill is conditioned - it fails to
-             * recognise this field as numeric, so doesn't check for
-             * it overspilling to the left.  Look to see whether we
-             * should move e left a bit: this is a conservative check,
-             * that'll be revisited below. */
-            int back = start[i + 1];
-            while (back > s && !isspace((unsigned char) line[back]))
-            {
-                back--;
-            }
-            if (back > s && back <= e &&
-                /* back > s implies isspace(line[back]), with no
-                 * further space before the next field; if this is a
-                 * single space, it's credibly the separator between
-                 * our field, shunted left, and this over-spilled
-                 * field: */
-                line[back] == ' ' &&
-                !isspace((unsigned char) line[back - 1]))
-            {
-                /* So we have a non-empty field that ends under our
-                 * header but before e; adjust e. */
-                e = back - 1;
-                Log(LOG_LEVEL_DEBUG, "Moved end of field '%s' to %d, based on "
-                    "field '%s' left spilling to %d", names[i], e+1, names[i+1],
-                    back);
-            }
-
-            /* Extend space-delimited to next space: */
-            while (ep[0] && !isspace((unsigned char)ep[0]))
-            {
-                ep++;
-            }
-            Log(LOG_LEVEL_DEBUG, "Found end of field '%s' at %td",
-                names[i], ep - line);
-        }
-        /* ep points at the space (or '\0') *following* the word or
-         * final field. */
-
-        /* Some ps stimes may contain spaces, e.g. "Jan 25" */
-        if (strcmp(names[i], "STIME") == 0 &&
-            ep - sp == 3)
-        {
-            const char *np = ep;
-            while (isspace((unsigned char) np[0]))
-            {
-                np++;
-            }
-            if (isdigit((unsigned char) np[0]))
-            {
-                do
-                {
-                    np++;
-                } while (isdigit((unsigned char) np[0]));
-                ep = np;
-            }
-            Log(LOG_LEVEL_DEBUG, "For time based field '%s', moved end pointer "
-                "to %td.", names[i], ep - line);
-        }
-
-        /* Numeric columns, including times, are apt to grow leftwards
-         * and be right-aligned; identify candidates for this by
-         * line[e] being a digit.  Text columns are typically
-         * left-aligned and may grow rightwards; identify candidates
-         * for this by line[s] being alphabetic.  Some columns shall
-         * match both (e.g. STIME).  Some numeric columns may grow
-         * left even as far as under the heading of the next column
-         * (seen with ps -fel's SZ spilling left into ADDR's space on
-         * Linux).  While widening, it's OK to include a stray space;
-         * we'll trim that afterwards.  Overspill from neighbouring
-         * columns can muck up alignment, so "digit" means any
-         * character that can appear in a numeric field (we may need
-         * to tweak "alphabetic" likewise for text fields; the user
-         * field can, for example, have a '+' appended). */
-        bool overspilt = false;
-
-        /* Numeric fields may include [-.:] and perhaps other
-         * punctuators: */
-#define IsNumberish(c) (isdigit((unsigned char)(c)) || ispunct((unsigned char)(c)))
-
-        /* Right-aligned numeric: move s left until we run outside the
-         * field or find space. */
-        if (IsNumberish(line[e]))
-        {
-            bool number = i > 0; /* Should we check for under-spill ? */
-            int outer = number ? end[i - 1] + 1 : 0;
-            int orig_s = s;
-            while (s >= outer && !isspace((unsigned char) line[s]))
-            {
-                if (number && !IsNumberish(line[s]))
-                {
-                    number = false;
-                }
-                s--;
-            }
-            Log(LOG_LEVEL_DEBUG, "Moved start of field '%s' to %d, based on "
-                "not finding space between %d and %d", names[i],
-                s+1, s+1, orig_s+1);
-
-            /* Numeric field might overspill under previous header: */
-            if (s < outer)
-            {
-                int spill = s;
-                s = outer; /* By default, don't overlap previous column. */
-
-                if (number && IsNumberish(line[spill]))
-                {
-                    outer = start[i - 1];
-                    /* Explore all the way to the start-column of the
-                     * previous field's header.  If we get there, in
-                     * digits-and-punctuation, we've got two numeric
-                     * fields that abut; we can't do better than assume
-                     * the boundary is under the right end of the previous
-                     * column label (which is what our parsing of the
-                     * previous column assumed).  So leave s where it is,
-                     * just after the previous field's header's
-                     * end-column. */
-
-                    while (spill > outer)
-                    {
-                        spill--;
-                        if (!IsNumberish(line[spill]))
-                        {
-                            s = spill + 1; /* Confirmed overlap. */
-                            break;
-                        }
-                    }
-                }
-            }
-            Log(LOG_LEVEL_DEBUG, "Moved field '%s' start to %d, based on "
-                "following digits backwards", names[i], s+1);
-
-            overspilt = IsNumberish(line[e + 1]);
-        }
-#undef IsNumberish
-
-        bool abut = false;
-        /* Left-aligned text or numeric misaligned by overspill; move
-         * e right (if there's any right to move into; last column
-         * already reaches end of line): */
-        if (line[e + 1] &&
-            (overspilt || isalpha((unsigned char) line[s])))
-        {
-            assert(i + 1 < CF_PROCCOLS && names[i + 1]);
-            int outer = start[i + 1]; /* Start of next field's header. */
-            int beyond = end[i + 1]; /* End of next field's header. */
-            if (beyond > linelen)
-            {
-                /* Command is shorter than its header. */
-                assert(i + 2 >= CF_PROCCOLS || NULL == names[i + 2]);
-                beyond = linelen;
-            }
-            assert(beyond >= outer);
-
-            int out = e;
-            do
-            {
-                out++;
-            } while (out < beyond && !isspace((unsigned char) line[out]));
-
-            if (out < outer)
-            {
-                /* Simple extension to the right, no overlap: we're on
-                 * a space just before the next field's header. */
-                e = out - 1;
-                Log(LOG_LEVEL_DEBUG, "Moved end of field '%s' to %d, based on "
-                    "it being text and there being no space before position.",
-                    names[i], e+1);
-            }
-            else if (out == beyond)
-            {
-                /* This looks like we're actually looking at the next
-                 * field over-spilling left so far that it reaches
-                 * under our header; but we did previously check for
-                 * this and amend e left-wards if it's credible; so
-                 * we're now looking at a case where it isn't;
-                 * probably our columns abut, with no space in
-                 * between.  The best we can do is include the text
-                 * between columns as part of both columns :-( */
-                abut = true;
-                prior = e; /* Before adjusting it: */
-                e = outer - 1;
-                char fmt[CF_BUFSIZE];
-                xsnprintf(fmt, sizeof(fmt), "Overlap detected, field '%%s' will "
-                          "take on value '%%.%ds', based on next field spilling "
-                          "into this one.", e - s);
-                Log(LOG_LEVEL_DEBUG, fmt, names[i], line + s + 1);
-            }
-            else
-            {
-                /* Our word appears to over-spill under the next
-                 * header.  See if that's credible.  If the next is a
-                 * left-aligned field, it'll follow ours after exactly
-                 * a simple space.  If it's right-aligned (numeric),
-                 * it'll still follow after a single space unless it
-                 * has enough space to fit under its header after more
-                 * than one space. */
-
-                assert(out < beyond && isspace((unsigned char) line[out]));
-                if ((line[out] == ' ' && line[out + 1] &&
-                     !isspace((unsigned char) line[out + 1])) ||
-                    (isdigit((unsigned char) line[beyond]) &&
-                     isspace((unsigned char) line[beyond + 1])))
-                {
-                    e = out - 1;
-                }
-                else
-                {
-                    e = outer - 1;
-                }
-                Log(LOG_LEVEL_DEBUG, "Field '%s' end moved to %d after "
-                    "checking overspill to the right", names[i], e+1);
-            }
-        }
-        if (!abut)
-        {
-            prior = e;
-        }
-
-        /* Strip off any leading and trailing spaces: */
-        while (isspace((unsigned char) line[s]))
-        {
-            s++;
-        }
-        /* ... but stop if the field is empty ! */
-        while (s <= e && isspace((unsigned char) line[e]))
-        {
-            e--;
-        }
-
-        /* Grumble if the two heuristics don't agree: */
-        size_t wordlen = ep - sp;
-        if (e < s ? ep > sp : (sp != line + s || ep != line + e + 1))
-        {
-            char word[CF_SMALLBUF];
-            if (wordlen >= CF_SMALLBUF)
-            {
-                wordlen = CF_SMALLBUF - 1;
-            }
-            memcpy(word, sp, wordlen);
-            word[wordlen] = '\0';
-
-            char column[CF_SMALLBUF];
-            if (s <= e)
-            {
-                /* Copy line[s through e] inclusive:  */
-                const size_t len = MIN(1 + e - s, CF_SMALLBUF - 1);
-                memcpy(column, line + s, len);
-                column[len] = '\0';
-            }
-            else
-            {
-                column[0] = '\0';
-            }
-
-            Log(LOG_LEVEL_VERBOSE,
-                "Unreliable fuzzy parsing of ps output (%s) %s: '%s' != '%s'",
-                line, names[i], word, column);
-            Log(LOG_LEVEL_DEBUG, "sp = '%.4s...', ep = '%.4s...', s = %d, e = %d",
-                sp, ep, s, e);
-        }
-
-        /* Fall back on word if column got an empty answer: */
-        fields[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(line + s, 1 + e - s);
-        sp = ep;
-    }
-
     /* Since start times can be very imprecise (e.g. just a past day's
      * date, or a past year), calculate a better value from elapsed
      * time, if available: */
@@ -896,7 +569,7 @@ static int SplitProcLine(const char *line, time_t pstime,
                 time_t value = pstime - (time_t) elapsed;
 
                 Log(LOG_LEVEL_DEBUG,
-                    "SplitProcLine: Replacing parsed start time %s with %s",
+                    "processes: Replacing parsed start time %s with %s",
                     fields[j], ctime(&value));
 
                 free(fields[j]);
@@ -910,6 +583,225 @@ static int SplitProcLine(const char *line, time_t pstime,
                 line);
         }
     }
+}
+
+/*******************************************************************/
+/* fields must be char *fields[CF_PROCCOLS] in fact. */
+/* pstime should be the time at which ps was run. */
+
+static bool SplitProcLine(const char *line,
+                          time_t pstime,
+                          char **names,
+                          int *start,
+                          int *end,
+                          char **fields)
+{
+    if (line == NULL || line[0] == '\0')
+    {
+        return false;
+    }
+
+    Log(LOG_LEVEL_DEBUG, "Trying to match ps line '%s'", line);
+
+    /*
+      All platforms have been verified to not produce overlapping fields with
+      currently used ps tools, and hence we can parse based on space separation
+      (with some caveats, see below).
+
+      Dates may have spaces in them, like "May 20", or not, like "May20". Prefer
+      to match a date without a space as long as it contains a number, but fall
+      back to parsing letters followed by a space and a date.
+
+      Commands will also have extra spaces, but it is always the last field, so
+      we just include spaces at this point in the parsing.
+
+      An additional complication is that some platforms (only AIX is known at
+      the time of writing) can have empty columns when a process is a
+      zombie. The plan is to match for this by checking the range between start
+      and end directly below the header (same byte position). If the whole range
+      is whitespace we consider the entry missing. The columns are (presumably)
+      guaranteed to line up correctly for this, since zombie processes do not
+      have memory usage which can produce large, potentially alignment-altering
+      numbers. However, we cannot do this whitespace check in general, because
+      non-zombie processes may shift columns in a way that leaves some columns
+      apparently (but not actually) empty.
+
+      Take these two examples:
+
+AIX:
+    USER     PID    PPID    PGID  %CPU  %MEM   VSZ NI ST    STIME        TIME COMMAND
+ jenkins 1036484  643150 1036484   0.0   0.0   584 20 A  09:29:20    00:00:00 bash
+          254232  729146  729146                   20 Z              00:00:00 <defunct>
+
+Solaris 9:
+    USER   PID %CPU %MEM   SZ  RSS TT      S    STIME        TIME COMMAND
+ jenkins 29769  0.0  0.0  810 2976 pts/1   S 07:22:43        0:00 /usr/bin/perl ../../ps.pl
+ jenkins 29835    -    -    0    0 ?       Z        -        0:00 <defunct>
+ jenkins 10026  0.0  0.3 30927 143632 ?       S   Jan_21    01:18:58 /usr/jdk/jdk1.6.0_45/bin/java -jar slave.jar
+
+      Due to how the process state 'S' is shifted under the 'S' header in the
+      second example, it is not possible to separate between this and a missing
+      column. Counting spaces is no good, because commands can contain an
+      arbitrary number of spaces, and there is no way to know the byte position
+      where a command begins. Hence the only way is to base this algorithm on
+      platform and only do the "empty column detection" when:
+        * The platform is known to produce empty columns for zombie processes
+          (see ZombiesCanHaveEmptyColumns())
+        * The platform is known to not shift columns when the process is a
+          zombie.
+        * The process is a zombie.
+    */
+
+    size_t linelen = strlen(line);
+    bool zombie = false;
+
+    if (ZombiesCanHaveEmptyColumns())
+    {
+        // Find out if the process is a zombie. This check is known to work on
+        // AIX, other platforms have not been checked.
+        for (int field = 0; names[field]; field++)
+        {
+            if (strcmp(names[field], "ST") == 0)
+            {
+                // Check for zombie state.
+                if (start[field] < linelen)
+                {
+                    // 'Z' letter with word boundary on each side.
+                    if (isspace(line[start[field] - 1])
+                        && line[start[field]] == 'Z'
+                        && (isspace(line[start[field] + 1])
+                            || line[start[field] + 1] == '\0'))
+                    {
+                        Log(LOG_LEVEL_DEBUG, "Detected zombie process, "
+                            "skipping parsing of empty ps fields.");
+                        zombie = true;
+                    }
+                }
+            }
+        }
+    }
+
+    int field = 0;
+    int pos = 0;
+    while (names[field] && pos <= linelen)
+    {
+        // Some sanity checks.
+        if (start[field] >= linelen)
+        {
+            Log(LOG_LEVEL_ERR, "ps output line '%s' is shorter than its "
+                "associated header.", line);
+            return false;
+        }
+
+        bool cmd = (strcmp(names[field], "CMD") == 0 ||
+                    strcmp(names[field], "COMMAND") == 0);
+        bool stime = !cmd && (strcmp(names[field], "STIME") == 0);
+
+        // Equal boolean results, either both must be true, or both must be
+        // false. IOW we must either both be at the last field, and it must be
+        // CMD, or none of those.      |
+        //                             v
+        if ((names[field + 1] != NULL) == cmd)
+        {
+            Log(LOG_LEVEL_ERR, "Last field of ps output '%s' is not "
+                "CMD/COMMAND.", line);
+            return false;
+        }
+
+        // If zombie, check if field is empty.
+        if (ZombiesCanHaveEmptyColumns() && zombie)
+        {
+            int empty_pos = start[field];
+            bool empty = true;
+            while (empty_pos <= end[field])
+            {
+                if (!isspace(line[empty_pos]))
+                {
+                    empty = false;
+                    break;
+                }
+                empty_pos++;
+            }
+            if (empty)
+            {
+                Log(LOG_LEVEL_DEBUG, "Detected empty '%s' field between "
+                    "positions %d and %d\n", names[field], start[field],
+                    end[field]);
+                fields[field] = xstrdup("");
+                pos = end[field] + 1;
+                field++;
+                continue;
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "Detected non-empty '%s' field between "
+                    "positions %d and %d\n", names[field], start[field],
+                    end[field]);
+            }
+        }
+
+        // Preceding space.
+        while (isspace(line[pos]))
+        {
+            pos++;
+        }
+
+        // Field.
+        int last = pos;
+        if (cmd)
+        {
+            // Last field, slurp up the rest, but discard trailing whitespace.
+            last = linelen;
+            while (isspace(line[last - 1]))
+            {
+                last--;
+            }
+        }
+        else if (stime)
+        {
+            while (isalpha(line[last]))
+            {
+                last++;
+            }
+            if (isspace(line[last]))
+            {
+                // In this case we expect one, and only one, space.
+                // It means what we first read was the month, now is the date.
+                last++;
+                if (!line[last] || !isdigit(line[last]))
+                {
+                    char fmt[200];
+                    xsnprintf(fmt, sizeof(fmt), "Unable to parse STIME entry in ps "
+                              "output line '%%s': Expected day number after "
+                              "'%%.%ds'", (last - 1) - pos);
+                    Log(LOG_LEVEL_ERR, fmt, line, line + pos);
+                    return false;
+                }
+            }
+            while (line[last] && !isspace(line[last]))
+            {
+                last++;
+            }
+        }
+        else
+        {
+            // Generic fields
+            while (line[last] && !isspace(line[last]))
+            {
+                last++;
+            }
+        }
+
+        // Make a copy and store in fields.
+        fields[field] = xstrndup(line + pos, last - pos);
+        Log(LOG_LEVEL_DEBUG, "'%s' field '%s' extracted from between positions "
+            "%d and %d", names[field], fields[field], pos, last - 1);
+
+        pos = last;
+        field++;
+    }
+
+    MaybeFixStartTime(line, pstime, names, fields);
 
     return true;
 }
@@ -944,6 +836,8 @@ bool IsProcessNameRunning(char *procNameRegex)
     bool matched = false;
     int i;
 
+    memset(colHeaders, 0, sizeof(colHeaders));
+
     if (PROCESSTABLE == NULL)
     {
         Log(LOG_LEVEL_ERR, "IsProcessNameRunning: PROCESSTABLE is empty");
@@ -957,6 +851,7 @@ bool IsProcessNameRunning(char *procNameRegex)
     for (const Item *ip = PROCESSTABLE->next; !matched && ip != NULL; ip = ip->next) // iterate over ps lines
     {
         char *lineSplit[CF_PROCCOLS];
+        memset(lineSplit, 0, sizeof(lineSplit));
 
         if (NULL_OR_EMPTY(ip->name))
         {
@@ -1303,7 +1198,7 @@ const char *GetProcessTableLegend(void)
     }
 }
 
-#ifdef __sun
+#if defined(__sun) || defined(TEST_UNIT_TEST)
 static FILE *OpenUcbPsPipe(void)
 {
     struct stat statbuf;
@@ -1347,7 +1242,7 @@ static void ReadFromUcbPsPipe(FILE *cmd)
     {
         if (header)
         {
-            GetProcessColumnNames(line, &names[0], start, end);
+            GetProcessColumnNames(line, names, start, end);
 
             for (int i = 0; names[i]; i++)
             {
@@ -1469,7 +1364,7 @@ static void ApplyPlatformExtraTable(char **names, char **columns)
     }
 }
 
-#else // !__sun
+#else
 static inline void LoadPlatformExtraTable(void)
 {
 }

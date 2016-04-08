@@ -73,17 +73,8 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, LoadSlowlyVaryingObservations, ARG_U
     Log(LOG_LEVEL_VERBOSE, "Extended system discovery is only available in CFEngine Enterprise");
 }
 
-/* all agents: cfstream.c, expand.c, generic_agent.c */
-
-
-ENTERPRISE_FUNC_1ARG_DEFINE_STUB(const char *, PromiseID, ARG_UNUSED const Promise *, pp)
-{
-    return "";
-}
-
 
 /* all agents: logging.c */
-
 
 ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(void, TrackValue, char *, date, double, kept, double, repaired, double, notkept)
 {

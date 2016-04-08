@@ -757,3 +757,27 @@ static void DereferenceComment(Promise *pp)
         pp->comment = xstrdup(buffer);
     }
 }
+
+/* Old legacy function from Enterprise, TODO remove static string. */
+const char *PromiseID(const Promise *pp)
+{
+    static char id[CF_MAXVARSIZE];
+    char vbuff[CF_MAXVARSIZE];
+    const char *handle = PromiseGetHandle(pp);
+
+    if (handle)
+    {
+        snprintf(id, CF_MAXVARSIZE, "%s", CanonifyName(handle));
+    }
+    else if (pp && PromiseGetBundle(pp)->source_path)
+    {
+        snprintf(vbuff, CF_MAXVARSIZE, "%s", ReadLastNode(PromiseGetBundle(pp)->source_path));
+        snprintf(id, CF_MAXVARSIZE, "promise_%s_%zu", CanonifyName(vbuff), pp->offset.line);
+    }
+    else
+    {
+        snprintf(id, CF_MAXVARSIZE, "unlabelled_promise");
+    }
+
+    return id;
+}

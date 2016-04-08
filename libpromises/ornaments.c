@@ -23,10 +23,13 @@
 */
 
 #include <ornaments.h>
+
+#include <string_lib.h>
 #include <rlist.h>
 #include <logging.h>
 #include <fncall.h>
-#include <string_lib.h>
+#include <promises.h>                                          /* PromiseID */
+
 
 /****************************************************************************************/
 

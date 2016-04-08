@@ -25,15 +25,19 @@
 #ifndef CFENGINE_PROMISES_H
 #define CFENGINE_PROMISES_H
 
+
 #include <cf3.defs.h>
 
 #include <logging.h>
 #include <sequence.h>
+
 
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp);
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded);
 void PromiseRef(LogLevel level, const Promise *pp);
 void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
                                   const Body *bp);
+const char *PromiseID(const Promise *pp);
+
 
 #endif

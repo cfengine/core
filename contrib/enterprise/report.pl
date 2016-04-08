@@ -43,12 +43,12 @@ my $query = shift;
 
 if ($options{list})
 {
-    $query = "SELECT Hosts.IPAddress, Contexts.ContextName FROM Hosts JOIN Contexts ON Hosts.Hostkey = Contexts.HostKey";
+    $query = "SELECT Hosts.HostName, Contexts.ContextName FROM Hosts JOIN Contexts ON Hosts.Hostkey = Contexts.HostKey";
 }
 
 elsif (exists $options{host})
 {
-    $query = "SELECT Variables.Bundle, Variables.VariableName, Variables.VariableValue FROM Variables WHERE Variables.HostKey = (SELECT Hosts.Hostkey FROM Hosts WHERE Hosts.IPAddress = '$options{host}')";
+    $query = "SELECT Variables.Bundle, Variables.VariableName, Variables.VariableValue FROM Variables WHERE Variables.HostKey = (SELECT Hosts.Hostkey FROM Hosts WHERE Hosts.HostName = '$options{host}')";
     $options{output} = 'host';
 }
 

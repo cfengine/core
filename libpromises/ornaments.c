@@ -116,7 +116,7 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
         Log(LOG_LEVEL_VERBOSE, "P:    \"unless\" class condition: %s", StringWriterData(w));
     }
 
-    Log(LOG_LEVEL_VERBOSE, "P:    Container path : '%s'", EvalContextStackToString(ctx));
+    Log(LOG_LEVEL_VERBOSE, "P:    Stack path: %s", EvalContextStackToString(ctx));
 
     if (pp->comment)
     {

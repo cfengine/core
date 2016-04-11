@@ -1380,7 +1380,10 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
 
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx)
 {
-    assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+    const StackFrame *last_frame = LastStackFrame(ctx, 0);
+
+    assert(last_frame       != NULL);
+    assert(last_frame->type == STACK_FRAME_TYPE_PROMISE);
 
     if (iter_ctx)
     {
@@ -1388,7 +1391,7 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
     }
 
     bool excluded = false;
-    Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner, &excluded);
+    Promise *pexp = ExpandDeRefPromise(ctx, last_frame->data.promise.owner, &excluded);
     if (excluded || !pexp)
     {
         PromiseDestroy(pexp);

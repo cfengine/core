@@ -432,6 +432,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
 
+    LoadAugments(ctx, config);
+
     const char *bootstrap_arg =
         config->agent_specific.agent.bootstrap_policy_server;
 
@@ -1031,8 +1033,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
     }
-
-    LoadAugments(ctx, config);
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)

@@ -2,6 +2,9 @@
 #
 # Test findprocesses()
 #
+# Note: On HP-UX this depends on the
+# 00_hpux_ps_setup_serial.cf setup test having run first.
+#
 ###########################################################
 
 body common control

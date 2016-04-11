@@ -1,0 +1,45 @@
+# basic test of the def.json facility: classes
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" string =>"
+Test that classes can be defined from def.json when they are based on other
+discovered classes";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine0000", "jira:CFE-2333" };
+
+  vars:
+     "c_sys_uqhost" string => canonify("$(sys.uqhost)");
+     "pass_class" string => "i_defined_a_class_based_on_my_hostname";
+
+  methods:
+      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+
+  files:
+     "$(sys.inputdir)/def.json"
+       create => "true",
+       edit_template => "$(this.promise_filename).json.mustache",
+       template_method => "mustache";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf|$(G.grep) $(test.pass_class)";
+
+  methods:
+      "" usebundle => dcs_passif_output("$(test.pass_class)\s+source=augments_file,hardclass", "", $(command), $(this.promise_filename));
+}

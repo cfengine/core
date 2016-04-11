@@ -195,7 +195,10 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
                                               CF_DATA_TYPE_STRING, "source=promise");
             }
 
-            const Promise *pexp =
+            /* ACTUAL WORK PART 1: lots of hidden stuff in this function. One
+             * is evaluation of all functions, even if they are not to be used
+             * immediately (for example in a classes promise). */
+            const Promise *pexp =                       /* expanded promise */
                 EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
             if (pexp == NULL)
             {
@@ -204,7 +207,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
                 continue;
             }
 
-            /* ACTUAL WORK */
+            /* ACTUAL WORK PART 2: run the actuator */
             PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
 
             /* iteration_result is always NOOP for PRE-EVAL. */
@@ -934,11 +937,13 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
     Log(LOG_LEVEL_DEBUG, "Resolving variables in bundle '%s' '%s'",
         bundle->type, bundle->name);
 
+    /* PRE-EVAL: evaluate classes of common bundles. */
     if (strcmp(bundle->type, "common") == 0)
     {
         BundleResolvePromiseType(ctx, bundle, "classes", VerifyClassPromise);
     }
-    BundleResolvePromiseType(ctx, bundle, "vars", (PromiseActuator*)VerifyVarPromise);
+    BundleResolvePromiseType(ctx, bundle, "vars",
+                             (PromiseActuator*) VerifyVarPromise);
 }
 
 ProtocolVersion ProtocolVersionParse(const char *s)
@@ -1202,7 +1207,7 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
         if (strcmp("common", bundle->type) == 0)
         {
             EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
-            BundleResolve(ctx, bundle);
+            BundleResolve(ctx, bundle);            /* PRE-EVAL classes,vars */
             EvalContextStackPopFrame(ctx);
         }
     }
@@ -1213,7 +1218,7 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
         if (strcmp("common", bundle->type) != 0)
         {
             EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
-            BundleResolve(ctx, bundle);
+            BundleResolve(ctx, bundle);                    /* PRE-EVAL vars */
             EvalContextStackPopFrame(ctx);
         }
     }

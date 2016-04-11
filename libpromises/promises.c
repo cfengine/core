@@ -486,7 +486,8 @@ static bool EvaluateConstraintIteration(EvalContext *ctx, const Constraint *cp, 
     }
     else
     {
-        *rval_out = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
+        *rval_out = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL,
+                                      "this", cp->rval, false, pp);
     }
 
     return true;
@@ -553,7 +554,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     *excluded = false;
 
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
-    if (!returnval.item || (strcmp(returnval.item, CF_NULL_VALUE) == 0)) 
+    if (!returnval.item || (strcmp(returnval.item, CF_NULL_VALUE) == 0))
     {
         *excluded = true;
         return NULL;
@@ -578,7 +579,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     }
 
     pcopy->classes = xstrdup(pp->classes);
-
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->offset.line = pp->offset.line;
     pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
@@ -590,18 +590,18 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     {
         if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping evaluation of classes promise as class '%s' is already set",
+            Log(LOG_LEVEL_VERBOSE,
+                "Skipping evaluation of classes promise as class '%s' is already set",
                 CanonifyName(pcopy->promiser));
-            *excluded = true;
 
+            *excluded = true;
             return pcopy;
         }
     }
 
+    /* Look for 'if'/'ifvarclass' exclusion. */
     {
-        // look for 'if'/'ifvarclass' exclusion, to short-circuit evaluation of other constraints
         const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
-
         if (!ifvarclass)
         {
             ifvarclass = PromiseGetConstraint(pp, "if");
@@ -609,28 +609,30 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
         if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for if/ifvarclass is not in scope", pp->promiser);
-            *excluded = true;
+            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s',"
+                " for if/ifvarclass is not in scope", pp->promiser);
 
+            *excluded = true;
             return pcopy;
         }
     }
 
+    /* Look for 'unless' exclusion. */
     {
-        // look for 'unless' exclusion, to short-circuit evaluation of other constraints
         const Constraint *unless = PromiseGetConstraint(pp, "unless");
 
         if (unless && IsVarClassDefined(ctx, unless, pcopy))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s', for unless is in scope", pp->promiser);
-            *excluded = true;
+            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s',"
+                " for unless is in scope", pp->promiser);
 
+            *excluded = true;
             return pcopy;
         }
     }
 
+    /* Look for depends_on exclusion. */
     {
-        // look for depends_on exclusion, to short-circuit evaluation of other constraints
         const Constraint *depends_on = PromiseGetConstraint(pp, "depends_on");
         if (depends_on)
         {
@@ -642,13 +644,13 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
                 if (MissingDependencies(ctx, pcopy))
                 {
                     *excluded = true;
-
                     return pcopy;
                 }
             }
         }
     }
 
+    /* Evaluate all constraints. */
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);

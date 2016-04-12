@@ -46,3 +46,24 @@ bundle agent check
 
 This text should never be seen, it's completely ignored
 @endif
+
+@if minimum_version(300.600)
+
+Nor should this
+
+@endif
+
+@if minimum_version(300.600)
+
+Nor this
+
+Not this either
+
+@endif
+
+@if minimum_version(300.600)
+Nothing should be seen here really
+
+Who knows, perhaps this text doesn't exist..?
+
+@endif

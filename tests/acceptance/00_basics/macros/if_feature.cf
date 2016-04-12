@@ -1,6 +1,6 @@
 ######################################################
 #
-#  Test that @if feature() wirks
+#  Test that @if feature() works
 #
 #####################################################
 
@@ -49,4 +49,25 @@ bundle agent check
 @if feature(ABCD)
 
 This text should never be seen, it's completely ignored
+@endif
+
+@if feature(ABCD)
+
+Nor should this
+
+@endif
+
+@if feature(ABCD)
+
+Nor this
+
+Not this either
+
+@endif
+
+@if feature(ABCD)
+Nothing should be seen here really
+
+Who knows, perhaps this text doesn't exist..?
+
 @endif

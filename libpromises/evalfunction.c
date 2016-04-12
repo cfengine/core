@@ -789,6 +789,73 @@ static FnCallResult FnCallIP2Host(ARG_UNUSED EvalContext *ctx,
 
 #ifdef __MINGW32__
 
+static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    // TODO: surely there's something we can do???
+    return FnFailure();
+}
+
+#else /* !__MINGW32__ */
+
+static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    struct passwd *pw = NULL;
+
+    if (NULL == finalargs)
+    {
+        pw = getpwuid(getuid());
+    }
+    else
+    {
+        char *arg = RlistScalarValue(finalargs);
+        if (StringIsNumeric(arg))
+        {
+            uid_t uid = Str2Uid(arg, NULL, NULL);
+            if (uid == CF_SAME_OWNER) // user "*"
+            {
+                uid = getuid();
+            }
+            else if (uid == CF_UNKNOWN_OWNER)
+            {
+                return FnFailure();
+            }
+
+            pw = getpwuid(uid);
+        }
+        else
+        {
+            pw = getpwnam(arg);
+        }
+    }
+
+    if (pw == NULL)
+    {
+        return FnFailure();
+    }
+
+
+    JsonElement *result = JsonObjectCreate(10);
+    JsonObjectAppendString(result, "username", pw->pw_name);
+    JsonObjectAppendString(result, "description", pw->pw_gecos);
+    JsonObjectAppendString(result, "home_dir", pw->pw_dir);
+    JsonObjectAppendString(result, "shell", pw->pw_shell);
+    JsonObjectAppendInteger(result, "uid", pw->pw_uid);
+    JsonObjectAppendInteger(result, "gid", pw->pw_gid);
+    //JsonObjectAppendBool(result, "locked", IsAccountLocked(pw->pw_name, pw));
+    // TODO: password: { format: "hash", data: { ...GetPasswordHash()... } }
+    // TODO: group_primary: name of group
+    // TODO: groups_secondary: [ names of groups ]
+    // TODO: gids_secondary: [ gids of groups ]
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+}
+
+#endif
+
+/*********************************************************************/
+
+#ifdef __MINGW32__
+
 static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
 {
     return FnFailure();
@@ -8007,6 +8074,12 @@ static const FnCallArg GETUID_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg GETUSERINFO_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "User name in text"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg GREP_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
@@ -8795,6 +8868,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getusers", CF_DATA_TYPE_STRING_LIST, GETUSERS_ARGS, &FnCallGetUsers, "Get a list of all system users defined, minus those names defined in arg1 and uids in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getuserinfo", CF_DATA_TYPE_CONTAINER, GETUSERINFO_ARGS, &FnCallGetUserInfo, "Get a data container describing user arg1, defaulting to current user",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values in the list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a variable's meta tags into an slist",

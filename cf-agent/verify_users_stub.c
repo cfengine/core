@@ -33,3 +33,13 @@ void VerifyOneUsersPromise (ARG_UNUSED const char *puser, ARG_UNUSED User u,
 {
     Log(LOG_LEVEL_ERR, "Users promise type is not supported on this OS");
 }
+
+bool IsAccountLocked(const char *puser, const void *passwd_info)
+{
+    return false;
+}
+
+bool GetPasswordHash(const char *puser, const void *passwd_info, const char **result)
+{
+    return false;
+}

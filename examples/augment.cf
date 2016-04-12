@@ -1,0 +1,38 @@
+bundle common def
+{
+  vars:
+    # Only define this variable if it is not yet defined.
+    "example_augment_string_override"
+      unless => isvariable("example_augment_string_override");
+
+    # Define this variable regardless if it has been set in def.json
+    "example_augment_list_override"
+      slist => { "defined", "in", "bundle", "common", "def" };
+}
+bundle agent main
+{
+  vars:
+    "def_vars"
+      slist => variablesmatching("default\:def\..*");
+
+  reports:
+    "Def var: '$(def_vars)'";
+
+    "def.example_augment_string_override = '$(def.example_augment_string_override)'";
+    "def.example_augment_list_override = '$(def.example_augment_list_override)'";
+    "def.example_augment_structured_override[key1] = '$(def.example_augment_structured_override[key1])'";
+}
+#+begin_src example_output
+#@ ```
+#@ R: Def var: 'default:def.example_augment_structured_override'
+#@ R: Def var: 'default:def.example_augment_string_override'
+#@ R: Def var: 'default:def.example_augment_list_override'
+#@ R: def.example_augment_string_override = 'defined in def.json'
+#@ R: def.example_augment_list_override = 'defined'
+#@ R: def.example_augment_list_override = 'in'
+#@ R: def.example_augment_list_override = 'bundle'
+#@ R: def.example_augment_list_override = 'common'
+#@ R: def.example_augment_list_override = 'def'
+#@ R: def.example_augment_structured_override[key1] = 'defined in def.json'
+#@ ```
+#+end_src

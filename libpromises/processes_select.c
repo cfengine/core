@@ -56,8 +56,13 @@ TABLE_STORAGE Item *PROCESSTABLE = NULL;
 
 #if defined(__sun) || defined(TEST_UNIT_TEST)
 static StringMap *UCB_PS_MAP = NULL;
-#define UCB_PS "/usr/ucb/ps"
-#define UCB_PS_ARGS "axwww"
+// These will be tried in order.
+const char *SOLARIS_UCB_STYLE_PS[] = {
+    "/usr/ucb/ps",
+    "/bin/ps",
+    NULL
+};
+const char *SOLARIS_UCB_STYLE_PS_ARGS = "axwww";
 #endif
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
@@ -1237,29 +1242,44 @@ const char *GetProcessTableLegend(void)
 #if defined(__sun) || defined(TEST_UNIT_TEST)
 static FILE *OpenUcbPsPipe(void)
 {
-    struct stat statbuf;
-    if (stat(UCB_PS, &statbuf) < 0)
+    for (int i = 0; SOLARIS_UCB_STYLE_PS[i]; i++)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "%s not found, extra process information not available",
-            UCB_PS);
-        return NULL;
-    }
-    if (!(statbuf.st_mode & 0111))
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "%s not executable, extra process information not available",
-            UCB_PS);
-        return NULL;
+        struct stat statbuf;
+        if (stat(SOLARIS_UCB_STYLE_PS[i], &statbuf) < 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "%s not found, cannot be used for extra process information",
+                SOLARIS_UCB_STYLE_PS[i]);
+            continue;
+        }
+        if (!(statbuf.st_mode & 0111))
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "%s not executable, cannot be used for extra process information",
+                SOLARIS_UCB_STYLE_PS[i]);
+            continue;
+        }
+
+        char *ps_cmd;
+        xasprintf(&ps_cmd, "%s %s", SOLARIS_UCB_STYLE_PS[i],
+                  SOLARIS_UCB_STYLE_PS_ARGS);
+
+        FILE *cmd = cf_popen(ps_cmd, "rt", false);
+        if (!cmd)
+        {
+            Log(LOG_LEVEL_WARNING, "Could not execute \"%s\", extra process "
+                "information not available.", ps_cmd);
+        }
+
+        free(ps_cmd);
+
+        return cmd;
     }
 
-    FILE *cmd = cf_popen(UCB_PS " " UCB_PS_ARGS, "rt", false);
-    if (!cmd)
-    {
-        Log(LOG_LEVEL_WARNING, "Could not execute \"%s %s\", extra process "
-            "information not available.", UCB_PS, UCB_PS_ARGS);
-    }
-    return cmd;
+    Log(LOG_LEVEL_VERBOSE, "No eligible tool for extra process information "
+        "found. Skipping.");
+
+    return NULL;
 }
 
 static void ReadFromUcbPsPipe(FILE *cmd)
@@ -1297,8 +1317,7 @@ static void ReadFromUcbPsPipe(FILE *cmd)
             {
                 Log(LOG_LEVEL_ERR,
                     "Could not find PID and/or CMD/COMMAND column in "
-                    "%s output: \"%s\"",
-                    UCB_PS, line);
+                    "ps output: \"%s\"", line);
                 break;
             }
 
@@ -1312,8 +1331,7 @@ static void ReadFromUcbPsPipe(FILE *cmd)
         if (!SplitProcLine(line, pstime, names, start, end, columns))
         {
             Log(LOG_LEVEL_WARNING,
-                "Not able to parse %s output: \"%s\"",
-                UCB_PS, line);
+                "Not able to parse ps output: \"%s\"", line);
         }
 
         StringMapInsert(UCB_PS_MAP, columns[pidcol], columns[cmdcol]);
@@ -1332,8 +1350,8 @@ static void ReadFromUcbPsPipe(FILE *cmd)
 
     if (!feof(cmd) && ferror(cmd))
     {
-        Log(LOG_LEVEL_ERR, "Error while reading output from %s: %s",
-            UCB_PS, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Error while reading output from ps: %s",
+            GetErrorStr());
     }
 
     for (int i = 0; names[i] && i < CF_PROCCOLS; i++)
@@ -1342,6 +1360,15 @@ static void ReadFromUcbPsPipe(FILE *cmd)
     }
 
     free(line);
+}
+
+static void ClearPlatformExtraTable(void)
+{
+    if (UCB_PS_MAP)
+    {
+        StringMapDestroy(UCB_PS_MAP);
+        UCB_PS_MAP = NULL;
+    }
 }
 
 static void LoadPlatformExtraTable(void)
@@ -1359,15 +1386,11 @@ static void LoadPlatformExtraTable(void)
         return;
     }
     ReadFromUcbPsPipe(cmd);
-    cf_pclose(cmd);
-}
-
-static void ClearPlatformExtraTable(void)
-{
-    if (UCB_PS_MAP)
+    if (cf_pclose(cmd) != 0)
     {
-        StringMapDestroy(UCB_PS_MAP);
-        UCB_PS_MAP = NULL;
+        Log(LOG_LEVEL_WARNING, "Command returned non-zero while gathering "
+            "extra process information.");
+        ClearPlatformExtraTable();
     }
 }
 

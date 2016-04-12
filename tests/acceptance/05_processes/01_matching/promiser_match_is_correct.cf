@@ -18,11 +18,6 @@ bundle common userinfo
 
   classes:
       "root_user" expression => strcmp("$(current_user)", "0");
-
-    solaris::
-      # Solaris can only handle long command lines if the /usr/ucb/ps tool is
-      # installed.
-      "long_cmd_supported" expression => fileexists("/usr/ucb/ps");
 }
 
 bundle agent debug_info
@@ -40,8 +35,6 @@ bundle agent init
       # match against the user in the ps output.
       # And we can't use no_fds under fakeroot.
       "test_skip_needs_work" string => "windows|!root_user|using_fakeroot";
-
-      "test_skip_unsupported" string => "solaris.!long_cmd_supported";
 
   commands:
       "$(G.no_fds) --no-std $(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_underscore_marks_the_81st_character_of_this_string___STRINGBEYOND80CHARS &"

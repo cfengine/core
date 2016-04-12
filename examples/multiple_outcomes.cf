@@ -1,0 +1,105 @@
+# Note: This is NOT an automatically tested example. The difference between
+# dry-run and normal run output makes it problematic to do so.
+
+#+begin_src cfengine3
+bundle agent main
+{
+  meta:
+    "description" string => "
+Illustrate how a promise can have multiple outcomes";
+
+  vars:
+    !windows::
+      "repaired_and_kept"
+        string => "/tmp/repaired_and_not_kept.txt";
+
+  files:
+    # We make sure our test file is absent so that we
+    # can show consistent outcomes.
+      "$(repaired_and_kept)"
+        handle => "testfile_absent",
+        delete => tidy;
+
+      "$(repaired_and_kept)"
+        handle => "test_outcomes",
+        depends_on => { "testfile_absent" },
+        create => "true",
+        edit_template => "$(this.promsie_filename).broken_mustache",
+        template_method => "mustache",
+        classes => results("bundle", "outcome");
+
+  vars:
+      "result_classes"
+        slist => classesmatching("outcome_.*");
+
+      "s_result_classes"
+        slist => sort( result_classes, "lex");
+
+  reports:
+    outcome_repaired::
+      "My promise was repaired because the file was created.";
+
+    outcome_not_kept::
+      "My promise was not kept because the template failed to render.";
+
+    outcome_reached::
+      "My promise was reached because it was actuated. Any o"
+
+    DEBUG::
+      "Found class: '$(s_result_classes)'";
+}
+
+body delete tidy
+# @brief This body was inlined from the standard
+# library in the masterfiles policy framework
+# repository at commit
+# 6244c16e6934546d069052f953e597c4b95747df
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+body classes results(scope, class_prefix)
+# @brief This body was inlined from the standard
+# library in the masterfiles policy framework
+# repository at commit
+# 206a8b2e6bf277c3df9b57bf5c535b0b6dba963a
+{
+  scope => "$(scope)";
+
+  promise_kept => { "$(class_prefix)_reached",
+                    "$(class_prefix)_kept" };
+
+  promise_repaired => { "$(class_prefix)_reached",
+                        "$(class_prefix)_repaired" };
+
+  repair_failed => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_failed" };
+
+  repair_denied => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_denied" };
+
+  repair_timeout => { "$(class_prefix)_reached",
+                      "$(class_prefix)_error",
+                      "$(class_prefix)_not_kept",
+                      "$(class_prefix)_timeout" };
+}
+#+end_src
+
+#########################
+#+begin_src do_not_test_example_output
+#@ ```
+#@    error: Template file '$(this.promsie_filename).broken_mustache' could not be opened for reading
+#@ R: My promise was repaired because the file was created.
+#@ R: My promise was not kept because the template failed to render.
+#@ R: Found class: 'outcome_error'
+#@ R: Found class: 'outcome_failed'
+#@ R: Found class: 'outcome_not_kept'
+#@ R: Found class: 'outcome_reached'
+#@ R: Found class: 'outcome_repaired'
+#@ ```
+#+end_src

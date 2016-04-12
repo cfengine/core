@@ -241,3 +241,15 @@ ENTERPRISE_FUNC_0ARG_DEFINE_STUB(size_t, EnterpriseGetMaxCfHubProcesses)
 {
     return 0;
 }
+
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_ClassHistoryAddContextName, 
+                                      ARG_UNUSED const StringSet *, list, 
+                                      ARG_UNUSED const char *, context_name)
+{
+}
+
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_ClassHistoryEnable, 
+                                      ARG_UNUSED StringSet **, list, 
+                                      ARG_UNUSED bool, enable)
+{
+}

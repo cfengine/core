@@ -129,6 +129,10 @@ StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const ch
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft);
 ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx);
 
+// Class Logging
+const StringSet *EvalContextAllClassesGet(const EvalContext *ctx);
+void EvalContextAllClassesLoggingEnable(EvalContext *ctx, bool enable);
+
 void EvalContextClear(EvalContext *ctx);
 
 Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);

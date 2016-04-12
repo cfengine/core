@@ -124,6 +124,8 @@ static const char *const HINTS[] =
 
 int main(int argc, char *argv[])
 {
+    SetupSignalsForAgent();
+
     GenericAgentConfig *config = CheckOpts(argc, argv);
     enum generic_agent_config_common_policy_output_format format = config->agent_specific.common.policy_output_format;
 

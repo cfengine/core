@@ -139,5 +139,6 @@ void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
 
 bool GenericAgentPostLoadInit(const EvalContext *ctx);
 
+void SetupSignalsForAgent(void);
 
 #endif

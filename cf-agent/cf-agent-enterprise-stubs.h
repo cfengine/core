@@ -60,6 +60,5 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_TrackExecution, const char *, input
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenerateReports, const GenericAgentConfig *, config, const EvalContext *, ctx);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_NoteAgentExecutionPerformance, const char *,
                                   input_file, struct timespec, start);
-
 #endif
 

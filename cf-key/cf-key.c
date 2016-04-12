@@ -114,7 +114,7 @@ static void handleShowKeysSignal(int signum)
     signal(signum, handleShowKeysSignal);
 }
 
-static void ThisAgentInit(CfKeySigHandler sighandler)
+static void SetupSignalsForCfKey(CfKeySigHandler sighandler)
 {
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
@@ -126,6 +126,8 @@ static void ThisAgentInit(CfKeySigHandler sighandler)
 
 int main(int argc, char *argv[])
 {
+    SetupSignalsForCfKey(HandleSignalsForAgent);
+
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
@@ -134,7 +136,7 @@ int main(int argc, char *argv[])
 
     if (SHOWHOSTS)
     {
-        ThisAgentInit(handleShowKeysSignal);
+        SetupSignalsForCfKey(handleShowKeysSignal);
         ShowLastSeenHosts();
         return 0;
     }
@@ -145,7 +147,6 @@ int main(int argc, char *argv[])
     }
 
     GenericAgentPostLoadInit(ctx);
-    ThisAgentInit(HandleSignalsForAgent);
 
     if (REMOVEKEYS)
     {

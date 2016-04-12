@@ -1,0 +1,9 @@
+{
+  "vars": {
+    "example_augment_string_override": "defined in def.json",
+    "example_augment_list_override": [ "defined", "in", "def.json"],
+    "example_augment_structured_override": {
+      "key1": "defined in def.json"
+    }
+  }
+}

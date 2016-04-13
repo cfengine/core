@@ -375,18 +375,18 @@ static int CompareResult(const char *filename, const char *prev_file)
             regex_extra = pcre_study(regex, 0, &errptr);
         }
 
+        size_t old_line_size = CF_BUFSIZE;
+        char *old_line = xmalloc(old_line_size);
+        size_t new_line_size = CF_BUFSIZE;
+        char *new_line = xmalloc(new_line_size);
         while (regex)
         {
-            size_t old_line_size = CF_BUFSIZE;
-            char *old_line = xmalloc(old_line_size);
             char *old_msg = NULL;
             if (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
             {
                 old_msg = old_line;
             }
 
-            size_t new_line_size = CF_BUFSIZE;
-            char *new_line = xmalloc(new_line_size);
             char *new_msg = NULL;
             if (CfReadLine(&new_line, &new_line_size, new_fp) >= 0)
             {
@@ -399,8 +399,6 @@ static int CompareResult(const char *filename, const char *prev_file)
                 {
                     rtn = 1;
                 }
-                free(old_line);
-                free(new_line);
                 break;
             }
 
@@ -425,14 +423,12 @@ static int CompareResult(const char *filename, const char *prev_file)
             if (strcmp(old_msg, new_msg) != 0)
             {
                 rtn = 1;
-                free(old_line);
-                free(new_line);
                 break;
             }
-
-            free(old_line);
-            free(new_line);
         }
+
+        free(old_line);
+        free(new_line);
 
         if (regex_extra)
         {

@@ -1169,6 +1169,166 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
 /*********************************************************************/
 
+static bool AddPackagesmatchingJsonLine(pcre *matcher, JsonElement *json, char *line)
+{
+    
+    if (strlen(line) > CF_BUFSIZE - 80)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Line from package inventory is too long (%zd) to be sensible",
+            strlen(line));
+        return false;
+    }
+    
+
+    if (StringMatchFullWithPrecompiledRegex(matcher, line))
+    {
+        Seq *list = SeqParseCsvString(line);
+        if (SeqLength(list) != 4)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Line from package inventory '%s' did not yield correct number of elements.",
+                line);
+            SeqDestroy(list);
+            return true;
+        }
+
+        JsonElement *line_obj = JsonObjectCreate(4);
+        JsonObjectAppendString(line_obj, "name",    SeqAt(list, 0));
+        JsonObjectAppendString(line_obj, "version", SeqAt(list, 1));
+        JsonObjectAppendString(line_obj, "arch",    SeqAt(list, 2));
+        JsonObjectAppendString(line_obj, "method",  SeqAt(list, 3));
+                
+        SeqDestroy(list);
+        JsonArrayAppendObject(json, line_obj);
+    }
+
+    return true;
+}
+
+static bool GetLegacyPackagesMatching(pcre *matcher, JsonElement *json, const bool installed_mode)
+{
+    char filename[CF_MAXVARSIZE];
+    if (installed_mode)
+    {
+        GetSoftwareCacheFilename(filename);
+    }
+    else
+    {
+        GetSoftwarePatchesFilename(filename);
+    }
+
+    Log(LOG_LEVEL_DEBUG, "Reading inventory from '%s'", filename);
+    
+    FILE *const fin = fopen(filename, "r");
+    if (fin == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Cannot open the %s packages inventory '%s' - "
+            "This is not necessarily an error. "
+            "Either the inventory policy has not been included, "
+            "or it has not had time to have an effect yet or you are using"
+            "new package promise and check for legacy promise is made."
+            "A future call may still succeed. (fopen: %s)",
+            installed_mode ? "installed" : "available",
+            filename,
+            GetErrorStr());
+
+        return true;
+    }
+    
+    char *line;
+    while (NULL != (line = GetCsvLineNext(fin)))
+    {
+        if (!AddPackagesmatchingJsonLine(matcher, json, line))
+        {
+            free(line);
+            break;
+        }
+        free(line);
+    }
+
+    bool ret = feof(fin);
+    fclose(fin);
+    
+    return ret;
+}
+
+static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool installed_mode, Rlist *default_inventory)
+{
+    dbid database = (installed_mode == true ? dbid_packages_installed : dbid_packages_updates);
+
+    for (const Rlist *rp = default_inventory; rp != NULL; rp = rp->next)
+    {
+        const char *pm_name =  RlistScalarValue(rp);
+        size_t pm_name_size = strlen(pm_name);
+        
+        Log(LOG_LEVEL_DEBUG, "Reading packages (%d) for package modeule [%s]", 
+                database, pm_name);
+        
+        if (StringSafeEqual(pm_name, "cf_null"))
+        {
+            continue;
+        }
+        
+        CF_DB *db_cached;
+        if (!OpenSubDB(&db_cached, database, pm_name))
+        {
+            Log(LOG_LEVEL_ERR, "Can not open database %d to get packages data.", database);
+            return false;
+        }
+
+        char *key = "<inventory>";
+        int data_size = ValueSizeDB(db_cached, key, strlen(key) + 1);
+        
+        Log(LOG_LEVEL_DEBUG, "Reading inventory from database: %d", data_size);
+        
+        /* For empty list we are storing one byte value in database. */
+        if (data_size > 1)
+        {
+            char *buff = xmalloc(data_size + 1);
+            buff[data_size] = '\0';
+            if (!ReadDB(db_cached, key, buff, data_size))
+            {
+                Log(LOG_LEVEL_WARNING, "Can not read installed packages database "
+                    "for '%s' package module.", pm_name);
+                continue;
+            }
+            
+            Seq *packages_form_module = SeqStringFromString(buff, '\n');
+            free(buff);
+            
+            if (packages_form_module)
+            {
+                // Iterate over and see where match is.
+                for (int i = 0; i < SeqLength(packages_form_module); i++)
+                {
+                    char *line = SeqAt(packages_form_module, i);
+                    size_t new_line_size = strlen(line) + pm_name_size + 2; // we need coma and terminator
+                    char new_line[new_line_size];
+                    strcpy(new_line, line);
+                    strcat(new_line, ",");
+                    strcat(new_line, pm_name);
+                    
+                    if (!AddPackagesmatchingJsonLine(matcher, json, new_line))
+                    {
+                        break;
+                    }
+                }
+                SeqDestroy(packages_form_module);
+            }
+            else
+            {
+                 Log(LOG_LEVEL_WARNING, "Can not parse packages database for '%s' "
+                     "package module.", pm_name);
+                 
+            }
+        }
+        CloseDB(db_cached);
+    }
+    return true;
+}
+
 static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     const bool installed_mode = (0 == strcmp(fp->name, "packagesmatching"));
@@ -1189,90 +1349,28 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
             return FnFailure();
         }
     }
-
-    char filename[CF_MAXVARSIZE];
-    if (installed_mode)
+    
+    JsonElement *json = JsonArrayCreate(50);
+    bool ret = false;
+    
+    Rlist *default_inventory = GetDefaultInventoryFromContext(ctx);
+    if (!default_inventory)
     {
-        GetSoftwareCacheFilename(filename);
+        // Legacy package promise
+        ret = GetLegacyPackagesMatching(matcher, json, installed_mode);
     }
     else
     {
-        GetSoftwarePatchesFilename(filename);
+        // We are using package modules.
+        ret = GetPackagesMatching(matcher, json, installed_mode, default_inventory);
     }
 
-    Log(LOG_LEVEL_DEBUG, "%s: reading inventory from '%s'", fp->name, filename);
-
-    FILE *const fin = fopen(filename, "r");
-    if (fin == NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "%s cannot open the %s packages inventory '%s' - "
-            "This is not necessarily an error. "
-            "Either the inventory policy has not been included, "
-            "or it has not had time to have an effect yet. "
-            "A future call may still succeed. (fopen: %s)",
-            fp->name,
-            installed_mode ? "installed" : "available",
-            filename,
-            GetErrorStr());
-
-        pcre_free(matcher);
-        return FnFailure();
-    }
-
-    JsonElement *json = JsonArrayCreate(50);
-    int linenumber = 0;
-    char *line;
-
-    while (NULL != (line = GetCsvLineNext(fin)))
-    {
-        if (strlen(line) > CF_BUFSIZE - 80)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Line %d from package inventory '%s' is too long (%zd) to be sensible",
-                linenumber, filename, strlen(line));
-            free(line);
-            break; /* or continue ? */
-        }
-
-        if (StringMatchFullWithPrecompiledRegex(matcher, line))
-        {
-            Seq *list = SeqParseCsvString(line);
-            if (SeqLength(list) != 4)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Line %d from package inventory '%s' did not yield 4 elements: %s",
-                    linenumber, filename, line);
-                ++linenumber;
-                SeqDestroy(list);
-                free(line);
-                continue;
-            }
-
-            JsonElement *line_obj = JsonObjectCreate(4);
-            JsonObjectAppendString(line_obj, "name",    SeqAt(list, 0));
-            JsonObjectAppendString(line_obj, "version", SeqAt(list, 1));
-            JsonObjectAppendString(line_obj, "arch",    SeqAt(list, 2));
-            JsonObjectAppendString(line_obj, "method",  SeqAt(list, 3));
-            SeqDestroy(list);
-
-            JsonArrayAppendObject(json, line_obj);
-        }
-
-        ++linenumber;
-        free(line);
-    }
-    const char *errstr = GetErrorStr(); /* Only relevant if fail */
-
-    bool fail = !feof(fin);
-    fclose(fin);
     pcre_free(matcher);
 
-    if (fail)
+    if (ret == false)
     {
         Log(LOG_LEVEL_ERR,
-            "Unable to read (%s) package inventory from '%s'.",
-            errstr, filename);
+            "%s Unable to read package inventory.", fp->name);
         JsonDestroy(json);
         return FnFailure();
     }

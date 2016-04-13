@@ -277,6 +277,7 @@ static int IsCf3Scalar(char *str)
     return vars;
 }
 
+/* Extract everything up to the dollar sign. */
 size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len)
 {
     assert(str);

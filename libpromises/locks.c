@@ -664,7 +664,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
     if (EvalContextPromiseLockCacheContains(ctx, str_digest))
     {
-        Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
+//        Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
         return CfLockNull();
     }
 

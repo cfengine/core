@@ -33,6 +33,8 @@
 #include <misc_lib.h>
 #include <rlist.h>
 #include <regex.h>                          /* CompileRegex,StringMatchFull */
+#include <string_lib.h>
+
 
 /* Pure, non-thread-safe */
 static char *FirstBackReference(pcre *rx, const char *teststring)

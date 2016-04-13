@@ -49,62 +49,214 @@ void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
 
         if (IsDefinedClass(ctx, scp->classes))
         {
-            Rval returnval = ExpandPrivateRval(ctx, NULL, "body", 
+            Rval returnval = ExpandPrivateRval(ctx, NULL, "body",
                                                scp->rval.item, scp->rval.type);
             PromiseAppendConstraint(pp, scp->lval, returnval, false);
         }
     }
 }
 
+/**
+ * Get a map that rewrites body according to parameters.
+ *
+ * @NOTE make sure you free the returned map with JsonDestroy().
+ */
+static JsonElement *GetBodyRewriter(const EvalContext *ctx,
+                                    const Body *current_body,
+                                    const Rval *called_rval,
+                                    bool in_inheritance_chain)
+{
+    size_t given_args = 0;
+    JsonElement *arg_rewriter = JsonObjectCreate(2);
 
+    if (called_rval == NULL)
+    {
+        // nothing needed, this is not an inherit_from rval
+    }
+    else if (called_rval->type == RVAL_TYPE_SCALAR)
+    {
+        // We leave the parameters as they were.
+
+        // Unless the current body matches the
+        // parameters of the inherited body, there
+        // will be unexpanded variables. But the
+        // alternative is to match up body and fncall
+        // arguments, which is not trivial.
+    }
+    else if (called_rval->type == RVAL_TYPE_FNCALL)
+    {
+        const Rlist *call_args = RvalFnCallValue(*called_rval)->args;
+        const Rlist *body_args = current_body->args;
+
+        given_args = RlistLen(call_args);
+
+        while (call_args != NULL &&
+               body_args != NULL)
+        {
+            JsonObjectAppendString(arg_rewriter,
+                                   RlistScalarValue(body_args),
+                                   RlistScalarValue(call_args));
+            call_args = call_args->next;
+            body_args = body_args->next;
+        }
+    }
+
+    size_t required_args = RlistLen(current_body->args);
+    // only check arguments for inherited bodies
+    if (in_inheritance_chain && required_args != given_args)
+    {
+        FatalError(ctx,
+                   "Argument count mismatch for body "
+                   "(gave %zu arguments) vs. inherited body '%s:%s' "
+                   "(requires %zu arguments)",
+                   given_args,
+                   current_body->ns, current_body->name, required_args);
+    }
+
+    return arg_rewriter;
+}
+
+/**
+ * Appends expanded bodies to the promise #pcopy. It expands the bodies based
+ * on arguments, inheritance, and it can optionally flatten the '@' slists and
+ * expand the variables in the body according to the EvalContext.
+ */
+static void AppendExpandedBodies(EvalContext *ctx, Promise *pcopy,
+                                 const Seq *bodies_and_args,
+                                 bool flatten_slists, bool expand_body_vars)
+{
+    size_t ba_len = SeqLength(bodies_and_args);
+
+    /* Iterate over all parent bodies, and finally over the body of the
+     * promise itself, expanding arguments.  We have already reversed the Seq
+     * so we start with the most distant parent in the inheritance tree. */
+    for (size_t i = 0; i < ba_len; i += 2)
+    {
+        const Rval *called_rval  = SeqAt(bodies_and_args, i);
+        const Body *current_body = SeqAt(bodies_and_args, i + 1);
+        bool in_inheritance_chain= (ba_len - i > 2);
+
+        JsonElement *arg_rewriter =
+            GetBodyRewriter(ctx, current_body, called_rval,
+                            in_inheritance_chain);
+
+        size_t constraints_num = SeqLength(current_body->conlist);
+        for (size_t k = 0; k < constraints_num; k++)
+        {
+            const Constraint *scp = SeqAt(current_body->conlist, k);
+
+            // we don't copy the inherit_from attribute or associated call
+            if (strcmp("inherit_from", scp->lval) == 0)
+            {
+                continue;
+            }
+
+            if (IsDefinedClass(ctx, scp->classes))
+            {
+                /* We copy the Rval expanding all, including inherited,
+                 * body arguments. */
+                Rval newrv = RvalCopyRewriter(scp->rval, arg_rewriter);
+
+                /* Expand '@' slists. */
+                if (flatten_slists && newrv.type == RVAL_TYPE_LIST)
+                {
+                    RlistFlatten(ctx, (Rlist **) &newrv.item);
+                }
+
+                /* Expand body vars; note it has to happen ONLY ONCE. */
+                if (expand_body_vars)
+                {
+                    Rval newrv2 = ExpandPrivateRval(ctx, NULL, "body",
+                                                    newrv.item, newrv.type);
+                    RvalDestroy(newrv);
+                    newrv = newrv2;
+                }
+
+                /* PromiseAppendConstraint() overwrites existing constraints,
+                   thus inheritance just works, as it correctly overwrites
+                   parents' constraints. */
+                Constraint *scp_copy =
+                    PromiseAppendConstraint(pcopy, scp->lval,
+                                            newrv, false);
+                scp_copy->offset = scp->offset;
+
+                char *rval_s     = RvalToString(scp->rval);
+                char *rval_exp_s = RvalToString(scp_copy->rval);
+                Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise():         "
+                    "expanding constraint '%s': '%s' -> '%s'",
+                    scp->lval, rval_s, rval_exp_s);
+                free(rval_exp_s);
+                free(rval_s);
+            }
+        } /* for all body constraints */
+
+        JsonDestroy(arg_rewriter);
+    }
+}
+
+/**
+ * Copies the promise, expanding the constraints.
+ *
+ * 1. copy the promise itself
+ * 2. copy constraints: copy the bodies expanding arguments passed
+ *    (arg_rewrite), copy the bundles, copy the rest of the constraints
+ * 3. flatten '@' slists everywhere
+ * 4. handle body inheritance
+ */
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 {
-    Promise *pcopy;
+    Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise(): "
+        "promiser:'%s'",
+        SAFENULL(pp->promiser));
 
-    pcopy = xcalloc(1, sizeof(Promise));
+    Promise *pcopy = xcalloc(1, sizeof(Promise));
 
     if (pp->promiser)
     {
         pcopy->promiser = xstrdup(pp->promiser);
     }
 
-    if (pp->promisee.item)
+    /* Copy promisee (if not NULL) while expanding '@' slists. */
+    pcopy->promisee = RvalCopy(pp->promisee);
+    if (pcopy->promisee.type == RVAL_TYPE_LIST)
     {
-        pcopy->promisee = RvalCopy(pp->promisee);
-        if (pcopy->promisee.type == RVAL_TYPE_LIST)
-        {
-            Rlist *rval_list = RvalRlistValue(pcopy->promisee);
-            RlistFlatten(ctx, &rval_list);
-            pcopy->promisee.item = rval_list;
-        }
+        RlistFlatten(ctx, (Rlist **) &pcopy->promisee.item);
+    }
+
+    if (pp->promisee.item != NULL)
+    {
+        char *promisee_string = RvalToString(pp->promisee);
+
+        CF_ASSERT(pcopy->promisee.item != NULL,
+                  "DeRefCopyPromise: Failed to copy promisee: %s",
+                  promisee_string);
+        Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise():     "
+            "expanded promisee: '%s'",
+            promisee_string);
+        free(promisee_string);
     }
 
     assert(pp->classes);
-    pcopy->classes = xstrdup(pp->classes);
-
-
-/* FIXME: may it happen? */
-    if ((pp->promisee.item != NULL && pcopy->promisee.item == NULL))
-    {
-        ProgrammingError("Unable to copy promise");
-    }
-
+    pcopy->classes             = xstrdup(pp->classes);
     pcopy->parent_promise_type = pp->parent_promise_type;
-    pcopy->offset.line = pp->offset.line;
-    pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
-    pcopy->conlist = SeqNew(10, ConstraintDestroy);
-    pcopy->org_pp = pp->org_pp;
-    pcopy->offset = pp->offset;
+    pcopy->offset.line         = pp->offset.line;
+    pcopy->comment             = pp->comment ? xstrdup(pp->comment) : NULL;
+    pcopy->conlist             = SeqNew(10, ConstraintDestroy);
+    pcopy->org_pp              = pp->org_pp;
+    pcopy->offset              = pp->offset;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-
         const Policy *policy = PolicyFromPromise(pp);
-        Seq *bodies_and_args = NULL; // at position 0 we'll have the body, then its rval, then the same for each of its inherit_from parents
-        const Rlist *args = NULL;
+
+        /* bodies_and_args: Do we have body to expand, possibly with arguments?
+         * At position 0 we'll have the body, then its rval, then the same for
+         * each of its inherit_from parents. */
+        Seq *bodies_and_args       = NULL;
+        const Rlist *args          = NULL;
         const char *body_reference = NULL;
 
         /* A body template reference could look like a scalar or fn to the parser w/w () */
@@ -124,15 +276,17 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             args = RvalFnCallValue(cp->rval)->args;
             break;
         default:
-            args = NULL;
             break;
         }
 
-        /* First case is: we have a body template to expand lval = body(args), .. */
+        /* First case is: we have a body to expand lval = body(args). */
 
-        if (bodies_and_args && SeqLength(bodies_and_args) > 0)
+        if (bodies_and_args != NULL &&
+            SeqLength(bodies_and_args) > 0)
         {
-            const Body *bp = SeqAt(bodies_and_args, 0); // guaranteed to be non-NULL
+            const Body *bp = SeqAt(bodies_and_args, 0);
+            assert(bp != NULL);
+
             SeqReverse(bodies_and_args); // when we iterate, start with the furthest parent
 
             EvalContextStackPushBodyFrame(ctx, pcopy, bp, args);
@@ -146,6 +300,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
             }
 
+            Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise():     "
+                "copying body %s: '%s'",
+                cp->lval, body_reference);
+
             if (IsDefinedClass(ctx, cp->classes))
             {
                 /* For new package promises we need to have name of the
@@ -156,15 +314,13 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                        (Rval) {xstrdup(bp->name), RVAL_TYPE_SCALAR }, false);
 
                 /* Keep the referent body type as a boolean for convenience
-                 * when checking later */
+                 * when checking later. */
                 PromiseAppendConstraint(pcopy, cp->lval,
                        (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, false);
             }
 
-            if (bp->args)
+            if (bp->args)                  /* There are arguments to insert */
             {
-                /* There are arguments to insert */
-
                 if (!args)
                 {
                     Log(LOG_LEVEL_ERR,
@@ -174,111 +330,12 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         PromiseGetBundle(pp)->source_path);
                 }
 
-                for (size_t body_index = 0; body_index < SeqLength(bodies_and_args); body_index+=2)
-                {
-                    // remember we reversed the Seq from what
-                    // EvalContextResolveBodyExpression() created
-                    Rval *called_rval = SeqAt(bodies_and_args, body_index);
-                    const Body *current_body = SeqAt(bodies_and_args, body_index+1);
-                    JsonElement *arg_rewrite = JsonObjectCreate(2);
-                    bool in_inheritance_chain = (SeqLength(bodies_and_args) - body_index > 2);
-                    int given_args = 0;
-
-                    if (NULL == called_rval)
-                    {
-                        // nothing needed, this is not an inherit_from rval
-                    }
-                    else if (RVAL_TYPE_SCALAR == called_rval->type)
-                    {
-                        // We leave the parameters as they were.
-
-                        // Unless the current body matches the
-                        // parameters of the inherited body, there
-                        // will be unexpanded variables. But the
-                        // alternative is to match up body and fncall
-                        // arguments, which is not trivial.
-
-                        given_args = 0;
-                    }
-                    else if (RVAL_TYPE_FNCALL == called_rval->type)
-                    {
-                        const Rlist *call_args = RvalFnCallValue(*called_rval)->args;
-                        const Rlist *body_args = current_body->args;
-
-                        given_args = RlistLen(call_args);
-                        // step through the body and call args
-                        for (;
-                             call_args && body_args;
-                             call_args = call_args->next, body_args = body_args->next)
-                        {
-                            JsonObjectAppendString(arg_rewrite, RlistScalarValue(body_args), RlistScalarValue(call_args));
-                        }
-                    }
-
-                    int required_args = RlistLen(current_body->args);
-                    // only check arguments for inherited bodies
-                    if (in_inheritance_chain && required_args != given_args)
-                    {
-                        FatalError(ctx,
-                            "Argument count mismatch for body reference '%s' (gave %d arguments) vs. inherited body '%s:%s' (requires %d arguments) in promise "
-                            "at line %zu of file '%s'",
-                            body_reference, given_args,
-                            current_body->ns, current_body->name, required_args,
-                            pp->offset.line,
-                            PromiseGetBundle(pp)->source_path);
-                    }
-
-                    for (size_t k = 0; k < SeqLength(current_body->conlist); k++)
-                    {
-                        Constraint *scp = SeqAt(current_body->conlist, k);
-
-                        // we don't copy the inherit_from attribute or associated call
-                        if (strcmp("inherit_from", scp->lval) == 0)
-                        {
-                            continue;
-                        }
-
-                        if (IsDefinedClass(ctx, scp->classes))
-                        {
-                            Rval returnval = RvalNew(scp->rval.item, scp->rval.type);
-
-                            // First we rewrite the Rval with the rewrite map
-                            Rval rewrite = RvalCopyRewriter(returnval, arg_rewrite);
-                            RvalDestroy(returnval);
-
-                            // Second we expand body vars; note it has to happen ONLY ONCE
-                            returnval = ExpandPrivateRval(ctx, NULL, "body", rewrite.item, rewrite.type);
-
-                            RvalDestroy(rewrite);
-
-                            // note that PromiseAppendConstraint() will overwrite existing constraints!
-                            // thus inheritance works, we just overwrite parents' constraints
-                            Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, false);
-                            scp_copy->offset = scp->offset;
-
-                            // This is incredibly useful if you have
-                            // to debug body inheritance but annoying
-                            // otherwise even in DEBUG mode so I'm
-                            // leaving it commented out
-
-                            // Writer *w = StringWriter();
-                            // RvalWrite(w, scp->rval);
-                            // WriterWrite(w, " -> copied rval ");
-                            // RvalWrite(w, scp_copy->rval);
-
-                            // Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise: processing body %s: at index %ld, current body %s, copying constraint %s with rval %s", body_reference, body_index, current_body->name, scp->lval, StringWriterData(w));
-                            // WriterClose(w);
-                        }
-                    }
-
-                    JsonDestroy(arg_rewrite);
-                }
+                AppendExpandedBodies(ctx, pcopy, bodies_and_args,
+                                     false, true);
             }
-            else
+            else                    /* No body arguments or body undeclared */
             {
-                /* No arguments to deal with or body undeclared */
-
-                if (args)
+                if (args)                                /* body undeclared */
                 {
                     Log(LOG_LEVEL_ERR,
                         "Apparent body '%s' was undeclared or could "
@@ -287,117 +344,42 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         RvalScalarValue(cp->rval), pp->offset.line,
                         PromiseGetBundle(pp)->source_path);
                 }
-                else
+                else /* no body arguments, but maybe the inherited bodies have */
                 {
-
-                    for (size_t body_index = 0; body_index < SeqLength(bodies_and_args); body_index+=2)
-                    {
-                        // remember we reversed the Seq from what
-                        // EvalContextResolveBodyExpression() created
-                        Rval *called_rval = SeqAt(bodies_and_args, body_index);
-                        const Body *current_body = SeqAt(bodies_and_args, body_index+1);
-                        JsonElement *arg_rewrite = JsonObjectCreate(2);
-                        bool in_inheritance_chain = (SeqLength(bodies_and_args) - body_index > 2);
-                        int given_args = 0;
-
-                        if (NULL == called_rval)
-                        {
-                            // nothing needed, this is not an inherit_from rval
-                        }
-                        else if (RVAL_TYPE_SCALAR == called_rval->type)
-                        {
-                            // We leave the parameters as they were.
-
-                            // Unless the current body matches the
-                            // parameters of the inherited body, there
-                            // will be unexpanded variables. But the
-                            // alternative is to match up body and fncall
-                            // arguments, which is not trivial.
-
-                            given_args = 0;
-                        }
-                        else if (RVAL_TYPE_FNCALL == called_rval->type)
-                        {
-                            const Rlist *call_args = RvalFnCallValue(*called_rval)->args;
-                            const Rlist *body_args = current_body->args;
-
-                            given_args = RlistLen(call_args);
-                            // step through the body and call args
-                            for (;
-                                 call_args && body_args;
-                                 call_args = call_args->next, body_args = body_args->next)
-                            {
-                                JsonObjectAppendString(arg_rewrite, RlistScalarValue(body_args), RlistScalarValue(call_args));
-                            }
-                        }
-
-                        int required_args = RlistLen(current_body->args);
-                        // only check arguments for inherited bodies
-                        if (in_inheritance_chain && required_args != given_args)
-                        {
-                            FatalError(ctx,
-                                "Argument count mismatch for body reference '%s' (gave %d arguments) vs. inherited body '%s:%s' (requires %d arguments) in promise "
-                                "at line %zu of file '%s'",
-                                body_reference, given_args,
-                                current_body->ns, current_body->name, required_args,
-                                pp->offset.line,
-                                PromiseGetBundle(pp)->source_path);
-                        }
-
-                        for (size_t k = 0; k < SeqLength(current_body->conlist); k++)
-                        {
-                            Constraint *scp = SeqAt(current_body->conlist, k);
-
-                            // we don't copy the inherit_from attribute or associated call
-                            if (strcmp("inherit_from", scp->lval) == 0)
-                            {
-                                continue;
-                            }
-
-                            if (IsDefinedClass(ctx, scp->classes))
-                            {
-                                Rval newrv = RvalCopyRewriter(scp->rval, arg_rewrite);
-                                if (newrv.type == RVAL_TYPE_LIST)
-                                {
-                                    Rlist *new_list = RvalRlistValue(newrv);
-                                    RlistFlatten(ctx, &new_list);
-                                    newrv.item = new_list;
-                                }
-
-                                // note that PromiseAppendConstraint() will overwrite existing constraints!
-                                // thus inheritance works, we just overwrite parents' constraints
-                                Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, newrv, false);
-                                scp_copy->offset = scp->offset;
-                            }
-                        }
-
-                        JsonDestroy(arg_rewrite);
-                    }
+                    AppendExpandedBodies(ctx, pcopy, bodies_and_args,
+                                         true, false);
                 }
             }
 
             EvalContextStackPopFrame(ctx);
+            SeqDestroy(bodies_and_args);
         }
-        else
+        else                                    /* constraint is not a body */
         {
-            const Policy *policy = PolicyFromPromise(pp);
-
             if (cp->references_body)
             {
                 // assume this is a typed bundle (e.g. edit_line)
-                const Bundle *callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), cp->lval);
+                const Bundle *callee =
+                    EvalContextResolveBundleExpression(ctx, policy,
+                                                       body_reference,
+                                                       cp->lval);
                 if (!callee)
                 {
                     // otherwise, assume this is a method-type call
-                    callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "agent");
+                    callee = EvalContextResolveBundleExpression(ctx, policy,
+                                                                body_reference,
+                                                                "agent");
                     if (!callee)
                     {
-                        callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "common");
+                        callee = EvalContextResolveBundleExpression(ctx, policy,
+                                                                    body_reference,
+                                                                    "common");
                     }
                 }
 
-                if (!callee && (strcmp("ifvarclass", cp->lval) != 0 &&
-                                strcmp("if", cp->lval) != 0))
+                if (callee == NULL &&
+                    strcmp("ifvarclass", cp->lval) != 0 &&
+                    strcmp("if",         cp->lval) != 0)
                 {
                     Log(LOG_LEVEL_ERR,
                         "Apparent bundle '%s' was undeclared, but "
@@ -406,25 +388,35 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         RvalScalarValue(cp->rval), pp->offset.line,
                         PromiseGetBundle(pp)->source_path);
                 }
+
+                Log(LOG_LEVEL_DEBUG,
+                    "DeRefCopyPromise():     copying bundle: '%s'",
+                    body_reference);
             }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "DeRefCopyPromise():     copying constraint: '%s'",
+                    cp->lval);
+            }
+
+            /* For all non-body constraints: copy the Rval expanding the
+             * '@' list variables. */
 
             if (IsDefinedClass(ctx, cp->classes))
             {
                 Rval newrv = RvalCopy(cp->rval);
                 if (newrv.type == RVAL_TYPE_LIST)
                 {
-                    Rlist *new_list = RvalRlistValue(newrv);
-                    RlistFlatten(ctx, &new_list);
-                    newrv.item = new_list;
+                    RlistFlatten(ctx, (Rlist **) &newrv.item);
                 }
 
                 PromiseAppendConstraint(pcopy, cp->lval, newrv, false);
             }
         }
 
-        SeqDestroy(bodies_and_args);
-    }
-    
+    } /* for all constraints */
+
     // Add default body for promise body types that are not present
     char *bundle_type = pcopy->parent_promise_type->parent_bundle->type;
     char *promise_type = pcopy->parent_promise_type->name;

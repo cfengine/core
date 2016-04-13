@@ -597,13 +597,13 @@ Rval ExpandPrivateRval(EvalContext *ctx,
     switch (rval_type)
     {
     case RVAL_TYPE_SCALAR:
-        {
-            Buffer *buffer = BufferNew();
-            ExpandScalar(ctx, ns, scope, rval_item, buffer);
-            returnval = (Rval) { BufferClose(buffer),  RVAL_TYPE_SCALAR };
-        }
+    {
+        Buffer *buffer = BufferNew();
+        ExpandScalar(ctx, ns, scope, rval_item, buffer);
+        returnval.item = BufferClose(buffer);
+        returnval.type = RVAL_TYPE_SCALAR ;
         break;
-
+    }
     case RVAL_TYPE_LIST:
         returnval.item = ExpandList(ctx, ns, scope, rval_item, true);
         returnval.type = RVAL_TYPE_LIST;

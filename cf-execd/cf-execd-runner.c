@@ -520,36 +520,8 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     Log(LOG_LEVEL_DEBUG, "Mail report: mailing results of '%s' to '%s'", file, config->mail_to_address);
 
-/* Check first for anomalies - for subject header */
-
     FILE *fp = fopen(file, "r");
-    if (!fp)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
-        return;
-    }
-
-    bool anomaly = false;
-    char vbuff[CF_BUFSIZE];
-
-    while (!feof(fp))
-    {
-        vbuff[0] = '\0';
-        if (fgets(vbuff, sizeof(vbuff), fp) == NULL)
-        {
-            break;
-        }
-
-        if (strstr(vbuff, "entropy"))
-        {
-            anomaly = true;
-            break;
-        }
-    }
-
-    fclose(fp);
-
-    if ((fp = fopen(file, "r")) == NULL)
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
@@ -605,6 +577,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         goto mail_err;
     }
 
+    char vbuff[CF_BUFSIZE];
     snprintf(vbuff, sizeof(vbuff), "HELO %s\r\n", config->fq_name);
     Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
 
@@ -645,24 +618,14 @@ static void MailResult(const ExecConfig *config, const char *file)
         goto mail_err;
     }
 
-    char mailsubject_anomaly_prefix[8];
-    if (anomaly)
-    {
-        strcpy(mailsubject_anomaly_prefix, "**!! ");
-    }
-    else
-    {
-        mailsubject_anomaly_prefix[0] = '\0';
-    }
-
     if (SafeStringLength(config->mail_subject) == 0)
     {
-        snprintf(vbuff, sizeof(vbuff), "Subject: %s[%s/%s]\r\n", mailsubject_anomaly_prefix, config->fq_name, config->ip_address);
+        snprintf(vbuff, sizeof(vbuff), "Subject: [%s/%s]\r\n", config->fq_name, config->ip_address);
         Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
     else
     {
-        snprintf(vbuff, sizeof(vbuff), "Subject: %s%s\r\n", mailsubject_anomaly_prefix, config->mail_subject);
+        snprintf(vbuff, sizeof(vbuff), "Subject: %s\r\n", config->mail_subject);
         Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
 

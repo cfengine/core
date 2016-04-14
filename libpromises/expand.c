@@ -886,13 +886,7 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
             switch (DataTypeToRvalType(value_type))
             {
             case RVAL_TYPE_LIST:
-                {
-                    Rlist *list = RlistCopy(value);
-                    RlistFlatten(ctx, &list);
-
-                    EvalContextVariablePut(ctx, mangled_ref, list, value_type, "source=agent");
-                    RlistDestroy(list);
-                }
+                EvalContextVariablePut(ctx, mangled_ref, value, value_type, "source=agent");
                 break;
 
             case RVAL_TYPE_CONTAINER:

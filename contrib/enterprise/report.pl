@@ -15,12 +15,13 @@ my %outputs = (
                html => sub { my $data = decode_json( shift ); print_html($data, shift) },
                list => sub { my $data = decode_json( shift ); print_hostlist($data, shift) },
                host => sub { my $data = decode_json( shift ); print_hostinfo($data, shift) },
+               ansible_emptyhostvars => sub { my $data = decode_json( shift ); print_ansible_emptyhostvars($data, shift) },
                json => sub { print @_ },
               );
 
 my %options = (
-               url => $ENV{CFENGINE_MP_URL} || 'http://admin:admin@localhost:80/',
-               output => 'csv',
+               url => $ENV{CFENGINE_MP_URL} || 'http://admin:admin@localhost:80',
+               output => 'list',
                limit => 100000,
                verbose => 0,
                list => 0,
@@ -43,8 +44,8 @@ my $query = shift;
 if ($options{list})
 {
     $query = "SELECT Hosts.HostName, Contexts.ContextName FROM Hosts JOIN Contexts ON Hosts.Hostkey = Contexts.HostKey";
-    $options{output} = 'list';
 }
+
 elsif (exists $options{host})
 {
     $query = "SELECT Variables.Bundle, Variables.VariableName, Variables.VariableValue FROM Variables WHERE Variables.HostKey = (SELECT Hosts.Hostkey FROM Hosts WHERE Hosts.HostName = '$options{host}')";
@@ -143,4 +144,23 @@ sub print_hostinfo
     }
 
     print encode_json(\%info), "\n";
+}
+
+sub print_ansible_emptyhostvars
+{
+    my $data = shift;
+    my %list;
+
+    foreach my $row (@{$data->{data}->[0]->{rows}})
+    {
+        push @{$list{$row->[1]}}, $row->[0];
+    }
+
+    # Insert empty _meta hostvars to speed ansible up when not using host
+    # variables. It would be nice to add another output option that combined the
+    # --host option for each host in the infrastructure to provide all the
+    # variables at once.
+    $list{'_meta'}->{'hostvars'} = {};
+
+    print encode_json(\%list), "\n";
 }

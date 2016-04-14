@@ -64,6 +64,7 @@
 #include <cf-windows-functions.h>
 #include <loading.h>
 #include <iteration.h>
+#include <signals.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -431,6 +432,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
+
+    LoadAugments(ctx, config);
 
     const char *bootstrap_arg =
         config->agent_specific.agent.bootstrap_policy_server;
@@ -1031,8 +1034,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
     }
-
-    LoadAugments(ctx, config);
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)
@@ -1965,4 +1966,14 @@ bool GenericAgentPostLoadInit(const EvalContext *ctx)
         EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_MIN_VERSION);
 
     return cfnet_init(tls_min_version, tls_ciphers);
+}
+
+void SetupSignalsForAgent(void)
+{
+    signal(SIGINT, HandleSignalsForAgent);
+    signal(SIGTERM, HandleSignalsForAgent);
+    signal(SIGHUP, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGUSR1, HandleSignalsForAgent);
+    signal(SIGUSR2, HandleSignalsForAgent);
 }

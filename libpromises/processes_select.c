@@ -563,17 +563,15 @@ static void PrintStringIndexLine(int prefix_spaces, int len)
     index_str[1] = '\0';
     for (int lineindex = 10; lineindex <= len; lineindex += 10)
     {
-        char num[11];
-        xsnprintf(num, sizeof(num), "% 10d", lineindex);
+        char num[PRINTSIZE(lineindex)];
+        xsnprintf(num, sizeof(num), "%10d", lineindex);
         strlcat(index_str, num, sizeof(index_str));
         strlcat(arrow_str, "         ^", sizeof(arrow_str));
     }
 
     // Prefix the beginning of the indexes with the given number.
-    char fmt[100];
-    xsnprintf(fmt, sizeof(fmt), "%% %ds%%s", prefix_spaces);
-    Log(LOG_LEVEL_DEBUG, fmt, "", arrow_str);
-    Log(LOG_LEVEL_DEBUG, fmt, "Index: ", index_str);
+    Log(LOG_LEVEL_DEBUG, "%*s%s", prefix_spaces, "", arrow_str);
+    Log(LOG_LEVEL_DEBUG, "%*s%s", prefix_spaces, "Index: ", index_str);
 }
 
 static void MaybeFixStartTime(const char *line,
@@ -1268,7 +1266,8 @@ static FILE *OpenUcbPsPipe(void)
         if (!cmd)
         {
             Log(LOG_LEVEL_WARNING, "Could not execute \"%s\", extra process "
-                "information not available.", ps_cmd);
+                "information not available. Process command line length may be "
+                "limited to 80 characters.", ps_cmd);
         }
 
         free(ps_cmd);

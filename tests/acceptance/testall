@@ -807,11 +807,11 @@ fi
 # or /var/cfengine/tests/acceptance.
 find_default_binary()
 {
-    [ -n "$BINDIR" -a -x "$BINDIR/$2" ] && eval $1=\""$BINDIR/$2"\"
-    [ -x "`pwd`/$2/$2" ] && eval $1=\""`pwd`/$2/$2"\"
-    [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
-    [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
     [ -x "`pwd`/../../ext/$2" ] && eval $1=\""`pwd`/../../ext/$2"\"
+    [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
+    [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
+    [ -x "`pwd`/$2/$2" ] && eval $1=\""`pwd`/$2/$2"\"
+    [ -n "$BINDIR" -a -x "$BINDIR/$2" ] && eval $1=\""$BINDIR/$2"\"
 }
 find_default_binary DEFAGENT cf-agent
 find_default_binary DEFCF_PROMISES cf-promises

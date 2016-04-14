@@ -185,10 +185,106 @@ body classes classes_generic(x)
 # @param x The unique part of the classes to be defined
 {
       promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_reached" };
+}
+
+body classes results(scope, class_prefix)
+# @brief Define classes prefixed with `class_prefix` and suffixed with
+# appropriate outcomes: _kept, _repaired, _not_kept, _error, _failed,
+# _denied, _timeout, _reached
+#
+# @param scope The scope in which the class should be defined (`bundle` or `namespace`)
+# @param class_prefix The prefix for the classes defined
+#
+# This body can be applied to any promise and sets global
+# (`namespace`) or local (`bundle`) classes based on its outcome. For
+# instance, with `class_prefix` set to `abc`:
+#
+# * if the promise is to change a file's owner to `nick` and the file
+# was already owned by `nick`, the classes `abc_reached` and
+# `abc_kept` will be set.
+#
+# * if the promise is to change a file's owner to `nick` and the file
+# was owned by `adam` and the change succeeded, the classes
+# `abc_reached` and `abc_repaired` will be set.
+#
+# This body is a simpler, more consistent version of the body
+# `scoped_classes_generic`, which see. The key difference is that
+# fewer classes are defined, and only for outcomes that we can know.
+# For example this body does not define "OK/not OK" outcome classes,
+# since a promise can be both kept and failed at the same time.
+#
+# It's important to understand that promises may do multiple things,
+# so a promise is not simply "OK" or "not OK." The best way to
+# understand what will happen when your specific promises get this
+# body is to test it in all the possible combinations.
+#
+# **Suffix Notes:**
+#
+# * `_reached` indicates the promise was tried. Any outcome will result
+#   in a class with this suffix being defined.
+#
+# * `_kept` indicates some aspect of the promise was kept
+#
+# * `_repaired` indicates some aspect of the promise was repaired
+#
+# * `_not_kept` indicates some aspect of the promise was not kept.
+#   error, failed, denied and timeout outcomes will result in a class
+#   with this suffix being defined
+#
+# * `_error` indicates the promise repair encountered an error
+#
+# * `_failed` indicates the promise failed
+#
+# * `_denied` indicates the promise repair was denied
+#
+# * `_timeout` indicates the promise timed out
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example
+# {
+#   commands:
+#     "/bin/true"
+#       classes => results("bundle", "my_class_prefix");
+#
+#   reports:
+#     my_class_prefix_kept::
+#       "My promise was kept";
+#
+#     my_class_prefix_repaired::
+#       "My promise was repaired";
+# }
+# ```
+#
+# **See also:** `scope`, `scoped_classes_generic`, `classes_generic`
+{
+  scope => "$(scope)";
+
+  promise_kept => { "$(class_prefix)_reached",
+                    "$(class_prefix)_kept" };
+
+  promise_repaired => { "$(class_prefix)_reached",
+                        "$(class_prefix)_repaired" };
+
+  repair_failed => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_failed" };
+
+  repair_denied => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_denied" };
+
+  repair_timeout => { "$(class_prefix)_reached",
+                      "$(class_prefix)_error",
+                      "$(class_prefix)_not_kept",
+                      "$(class_prefix)_timeout" };
 }
 
 body classes scoped_classes_generic(scope, x)
@@ -200,10 +296,10 @@ body classes scoped_classes_generic(scope, x)
 {
       scope => "$(scope)";
       promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_error", "$(x)_not_kept", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_reached" };
 }
 
 body classes always(x)
@@ -221,6 +317,19 @@ body classes kept_successful_command
 # @brief Set command to "kept" instead of "repaired" if it returns 0
 {
       kept_returncodes => { "0" };
+}
+
+bundle edit_line insert_before_if_no_line(before, string)
+# @brief Insert `string` before `before` if `string` is not found in the file
+# @param before The regular expression matching the line which `string` will be
+# inserted before
+# @param string The string to be prepended
+#
+{
+  insert_lines:
+      "$(string)"
+        location => before($(before)),
+        comment => "Prepend a line to the file if it doesn't already exist";
 }
 
 bundle edit_line insert_lines(lines)
@@ -511,7 +620,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
       "$(index)\s*=.*"
       edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
       select_region => INI_section("$(sectionName)"),
-      classes => if_ok("manage_variable_values_ini_not_$(cindex[$(index)])"),
+      classes => results("bundle", "manage_variable_values_ini_not_$(cindex[$(index)])"),
       ifvarclass => "edit_$(cindex[$(index)])";
 
   delete_lines:
@@ -526,7 +635,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
 
       "$(index)=$($(tab)[$(sectionName)][$(index)])"
       select_region => INI_section("$(sectionName)"),
-      ifvarclass => "!manage_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
+        ifvarclass => "!(manage_variable_values_ini_not_$(cindex[$(index)])_kept|manage_variable_values_ini_not_$(cindex[$(index)])_repaired).edit_$(cindex[$(index)])";
 
 }
 
@@ -542,7 +651,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 # @param sectionName The section in the file within which values should be
 # modified
 #
-# **See also:** `set_variable_values_ini()`
+# **See also:** `manage_variable_values_ini()`
 {
   vars:
       "index" slist => getindices("$(tab)[$(sectionName)]");
@@ -566,7 +675,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
       "$(index)\s*=.*"
       edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
       select_region => INI_section("$(sectionName)"),
-      classes => if_ok("set_variable_values_ini_not_$(cindex[$(index)])"),
+      classes => results("bundle", "set_variable_values_ini_not_$(cindex[$(index)])"),
       ifvarclass => "edit_$(cindex[$(index)])";
 
   insert_lines:
@@ -576,7 +685,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
       "$(index)=$($(tab)[$(sectionName)][$(index)])"
       select_region => INI_section("$(sectionName)"),
-      ifvarclass => "!set_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
+        ifvarclass => "!(set_variable_values_ini_not_$(cindex[$(index)])_kept|set_variable_values_ini_not_$(cindex[$(index)])_repaired).edit_$(cindex[$(index)])";
 
 }
 
@@ -655,13 +764,13 @@ bundle edit_line set_quoted_values(v)
       # match a line starting like the key = something
       "\s*$(index)\s*=.*"
       edit_field => col("=","2",'"$($(v)[$(index)])"',"set"),
-      classes    => if_ok("$(cindex[$(index)])_in_file"),
+      classes    => results("bundle", "$(cindex[$(index)])_in_file"),
       comment    => "Match a line starting like key = something";
 
   insert_lines:
       '$(index)="$($(v)[$(index)])"'
       comment    => "Insert a variable definition",
-      ifvarclass => "!$(cindex[$(index)])_in_file";
+        ifvarclass => "!($(cindex[$(index)])_in_file_kept|$(cindex[$(index)])_in_file_repaired)";
 }
 
 bundle edit_line set_variable_values(v)
@@ -685,7 +794,7 @@ bundle edit_line set_variable_values(v)
 #
 #     files:
 #        "myfile"
-#          edit_line => set_quoted_values(stuff)
+#          edit_line => set_variable_values(stuff)
 # ```
 #
 # **See also:** `set_quoted_values()`
@@ -715,7 +824,7 @@ bundle edit_line set_variable_values(v)
       "\s*$(index)\s*=.*"
 
       edit_field => col("\s*$(index)\s*=","2","$($(v)[$(index)])","set"),
-      classes => if_ok("$(cv)_$(cindex[$(index)])_in_file"),
+      classes => results("bundle", "$(cv)_$(cindex[$(index)])_in_file"),
       comment => "Match a line starting like key = something";
 
   insert_lines:
@@ -723,7 +832,7 @@ bundle edit_line set_variable_values(v)
       "$(index)=$($(v)[$(index)])"
 
       comment => "Insert a variable definition",
-      ifvarclass => "!$(cv)_$(cindex[$(index)])_in_file";
+        ifvarclass => "!($(cv)_$(cindex[$(index)])_in_file_kept|$(cv)_$(cindex[$(index)])_in_file_repaired)";
 }
 
 bundle edit_line set_config_values(v)
@@ -758,47 +867,56 @@ bundle edit_line set_config_values(v)
       "ev[$(index)]" string => escape("$($(v)[$(index)])");
 
       # Do we have more than one line commented out?
-      "index_comment_matches_$(cindex[$(index)])" int => countlinesmatching("^\s*#\s*($(index)\s+.*|$(index))$","$(edit.filename)");
+      "index_comment_matches_$(cindex[$(index)])"
+        int => countlinesmatching("^\s*#\s*($(index)\s+.*|$(index))$","$(edit.filename)");
 
 
   classes:
       # Check to see if this line exists
-      "line_exists_$(cindex[$(index)])" expression => regline("^\s*($(index)\s.*|$(index))$","$(edit.filename)");
+      "line_exists_$(cindex[$(index)])"
+        expression => regline("^\s*($(index)\s.*|$(index))$","$(edit.filename)"),
+        scope => "bundle";
 
       # if there's more than one comment, just add new (don't know who to use)
-      "multiple_comments_$(cindex[$(index)])" expression => isgreaterthan("$(index_comment_matches_$(cindex[$(index)]))","1");
-
+      "multiple_comments_$(cindex[$(index)])"
+        expression => isgreaterthan("$(index_comment_matches_$(cindex[$(index)]))","1"),
+        scope => "bundle";
 
   replace_patterns:
       # If the line is commented out, uncomment and replace with
       # the correct value
       "^\s*#\s*($(index)\s+.*|$(index))$"
-             comment => "Uncommented the value $(index)",
+        comment => "If we find a single commented entry we can uncomment it to
+                    keep the settings near any inline documentation. If there
+                    are multiple comments, then we don't try to replace them and
+                    instead will later append the new value after the first
+                    commented occurance of $(index).",
+        handle => "set_config_values_replace_commented_line",
         replace_with => value("$(index) $($(v)[$(index)])"),
-          ifvarclass => "!line_exists_$(cindex[$(index)]).!replace_attempted_$(cindex[$(index)]).!multiple_comments_$(cindex[$(index)])",
-             classes => always("uncommented_$(cindex[$(index)])");
-      
+          ifvarclass => "!line_exists_$(cindex[$(index)]).!replace_attempted_$(cindex[$(index)])_reached.!multiple_comments_$(cindex[$(index)])",
+             classes => results("bundle", "uncommented_$(cindex[$(index)])");
+
       # If the line is there with the wrong value, replace with
       # the correct value
       "^\s*($(index)\s+(?!$(ev[$(index)])$).*|$(index))$"
            comment => "Correct the value $(index)",
       replace_with => value("$(index) $($(v)[$(index)])"),
-           classes => always("replace_attempted_$(cindex[$(index)])");
+           classes => results("bundle", "replace_attempted_$(cindex[$(index)])");
 
   insert_lines:
-      # If the line doesn't exist, or there is more than one occurrence
+      # If the line doesn't exist, or there is more than one occurance
       # of the LHS commented out, insert a new line and try to place it
       # after the commented LHS (keep new line with old comments)
       "$(index) $($(v)[$(index)])"
          comment => "Insert the value, marker exists $(index)",
         location => after("^\s*#\s*($(index)\s+.*|$(index))$"),
-      ifvarclass => "replace_attempted_$(cindex[$(index)]).multiple_comments_$(cindex[$(index)])";
+      ifvarclass => "replace_attempted_$(cindex[$(index)])_reached.multiple_comments_$(cindex[$(index)])";
 
       # If the line doesn't exist and there are no occurrences
       # of the LHS commented out, insert a new line at the eof
       "$(index) $($(v)[$(index)])"
          comment => "Insert the value, marker doesn't exist $(index)",
-      ifvarclass => "replace_attempted_$(cindex[$(index)]).!multiple_comments_$(cindex[$(index)])";
+      ifvarclass => "replace_attempted_$(cindex[$(index)])_reached.!multiple_comments_$(cindex[$(index)])";
 
 }
 
@@ -881,15 +999,15 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
       "^$(cp)($(i)$(bp).*|$(i))$"
              comment => "Uncommented the value '$(i)'",
         replace_with => value("$(i)$(sep)$($(v)[$(i)])"),
-          ifvarclass => "!exists_$(ci[$(i)]).!replace_attempted_$(ci[$(i)]).!multiple_comments_$(ci[$(i)])",
-             classes => always("uncommented_$(ci[$(i)])");
+          ifvarclass => "!exists_$(ci[$(i)]).!replace_attempted_$(ci[$(i)])_reached.!multiple_comments_$(ci[$(i)])",
+             classes => results("bundle", "uncommented_$(ci[$(i)])");
 
       # If the line is there with the wrong value, replace with
       # the correct value
       "^\s*($(i)$(bp)(?!$(ev[$(i)])$).*|$(i))$"
            comment => "Correct the value '$(i)'",
       replace_with => value("$(i)$(sep)$($(v)[$(i)])"),
-           classes => always("replace_attempted_$(ci[$(i)])");
+           classes => results("bundle", "replace_attempted_$(ci[$(i)])");
 
   insert_lines:
       # If the line doesn't exist, or there is more than one occurrence
@@ -898,19 +1016,18 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
       "$(i)$(sep)$($(v)[$(i)])"
          comment => "Insert the value, marker '$(i)' exists",
         location => after("^$(cp)($(i)$(bp).*|$(i))$"),
-      ifvarclass => "replace_attempted_$(ci[$(i)]).multiple_comments_$(ci[$(i)])";
+      ifvarclass => "replace_attempted_$(ci[$(i)])_reached.multiple_comments_$(ci[$(i)])";
 
       # If the line doesn't exist and there are no occurrences
       # of the LHS commented out, insert a new line at the eof
       "$(i)$(sep)$($(v)[$(i)])"
          comment => "Insert the value, marker '$(i)' doesn't exist",
-      ifvarclass => "replace_attempted_$(ci[$(i)]).!multiple_comments_$(ci[$(i)]).!exists_$(ci[$(i)])";
+      ifvarclass => "replace_attempted_$(ci[$(i)])_reached.!multiple_comments_$(ci[$(i)]).!exists_$(ci[$(i)])";
 
   reports:
     verbose_mode|EXTRA::
       "$(this.bundle): Line for '$(i)' exists" ifvarclass => "exists_$(ci[$(i)])";
       "$(this.bundle): Line for '$(i)' does not exist" ifvarclass => "!exists_$(ci[$(i)])";
-
 }
 
 bundle edit_line set_config_values_matching(v,pat)
@@ -948,11 +1065,11 @@ bundle edit_line set_config_values_matching(v,pat)
       "^\s*($(index)\s+(?!$($(v)[$(index)])).*|# ?$(index)\s+.*)$"
       comment => "Correct the value",
       replace_with => value("$(index) $($(v)[$(index)])"),
-      classes => always("replace_attempted_$(cindex[$(index)])");
+      classes => results("bundle", "replace_attempted_$(cindex[$(index)])");
 
   insert_lines:
       "$(index) $($(v)[$(index)])"
-      ifvarclass => "replace_attempted_$(cindex[$(index)])";
+      ifvarclass => "replace_attempted_$(cindex[$(index)])_reached";
 
 }
 
@@ -1135,11 +1252,11 @@ bundle edit_line replace_or_add(pattern,line)
       "^(?!$(eline)$)$(pattern)$"
       comment => "Replace a pattern here",
       replace_with => value("$(line)"),
-      classes => always("replace_done_$(cline)");
+      classes => results("bundle", "replace_$(cline)");
 
   insert_lines:
       "$(line)"
-      ifvarclass => "replace_done_$(cline)";
+      ifvarclass => "replace_$(cline)_reached";
 }
 
 bundle edit_line converge(marker, lines)
@@ -1324,7 +1441,7 @@ body copy_from secure_cp(from,server)
 #
 # Only copy the file if it is different from the local copy, and verify
 # that the copy is correct.
-# 
+#
 # @param from The location of the file on the remote server
 # @param server The hostname or IP of the server from which to download
 {
@@ -1636,8 +1753,8 @@ bundle agent file_tidy(file)
       "$(file)" delete => tidy;
 
   reports:
-    inform_mode|EXTRA::
-      "$(this.bundle): deleting $(file) with delete => tidy";
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): deleting $(file) with delete => tidy";
 }
 
 bundle agent dir_sync(from, to)
@@ -1659,8 +1776,8 @@ bundle agent dir_sync(from, to)
       copy_from => copyfrom_sync($(from));
 
   reports:
-    inform_mode|EXTRA::
-      "$(this.bundle): copying directory $(from) to $(to)";
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): copying directory $(from) to $(to)";
 }
 
 bundle agent file_copy(from, to)
@@ -1680,8 +1797,8 @@ bundle agent file_copy(from, to)
       copy_from => copyfrom_sync($(from));
 
   reports:
-    inform_mode|EXTRA::
-      "$(this.bundle): copying file $(from) to $(to)";
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): copying file $(from) to $(to)";
 }
 
 body copy_from copyfrom_sync(f)
@@ -1708,6 +1825,15 @@ bundle agent file_make(file, str)
 # and some more text here");
 # ```
 {
+  vars:
+      "len" int => string_length($(str));
+    summarize::
+      "summary" string => format("%s...%s",
+                                string_head($(str), 18),
+                                string_tail($(str), 18));
+  classes:
+      "summarize" expression => isgreaterthan($(len), 40);
+
   files:
       "$(file)"
       create => "true",
@@ -1715,8 +1841,53 @@ bundle agent file_make(file, str)
       edit_defaults => empty;
 
   reports:
-    inform_mode|EXTRA::
-      "$(this.bundle): creating $(file) with contents '$(str)'";
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): creating $(file) with contents '$(str)'"
+      ifvarclass => "!summarize";
+
+      "DEBUG $(this.bundle): creating $(file) with contents '$(summary)'"
+      ifvarclass => "summarize";
+}
+
+bundle agent file_make_mog(file, str, mode, owner, group)
+# @brief Make a file from a string with mode, owner, group
+# @param file target
+# @param str the string data
+# @param mode the file permissions in octal
+# @param owner the file owner as a name or UID
+# @param group the file group as a name or GID
+#
+# **Example:**
+#
+# ```cf3
+# methods:
+#      "" usebundle => file_make_mog("/tmp/z.txt", "Some text
+# and some more text here", "0644", "root", "root");
+# ```
+{
+  vars:
+      "len" int => string_length($(str));
+    summarize::
+      "summary" string => format("%s...%s",
+                                string_head($(str), 18),
+                                string_tail($(str), 18));
+  classes:
+      "summarize" expression => isgreaterthan($(len), 40);
+
+  files:
+      "$(file)"
+      create => "true",
+      edit_line => insert_lines($(str)),
+      perms => mog($(mode), $(owner), $(group)),
+      edit_defaults => empty;
+
+  reports:
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): creating $(file) with contents '$(str)', mode '$(mode)', owner '$(owner)' and group '$(group)'"
+      ifvarclass => "!summarize";
+
+      "DEBUG $(this.bundle): creating $(file) with contents '$(summary)', mode '$(mode)', owner '$(owner)' and group '$(group)'"
+      ifvarclass => "summarize";
 }
 
 bundle agent file_empty(file)
@@ -1736,8 +1907,8 @@ bundle agent file_empty(file)
       edit_defaults => empty;
 
   reports:
-    inform_mode|EXTRA::
-      "$(this.bundle): creating empty $(file) with 0 size";
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): creating empty $(file) with 0 size";
 }
 
 bundle agent file_hardlink(target, link)
@@ -1758,8 +1929,8 @@ bundle agent file_hardlink(target, link)
       link_from => linkfrom($(target), "hardlink");
 
   reports:
-    inform_mode|EXTRA::
-      "$(this.bundle): $(link) will be a hard link to $(target)";
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): $(link) will be a hard link to $(target)";
 }
 
 bundle agent file_link(target, link)
@@ -1780,8 +1951,8 @@ bundle agent file_link(target, link)
       link_from => linkfrom($(target), "symlink");
 
   reports:
-    inform_mode|EXTRA::
-      "$(this.bundle): $(link) will be a symlink to $(target)";
+    "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): $(link) will be a symlink to $(target)";
 }
 
 bundle edit_line create_solaris_admin_file

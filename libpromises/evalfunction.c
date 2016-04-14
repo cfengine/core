@@ -1161,7 +1161,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
 /*********************************************************************/
 
-static bool AddPackagesmatchingJsonLine(pcre *matcher, JsonElement *json, char *line)
+static bool AddPackagesMatchingJsonLine(pcre *matcher, JsonElement *json, char *line)
 {
     
     if (strlen(line) > CF_BUFSIZE - 80)
@@ -1232,7 +1232,7 @@ static bool GetLegacyPackagesMatching(pcre *matcher, JsonElement *json, const bo
     char *line;
     while (NULL != (line = GetCsvLineNext(fin)))
     {
-        if (!AddPackagesmatchingJsonLine(matcher, json, line))
+        if (!AddPackagesMatchingJsonLine(matcher, json, line))
         {
             free(line);
             break;
@@ -1240,7 +1240,7 @@ static bool GetLegacyPackagesMatching(pcre *matcher, JsonElement *json, const bo
         free(line);
     }
 
-    bool ret = feof(fin);
+    bool ret = (feof(fin) != 0);
     fclose(fin);
     
     return ret;
@@ -1255,7 +1255,7 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
         const char *pm_name =  RlistScalarValue(rp);
         size_t pm_name_size = strlen(pm_name);
         
-        Log(LOG_LEVEL_DEBUG, "Reading packages (%d) for package modeule [%s]", 
+        Log(LOG_LEVEL_DEBUG, "Reading packages (%d) for package module [%s]", 
                 database, pm_name);
         
         if (StringSafeEqual(pm_name, "cf_null"))
@@ -1287,27 +1287,38 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
                 continue;
             }
             
-            Seq *packages_form_module = SeqStringFromString(buff, '\n');
+            Seq *packages_from_module = SeqStringFromString(buff, '\n');
             free(buff);
             
-            if (packages_form_module)
+            if (packages_from_module)
             {
                 // Iterate over and see where match is.
-                for (int i = 0; i < SeqLength(packages_form_module); i++)
+                for (int i = 0; i < SeqLength(packages_from_module); i++)
                 {
-                    char *line = SeqAt(packages_form_module, i);
+                    // With the new package promise we are storing inventory 
+                    // information it the database. This set of lines ('\n' separated)
+                    // containing packages information. Each line is comma 
+                    // separated set of data containing name, version and architecture.
+                    //
+                    // Legacy package promise is using 4 values, where the last one
+                    // is package method. In our case, method is simply package 
+                    // module name. To make sure regex matching is working as
+                    // expected (we are comparing whole lines, containing package
+                    // method) we need to extend the line to contain package
+                    // module before regex match is taking place.
+                    char *line = SeqAt(packages_from_module, i);
                     size_t new_line_size = strlen(line) + pm_name_size + 2; // we need coma and terminator
                     char new_line[new_line_size];
                     strcpy(new_line, line);
                     strcat(new_line, ",");
                     strcat(new_line, pm_name);
                     
-                    if (!AddPackagesmatchingJsonLine(matcher, json, new_line))
+                    if (!AddPackagesMatchingJsonLine(matcher, json, new_line))
                     {
                         break;
                     }
                 }
-                SeqDestroy(packages_form_module);
+                SeqDestroy(packages_from_module);
             }
             else
             {
@@ -1362,7 +1373,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
     if (ret == false)
     {
         Log(LOG_LEVEL_ERR,
-            "%s Unable to read package inventory.", fp->name);
+            "%s: Unable to read package inventory.", fp->name);
         JsonDestroy(json);
         return FnFailure();
     }

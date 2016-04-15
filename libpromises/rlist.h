@@ -52,6 +52,7 @@ Rval RvalCopyRewriter(Rval rval, JsonElement *map);
 void RvalDestroy(Rval rval);
 JsonElement *RvalToJson(Rval rval);
 char *RvalToString(Rval rval);
+char *RlistToString(const Rlist *rlist);
 void RvalWrite(Writer *writer, Rval rval);
 void RvalWriteQuoted(Writer *writer, Rval rval);
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max);

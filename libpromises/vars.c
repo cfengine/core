@@ -347,10 +347,8 @@ static const char *ReferenceEnd(const char *str, size_t len)
         case '}':
             if (stack[level] != '{')
             {
-                Writer *w = StringWriter();
-                WriterWriteLen(w, str, len);
-                Log(LOG_LEVEL_ERR, "Variable reference bracket mismatch '%s'", StringWriterData(w));
-                WriterClose(w);
+                Log(LOG_LEVEL_ERR, "Variable reference bracket mismatch '%.*s'",
+                    (int) len, str);
                 return NULL;
             }
             level--;
@@ -358,10 +356,8 @@ static const char *ReferenceEnd(const char *str, size_t len)
         case ')':
             if (stack[level] != '(')
             {
-                Writer *w = StringWriter();
-                WriterWriteLen(w, str, len);
-                Log(LOG_LEVEL_ERR, "Variable reference bracket mismatch '%s'", StringWriterData(w));
-                WriterClose(w);
+                Log(LOG_LEVEL_ERR, "Variable reference bracket mismatch '%.*s'",
+                    (int) len, str);
                 return NULL;
             }
             level--;
@@ -377,6 +373,10 @@ static const char *ReferenceEnd(const char *str, size_t len)
     return NULL;
 }
 
+/**
+ * Extract variable inside dollar-paren.
+ * @param extract_inner ignore opening dollar-paren and closing paren.
+ */
 bool ExtractScalarReference(Buffer *out, const char *str, size_t len, bool extract_inner)
 {
     if (len <= 1)
@@ -400,26 +400,23 @@ bool ExtractScalarReference(Buffer *out, const char *str, size_t len, bool extra
             }
             else
             {
-                return ExtractScalarReference(out, dollar_point + 1, remaining - 1, extract_inner);
+                return ExtractScalarReference(out, dollar_point + 1,
+                                              remaining - 1, extract_inner);
             }
         }
 
         if (!close_point)
         {
-            Writer *w = StringWriter();
-            WriterWriteLen(w, str, len);
-            Log(LOG_LEVEL_ERR, "Variable reference close mismatch '%s'", StringWriterData(w));
-            WriterClose(w);
+            Log(LOG_LEVEL_ERR, "Variable reference close mismatch '%.*s'",
+                (int) len, str);
             return false;
         }
 
         size_t outer_len = close_point - dollar_point + 1;
         if (outer_len <= 3)
         {
-            Writer *w = StringWriter();
-            WriterWriteLen(w, str, len);
-            Log(LOG_LEVEL_ERR, "Empty variable reference close mismatch '%s'", StringWriterData(w));
-            WriterClose(w);
+            Log(LOG_LEVEL_ERR, "Empty variable reference close mismatch '%.*s'",
+                (int) len, str);
             return false;
         }
 

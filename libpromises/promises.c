@@ -37,7 +37,6 @@
 #include <string_lib.h>
 #include <audit.h>
 
-static void DereferenceComment(Promise *pp);
 static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const PromiseTypeSyntax *syntax);
 
 void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
@@ -537,6 +536,30 @@ static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Prom
     return IsDefinedClass(ctx, classes);
 }
 
+/* Expands "$(this.promiser)" comment if present. Writes the result to pp. */
+static void DereferenceAndPutComment(Promise* pp, const char *comment)
+{
+    free(pp->comment);
+
+    char *sp;
+    if ((sp = strstr(comment, "$(this.promiser)")) != NULL ||
+        (sp = strstr(comment, "${this.promiser}")) != NULL)
+    {
+        char *s;
+        int this_len    = strlen("$(this.promiser)");
+        int this_offset = sp - comment;
+        xasprintf(&s, "%.*s%s%s",
+                  this_offset, comment, pp->promiser,
+                  &comment[this_offset + this_len]);
+
+        pp->comment = s;
+    }
+    else
+    {
+        pp->comment = xstrdup(comment);
+    }
+}
+
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
     assert(pp->promiser);
@@ -673,15 +696,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
             }
             else
             {
-                free(pcopy->comment);
-                pcopy->comment = final.item ? xstrdup(final.item) : NULL;
-
-                if (pcopy->comment &&
-                    (strstr(pcopy->comment, "$(this.promiser)") ||
-                     strstr(pcopy->comment, "${this.promiser}")))
-                {
-                    DereferenceComment(pcopy);
-                }
+                assert(final.item != NULL);             /* it's SCALAR type */
+                DereferenceAndPutComment(pcopy, final.item);
             }
         }
     }
@@ -732,25 +748,6 @@ void PromiseRef(LogLevel level, const Promise *pp)
 }
 
 /*******************************************************************/
-
-static void DereferenceComment(Promise *pp)
-{
-    char pre_buffer[CF_BUFSIZE], post_buffer[CF_BUFSIZE], buffer[CF_BUFSIZE], *sp;
-    int offset = 0;
-
-    strlcpy(pre_buffer, pp->comment, CF_BUFSIZE);
-
-    if ((sp = strstr(pre_buffer, "$(this.promiser)")) || (sp = strstr(pre_buffer, "${this.promiser}")))
-    {
-        *sp = '\0';
-        offset = sp - pre_buffer + strlen("$(this.promiser)");
-        strlcpy(post_buffer, pp->comment + offset, CF_BUFSIZE);
-        snprintf(buffer, CF_BUFSIZE, "%s%s%s", pre_buffer, pp->promiser, post_buffer);
-
-        free(pp->comment);
-        pp->comment = xstrdup(buffer);
-    }
-}
 
 /* Old legacy function from Enterprise, TODO remove static string. */
 const char *PromiseID(const Promise *pp)

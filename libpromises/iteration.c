@@ -32,6 +32,7 @@
 #include <string_lib.h>
 #include <assoc.h>
 
+
 struct PromiseIterator_
 {
     size_t idx;                                /* current iteration index */
@@ -125,7 +126,9 @@ static bool AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
     return state != NULL;
 }
 
-PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *lists, const Rlist *containers)
+PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp,
+                                    const Rlist *lists,
+                                    const Rlist *containers)
 {
     int lists_len      = RlistLen(lists);
     int containers_len = RlistLen(containers);
@@ -138,32 +141,43 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
     for (const Rlist *rp = lists; rp != NULL; rp = rp->next)
     {
-        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
-
-        DataType dtype = CF_DATA_TYPE_NONE;
+        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp),
+                                            PromiseGetBundle(pp));
+        DataType dtype;
         const void *value = EvalContextVariableGet(ctx, ref, &dtype);
         if (!value)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't locate variable '%s' apparently in '%s'", RlistScalarValue(rp), PromiseGetBundle(pp)->name);
+            Log(LOG_LEVEL_ERR,
+                "Couldn't locate variable '%s' apparently in '%s'",
+                RlistScalarValue(rp), PromiseGetBundle(pp)->name);
             VarRefDestroy(ref);
             continue;
         }
 
         VarRefDestroy(ref);
 
-        CfAssoc *new_var = NewAssoc(RlistScalarValue(rp), (Rval) { (void *)value, DataTypeToRvalType(dtype) }, dtype);
+        assert(DataTypeToRvalType(dtype) == RVAL_TYPE_LIST);
+
+        /* Could use NewAssoc() but I don't for consistency with code next. */
+        CfAssoc *new_var = xmalloc(sizeof(CfAssoc));
+        new_var->lval = xstrdup(RlistScalarValue(rp));
+        new_var->rval = RvalNew(value, RVAL_TYPE_LIST);
+        new_var->dtype = dtype;
+
         iter->has_null_list |= !AppendIterationVariable(iter, new_var);
     }
 
     for (const Rlist *rp = containers; rp; rp = rp->next)
     {
-        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
-
-        DataType dtype = CF_DATA_TYPE_NONE;
+        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp),
+                                            PromiseGetBundle(pp));
+        DataType dtype;
         const JsonElement *value = EvalContextVariableGet(ctx, ref, &dtype);
         if (!value)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't locate variable '%s' apparently in '%s'", RlistScalarValue(rp), PromiseGetBundle(pp)->name);
+            Log(LOG_LEVEL_ERR,
+                "Couldn't locate variable '%s' apparently in '%s'",
+                RlistScalarValue(rp), PromiseGetBundle(pp)->name);
             VarRefDestroy(ref);
             continue;
         }
@@ -186,7 +200,6 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
         " for promise:  '%s'",
         lists_len, containers_len, pp->promiser);
 
-    // We now have a control list of list-variables, with internal state in state_ptr
     return iter;
 }
 
@@ -293,9 +306,10 @@ static bool VariableStateHasMore(const PromiseIterator *iter, size_t index)
     return false;
 }
 
-static bool IncrementIterationContextInternal(PromiseIterator *iter, size_t wheel_idx)
+static bool IncrementIterationContextInternal(PromiseIterator *iter,
+                                              size_t wheel_idx)
 {
-    /* How many wheels (slists) we have. */
+    /* How many wheels (slists/containers) we have. */
     size_t wheel_max = SeqLength(iter->vars);
 
     if (wheel_idx == wheel_max)
@@ -305,25 +319,26 @@ static bool IncrementIterationContextInternal(PromiseIterator *iter, size_t whee
 
     assert(wheel_idx < wheel_max);
 
-    // Go ahead and increment
     if (VariableStateHasMore(iter, wheel_idx))
     {
-        /* Update the current wheel, i.e. get the next slist item. */
         // printf("%*c\n", (int) wheel_idx + 1, 'I');
+
+        /* Update the current wheel, i.e. get the next slist item. */
         return VariableStateIncrement(iter, wheel_idx);
     }
     else                          /* this wheel has come to full revolution */
     {
+        /* Try to increase the next wheel. */
         if (IncrementIterationContextInternal(iter, wheel_idx + 1))
         {
+            // printf("%*c\n", (int) wheel_idx + 1, 'R');
+
             /* We successfully increased one of the next wheels, so reset this
              * one to iterate over all possible states. */
-            // printf("%*c\n", (int) wheel_idx + 1, 'R');
             return VariableStateReset(iter, wheel_idx);
         }
-        else
+        else                      /* there were no more wheels to increment */
         {
-            /* Reached last slist wheel - pass up. */
             return false;
         }
     }
@@ -342,36 +357,38 @@ bool PromiseIteratorNext(PromiseIterator *iter_ctx)
     }
 }
 
-void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter)
+/**
+ * Put the newly iterated variable value in the EvalContext.
+ */
+void PromiseIteratorUpdateVariables(EvalContext *ctx, const PromiseIterator *iter)
 {
     for (size_t i = 0; i < SeqLength(iter->vars); i++)
     {
-        CfAssoc *iter_var = SeqAt(iter->vars, i);
-
-        const Rlist *state = SeqAt(iter->var_states, i);
+        DataType t;
+        const CfAssoc *iter_var = SeqAt(iter->vars, i);
+        const Rlist   *state    = SeqAt(iter->var_states, i);
 
         if (!state || state->val.type == RVAL_TYPE_FNCALL)
         {
             continue;
         }
 
-        assert(state->val.type == RVAL_TYPE_SCALAR);
-
         switch (iter_var->dtype)
         {
-        case CF_DATA_TYPE_STRING_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), CF_DATA_TYPE_STRING, "source=promise");
-            break;
-        case CF_DATA_TYPE_INT_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), CF_DATA_TYPE_INT, "source=promise");
-            break;
-        case CF_DATA_TYPE_REAL_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), CF_DATA_TYPE_REAL, "source=promise");
-            break;
+        case CF_DATA_TYPE_STRING_LIST: t = CF_DATA_TYPE_STRING; break;
+        case CF_DATA_TYPE_INT_LIST:    t = CF_DATA_TYPE_INT;    break;
+        case CF_DATA_TYPE_REAL_LIST:   t = CF_DATA_TYPE_REAL;   break;
         default:
-            assert(false);
-            break;
+            t = CF_DATA_TYPE_NONE;                       /* silence warning */
+            ProgrammingError("CfAssoc contains invalid type: %d",
+                             iter_var->dtype);
         }
+
+        assert(state->val.type == RVAL_TYPE_SCALAR);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS,
+                                      iter_var->lval, RlistScalarValue(state),
+                                      t, "source=promise");
     }
 }
 

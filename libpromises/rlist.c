@@ -1318,6 +1318,13 @@ char *RvalToString(Rval rval)
     return StringWriterClose(w);
 }
 
+char *RlistToString(const Rlist *rlist)
+{
+    Writer *w = StringWriter();
+    RlistWrite(w, rlist);
+    return StringWriterClose(w);
+}
+
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
 {
     switch (rval.type)

@@ -1266,8 +1266,9 @@ static FILE *OpenUcbPsPipe(void)
         if (!cmd)
         {
             Log(LOG_LEVEL_WARNING, "Could not execute \"%s\", extra process "
-                "information not available. Process command line length may be "
-                "limited to 80 characters.", ps_cmd);
+                "information not available. "
+                "Process command line length may be limited to 80 characters.",
+                ps_cmd);
         }
 
         free(ps_cmd);

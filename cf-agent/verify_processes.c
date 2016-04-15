@@ -44,8 +44,8 @@
 
 static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promise *pp);
 static bool ProcessSanityChecks(Attributes a, const Promise *pp);
-static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, const Promise *pp);
-static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser);
+static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promise *pp);
+static int FindPidMatches(Item **killlist, Attributes a, const char *promiser);
 
 PromiseResult VerifyProcessesPromise(EvalContext *ctx, const Promise *pp)
 {
@@ -124,14 +124,14 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promi
     }
 
     PromiseBanner(ctx, pp);
-    PromiseResult result = VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
+    PromiseResult result = VerifyProcessOp(ctx, a, pp);
 
     YieldCurrentLock(thislock);
 
     return result;
 }
 
-static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, const Promise *pp)
+static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     bool do_signals = true;
     int out_of_range;
@@ -139,7 +139,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
     bool need_to_restart = true;
     Item *killlist = NULL;
 
-    int matches = FindPidMatches(procdata, &killlist, a, pp->promiser);
+    int matches = FindPidMatches(&killlist, a, pp->promiser);
 
 /* promise based on number of matches */
 
@@ -323,12 +323,12 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
 }
 #endif
 
-static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser)
+static int FindPidMatches(Item **killlist, Attributes a, const char *promiser)
 {
     int matches = 0;
     pid_t cfengine_pid = getpid();
 
-    Item *matched = SelectProcesses(procdata, promiser, a.process_select, a.haveselect);
+    Item *matched = SelectProcesses(promiser, a.process_select, a.haveselect);
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {
@@ -365,7 +365,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
         if ((a.transaction.action == cfa_warn) && promised_zero)
         {
-            Log(LOG_LEVEL_WARNING, "Process alert '%s'", procdata->name);     /* legend */
+            Log(LOG_LEVEL_WARNING, "Process alert '%s'", GetProcessTableLegend());
             Log(LOG_LEVEL_WARNING, "Process alert '%s'", ip->name);
             continue;
         }

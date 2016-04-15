@@ -7075,16 +7075,15 @@ static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
 
     const bool is_context_processexists = strcmp(fp->name, "processexists") == 0;
 
-    Item* procdata = NULL;
-    if (!LoadProcessTable(&procdata))
+    if (!LoadProcessTable())
     {
         Log(LOG_LEVEL_ERR, "%s: could not load the process table?!?!", fp->name);
         return FnFailure();
     }
 
     ProcessSelect ps;
-    Item *matched = SelectProcesses(procdata, regex, ps, false);
-    DeleteItemList(procdata);
+    Item *matched = SelectProcesses(regex, ps, false);
+    ClearProcessTable();
 
     if (is_context_processexists)
     {

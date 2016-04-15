@@ -761,37 +761,45 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
 #endif /* _AIX */
 
 // TODO: perhaps rename and move these to json.c and ip_address.c?  Or even let JsonElements store IPAddress structs?
-static Buffer* ParsedIPAddressHex(const char *data, const bool with_port)
+static IPAddress* ParsedIPAddressHex(const char *data)
 {
-    Buffer *addr = NULL;
+    IPAddress *ip = NULL;
     Buffer *buffer = BufferNewFrom(data, strlen(data));
     if (NULL != buffer)
     {
-        IPAddress *ip = IPAddressNewHex(buffer);
-        if (NULL != ip)
-        {
-            addr = IPAddressGetAddress(ip);
-            int port = IPAddressGetPort(ip);
-            if (with_port)
-            {
-                BufferAppendF(addr, ":%d", port);
-            }
-            IPAddressDestroy(&ip);
-        }
+        ip = IPAddressNewHex(buffer);
         BufferDestroy(buffer);
     }
 
-    return addr;
+    return ip;
 }
 
-static void JsonRewriteParsedIPAddress(JsonElement* element, const char* raw_key, const char *new_key, const bool with_port)
+static void JsonRewriteParsedIPAddress(JsonElement* element, const char* raw_key, const char *new_key, const bool as_map)
 {
-    Buffer *addr = ParsedIPAddressHex(JsonObjectGetAsString(element, raw_key), with_port);
+    IPAddress *addr = ParsedIPAddressHex(JsonObjectGetAsString(element, raw_key));
     if (NULL != addr)
     {
-        JsonObjectAppendString(element, new_key, BufferData(addr));
-        JsonObjectRemoveKey(element, raw_key);
-        BufferDestroy(addr);
+        Buffer *buf = IPAddressGetAddress(addr);
+        if (NULL != buf)
+        {
+            JsonObjectRemoveKey(element, raw_key);
+            if (as_map)
+            {
+                JsonElement *ip = JsonObjectCreate(2);
+                JsonObjectAppendString(ip, "address", BufferData(buf));
+                BufferPrintf(buf, "%d", IPAddressGetPort(addr));
+                JsonObjectAppendString(ip, "port", BufferData(buf));
+                JsonObjectAppendElement(element, new_key, ip);
+            }
+            else
+            {
+                JsonObjectAppendString(element, new_key, BufferData(buf));
+            }
+
+            BufferDestroy(buf);
+        }
+
+        IPAddressDestroy(&addr);
     }
 }
 
@@ -908,6 +916,52 @@ static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void 
     JsonExtractParsedNumber(entry, "raw_device_number", "device_number", true, false);
     JsonExtractParsedNumber(entry, "raw_prefix_length", "prefix_length", true, false);
     JsonExtractParsedNumber(entry, "raw_scope", "scope", true, false);
+    return NULL;
+}
+
+/*******************************************************************/
+
+static const char* GetPortStateString(int state)
+{
+# if defined (__linux__)
+    switch (state)
+    {
+    case TCP_ESTABLISHED: return "ESTABLISHED";
+    case TCP_SYN_SENT:    return "SYN_SENT";
+    case TCP_SYN_RECV:    return "SYN_RECV";
+    case TCP_FIN_WAIT1:   return "FIN_WAIT1";
+    case TCP_FIN_WAIT2:   return "FIN_WAIT2";
+    case TCP_TIME_WAIT:   return "TIME_WAIT";
+    case TCP_CLOSE:       return "CLOSE";
+    case TCP_CLOSE_WAIT:  return "CLOSE_WAIT";
+    case TCP_LAST_ACK:    return "LAST_ACK";
+    case TCP_LISTEN:      return "LISTEN";
+    case TCP_CLOSING:     return "CLOSING";
+    }
+
+# endif
+    return "UNKNOWN";
+}
+
+// used in evalfunction.c but defined here so
+// JsonRewriteParsedIPAddress() etc. can stay local
+ProcPostProcessFn NetworkingPortsPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+{
+    JsonElement *conn = json;
+
+    if (NULL != conn)
+    {
+        JsonRewriteParsedIPAddress(conn, "raw_local", "local", true);
+        JsonRewriteParsedIPAddress(conn, "raw_remote", "remote", true);
+
+        long num_state = JsonExtractParsedNumber(conn, "raw_state", "temp_state", false, false);
+
+        if (NULL != JsonObjectGetAsString(conn, "temp_state"))
+        {
+            JsonObjectRemoveKey(conn, "temp_state");
+            JsonObjectAppendString(conn, "state", GetPortStateString(num_state));
+        }
+    }
 
     return NULL;
 }
@@ -973,9 +1027,14 @@ static JsonElement* GetNetworkingStatsInfo(const char *filename)
 
 /*******************************************************************/
 
-static JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, const char* regex)
+// always returns the parsed data. If the key is not NULL, also
+// creates a sys.KEY variable.
+
+JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, const char* regex)
 {
-    JsonElement *ret = NULL;
+    JsonElement *info = NULL;
+    bool extract_key_mode = (NULL != extracted_key);
+
     FILE *fin = safe_fopen(filename, "rt");
     if (fin)
     {
@@ -993,8 +1052,8 @@ static JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, cons
         {
             size_t line_size = CF_BUFSIZE;
             char *line = xmalloc(line_size);
-            bool extract_key_mode = (NULL != extracted_key);
-            JsonElement *info = extract_key_mode ? JsonObjectCreate(10) : JsonArrayCreate(10);
+
+            info = extract_key_mode ? JsonObjectCreate(10) : JsonArrayCreate(10);
 
             while (CfReadLine(&line, &line_size, fin) != -1)
             {
@@ -1028,9 +1087,7 @@ static JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, cons
 
             free(line);
 
-            ret = info;
-
-            if (key)
+            if (NULL != key)
             {
                 Buffer *varname = BufferNew();
                 BufferPrintf(varname, "%s", key);
@@ -1045,12 +1102,12 @@ static JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, cons
         fclose(fin);
     }
 
-    return ret;
+    return info;
 }
 
 /*******************************************************************/
 
-void GetNetworkingInfo(EvalContext *ctx)
+const char* GetNetworkingProcdir()
 {
     const char *procdir = getenv("CFENGINE_TEST_OVERRIDE_PROCDIR");
     if (NULL == procdir)
@@ -1061,6 +1118,13 @@ void GetNetworkingInfo(EvalContext *ctx)
     {
         Log(LOG_LEVEL_VERBOSE, "Overriding /proc location to be %s", procdir);
     }
+
+    return procdir;
+}
+
+void GetNetworkingInfo(EvalContext *ctx)
+{
+    const char *procdir = GetNetworkingProcdir();
 
     Buffer *pbuf = BufferNew();
 
@@ -1206,6 +1270,53 @@ void GetNetworkingInfo(EvalContext *ctx)
                     "(?<transmit_multicast>\\d+)");
 
     BufferDestroy(pbuf);
+}
+
+JsonElement* GetNetworkingConnections(EvalContext *ctx)
+{
+    const char *procdir = GetNetworkingProcdir();
+    JsonElement *json = JsonObjectCreate(5);
+    const char* ports_regex = "^\\s*\\d+:\\s+(?<raw_local>[0-9A-F:]+)\\s+(?<raw_remote>[0-9A-F:]+)\\s+(?<raw_state>[0-9]+)";
+
+    JsonElement *data = NULL;
+    Buffer *pbuf = BufferNew();
+
+    BufferPrintf(pbuf, "%s/proc/net/tcp", procdir);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    if (NULL != data)
+    {
+        JsonObjectAppendElement(json, "tcp", data);
+    }
+
+    BufferPrintf(pbuf, "%s/proc/net/tcp6", procdir);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    if (NULL != data)
+    {
+        JsonObjectAppendElement(json, "tcp6", data);
+    }
+
+    BufferPrintf(pbuf, "%s/proc/net/udp", procdir);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    if (NULL != data)
+    {
+        JsonObjectAppendElement(json, "udp", data);
+    }
+
+    BufferPrintf(pbuf, "%s/proc/net/udp6", procdir);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    if (NULL != data)
+    {
+        JsonObjectAppendElement(json, "udp6", data);
+    }
+
+    if (JsonLength(json) < 1)
+    {
+        // nothing was collected, this is a failure
+        JsonDestroy(json);
+        return NULL;
+    }
+
+    return json;
 }
 
 #endif /* !__MINGW32__ */

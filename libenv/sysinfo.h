@@ -36,5 +36,6 @@ int GetUptimeSeconds(time_t now);
 
 void GetInterfacesInfo(EvalContext *ctx);
 void GetNetworkingInfo(EvalContext *ctx);
+JsonElement* GetNetworkingConnections(EvalContext *ctx);
 
 #endif

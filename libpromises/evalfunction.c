@@ -67,6 +67,7 @@
 #include <known_dirs.h>
 #include <mustache.h>
 #include <processes_select.h>
+#include <sysinfo.h>
 
 #include <math_eval.h>
 
@@ -7114,6 +7115,21 @@ static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
 
 /*********************************************************************/
 
+static FnCallResult FnCallNetworkConnections(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
+{
+    JsonElement *json = GetNetworkingConnections(ctx);
+
+    if (NULL == json)
+    {
+        // nothing was collected, this is a failure
+        return FnFailure();
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+}
+
+/*********************************************************************/
+
 static int ExecModule(EvalContext *ctx, char *command)
 {
     FILE *pp = cf_popen(command, "rt", true);
@@ -8332,6 +8348,11 @@ static const FnCallArg PROCESSEXISTS_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg NETWORK_CONNECTIONS_ARGS[] =
+{
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -8664,5 +8685,10 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("data_readstringarrayidx", CF_DATA_TYPE_CONTAINER, DATA_READSTRINGARRAY_ARGS, &FnCallDataRead, "Read an array of strings from a file into a data container array",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+
+    // Network probe functions
+    FnCallTypeNew("network_connections", CF_DATA_TYPE_CONTAINER, NETWORK_CONNECTIONS_ARGS, &FnCallNetworkConnections, "Get the full list of TCP, TCP6, UDP, and UDP6 connections from /proc/net",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+
     FnCallTypeNewNull()
 };

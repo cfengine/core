@@ -1,0 +1,38 @@
+###########################################################
+#
+# Test expansion of JSON booleans
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  classes:
+      "canary" expression => "any", meta => { "collect" }; # just a baseline test
+      "from_$(json)" expression => "$(json)", meta => { "collect" }; # iterates through non-nulls
+      "from_null" expression => "$(json[maybe])", meta => { "collect" };
+      "from_missing" expression => "$(json[nonesuch])", meta => { "collect" };
+
+  vars:
+      "json" data => '{ "yes": true, "no": false, "maybe": null }';
+      "var_$(json)" string => "$(json)";
+      "collected" slist => sort(classesmatching(".*", "collect"));
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

@@ -1,0 +1,13 @@
+{
+  "collected": [
+    "canary",
+    "from_true"
+  ],
+  "json": {
+    "maybe": null,
+    "no": false,
+    "yes": true
+  },
+  "var_false": "false",
+  "var_true": "true"
+}

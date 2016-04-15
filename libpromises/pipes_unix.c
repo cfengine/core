@@ -943,7 +943,7 @@ int PipeIsReadWriteReady(const IOData *io, int timeout_sec)
     /* We have reached timeout */
     if (ret == 0)
     {
-        Log(LOG_LEVEL_DEBUG, "Timeout reading from package module.");
+        Log(LOG_LEVEL_DEBUG, "Timeout reading from application pipe.");
         return 0;
     }
 
@@ -961,7 +961,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
     if (!data)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Unable to allocate buffer for handling package module responses.");
+            "Unable to allocate buffer for handling pipe responses.");
         return NULL;
     }
 
@@ -974,7 +974,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
         if (fd < 0)
         {
             Log(LOG_LEVEL_VERBOSE,
-                "Error reading data from package module: %s",
+                "Error reading data from application pipe: %s",
                 GetErrorStr());
             return NULL;
         }
@@ -990,7 +990,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
                 else
                 {
                     Log(LOG_LEVEL_ERR,
-                        "Unable to read output from package module: %s",
+                        "Unable to read output from application pipe: %s",
                         GetErrorStr());
                     BufferDestroy(data);
                     return NULL;
@@ -1000,7 +1000,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
             {
                 break;
             }
-            Log(LOG_LEVEL_DEBUG, "Data read from package module: %zu [%s]",
+            Log(LOG_LEVEL_DEBUG, "Data read from application pipe: %zu [%s]",
                 res, buff);
 
             BufferAppendString(data, buff);
@@ -1056,7 +1056,7 @@ int PipeWriteData(const char *base_cmd, const char *args, const char *data)
     if (io.write_fd == -1 || io.read_fd == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Error occurred while opening pipes for "
-            "communication with package module.");
+            "communication with application '%s'.", base_cmd);
         return -1;
     }
 
@@ -1067,7 +1067,8 @@ int PipeWriteData(const char *base_cmd, const char *args, const char *data)
     if (PipeWrite(&io, data) != strlen(data))
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Was not able to send whole data to package module.");
+            "Was not able to send whole data to application '%s'.",
+            base_cmd);
         res = -1;
     }
 
@@ -1076,8 +1077,8 @@ int PipeWriteData(const char *base_cmd, const char *args, const char *data)
     if (close != EXIT_SUCCESS)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Package module returned with non zero return code: %d",
-            close);
+            "Application '%s' returned with non zero return code: %d",
+            base_cmd, close);
         res = -1;
     }
     return res;
@@ -1106,7 +1107,8 @@ int PipeReadWriteData(const char *base_cmd, const char *args, const char *reques
 
     if (PipeWrite(&io, request) != strlen(request))
     {
-        Log(LOG_LEVEL_VERBOSE, "Couldn't send whole data to package module.");
+        Log(LOG_LEVEL_VERBOSE, "Couldn't send whole data to application '%s'.",
+            base_cmd);
         free(command);
         return -1;
     }

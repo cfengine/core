@@ -44,7 +44,7 @@ bool PromiseIteratorNext(PromiseIterator *iter_ctx);
 
 bool PromiseIteratorHasNullIterators(const PromiseIterator *iter_ctx);
 
-void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter_ctx);
+void PromiseIteratorUpdateVariables(EvalContext *ctx, const PromiseIterator *iter_ctx);
 
 size_t PromiseIteratorIndex(const PromiseIterator *iter_ctx);
 

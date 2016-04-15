@@ -1385,13 +1385,10 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
     assert(last_frame       != NULL);
     assert(last_frame->type == STACK_FRAME_TYPE_PROMISE);
 
-    if (iter_ctx)
-    {
-        PromiseIteratorUpdateVariable(ctx, iter_ctx);
-    }
-
-    bool excluded = false;
-    Promise *pexp = ExpandDeRefPromise(ctx, last_frame->data.promise.owner, &excluded);
+    /* Evaluate all constraints by calling functions etc. */
+    bool excluded;
+    Promise *pexp = ExpandDeRefPromise(ctx, last_frame->data.promise.owner,
+                                       &excluded);
     if (excluded || !pexp)
     {
         PromiseDestroy(pexp);

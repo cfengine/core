@@ -43,8 +43,6 @@ int CF_PERSISTENCE = 10; /* GLOBAL_P */
 
 AgentType THIS_AGENT_TYPE; /* GLOBAL_C, initialized later */
 
-Item *PROCESSTABLE = NULL; /* GLOBAL_X */
-
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/

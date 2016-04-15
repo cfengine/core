@@ -1250,8 +1250,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
     if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
-        DeleteItemList(PROCESSTABLE);
-        PROCESSTABLE = NULL;
+        ClearProcessTable();
     }
 
     PromiseResult result = PROMISE_RESULT_SKIPPED;
@@ -1684,7 +1683,7 @@ static int NewTypeContext(TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_PROCESSES:
-        if (!LoadProcessTable(&PROCESSTABLE))
+        if (!LoadProcessTable())
         {
             Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep processes: type promises");
             return false;
@@ -1826,9 +1825,8 @@ static bool VerifyBootstrap(void)
     }
 
     // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
-    DeleteItemList(PROCESSTABLE);
-    PROCESSTABLE = NULL;
-    LoadProcessTable(&PROCESSTABLE);
+    ClearProcessTable();
+    LoadProcessTable();
 
     if (!IsProcessNameRunning(".*cf-execd.*"))
     {

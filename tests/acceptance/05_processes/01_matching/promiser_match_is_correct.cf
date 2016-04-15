@@ -1,0 +1,91 @@
+# Test that process promise only matches the promiser against the command line
+# not the full ps line output. Also verify that a command line longer than 80
+# characters can be matched using the promiser. Created for Redmine #7627.
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { "debug_info", default("$(this.promise_filename)") };
+}
+
+bundle common userinfo
+{
+  vars:
+      "cmd" string => "id | sed -e 's/.*uid=\([0-9][0-9]*\).*/\1/'";
+
+    any::
+      "current_user" string => execresult($(cmd), "useshell");
+
+  classes:
+      "root_user" expression => strcmp("$(current_user)", "0");
+}
+
+bundle agent debug_info
+{
+  reports:
+    !root_user::
+      "Need to be root user to run this. Detected user: $(userinfo.current_user)";
+}
+
+bundle agent init
+{
+  meta:
+      # Using background commands, this won't work correctly on Windows.
+      # Also, we need to be root user to test this correctly, since we need to
+      # match against the user in the ps output.
+      # And we can't use no_fds under fakeroot.
+      "test_skip_needs_work" string => "windows|!root_user|using_fakeroot";
+
+  commands:
+      "$(G.no_fds) --no-std $(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_underscore_marks_the_81st_character_of_this_string___STRINGBEYOND80CHARS &"
+        contain => in_shell;
+}
+
+body process_count at_least_one(class)
+{
+    match_range => irange("1", "1000");
+    in_range_define => { "$(class)" };
+}
+
+bundle agent test
+{
+  processes:
+      "$(this.promise_filename).sub"
+        process_count => at_least_one("cf_agent");
+      "STRINGBEYOND80CHARS"
+        process_count => at_least_one("string");
+      # This is intended to look for a username in the process matching, which
+      # is wrong, we only want it to match the command string. However, "root"
+      # might be in the home path of the executing user, which is valid, so
+      # avoid that match.
+      "root[^/].*$(this.promise_filename).sub"
+        process_count => at_least_one("root");
+}
+
+bundle agent check
+{
+  vars:
+      "expected_classes" slist => {
+          "cf_agent",
+          "string",
+          "!root",
+      };
+
+  classes:
+      "ok" and => { @(expected_classes) };
+
+  commands:
+      # Just sleep a little to make sure our background command has finished.
+      "$(G.sleep) 6";
+
+  reports:
+    DEBUG::
+      "expected_classes = $(expected_classes)";
+      "Expression evaluated to false, should be true: $(expected_classes)"
+        unless => "$(expected_classes)";
+
+    !root_user|!ok::
+      "$(this.promise_filename) FAIL";
+    root_user.ok::
+      "$(this.promise_filename) Pass";
+}

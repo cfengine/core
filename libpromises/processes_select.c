@@ -47,38 +47,102 @@
 #define MAX_ZONENAME_SIZE 64
 # endif
 
+#ifdef _WIN32
+#define TABLE_STORAGE
+#else
+#define TABLE_STORAGE static
+#endif
+TABLE_STORAGE Item *PROCESSTABLE = NULL;
+
+#if defined(__sun) || defined(TEST_UNIT_TEST)
+static StringMap *UCB_PS_MAP = NULL;
+// These will be tried in order.
+const char *SOLARIS_UCB_STYLE_PS[] = {
+    "/usr/ucb/ps",
+    "/bin/ps",
+    NULL
+};
+const char *SOLARIS_UCB_STYLE_PS_ARGS = "axwww";
+#endif
+
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
-static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, char **colNames, char **line);
-static int SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
+static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, bool anchored, char **colNames, char **line);
+static bool SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
+static void ApplyPlatformExtraTable(char **names, char **columns);
+static bool ZombiesCanHaveEmptyColumns(void);
 
 /***************************************************************************/
 
-static int SelectProcess(const char *procentry, time_t pstime, char **names, int *start, int *end, ProcessSelect a)
+// For unit testing
+#ifndef TEST_UNIT_TEST
+
+static bool ZombiesCanHaveEmptyColumns(void)
 {
-    int result = true, i;
+#ifdef _AIX
+    /*
+      Ideally this should be autoconf-tested, but it's really hard to do so. ATM
+      AIX is the only platform known to produce empty columns in ps output. See
+      SplitProcLine() to see the exact effects this has.
+    */
+    return true;
+#else
+    return false;
+#endif
+}
+
+#endif // TEST_UNIT_TEST
+
+static bool SelectProcess(const char *procentry,
+                          time_t pstime,
+                          char **names,
+                          int *start,
+                          int *end,
+                          const char *process_regex,
+                          ProcessSelect a,
+                          bool attrselect)
+{
+    bool result = true;
     char *column[CF_PROCCOLS];
     Rlist *rp;
 
+    assert(process_regex);
+
     StringSet *process_select_attributes = StringSetNew();
+
+    memset(column, 0, sizeof(column));
 
     if (!SplitProcLine(procentry, pstime, names, start, end, column))
     {
         return false;
     }
 
-    for (i = 0; names[i] != NULL; i++)
+    ApplyPlatformExtraTable(names, column);
+
+    for (int i = 0; names[i] != NULL; i++)
     {
         Log(LOG_LEVEL_DEBUG, "In SelectProcess, COL[%s] = '%s'", names[i], column[i]);
     }
 
+    if (!SelectProcRegexMatch("CMD", "COMMAND", process_regex, false, names, column))
+    {
+        result = false;
+        goto cleanup;
+    }
+
+    if (!attrselect)
+    {
+        // If we are not considering attributes, then the matching is done.
+        goto cleanup;
+    }
+
     for (rp = a.owner; rp != NULL; rp = rp->next)
     {
-        if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), names, column))
+        if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), true, names, column))
         {
             StringSetAdd(process_select_attributes, xstrdup("process_owner"));
             break;
@@ -131,17 +195,17 @@ static int SelectProcess(const char *procentry, time_t pstime, char **names, int
         StringSetAdd(process_select_attributes, xstrdup("threads"));
     }
 
-    if (SelectProcRegexMatch("S", "STAT", a.status, names, column))
+    if (SelectProcRegexMatch("S", "STAT", a.status, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("status"));
     }
 
-    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, names, column))
+    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("command"));
     }
 
-    if (SelectProcRegexMatch("TTY", "TTY", a.tty, names, column))
+    if (SelectProcRegexMatch("TTY", "TTY", a.tty, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("tty"));
     }
@@ -174,9 +238,10 @@ static int SelectProcess(const char *procentry, time_t pstime, char **names, int
         result = EvalProcessResult(a.process_result, process_select_attributes);
     }
 
+cleanup:
     StringSetDestroy(process_select_attributes);
 
-    for (i = 0; column[i] != NULL; i++)
+    for (int i = 0; column[i] != NULL; i++)
     {
         free(column[i]);
     }
@@ -184,8 +249,9 @@ static int SelectProcess(const char *procentry, time_t pstime, char **names, int
     return result;
 }
 
-Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
+Item *SelectProcesses(const char *process_name, ProcessSelect a, bool attrselect)
 {
+    const Item *processes = PROCESSTABLE;
     Item *result = NULL;
 
     if (processes == NULL)
@@ -197,44 +263,33 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
     int start[CF_PROCCOLS];
     int end[CF_PROCCOLS];
 
-    GetProcessColumnNames(processes->name, &names[0], start, end);
+    GetProcessColumnNames(processes->name, names, start, end);
 
-    pcre *rx = CompileRegex(process_name);
-    if (rx)
+    /* TODO: use actual time of ps-run, as time(NULL) may be later. */
+    time_t pstime = time(NULL);
+
+    for (Item *ip = processes->next; ip != NULL; ip = ip->next)
     {
-        /* TODO: use actual time of ps-run, as time(NULL) may be later. */
-        time_t pstime = time(NULL);
-
-        for (Item *ip = processes->next; ip != NULL; ip = ip->next)
+        if (NULL_OR_EMPTY(ip->name))
         {
-            int s, e;
-
-            if (StringMatchWithPrecompiledRegex(rx, ip->name, &s, &e))
-            {
-                if (NULL_OR_EMPTY(ip->name))
-                {
-                    continue;
-                }
-
-                if (attrselect && !SelectProcess(ip->name, pstime, names, start, end, a))
-                {
-                    continue;
-                }
-
-                pid_t pid = ExtractPid(ip->name, names, end);
-
-                if (pid == -1)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Unable to extract pid while looking for %s", process_name);
-                    continue;
-                }
-
-                PrependItem(&result, ip->name, "");
-                result->counter = (int)pid;
-            }
+            continue;
         }
 
-        pcre_free(rx);
+        if (!SelectProcess(ip->name, pstime, names, start, end, process_name, a, attrselect))
+        {
+            continue;
+        }
+
+        pid_t pid = ExtractPid(ip->name, names, end);
+
+        if (pid == -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Unable to extract pid while looking for %s", process_name);
+            continue;
+        }
+
+        PrependItem(&result, ip->name, "");
+        result->counter = (int)pid;
     }
 
     for (int i = 0; i < CF_PROCCOLS; i++)
@@ -472,7 +527,8 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 /***************************************************************************/
 
 static bool SelectProcRegexMatch(const char *name1, const char *name2,
-                                 const char *regex, char **colNames, char **line)
+                                 const char *regex, bool anchored,
+                                 char **colNames, char **line)
 {
     int i;
 
@@ -483,373 +539,301 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
 
     if ((i = GetProcColumnIndex(name1, name2, colNames)) != -1)
     {
-
-        if (StringMatchFull(regex, line[i]))
+        if (anchored)
         {
-            return true;
+            return StringMatchFull(regex, line[i]);
         }
         else
         {
-            return false;
+            int s, e;
+            return StringMatch(regex, line[i], &s, &e);
         }
     }
 
     return false;
 }
 
-/*******************************************************************/
-/* line must be char *line[CF_PROCCOLS] in fact. */
-/* pstime should be the time at which ps was run. */
-
-static int SplitProcLine(const char *proc, time_t pstime,
-                         char **names, int *start, int *end,
-                         char **line)
+static void PrintStringIndexLine(int prefix_spaces, int len)
 {
-    if (proc == NULL || proc[0] == '\0')
+    char arrow_str[CF_BUFSIZE];
+    arrow_str[0] = '^';
+    arrow_str[1] = '\0';
+    char index_str[CF_BUFSIZE];
+    index_str[0] = '0';
+    index_str[1] = '\0';
+    for (int lineindex = 10; lineindex <= len; lineindex += 10)
     {
-        return false;
+        char num[PRINTSIZE(lineindex)];
+        xsnprintf(num, sizeof(num), "%10d", lineindex);
+        strlcat(index_str, num, sizeof(index_str));
+        strlcat(arrow_str, "         ^", sizeof(arrow_str));
     }
 
-    memset(line, 0, sizeof(char *) * CF_PROCCOLS);
+    // Prefix the beginning of the indexes with the given number.
+    Log(LOG_LEVEL_DEBUG, "%*s%s", prefix_spaces, "", arrow_str);
+    Log(LOG_LEVEL_DEBUG, "%*s%s", prefix_spaces, "Index: ", index_str);
+}
 
-    int prior = -1; /* End of last header-selected field. */
-    const size_t linelen = strlen(proc);
-    const char *sp = proc; /* Just after last space-separated field. */
-    /* Scan in parallel for two heuristics: space-delimited fields
-     * found using sp, and ones inferred from the column headers. */
-
-    /* TODO: we test with isspace() mostly, which makes sense as TAB
-     * might be used to enable field alignment; but we make no attempt
-     * to account for the alignment offsets this may introduce, that
-     * would mess up the heuristic based on column headers.  Hard to
-     * do robustly, as we'd need to assume a tab-width and apply the
-     * same accounting to the headers (where start and end are indices
-     * of bytes, we'd need a third array for tab-induced offsets
-     * between headers). */
-
-    for (int i = 0; i < CF_PROCCOLS && names[i] != NULL; i++)
-    {
-        /* Space-delimited heuristic, from sp to just before ep: */
-        while (isspace((unsigned char) sp[0]))
-        {
-            sp++;
-        }
-        const char *ep = sp;
-
-        /* Header-driven heuristic, field from proc[s] to proc[e].
-         * Start with the column header's position and maybe grow
-         * outwards. */
-        int s = start[i], e;
-
-        /* If the previous field over-spilled into this one, our start
-         * may be under our header, not directly below the header's
-         * start; but only believe this if the earlier field is
-         * followed by one space and the subsequent field does start
-         * under our header.  Otherwise, allow that the prior field
-         * may be abutting this field, or this field may have
-         * overflowed left into the prior field causing the prior to
-         * (mistakenly) think it includes the present. */
-        if (s <= prior &&
-            prior + 2 <= end[i] &&
-            proc[prior + 1] == ' ' &&
-            proc[prior + 2] != '\0' &&
-            !isspace((unsigned char) proc[prior + 2]))
-        {
-            s = prior + 2;
-        }
-
-        if (i + 1 == CF_PROCCOLS || names[i + 1] == NULL)
-        {
-            e = linelen - 1;
-            /* Extend space-delimited field to line end: */
-            while (ep[0] && ep[0] != '\n')
-            {
-                ep++;
-            }
-            /* But trim trailing hspace: */
-            while (isspace((unsigned char)ep[-1]))
-            {
-                ep--;
-            }
-        }
-        else
-        {
-            e = end[i];
-
-            /* It's possible the present field has been shunted left
-             * to make way for an over-sized number or date to the
-             * right.  This can confuse the numeric check below, on
-             * which left-overspill is conditioned - it fails to
-             * recognise this field as numeric, so doesn't check for
-             * it overspilling to the left.  Look to see whether we
-             * should move e left a bit: this is a conservative check,
-             * that'll be revisited below. */
-            int back = start[i + 1];
-            while (back > s && !isspace((unsigned char) proc[back]))
-            {
-                back--;
-            }
-            if (back > s && back <= e &&
-                /* back > s implies isspace(proc[back]), with no
-                 * further space before the next field; if this is a
-                 * single space, it's credibly the separator between
-                 * our field, shunted left, and this over-spilled
-                 * field: */
-                proc[back] == ' ' &&
-                !isspace((unsigned char) proc[back - 1]))
-            {
-                /* So we have a non-empty field that ends under our
-                 * header but before e; adjust e. */
-                e = back - 1;
-            }
-
-            /* Extend space-delimited to next space: */
-            while (ep[0] && !isspace((unsigned char)ep[0]))
-            {
-                ep++;
-            }
-        }
-        /* ep points at the space (or '\0') *following* the word or
-         * final field. */
-
-        /* Some ps stimes may contain spaces, e.g. "Jan 25" */
-        if (strcmp(names[i], "STIME") == 0 &&
-            ep - sp == 3)
-        {
-            const char *np = ep;
-            while (isspace((unsigned char) np[0]))
-            {
-                np++;
-            }
-            if (isdigit((unsigned char) np[0]))
-            {
-                do
-                {
-                    np++;
-                } while (isdigit((unsigned char) np[0]));
-                ep = np;
-            }
-        }
-
-        /* Numeric columns, including times, are apt to grow leftwards
-         * and be right-aligned; identify candidates for this by
-         * proc[e] being a digit.  Text columns are typically
-         * left-aligned and may grow rightwards; identify candidates
-         * for this by proc[s] being alphabetic.  Some columns shall
-         * match both (e.g. STIME).  Some numeric columns may grow
-         * left even as far as under the heading of the next column
-         * (seen with ps -fel's SZ spilling left into ADDR's space on
-         * Linux).  While widening, it's OK to include a stray space;
-         * we'll trim that afterwards.  Overspill from neighbouring
-         * columns can muck up alignment, so "digit" means any
-         * character that can appear in a numeric field (we may need
-         * to tweak "alphabetic" likewise for text fields; the user
-         * field can, for example, have a '+' appended). */
-        bool overspilt = false;
-
-        /* Numeric fields may include [-.:] and perhaps other
-         * punctuators: */
-#define IsNumberish(c) (isdigit((unsigned char)(c)) || ispunct((unsigned char)(c)))
-
-        /* Right-aligned numeric: move s left until we run outside the
-         * field or find space. */
-        if (IsNumberish(proc[e]))
-        {
-            bool number = i > 0; /* Should we check for under-spill ? */
-            int outer = number ? end[i - 1] + 1 : 0;
-            while (s >= outer && !isspace((unsigned char) proc[s]))
-            {
-                if (number && !IsNumberish(proc[s]))
-                {
-                    number = false;
-                }
-                s--;
-            }
-
-            /* Numeric field might overspill under previous header: */
-            if (s < outer)
-            {
-                int spill = s;
-                s = outer; /* By default, don't overlap previous column. */
-
-                if (number && IsNumberish(proc[spill]))
-                {
-                    outer = start[i - 1];
-                    /* Explore all the way to the start-column of the
-                     * previous field's header.  If we get there, in
-                     * digits-and-punctuation, we've got two numeric
-                     * fields that abut; we can't do better than assume
-                     * the boundary is under the right end of the previous
-                     * column label (which is what our parsing of the
-                     * previous column assumed).  So leave s where it is,
-                     * just after the previous field's header's
-                     * end-column. */
-
-                    while (spill > outer)
-                    {
-                        spill--;
-                        if (!IsNumberish(proc[spill]))
-                        {
-                            s = spill + 1; /* Confirmed overlap. */
-                            break;
-                        }
-                    }
-                }
-            }
-
-            overspilt = IsNumberish(proc[e + 1]);
-        }
-#undef IsNumberish
-
-        bool abut = false;
-        /* Left-aligned text or numeric misaligned by overspill; move
-         * e right (if there's any right to move into; last column
-         * already reaches end of proc): */
-        if (proc[e + 1] &&
-            (overspilt || isalpha((unsigned char) proc[s])))
-        {
-            assert(i + 1 < CF_PROCCOLS && names[i + 1]);
-            int outer = start[i + 1]; /* Start of next field's header. */
-            int beyond = end[i + 1]; /* End of next field's header. */
-            if (beyond > linelen)
-            {
-                /* Command is shorter than its header. */
-                assert(i + 2 >= CF_PROCCOLS || NULL == names[i + 2]);
-                beyond = linelen;
-            }
-            assert(beyond >= outer);
-
-            int out = e;
-            do
-            {
-                out++;
-            } while (out < beyond && !isspace((unsigned char) proc[out]));
-
-            if (out < outer)
-            {
-                /* Simple extension to the right, no overlap: we're on
-                 * a space just before the next field's header. */
-                e = out - 1;
-            }
-            else if (out == beyond)
-            {
-                /* This looks like we're actually looking at the next
-                 * field over-spilling left so far that it reaches
-                 * under our header; but we did previously check for
-                 * this and amend e left-wards if it's credible; so
-                 * we're now looking at a case where it isn't;
-                 * probably our columns abut, with no space in
-                 * between.  The best we can do is include the text
-                 * between columns as part of both columns :-( */
-                abut = true;
-                prior = e; /* Before adjusting it: */
-                e = outer - 1;
-            }
-            else
-            {
-                /* Our word appears to over-spill under the next
-                 * header.  See if that's credible.  If the next is a
-                 * left-aligned field, it'll follow ours after exactly
-                 * a simple space.  If it's right-aligned (numeric),
-                 * it'll still follow after a single space unless it
-                 * has enough space to fit under its header after more
-                 * than one space. */
-
-                assert(out < beyond && isspace((unsigned char) proc[out]));
-                if ((proc[out] == ' ' && proc[out + 1] &&
-                     !isspace((unsigned char) proc[out + 1])) ||
-                    (isdigit((unsigned char) proc[beyond]) &&
-                     isspace((unsigned char) proc[beyond + 1])))
-                {
-                    e = out - 1;
-                }
-                else
-                {
-                    e = outer - 1;
-                }
-            }
-        }
-        if (!abut)
-        {
-            prior = e;
-        }
-
-        /* Strip off any leading and trailing spaces: */
-        while (isspace((unsigned char) proc[s]))
-        {
-            s++;
-        }
-        /* ... but stop if the field is empty ! */
-        while (s <= e && isspace((unsigned char) proc[e]))
-        {
-            e--;
-        }
-
-        /* Grumble if the two heuristics don't agree: */
-        size_t wordlen = ep - sp;
-        if (e < s ? ep > sp : (sp != proc + s || ep != proc + e + 1))
-        {
-            char word[CF_SMALLBUF];
-            if (wordlen >= CF_SMALLBUF)
-            {
-                wordlen = CF_SMALLBUF - 1;
-            }
-            memcpy(word, sp, wordlen);
-            word[wordlen] = '\0';
-
-            char column[CF_SMALLBUF];
-            if (s <= e)
-            {
-                /* Copy proc[s through e] inclusive:  */
-                const size_t len = MIN(1 + e - s, CF_SMALLBUF - 1);
-                memcpy(column, proc + s, len);
-                column[len] = '\0';
-            }
-            else
-            {
-                column[0] = '\0';
-            }
-
-            Log(LOG_LEVEL_VERBOSE,
-                "Unreliable fuzzy parsing of ps output (%s) %s: '%s' != '%s'",
-                proc, names[i], word, column);
-        }
-
-        /* Fall back on word if column got an empty answer: */
-        line[i] = e < s ? xstrndup(sp, ep - sp) : xstrndup(proc + s, 1 + e - s);
-        sp = ep;
-    }
-
+static void MaybeFixStartTime(const char *line,
+                              time_t pstime,
+                              char **names,
+                              char **fields)
+{
     /* Since start times can be very imprecise (e.g. just a past day's
      * date, or a past year), calculate a better value from elapsed
      * time, if available: */
     int k = GetProcColumnIndex("ELAPSED", "ELAPSED", names);
     if (k != -1)
     {
-        const long elapsed = TimeCounter2Int(line[k]);
+        const long elapsed = TimeCounter2Int(fields[k]);
         if (elapsed != CF_NOINT) /* Only use if parsed successfully ! */
         {
             int j = GetProcColumnIndex("STIME", "START", names), ns[3];
             /* Trust the reported value if it matches hh:mm[:ss], though: */
-            if (sscanf(line[j], "%d:%d:%d", ns, ns + 1, ns + 2) < 2)
+            if (sscanf(fields[j], "%d:%d:%d", ns, ns + 1, ns + 2) < 2)
             {
                 time_t value = pstime - (time_t) elapsed;
 
                 Log(LOG_LEVEL_DEBUG,
-                    "SplitProcLine: Replacing parsed start time %s with %s",
-                    line[j], ctime(&value));
+                    "processes: Replacing parsed start time %s with %s",
+                    fields[j], ctime(&value));
 
-                free(line[j]);
-                xasprintf(line + j, "%ld", value);
+                free(fields[j]);
+                xasprintf(fields + j, "%ld", value);
             }
         }
-        else if (line[k])
+        else if (fields[k])
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Parsing problem was in ELAPSED field of '%s'",
-                proc);
+                line);
         }
     }
+}
+
+/*******************************************************************/
+/* fields must be char *fields[CF_PROCCOLS] in fact. */
+/* pstime should be the time at which ps was run. */
+
+static bool SplitProcLine(const char *line,
+                          time_t pstime,
+                          char **names,
+                          int *start,
+                          int *end,
+                          char **fields)
+{
+    if (line == NULL || line[0] == '\0')
+    {
+        return false;
+    }
+
+    size_t linelen = strlen(line);
+
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        Log(LOG_LEVEL_DEBUG, "Parsing ps line: '%s'", line);
+        // Makes the entry line up with the line above.
+        PrintStringIndexLine(18, linelen);
+    }
+
+    /*
+      All platforms have been verified to not produce overlapping fields with
+      currently used ps tools, and hence we can parse based on space separation
+      (with some caveats, see below).
+
+      Dates may have spaces in them, like "May 20", or not, like "May20". Prefer
+      to match a date without a space as long as it contains a number, but fall
+      back to parsing letters followed by a space and a date.
+
+      Commands will also have extra spaces, but it is always the last field, so
+      we just include spaces at this point in the parsing.
+
+      An additional complication is that some platforms (only AIX is known at
+      the time of writing) can have empty columns when a process is a
+      zombie. The plan is to match for this by checking the range between start
+      and end directly below the header (same byte position). If the whole range
+      is whitespace we consider the entry missing. The columns are (presumably)
+      guaranteed to line up correctly for this, since zombie processes do not
+      have memory usage which can produce large, potentially alignment-altering
+      numbers. However, we cannot do this whitespace check in general, because
+      non-zombie processes may shift columns in a way that leaves some columns
+      apparently (but not actually) empty.
+
+      Take these two examples:
+
+AIX:
+    USER     PID    PPID    PGID  %CPU  %MEM   VSZ NI ST    STIME        TIME COMMAND
+ jenkins 1036484  643150 1036484   0.0   0.0   584 20 A  09:29:20    00:00:00 bash
+          254232  729146  729146                   20 Z              00:00:00 <defunct>
+
+Solaris 9:
+    USER   PID %CPU %MEM   SZ  RSS TT      S    STIME        TIME COMMAND
+ jenkins 29769  0.0  0.0  810 2976 pts/1   S 07:22:43        0:00 /usr/bin/perl ../../ps.pl
+ jenkins 29835    -    -    0    0 ?       Z        -        0:00 <defunct>
+ jenkins 10026  0.0  0.3 30927 143632 ?       S   Jan_21    01:18:58 /usr/jdk/jdk1.6.0_45/bin/java -jar slave.jar
+
+      Due to how the process state 'S' is shifted under the 'S' header in the
+      second example, it is not possible to separate between this and a missing
+      column. Counting spaces is no good, because commands can contain an
+      arbitrary number of spaces, and there is no way to know the byte position
+      where a command begins. Hence the only way is to base this algorithm on
+      platform and only do the "empty column detection" when:
+        * The platform is known to produce empty columns for zombie processes
+          (see ZombiesCanHaveEmptyColumns())
+        * The platform is known to not shift columns when the process is a
+          zombie.
+        * The process is a zombie.
+    */
+
+    bool zombie = false;
+
+    if (ZombiesCanHaveEmptyColumns())
+    {
+        // Find out if the process is a zombie. This check is known to work on
+        // AIX, other platforms have not been checked.
+        for (int field = 0; names[field]; field++)
+        {
+            if (strcmp(names[field], "ST") == 0)
+            {
+                // Check for zombie state.
+                if (start[field] < linelen)
+                {
+                    // 'Z' letter with word boundary on each side.
+                    if (isspace(line[start[field] - 1])
+                        && line[start[field]] == 'Z'
+                        && (isspace(line[start[field] + 1])
+                            || line[start[field] + 1] == '\0'))
+                    {
+                        Log(LOG_LEVEL_DEBUG, "Detected zombie process, "
+                            "skipping parsing of empty ps fields.");
+                        zombie = true;
+                    }
+                }
+            }
+        }
+    }
+
+    int field = 0;
+    int pos = 0;
+    while (names[field] && pos <= linelen)
+    {
+        // Some sanity checks.
+        if (start[field] >= linelen)
+        {
+            Log(LOG_LEVEL_ERR, "ps output line '%s' is shorter than its "
+                "associated header.", line);
+            return false;
+        }
+
+        bool cmd = (strcmp(names[field], "CMD") == 0 ||
+                    strcmp(names[field], "COMMAND") == 0);
+        bool stime = !cmd && (strcmp(names[field], "STIME") == 0);
+
+        // Equal boolean results, either both must be true, or both must be
+        // false. IOW we must either both be at the last field, and it must be
+        // CMD, or none of those.      |
+        //                             v
+        if ((names[field + 1] != NULL) == cmd)
+        {
+            Log(LOG_LEVEL_ERR, "Last field of ps output '%s' is not "
+                "CMD/COMMAND.", line);
+            return false;
+        }
+
+        // If zombie, check if field is empty.
+        if (ZombiesCanHaveEmptyColumns() && zombie)
+        {
+            int empty_pos = start[field];
+            bool empty = true;
+            while (empty_pos <= end[field])
+            {
+                if (!isspace(line[empty_pos]))
+                {
+                    empty = false;
+                    break;
+                }
+                empty_pos++;
+            }
+            if (empty)
+            {
+                Log(LOG_LEVEL_DEBUG, "Detected empty '%s' field between "
+                    "positions %d and %d\n", names[field], start[field],
+                    end[field]);
+                fields[field] = xstrdup("");
+                pos = end[field] + 1;
+                field++;
+                continue;
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "Detected non-empty '%s' field between "
+                    "positions %d and %d\n", names[field], start[field],
+                    end[field]);
+            }
+        }
+
+        // Preceding space.
+        while (isspace(line[pos]))
+        {
+            pos++;
+        }
+
+        // Field.
+        int last = pos;
+        if (cmd)
+        {
+            // Last field, slurp up the rest, but discard trailing whitespace.
+            last = linelen;
+            while (isspace(line[last - 1]))
+            {
+                last--;
+            }
+        }
+        else if (stime)
+        {
+            while (isalpha(line[last]))
+            {
+                last++;
+            }
+            if (isspace(line[last]))
+            {
+                // In this case we expect one, and only one, space.
+                // It means what we first read was the month, now is the date.
+                last++;
+                if (!line[last] || !isdigit(line[last]))
+                {
+                    char fmt[200];
+                    xsnprintf(fmt, sizeof(fmt), "Unable to parse STIME entry in ps "
+                              "output line '%%s': Expected day number after "
+                              "'%%.%ds'", (last - 1) - pos);
+                    Log(LOG_LEVEL_ERR, fmt, line, line + pos);
+                    return false;
+                }
+            }
+            while (line[last] && !isspace(line[last]))
+            {
+                last++;
+            }
+        }
+        else
+        {
+            // Generic fields
+            while (line[last] && !isspace(line[last]))
+            {
+                last++;
+            }
+        }
+
+        // Make a copy and store in fields.
+        fields[field] = xstrndup(line + pos, last - pos);
+        Log(LOG_LEVEL_DEBUG, "'%s' field '%s' extracted from between positions "
+            "%d and %d", names[field], fields[field], pos, last - 1);
+
+        pos = last;
+        field++;
+    }
+
+    MaybeFixStartTime(line, pstime, names, fields);
 
     return true;
 }
@@ -884,6 +868,8 @@ bool IsProcessNameRunning(char *procNameRegex)
     bool matched = false;
     int i;
 
+    memset(colHeaders, 0, sizeof(colHeaders));
+
     if (PROCESSTABLE == NULL)
     {
         Log(LOG_LEVEL_ERR, "IsProcessNameRunning: PROCESSTABLE is empty");
@@ -897,6 +883,7 @@ bool IsProcessNameRunning(char *procNameRegex)
     for (const Item *ip = PROCESSTABLE->next; !matched && ip != NULL; ip = ip->next) // iterate over ps lines
     {
         char *lineSplit[CF_PROCCOLS];
+        memset(lineSplit, 0, sizeof(lineSplit));
 
         if (NULL_OR_EMPTY(ip->name))
         {
@@ -909,7 +896,9 @@ bool IsProcessNameRunning(char *procNameRegex)
             continue;
         }
 
-        if (SelectProcRegexMatch("CMD", "COMMAND", procNameRegex, colHeaders, lineSplit))
+        ApplyPlatformExtraTable(colHeaders, lineSplit);
+
+        if (SelectProcRegexMatch("CMD", "COMMAND", procNameRegex, true, colHeaders, lineSplit))
         {
             matched = true;
         }
@@ -933,6 +922,13 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
 {
     char title[16];
     int col, offset = 0;
+
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        Log(LOG_LEVEL_DEBUG, "Parsing ps line: '%s'", proc);
+        // Makes the entry line up with the line above.
+        PrintStringIndexLine(18, strlen(proc));
+    }
 
     for (col = 0; col < CF_PROCCOLS; col++)
     {
@@ -972,7 +968,15 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
         }
         else if (start[col] == -1)
         {
-            start[col] = offset;
+            if (col == 0)
+            {
+                // The first column always extends all the way to the left.
+                start[col] = 0;
+            }
+            else
+            {
+                start[col] = offset;
+            }
             sscanf(sp, "%15s", title);
             Log(LOG_LEVEL_DEBUG, "Start of '%s' is %d", title, offset);
             names[col] = xstrdup(title);
@@ -987,7 +991,7 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
     }
 }
 
-#ifndef __MINGW32__
+#ifndef _WIN32
 static const char *GetProcessOptions(void)
 {
 
@@ -1046,7 +1050,7 @@ static int ExtractPid(char *psentry, char **names, int *end)
     return -1;
 }
 
-# ifndef __MINGW32__
+# ifndef _WIN32
 # ifdef HAVE_GETZONEID
 /* ListLookup with the following return semantics
  * -1 if the first argument is smaller than the second
@@ -1079,7 +1083,6 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
     int start[CF_PROCCOLS];
     int end[CF_PROCCOLS];
 
-    int index = 0;
     const char *pscmd = "/usr/bin/ps -Aleo zone,user,pid";
 
     FILE *psf = cf_popen(pscmd, "r", false);
@@ -1217,10 +1220,225 @@ static void CheckPsLineLimitations(void)
 
     free(buf);
     fclose(ps_fd);
-#endif
+#endif // __hpux
+}
+#endif // _WIN32
+
+const char *GetProcessTableLegend(void)
+{
+    if (PROCESSTABLE)
+    {
+        // First entry in the table is legend.
+        return PROCESSTABLE->name;
+    }
+    else
+    {
+        return "<Process table not loaded>";
+    }
 }
 
-int LoadProcessTable(Item **procdata)
+#if defined(__sun) || defined(TEST_UNIT_TEST)
+static FILE *OpenUcbPsPipe(void)
+{
+    for (int i = 0; SOLARIS_UCB_STYLE_PS[i]; i++)
+    {
+        struct stat statbuf;
+        if (stat(SOLARIS_UCB_STYLE_PS[i], &statbuf) < 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "%s not found, cannot be used for extra process information",
+                SOLARIS_UCB_STYLE_PS[i]);
+            continue;
+        }
+        if (!(statbuf.st_mode & 0111))
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "%s not executable, cannot be used for extra process information",
+                SOLARIS_UCB_STYLE_PS[i]);
+            continue;
+        }
+
+        char *ps_cmd;
+        xasprintf(&ps_cmd, "%s %s", SOLARIS_UCB_STYLE_PS[i],
+                  SOLARIS_UCB_STYLE_PS_ARGS);
+
+        FILE *cmd = cf_popen(ps_cmd, "rt", false);
+        if (!cmd)
+        {
+            Log(LOG_LEVEL_WARNING, "Could not execute \"%s\", extra process "
+                "information not available. "
+                "Process command line length may be limited to 80 characters.",
+                ps_cmd);
+        }
+
+        free(ps_cmd);
+
+        return cmd;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "No eligible tool for extra process information "
+        "found. Skipping.");
+
+    return NULL;
+}
+
+static void ReadFromUcbPsPipe(FILE *cmd)
+{
+    char *names[CF_PROCCOLS];
+    memset(names, 0, sizeof(names));
+    int start[CF_PROCCOLS];
+    int end[CF_PROCCOLS];
+    char *line = NULL;
+    size_t linesize = 0;
+    bool header = true;
+    time_t pstime = time(NULL);
+    int pidcol = -1;
+    int cmdcol = -1;
+    while (CfReadLine(&line, &linesize, cmd) > 0)
+    {
+        if (header)
+        {
+            GetProcessColumnNames(line, names, start, end);
+
+            for (int i = 0; names[i]; i++)
+            {
+                if (strcmp(names[i], "PID") == 0)
+                {
+                    pidcol = i;
+                }
+                else if (strcmp(names[i], "COMMAND") == 0
+                           || strcmp(names[i], "CMD") == 0)
+                {
+                    cmdcol = i;
+                }
+            }
+
+            if (pidcol < 0 || cmdcol < 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Could not find PID and/or CMD/COMMAND column in "
+                    "ps output: \"%s\"", line);
+                break;
+            }
+
+            header = false;
+            continue;
+        }
+
+
+        char *columns[CF_PROCCOLS];
+        memset(columns, 0, sizeof(columns));
+        if (!SplitProcLine(line, pstime, names, start, end, columns))
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Not able to parse ps output: \"%s\"", line);
+        }
+
+        StringMapInsert(UCB_PS_MAP, columns[pidcol], columns[cmdcol]);
+        // We avoid strdup'ing these strings by claiming ownership here.
+        columns[pidcol] = NULL;
+        columns[cmdcol] = NULL;
+
+        for (int i = 0; i < CF_PROCCOLS; i++)
+        {
+            // There may be some null entries here, but since we "steal"
+            // strings in the section above, we may have set some of them to
+            // NULL and there may be following non-NULL fields.
+            free(columns[i]);
+        }
+    }
+
+    if (!feof(cmd) && ferror(cmd))
+    {
+        Log(LOG_LEVEL_ERR, "Error while reading output from ps: %s",
+            GetErrorStr());
+    }
+
+    for (int i = 0; names[i] && i < CF_PROCCOLS; i++)
+    {
+        free(names[i]);
+    }
+
+    free(line);
+}
+
+static void ClearPlatformExtraTable(void)
+{
+    if (UCB_PS_MAP)
+    {
+        StringMapDestroy(UCB_PS_MAP);
+        UCB_PS_MAP = NULL;
+    }
+}
+
+static void LoadPlatformExtraTable(void)
+{
+    if (UCB_PS_MAP)
+    {
+        return;
+    }
+
+    UCB_PS_MAP = StringMapNew();
+
+    FILE *cmd = OpenUcbPsPipe();
+    if (!cmd)
+    {
+        return;
+    }
+    ReadFromUcbPsPipe(cmd);
+    if (cf_pclose(cmd) != 0)
+    {
+        Log(LOG_LEVEL_WARNING, "Command returned non-zero while gathering "
+            "extra process information.");
+        ClearPlatformExtraTable();
+    }
+}
+
+static void ApplyPlatformExtraTable(char **names, char **columns)
+{
+    int pidcol = -1;
+
+    for (int i = 0; names[i] && columns[i]; i++)
+    {
+        if (strcmp(names[i], "PID") == 0)
+        {
+            pidcol = i;
+            break;
+        }
+    }
+
+    if (!StringMapHasKey(UCB_PS_MAP, columns[pidcol]))
+    {
+        return;
+    }
+
+    for (int i = 0; names[i] && columns[i]; i++)
+    {
+        if (strcmp(names[i], "COMMAND") == 0 || strcmp(names[i], "CMD") == 0)
+        {
+            free(columns[i]);
+            columns[i] = xstrdup(StringMapGet(UCB_PS_MAP, columns[pidcol]));
+            break;
+        }
+    }
+}
+
+#else
+static inline void LoadPlatformExtraTable(void)
+{
+}
+
+static inline void ClearPlatformExtraTable(void)
+{
+}
+
+static inline void ApplyPlatformExtraTable(ARG_UNUSED char **names, ARG_UNUSED char **columns)
+{
+}
+#endif
+
+#ifndef _WIN32
+int LoadProcessTable()
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE];
@@ -1233,6 +1451,8 @@ int LoadProcessTable(Item **procdata)
         Log(LOG_LEVEL_VERBOSE, "Reusing cached process table");
         return true;
     }
+
+    LoadPlatformExtraTable();
 
     CheckPsLineLimitations();
 
@@ -1312,7 +1532,7 @@ int LoadProcessTable(Item **procdata)
         }
 
 # endif
-        AppendItem(procdata, vbuff, "");
+        AppendItem(&PROCESSTABLE, vbuff, "");
     }
 
     cf_pclose(prp);
@@ -1321,19 +1541,19 @@ int LoadProcessTable(Item **procdata)
     const char* const statedir = GetStateDir();
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_procs", statedir, FILE_SEPARATOR);
-    RawSaveItemList(*procdata, vbuff, NewLineMode_Unix);
+    RawSaveItemList(PROCESSTABLE, vbuff, NewLineMode_Unix);
 
 # ifdef HAVE_GETZONEID
     if (global_zone) /* pidlist and rootpidlist are empty if we're not in the global zone */
     {
-        Item *ip = *procdata;
+        Item *ip = PROCESSTABLE;
         while (ip != NULL)
         {
             ZCopyProcessList(&rootprocs, ip, rootpidlist, names, end);
             ip = ip->next;
         }
         ReverseItemList(rootprocs);
-        ip = *procdata;
+        ip = PROCESSTABLE;
         while (ip != NULL)
         {
             ZCopyProcessList(&otherprocs, ip, pidlist, names, end);
@@ -1344,8 +1564,8 @@ int LoadProcessTable(Item **procdata)
     else
 # endif
     {
-        CopyList(&rootprocs, *procdata);
-        CopyList(&otherprocs, *procdata);
+        CopyList(&rootprocs, PROCESSTABLE);
+        CopyList(&otherprocs, PROCESSTABLE);
 
         while (DeleteItemNotContaining(&rootprocs, "root"))
         {
@@ -1372,3 +1592,11 @@ int LoadProcessTable(Item **procdata)
     return true;
 }
 # endif
+
+void ClearProcessTable(void)
+{
+    ClearPlatformExtraTable();
+
+    DeleteItemList(PROCESSTABLE);
+    PROCESSTABLE = NULL;
+}

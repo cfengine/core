@@ -2245,11 +2245,12 @@ Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *poli
                                       const char *callee_reference, const char *callee_type)
 {
     ClassRef ref = IDRefQualify(ctx, callee_reference);
-    Seq *bodies = SeqNew(2, NULL);
+    Seq *bodies = NULL;
 
     const Body *bp = EvalContextFindFirstMatchingBody(policy, callee_type, ref.ns, ref.name);
     if (bp)
     {
+        bodies = SeqNew(2, NULL);
         SeqAppend(bodies, (void *)bp);
         SeqAppend(bodies, (void *)NULL);
         EvalContextAppendBodyParentsAndArgs(ctx, policy, bodies, bp, callee_type, 1);

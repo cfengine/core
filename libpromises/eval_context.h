@@ -131,6 +131,8 @@ ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx
 
 void EvalContextClear(EvalContext *ctx);
 
+Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);
+
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, const Rlist *args);
 void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner);
@@ -148,6 +150,9 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx);
 const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
 const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 const RingBuffer *EvalContextStackCurrentMessages(const EvalContext *ctx);
+
+Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);
+JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags);

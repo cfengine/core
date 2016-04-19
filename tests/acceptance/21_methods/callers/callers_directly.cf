@@ -1,0 +1,59 @@
+#######################################################
+#
+# Test the variable this.callers_promisers with one bundle
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init {
+}
+
+bundle agent test {
+  methods:
+    "test" usebundle => "caller";
+}
+
+bundle agent check {
+  vars:
+      "callers_expect" string => "agent";
+      # Due to the 4K variable limit we cannot test the whole structure, so
+      # just test one element within it. At least it's not completely broken
+      # if we find it.
+      "callers_actual" string => "$(dummy.callers[0][bundle][bundleType])";
+
+  classes:
+      "success"  expression => strcmp("${callers_expect}", "${callers_actual}"),
+        scope => "namespace";
+
+  reports:
+    success::
+      "$(this.promise_filename) Pass";
+    !success::
+      "$(this.promise_filename) FAIL";
+
+  methods:
+      "any" usebundle => file_make($(G.testfile), $(callers_actual));
+
+  reports:
+    DEBUG::
+      "EXPECT: callers_string = ${callers_expect}";
+      "ACTUAL: callers_string = $(callers_actual)";
+}
+
+bundle agent caller {
+  methods:
+    "first call" usebundle => dummy;
+}
+
+bundle agent dummy {
+  vars:
+    "callers" data => callstack_callers();
+}

@@ -1,0 +1,53 @@
+#######################################################
+#
+# Test the variable this.callers_promisers with one bundle
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init {
+}
+
+bundle agent test {
+  methods:
+    "test" usebundle => "caller";
+}
+
+bundle agent check {
+  reports:
+    success::
+      "$(this.promise_filename) Pass";
+    !success::
+      "$(this.promise_filename) FAIL";
+}
+
+bundle agent caller {
+  methods:
+    "first call" usebundle => dummy;
+}
+
+bundle agent dummy {
+  vars:
+    "callers_promisers" slist => callstack_promisers();
+
+    "callers_promisers_expect" string => "any, any, test, first call";
+    "callers_promisers_actual" string => join(", ", "callers_promisers");
+
+  classes:
+    "success"  expression => strcmp("${callers_promisers_expect}", "${callers_promisers_actual}"),
+      scope => "namespace";
+
+  reports:
+    DEBUG::
+      "EXPECT: callers_promisers_string = ${callers_promisers_expect}";
+      "ACTUAL: callers_promisers_string = ${callers_promisers_actual}";
+}
+

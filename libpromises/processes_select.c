@@ -118,7 +118,8 @@ static bool SelectProcess(const char *procentry,
 
     if (!SplitProcLine(procentry, pstime, names, start, end, column))
     {
-        return false;
+        result = false;
+        goto cleanup;
     }
 
     ApplyPlatformExtraTable(names, column);
@@ -893,7 +894,7 @@ bool IsProcessNameRunning(char *procNameRegex)
         if (!SplitProcLine(ip->name, pstime, colHeaders, start, end, lineSplit))
         {
             Log(LOG_LEVEL_ERR, "IsProcessNameRunning: Could not split process line '%s'", ip->name);
-            continue;
+            goto loop_cleanup;
         }
 
         ApplyPlatformExtraTable(colHeaders, lineSplit);
@@ -903,6 +904,7 @@ bool IsProcessNameRunning(char *procNameRegex)
             matched = true;
         }
 
+   loop_cleanup:
         for (i = 0; lineSplit[i] != NULL; i++)
         {
             free(lineSplit[i]);

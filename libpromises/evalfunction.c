@@ -6015,7 +6015,7 @@ static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCal
 
     free(file_buffer);
 
-    if (newlist && noerrors)
+    if (noerrors)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
     }

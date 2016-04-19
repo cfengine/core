@@ -217,6 +217,7 @@ static const char *const HINTS[] =
 
 int main(int argc, char *argv[])
 {
+    SetupSignalsForAgent();
 #ifdef HAVE_LIBXML2
         xmlInitParser();
 #endif
@@ -661,13 +662,6 @@ static void ThisAgentInit(void)
 #ifdef HAVE_SETSID
     setsid();
 #endif
-
-    signal(SIGINT, HandleSignalsForAgent);
-    signal(SIGTERM, HandleSignalsForAgent);
-    signal(SIGHUP, SIG_IGN);
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGUSR1, HandleSignalsForAgent);
-    signal(SIGUSR2, HandleSignalsForAgent);
 
     CFA_MAXTHREADS = 30;
     EDITFILESIZE = 100000;

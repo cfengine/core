@@ -1639,6 +1639,7 @@ AC_CONFIG_FILES([Makefile
     examples/Makefile
     tests/Makefile
     tests/acceptance/Makefile
+    tests/acceptance/25_cf-execd/Makefile
     tests/unit/Makefile
     tests/load/Makefile])
 

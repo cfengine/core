@@ -40,6 +40,12 @@ typedef struct
     char *mail_to_address;
     char *mail_subject;
     int mail_max_lines;
+    // These two contain regular expression strings.
+    Seq *mailfilter_include;
+    Seq *mailfilter_exclude;
+    // These two contain precompiled regexes (pcre*).
+    Seq *mailfilter_include_regex;
+    Seq *mailfilter_exclude_regex;
 
     /*
      * Host information.

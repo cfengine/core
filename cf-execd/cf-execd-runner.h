@@ -29,5 +29,7 @@
 
 void LocalExec(const ExecConfig *config);
 
+int ConnectToSmtpSocket(const ExecConfig *config);
+
 #endif
 

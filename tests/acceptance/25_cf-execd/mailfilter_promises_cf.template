@@ -1,0 +1,13 @@
+body common control
+{
+    inputs => { "controls/cf_execd.cf" };
+    bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  reports:
+      {{#reports}}
+      "{{.}}";
+      {{/reports}}
+}

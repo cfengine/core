@@ -221,6 +221,20 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
 JsonElement *PolicyToJson(const Policy *policy);
 
 /**
+ * @brief Serialize a bundle as JSON
+ * @param bundle The bundle to serialize
+ * @return A JsonElement representing the input bundle
+ */
+JsonElement *BundleToJson(const Bundle *bundle);
+
+/**
+ * @brief Serialize a body as JSON
+ * @param body The body to serialize
+ * @return A JsonElement representing the input body
+ */
+JsonElement *BodyToJson(const Body *body);
+
+/**
  * @brief Deserialize a policy from JSON
  * @param json_policy JSON to deserialize
  * @return A policy DOM

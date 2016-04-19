@@ -1,0 +1,170 @@
+# Common stuff for mailfilter tests.
+
+bundle agent prepare_mailfilter_test(reports, includes, excludes)
+{
+  vars:
+      "data_keys[reports]"  slist => { @(reports) };
+      "data_keys[includes]" slist => { @(includes) };
+      "data_keys[excludes]" slist => { @(excludes) };
+      "data" data => mergedata("data_keys");
+      "data_print" string => format("%S", "data");
+
+  # promises.cf
+
+  files:
+      "$(sys.inputdir)/promises.cf"
+        create => "true",
+        edit_template => "$(this.promise_dirname)/mailfilter_promises_cf.template",
+        template_method => "mustache",
+        template_data => @(data);
+
+  # cf-execd.cf
+
+  files:
+      "$(sys.inputdir)/controls/cf_execd.cf"
+        create => "true",
+        edit_template => "$(this.promise_dirname)/mailfilter_cf_execd_control.template",
+        template_method => "mustache",
+        template_data => @(data);
+
+  # Keys.
+
+  methods:
+      "generate_key";
+}
+
+bundle agent run_cf_execd(wanted, unwanted)
+{
+  vars:
+      "cmd" string => "$(this.promise_dirname)/cf-execd-test --once";
+
+  commands:
+      "$(cmd) >> $(G.testfile).output"
+        contain => in_shell;
+
+  methods:
+      "any" usebundle => store_expected_regex_from_run(@(wanted), @(unwanted));
+}
+
+bundle agent store_expected_regex_from_run(wanted, unwanted)
+{
+  classes:
+      "wanted_not_empty" expression => some(".*", "wanted");
+      "unwanted_not_empty" expression => some(".*", "unwanted");
+
+  vars:
+    !wanted_not_empty::
+      "wanted_regex" string => "";
+    wanted_not_empty::
+      # Notice that "Date" is optionally matched, due to it being ifdef'ed on
+      # some platforms.
+      "wanted_regex" string => concat(
+'220 test\.com\r
+HELO [^\r\n]+\r
+250 Hello test\.com, pleased to meet you\r
+MAIL FROM: <from@test\.com>\r
+250 from@test\.com\.\.\. Sender ok\r
+RCPT TO: <to@test\.com>\r
+250 to@test\.com\.\.\. Recipient ok\r
+DATA\r
+354 Enter mail, end with "\." on a line by itself\r
+Subject: \[[^]]+\]\r
+X-CFEngine: vfqhost="[^"]+";ip-addresses="[^"]+";policyhub="[^"]*";pkhash="MD5=617eb383deffef843ea856b129d0a423"\r
+(Date: [^\r\n]+\r
+)?From: from@test\.com\r
+To: to@test\.com\r
+\r
+R: ', join('\r
+R: ', "wanted"), '\r
+\.\r
+250 Message accepted for delivery\r
+QUIT\r(
+221 test\.com closing connection\r)?');
+# ^ Note that this last string is optionally matched. The reason is that
+#   cf-execd may finish everything and quit before the mock thread has time to
+#   finish writing that string. It does not mean there's an error. The string is
+#   left here for clarity though.
+
+    unwanted_not_empty::
+      "unwanted_regex" string => concat(".*(", join("|", "unwanted"), ").*");
+
+  files:
+      "$(G.testfile).wanted"
+        create => "true";
+    wanted_not_empty::
+      "$(G.testfile).wanted"
+        edit_line => append_regex($(wanted_regex));
+
+      "$(G.testfile).unwanted"
+        create => "true";
+    unwanted_not_empty::
+      "$(G.testfile).unwanted"
+        edit_line => append_regex($(unwanted_regex));
+}
+
+bundle edit_line append_regex(regex)
+{
+  insert_lines:
+      "$(regex)"
+        insert_type => "preserve_all_lines";
+}
+
+bundle agent compare_cf_execd_mail(test)
+{
+  classes:
+      "test_not_empty" expression => isvariable("test");
+      "unwanted_content" not => strcmp(filestat("$(G.testfile).unwanted", "size"), "0");
+
+  vars:
+    test_not_empty::
+      "cmd" string => "$(G.cat) $(G.testfile).output";
+      "wanted_regex" string => readfile("$(G.testfile).wanted", 0);
+      "unwanted_regex_list" slist => readstringlist("$(G.testfile).unwanted",
+                                                    "",
+                                                    "\n",
+                                                    "1000000",
+                                                    "1000000");
+
+      "unwanted_regex" string => join("|", "unwanted_regex_list");
+
+      "output" string => readfile("$(G.testfile).output", 0);
+
+  classes:
+      "wanted_ok" expression => regcmp($(wanted_regex), $(output));
+      "unwanted_ok"      not => regcmp($(unwanted_regex), $(output));
+      "ok"               and => { "wanted_ok", "unwanted_ok" };
+
+  reports:
+      "wanted_regex_list = $(wanted_regex_list)";
+      "unwanted_regex_list = $(unwanted_regex_list)";
+      "wanted_regex = '$(wanted_regex)'";
+      "unwanted_regex = '$(unwanted_regex)'";
+      "output = '$(output)'";
+    wanted_ok::
+      "wanted_ok is set";
+    !wanted_ok::
+      "wanted_ok is NOT set";
+    unwanted_ok::
+      "unwanted_ok is set";
+    !unwanted_ok::
+      "unwanted_ok is NOT set";
+
+  reports:
+    ok::
+      "$(test) Pass";
+    !ok::
+      "$(test) FAIL";
+}
+
+bundle agent check_cf_execd_mail(wanted_arg, unwanted_arg, test)
+{
+  vars:
+      # Workaround: The parser doesn't see bundle arguments as truly being in
+      # the scope of the bundle, and therefore they can't be passed on into
+      # other bundles. Therefore we make a copy.
+      "wanted" slist => { @(wanted_arg) };
+      "unwanted" slist => { @(unwanted_arg) };
+  methods:
+      "any" usebundle => run_cf_execd(@(wanted), @(unwanted));
+      "any" usebundle => compare_cf_execd_mail($(test));
+}

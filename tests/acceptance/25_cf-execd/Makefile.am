@@ -21,43 +21,20 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-noinst_LTLIBRARIES = libcf-execd.la libcf-execd-test.la
 
 AM_CPPFLAGS = \
 	$(OPENSSL_CPPFLAGS) \
-	-I$(srcdir)/../libpromises \
-	-I$(srcdir)/../libutils \
-	-I$(srcdir)/../libcfnet \
-	-I$(srcdir)/../libenv \
+	-I$(srcdir)/../../../libpromises \
+	-I$(srcdir)/../../../libutils \
+	-I$(srcdir)/../../../libcfnet \
+	-I$(srcdir)/../../../libenv \
+	-I$(srcdir)/../../../cf-execd \
 	$(PCRE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
-AM_CFLAGS = \
-	$(OPENSSL_CFLAGS) \
-	$(ENTERPRISE_CFLAGS)
+if !NT
+noinst_PROGRAMS = cf-execd-test
 
-libcf_execd_la_LIBADD = ../libpromises/libpromises.la
-
-libcf_execd_la_SOURCES = \
-        cf-execd.c cf-execd.h \
-        cf-execd-runner.c cf-execd-runner.h \
-        exec-config.c exec-config.h \
-        execd-config.c execd-config.h
-
-libcf_execd_test_la_SOURCES = $(libcf_execd_la_SOURCES)
-libcf_execd_test_la_LIBADD = $(libcf_execd_la_LIBADD)
-libcf_execd_test_la_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_CF_EXECD
-
-if !BUILTIN_EXTENSIONS
- sbin_PROGRAMS = cf-execd
- # Workaround for automake madness (try removing it if you want to know why).
- cf_execd_CFLAGS = $(AM_CFLAGS)
- cf_execd_LDADD = libcf-execd.la
+cf_execd_test_SOURCES = cf-execd-rpl-functions.c
+cf_execd_test_LDADD = ../../../cf-execd/libcf-execd-test.la
 endif
-
-CLEANFILES = *.gcno *.gcda
-
-#
-# Some basic clean ups
-#
-MOSTLYCLEANFILES = *~ *.orig *.rej

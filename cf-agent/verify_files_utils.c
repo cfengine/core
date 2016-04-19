@@ -3251,7 +3251,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
             {
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "NEW SETUID root PROGRAM '%s'", file);
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "NEW SETUID root PROGRAM '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
 
@@ -3273,7 +3273,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
 
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "WARNING setuid (root) flag on '%s'", file);
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Need to remove setuid (root) flag on '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
                 break;
@@ -3293,7 +3293,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
             {
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
 
@@ -3313,7 +3313,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
 
             case cfa_warn:
 
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "WARNING setgid (root) flag on '%s'", file);
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Need to remove setgid (root) flag on '%s'", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 break;
 

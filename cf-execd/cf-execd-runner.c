@@ -636,6 +636,10 @@ static void MailResult(const ExecConfig *config, const char *file)
     char buffer[CF_HOSTKEY_STRING_SIZE];
 
     char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+    if (!existing_policy_server)
+    {
+        existing_policy_server = xstrdup("(none)");
+    }
 
     HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
 

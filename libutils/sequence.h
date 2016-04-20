@@ -47,7 +47,10 @@ typedef struct
     void (*ItemDestroy) (void *item);
 } Seq;
 
-#define SeqAt(seq, i) seq->data[i]
+static inline void *SeqAt(const Seq *seq, int i)
+{
+    return seq->data[i];
+}
 
 /**
   @brief Length of the sequence.

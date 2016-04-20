@@ -51,6 +51,73 @@ static char *GetIpAddresses(const EvalContext *ctx)
     return StringWriterClose(ipbuf);
 }
 
+static void RegexFree(void *ptr)
+{
+    pcre_free(ptr);
+}
+
+static void MailFilterFill(const char *str,
+                           Seq **output, Seq **output_regex,
+                           const char *filter_type)
+{
+    const char *errorstr;
+    int erroffset;
+    pcre *rx = pcre_compile(str,
+                            PCRE_MULTILINE | PCRE_DOTALL | PCRE_ANCHORED,
+                            &errorstr, &erroffset, NULL);
+    if (!rx)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Invalid regular expression in mailfilter_%s: "
+            "pcre_compile() '%s' in expression '%s' (offset: %d). "
+            "Ignoring expression.", filter_type,
+            errorstr, str, erroffset);
+    }
+    else
+    {
+        SeqAppend(*output, xstrdup(str));
+        SeqAppend(*output_regex, rx);
+    }
+}
+
+static void RlistMailFilterFill(const Rlist *input,
+                                Seq **output, Seq **output_regex,
+                                const char *filter_type)
+{
+    int len = RlistLen(input);
+
+    *output = SeqNew(len, &free);
+    *output_regex = SeqNew(len, &RegexFree);
+
+    const Rlist *ptr = input;
+    for (int i = 0; i < len; i++)
+    {
+        const char *str = ptr->val.item;
+        if (strcmp(str, "cf_null") == 0)
+        {
+            continue;
+        }
+        ptr = ptr->next;
+
+        MailFilterFill(str, output, output_regex, filter_type);
+    }
+}
+
+static void SeqMailFilterFill(const Seq *input,
+                           Seq **output, Seq **output_regex,
+                           const char *filter_type)
+{
+    int len = SeqLength(input);
+
+    *output = SeqNew(len, &free);
+    *output_regex = SeqNew(len, &RegexFree);
+
+    for (int i = 0; i < len; i++)
+    {
+        MailFilterFill(SeqAt(input, i), output, output_regex, filter_type);
+    }
+}
+
 ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Policy *policy)
 {
     ExecConfig *exec_config = xcalloc(1, sizeof(ExecConfig));
@@ -64,6 +131,10 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
     exec_config->mail_to_address = xstrdup("");
     exec_config->mail_subject = xstrdup("");
     exec_config->mail_max_lines = 30;
+    exec_config->mailfilter_include = SeqNew(0, &free);
+    exec_config->mailfilter_include_regex = SeqNew(0, &RegexFree);
+    exec_config->mailfilter_exclude = SeqNew(0, &free);
+    exec_config->mailfilter_exclude_regex = SeqNew(0, &RegexFree);
 
     exec_config->fq_name = xstrdup(VFQNAME);
     exec_config->ip_address = xstrdup(VIPADDRESS);
@@ -136,6 +207,20 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
                 exec_config->mail_max_lines = IntFromString(value);
                 Log(LOG_LEVEL_DEBUG, "maxlines %d", exec_config->mail_max_lines);
             }
+            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILFILTER_INCLUDE].lval) == 0)
+            {
+                SeqDestroy(exec_config->mailfilter_include);
+                SeqDestroy(exec_config->mailfilter_include_regex);
+                RlistMailFilterFill(value, &exec_config->mailfilter_include,
+                                    &exec_config->mailfilter_include_regex, "include");
+            }
+            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILFILTER_EXCLUDE].lval) == 0)
+            {
+                SeqDestroy(exec_config->mailfilter_exclude);
+                SeqDestroy(exec_config->mailfilter_exclude_regex);
+                RlistMailFilterFill(value, &exec_config->mailfilter_exclude,
+                                    &exec_config->mailfilter_exclude_regex, "exclude");
+            }
         }
     }
 
@@ -154,6 +239,10 @@ ExecConfig *ExecConfigCopy(const ExecConfig *config)
     copy->mail_to_address = xstrdup(config->mail_to_address);
     copy->mail_subject = xstrdup(config->mail_subject);
     copy->mail_max_lines = config->mail_max_lines;
+    SeqMailFilterFill(config->mailfilter_include, &copy->mailfilter_include,
+                      &copy->mailfilter_include_regex, "include");
+    SeqMailFilterFill(config->mailfilter_exclude, &copy->mailfilter_exclude,
+                      &copy->mailfilter_exclude_regex, "exclude");
     copy->fq_name = xstrdup(config->fq_name);
     copy->ip_address = xstrdup(config->ip_address);
     copy->ip_addresses = xstrdup(config->ip_addresses);
@@ -170,6 +259,10 @@ void ExecConfigDestroy(ExecConfig *exec_config)
         free(exec_config->mail_from_address);
         free(exec_config->mail_to_address);
         free(exec_config->mail_subject);
+        SeqDestroy(exec_config->mailfilter_include);
+        SeqDestroy(exec_config->mailfilter_exclude);
+        SeqDestroy(exec_config->mailfilter_include_regex);
+        SeqDestroy(exec_config->mailfilter_exclude_regex);
         free(exec_config->fq_name);
         free(exec_config->ip_address);
         free(exec_config->ip_addresses);

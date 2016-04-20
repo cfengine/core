@@ -51,7 +51,6 @@ static const int INF_LINES = -2;
 
 /*******************************************************************/
 
-static int CompareResult(const char *filename, const char *prev_file);
 static void MailResult(const ExecConfig *config, const char *file);
 static int Dialogue(int sd, const char *s);
 
@@ -350,11 +349,48 @@ void LocalExec(const ExecConfig *config)
     }
 }
 
-static int CompareResult(const char *filename, const char *prev_file)
+// Returns true if line is filtered, IOW should not be included.
+static bool LineIsFiltered(const ExecConfig *config,
+                           const char *line)
+{
+    // Check whether the line matches mail filters
+    int include_filter_len = SeqLength(config->mailfilter_include_regex);
+    int exclude_filter_len = SeqLength(config->mailfilter_exclude_regex);
+    // Count messages as matched in include set if there is no include set.
+    bool included = (include_filter_len == 0);
+    bool excluded = false;
+    if (include_filter_len > 0)
+    {
+        for (int i = 0; i < include_filter_len; i++)
+        {
+            if (StringMatchFullWithPrecompiledRegex(SeqAt(config->mailfilter_include_regex, i),
+                                                    line))
+            {
+                included = true;
+            }
+        }
+    }
+    if (exclude_filter_len > 0)
+    {
+        for (int i = 0; i < exclude_filter_len; i++)
+        {
+            if (StringMatchFullWithPrecompiledRegex(SeqAt(config->mailfilter_exclude_regex, i),
+                                                    line))
+            {
+                excluded = true;
+            }
+        }
+    }
+    return !included || excluded;
+}
+
+static bool CompareResultEqual(const ExecConfig *config,
+                               const char *filename,
+                               const char *prev_file)
 {
     Log(LOG_LEVEL_VERBOSE, "Comparing files  %s with %s", prev_file, filename);
 
-    int rtn = 0;
+    bool rtn = true;
 
     FILE *old_fp = safe_fopen(prev_file, "r");
     FILE *new_fp = safe_fopen(filename, "r");
@@ -368,42 +404,49 @@ static int CompareResult(const char *filename, const char *prev_file)
         if (!regex)
         {
             UnexpectedError("Compiling regular expression failed");
-            rtn = 1;
+            rtn = false;
         }
         else
         {
             regex_extra = pcre_study(regex, 0, &errptr);
         }
 
+        size_t old_line_size = CF_BUFSIZE;
+        char *old_line = xmalloc(old_line_size);
+        size_t new_line_size = CF_BUFSIZE;
+        char *new_line = xmalloc(new_line_size);
         while (regex)
         {
-            size_t old_line_size = CF_BUFSIZE;
-            char *old_line = xmalloc(old_line_size);
             char *old_msg = NULL;
-            if (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
+            while (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
             {
-                old_msg = old_line;
+                if (!LineIsFiltered(config, old_line))
+                {
+                    old_msg = old_line;
+                    break;
+                }
             }
 
-            size_t new_line_size = CF_BUFSIZE;
-            char *new_line = xmalloc(new_line_size);
             char *new_msg = NULL;
-            if (CfReadLine(&new_line, &new_line_size, new_fp) >= 0)
+            while (CfReadLine(&new_line, &new_line_size, new_fp) >= 0)
             {
-                new_msg = new_line;
+                if (!LineIsFiltered(config, new_line))
+                {
+                    new_msg = new_line;
+                    break;
+                }
             }
 
             if (!old_msg || !new_msg)
             {
                 if (old_msg != new_msg)
                 {
-                    rtn = 1;
+                    rtn = false;
                 }
-                free(old_line);
-                free(new_line);
                 break;
             }
 
+            // Remove timestamps from lines before comparison.
             char *index;
             if (pcre_exec(regex, regex_extra, old_msg, strlen(old_msg), 0, 0, NULL, 0) >= 0)
             {
@@ -424,15 +467,13 @@ static int CompareResult(const char *filename, const char *prev_file)
 
             if (strcmp(old_msg, new_msg) != 0)
             {
-                rtn = 1;
-                free(old_line);
-                free(new_line);
+                rtn = false;
                 break;
             }
-
-            free(old_line);
-            free(new_line);
         }
+
+        free(old_line);
+        free(new_line);
 
         if (regex_extra)
         {
@@ -443,7 +484,7 @@ static int CompareResult(const char *filename, const char *prev_file)
     else
     {
         /* no previous file */
-        rtn = 1;
+        rtn = false;
     }
 
     if (old_fp)
@@ -468,15 +509,65 @@ static int CompareResult(const char *filename, const char *prev_file)
     if (!LinkOrCopy(filename, prev_file, true))
     {
         Log(LOG_LEVEL_INFO, "Could not symlink or copy '%s' to '%s'", filename, prev_file);
-        rtn = 1;
+        rtn = false;
     }
 
     ThreadUnlock(cft_count);
     return rtn;
 }
 
+#ifndef TEST_CF_EXECD
+int ConnectToSmtpSocket(const ExecConfig *config)
+{
+    struct hostent *hp = gethostbyname(config->mail_server);
+    if (!hp)
+    {
+        Log(LOG_LEVEL_ERR, "Mail report: unknown host '%s' ('smtpserver' in body executor control). Make sure that fully qualified names can be looked up at your site.",
+                config->mail_server);
+        return -1;
+    }
+
+    struct servent *server = getservbyname("smtp", "tcp");
+    if (!server)
+    {
+        Log(LOG_LEVEL_ERR, "Mail report: unable to lookup smtp service. (getservbyname: %s)", GetErrorStr());
+        return -1;
+    }
+
+    struct sockaddr_in raddr;
+    memset(&raddr, 0, sizeof(raddr));
+
+    raddr.sin_port = (unsigned int) server->s_port;
+    raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
+    raddr.sin_family = AF_INET;
+
+    Log(LOG_LEVEL_DEBUG, "Mail report: connecting...");
+
+    int sd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sd == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Mail report: couldn't open a socket. (socket: %s)", GetErrorStr());
+        return -1;
+    }
+
+    if (connect(sd, (void *) &raddr, sizeof(raddr)) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Mail report: couldn't connect to host '%s'. (connect: %s)",
+            config->mail_server, GetErrorStr());
+        cf_closesocket(sd);
+        return -1;
+    }
+
+    return sd;
+}
+#endif // !TEST_CF_EXECD
+
 static void MailResult(const ExecConfig *config, const char *file)
 {
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    ssize_t read;
+
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
@@ -502,7 +593,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         snprintf(prev_file, CF_BUFSIZE, "%s/outputs/previous", GetWorkDir());
         MapName(prev_file);
 
-        if (CompareResult(file, prev_file) == 0)
+        if (CompareResultEqual(config, file, prev_file))
         {
             Log(LOG_LEVEL_VERBOSE, "Mail report: previous output is the same as current so do not mail it");
             return;
@@ -524,81 +615,17 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     Log(LOG_LEVEL_DEBUG, "Mail report: mailing results of '%s' to '%s'", file, config->mail_to_address);
 
-/* Check first for anomalies - for subject header */
-
     FILE *fp = fopen(file, "r");
-    if (!fp)
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
     }
 
-    bool anomaly = false;
-    char vbuff[CF_BUFSIZE];
-
-    while (!feof(fp))
+    int sd = ConnectToSmtpSocket(config);
+    if (sd < 0)
     {
-        vbuff[0] = '\0';
-        if (fgets(vbuff, sizeof(vbuff), fp) == NULL)
-        {
-            break;
-        }
-
-        if (strstr(vbuff, "entropy"))
-        {
-            anomaly = true;
-            break;
-        }
-    }
-
-    fclose(fp);
-
-    if ((fp = fopen(file, "r")) == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
-        return;
-    }
-
-    struct hostent *hp = gethostbyname(config->mail_server);
-    if (!hp)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: unknown host '%s' ('smtpserver' in body executor control). Make sure that fully qualified names can be looked up at your site.",
-                config->mail_server);
         fclose(fp);
-        return;
-    }
-
-    struct servent *server = getservbyname("smtp", "tcp");
-    if (!server)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: unable to lookup smtp service. (getservbyname: %s)", GetErrorStr());
-        fclose(fp);
-        return;
-    }
-
-    struct sockaddr_in raddr;
-    memset(&raddr, 0, sizeof(raddr));
-
-    raddr.sin_port = (unsigned int) server->s_port;
-    raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
-    raddr.sin_family = AF_INET;
-
-    Log(LOG_LEVEL_DEBUG, "Mail report: connecting...");
-
-    int sd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sd == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: couldn't open a socket. (socket: %s)", GetErrorStr());
-        fclose(fp);
-        return;
-    }
-
-    if (connect(sd, (void *) &raddr, sizeof(raddr)) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: couldn't connect to host '%s'. (connect: %s)",
-            config->mail_server, GetErrorStr());
-        fclose(fp);
-        cf_closesocket(sd);
         return;
     }
 
@@ -609,6 +636,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         goto mail_err;
     }
 
+    char vbuff[CF_BUFSIZE];
     snprintf(vbuff, sizeof(vbuff), "HELO %s\r\n", config->fq_name);
     Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
 
@@ -649,24 +677,14 @@ static void MailResult(const ExecConfig *config, const char *file)
         goto mail_err;
     }
 
-    char mailsubject_anomaly_prefix[8];
-    if (anomaly)
-    {
-        strcpy(mailsubject_anomaly_prefix, "**!! ");
-    }
-    else
-    {
-        mailsubject_anomaly_prefix[0] = '\0';
-    }
-
     if (SafeStringLength(config->mail_subject) == 0)
     {
-        snprintf(vbuff, sizeof(vbuff), "Subject: %s[%s/%s]\r\n", mailsubject_anomaly_prefix, config->fq_name, config->ip_address);
+        snprintf(vbuff, sizeof(vbuff), "Subject: [%s/%s]\r\n", config->fq_name, config->ip_address);
         Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
     else
     {
-        snprintf(vbuff, sizeof(vbuff), "Subject: %s%s\r\n", mailsubject_anomaly_prefix, config->mail_subject);
+        snprintf(vbuff, sizeof(vbuff), "Subject: %s\r\n", config->mail_subject);
         Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     }
 
@@ -677,6 +695,10 @@ static void MailResult(const ExecConfig *config, const char *file)
     char buffer[CF_HOSTKEY_STRING_SIZE];
 
     char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+    if (!existing_policy_server)
+    {
+        existing_policy_server = xstrdup("(none)");
+    }
 
     HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
 
@@ -713,30 +735,33 @@ static void MailResult(const ExecConfig *config, const char *file)
     send(sd, vbuff, strlen(vbuff), 0);
 
     int count = 0;
-    while (!feof(fp))
+    while ((read = CfReadLine(&line, &line_size, fp)) > 0)
     {
-        vbuff[0] = '\0';
-        if (fgets(vbuff, sizeof(vbuff), fp) == NULL)
+        if (LineIsFiltered(config, line))
         {
-            break;
+            continue;
+        }
+        if (send(sd, line, read, 0) == -1 ||
+            send(sd, "\r\n", 2, 0) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Error while sending mail to mailserver "
+                "'%s'. (send: '%s')", config->mail_server, GetErrorStr());
+            goto mail_err;
         }
 
-        Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
-
-        if (strlen(vbuff) > 0)
+        count++;
+        if ((config->mail_max_lines != INF_LINES) &&
+            (count >= config->mail_max_lines))
         {
-            vbuff[strlen(vbuff) - 1] = '\r';
-            strcat(vbuff, "\n");
-            count++;
-            send(sd, vbuff, strlen(vbuff), 0);
-        }
-
-        if ((config->mail_max_lines != INF_LINES) && (count > config->mail_max_lines))
-        {
-            snprintf(vbuff, sizeof(vbuff),
+            snprintf(line, line_size,
                      "\r\n[Mail truncated by CFEngine. File is at %s on %s]\r\n",
                      file, config->fq_name);
-            send(sd, vbuff, strlen(vbuff), 0);
+            if (send(sd, line, strlen(line), 0))
+            {
+                Log(LOG_LEVEL_ERR, "Error while sending mail to mailserver "
+                    "'%s'. (send: '%s')", config->mail_server, GetErrorStr());
+                goto mail_err;
+            }
             break;
         }
     }
@@ -749,12 +774,14 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     Dialogue(sd, "QUIT\r\n");
     Log(LOG_LEVEL_DEBUG, "Mail report: done sending mail");
+    free(line);
     fclose(fp);
     cf_closesocket(sd);
     return;
 
   mail_err:
 
+    free(line);
     fclose(fp);
     cf_closesocket(sd);
     Log(LOG_LEVEL_ERR, "Mail report: cannot mail to %s.", config->mail_to_address);

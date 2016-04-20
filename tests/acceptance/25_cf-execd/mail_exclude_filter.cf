@@ -1,0 +1,38 @@
+# Tests that exclude mail filter causes excluded lines not to be mailed by
+# cf-execd.
+
+body common control
+{
+    inputs => { "../default.cf.sub", "mailfilter_common.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent init
+{
+  vars:
+      "reports"  slist => {
+                            "CorrectString1",
+                            "CorrectString2",
+                            "WrongString1",
+                            "WrongString2",
+                          };
+      "includes" slist => { };
+      "excludes" slist => { "R: WrongString1", ".*WrongString[2]" };
+
+  methods:
+      "any" usebundle => prepare_mailfilter_test(@(reports),
+                                                 @(includes),
+                                                 @(excludes));
+}
+
+bundle agent check
+{
+  vars:
+      "expected" slist => { "CorrectString1", "CorrectString2" };
+      "not_expected" slist => { "WrongString1", "WrongString2" };
+
+  methods:
+      "any" usebundle => check_cf_execd_mail(@(expected),
+                                             @(not_expected),
+                                             $(this.promise_filename));
+}

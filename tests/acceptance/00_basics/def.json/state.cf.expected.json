@@ -17,5 +17,6 @@
     ".*\\.json",
     ".*\\.yaml",
     ".*\\.js"
-  ]
+  ],
+  "jq": "jq --compact-output --monochrome-output --ascii-output --unbuffered --sort-keys"
 }

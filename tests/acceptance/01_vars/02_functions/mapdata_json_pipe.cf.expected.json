@@ -1,0 +1,44 @@
+{
+  "items": {
+    "titles": [
+      "JQ Primer",
+      "More JQ"
+    ],
+    "user": "stedolan"
+  },
+  "items_input": [
+    {
+      "a": 100,
+      "b": true
+    },
+    {
+      "a": 100,
+      "b": true
+    },
+    {
+      "a": 100,
+      "b": true
+    },
+    {
+    }
+  ],
+  "items_jqinput": [
+    {
+      "title": "JQ Primer",
+      "user": "stedolan"
+    },
+    {
+      "title": "More JQ",
+      "user": "stedolan"
+    }
+  ],
+  "items_passthrough": [
+    {
+      "titles": [
+        "JQ Primer",
+        "More JQ"
+      ],
+      "user": "stedolan"
+    }
+  ]
+}

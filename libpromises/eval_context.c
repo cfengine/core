@@ -76,6 +76,8 @@ TYPED_MAP_DEFINE(FuncCache, Rlist *, Rval *,
 
 static pcre *context_expression_whitespace_rx = NULL;
 
+#include <policy.h>
+
 static bool BundleAborted(const EvalContext *ctx);
 static void SetBundleAborted(EvalContext *ctx);
 
@@ -1029,6 +1031,85 @@ void EvalContextClear(EvalContext *ctx)
     FuncCacheMapClear(ctx->function_cache);
 }
 
+Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx) {
+    Rlist *callers_promisers = NULL;
+
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        switch (frame->type)
+        {
+        case STACK_FRAME_TYPE_BODY:
+            break;
+
+        case STACK_FRAME_TYPE_BUNDLE:
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE:
+            if (strcmp(frame->data.promise.owner->parent_promise_type->name, "methods") == 0) {
+                RlistAppendScalar(&callers_promisers, frame->data.promise.owner->promiser);
+            }
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_TYPE:
+            break;
+        }
+    }
+    return callers_promisers;
+}
+
+JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx) {
+    JsonElement *callers = JsonArrayCreate(4);
+    size_t depth = SeqLength(ctx->stack);
+
+    for (size_t i = 0; i < depth; i++)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        JsonElement *f = JsonObjectCreate(10);
+        JsonObjectAppendInteger(f, "frame", depth-i);
+        JsonObjectAppendInteger(f, "depth", i);
+
+        switch (frame->type)
+        {
+        case STACK_FRAME_TYPE_BODY:
+            JsonObjectAppendString(f, "type", "body");
+            JsonObjectAppendObject(f, "body", BodyToJson(frame->data.body.owner));
+            break;
+
+        case STACK_FRAME_TYPE_BUNDLE:
+            JsonObjectAppendString(f, "type", "bundle");
+            JsonObjectAppendObject(f, "bundle", BundleToJson(frame->data.bundle.owner));
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            JsonObjectAppendString(f, "type", "iteration");
+            JsonObjectAppendInteger(f, "iteration_index", frame->data.promise_iteration.index);
+
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE:
+            JsonObjectAppendString(f, "type", "promise");
+            JsonObjectAppendString(f, "promise_type", frame->data.promise.owner->parent_promise_type->name);
+            JsonObjectAppendString(f, "promiser", frame->data.promise.owner->promiser);
+            JsonObjectAppendString(f, "promise_classes", frame->data.promise.owner->classes);
+            JsonObjectAppendString(f, "promise_comment", NULL == frame->data.promise.owner->comment ? "" : frame->data.promise.owner->comment);
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_TYPE:
+            JsonObjectAppendString(f, "type", "promise_type");
+            JsonObjectAppendString(f, "promise_type", frame->data.promise_type.owner->name);
+            break;
+        }
+
+        JsonArrayAppendObject(callers, f);
+    }
+
+    return callers;
+}
+
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args)
 {
     if (ctx->args)
@@ -1272,6 +1353,20 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_pid", v, CF_DATA_TYPE_INT, "source=agent");
     xsnprintf(v, sizeof(v), "%d", (int) ctx->ppid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, CF_DATA_TYPE_INT, "source=agent");
+
+    Rlist *metas = PromiseGetConstraintAsList(ctx, "meta", frame->data.promise.owner);
+    for (Rlist *ptr = metas; ptr; ptr = ptr->next)
+    {
+        if (strcmp(RvalScalarValue(ptr->val), "cfengine:callers_promisers") == 0)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "callers_promisers", EvalContextGetPromiseCallerMethods(ctx), CF_DATA_TYPE_STRING_LIST, "source=promise");
+        }
+
+        if (strcmp(RvalScalarValue(ptr->val), "cfengine:callers") == 0)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "callers", EvalContextGetPromiseCallers(ctx), CF_DATA_TYPE_CONTAINER, "source=promise");
+        }
+    }
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");

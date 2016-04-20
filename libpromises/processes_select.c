@@ -54,48 +54,84 @@
 #endif
 TABLE_STORAGE Item *PROCESSTABLE = NULL;
 
+typedef enum
+{
+    /*
+     * In this mode, all columns must be present by the occurrence of at least
+     * one non-whitespace character.
+     */
+    PCA_AllColumnsPresent,
+    /*
+     * In this mode, if a process is a zombie, and if there is nothing but
+     * whitespace in the byte columns directly below a header, that column is
+     * skipped.
+     *
+     * This means that very little text shifting will be tolerated, preferably
+     * none, or small enough that all column entries still remain under their
+     * own header. It also means that a zombie process must be detectable by
+     * reading the 'Z' state directly below the 'S' or 'ST' header.
+     */
+    PCA_ZombieSkipEmptyColumns,
+} PsColumnAlgorithm;
+
+/*
+  Ideally this should be autoconf-tested, but it's really hard to do so. See
+  SplitProcLine() to see the exact effects this has.
+*/
+static const PsColumnAlgorithm PS_COLUMN_ALGORITHM[] =
+{
+    [PLATFORM_CONTEXT_UNKNOWN] = PCA_AllColumnsPresent,
+    [PLATFORM_CONTEXT_OPENVZ] = PCA_AllColumnsPresent,      /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = PCA_AllColumnsPresent,          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = PCA_ZombieSkipEmptyColumns,    /* aix */
+    [PLATFORM_CONTEXT_LINUX] = PCA_AllColumnsPresent,       /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = PCA_AllColumnsPresent,     /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = PCA_AllColumnsPresent,     /* solaris >= 11 */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = PCA_AllColumnsPresent, /* solaris  < 11 */
+    [PLATFORM_CONTEXT_FREEBSD] = PCA_AllColumnsPresent,     /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = PCA_AllColumnsPresent,      /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = PCA_AllColumnsPresent,      /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = PCA_AllColumnsPresent,  /* NT - cygnus */
+    [PLATFORM_CONTEXT_SYSTEMV] = PCA_AllColumnsPresent,     /* unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = PCA_AllColumnsPresent,     /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = PCA_AllColumnsPresent,       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = PCA_AllColumnsPresent,      /* darwin */
+    [PLATFORM_CONTEXT_QNX] = PCA_AllColumnsPresent,         /* qnx  */
+    [PLATFORM_CONTEXT_DRAGONFLY] = PCA_AllColumnsPresent,   /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = PCA_AllColumnsPresent,       /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = PCA_AllColumnsPresent,      /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = PCA_AllColumnsPresent,     /* android */
+};
+
 #if defined(__sun) || defined(TEST_UNIT_TEST)
 static StringMap *UCB_PS_MAP = NULL;
 // These will be tried in order.
-const char *SOLARIS_UCB_STYLE_PS[] = {
+static const char *UCB_STYLE_PS[] = {
     "/usr/ucb/ps",
     "/bin/ps",
     NULL
 };
-const char *SOLARIS_UCB_STYLE_PS_ARGS = "axwww";
+static const char *UCB_STYLE_PS_ARGS = "axwww";
+static const PsColumnAlgorithm UCB_STYLE_PS_COLUMN_ALGORITHM = PCA_ZombieSkipEmptyColumns;
 #endif
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, bool anchored, char **colNames, char **line);
-static bool SplitProcLine(const char *proc, time_t pstime, char **names, int *start, int *end, char **line);
+static bool SplitProcLine(const char *proc,
+                          time_t pstime,
+                          char **names,
+                          int *start,
+                          int *end,
+                          PsColumnAlgorithm pca,
+                          char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
 static void ApplyPlatformExtraTable(char **names, char **columns);
-static bool ZombiesCanHaveEmptyColumns(void);
 
 /***************************************************************************/
-
-// For unit testing
-#ifndef TEST_UNIT_TEST
-
-static bool ZombiesCanHaveEmptyColumns(void)
-{
-#ifdef _AIX
-    /*
-      Ideally this should be autoconf-tested, but it's really hard to do so. ATM
-      AIX is the only platform known to produce empty columns in ps output. See
-      SplitProcLine() to see the exact effects this has.
-    */
-    return true;
-#else
-    return false;
-#endif
-}
-
-#endif // TEST_UNIT_TEST
 
 static bool SelectProcess(const char *procentry,
                           time_t pstime,
@@ -116,9 +152,11 @@ static bool SelectProcess(const char *procentry,
 
     memset(column, 0, sizeof(column));
 
-    if (!SplitProcLine(procentry, pstime, names, start, end, column))
+    if (!SplitProcLine(procentry, pstime, names, start, end,
+                       PS_COLUMN_ALGORITHM[VPSHARDCLASS], column))
     {
-        return false;
+        result = false;
+        goto cleanup;
     }
 
     ApplyPlatformExtraTable(names, column);
@@ -620,6 +658,7 @@ static bool SplitProcLine(const char *line,
                           char **names,
                           int *start,
                           int *end,
+                          PsColumnAlgorithm pca,
                           char **fields)
 {
     if (line == NULL || line[0] == '\0')
@@ -687,42 +726,55 @@ Solaris 9:
 
     bool zombie = false;
 
-    if (ZombiesCanHaveEmptyColumns())
+    if (pca == PCA_ZombieSkipEmptyColumns)
     {
-        // Find out if the process is a zombie. This check is known to work on
-        // AIX, other platforms have not been checked.
+        // Find out if the process is a zombie.
         for (int field = 0; names[field]; field++)
         {
-            if (strcmp(names[field], "ST") == 0)
+            if (strcmp(names[field], "S") == 0 ||
+                strcmp(names[field], "ST") == 0)
             {
                 // Check for zombie state.
-                if (start[field] < linelen)
+                for (int pos = start[field]; pos <= end[field] && pos < linelen; pos++)
                 {
                     // 'Z' letter with word boundary on each side.
-                    if (isspace(line[start[field] - 1])
-                        && line[start[field]] == 'Z'
-                        && (isspace(line[start[field] + 1])
-                            || line[start[field] + 1] == '\0'))
+                    if (isspace(line[pos - 1])
+                        && line[pos] == 'Z'
+                        && (isspace(line[pos + 1])
+                            || line[pos + 1] == '\0'))
                     {
                         Log(LOG_LEVEL_DEBUG, "Detected zombie process, "
                             "skipping parsing of empty ps fields.");
                         zombie = true;
                     }
                 }
+                break;
             }
         }
     }
 
     int field = 0;
     int pos = 0;
-    while (names[field] && pos <= linelen)
+    while (names[field])
     {
         // Some sanity checks.
-        if (start[field] >= linelen)
+        if (pos >= linelen)
         {
-            Log(LOG_LEVEL_ERR, "ps output line '%s' is shorter than its "
-                "associated header.", line);
-            return false;
+            if (pca == PCA_ZombieSkipEmptyColumns && zombie)
+            {
+                Log(LOG_LEVEL_DEBUG, "Assuming '%s' field is empty, "
+                    "since ps line '%s' is not long enough to reach under its "
+                    "header.", names[field], line);
+                fields[field] = xstrdup("");
+                field++;
+                continue;
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "ps output line '%s' is shorter than its "
+                    "associated header.", line);
+                return false;
+            }
         }
 
         bool cmd = (strcmp(names[field], "CMD") == 0 ||
@@ -741,7 +793,7 @@ Solaris 9:
         }
 
         // If zombie, check if field is empty.
-        if (ZombiesCanHaveEmptyColumns() && zombie)
+        if (pca == PCA_ZombieSkipEmptyColumns && zombie)
         {
             int empty_pos = start[field];
             bool empty = true;
@@ -890,10 +942,11 @@ bool IsProcessNameRunning(char *procNameRegex)
             continue;
         }
 
-        if (!SplitProcLine(ip->name, pstime, colHeaders, start, end, lineSplit))
+        if (!SplitProcLine(ip->name, pstime, colHeaders, start, end,
+                           PS_COLUMN_ALGORITHM[VPSHARDCLASS], lineSplit))
         {
             Log(LOG_LEVEL_ERR, "IsProcessNameRunning: Could not split process line '%s'", ip->name);
-            continue;
+            goto loop_cleanup;
         }
 
         ApplyPlatformExtraTable(colHeaders, lineSplit);
@@ -903,6 +956,7 @@ bool IsProcessNameRunning(char *procNameRegex)
             matched = true;
         }
 
+   loop_cleanup:
         for (i = 0; lineSplit[i] != NULL; i++)
         {
             free(lineSplit[i]);
@@ -1240,27 +1294,27 @@ const char *GetProcessTableLegend(void)
 #if defined(__sun) || defined(TEST_UNIT_TEST)
 static FILE *OpenUcbPsPipe(void)
 {
-    for (int i = 0; SOLARIS_UCB_STYLE_PS[i]; i++)
+    for (int i = 0; UCB_STYLE_PS[i]; i++)
     {
         struct stat statbuf;
-        if (stat(SOLARIS_UCB_STYLE_PS[i], &statbuf) < 0)
+        if (stat(UCB_STYLE_PS[i], &statbuf) < 0)
         {
             Log(LOG_LEVEL_VERBOSE,
                 "%s not found, cannot be used for extra process information",
-                SOLARIS_UCB_STYLE_PS[i]);
+                UCB_STYLE_PS[i]);
             continue;
         }
         if (!(statbuf.st_mode & 0111))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "%s not executable, cannot be used for extra process information",
-                SOLARIS_UCB_STYLE_PS[i]);
+                UCB_STYLE_PS[i]);
             continue;
         }
 
         char *ps_cmd;
-        xasprintf(&ps_cmd, "%s %s", SOLARIS_UCB_STYLE_PS[i],
-                  SOLARIS_UCB_STYLE_PS_ARGS);
+        xasprintf(&ps_cmd, "%s %s", UCB_STYLE_PS[i],
+                  UCB_STYLE_PS_ARGS);
 
         FILE *cmd = cf_popen(ps_cmd, "rt", false);
         if (!cmd)
@@ -1328,7 +1382,8 @@ static void ReadFromUcbPsPipe(FILE *cmd)
 
         char *columns[CF_PROCCOLS];
         memset(columns, 0, sizeof(columns));
-        if (!SplitProcLine(line, pstime, names, start, end, columns))
+        if (!SplitProcLine(line, pstime, names, start, end,
+                           UCB_STYLE_PS_COLUMN_ALGORITHM, columns))
         {
             Log(LOG_LEVEL_WARNING,
                 "Not able to parse ps output: \"%s\"", line);

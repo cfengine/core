@@ -1,0 +1,78 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "run" };
+}
+
+bundle agent run
+{
+  vars:
+      "tester" data => '{ "x": 100, "y": [ true, "a", "b" ] }';
+
+      # "jq ." returns the same thing that was passed in
+      "pipe_passthrough" data => mapdata("json_pipe", '$(def.jq) .', tester);
+      "pipe_passthrough_str" string => format("%S", pipe_passthrough);
+
+      # "jq .x" returns what was under x wrapped in an array: [100]
+      "pipe_justx" data => mapdata("json_pipe", '$(def.jq) .x', tester);
+      "pipe_justx_str" string => format("%S", pipe_justx);
+
+      # "jq .y" returns what was under y wrapped in an array: [[true,"a","b"]]
+      "pipe_justy" data => mapdata("json_pipe", '$(def.jq) .y', tester);
+      "pipe_justy_str" string => format("%S", pipe_justy);
+
+      # "jq .y[]" returns each entry under y *separately*: [true,"a","b"]
+      "pipe_yarray" data => mapdata("json_pipe", '$(def.jq) .y[]', tester);
+      "pipe_yarray_str" string => format("%S", pipe_yarray);
+
+      # "jq .z" returns null because the key "z" is missing: [null]
+      "pipe_justz" data => mapdata("json_pipe", '$(def.jq) .z', tester);
+      "pipe_justz_str" string => format("%S", pipe_justz);
+
+      # "jq" can do math too! and much more!
+      "pipe_jqmath" data => mapdata("json_pipe", '$(def.jq) 1+2+3', tester);
+      "pipe_jqmath_str" string => format("%S", pipe_jqmath);
+
+  reports:
+      "mapdata/json_pipe passthrough result: $(pipe_passthrough_str)";
+      "mapdata/json_pipe just x result: $(pipe_justx_str)";
+      "mapdata/json_pipe just y result: $(pipe_justy_str)";
+      "mapdata/json_pipe array under y result: $(pipe_yarray_str)";
+      "mapdata/json_pipe just z result: $(pipe_justz_str)";
+      "mapdata/json_pipe math expression result: $(pipe_jqmath_str)";
+}
+
+#+end_src
+###############################################################################
+#+begin_src output
+#@ ```
+#@ R: mapdata/json_pipe passthrough result: [{"x":100,"y":[true,"a","b"]}]
+#@ R: mapdata/json_pipe just x result: [100]
+#@ R: mapdata/json_pipe just y result: [[true,"a","b"]]
+#@ R: mapdata/json_pipe array under y result: [true,"a","b"]
+#@ R: mapdata/json_pipe just z result: [null]
+#@ R: mapdata/json_pipe math expression result: [6]
+#@ ```
+#+end_src

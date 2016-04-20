@@ -1,0 +1,18 @@
+body executor control
+{
+      mailto     => "to@test.com";
+      mailfrom   => "from@test.com";
+      smtpserver => "dummy";
+      mailfilter_include => {
+          {{#includes}}
+          "{{.}}",
+          {{/includes}}
+      };
+      mailfilter_exclude => {
+          {{#excludes}}
+          "{{.}}",
+          {{/excludes}}
+      };
+
+      exec_command => "$(sys.cf_agent) -K";
+}

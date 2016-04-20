@@ -1,0 +1,90 @@
+# Tests that the correct content is sent by cf-execd after several consecutive
+# cf-agent runs.
+
+body common control
+{
+    inputs => { "../../default.cf.sub", "../mailfilter_common.cf.sub" };
+    bundlesequence => { default($(this.promiser_filename)) };
+}
+
+bundle agent init
+{
+  vars:
+      # Positions of WrongString inside the report should not matter, since it
+      # is filtered out.
+      "reports1"  slist => {
+                             "CorrectString1",
+                             "CorrectString2",
+                             "WrongString1",
+                             "WrongString2",
+                             "WrongString3",
+                           };
+      "expected1" slist => {
+                             "CorrectString1",
+                             "CorrectString2",
+                           };
+
+      "reports2"  slist => {
+                             "WrongString1",
+                             "CorrectString1",
+                             "WrongString2",
+                             "CorrectString2",
+                             "WrongString3",
+                           };
+      "expected2" slist => {
+                             # Nothing expected, since it is identical to
+                             # previous run.
+                           };
+
+      "reports3"  slist => {
+                             "WrongString2",
+                             "WrongString1",
+                             "CorrectString2",
+                             "CorrectString1",
+                             "WrongString3",
+                           };
+      "expected3" slist => {
+                             "CorrectString2",
+                             "CorrectString1",
+                           };
+
+      "unexpected" slist => { ".*WrongString.*" };
+
+      "includes" slist => {
+                            "R: CorrectString1", ".*CorrectString[2]",
+                            "R: WrongString1", ".*WrongString[2]"
+                          };
+      "excludes" slist => {
+                            "R: WrongString1", ".*WrongString[2]",
+                            # Tests anchoring.
+                            "orrectString1"
+                          };
+
+  methods:
+    test_pass_1::
+      "any" usebundle => prepare_mailfilter_test(@(reports1),
+                                                 @(includes),
+                                                 @(excludes));
+      "any" usebundle => run_cf_execd(@(expected1), @(unexpected));
+
+    test_pass_2::
+      "any" usebundle => prepare_mailfilter_test(@(reports2),
+                                                 @(includes),
+                                                 @(excludes));
+      "any" usebundle => run_cf_execd(@(expected2), @(unexpected));
+
+    test_pass_3::
+      "any" usebundle => prepare_mailfilter_test(@(reports3),
+                                                 @(includes),
+                                                 @(excludes));
+      "any" usebundle => run_cf_execd(@(expected3), @(unexpected));
+}
+
+bundle agent check
+{
+  methods:
+    test_pass_1|test_pass_2::
+      "any" usebundle => dcs_wait($(this.promise_filename), 1);
+    test_pass_3::
+      "any" usebundle => compare_cf_execd_mail($(this.promise_filename));
+}

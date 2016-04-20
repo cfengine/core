@@ -1,0 +1,47 @@
+# Tests that combining include and exclude mail filters works, IOW only lines
+# matching the include filter should be printed, unless they also match the
+# exclude filter.
+
+body common control
+{
+    inputs => { "../default.cf.sub", "mailfilter_common.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent init
+{
+  vars:
+      "reports"  slist => {
+                            "CorrectString1",
+                            "CorrectString2",
+                            "WrongString1",
+                            "WrongString2",
+                            "WrongString3",
+                          };
+      "includes" slist => {
+                            "R: CorrectString1", ".*CorrectString[2]",
+                            "R: WrongString1", ".*WrongString[2]"
+                          };
+      "excludes" slist => {
+                            "R: WrongString1", ".*WrongString[2]",
+                            # Tests anchoring. This is only a part of the string
+                            # and should not match.
+                            "orrectString1"
+                          };
+  methods:
+      "any" usebundle => prepare_mailfilter_test(@(reports),
+                                                 @(includes),
+                                                 @(excludes));
+}
+
+bundle agent check
+{
+  vars:
+      "expected" slist => { "CorrectString1", "CorrectString2" };
+      "not_expected" slist => { "WrongString1", "WrongString2", "WrongString3" };
+
+  methods:
+      "any" usebundle => check_cf_execd_mail(@(expected),
+                                             @(not_expected),
+                                             $(this.promise_filename));
+}

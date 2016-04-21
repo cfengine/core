@@ -225,6 +225,10 @@ int main(int argc, char *argv[])
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
+
+    // Enable only for cf-agent eval context.
+    EvalContextAllClassesLoggingEnable(ctx, true);
+
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
@@ -1027,6 +1031,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORTCLASSLOG].lval) == 0)
             {
                 config->agent_specific.agent.report_class_log = BooleanFromString(value);
+
                 Log(LOG_LEVEL_VERBOSE, "Setting report_class_log to %s", 
                     config->agent_specific.agent.report_class_log? "true" : "false");
                 continue;
@@ -1076,6 +1081,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
         }
     }
     Nova_Initialize(ctx);
+
+    // If not have been enabled above then should be disabled.
+    // By default it's enabled to catch all set classes on startup stage 
+    // before this part of the policy is processed.
+    if (!config->agent_specific.agent.report_class_log)
+    {
+        EvalContextAllClassesLoggingEnable(ctx, false);
+    }
 }
 
 /*********************************************************************/

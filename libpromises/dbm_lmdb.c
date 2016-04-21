@@ -177,6 +177,34 @@ void DBPrivSetMaximumConcurrentTransactions(int max_txn)
     DB_MAX_READERS = max_txn;
 }
 
+static int LmdbEnvOpen(MDB_env *env, const char *path, unsigned int flags, mdb_mode_t mode)
+{
+    /* There is a race condition in LMDB that will fail to open the database
+     * environment if another process is opening it at the exact same time. This
+     * condition is signaled by returning ENOENT, which we should never get
+     * otherwise. This can lead to error messages on a heavily loaded machine,
+     * so try to open it again after allowing other threads to finish their
+     * opening process. */
+    int attempts = 5;
+    while (attempts-- > 0)
+    {
+        int rc = mdb_env_open(env, path, flags, mode);
+        if (rc != ENOENT)
+        {
+            return rc;
+        }
+
+#if HAVE_DECL_SCHED_YIELD && defined(HAVE_SCHED_YIELD)
+        // Not required for this to work, but makes it less likely that the race
+        // condition will persist.
+        sched_yield();
+#endif
+    }
+
+    // Return EBUSY for an error message slightly more related to reality.
+    return EBUSY;
+}
+
 DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
@@ -236,7 +264,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
     open_flags |= MDB_WRITEMAP;
 #endif
 
-    rc = mdb_env_open(db->env, dbpath, open_flags, 0644);
+    rc = LmdbEnvOpen(db->env, dbpath, open_flags, 0644);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",

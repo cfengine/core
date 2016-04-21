@@ -1026,6 +1026,9 @@ AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
 
+AC_CHECK_DECLS(sched_yield, [], [], [[#include <sched.h>]])
+AC_CHECK_FUNCS(sched_yield)
+
 AC_CHECK_DECLS([openat], [], [], [[#define _GNU_SOURCE 1
                                    #include <fcntl.h>]])
 AC_CHECK_DECLS([fstatat], [], [], [[#define _GNU_SOURCE 1

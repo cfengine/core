@@ -1,0 +1,71 @@
+#######################################################
+#
+# Test the variable this.callers_promisers with one bundle called twice
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init {
+}
+
+bundle agent test {
+  methods:
+    "test" usebundle => "caller";
+}
+
+bundle agent check {
+  reports:
+    success_first.success_second::
+      "$(this.promise_filename) Pass";
+    !(success_first.success_second)::
+      "$(this.promise_filename) FAIL";
+}
+
+bundle agent caller {
+
+  methods:
+    "first call" usebundle => dummy;
+    "second call" usebundle => dummy_inter;
+
+}
+
+bundle agent dummy_inter {
+
+  methods:
+    "inter" usebundle => dummy;
+
+}
+
+bundle agent dummy {
+
+  vars:
+    # This bundle gets called twice, once directly, and once via dummy_inter
+    "callers_promisers" slist => callstack_promisers();
+
+    "callers_promisers_expect_first" string => "any, any, test, first call";
+    "callers_promisers_expect_second" string => "any, any, test, second call, inter";
+    "callers_promisers_actual" string => join(", ", "callers_promisers");
+
+  classes:
+    "success_first"  expression => strcmp("${callers_promisers_expect_first}", "${callers_promisers_actual}"),
+      scope => "namespace";
+    "success_second" expression => strcmp("${callers_promisers_expect_second}", "${callers_promisers_actual}"),
+      scope => "namespace";
+
+  reports:
+    DEBUG::
+      "EXPECT (first in ${this.bundle}): callers_promisers_string = ${callers_promisers_expect_first}";
+      "ACTUAL (first in ${this.bundle}): callers_promisers_string = ${callers_promisers_actual}";
+
+      "EXPECT (second in ${this.bundle}): callers_promisers_string = ${callers_promisers_expect_second}";
+      "ACTUAL (second in ${this.bundle}): callers_promisers_string = ${callers_promisers_actual}";
+}
+

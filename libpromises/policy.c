@@ -1761,7 +1761,7 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
     return json_contexts;
 }
 
-static JsonElement *BundleToJson(const Bundle *bundle)
+JsonElement *BundleToJson(const Bundle *bundle)
 {
     JsonElement *json_bundle = JsonObjectCreate(10);
 
@@ -1810,7 +1810,7 @@ static JsonElement *BundleToJson(const Bundle *bundle)
 }
 
 
-static JsonElement *BodyToJson(const Body *body)
+JsonElement *BodyToJson(const Body *body)
 {
     JsonElement *json_body = JsonObjectCreate(10);
 

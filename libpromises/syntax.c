@@ -1195,7 +1195,8 @@ static const char *FnCallCategoryToString(FnCallCategory category)
         [FNCALL_CATEGORY_FILES] = "files",
         [FNCALL_CATEGORY_IO] = "io",
         [FNCALL_CATEGORY_SYSTEM] = "system",
-        [FNCALL_CATEGORY_UTILS] = "utils"
+        [FNCALL_CATEGORY_UTILS] = "utils",
+        [FNCALL_CATEGORY_INTERNAL] = "internal"
     };
 
     return category_str[category];

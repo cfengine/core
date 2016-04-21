@@ -129,6 +129,9 @@ struct EvalContext_
 
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
+
+    /* List if all classes set during policy evaluation */
+    StringSet *all_classes;
 };
 
 
@@ -931,6 +934,8 @@ EvalContext *EvalContextNew(void)
 
     ctx->package_promise_context = PackagePromiseConfigNew();
 
+    ctx->all_classes = NULL;
+
     return ctx;
 }
 
@@ -965,6 +970,8 @@ void EvalContextDestroy(EvalContext *ctx)
         FuncCacheMapDestroy(ctx->function_cache);
 
         FreePackagePromiseContext(ctx->package_promise_context);
+
+        StringSetDestroy(ctx->all_classes);
 
         free(ctx);
     }
@@ -1523,6 +1530,8 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
     {
         return false;
     }
+
+    Nova_ClassHistoryAddContextName(ctx->all_classes, name);
 
     switch (scope)
     {
@@ -2852,4 +2861,16 @@ JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source)
 
     ProgrammingError("JsonExpandElement: unexpected container type");
     return NULL;
+}
+
+const StringSet *EvalContextAllClassesGet(const EvalContext *ctx)
+{
+    assert (ctx);
+    return ctx->all_classes;
+}
+
+void EvalContextAllClassesLoggingEnable(EvalContext *ctx, bool enable)
+{
+    assert (ctx);
+    Nova_ClassHistoryEnable(&(ctx->all_classes), enable);
 }

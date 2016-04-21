@@ -28,6 +28,7 @@
 #include <cf3.defs.h>
 #include <compiler.h>
 #include <enterprise_extension.h>
+#include <set.h>
 
 bool BootstrapAllowed(void);
 
@@ -86,6 +87,9 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, SetMeasurementPromises, Item **, classli
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, CheckAndSetHAState, const char *, workdir, EvalContext *, ctx);
 ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, ReloadHAConfig);
+
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_ClassHistoryAddContextName, const StringSet *, list, const char *, context_name);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_ClassHistoryEnable, StringSet **, list, bool, enable);
 
 /* manual.c */
 

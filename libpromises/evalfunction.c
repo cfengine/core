@@ -6845,7 +6845,7 @@ FnCallResult FnCallGroupExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Pol
 {
     char *arg = RlistScalarValue(finalargs);
 
-    if (isdigit((int) *arg))
+    if (StringIsNumeric(arg))
     {
         gid_t gid = Str2Gid(arg, NULL, NULL);
         if (gid == CF_SAME_GROUP || gid == CF_UNKNOWN_GROUP)

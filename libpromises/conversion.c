@@ -1176,7 +1176,11 @@ gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
         else
         {
             gid = gr->gr_gid;
-            strcpy(groupcopy, gidbuff);
+
+            if (groupcopy != NULL)
+            {
+                strcpy(groupcopy, gidbuff);
+            }
         }
     }
 

@@ -26,6 +26,7 @@
 #include <map.h>
 #include <rlist.h>
 #include <writer.h>
+#include <conversion.h>                                 /* DataTypeToString */
 
 
 static void VariableDestroy(Variable *var);                 /* forward declaration */
@@ -37,13 +38,11 @@ static void VariableDestroy_untyped(void *var)
 
 
 /**
-   Define VarMap.
-   Key:   VarRef
-   Value: Variable
+   Define "VarMap" hash table.
+       Key:   VarRef
+       Value: Variable
 */
-
 TYPED_MAP_DECLARE(Var, VarRef *, Variable *)
-
 TYPED_MAP_DEFINE(Var, VarRef *, Variable *,
                  VarRefHash_untyped,
                  VarRefEqual_untyped,
@@ -95,9 +94,52 @@ void VariableTableDestroy(VariableTable *table)
     }
 }
 
+/* NULL return value means variable not found. */
 Variable *VariableTableGet(const VariableTable *table, const VarRef *ref)
 {
-    return VarMapGet(table->vars, ref);
+    Variable *v = VarMapGet(table->vars, ref);
+
+    char *ref_s = VarRefToString(ref, true);              /* TODO optimise */
+
+    if (v != NULL)
+    {
+        CF_ASSERT(v->rval.item != NULL || DataTypeIsIterable(v->type),
+                  "VariableTableGet(%s): "
+                  "Only iterables (Rlists) are allowed to be NULL",
+                  ref_s);
+    }
+
+    // if (LogModuleActive(LOG_MODULE_VARIABLESTABLE))
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        Buffer *buf = BufferNew();
+        BufferPrintf(buf, "VariableTableGet(%s): %s", ref_s,
+                     v ? DataTypeToString(v->type) : "NOT FOUND");
+        if (v != NULL)
+        {
+            char *value_s;
+            BufferAppendString(buf, "  => ");
+            if (DataTypeIsIterable(v->type) &&
+                v->rval.item == NULL)
+            {
+                value_s = xstrdup("EMPTY");
+            }
+            else
+            {
+                value_s = RvalToString(v->rval);
+            }
+
+            BufferAppendString(buf, value_s);
+            free(value_s);
+        }
+
+        Log(LOG_LEVEL_DEBUG, "%s", BufferGet(buf));
+
+        BufferDestroy(buf);
+    }
+
+    free(ref_s);
+    return v;
 }
 
 bool VariableTableRemove(VariableTable *table, const VarRef *ref)
@@ -131,6 +173,21 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
                       const char *tags, const Promise *promise)
 {
     assert(VarRefIsQualified(ref));
+
+    /* TODO assert there are no CF_NS or '.' in the variable name? */
+
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        char *value_s = RvalToString(*rval);
+        Log(LOG_LEVEL_DEBUG, "VariableTablePut(%s): %s  => %s",
+            ref->lval, DataTypeToString(type),
+            rval->item ? value_s : "EMPTY");
+        free(value_s);
+    }
+
+    CF_ASSERT(rval != NULL || DataTypeIsIterable(type),
+              "VariableTablePut(): "
+              "Only iterables (Rlists) are allowed to be NULL");
 
     Variable *var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
                                 StringSetFromString(tags, ','), promise);

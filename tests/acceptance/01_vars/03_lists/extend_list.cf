@@ -1,16 +1,12 @@
 #######################################################
 #
 # Test that slists can be extended (redefined using its own previous value)
-# Redmine:4335 and 6541 
+# Redmine:4335 and 6541
 #######################################################
 
 body common control
 {
-AUTO::
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
-!AUTO::
       bundlesequence => { "init", "test", "check" };
 }
 
@@ -26,10 +22,8 @@ bundle agent test
 {
   vars:
       "x" slist => { "xyz" }, policy => "free";
-
       "x" slist => { @(x), "extended" }, policy => "free";
-
-      "x" slist => { @(x), "more" }, policy => "free";
+      "x" slist => { @(x), "more" },     policy => "free";
 
       "x1" slist => { @(x), @(undefined1), @(undefined2) }, policy => "ifdefined";
       "x2" slist => { @(undefined1), @(x), @(undefined2) }, policy => "ifdefined";
@@ -70,7 +64,8 @@ bundle agent check
     DEBUG.!ok0::
       "x: $(joined_test_x)";
     DEBUG.!ok1::
-      "x1: $(joined_test_x1)";
+      "expected x1: $(expected)";
+      "         x1: $(joined_test_x1)";
     DEBUG.!ok2::
       "x2: $(joined_test_x2)";
     DEBUG.!ok3::

@@ -83,11 +83,11 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
         DeletePackageModuleWrapper(wrapper);
         return NULL;
     }
-    
+
     Log(LOG_LEVEL_DEBUG,
         "Successfully created package module wrapper for '%s' package module.",
         package_module->name);
-    
+
     return wrapper;
 }
 
@@ -95,29 +95,23 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
 void UpdatePackagesCache(EvalContext *ctx, bool force_update)
 {
     Log(LOG_LEVEL_DEBUG, "Updating package cache.");
-    
-    PackagePromiseGlobalLock package_lock = 
+
+    PackagePromiseGlobalLock package_lock =
             AcquireGlobalPackagePromiseLock(ctx);
-                        
+
     if (package_lock.g_lock.lock == NULL)
     {
         Log(LOG_LEVEL_INFO, "Can not acquire global lock for package promise. "
             "Skipping updating cache.");
         return;
     }
-                        
+
     Rlist *default_inventory = GetDefaultInventoryFromContext(ctx);
-    
+
     for (const Rlist *rp = default_inventory; rp != NULL; rp = rp->next)
     {
         const char *pm_name =  RlistScalarValue(rp);
-        
-        /* We don't want inventory to be reported. */
-        if (StringSafeEqual(pm_name, "cf_null"))
-        {
-            break;
-        }
-        
+
         PackageModuleBody *module = GetPackageModuleFromContext(ctx, pm_name);
         if (!module)
         {

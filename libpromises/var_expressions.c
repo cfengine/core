@@ -226,7 +226,9 @@ static size_t IndexCount(const char *var_string)
     return count;
 }
 
-VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator)
+VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name,
+                                         const char *_ns, const char *_scope,
+                                         char ns_separator, char scope_separator)
 {
     assert(qualified_name);
     char *ns = NULL;
@@ -357,11 +359,18 @@ VarRef *VarRefParseFromScope(const char *var_ref_string, const char *scope)
     }
 }
 
+/**
+ * @brief Parse the variable reference in the context of a bundle. This means
+ *        that the VarRef will inherit scope and namespace of the bundle if
+ *        these are not specified explicitly in the string.
+ */
 VarRef *VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle)
 {
     if (bundle)
     {
-        return VarRefParseFromNamespaceAndScope(var_ref_string, bundle->ns, bundle->name, CF_NS, '.');
+        return VarRefParseFromNamespaceAndScope(var_ref_string,
+                                                bundle->ns, bundle->name,
+                                                CF_NS, '.');
     }
     else
     {
@@ -449,7 +458,8 @@ char *VarRefMangle(const VarRef *ref)
 
 VarRef *VarRefDeMangle(const char *mangled_var_ref)
 {
-    return VarRefParseFromNamespaceAndScope(mangled_var_ref, NULL, NULL, '*', '#');
+    return VarRefParseFromNamespaceAndScope(mangled_var_ref, NULL, NULL,
+                                            CF_MANGLED_NS, CF_MANGLED_SCOPE);
 }
 
 static bool VarRefIsMeta(VarRef *ref)

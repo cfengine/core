@@ -1,5 +1,8 @@
 # Test that reglist() does not match cf_null values
 
+# NOTE: tests conditions have been reversed! cf_null is no longer
+#       treated specially!
+
 body common control
 {
       inputs => { "../../default.cf.sub" };
@@ -25,7 +28,7 @@ bundle agent check
       "emptylist" slist => { "cf_null" };
 
   classes:
-      "ok" not => reglist("@(emptylist)", ".+");
+      "ok" expression => reglist("@(emptylist)", ".+");
 
   reports:
     ok::

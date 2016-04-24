@@ -1750,6 +1750,7 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
 
     return d;
 }
+
 /*******************************************************************/
 
 User GetUserConstraints(const EvalContext *ctx, const Promise *pp)
@@ -1768,9 +1769,13 @@ User GetUserConstraints(const EvalContext *ctx, const Promise *pp)
     u.description = PromiseGetConstraintAsRval(pp, "description", RVAL_TYPE_SCALAR);
 
     u.group_primary = PromiseGetConstraintAsRval(pp, "group_primary", RVAL_TYPE_SCALAR);
-    u.groups_secondary = PromiseGetConstraintAsList(ctx, "groups_secondary", pp);
     u.home_dir = PromiseGetConstraintAsRval(pp, "home_dir", RVAL_TYPE_SCALAR);
     u.shell = PromiseGetConstraintAsRval(pp, "shell", RVAL_TYPE_SCALAR);
+
+    u.groups_secondary = PromiseGetConstraintAsList(ctx, "groups_secondary", pp);
+
+    const Constraint *cp = PromiseGetImmediateConstraint(pp, "groups_secondary");
+    u.groups_secondary_given = (cp != NULL);
 
     if (value && ((u.policy) == USER_STATE_NONE))
     {

@@ -93,13 +93,9 @@ static void RlistMailFilterFill(const Rlist *input,
     for (int i = 0; i < len; i++)
     {
         const char *str = ptr->val.item;
-        if (strcmp(str, "cf_null") == 0)
-        {
-            continue;
-        }
-        ptr = ptr->next;
-
         MailFilterFill(str, output, output_regex, filter_type);
+
+        ptr = ptr->next;
     }
 }
 
@@ -153,19 +149,16 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
-
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
-            if (!value)
-            {
-                /* Has already been checked by the parser. */
-                ProgrammingError(
-                    "Unknown attribute in body executor control: %s",
-                    cp->lval);
-                VarRefDestroy(ref);
-                continue;
-            }
-
+            DataType t;
+            const void *value = EvalContextVariableGet(ctx, ref, &t);
             VarRefDestroy(ref);
+
+            if (t == CF_DATA_TYPE_NONE)
+            {
+                ProgrammingError("Unknown attribute '%s' in control body,"
+                                 " should have already been stopped by the parser",
+                                 cp->lval);
+            }
 
             if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILFROM].lval) == 0)
             {

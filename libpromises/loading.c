@@ -37,8 +37,8 @@
 #include <ornaments.h>
 
 // TODO: remove
-#include <vars.h>
-#include <audit.h>
+#include <vars.h>                                         /* IsCf3VarString */
+#include <audit.h>                                        /* FatalError */
 
 
 static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file,
@@ -84,7 +84,7 @@ Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
     }
 #endif
 
-    Log(LOG_LEVEL_VERBOSE, "Begin Parsing file '%s'", input_path);
+    Log(LOG_LEVEL_VERBOSE, "BEGIN parsing file: %s", input_path);
 
     if (!FileCanOpen(input_path, "r"))
     {
@@ -127,7 +127,7 @@ Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "End Parsing file '%s'", input_path);
+    Log(LOG_LEVEL_VERBOSE, "END   parsing file: %s", input_path);
     return policy;
 }
 
@@ -144,12 +144,6 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
         }
 
         const char *unresolved_input = RlistScalarValue(rp);
-
-        if (strcmp(CF_NULL_VALUE, unresolved_input) == 0)
-        {
-            continue;
-        }
-
         if (IsExpandable(unresolved_input))
         {
             PolicyResolve(ctx, policy, config);
@@ -384,11 +378,6 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
                 Log(LOG_LEVEL_ERR, "%s", StringWriterData(w));
                 WriterClose(w);
             }
-            continue;
-        }
-
-        if (strcmp(name, CF_NULL_VALUE) == 0)
-        {
             continue;
         }
 

@@ -1,7 +1,7 @@
 body common control
 {
       inputs => { "../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
+      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -41,7 +41,12 @@ bundle agent check
 {
   vars:
     "expected_classes" slist => maplist( "file_$(this)_repaired", "test.idx" );
+# NOT WORKING  --  variable not expanded "/tmp/TESTDIR.cfengine/$(test#file[2])"
     "expected_files" slist => maplist( "$(G.testdir)/$(test.file[$(this)])", "test.idx");
+# NOT WORKING  --  Only the first file is actually tested
+#    "expected_files" slist => { "$(G.testdir)/$(test.file[@(test.idx)])" };
+# NOT WORKING  --  only the second file is created
+#    "expected_files" slist => { "$(G.testdir)/$(test.file[$(test.idx)])" };
 
     "classes" slist => classesmatching("file_.*");
   classes:
@@ -64,6 +69,3 @@ bundle agent check
     "Have expected files"
       ifvarclass => "have_expected_files";
 }
-
-
-

@@ -66,13 +66,25 @@ static bool IsValidVariableName(const char *var_name)
     return StringMatchFullWithPrecompiledRegex(rx, var_name);
 }
 
-PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
+// TODO why not printing that new definition is skipped?
+// TODO what with ifdefined?
+
+PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_redefine)
 {
-    ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_duplicates);
+    ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_redefine);
+
+    Log(LOG_LEVEL_DEBUG, "Evaluating vars promise: %s", pp->promiser);
+    Log(LOG_LEVEL_DEBUG,
+        "    allow_redefine=%d, ok_redefine=%d, drop_undefined=%d, should_converge=%d",
+        allow_redefine, opts.ok_redefine, opts.drop_undefined, opts.should_converge);
+
     if (!opts.should_converge)
     {
+        Log(LOG_LEVEL_DEBUG, "    Skipping vars promise because should_converge=false");
         return PROMISE_RESULT_NOOP;
     }
+
+//    opts.drop_undefined = true;         /* always remove @{unresolved_list} */
 
     Attributes a = { {0} };
     // More consideration needs to be given to using these
@@ -86,13 +98,20 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
     }
 
     DataType existing_value_type = CF_DATA_TYPE_NONE;
-    const void *const existing_value =
-        IsExpandable(pp->promiser) ? NULL : EvalContextVariableGet(ctx, ref, &existing_value_type);
+    const void *existing_value;
+    if (IsExpandable(pp->promiser))
+    {
+        existing_value = NULL;
+    }
+    else
+    {
+        existing_value = EvalContextVariableGet(ctx, ref, &existing_value_type);
+    }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     Rval rval = opts.cp_save->rval;
+    PromiseResult result;
 
-    if (rval.item != NULL)
+    if (rval.item != NULL || rval.type == RVAL_TYPE_LIST)
     {
         DataType data_type = DataTypeFromString(opts.cp_save->lval);
 
@@ -183,7 +202,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                 /* Arises when opts->cp_save->rval.item isn't yet expanded. */
                 /* Has already been logged by *FromString */
                 VarRefDestroy(ref);
-                return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                return PROMISE_RESULT_FAIL;
             }
             else if (misprint)
             {
@@ -191,7 +210,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                  * get here, there might be other problems. */
                 UnexpectedError("Problems writing to buffer");
                 VarRefDestroy(ref);
-                return PROMISE_RESULT_NOOP;
+                return PROMISE_RESULT_FAIL;
             }
             else if (rval.type == RVAL_TYPE_LIST)
             {
@@ -218,51 +237,52 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             rval = returnval;
         }
 
-        if (existing_value_type != CF_DATA_TYPE_NONE)
+        /* If variable did resolve but we're not allowed to modify it. */
+        /* ok_redefine: only on second iteration, else we ignore broken promises. TODO wat? */
+        if (existing_value_type != CF_DATA_TYPE_NONE &&
+            !opts.ok_redefine)
         {
-            if (!opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
+            if (!CompareRval(existing_value, DataTypeToRvalType(existing_value_type),
+                             rval.item, rval.type))
             {
-                if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON &&
-                     !CompareRval(existing_value, DataTypeToRvalType(existing_value_type),
-                                  rval.item, rval.type))
+                switch (rval.type)
                 {
-                    switch (rval.type)
-                    {
-                    case RVAL_TYPE_SCALAR:
-                        Log(LOG_LEVEL_VERBOSE, "V: Redefinition of a constant scalar '%s', was '%s' now '%s'",
-                            pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
-                        PromiseRef(LOG_LEVEL_VERBOSE, pp);
-                        break;
+                    /* TODO redefinition shouldn't be mentioned. Maybe handle like normal variable definition/ */
+                case RVAL_TYPE_SCALAR:
+                    Log(LOG_LEVEL_VERBOSE, "V: Skipping redefinition of constant scalar '%s': from '%s' to '%s'",
+                        pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
+                    PromiseRef(LOG_LEVEL_VERBOSE, pp);
+                    break;
 
-                    case RVAL_TYPE_LIST:
-                        {
-                            Log(LOG_LEVEL_VERBOSE, "V: Redefinition of a constant list '%s'", pp->promiser);
-                            Writer *w = StringWriter();
-                            RlistWrite(w, existing_value);
-                            char *oldstr = StringWriterClose(w);
-                            Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
-                            free(oldstr);
+                case RVAL_TYPE_LIST:
+                {
+                    Log(LOG_LEVEL_VERBOSE, "V: Skipping redefinition of constant list '%s'", pp->promiser);
+                    Writer *w = StringWriter();
+                    RlistWrite(w, existing_value);
+                    char *oldstr = StringWriterClose(w);
+                    Log(LOG_LEVEL_DEBUG, "Old value:         %s", oldstr);
+                    free(oldstr);
 
-                            w = StringWriter();
-                            RlistWrite(w, rval.item);
-                            char *newstr = StringWriterClose(w);
-                            Log(LOG_LEVEL_VERBOSE, "V: New value '%s'", newstr);
-                            free(newstr);
-                            PromiseRef(LOG_LEVEL_VERBOSE, pp);
-                        }
-                        break;
+                    w = StringWriter();
+                    RlistWrite(w, rval.item);
+                    char *newstr = StringWriterClose(w);
+                    Log(LOG_LEVEL_DEBUG, "Skipped new value: %s", newstr);
+                    free(newstr);
 
-                    case RVAL_TYPE_CONTAINER:
-                    case RVAL_TYPE_FNCALL:
-                    case RVAL_TYPE_NOPROMISEE:
-                        break;
-                    }
+                    PromiseRef(LOG_LEVEL_VERBOSE, pp);
                 }
+                break;
 
-                RvalDestroy(rval);
-                VarRefDestroy(ref);
-                return result;
+                case RVAL_TYPE_CONTAINER:
+                case RVAL_TYPE_FNCALL:
+                case RVAL_TYPE_NOPROMISEE:
+                    break;
+                }
             }
+
+            RvalDestroy(rval);
+            VarRefDestroy(ref);
+            return PROMISE_RESULT_NOOP;
         }
 
         if (IsCf3VarString(pp->promiser))
@@ -270,7 +290,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             // Unexpanded variables, we don't do anything with
             RvalDestroy(rval);
             VarRefDestroy(ref);
-            return result;
+            return PROMISE_RESULT_NOOP;
         }
 
         if (!IsValidVariableName(pp->promiser))
@@ -279,7 +299,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
             VarRefDestroy(ref);
-            return result;
+            return PROMISE_RESULT_NOOP;
         }
 
         if (rval.type == RVAL_TYPE_LIST)
@@ -312,7 +332,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     // Cannot assign variable because value is a list containing a non-scalar item
                     VarRefDestroy(ref);
                     RvalDestroy(rval);
-                    return result;
+                    return PROMISE_RESULT_NOOP;
                 }
             }
         }
@@ -327,11 +347,11 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                 free(lval_str);
                 VarRefDestroy(ref);
                 RvalDestroy(rval);
-                return result;
+                return PROMISE_RESULT_NOOP;
             }
             else
             {
-                DataType existing_type = CF_DATA_TYPE_NONE;
+                DataType existing_type;
                 VarRef *base_ref = VarRefCopyIndexless(ref);
                 if (EvalContextVariableGet(ctx, ref, &existing_type) && existing_type == CF_DATA_TYPE_CONTAINER)
                 {
@@ -344,7 +364,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     VarRefDestroy(base_ref);
                     VarRefDestroy(ref);
                     RvalDestroy(rval);
-                    return result;
+                    return PROMISE_RESULT_NOOP;
                 }
                 VarRefDestroy(base_ref);
             }
@@ -359,45 +379,52 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             Log(LOG_LEVEL_ERR, "Variable '%s' expected a variable of type '%s', but was given incompatible value '%s'",
                 ref_str, DataTypeToString(required_datatype), value_str);
             PromiseRef(LOG_LEVEL_ERR, pp);
+
             free(ref_str);
             free(value_str);
             VarRefDestroy(ref);
             RvalDestroy(rval);
-            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return PROMISE_RESULT_FAIL;
         }
 
-        if (!EvalContextVariablePut(ctx, ref, rval.item, required_datatype, "source=promise"))
+        /* WRITE THE VARIABLE AT LAST. */
+        bool success = EvalContextVariablePut(ctx, ref, rval.item, required_datatype, "source=promise");
+
+        if (!success)
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Unable to converge %s.%s value (possibly empty or infinite regression)",
                 ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+
+            VarRefDestroy(ref);
+            RvalDestroy(rval);
+            return PROMISE_RESULT_FAIL;
         }
-        else
+
+        Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
+        if (promise_meta)
         {
-            Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
-            if (promise_meta)
+            StringSet *class_meta = EvalContextVariableTags(ctx, ref);
+            Buffer *print;
+            for (const Rlist *rp = promise_meta; rp; rp = rp->next)
             {
-                StringSet *class_meta = EvalContextVariableTags(ctx, ref);
-                Buffer *print;
-                for (const Rlist *rp = promise_meta; rp; rp = rp->next)
-                {
-                    StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
-                    print = StringSetToBuffer(class_meta, ',');
-                    Log(LOG_LEVEL_DEBUG,
-                        "Added tag %s to class %s, tags now [%s]",
-                        RlistScalarValue(rp), pp->promiser, BufferData(print));
-                    BufferDestroy(print);
-                }
+                StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
+                print = StringSetToBuffer(class_meta, ',');
+                Log(LOG_LEVEL_DEBUG,
+                    "Added tag %s to class %s, tags now [%s]",
+                    RlistScalarValue(rp), pp->promiser, BufferData(print));
+                BufferDestroy(print);
             }
         }
+
+        result = PROMISE_RESULT_NOOP;
     }
     else
     {
         Log(LOG_LEVEL_ERR, "Variable %s has no promised value", pp->promiser);
         Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        result = PROMISE_RESULT_FAIL;
     }
 
     /*
@@ -518,11 +545,14 @@ static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, cons
  */
 static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine)
 {
-    ConvergeVariableOptions opts = { 0 };
-    opts.should_converge = false;
+    ConvergeVariableOptions opts;
     opts.drop_undefined = false;
-    opts.ok_redefine = allow_redefine;
-    opts.cp_save = NULL;
+    opts.cp_save = NULL;                             /* main variable value */
+    /* By default allow variable redefinition, use "policy" constraint
+     * to override. */
+    opts.ok_redefine = true;
+    /* Main return value: becomes true at the end of the function. */
+    opts.should_converge = false;
 
     if (!IsDefinedClass(ctx, pp->classes))
     {
@@ -536,15 +566,13 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
         if (strcmp(cp->lval, "comment") == 0)
         {
-            continue;
         }
-
-        if (cp->rval.item == NULL)
+        else if (cp->rval.item == NULL && cp->rval.type != RVAL_TYPE_LIST)
         {
-            continue;
-        }
 
-        if (strcmp(cp->lval, "ifvarclass") == 0 || strcmp(cp->lval, "if") == 0)
+        }
+        else if (strcmp(cp->lval, "ifvarclass") == 0 ||
+                 strcmp(cp->lval, "if")         == 0)
         {
             switch (cp->rval.type)
             {
@@ -584,29 +612,18 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
             default:
                 Log(LOG_LEVEL_ERR, "Invalid if/ifvarclass type '%c': should be string or function", cp->rval.type);
-                continue;
             }
-
-            continue;
         }
-
-        if (strcmp(cp->lval, "policy") == 0)
+        else if (strcmp(cp->lval, "policy") == 0)
         {
             if (strcmp(cp->rval.item, "ifdefined") == 0)
             {
                 opts.drop_undefined = true;
-                opts.ok_redefine = false;
             }
             else if (strcmp(cp->rval.item, "constant") == 0)
             {
                 opts.ok_redefine = false;
             }
-            else
-            {
-                opts.ok_redefine |= true;
-            }
-
-            opts.ok_redefine &= allow_redefine;
         }
         else if (DataTypeFromString(cp->lval) != CF_DATA_TYPE_NONE)
         {
@@ -617,18 +634,24 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
     if (opts.cp_save == NULL)
     {
-        Log(LOG_LEVEL_WARNING, "Variable body for '%s' seems incomplete", pp->promiser);
+        Log(LOG_LEVEL_WARNING, "Incomplete vars promise: %s",
+            pp->promiser);
         PromiseRef(LOG_LEVEL_INFO, pp);
         return opts;
     }
 
     if (num_values > 2)
     {
-        Log(LOG_LEVEL_ERR, "Variable '%s' breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
+        Log(LOG_LEVEL_ERR,
+            "Variable '%s' breaks its own promise with multiple (%d) values",
+            pp->promiser, num_values);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return opts;
     }
 
+    /* All constraints look OK, and classes are defined. Move forward with
+     * this promise. */
     opts.should_converge = true;
+
     return opts;
 }

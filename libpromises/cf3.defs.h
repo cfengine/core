@@ -121,6 +121,12 @@
 
 #define CF_NS ':'   // namespace character separator
 
+/* Mangled namespace and scope characters, in order for the iteration engine
+ * to VariablePut() to THIS scope single elements of namespaced iterables
+ * (slists/containers). See expand.c and iteration.c. */
+#define CF_MANGLED_NS    '*'
+#define CF_MANGLED_SCOPE '#'
+
 /*****************************************************************************/
 
 /* Auditing key */
@@ -545,7 +551,6 @@ typedef enum
 #define CF_INTLISTRANGE  "[-0-9_$(){}\\[\\].]+"
 #define CF_REALRANGE "-9.99999E100,9.99999E100"
 #define CF_CHARRANGE "^.$"
-#define CF_NULL_VALUE "cf_null"
 
 #define CF_MODERANGE   "[0-7augorwxst,+-=]+"
 #define CF_BSDFLAGRANGE "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+"
@@ -1406,6 +1411,7 @@ typedef struct
     char *description;
     char *group_primary;
     Rlist *groups_secondary;
+    bool   groups_secondary_given;
     char *home_dir;
     char *shell;
 } User;
@@ -1587,6 +1593,7 @@ typedef struct
 /* common macros                                                         */
 /*************************************************************************/
 
+#include <rlist.h>
 #include <dbm_api.h>
 #include <sequence.h>
 #include <prototypes3.h>

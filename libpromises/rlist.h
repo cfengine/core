@@ -29,6 +29,7 @@
 #include <writer.h>
 #include <json.h>
 
+/* NOTE: an empty Rlist is simply NULL. */
 struct Rlist_
 {
     Rval val;

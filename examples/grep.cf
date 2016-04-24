@@ -50,9 +50,9 @@ bundle agent test
 #@ ```
 #@ R: mylist: { "One", "Two", "Three", "Four", "Five" }
 #@ R: Tlist: { "Two", "Three" }
-#@ R: empty_list: { --empty-list-- }
+#@ R: empty_list: {  }
 #@ R: datalist: [1,2,3,"Tab","chive"]
 #@ R: data_Tlist: { "Tab" }
-#@ R: data_empty_list: { --empty-list-- }
+#@ R: data_empty_list: {  }
 #@ ```
 #+end_src

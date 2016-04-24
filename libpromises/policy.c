@@ -314,7 +314,10 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
 
         char *bundle_symbol = StripNamespace(name);
 
-        if ((!type || strcmp(bp->type, type) == 0) && ((strcmp(bundle_symbol, bp->name) == 0) || (strcmp(bp->name, name) == 0)))
+        if ((type == NULL || strcmp(bp->type, type) == 0)
+            &&
+            ((strcmp(bp->name, bundle_symbol) == 0) ||
+             (strcmp(bp->name, name)          == 0)))
         {
             free(bundle_symbol);
 

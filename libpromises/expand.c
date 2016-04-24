@@ -43,134 +43,68 @@
 #include <conversion.h>
 #include <verify_classes.h>
 
-#define CF_MAPPEDLIST '#'
 
-static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
-                                        Rlist *lists, Rlist *containers,
-                                        PromiseActuator *ActOnPromise, void *param);
-static void ExpandAndMapIteratorsFromScalar(const EvalContext *ctx,
-                                            const Bundle *bundle,
-                                            const char *s, size_t s_len,
-                                            int level,
-                                            Rlist **scalars, Rlist **lists,
-                                            Rlist **containers,
-                                            Rlist **full_expansion);
-static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
-                                                 const Bundle *bundle,
-                                                 const Rlist *ref_names);
+/**
+ * VARIABLES AND PROMISE EXPANSION
+ *
+ * Expanding variables is easy -- expanding lists automagically requires
+ * some thought. Remember that
+ *
+ * promiser <=> RVAL_TYPE_SCALAR
+ * promisee <=> RVAL_TYPE_LIST
+ *
+ * For bodies we have
+ *
+ * lval <=> RVAL_TYPE_LIST | RVAL_TYPE_SCALAR
+ *
+ * Any list or container variable occurring within a scalar or in place of a
+ * scalar is assumed to be iterated i.e. $(name). See comments in iteration.c.
+ *
+ * Any list variable @(name) is *not iterated*, but dropped into place (see
+ * DeRefCopyPromise()).
+ *
+ * Please note that bodies cannot contain iterators.
+ *
+ * The full process of promise and variable expansion is mostly outlined in
+ * ExpandPromise() and ExpandPromiseAndDo() and the basic steps are:
+ *
+ * + Skip everything if the class guard is not defined.
+ *
+ * + DeRefCopyPromise(): *Copy the promise* while expanding '@' slists and body
+ *   arguments and handling body inheritance. This requires one round of
+ *   expansion with scopeid "body".
+ *
+ * + Push promise frame
+ *
+ * + MapIteratorsFromRval(): Parse all strings (promiser-promisee-constraints),
+ *   find all unexpanded variables, mangle them if needed (if they are
+ *   namespaced/scoped), and *initialise the wheels* in the iteration engine
+ *   (iterctx) to iterate over iterable variables (slists and containers). See
+ *   comments in iteration.c for further details.
+ *
+ * + For every iteration:
+ *
+ *   - Push iteration frame
+ *
+ *   - EvalContextStackPushPromiseIterationFrame()->ExpandDeRefPromise(): Make
+ *     another copy of the promise with all constraints evaluated and variables
+ *     expanded.
+ *
+ *     -- NOTE: As a result all *functions are also evaluated*, even if they are
+ *        not to be used immediately (for example promises that the actuator skips
+ *        because of ifvarclass, see promises.c:ExpandDeRefPromise() ).
+ *
+ *        -- (TODO IS IT CORRECT?) In a sub-bundle, create a new context and make
+ *           hashes of the the transferred variables in the temporary context
+ *
+ *   - Run the actuator (=act_on_promise= i.e. =VerifyWhateverPromise()=)
+ *
+ *   - Pop iteration frame
+ *
+ * + Pop promise frame
+ *
+ */
 
-/*
-
-Expanding variables is easy -- expanding lists automagically requires
-some thought. Remember that
-
-promiser <=> RVAL_TYPE_SCALAR
-promisee <=> RVAL_TYPE_LIST
-
-Expanding all bodies in the constraint list, we have
-
-lval <=> RVAL_TYPE_LIST|RVAL_TYPE_SCALAR
-
-Now the rule for variable substitution is that any list variable @(name)
-substituted directly for a LIST is not iterated, but dropped into
-place, i.e. in list-lvals and the promisee (since this would be
-equivalent to a re-concatenation of the expanded separate promises)
-
-Any list variable occurring within a scalar or in place of a scalar
-is assumed to be iterated i.e. $(name).
-
-To expand a promise, we build temporary hash tables. There are two
-stages, to this - one is to create a promise copy including all of the
-body templates and translate the parameters. This requires one round
-of expansion with scopeid "body". Then we use this fully assembled promise
-and expand vars and function calls.
-
-To expand the variables in a promise we need to
-
-   -- first get all strings, also parameterized bodies, which
-      could also be lists
-                                                                     /
-        //  MapIteratorsFromRval("scope",&lol,"ksajd$(one)$(two)...$(three)"); \/
-
-   -- compile an ordered list of variables involved , with types -           /
-      assume all are lists - these are never inside sub-bodies by design,  \/
-      so all expansion data are in the promise itself
-      can also be variables based on list items - derived like arrays x[i]
-
-   -- Copy the promise to a temporary promise + constraint list, expanding one by one,   /
-      then execute that                                                                \/
-
-      -- In a sub-bundle, create a new context and make hashes of the the
-      transferred variables in the temporary context
-
-   -- bodies cannot contain iterators
-
-   -- we've already checked types of lhs rhs, must match so an iterator
-      can only be in a non-naked variable?
-
-   -- form the outer loops to generate combinations
-
-Note, we map the current context into a fluid context "this" that maps
-every list into a scalar during iteration. Thus "this" never contains
-lists. This presents a problem for absolute references like $(abs.var),
-since these cannot be mapped into "this" without some magic.
-
-**********************************************************************/
-
-PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
-                            PromiseActuator *ActOnPromise, void *param)
-{
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        return PROMISE_RESULT_SKIPPED;
-    }
-
-    Rlist *lists = NULL;
-    Rlist *scalars = NULL;
-    Rlist *containers = NULL;
-
-    /* 1. Copy the promise while expanding '@' slists and body arguments
-     *    (including body inheritance). */
-    Promise *pcopy = DeRefCopyPromise(ctx, pp);
-
-    /* 2. Parse everything for creating iterators over
-          slists and containers. */
-
-    MapIteratorsFromRval(ctx, PromiseGetBundle(pp),
-                         (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR },
-                         &scalars, &lists, &containers);
-
-    if (pcopy->promisee.item != NULL)
-    {
-        MapIteratorsFromRval(ctx, PromiseGetBundle(pp), pp->promisee,
-                             &scalars, &lists, &containers);
-    }
-
-    for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
-    {
-        Constraint *cp = SeqAt(pcopy->conlist, i);
-        MapIteratorsFromRval(ctx, PromiseGetBundle(pp), cp->rval,
-                             &scalars, &lists, &containers);
-    }
-
-    /* 3. Now all scalars, slists and containers have been identified, and
-     *    possibly mangled. Put the variable values in the EvalContext. */
-
-    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), lists);
-    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), scalars);
-    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), containers);
-
-    /* 4. GO! */
-    PromiseResult result = ExpandPromiseAndDo(ctx, pcopy, lists, containers, ActOnPromise, param);
-
-    PromiseDestroy(pcopy);
-
-    RlistDestroy(lists);
-    RlistDestroy(scalars);
-    RlistDestroy(containers);
-
-    return result;
-}
 
 static void PutHandleVariable(EvalContext *ctx, const Promise *pp)
 {
@@ -194,428 +128,309 @@ static void PutHandleVariable(EvalContext *ctx, const Promise *pp)
     free(handle_s);
 }
 
-static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
-                                        Rlist *lists, Rlist *containers,
-                                        PromiseActuator *ActOnPromise, void *param)
+/**
+ * Recursively go down the #rval and run PromiseIteratorPrepare() to take note
+ * of all iterables and mangle all rvals than need to be mangled before
+ * iterating.
+ */
+static void MapIteratorsFromRval(EvalContext *ctx,
+                                 PromiseIterator *iterctx,
+                                 Rval rval)
+{
+    switch (rval.type)
+    {
+
+    case RVAL_TYPE_SCALAR:
+        PromiseIteratorPrepare(iterctx, ctx, RvalScalarValue(rval));
+        break;
+
+    case RVAL_TYPE_LIST:
+        for (const Rlist *rp = RvalRlistValue(rval);
+             rp != NULL; rp = rp->next)
+        {
+            MapIteratorsFromRval(ctx, iterctx, rp->val);
+        }
+        break;
+
+    case RVAL_TYPE_FNCALL:
+    {
+        char *fn_name = RvalFnCallValue(rval)->name;
+
+        /* Check function name. */
+        PromiseIteratorPrepare(iterctx, ctx, fn_name);
+
+        /* Check each of the function arguments. */
+        /* EXCEPT on functions that use special variables: the mangled
+         * variables would never be resolved if they contain inner special
+         * variables (for example "$(bundle.A[$(this.k)])" and the returned
+         * slist would contained mangled vars like "bundle#A[1]" which would
+         * never resolve in future iterations. By skipping the iteration
+         * engine for now, the function returns an slist with unmangled
+         * entries, and the iteration engine works correctly on the next
+         * pass! */
+        if (strcmp(fn_name, "maplist") != 0 &&
+            strcmp(fn_name, "mapdata") != 0 &&
+            strcmp(fn_name, "maparray")!= 0)
+        {
+            for (Rlist *rp = RvalFnCallValue(rval)->args;
+                 rp != NULL;  rp = rp->next)
+            {
+                MapIteratorsFromRval(ctx, iterctx, rp->val);
+            }
+        }
+        break;
+    }
+
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
+        break;
+    }
+}
+
+static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterctx,
+                                        PromiseActuator *act_on_promise, void *param)
 {
     PromiseResult result = PROMISE_RESULT_SKIPPED;
 
-    EvalContextStackPushPromiseFrame(ctx, pp, true);
-    PutHandleVariable(ctx, pp);
-
-    PromiseIterator *iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers);
-
-    /* If any of the lists we iterate is null or contains only cf_null
-     * values, then skip the entire promise. */
-    if (PromiseIteratorHasNullIterators(iter_ctx))
+    /* TODO this loop could be completely skipped for for non vars/classes if
+     *      act_on_promise is CommonEvalPromise(). */
+    while (PromiseIteratorNext(iterctx, ctx))
     {
-        goto cleanup;
-    }
-
-    /* TODO no need to iterate for non vars/classes promises during
-     * pre-eval, i.e. if ActOnPromise is CommonEvalPromise(). */
-    do
-    {
-        /* Put all wheel variables into the EvalContext. */
-        PromiseIteratorUpdateVariables(ctx, iter_ctx);
-
         /*
-         * ACTUAL WORK PART 1: lots of hidden stuff in this function.
+         * ACTUAL WORK PART 1: Get a (another) copy of the promise.
          *
-         * One is evaluation of all functions, even if they are not to be used
-         * immediately (for example promises that the actuator skips).
+         * Basically this evaluates all constraints.  As a result it evaluates
+         * all functions, even if they are not to be used immediately (for
+         * example promises that the actuator skips because of ifvarclass).
          */
-        const Promise *pexp =                       /* expanded promise */
-            EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
-        if (pexp == NULL)
+        const Promise *pexp =                           /* expanded promise */
+            EvalContextStackPushPromiseIterationFrame(ctx, iterctx);
+        if (pexp == NULL)                       /* is the promise excluded? */
         {
-            // excluded
             result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
             continue;
         }
 
         /* ACTUAL WORK PART 2: run the actuator */
-        PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
+        PromiseResult iteration_result = act_on_promise(ctx, pexp, param);
 
         /* iteration_result is always NOOP for PRE-EVAL. */
         result = PromiseResultUpdate(result, iteration_result);
 
         /* Redmine#6484: Do not store promise handles during PRE-EVAL, to
          *               avoid package promise always running. */
-        if (ActOnPromise != &CommonEvalPromise)
+        if (act_on_promise != &CommonEvalPromise)
         {
             NotifyDependantPromises(ctx, pexp, iteration_result);
         }
 
-        /* EVALUATE VARS PROMISES -- TODO WHY, ISN'T ActOnPromise() enough?? */
-        if (strcmp(pp->parent_promise_type->name, "vars") == 0 ||
-            strcmp(pp->parent_promise_type->name, "meta") == 0)
+        /* EVALUATE VARS PROMISES again, allowing redefinition of
+         * variables. The theory behind this is that the "sampling rate" of
+         * vars promise needs to be double than the rest. */
+        if (strcmp(pexp->parent_promise_type->name, "vars") == 0 ||
+            strcmp(pexp->parent_promise_type->name, "meta") == 0)
         {
-            VerifyVarPromise(ctx, pexp, true);
+            if (act_on_promise != (void *) &VerifyVarPromise)
+            {
+                VerifyVarPromise(ctx, pexp, true);  /* true==allow_redefine */
+            }
         }
 
+        /* Why do we push/pop an iteration frame, if all iterated variables
+         * are Put() on the previous scope? */
         EvalContextStackPopFrame(ctx);
-
-    } while (PromiseIteratorNext(iter_ctx));
-
-  cleanup:
-    PromiseIteratorDestroy(iter_ctx);
-    EvalContextStackPopFrame(ctx);
+    }
 
     return result;
 }
 
-/*
- * Search for unexpanded scalars, lists and containers in all kinds of Rval.
- */
-void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval,
-                          Rlist **scalars, Rlist **lists, Rlist **containers)
+PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
+                            PromiseActuator *act_on_promise, void *param)
 {
-    switch (rval.type)
+    if (!IsDefinedClass(ctx, pp->classes))
     {
-    case RVAL_TYPE_SCALAR:
-    {
-        const char *s = RvalScalarValue(rval);
-        ExpandAndMapIteratorsFromScalar(ctx, bundle, s, strlen(s), 0,
-                                        scalars, lists, containers, NULL);
-        break;
+        return PROMISE_RESULT_SKIPPED;
     }
-    case RVAL_TYPE_LIST:
-        for (const Rlist *rp = RvalRlistValue(rval); rp; rp = rp->next)
-        {
-            MapIteratorsFromRval(ctx, bundle, rp->val,
-                                 scalars, lists, containers);
-        }
-        break;
 
-    case RVAL_TYPE_FNCALL:
-    {
-        const char *fn_name = RvalFnCallValue(rval)->name;
-        ExpandAndMapIteratorsFromScalar(ctx, bundle, fn_name, strlen(fn_name),
-                                        0, scalars, lists, containers, NULL);
+    /* 1. Copy the promise while expanding '@' slists and body arguments
+     *    (including body inheritance). */
+    Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
-        /* Check each of the function arguments. */
-        for (const Rlist *rp = RvalFnCallValue(rval)->args; rp; rp = rp->next)
-        {
-            MapIteratorsFromRval(ctx, bundle, rp->val,
-                                 scalars, lists, containers);
-        }
-        break;
+    EvalContextStackPushPromiseFrame(ctx, pcopy, true);
+    PromiseIterator *iterctx = PromiseIteratorNew(pcopy);
+
+    /* 2. Parse all strings (promiser-promisee-constraints), find all
+          unexpanded variables, mangle them if needed (if they are
+          namespaced/scoped), and start the iteration engine (iterctx) to
+          iterate over slists and containers. */
+
+    MapIteratorsFromRval(ctx, iterctx,
+                         (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
+
+    if (pcopy->promisee.item != NULL)
+    {
+        MapIteratorsFromRval(ctx, iterctx, pcopy->promisee);
     }
-    case RVAL_TYPE_CONTAINER:
-    case RVAL_TYPE_NOPROMISEE:
-        Log(LOG_LEVEL_DEBUG,
-            "Unknown Rval type for scope '%s'", bundle->name);
-        break;
+
+    for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pcopy->conlist, i);
+        MapIteratorsFromRval(ctx, iterctx, cp->rval);
     }
+
+    /* 3. GO! */
+    PutHandleVariable(ctx, pcopy);
+    PromiseResult result = ExpandPromiseAndDo(ctx, iterctx,
+                                              act_on_promise, param);
+
+    EvalContextStackPopFrame(ctx);
+    PromiseIteratorDestroy(iterctx);
+    PromiseDestroy(pcopy);
+
+    return result;
 }
+
 
 /*********************************************************************/
 
-static void RlistConcatInto(Rlist **dest,
-                            const Rlist *src, const char *extension)
+/**
+ * @brief Like @c StringAppend, but replace characters @c '*' and @c '#' with their visible counterparts.
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
+ */
+bool StringAppendPromise(char *dst, const char *src, size_t n)
 {
-    assert(dest);
-
-    size_t count = 0;
-    for (const Rlist *rp = src; rp != NULL; rp = rp->next)
+    int i, j;
+    n--;
+    for (i = 0; i < n && dst[i]; i++)
     {
-        count++;
-        char temp[CF_EXPANDSIZE] = "";
-        snprintf(temp, CF_EXPANDSIZE, "%s%s", RlistScalarValue(rp), extension);
-        RlistAppendScalarIdemp(dest, temp);
     }
-
-    if (count == 0)
+    for (j = 0; i < n && src[j]; i++, j++)
     {
-        RlistAppendScalarIdemp(dest, extension);
+        const char ch = src[j];
+        switch (ch)
+        {
+        case CF_MANGLED_NS:
+            dst[i] = ':';
+            break;
+
+        case CF_MANGLED_SCOPE:
+            dst[i] = '.';
+            break;
+
+        default:
+            dst[i] = ch;
+            break;
+        }
+    }
+    dst[i] = '\0';
+    return (i < n || !src[j]);
+}
+
+/**
+ * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
+ *   and is longer than 2*N+3, then only copy an abbreviated version
+ *   consisting of the first and last N characters, separated by @c `...`
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
+ * @param max_fragment Max. length of initial/final segment of @c str to keep
+ * @note 2*max_fragment+3 is the maximum length of the appended string (excl. terminating NULL)
+ *
+ */
+bool StringAppendAbbreviatedPromise(char *dst, const char *src, size_t n, const size_t max_fragment)
+{
+    /* check if `src` contains a new line (may happen for "insert_lines") */
+    const char *const nl = strchr(src, '\n');
+    if (NULL == nl)
+    {
+        return StringAppendPromise(dst, src, n);
+    }
+    else
+    {
+        /* `src` contains a newline: abbreviate it by taking the first and last few characters */
+        static const char sep[] = "...";
+        char abbr[sizeof(sep) + 2 * max_fragment];
+        const int head = (nl > src + max_fragment) ? max_fragment : (nl - src);
+        const char * last_line = strrchr(src, '\n') + 1;
+        assert(last_line); /* not max_fragmentULL, we know we have at least one '\n' */
+        const int tail = strlen(last_line);
+        if (tail > max_fragment)
+        {
+            last_line += tail - max_fragment;
+        }
+        memcpy(abbr, src, head);
+        strcpy(abbr + head, sep);
+        strcat(abbr, last_line);
+        return StringAppendPromise(dst, abbr, n);
     }
 }
 
-static void MangleVarRefString(char *ref_str, size_t len)
+/**
+ * @brief Concatenate string @c str to @c buf, replacing
+ *   characters @c '*' and @c '#' with their visible counterparts.
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ */
+void BufferAppendPromiseStr(Buffer *buf, const char *promiser)
 {
-    for (size_t i = 0; i < len; i++)
+    for (const char *ch = promiser; *ch != '\0'; ch++)
     {
-        if (ref_str[i] == ':')
+        switch (*ch)
         {
-            ref_str[i] = '*';
-        }
-        else if (ref_str[i] == '.')
-        {
-            ref_str[i] = '#';
-        }
-        else if (ref_str[i] == '\0' || ref_str[i] == '[')
-        {
-            return;
-        }
-    }
-}
+        case CF_MANGLED_NS:
+            BufferAppendChar(buf, ':');
+            break;
 
-static void DeMangleVarRefString(char *ref_str, size_t len)
-{
-    for (size_t i = 0; i < len; i++)
-    {
-        if (ref_str[i] == '*')
-        {
-            ref_str[i] = ':';
-        }
-        else if (ref_str[i] == '#')
-        {
-            ref_str[i] = '.';
-        }
-        else if (ref_str[i] == '[')
-        {
-            return;
+        case CF_MANGLED_SCOPE:
+            BufferAppendChar(buf, '.');
+            break;
+
+        default:
+            BufferAppendChar(buf, *ch);
+            break;
         }
     }
 }
 
 /**
- * Parses the string #s and finds all iterables (containers and slists) as
- * well as all of the scalars.
+ * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
+ *   and is longer than 2*N+3, then only copy an abbreviated version
+ *   consisting of the first and last N characters, separated by @c `...`
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ * @param N      Max. length of initial/final segment of @c str to keep
+ * @note 2*N+3 is the maximum length of the appended string (excl. terminating NULL)
  *
- * The names of the variables are returned in parameters #scalars, #lists,
- * #containers and they are *mangled* (see comments and function
- * MangleVarRefString()).
- *
- * @param full_expansion must be NULL, it's only used internally in the
- *                       recursive calls.
  */
-static void ExpandAndMapIteratorsFromScalar(const EvalContext *ctx,
-                                            const Bundle *bundle,
-                                            const char *s, size_t s_len,
-                                            int level,
-                                            Rlist **scalars, Rlist **lists,
-                                            Rlist **containers,
-                                            Rlist **full_expansion)
+void BufferAppendAbbreviatedStr(Buffer *buf, const char *promiser, const int N)
 {
-    Log(LOG_LEVEL_DEBUG,
-        "ExpandAndMapIteratorsFromScalar(level=%d): %*sBEGIN scalar:\"%s\"",
-        level, 4*level, "", s);
-
-    assert(s != NULL);
-    assert(scalars    != NULL);
-    assert(lists      != NULL);
-    assert(containers != NULL);
-
-    Buffer *value = BufferNew();
-
-    for (size_t i = 0; i < s_len; i++)
+    /* check if `promiser` contains a new line (may happen for "insert_lines") */
+    const char *const nl = strchr(promiser, '\n');
+    if (NULL == nl)
     {
-        const char *sp = &s[i];
-
-        Rlist *tmp_list = NULL;
-        BufferClear(value);
-
-        /* 1. Skip until dollar sign. */
-        if (ExtractScalarPrefix(value, sp, s_len - i))
-        {
-            if (full_expansion)
-            {
-                /* If full expansion was requested, this means we are down in
-                 * a recursive call, and the dollar sign has already been
-                 * skipped. For example initial string was "$(A_$(i))" and now
-                 * string is "A_$(i)". So we are now keeping the "A_" prefix
-                 * in order to expand this variable after resolving $(i). */
-                RlistConcatInto(&tmp_list, *full_expansion, BufferData(value));
-                RlistDestroy(*full_expansion);
-                *full_expansion = tmp_list;
-                tmp_list = NULL;
-            }
-
-            sp += BufferSize(value);
-            i += BufferSize(value);                             /* oh my WHY??? */
-
-            BufferClear(value);
-
-            if (i >= s_len)
-            {
-                break;
-            }
-        }
-
-        if (*sp == '$')
-        {
-            BufferClear(value);
-
-            /* 2. Extract the variable name. */
-            ExtractScalarReference(value, sp, s_len - i, true);
-            if (BufferSize(value) > 0)
-            {
-                Rlist *inner_expansion = NULL;
-                Rlist *exp = NULL;
-                int success = 0;
-
-                VarRef *ref = VarRefParse(BufferData(value));
-
-                int increment = BufferSize(value) - 1 + 3;
-
-                /* 3. RECURSE: Handle any embedded variables. */
-
-                const char *substring = &s[i+2];     /* bypass dollar-paren */
-                ExpandAndMapIteratorsFromScalar(ctx, bundle, substring,
-                                                BufferSize(value), level+1,
-                                                scalars, lists, containers,
-                                                &inner_expansion);
-
-                /* After this, inner_expansion of 'B[$(k)$(v)]' for example
-                 * can be a long list of slists, lets say B[a1]->B[a2]->B[a3]
-                 * etc, and each one of these could be an slist. */
-
-                for (exp = inner_expansion; exp != NULL; exp = exp->next)
-                {
-                    /* MANGLING VARIABLE NAMES
-                     *
-                     * If a list is non-local, i.e. $(bundle.var), map it to
-                     * local $(bundle#var), or $(ns:var) to $(ns*var)
-                     *
-                     * NB without modifying variables as we map them, it's not
-                     * possible to handle remote lists referenced by a variable
-                     * scope. For example, the following examples were failing:
-                     *   1. scope => "test."; var => "somelist"; $($(scope)$(var))
-                     *   2. varname => "test.somelist"; $($(varname)) also fails
-                     * TODO Unless the consumer handles it?
-                     */
-                    const char *inner_ref_str = RlistScalarValue(exp);
-                    VarRef *inner_ref = VarRefParseFromBundle(inner_ref_str, bundle);
-
-                    // var is the expanded name of the variable in its native context
-                    // finalname will be the mapped name in the local context "this."
-
-                    DataType value_type = CF_DATA_TYPE_NONE;
-                    const void *value = EvalContextVariableGet(ctx, inner_ref, &value_type);
-                    if (value)
-                    {
-                        char *mangled_inner_ref = xstrdup(inner_ref_str);
-                        MangleVarRefString(mangled_inner_ref, strlen(mangled_inner_ref));
-
-                        success++;
-                        switch (DataTypeToRvalType(value_type))
-                        {
-                        case RVAL_TYPE_LIST:
-                            {
-                                bool has_valid_entries = false;
-                                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
-                                {
-                                    has_valid_entries |= (rp->val.item != NULL &&
-                                                          strcmp(rp->val.item, CF_NULL_VALUE) != 0);
-                                    if (full_expansion)
-                                    {
-                                        // append each slist item to each of full_expansion
-                                        RlistConcatInto(&tmp_list, *full_expansion, RlistScalarValue(rp));
-                                    }
-                                }
-                                if (!has_valid_entries)
-                                {
-                                    break;           /* skipping empty list */
-                                }
-                                if (level > 0)
-                                {
-                                    RlistPrependScalarIdemp(lists, mangled_inner_ref);
-                                }
-                                else
-                                {
-                                    RlistAppendScalarIdemp(lists, mangled_inner_ref);
-                                }
-                            }
-                            break;
-
-                        case RVAL_TYPE_SCALAR:
-                            RlistAppendScalarIdemp(scalars, mangled_inner_ref);
-
-                            if (full_expansion)
-                            {
-                                // append the scalar value to each of full_expansion
-                                RlistConcatInto(&tmp_list, *full_expansion, value);
-                            }
-                            break;
-
-                        case RVAL_TYPE_CONTAINER:
-                            if (level > 0)
-                            {
-                                RlistPrependScalarIdemp(containers, mangled_inner_ref);
-                            }
-                            else
-                            {
-                                RlistAppendScalarIdemp(containers, mangled_inner_ref);
-                            }
-                            break;
-
-                        case RVAL_TYPE_FNCALL:
-                        case RVAL_TYPE_NOPROMISEE:
-                            break;
-                        }
-
-                        free(mangled_inner_ref);
-                    }
-
-                    VarRefDestroy(inner_ref);
-                }
-                RlistDestroy(inner_expansion);
-
-                if (full_expansion)
-                {
-                    RlistDestroy(*full_expansion);
-                    *full_expansion = tmp_list;
-                    tmp_list = NULL;
-                }
-
-                /* Mangle the namespaced/scoped variables.  No need to map
-                   "this.*" even though it's technically qualified. */
-                if (success && IsQualifiedVariable(BufferData(value)) && strcmp(ref->scope, "this") != 0)
-                {
-                    char *dotpos = strchr(substring, '.');
-                    if (dotpos)
-                    {
-                        *dotpos = CF_MAPPEDLIST;    // replace '.' with '#'
-                    }
-
-                    if (strchr(BufferData(value), ':'))
-                    {
-                        char *colonpos = strchr(substring, ':');
-                        if (colonpos)
-                        {
-                            *colonpos = '*';
-                        }
-                    }
-                }
-
-                VarRefDestroy(ref);
-
-                sp += increment;
-                i += increment;                                 /* WHYYYY */
-            }
-        }
+        BufferAppendPromiseStr(buf, promiser);
     }
-
-    BufferDestroy(value);
-
-    char *scalars_s    = RlistToString(*scalars);
-    char *lists_s      = RlistToString(*lists);
-    char *containers_s = RlistToString(*containers);
-    Log(LOG_LEVEL_DEBUG,
-        "ExpandAndMapIteratorsFromScalar(level=%d): %*s"
-        "RET   scalars:%s slists:%s containers:%s",
-        level, 4*level, "",
-        scalars_s, lists_s, containers_s);
-    if (full_expansion != NULL)
+    else
     {
-        char *full_exp_s = RlistToString(*full_expansion);
-        Log(LOG_LEVEL_DEBUG,
-            "ExpandAndMapIteratorsFromScalar(level=%d): %*s"
-            "RET   fullexpansion:%s",
-            level, 4*level, "", full_exp_s);
-        free(full_exp_s);
+        /* `promiser` contains a newline: abbreviate it by taking the first and last few characters */
+        static const char sep[] = "...";
+        char abbr[sizeof(sep) + 2 * N];
+        const int head = (nl > promiser + N) ? N : (nl - promiser);
+        const char * last_line = strrchr(promiser, '\n') + 1;
+        assert(last_line); /* not NULL, we know we have at least one '\n' */
+        const int tail = strlen(last_line);
+        if (tail > N)
+        {
+            last_line += tail - N;
+        }
+        memcpy(abbr, promiser, head);
+        strcpy(abbr + head, sep);
+        strcat(abbr, last_line);
+        BufferAppendPromiseStr(buf, abbr);
     }
-    Log(LOG_LEVEL_DEBUG,
-        "ExpandAndMapIteratorsFromScalar(level=%d): %*sEND",
-        level, 4*level, "");
-    free(containers_s);
-    free(lists_s);
-    free(scalars_s);
 }
-
-/*********************************************************************/
 
 /* TODO undestand */
 static Rval ExpandListEntry(EvalContext *ctx,
@@ -637,15 +452,16 @@ static Rval ExpandListEntry(EvalContext *ctx,
                 free(exp);
             }
 
+            /* Check again, it might have changed. */
             if (!IsExpandable(naked))
             {
                 VarRef *ref = VarRefParseFromScope(naked, scope);
 
-                DataType value_type = CF_DATA_TYPE_NONE;
+                DataType value_type;
                 const void *value = EvalContextVariableGet(ctx, ref, &value_type);
                 VarRefDestroy(ref);
 
-                if (value)
+                if (value_type != CF_DATA_TYPE_NONE)     /* variable found? */
                 {
                     return ExpandPrivateRval(ctx, ns, scope, value,
                                              DataTypeToRvalType(value_type));
@@ -691,7 +507,7 @@ Rval ExpandPrivateRval(EvalContext *ctx,
     {
     case RVAL_TYPE_SCALAR:
         returnval.item = ExpandScalar(ctx, ns, scope, rval_item, NULL);
-        returnval.type = RVAL_TYPE_SCALAR ;
+        returnval.type = RVAL_TYPE_SCALAR;
         break;
     case RVAL_TYPE_LIST:
         returnval.item = ExpandList(ctx, ns, scope, rval_item, true);
@@ -742,7 +558,7 @@ Rval ExpandBundleReference(EvalContext *ctx,
 }
 
 /**
- * Expand a scalar into Buffer #out, returning the pointer to the string
+ * Expand a #string into Buffer #out, returning the pointer to the string
  * itself, inside the Buffer #out. If #out is NULL then the buffer will be
  * created and destroyed internally.
  *
@@ -790,50 +606,34 @@ char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
 
         if (!IsExpandable(BufferData(current_item)))
         {
-            DataType type = CF_DATA_TYPE_NONE;
-            const void *value = NULL;
-            {
-                VarRef *ref = VarRefParseFromNamespaceAndScope(BufferData(current_item), ns, scope, CF_NS, '.');
-                value = EvalContextVariableGet(ctx, ref, &type);
-                VarRefDestroy(ref);
-            }
+            VarRef *ref = VarRefParseFromNamespaceAndScope(
+                BufferData(current_item),
+                ns, scope, CF_NS, '.');
+            DataType value_type;
+            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            VarRefDestroy(ref);
 
-            switch (DataTypeToRvalType(type))
+            switch (DataTypeToRvalType(value_type))
             {
             case RVAL_TYPE_SCALAR:
-                if (value)
-                {
-                     BufferAppendString(out, value);
-                     continue;
-                }
+                assert(value != NULL);
+                BufferAppendString(out, value);
+                continue;
                 break;
 
             case RVAL_TYPE_CONTAINER:
-                if (value && JsonGetElementType((JsonElement*)value) == JSON_ELEMENT_TYPE_PRIMITIVE)
+            {
+                assert(value != NULL);
+                const JsonElement *jvalue = value;      /* instead of casts */
+                if (JsonGetElementType(jvalue) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
-                    BufferAppendString(out, JsonPrimitiveGetAsString((JsonElement*)value));
+                    BufferAppendString(out, JsonPrimitiveGetAsString(jvalue));
                     continue;
                 }
                 break;
-
+            }
             default:
-                // Discover if we are about to evaluate a promise with a cf_null-list
-                if (   (value != NULL &&
-                        strcmp(RlistScalarValue(value), CF_NULL_VALUE) == 0)
-                // or a list from a foreign bundle that can't be expanded because it is a null list there
-                    || (type == CF_DATA_TYPE_NONE &&
-                        value == NULL &&
-                        strchr(BufferData(current_item), CF_MAPPEDLIST) != NULL)
-                    )
-                {
-                    BufferDestroy(current_item);
-                    BufferClear(out);
-
-                    /* Mark as invalid by writing only "cf_null" - see ExpandDeRefPromise() */
-                    BufferAppendString(out, CF_NULL_VALUE);
-
-                    return out_belongs_to_us ? BufferClose(out) : BufferGet(out);
-                }
+                /* TODO Log() */
                 break;
             }
         }
@@ -850,11 +650,13 @@ char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
 
     BufferDestroy(current_item);
 
+    Log(LOG_LEVEL_DEBUG, "ExpandScalar( %s : %s . %s )  =>  %s",
+        SAFENULL(ns), SAFENULL(scope), string, BufferData(out));
+
     return out_belongs_to_us ? BufferClose(out) : BufferGet(out);
 }
 
 /*********************************************************************/
-
 
 Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
                        const char *ns, const char *scope,
@@ -862,36 +664,34 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
 {
     assert(ctx);
     assert(policy);
-
     Rval returnval;
-    if (rval.type == RVAL_TYPE_SCALAR &&
-        IsNakedVar(rval.item, '@'))
+
+    /* Treat lists specially. */
+    if (rval.type == RVAL_TYPE_SCALAR && IsNakedVar(rval.item, '@'))
     {
-        /* Treat lists specially here */
         char naked[CF_MAXVARSIZE];
         GetNaked(naked, rval.item);
 
-        if (IsExpandable(naked))
+        if (IsExpandable(naked))                /* example: @(blah_$(blue)) */
         {
             returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
         }
         else
         {
             VarRef *ref = VarRefParseFromScope(naked, scope);
-            DataType value_type = CF_DATA_TYPE_NONE;
+            DataType value_type;
             const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            VarRefDestroy(ref);
 
-            if (!value || DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
-            {
-                returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
-            }
-            else
+            if (DataTypeToRvalType(value_type) == RVAL_TYPE_LIST)
             {
                 returnval.item = ExpandList(ctx, ns, scope, value, true);
                 returnval.type = RVAL_TYPE_LIST;
             }
-
-            VarRefDestroy(ref);
+            else
+            {
+                returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
+            }
         }
     }
     else if (forcelist) /* We are replacing scalar @(name) with list */
@@ -963,61 +763,6 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
 
 /*********************************************************************/
 
-/**
- * Write variable values to EvalContext, for all variables that have been
- * mangled from ExpandAndMapIteratorsFromScalar().
- */
-static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
-                                                 const Bundle *bundle,
-                                                 const Rlist *ref_names)
-{
-    for (const Rlist *rp = ref_names; rp != NULL; rp = rp->next)
-    {
-        const char *mangled = RlistScalarValue(rp);
-
-        /* If mangled, get the value/type of the demangled so that you can put
-         * the same value/type to the mangled one. */
-        if (strchr(mangled, CF_MAPPEDLIST))
-        {
-            char *demangled = xstrdup(mangled);
-            DeMangleVarRefString(demangled, strlen(demangled));
-
-            Log(LOG_LEVEL_DEBUG, "                 '%s' demangle -> '%s'",
-                mangled, demangled);
-
-            VarRef *demangled_ref = VarRefParseFromBundle(demangled, bundle);
-            DataType value_type;
-            const void *value = EvalContextVariableGet(ctx, demangled_ref, &value_type);
-            if (!value)
-            {
-                ProgrammingError("Couldn't find extracted variable '%s'", mangled);
-            }
-
-            VarRef *mangled_ref = VarRefParseFromBundle(mangled, bundle);
-
-            switch (DataTypeToRvalType(value_type))
-            {
-            case RVAL_TYPE_LIST:
-                EvalContextVariablePut(ctx, mangled_ref, value, value_type, "source=agent");
-                break;
-
-            case RVAL_TYPE_CONTAINER:
-            case RVAL_TYPE_SCALAR:
-                EvalContextVariablePut(ctx, mangled_ref, value, value_type, "source=agent");
-                break;
-
-            case RVAL_TYPE_FNCALL:
-            case RVAL_TYPE_NOPROMISEE:
-                ProgrammingError("Illegal rval type in switch %d", DataTypeToRvalType(value_type));
-            }
-
-            VarRefDestroy(mangled_ref);
-            VarRefDestroy(demangled_ref);
-            free(demangled);
-        }
-    }
-}
-
 void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char *type, PromiseActuator *actuator)
 {
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
@@ -1039,16 +784,27 @@ void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char
 
 void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 {
-    Log(LOG_LEVEL_DEBUG, "Resolving variables in bundle '%s' '%s'",
+    Log(LOG_LEVEL_DEBUG,
+        "Resolving classes and variables in 'bundle %s %s'",
         bundle->type, bundle->name);
+
+    /* Necessary to parse vars *before* classes for cases like this:
+     * 00_basics/04_bundles/dynamic_bundlesequence/dynamic_inputs_based_on_class_set_using_variable_file_control_extends_inputs.cf.sub
+     *   --  see bundle "classify". */
+    BundleResolvePromiseType(ctx, bundle, "vars",
+                             (PromiseActuator *) VerifyVarPromise);
 
     /* PRE-EVAL: evaluate classes of common bundles. */
     if (strcmp(bundle->type, "common") == 0)
     {
         BundleResolvePromiseType(ctx, bundle, "classes", VerifyClassPromise);
     }
+
+    /* Necessary to also parse vars *after* classes,
+     * because "inputs" might be affected in cases like:
+     * 00_basics/04_bundles/dynamic_bundlesequence/dynamic_inputs_based_on_list_variable_dependent_on_class.cf */
     BundleResolvePromiseType(ctx, bundle, "vars",
-                             (PromiseActuator*) VerifyVarPromise);
+                             (PromiseActuator *) VerifyVarPromise);
 }
 
 ProtocolVersion ProtocolVersionParse(const char *s)
@@ -1306,6 +1062,7 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
 void PolicyResolve(EvalContext *ctx, const Policy *policy,
                    GenericAgentConfig *config)
 {
+    /* PRE-EVAL: common bundles: classes,vars. */
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bundle = SeqAt(policy->bundles, i);
@@ -1317,6 +1074,13 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
         }
     }
 
+/*
+ * HACK: yet another pre-eval pass here, WHY? TODO remove, but test fails:
+ *       00_basics/03_bodies/dynamic_inputs_findfiles.cf
+ */
+#if 1
+
+    /* PRE-EVAL: non-common bundles: only vars. */
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bundle = SeqAt(policy->bundles, i);
@@ -1327,6 +1091,8 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
             EvalContextStackPopFrame(ctx);
         }
     }
+
+#endif
 
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
@@ -1473,22 +1239,35 @@ bool IsNakedVar(const char *str, char vtype)
 
 /*********************************************************************/
 
-void GetNaked(char *s2, const char *s1)
-/* copy @(listname) -> listname */
+/**
+ * Copy @(listname) -> listname.
+ *
+ * This function performs no validations, it is necessary to call the
+ * validation functions before calling this function.
+ *
+ * @NOTE make sure sizeof(dst) >= sizeof(s)
+ */
+void GetNaked(char *dst, const char *s)
 {
-    if (strlen(s1) < 4)
+    size_t s_len = strlen(s);
+
+    if (s_len < 4  ||  s_len + 3 >= CF_MAXVARSIZE)
     {
-        Log(LOG_LEVEL_ERR, "Naked variable expected, but '%s' is malformed", s1);
-        strlcpy(s2, s1, CF_MAXVARSIZE);
+        Log(LOG_LEVEL_ERR,
+            "@(variable) expected, but got malformed: %s", s);
+        strlcpy(dst, s, CF_MAXVARSIZE);
         return;
     }
 
-    memset(s2, 0, CF_MAXVARSIZE);
-    strncpy(s2, s1 + 2, strlen(s1) - 3);
+    memcpy(dst, &s[2], s_len - 3);
+    dst[s_len - 3] = '\0';
 }
 
 /*********************************************************************/
 
+/**
+ * Checks if a variable is an @-list and returns true or false.
+ */
 bool IsVarList(const char *var)
 {
     if ('@' != var[0])

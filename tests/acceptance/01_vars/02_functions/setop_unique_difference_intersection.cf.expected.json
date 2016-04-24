@@ -1,7 +1,5 @@
 {
-  "difference_a_a": [
-    "cf_null"
-  ],
+  "difference_a_a": [],
   "difference_a_b": [
     "x",
     "y",
@@ -31,9 +29,7 @@
     "9",
     "10"
   ],
-  "difference_b_b": [
-    "cf_null"
-  ],
+  "difference_b_b": [],
   "difference_b_c": [
     "100",
     "9",
@@ -54,24 +50,12 @@
     "9",
     "10"
   ],
-  "difference_c_a": [
-    "cf_null"
-  ],
-  "difference_c_b": [
-    "cf_null"
-  ],
-  "difference_c_c": [
-    "cf_null"
-  ],
-  "difference_c_d": [
-    "cf_null"
-  ],
-  "difference_c_e": [
-    "cf_null"
-  ],
-  "difference_c_f": [
-    "cf_null"
-  ],
+  "difference_c_a": [],
+  "difference_c_b": [],
+  "difference_c_c": [],
+  "difference_c_d": [],
+  "difference_c_e": [],
+  "difference_c_f": [],
   "difference_d_a": [
     ""
   ],
@@ -81,18 +65,14 @@
   "difference_d_c": [
     ""
   ],
-  "difference_d_d": [
-    "cf_null"
-  ],
+  "difference_d_d": [],
   "difference_d_e": [
     ""
   ],
   "difference_d_f": [
     ""
   ],
-  "difference_e_a": [
-    "cf_null"
-  ],
+  "difference_e_a": [],
   "difference_e_b": [
     "x"
   ],
@@ -102,9 +82,7 @@
   "difference_e_d": [
     "x"
   ],
-  "difference_e_e": [
-    "cf_null"
-  ],
+  "difference_e_e": [],
   "difference_e_f": [
     "x"
   ],
@@ -168,9 +146,7 @@
     "fix",
     "six"
   ],
-  "difference_f_f": [
-    "cf_null"
-  ],
+  "difference_f_f": [],
   "difference_inline_a": [
     "b",
     "q"
@@ -200,125 +176,57 @@
     "y",
     "z"
   ],
-  "intersection_a_b": [
-    "cf_null"
-  ],
-  "intersection_a_c": [
-    "cf_null"
-  ],
-  "intersection_a_d": [
-    "cf_null"
-  ],
+  "intersection_a_b": [],
+  "intersection_a_c": [],
+  "intersection_a_d": [],
   "intersection_a_e": [
     "x"
   ],
-  "intersection_a_f": [
-    "cf_null"
-  ],
-  "intersection_a_inline": [
-    "cf_null"
-  ],
-  "intersection_b_a": [
-    "cf_null"
-  ],
+  "intersection_a_f": [],
+  "intersection_a_inline": [],
+  "intersection_b_a": [],
   "intersection_b_b": [
     "100",
     "9",
     "10"
   ],
-  "intersection_b_c": [
-    "cf_null"
-  ],
-  "intersection_b_d": [
-    "cf_null"
-  ],
-  "intersection_b_e": [
-    "cf_null"
-  ],
-  "intersection_b_f": [
-    "cf_null"
-  ],
-  "intersection_b_inline": [
-    "cf_null"
-  ],
-  "intersection_c_a": [
-    "cf_null"
-  ],
-  "intersection_c_b": [
-    "cf_null"
-  ],
-  "intersection_c_c": [
-    "cf_null"
-  ],
-  "intersection_c_d": [
-    "cf_null"
-  ],
-  "intersection_c_e": [
-    "cf_null"
-  ],
-  "intersection_c_f": [
-    "cf_null"
-  ],
-  "intersection_c_inline": [
-    "cf_null"
-  ],
-  "intersection_d_a": [
-    "cf_null"
-  ],
-  "intersection_d_b": [
-    "cf_null"
-  ],
-  "intersection_d_c": [
-    "cf_null"
-  ],
+  "intersection_b_c": [],
+  "intersection_b_d": [],
+  "intersection_b_e": [],
+  "intersection_b_f": [],
+  "intersection_b_inline": [],
+  "intersection_c_a": [],
+  "intersection_c_b": [],
+  "intersection_c_c": [],
+  "intersection_c_d": [],
+  "intersection_c_e": [],
+  "intersection_c_f": [],
+  "intersection_c_inline": [],
+  "intersection_d_a": [],
+  "intersection_d_b": [],
+  "intersection_d_c": [],
   "intersection_d_d": [
     ""
   ],
-  "intersection_d_e": [
-    "cf_null"
-  ],
-  "intersection_d_f": [
-    "cf_null"
-  ],
-  "intersection_d_inline": [
-    "cf_null"
-  ],
+  "intersection_d_e": [],
+  "intersection_d_f": [],
+  "intersection_d_inline": [],
   "intersection_e_a": [
     "x"
   ],
-  "intersection_e_b": [
-    "cf_null"
-  ],
-  "intersection_e_c": [
-    "cf_null"
-  ],
-  "intersection_e_d": [
-    "cf_null"
-  ],
+  "intersection_e_b": [],
+  "intersection_e_c": [],
+  "intersection_e_d": [],
   "intersection_e_e": [
     "x"
   ],
-  "intersection_e_f": [
-    "cf_null"
-  ],
-  "intersection_e_inline": [
-    "cf_null"
-  ],
-  "intersection_f_a": [
-    "cf_null"
-  ],
-  "intersection_f_b": [
-    "cf_null"
-  ],
-  "intersection_f_c": [
-    "cf_null"
-  ],
-  "intersection_f_d": [
-    "cf_null"
-  ],
-  "intersection_f_e": [
-    "cf_null"
-  ],
+  "intersection_e_f": [],
+  "intersection_e_inline": [],
+  "intersection_f_a": [],
+  "intersection_f_b": [],
+  "intersection_f_c": [],
+  "intersection_f_d": [],
+  "intersection_f_e": [],
   "intersection_f_f": [
     "1",
     "2",
@@ -360,9 +268,7 @@
     "9",
     "10"
   ],
-  "unique_c": [
-    "cf_null"
-  ],
+  "unique_c": [],
   "unique_d": [
     ""
   ],

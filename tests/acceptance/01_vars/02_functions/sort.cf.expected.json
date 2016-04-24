@@ -9,9 +9,7 @@
     "100",
     "9"
   ],
-  "IP_sorted_c": [
-    "cf_null"
-  ],
+  "IP_sorted_c": [],
   "IP_sorted_d": [
     "",
     "",
@@ -99,9 +97,7 @@
     "100",
     "9"
   ],
-  "MAC_sorted_c": [
-    "cf_null"
-  ],
+  "MAC_sorted_c": [],
   "MAC_sorted_d": [
     "",
     "",
@@ -229,9 +225,7 @@
     "10",
     "100"
   ],
-  "int_sorted_c": [
-    "cf_null"
-  ],
+  "int_sorted_c": [],
   "int_sorted_d": [
     "",
     "",
@@ -319,9 +313,7 @@
     "100",
     "9"
   ],
-  "lex_sorted_c": [
-    "cf_null"
-  ],
+  "lex_sorted_c": [],
   "lex_sorted_d": [
     "",
     "",
@@ -409,9 +401,7 @@
     "10",
     "100"
   ],
-  "real_sorted_c": [
-    "cf_null"
-  ],
+  "real_sorted_c": [],
   "real_sorted_d": [
     "",
     "",
@@ -506,9 +496,7 @@
     "100",
     "9"
   ],
-  "sorted_c": [
-    "cf_null"
-  ],
+  "sorted_c": [],
   "sorted_d": [
     "",
     "",

@@ -411,8 +411,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
 DataType StringDataType(EvalContext *ctx, const char *string)
 {
-    int islist = false;
-    DataType dtype = CF_DATA_TYPE_NONE;
+    int islist = false;                     /* TODO something is wrong here */
 
 /*-------------------------------------------------------
 What happens if we embed vars in a literal string
@@ -433,25 +432,24 @@ vars:
         Buffer *inner_value = BufferNew();
         if (ExtractScalarReference(inner_value, string, len, true))
         {
+            DataType dtype;
             if (!IsExpandable(BufferData(inner_value)))
             {
                 VarRef *ref = VarRefParse(BufferData(inner_value));
-                if (EvalContextVariableGet(ctx, ref, &dtype))
+                EvalContextVariableGet(ctx, ref, &dtype);
+                VarRefDestroy(ref);
+
+                if (DataTypeToRvalType(dtype) == RVAL_TYPE_LIST)
                 {
-                    if (DataTypeToRvalType(dtype) == RVAL_TYPE_LIST)
+                    if (!islist)
                     {
-                        if (!islist)
-                        {
-                            islist = true;
-                        }
-                        else
-                        {
-                            islist = false;
-                        }
+                        islist = true;
+                    }
+                    else
+                    {
+                        islist = false;
                     }
                 }
-
-                VarRefDestroy(ref);
             }
 
             if (BufferSize(inner_value) == strlen(string))

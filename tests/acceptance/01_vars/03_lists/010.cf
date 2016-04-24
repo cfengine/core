@@ -2,6 +2,8 @@
 #
 # Test list iteration over cf_null special blank character, end of list
 #
+# NOTE: tests conditions have been reversed! cf_null is no longer
+#       treated specially!
 #######################################################
 
 body common control
@@ -17,9 +19,11 @@ bundle agent init
 {
   vars:
 
-      "expected" string => "1
+      "expected" string =>
+"1
 2
-3";
+3
+cf_null";
 
   files:
       "$(G.testfile).expected"

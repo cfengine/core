@@ -29,6 +29,7 @@
 #include <logging.h>
 #include <fncall.h>
 #include <promises.h>                                          /* PromiseID */
+#include <expand.h>                       /* StringAppendAbbreviatedPromise */
 
 
 /****************************************************************************************/

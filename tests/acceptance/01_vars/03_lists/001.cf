@@ -30,7 +30,11 @@ b y
 b z
 c x
 c y
-c z";
+c z
+a cf_null
+b cf_null
+c cf_null
+cf_null";
 
   files:
       "$(G.testfile).$(states)"
@@ -74,12 +78,14 @@ bundle edit_line test_insert
 
   insert_lines:
       "$(one) $(two)";
-      # these should do nothing
+      # cf_null is no longer treated specially, they are regular list elements
+      "$(one) $(nulls)";
+      "$(null)";
+      "$(nulls)";
+      # the following should do nothing
       "$(one) $(two) $(empty)";
       "$(empty) $(one) $(null) $(two)";
       "$(null) $(empty)";
-      "$(one) $(nulls)";
-      "$(nulls)";
       "$(no_values)";
 }
 

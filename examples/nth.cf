@@ -75,7 +75,6 @@ bundle agent test
 #@ R: element #6 of the test list: long string
 #@ R: element #10 of the test list: one
 #@ R: element #11 of the test list: two
-#@ R: element #1000 of the test list: $(access[1000])
 #@ R: element #0 of the test list: 1
 #@ R: The test2 data container is [1,2,3,null]
 #@ R: element #0 of the test2 data container: 1

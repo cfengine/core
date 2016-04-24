@@ -98,18 +98,10 @@
   "maparray_3_4": [
     "xvalue should be xxvalue"
   ],
-  "maparray_4_1": [
-    "cf_null"
-  ],
-  "maparray_4_2": [
-    "cf_null"
-  ],
-  "maparray_4_3": [
-    "cf_null"
-  ],
-  "maparray_4_4": [
-    "cf_null"
-  ],
+  "maparray_4_1": [],
+  "maparray_4_2": [],
+  "maparray_4_3": [],
+  "maparray_4_4": [],
   "maparray_5_1": [
     "key = mykey",
     "key = anotherkey",

@@ -59,6 +59,7 @@ bundle agent store_expected_regex_from_run(wanted, unwanted)
       # Notice that "Date" is optionally matched, due to it being ifdef'ed on
       # some platforms.
       "wanted_regex" string => concat(
+
 '220 test\.com\r
 HELO [^\r\n]+\r
 250 Hello test\.com, pleased to meet you\r
@@ -74,8 +75,13 @@ X-CFEngine: vfqhost="[^"]+";ip-addresses="[^"]+";policyhub="[^"]*";pkhash="MD5=6
 )?From: from@test\.com\r
 To: to@test\.com\r
 \r
-R: ', join('\r
-R: ', "wanted"), '\r
+R: '
+                           , join(
+
+'\r
+R: ', "wanted"),
+
+'\r
 \.\r
 250 Message accepted for delivery\r
 QUIT\r(
@@ -136,11 +142,10 @@ bundle agent compare_cf_execd_mail(test)
       "ok"               and => { "wanted_ok", "unwanted_ok" };
 
   reports:
-      "wanted_regex_list = $(wanted_regex_list)";
-      "unwanted_regex_list = $(unwanted_regex_list)";
-      "wanted_regex = '$(wanted_regex)'";
-      "unwanted_regex = '$(unwanted_regex)'";
-      "output = '$(output)'";
+#      "unwanted_regex_list = $(unwanted_regex_list)";
+#      "wanted_regex = '$(wanted_regex)'";
+#      "unwanted_regex = '$(unwanted_regex)'";
+#      "output = '$(output)'";
     wanted_ok::
       "wanted_ok is set";
     !wanted_ok::

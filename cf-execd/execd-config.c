@@ -69,19 +69,16 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
-
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
-            if (!value)
-            {
-                /* Has already been checked by the parser. */
-                ProgrammingError(
-                    "Unknown attribute in body executor control: %s",
-                    cp->lval);
-                VarRefDestroy(ref);
-                continue;
-            }
-
+            DataType t;
+            const void *value = EvalContextVariableGet(ctx, ref, &t);
             VarRefDestroy(ref);
+
+            if (t == CF_DATA_TYPE_NONE)
+            {
+                ProgrammingError("Unknown attribute '%s' in control body,"
+                                 " should have already been stopped by the parser",
+                                 cp->lval);
+            }
 
             if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval) == 0)
             {

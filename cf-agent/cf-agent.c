@@ -718,9 +718,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_agent");
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            DataType value_type;
+            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
             VarRefDestroy(ref);
-            if (!value)
+
+            /* If var not found, or if it's an empty list. */
+            if (value_type == CF_DATA_TYPE_NONE || value == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in agent control body", cp->lval);
                 continue;
@@ -1130,11 +1133,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         {
         case RVAL_TYPE_SCALAR:
             name = RlistScalarValue(rp);
-            if (strcmp(name, CF_NULL_VALUE) == 0)
-            {
-                continue;
-            }
-
             break;
         case RVAL_TYPE_FNCALL:
             name = RlistFnCallValue(rp)->name;
@@ -1197,10 +1195,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             name = RlistScalarValue(rp);
             args = NULL;
             break;
-        }
-        if (!strcmp(name, CF_NULL_VALUE))
-        {
-            continue;
         }
 
         EvalContextSetBundleArgs(ctx, args);
@@ -1533,10 +1527,11 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     if (strcmp("meta", pp->parent_promise_type->name) == 0 ||
         strcmp("vars", pp->parent_promise_type->name) == 0)
     {
+        Log(LOG_LEVEL_VERBOSE, "V:     Computing value of '%s'", pp->promiser);
+
         result = VerifyVarPromise(ctx, pp, true);
         if (result != PROMISE_RESULT_FAIL)
         {
-            Log(LOG_LEVEL_VERBOSE, "V:     Computing value of \"%s\"", pp->promiser);
             if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
             {
                 LogVariableValue(ctx, pp);
@@ -1908,7 +1903,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     }
 
     // return the worst case for the bundle status
-    
+
     if (delta_pr_notkept > 0)
     {
         return PROMISE_RESULT_FAIL;

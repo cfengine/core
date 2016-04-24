@@ -240,10 +240,14 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
             convert = JsonArrayCreate(RlistLen(value));
             for (const Rlist *rp = value; rp != NULL; rp = rp->next)
             {
-                if (rp->val.type == RVAL_TYPE_SCALAR &&
-                    strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                if (rp->val.type == RVAL_TYPE_SCALAR) /* TODO what if it's an ilist */
                 {
                     JsonArrayAppendString(convert, RlistScalarValue(rp));
+                }
+                else
+                {
+                    ProgrammingError("Ignored Rval of list type: %s",
+                        RvalTypeToString(rp->val.type));
                 }
             }
 
@@ -257,17 +261,23 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
             break;
 
         case RVAL_TYPE_SCALAR:
+        {
+            const char* data = value;
             if (allow_scalars)
             {
-                const char* data = value;
-                if (strcmp(data, CF_NULL_VALUE) != 0)
-                {
-                    convert = JsonStringCreate(data);
-                    break;
-                }
+                convert = JsonStringCreate(value);
+                *allocated = true;
+                break;
             }
-            *allocated = true;
-
+            else
+            {
+                /* regarray,mergedata,maparray,mapdata only care for arrays
+                 * and ignore strings, so they go through this path. */
+                Log(LOG_LEVEL_DEBUG,
+                    "Skipping scalar '%s' because 'allow_scalars' is false",
+                    data);
+            }
+        }
         default:
             *allocated = true;
 
@@ -316,8 +326,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                             JsonElement *array = JsonArrayCreate(10);
                             for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
                             {
-                                if (rp->val.type == RVAL_TYPE_SCALAR &&
-                                    strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                                if (rp->val.type == RVAL_TYPE_SCALAR)
                                 {
                                     JsonArrayAppendString(array, RlistScalarValue(rp));
                                 }
@@ -1240,7 +1249,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
         {
             VarRef *ref = VarRefParseFromBundle("tags", bp);
             VarRefSetMeta(ref, true);
-            DataType type = CF_DATA_TYPE_NONE;
+            DataType type;
             const void *bundle_tags = EvalContextVariableGet(ctx, ref, &type);
             VarRefDestroy(ref);
 
@@ -1251,9 +1260,9 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
                 // we declare it found if no tags were requested
                 found = true;
             }
-            else if (bundle_tags != NULL)
+            /* was the variable "tags" found? */
+            else if (type != CF_DATA_TYPE_NONE)
             {
-
                 switch (DataTypeToRvalType(type))
                 {
                 case RVAL_TYPE_SCALAR:
@@ -1388,11 +1397,6 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
 
         Log(LOG_LEVEL_DEBUG, "Reading packages (%d) for package module [%s]",
                 database, pm_name);
-
-        if (StringSafeEqual(pm_name, "cf_null"))
-        {
-            continue;
-        }
 
         CF_DB *db_cached;
         if (!OpenSubDB(&db_cached, database, pm_name))
@@ -2256,7 +2260,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
     if (RlistValueIsType(finalargs, RVAL_TYPE_SCALAR))
     {
         VarRef *ref = ResolveAndQualifyVarName(fp, name_str);
-        DataType type = CF_DATA_TYPE_NONE;
+        DataType type;
         EvalContextVariableGet(ctx, ref, &type);
 
         if (type != CF_DATA_TYPE_CONTAINER)
@@ -2953,11 +2957,6 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     JsonElement *returnjson = NULL;
 
-    if (returnlist == NULL && !mapdatamode)
-    {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-    }
-
     // this is mapdata()
     if (mapdatamode)
     {
@@ -3243,7 +3242,8 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
             if (scope_obj != NULL)
             {
                 char *lval_key = VarRefToString(var->ref, false);
-                if (strchr(lval_key, '#') == NULL) // don't collect mangled refs
+                // don't collect mangled refs
+                if (strchr(lval_key, CF_MANGLED_SCOPE) == NULL)
                 {
                     JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
                 }
@@ -3343,16 +3343,15 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     VarRef *ref = VarRefParse(naked);
     DataType value_type;
     const Rlist *hostnameip = EvalContextVariableGet(ctx, ref, &value_type);
-    if (!hostnameip)
+    if (value_type == CF_DATA_TYPE_NONE)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Function selectservers was promised a list called '%s' but this was not found from context '%s.%s'",
-              listvar, ref->scope, naked);
+            listvar, ref->scope, naked);
         VarRefDestroy(ref);
         free(array_lval);
         return FnFailure();
     }
-
     VarRefDestroy(ref);
 
     if (DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
@@ -3965,34 +3964,27 @@ static FnCallResult FnCallFilter(EvalContext *ctx, ARG_UNUSED const Policy *poli
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const FnCall *fp, const char *lval_str, DataType *datatype_out)
 {
     VarRef *ref = VarRefParse(lval_str);
-
-    DataType value_type = CF_DATA_TYPE_NONE;
+    DataType value_type;
     const Rlist *value = EvalContextVariableGet(ctx, ref, &value_type);
-    if (!value)
+    VarRefDestroy(ref);
+
+    /* Error 1: variable not found. */
+    if (value_type == CF_DATA_TYPE_NONE)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Could not resolve expected list variable '%s' in function '%s'",
-            lval_str,
-            fp->name);
-        VarRefDestroy(ref);
-        if (datatype_out)
-        {
-            *datatype_out = CF_DATA_TYPE_NONE;
-        }
-        return NULL;
+            lval_str, fp->name);
+        assert(value == NULL);
     }
-
-    VarRefDestroy(ref);
-
-    if (DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
+    /* Error 2: variable is not a list. */
+    else if (DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_ERR, "Function '%s' expected a list variable reference, got variable of type '%s'",
+        Log(LOG_LEVEL_ERR, "Function '%s' expected a list variable,"
+            " got variable of type '%s'",
             fp->name, DataTypeToString(value_type));
-        if (datatype_out)
-        {
-            *datatype_out = CF_DATA_TYPE_NONE;
-        }
-        return NULL;
+
+        value      = NULL;
+        value_type = CF_DATA_TYPE_NONE;
     }
 
     if (datatype_out)
@@ -4446,7 +4438,7 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
     const char* const varname = RlistScalarValue(finalargs);
 
     VarRef* const ref = VarRefParse(varname);
-    DataType type = CF_DATA_TYPE_NONE;
+    DataType type;
     const void *value = EvalContextVariableGet(ctx, ref, &type);
     VarRefDestroy(ref);
 
@@ -4782,7 +4774,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
                         const char* const varname = data;
                         VarRef *ref = VarRefParse(varname);
-                        DataType type = CF_DATA_TYPE_NONE;
+                        DataType type;
                         const void *value = EvalContextVariableGet(ctx, ref, &type);
                         VarRefDestroy(ref);
 
@@ -4805,14 +4797,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                                 for (const Rlist *rp = list; rp; rp = rp->next)
                                 {
                                     char *escaped = EscapeCharCopy(RlistScalarValue(rp), '"', '\\');
-                                    if (0 == strcmp(escaped, CF_NULL_VALUE))
-                                    {
-                                        WriterWrite(w, "--empty-list--");
-                                    }
-                                    else
-                                    {
-                                        WriterWriteF(w, "\"%s\"", escaped);
-                                    }
+                                    WriterWriteF(w, "\"%s\"", escaped);
                                     free(escaped);
 
                                     if (rp != NULL && rp->next != NULL)
@@ -5036,7 +5021,12 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, ARG_UNUSED const Policy *
     if (lval)
     {
         VarRef *ref = VarRefParse(lval);
-        found = EvalContextVariableGet(ctx, ref, NULL) != NULL;
+        DataType value_type;
+        EvalContextVariableGet(ctx, ref, &value_type);
+        if (value_type != CF_DATA_TYPE_NONE)
+        {
+            found = true;
+        }
         VarRefDestroy(ref);
     }
 
@@ -6751,20 +6741,21 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED const Policy *
     }
 
     VarRef *ref = VarRefParse(naked);
-    DataType input_list_type = CF_DATA_TYPE_NONE;
+    DataType input_list_type;
     const Rlist *input_list = EvalContextVariableGet(ctx, ref, &input_list_type);
-    if (!input_list)
+    VarRefDestroy(ref);
+    if (input_list_type == CF_DATA_TYPE_NONE)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found", listvar);
-        VarRefDestroy(ref);
+        Log(LOG_LEVEL_VERBOSE,
+            "Function filesexist was promised a list called"
+            " '%s' but this was not found", listvar);
         return FnFailure();
     }
-
-    VarRefDestroy(ref);
-
-    if (DataTypeToRvalType(input_list_type) != RVAL_TYPE_LIST)
+    else if (DataTypeToRvalType(input_list_type) != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this variable is not a list", listvar);
+        Log(LOG_LEVEL_VERBOSE,
+            "Function filesexist was promised a list called"
+            " '%s' but this variable is not a list", listvar);
         return FnFailure();
     }
 

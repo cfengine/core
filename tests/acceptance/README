@@ -79,12 +79,20 @@ or directories to 'testall':
 Creating/editing test cases
 ------------------------------------------------------------------------------
 
-Each test should be 100% standalone, and must contain at least 1 of the main
-bundles:
+Each test should be 100% standalone. If you include "default.cf.sub" in
+inputs, then the bundlesequence is automatically defined, and your file
+must contain at least 1 of the main bundles:
 
 * init - setup, create initial and hoped-for final states
 * test - the actual test code
 * check - the comparison of expected and actual results
+* destroy - anything you want to do at the end like killing processes etc
+
+However if the test is really simple you might want to skip including
+"default.cf.sub" in inputs. Then you should define your own
+bundlesequence, e.g. {"test","check"}. It's recommended to avoid
+including "default.cf.sub" when not needed, since the test will run much
+faster.
 
 Look in default.cf for some standard check bundles (for example, to compare
 files when testing file edits, or for cleaning up temporary files).
@@ -291,9 +299,11 @@ Example Test Skeleton
 ------------------------------------------------------------------------------
 body common control
 {
+      # Feel free to avoid including "default.cf.sub" and define your
+      # own bundlesequence for simple tests
+
       inputs => { "../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
 }
 
 #######################################################

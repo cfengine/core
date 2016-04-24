@@ -56,14 +56,14 @@ bundle agent test
       # "expected_j" string => "1:2:true:false";
       # "expected_k" string => "";
       # "expected_l" string => "100:200";
-      # "expected_m" string => "";
-      # "expected_n" string => "a:b:c";
+      # "expected_m" string => "cf_null";
+      # "expected_n" string => "a:b:c:cf_null";
       # "expected_o" string => "b:c:a";
-      # "expected_p" string => "";
+      # "expected_p" string => "cf_null";
       # "expected_q" string => ":::";
       # "expected_r" string => ":";
-      # "expected_s" string => ":";
-      # "expected_t" string => "a:b:c:a:b:c::";
+      # "expected_s" string => "::cf_null";
+      # "expected_t" string => "a:b:c:cf_null:cf_null:a:b:c:cf_null::";
   vars:
       "lists" slist => { @(init.lists) };
       "join_$(lists)" string => join(":", "init.$(lists)");

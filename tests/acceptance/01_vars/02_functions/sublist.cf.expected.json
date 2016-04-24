@@ -11,9 +11,7 @@
     "two",
     "three"
   ],
-  "test_head0": [
-    "cf_null"
-  ],
+  "test_head0": [],
   "test_head1": [
     "1"
   ],
@@ -34,9 +32,7 @@
     "6",
     "7"
   ],
-  "test_tail0": [
-    "cf_null"
-  ],
+  "test_tail0": [],
   "test_tail1": [
     "three"
   ],

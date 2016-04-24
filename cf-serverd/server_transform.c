@@ -276,13 +276,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             const void *value = EvalContextVariableGet(ctx, ref, NULL);
             VarRefDestroy(ref);
 
-            if (!value)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Unknown lval '%s' in server control body",
-                    cp->lval);
-            }
-            else if (IsControlBody(SERVER_CONTROL_SERVER_FACILITY))
+            if (IsControlBody(SERVER_CONTROL_SERVER_FACILITY))
             {
                 SetFacility(value);
             }
@@ -414,7 +408,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
             else if (IsControlBody(SERVER_CONTROL_TRUST_KEYS_FROM))
             {
-                Log(LOG_LEVEL_VERBOSE, "Setting trust keys from ...");
+                Log(LOG_LEVEL_VERBOSE, "Setting 'trustkeysfrom' ...");
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
@@ -426,7 +420,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
             else if (IsControlBody(SERVER_CONTROL_ALLOWLEGACYCONNECTS))
             {
-                Log(LOG_LEVEL_VERBOSE, "Setting allowing legacy connections from ...");
+                Log(LOG_LEVEL_VERBOSE, "Setting 'allowlegacyconnects' ...");
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
@@ -647,9 +641,9 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
 
     if (strcmp(pp->parent_promise_type->name, "vars") == 0)
     {
-        return VerifyVarPromise(ctx, pp, NULL);
+        return VerifyVarPromise(ctx, pp, false);
     }
-    
+
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);

@@ -29,7 +29,7 @@
 #include <syntax.h>
 #include <item_lib.h>
 #include <ornaments.h>
-#include <expand.h>
+#include <expand.h>                           /* BufferAppendAbbreviatedStr */
 #include <matching.h>
 #include <string_lib.h>
 #include <misc_lib.h>
@@ -49,6 +49,7 @@
 #include <printsize.h>
 #include <regex.h>
 #include <map.h>
+#include <conversion.h>                               /* DataTypeIsIterable */
 
 
 /**
@@ -190,11 +191,11 @@ void AddPackageModuleToContext(const EvalContext *ctx, PackageModuleBody *pm)
 PackageModuleBody *GetPackageModuleFromContext(const EvalContext *ctx,
         const char *name)
 {
-    if (name == NULL || StringSafeEqual("cf_null", name))
+    if (name == NULL)
     {
         return NULL;
     }
-    
+
     for (int i = 0;
          i < SeqLength(ctx->package_promise_context->package_modules_bodies);
          i++)
@@ -1241,6 +1242,8 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
 
     assert(!frame->path);
     frame->path = EvalContextStackPath(ctx);
+
+    Log(LOG_LEVEL_DEBUG, "PUSHED FRAME (type %d)", frame->type);
 }
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
@@ -1441,6 +1444,8 @@ void EvalContextStackPopFrame(EvalContext *ctx)
             LoggingPrivSetLevels(CalculateLogLevel(pp), CalculateReportLevel(pp));
         }
     }
+
+    Log(LOG_LEVEL_DEBUG, "POPPED FRAME (type %d)", last_frame_type);
 }
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
@@ -1947,11 +1952,10 @@ bool EvalContextVariablePut(EvalContext *ctx,
     assert(type != CF_DATA_TYPE_NONE);
     assert(ref);
     assert(ref->lval);
-    assert(value);
-    if (!value)
-    {
-        return false;
-    }
+
+    /* The only possible way to get a NULL value is if it's an empty linked
+     * list (Rlist usually). */
+    assert(value != NULL || DataTypeIsIterable(type));
 
     if (strlen(ref->lval) > CF_MAXVARSIZE)
     {
@@ -2007,7 +2011,7 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
         {
             return var;
         }
-        else if (ref->num_indices > 0)
+        else if (ref->num_indices > 0)                 /* why? TODO comment */
         {
             VarRef *base_ref = VarRefCopyIndexless(ref);
             var = VariableTableGet(table, base_ref);
@@ -2023,14 +2027,23 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     return NULL;
 }
 
+/**
+ *
+ * @NOTE NULL is a valid return value if #type_out is of list type and the
+ *       list is empty. To check if the variable didn't resolve, check if
+ *       #type_out was set to CF_DATA_TYPE_NONE.
+ */
 const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out)
 {
     Variable *var = VariableResolve(ctx, ref);
     if (var)
     {
-        if (var->ref->num_indices == 0 && ref->num_indices > 0 && var->type == CF_DATA_TYPE_CONTAINER)
+        if (var->ref->num_indices == 0    &&
+                 ref->num_indices > 0     &&
+            var->type == CF_DATA_TYPE_CONTAINER)
         {
-            JsonElement *child = JsonSelect(RvalContainerValue(var->rval), ref->num_indices, ref->indices);
+            JsonElement *child = JsonSelect(RvalContainerValue(var->rval),
+                                            ref->num_indices, ref->indices);
             if (child)
             {
                 if (type_out)
@@ -2052,12 +2065,13 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
     else if (!VarRefIsQualified(ref))
     {
         /*
-         * FALLBACK: Because VariableResolve currently does not walk the stack (rather, it looks at
-         * only the top frame), we do an explicit retry here to qualify an unqualified reference to
-         * the current bundle.
+         * FALLBACK: Because VariableResolve currently does not walk the stack
+         * (rather, it looks at only the top frame), we do an explicit retry
+         * here to qualify an unqualified reference to the current bundle.
          *
-         * This is overly complicated, and will go away as soon as VariableResolve can walk the stack
-         * (which is pending rework in variable iteration).
+         * This is overly complicated, and will go away as soon as
+         * VariableResolve can walk the stack (which is pending rework in
+         * variable iteration).
          */
         const Bundle *bp = EvalContextStackCurrentBundle(ctx);
         if (bp)

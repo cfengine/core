@@ -55,12 +55,14 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
 {
     assert(param == NULL);
 
+    Log(LOG_LEVEL_DEBUG, "Evaluating classes promise: %s", pp->promiser);
+
     Attributes a = GetClassContextAttributes(ctx, pp);
 
     if (!StringMatchFull("[a-zA-Z0-9_]+", pp->promiser))
     {
         Log(LOG_LEVEL_VERBOSE, "Class identifier '%s' contains illegal characters - canonifying", pp->promiser);
-        xsnprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
+        CanonifyNameInPlace(pp->promiser);
     }
 
     if (a.context.nconstraints > 1)
@@ -69,7 +71,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         return PROMISE_RESULT_FAIL;
     }
 
-    if (a.context.expression == NULL||
+    if (a.context.expression == NULL ||
         EvalClassExpression(ctx, a.context.expression, pp))
     {
         if (a.context.expression == NULL)
@@ -85,19 +87,15 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         }
         else
         {
-            char *tags = NULL;
+            Buffer *tag_buffer = BufferNew();
+            BufferAppendString(tag_buffer, "source=promise");
+
+            for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "meta", pp); rp; rp = rp->next)
             {
-                Buffer *tag_buffer = BufferNew();
-                BufferAppendString(tag_buffer, "source=promise");
-
-                for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "meta", pp); rp; rp = rp->next)
-                {
-                    BufferAppendChar(tag_buffer, ',');
-                    BufferAppendString(tag_buffer, RlistScalarValue(rp));
-                }
-
-                tags = BufferClose(tag_buffer);
+                BufferAppendChar(tag_buffer, ',');
+                BufferAppendString(tag_buffer, RlistScalarValue(rp));
             }
+            char *tags = BufferClose(tag_buffer);
 
             if (/* Persistent classes are always global: */
                 a.context.persistent > 0 ||
@@ -105,21 +103,25 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                 a.context.scope == CONTEXT_SCOPE_NAMESPACE ||
                 /* If there is no explicit scope, common bundles define global
                  * classes, other bundles define local classes: */
-                    (a.context.scope == CONTEXT_SCOPE_NONE &&
-                     strcmp(PromiseGetBundle(pp)->type, "common") == 0))
+                (a.context.scope == CONTEXT_SCOPE_NONE &&
+                 strcmp(PromiseGetBundle(pp)->type, "common") == 0))
             {
-                Log(LOG_LEVEL_VERBOSE, "C:     +  Global class: %s ", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "C:     +  Global class: %s",
+                    pp->promiser);
                 EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_NAMESPACE, tags);
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "C:     +  Private class: %s ", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "C:     +  Private class: %s",
+                    pp->promiser);
                 EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_BUNDLE, tags);
             }
 
             if (a.context.persistent > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "C:     +  Persistent class: '%s'. (%d minutes)", pp->promiser, a.context.persistent);
+                Log(LOG_LEVEL_VERBOSE,
+                    "C:     +  Persistent class: '%s' (%d minutes)",
+                    pp->promiser, a.context.persistent);
                 EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent,
                                               CONTEXT_STATE_POLICY_RESET, tags);
             }
@@ -135,15 +137,9 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
 
 static bool SelectClass(EvalContext *ctx, const Rlist *list, const Promise *pp)
 {
-    int count = 0;
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        count++;
-    }
+    int count = RlistLen(list);
 
-    /* At least in some cases we will have cf_null once list is empty. */
-    if (count == 0 ||
-        (count == 1 && strcmp(RlistScalarValue(list), "cf_null") == 0))
+    if (count == 0)
     {
         Log(LOG_LEVEL_ERR, "No classes to select on RHS");
         PromiseRef(LOG_LEVEL_ERR, pp);

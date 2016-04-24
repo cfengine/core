@@ -200,6 +200,7 @@ bool MapHasKey(const Map *map, const void *key)
     return MapGetRaw(map, key) != NULL;
 }
 
+/* TODO what if the element is found and has a NULL value? Is it possible? If not we should assert() against it in both insertions and retrievals. */
 void *MapGet(Map *map, const void *key)
 {
     assert(map != NULL);

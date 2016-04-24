@@ -175,7 +175,8 @@ check_PROGRAMS = \
 	addr_lib_test \
 	libcompat_test \
 	split_process_line_test \
-        new_packages_promise_test
+	new_packages_promise_test \
+	iteration_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -425,6 +426,8 @@ key_test_SOURCES = key_test.c
 key_test_LDADD = ../../libpromises/libpromises.la ../../libutils/libutils.la libtest.la
 
 strlist_test_SOURCES = strlist_test.c ../../cf-serverd/strlist.c ../../cf-serverd/strlist.h
+
+iteration_test_SOURCES = iteration_test.c
 
 libcompat_test_CPPFLAGS = -I$(top_srcdir)/libcompat
 libcompat_test_SOURCES = libcompat_test.c

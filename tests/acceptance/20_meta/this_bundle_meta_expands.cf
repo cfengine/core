@@ -26,7 +26,7 @@ bundle agent check
       meta => { "redmine7803" };
 
     "string" string => "value";
-    "list" slist => { "element1", "element2" }; 
+    "list" slist => { "element1", "element2" };
 
   classes:
       "can_deref_this_bundle_meta_string"

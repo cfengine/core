@@ -25,16 +25,17 @@
 #ifndef CFENGINE_EXPAND_H
 #define CFENGINE_EXPAND_H
 
+
 #include <cf3.defs.h>
 #include <generic_agent.h>
 #include <actuator.h>
+
 
 PromiseResult CommonEvalPromise(EvalContext *ctx, const Promise *pp, void *param);
 
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers);
 
 bool IsExpandable(const char *str);
 
@@ -73,5 +74,12 @@ void GetNaked(char *s1, const char *s2);
 bool IsVarList(const char *var);
 
 ProtocolVersion ProtocolVersionParse(const char *s);
+
+void BufferAppendPromiseStr(Buffer *buf, const char *str);
+void BufferAppendAbbreviatedStr(Buffer *buffer, const char *str, const int N);
+
+bool StringAppendPromise(char *dst, const char *str, size_t n);
+bool StringAppendAbbreviatedPromise(char *dst, const char *str, size_t n, const size_t max_fragment);
+
 
 #endif

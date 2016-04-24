@@ -19,11 +19,12 @@ bundle agent test
 {
   meta:
     "description"
-      string => "Test that it is possible to use this.promiser in ifvarclass.";
+      string => "Test that it is possible to use this.promiser in ifvarclass.",
+      meta => { "redmine#7880" };
 
-    "test_soft_fail"
+  "test_soft_fail"
       string => "any",
-      meta => { "redmine7880" };
+      meta => { "redmine#7880" };
 
   files:
     # I should be able to use this.promiser to check if the file is a plain

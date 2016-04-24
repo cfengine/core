@@ -18,7 +18,7 @@ body common control
 
 bundle agent init
 {
-  # Remove him first, should he already be present.
+  # Create him first with some unwanted attributes
   users:
     "johndoe"
       policy => "present",

@@ -148,8 +148,8 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
             GetNaked(naked, RlistScalarValue(rpr));
 
-            DataType value_type = CF_DATA_TYPE_NONE;
-            const void *value = NULL;
+            DataType value_type;
+            const void *value;
             if (pbp != NULL)
             {
                 VarRef *ref = VarRefParseFromBundle(naked, pbp);

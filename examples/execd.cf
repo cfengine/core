@@ -22,7 +22,7 @@
 
 body common control
 {
-      bundlesequence => { "cf_null" };
+      bundlesequence => { };
 }
 
 body executor control

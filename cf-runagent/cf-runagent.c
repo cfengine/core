@@ -566,10 +566,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_runagent");
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            DataType value_type;
+            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
-            if (!value)
+            /* If var not found, or if it's an empty list. */
+            if (value_type == CF_DATA_TYPE_NONE || value == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in runagent control body", cp->lval);
                 continue;

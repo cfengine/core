@@ -141,9 +141,9 @@ bundle agent appgroups(name, g)
 #@ R: appgroups: Host1 is assigned App1
 #@ R: appgroups: Host1 is assigned App2
 #@ R: appgroups: all groups for Host1 = GrpA
-#@ R: appgroups: all groups for Host1 = GrpX
 #@ R: appgroups: all groups for Host1 = GrpB
 #@ R: appgroups: all groups for Host1 = GrpC
+#@ R: appgroups: all groups for Host1 = GrpX
 #@ R: appgroups: all groups for Host1 = GrpY
 #@ R: appgroups: all groups for Host1 = GrpZ
 #@ R: appgroups: space-separated groups for Host1 = GrpA GrpB GrpC GrpX GrpY GrpZ

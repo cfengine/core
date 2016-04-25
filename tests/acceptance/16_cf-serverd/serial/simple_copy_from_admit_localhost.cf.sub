@@ -41,8 +41,6 @@ body copy_from copy_file(port, protocol_version)
       copy_backup => "false";
 
       portnumber       => "$(port)";
-      protocol_version => "$(protocol_version)";
-
       #encrypt     => "true";
       #verify      => "true";
       #purge       => "false";

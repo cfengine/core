@@ -12,15 +12,13 @@ body common control
 body server control
 
 {
-      port => "9891";
+      port => "9876";
 
       allowconnects         => { "127.0.0.1" , "::1" };
       allowallconnects      => { "127.0.0.1" , "::1" };
       trustkeysfrom         => { "127.0.0.1" , "::1" };
 
-      # Absence of this option *denies* access
-      # to classic protocol connections
-      #allowlegacyconnects   => { ... };
+      allowlegacyconnects   => { "127.0.0.1" , "::1" };
 }
 
 #########################################################

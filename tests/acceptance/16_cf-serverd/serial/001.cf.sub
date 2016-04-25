@@ -34,7 +34,6 @@ body copy_from copy_src_file(protocol_version)
       servers     => { "127.0.0.1" };
       compare     => "mtime";
       copy_backup => "false";
-      protocol_version => "$(protocol_version)";
 
       portnumber => "9876"; # localhost_open
 

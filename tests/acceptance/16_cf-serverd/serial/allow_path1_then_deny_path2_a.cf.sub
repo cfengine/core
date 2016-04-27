@@ -20,7 +20,6 @@ body copy_from copy_from_port(port, protocol_version)
 
 {
       portnumber       => "$(port)";
-      protocol_version => "$(protocol_version)";
 
       # testroot dir is admitted on the server, while G.testdir is denied
       source      => "$(G.testroot)/source_file";

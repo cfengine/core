@@ -36,8 +36,6 @@ bundle agent test
 
 body copy_from copy_src_file(protocol_version)
 {
-      protocol_version => "$(protocol_version)";
-
       source      => "$(G.testdir)/source_file";
       servers     => { "127.0.0.1" };
       compare     => "digest";

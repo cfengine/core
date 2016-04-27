@@ -1100,14 +1100,20 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 
     Banner("Begin policy/promise evaluation");
 
-    if (config->bundlesequence)
+    if (config->bundlesequence != NULL)
     {
         Log(LOG_LEVEL_INFO, "Using command line specified bundlesequence");
-        bundlesequence = config->bundlesequence;
+        bundlesequence = RlistCopy(config->bundlesequence);
     }
-    else if (!(bundlesequence = (Rlist *)EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE)))
+    else
     {
-        RlistAppendScalar(&bundlesequence, "main");
+        bundlesequence = RlistCopy((Rlist *) EvalContextVariableControlCommonGet(
+                                       ctx, COMMON_CONTROL_BUNDLESEQUENCE));
+
+        if (bundlesequence == NULL)
+        {
+            RlistAppendScalar(&bundlesequence, "main");
+        }
     }
 
     bool ok = true;
@@ -1220,6 +1226,8 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             }
         }
     }
+
+    RlistDestroy(bundlesequence);
 }
 
 static void AllClassesReport(const EvalContext *ctx)

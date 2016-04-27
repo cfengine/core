@@ -361,9 +361,9 @@ static void *HandleConnection(void *c)
     else if (protocol_version < CF_PROTOCOL_LATEST &&
              protocol_version > CF_PROTOCOL_UNDEFINED)
     {
-        /* This connection is legacy protocol. Do we allow it? */
-        if (SV.allowlegacyconnects != NULL &&           /* By default we do */
-            !IsMatchItemIn(SV.allowlegacyconnects, conn->ipaddr))
+        /* This connection is legacy protocol.
+         * We are not allowing it by default. */
+        if (!IsMatchItemIn(SV.allowlegacyconnects, conn->ipaddr))
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");

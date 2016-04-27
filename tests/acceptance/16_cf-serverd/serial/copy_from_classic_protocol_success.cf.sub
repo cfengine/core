@@ -45,6 +45,6 @@ bundle agent check
 
   reports:
 
-    (copy1_repaired.copy2_repaired).(exists1.exists2).(!copy1_failed.!copy2_failed)::
+    (copy1_repaired.!copy2_repaired).(exists1.!exists2).(!copy1_failed.copy2_failed)::
       "$(fn[1]) Pass";
 }

@@ -1,8 +1,283 @@
 3.9.0:
+	New features/additions:
+	- Add optional interface parameter to iprange() to match only one interface.
+	- Allow '=' in symbolic modes (Redmine #7826)
+	- Add: FreeBSD ports package module
+	- New package module for FreeBSD pkg package manager.
+	- Add support for adding/removing fifos in policy
+	- Add Linux parsing of /proc/net/ data.
+	  - sys.inet
+	  - sys.inet6
+	  - sys.interface_data
+	  - Data is returned as a data container.
+	  - See documentation for more details. (Jira CFE-1991)
+	- sys.ip2iface: new reverse mapping variable from IP to interface name
+	- Namespaced classes can now be specified on the command line.
+	- namespaces can now be passed to cf-runagent -D and --remote-bundles
+	  (Redmine #7856)
+	- Add 'cf-full' and 'json-full' to cf-promises '-p' option.
+	  They generate output based on the entire policy. The existing 'cf'
+	  already behaved this way, and it has now been changed to generate
+	  output only for a single file, which the existing 'json' option
+	  already does.
+	- New language functions: processexists() and findprocesses()
+	  (Redmine #7633)
+	- Implement new regex_replace() function. (Redmine #7346)
+	- Add log rotation policy for state/classes.jsonl log. (Redmine #7951)
+	- Added collect_vars utility bundle to stdlib
+	- Intoduce report_class_log attribute to body agent common.
+	  (Redmine #7951)
+	- Add standard_services service_method allowing for explicit usage
+	- cf-promises --show-vars can now show JSON variables.
+	- Add `json_pipe` mode to `mapdata()`, which allows piping a
+	  JSON container to an external program for manipulation and receiving
+	  JSON back. The `jq` tool is a good example where this mode can be
+	  useful. A corresponding `$(def.jq)` variable has also been added with
+	  a default path to this tool. See documentation for `mapdata()` for
+	  more information and examples. (Jira CFE-2071)
+	- behaviour change: "true" is always defined and "false" is never defined in a context expression.
+	- Add: nimclient package module for AIX
+	  This module provides basic functionality for using nimclient as a means
+	  to ensure packages are either present or absent. It does not support
+	  listing package updates available or provide any special caching.
+	- Add callstack_callers() and callstack_promisers() functions.
+	- Log variable definitions in debug output. (Redmine #7137)
+	- Add: Memory information to host info report (Jira CFE-1177)
+	- In Mustache templates, one can now use `{{#-top-}}` and
+	  `{{/-top-}}` tags to iterate over the top level element in a
+	  container. (Redmine #6545)
+	- Add network_connections() function that parses /proc/net
+	- Provide new -w argument to override the workdir for testing
+	- New feature: Emails sent by cf-execd can be filtered to get
+	  rid of emails for unwanted log messages. The attributes
+	  `mailfilter_include` and `mailfilter_exclude` in `body executor
+	  control` control what to include. See documentation for `cf-execd` for
+	  more information. (Jira CFE-2283)
+	- Add: file_make_mustache bundle to render mustache templates
+	- Add '-n' flag to cf-key to avoid host name lookups.
+	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor multiple -D, -N and -s arguments
+	  (Redmine #7191)
+	- Add "canonify" mode to mapdata().
+	- Add: printfile bodies to stdlib
+	- Add: New `results` classes body [] (Redmine #7418, #7481)
+	- Implement cf-runagent --remote-bundles and cf-serverd "bundle" access promise.
+	  (Redmine #7581)
+	- Add commands promise arglist attribute, augmenting args attribute.
+	- It's now possible to reference variables in inline JSON,
+	  for example: `mergedata('[ thing, { "mykey": otherthing[123] } ]')`.
+	  `thing` and `otherthing[123]` will be resolved as variables, since
+	  they are unquoted. See the documentation for more details.
+	  (Redmine #7871)
+	- Allow inline JSON to be used in the following function
+	  calls:
+	  - data_expand()
+	  - difference()
+	  - every()
+	  - filter()
+	  - format()
+	  - getindices()
+	  - getvalues()
+	  - grep()
+	  - intersection()
+	  - join()
+	  - length()
+	  - makerule()
+	  - mapdata()
+	  - maplist()
+	  - mean()
+	  - mergedata()
+	  - none()
+	  - nth()
+	  - parsejson()
+	  - product()
+	  - regarray()
+	  - reglist()
+	  - reverse()
+	  - shuffle()
+	  - some()
+	  - sort()
+	  - storejson()
+	  - string_mustache()
+	  - sublist()
+	  - sum()
+	  - unique()
+	  - url_get()
+	  - variance()
+	  For example: `mergedata('[ "thing", { "mykey": "myvalue" } ]')`
+	  See the documentation for more details. (Jira CFE-2253)
+
 	Changes:
 	- Change: classesmatching(): order of classes changed
 	- Change: getindices(), getvalues(), variablesmatching(), maparray():
 	  order of variables returned has changed
+	- Change: set_quoted_values uses bundle scoped classes
+	- Change: set_config_values uses bundle scoped classes
+	- Change: set_variable_values uses bundle scoped classes
+	- Change: set_config_values_matching uses bundle scoped classes
+	- Change: manage_variable_values_ini uses bundle scoped classes
+	- Change: set_line_based should use bundle scoped classes
+	  (Jira CFE-1959)
+	- getvalues() will now return a list also for data containers,
+	  and will descend recursively into the containers. (Redmine #7116)
+	- Change: Improve git drop user support
+	- Use new package promise as default package promise
+	  implementation. (Jira CFE-2332)
+	- Don't follow symbolic links when copying extended attributes.
+	- When a bodydefault:<promise_type>_<body_type> body is
+	  defined, it will be used by all promises of type <promise_type>
+	  unless another body is explicitly used.
+	- cf-serverd no longer appends "-I -Dcfruncommand" to
+	             cfruncommand, this has to be done manually in masterfiles
+	             body server control. (Redmine #7732)
+	- eval() function arguments `mode` and `options` are now
+	  optional.
+	- sort() function argument `mode` is now optional.
+	- Change: returnszero() no longer outputs the output of a command.
+	  The output can be seen by enabling info mode (-I).
+	- cfruncommand is not executed under shell. (Redmine #7409)
+	- Remove: Apache CGI module
+	- Change: Make maxbytes arg of readjson() and readyaml() optional
+	- Classes matching agent control's abortclasses are
+	  now printed before exit, even if they are defined in common bundles.
+	  Previously the regex (in abortclasses) that matched the class was
+	  printed if the class was defined in a common bundle, but the class
+	  itself was printed if it was defined in an agent bundle. With this
+	  change, the defined class that caused the abort is always printed.
+	- Remove: Support for email settings from augments_file (Redmine #7682)
+	- Change: set_variable_values_ini uses bundle scoped classes
+	- findfiles() now skips relative paths. (Redmine #7981)
+	- Clients connections using non TLS protocol are rejected
+	  by default. . (Jira CFE-2339)
+	- Change: Policy files specified in the "inputs" section of
+	  def.json will no longer be auto-loaded. One has to refer to the
+	  which are using the "inputs" field inside def.json. (Redmine #7961)
+	- Change: Seperate binary details from policy update (Redmine #7662)
+	- Add guard for binary upgrade during bootstrap (Redmine #7861)
+	- Change: Modernize pkg module and package_method
+	- Remove: Userdir apache module
+	- filestat(path, "linktarget") now follows non-absolute links and returns full path of target.
+	  This introduces a change in behaviour. Here is an example:
+	  $ ls -l /bin/sh
+	  lrwxrwxrwx 1 root root 4 Jun  4  2015 /bin/sh -> dash
+	  Previously the filestat function would return "dash", and would also log
+	  an error that the file can not be read. Now it will return "/bin/dash"
+	  (or the final destination if it happens that /bin/dash is also a
+	  symlink).
+	  You can still get the previous behaviour by using
+	  filestat(path, "linktarget_shallow"). (Redmine #7404)
+	- Define (bootstrap|failsafe)_mode during update.cf when triggerd from failsafe.cf
+	  (Redmine #7861)
+	- Behavior change: The promise string of a `processes`
+	  promise now matches just the command line of each process instead of
+	  the line that is output by ps. This was done to reduce fragmentation
+	  between platforms, since ps is a very nonstandardized tool.
+	  (Jira CFE-2161)
+	- Allowed namespace names made more strict, to disallow
+	  namespaces that cannot be reached. (Redmine #7903)
+	- Behavior change: When using readintlist(), readreallist()
+	  or readstringlist(), parsing an empty file will no longer result in a
+	  failed function call, but instead an empty list. Failure to open the
+	  file will still result in a failed function call.
+
+	Bug fixes:
+	- Upgrade CFEngine dependencies to the following versions:
+	  - Curl     7.48.0
+	  - libxml2  2.9.3
+	  - LMDB     0.9.18
+	  - OpenLDAP 2.4.44
+	  - OpenSSL  1.0.2g
+	  - PCRE     8.38
+	  (Jira ENT-2720)
+	- Upgrade dependencies to latest minor versions.
+	  For Community / Enterprise:
+	  For Enterprise:
+	- Fix bug which sometimes misparses user names in ps output.
+	- Fix: Problem with git not dropping privileges soon enough
+	- Allow def.json up to 5MB instead of 4K.
+	- It is possible to edit the same value in multiple regions
+	  of one file. (Redmine #7460)
+	- CFEngine on Windows no longer truncates log messages if the
+	  program in question is killed halfway through.
+	- Fixed a bug which caused def.json not being able to define
+	  classes based on other hard classes. (Jira CFE-2333)
+	- Change: Tighten Enterprise hub permissions (Jira ENT-2708)
+	- Fix a regression which would sometimes cause "Permission
+	  denied" errors on files inside directories with very restricted
+	  permissions. (Redmine #7808)
+	- Fix use-after-free in ArrayMap and HashMap (Redmine #7952)
+	- Package repositories are no more hit every time package promise
+	  is evaluated on SUSE.
+	- Fix a bug which sometimes caused package promises to be
+	  skipped with "XX Another cf-agent seems to have done this since I
+	  started" messages in the log, most notably in long running cf-agent
+	  runs (longer than one minute). (Redmine #7933)
+	- TTY detection should be more reliable. (Redmine #7606)
+	- cf-promises -p cf now produces valid cfengine code (Redmine #7956)
+	- Fix ps options for FreeBSD to check processes only in current host and not in jails
+	- cf-runagent now properly supports multiple -D or -s arguments
+	  (Redmine #7191)
+	- Fix: Work around impaired class definition from augments
+	  (Jira CFE-2333)
+	- Fix "No such file or directory" LMDB error on heavily loaded hosts.
+	  (Jira CFE-2300)
+	- Check for empty server response in RemoteDirList after decryption
+	  (Redmine #7908)
+	- Small performance optimization when cf-execd scans emails before sending.
+	- Fix handling of closed connections during transactions
+	  (Redmine #7926)
+	- The core ps parsing engine used for `processes` promises
+	  has been rewritten from scratch, and should be more robust than
+	  before. (Jira CFE-2161)
+	- Fix the lexer which could not handle empty newline(s)
+	  before a ```@endif```.
+	- groupexists() no longer fails to detect a group name
+	  starting with a digit. (Jira CFE-2351)
+	- Fix HP-UX specific bug that caused a lot of log output to disappear.
+	- Fix unresolved variable (Redmine #7931)
+	- Change: Suppress standard services noise on SUSE (Redmine #6968)
+	- Reduce verbosity of yum package module (Redmine #7485)
+	- cf-runagent: Allow connections to localhost instead of failing silently.
+	- Show errors regarding failure to copy extended attributes
+	  when doing a local file copy. Errors could happen when copying
+	  across two different mount points where the support for extended
+	  attributes is different between the mount points.
+	- Fix classes being set because of hash collision in the implementation.
+	  (Redmine #7912)
+	- fix build failure on FreeBSD 7.1 (Redmine #7415)
+	- Improve logging when managing setuid/setgid
+	- Reduce verbosity of apt_get package module (Redmine #7485)
+	- packagesmatching() and packageupdatesmatching() should work
+	  when new package promise is used. (Jira CFE-2246)
+	- Fix bug which could render host unable to recover from a
+	  syntax error, even if failsafe.cf was utilized. This could happen if
+	  the file containing the syntax error was specified in the def.json
+	  special file. (Redmine #7961)
+	- Prevent crash in cf-execd email code when policy server is not set.
+	- In case of networking error, assume checksum is wrong
+	- Fix two cases where action_policy warn still produces errors
+	  (Redmine #7274)
+	- Fix bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
+	- @if minimum_version now correctly ignores lines starting with '@'
+	  (Redmine #7862)
+	- No longer hang when changing permissions/ownership on fifos
+	  (Redmine #7030)
+	- readfile() and read*list() should print an error if they fail to read file.
+	  (Redmine #7702)
+	- The `isvariable()` function call now correctly accepts all
+	  array variables when specified inline. Previously it would not accept
+	  certain special characters, even though they could be specified
+	  indirectly by using a variable to hold it. (Redmine #7088)
+	- Fix file descriptor leak when there are network errors.
+	- Improve robustness of process table parsing on Solaris.
+	  (Jira CFE-2161)
+	- Installing packages containing version numbers using yum
+	  now works correctly. (Redmine #7825)
+	- Parse def.json vars, classes and inputs from the C
+	  code. This fixes a bug where certain entries in this file would be
+	  parsed too late to have any effect on the evaluation.
+	  (Redmine #7453, #7615)
+	- Change package modules permissions on hub package so that
+	  hub can execute package promises. (Redmine #7602)
 
 3.8.2:
 	Fixes:

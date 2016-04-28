@@ -29,11 +29,11 @@
 	  (Redmine #7951)
 	- Add standard_services service_method allowing for explicit usage
 	- cf-promises --show-vars can now show JSON variables.
-	- Add `json_pipe` mode to `mapdata()`, which allows piping a
+	- Add json_pipe mode to mapdata(), which allows piping a
 	  JSON container to an external program for manipulation and receiving
 	  JSON back. The `jq` tool is a good example where this mode can be
 	  useful. A corresponding `$(def.jq)` variable has also been added with
-	  a default path to this tool. See documentation for `mapdata()` for
+	  a default path to this tool. See documentation for mapdata() for
 	  more information and examples. (Jira CFE-2071)
 	- behaviour change: "true" is always defined and "false" is never defined in a context expression.
 	- Add: nimclient package module for AIX
@@ -50,8 +50,8 @@
 	- Provide new -w argument to override the workdir for testing
 	- New feature: Emails sent by cf-execd can be filtered to get
 	  rid of emails for unwanted log messages. The attributes
-	  `mailfilter_include` and `mailfilter_exclude` in `body executor
-	  control` control what to include. See documentation for `cf-execd` for
+	  mailfilter_include and mailfilter_exclude in body executor
+	  control control what to include. See documentation for cf-execd for
 	  more information. (Jira CFE-2283)
 	- Add: file_make_mustache bundle to render mustache templates
 	- Add '-n' flag to cf-key to avoid host name lookups.
@@ -129,9 +129,9 @@
 	- cf-serverd no longer appends "-I -Dcfruncommand" to
 	             cfruncommand, this has to be done manually in masterfiles
 	             body server control. (Redmine #7732)
-	- eval() function arguments `mode` and `options` are now
+	- eval() function arguments mode and options are now
 	  optional.
-	- sort() function argument `mode` is now optional.
+	- sort() function argument mode is now optional.
 	- Change: returnszero() no longer outputs the output of a command.
 	  The output can be seen by enabling info mode (-I).
 	- cfruncommand is not executed under shell. (Redmine #7409)
@@ -167,7 +167,7 @@
 	  filestat(path, "linktarget_shallow"). (Redmine #7404)
 	- Define (bootstrap|failsafe)_mode during update.cf when triggerd from failsafe.cf
 	  (Redmine #7861)
-	- Behavior change: The promise string of a `processes`
+	- Behavior change: The promise string of a processes
 	  promise now matches just the command line of each process instead of
 	  the line that is output by ps. This was done to reduce fragmentation
 	  between platforms, since ps is a very nonstandardized tool.
@@ -225,7 +225,7 @@
 	- Small performance optimization when cf-execd scans emails before sending.
 	- Fix handling of closed connections during transactions
 	  (Redmine #7926)
-	- The core ps parsing engine used for `processes` promises
+	- The core ps parsing engine used for processes promises
 	  has been rewritten from scratch, and should be more robust than
 	  before. (Jira CFE-2161)
 	- Fix the lexer which could not handle empty newline(s)
@@ -263,7 +263,7 @@
 	  (Redmine #7030)
 	- readfile() and read*list() should print an error if they fail to read file.
 	  (Redmine #7702)
-	- The `isvariable()` function call now correctly accepts all
+	- The isvariable() function call now correctly accepts all
 	  array variables when specified inline. Previously it would not accept
 	  certain special characters, even though they could be specified
 	  indirectly by using a variable to hold it. (Redmine #7088)

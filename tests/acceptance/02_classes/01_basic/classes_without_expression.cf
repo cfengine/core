@@ -1,0 +1,30 @@
+#######################################################
+#
+# test that classes without expressions are defined
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test
+{
+  classes:
+      "myclass1";
+      "myclass2" meta => { "good" };
+      "myclass3" persistence => "120";
+      "myclass4" meta => { "good" }, persistence => "120";
+}
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("myclass1,myclass2,myclass3,myclass4",
+                                         "",
+                                         $(this.promise_filename));
+}

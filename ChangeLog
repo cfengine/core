@@ -1,5 +1,6 @@
 3.9.0:
 	New features/additions:
+	- Classes promise: allow classes without an expression to default to defined.
 	- Add optional interface parameter to iprange() to match only one interface.
 	- Allow '=' in symbolic modes (Redmine #7826)
 	- Add: FreeBSD ports package module

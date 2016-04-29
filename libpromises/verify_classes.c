@@ -63,20 +63,20 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         xsnprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
     }
 
-    if (a.context.nconstraints == 0)
-    {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "No constraints for class promise '%s'", pp->promiser);
-        return PROMISE_RESULT_FAIL;
-    }
-
     if (a.context.nconstraints > 1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for '%s'", pp->promiser);
         return PROMISE_RESULT_FAIL;
     }
 
-    if (EvalClassExpression(ctx, a.context.expression, pp))
+    if (NULL == a.context.expression ||
+        EvalClassExpression(ctx, a.context.expression, pp))
     {
+        if (NULL == a.context.expression)
+        {
+            Log(LOG_LEVEL_DEBUG, "Setting class '%s' without an expression, implying 'any'", pp->promiser);
+        }
+
         if (!ValidClassName(pp->promiser))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
@@ -157,7 +157,7 @@ static bool SelectClass(EvalContext *ctx, const Rlist *list, const Promise *pp)
         PromiseRef(LOG_LEVEL_VERBOSE, pp);
         return false;
     }
-    
+
     assert(list);
 
     char splay[CF_MAXVARSIZE];
@@ -173,7 +173,7 @@ static bool SelectClass(EvalContext *ctx, const Rlist *list, const Promise *pp)
         n--;
         list = list->next;
     }
-    
+
     /* We are not having expanded variable or list at this point,
      * so we can not set select_class. */
     if (IsExpandable(RlistScalarValue(list)))

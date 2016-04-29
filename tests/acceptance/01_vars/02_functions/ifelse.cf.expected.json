@@ -1,0 +1,9 @@
+{
+  "empty": "",
+  "empty2": "hardclass expected",
+  "expression": "bundle class OK",
+  "five": "5 parameters OK",
+  "hardclass": "hardclass OK",
+  "one": "1",
+  "single": "single string parameter"
+}

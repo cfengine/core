@@ -3,16 +3,38 @@
 #
 # See README for details about writing test cases.
 ########################################################################
+bundle common D
+{
+  vars:
+    any::
+
+      "owndir" string => "$(this.promise_dirname)";
+
+
+    # If not testing the masterfiles policy framework we want to include the
+    # plucked bodies and bundles so that we have conveniant access to commonly
+    # used bundles and bodies.
+    !testing_masterfiles_policy_framework::
+      "inputs"
+        slist => {
+                   "$(D.owndir)$(const.dirsep)dcs.cf.sub",
+                   "$(D.owndir)$(const.dirsep)plucked.cf.sub",
+                 };
+
+    # If testing the masterfiles policy framework then load the stdlib by
+    # default so it can be leveraged as expected.
+    testing_masterfiles_policy_framework::
+      "inputs"
+        slist => {
+                   "$(D.owndir)$(const.dirsep)dcs.cf.sub",
+                   "$(D.owndir)$(const.dirsep)..$(const.dirsep)..$(const.dirsep)lib$(const.dirsep)stdlib.cf"
+                 };
+
+
+}
 
 body file control
 {
       # plucked.cf.sub comes from the stdlib with `make pluck`
-      inputs => { "$(D.owndir)$(const.dirsep)plucked.cf.sub",
-                  "$(D.owndir)$(const.dirsep)dcs.cf.sub",};
-}
-
-bundle common D
-{
-  vars:
-      "owndir" string => "$(this.promise_dirname)";
+      inputs => { @(D.inputs) };
 }

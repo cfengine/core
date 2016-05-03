@@ -132,7 +132,8 @@ PromiseResult VerifyStoragePromise(EvalContext *ctx, char *path, const Promise *
     PromiseResult result = PROMISE_RESULT_NOOP;
 
 #ifndef __MINGW32__
-    if ((SeqLength(GetGlobalMountedFSList())) && (!LoadMountInfo(GetGlobalMountedFSList())))
+    if (SeqLength(GetGlobalMountedFSList()) == 0 &&
+        !LoadMountInfo(GetGlobalMountedFSList()))
     {
         Log(LOG_LEVEL_ERR, "Couldn't obtain a list of mounted filesystems - aborting");
         YieldCurrentLock(thislock);

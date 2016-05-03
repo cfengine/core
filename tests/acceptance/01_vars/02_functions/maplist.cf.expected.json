@@ -1,10 +1,6 @@
 {
-  "empty": [
-    "cf_null"
-  ],
-  "mapped_empty": [
-    "cf_null"
-  ],
+  "empty": [],
+  "mapped_empty": [],
   "mapped_inline": [
     "value=a",
     "value=b",

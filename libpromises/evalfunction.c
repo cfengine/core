@@ -248,10 +248,11 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
             convert = JsonArrayCreate(RlistLen(value));
             for (const Rlist *rp = value; rp != NULL; rp = rp->next)
             {
-                if (rp->val.type == RVAL_TYPE_SCALAR &&
-                    strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                char* item = RlistScalarValueSafe(rp);
+                if (item &&
+                    !(RlistLen(value) == 1 && strcmp(item, CF_NULL_VALUE) == 0))
                 {
-                    JsonArrayAppendString(convert, RlistScalarValue(rp));
+                    JsonArrayAppendString(convert, item);
                 }
             }
 
@@ -324,10 +325,11 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                             JsonElement *array = JsonArrayCreate(10);
                             for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
                             {
-                                if (rp->val.type == RVAL_TYPE_SCALAR &&
-                                    strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                                char* item = RlistScalarValueSafe(rp);
+                                if (item &&
+                                    !(RlistLen(RvalRlistValue(var->rval)) == 1 && strcmp(item, CF_NULL_VALUE) == 0))
                                 {
-                                    JsonArrayAppendString(array, RlistScalarValue(rp));
+                                    JsonArrayAppendString(array, item);
                                 }
                             }
                             JsonObjectAppendArray(holder, last_key, array);

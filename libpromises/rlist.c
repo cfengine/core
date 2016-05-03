@@ -702,7 +702,7 @@ typedef enum
 } state;
 
 #define CLASS_BLANK(x)  (((x)==' ')||((x)=='\t'))
-#define CLASS_START1(x) (((x)=='\'')) 
+#define CLASS_START1(x) (((x)=='\''))
 #define CLASS_START2(x) (((x)=='"'))
 #define CLASS_END1(x)   ((CLASS_START1(x)))
 #define CLASS_END2(x)   ((CLASS_START2(x)))
@@ -722,7 +722,7 @@ typedef enum
 
 /**
  @brief parse elements in a list passed through use_module
- 
+
  @param[in] str: is the string to parse
  @param[out] newlist: rlist of elements found
 
@@ -751,7 +751,7 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                 {
                     current_state = ST_OPENED;
                 }
-                else if (CLASS_BRA1(*s)) 
+                else if (CLASS_BRA1(*s))
                 {
                     current_state = ST_IO;
                 }
@@ -1388,13 +1388,19 @@ static JsonElement *FnCallToJson(const FnCall *fp)
 static JsonElement *RlistToJson(Rlist *list)
 {
     JsonElement *array = JsonArrayCreate(RlistLen(list));
+    char* item = NULL;
 
     for (Rlist *rp = list; rp; rp = rp->next)
     {
         switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
-            JsonArrayAppendString(array, RlistScalarValue(rp));
+            item = RlistScalarValueSafe(rp);
+            if (item &&
+                !(RlistLen(list) == 1 && strcmp(item, CF_NULL_VALUE) == 0))
+            {
+                JsonArrayAppendString(array, item);
+            }
             break;
 
         case RVAL_TYPE_LIST:
@@ -1559,4 +1565,3 @@ bool RlistEqual_untyped(const void *list1, const void *list2)
 {
     return RlistEqual(list1, list2);
 }
-

@@ -106,6 +106,7 @@
 	  - variance()
 	  For example: `mergedata('[ "thing", { "mykey": "myvalue" } ]')`
 	  See the documentation for more details. (Jira CFE-2253)
+	- Add: edit_line contains_literal_string to stdlib
 
 	Changes:
 	- Change: classesmatching(): order of classes changed
@@ -279,6 +280,9 @@
 	  (Redmine #7453, #7615)
 	- Change package modules permissions on hub package so that
 	  hub can execute package promises. (Redmine #7602)
+	- Fix: CFEngine choking on standard services (Jira CFE-2086)
+	- Fix: cf-upgrade on SUSE
+	- Fix: Stop cfengine choking on systemctl output (Jira CFE-2806)
 
 3.8.2:
 	Fixes:

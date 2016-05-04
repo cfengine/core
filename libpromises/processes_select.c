@@ -718,7 +718,7 @@ Solaris 9:
       where a command begins. Hence the only way is to base this algorithm on
       platform and only do the "empty column detection" when:
         * The platform is known to produce empty columns for zombie processes
-          (see ZombiesCanHaveEmptyColumns())
+          (see PCA_ZombieSkipEmptyColumns)
         * The platform is known to not shift columns when the process is a
           zombie.
         * The process is a zombie.

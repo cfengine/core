@@ -220,7 +220,7 @@ static bool StringItemLess(const char *lhs, const char *rhs, ARG_UNUSED void *ct
 
 static bool StringItemNumberLess(const char *lhs, const char *rhs, ARG_UNUSED void *ctx, bool int_mode)
 {
-    char remainder[CF_BUFSIZE];
+    char remainder[4096];
     double left;
     double right;
 
@@ -229,12 +229,12 @@ static bool StringItemNumberLess(const char *lhs, const char *rhs, ARG_UNUSED vo
 
     if (!matched_left)
     {
-        matched_left = sscanf(lhs, "%lf%s", &left, remainder) > 0;
+        matched_left = sscanf(lhs, "%lf%4095s", &left, remainder) > 0;
     }
 
     if (!matched_right)
     {
-        matched_right = sscanf(rhs, "%lf%s", &right, remainder) > 0;
+        matched_right = sscanf(rhs, "%lf%4095s", &right, remainder) > 0;
     }
 
     if (matched_left && matched_right)

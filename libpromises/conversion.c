@@ -211,11 +211,11 @@ char *Rlist2String(Rlist *list, char *sep)
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        strcat(line, RlistScalarValue(rp));
+        strlcat(line, RlistScalarValue(rp), sizeof(line));
 
         if (rp->next)
         {
-            strcat(line, sep);
+            strlcat(line, sep, sizeof(line));
         }
     }
 

@@ -329,7 +329,7 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 {
     char nodename[CF_BUFSIZE];
 
-    strcpy(nodename, orig_nodename);
+    strlcpy(nodename, orig_nodename, sizeof(nodename));
     ToLowerStrInplace(nodename);
 
     char dnsname[CF_BUFSIZE] = "";
@@ -341,7 +341,7 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 
         if ((hp = gethostbyname(fqn)))
         {
-            strlcpy(dnsname, hp->h_name, CF_MAXVARSIZE);
+            strlcpy(dnsname, hp->h_name, sizeof(dnsname));
             ToLowerStrInplace(dnsname);
         }
     }

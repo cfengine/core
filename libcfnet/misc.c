@@ -53,41 +53,6 @@ int cf_closesocket(int sd)
     return res;
 }
 
-/* Convert IP address in src (which can be struct sockaddr_storage (best
- * choice for any IP version), struct sockaddr, struct sockaddr_in or struct
- * sockaddr_in6) to string dst.
- * Better use getnameinfo(NI_NUMERICHOST) if available. */
-const char *sockaddr_ntop(const void *src, char *dst, socklen_t size)
-{
-    int family = ((struct sockaddr *) src)->sa_family;
-    void *addr;
-
-    switch (family)
-    {
-    case AF_INET:
-        addr = & ((struct sockaddr_in *) src)->sin_addr.s_addr;
-        break;
-
-#ifdef HAVE_GETADDRINFO
-    case AF_INET6:
-        addr = & ((struct sockaddr_in6 *) src)->sin6_addr.s6_addr;
-        break;
-#endif
-
-#ifdef AF_LOCAL
-    case AF_LOCAL:
-        strcpy(dst, "127.0.0.1");
-        return dst;
-#endif
-
-    default:
-        ProgrammingError("sockaddr_ntop: address family was %d", family);
-    }
-
-    const char *ret = inet_ntop(family, addr, dst, size);
-    return ret;
-}
-
 /* Return the port number in host byte order. */
 uint16_t sockaddr_port(const void *sa)
 {

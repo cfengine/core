@@ -35,15 +35,9 @@
     "g",
     "a"
   ],
-  "shuffle_b_cormorant": [
-    "cf_null"
-  ],
-  "shuffle_b_dollhouse": [
-    "cf_null"
-  ],
-  "shuffle_b_skruf": [
-    "cf_null"
-  ],
+  "shuffle_b_cormorant": [],
+  "shuffle_b_dollhouse": [],
+  "shuffle_b_skruf": [],
   "shuffle_inline_cormorant": [
     "delta",
     "a",

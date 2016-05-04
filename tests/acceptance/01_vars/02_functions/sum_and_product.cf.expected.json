@@ -1,7 +1,5 @@
 {
-  "empty_list": [
-    "cf_null"
-  ],
+  "empty_list": [],
   "empty_list_product": "1.000000",
   "empty_list_sum": "0.000000",
   "empty_object": {

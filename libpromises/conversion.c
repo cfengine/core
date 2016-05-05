@@ -389,8 +389,7 @@ bool BooleanFromString(const char *s)
 long IntFromString(const char *s)
 {
     long long a = CF_NOINT;
-    char c = 'X';
-    char remainder[CF_BUFSIZE];
+    char c = 'X', remainder = '\0';
 
     if (s == NULL)
     {
@@ -407,15 +406,14 @@ long IntFromString(const char *s)
         return (long) CFSTARTTIME;
     }
 
-    remainder[0] = '\0';
 
-    sscanf(s, "%lld%c%s", &a, &c, remainder);
+    sscanf(s, "%lld%c%c", &a, &c, &remainder);
 
 // Test whether remainder is space only
 
-    if ((a == CF_NOINT) || (!IsSpace(remainder)))
+    if ((a == CF_NOINT) || (remainder == ' '))
     {
-        Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%s'",
+        Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%c'",
               s, remainder);
         if (strchr(s, '$'))
         {

@@ -444,9 +444,17 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
             EncryptString(out, sizeof(out), in,
                           strlen(in) + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN,
                           conn->encryption_type, conn->session_key);
+
+        tosend = cipherlen + CF_PROTO_OFFSET;
+
+        if(tosend > sizeof(sendbuffer))
+        {
+            ProgrammingError("CompareHashNet: tosend (%d) > sendbuffer (%ld)",
+                             tosend, sizeof(sendbuffer));
+        }
+
         snprintf(sendbuffer, CF_BUFSIZE, "SMD5 %d", cipherlen);
         memcpy(sendbuffer + CF_PROTO_OFFSET, out, cipherlen);
-        tosend = cipherlen + CF_PROTO_OFFSET;
     }
     else
     {

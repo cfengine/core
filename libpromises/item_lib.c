@@ -637,33 +637,6 @@ Item *SplitStringAsItemList(const char *string, char sep)
 
 /*********************************************************************/
 
-/* NB: does not escape entries in list ! */
-char *ItemList2CSV(const Item *list)
-{
-    /* After each entry, we need space for either a ',' (before the
-     * next entry) or a final '\0'. */
-    int len = ItemListSize(list) + ListLen(list);
-    char *s = xmalloc(len);
-    *s = '\0';
-
-    /* No point cycle-checking; done while computing len. */
-    for (const Item *ip = list; ip != NULL; ip = ip->next)
-    {
-        if (ip->name)
-        {
-            strcat(s, ip->name);
-        }
-
-        if (ip->next)
-        {
-            strcat(s, ",");
-        }
-    }
-    assert(strlen(s) + 1 == len);
-
-    return s;
-}
-
 /**
  * Write all strings in list to buffer #buf, separating them with
  * #separator. Watch out, no escaping happens.

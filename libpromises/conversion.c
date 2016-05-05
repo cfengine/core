@@ -499,7 +499,7 @@ bool DoubleFromString(const char *s, double *value_out)
     static const double NO_DOUBLE = -123.45;
 
     double a = NO_DOUBLE;
-    char remainder[CF_BUFSIZE];
+    char remainder[4096];
     char c = 'X';
 
     if (s == NULL)
@@ -509,7 +509,7 @@ bool DoubleFromString(const char *s, double *value_out)
 
     remainder[0] = '\0';
 
-    sscanf(s, "%lf%c%s", &a, &c, remainder);
+    sscanf(s, "%lf%c%4095s", &a, &c, remainder);
 
     if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
     {

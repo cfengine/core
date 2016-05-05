@@ -432,7 +432,7 @@ bool SavePublicKey(const char *user, const char *digest, const RSA *key)
     return true;
 }
 
-int EncryptString(char type, const char *in, char *out, unsigned char *key, int plainlen)
+int EncryptString(char *out, const char *in, int plainlen, char type, unsigned char *key)
 {
     int cipherlen = 0, tmplen;
     unsigned char iv[32] =

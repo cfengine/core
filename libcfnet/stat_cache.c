@@ -145,8 +145,8 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
 
         snprintf(in, CF_BUFSIZE - 1, "SYNCH %jd STAT %s",
                  (intmax_t) tloc, file);
-        int cipherlen = EncryptString(conn->encryption_type, in, out,
-                                      conn->session_key, strlen(in) + 1);
+        int cipherlen = EncryptString(out, in, strlen(in) + 1,
+                                      conn->encryption_type, conn->session_key);
         snprintf(sendbuffer, CF_BUFSIZE - 1, "SSYNCH %d", cipherlen);
         memcpy(sendbuffer + CF_PROTO_OFFSET, out, cipherlen);
         tosend = cipherlen + CF_PROTO_OFFSET;

@@ -547,9 +547,17 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
     snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
     cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
+
+    tosend = cipherlen + CF_PROTO_OFFSET;
+
+    if(tosend > sizeof(workbuf))
+    {
+        ProgrammingError("EncryptCopyRegularFileNet: tosend (%d) > workbuf (%ld)",
+                         tosend, sizeof(workbuf));
+    }
+
     snprintf(workbuf, CF_BUFSIZE, "SGET %4d %4d", cipherlen, blocksize);
     memcpy(workbuf + CF_PROTO_OFFSET, out, cipherlen);
-    tosend = cipherlen + CF_PROTO_OFFSET;
 
 /* Send proposition C0 - query */
 

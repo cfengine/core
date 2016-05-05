@@ -42,7 +42,7 @@ static void test_symmetric_encrypt(void)
     char ciphertext[CF_BUFSIZE];
     int plaintext_len = strlen(PLAINTEXT) + 1;
     
-    int ciphertext_len = EncryptString(CIPHER_TYPE_CFENGINE, PLAINTEXT, ciphertext, KEY, plaintext_len);
+    int ciphertext_len = EncryptString(ciphertext, PLAINTEXT, plaintext_len, CIPHER_TYPE_CFENGINE, KEY);
 
     assert_int_equal(ciphertext_len, ComputeCiphertextLen(plaintext_len, CIPHER_BLOCK_SIZE_BYTES));
 

@@ -39,7 +39,7 @@ const char *CryptoLastErrorString(void);
 void DebugBinOut(char *buffer, int len, char *com);
 bool LoadSecretKeys(void);
 void PolicyHubUpdateKeys(const char *policy_server);
-int EncryptString(char type, const char *in, char *out, unsigned char *key, int len);
+int EncryptString(char *out, const char *in, int plainlen, char type, unsigned char *key);
 int DecryptString(char type, const char *in, char *out, unsigned char *key, int len);
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest);
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress);

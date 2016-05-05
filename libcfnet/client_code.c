@@ -320,9 +320,17 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
         snprintf(in, CF_BUFSIZE, "OPENDIR %s", dirname);
         cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
+
+        tosend = cipherlen + CF_PROTO_OFFSET;
+
+        if(tosend > sizeof(sendbuffer))
+        {
+            ProgrammingError("RemoteDirList: tosend (%d) > sendbuffer (%ld)",
+                             tosend, sizeof(sendbuffer));
+        }
+
         snprintf(sendbuffer, CF_BUFSIZE - 1, "SOPENDIR %d", cipherlen);
         memcpy(sendbuffer + CF_PROTO_OFFSET, out, cipherlen);
-        tosend = cipherlen + CF_PROTO_OFFSET;
     }
     else
     {

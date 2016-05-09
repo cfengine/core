@@ -680,9 +680,9 @@ static bool SplitProcLine(const char *line,
       currently used ps tools, and hence we can parse based on space separation
       (with some caveats, see below).
 
-      Dates may have spaces in them, like "May 20", or not, like "May20". Prefer
-      to match a date without a space as long as it contains a number, but fall
-      back to parsing letters followed by a space and a date.
+      Dates may have spaces in them, like "May  4", or not, like "May4". Prefer
+      to match a date without spaces as long as it contains a number, but fall
+      back to parsing letters followed by space(s) and a date.
 
       Commands will also have extra spaces, but it is always the last field, so
       we just include spaces at this point in the parsing.
@@ -849,10 +849,13 @@ Solaris 9:
             }
             if (isspace(line[last]))
             {
-                // In this case we expect one, and only one, space.
+                // In this case we expect spaces followed by a number.
                 // It means what we first read was the month, now is the date.
-                last++;
-                if (!line[last] || !isdigit(line[last]))
+                do
+                {
+                    last++;
+                } while (isspace(line[last]));
+                if (!isdigit(line[last]))
                 {
                     char fmt[200];
                     xsnprintf(fmt, sizeof(fmt), "Unable to parse STIME entry in ps "

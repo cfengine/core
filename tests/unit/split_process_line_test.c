@@ -658,6 +658,8 @@ static void test_platform_specific_ps_examples(void)
             " <     > <   > <   >  X <      > <   >     <  > <                                                   >",
             " jenkins 17374 17345  0 09:31:40 pts/0     0:00 <defunct>",
             " <     > <   > <   >  X <      > <   >     <  > <       >",
+            "    root   832     1  0  May  4  ?         0:01 /usr/sbin/automountd",
+            "    <  >   < >     X  X  <    >  X         <  > <                  >",
             NULL
         }, {
             // Solaris 9

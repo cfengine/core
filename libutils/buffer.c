@@ -427,6 +427,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
     return printed;
 }
 
+// NB! Make sure to sanitize format if taken from user input
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
 {
     assert(buffer);

@@ -1197,6 +1197,7 @@ typedef struct
     char *select_end;
     int include_start;
     int include_end;
+    bool select_end_match_eof;
 } EditRegion;
 
 typedef struct

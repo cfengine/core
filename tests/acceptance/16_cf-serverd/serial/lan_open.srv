@@ -25,6 +25,7 @@ body server control
       allowconnects         => { @(sys.ip_addresses) };
       allowallconnects      => { @(sys.ip_addresses) };
       trustkeysfrom         => { @(sys.ip_addresses) };
+      allowlegacyconnects   => { @(sys.ip_addresses) };
 }
 
 #########################################################

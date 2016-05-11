@@ -36,7 +36,7 @@ body common control
 
 bundle agent test
 
-{     
+{
   classes:
 
       "ok" expression => isgreaterthan("1","0");
@@ -52,3 +52,9 @@ bundle agent test
       "Assertion is false";
 
 }
+
+#+begin_src example_output
+#@ ```
+#@ R: Assertion is true
+#@ ```
+#+end_src

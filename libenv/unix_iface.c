@@ -241,7 +241,11 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 
     if (ioctl(fd, SIOCGARP, &arpreq) == -1)
     {
-        Log(LOG_LEVEL_ERR,
+        // ENXIO happens if there is no MAC address assigned, which is not that
+        // uncommon.
+        LogLevel log_level =
+            (errno == ENXIO) ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR;
+        Log(log_level,
             "Could not get interface '%s' addresses (ioctl(SIOCGARP): %s)",
             ifp->ifr_name, GetErrorStr());
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name,

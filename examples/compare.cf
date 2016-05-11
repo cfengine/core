@@ -34,7 +34,7 @@ body common control
 
 ###########################################################
 
-bundle agent example
+bundle agent test
 
 {     
   classes:

@@ -683,6 +683,15 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
     }
+    
+    if (!end_ptr && a.region.select_end && !a.region.select_end_match_eof)
+    {
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+            "The promised end pattern '%s' was not found when selecting region to insert in '%s'",
+             a.region.select_end, edcontext->filename);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+        return false;
+    }
 
     if (allow_multi_lines)
     {

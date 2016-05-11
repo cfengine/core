@@ -387,7 +387,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
     }
-    if (!end_ptr && a.region.select_end)
+    if (!end_ptr && a.region.select_end && !a.region.select_end_match_eof)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
             "The promised end pattern '%s' was not found when selecting region to delete in '%s'",

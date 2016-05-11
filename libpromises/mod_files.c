@@ -71,6 +71,7 @@ static const ConstraintSyntax select_region_constraints[] =
     ConstraintSyntaxNewBool("include_end_delimiter", "Whether to include the section delimiter. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("select_start", CF_ANYSTRING, "Regular expression matching start of edit region", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("select_end", CF_ANYSTRING, "Regular expression matches end of edit region from start", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("select_end_match_eof", "Whether to include EOF as end of the region. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

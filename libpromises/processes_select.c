@@ -1151,6 +1151,7 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
 
     size_t pbuff_size = CF_BUFSIZE;
     char *pbuff = xmalloc(pbuff_size);
+    bool header = true;
 
     while (true)
     {
@@ -1170,7 +1171,7 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
             }
         }
         Chop(pbuff, pbuff_size);
-        if (strstr(pbuff, "PID")) /* This line is the header. */
+        if (header) /* This line is the header. */
         {
             GetProcessColumnNames(pbuff, &names[0], start, end);
         }
@@ -1196,6 +1197,8 @@ int ZLoadProcesstable(Seq *pidlist, Seq *rootpidlist)
                 SeqAppend(pidlist, (void*)(intptr_t)pid);
             }
         }
+
+        header = false;
     }
     cf_pclose(psf);
     free(pbuff);
@@ -1551,6 +1554,7 @@ int LoadProcessTable()
 
 # endif
 
+    bool header = true;
     for (;;)
     {
         ssize_t res = CfReadLine(&vbuff, &vbuff_size, prp);
@@ -1574,7 +1578,7 @@ int LoadProcessTable()
 
         if (global_zone)
         {
-            if (strstr(vbuff, "PID") != NULL)
+            if (header)
             {   /* this is the banner so get the column header names for later use*/
                 GetProcessColumnNames(vbuff, &names[0], start, end);
             }
@@ -1591,6 +1595,8 @@ int LoadProcessTable()
 
 # endif
         AppendItem(&PROCESSTABLE, vbuff, "");
+
+        header = false;
     }
 
     cf_pclose(prp);

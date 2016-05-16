@@ -29,5 +29,6 @@
 #include <generic_agent.h>
 
 Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
+Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
 
 #endif

@@ -132,10 +132,13 @@ int main(int argc, char *argv[])
     if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF ||
         format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON)
     {
+        // If no file was provided, use 'promises.cf' by default
+        if (config->input_file == NULL) {
+            GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
+        }
+
         // Just parse and write content to output
-        Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
-                                                config->agent_specific.common.parser_warnings,
-                                                config->agent_specific.common.parser_warnings_error);
+        Policy *output_policy = Cf3ParseFile(config, config->input_file);
         Writer *writer = FileWriter(stdout);
         if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF)
         {

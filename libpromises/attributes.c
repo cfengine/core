@@ -1489,6 +1489,8 @@ EditRegion GetRegionConstraints(const EvalContext *ctx, const Promise *pp)
     e.select_end = PromiseGetConstraintAsRval(pp, "select_end", RVAL_TYPE_SCALAR);
     e.include_start = PromiseGetConstraintAsBoolean(ctx, "include_start_delimiter", pp);
     e.include_end = PromiseGetConstraintAsBoolean(ctx, "include_end_delimiter", pp);
+    e.select_end_match_eof = PromiseGetConstraintAsBoolean(ctx, "select_end_match_eof", pp);
+    
     return e;
 }
 

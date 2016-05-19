@@ -485,27 +485,38 @@ size_t CipherBlockSizeBytes(const EVP_CIPHER *cipher)
 
 size_t CipherTextSizeMax(const EVP_CIPHER* cipher, size_t plaintext_size)
 {
-    if(plaintext_size <= 0)
-    {
-        ProgrammingError("CipherTextSizeMax: plaintext_size is not positive (%ld)",
-                         plaintext_size);
-    }
+    // see man EVP_DecryptUpdate() and EVP_DecryptFinal_ex()
+    size_t padding_size = (CipherBlockSizeBytes(cipher) * 2) - 1;
 
     // check for potential integer overflow, leave some buffer
-    if(plaintext_size > INT_MAX - 1024)
+    if(plaintext_size > SIZE_MAX - padding_size)
     {
-        ProgrammingError("CipherTextSizeMax: plaintext_size is too large (%ld)",
+        ProgrammingError("CipherTextSizeMax: plaintext_size is too large (%zu)",
                          plaintext_size);
     }
 
-    // see man EVP_EncryptUpdate() and EVP_EncryptFinal_ex()
-    return plaintext_size + (CipherBlockSizeBytes(cipher) * 2) - 1;
+    return plaintext_size + padding_size;
 }
 
+size_t PlainTextSizeMax(const EVP_CIPHER* cipher, size_t ciphertext_size)
+{
+    // see man EVP_DecryptUpdate() and EVP_DecryptFinal_ex()
+    size_t padding_size = (CipherBlockSizeBytes(cipher) * 2);
+
+    // check for potential integer overflow, leave some buffer
+    if(ciphertext_size > SIZE_MAX - padding_size)
+    {
+        ProgrammingError("PlainTextSizeMax: ciphertext_size is too large (%zu)",
+                         ciphertext_size);
+    }
+
+    return ciphertext_size + padding_size;
+}
 
 /*********************************************************************/
 
-int DecryptString(char type, const char *in, char *out, unsigned char *key, int cipherlen)
+int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
+                  char type, unsigned char *key)
 {
     int plainlen = 0, tmplen;
     unsigned char iv[32] =
@@ -514,6 +525,14 @@ int DecryptString(char type, const char *in, char *out, unsigned char *key, int 
 
     if (key == NULL)
         ProgrammingError("DecryptString: session key == NULL");
+
+    size_t max_plaintext_size = PlainTextSizeMax(CfengineCipher(type), cipherlen);
+
+    if(max_plaintext_size > out_size)
+    {
+        ProgrammingError("DecryptString: output buffer too small: max_plaintext_size (%ld) > out_size (%ld)",
+                          max_plaintext_size, out_size);
+    }
 
     EVP_CIPHER_CTX_init(&ctx);
     EVP_DecryptInit_ex(&ctx, CfengineCipher(type), NULL, key, iv);
@@ -535,6 +554,12 @@ int DecryptString(char type, const char *in, char *out, unsigned char *key, int 
     }
 
     plainlen += tmplen;
+
+    if(plainlen > max_plaintext_size)
+    {
+        ProgrammingError("DecryptString: too large plaintext written: plainlen (%d) > max_plaintext_size (%ld)",
+                          plainlen, max_plaintext_size);
+    }
 
     EVP_CIPHER_CTX_cleanup(&ctx);
 

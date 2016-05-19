@@ -199,7 +199,7 @@ static void test_remove_ip(void)
     UpdateLastSawHost("SHA-12345", "127.0.0.64", false, 556);
 
     char digest[CF_BUFSIZE];
-    DeleteIpFromLastSeen("127.0.0.64", digest);
+    DeleteIpFromLastSeen("127.0.0.64", digest, sizeof(digest));
 
     DBHandle *db;
     OpenDB(&db, dbid_lastseen);

@@ -6,14 +6,18 @@ char fqname[CF_BUFSIZE];
 char uqname[CF_BUFSIZE];
 char domain[CF_BUFSIZE];
 
-void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
+void CalculateDomainName(const char *nodename, const char *dnsname,
+                         char *fqname, size_t fqname_size,
+                         char *uqname, size_t uqname_size,
+                         char *domain, size_t domain_size);
 
 static void test_fqname(void)
 {
     const char nodename[] = "mylaptop.example.com";
     const char dnsname[] = "mylaptop.example.com";
 
-    CalculateDomainName(nodename, dnsname, fqname, uqname, domain);
+    CalculateDomainName(nodename, dnsname,
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "mylaptop.example.com");
     assert_string_equal(uqname, "mylaptop");
@@ -22,7 +26,8 @@ static void test_fqname(void)
 
 static void test_uqname(void)
 {
-    CalculateDomainName("mylaptop", "mylaptop.example.com", fqname, uqname, domain);
+    CalculateDomainName("mylaptop", "mylaptop.example.com",
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "mylaptop.example.com");
     assert_string_equal(uqname, "mylaptop");
@@ -31,7 +36,8 @@ static void test_uqname(void)
 
 static void test_uqname2(void)
 {
-    CalculateDomainName("user.laptop", "user.laptop.example.com", fqname, uqname, domain);
+    CalculateDomainName("user.laptop", "user.laptop.example.com",
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "user.laptop.example.com");
     assert_string_equal(uqname, "user.laptop");
@@ -40,7 +46,8 @@ static void test_uqname2(void)
 
 static void test_fqname_not_really_fq(void)
 {
-    CalculateDomainName("user.laptop", "user.laptop", fqname, uqname, domain);
+    CalculateDomainName("user.laptop", "user.laptop",
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "user.laptop");
     assert_string_equal(uqname, "user");
@@ -49,7 +56,8 @@ static void test_fqname_not_really_fq(void)
 
 static void test_fqname_not_really_fq2(void)
 {
-    CalculateDomainName("laptop", "laptop", fqname, uqname, domain);
+    CalculateDomainName("laptop", "laptop",
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "laptop");
     assert_string_equal(uqname, "laptop");
@@ -58,7 +66,8 @@ static void test_fqname_not_really_fq2(void)
 
 static void test_fqname_unresolvable(void)
 {
-    CalculateDomainName("laptop", "", fqname, uqname, domain);
+    CalculateDomainName("laptop", "",
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "laptop");
     assert_string_equal(uqname, "laptop");
@@ -67,7 +76,8 @@ static void test_fqname_unresolvable(void)
 
 static void test_no_names(void)
 {
-    CalculateDomainName("", "", fqname, uqname, domain);
+    CalculateDomainName("", "",
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "");
     assert_string_equal(uqname, "");
@@ -76,7 +86,8 @@ static void test_no_names(void)
 
 static void test_wrong_fqname(void)
 {
-    CalculateDomainName("laptop", "a1006.cfengine.com", fqname, uqname, domain);
+    CalculateDomainName("laptop", "a1006.cfengine.com",
+                        fqname, sizeof(fqname), uqname, sizeof(uqname), domain, sizeof(domain));
 
     assert_string_equal(fqname, "a1006.cfengine.com");
     assert_string_equal(uqname, "laptop");

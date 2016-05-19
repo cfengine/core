@@ -3807,7 +3807,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx,
                 AddSlash(path_buffer);
                 strlcat(path_buffer, buffer, sizeof(path_buffer));
                 /* Use buffer again as a tmp buffer. */
-                CompressPath(buffer, path_buffer);
+                CompressPath(buffer, sizeof(buffer), path_buffer);
             }
 
             // We got a good link target into buffer.  Copy it to path_buffer.

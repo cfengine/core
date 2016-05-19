@@ -212,7 +212,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
         strcpy(linkto, source);
     }
 
-    CompressPath(absto, linkto);
+    CompressPath(absto, sizeof(absto), linkto);
 
     expand[0] = '\0';
 
@@ -234,7 +234,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
         strcpy(expand, absto);
     }
 
-    CompressPath(linkto, expand);
+    CompressPath(linkto, sizeof(linkto), expand);
 
     return VerifyLink(ctx, destination, linkto, attr, pp);
 }
@@ -252,7 +252,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
         return VerifyLink(ctx, destination, source, attr, pp);
     }
 
-    if (!CompressPath(linkto, source))
+    if (!CompressPath(linkto, sizeof(linkto), source))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Failed to link '%s' to '%s'", destination, source);
         return PROMISE_RESULT_INTERRUPTED;
@@ -461,7 +461,7 @@ bool KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pr
     }
 
     strcat(linkpath, linkbuf);
-    CompressPath(tmp, linkpath);
+    CompressPath(tmp, sizeof(tmp), linkpath);
 
     if (stat(tmp, &statbuf) == -1)    /* link points nowhere */
     {

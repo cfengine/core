@@ -44,7 +44,7 @@ void LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);
 void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role);
 
 bool DeleteIpFromLastSeen(const char *ip, char *digest);
-bool DeleteDigestFromLastSeen(const char *key, char *ip);
+bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size);
 
 /*
  * Return false in order to stop iteration
@@ -57,6 +57,6 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx);
 int LastSeenHostKeyCount(void);
 bool IsLastSeenCoherent(void);
 int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
-                           char *equivalent);
+                           char *equivalent, size_t equivalent_size);
 
 #endif

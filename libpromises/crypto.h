@@ -43,7 +43,9 @@ int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
                   char type, unsigned char *key);
 size_t CipherBlockSizeBytes(const EVP_CIPHER *cipher);
 size_t CipherTextSizeMax(const EVP_CIPHER* cipher, size_t plaintext_size);
-int DecryptString(char type, const char *in, char *out, unsigned char *key, int len);
+size_t PlainTextSizeMax(const EVP_CIPHER* cipher, size_t ciphertext_size);
+int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
+                  char type, unsigned char *key);
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest);
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress);
 bool SavePublicKey(const char *username, const char *digest, const RSA *key);

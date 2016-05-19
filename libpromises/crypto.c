@@ -432,7 +432,8 @@ bool SavePublicKey(const char *user, const char *digest, const RSA *key)
     return true;
 }
 
-int EncryptString(char *out, const char *in, int plainlen, char type, unsigned char *key)
+int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
+                  char type, unsigned char *key)
 {
     int cipherlen = 0, tmplen;
     unsigned char iv[32] =
@@ -441,6 +442,14 @@ int EncryptString(char *out, const char *in, int plainlen, char type, unsigned c
 
     if (key == NULL)
         ProgrammingError("EncryptString: session key == NULL");
+
+    size_t max_ciphertext_size = CipherTextSizeMax(CfengineCipher(type), plainlen);
+
+    if(max_ciphertext_size > out_size)
+    {
+        ProgrammingError("EncryptString: output buffer too small: max_ciphertext_size (%ld) > out_size (%ld)",
+                          max_ciphertext_size, out_size);
+    }
 
     EVP_CIPHER_CTX_init(&ctx);
     EVP_EncryptInit_ex(&ctx, CfengineCipher(type), NULL, key, iv);
@@ -458,9 +467,41 @@ int EncryptString(char *out, const char *in, int plainlen, char type, unsigned c
     }
 
     cipherlen += tmplen;
+
+    if(cipherlen > max_ciphertext_size)
+    {
+        ProgrammingError("EncryptString: too large ciphertext written: cipherlen (%d) > max_ciphertext_size (%ld)",
+                          cipherlen, max_ciphertext_size);
+    }
+
     EVP_CIPHER_CTX_cleanup(&ctx);
     return cipherlen;
 }
+
+size_t CipherBlockSizeBytes(const EVP_CIPHER *cipher)
+{
+    return EVP_CIPHER_block_size(cipher);
+}
+
+size_t CipherTextSizeMax(const EVP_CIPHER* cipher, size_t plaintext_size)
+{
+    if(plaintext_size <= 0)
+    {
+        ProgrammingError("CipherTextSizeMax: plaintext_size is not positive (%ld)",
+                         plaintext_size);
+    }
+
+    // check for potential integer overflow, leave some buffer
+    if(plaintext_size > INT_MAX - 1024)
+    {
+        ProgrammingError("CipherTextSizeMax: plaintext_size is too large (%ld)",
+                         plaintext_size);
+    }
+
+    // see man EVP_EncryptUpdate() and EVP_EncryptFinal_ex()
+    return plaintext_size + (CipherBlockSizeBytes(cipher) * 2) - 1;
+}
+
 
 /*********************************************************************/
 

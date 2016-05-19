@@ -891,7 +891,9 @@ void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendb
 
     if (encrypted)
     {
-        cipherlen = EncryptString(out, sendbuffer, strlen(sendbuffer) + 1, conn->encryption_type, conn->session_key);
+        cipherlen = EncryptString(out, sizeof(out),
+                                  sendbuffer, strlen(sendbuffer) + 1,
+                                  conn->encryption_type, conn->session_key);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     }
     else
@@ -931,7 +933,8 @@ void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classe
     if (encrypted)
     {
         char out[CF_BUFSIZE];
-        int cipherlen = EncryptString(out, sendbuffer, strlen(sendbuffer) + 1,
+        int cipherlen = EncryptString(out, sizeof(out),
+                                      sendbuffer, strlen(sendbuffer) + 1,
                                       conn->encryption_type, conn->session_key);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     }
@@ -1008,7 +1011,9 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     if (!IsAbsoluteFileName(dirname))
     {
         strcpy(sendbuffer, "BAD: request to access a non-absolute filename");
-        cipherlen = EncryptString(out, sendbuffer, strlen(sendbuffer) + 1, conn->encryption_type, conn->session_key);
+        cipherlen = EncryptString(out, sizeof(out),
+                                  sendbuffer, strlen(sendbuffer) + 1,
+                                  conn->encryption_type, conn->session_key);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
         return -1;
     }
@@ -1017,7 +1022,9 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     {
         Log(LOG_LEVEL_VERBOSE, "Couldn't open dir %s", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s", dirname);
-        cipherlen = EncryptString(out, sendbuffer, strlen(sendbuffer) + 1, conn->encryption_type, conn->session_key);
+        cipherlen = EncryptString(out, sizeof(out),
+                                  sendbuffer, strlen(sendbuffer) + 1,
+                                  conn->encryption_type, conn->session_key);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
         return -1;
     }
@@ -1032,7 +1039,9 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
-            cipherlen = EncryptString(out, sendbuffer, offset + 1, conn->encryption_type, conn->session_key);
+            cipherlen = EncryptString(out, sizeof(out),
+                                      sendbuffer, offset + 1,
+                                      conn->encryption_type, conn->session_key);
             SendTransaction(conn->conn_info, out, cipherlen, CF_MORE);
             offset = 0;
             memset(sendbuffer, 0, CF_BUFSIZE);
@@ -1047,7 +1056,9 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     strcpy(sendbuffer + offset, CFD_TERMINATOR);
 
     cipherlen =
-        EncryptString(out, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), conn->encryption_type, conn->session_key);
+        EncryptString(out, sizeof(out),
+                      sendbuffer, offset + 2 + strlen(CFD_TERMINATOR),
+                      conn->encryption_type, conn->session_key);
     SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     DirClose(dirh);
     return 0;

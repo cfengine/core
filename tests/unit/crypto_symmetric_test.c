@@ -42,7 +42,9 @@ static void test_symmetric_encrypt(void)
     char ciphertext[CF_BUFSIZE];
     int plaintext_len = strlen(PLAINTEXT) + 1;
     
-    int ciphertext_len = EncryptString(ciphertext, PLAINTEXT, plaintext_len, CIPHER_TYPE_CFENGINE, KEY);
+    int ciphertext_len = EncryptString(ciphertext, sizeof(ciphertext),
+                                       PLAINTEXT, plaintext_len,
+                                       CIPHER_TYPE_CFENGINE, KEY);
 
     assert_int_equal(ciphertext_len, ComputeCiphertextLen(plaintext_len, CIPHER_BLOCK_SIZE_BYTES));
 
@@ -63,6 +65,30 @@ static void test_symmetric_decrypt(void)
     assert_string_equal(plaintext_out, PLAINTEXT);
 }
 
+static void test_cipher_block_size(void)
+{
+    assert_int_equal(CipherBlockSizeBytes(EVP_bf_cbc()), 8);
+    assert_int_equal(CipherBlockSizeBytes(CfengineCipher('c')), 8);
+
+    assert_int_equal(CipherBlockSizeBytes(EVP_aes_256_cbc()), 16);
+    assert_int_equal(CipherBlockSizeBytes(CfengineCipher('N')), 16);
+}
+
+static void test_cipher_text_size_max(void)
+{
+    assert_int_equal(CipherTextSizeMax(EVP_aes_256_cbc(), 1), 32);
+    assert_int_equal(CipherTextSizeMax(CfengineCipher('N'), 1), 32);
+
+    assert_int_equal(CipherTextSizeMax(EVP_aes_256_cbc(), CF_BUFSIZE), 4127);
+    assert_int_equal(CipherTextSizeMax(CfengineCipher('N'), CF_BUFSIZE), 4127);
+
+    assert_int_equal(CipherTextSizeMax(EVP_bf_cbc(), 1), 16);
+    assert_int_equal(CipherTextSizeMax(CfengineCipher('c'), 1), 16);
+
+    assert_int_equal(CipherTextSizeMax(EVP_bf_cbc(), CF_BUFSIZE), 4111);
+    assert_int_equal(CipherTextSizeMax(CfengineCipher('c'), CF_BUFSIZE), 4111);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -73,6 +99,8 @@ int main()
         unit_test(test_cipher_init),
         unit_test(test_symmetric_encrypt),
         unit_test(test_symmetric_decrypt),
+        unit_test(test_cipher_block_size),
+        unit_test(test_cipher_text_size_max),
     };
     
     return run_tests(tests);

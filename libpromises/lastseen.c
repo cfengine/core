@@ -508,9 +508,10 @@ clean:
  * @param[in]     key : either in (SHA/MD5 format)
  * @param[in,out] ip  : return the key corresponding host.
  *                      If NULL, return nothing
+ * @param[in] ip_size : length of ip parameter
  * @retval true if entry was deleted, false otherwise
  */
-bool DeleteDigestFromLastSeen(const char *key, char *ip)
+bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size)
 {
     DBHandle *db;
     bool res = false;
@@ -542,7 +543,7 @@ bool DeleteDigestFromLastSeen(const char *key, char *ip)
         {
             if (ip != NULL)
             {
-                strcpy(ip, host);
+                strlcpy(ip, host, ip_size);
             }
             DeleteDB(db, bufhost);
             DeleteDB(db, bufkey);
@@ -688,7 +689,7 @@ int LastSeenHostKeyCount(void)
  * @retval 0 if entry was deleted, <>0 otherwise
  */
 int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
-                           char *equivalent)
+                           char *equivalent, size_t equivalent_size)
 {
     bool is_coherent = false;
 
@@ -708,7 +709,7 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
     if (is_digest == true)
     {
         Log(LOG_LEVEL_VERBOSE, "Removing digest '%s' from lastseen database\n", input);
-        if (DeleteDigestFromLastSeen(input, equivalent) == false)
+        if (DeleteDigestFromLastSeen(input, equivalent, equivalent_size) == false)
         {
             Log(LOG_LEVEL_ERR, "Unable to remove digest from lastseen database.");
             return 252;

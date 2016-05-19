@@ -382,7 +382,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
             if (a.module)
             {
-                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, module_tags, &persistence);
+                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, sizeof(module_context), module_tags, &persistence);
             }
 
             if (!a.contain.nooutput && !EmptyString(line))

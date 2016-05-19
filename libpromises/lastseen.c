@@ -441,9 +441,10 @@ bool IsLastSeenCoherent(void)
  * @param[in]     ip : either in (SHA/MD5 format)
  * @param[in,out] digest: return corresponding digest of input host.
  *                        If NULL, return nothing
+ * @param[in] digest_size: size of digest parameter
  * @retval true if entry was deleted, false otherwise
  */
-bool DeleteIpFromLastSeen(const char *ip, char *digest)
+bool DeleteIpFromLastSeen(const char *ip, char *digest, size_t digest_size)
 {
     DBHandle *db;
     bool res = false;
@@ -476,7 +477,7 @@ bool DeleteIpFromLastSeen(const char *ip, char *digest)
         {
             if (digest != NULL)
             {
-                strlcpy(digest, bufkey + 1, CF_BUFSIZE);
+                strlcpy(digest, bufkey + 1, digest_size);
             }
             DeleteDB(db, bufkey);
             DeleteDB(db, bufhost);
@@ -718,7 +719,7 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
     else
     {
         Log(LOG_LEVEL_VERBOSE, "Removing host '%s' from lastseen database\n", input);
-        if (DeleteIpFromLastSeen(input, equivalent) == false)
+        if (DeleteIpFromLastSeen(input, equivalent, equivalent_size) == false)
         {
             Log(LOG_LEVEL_ERR, "Unable to remove host from lastseen database.");
             return 253;

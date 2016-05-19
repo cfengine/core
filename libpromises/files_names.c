@@ -515,18 +515,25 @@ const char *ReadLastNode(const char *str)
 
 /*********************************************************************/
 
-/**
- * @TODO fix the dangerous path lengths
- */
-int CompressPath(char *dest, const char *src)
+bool CompressPath(char *dest, size_t dest_size, const char *src)
 {
     char node[CF_BUFSIZE];
     int nodelen;
     int rootlen;
 
-    memset(dest, 0, CF_BUFSIZE);
+    memset(dest, 0, dest_size);
 
     rootlen = RootDirLength(src);
+
+    if(rootlen >= dest_size)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Internal limit reached in CompressPath(),"
+            "src path too long (%d bytes): '%s'",
+                rootlen, src);
+            return false;
+    }
+
     memcpy(dest, src, rootlen);
 
     for (const char *sp = src + rootlen; *sp != '\0'; sp++)
@@ -568,8 +575,7 @@ int CompressPath(char *dest, const char *src)
 
         AddSlash(dest);
 
-        /* TODO use dest_size parameter instead of CF_BUFSIZE. */
-        size_t ret = strlcat(dest, node, CF_BUFSIZE);
+        size_t ret = strlcat(dest, node, dest_size);
 
         if (ret >= CF_BUFSIZE)
         {

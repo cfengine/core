@@ -359,8 +359,8 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         if (encrypt)
         {
             memcpy(in, recvbuffer, nbytes);
-            DecryptString(conn->encryption_type, in, recvbuffer,
-                          conn->session_key, nbytes);
+            DecryptString(recvbuffer, sizeof(recvbuffer), in, nbytes,
+                          conn->encryption_type, conn->session_key);
         }
 
         if (recvbuffer[0] == '\0')

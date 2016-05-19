@@ -58,7 +58,8 @@ static void test_symmetric_decrypt(void)
     
     char plaintext_out[CF_BUFSIZE];
     
-    int plaintext_len = DecryptString(CIPHER_TYPE_CFENGINE, ciphertext, plaintext_out, KEY, ciphertext_len);
+    int plaintext_len = DecryptString(plaintext_out, sizeof(plaintext_out),
+                                      ciphertext, ciphertext_len, CIPHER_TYPE_CFENGINE, KEY);
 
     assert_int_equal(plaintext_len, strlen(PLAINTEXT) + 1);
 
@@ -89,6 +90,21 @@ static void test_cipher_text_size_max(void)
     assert_int_equal(CipherTextSizeMax(CfengineCipher('c'), CF_BUFSIZE), 4111);
 }
 
+static void test_plain_text_size_max(void)
+{
+    assert_int_equal(PlainTextSizeMax(EVP_aes_256_cbc(), 1), 33);
+    assert_int_equal(PlainTextSizeMax(CfengineCipher('N'), 1), 33);
+
+    assert_int_equal(PlainTextSizeMax(EVP_aes_256_cbc(), CF_BUFSIZE), 4128);
+    assert_int_equal(PlainTextSizeMax(CfengineCipher('N'), CF_BUFSIZE), 4128);
+
+    assert_int_equal(PlainTextSizeMax(EVP_bf_cbc(), 1), 17);
+    assert_int_equal(PlainTextSizeMax(CfengineCipher('c'), 1), 17);
+
+    assert_int_equal(PlainTextSizeMax(EVP_bf_cbc(), CF_BUFSIZE), 4112);
+    assert_int_equal(PlainTextSizeMax(CfengineCipher('c'), CF_BUFSIZE), 4112);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -101,6 +117,7 @@ int main()
         unit_test(test_symmetric_decrypt),
         unit_test(test_cipher_block_size),
         unit_test(test_cipher_text_size_max),
+        unit_test(test_plain_text_size_max),
     };
     
     return run_tests(tests);

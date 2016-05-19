@@ -1340,7 +1340,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 
         strlcpy(new, dest, CF_BUFSIZE);
 
-        if (!JoinSuffix(new, CF_NEW))
+        if (!JoinSuffix(new, sizeof(new), CF_NEW))
         {
             Log(LOG_LEVEL_ERR, "Unable to construct filename for copy");
             return false;
@@ -1399,13 +1399,13 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
             stampnow = time((time_t *) NULL);
             snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
 
-            if (!JoinSuffix(backup, stamp))
+            if (!JoinSuffix(backup, sizeof(backup), stamp))
             {
                 return false;
             }
         }
 
-        if (!JoinSuffix(backup, CF_SAVED))
+        if (!JoinSuffix(backup, sizeof(backup), CF_SAVED))
         {
             return false;
         }
@@ -1825,14 +1825,14 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
 
             if (attr.rename.disable_suffix)
             {
-                if (!JoinSuffix(newname, attr.rename.disable_suffix))
+                if (!JoinSuffix(newname, sizeof(newname), attr.rename.disable_suffix))
                 {
                     return result;
                 }
             }
             else
             {
-                if (!JoinSuffix(newname, ".cfdisabled"))
+                if (!JoinSuffix(newname, sizeof(newname), ".cfdisabled"))
                 {
                     return result;
                 }

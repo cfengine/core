@@ -154,7 +154,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 /*****************************************************************************/
 
 /* Lookup a reverse entry (IP->KeyHash) in lastseen database. */
-static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
+static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result, size_t result_size)
 {
     char address_key[CF_BUFSIZE];
     char hostkey[CF_BUFSIZE];
@@ -185,7 +185,7 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
     }
 #endif
 
-    strlcpy(result, hostkey, CF_BUFSIZE);
+    strlcpy(result, hostkey, result_size);
     return true;
 }
 
@@ -226,7 +226,7 @@ bool Address2Hostkey(char *dst, size_t dst_size, const char *address)
         DBHandle *db;
         if (OpenDB(&db, dbid_lastseen))
         {
-            retval = Address2HostkeyInDB(db, address, dst);
+            retval = Address2HostkeyInDB(db, address, dst, dst_size);
             CloseDB(db);
 
             if (!retval)

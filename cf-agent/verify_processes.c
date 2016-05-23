@@ -246,7 +246,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promi
         else
         {
             PromiseResult status = killed ? PROMISE_RESULT_CHANGE : PROMISE_RESULT_NOOP;
-            cfPS(ctx, LOG_LEVEL_INFO, status, pp, a,
+            cfPS(ctx, LOG_LEVEL_VERBOSE, status, pp, a,
                  "Setting restart class '%s' for promise '%s'", a.restart_class, pp->promiser);
             result = PromiseResultUpdate(result, status);
             EvalContextClassPutSoft(ctx, a.restart_class, CONTEXT_SCOPE_NAMESPACE, "source=promise");

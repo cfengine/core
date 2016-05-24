@@ -37,13 +37,28 @@ bundle agent init
                            };
 
       "reports3"  slist => {
+                           };
+      "expected3" slist => {
+                             # Nothing expected, because the log is empty.
+                           };
+
+      "reports4"  slist => {
+                             "WrongString1",
+                             "WrongString2",
+                             "WrongString3",
+                           };
+      "expected4" slist => {
+                             # Nothing expected, because everything is filtered.
+                           };
+
+      "reports5"  slist => {
                              "WrongString2",
                              "WrongString1",
                              "CorrectString2",
                              "CorrectString1",
                              "WrongString3",
                            };
-      "expected3" slist => {
+      "expected5" slist => {
                              "CorrectString2",
                              "CorrectString1",
                            };
@@ -78,13 +93,25 @@ bundle agent init
                                                  @(includes),
                                                  @(excludes));
       "any" usebundle => run_cf_execd(@(expected3), @(unexpected));
+
+    test_pass_4::
+      "any" usebundle => prepare_mailfilter_test(@(reports4),
+                                                 @(includes),
+                                                 @(excludes));
+      "any" usebundle => run_cf_execd(@(expected4), @(unexpected));
+
+    test_pass_5::
+      "any" usebundle => prepare_mailfilter_test(@(reports5),
+                                                 @(includes),
+                                                 @(excludes));
+      "any" usebundle => run_cf_execd(@(expected5), @(unexpected));
 }
 
 bundle agent check
 {
   methods:
-    test_pass_1|test_pass_2::
+    test_pass_1|test_pass_2|test_pass_3|test_pass_4::
       "any" usebundle => dcs_wait($(this.promise_filename), 1);
-    test_pass_3::
+    test_pass_5::
       "any" usebundle => compare_cf_execd_mail($(this.promise_filename));
 }

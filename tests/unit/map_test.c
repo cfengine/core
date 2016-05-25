@@ -198,6 +198,110 @@ static void test_hashmap_degenerate_hash_fn(void)
     HashMapDestroy(hashmap);
 }
 
+/* A special struct for *Value* in the Map, that references the Key. */
+typedef struct
+{
+    char *keyref;                                     /* pointer to the key */
+    int val;                                          /* arbitrary value */
+} TestValue;
+
+/* This tests that in case we insert a pre-existing key, so that the value
+ * gets replaced, the key also gets replaced despite being the same so that
+ * any references in the new value are not invalid. */
+static void test_array_map_key_referenced_in_value(void)
+{
+    ArrayMap *m = ArrayMapNew((MapKeyEqualFn) StringSafeEqual,
+                              free, free);
+
+    char      *key1 = xstrdup("blah");
+    TestValue *val1 = xmalloc(sizeof(*val1));
+    val1->keyref = key1;
+    val1->val    = 1;
+
+    /* Return value of 2 means: new value was inserted. */
+    assert_int_equal(ArrayMapInsert(m, key1, val1), 2);
+
+    /* Now we insert the same key, so that it replaces the value. */
+
+    char      *key2 = xstrdup("blah");                   /* same key string */
+    TestValue *val2 = xmalloc(sizeof(*val2));
+    val2->keyref = key2;
+    val2->val    = 2;
+
+    /* Return value of 1 means: key preexisted, old data is replaced. */
+    assert_int_equal(ArrayMapInsert(m, key2, val2), 1);
+
+    /* And now the important bit: make sure that both "key" and "val->key" are
+     * the same pointer. */
+    /* WARNING: key1 and val1 must have been freed, but there is no way to
+     *          test that. */
+    {
+        MapKeyValue *keyval = ArrayMapGet(m, key2);
+        assert_true(keyval != NULL);
+        char      *key = keyval->key;
+        TestValue *val = keyval->value;
+        assert_true(val->keyref == key);
+        assert_int_equal(val->val, 2);
+        /* Valgrind will barf on the next line if the key has freed by
+         * mistake. */
+        assert_true(strcmp(val->keyref, "blah") == 0);
+        /* A bit irrelevant: make sure that using "blah" in the lookup yields
+         * the same results, as the string is the same as in key2. */
+        MapKeyValue *keyval2 = ArrayMapGet(m, "blah");
+        assert_true(keyval2 == keyval);
+    }
+
+    ArrayMapDestroy(m);
+}
+
+/* Same purpose as the above test. */
+static void test_hash_map_key_referenced_in_value(void)
+{
+    HashMap *m = HashMapNew((MapHashFn) StringHash,
+                            (MapKeyEqualFn) StringSafeEqual,
+                            free, free);
+    char      *key1 = xstrdup("blah");
+    TestValue *val1 = xmalloc(sizeof(*val1));
+    val1->keyref = key1;
+    val1->val    = 1;
+
+    /* Return value false means: new value was inserted. */
+    assert_false(HashMapInsert(m, key1, val1));
+
+    /* Now we insert the same key, so that it replaces the value. */
+
+    char      *key2 = xstrdup("blah");                   /* same key string */
+    TestValue *val2 = xmalloc(sizeof(*val2));
+    val2->keyref = key2;
+    val2->val    = 2;
+
+    /* Return value true means: key preexisted, old data is replaced. */
+    assert_true(HashMapInsert(m, key2, val2));
+
+    /* And now the important bit: make sure that both "key" and "val->key" are
+     * the same pointer. */
+    /* WARNING: key1 and val1 must have been freed, but there is no way to
+     *          test that. */
+    {
+        MapKeyValue *keyval = HashMapGet(m, key2);
+        assert_true(keyval != NULL);
+        char      *key = keyval->key;
+        TestValue *val = keyval->value;
+        assert_true(val->keyref == key);    /* THIS IS WHAT IT'S ALL ABOUT! */
+        assert_int_equal(val->val, 2);
+        /* Valgrind will barf on the next line if the key has freed by
+         * mistake. */
+        assert_true(strcmp(val->keyref, "blah") == 0);
+        /* A bit irrelevant: make sure that using "blah" in the lookup yields
+         * the same results, as the string is the same as in key2. */
+        MapKeyValue *keyval2 = HashMapGet(m, "blah");
+        assert_true(keyval2 == keyval);
+    }
+
+    HashMapDestroy(m);
+}
+
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -211,9 +315,11 @@ int main()
         unit_test(test_has_key),
         unit_test(test_clear),
         unit_test(test_soft_destroy),
-        unit_test(test_iterate_jumbo),
         unit_test(test_hashmap_new_destroy),
         unit_test(test_hashmap_degenerate_hash_fn),
+        unit_test(test_array_map_key_referenced_in_value),
+        unit_test(test_hash_map_key_referenced_in_value),
+        unit_test(test_iterate_jumbo),
     };
 
     return run_tests(tests);

@@ -415,6 +415,7 @@ static bool CompareResultEqual(const ExecConfig *config,
         char *old_line = xmalloc(old_line_size);
         size_t new_line_size = CF_BUFSIZE;
         char *new_line = xmalloc(new_line_size);
+        bool any_new_msg_present = false;
         while (regex)
         {
             char *old_msg = NULL;
@@ -432,6 +433,7 @@ static bool CompareResultEqual(const ExecConfig *config,
             {
                 if (!LineIsFiltered(config, new_line))
                 {
+                    any_new_msg_present = true;
                     new_msg = new_line;
                     break;
                 }
@@ -439,7 +441,11 @@ static bool CompareResultEqual(const ExecConfig *config,
 
             if (!old_msg || !new_msg)
             {
-                if (old_msg != new_msg)
+                // Return difference in most cases, when there is a new
+                // message line, but if there isn't one, return equal, even
+                // if strictly speaking they aren't, since we don't want to
+                // send an empty email.
+                if (any_new_msg_present && old_msg != new_msg)
                 {
                     rtn = false;
                 }

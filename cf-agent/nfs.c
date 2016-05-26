@@ -718,10 +718,12 @@ void MountAll()
 
     SetTimeOut(RPCTIMEOUT);
 
-    if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS], "r", true)) == NULL)
+    const char *cmd = VMOUNTCOMM[VSYSTEMHARDCLASS];
+
+    if ((pp = cf_popen(cmd, "r", true)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to open pipe from '%s'. (cf_popen: %s)",
-            VMOUNTCOMM[VSYSTEMHARDCLASS], GetErrorStr());
+            cmd, GetErrorStr());
         return;
     }
 
@@ -735,7 +737,9 @@ void MountAll()
         {
             if (!feof(pp))
             {
-                Log(LOG_LEVEL_ERR, "Error reading list of mounted filesystems. (ferror: %s)", GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Error reading output of command '%s' (ferror: %s)",
+                    cmd, GetErrorStr());
             }
             break;
         }
@@ -752,13 +756,17 @@ void MountAll()
 
         if ((strstr(line, "denied")) || (strstr(line, "RPC")))
         {
-            Log(LOG_LEVEL_ERR, "There was a mount error, trying to mount one of the filesystems on this host.");
+            Log(LOG_LEVEL_ERR,
+                "There was a mount error while trying to mount the filesystems"
+                " (command '%s')", cmd);
             break;
         }
 
         if ((strstr(line, "trying")) && (!strstr(line, "NFS version 2")) && (!strstr(line, "vers 3")))
         {
-            Log(LOG_LEVEL_ERR, "Attempting abort because mount went into a retry loop.");
+            Log(LOG_LEVEL_ERR,
+                "Attempting filesystems mount aborted because command"
+                " '%s' went into a retry loop", cmd);
             break;
         }
     }

@@ -194,7 +194,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...) FUNC_ATTR_PRINTF(2, 3)
   character.
   @note The data will be preserved if this operation fails, although it might be in a detached state.
   @param buffer
-  @param format
+  @param format NB! Make sure to sanitize if taken from user input.
   @return The number of bytes written to the buffer or 0 if the operation needs to be retried. In case of error -1 is returned.
   */
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap);

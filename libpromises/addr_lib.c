@@ -463,14 +463,14 @@ bool FuzzyMatchParse(const char *s)
     if (isv4 && isrange)
     {
         long i, from = -1, to = -1;
-        char buffer1[CF_MAX_IP_LEN];
+        char buffer1[64];
 
         const char *sp1 = s;
 
         for (i = 0; i < 4; i++)
         {
             buffer1[0] = '\0';
-            sscanf(sp1, "%[^.]", buffer1);
+            sscanf(sp1, "%63[^.]", buffer1);
             sp1 += strlen(buffer1) + 1;
 
             if (strstr(buffer1, "-"))

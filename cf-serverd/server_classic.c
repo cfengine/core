@@ -126,7 +126,7 @@ static bool ResolveFilename(const char *req_path, char *res_path)
     }
 #else
     memset(res_path, 0, CF_BUFSIZE);
-    CompressPath(res_path, req_path);
+    CompressPath(res_path, CF_BUFSIZE, req_path);
 #endif
 
     /* Adjust for forward slashes */

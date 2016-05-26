@@ -144,7 +144,10 @@ static time_t GetBootTimeFromUptimeCommand(time_t now);
 
 /*****************************************************/
 
-void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
+void CalculateDomainName(const char *nodename, const char *dnsname,
+                         char *fqname, size_t fqname_size,
+                         char *uqname, size_t uqname_size,
+                         char *domain, size_t domain_size);
 
 #ifdef __linux__
 static int Linux_Fedora_Version(EvalContext *ctx);
@@ -281,22 +284,25 @@ static const char *const VEXPORTS[] =
 
 /*******************************************************************/
 
-void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain)
+void CalculateDomainName(const char *nodename, const char *dnsname,
+                         char *fqname, size_t fqname_size,
+                         char *uqname, size_t uqname_size,
+                         char *domain, size_t domain_size)
 {
     if (strstr(dnsname, "."))
     {
-        strlcpy(fqname, dnsname, CF_BUFSIZE);
+        strlcpy(fqname, dnsname, fqname_size);
     }
     else
     {
-        strlcpy(fqname, nodename, CF_BUFSIZE);
+        strlcpy(fqname, nodename, fqname_size);
     }
 
     if ((strncmp(nodename, fqname, strlen(nodename)) == 0) && (fqname[strlen(nodename)] == '.'))
     {
         /* If hostname is not qualified */
-        strcpy(domain, fqname + strlen(nodename) + 1);
-        strcpy(uqname, nodename);
+        strlcpy(domain, fqname + strlen(nodename) + 1, domain_size);
+        strlcpy(uqname, nodename, uqname_size);
     }
     else
     {
@@ -306,13 +312,13 @@ void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname
 
         if (p != NULL)
         {
-            strlcpy(uqname, nodename, MIN(CF_BUFSIZE, p - nodename + 1));
-            strlcpy(domain, p + 1, CF_BUFSIZE);
+            strlcpy(uqname, nodename, MIN(uqname_size, p - nodename + 1));
+            strlcpy(domain, p + 1, domain_size);
         }
         else
         {
-            strcpy(uqname, nodename);
-            strcpy(domain, "");
+            strlcpy(uqname, nodename, uqname_size);
+            strlcpy(domain, "", domain_size);
         }
     }
 }
@@ -323,7 +329,7 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 {
     char nodename[CF_BUFSIZE];
 
-    strcpy(nodename, orig_nodename);
+    strlcpy(nodename, orig_nodename, sizeof(nodename));
     ToLowerStrInplace(nodename);
 
     char dnsname[CF_BUFSIZE] = "";
@@ -335,12 +341,13 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 
         if ((hp = gethostbyname(fqn)))
         {
-            strlcpy(dnsname, hp->h_name, CF_MAXVARSIZE);
+            strlcpy(dnsname, hp->h_name, sizeof(dnsname));
             ToLowerStrInplace(dnsname);
         }
     }
 
-    CalculateDomainName(nodename, dnsname, VFQNAME, VUQNAME, VDOMAIN);
+    CalculateDomainName(nodename, dnsname, VFQNAME, CF_MAXVARSIZE,
+                        VUQNAME, CF_MAXVARSIZE, VDOMAIN, CF_MAXVARSIZE);
 
 /*
  * VFQNAME = a.b.c.d ->

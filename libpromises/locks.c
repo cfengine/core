@@ -886,10 +886,10 @@ void GetLockName(char *lockname, const char *locktype, const char *base, const R
         max_sample = 0;
     }
 
-    strncpy(lockname, locktype, CF_BUFSIZE / 10);
-    strcat(lockname, "_");
-    strncat(lockname, base, CF_BUFSIZE / 10);
-    strcat(lockname, "_");
+    strlcpy(lockname, locktype, CF_BUFSIZE / 10);
+    strlcat(lockname, "_", CF_BUFSIZE / 10);
+    strlcat(lockname, base, CF_BUFSIZE / 10);
+    strlcat(lockname, "_", CF_BUFSIZE / 10);
 
     for (const Rlist *rp = params; rp != NULL; rp = rp->next)
     {

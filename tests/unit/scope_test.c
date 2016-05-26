@@ -19,30 +19,10 @@ static void test_name_join(void)
     }
 }
 
-static void test_name_split(void)
-{
-    {
-        char ns[CF_MAXVARSIZE] = { 0 };
-        char b[CF_MAXVARSIZE] = { 0 };
-        SplitScopeName("sys", ns, b);
-        assert_string_equal("", ns);
-        assert_string_equal("sys", b);
-    }
-
-    {
-        char ns[CF_MAXVARSIZE] = { 0 };
-        char b[CF_MAXVARSIZE] = { 0 };
-        SplitScopeName("ns:b", ns, b);
-        assert_string_equal("ns", ns);
-        assert_string_equal("b", b);
-    }
-}
-
 int main()
 {
     const UnitTest tests[] =
 {
-        unit_test(test_name_split),
         unit_test(test_name_join),
     };
 

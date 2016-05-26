@@ -723,8 +723,8 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name)
 {
     if (strchr(qualified_name, CF_NS))
     {
-        char ns[CF_BUFSIZE] = { 0 };
-        sscanf(qualified_name, "%[^:]", ns);
+        char ns[256] = { 0 };
+        sscanf(qualified_name, "%255[^:]", ns);
 
         return xstrdup(ns);
     }

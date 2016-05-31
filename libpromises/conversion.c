@@ -434,7 +434,7 @@ long IntFromString(const char *s)
 
 // Test whether remainder is space only
 
-    if ((a == CF_NOINT) || (remainder == ' '))
+    if ((a == CF_NOINT) || (!isspace(remainder)))
     {
         Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%c'",
               s, remainder);

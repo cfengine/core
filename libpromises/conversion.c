@@ -520,21 +520,18 @@ bool DoubleFromString(const char *s, double *value_out)
     static const double NO_DOUBLE = -123.45;
 
     double a = NO_DOUBLE;
-    char remainder[4096];
-    char c = 'X';
+    char c = 'X', remainder = '\0';
 
     if (s == NULL)
     {
         return false;
     }
 
-    remainder[0] = '\0';
+    sscanf(s, "%lf%c%c", &a, &c, &remainder);
 
-    sscanf(s, "%lf%c%4095s", &a, &c, remainder);
-
-    if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
+    if ((a == NO_DOUBLE) || (!isspace(remainder)))
     {
-        Log(LOG_LEVEL_ERR, "Reading assumed real value '%s', anomalous remainder '%s'", s, remainder);
+        Log(LOG_LEVEL_ERR, "Reading assumed real value '%s', anomalous remainder '%c'", s, remainder);
         return false;
     }
     else

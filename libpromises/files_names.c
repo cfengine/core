@@ -159,9 +159,9 @@ char *JoinSuffix(char *path, size_t path_size, const char *leaf)
     }
     DeleteSlash(path);
 
-    if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
+    if (strlen(path) + len + 1 > path_size)
     {
-        Log(LOG_LEVEL_ERR, "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s",
+        Log(LOG_LEVEL_ERR, "JoinSuffix: Internal limit reached. Tried to add %s to %s",
               leaf, path);
         return NULL;
     }

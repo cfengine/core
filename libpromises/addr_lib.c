@@ -42,12 +42,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false;
     char address[CF_ADDRSIZE];
 
-    if (strlen(s1) >= CF_MAX_IP_LEN)
-    {
-        Log(LOG_LEVEL_ERR, "IP set string '%s' is too large to parse (>=%d)", s1, CF_MAX_IP_LEN);
-        return -1;
-    }
-
     if (strcmp(s1, s2) == 0)
     {
         return 0;

@@ -20,7 +20,10 @@ bundle common test
   reports:
       "test_inherit1" classes => scoped_classes_generic_inherit("namespace", "test_inherit");
       "test_inherit2" classes => scoped_classes_generic_some_inherit("test_inherit_some");
+      "test_inherit2_again" classes => scoped_classes_generic_some_inherit_again("test_inherit_some_again");
+      "test_inherit2_again2_noparams" classes => scoped_classes_generic_some_inherit_again2_noparams;
       "test_inherit3" classes => scoped_classes_generic_none_inherit;
+      "test_inherit_xyz_abc" classes => scoped_classes_generic_inherit_abc_xyz("test_inherit_def");
 }
 
 body classes scoped_classes_generic_inherit(myscope, myx)
@@ -33,15 +36,44 @@ body classes scoped_classes_generic_some_inherit(somex)
       inherit_from => scoped_classes_generic("namespace", $(somex));
 }
 
+# 3 levels of inheritance: scoped_classes_generic -> scoped_classes_generic_some_inherit -> scoped_classes_generic_some_inherit_again
+body classes scoped_classes_generic_some_inherit_again(somex2)
+{
+      inherit_from => scoped_classes_generic_some_inherit($(somex2));
+}
+
+# 5 levels of inheritance: scoped_classes_generic -> scoped_classes_generic_some_inherit -> scoped_classes_generic_some_inherit_again -> scoped_classes_generic_some_inherit_again2 -> scoped_classes_generic_some_inherit_again2_noparams
+body classes scoped_classes_generic_some_inherit_again2_noparams
+{
+      inherit_from => scoped_classes_generic_some_inherit_again2;
+}
+
+body classes scoped_classes_generic_some_inherit_again2
+{
+      inherit_from => scoped_classes_generic_some_inherit_again("test_inherit_some_again2");
+}
+
 body classes scoped_classes_generic_none_inherit
 {
       inherit_from => scoped_classes_generic("namespace", "test_inherit_none");
 }
 
+body classes scoped_classes_generic_inherit_xyz(xyz)
+{
+      inherit_from => scoped_classes_generic("namespace", $(xyz));
+}
+
+# we override xyz to something else, to test that the innermost xyz gets used
+# (as expected by scoping rules)
+body classes scoped_classes_generic_inherit_abc_xyz(xyz)
+{
+      inherit_from => scoped_classes_generic("namespace", "test_inherit_abc");
+}
+
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_expected("test_inherit_ok,test_inherit_some_ok,test_inherit_none_ok",
+      "" usebundle => dcs_passif_expected("test_inherit_ok,test_inherit_some_ok,test_inherit_some_again_ok,test_inherit_none_ok,test_inherit_abc_ok,test_inherit_some_again2_ok",
                                           "",
                                           $(this.promise_filename)),
       inherit => "true";

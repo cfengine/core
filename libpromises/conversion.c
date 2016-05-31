@@ -432,12 +432,12 @@ long IntFromString(const char *s)
 
     sscanf(s, "%lld%c%c", &a, &c, &remainder);
 
-// Test whether remainder is space only
-
-    if ((a == CF_NOINT) || (!isspace(remainder)))
+    if ((a == CF_NOINT) || ((!isspace(remainder)) && (remainder != '\0')))
     {
-        Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%c'",
-              s, remainder);
+        Log(LOG_LEVEL_ERR,
+            "IntFromString: Failed to parse assumed integer value '%s' (int=%lld, conversion=%c, remainder=%c)",
+            s, a, c, remainder);
+
         if (strchr(s, '$'))
         {
             Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
@@ -529,9 +529,11 @@ bool DoubleFromString(const char *s, double *value_out)
 
     sscanf(s, "%lf%c%c", &a, &c, &remainder);
 
-    if ((a == NO_DOUBLE) || (!isspace(remainder)))
+    if ((a == NO_DOUBLE) || ((!isspace(remainder)) && (remainder != '\0')))
     {
-        Log(LOG_LEVEL_ERR, "Reading assumed real value '%s', anomalous remainder '%c'", s, remainder);
+        Log(LOG_LEVEL_ERR,
+            "DoubleFromString: Failed to parse assumed real value '%s' (double=%lf, conversion=%c, remainder=%c)",
+            s, a, c, remainder);
         return false;
     }
     else

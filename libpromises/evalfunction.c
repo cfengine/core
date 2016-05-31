@@ -7571,6 +7571,13 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 {
     assert(tags);
 
+    // see the sscanf() limit below
+    if(context_size < 51)
+    {
+        ProgrammingError("ModuleProtocol: context_size too small (%zu)",
+                         context_size);
+    }
+
     if (*context == '\0')
     {
         /* Infer namespace from script name */

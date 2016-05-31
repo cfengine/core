@@ -208,14 +208,37 @@ char *Rlist2String(Rlist *list, char *sep)
     Rlist *rp;
 
     line[0] = '\0';
+    size_t sep_length = strlen(sep);
+    size_t line_chars_left = sizeof(line);
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        strlcat(line, RlistScalarValue(rp), sizeof(line));
+        char *rlist_scalar = RlistScalarValue(rp);
+        size_t rlist_scalar_length = strlen(rlist_scalar);
+
+        if(rlist_scalar_length + 1 > line_chars_left)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Rlist2String: Internal limit reached (line='%s', rlist_scalar='%s')",
+                line, rlist_scalar);
+            break;
+        }
+
+        strlcat(line, rlist_scalar, sizeof(line));
+        line_chars_left -= rlist_scalar_length;
 
         if (rp->next)
         {
+            if(sep_length + 1 > line_chars_left)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Rlist2String: Internal limit reached (line='%s', sep='%s')",
+                    line, sep);
+                break;
+            }
+
             strlcat(line, sep, sizeof(line));
+            line_chars_left -= sep_length;
         }
     }
 

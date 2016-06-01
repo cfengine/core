@@ -384,9 +384,9 @@ static bool LineIsFiltered(const ExecConfig *config,
     return !included || excluded;
 }
 
-static bool CompareResultEqual(const ExecConfig *config,
-                               const char *filename,
-                               const char *prev_file)
+static bool CompareResultEqualOrFiltered(const ExecConfig *config,
+                                         const char *filename,
+                                         const char *prev_file)
 {
     Log(LOG_LEVEL_VERBOSE, "Comparing files  %s with %s", prev_file, filename);
 
@@ -599,7 +599,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         snprintf(prev_file, CF_BUFSIZE, "%s/outputs/previous", GetWorkDir());
         MapName(prev_file);
 
-        if (CompareResultEqual(config, file, prev_file))
+        if (CompareResultEqualOrFiltered(config, file, prev_file))
         {
             Log(LOG_LEVEL_VERBOSE, "Mail report: previous output is the same as current so do not mail it");
             return;

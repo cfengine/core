@@ -1,0 +1,41 @@
+# Tests that no mail is sent by cf-execd if everything is filtered on the first
+# run (hence the old log doesn't exist).
+
+body common control
+{
+    inputs => { "../default.cf.sub", "mailfilter_common.cf.sub" };
+    bundlesequence => { default($(this.promiser_filename)) };
+}
+
+bundle agent init
+{
+  vars:
+      "reports"  slist => {
+                            "WrongString1",
+                            "WrongString2",
+                            "WrongString3",
+                          };
+
+      # No mail is expected at all, since everything is filtered.
+      "expected" slist => { };
+      "unexpected" slist => { ".+" };
+
+      "includes" slist => {
+                          };
+      "excludes" slist => {
+                            ".*WrongString.*"
+                          };
+
+  methods:
+      "any" usebundle => prepare_mailfilter_test(@(reports),
+                                                 @(includes),
+                                                 @(excludes));
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => check_cf_execd_mail(@(init.expected),
+                                             @(init.unexpected),
+                                             $(this.promise_filename));
+}

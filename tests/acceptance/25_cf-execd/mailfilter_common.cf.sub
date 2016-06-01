@@ -95,6 +95,7 @@ QUIT\r(
       "$(G.testfile).wanted"
         edit_line => append_regex($(wanted_regex));
 
+    any::
       "$(G.testfile).unwanted"
         create => "true";
     unwanted_not_empty::

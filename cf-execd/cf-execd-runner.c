@@ -394,7 +394,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
 
     FILE *old_fp = safe_fopen(prev_file, "r");
     FILE *new_fp = safe_fopen(filename, "r");
-    if (old_fp && new_fp)
+    if (new_fp)
     {
         const char *errptr;
         int erroffset;
@@ -419,12 +419,15 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
         while (regex)
         {
             char *old_msg = NULL;
-            while (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
+            if (old_fp)
             {
-                if (!LineIsFiltered(config, old_line))
+                while (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
                 {
-                    old_msg = old_line;
-                    break;
+                    if (!LineIsFiltered(config, old_line))
+                    {
+                        old_msg = old_line;
+                        break;
+                    }
                 }
             }
 

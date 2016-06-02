@@ -1,0 +1,42 @@
+# Tests that no mail is sent by cf-execd if the old and new logs are empty.
+
+body common control
+{
+    inputs => { "../default.cf.sub", "mailfilter_common.cf.sub" };
+    bundlesequence => { default($(this.promiser_filename)) };
+}
+
+bundle agent init
+{
+  vars:
+      "reports"  slist => {
+                          };
+
+      # No mail is expected at all, since everything is filtered.
+      "expected" slist => { };
+      "unexpected" slist => { ".+" };
+
+      "includes" slist => {
+                          };
+      "excludes" slist => {
+                          };
+
+  methods:
+      "any" usebundle => prepare_mailfilter_test(@(reports),
+                                                 @(includes),
+                                                 @(excludes));
+
+  files:
+      "$(sys.workdir)/outputs/old.log"
+        create => "true";
+      "$(sys.workdir)/outputs/previous"
+        link_from => linkfrom("$(sys.workdir)/outputs/old.log", "symlink");
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => check_cf_execd_mail(@(init.expected),
+                                             @(init.unexpected),
+                                             $(this.promise_filename));
+}

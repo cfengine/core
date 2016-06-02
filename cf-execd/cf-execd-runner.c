@@ -384,9 +384,9 @@ static bool LineIsFiltered(const ExecConfig *config,
     return !included || excluded;
 }
 
-static bool CompareResultEqual(const ExecConfig *config,
-                               const char *filename,
-                               const char *prev_file)
+static bool CompareResultEqualOrFiltered(const ExecConfig *config,
+                                         const char *filename,
+                                         const char *prev_file)
 {
     Log(LOG_LEVEL_VERBOSE, "Comparing files  %s with %s", prev_file, filename);
 
@@ -394,7 +394,7 @@ static bool CompareResultEqual(const ExecConfig *config,
 
     FILE *old_fp = safe_fopen(prev_file, "r");
     FILE *new_fp = safe_fopen(filename, "r");
-    if (old_fp && new_fp)
+    if (new_fp)
     {
         const char *errptr;
         int erroffset;
@@ -419,12 +419,15 @@ static bool CompareResultEqual(const ExecConfig *config,
         while (regex)
         {
             char *old_msg = NULL;
-            while (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
+            if (old_fp)
             {
-                if (!LineIsFiltered(config, old_line))
+                while (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
                 {
-                    old_msg = old_line;
-                    break;
+                    if (!LineIsFiltered(config, old_line))
+                    {
+                        old_msg = old_line;
+                        break;
+                    }
                 }
             }
 
@@ -599,7 +602,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         snprintf(prev_file, CF_BUFSIZE, "%s/outputs/previous", GetWorkDir());
         MapName(prev_file);
 
-        if (CompareResultEqual(config, file, prev_file))
+        if (CompareResultEqualOrFiltered(config, file, prev_file))
         {
             Log(LOG_LEVEL_VERBOSE, "Mail report: previous output is the same as current so do not mail it");
             return;

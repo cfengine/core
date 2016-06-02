@@ -350,81 +350,31 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
         if (NULL != map && JsonLength(map) > 0 &&       // do we have a rewrite map?
             (strstr(item, "$(") || strstr(item, "${"))) // are there unresolved variable references?
         {
-            // TODO: replace with BufferSearchAndReplace when the
-            // string_replace code is merged.
-            // Sorry about the CF_BUFSIZE ugliness.
-            int max_size = 10*CF_BUFSIZE+1;
-            char *buffer_from = xmalloc(max_size);
-            char *buffer_to = xmalloc(max_size);
-
-            Buffer *format = BufferNew();
-            strncpy(buffer_from, item, max_size);
-
-            for (int iteration = 0; iteration < 10; iteration++)
+            Buffer *format = BufferNewFrom(item, strlen(item));
+            Buffer *keyrep = BufferNew();
+            // iterate at most enough to have every variable refer to another in
+            // the rewrite map
+            for (int iteration = 0; iteration < JsonLength(map)+1; iteration++)
             {
-                bool replacement_made = false;
-                int var_start = -1;
-                char closing_brace = 0;
-                for (int c = 0; c < buffer_from[c]; c++)
+                JsonIterator iter = JsonIteratorInit(map);
+                const JsonElement *e;
+                while ((e = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
                 {
-                    if (buffer_from[c] == '$')
+                    const char *key = JsonIteratorCurrentKey(&iter);
+                    const char *value = JsonPrimitiveGetAsString(e);
+
+                    BufferPrintf(keyrep, "[$](\\(%s\\)|\\{%s\\})", key, key);
+                    if (strstr(BufferData(format), key))
                     {
-                        if (buffer_from[c+1] == '(')
-                        {
-                            closing_brace = ')';
-                        }
-                        else if (buffer_from[c+1] == '{')
-                        {
-                            closing_brace = '}';
-                        }
-
-                        if (closing_brace)
-                        {
-                            c++;
-                            var_start = c-1;
-                        }
+                        // doing a search and replace globally uses the "g" option
+                        BufferSearchAndReplace(format, BufferData(keyrep), value, "g");
                     }
-                    else if (var_start >= 0 && buffer_from[c] == closing_brace)
-                    {
-                        char saved = buffer_from[c];
-                        buffer_from[c] = '\0';
-                        const char *repl = JsonObjectGetAsString(map, buffer_from + var_start + 2);
-                        buffer_from[c] = saved;
-
-                        if (repl)
-                        {
-                            // Before the replacement.
-                            memcpy(buffer_to, buffer_from, var_start);
-
-                            // The actual replacement.
-                            int repl_len = strlen(repl);
-                            memcpy(buffer_to + var_start, repl, repl_len);
-
-                            // The text after.
-                            strlcpy(buffer_to + var_start + repl_len, buffer_from + c + 1, max_size - var_start - repl_len);
-
-                            // Reset location to immediately after the replacement.
-                            c = var_start + repl_len - 1;
-                            var_start = -1;
-                            strcpy(buffer_from, buffer_to);
-                            closing_brace = 0;
-                            replacement_made = true;
-                        }
-                    }
-                }
-
-                if (!replacement_made)
-                {
-                    break;
                 }
             }
+            BufferDestroy(keyrep);
 
-            char *ret = xstrdup(buffer_to);
-
+            char *ret = xstrdup(BufferData(format));
             BufferDestroy(format);
-            free(buffer_to);
-            free(buffer_from);
-
             return (Rval) { ret, RVAL_TYPE_SCALAR };
         }
         else

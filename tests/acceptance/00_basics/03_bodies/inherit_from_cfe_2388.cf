@@ -1,0 +1,60 @@
+#######################################################
+#
+# CFE-2388: test body inheritance with parameters
+#
+#######################################################
+
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+body copy_from from_ref(path1)
+{
+        source  => "$(init.referential_root_dir)/$(path1)";
+}
+
+body copy_from ref_for_level(level, path2)
+{
+        inherit_from => from_ref("$(level)/$(path2)");
+}
+
+body copy_from ref_common(path3)
+{
+      # inherit_from => from_ref("common/$(path3)");
+        inherit_from => ref_for_level("common", $(path3));
+}
+
+
+
+bundle agent init
+{
+  vars:
+      "referential_root_dir" string => "$(G.testdir)/ref";
+      "target_filepath" string => "$(referential_root_dir)/testtarget";
+      "source_filepath" string => "service_x/tmp/fic1";
+
+  methods:
+      "" usebundle => file_make_mog("$(referential_root_dir)/common/$(source_filepath)", "",
+                                   "644", $(this.promiser_uid), $(this.promiser_gid));
+
+      "" usebundle => file_tidy($(target_filepath));
+}
+
+
+bundle agent test
+{
+  files:
+      "$(init.target_filepath)"
+        copy_from => ref_common($(init.source_filepath)),
+        perms => mog("644", $(this.promiser_uid), $(this.promiser_gid));
+}
+
+bundle agent check
+{
+  methods:
+      "any"  usebundle => dcs_passif_fileexists($(init.target_filepath),
+                                               $(this.promise_filename));
+}

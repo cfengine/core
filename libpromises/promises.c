@@ -291,10 +291,11 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                             // leaving it commented out
 
                             // Writer *w = StringWriter();
+                            // WriterWrite(w, "'");
                             // RvalWrite(w, returnval);
-                            // WriterWrite(w, " -> copied rval ");
+                            // WriterWrite(w, "' -> expanded+rewritten rval '");
                             // RvalWrite(w, scp_copy->rval);
-                            // WriterWrite(w, "; rewrite map ");
+                            // WriterWrite(w, "'; rewrite map ");
                             // JsonWrite(w, arg_rewrite, 0);
 
                             // Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise: processing body %s: expanding constraint %s with rval %s",

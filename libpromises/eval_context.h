@@ -230,6 +230,9 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
 PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
 
+bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx);
+void EvalContextSetSelectEndMatchEof(EvalContext *ctx, bool value);
+
 void AddDefaultPackageModuleToContext(const EvalContext *ctx, char *name);
 void AddDefaultInventoryToContext(const EvalContext *ctx, Rlist *inventory);
 

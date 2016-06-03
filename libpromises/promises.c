@@ -252,10 +252,9 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     }
 
                     // Only do the copy expansion if we copied something while inheriting
-                    // note that r < 0 can't be true because size_t is unsigned
-                    for (size_t r = SeqLength(constraints_to_expand); r != 0; r--)
+                    for (size_t r = 0; r < SeqLength(constraints_to_expand); r++)
                     {
-                        Constraint *scp = SeqAt(constraints_to_expand, r-1);
+                        Constraint *scp = SeqAt(constraints_to_expand, r);
 
                         if (IsDefinedClass(ctx, scp->classes))
                         {
@@ -301,7 +300,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                             // WriterWrite(w, "' -> expanded+rewritten rval '");
                             // RvalWrite(w, scp_copy->rval);
                             // WriterWrite(w, "'; rewrite map ");
-                            // JsonWrite(w, arg_rewrite, 0);
+                            // JsonWriteCompact(w, arg_rewrite);
 
                             // Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise: in promise %s, processing body %s: expanding constraint %s with rval %s",
                             //     pcopy->promiser, body_reference, scp->lval, StringWriterData(w));

@@ -45,6 +45,25 @@
 
 #define CF_MAPPEDLIST '#'
 
+static StringSet *expand_exceptions = NULL;
+void ExpandExceptionAdd(const char *name)
+{
+    if (expand_exceptions == NULL)
+    {
+        expand_exceptions = StringSetNew();
+    }
+
+    StringSetAdd(expand_exceptions, xstrdup(name));
+}
+
+void ExpandExceptionRemove(const char *name)
+{
+    if (expand_exceptions != NULL)
+    {
+        StringSetRemove(expand_exceptions, name);
+    }
+}
+
 static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
                                         Rlist *lists, Rlist *containers,
                                         PromiseActuator *ActOnPromise, void *param);
@@ -687,6 +706,7 @@ bool ExpandScalar(const EvalContext *ctx,
         {
             DataType type = CF_DATA_TYPE_NONE;
             const void *value = NULL;
+            if (expand_exceptions == NULL || !StringSetContains(expand_exceptions, BufferData(current_item)))
             {
                 VarRef *ref = VarRefParseFromNamespaceAndScope(BufferData(current_item), ns, scope, CF_NS, '.');
                 value = EvalContextVariableGet(ctx, ref, &type);
@@ -698,8 +718,9 @@ bool ExpandScalar(const EvalContext *ctx,
             case RVAL_TYPE_SCALAR:
                 if (value)
                 {
-                     BufferAppendString(out, value);
-                     continue;
+                    //Log(LOG_LEVEL_DEBUG, "ExpandScalar: expanded %s to %s", BufferData(current_item), value);
+                    BufferAppendString(out, value);
+                    continue;
                 }
                 break;
 

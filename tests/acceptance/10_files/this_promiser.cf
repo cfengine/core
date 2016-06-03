@@ -1,13 +1,13 @@
 #######################################################
 #
-# Test this.promiser on files promises 
+# Test this.promiser on files promises
 #
 #######################################################
 
 body common control
 {
       inputs => { "../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
+      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -58,6 +58,7 @@ bundle agent test
   commands:
     "$(G.true)"
       classes => promiser0_generic;
+
   files:
     # 6 promisers
     "$(G.testdir)/$(init.files)"
@@ -132,7 +133,7 @@ bundle agent template_test
 body file_select mustache_files
 {
      leaf_name => { "@(template_test.mustache_files)" };
-     file_result => "leaf_name";   
+     file_result => "leaf_name";
 }
 
 body delete tidyfiles
@@ -164,41 +165,33 @@ body depth_search test_recurse
 
 #######################################################
 
+bundle agent collect
+{
+  vars:
+      "todo" slist =>  expandrange("[0-4]", 1);
+      "ok_$(todo)_count" int => countclassesmatching(".*_$(todo)_ok");
+      "found_copy_me" int => length(findfiles("$(G.testdir)/copy_me"));
+
+      "bad_count" int => countclassesmatching("__this_promiser_[0-9]_ok");
+}
+
+#######################################################
+
 bundle agent check
 {
   vars:
-      "ok_promisers" slist => classesmatching(".*_ok");
-      "ok_0_count" int => countclassesmatching(".*_0_ok");
-      "ok_1_count" int => countclassesmatching(".*_1_ok");
-      "ok_2_count" int => countclassesmatching(".*_2_ok");
-      "ok_3_count" int => countclassesmatching(".*_3_ok");
-      "ok_4_count" int => countclassesmatching(".*_4_ok");
+      "ok_$(collect.todo)_classes" slist => classesmatching(".*_$(collect.todo)_ok");
 
-  classes:
-      "ok_expand" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
-      "ok0" expression => strcmp("$(ok_0_count)", 1);
-      "ok1" expression => strcmp("$(ok_1_count)", 6);
-      "ok2" expression => strcmp("$(ok_2_count)", 4);
-      "ok3" expression => strcmp("$(ok_3_count)", 6);
-      "ok4" expression => strcmp("$(ok_4_count)", 4);
-      "ok5" expression => fileexists("$(G.testdir)/copy_me");
-
-      "ok" and => { "ok_expand", "ok0", "ok1", "ok2", "ok3", "ok4", "ok5" };
+  methods:
+      "collect";
+      "check"  usebundle => dcs_check_state(collect,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
   reports:
     DEBUG::
-      "$(ok_promisers)";
-      "0: $(ok_0_count)";
-      "1: $(ok_1_count)";
-      "2: $(ok_2_count)";
-      "3: $(ok_3_count)";
-      "4: $(ok_4_count)";
-    DEBUG.!ok5::
-      "5: file not copied";
-
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+      "$(collect.todo): count=$(collect.ok_$(collect.todo)_count)";
+      "$(collect.todo): class = $(ok_$(collect.todo)_classes)";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

@@ -38,6 +38,9 @@ void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rli
 
 bool IsExpandable(const char *str);
 
+void ExpandExceptionAdd(const char *name);
+void ExpandExceptionRemove(const char *name);
+
 bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, Buffer *out);
 Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
 Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, const void *rval_item, RvalType rval_type);

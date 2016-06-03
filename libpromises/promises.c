@@ -128,8 +128,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             break;
         }
 
-        /* First case is: we have a body template to expand lval = body(args), .. */
-
         if (bodies_and_args && SeqLength(bodies_and_args) > 0)
         {
             const Body *bp = SeqAt(bodies_and_args, 0); // guaranteed to be non-NULL
@@ -263,20 +261,24 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         {
                             Rval returnval = RvalNew(scp->rval.item, scp->rval.type);
 
+                            // TODO: this was only in the case of body call with no args, should it always happen?
+                            if (returnval.type == RVAL_TYPE_LIST)
+                            {
+                                Rlist *new_list = RvalRlistValue(returnval);
+                                RlistFlatten(ctx, &new_list);
+                                returnval.item = new_list;
+                            }
+
                             // First we rewrite the Rval with the rewrite map
                             Rval rewrite = RvalCopyRewriter(returnval, arg_rewrite);
                             RvalDestroy(returnval);
 
-                            // TODO: this was only in the case of body call with no args, should it always happen?
-                            if (rewrite.type == RVAL_TYPE_LIST)
-                            {
-                                Rlist *new_list = RvalRlistValue(rewrite);
-                                RlistFlatten(ctx, &new_list);
-                                rewrite.item = new_list;
-                            }
-
                             // Second we expand body vars; note it has to happen ONLY ONCE
+                            // We have to protect this.promiser because in promise iterations, it will not be always correct
+                            // For example "x" usebundle => y; followed by an iterative files promise; will set this.promiser to "x"
+                            ExpandExceptionAdd("this.promiser");
                             returnval = ExpandPrivateRval(ctx, NULL, "body", rewrite.item, rewrite.type);
+                            ExpandExceptionRemove("this.promiser");
 
                             RvalDestroy(rewrite);
 
@@ -292,14 +294,17 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                             // Writer *w = StringWriter();
                             // WriterWrite(w, "'");
+                            // RvalWrite(w, scp->rval);
+                            // WriterWrite(w, "' -> expanded rval '");
+                            // WriterWrite(w, "'");
                             // RvalWrite(w, returnval);
                             // WriterWrite(w, "' -> expanded+rewritten rval '");
                             // RvalWrite(w, scp_copy->rval);
                             // WriterWrite(w, "'; rewrite map ");
                             // JsonWrite(w, arg_rewrite, 0);
 
-                            // Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise: processing body %s: expanding constraint %s with rval %s",
-                            //     body_reference, scp->lval, StringWriterData(w));
+                            // Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise: in promise %s, processing body %s: expanding constraint %s with rval %s",
+                            //     pcopy->promiser, body_reference, scp->lval, StringWriterData(w));
                             // WriterClose(w);
                         }
                     }
@@ -358,7 +363,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
         SeqDestroy(bodies_and_args);
     }
-    
+
     // Add default body for promise body types that are not present
     char *bundle_type = pcopy->parent_promise_type->parent_bundle->type;
     char *promise_type = pcopy->parent_promise_type->name;

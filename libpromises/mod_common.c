@@ -315,6 +315,7 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewInt("default_timeout", CF_VALRANGE, "Maximum time a network connection should attempt to connect. Default value: 10 seconds", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("verbose", "true/false switches on verbose standard output. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("report_class_log", "true/false enables logging classes at the end of agent execution. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("select_end_match_eof", "Set the default behavior of select_end_match_eof in edit_line promises. Default: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

@@ -1,7 +1,7 @@
 #######################################################
 #
 # Test matching EOF in file where end selector in region don't matches
-# anything but select_end_match_eof is true.
+# anything and control body 'select_end_match_eof' is true.
 #
 #######################################################
 
@@ -10,6 +10,11 @@ body common control
       inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
+}
+
+body agent control
+{
+      select_end_match_eof => "true";
 }
 
 #######################################################
@@ -67,7 +72,6 @@ body select_region example_select
 {
       select_start => "\[quux\]";
       select_end => "\[.*\]";
-      select_end_match_eof => "true";
 }
 
 body location example_location

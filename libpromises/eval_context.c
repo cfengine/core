@@ -129,10 +129,23 @@ struct EvalContext_
 
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
+    
+    /* select_end_match_eof context*/
+    bool select_end_match_eof;
 
     /* List if all classes set during policy evaluation */
     StringSet *all_classes;
 };
+
+bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx)
+{
+    return ctx->select_end_match_eof;
+}
+
+void EvalContextSetSelectEndMatchEof(EvalContext *ctx, bool value)
+{
+    ctx->select_end_match_eof = value;
+}
 
 
 void AddDefaultPackageModuleToContext(const EvalContext *ctx, char *name)
@@ -935,6 +948,7 @@ EvalContext *EvalContextNew(void)
     ctx->package_promise_context = PackagePromiseConfigNew();
 
     ctx->all_classes = NULL;
+    ctx->select_end_match_eof = false;
 
     return ctx;
 }

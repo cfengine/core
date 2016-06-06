@@ -1027,6 +1027,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 continue;
             }
+            
+            if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SELECT_END_MATCH_EOF].lval) == 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "SET select_end_match_eof %s", value);
+                EvalContextSetSelectEndMatchEof(ctx, BooleanFromString(value));
+            }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORTCLASSLOG].lval) == 0)
             {

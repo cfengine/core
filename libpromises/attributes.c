@@ -1489,8 +1489,24 @@ EditRegion GetRegionConstraints(const EvalContext *ctx, const Promise *pp)
     e.select_end = PromiseGetConstraintAsRval(pp, "select_end", RVAL_TYPE_SCALAR);
     e.include_start = PromiseGetConstraintAsBoolean(ctx, "include_start_delimiter", pp);
     e.include_end = PromiseGetConstraintAsBoolean(ctx, "include_end_delimiter", pp);
-    e.select_end_match_eof = PromiseGetConstraintAsBoolean(ctx, "select_end_match_eof", pp);
     
+    // set the value based on body agent control
+    char *local_select_end = PromiseGetConstraintAsRval(pp,  "select_end_match_eof", RVAL_TYPE_SCALAR);
+    if (local_select_end != NULL)
+    {
+        if (strcmp(local_select_end, "true") == 0) 
+        {
+            e.select_end_match_eof = true;
+        }
+        else
+        {
+            e.select_end_match_eof = false;
+        }
+    }
+    else
+    {
+        e.select_end_match_eof = EvalContextGetSelectEndMatchEof(ctx);
+    }
     return e;
 }
 

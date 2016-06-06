@@ -1,7 +1,8 @@
 #######################################################
 #
 # Test matching EOF in file where end selector in region don't matches
-# anything but select_end_match_eof is true.
+# anything and local edit_line 'select_end_match_eof' option is
+# overriding global body common control. 
 #
 #######################################################
 
@@ -12,6 +13,11 @@ body common control
       version => "1.0";
 }
 
+body agent control
+{
+      select_end_match_eof => "true";
+}
+
 #######################################################
 
 bundle agent init
@@ -19,6 +25,7 @@ bundle agent init
   vars:
       "actual" string => "[quux]
 bar
+foo
 ";
 
       "expected" string => "[quux]
@@ -67,7 +74,7 @@ body select_region example_select
 {
       select_start => "\[quux\]";
       select_end => "\[.*\]";
-      select_end_match_eof => "true";
+      select_end_match_eof => "false";
 }
 
 body location example_location

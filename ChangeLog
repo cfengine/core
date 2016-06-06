@@ -107,6 +107,7 @@
 	  For example: `mergedata('[ "thing", { "mykey": "myvalue" } ]')`
 	  See the documentation for more details. (Jira CFE-2253)
 	- Add: edit_line contains_literal_string to stdlib
+	- Add body agent control select_end_match_eof option. (Jira CFE-2390)
 
 	Changes:
 	- Change: classesmatching(): order of classes changed
@@ -180,14 +181,20 @@
 	  or readstringlist(), parsing an empty file will no longer result in a
 	  failed function call, but instead an empty list. Failure to open the
 	  file will still result in a failed function call.
+	- insert_lines is no longer implicitly matching EOF as
+	  end of the region if 'select_end' pattern is not matched .
+	  (Jira CFE-2263)
+	- EOF is  matched as an end of the region in edit_line
+	  promises only if 'select_end_match_eof' parameter is true.
+	  (Jira CFE-2263)
 
 	Bug fixes:
 	- Upgrade CFEngine dependencies to the following versions:
 	  - Curl     7.48.0
-	  - libxml2  2.9.3
+	  - libxml2  2.9.4
 	  - LMDB     0.9.18
 	  - OpenLDAP 2.4.44
-	  - OpenSSL  1.0.2g
+	  - OpenSSL  1.0.2h
 	  - PCRE     8.38
 	  (Jira ENT-2720)
 	- Upgrade dependencies to latest minor versions.
@@ -283,6 +290,18 @@
 	- Fix: CFEngine choking on standard services (Jira CFE-2086)
 	- Fix: cf-upgrade on SUSE
 	- Fix: Stop cfengine choking on systemctl output (Jira CFE-2806)
+	- storage: Properly initialize the list of current mounts
+	  (Jira CFE-1803)
+	- Fix bug which caused empty emails to be sent from cf-execd
+	  if there was no previous output log and the new log was fully filtered
+	  by email filters. (Jira ENT-2739)
+	- Don't send empty emails for logs where everything is filtered.
+	  (Jira ENT-2739)
+	- Fix intermittent error message of type:
+	  "error: Process table lacks space for last columns: <cmd>"
+	  (Jira CFE-2371)
+	- Be less verbose if a network interface doesn't have a MAC address.
+	  (Jira CFE-1995)
 
 3.8.2:
 	Fixes:

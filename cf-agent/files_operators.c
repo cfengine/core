@@ -73,15 +73,15 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
             }
 
             saved[0] = '\0';
-            strcpy(saved, from);
+            strlcpy(saved, from, sizeof(saved));
 
             if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP || attr.edits.backup == BACKUP_OPTION_TIMESTAMP)
             {
                 snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
-                strcat(saved, stamp);
+                strlcat(saved, stamp, sizeof(saved));
             }
 
-            strcat(saved, CF_SAVED);
+            strlcat(saved, CF_SAVED, sizeof(saved));
 
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object '%s' to '%s'", from, saved);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -112,12 +112,12 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
             }
 
             saved[0] = '\0';
-            strcpy(saved, from);
+            strlcpy(saved, from, sizeof(saved));
 
             snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
-            strcat(saved, stamp);
-            strcat(saved, CF_SAVED);
-            strcat(saved, ".dir");
+            strlcat(saved, stamp, sizeof(saved));
+            strlcat(saved, CF_SAVED, sizeof(saved));
+            strlcat(saved, ".dir", sizeof(saved));
 
             if (stat(saved, &sb) != -1)
             {

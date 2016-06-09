@@ -14,6 +14,20 @@
       "g,h,i"
     ]
   ],
+  "explicit_env": {
+    "A": "B",
+    "C": "D",
+    "E": "F\"G",
+    "EMPTY": "",
+    "J": "\"",
+    "K": "\\\"",
+    "L": "",
+    "M": "\\",
+    "N": "\"",
+    "OVERRIDE": "new",
+    "SPACE": " ",
+    "x": "y"
+  },
   "explicit_json": {
     "x": [
       1,
@@ -40,6 +54,20 @@
       "g,h,i"
     ]
   ],
+  "extension_env": {
+    "A": "B",
+    "C": "D",
+    "E": "F\"G",
+    "EMPTY": "",
+    "J": "\"",
+    "K": "\\\"",
+    "L": "",
+    "M": "\\",
+    "N": "\"",
+    "OVERRIDE": "new",
+    "SPACE": " ",
+    "x": "y"
+  },
   "extension_json": {
     "x": [
       1,
@@ -52,6 +80,8 @@
     }
   },
   "failed_explicit_csv": [],
+  "failed_explicit_env": {
+  },
   "guess_json": {
     "x": [
       1,

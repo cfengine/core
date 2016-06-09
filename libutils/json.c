@@ -829,7 +829,7 @@ static char *JsonEncodeString(const char *unescaped_string)
     return StringWriterClose(writer);
 }
 
-static char *JsonDecodeString(const char *encoded_string)
+char *JsonDecodeString(const char *encoded_string)
 {
     assert(encoded_string);
 

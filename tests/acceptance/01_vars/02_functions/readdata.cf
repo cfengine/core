@@ -17,15 +17,18 @@ bundle agent test
 {
   vars:
       "explicit_csv" data => readdata("$(this.promise_filename).csv", "CSV");
+      "explicit_env" data => readdata("$(this.promise_filename).env", "ENV");
       "explicit_json" data => readdata("$(this.promise_filename).json", "JSON");
 
       "extension_csv" data => readdata("$(this.promise_filename).csv", "auto");
+      "extension_env" data => readdata("$(this.promise_filename).env", "auto");
       "extension_json" data => readdata("$(this.promise_filename).json", "auto");
 
       "guess_csv" data => readdata("$(this.promise_filename).csv.guess", "auto");   # should be empty (JSON is attempted)
       "guess_json" data => readdata("$(this.promise_filename).json.guess", "auto");
 
       "failed_explicit_csv" data => readdata($(this.promise_filename), "CSV");
+      "failed_explicit_env" data => readdata("$(this.promise_filename).csv", "ENV");
       "failed_explicit_json" data => readdata($(this.promise_filename), "JSON");
 
       "failed_guess" data => readdata($(this.promise_filename), "auto");

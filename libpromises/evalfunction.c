@@ -6370,6 +6370,10 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
             {
                 requested_mode = "YAML";
             }
+            else if (StringEndsWithCase(input_path, ".env", true))
+            {
+                requested_mode = "ENV";
+            }
             else // always default to JSON
             {
                 requested_mode = "JSON";
@@ -6390,14 +6394,21 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         {
             requested_mode = "CSV";
         }
+        else if (0 == strcmp(fp->name, "readenvfile"))
+        {
+            requested_mode = "ENV";
+        }
         else
         {
             requested_mode = "JSON";
         }
     }
 
-    if (strcmp("CSV", requested_mode) == 0)
+    if (strcmp("CSV", requested_mode) == 0 ||
+        strcmp("ENV", requested_mode) == 0)
     {
+        bool env_mode = (strcmp("ENV", requested_mode) == 0);
+
         size_t size_max = 50 * (1024 * 1024);
 
         size_t byte_count = 0;
@@ -6405,41 +6416,103 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         FILE *fin = safe_fopen(input_path, "r");
         if (fin == NULL)
         {
-            Log(LOG_LEVEL_VERBOSE, "%s cannot open the CSV file '%s' (fopen: %s)",
-                fp->name, input_path, GetErrorStr());
+            Log(LOG_LEVEL_VERBOSE, "%s cannot open the %s file '%s' (fopen: %s)",
+                fp->name, requested_mode, input_path, GetErrorStr());
             return FnFailure();
         }
 
-        JsonElement *json = JsonArrayCreate(50);
+        JsonElement *json = NULL;
         int linenumber = 0;
-        char *line;
-        while ((line = GetCsvLineNext(fin)) != NULL)
+        if (env_mode)
         {
-            ++linenumber;
+            json = JsonObjectCreate(10);
+            size_t line_size = CF_BUFSIZE;
+            char *line = xmalloc(CF_BUFSIZE);
 
-            byte_count += strlen(line);
-            if (byte_count > size_max)
+
+            while (CfReadLine(&line, &line_size, fin) != -1)
             {
-                Log(LOG_LEVEL_VERBOSE, "%s: line %d from CSV file '%s' exceeded byte limit %lu, done with file",
-                    fp->name, linenumber, input_path, (long unsigned int)size_max);
-                free(line);
-                break;
-            }
+                ++linenumber;
 
-            Seq *list = SeqParseCsvString(line);
-            free(line);
-
-            if (list != NULL)
-            {
-                JsonElement *line_arr = JsonArrayCreate(SeqLength(list));
-
-                for (size_t i = 0; i < SeqLength(list); i++)
+                byte_count += strlen(line);
+                if (byte_count > size_max)
                 {
-                    JsonArrayAppendString(line_arr, SeqAt(list, i));
+                    Log(LOG_LEVEL_VERBOSE, "%s: line %d from ENV file '%s' exceeded byte limit %lu, done with file",
+                        fp->name, linenumber, input_path, (long unsigned int)size_max);
+                    free(line);
+                    break;
                 }
 
-                SeqDestroy(list);
-                JsonArrayAppendArray(json, line_arr);
+                if (line[0] == '#' || strlen(line) == 0)
+                {
+                    // skip comment or blank line
+                }
+                else
+                {
+                    Rlist *pieces = RlistFromSplitRegex(line, "=", 2, true);
+                    if (pieces && pieces->next)
+                    {
+                        const char* v = RlistScalarValueSafe(pieces->next);
+                        if (strlen(v) > 1 && v[0] == '"' && v[strlen(v)-1] == '"')
+                        {
+                            char* decoded = JsonDecodeString(v);
+                            // cut off the last character
+                            decoded[strlen(decoded)-1] = '\0';
+                            JsonObjectAppendString(json, RlistScalarValueSafe(pieces), decoded+1);
+                            free(decoded);
+                        }
+                        else
+                        {
+                            JsonObjectAppendString(json, RlistScalarValueSafe(pieces), v);
+                        }
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_INFO, "%s: line %d from %s file '%s' was not in the format k=v",
+                            fp->name, linenumber, requested_mode, input_path);
+                    }
+
+                    if (pieces)
+                    {
+                        RlistDestroy(pieces);
+                    }
+                }
+            }
+
+            free(line);
+        }
+        else
+        {
+            json = JsonArrayCreate(50);
+            char *line;
+            while ((line = GetCsvLineNext(fin)) != NULL)
+            {
+                ++linenumber;
+
+                byte_count += strlen(line);
+                if (byte_count > size_max)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "%s: line %d from %s file '%s' exceeded byte limit %lu, done with file",
+                        fp->name, linenumber, requested_mode, input_path, (long unsigned int)size_max);
+                    free(line);
+                    break;
+                }
+
+                Seq *list = SeqParseCsvString(line);
+                free(line);
+
+                if (list != NULL)
+                {
+                    JsonElement *line_arr = JsonArrayCreate(SeqLength(list));
+
+                    for (size_t i = 0; i < SeqLength(list); i++)
+                    {
+                        JsonArrayAppendString(line_arr, SeqAt(list, i));
+                    }
+
+                    SeqDestroy(list);
+                    JsonArrayAppendArray(json, line_arr);
+                }
             }
         }
 
@@ -6449,8 +6522,8 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         if (!atend)
         {
             Log(LOG_LEVEL_ERR,
-                "%s: unable to read line from CSV file '%s'. (fread: %s)",
-                fp->name, input_path, GetErrorStr());
+                "%s: unable to read line from %s file '%s'. (fread: %s)",
+                fp->name, requested_mode, input_path, GetErrorStr());
             JsonDestroy(json);
             return FnFailure();
         }
@@ -8432,7 +8505,7 @@ static const FnCallArg READSTRINGLIST_ARGS[] =
 static const FnCallArg READDATA_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name to read"},
-    {"CSV,YAML,JSON,auto", CF_DATA_TYPE_OPTION, "Type of data to read"},
+    {"CSV,YAML,JSON,ENV,auto", CF_DATA_TYPE_OPTION, "Type of data to read"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -9014,6 +9087,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("readcsv", CF_DATA_TYPE_CONTAINER, READCSV_ARGS, &FnCallReadData, "Parse a CSV file and return a JSON data container with the contents",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readdata", CF_DATA_TYPE_CONTAINER, READDATA_ARGS, &FnCallReadData, "Parse a YAML, JSON, CSV, etc. file and return a JSON data container with the contents",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readenvfile", CF_DATA_TYPE_CONTAINER, READCSV_ARGS, &FnCallReadData, "Parse a ENV-style file and return a JSON data container with the contents",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readfile", CF_DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile, "Read max number of bytes from named file and assign to variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

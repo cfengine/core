@@ -49,6 +49,7 @@
 #include <cf-windows-functions.h>
 #include <ornaments.h>
 #include <feature.h>
+#include <evalfunction.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -585,6 +586,22 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "statedir", GetStateDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), CF_DATA_TYPE_STRING, "source=agent");
+
+    struct stat statbuf;
+    JsonElement *os_release_json = NULL;
+    if (stat("/etc/os-release", &statbuf) != -1)
+    {
+        os_release_json = ReadDataFile("system info discovery", "/etc/os-release", "ENV", 100 * 1024);
+    }
+    else if (stat("/usr/lib/os-release", &statbuf) != -1)
+    {
+        os_release_json = ReadDataFile("system info discovery", "/usr/lib/os-release", "ENV", 100 * 1024);
+    }
+
+    if (os_release_json != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os_release", os_release_json, CF_DATA_TYPE_CONTAINER, "source=agent,os,release,derived_from=/etc/os-release");
+    }
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cbin", workdir, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, CF_DATA_TYPE_STRING, "source=agent");

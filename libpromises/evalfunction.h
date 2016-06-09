@@ -41,5 +41,5 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, const Policy *policy, const FnC
 FnCallResult FnCallUserExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 
 JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle);
-
+JsonElement *ReadDataFile(const char* log_identifier, const char* input_path, const char* requested_mode, size_t size_max);
 #endif

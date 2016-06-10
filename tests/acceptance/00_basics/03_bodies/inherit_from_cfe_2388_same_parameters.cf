@@ -1,0 +1,68 @@
+#######################################################
+#
+# CFE-2388: test body inheritance with same-named parameters
+#
+#######################################################
+
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+body copy_from from_ref_same_parameters(path_same)
+{
+        source  => "$(init.referential_root_dir)/$(path_same)";
+}
+
+body copy_from ref_for_level_same_parameters(level, path_same)
+{
+        inherit_from => from_ref_same_parameters("$(level)/$(path_same)");
+}
+
+body copy_from ref_common_same_parameters(path_same)
+{
+        inherit_from => ref_for_level_same_parameters("common", $(path_same));
+}
+
+bundle agent init
+{
+  vars:
+      "referential_root_dir" string => "$(G.testdir)/ref";
+      "target_filepath_same_parameters" string => "$(referential_root_dir)/testtarget_same_parameters";
+
+      "targets" data => '[ target_filepath_same_parameters ]';
+
+      "source_filepath" string => "service_x/tmp/fic1";
+
+  methods:
+      "" usebundle => file_make_mog("$(referential_root_dir)/common/$(source_filepath)", "",
+                                   "644", $(this.promiser_uid), $(this.promiser_gid));
+
+      "" usebundle => file_tidy($(targets));
+}
+
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Test that body inheritance works with repeated parameter names.";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "CFE-2388" };
+
+  files:
+      "$(init.target_filepath_same_parameters)"
+        copy_from => ref_common_same_parameters($(init.source_filepath)),
+        perms => mog("644", $(this.promiser_uid), $(this.promiser_gid));
+}
+
+bundle agent check
+{
+  methods:
+      "any"  usebundle => dcs_passif_filesexist(@(init.targets),
+                                               $(this.promise_filename));
+}

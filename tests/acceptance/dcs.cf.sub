@@ -717,6 +717,32 @@ bundle agent dcs_passif_fileexists(file, test)
       "$(this.bundle): $(file) exists.";
 }
 
+bundle agent dcs_passif_filesexist(files, test)
+{
+  vars:
+      "indices" slist => getindices(files);
+      "files_slist" slist => getvalues(files);
+      "files_str" string => format("%S", files);
+
+  classes:
+      "__passif" expression => filesexist(@(files_slist));
+      "$(indices)__passif" expression => fileexists("$(files[$(indices)])");
+
+  methods:
+      "" usebundle => dcs_passif("__passif", $(test)), inherit => "true";
+
+  reports:
+    "DEBUG.!$(indices)__passif"::
+      "$(this.bundle): file MISSING: $(files[$(indices)])";
+
+    "EXTRA.$(indices)__passif"::
+      "$(this.bundle): file OK: $(files[$(indices)])";
+    DEBUG.!__passif::
+      "$(this.bundle): MISSING: some of the files $(files_str)";
+    EXTRA.__passif::
+      "$(this.bundle): OK, all the files $(files_str) exist.";
+}
+
 bundle agent dcs_passif_file_absent(file, test)
 {
   classes:

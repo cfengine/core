@@ -197,10 +197,10 @@ bundle agent failsafe_cfe_internal_update
         handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
         classes => failsafe_results("namespace", "cf_execd_running");
 
-    cf_serverd_not_running.!systemd::
+    cf_serverd_not_running.!(windows|systemd)::
 
-      # cf-serverd is not launched directly on systemd and is handled
-      # seperately.
+      # cf-serverd is not launched directly on Windows and systemd and is
+      # handled separately.
 
       "$(sys.cf_serverd)"
         handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",

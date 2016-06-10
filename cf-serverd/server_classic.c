@@ -1199,7 +1199,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        plainlen = DecryptString(conn->encryption_type, recvbuffer + CF_PROTO_OFFSET, buffer, conn->session_key, len);
+        plainlen = DecryptString(buffer, sizeof(buffer),
+                                 recvbuffer + CF_PROTO_OFFSET, len,
+                                 conn->encryption_type, conn->session_key);
 
         cfscanf(buffer, strlen("GET"), strlen("dummykey"), check, sendbuffer, filename);
 
@@ -1266,7 +1268,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
 
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        plainlen = DecryptString(recvbuffer, sizeof(recvbuffer),
+                                 out, len,
+                                 conn->encryption_type, conn->session_key);
 
         if (strncmp(recvbuffer, "OPENDIR", 7) != 0)
         {
@@ -1337,7 +1341,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
 
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        plainlen = DecryptString(recvbuffer, sizeof(recvbuffer),
+                                 out, len,
+                                 conn->encryption_type, conn->session_key);
 
         if (plainlen < 0)
         {
@@ -1419,7 +1425,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        plainlen = DecryptString(recvbuffer, sizeof(recvbuffer),
+                                 out, len,
+                                 conn->encryption_type, conn->session_key);
 
         if (strncmp(recvbuffer, "MD5", 3) != 0)
         {
@@ -1478,7 +1486,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        plainlen = DecryptString(recvbuffer, sizeof(recvbuffer),
+                                 out, len,
+                                 conn->encryption_type, conn->session_key);
         encrypted = true;
 
         if (strncmp(recvbuffer, "VAR", 3) != 0)
@@ -1512,7 +1522,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        plainlen = DecryptString(recvbuffer, sizeof(recvbuffer),
+                                 out, len,
+                                 conn->encryption_type, conn->session_key);
         encrypted = true;
 
         if (strncmp(recvbuffer, "CONTEXT", 7) != 0)
@@ -1546,7 +1558,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        plainlen = DecryptString(recvbuffer, sizeof(recvbuffer),
+                                 out, len,
+                                 conn->encryption_type, conn->session_key);
 
         if (strncmp(recvbuffer, "QUERY", 5) != 0)
         {
@@ -1579,7 +1593,9 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        plainlen = DecryptString(recvbuffer, sizeof(recvbuffer),
+                                 out, len,
+                                 conn->encryption_type, conn->session_key);
 
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {

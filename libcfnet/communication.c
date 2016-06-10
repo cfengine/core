@@ -237,34 +237,6 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
 
 /*****************************************************************************/
 
-int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
-{
-    char *ip;
-    struct hostent *hostinfo;
-
-    if (gethostname(nameBuf, MAXHOSTNAMELEN) == 0)
-    {
-        if ((hostinfo = gethostbyname(nameBuf)) != NULL)
-        {
-            ip = inet_ntoa(*(struct in_addr *) *hostinfo->h_addr_list);
-            strlcpy(ipBuf, ip, MAXIP4CHARLEN);
-            return true;
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Could not get host entry for local host. (gethostbyname: %s)", GetErrorStr());
-        }
-    }
-    else
-    {
-        Log(LOG_LEVEL_ERR, "Could not get host name. (gethostname: %s)", GetErrorStr());
-    }
-
-    return false;
-}
-
-/*****************************************************************************/
-
 unsigned short SocketFamily(int sd)
 {
     struct sockaddr_storage ss = {0};

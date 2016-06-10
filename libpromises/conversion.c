@@ -208,14 +208,37 @@ char *Rlist2String(Rlist *list, char *sep)
     Rlist *rp;
 
     line[0] = '\0';
+    size_t sep_length = strlen(sep);
+    size_t line_chars_left = sizeof(line);
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        strcat(line, RlistScalarValue(rp));
+        char *rlist_scalar = RlistScalarValue(rp);
+        size_t rlist_scalar_length = strlen(rlist_scalar);
+
+        if(rlist_scalar_length + 1 > line_chars_left)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Rlist2String: Internal limit reached (line='%s', rlist_scalar='%s')",
+                line, rlist_scalar);
+            break;
+        }
+
+        strlcat(line, rlist_scalar, sizeof(line));
+        line_chars_left -= rlist_scalar_length;
 
         if (rp->next)
         {
-            strcat(line, sep);
+            if(sep_length + 1 > line_chars_left)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Rlist2String: Internal limit reached (line='%s', sep='%s')",
+                    line, sep);
+                break;
+            }
+
+            strlcat(line, sep, sizeof(line));
+            line_chars_left -= sep_length;
         }
     }
 
@@ -389,8 +412,7 @@ bool BooleanFromString(const char *s)
 long IntFromString(const char *s)
 {
     long long a = CF_NOINT;
-    char c = 'X';
-    char remainder[CF_BUFSIZE];
+    char c = 'X', remainder = '\0';
 
     if (s == NULL)
     {
@@ -407,16 +429,15 @@ long IntFromString(const char *s)
         return (long) CFSTARTTIME;
     }
 
-    remainder[0] = '\0';
 
-    sscanf(s, "%lld%c%s", &a, &c, remainder);
+    sscanf(s, "%lld%c%c", &a, &c, &remainder);
 
-// Test whether remainder is space only
-
-    if ((a == CF_NOINT) || (!IsSpace(remainder)))
+    if ((a == CF_NOINT) || ((!isspace(remainder)) && (remainder != '\0')))
     {
-        Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%s'",
-              s, remainder);
+        Log(LOG_LEVEL_ERR,
+            "IntFromString: Failed to parse assumed integer value '%s' (int=%lld, conversion=%c, remainder=%c)",
+            s, a, c, remainder);
+
         if (strchr(s, '$'))
         {
             Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
@@ -499,21 +520,20 @@ bool DoubleFromString(const char *s, double *value_out)
     static const double NO_DOUBLE = -123.45;
 
     double a = NO_DOUBLE;
-    char remainder[CF_BUFSIZE];
-    char c = 'X';
+    char c = 'X', remainder = '\0';
 
     if (s == NULL)
     {
         return false;
     }
 
-    remainder[0] = '\0';
+    sscanf(s, "%lf%c%c", &a, &c, &remainder);
 
-    sscanf(s, "%lf%c%s", &a, &c, remainder);
-
-    if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
+    if ((a == NO_DOUBLE) || ((!isspace(remainder)) && (remainder != '\0')))
     {
-        Log(LOG_LEVEL_ERR, "Reading assumed real value '%s', anomalous remainder '%s'", s, remainder);
+        Log(LOG_LEVEL_ERR,
+            "DoubleFromString: Failed to parse assumed real value '%s' (double=%lf, conversion=%c, remainder=%c)",
+            s, a, c, remainder);
         return false;
     }
     else

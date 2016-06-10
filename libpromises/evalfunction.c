@@ -7335,7 +7335,7 @@ static int ExecModule(EvalContext *ctx, char *command)
             }
         }
 
-        ModuleProtocol(ctx, command, line, print, context, tags, &persistence);
+        ModuleProtocol(ctx, command, line, print, context, sizeof(context), tags, &persistence);
     }
     bool atend = feof(pp);
     cf_pclose(pp);
@@ -7351,9 +7351,16 @@ static int ExecModule(EvalContext *ctx, char *command)
     return true;
 }
 
-void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, StringSet *tags, long *persistence)
+void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, size_t context_size, StringSet *tags, long *persistence)
 {
     assert(tags);
+
+    // see the sscanf() limit below
+    if(context_size < 51)
+    {
+        ProgrammingError("ModuleProtocol: context_size too small (%zu)",
+                         context_size);
+    }
 
     if (*context == '\0')
     {
@@ -7364,7 +7371,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 
         /* Canonicalize filename into acceptable namespace name */
         CanonifyNameInPlace(filename);
-        strcpy(context, filename);
+        strlcpy(context, filename, context_size);
         Log(LOG_LEVEL_VERBOSE, "Module context '%s'", context);
     }
 
@@ -7388,7 +7395,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             else if (StringMatchFullWithPrecompiledRegex(context_name_rx, content))
             {
                 Log(LOG_LEVEL_VERBOSE, "Module changed variable context from '%s' to '%s'", context, content);
-                strcpy(context, content);
+                strlcpy(context, content, context_size);
             }
             else
             {

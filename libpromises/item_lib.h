@@ -90,7 +90,6 @@ void DeleteItemList(Item *item);
 void DeleteItem(Item **liststart, Item *item);
 void IncrementItemListCounter(Item *ptr, const char *string);
 void SetItemListCounter(Item *ptr, const char *string, int value);
-char *ItemList2CSV(const Item *list);
 size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size, char separator);
 int ItemListSize(const Item *list);
 

@@ -142,7 +142,7 @@ bundle agent failsafe_cfe_internal_update
       handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
       classes => failsafe_repaired("executor_started");
 
-    start_server.!systemd::
+    start_server.!(windows|systemd)::
 
       "$(sys.cf_serverd)"
       handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",

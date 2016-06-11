@@ -68,7 +68,6 @@ extern const char *const CF_AGENTTYPES[];
 
 extern int CFA_MAXTHREADS;
 extern AgentType THIS_AGENT_TYPE;
-extern int SHOWREPORTS;
 extern int LASTSEENEXPIREAFTER;
 extern const char *DEFAULT_COPYTYPE;
 

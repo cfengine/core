@@ -82,7 +82,7 @@ void ConnCache_Destroy()
         DisconnectServer(svp->conn);
     }
 
-    SeqClear(conn_cache);
+    SeqDestroy(conn_cache);
     conn_cache = NULL;
 
     ThreadUnlock(&cft_conncache);

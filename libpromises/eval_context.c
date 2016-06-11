@@ -1206,13 +1206,12 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseIteration(Promise *owner, const PromiseIterator *iter_ctx, unsigned index)
+static StackFrame *StackFrameNewPromiseIteration(Promise *owner, const PromiseIterator *iter_ctx)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
 
     frame->data.promise_iteration.owner = owner;
     frame->data.promise_iteration.iter_ctx = iter_ctx;
-    frame->data.promise_iteration.index = index;
     frame->data.promise_iteration.log_messages = RingBufferNew(5, NULL, free);
 
     return frame;
@@ -1379,24 +1378,24 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");
 }
 
-Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx)
+Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx)
 {
-    assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+    const StackFrame *last_frame = LastStackFrame(ctx, 0);
 
-    if (iter_ctx)
-    {
-        PromiseIteratorUpdateVariable(ctx, iter_ctx);
-    }
+    assert(last_frame       != NULL);
+    assert(last_frame->type == STACK_FRAME_TYPE_PROMISE);
 
-    bool excluded = false;
-    Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner, &excluded);
+    /* Evaluate all constraints by calling functions etc. */
+    bool excluded;
+    Promise *pexp = ExpandDeRefPromise(ctx, last_frame->data.promise.owner,
+                                       &excluded);
     if (excluded || !pexp)
     {
         PromiseDestroy(pexp);
         return NULL;
     }
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx, iteration_index));
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx));
 
     LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
 
@@ -1504,9 +1503,9 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
                 "is equal or longer than %zu", name, sizeof(canonified_context));
             return false;
         }
-        
+
         strlcpy(canonified_context, name, sizeof(canonified_context));
-        
+
         if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
         {
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
@@ -1697,9 +1696,13 @@ char *EvalContextStackPath(const EvalContext *ctx)
             BufferAppendChar(path, '\'');
             BufferAppendAbbreviatedStr(path, frame->data.promise_iteration.owner->promiser, CF_MAXFRAGMENT);
             BufferAppendChar(path, '\'');
-            if (i == SeqLength(ctx->stack) - 1)
+            if (i == SeqLength(ctx->stack) - 1  &&
+                /* For some reason verify_packages.c is adding NULL iteration
+                 * frames all over the place; TODO fix. */
+                frame->data.promise_iteration.iter_ctx != NULL)
             {
-                BufferAppendF(path, "[%zd]", frame->data.promise_iteration.index);
+                BufferAppendF(path, "[%zu]",
+                              PromiseIteratorIndex(frame->data.promise_iteration.iter_ctx));
             }
             break;
         }
@@ -2245,11 +2248,12 @@ Seq *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *poli
                                       const char *callee_reference, const char *callee_type)
 {
     ClassRef ref = IDRefQualify(ctx, callee_reference);
-    Seq *bodies = SeqNew(2, NULL);
+    Seq *bodies = NULL;
 
     const Body *bp = EvalContextFindFirstMatchingBody(policy, callee_type, ref.ns, ref.name);
     if (bp)
     {
+        bodies = SeqNew(2, NULL);
         SeqAppend(bodies, (void *)bp);
         SeqAppend(bodies, (void *)NULL);
         EvalContextAppendBodyParentsAndArgs(ctx, policy, bodies, bp, callee_type, 1);
@@ -2349,12 +2353,6 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int persistence_ttl,
                           PersistentClassPolicy policy, ContextScope context_scope)
 {
-
-    if (list)
-    {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-    }
-
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         char *classname = xstrdup(RlistScalarValue(rp));
@@ -2404,12 +2402,6 @@ static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int pers
         }
         free(classname);
     }
-
-    if (list)
-    {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-    }
-
 }
 
 static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)

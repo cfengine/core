@@ -15,14 +15,14 @@ char TEMPDIR[] = "/tmp/generic_agent_test_XXXXXX";
 void test_have_tty_interactive_failsafe_is_not_created(void)
 {
      CryptoInitialize();
-     
+
      bool simulate_tty_interactive = true;
-    
+
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config =
             GenericAgentConfigNewDefault(AGENT_TYPE_COMMON,
                                          simulate_tty_interactive);
-    
+
     /* Just make sure that file doesn't exist. */
     GenericAgentConfigSetInputFile(config, NULL,
                                    "/masterfiles/non_existing.cf");
@@ -30,14 +30,14 @@ void test_have_tty_interactive_failsafe_is_not_created(void)
     /* This is where failsafe.cf will be created. */
     char *failsafe_file = StringFormat("%s%c%s",
                                        GetInputDir(),
-                                       FILE_SEPARATOR, 
+                                       FILE_SEPARATOR,
                                        "failsafe.cf");
     Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
     struct stat buf;
-    
+
     /* failsafe.cf shouldn't be created as we have tty_interactive. */
     assert_int_equal(stat(failsafe_file, &buf), -1);
-    
+
     free(failsafe_file);
 
     PolicyDestroy(policy);
@@ -48,14 +48,14 @@ void test_have_tty_interactive_failsafe_is_not_created(void)
 void test_dont_have_tty_interactive_failsafe_is_created(void)
 {
      CryptoInitialize();
-     
+
      bool simulate_tty_interactive = false;
-    
+
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config =
         GenericAgentConfigNewDefault(AGENT_TYPE_COMMON,
                                      simulate_tty_interactive);
-    
+
     /* Just make sure that file doesn't exist. */
     GenericAgentConfigSetInputFile(config,
                                    NULL,
@@ -66,10 +66,10 @@ void test_dont_have_tty_interactive_failsafe_is_created(void)
         StringFormat("%s%c%s", GetInputDir(), FILE_SEPARATOR,  "failsafe.cf");
     Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
     struct stat buf;
- 
+
     /* failsafe.cf should be created as we don't have tty_interactive. */
     assert_int_equal(stat(failsafe_file, &buf), 0);
-    
+
     unlink(failsafe_file);
     free(failsafe_file);
 

@@ -1582,12 +1582,10 @@ typedef struct
     Rlist *insert_match;
 } Attributes;
 
+
 /*************************************************************************/
 /* common macros                                                         */
 /*************************************************************************/
-
-#define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
-#define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
 
 #include <dbm_api.h>
 #include <sequence.h>

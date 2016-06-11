@@ -141,7 +141,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, const Rlist *args);
 void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
-Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
+Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx);
 void EvalContextStackPopFrame(EvalContext *ctx);
 const char *EvalContextStackToString(EvalContext *ctx);
 void EvalContextSetBundleArgs(EvalContext *ctx, const Rlist *args);

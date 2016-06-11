@@ -1186,7 +1186,7 @@ void GetNetworkingInfo(EvalContext *ctx)
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet", inet, CF_DATA_TYPE_CONTAINER,
                                   "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
-
+    JsonDestroy(inet);
 
     JsonElement *inet6 = JsonObjectCreate(3);
 
@@ -1247,12 +1247,14 @@ void GetNetworkingInfo(EvalContext *ctx)
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet6", inet6, CF_DATA_TYPE_CONTAINER,
                                   "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+    JsonDestroy(inet6);
 
     // Inter-|   Receive                                                |  Transmit
     //  face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
     //   eth0: 74850544807 75236137    0    0    0     0          0   1108775 63111535625 74696758    0    0    0     0       0          0
 
     BufferPrintf(pbuf, "%s/proc/net/dev", procdir);
+    JsonElement *interfaces_data =
     GetProcFileInfo(ctx, BufferData(pbuf), "interfaces_data", "device", NULL,
                     "^\\s*(?<device>[^:]+)\\s*:\\s*"
                     // All of the below are just decimal digits separated by spaces
@@ -1272,7 +1274,7 @@ void GetNetworkingInfo(EvalContext *ctx)
                     "(?<transmit_frame>\\d+)\\s+"
                     "(?<transmit_compressed>\\d+)\\s+"
                     "(?<transmit_multicast>\\d+)");
-
+    JsonDestroy(interfaces_data);
     BufferDestroy(pbuf);
 }
 

@@ -79,7 +79,6 @@ static const struct option OPTIONS[] =
     {"negate", required_argument, 0, 'N'},
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
-    {"reports", no_argument, 0, 'r'},
     {"policy-output-format", required_argument, 0, 'p'},
     {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
@@ -107,7 +106,6 @@ static const char *const HINTS[] =
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
-    "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json' (this file only), 'cf-full', 'json-full' (all parsed promises). Default is 'none'. (experimental)",
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
@@ -178,11 +176,6 @@ int main(int argc, char *argv[])
             Log(LOG_LEVEL_ERR, "The given directory could not be tagged, sorry.");
             exit(EXIT_FAILURE);
         }
-    }
-
-    if (SHOWREPORTS)
-    {
-        ShowPromises(policy->bundles, policy->bodies);
     }
 
     switch (config->agent_specific.common.policy_output_format)
@@ -411,7 +404,8 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         }
 
         case 'r':
-            SHOWREPORTS = true;
+            Log(LOG_LEVEL_ERR, "Option '-r' has been deprecated");
+            exit(EXIT_FAILURE);
             break;
 
         case 'W':

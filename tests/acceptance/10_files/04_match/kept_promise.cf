@@ -20,16 +20,16 @@ bundle agent init
 
   files:
       "$(G.testfile)"
-      create => "true",
-      edit_line => init_edit;
+          create => "true",
+          edit_line => init_edit;
 }
 
 bundle agent test
 {
   files:
       "$(G.testfile)"
-      create => "true",
-      edit_line => test_edit;
+          create => "true",
+          edit_line => test_edit;
 }
 
 bundle edit_line init_edit
@@ -38,7 +38,7 @@ bundle edit_line init_edit
       "index" slist => getindices("init.array");
 
   insert_lines:
-      "${test.array[${index}]}";
+      "${init.array[${index}]}";
 }
 
 bundle edit_line test_edit
@@ -47,8 +47,8 @@ bundle edit_line test_edit
       "index" slist => getindices("init.array");
 
   insert_lines:
-      "${test.array[${index}]}"
-      classes => kept_if_else("line_${index}_kept", "line_${index}_added", "line_${index}_failed");
+      "${init.array[${index}]}"
+          classes => kept_if_else("line_${index}_kept", "line_${index}_added", "line_${index}_failed");
 }
 
 bundle agent check

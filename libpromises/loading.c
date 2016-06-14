@@ -504,7 +504,14 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, CommonEvalPromise, NULL);
+
+                    /* Skip constraint syntax verification through all
+                     * slist/container iterations for cf-promises! cf-agent
+                     * still checks though. */
+                    if (config->agent_type != AGENT_TYPE_COMMON)
+                    {
+                        ExpandPromise(ctx, pp, CommonEvalPromise, NULL);
+                    }
                 }
 
                 EvalContextStackPopFrame(ctx);

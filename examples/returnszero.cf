@@ -45,8 +45,6 @@ bundle agent example
 #@ ```
 #@ 2014-08-18T14:13:28+0100 error: Proposed executable file '/usr/local/bin/mycommand' doesn't exist
 #@ 2014-08-18T14:13:28+0100 error: returnszero '/usr/local/bin/mycommand' is assumed to be executable but isn't
-#@ error: Proposed executable file '/usr/local/bin/mycommand' doesn't exist
-#@ error: returnszero '/usr/local/bin/mycommand' is assumed to be executable but isn't
 #@ R: Command failed
 #@ ```
 #+end_src

@@ -908,7 +908,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cupdate.conf", GetInputDir(), FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
     snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);

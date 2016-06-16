@@ -16,12 +16,7 @@ bundle agent test
 {
   meta:
       "description"
-        string => "Test that ifelse can use the result of isvariable
-                   as a class identifer";
-
-      "test_soft_fail"
-        string => "any",
-        meta => { "redmine7878" };
+        string => "Test that ifelse can use the result of isvariable as a class identifer";
 
   vars:
       # Since init.passwd_file is defined, I expect the value to be
@@ -39,34 +34,8 @@ bundle agent test
 
 bundle agent check
 {
-  classes:
-      "ok_passwd_file"
-        expression => strcmp( "/tmp/custom_passwd", $(init.passwd_file) );
-
-      "ok_shadow_file"
-        expression => strcmp( "/etc/shadow", $(init.use_shadow_file) );
-
-      "ok" and => { "ok_passwd_file", "ok_shadow_file" };
-
-  reports:
-    DEBUG::
-      "Found test.use_passwd_file = $(test.use_passwd_file) to be as expected"
-        if => "ok_passwd_file";
-
-      "Found test.use_shadow_file = $(test.use_shadow_filee) to be as expected"
-         if => "ok_shadow_file";
-
-      "Found value for test.use_passwd_file to be INCORRECT
-       expected '/tmp/custom_passwd' got '$(test.use_passwd_file)'"
-        unless => "ok_passwd_file";
-
-      "Found value for test.use_shadow_file to be INCORRECT
-       expected '/etc/shadow' got '$(test.use_shadow_file)'"
-        unless => "ok_shadow_file";
-
-    ok::
-      "$(this.promise_filename) Pass";
-
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

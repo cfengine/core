@@ -345,15 +345,29 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
     if (RlistIsUnresolved(expargs))
     {
-        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        // Special case: ifelse(isvariable("x"), $(x), "default")
+        // (the first argument will come down expanded as "!any")
+        if (0 == strcmp(fp->name, "ifelse") &&
+            RlistLen(expargs) == 3 &&
+            0 == strcmp("!any", RlistScalarValueSafe(expargs)) &&
+            !RlistIsUnresolved(expargs->next->next))
         {
-            Log(LOG_LEVEL_DEBUG, "Skipping function evaluation for now,"
-                " arguments contain unresolved variables: %s",
-                fncall_string);
-            WriterClose(fncall_writer);
+                Log(LOG_LEVEL_DEBUG, "Allowing ifelse() function evaluation even"
+                    " though its arguments contain unresolved variables: %s",
+                    fncall_string);
         }
-        RlistDestroy(expargs);
-        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
+        else
+        {
+            if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+            {
+                Log(LOG_LEVEL_DEBUG, "Skipping function evaluation for now,"
+                    " arguments contain unresolved variables: %s",
+                    fncall_string);
+                WriterClose(fncall_writer);
+            }
+            RlistDestroy(expargs);
+            return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
+        }
     }
 
     Rval cached_rval;

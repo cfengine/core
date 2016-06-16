@@ -1,0 +1,41 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "passwd_file"
+        string => "/tmp/custom_passwd";
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that ifelse can use the result of isvariable as a class identifer";
+
+  vars:
+      # Since init.passwd_file is defined, I expect the value to be
+      # the value of init.passwd_file
+      "use_passwd_file"
+        string => ifelse( isvariable("init.passwd_file"), $(init.passwd_file),
+                         "/etc/passwd");
+
+      # Since init.shadow_file is not defined, I expect that the value
+      # will be "/etc/shadow"
+      "use_shadow_file"
+        string => ifelse( isvariable("init.shadow_file"), $(init.shadow_file),
+                          "/etc/shadow");
+}
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

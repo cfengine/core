@@ -68,21 +68,21 @@
 
 #ifndef NDEBUG
 # define CF_ASSERT_FIX(condition, fix, ...)                             \
-    do {                                                                \
+    {                                                                   \
         if (!(condition))                                               \
             ProgrammingError(__VA_ARGS__);                              \
-    } while(0)
+    }
 #else
   /* TODO UnexpectedError() needs
    * to be rate limited to avoid spamming the console.  */
 # define CF_ASSERT_FIX(condition, fix, ...)                             \
-    do {                                                                \
+    {                                                                   \
         if (!(condition))                                               \
         {                                                               \
             UnexpectedError(__VA_ARGS__);                               \
             (fix);                                                      \
         }                                                               \
-    } while(0)
+    }
 #endif
 
 

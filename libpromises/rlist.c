@@ -1555,3 +1555,66 @@ bool RlistEqual_untyped(const void *list1, const void *list2)
 {
     return RlistEqual(list1, list2);
 }
+
+/*******************************************************************/
+
+static void RlistAppendContainerPrimitive(Rlist **list, const JsonElement *primitive)
+{
+    assert(JsonGetElementType(primitive) == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    switch (JsonGetPrimitiveType(primitive))
+    {
+    case JSON_PRIMITIVE_TYPE_BOOL:
+        RlistAppendScalar(list, JsonPrimitiveGetAsBool(primitive) ? "true" : "false");
+        break;
+    case JSON_PRIMITIVE_TYPE_INTEGER:
+        {
+            char *str = StringFromLong(JsonPrimitiveGetAsInteger(primitive));
+            RlistAppendScalar(list, str);
+            free(str);
+        }
+        break;
+    case JSON_PRIMITIVE_TYPE_REAL:
+        {
+            char *str = StringFromDouble(JsonPrimitiveGetAsReal(primitive));
+            RlistAppendScalar(list, str);
+            free(str);
+        }
+        break;
+    case JSON_PRIMITIVE_TYPE_STRING:
+        RlistAppendScalar(list, JsonPrimitiveGetAsString(primitive));
+        break;
+
+    case JSON_PRIMITIVE_TYPE_NULL:
+        break;
+    }
+}
+
+Rlist *RlistFromContainer(const JsonElement *container)
+{
+    Rlist *list = NULL;
+
+    switch (JsonGetElementType(container))
+    {
+    case JSON_ELEMENT_TYPE_PRIMITIVE:
+        RlistAppendContainerPrimitive(&list, container);
+        break;
+
+    case JSON_ELEMENT_TYPE_CONTAINER:
+        {
+            JsonIterator iter = JsonIteratorInit(container);
+            const JsonElement *child;
+
+            while (NULL != (child = JsonIteratorNextValue(&iter)))
+            {
+                if (JsonGetElementType(child) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    RlistAppendContainerPrimitive(&list, child);
+                }
+            }
+        }
+        break;
+    }
+
+    return list;
+}

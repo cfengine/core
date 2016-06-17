@@ -41,7 +41,5 @@ bool PromiseIteratorNext(PromiseIterator *iterctx,
                          EvalContext *evalctx);
 size_t PromiseIteratorIndex(const PromiseIterator *iter_ctx);
 
-Rlist *ContainerToRlist(const JsonElement *container);
-
 
 #endif

@@ -63,7 +63,6 @@
 #include <ornaments.h>
 #include <cf-windows-functions.h>
 #include <loading.h>
-#include <iteration.h>
 #include <signals.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
@@ -245,7 +244,7 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                         Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
                             SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, BufferData(filename_buffer));
                         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                      vkey, ContainerToRlist(data),
+                                                      vkey, RlistFromContainer(data),
                                                       CF_DATA_TYPE_STRING_LIST,
                                                       "source=augments_file");
                     }
@@ -336,7 +335,7 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                 {
                     Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
                         BufferData(filename_buffer));
-                    Rlist *rlist = ContainerToRlist(inputs);
+                    Rlist *rlist = RlistFromContainer(inputs);
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
                                                   "augments_inputs", rlist,
                                                   CF_DATA_TYPE_STRING_LIST,

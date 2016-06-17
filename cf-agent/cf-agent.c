@@ -186,6 +186,8 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {"timestamp", no_argument, 0, 'l'},
+    /* Only long option for the rest */
+    {"log-modules", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -210,6 +212,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     "Log timestamps on each line of log output",
+    "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     NULL
 };
 
@@ -306,8 +309,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
     FreeFixedStringArray(argc_new, argv_tmp);
 
+    int longopt_idx;
     while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:w:D:N:VxMB:b:hC::ElT::",
-                            OPTIONS, NULL))
+                            OPTIONS, &longopt_idx))
            != -1)
     {
         switch (c)
@@ -515,6 +519,19 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 config->agent_specific.agent.bootstrap_trust_server = false;
             }
 
+            break;
+
+        /* long options only */
+        case 0:
+
+            if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
+            {
+                bool ret = LogEnableModulesFromString(optarg);
+                if (!ret)
+                {
+                    exit(EXIT_FAILURE);
+                }
+            }
             break;
 
         default:

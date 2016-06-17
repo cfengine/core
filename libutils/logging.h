@@ -22,14 +22,18 @@
   included file COSL.txt.
 */
 
+
 #ifndef CFENGINE_LOGGING_H
 #define CFENGINE_LOGGING_H
+
 
 #include <platform.h>
 #include <compiler.h>
 
+
 // Does not include timezone, since it is hard to match on Windows.
 #define LOGGING_TIMESTAMP_REGEX "^20[0-9][0-9]-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]"
+
 
 typedef enum
 {
@@ -43,7 +47,26 @@ typedef enum
     LOG_LEVEL_DEBUG
 } LogLevel;
 
+
+/**
+ *  Enum used as a parameter in LogDebug(), used to print even more detailed
+ *  info than Log(LOG_LEVEL_DEBUG).
+ */
+enum LogModule
+{
+    LOG_MOD_NONE = 0,                         /* DEFAULT DEBUG LOGGING */
+    LOG_MOD_EVALCTX,                          /* evaluator */
+    LOG_MOD_EXPAND,                           /* variables expansion */
+    LOG_MOD_ITERNGN,                          /* evaluator iteration engine */
+    LOG_MOD_PARSER,                           /* yacc */
+    LOG_MOD_VARTABLE,                         /* variables tables */
+    LOG_MOD_VARS,                             /* variables promise */
+    LOG_MOD_MAX
+};
+
+
 #include <logging_priv.h>
+
 
 typedef struct
 {
@@ -68,6 +91,7 @@ bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp);
 LoggingContext *GetCurrentThreadContext(void);
 
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+void LogDebug(enum LogModule mod, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void LogRaw(LogLevel level, const char *prefix, const void *buf, size_t buflen);
 void VLog(LogLevel level, const char *fmt, va_list ap);
 
@@ -88,5 +112,11 @@ void LogToSystemLog(const char *msg, LogLevel level);
  */
 const char *GetErrorStr(void);
 const char *GetErrorStrFromCode(int error_code);
+
+void LogModuleHelp(void);
+bool LogModuleEnabled(enum LogModule mod);
+void LogEnableModule(enum LogModule mod);
+bool LogEnableModulesFromString(char *s);
+
 
 #endif

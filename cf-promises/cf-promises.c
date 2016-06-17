@@ -86,6 +86,8 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"tag-release", required_argument, 0, 'T'},
     {"timestamp", no_argument, 0, 'l'},
+    /* Only long option for the rest */
+    {"log-modules", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -113,6 +115,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Tag a directory with promises.cf with cf_promises_validated and cf_promises_release_id",
     "Log timestamps on each line of log output",
+    "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     NULL
 };
 
@@ -233,8 +236,9 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, GetTTYInteractive());
     config->tag_release_dir = NULL;
 
+    int longopt_idx;
     while ((c = getopt_long(argc, argv, "dvnIw:f:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
-                            OPTIONS, NULL))
+                            OPTIONS, &longopt_idx))
            != -1)
     {
         switch (c)
@@ -438,6 +442,19 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'l':
             LoggingEnableTimestamps(true);
+            break;
+
+        /* long options only */
+        case 0:
+
+            if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
+            {
+                bool ret = LogEnableModulesFromString(optarg);
+                if (!ret)
+                {
+                    exit(EXIT_FAILURE);
+                }
+            }
             break;
 
         default:

@@ -29,7 +29,7 @@
 #include <syntax.h>
 #include <item_lib.h>
 #include <ornaments.h>
-#include <expand.h>                           /* BufferAppendAbbreviatedStr */
+#include <expand.h>                                    /* ExpandPrivateRval */
 #include <matching.h>
 #include <string_lib.h>
 #include <misc_lib.h>
@@ -1667,6 +1667,73 @@ const RingBuffer *EvalContextStackCurrentMessages(const EvalContext *ctx)
 {
     StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE_ITERATION);
     return frame ? frame->data.promise_iteration.log_messages : NULL;
+}
+
+
+
+/**
+ * @brief Concatenate string #str to #buf, replacing mangling
+ *        characters '*' and '#' with their visible counterparts.
+ */
+static void BufferAppendPromiseStr(Buffer *buf, const char *str)
+{
+    for (const char *ch = str; *ch != '\0'; ch++)
+    {
+        switch (*ch)
+        {
+        case CF_MANGLED_NS:
+            BufferAppendChar(buf, ':');
+            break;
+
+        case CF_MANGLED_SCOPE:
+            BufferAppendChar(buf, '.');
+            break;
+
+        default:
+            BufferAppendChar(buf, *ch);
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
+ *   and is longer than 2*N+3, then only copy an abbreviated version
+ *   consisting of the first and last N characters, separated by @c `...`
+ *
+ * @param buffer Buffer to be used.
+ * @param promiser Constant string to append
+ * @param N      Max. length of initial/final segment of @c promiser to keep
+ * @note 2*N+3 is the maximum length of the appended string (excl. terminating NULL)
+ *
+ */
+static void BufferAppendAbbreviatedStr(Buffer *buf,
+                                       const char *promiser, const int N)
+{
+    /* check if `promiser` contains a new line (may happen for "insert_lines") */
+    const char *const nl = strchr(promiser, '\n');
+    if (NULL == nl)
+    {
+        BufferAppendPromiseStr(buf, promiser);
+    }
+    else
+    {
+        /* `promiser` contains a newline: abbreviate it by taking the first and last few characters */
+        static const char sep[] = "...";
+        char abbr[sizeof(sep) + 2 * N];
+        const int head = (nl > promiser + N) ? N : (nl - promiser);
+        const char * last_line = strrchr(promiser, '\n') + 1;
+        assert(last_line); /* not NULL, we know we have at least one '\n' */
+        const int tail = strlen(last_line);
+        if (tail > N)
+        {
+            last_line += tail - N;
+        }
+        memcpy(abbr, promiser, head);
+        strcpy(abbr + head, sep);
+        strcat(abbr, last_line);
+        BufferAppendPromiseStr(buf, abbr);
+    }
 }
 
 char *EvalContextStackPath(const EvalContext *ctx)

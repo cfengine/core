@@ -292,147 +292,43 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
 
 
 /*********************************************************************/
+/*********************************************************************/
 
-/**
- * @brief Like @c StringAppend, but replace characters @c '*' and @c '#' with their visible counterparts.
- * @param buffer Buffer to be used.
- * @param str    Constant string to append
- * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
- */
-bool StringAppendPromise(char *dst, const char *src, size_t n)
+Rval ExpandPrivateRval(EvalContext *ctx,
+                       const char *ns, const char *scope,
+                       const void *rval_item, RvalType rval_type)
 {
-    int i, j;
-    n--;
-    for (i = 0; i < n && dst[i]; i++)
-    {
-    }
-    for (j = 0; i < n && src[j]; i++, j++)
-    {
-        const char ch = src[j];
-        switch (ch)
-        {
-        case CF_MANGLED_NS:
-            dst[i] = ':';
-            break;
+    Rval returnval;
+    returnval.item = NULL;
+    returnval.type = RVAL_TYPE_NOPROMISEE;
 
-        case CF_MANGLED_SCOPE:
-            dst[i] = '.';
-            break;
+    switch (rval_type)
+    {
+    case RVAL_TYPE_SCALAR:
+        returnval.item = ExpandScalar(ctx, ns, scope, rval_item, NULL);
+        returnval.type = RVAL_TYPE_SCALAR;
+        break;
+    case RVAL_TYPE_LIST:
+        returnval.item = ExpandList(ctx, ns, scope, rval_item, true);
+        returnval.type = RVAL_TYPE_LIST;
+        break;
 
-        default:
-            dst[i] = ch;
-            break;
-        }
+    case RVAL_TYPE_FNCALL:
+        returnval.item = ExpandFnCall(ctx, ns, scope, rval_item);
+        returnval.type = RVAL_TYPE_FNCALL;
+        break;
+
+    case RVAL_TYPE_CONTAINER:
+        returnval = RvalNew(rval_item, RVAL_TYPE_CONTAINER);
+        break;
+
+    case RVAL_TYPE_NOPROMISEE:
+        break;
     }
-    dst[i] = '\0';
-    return (i < n || !src[j]);
+
+    return returnval;
 }
 
-/**
- * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
- *   and is longer than 2*N+3, then only copy an abbreviated version
- *   consisting of the first and last N characters, separated by @c `...`
- * @param buffer Buffer to be used.
- * @param str    Constant string to append
- * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
- * @param max_fragment Max. length of initial/final segment of @c str to keep
- * @note 2*max_fragment+3 is the maximum length of the appended string (excl. terminating NULL)
- *
- */
-bool StringAppendAbbreviatedPromise(char *dst, const char *src, size_t n, const size_t max_fragment)
-{
-    /* check if `src` contains a new line (may happen for "insert_lines") */
-    const char *const nl = strchr(src, '\n');
-    if (NULL == nl)
-    {
-        return StringAppendPromise(dst, src, n);
-    }
-    else
-    {
-        /* `src` contains a newline: abbreviate it by taking the first and last few characters */
-        static const char sep[] = "...";
-        char abbr[sizeof(sep) + 2 * max_fragment];
-        const int head = (nl > src + max_fragment) ? max_fragment : (nl - src);
-        const char * last_line = strrchr(src, '\n') + 1;
-        assert(last_line); /* not max_fragmentULL, we know we have at least one '\n' */
-        const int tail = strlen(last_line);
-        if (tail > max_fragment)
-        {
-            last_line += tail - max_fragment;
-        }
-        memcpy(abbr, src, head);
-        strcpy(abbr + head, sep);
-        strcat(abbr, last_line);
-        return StringAppendPromise(dst, abbr, n);
-    }
-}
-
-/**
- * @brief Concatenate string @c str to @c buf, replacing
- *   characters @c '*' and @c '#' with their visible counterparts.
- * @param buffer Buffer to be used.
- * @param str    Constant string to append
- */
-void BufferAppendPromiseStr(Buffer *buf, const char *promiser)
-{
-    for (const char *ch = promiser; *ch != '\0'; ch++)
-    {
-        switch (*ch)
-        {
-        case CF_MANGLED_NS:
-            BufferAppendChar(buf, ':');
-            break;
-
-        case CF_MANGLED_SCOPE:
-            BufferAppendChar(buf, '.');
-            break;
-
-        default:
-            BufferAppendChar(buf, *ch);
-            break;
-        }
-    }
-}
-
-/**
- * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
- *   and is longer than 2*N+3, then only copy an abbreviated version
- *   consisting of the first and last N characters, separated by @c `...`
- * @param buffer Buffer to be used.
- * @param str    Constant string to append
- * @param N      Max. length of initial/final segment of @c str to keep
- * @note 2*N+3 is the maximum length of the appended string (excl. terminating NULL)
- *
- */
-void BufferAppendAbbreviatedStr(Buffer *buf, const char *promiser, const int N)
-{
-    /* check if `promiser` contains a new line (may happen for "insert_lines") */
-    const char *const nl = strchr(promiser, '\n');
-    if (NULL == nl)
-    {
-        BufferAppendPromiseStr(buf, promiser);
-    }
-    else
-    {
-        /* `promiser` contains a newline: abbreviate it by taking the first and last few characters */
-        static const char sep[] = "...";
-        char abbr[sizeof(sep) + 2 * N];
-        const int head = (nl > promiser + N) ? N : (nl - promiser);
-        const char * last_line = strrchr(promiser, '\n') + 1;
-        assert(last_line); /* not NULL, we know we have at least one '\n' */
-        const int tail = strlen(last_line);
-        if (tail > N)
-        {
-            last_line += tail - N;
-        }
-        memcpy(abbr, promiser, head);
-        strcpy(abbr + head, sep);
-        strcat(abbr, last_line);
-        BufferAppendPromiseStr(buf, abbr);
-    }
-}
-
-/* TODO undestand */
 static Rval ExpandListEntry(EvalContext *ctx,
                             const char *ns, const char *scope,
                             int expandnaked, Rval entry)
@@ -491,43 +387,6 @@ Rlist *ExpandList(EvalContext *ctx,
     }
 
     return start;
-}
-
-/*********************************************************************/
-
-Rval ExpandPrivateRval(EvalContext *ctx,
-                       const char *ns, const char *scope,
-                       const void *rval_item, RvalType rval_type)
-{
-    Rval returnval;
-    returnval.item = NULL;
-    returnval.type = RVAL_TYPE_NOPROMISEE;
-
-    switch (rval_type)
-    {
-    case RVAL_TYPE_SCALAR:
-        returnval.item = ExpandScalar(ctx, ns, scope, rval_item, NULL);
-        returnval.type = RVAL_TYPE_SCALAR;
-        break;
-    case RVAL_TYPE_LIST:
-        returnval.item = ExpandList(ctx, ns, scope, rval_item, true);
-        returnval.type = RVAL_TYPE_LIST;
-        break;
-
-    case RVAL_TYPE_FNCALL:
-        returnval.item = ExpandFnCall(ctx, ns, scope, rval_item);
-        returnval.type = RVAL_TYPE_FNCALL;
-        break;
-
-    case RVAL_TYPE_CONTAINER:
-        returnval = RvalNew(rval_item, RVAL_TYPE_CONTAINER);
-        break;
-
-    case RVAL_TYPE_NOPROMISEE:
-        break;
-    }
-
-    return returnval;
 }
 
 /*********************************************************************/

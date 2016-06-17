@@ -46,40 +46,15 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, cons
 Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy, const char *ns, const char *scope, Rval rval, bool forcelist, const Promise *pp);
 
-/**
- * @brief BundleResolve
- * @param ctx
- * @param bundle
- */
 void BundleResolve(EvalContext *ctx, const Bundle *bundle);
 void PolicyResolve(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char *type, PromiseActuator *actuator);
 
 bool IsNakedVar(const char *str, char vtype);
-/**
-  @brief Takes a variable and removes decorations.
-
-  This function performs no validations, it is necessary to call the validation functions before calling this function.
-  @remarks This function does not check for NULL pointers, that is the caller's responsibility.
-  @param s1 Buffer to store the undecorated variable.
-  @param s2 Decorated variable
-  */
-void GetNaked(char *s1, const char *s2);
-/**
-  @brief Checks if a given variable is a list or not.
-  @remarks This function does not check for NULL pointers, it is responsibility of the caller.
-  @param variable Variable to be checked
-  @return True if the variable is a list, False otherwise.
-  */
+void GetNaked(char *dst, const char *s);
 bool IsVarList(const char *var);
 
 ProtocolVersion ProtocolVersionParse(const char *s);
-
-void BufferAppendPromiseStr(Buffer *buf, const char *str);
-void BufferAppendAbbreviatedStr(Buffer *buffer, const char *str, const int N);
-
-bool StringAppendPromise(char *dst, const char *str, size_t n);
-bool StringAppendAbbreviatedPromise(char *dst, const char *str, size_t n, const size_t max_fragment);
 
 
 #endif

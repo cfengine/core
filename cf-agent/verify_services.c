@@ -71,6 +71,7 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
 
     switch (a.service.service_policy)
     {
+    case SERVICE_POLICY_ENABLE:
     case SERVICE_POLICY_START:
         break;
 
@@ -81,7 +82,7 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
         if (strcmp(a.service.service_autostart_policy, "none") != 0)
         {
             Log(LOG_LEVEL_ERR,
-                "!! Autostart policy of service promiser '%s' needs to be 'none' when service policy is not 'start', but is '%s'",
+                "!! Autostart policy of service promiser '%s' needs to be 'none' when service policy is not 'enable' nor 'start', but is '%s'",
                 pp->promiser, a.service.service_autostart_policy);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
@@ -200,6 +201,16 @@ static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service
 
     switch (service_policy)
     {
+    case SERVICE_POLICY_ENABLE:
+        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+        RlistAppend(&args, "enable", RVAL_TYPE_SCALAR);
+        break;
+
+    case SERVICE_POLICY_DISABLE:
+        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+        RlistAppend(&args, "disable", RVAL_TYPE_SCALAR);
+        break;
+
     case SERVICE_POLICY_START:
         RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
         RlistAppend(&args, "start", RVAL_TYPE_SCALAR);
@@ -212,11 +223,10 @@ static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service
 
     case SERVICE_POLICY_RELOAD:
         RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-        RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
+        RlistAppend(&args, "reload", RVAL_TYPE_SCALAR);
         break;
 
     case SERVICE_POLICY_STOP:
-    case SERVICE_POLICY_DISABLE:
     default:
         RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
         RlistAppend(&args, "stop", RVAL_TYPE_SCALAR);
@@ -256,6 +266,14 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
 
     switch (a.service.service_policy)
     {
+    case SERVICE_POLICY_ENABLE:
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "enable", CF_DATA_TYPE_STRING, "source=promise");
+        break;
+
+    case SERVICE_POLICY_DISABLE:
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "disable", CF_DATA_TYPE_STRING, "source=promise");
+        break;
+
     case SERVICE_POLICY_START:
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "start", CF_DATA_TYPE_STRING, "source=promise");
         break;
@@ -269,7 +287,6 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
         break;
 
     case SERVICE_POLICY_STOP:
-    case SERVICE_POLICY_DISABLE:
     default:
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "stop", CF_DATA_TYPE_STRING, "source=promise");
         break;

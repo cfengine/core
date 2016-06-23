@@ -582,6 +582,9 @@ Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool 
 
     Rlist *rp = xmalloc(sizeof(Rlist));
 
+    rp->val  = RvalCopy((Rval) {(void *) item, type});
+    rp->next = NULL;
+
     if (*start == NULL)
     {
         *start = rp;
@@ -594,14 +597,6 @@ Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool 
 
         lp->next = rp;
     }
-
-    rp->val = RvalCopy((Rval) {(void *) item, type});
-
-    ThreadLock(cft_lock);
-
-    rp->next = NULL;
-
-    ThreadUnlock(cft_lock);
 
     return rp;
 }

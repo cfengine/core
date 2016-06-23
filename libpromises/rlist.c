@@ -582,7 +582,7 @@ Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool 
 
     Rlist *rp = xmalloc(sizeof(Rlist));
 
-    rp->val  = RvalCopy((Rval) {(void *) item, type});
+    rp->val  = RvalNew(item, type);
     rp->next = NULL;
 
     if (*start == NULL)

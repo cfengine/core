@@ -32,7 +32,6 @@
 #include <fncall.h>
 #include <string_lib.h>                                       /* StringHash */
 #include <regex.h>          /* StringMatchWithPrecompiledRegex,CompileRegex */
-#include <mutex.h>
 #include <misc_lib.h>
 #include <assoc.h>
 #include <eval_context.h>
@@ -609,9 +608,9 @@ static Rlist *RlistPrependRval(Rlist **start, Rval rval)
 
     rp->next = *start;
     rp->val = rval;
-    ThreadLock(cft_lock);
+
     *start = rp;
-    ThreadUnlock(cft_lock);
+
     return rp;
 }
 

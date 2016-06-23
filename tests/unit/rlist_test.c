@@ -720,12 +720,12 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *lval, D
 }
 
 pthread_mutex_t *cft_lock;
-int ThreadLock(pthread_mutex_t *name)
+int __ThreadLock(pthread_mutex_t *name)
 {
     return true;
 }
 
-int ThreadUnlock(pthread_mutex_t *name)
+int __ThreadUnlock(pthread_mutex_t *name)
 {
     return true;
 }

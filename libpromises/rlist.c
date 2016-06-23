@@ -930,9 +930,7 @@ void RvalDestroy(Rval rval)
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        ThreadLock(cft_lock);
         free(RvalScalarValue(rval));
-        ThreadUnlock(cft_lock);
         return;
 
     case RVAL_TYPE_LIST:

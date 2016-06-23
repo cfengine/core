@@ -316,6 +316,9 @@ Rlist *RlistAppendRval(Rlist **start, Rval rval)
 {
     Rlist *rp = xmalloc(sizeof(Rlist));
 
+    rp->val  = rval;
+    rp->next = NULL;
+
     if (*start == NULL)
     {
         *start = rp;
@@ -330,14 +333,6 @@ Rlist *RlistAppendRval(Rlist **start, Rval rval)
 
         lp->next = rp;
     }
-
-    rp->val = rval;
-
-    ThreadLock(cft_lock);
-
-    rp->next = NULL;
-
-    ThreadUnlock(cft_lock);
 
     return rp;
 }

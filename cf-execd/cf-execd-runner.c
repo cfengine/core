@@ -184,11 +184,6 @@ void LocalExec(const ExecConfig *config)
     if (strlen(config->exec_command) > 0)
     {
         strlcpy(cmd, config->exec_command, CF_BUFSIZE);
-
-        if (!strstr(cmd, "-Dfrom_cfexecd"))
-        {
-            strcat(cmd, " -Dfrom_cfexecd");
-        }
     }
     else
     {

@@ -96,7 +96,7 @@ bool PassOpenFile_Put(int uds, int descriptor, const char *text)
             "Failed to parse peer PID from: %s", buffer);
         return false;
     }
-    else if (0 != WSADuplicateSocket(descriptor, pid, &blob))
+    else if (WSADuplicateSocket(descriptor, pid, &blob) != 0)
     {
         Log(LOG_LEVEL_ERR,
             "Failed to generate socket transmission data blob");
@@ -169,7 +169,7 @@ bool PassOpenFile_Put(int uds, int descriptor, const char *text)
         if (got > 0)
         {
             answer[got] = '\0'; /* In case unexpected message isn't terminated */
-            if (0 != strcmp(answer, ACK_MSG))
+            if (strcmp(answer, ACK_MSG) != 0)
             {
                 Log(LOG_LEVEL_WARNING,
                     "ACK message wasn't as expected: '%s' != '%s' (ignoring)",

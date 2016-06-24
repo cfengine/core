@@ -605,7 +605,8 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                    fname = "parseyaml";
 
                                                    // look for unexpanded variables
-                                                   if (NULL == strstr(P.rval.item, "$(") && NULL == strstr(P.rval.item, "${"))
+                                                   if (strstr(P.rval.item, "$(") == NULL &&
+                                                       strstr(P.rval.item, "${") == NULL)
                                                    {
                                                        const char *copy_data = BufferData(copy);
                                                        res = JsonParseYamlString(&copy_data, &json);
@@ -616,7 +617,8 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                {
                                                    fname = "parsejson";
                                                    // look for unexpanded variables
-                                                   if (NULL == strstr(P.rval.item, "$(") && NULL == strstr(P.rval.item, "${"))
+                                                   if (strstr(P.rval.item, "$(") == NULL &&
+                                                       strstr(P.rval.item, "${") == NULL)
                                                    {
                                                        const char *copy_data = BufferData(copy);
                                                        res = JsonParse(&copy_data, &json);
@@ -630,16 +632,17 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                {
                                                    // Parsing failed, insert fncall so it can be retried during evaluation
                                                }
-                                               else if (NULL != json && JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                                               else if (json != NULL &&
+                                                        JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
                                                {
                                                    // Parsing failed, insert fncall so it can be retried during evaluation
                                                    JsonDestroy(json);
                                                    json = NULL;
                                                }
 
-                                               if (NULL != fname)
+                                               if (fname != NULL)
                                                {
-                                                   if (NULL == json)
+                                                   if (json == NULL)
                                                    {
                                                        Rlist *synthetic_args = NULL;
                                                        RlistAppendScalar(&synthetic_args, xstrdup(P.rval.item));
@@ -955,7 +958,7 @@ class:                 CLASS
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses ? P.currentclasses : P.currentvarclasses) - 2;
                            ParserDebug("\tP:%s:%s:%s:%s %s = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? "class": "varclass", yytext);
 
-                           if (NULL != P.currentclasses)
+                           if (P.currentclasses != NULL)
                            {
                                char *literal = xstrdup(P.currentclasses);
 

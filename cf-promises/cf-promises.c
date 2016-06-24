@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
     GenericAgentPostLoadInit(ctx);
 
-    if (NULL != config->tag_release_dir)
+    if (config->tag_release_dir != NULL)
     {
         // write the validated file and the release ID
         bool tagged = GenericAgentTagReleaseDirectory(config, config->tag_release_dir, true, true);

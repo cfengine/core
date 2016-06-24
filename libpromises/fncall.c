@@ -347,9 +347,9 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     {
         // Special case: ifelse(isvariable("x"), $(x), "default")
         // (the first argument will come down expanded as "!any")
-        if (0 == strcmp(fp->name, "ifelse") &&
+        if (strcmp(fp->name, "ifelse") == 0 &&
             RlistLen(expargs) == 3 &&
-            0 == strcmp("!any", RlistScalarValueSafe(expargs)) &&
+            strcmp("!any", RlistScalarValueSafe(expargs)) == 0 &&
             !RlistIsUnresolved(expargs->next->next))
         {
                 Log(LOG_LEVEL_DEBUG, "Allowing ifelse() function evaluation even"

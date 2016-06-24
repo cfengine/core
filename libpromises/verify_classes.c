@@ -69,10 +69,10 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         return PROMISE_RESULT_FAIL;
     }
 
-    if (NULL == a.context.expression ||
+    if (a.context.expression == NULL||
         EvalClassExpression(ctx, a.context.expression, pp))
     {
-        if (NULL == a.context.expression)
+        if (a.context.expression == NULL)
         {
             Log(LOG_LEVEL_DEBUG, "Setting class '%s' without an expression, implying 'any'", pp->promiser);
         }
@@ -105,8 +105,8 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                 a.context.scope == CONTEXT_SCOPE_NAMESPACE ||
                 /* If there is no explicit scope, common bundles define global
                  * classes, other bundles define local classes: */
-                (a.context.scope == CONTEXT_SCOPE_NONE &&
-                 0 == strcmp(PromiseGetBundle(pp)->type, "common")))
+                    (a.context.scope == CONTEXT_SCOPE_NONE &&
+                     strcmp(PromiseGetBundle(pp)->type, "common") == 0))
             {
                 Log(LOG_LEVEL_VERBOSE, "C:     +  Global class: %s ", pp->promiser);
                 EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_NAMESPACE, tags);

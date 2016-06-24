@@ -174,7 +174,9 @@ static FnCallResult FnFailure(void)
 static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
 {
     VarRef *ref = NULL;
-    if (NULL != varname && IsVarList(varname) && strlen(varname) < CF_MAXVARSIZE)
+    if (varname != NULL &&
+        IsVarList(varname) &&
+        strlen(varname) < CF_MAXVARSIZE)
     {
         char naked[CF_MAXVARSIZE] = "";
         GetNaked(naked, varname);
@@ -301,7 +303,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                         }
                     }
 
-                    if (NULL != last_key && NULL != holder)
+                    if (last_key != NULL && holder != NULL)
                     {
                         switch (var->rval.type)
                         {
@@ -941,7 +943,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
     }
 
     /* Require an odd number of arguments. We will always return something. */
-    if (argcount%2 != 1)
+    if ((argcount % 2) != 1)
     {
         FatalError(ctx, "in built-in FnCall ifelse: even number of arguments");
     }
@@ -973,15 +975,15 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
     bool check_only = false;
     unsigned count = 0;
 
-    if (0 == strcmp(fp->name, "classmatch"))
+    if (strcmp(fp->name, "classmatch") == 0)
     {
         check_only = true;
     }
-    else if (0 == strcmp(fp->name, "countclassesmatching"))
+    else if (strcmp(fp->name, "countclassesmatching") == 0)
     {
         count_only = true;
     }
-    else if (0 == strcmp(fp->name, "classesmatching"))
+    else if (strcmp(fp->name, "classesmatching") == 0)
     {
     }
     else
@@ -1177,13 +1179,13 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
     Rlist *tags = NULL;
     StringSet *tagset = NULL;
 
-    if (0 == strcmp(fp->name, "getvariablemetatags"))
+    if (strcmp(fp->name, "getvariablemetatags") == 0)
     {
         VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
         tagset = EvalContextVariableTags(ctx, ref);
         VarRefDestroy(ref);
     }
-    else if (0 == strcmp(fp->name, "getclassmetatags"))
+    else if (strcmp(fp->name, "getclassmetatags") == 0)
     {
         ClassRef ref = ClassRefParse(RlistScalarValue(finalargs));
         tagset = EvalContextClassTags(ctx, ref.ns, ref.name);
@@ -1249,7 +1251,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
                 // we declare it found if no tags were requested
                 found = true;
             }
-            else if (NULL != bundle_tags)
+            else if (bundle_tags != NULL)
             {
 
                 switch (DataTypeToRvalType(type))
@@ -1359,7 +1361,7 @@ static bool GetLegacyPackagesMatching(pcre *matcher, JsonElement *json, const bo
     }
 
     char *line;
-    while (NULL != (line = GetCsvLineNext(fin)))
+    while ((line = GetCsvLineNext(fin)) != NULL)
     {
         if (!AddPackagesMatchingJsonLine(matcher, json, line))
         {
@@ -1463,7 +1465,7 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
 
 static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const bool installed_mode = (0 == strcmp(fp->name, "packagesmatching"));
+    const bool installed_mode = (strcmp(fp->name, "packagesmatching") == 0);
     pcre *matcher;
     {
         const char *regex_package = RlistScalarValue(finalargs);
@@ -1943,7 +1945,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
 
     JsonElement *old_result = JsonObjectGetAsObject(CURL_CACHE, StringWriterData(cache_w));
 
-    if (NULL != old_result)
+    if (old_result != NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "%s: found cached request for %s", fp->name, url);
         WriterClose(cache_w);
@@ -2000,37 +2002,37 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
         const char *key = JsonIteratorCurrentKey(&iter);
         const char *value = JsonPrimitiveGetAsString(e);
 
-        if (0 == strcmp(key, "url.timeout"))
+        if (strcmp(key, "url.timeout") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: setting timeout to %ld seconds", fp->name, IntFromString(value));
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, IntFromString(value));
         }
-        else if (0 == strcmp(key, "url.verbose"))
+        else if (strcmp(key, "url.verbose") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: setting verbosity to %ld", fp->name, IntFromString(value));
             curl_easy_setopt(curl, CURLOPT_VERBOSE, IntFromString(value));
         }
-        else if (0 == strcmp(key, "url.header"))
+        else if (strcmp(key, "url.header") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: setting inline headers to %ld", fp->name, IntFromString(value));
             curl_easy_setopt(curl, CURLOPT_HEADER, IntFromString(value));
         }
-        else if (0 == strcmp(key, "url.referer"))
+        else if (strcmp(key, "url.referer") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: setting referer to %s", fp->name, value);
             curl_easy_setopt(curl, CURLOPT_REFERER, value);
         }
-        else if (0 == strcmp(key, "url.user-agent"))
+        else if (strcmp(key, "url.user-agent") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: setting user agent string to %s", fp->name, value);
             curl_easy_setopt(curl, CURLOPT_USERAGENT, value);
         }
-        else if (0 == strcmp(key, "url.max_content"))
+        else if (strcmp(key, "url.max_content") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: setting max contents to %ld", fp->name, IntFromString(value));
             max_content = IntFromString(value);
         }
-        else if (0 == strcmp(key, "url.max_headers"))
+        else if (strcmp(key, "url.max_headers") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "%s: setting max headers to %ld", fp->name, IntFromString(value));
             max_headers = IntFromString(value);
@@ -2050,7 +2052,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
     JsonElement *options_headers = JsonObjectGetAsArray(options, "url.headers");
     struct curl_slist *header_list = NULL;
 
-    if (NULL != options_headers)
+    if (options_headers != NULL)
     {
         iter = JsonIteratorInit(options_headers);
         while ((e = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
@@ -2059,14 +2061,14 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
         }
     }
 
-    if (NULL != header_list)
+    if (header_list != NULL)
     {
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
     }
 
     JsonElement *result = JsonObjectCreate(10);
     CURLcode res = curl_easy_perform(curl);
-    if (NULL != header_list)
+    if (header_list != NULL)
     {
         curl_slist_free_all(header_list);
         header_list = NULL;
@@ -2321,7 +2323,7 @@ void CollectContainerValues(EvalContext *ctx, Rlist **values, const JsonElement 
             else
             {
                 char *value = JsonPrimitiveToString(el);
-                if (NULL != value)
+                if (value != NULL)
                 {
                     RlistAppendScalar(values, value);
                     free(value);
@@ -2332,7 +2334,7 @@ void CollectContainerValues(EvalContext *ctx, Rlist **values, const JsonElement 
     else if (JsonGetElementType(container) == JSON_ELEMENT_TYPE_PRIMITIVE)
     {
         char *value = JsonPrimitiveToString(container);
-        if (NULL != value)
+        if (value != NULL)
         {
             RlistAppendScalar(values, value);
             free(value);
@@ -2705,7 +2707,7 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
     {
         const char *data = RlistScalarValue(rp);
 
-        if (0 != BufferSize(buf))
+        if (BufferSize(buf) != 0)
         {
             // simulate the newline
             BufferAppendString(buf, "\n");
@@ -2742,7 +2744,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
-    bool mapdatamode = 0 == strcmp(fp->name, "mapdata");
+    bool mapdatamode = (strcmp(fp->name, "mapdata") == 0);
     Rlist *returnlist = NULL;
 
     const char *conversion;
@@ -2765,9 +2767,9 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     varname = RlistScalarValueSafe(varpointer);
 
-    bool jsonmode = (0 == strcmp(conversion, "json"));
-    bool canonifymode = (0 == strcmp(conversion, "canonify"));
-    bool json_pipemode = (0 == strcmp(conversion, "json_pipe"));
+    bool jsonmode      = (strcmp(conversion, "json")      == 0);
+    bool canonifymode  = (strcmp(conversion, "canonify")  == 0);
+    bool json_pipemode = (strcmp(conversion, "json_pipe") == 0);
 
     bool allocated = false;
     JsonElement *container = VarNameOrInlineToJson(ctx, fp, varpointer, false, &allocated);
@@ -2815,7 +2817,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     JsonIterator iter = JsonIteratorInit(container);
     const JsonElement *e;
 
-    while (NULL != (e = JsonIteratorNextValue(&iter)))
+    while ((e = JsonIteratorNextValue(&iter)) != NULL)
     {
         EvalContextVariablePutSpecialEscaped(ctx, SPECIAL_SCOPE_THIS, "k", JsonGetPropertyAsString(e),
                                              CF_DATA_TYPE_STRING, "source=function,function=maparray",
@@ -2857,10 +2859,10 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
             const JsonElement *e2;
             JsonIterator iter2 = JsonIteratorInit(e);
             int position = 0;
-            while (NULL != (e2 = JsonIteratorNextValueByType(&iter2, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+            while ((e2 = JsonIteratorNextValueByType(&iter2, JSON_ELEMENT_TYPE_PRIMITIVE, true)) != NULL)
             {
                 char *key = (char*) JsonGetPropertyAsString(e2);
-                bool havekey = NULL != key;
+                bool havekey = (key != NULL);
                 if (havekey)
                 {
                     EvalContextVariablePutSpecialEscaped(ctx, SPECIAL_SCOPE_THIS, "k[1]", key,
@@ -3199,14 +3201,14 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
                     JsonObjectAppendObject(bundles, scope_key, scope_obj);
                 }
             }
-            else if (0 == strcmp(scope_key, wantbundle))
+            else if (strcmp(scope_key, wantbundle) == 0)
             {
                 scope_obj = hash;
             }
 
             free(scope_key);
 
-            if (NULL != scope_obj)
+            if (scope_obj != NULL)
             {
                 char *lval_key = VarRefToString(var->ref, false);
                 if (strchr(lval_key, '#') == NULL) // don't collect mangled refs
@@ -3247,7 +3249,7 @@ static FnCallResult FnCallBundlestate(EvalContext *ctx,
         JsonGetElementType(state) != JSON_ELEMENT_TYPE_CONTAINER ||
         JsonLength(state) < 1)
     {
-        if (NULL != state)
+        if (state != NULL)
         {
             JsonDestroy(state);
         }
@@ -4017,7 +4019,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
            match_count < max)
     {
         char *val = JsonPrimitiveToString(el);
-        if (NULL != val)
+        if (val != NULL)
         {
             bool found;
             if (do_regex)
@@ -4034,13 +4036,14 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                 RlistAppendScalar(&returnlist, val);
                 match_count++;
 
-                if (0 == strcmp(fp->name, "some") || 0 == strcmp(fp->name, "regarray"))
+                if (strcmp(fp->name, "some")     == 0 ||
+                    strcmp(fp->name, "regarray") == 0)
                 {
                     free(val);
                     break;
                 }
             }
-            else if (0 == strcmp(fp->name, "every"))
+            else if (strcmp(fp->name, "every") == 0)
             {
                 total++;
                 free(val);
@@ -4061,24 +4064,25 @@ static FnCallResult FilterInternal(EvalContext *ctx,
 
     bool contextmode = 0;
     bool ret;
-    if (0 == strcmp(fp->name, "every"))
+    if (strcmp(fp->name, "every") == 0)
     {
         contextmode = 1;
         ret = (match_count == total && total > 0);
     }
-    else if (0 == strcmp(fp->name, "none"))
+    else if (strcmp(fp->name, "none") == 0)
     {
         contextmode = 1;
         ret = (match_count == 0);
     }
-    else if (0 == strcmp(fp->name, "some") ||
-             0 == strcmp(fp->name, "regarray") ||
-             0 == strcmp(fp->name, "reglist"))
+    else if (strcmp(fp->name, "some")     == 0 ||
+             strcmp(fp->name, "regarray") == 0 ||
+             strcmp(fp->name, "reglist")  == 0)
     {
         contextmode = 1;
         ret = (match_count > 0);
     }
-    else if (0 != strcmp(fp->name, "grep") && 0 != strcmp(fp->name, "filter"))
+    else if (strcmp(fp->name, "grep")   != 0 &&
+             strcmp(fp->name, "filter") != 0)
     {
         ProgrammingError("built-in FnCall %s: unhandled FilterInternal() contextmode", fp->name);
     }
@@ -4116,7 +4120,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
-    bool head = 0 == strcmp(RlistScalarValue(finalargs->next), "head"); // heads or tails
+    bool head = (strcmp(RlistScalarValue(finalargs->next), "head") == 0); // heads or tails
     long max = IntFromString(RlistScalarValue(finalargs->next->next)); // max results
 
     Rlist *input_list = NULL;
@@ -4168,8 +4172,8 @@ static FnCallResult FnCallSetop(EvalContext *ctx,
                                 ARG_UNUSED const Policy *policy,
                                 const FnCall *fp, const Rlist *finalargs)
 {
-    bool difference_mode = (0 == strcmp(fp->name, "difference"));
-    bool unique_mode = (0 == strcmp(fp->name, "unique"));
+    bool difference_mode = (strcmp(fp->name, "difference") == 0);
+    bool unique_mode = (strcmp(fp->name, "unique") == 0);
 
     const char *name_str = RlistScalarValueSafe(finalargs);
     bool allocated = false;
@@ -4243,7 +4247,7 @@ static FnCallResult FnCallSetop(EvalContext *ctx,
     }
 
     JsonDestroyMaybe(json, allocated);
-    if (NULL != json_b)
+    if (json_b != NULL)
     {
         JsonDestroyMaybe(json_b, allocated_b);
     }
@@ -4316,7 +4320,7 @@ static FnCallResult FnCallFold(EvalContext *ctx,
     {
         char *value = JsonPrimitiveToString(el);
 
-        if (NULL != value)
+        if (value != NULL)
         {
             if (sort_type)
             {
@@ -4338,7 +4342,7 @@ static FnCallResult FnCallFold(EvalContext *ctx,
             if (mean_mode || variance_mode || sum_mode || product_mode)
             {
                 double x;
-                if (1 != sscanf(value, "%lf", &x))
+                if (sscanf(value, "%lf", &x) != 1)
                 {
                     x = 0; /* treat non-numeric entries as zero */
                 }
@@ -4514,7 +4518,8 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
             ProgrammingError("JSON Container is neither array nor object but type %d", (int) ct);
         }
 
-        if (NULL != jelement && JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
+        if (jelement != NULL &&
+            JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
         {
             jstring = xstrdup(JsonPrimitiveGetAsString(jelement));
         }
@@ -4661,7 +4666,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                 if (SeqLength(s) >= 2)
                 {
                     const char *format_piece = BufferData(SeqAt(s, 1));
-                    bool percent = (0 == strncmp(format_piece, "%%", 2));
+                    bool percent = (strncmp(format_piece, "%%", 2) == 0);
                     char *data = NULL;
 
                     if (percent)
@@ -4688,7 +4693,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     char bad_modifiers[] = "hLqjzt";
                     for (int b = 0; b < strlen(bad_modifiers); b++)
                     {
-                        if (NULL != strchr(format_piece, bad_modifiers[b]))
+                        if (strchr(format_piece, bad_modifiers[b]) != NULL)
                         {
                             Log(LOG_LEVEL_ERR, "format() does not allow modifier character '%c' in format specifier '%s'.",
                                   bad_modifiers[b],
@@ -4778,7 +4783,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                                     }
                                     free(escaped);
 
-                                    if (NULL != rp && NULL != rp->next)
+                                    if (rp != NULL && rp->next != NULL)
                                     {
                                         WriterWrite(w, ", ");
                                     }
@@ -5573,7 +5578,7 @@ static FnCallResult FnCallIsLessGreaterThan(ARG_UNUSED EvalContext *ctx, ARG_UNU
 {
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
-    bool rising = (0 == strcmp(fp->name, "isgreaterthan"));
+    bool rising = (strcmp(fp->name, "isgreaterthan") == 0);
 
     if (IsRealNumber(argv0) && IsRealNumber(argv1))
     {
@@ -5946,7 +5951,7 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
 
     struct tm* tm;
 
-    if (0 == strcmp("gmtime", mode))
+    if (strcmp("gmtime", mode) == 0)
     {
         tm = gmtime(&when);
     }
@@ -6157,13 +6162,13 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
     const char *input_path = RlistScalarValue(args);
     size_t size_max;
     const char *requested_mode = NULL;
-    if (0 == strcmp(fp->name, "readdata"))
+    if (strcmp(fp->name, "readdata") == 0)
     {
         // readdata gets rid of the size, well almost
         // csv still has 50MB restriction applied later
         size_max = IntFromString("inf");
         requested_mode = RlistScalarValue(args->next);
-        if (0 == strcmp("auto", requested_mode))
+        if (strcmp("auto", requested_mode) == 0)
         {
             if (StringEndsWithCase(input_path, ".csv", true))
             {
@@ -6185,11 +6190,11 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
     {
         size_max = args->next ? IntFromString(RlistScalarValue(args->next)) : IntFromString("inf");
 
-        if (0 == strcmp(fp->name, "readyaml"))
+        if (strcmp(fp->name, "readyaml") == 0)
         {
             requested_mode = "YAML";
         }
-        else if (0 == strcmp(fp->name, "readcsv"))
+        else if (strcmp(fp->name, "readcsv") == 0)
         {
             requested_mode = "CSV";
         }
@@ -6199,7 +6204,7 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         }
     }
 
-    if (0 == strcmp("CSV", requested_mode))
+    if (strcmp("CSV", requested_mode) == 0)
     {
         size_t size_max = 50 * (1024 * 1024);
 
@@ -6216,7 +6221,7 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         JsonElement *json = JsonArrayCreate(50);
         int linenumber = 0;
         char *line;
-        while (NULL != (line = GetCsvLineNext(fin)))
+        while ((line = GetCsvLineNext(fin)) != NULL)
         {
             ++linenumber;
 
@@ -6232,7 +6237,7 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
             Seq *list = SeqParseCsvString(line);
             free(line);
 
-            if (NULL != list)
+            if (list != NULL)
             {
                 JsonElement *line_arr = JsonArrayCreate(SeqLength(list));
 
@@ -6261,7 +6266,7 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
     }
 
-    bool yaml_mode = (0 == strcmp(requested_mode, "YAML"));
+    bool yaml_mode = (strcmp(requested_mode, "YAML") == 0);
     const char* data_type = requested_mode;
 
     JsonElement *json = NULL;
@@ -6306,7 +6311,7 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
 {
     const char *data = RlistScalarValue(args);
     JsonElement *json = NULL;
-    bool yaml_mode = (0 == strcmp(fp->name, "parseyaml"));
+    bool yaml_mode = (strcmp(fp->name, "parseyaml") == 0);
     const char* data_type = yaml_mode ? "YAML" : "JSON";
     JsonParseError res;
 
@@ -6395,7 +6400,7 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
     int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next));
     int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
 
-    bool make_array = 0 == strcmp(fp->name, "data_readstringarrayidx");
+    bool make_array = (strcmp(fp->name, "data_readstringarrayidx") == 0);
     JsonElement *json = NULL;
 
     // Read once to validate structure of file in itemlist
@@ -7301,7 +7306,7 @@ static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
 
     if (is_context_processexists)
     {
-        const bool ret = (NULL != matched);
+        const bool ret = (matched != NULL);
         DeleteItemList(matched);
         return FnReturnContext(ret);
     }
@@ -7412,7 +7417,8 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
     {
     case '^':
         // Allow modules to set their variable context (up to 50 characters)
-        if (1 == sscanf(line + 1, "context=%50[^\n]", content) && content[0] != '\0')
+        if (sscanf(line + 1, "context=%50[^\n]", content) == 1 &&
+            content[0] != '\0')
         {
             /* Symbol ID without \200 to \377: */
             pcre *context_name_rx = CompileRegex("[a-zA-Z0-9_]+");
@@ -7437,7 +7443,8 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
                 pcre_free(context_name_rx);
             }
         }
-        else if (1 == sscanf(line + 1, "meta=%1024[^\n]", content) && content[0] != '\0')
+        else if (sscanf(line + 1, "meta=%1024[^\n]", content) == 1 &&
+                 content[0] != '\0')
         {
             Log(LOG_LEVEL_VERBOSE, "Module set meta tags to '%s'", content);
             StringSetClear(tags);
@@ -7445,7 +7452,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             StringSetAddSplit(tags, content, ',');
             StringSetAdd(tags, xstrdup("source=module"));
         }
-        else if (1 == sscanf(line + 1, "persistence=%ld", persistence))
+        else if (sscanf(line + 1, "persistence=%ld", persistence) == 1)
         {
             Log(LOG_LEVEL_VERBOSE, "Module set persistence to %ld minutes", *persistence);
         }
@@ -7659,7 +7666,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 
 static FnCallResult FnCallCFEngineCallers(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
 {
-    bool promisersmode = (0 == strcmp(fp->name, "callstack_promisers"));
+    bool promisersmode = (strcmp(fp->name, "callstack_promisers") == 0);
 
     if (promisersmode)
     {

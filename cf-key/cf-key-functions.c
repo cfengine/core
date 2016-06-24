@@ -88,7 +88,7 @@ char *LoadPubkeyDigest(const char *filename)
     char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
 
     key = LoadPublicKey(filename);
-    if (NULL == key)
+    if (key == NULL)
     {
         return NULL;
     }
@@ -119,7 +119,7 @@ int PrintDigest(const char *pubkey)
 {
     char *digeststr = LoadPubkeyDigest(pubkey);
 
-    if (NULL == digeststr)
+    if (digeststr == NULL)
     {
         return 1; /* ERROR exitcode */
     }

@@ -4862,55 +4862,47 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
-    /*
-     * MODE1: iprange(range)
-     *        Match range on either VIPADDRESS or address of any interface.
-     */
-    if (ifaces == NULL)
-    {
-        for (const Item *ip = EvalContextGetIpAddresses(ctx);
-             ip != NULL;
-             ip = ip->next)
-        {
-            if (FuzzySetMatch(range, ip->name) == 0)
-            {
-                Log(LOG_LEVEL_DEBUG, "%s(%s): Match on IP '%s'",
-                    fp->name, range, ip->name);
-                return FnReturnContext(true);
-            }
-        }
-
-        Log(LOG_LEVEL_DEBUG, "%s(%s): no match", fp->name, range);
-        return FnReturnContext(false);
-    }
-
-    /*
-     * MODE2: iprange(range, args...)
-     *        Match range only on the addresses of args interfaces.
-     */
-    assert(ifaces != NULL);
-
     for (const Item *ip = EvalContextGetIpAddresses(ctx);
          ip != NULL;
          ip = ip->next)
     {
         if (FuzzySetMatch(range, ip->name) == 0)
         {
-            for (const Rlist *i = ifaces; i != NULL; i = i->next)
+            /*
+             * MODE1: iprange(range)
+             *        Match range on the address of any interface.
+             */
+            if (ifaces == NULL)
             {
-                char *iface = xstrdup(RlistScalarValue(i));
-                CanonifyNameInPlace(iface);
-                if (ip->classes != NULL &&
-                    strcmp(iface, ip->classes) == 0)
+                Log(LOG_LEVEL_DEBUG, "%s(%s): Match on IP '%s'",
+                    fp->name, range, ip->name);
+                return FnReturnContext(true);
+            }
+            /*
+             * MODE2: iprange(range, args...)
+             *        Match range only on the addresses of args interfaces.
+             */
+            else
+            {
+                for (const Rlist *i = ifaces; i != NULL; i = i->next)
                 {
-                    Log(LOG_LEVEL_DEBUG,
-                        "%s(%s): Match on IP '%s' interface '%s'",
-                        fp->name, range, ip->name, ip->classes);
+                    char *iface = xstrdup(RlistScalarValue(i));
+                    CanonifyNameInPlace(iface);
 
+                    const char *ip_iface = ip->classes;
+
+                    if (ip_iface != NULL &&
+                        strcmp(iface, ip_iface) == 0)
+                    {
+                        Log(LOG_LEVEL_DEBUG,
+                            "%s(%s): Match on IP '%s' interface '%s'",
+                            fp->name, range, ip->name, ip->classes);
+
+                        free(iface);
+                        return FnReturnContext(true);
+                    }
                     free(iface);
-                    return FnReturnContext(true);
                 }
-                free(iface);
             }
         }
     }

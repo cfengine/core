@@ -1017,7 +1017,7 @@ bool StringAppendAbbreviatedPromise(char *dst, const char *src, size_t n, const 
 {
     /* check if `src` contains a new line (may happen for "insert_lines") */
     const char *const nl = strchr(src, '\n');
-    if (NULL == nl)
+    if (nl == NULL)
     {
         return StringAppendPromise(dst, src, n);
     }

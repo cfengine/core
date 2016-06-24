@@ -55,7 +55,7 @@ static JsonElement* JsonParseYamlScalarValue(yaml_event_t *event)
     const char *value = (const char *) event->data.scalar.value;
     size_t length = event->data.scalar.length;
 
-    if (NULL == tag)
+    if (tag == NULL)
     {
         tag = YAML_DEFAULT_SCALAR_TAG;
     }
@@ -117,7 +117,7 @@ static JsonElement* JsonParseYamlScalarValue(yaml_event_t *event)
         }
     }
 
-    if (0 == strcmp(tag, YAML_TIMESTAMP_TAG))
+    if (strcmp(tag, YAML_TIMESTAMP_TAG) == 0)
     {
         // what else could we do, return a epoch time?
         Log(LOG_LEVEL_VERBOSE, "YAML parse: treating timestamp value '%s' as a string", value);
@@ -157,7 +157,7 @@ static void JsonParseYamlData(yaml_parser_t *parser, JsonElement *element, const
             {
                 if (JsonGetContainerType(element) == JSON_CONTAINER_TYPE_OBJECT)
                 {
-                    if (NULL == key)
+                    if (key == NULL)
                     {
                         // save key
                         key = xstrdup(event.data.scalar.value);

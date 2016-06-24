@@ -1338,7 +1338,7 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = pp;
 
-    if (NULL != varclasses)
+    if (varclasses != NULL)
     {
         PromiseAppendConstraint(pp, "ifvarclass", RvalNew(varclasses, RVAL_TYPE_SCALAR), true);
     }

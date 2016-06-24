@@ -1167,7 +1167,7 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
         }
 
         const struct dirent *dirp;
-        while (NULL != (dirp = DirRead(dirh)))
+        while ((dirp = DirRead(dirh)) != NULL)
         {
             if (FullTextMatch(ctx, refAnyVer, dirp->d_name))
             {
@@ -1230,7 +1230,7 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
         mp = mp->next;
     }
 
-    if (NULL == mp)
+    if (mp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Found no package manager matching attr.packages.package_list_command '%s'",
             attr.packages.package_list_command == NULL ? "[empty]" : attr.packages.package_list_command);
@@ -1327,7 +1327,7 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
     {
         PackageManager *manager = GetPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
 
-        if (NULL == manager)
+        if (manager == NULL)
         {
             ProgrammingError("AddPackageToSchedule: Null package manager found!!!");
         }
@@ -1375,7 +1375,7 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
     {
         PackageManager *manager = GetPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
 
-        if (NULL == manager)
+        if (manager == NULL)
         {
             ProgrammingError("AddPatchToSchedule: Null package manager found!!!");
         }
@@ -2302,7 +2302,9 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
         {
             strlcpy(name, pp->promiser, CF_MAXVARSIZE);
             strlcpy(version, a2.packages.package_version, CF_MAXVARSIZE);
-            strlcpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE);
+            strlcpy(arch,
+                    (rp == NULL) ? "*" : RlistScalarValue(rp),
+                    CF_MAXVARSIZE);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
@@ -2316,7 +2318,7 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
             installed += installed1;
             matches += matches1;
 
-            if (NULL == rp) break; // Note we exit the loop explicitly here
+            if (rp == NULL) break; // Note we exit the loop explicitly here
         }
     }
     else if (a2.packages.package_version_regex) // version is not given, but a version regex is
@@ -2344,7 +2346,9 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
         {
             strlcpy(name, pp->promiser, CF_MAXVARSIZE);
             strlcpy(version, "*", CF_MAXVARSIZE);
-            strlcpy(arch, NULL == rp ? "*" : RlistScalarValue(rp), CF_MAXVARSIZE);
+            strlcpy(arch,
+                    (rp == NULL) ? "*" : RlistScalarValue(rp),
+                    CF_MAXVARSIZE);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
@@ -2358,7 +2362,7 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, const P
             installed += installed1;
             matches += matches1;
 
-            if (NULL == rp) break; // Note we exit the loop explicitly here
+            if (rp == NULL) break; // Note we exit the loop explicitly here
         }
     }
 
@@ -2697,7 +2701,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                                 "Package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
                                   pi->name);
                         }
-                        else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                        else if (strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)) == 0)
                         {
                             Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
                         }
@@ -2762,7 +2766,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                                     "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
                                       pi->name);
                             }
-                            else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                            else if (strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)) == 0)
                             {
                                 Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
                             }
@@ -2948,7 +2952,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
                                 "Package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
                                   pi->name);
                         }
-                        else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                        else if (strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)) == 0)
                         {
                             Log(LOG_LEVEL_DEBUG, "ExecutePatch: Ignoring outcome for special package '%s'", pi->name);
                         }
@@ -2991,7 +2995,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
                                 "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
                                   pi->name);
                         }
-                        else if (0 == strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)))
+                        else if (strncmp(pi->name, PACKAGE_IGNORED_CFE_INTERNAL, strlen(PACKAGE_IGNORED_CFE_INTERNAL)) == 0)
                         {
                             Log(LOG_LEVEL_DEBUG, "ExecutePatch: Ignoring outcome for special package '%s'", pi->name);
                         }

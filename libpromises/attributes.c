@@ -1051,7 +1051,7 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
         /* Check if we have generic package_method. */
         const Policy *policy = PolicyFromPromise(pp);
         Seq *bodies_and_args = EvalContextResolveBodyExpression(ctx, policy, "generic", "package_method");; // at position 0 we'll have the body, then its rval, then the same for each of its inherit_from parents
-        if (NULL != bodies_and_args &&
+        if (bodies_and_args != NULL &&
             SeqLength(bodies_and_args) > 0)
         {
             const Body *bp = SeqAt(bodies_and_args, 0); // guaranteed to be non-NULL

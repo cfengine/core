@@ -786,7 +786,8 @@ static size_t StrList_AppendRegexHostname(StrList **sl, const char *host)
             return (size_t) -1;
         }
 
-        if (name > host || NULL != strchr(host, '\\'))
+        if (name > host ||
+            strchr(host, '\\') != NULL)
         {
             /* 2: leading '.' and final '\0' */
             char copy[2 + strlen(name)], *c = copy;

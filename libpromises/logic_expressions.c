@@ -250,11 +250,11 @@ ExpressionValue EvalExpression(const Expression *expr,
         {
             return EXPRESSION_VALUE_ERROR;
         }
-        else if (0 == strcmp("true", name))
+        else if (strcmp("true", name) == 0)
         {
             ret =  EXPRESSION_VALUE_TRUE;
         }
-        else if (0 == strcmp("false", name))
+        else if (strcmp("false", name) == 0)
         {
             ret =  EXPRESSION_VALUE_FALSE;
         }

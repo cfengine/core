@@ -57,9 +57,9 @@ static void test_key_basic(void)
     assert_int_equal(CF_MD5_LEN, length);
     assert_true(KeyPrintableHash(key) != NULL);
     /* Negative cases */
-    assert_true(NULL == KeyNew(NULL, HASH_METHOD_MD5));
-    assert_true(NULL == KeyNew(rsa, HASH_METHOD_NONE));
-    assert_true(NULL == KeyNew(NULL, HASH_METHOD_NONE));
+    assert_true(KeyNew(NULL, HASH_METHOD_MD5) == NULL);
+    assert_true(KeyNew(rsa,  HASH_METHOD_NONE) == NULL);
+    assert_true(KeyNew(NULL, HASH_METHOD_NONE) == NULL);
     /* Finish */
     KeyDestroy(&key);
     assert_true(key == NULL);

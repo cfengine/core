@@ -2177,7 +2177,7 @@ static JsonParseError JsonParseAsObject(void *lookup_context, JsonLookup *lookup
         default:
             // Note the character class excludes ':'.
             // This will match the key from { foo : 2 } but not { -foo: 2 }
-            if (NULL == property_name &&
+            if (property_name == NULL &&
                 StringMatch("^\\w[-\\w]*\\s*:", *data, NULL, NULL))
             {
                 char *colon = strchr(*data, ':');
@@ -2345,7 +2345,7 @@ JsonElement* StringCaptureData(pcre *pattern, const char* regex, const char* dat
 
     Seq *s;
 
-    if (NULL != pattern)
+    if (pattern != NULL)
     {
         s = StringMatchCapturesWithPrecompiledRegex(pattern, data, true);
     }

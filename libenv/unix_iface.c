@@ -769,7 +769,7 @@ static IPAddress* ParsedIPAddressHex(const char *data)
 {
     IPAddress *ip = NULL;
     Buffer *buffer = BufferNewFrom(data, strlen(data));
-    if (NULL != buffer)
+    if (buffer != NULL)
     {
         ip = IPAddressNewHex(buffer);
         BufferDestroy(buffer);
@@ -781,10 +781,10 @@ static IPAddress* ParsedIPAddressHex(const char *data)
 static void JsonRewriteParsedIPAddress(JsonElement* element, const char* raw_key, const char *new_key, const bool as_map)
 {
     IPAddress *addr = ParsedIPAddressHex(JsonObjectGetAsString(element, raw_key));
-    if (NULL != addr)
+    if (addr != NULL)
     {
         Buffer *buf = IPAddressGetAddress(addr);
-        if (NULL != buf)
+        if (buf != NULL)
         {
             JsonObjectRemoveKey(element, raw_key);
             if (as_map)
@@ -811,14 +811,17 @@ static long JsonExtractParsedNumber(JsonElement* element, const char* raw_key, c
 {
     long num = 0;
 
-    if (1 == sscanf(JsonObjectGetAsString(element, raw_key), hex_mode ? "%lx" : "%ld", &num))
+    if (sscanf(JsonObjectGetAsString(element, raw_key),
+               hex_mode ? "%lx" : "%ld",
+               &num)
+        == 1)
     {
         if (!keep_number)
         {
             JsonObjectRemoveKey(element, raw_key);
         }
 
-        if (NULL != new_key)
+        if (new_key != NULL)
         {
             JsonObjectAppendInteger(element, new_key, num);
         }
@@ -853,7 +856,7 @@ static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void 
     bool is_up = (num_flags & RTF_UP);
     bool is_gw = (num_flags & RTF_GATEWAY);
     bool is_host = (num_flags & RTF_HOST);
-    bool is_default_route = (0 == strcmp(JsonObjectGetAsString(route, "dest"), "0.0.0.0"));
+    bool is_default_route = (strcmp(JsonObjectGetAsString(route, "dest"), "0.0.0.0") == 0);
 
     const char* gw_type = is_gw ? "gateway":"local";
 
@@ -953,14 +956,14 @@ ProcPostProcessFn NetworkingPortsPostProcessInfo(ARG_UNUSED void *passed_ctx, vo
 {
     JsonElement *conn = json;
 
-    if (NULL != conn)
+    if (conn != NULL)
     {
         JsonRewriteParsedIPAddress(conn, "raw_local", "local", true);
         JsonRewriteParsedIPAddress(conn, "raw_remote", "remote", true);
 
         long num_state = JsonExtractParsedNumber(conn, "raw_state", "temp_state", false, false);
 
-        if (NULL != JsonObjectGetAsString(conn, "temp_state"))
+        if (JsonObjectGetAsString(conn, "temp_state") != NULL)
         {
             JsonObjectRemoveKey(conn, "temp_state");
             JsonObjectAppendString(conn, "state", GetPortStateString(num_state));
@@ -988,7 +991,7 @@ static JsonElement* GetNetworkingStatsInfo(const char *filename)
         while (CfReadLine(&header_line, &header_line_size, fin) != -1)
         {
             char* colon_ptr = strchr(header_line, ':');
-            if (NULL != colon_ptr &&
+            if (colon_ptr != NULL &&
                 colon_ptr+2 < header_line + strlen(header_line))
             {
                 JsonElement *stat = JsonObjectCreate(3);
@@ -1037,7 +1040,7 @@ static JsonElement* GetNetworkingStatsInfo(const char *filename)
 JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, const char* regex)
 {
     JsonElement *info = NULL;
-    bool extract_key_mode = (NULL != extracted_key);
+    bool extract_key_mode = (extracted_key != NULL);
 
     FILE *fin = safe_fopen(filename, "rt");
     if (fin)
@@ -1063,16 +1066,16 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
             {
                 JsonElement *item = StringCaptureData(pattern, regex, line);
 
-                if (NULL != item)
+                if (item != NULL)
                 {
-                    if (NULL != post)
+                    if (post != NULL)
                     {
                         (*post)(ctx, item);
                     }
 
                     if (extract_key_mode)
                     {
-                        if (NULL == JsonObjectGetAsString(item, extracted_key))
+                        if (JsonObjectGetAsString(item, extracted_key) == NULL)
                         {
                             Log(LOG_LEVEL_ERR, "While parsing %s, looked to extract key %s but couldn't find it in line %s", filename, extracted_key, line);
                         }
@@ -1091,7 +1094,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
 
             free(line);
 
-            if (NULL != key)
+            if (key != NULL)
             {
                 Buffer *varname = BufferNew();
                 BufferPrintf(varname, "%s", key);
@@ -1114,7 +1117,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
 const char* GetNetworkingProcdir()
 {
     const char *procdir = getenv("CFENGINE_TEST_OVERRIDE_PROCDIR");
-    if (NULL == procdir)
+    if (procdir == NULL)
     {
         procdir = "";
     }
@@ -1137,7 +1140,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     BufferPrintf(pbuf, "%s/proc/net/netstat", procdir);
     JsonElement *inet_stats = GetNetworkingStatsInfo(BufferData(pbuf));
 
-    if (NULL != inet_stats)
+    if (inet_stats != NULL)
     {
         JsonObjectAppendElement(inet, "stats", inet_stats);
     }
@@ -1148,7 +1151,7 @@ void GetNetworkingInfo(EvalContext *ctx)
                     //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0 
                     "^(?<interface>\\S+)\\t(?<raw_dest>[[:xdigit:]]+)\\t(?<raw_gw>[[:xdigit:]]+)\\t(?<raw_flags>[[:xdigit:]]+)\\t(?<refcnt>\\d+)\\t(?<use>\\d+)\\t(?<metric>[[:xdigit:]]+)\\t(?<raw_mask>[[:xdigit:]]+)\\t(?<mtu>\\d+)\\t(?<window>\\d+)\\t(?<irtt>[[:xdigit:]]+)");
 
-    if (NULL != routes &&
+    if (routes != NULL &&
         JsonGetElementType(routes) == JSON_ELEMENT_TYPE_CONTAINER)
     {
         JsonObjectAppendElement(inet, "routes", routes);
@@ -1160,16 +1163,16 @@ void GetNetworkingInfo(EvalContext *ctx)
         while ((route = JsonIteratorNextValue(&iter)))
         {
             JsonElement *active = JsonObjectGet(route, "active_default_gateway");
-            if (NULL != active &&
+            if (active != NULL &&
                 JsonGetElementType(active) == JSON_ELEMENT_TYPE_PRIMITIVE &&
                 JsonGetPrimitiveType(active) == JSON_PRIMITIVE_TYPE_BOOL &&
                 JsonPrimitiveGetAsBool(active))
             {
                 JsonElement *metric = JsonObjectGet(route, "metric");
-                if (NULL != metric &&
+                if (metric != NULL &&
                     JsonGetElementType(metric) == JSON_ELEMENT_TYPE_PRIMITIVE &&
                     JsonGetPrimitiveType(metric) == JSON_PRIMITIVE_TYPE_INTEGER &&
-                    (NULL == default_route ||
+                    (default_route == NULL ||
                      JsonPrimitiveGetAsInteger(metric) < lowest_metric))
                 {
                     default_route = route;
@@ -1177,7 +1180,7 @@ void GetNetworkingInfo(EvalContext *ctx)
             }
         }
 
-        if (NULL != default_route)
+        if (default_route != NULL)
         {
             JsonObjectAppendString(inet, "default_gateway", JsonObjectGetAsString(default_route, "gateway"));
             JsonObjectAppendElement(inet, "default_route", JsonCopy(default_route));
@@ -1194,7 +1197,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     JsonElement *inet6_stats = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, NULL,
                                                "^\\s*(?<key>\\S+)\\s+(?<value>\\d+)");
 
-    if (NULL != inet6_stats)
+    if (inet6_stats != NULL)
     {
         // map the key to the value (as a number) in the "stats" map
         JsonElement *rewrite = JsonObjectCreate(JsonLength(inet6_stats));
@@ -1205,7 +1208,8 @@ void GetNetworkingInfo(EvalContext *ctx)
             long num = 0;
             const char* key = JsonObjectGetAsString(stat, "key");
             const char* value = JsonObjectGetAsString(stat, "value");
-            if (key && value && (1 == sscanf(value, "%ld", &num)))
+            if (key && value &&
+                sscanf(value, "%ld", &num) == 1)
             {
                 JsonObjectAppendInteger(rewrite, key, num);
             }
@@ -1225,7 +1229,7 @@ void GetNetworkingInfo(EvalContext *ctx)
                     "(?<refcnt>\\d+)\\s+(?<use>\\d+)\\s+"
                     "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
 
-    if (NULL != inet6_routes)
+    if (inet6_routes != NULL)
     {
         JsonObjectAppendElement(inet6, "routes", inet6_routes);
     }
@@ -1240,7 +1244,7 @@ void GetNetworkingInfo(EvalContext *ctx)
                     "(?<raw_prefix_length>[[:xdigit:]]+)\\s+(?<raw_scope>[[:xdigit:]]+)\\s+"
                     "(?<raw_flags>[[:xdigit:]]+)\\s+(?<interface>\\S+)");
 
-    if (NULL != inet6_addresses)
+    if (inet6_addresses != NULL)
     {
         JsonObjectAppendElement(inet6, "addresses", inet6_addresses);
     }
@@ -1289,28 +1293,28 @@ JsonElement* GetNetworkingConnections(EvalContext *ctx)
 
     BufferPrintf(pbuf, "%s/proc/net/tcp", procdir);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
-    if (NULL != data)
+    if (data != NULL)
     {
         JsonObjectAppendElement(json, "tcp", data);
     }
 
     BufferPrintf(pbuf, "%s/proc/net/tcp6", procdir);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
-    if (NULL != data)
+    if (data != NULL)
     {
         JsonObjectAppendElement(json, "tcp6", data);
     }
 
     BufferPrintf(pbuf, "%s/proc/net/udp", procdir);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
-    if (NULL != data)
+    if (data != NULL)
     {
         JsonObjectAppendElement(json, "udp", data);
     }
 
     BufferPrintf(pbuf, "%s/proc/net/udp6", procdir);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
-    if (NULL != data)
+    if (data != NULL)
     {
         JsonObjectAppendElement(json, "udp6", data);
     }

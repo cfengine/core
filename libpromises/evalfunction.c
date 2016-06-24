@@ -4911,6 +4911,36 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
     return FnReturnContext(false);
 }
 
+static FnCallResult FnCallIsIpInSubnet(ARG_UNUSED EvalContext *ctx,
+                                       ARG_UNUSED const Policy *policy,
+                                       const FnCall *fp, const Rlist *finalargs)
+{
+    const char *range = RlistScalarValue(finalargs);
+    const Rlist *ips  = finalargs->next;
+
+    if (!FuzzyMatchParse(range))
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "%s(%s): argument is not a valid address range",
+            fp->name, range);
+        return FnFailure();
+    }
+
+    for (const Rlist *ip = ips; ip != NULL; ip = ip->next)
+    {
+        const char *ip_s = RlistScalarValue(ip);
+
+        if (FuzzySetMatch(range, ip_s) == 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "%s(%s): Match on IP '%s'",
+                fp->name, range, ip_s);
+            return FnReturnContext(true);
+        }
+    }
+
+    Log(LOG_LEVEL_DEBUG, "%s(%s): no match", fp->name, range);
+    return FnReturnContext(false);
+}
 /*********************************************************************/
 
 static FnCallResult FnCallHostRange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
@@ -8682,7 +8712,9 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1 that are also in list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified (can be narrowed to specific interfaces)",
+    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified in arg1 (can be narrowed to specific interfaces with arg2).",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isipinsubnet", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIsIpInSubnet, "True if an IP address specified in arg2, arg3, ... lies in the range of IP addresses specified in arg1",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", CF_DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

@@ -1,0 +1,46 @@
+#######################################################
+#
+# Test isipinsubnet()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+      "zeroes_range_match" expression => isipinsubnet("0.0.0.0/0", "1.2.3.4"),
+        meta => { "collect" };
+
+      "exact_ip_match" expression => isipinsubnet("1.2.3.4/32", "1.2.3.4"),
+        meta => { "collect" };
+
+      "two_ips_match"  expression => isipinsubnet("1.2.3.4/16", "4.5.6.7", "1.2.1.2"),
+        meta => { "collect" };
+
+      "two_ips_nomatch"  expression => isipinsubnet("1.2.3.4/16", "4.5.6.7", "3.4.1.2"),
+        meta => { "collect" };
+
+      "garbage_nomatch" expression => isipinsubnet("1.2.3.4/16", "blah", "blue", "bleh"),
+        meta => { "collect" };
+
+  vars:
+      "found" slist => classesmatching(".*", "collect");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                            $(this.promise_filename));
+}

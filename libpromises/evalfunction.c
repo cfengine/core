@@ -166,16 +166,6 @@ static FnCallResult FnReturnContext(bool result)
     return FnReturn(result ? "any" : "!any");
 }
 
-static FnCallResult FnReturnContextTrue()
-{
-    return FnReturnContext(true);
-}
-
-static FnCallResult FnReturnContextFalse()
-{
-    return FnReturnContext(false);
-}
-
 static FnCallResult FnFailure(void)
 {
     return (FnCallResult) { FNCALL_FAILURE };
@@ -4858,51 +4848,84 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
 /*********************************************************************/
 
-static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *policy,
+                                  const FnCall *fp, const Rlist *finalargs)
 {
-    char *range = RlistScalarValue(finalargs);
+    const char *range   = RlistScalarValue(finalargs);
+    const Rlist *ifaces = finalargs->next;
 
     if (!FuzzyMatchParse(range))
     {
+        Log(LOG_LEVEL_VERBOSE,
+            "%s(%s): argument is not a valid address range",
+            fp->name, range);
         return FnFailure();
     }
 
-    for (const Item *ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
+    /*
+     * MODE1: iprange(range)
+     *        Match range on either VIPADDRESS or address of any interface.
+     *        TODO: remove the match on VIPADDRESS, I believe it
+     *              is included in EvalContextGetIpAddresses()
+     */
+    if (ifaces == NULL)
     {
-        Rlist *ifaces = finalargs->next;
-        // we match on VIPADDRESS iff no interfaces were requested
-        if (FuzzySetMatch(range, VIPADDRESS) == 0 && NULL == ifaces)
+        if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "%s: found range %s on hostip %s, no interface", fp->name, range, ip->name);
-            return FnReturnContextTrue();
+            Log(LOG_LEVEL_DEBUG, "%s(%s): Match on main IP '%s'",
+                fp->name, range, VIPADDRESS);
+            return FnReturnContext(true);
         }
-        else if (FuzzySetMatch(range, ip->name) == 0)
+
+        for (const Item *ip = EvalContextGetIpAddresses(ctx);
+             ip != NULL;
+             ip = ip->next)
         {
-            if (ifaces == NULL) // no interfaces requested
+            if (FuzzySetMatch(range, ip->name) == 0)
             {
-                Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, any interface", fp->name, range, ip->name);
-                return FnReturnContextTrue();
+                Log(LOG_LEVEL_DEBUG, "%s(%s): Match on IP '%s'",
+                    fp->name, range, ip->name);
+                return FnReturnContext(true);
             }
-            else // check the specific interfaces given as arguments
+        }
+
+        Log(LOG_LEVEL_DEBUG, "%s(%s): no match", fp->name, range);
+        return FnReturnContext(false);
+    }
+
+    /*
+     * MODE2: iprange(range, args...)
+     *        Match range only on the addresses of args interfaces.
+     */
+    assert(ifaces != NULL);
+
+    for (const Item *ip = EvalContextGetIpAddresses(ctx);
+         ip != NULL;
+         ip = ip->next)
+    {
+        if (FuzzySetMatch(range, ip->name) == 0)
+        {
+            for (const Rlist *i = ifaces; i != NULL; i = i->next)
             {
-                for (; ifaces != NULL; ifaces = ifaces->next)
+                char *iface = xstrdup(RlistScalarValue(i));
+                CanonifyNameInPlace(iface);
+                if (ip->classes != NULL &&
+                    strcmp(iface, ip->classes) == 0)
                 {
-                    Buffer *iface = BufferNewFrom(RlistScalarValue(ifaces), strlen(RlistScalarValue(ifaces)));
-                    BufferCanonify(iface);
-                    Log(LOG_LEVEL_DEBUG, "%s: checking range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
-                    if (0 == strcmp(BufferData(iface), ip->classes))
-                    {
-                        Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
-                        BufferDestroy(iface);
-                        return FnReturnContextTrue();
-                    }
-                    BufferDestroy(iface);
+                    Log(LOG_LEVEL_DEBUG,
+                        "%s(%s): Match on IP '%s' interface '%s'",
+                        fp->name, range, ip->name, ip->classes);
+
+                    free(iface);
+                    return FnReturnContext(true);
                 }
+                free(iface);
             }
         }
     }
 
-    return FnReturnContextFalse();
+    Log(LOG_LEVEL_DEBUG, "%s(%s): no match", fp->name, range);
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/

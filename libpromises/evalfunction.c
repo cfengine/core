@@ -4869,7 +4869,26 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
-    /* Case 1: iprange(): No second argument, just arg1: check arg1 (a range) against VIPADDRESS */
+    /* Case 1: isipinsubnet(): check arg1 (a range) against arg2, arg3, ... if they are IPs */
+    if (!iprange_mode)
+    {
+        for (Rlist *ip = finalargs->next; ip != NULL; ip = ip->next)
+        {
+            Buffer *ipb = BufferNewFrom(RlistScalarValue(ip), strlen(RlistScalarValue(ip)));
+            bool is_ip = IPAddressIsIPAddress(ipb, NULL);
+            if (is_ip && FuzzySetMatch(range, BufferData(ipb)) == 0)
+            {
+                Log(LOG_LEVEL_DEBUG, "%s: found range %s on given IP %s", fp->name, range, BufferData(ipb));
+                BufferDestroy(ipb);
+                return FnReturnContextTrue();
+            }
+            BufferDestroy(ipb);
+        }
+    }
+
+    /* Case 2: iprange(): No second argument, just arg1: check arg1 (a range)
+     * against VIPADDRESS. Below we'll check all known IPs as well, this is just
+     * for VIPADDRESS. */
     if (iprange_mode && finalargs->next == NULL)
     {
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
@@ -4877,52 +4896,40 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
             Log(LOG_LEVEL_DEBUG, "%s: found range %s on hostip %s, no interface", fp->name, range, VIPADDRESS);
             return FnReturnContextTrue();
         }
-
-        return FnReturnContextFalse();
     }
 
-    /* Case 2: isipinsubnet(): check arg1 (a range) against arg2, arg3, ... if they are IPs */
-    for (Rlist *ip = finalargs->next; !iprange_mode && ip != NULL; ip = ip->next)
+    /* Case 3: iprange(): check arg1 (a range) against arg2, arg3, ... if they
+     * are interface names, inspecting the IP for that interface. Check all IPs
+     * if no interface names are given (in addition to the VIPADDRESS we checked
+     * above). */
+    if (iprange_mode)
     {
-        Buffer *ipb = BufferNewFrom(RlistScalarValue(ip), strlen(RlistScalarValue(ip)));
-        bool is_ip = IPAddressIsIPAddress(ipb, NULL);
-        if (is_ip && FuzzySetMatch(range, BufferData(ipb)) == 0)
+        for (const Item *ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_DEBUG, "%s: found range %s on given IP %s", fp->name, range, BufferData(ipb));
-            BufferDestroy(ipb);
-            return FnReturnContextTrue();
-        }
-        BufferDestroy(ipb);
-    }
+            Rlist *ifaces = finalargs->next;
 
-    /* Case 3: iprange(): check arg1 (a range) against arg2, arg3, ... if
-     * they are interface names, inspecting the IP for that interface. Check all
-     * IPs if no interface names are given. */
-    for (const Item *ip = EvalContextGetIpAddresses(ctx); iprange_mode && ip != NULL; ip = ip->next)
-    {
-        Rlist *ifaces = finalargs->next;
-
-        if (FuzzySetMatch(range, ip->name) == 0)
-        {
-            if (ifaces == NULL) // no interfaces requested
+            if (FuzzySetMatch(range, ip->name) == 0)
             {
-                Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, any interface", fp->name, range, ip->name);
-                return FnReturnContextTrue();
-            }
-            else // check the specific interfaces given as arguments
-            {
-                for (; ifaces != NULL; ifaces = ifaces->next)
+                if (ifaces == NULL) // no interfaces requested
                 {
-                    Buffer *iface = BufferNewFrom(RlistScalarValue(ifaces), strlen(RlistScalarValue(ifaces)));
-                    BufferCanonify(iface);
-                    Log(LOG_LEVEL_DEBUG, "%s: checking range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
-                    if (0 == strcmp(BufferData(iface), ip->classes))
+                    Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, any interface", fp->name, range, ip->name);
+                    return FnReturnContextTrue();
+                }
+                else // check the specific interfaces given as arguments
+                {
+                    for (; ifaces != NULL; ifaces = ifaces->next)
                     {
-                        Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                        Buffer *iface = BufferNewFrom(RlistScalarValue(ifaces), strlen(RlistScalarValue(ifaces)));
+                        BufferCanonify(iface);
+                        Log(LOG_LEVEL_DEBUG, "%s: checking range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                        if (0 == strcmp(BufferData(iface), ip->classes))
+                        {
+                            Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                            BufferDestroy(iface);
+                            return FnReturnContextTrue();
+                        }
                         BufferDestroy(iface);
-                        return FnReturnContextTrue();
                     }
-                    BufferDestroy(iface);
                 }
             }
         }

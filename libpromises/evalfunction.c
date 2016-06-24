@@ -4865,18 +4865,9 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
     /*
      * MODE1: iprange(range)
      *        Match range on either VIPADDRESS or address of any interface.
-     *        TODO: remove the match on VIPADDRESS, I believe it
-     *              is included in EvalContextGetIpAddresses()
      */
     if (ifaces == NULL)
     {
-        if (FuzzySetMatch(range, VIPADDRESS) == 0)
-        {
-            Log(LOG_LEVEL_DEBUG, "%s(%s): Match on main IP '%s'",
-                fp->name, range, VIPADDRESS);
-            return FnReturnContext(true);
-        }
-
         for (const Item *ip = EvalContextGetIpAddresses(ctx);
              ip != NULL;
              ip = ip->next)

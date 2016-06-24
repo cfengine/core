@@ -1,9 +1,11 @@
 {
   "found": [
+    "ip_range",
     "just_locals",
     "local_range2",
     "local_range",
     "all_zeroes_some_interfaces",
-    "all_zeroes"
+    "all_zeroes",
+    "all_zeroes_on_ip"
   ]
 }

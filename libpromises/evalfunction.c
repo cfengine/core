@@ -67,6 +67,7 @@
 #include <mustache.h>
 #include <processes_select.h>
 #include <sysinfo.h>
+#include <ip_address.h>
 
 #include <math_eval.h>
 
@@ -300,7 +301,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                         for (int index = ref_num_indices; index < var->ref->num_indices-1; index++)
                         {
                             JsonElement *local = JsonObjectGet(holder, var->ref->indices[index]);
-                            if (NULL == local)
+                            if (local == NULL)
                             {
                                 local = JsonObjectCreate(1);
                                 JsonObjectAppendObject(holder, var->ref->indices[index], local);
@@ -1204,7 +1205,7 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
         FatalError(ctx, "FnCallGetMetaTags: got unknown function name '%s', aborting", fp->name);
     }
 
-    if (NULL == tagset)
+    if (tagset == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "%s found variable or class %s without a tagset", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1254,7 +1255,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
             bool found = false; // case where tag_args are given and the bundle has no tags
 
-            if (NULL == tag_args)
+            if (tag_args == NULL)
             {
                 // we declare it found if no tags were requested
                 found = true;
@@ -1901,7 +1902,7 @@ static size_t cfengine_curl_write_callback(char *ptr, size_t size, size_t nmemb,
 
 static void CurlCleanup()
 {
-    if (NULL == CURL_CACHE)
+    if (CURL_CACHE == NULL)
     {
         JsonElement *temp = CURL_CACHE;
         CURL_CACHE = NULL;
@@ -1929,7 +1930,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
     bool allocated = false;
     JsonElement *options = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
-    if (NULL == options)
+    if (options == NULL)
     {
         return FnFailure();
     }
@@ -1945,7 +1946,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
     WriterWriteF(cache_w, "url = %s; options = ", url);
     JsonWriteCompact(cache_w, options);
 
-    if (NULL == CURL_CACHE)
+    if (CURL_CACHE == NULL)
     {
         CURL_CACHE = JsonObjectCreate(10);
         atexit(&CurlCleanup);
@@ -2279,7 +2280,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, true, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -2359,7 +2360,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, true, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -2436,7 +2437,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, ARG_UNUSED const Policy *policy
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -2703,7 +2704,7 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
     }
 
     // Exit if no data was obtained from the pipe
-    if (NULL == returnlist)
+    if (returnlist == NULL)
     {
         return NULL;
     }
@@ -2782,7 +2783,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     bool allocated = false;
     JsonElement *container = VarNameOrInlineToJson(ctx, fp, varpointer, false, &allocated);
 
-    if (NULL == container)
+    if (container == NULL)
     {
         return FnFailure();
     }
@@ -2799,7 +2800,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     {
         JsonElement *returnjson_pipe = ExecJSON_Pipe(arg_map, container);
 
-        if (NULL == returnjson_pipe)
+        if (returnjson_pipe == NULL)
         {
             Log(LOG_LEVEL_ERR, "Function %s failed to get output from 'json_pipe' execution", fp->name);
             return FnFailure();
@@ -2982,7 +2983,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx,
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -3110,7 +3111,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
         JsonElement *json = VarNameOrInlineToJson(ctx, fp, arg, false, &allocated);
 
         // we failed to produce a valid JsonElement, so give up
-        if (NULL == json)
+        if (json == NULL)
         {
             SeqDestroy(containers);
 
@@ -3162,7 +3163,7 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
     JsonElement *classes = NULL;
     JsonElement *bundles = NULL;
 
-    bool want_all_bundles = (NULL == wantbundle);
+    bool want_all_bundles = (wantbundle == NULL);
 
     if (want_all_bundles) // no specific bundle
     {
@@ -3219,7 +3220,7 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
             if (NULL != scope_obj)
             {
                 char *lval_key = VarRefToString(var->ref, false);
-                if (NULL == strchr(lval_key, '#')) // don't collect mangled refs
+                if (strchr(lval_key, '#') == NULL) // don't collect mangled refs
                 {
                     JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
                 }
@@ -3253,7 +3254,7 @@ static FnCallResult FnCallBundlestate(EvalContext *ctx,
 {
     JsonElement *state = DefaultTemplateData(ctx, RlistScalarValue(args));
 
-    if (NULL == state ||
+    if (state == NULL ||
         JsonGetElementType(state) != JSON_ELEMENT_TYPE_CONTAINER ||
         JsonLength(state) < 1)
     {
@@ -3447,7 +3448,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, ARG_UNUSED const Policy *pol
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -4002,7 +4003,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, rp, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         pcre_free(rx);
         return FnFailure();
@@ -4114,7 +4115,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *pol
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -4186,7 +4187,7 @@ static FnCallResult FnCallSetop(EvalContext *ctx,
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -4206,7 +4207,7 @@ static FnCallResult FnCallSetop(EvalContext *ctx,
         json_b = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated_b);
 
         // we failed to produce a valid JsonElement, so give up
-        if (NULL == json_b)
+        if (json_b == NULL)
         {
             return FnFailure();
         }
@@ -4275,7 +4276,7 @@ static FnCallResult FnCallLength(EvalContext *ctx,
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -4330,13 +4331,13 @@ static FnCallResult FnCallFold(EvalContext *ctx,
         {
             if (sort_type)
             {
-                if (min_mode && (NULL == min || !GenericStringItemLess(sort_type, min, value)))
+                if (min_mode && (min == NULL || !GenericStringItemLess(sort_type, min, value)))
                 {
                     free(min);
                     min = xstrdup(value);
                 }
 
-                if (max_mode && (NULL == max || GenericStringItemLess(sort_type, max, value)))
+                if (max_mode && (max == NULL || GenericStringItemLess(sort_type, max, value)))
                 {
                     free(max);
                     max = xstrdup(value);
@@ -4399,11 +4400,11 @@ static FnCallResult FnCallFold(EvalContext *ctx,
     }
     else if (max_mode)
     {
-        return NULL == max ? FnFailure() : FnReturnNoCopy(max);
+        return max == NULL ? FnFailure() : FnReturnNoCopy(max);
     }
     else if (min_mode)
     {
-        return NULL == min ? FnFailure() : FnReturnNoCopy(min);
+        return min == NULL ? FnFailure() : FnReturnNoCopy(min);
     }
 
     // else, we don't know this fp->name
@@ -4488,7 +4489,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -4532,7 +4533,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
 
     JsonDestroyMaybe(json, allocated);
 
-    if (NULL == jstring)
+    if (jstring == NULL)
     {
         return FnFailure();
     }
@@ -4555,7 +4556,7 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, ARG_UNUSED const Polic
 
 static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    if (NULL == finalargs)
+    if (finalargs == NULL)
     {
         FatalError(ctx, "in built-in FnCall %s: missing first argument, a list name", fp->name);
     }
@@ -4578,7 +4579,7 @@ static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -4860,6 +4861,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
 static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
+    const bool iprange_mode = (strcmp(fp->name, "iprange") == 0);
     char *range = RlistScalarValue(finalargs);
 
     if (!FuzzyMatchParse(range))
@@ -4867,36 +4869,67 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *pol
         return FnFailure();
     }
 
-    for (const Item *ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
+    /* Case 1: isipinsubnet(): check arg1 (a range) against arg2, arg3, ... if they are IPs */
+    if (!iprange_mode)
     {
-        Rlist *ifaces = finalargs->next;
-        // we match on VIPADDRESS iff no interfaces were requested
-        if (FuzzySetMatch(range, VIPADDRESS) == 0 && NULL == ifaces)
+        for (Rlist *ip = finalargs->next; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_DEBUG, "%s: found range %s on hostip %s, no interface", fp->name, range, ip->name);
-            return FnReturnContextTrue();
-        }
-        else if (FuzzySetMatch(range, ip->name) == 0)
-        {
-            if (NULL == ifaces) // no interfaces requested
+            Buffer *ipb = BufferNewFrom(RlistScalarValue(ip), strlen(RlistScalarValue(ip)));
+            bool is_ip = IPAddressIsIPAddress(ipb, NULL);
+            if (is_ip && FuzzySetMatch(range, BufferData(ipb)) == 0)
             {
-                Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, any interface", fp->name, range, ip->name);
+                Log(LOG_LEVEL_DEBUG, "%s: found range %s on given IP %s", fp->name, range, BufferData(ipb));
+                BufferDestroy(ipb);
                 return FnReturnContextTrue();
             }
-            else // check the specific interfaces given as arguments
+            BufferDestroy(ipb);
+        }
+    }
+
+    /* Case 2: iprange(): No second argument, just arg1: check arg1 (a range)
+     * against VIPADDRESS. Below we'll check all known IPs as well, this is just
+     * for VIPADDRESS. */
+    if (iprange_mode && finalargs->next == NULL)
+    {
+        if (FuzzySetMatch(range, VIPADDRESS) == 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "%s: found range %s on hostip %s, no interface", fp->name, range, VIPADDRESS);
+            return FnReturnContextTrue();
+        }
+    }
+
+    /* Case 3: iprange(): check arg1 (a range) against arg2, arg3, ... if they
+     * are interface names, inspecting the IP for that interface. Check all IPs
+     * if no interface names are given (in addition to the VIPADDRESS we checked
+     * above). */
+    if (iprange_mode)
+    {
+        for (const Item *ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
+        {
+            Rlist *ifaces = finalargs->next;
+
+            if (FuzzySetMatch(range, ip->name) == 0)
             {
-                for (; ifaces != NULL; ifaces = ifaces->next)
+                if (ifaces == NULL) // no interfaces requested
                 {
-                    Buffer *iface = BufferNewFrom(RlistScalarValue(ifaces), strlen(RlistScalarValue(ifaces)));
-                    BufferCanonify(iface);
-                    Log(LOG_LEVEL_DEBUG, "%s: checking range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
-                    if (0 == strcmp(BufferData(iface), ip->classes))
+                    Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, any interface", fp->name, range, ip->name);
+                    return FnReturnContextTrue();
+                }
+                else // check the specific interfaces given as arguments
+                {
+                    for (; ifaces != NULL; ifaces = ifaces->next)
                     {
-                        Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                        Buffer *iface = BufferNewFrom(RlistScalarValue(ifaces), strlen(RlistScalarValue(ifaces)));
+                        BufferCanonify(iface);
+                        Log(LOG_LEVEL_DEBUG, "%s: checking range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                        if (0 == strcmp(BufferData(iface), ip->classes))
+                        {
+                            Log(LOG_LEVEL_DEBUG, "%s: found range %s on IP %s, interface %s", fp->name, range, ip->name, RlistScalarValue(ifaces));
+                            BufferDestroy(iface);
+                            return FnReturnContextTrue();
+                        }
                         BufferDestroy(iface);
-                        return FnReturnContextTrue();
                     }
-                    BufferDestroy(iface);
                 }
             }
         }
@@ -5631,7 +5664,7 @@ static FnCallResult FnCallReverse(EvalContext *ctx, ARG_UNUSED const Policy *pol
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -5939,7 +5972,7 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
 
 static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    if (NULL == finalargs)
+    if (finalargs == NULL)
     {
         FatalError(ctx, "in built-in FnCall %s: missing first argument, an evaluation input", fp->name);
     }
@@ -6170,7 +6203,7 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         size_t byte_count = 0;
 
         FILE *fin = safe_fopen(input_path, "r");
-        if (NULL == fin)
+        if (fin == NULL)
         {
             Log(LOG_LEVEL_VERBOSE, "%s cannot open the CSV file '%s' (fopen: %s)",
                 fp->name, input_path, GetErrorStr());
@@ -6312,7 +6345,7 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *p
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -6376,7 +6409,7 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
 
     free(file_buffer);
 
-    if (NULL == json)
+    if (json == NULL)
     {
         Log(LOG_LEVEL_INFO, "%s: error reading from file '%s'", fp->name, filename);
         return FnFailure();
@@ -6395,7 +6428,7 @@ static FnCallResult FnCallDataExpand(EvalContext *ctx,
     bool allocated = false;
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, args, false, &allocated);
 
-    if (NULL == json)
+    if (json == NULL)
     {
         return FnFailure();
     }
@@ -6588,7 +6621,7 @@ static FnCallResult FnCallStringMustache(EvalContext *ctx, ARG_UNUSED const Poli
         json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
         // we failed to produce a valid JsonElement, so give up
-        if (NULL == json)
+        if (json == NULL)
         {
             return FnFailure();
         }
@@ -6866,7 +6899,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
         JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
 
         // we failed to produce a valid JsonElement, so give up
-        if (NULL == json)
+        if (json == NULL)
         {
             return FnFailure();
         }
@@ -7208,7 +7241,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
                 ProgrammingError("Unhandled type in switch: %d", type);
             }
 
-            if (NULL == first_index)
+            if (first_index == NULL)
             {
                 first_index = xstrdup(converted);
             }
@@ -7296,7 +7329,7 @@ static FnCallResult FnCallNetworkConnections(EvalContext *ctx, ARG_UNUSED const 
 {
     JsonElement *json = GetNetworkingConnections(ctx);
 
-    if (NULL == json)
+    if (json == NULL)
     {
         // nothing was collected, this is a failure
         return FnFailure();
@@ -8676,8 +8709,6 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1 that are also in list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified (can be narrowed to specific interfaces)",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", CF_DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isdir", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory",
@@ -8898,6 +8929,10 @@ const FnCallType CF_FNCALL_TYPES[] =
     // Network probe functions
     FnCallTypeNew("network_connections", CF_DATA_TYPE_CONTAINER, NETWORK_CONNECTIONS_ARGS, &FnCallNetworkConnections, "Get the full list of TCP, TCP6, UDP, and UDP6 connections from /proc/net",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified in arg1 (can be narrowed to specific interfaces with arg2).",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isipinsubnet", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if an IP address specified in arg2, arg3, ... lies in the range of IP addresses specified in arg1",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
 
     FnCallTypeNewNull()
 };

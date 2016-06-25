@@ -69,32 +69,6 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
 {
     Rlist *dep;
 
-    switch (a.service.service_policy)
-    {
-    case SERVICE_POLICY_ENABLE:
-    case SERVICE_POLICY_START:
-        break;
-
-    case SERVICE_POLICY_STOP:
-    case SERVICE_POLICY_DISABLE:
-    case SERVICE_POLICY_RESTART:
-    case SERVICE_POLICY_RELOAD:
-        if (strcmp(a.service.service_autostart_policy, "none") != 0)
-        {
-            Log(LOG_LEVEL_ERR,
-                "!! Autostart policy of service promiser '%s' needs to be 'none' when service policy is not 'enable' nor 'start', but is '%s'",
-                pp->promiser, a.service.service_autostart_policy);
-            PromiseRef(LOG_LEVEL_ERR, pp);
-            return false;
-        }
-        break;
-
-    default:
-        Log(LOG_LEVEL_ERR, "Invalid service policy for service '%s'", pp->promiser);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
-    }
-
     for (dep = a.service.service_depend; dep != NULL; dep = dep->next)
     {
         if (strcmp(pp->promiser, RlistScalarValue(dep)) == 0)
@@ -131,6 +105,11 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
 
 static void SetServiceDefaults(Attributes *a)
 {
+    if ((a->service.service_policy == NULL) || strcmp(a->service.service_policy, "") == 0)
+    {
+        a->service.service_policy = "start";
+    }
+
     if (a->service.service_autostart_policy == NULL)
     {
         a->service.service_autostart_policy = "none";
@@ -194,44 +173,13 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
 /* Level                                                                     */
 /*****************************************************************************/
 
-static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service_policy)
+static FnCall *DefaultServiceBundleCall(const Promise *pp, const char *service_policy)
 {
     Rlist *args = NULL;
     FnCall *call = NULL;
 
-    switch (service_policy)
-    {
-    case SERVICE_POLICY_ENABLE:
-        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-        RlistAppend(&args, "enable", RVAL_TYPE_SCALAR);
-        break;
-
-    case SERVICE_POLICY_DISABLE:
-        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-        RlistAppend(&args, "disable", RVAL_TYPE_SCALAR);
-        break;
-
-    case SERVICE_POLICY_START:
-        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-        RlistAppend(&args, "start", RVAL_TYPE_SCALAR);
-        break;
-
-    case SERVICE_POLICY_RESTART:
-        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-        RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
-        break;
-
-    case SERVICE_POLICY_RELOAD:
-        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-        RlistAppend(&args, "reload", RVAL_TYPE_SCALAR);
-        break;
-
-    case SERVICE_POLICY_STOP:
-    default:
-        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-        RlistAppend(&args, "stop", RVAL_TYPE_SCALAR);
-        break;
-    }
+    RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+    RlistAppend(&args, service_policy, RVAL_TYPE_SCALAR);
 
     Rval name = DefaultBundleConstraint(pp, "service");
 
@@ -264,33 +212,7 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
     }
     a.havebundle = true;
 
-    switch (a.service.service_policy)
-    {
-    case SERVICE_POLICY_ENABLE:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "enable", CF_DATA_TYPE_STRING, "source=promise");
-        break;
-
-    case SERVICE_POLICY_DISABLE:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "disable", CF_DATA_TYPE_STRING, "source=promise");
-        break;
-
-    case SERVICE_POLICY_START:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "start", CF_DATA_TYPE_STRING, "source=promise");
-        break;
-
-    case SERVICE_POLICY_RESTART:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "restart", CF_DATA_TYPE_STRING, "source=promise");
-        break;
-
-    case SERVICE_POLICY_RELOAD:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "reload", CF_DATA_TYPE_STRING, "source=promise");
-        break;
-
-    case SERVICE_POLICY_STOP:
-    default:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "stop", CF_DATA_TYPE_STRING, "source=promise");
-        break;
-    }
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", a.service.service_policy, CF_DATA_TYPE_STRING, "source=promise");
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     result = PromiseResultUpdate(result, VerifyMethod(ctx, call, a, pp));  // Send list of classes to set privately?

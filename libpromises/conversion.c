@@ -668,14 +668,6 @@ AclInherit AclInheritFromString(const char *string)
     return ACL_INHERIT_NOCHANGE;
 }
 
-ServicePolicy ServicePolicyFromString(const char *string)
-{
-    static const char *const SERVICE_POLICY_TYPES[] =
-        { "enable", "start", "stop", "disable", "restart", "reload", NULL };
-
-    return FindTypeInArray(SERVICE_POLICY_TYPES, string, SERVICE_POLICY_START, SERVICE_POLICY_START);
-}
-
 const char *DataTypeShortToType(char *short_type)
 {
     assert(short_type);

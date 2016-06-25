@@ -323,7 +323,7 @@ Services GetServicesConstraints(const EvalContext *ctx, const Promise *pp)
     Services s;
 
     s.service_type = PromiseGetConstraintAsRval(pp, "service_type", RVAL_TYPE_SCALAR);
-    s.service_policy = ServicePolicyFromString(PromiseGetConstraintAsRval(pp, "service_policy", RVAL_TYPE_SCALAR));
+    s.service_policy = PromiseGetConstraintAsRval(pp, "service_policy", RVAL_TYPE_SCALAR);
     s.service_autostart_policy = PromiseGetConstraintAsRval(pp, "service_autostart_policy", RVAL_TYPE_SCALAR);
     s.service_args = PromiseGetConstraintAsRval(pp, "service_args", RVAL_TYPE_SCALAR);
     s.service_depend = PromiseGetConstraintAsList(ctx, "service_dependencies", pp);

@@ -32,7 +32,6 @@
 #include <fncall.h>
 #include <string_lib.h>                                       /* StringHash */
 #include <regex.h>          /* StringMatchWithPrecompiledRegex,CompileRegex */
-#include <mutex.h>
 #include <misc_lib.h>
 #include <assoc.h>
 #include <eval_context.h>
@@ -316,6 +315,9 @@ Rlist *RlistAppendRval(Rlist **start, Rval rval)
 {
     Rlist *rp = xmalloc(sizeof(Rlist));
 
+    rp->val  = rval;
+    rp->next = NULL;
+
     if (*start == NULL)
     {
         *start = rp;
@@ -330,14 +332,6 @@ Rlist *RlistAppendRval(Rlist **start, Rval rval)
 
         lp->next = rp;
     }
-
-    rp->val = rval;
-
-    ThreadLock(cft_lock);
-
-    rp->next = NULL;
-
-    ThreadUnlock(cft_lock);
 
     return rp;
 }
@@ -587,6 +581,9 @@ Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool 
 
     Rlist *rp = xmalloc(sizeof(Rlist));
 
+    rp->val  = RvalNew(item, type);
+    rp->next = NULL;
+
     if (*start == NULL)
     {
         *start = rp;
@@ -600,14 +597,6 @@ Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool 
         lp->next = rp;
     }
 
-    rp->val = RvalCopy((Rval) {(void *) item, type});
-
-    ThreadLock(cft_lock);
-
-    rp->next = NULL;
-
-    ThreadUnlock(cft_lock);
-
     return rp;
 }
 
@@ -619,9 +608,9 @@ static Rlist *RlistPrependRval(Rlist **start, Rval rval)
 
     rp->next = *start;
     rp->val = rval;
-    ThreadLock(cft_lock);
+
     *start = rp;
-    ThreadUnlock(cft_lock);
+
     return rp;
 }
 
@@ -930,9 +919,7 @@ void RvalDestroy(Rval rval)
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        ThreadLock(cft_lock);
         free(RvalScalarValue(rval));
-        ThreadUnlock(cft_lock);
         return;
 
     case RVAL_TYPE_LIST:

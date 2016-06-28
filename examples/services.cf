@@ -1,0 +1,56 @@
+body file control
+{
+  inputs => { "$(sys.libdir)/services.cf", "$(sys.libdir)/commands.cf" };
+}
+
+bundle agent main
+# @brief Example showing services promises to manage standard operating system
+# services
+{
+  vars:
+
+    linux::
+      "enable[ssh]"
+        string => ifelse( "debian|ubuntu", "ssh", "sshd"),
+        comment => "The name of the ssh service varies on different platforms.
+                    Here we set the name of the service based on existing
+                    classes and defaulting to `sshd`";
+
+      "disable[apache]"
+        string => ifelse( "debian|ubuntu", "apache2", "httpd" ),
+        comment => "The name of the apache web service varies on different
+                    platforms. Here we set the name of the service based on
+                    existing classes and defaulting to `httpd`";
+
+      "enable[cron]"
+        string  => ifelse( "debian|ubuntu", "cron", "crond" ),
+        comment => "The name of the cron service varies on different
+                    platforms. Here we set the name of the service based on
+                    existing classes and defaulting to `crond`";
+
+      "disable[cups]"
+        string => "cups",
+        comment => "Printing services are not needed on most hosts.";
+
+      "enabled" slist => getvalues( enable );
+      "disabled" slist => getvalues( disable );
+
+  services:
+
+    linux::
+
+      "$(enabled)" -> { "SysOps" }
+        service_policy => "start",
+        comment => "These services should be running because x, y or z.";
+
+      "$(disabled)" -> { "SysOps" }
+        service_policy => "stop",
+        comment => "These services should not be running because x, y or z.";
+
+    systemd::
+
+      "sysstat"
+        service_policy => "stop",
+        comment => "Standard service handling for sysstat only works with
+                    systemd. Other inits need cron entries managed.";
+}

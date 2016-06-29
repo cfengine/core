@@ -387,7 +387,7 @@ void DiscoverVersion(EvalContext *ctx)
     int patch = 0;
     const char* const workdir = GetWorkDir();
 
-    if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
+    if (sscanf(Version(), "%d.%d.%d", &major, &minor, &patch) == 3)
     {
         char workbuf[CF_BUFSIZE];
 

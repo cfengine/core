@@ -166,7 +166,7 @@ promise_type   [a-zA-Z_]+:
 
                           P.if_depth++;
 
-                          if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
+                          if (sscanf(Version(), "%d.%d.%d", &major, &minor, &patch) == 3)
                           {
                             request_level = sscanf(version_text, "%d.%d.%d", &request_major, &request_minor, &request_patch);
                             if (request_level >= 1)
@@ -378,12 +378,12 @@ promise_type   [a-zA-Z_]+:
                         
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
-                          if (NULL == context_expression_whitespace_rx)
+                          if (context_expression_whitespace_rx == NULL)
                           {
                               context_expression_whitespace_rx = CompileRegex(CFENGINE_REGEX_WHITESPACE_IN_CONTEXTS);
                           }
 
-                          if (NULL == context_expression_whitespace_rx)
+                          if (context_expression_whitespace_rx == NULL)
                           {
                               yyerror("The context expression whitespace regular expression could not be compiled, aborting.");
                           }

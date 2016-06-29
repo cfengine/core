@@ -100,8 +100,8 @@ static JsonElement *ReadJsonFile(const char *filename, LogLevel log_level)
     // 5 MB should be enough for most reasonable def.json data
     JsonParseError err = JsonParseFile(filename, 5 * 1024 * 1024, &doc);
 
-    if (err != JSON_PARSE_OK
-        || NULL == doc)
+    if (err != JSON_PARSE_OK ||
+        doc == NULL)
     {
         Log(log_level, "Could not parse JSON file %s: %s", filename, JsonParseErrorToString(err));
     }
@@ -211,12 +211,12 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
         const char *key;
         while ((key = JsonIteratorNextKey(&iter)))
         {
-            if (0 == strcmp("vars", key))
+            if (strcmp("vars", key) == 0)
             {
                 // load variables
                 JsonElement* vars = JsonExpandElement(ctx, JsonObjectGet(augment, key));
 
-                if (NULL == vars ||
+                if (vars == NULL ||
                     JsonGetElementType(vars) != JSON_ELEMENT_TYPE_CONTAINER ||
                     JsonGetContainerType(vars) != JSON_CONTAINER_TYPE_OBJECT)
                 {
@@ -263,7 +263,7 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
               vars_cleanup:
                 JsonDestroy(vars);
             }
-            else if (0 == strcmp("classes", key))
+            else if (strcmp("classes", key) == 0)
             {
                 // load classes
                 JsonElement* classes = JsonExpandElement(ctx, JsonObjectGet(augment, key));
@@ -325,7 +325,7 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
               classes_cleanup:
                 JsonDestroy(classes);
             }
-            else if (0 == strcmp("inputs", key))
+            else if (strcmp("inputs", key) == 0)
             {
                 // load inputs
                 JsonElement* inputs = JsonExpandElement(ctx, JsonObjectGet(augment, key));
@@ -377,7 +377,7 @@ void LoadAugmentsFiles(EvalContext *ctx, const char* filename)
         if (FileCanOpen(BufferData(expbuf), "r"))
         {
             JsonElement* augment = ReadJsonFile(BufferData(expbuf), LOG_LEVEL_ERR);
-            if (NULL != augment )
+            if (augment != NULL)
             {
                 LoadAugmentsData(ctx, expbuf, augment);
                 JsonDestroy(augment);
@@ -604,7 +604,7 @@ static JsonElement *ReadPolicyValidatedFile(const char *filename)
     }
 
     JsonElement *validated_doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG);
-    if (NULL == validated_doc)
+    if (validated_doc == NULL)
     {
         Log(missing ? LOG_LEVEL_DEBUG : LOG_LEVEL_VERBOSE, "Could not parse policy_validated JSON file '%s', using dummy data", filename);
         validated_doc = JsonObjectCreate(2);
@@ -671,7 +671,7 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
 bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname, bool write_validated, bool write_release)
 {
     char local_dirname[PATH_MAX + 1];
-    if (NULL == dirname)
+    if (dirname == NULL)
     {
         GetAutotagDir(local_dirname, PATH_MAX, NULL);
         dirname = local_dirname;
@@ -691,10 +691,11 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
         // first, tag the release ID
         GetReleaseIdFile(dirname, filename, sizeof(filename));
         char *id = ReadReleaseIdFromReleaseIdFileMasterfiles(dirname);
-        if (NULL == id
-            || (have_git_checksum && 0 != strcmp(id, git_checksum)))
+        if (id == NULL
+            || (have_git_checksum &&
+                strcmp(id, git_checksum) != 0))
         {
-            if (NULL == id)
+            if (id == NULL)
             {
                 Log(LOG_LEVEL_DEBUG, "The release_id of %s was missing", dirname);
             }
@@ -1184,7 +1185,7 @@ static void GetPromisesValidatedFile(char *filename, size_t max_size, const Gene
     /* TODO overflow error checking! */
     GetAutotagDir(dirname, max_size, maybe_dirname);
 
-    if (NULL == maybe_dirname && MINUSF)
+    if (maybe_dirname == NULL && MINUSF)
     {
         snprintf(filename, max_size, "%s/validated_%s", dirname, CanonifyName(config->original_input_file));
     }
@@ -1201,7 +1202,7 @@ static void GetPromisesValidatedFile(char *filename, size_t max_size, const Gene
  */
 static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirname)
 {
-    if (NULL != maybe_dirname)
+    if (maybe_dirname != NULL)
     {
         strlcpy(dirname, maybe_dirname, max_size);
     }
@@ -1230,11 +1231,11 @@ static JsonElement *ReadReleaseIdFileFromMasterfiles(const char *maybe_dirname)
 {
     char filename[CF_MAXVARSIZE];
 
-    GetReleaseIdFile(NULL == maybe_dirname ? GetMasterDir() : maybe_dirname,
+    GetReleaseIdFile((maybe_dirname == NULL) ? GetMasterDir() : maybe_dirname,
                      filename, sizeof(filename));
 
     JsonElement *doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG);
-    if (NULL == doc)
+    if (doc == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not parse release_id JSON file %s", filename);
     }
@@ -1784,7 +1785,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     config->tty_interactive = tty_interactive;
 
     const char *color_env = getenv("CFENGINE_COLOR");
-    config->color = (color_env && 0 == strcmp(color_env, "1"));
+    config->color = (color_env && strcmp(color_env, "1") == 0);
 
     config->bundlesequence = NULL;
 

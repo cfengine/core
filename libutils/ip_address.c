@@ -85,7 +85,7 @@ static int IPV4_hex_parser(const char *source, struct IPV4Address *address)
         // shortcut for the 0a0b0c0d format
         unsigned int a, b, c, d, pport = 0;
         if (strlen(source) == 8 &&
-            4 == sscanf(source, "%2x%2x%2x%2x", &a, &b, &c, &d))
+            sscanf(source, "%2x%2x%2x%2x", &a, &b, &c, &d) == 4)
         {
             address->octets[3] = a;
             address->octets[2] = b;
@@ -97,7 +97,7 @@ static int IPV4_hex_parser(const char *source, struct IPV4Address *address)
 
         // shortcut for the 0a0b0c0d:0e0f format
         if (strlen(source) == 8+1+4 &&
-            5 == sscanf(source, "%2x%2x%2x%2x:%4x", &a, &b, &c, &d, &pport))
+            sscanf(source, "%2x%2x%2x%2x:%4x", &a, &b, &c, &d, &pport) == 5)
         {
             address->octets[3] = a;
             address->octets[2] = b;
@@ -378,7 +378,7 @@ static int IPV6_hex_parser(const char *source, struct IPV6Address *address)
         unsigned int a, b, c, d, e, f, g, h, pport = 0;
 
         if (strlen(source) == 32 &&
-            8 == sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x", &a, &b, &c, &d, &e, &f, &g, &h))
+            sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x", &a, &b, &c, &d, &e, &f, &g, &h) == 8)
         {
             address->sixteen[7] = a;
             address->sixteen[6] = b;
@@ -392,7 +392,7 @@ static int IPV6_hex_parser(const char *source, struct IPV6Address *address)
         }
 
         if (strlen(source) == 32+1+4 &&
-            9 == sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x:%4x", &a, &b, &c, &d, &e, &f, &g, &h, &pport))
+            sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x:%4x", &a, &b, &c, &d, &e, &f, &g, &h, &pport) == 9)
         {
             address->sixteen[7] = a;
             address->sixteen[6] = b;

@@ -330,7 +330,7 @@ void BufferAppendAbbreviatedStr(Buffer *buf, const char *promiser, const int N)
 {
     /* check if `promiser` contains a new line (may happen for "insert_lines") */
     const char *const nl = strchr(promiser, '\n');
-    if (NULL == nl)
+    if (nl == NULL)
     {
         BufferAppendPromiseStr(buf, promiser);
     }
@@ -471,7 +471,7 @@ const char* BufferSearchAndReplace(Buffer *buffer, const char *pattern, const ch
     int err;
 
     pcre_wrap_job *job = pcre_wrap_compile(pattern, substitute, options, &err);
-    if (NULL == job)
+    if (job == NULL)
     {
         return pcre_wrap_strerror(err);
     }
@@ -512,7 +512,8 @@ const char *BufferData(const Buffer *buffer)
 void BufferCanonify(Buffer *buffer)
 {
     assert(buffer);
-    if (NULL != buffer && NULL != buffer->buffer)
+    if (buffer         != NULL &&
+        buffer->buffer != NULL)
     {
         CanonifyNameInPlace(buffer->buffer);
     }

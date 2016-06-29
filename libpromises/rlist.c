@@ -76,7 +76,7 @@ RvalType DataTypeToRvalType(DataType datatype)
 
 bool RlistValueIsType(const Rlist *rlist, RvalType type)
 {
-    return (NULL != rlist &&
+    return (rlist != NULL &&
             rlist->val.type == type);
 }
 
@@ -341,7 +341,7 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
     switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        if (NULL != map && JsonLength(map) > 0 &&       // do we have a rewrite map?
+        if (map != NULL && JsonLength(map) > 0 &&       // do we have a rewrite map?
             (strstr(item, "$(") || strstr(item, "${"))) // are there unresolved variable references?
         {
             // TODO: replace with BufferSearchAndReplace when the

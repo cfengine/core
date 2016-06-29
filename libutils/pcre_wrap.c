@@ -58,7 +58,7 @@ static int pcre_wrap_parse_perl_options(const char *options, int *flags)
     int rc = 0;
     *flags = 0;
 
-    if (NULL == options)
+    if (options == NULL)
     {
         return 0;
     }
@@ -93,7 +93,7 @@ static pcre_wrap_substitute *pcre_wrap_compile_replacement(const char *replaceme
     /*
      * Sanity check
      */
-    if (NULL == replacement)
+    if (replacement == NULL)
     {
         replacement = "";
     }
@@ -101,14 +101,14 @@ static pcre_wrap_substitute *pcre_wrap_compile_replacement(const char *replaceme
     size_t length = strlen(replacement);
 
     rstruct = calloc(1, sizeof(pcre_wrap_substitute));
-    if (NULL == rstruct)
+    if (rstruct == NULL)
     {
         *errptr = PCRE_WRAP_ERR_NOMEM;
         return NULL;
     }
 
     text = calloc(1, length + 1);
-    if (NULL == text)
+    if (text == NULL)
     {
         free(rstruct);
         *errptr = PCRE_WRAP_ERR_NOMEM;
@@ -200,7 +200,8 @@ static pcre_wrap_substitute *pcre_wrap_compile_replacement(const char *replaceme
                         *errptr = PCRE_WRAP_WARN_BADREF;
                     }
                 }
-                else if (have_dollar && NULL != (symbol = strchr(symbols, replacement[sourcepos + 1])))
+                else if (have_dollar &&
+                         (symbol = strchr(symbols, replacement[sourcepos + 1])) != NULL)
                 {
                     if (*symbol == '+') /* $+ */
                     {
@@ -249,26 +250,26 @@ static pcre_wrap_substitute *pcre_wrap_compile_replacement(const char *replaceme
 
 pcre_wrap_job *pcre_wrap_free_job(pcre_wrap_job *job)
 {
-    if (NULL == job)
+    if (job == NULL)
     {
         return NULL;
     }
 
     // grab the next node and destroy the current head
     pcre_wrap_job *next = job->next;
-    if (NULL != job->pattern)
+    if (job->pattern != NULL)
     {
         free(job->pattern);
     }
 
-    if (NULL != job->hints)
+    if (job->hints != NULL)
     {
         free(job->hints);
     }
 
-    if (NULL != job->substitute)
+    if (job->substitute != NULL)
     {
-        if (NULL != job->substitute->text)
+        if (job->substitute->text != NULL)
         {
             free(job->substitute->text);
         }
@@ -298,7 +299,7 @@ pcre_wrap_job *pcre_wrap_compile(const char *pattern, const char *substitute, co
     }
 
     pcre_wrap_job *newjob = calloc(1, sizeof(pcre_wrap_job));
-    if (NULL == newjob)
+    if (newjob == NULL)
     {
         *errptr = PCRE_WRAP_ERR_NOMEM;
         return NULL;
@@ -308,14 +309,14 @@ pcre_wrap_job *pcre_wrap_compile(const char *pattern, const char *substitute, co
     newjob->flags = flags;
 
     newjob->pattern = pcre_compile(pattern, newjob->options, &error, errptr, NULL);
-    if (NULL == newjob->pattern)
+    if (newjob->pattern == NULL)
     {
         pcre_wrap_free_job(newjob);
         return NULL;
     }
 
     newjob->hints = pcre_study(newjob->pattern, 0, &error);
-    if (NULL != error)
+    if (error != NULL)
     {
         *errptr = PCRE_WRAP_ERR_STUDY;
         pcre_wrap_free_job(newjob);
@@ -323,14 +324,14 @@ pcre_wrap_job *pcre_wrap_compile(const char *pattern, const char *substitute, co
     }
 
     *errptr = pcre_fullinfo(newjob->pattern, newjob->hints, PCRE_INFO_CAPTURECOUNT, &capturecount);
-    if (0 > *errptr)
+    if (*errptr < 0)
     {
         pcre_wrap_free_job(newjob);
         return NULL;
     }
 
     newjob->substitute = pcre_wrap_compile_replacement(substitute, newjob->flags & PCRE_WRAP_TRIVIAL, capturecount, errptr);
-    if (NULL == newjob->substitute)
+    if (newjob->substitute == NULL)
     {
         pcre_wrap_free_job(newjob);
         return NULL;
@@ -356,7 +357,7 @@ int pcre_wrap_execute(pcre_wrap_job *job, char *subject, size_t subject_length, 
     }
 
     pcre_wrap_match *matches = calloc(max_matches, sizeof(pcre_wrap_match));
-    if (NULL == matches)
+    if (matches == NULL)
     {
         *result = NULL;
         return(PCRE_WRAP_ERR_NOMEM);
@@ -407,7 +408,7 @@ int pcre_wrap_execute(pcre_wrap_job *job, char *subject, size_t subject_length, 
             max_matches = (int)(max_matches * PCRE_WRAP_MAX_MATCH_GROW);
 
             pcre_wrap_match *temp = realloc(matches, max_matches * sizeof(pcre_wrap_match));
-            if (NULL == temp)
+            if (temp == NULL)
             {
                 free(matches);
                 *result = NULL;

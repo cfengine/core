@@ -150,7 +150,7 @@ static JsonElement *LookupVariable(Seq *hash_stack, const char *name, size_t nam
         StringRef base_comp = StringGetToken(name, name_len, 0, ".");
         char *base_comp_str = xstrndup(base_comp.data, base_comp.len);
 
-        if (0 == strcmp("-top-", base_comp_str))
+        if (strcmp("-top-", base_comp_str) == 0)
         {
             base_var = SeqAt(hash_stack, 0);
         }
@@ -350,7 +350,7 @@ static void RenderContent(Buffer *out, const char *content, size_t len, bool htm
 
 static bool RenderVariablePrimitive(Buffer *out, const JsonElement *primitive, const bool escaped, const char* json_key)
 {
-    if (NULL != json_key)
+    if (json_key != NULL)
     {
         if (escaped)
         {
@@ -454,7 +454,7 @@ static bool RenderVariable(Buffer *out,
         var = LookupVariable(hash_stack, content, content_len);
     }
 
-    if (key_mode && NULL == json_key)
+    if (key_mode && json_key == NULL)
     {
         Log(LOG_LEVEL_WARNING, "RenderVariable: {{@}} Mustache tag must be used in a context where there's a valid key or iteration position");
         return false;

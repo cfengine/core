@@ -150,7 +150,7 @@ Attributes GetServicesAttributes(const EvalContext *ctx, const Promise *pp)
 Attributes GetPackageAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
-    
+
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
     attr.packages = GetPackageConstraints(ctx, pp);
@@ -1041,17 +1041,17 @@ ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *p
 Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
 {
     Packages p = {0};
-    
-    bool has_package_method = 
+
+    bool has_package_method =
             PromiseBundleOrBodyConstraintExists(ctx, "package_method", pp);
     bool has_generic_package_method = false;
-    
+
     if (!has_package_method)
     {
         /* Check if we have generic package_method. */
         const Policy *policy = PolicyFromPromise(pp);
         Seq *bodies_and_args = EvalContextResolveBodyExpression(ctx, policy, "generic", "package_method");; // at position 0 we'll have the body, then its rval, then the same for each of its inherit_from parents
-        if (NULL != bodies_and_args &&
+        if (bodies_and_args != NULL &&
             SeqLength(bodies_and_args) > 0)
         {
             const Body *bp = SeqAt(bodies_and_args, 0); // guaranteed to be non-NULL
@@ -1060,7 +1060,7 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
         }
     }
 
-    
+
     p.package_version = PromiseGetConstraintAsRval(pp, "package_version", RVAL_TYPE_SCALAR);
     p.package_architectures = PromiseGetConstraintAsList(ctx, "package_architectures", pp);
     p.package_select = PackageVersionComparatorFromString(PromiseGetConstraintAsRval(pp, "package_select", RVAL_TYPE_SCALAR));
@@ -1076,12 +1076,12 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     {
         p.is_empty = false;
     }
-    
+
     if (p.package_policy == PACKAGE_ACTION_NONE)        // Default action => package add
     {
         p.package_policy = PACKAGE_ACTION_ADD;
     }
-    
+
     p.has_package_method = has_package_method | has_generic_package_method;
 
     /* body package_method constraints */
@@ -1123,7 +1123,7 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     }
     p.package_version_less_command = PromiseGetConstraintAsRval(pp, "package_version_less_command", RVAL_TYPE_SCALAR);
     p.package_version_equal_command = PromiseGetConstraintAsRval(pp, "package_version_equal_command", RVAL_TYPE_SCALAR);
-    
+
     return p;
 }
 
@@ -1140,26 +1140,26 @@ NewPackages GetNewPackageConstraints(const EvalContext *ctx, const Promise *pp)
 {
     NewPackages p = {0};
     NewPackages empty = {0};
-    
+
     p.package_version = PromiseGetConstraintAsRval(pp, "version", RVAL_TYPE_SCALAR);
     p.package_architecture = PromiseGetConstraintAsRval(pp, "architecture", RVAL_TYPE_SCALAR);
     p.package_options = PromiseGetConstraintAsList(ctx, "options", pp);
-    
+
     p.is_empty = (memcmp(&p, &empty, sizeof(NewPackages)) == 0);
     p.package_policy = GetNewPackagePolicy(PromiseGetConstraintAsRval(pp, "policy", RVAL_TYPE_SCALAR),
                                            new_packages_actions);
-    
+
     /* We can have only policy specified in new package promise definition. */
     if (p.package_policy != NEW_PACKAGE_ACTION_NONE)
     {
         p.is_empty = false;
     }
-    
-    /* If we have promise package manager specified. 
+
+    /* If we have promise package manager specified.
      * IMPORTANT: this must be done after is_empty flag is set as we can have
      * some default options for new package promise specified and still use
      * old promise inside policy. */
-    char *local_promise_manager = 
+    char *local_promise_manager =
             PromiseGetConstraintAsRval(pp, "package_module_name", RVAL_TYPE_SCALAR);
     if (local_promise_manager)
     {
@@ -1170,7 +1170,7 @@ NewPackages GetNewPackageConstraints(const EvalContext *ctx, const Promise *pp)
         p.module_body = GetDefaultPackageModuleFromContext(ctx);
     }
     p.package_inventory = GetDefaultInventoryFromContext(ctx);
-    
+
     /* If global options are not override by promise specific ones. */
     if (!p.package_options && p.module_body)
     {
@@ -1489,12 +1489,12 @@ EditRegion GetRegionConstraints(const EvalContext *ctx, const Promise *pp)
     e.select_end = PromiseGetConstraintAsRval(pp, "select_end", RVAL_TYPE_SCALAR);
     e.include_start = PromiseGetConstraintAsBoolean(ctx, "include_start_delimiter", pp);
     e.include_end = PromiseGetConstraintAsBoolean(ctx, "include_end_delimiter", pp);
-    
+
     // set the value based on body agent control
     char *local_select_end = PromiseGetConstraintAsRval(pp,  "select_end_match_eof", RVAL_TYPE_SCALAR);
     if (local_select_end != NULL)
     {
-        if (strcmp(local_select_end, "true") == 0) 
+        if (strcmp(local_select_end, "true") == 0)
         {
             e.select_end_match_eof = true;
         }
@@ -1607,9 +1607,9 @@ StorageVolume GetVolumeConstraints(const EvalContext *ctx, const Promise *pp)
 Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
 {
  Report r = {0};
- 
+
  r.result = PromiseGetConstraintAsRval(pp, "bundle_return_value_index", RVAL_TYPE_SCALAR);
-    
+
     if (PromiseGetConstraintAsRval(pp, "lastseen", RVAL_TYPE_SCALAR))
     {
         r.havelastseen = true;
@@ -1650,7 +1650,7 @@ Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
     {
         Log(LOG_LEVEL_ERR, "bundle_return_value promise for '%s' in bundle '%s' with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
     }
-    
+
     return r;
 }
 
@@ -1707,7 +1707,7 @@ Measurement GetMeasurementConstraint(const EvalContext *ctx, const Promise *pp)
     m.select_line_matching = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR);
     m.select_line_number = PromiseGetConstraintAsInt(ctx, "select_line_number", pp);
     m.policy = MeasurePolicyFromString(PromiseGetConstraintAsRval(pp, "select_multiline_policy", RVAL_TYPE_SCALAR));
-    
+
     m.extraction_regex = PromiseGetConstraintAsRval(pp, "extraction_regex", RVAL_TYPE_SCALAR);
     m.units = PromiseGetConstraintAsRval(pp, "units", RVAL_TYPE_SCALAR);
     m.growing = PromiseGetConstraintAsBoolean(ctx, "track_growing_file", pp);

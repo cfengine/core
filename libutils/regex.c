@@ -201,7 +201,7 @@ Seq *StringMatchCapturesWithPrecompiledRegex(const pcre *pattern, const char *st
 
         if (return_names)
         {
-            if (NULL == capture)
+            if (capture == NULL)
             {
                 capture = BufferNew();
                 BufferAppendF(capture, "%zd", i);

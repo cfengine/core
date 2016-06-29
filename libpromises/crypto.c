@@ -205,7 +205,7 @@ bool LoadSecretKeys(void)
         }
 
         PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, (void*) priv_passphrase);
-        if (NULL == PUBKEY)
+        if (PUBKEY == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
@@ -220,7 +220,7 @@ bool LoadSecretKeys(void)
         fclose(fp);
     }
 
-    if (NULL != PUBKEY
+    if (PUBKEY != NULL
         && ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e))))
     {
         Log(LOG_LEVEL_ERR, "The public key RSA exponent is too small or not odd");
@@ -232,7 +232,7 @@ bool LoadSecretKeys(void)
 
 void PolicyHubUpdateKeys(const char *policy_server)
 {
-    if (GetAmPolicyHub() && NULL != PUBKEY)
+    if (GetAmPolicyHub() && PUBKEY != NULL)
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
         const char* const workdir = GetWorkDir();

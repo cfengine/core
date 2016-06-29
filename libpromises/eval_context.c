@@ -487,12 +487,12 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
         return true;
     }
 
-    if (NULL == context_expression_whitespace_rx)
+    if (context_expression_whitespace_rx == NULL)
     {
         context_expression_whitespace_rx = CompileRegex(CFENGINE_REGEX_WHITESPACE_IN_CONTEXTS);
     }
 
-    if (NULL == context_expression_whitespace_rx)
+    if (context_expression_whitespace_rx == NULL)
     {
         Log(LOG_LEVEL_ERR, "The context expression whitespace regular expression could not be compiled, aborting.");
         return false;
@@ -1116,7 +1116,8 @@ JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx) {
             JsonObjectAppendString(f, "promise_type", frame->data.promise.owner->parent_promise_type->name);
             JsonObjectAppendString(f, "promiser", frame->data.promise.owner->promiser);
             JsonObjectAppendString(f, "promise_classes", frame->data.promise.owner->classes);
-            JsonObjectAppendString(f, "promise_comment", NULL == frame->data.promise.owner->comment ? "" : frame->data.promise.owner->comment);
+            JsonObjectAppendString(f, "promise_comment",
+                                   (frame->data.promise.owner->comment == NULL) ? "" : frame->data.promise.owner->comment);
             break;
 
         case STACK_FRAME_TYPE_PROMISE_TYPE:
@@ -2226,7 +2227,7 @@ void EvalContextAppendBodyParentsAndArgs(const EvalContext *ctx, const Policy *p
 
             // We don't do a more detailed check for circular
             // inheritance because the depth check above will catch it
-            if (0 == strcmp(parent_ref.name, bp->name))
+            if (strcmp(parent_ref.name, bp->name) == 0)
             {
                 Log(LOG_LEVEL_ERR, "EvalContextAppendBodyParentsAndArgs: self body inheritance in %s->%s, aborting", bp->name, parent_ref.name);
                 exit(EXIT_FAILURE);
@@ -2698,7 +2699,8 @@ bool GetChecksumUpdatesDefault(const EvalContext *ctx)
 
 void EvalContextAddIpAddress(EvalContext *ctx, const char *ip_address, const char *iface)
 {
-    AppendItem(&ctx->ip_addresses, ip_address, (NULL == iface ? "" : iface));
+    AppendItem(&ctx->ip_addresses, ip_address,
+               (iface == NULL) ? "" : iface);
 }
 
 void EvalContextDeleteIpAddresses(EvalContext *ctx)

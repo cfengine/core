@@ -338,8 +338,8 @@ static bool StringItemMACLess(const char *lhs, const char *rhs, ARG_UNUSED void 
 {
     int bytes = 6;
     unsigned char left[bytes], right[bytes];
-    int matched_left = 6 == ParseEtherAddress(lhs, left);
-    int matched_right = 6 == ParseEtherAddress(rhs, right);
+    int matched_left  = (ParseEtherAddress(lhs, left)  == 6);
+    int matched_right = (ParseEtherAddress(rhs, right) == 6);;
 
     if (matched_left && matched_right)
     {

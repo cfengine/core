@@ -335,7 +335,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         return NULL;
     }
 
-    Item *start = NULL, *end = NULL;                  /* NULL == empty list */
+    Item *start = NULL, *end = NULL;                  /* NULL is empty list */
     while (true)
     {
         /* TODO check the CF_MORE flag, no need for CFD_TERMINATOR. */

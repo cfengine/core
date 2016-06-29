@@ -312,7 +312,7 @@ size_t SeqLength(const Seq *seq)
 
 void SeqShuffle(Seq *seq, unsigned int seed)
 {
-    if (0 == SeqLength(seq))
+    if (SeqLength(seq) == 0)
     {
         return;
     }

@@ -483,7 +483,7 @@ static time_t TimeAbs2Int(const char *s)
         }
     }
     /* or MMM dd (the %ld shall ignore any leading space) */
-    else if (2 == sscanf(s, "%3[a-zA-Z]%ld", word, ns) &&
+    else if (sscanf(s, "%3[a-zA-Z]%ld", word, ns) == 2 &&
              /* Only match if word is a valid month text: */
              0 < (ns[1] = Month2Int(word)))
     {
@@ -499,7 +499,7 @@ static time_t TimeAbs2Int(const char *s)
         tm.tm_min = 0;
     }
     /* or just year, or seconds since 1970 */
-    else if (1 == sscanf(s, "%ld", ns))
+    else if (sscanf(s, "%ld", ns) == 1)
     {
         if (ns[0] > 9999)
         {

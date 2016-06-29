@@ -24,39 +24,43 @@
 # Function regline(regex,file)
 ######################################################################
 
-body common control
-
+#+begin_src cfengine3
+bundle agent main
+# @brief An example showing how to use regline to see if a pattern exists within
+# a file.
 {
-      version => "1.2.3";
-      bundlesequence  => { "example" };
-}
+  vars:
 
-########################################################
+    linux::
 
-bundle agent example
+      "file" string => "/proc/sys/net/ipv4/ip_forward";
+      "reg_enabled" string => "^1$";
+      "reg_disabled" string => "^0$";
 
-{
-  files:
-
-      "/tmp/testfile"
-
-      edit_line => test;
-
-}
-
-########################################################
-
-bundle edit_line test
-{
   classes:
 
-      "ok" expression => regline(".*mark.*","$(edit.filename)");
+    linux::
+
+      "ipv4_forwarding_enabled" -> { "SecOps" }
+        expression => regline( $(reg_enabled) , $(file) ),
+        comment => "We want to know if ip forwarding is enabled because it is a
+                    potential security issue.";
+
+      "ipv4_forwarding_disabled" -> { "SecOps" }
+        expression => regline( $(reg_disabled) , $(file) );
 
   reports:
 
-    ok::
+    ipv4_forwarding_enabled::
+      "I found that IPv4 forwarding is enabled!";
 
-      "File matched $(edit.filename)";
-
+    ipv4_forwarding_disabled::
+      "I found that IPv4 forwarding is disabled.";
 }
+#+end_src
 
+#+begin_src example_output
+#@ ```
+#@ R: I found that IPv4 forwarding is disabled.
+#@ ```
+#+end_src

@@ -794,49 +794,60 @@ struct timespec
 /* Copy file defines                                               */
 /*******************************************************************/
 
-            /* Based heavily on cp.c in GNU-fileutils */
-
-#ifndef DEV_BSIZE
+#ifndef DEV_BSIZE                       /* usually defined in <sys/param.h> */
 # ifdef BSIZE
 #  define DEV_BSIZE BSIZE
-# else/* !BSIZE */
-#  define DEV_BSIZE 4096
-# endif/* !BSIZE */
-#endif /* !DEV_BSIZE */
+# else
+#  define DEV_BSIZE 512
+# endif
+#endif
 
 /* Extract or fake data from a `struct stat'.
    ST_BLKSIZE: Optimal I/O blocksize for the file, in bytes.
-   ST_NBLOCKS: Number of 512-byte blocks in the file
-   (including indirect blocks). */
+               WARNING this is irrelevant to ST_NBLOCKS, and has to do with
+                       the optimal I/O unit for the filesystem.
+   ST_NBLOCKS: Number of blocks in the file,
+               **most commonly in DEV_BSIZE units**
 
-#define SMALL_BLOCK_BUF_SIZE 512
+   TODO on Windows here is how to get the "cluster size" i.e. the block size:
+   - send IOCTL_DISK_GET_DRIVE_GEOMETRY_EX and use Geometry.BytesPerSector
+     from DISK_GEOMETRY_EX structure
+*/
 
-#ifndef HAVE_ST_BLOCKS
-# define ST_BLKSIZE(statbuf) DEV_BSIZE
-# if defined(_POSIX_SOURCE) || !defined(BSIZE)  /* fileblocks.c uses BSIZE.  */
-#  define ST_NBLOCKS(statbuf) (((statbuf).st_size + 512 - 1) / 512)
-# else/* !_POSIX_SOURCE && BSIZE */
-#  define ST_NBLOCKS(statbuf) (st_blocks ((statbuf).st_size))
-# endif/* !_POSIX_SOURCE && BSIZE */
-#else /* HAVE_ST_BLOCKS */
-/* Some systems, like Sequents, return st_blksize of 0 on pipes. */
+#ifndef HAVE_STRUCT_STAT_ST_BLOCKS
+/*
+ * Known platforms that don't have stat.st_blocks:
+ *   Windows MinGW
+ */
+# define ST_BLKSIZE(statbuf)    DEV_BSIZE
+# define ST_NBLOCKS(statbuf)    (((statbuf).st_size + DEV_BSIZE - 1) / DEV_BSIZE)
+
+#else  /* HAVE_STRUCT_STAT_ST_BLOCKS */
+  /* Some systems, like Sequents, return st_blksize of 0 on pipes. */
 # define ST_BLKSIZE(statbuf) ((statbuf).st_blksize > 0 \
                                ? (statbuf).st_blksize : DEV_BSIZE)
+# define ST_NBLOCKS(statbuf) ((statbuf).st_blocks)
+#endif
+
+
+#ifndef HAVE_STRUCT_STAT_ST_BLOCKS
+# define ST_NBLOCKS512 (((statbuf).st_size + 512 - 1) / 512)
+#else
 # if defined(__hpux)
-/* HP-UX counts st_blocks in 1024-byte units.
-   This loses when mixing HP-UX and BSD filesystems with NFS.  */
-#  define ST_NBLOCKS(statbuf) ((statbuf).st_blocks * 2)
-# else/* !hpux */
+  /* HP-UX counts st_blocks in 1024-byte units (DEV_BSIZE==1024)
+     This loses when mixing HP-UX and BSD filesystems with NFS.  */
+#  define ST_NBLOCKS512(statbuf) ((statbuf).st_blocks * 2)
+# else  /* not hpux */
 #  if defined(_AIX) && defined(_I386)
-/* AIX PS/2 counts st_blocks in 4K units.  */
-#   define ST_NBLOCKS(statbuf) ((statbuf).st_blocks * 8)
-#  else
-      /* not AIX PS/2 */
-#   define ST_NBLOCKS(statbuf) ((statbuf).st_blocks)
-#  endif
-       /* not AIX PS/2 */
-# endif/* !hpux */
-#endif /* HAVE_ST_BLOCKS */
+    /* AIX PS/2 counts st_blocks in 4K units.  */
+#   define ST_NBLOCKS512(statbuf) ((statbuf).st_blocks * 8)
+#  else  /* not AIX PS/2 */
+    /* ======= DEFAULT ======== */
+#   define ST_NBLOCKS512(statbuf) ((statbuf).st_blocks)
+    /* ======================== */
+#  endif /* AIX PS/2*/
+# endif /* hpux */
+#endif
 
 #ifndef SEEK_CUR
 # define SEEK_CUR 1

@@ -269,9 +269,9 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                 int nl = StripTrailingNewline(promiser, size);
                 CF_ASSERT(nl != -1, "StripTrailingNewline failure");
 
-                np = PromiseTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
+                np = PromiseTypeAppendPromise(tp, promiser, RvalNULL(), context, NULL);
                 np->offset.line = lineno;
-                PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_all_lines", RVAL_TYPE_SCALAR), false);
+                PromiseAppendConstraint(np, "insert_type", RvalNewScalar("preserve_all_lines"), false);
 
                 DeleteItemList(lines);
                 free(promiser);
@@ -289,9 +289,9 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                     {
                         //install independent promise line
                         StripTrailingNewline(buffer, buffer_size);
-                        np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
+                        np = PromiseTypeAppendPromise(tp, buffer, RvalNULL(), context, NULL);
                         np->offset.line = lineno;
-                        PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_all_lines", RVAL_TYPE_SCALAR), false);
+                        PromiseAppendConstraint(np, "insert_type", RvalNewScalar("preserve_all_lines"), false);
                     }
                 }
             }

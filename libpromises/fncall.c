@@ -95,7 +95,7 @@ Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, cons
             }
             break;
         default:
-            rval = ExpandPrivateRval(ctx, NULL, NULL, rp->val.item, rp->val.type);
+            rval = ExpandPrivateRval(ctx, NULL, NULL, rp->val);
             assert(rval.item);
             break;
         }

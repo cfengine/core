@@ -450,6 +450,17 @@ Rval RvalCopyRewriter(Rval rval, JsonElement *map)
     return RvalNewRewriter(rval.item, rval.type, map);
 }
 
+Rval RvalNULL()
+{
+    return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+}
+
+
+Rval RvalNewScalar(const void *item)
+{
+    return RvalNew(item, RVAL_TYPE_SCALAR);
+}
+
 Rval RvalCopy(Rval rval)
 {
     return RvalNew(rval.item, rval.type);

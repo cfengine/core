@@ -48,8 +48,7 @@ void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
 
         if (IsDefinedClass(ctx, scp->classes))
         {
-            Rval returnval = ExpandPrivateRval(ctx, NULL, "body",
-                                               scp->rval.item, scp->rval.type);
+            Rval returnval = ExpandPrivateRval(ctx, NULL, "body", scp->rval);
             PromiseAppendConstraint(pp, scp->lval, returnval, false);
         }
     }

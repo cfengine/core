@@ -103,7 +103,7 @@ bundletype:            bundletype_values
                            ParserDebug("P:bundle:%s\n", P.blocktype);
                            P.block = "bundle";
                            RvalDestroy(P.rval);
-                           P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+                           P.rval = RvalNULL();
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            if (P.currentstring)
@@ -691,7 +691,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                }
 
                                RvalDestroy(P.rval);
-                               P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+                               P.rval = RvalNULL();
                                strcpy(P.lval,"no lval");
                                RlistDestroy(P.currentRlist);
                                P.currentRlist = NULL;
@@ -699,7 +699,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                            else
                            {
                                RvalDestroy(P.rval);
-                               P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+                               P.rval = RvalNULL();
                            }
                        }
 
@@ -863,7 +863,7 @@ selection:             selection_id                         /* BODY ONLY */
                            else
                            {
                                RvalDestroy(P.rval);
-                               P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+                               P.rval = RvalNULL();
                            }
 
                            if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"file") == 0)
@@ -883,7 +883,7 @@ selection:             selection_id                         /* BODY ONLY */
                            }
                            
                            RvalDestroy(P.rval);
-                           P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+                           P.rval = RvalNULL();
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -978,14 +978,14 @@ rval:                  IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s id rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            RvalDestroy(P.rval);
-                           P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
+                           P.rval = RvalNewScalar(P.currentid);
                            P.references_body = true;
                        }
                      | BLOCKID
                        {
                            ParserDebug("\tP:%s:%s:%s:%s blockid rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            RvalDestroy(P.rval);
-                           P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
+                           P.rval = RvalNewScalar(P.currentid);
                            P.references_body = true;
                        }
                      | QSTRING

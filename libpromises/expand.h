@@ -42,7 +42,7 @@ bool IsExpandable(const char *str);
 char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
                    const char *string, Buffer *out);
 Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
-Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, const void *rval_item, RvalType rval_type);
+Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
 Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy, const char *ns, const char *scope, Rval rval, bool forcelist, const Promise *pp);
 

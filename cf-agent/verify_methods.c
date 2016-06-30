@@ -68,7 +68,7 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
     }
     else
     {
-        method_name = RvalNew(pp->promiser, RVAL_TYPE_SCALAR);
+        method_name = RvalNewScalar(pp->promiser);
         destroy_name = true;
     }
 

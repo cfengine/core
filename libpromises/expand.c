@@ -647,18 +647,18 @@ static Rval ExpandListEntry(EvalContext *ctx,
 
                 if (value)
                 {
-                    return ExpandPrivateRval(ctx, ns, scope, value,
-                                             DataTypeToRvalType(value_type));
+                    return ExpandPrivateRval(ctx, ns, scope,
+                                             (Rval) {value, DataTypeToRvalType(value_type)});
                 }
             }
         }
         else
         {
-            return RvalNew(entry.item, RVAL_TYPE_SCALAR);
+            return RvalNewScalar(entry.item);
         }
     }
 
-    return ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
+    return ExpandPrivateRval(ctx, ns, scope, entry);
 }
 
 Rlist *ExpandList(EvalContext *ctx,
@@ -681,30 +681,33 @@ Rlist *ExpandList(EvalContext *ctx,
 
 Rval ExpandPrivateRval(EvalContext *ctx,
                        const char *ns, const char *scope,
-                       const void *rval_item, RvalType rval_type)
+                       Rval rval)
 {
     Rval returnval;
     returnval.item = NULL;
     returnval.type = RVAL_TYPE_NOPROMISEE;
 
-    switch (rval_type)
+    switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        returnval.item = ExpandScalar(ctx, ns, scope, rval_item, NULL);
-        returnval.type = RVAL_TYPE_SCALAR ;
+        {
+            Buffer *buffer = BufferNew();
+            ExpandScalar(ctx, ns, scope, rval.item, buffer);
+            returnval = RvalNewUseScalar(BufferClose(buffer));
+        }
         break;
     case RVAL_TYPE_LIST:
-        returnval.item = ExpandList(ctx, ns, scope, rval_item, true);
-        returnval.type = RVAL_TYPE_LIST;
+        returnval.item = ExpandList(ctx, ns, scope, rval.item, true);
+        returnval.type = rval.type;
         break;
 
     case RVAL_TYPE_FNCALL:
-        returnval.item = ExpandFnCall(ctx, ns, scope, rval_item);
-        returnval.type = RVAL_TYPE_FNCALL;
+        returnval.item = ExpandFnCall(ctx, ns, scope, rval.item);
+        returnval.type = rval.type;
         break;
 
     case RVAL_TYPE_CONTAINER:
-        returnval = RvalNew(rval_item, RVAL_TYPE_CONTAINER);
+        returnval = RvalNew(rval.item, RVAL_TYPE_CONTAINER);
         break;
 
     case RVAL_TYPE_NOPROMISEE:
@@ -734,11 +737,11 @@ Rval ExpandBundleReference(EvalContext *ctx,
     case RVAL_TYPE_CONTAINER:
     case RVAL_TYPE_LIST:
     case RVAL_TYPE_NOPROMISEE:
-         return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+         return RvalNULL();
     }
 
     assert(false);
-    return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+    return RvalNULL();
 }
 
 /**
@@ -873,7 +876,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
 
         if (IsExpandable(naked))
         {
-            returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
+            returnval = ExpandPrivateRval(ctx, NULL, "this", rval);
         }
         else
         {
@@ -883,7 +886,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
 
             if (!value || DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
             {
-                returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
+                returnval = ExpandPrivateRval(ctx, NULL, "this", rval);
             }
             else
             {
@@ -896,7 +899,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
     }
     else if (forcelist) /* We are replacing scalar @(name) with list */
     {
-        returnval = ExpandPrivateRval(ctx, ns, scope, rval.item, rval.type);
+        returnval = ExpandPrivateRval(ctx, ns, scope, rval);
     }
     else if (FnCallIsBuiltIn(rval))
     {
@@ -904,7 +907,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
     }
     else
     {
-        returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
+        returnval = ExpandPrivateRval(ctx, NULL, "this", rval);
     }
 
     switch (returnval.type)
@@ -931,7 +934,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
                 {
                     void *prior = rp->val.item;
                     rp->val = ExpandPrivateRval(ctx, NULL, "this",
-                                                prior, RVAL_TYPE_SCALAR);
+                                                (Rval) {prior, RVAL_TYPE_SCALAR});
                     free(prior);
                 }
                 /* else: returnval unchanged. */
@@ -1131,8 +1134,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
 
             if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
             {
-                evaluated_rval = ExpandPrivateRval(ctx, NULL, scope,
-                                                   cp->rval.item, cp->rval.type);
+                evaluated_rval = ExpandPrivateRval(ctx, NULL, scope, cp->rval);
             }
             else
             {
@@ -1269,8 +1271,7 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
 
         if (IsDefinedClass(ctx, cp->classes))
         {
-            returnval = ExpandPrivateRval(ctx, NULL, "body",
-                                          cp->rval.item, cp->rval.type);
+            returnval = ExpandPrivateRval(ctx, NULL, "body", cp->rval);
         }
 
         if (returnval.item == NULL || returnval.type == RVAL_TYPE_NOPROMISEE)

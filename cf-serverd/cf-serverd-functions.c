@@ -637,7 +637,7 @@ static CfLock AcquireServerLock(EvalContext *ctx,
         PromiseType *tp = BundleAppendPromiseType(bp, "server_cfengine");
 
         pp = PromiseTypeAppendPromise(tp, config->input_file,
-                                      (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                      RvalNULL(),
                                       NULL, NULL);
     }
     assert(pp);

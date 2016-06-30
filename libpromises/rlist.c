@@ -453,6 +453,17 @@ Rval RvalCopyRewriter(Rval rval, JsonElement *map)
     return RvalNewRewriter(rval.item, rval.type, map);
 }
 
+Rval RvalNULL()
+{
+    return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+}
+
+
+Rval RvalNewScalar(const void *item)
+{
+    return RvalNew(item, RVAL_TYPE_SCALAR);
+}
+
 Rval RvalCopy(Rval rval)
 {
     return RvalNew(rval.item, rval.type);
@@ -691,7 +702,7 @@ typedef enum
 } state;
 
 #define CLASS_BLANK(x)  (((x)==' ')||((x)=='\t'))
-#define CLASS_START1(x) (((x)=='\'')) 
+#define CLASS_START1(x) (((x)=='\''))
 #define CLASS_START2(x) (((x)=='"'))
 #define CLASS_END1(x)   ((CLASS_START1(x)))
 #define CLASS_END2(x)   ((CLASS_START2(x)))
@@ -711,7 +722,7 @@ typedef enum
 
 /**
  @brief parse elements in a list passed through use_module
- 
+
  @param[in] str: is the string to parse
  @param[out] newlist: rlist of elements found
 
@@ -740,7 +751,7 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                 {
                     current_state = ST_OPENED;
                 }
-                else if (CLASS_BRA1(*s)) 
+                else if (CLASS_BRA1(*s))
                 {
                     current_state = ST_IO;
                 }
@@ -1553,4 +1564,3 @@ bool RlistEqual_untyped(const void *list1, const void *list2)
 {
     return RlistEqual(list1, list2);
 }
-

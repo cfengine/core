@@ -336,7 +336,7 @@ static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise 
         break;
 
     default:
-        rval = ExpandPrivateRval(ctx, NULL, "this", cp->rval.item, cp->rval.type);
+        rval = ExpandPrivateRval(ctx, NULL, "this", cp->rval);
         RvalDestroy(cp->rval);
         cp->rval = rval;
         break;

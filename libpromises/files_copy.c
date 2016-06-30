@@ -142,7 +142,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
         goto end;
     }
 
-    int buf_size = ST_BLKSIZE(dstat);
+    int buf_size = ST_BLKSIZE(statbuf);
     buf = xmalloc(buf_size);
 
     result = CopyData(source, sd, destination, dd, buf, buf_size);

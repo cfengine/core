@@ -793,15 +793,8 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
         cfst.cf_nlink = statbuf.st_nlink;
     }
 
-#if !defined(__MINGW32__)
-    if (statbuf.st_size > statbuf.st_blocks * DEV_BSIZE)
-#else
-# ifdef HAVE_ST_BLOCKS
-    if (statbuf.st_size > statbuf.st_blocks * DEV_BSIZE)
-# else
+    /* Is file sparse? */
     if (statbuf.st_size > ST_NBLOCKS(statbuf) * DEV_BSIZE)
-# endif
-#endif
     {
         cfst.cf_makeholes = 1;  /* must have a hole to get checksum right */
     }

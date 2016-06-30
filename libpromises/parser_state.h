@@ -59,6 +59,7 @@ typedef struct
     bool references_body;
 
     char *promiser;
+    Rval promiser_attribute;
     void *promisee;
 
     char *current_namespace;

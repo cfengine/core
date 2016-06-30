@@ -37,7 +37,7 @@
 #include "string_lib.h"
 #include "logic_expressions.h"
 #include <json-yaml.h>
-
+#include "files_names.h"
 // FIX: remove
 #include "syntax.h"
 
@@ -430,10 +430,13 @@ promisee_statement:    promiser
                                    ParseError("Missing promise type declaration");
                                }
 
-                               P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
-                                                                           RvalCopy(P.rval),
-                                                                           P.currentclasses ? P.currentclasses : "any",
-                                                                           P.currentvarclasses);
+                               P.currentpromise = PromiseTypeAppendPromiseWithPromiserAttribute(
+                                   P.currentstype, P.promiser,
+                                   RvalCopy(P.rval),
+                                   P.currentclasses ? P.currentclasses : "any",
+                                   P.currentvarclasses,
+                                   P.promiser_attribute);
+                               P.promiser_attribute = RvalNULL();
                                P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -458,10 +461,13 @@ promiser_statement:    promiser
                                    ParseError("Missing promise type declaration");
                                }
 
-                               P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
-                                                                (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
-                                                                           P.currentclasses ? P.currentclasses : "any",
-                                                                           P.currentvarclasses);
+                               P.currentpromise = PromiseTypeAppendPromiseWithPromiserAttribute(
+                                   P.currentstype, P.promiser,
+                                   RvalNULL(),
+                                   P.currentclasses ? P.currentclasses : "any",
+                                   P.currentvarclasses,
+                                   P.promiser_attribute);
+                               P.promiser_attribute = RvalNULL();
                                P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -483,10 +489,29 @@ promiser:              QSTRING
                                free(P.promiser);
                            }
                            P.promiser = P.currentstring;
+                           P.promiser_attribute = RvalNULL();
+
                            P.currentstring = NULL;
                            CURRENT_PROMISER_LINE = P.line_no;
                            ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser);
                        }
+
+                     | usefunction
+                       {
+                           if (P.promiser)
+                           {
+                               free(P.promiser);
+                           }
+
+                           P.promiser_attribute = RvalNew(P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
+                           FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
+                           P.currentfncall[P.arg_nesting+1] = NULL;
+                           P.promiser = RvalToString(P.promiser_attribute);
+                           CanonifyNameInPlace(P.promiser);
+                           CURRENT_PROMISER_LINE = P.line_no;
+                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser);
+                       }
+
                      | error
                        {
                           INSTALL_SKIP = true;
@@ -501,7 +526,7 @@ promiser:              QSTRING
                           }
                           else
                           {
-                             ParseError("Expected promiser string, got '%s'", yytext);
+                             ParseError("Expected promiser string or rval, got '%s'", yytext);
                           }
 
                           yyclearin;
@@ -538,13 +563,16 @@ constraints_decl:      constraints
                            strcpy(P.currentid,"");
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
-                           free(P.promiser);
                            if (P.currentstring)
                            {
                                free(P.currentstring);
                            }
                            P.currentstring = NULL;
+
+                           free(P.promiser);
                            P.promiser = NULL;
+
+                           P.promiser_attribute = RvalNULL();
                            P.promisee = NULL;
                            /* reset argptrs etc*/
                        }

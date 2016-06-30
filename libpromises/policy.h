@@ -266,6 +266,7 @@ bool BodyHasConstraint(const Body *body, const char *lval);
 const char *ConstraintGetNamespace(const Constraint *cp);
 
 Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses);
+Promise *PromiseTypeAppendPromiseWithPromiserAttribute(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses, Rval promiser_attribute);
 void PromiseTypeDestroy(PromiseType *promise_type);
 
 void PromiseDestroy(Promise *pp);

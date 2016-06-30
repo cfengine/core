@@ -1,0 +1,34 @@
+###########################################################
+#
+# Test rvals in the promiser
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+      "iter" slist => { "1", "2", "3" };
+      canonify(concat("promiser ", canonify("addition"))) string => "";
+      canonify("clean") string => "";
+      canonify("my name is canonified") string => "";
+      concat("iter_canon_", canonify($(iter))) string => "iter = $(iter)";
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

@@ -1312,7 +1312,8 @@ PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
 
 /*******************************************************************/
 
-Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses)
+
+Promise *PromiseTypeAppendPromiseWithPromiserAttribute(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses, Rval promiser_attribute)
 {
     assert(promiser && "Missing promiser");
     assert(type && "Missing promise type");
@@ -1340,10 +1341,20 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
 
     if (varclasses != NULL)
     {
-        PromiseAppendConstraint(pp, "ifvarclass", RvalNew(varclasses, RVAL_TYPE_SCALAR), true);
+        PromiseAppendConstraint(pp, "ifvarclass", RvalNewScalar(varclasses), true);
+    }
+
+    if (promiser_attribute.item)
+    {
+        PromiseAppendConstraint(pp, "promiser_attribute", RvalCopy(promiser_attribute), false);
     }
 
     return pp;
+}
+
+Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses)
+{
+    return PromiseTypeAppendPromiseWithPromiserAttribute(type, promiser, promisee, classes, varclasses, RvalNULL());
 }
 
 static void BundleDestroy(Bundle *bundle)

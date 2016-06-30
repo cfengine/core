@@ -36,10 +36,15 @@
 #include <acl_tools.h>
 
 /*
- * Copy data jumping over areas filled by '\0', so files automatically become sparse if possible.
+ * Copy data jumping over areas filled by '\0' greater than buf_size, so
+ * files automatically become sparse if possible.
  */
-static bool CopyData(const char *source, int sd, const char *destination, int dd, char *buf, size_t buf_size)
+static bool CopyData(const char *source, int sd,
+                     const char *destination, int dd,
+                     char *buf, size_t buf_size)
 {
+    assert(buf_size > 0);
+
     off_t n_read_total = 0;
 
     while (true)
@@ -52,12 +57,13 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
             {
                 continue;
             }
-
-            Log(LOG_LEVEL_ERR, "Unable to read source file while copying '%s' to '%s'. (read: %s)", source, destination, GetErrorStr());
+            Log(LOG_LEVEL_ERR,
+                "Unable to read source file while copying '%s' to '%s'"
+                " (read: %s)", source, destination, GetErrorStr());
             return false;
         }
 
-        if (n_read == 0)
+        if (n_read == 0)                                        /* EOF */
         {
             /*
              * As the tail of file may contain of bytes '\0' (and hence
@@ -67,7 +73,9 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
              */
             if (ftruncate(dd, n_read_total) < 0)
             {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' to '%s'. (ftruncate: %s)", source, destination, GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Copy failed (no space?) while copying '%s' to '%s'"
+                    " (ftruncate: %s)", source, destination, GetErrorStr());
                 return false;
             }
 
@@ -88,7 +96,10 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
             {
                 if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
                 {
-                    Log(LOG_LEVEL_ERR, "Failed while copying '%s' to '%s' (no space?). (lseek: %s)", source, destination, GetErrorStr());
+                    Log(LOG_LEVEL_ERR,
+                        "Failed while copying '%s' to '%s'"
+                        " (no space?) (lseek: %s)",
+                        source, destination, GetErrorStr());
                     return false;
                 }
 
@@ -101,7 +112,10 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
             {
                 if (FullWrite(dd, cur, copy_span - cur) < 0)
                 {
-                    Log(LOG_LEVEL_ERR, "Failed while copying '%s' to '%s' (no space?). (write: %s)", source, destination, GetErrorStr());
+                    Log(LOG_LEVEL_ERR,
+                        "Failed while copying '%s' to '%s'"
+                        " (no space?) (write: %s)",
+                        source, destination, GetErrorStr());
                     return false;
                 }
 
@@ -114,13 +128,15 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
 bool CopyRegularFileDisk(const char *source, const char *destination)
 {
     int sd;
-    int dd = 0;
-    char *buf = 0;
+    int dd = -1;
+    char *buf = NULL;
     bool result = false;
 
-    if ((sd = safe_open(source, O_RDONLY | O_BINARY)) == -1)
+    sd = safe_open(source, O_RDONLY | O_BINARY);
+    if (sd == -1)
     {
-        Log(LOG_LEVEL_INFO, "Can't copy '%s'. (open: %s)", source, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Can't copy '%s' (open: %s)",
+            source, GetErrorStr());
         goto end;
     }
     /*
@@ -130,15 +146,22 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
 
     if (stat(source, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Can't copy '%s'. (stat: %s)", source, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Can't copy '%s' (stat: %s)",
+            source, GetErrorStr());
         goto end;
     }
 
-    unlink(destination);                /* To avoid link attacks */
+    /* Unlink to avoid link attacks, TODO race condition. */
+    unlink(destination);
 
-    if ((dd = safe_open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, statbuf.st_mode)) == -1)
+    dd = safe_open(destination,
+                   O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY,
+                   statbuf.st_mode);
+    if (dd == -1)
     {
-        Log(LOG_LEVEL_INFO, "Unable to open destination file while copying '%s' to '%s'. (open: %s)", source, destination, GetErrorStr());
+        Log(LOG_LEVEL_INFO,
+            "Unable to open destination file while copying '%s' to '%s'"
+            " (open: %s)", source, destination, GetErrorStr());
         goto end;
     }
 
@@ -148,23 +171,20 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
     result = CopyData(source, sd, destination, dd, buf, buf_size);
     if (!result)
     {
-        goto end;
+        unlink(destination);
     }
 
+    free(buf);
+
 end:
-    if (buf)
-    {
-        free(buf);
-    }
-    if (dd)
+    if (dd != -1)
     {
         close(dd);
     }
-    if (!result)
+    if (sd != -1)
     {
-        unlink(destination);
+        close(sd);
     }
-    close(sd);
     return result;
 }
 

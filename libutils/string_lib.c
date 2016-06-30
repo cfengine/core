@@ -911,33 +911,28 @@ bool StringStartsWith(const char *str, const char *prefix)
     return true;
 }
 
-void *MemSpan(const void *mem, char c, size_t n)
+
+/**
+ * Returns pointer to the first byte in #buf that is not #c. Returns NULL if
+ * all of #buf contains only bytes of value #c.
+ *
+ * @NOTE this functions complements memchr() from POSIX.
+ *
+ * @TODO move to libcompat, it appears to be available in some systems.
+ */
+void *memcchr(const void *buf, int c, size_t buf_size)
 {
-    const char *end = mem + n;
-    for (; (char*)mem < end; ++mem)
+    const char *cbuf = buf;
+    for (size_t i = 0; i < buf_size; i++)
     {
-        if (*((char *)mem) != c)
+        if (cbuf[i] != c)
         {
-            return (char *)mem;
+            return (void *) &cbuf[i];                    /* cast-away const */
         }
     }
-
-    return (char *)mem;
+    return NULL;
 }
 
-void *MemSpanInverse(const void *mem, char c, size_t n)
-{
-    const char *end = mem + n;
-    for (; (char*)mem < end; ++mem)
-    {
-        if (*((char*)mem) == c)
-        {
-            return (char *)mem;
-        }
-    }
-
-    return (char *)mem;
-}
 
 /*
  * @brief extract info from input string given two types of constraints:

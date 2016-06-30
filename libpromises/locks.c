@@ -910,23 +910,6 @@ void GetLockName(char *lockname, const char *locktype, const char *base, const R
     }
 }
 
-/**
- * Returns pointer to the first byte in #buf that is not #c. Returns NULL if
- * all of #buf contains only bytes of value #c.
- */
-static void *memcchr(const void *buf, int c, size_t buf_size)
-{
-    const char *cbuf = buf;
-    for (size_t i = 0; i < buf_size; i++)
-    {
-        if (cbuf[i] != c)
-        {
-            return (void *) &cbuf[i];                    /* cast-away const */
-        }
-    }
-    return NULL;
-}
-
 static void CopyLockDatabaseAtomically(const char *from, const char *to,
                                        const char *from_pretty_name, const char *to_pretty_name)
 {

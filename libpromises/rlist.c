@@ -461,6 +461,11 @@ Rval RvalNewScalar(const void *item)
     return RvalNew(item, RVAL_TYPE_SCALAR);
 }
 
+Rval RvalNewUseScalar(const void *item)
+{
+    return (Rval) { item, RVAL_TYPE_SCALAR };
+}
+
 Rval RvalCopy(Rval rval)
 {
     return RvalNew(rval.item, rval.type);

@@ -1401,6 +1401,26 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx));
 
+    for (size_t i = 0; i < SeqLength(pexp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pexp->conlist, i);
+
+        if (0 == strcmp(cp->lval, "promiser_attribute"))
+        {
+            if (RVAL_TYPE_SCALAR == cp->rval.type)
+            {
+                free(pexp->promiser);
+                pexp->promiser = xstrdup(RvalScalarValue(cp->rval));
+            }
+            else
+            {
+                free(pexp->promiser);
+                pexp->promiser = RvalToString(cp->rval);
+                CanonifyNameInPlace(pexp->promiser);
+            }
+        }
+    }
+
     LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
 
     return pexp;

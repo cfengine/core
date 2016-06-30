@@ -947,7 +947,7 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
         goto cleanup_2;
     }
 
-    char data[CF_BUFSIZE];
+    char data[DEV_BSIZE];
     while (1)
     {
         int read_status = read(from_fd, data, sizeof(data));
@@ -961,8 +961,9 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
             break;
         }
 
-        /* Is the file sparse? */
-        if (memcchr(data, '\0', read_status) == NULL)    /* is file sparse? */
+        /* Did we read only zeroes?
+           Then write a hole, making it a sparse file. */
+        if (memcchr(data, '\0', read_status) == NULL)
         {
             /*
              * TODO seek()ing is not enough to preserve sparse-ness on
@@ -978,7 +979,7 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
                 goto cleanup_4;
             }
         }
-        else                                          /* file is not sparse */
+        else                                                  /* not sparse */
         {
             int write_status = write(to_fd, data, read_status);
             if (write_status < 0)

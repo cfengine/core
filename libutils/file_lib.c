@@ -108,9 +108,9 @@ Writer *FileReadFromFd(int fd, size_t max_size, bool *truncated)
     }
 }
 
-int FullWrite(int desc, const char *ptr, size_t len)
+ssize_t FullWrite(int desc, const char *ptr, size_t len)
 {
-    int total_written = 0;
+    ssize_t total_written = 0;
 
     while (len > 0)
     {
@@ -134,13 +134,13 @@ int FullWrite(int desc, const char *ptr, size_t len)
     return total_written;
 }
 
-int FullRead(int fd, char *ptr, size_t len)
+ssize_t FullRead(int fd, char *ptr, size_t len)
 {
-    int total_read = 0;
+    ssize_t total_read = 0;
 
     while (len > 0)
     {
-        int bytes_read = read(fd, ptr, len);
+        ssize_t bytes_read = read(fd, ptr, len);
 
         if (bytes_read < 0)
         {

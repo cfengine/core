@@ -46,80 +46,68 @@ static bool CopyData(const char *source, int sd,
     assert(buf_size > 0);
 
     off_t n_read_total = 0;
+    bool all_zeroes    = false;
 
     while (true)
     {
-        ssize_t n_read = read(sd, buf, buf_size);
-
-        if (n_read == -1)
+        ssize_t n_read = FullRead(sd, buf, buf_size);
+        if (n_read < 0)
         {
-            if (errno == EINTR)
-            {
-                continue;
-            }
             Log(LOG_LEVEL_ERR,
                 "Unable to read source file while copying '%s' to '%s'"
                 " (read: %s)", source, destination, GetErrorStr());
             return false;
         }
-
-        if (n_read == 0)                                        /* EOF */
+        else if (n_read == 0)                                   /* EOF */
         {
             /*
-             * As the tail of file may contain of bytes '\0' (and hence
-             * lseek(2)ed on destination instead of being written), do a
-             * ftruncate(2) here to ensure the whole file is written to the
-             * disc.
+             * If the tail of the file was a hole (and hence lseek(2)ed on
+             * destination instead of being written), do a ftruncate(2) here
+             * to ensure the whole file is written to the disc. But
+             * ftruncate() fails with EPERM on non-native Linux filesystems
+             * (e.g. vfat, vboxfs) when the count is greater than the size of
+             * the file. So we write() one byte and then ftruncate() it back.
              */
-            if (ftruncate(dd, n_read_total) < 0)
+            if (all_zeroes)
             {
-                Log(LOG_LEVEL_ERR,
-                    "Copy failed (no space?) while copying '%s' to '%s'"
-                    " (ftruncate: %s)", source, destination, GetErrorStr());
-                return false;
+                if (FullWrite(dd, "", 1)        < 0 ||
+                    ftruncate(dd, n_read_total) < 0)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Copy failed (no space?) while copying '%s' to '%s'"
+                        " (ftruncate: %s)",
+                        source, destination, GetErrorStr());
+                    return false;
+                }
             }
-
             return true;
         }
 
         n_read_total += n_read;
+        all_zeroes    = (memcchr(buf, '\0', n_read) == NULL);
 
-        /* Copy/seek */
-
-        void *cur = buf;
-        void *end = buf + n_read;
-
-        while (cur < end)
+        if (all_zeroes)                                     /* Write a hole */
         {
-            void *skip_span = MemSpan(cur, 0, end - cur);
-            if (skip_span > cur)
+            off_t seek_ret = lseek(dd, n_read, SEEK_CUR);
+            if (seek_ret == (off_t) -1)
             {
-                if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
-                {
-                    Log(LOG_LEVEL_ERR,
-                        "Failed while copying '%s' to '%s'"
-                        " (no space?) (lseek: %s)",
-                        source, destination, GetErrorStr());
-                    return false;
-                }
-
-                cur = skip_span;
+                Log(LOG_LEVEL_ERR,
+                    "Failed while copying '%s' to '%s'"
+                    " (no space?) (lseek: %s)",
+                    source, destination, GetErrorStr());
+                return false;
             }
-
-
-            void *copy_span = MemSpanInverse(cur, 0, end - cur);
-            if (copy_span > cur)
+        }
+        else
+        {
+            ssize_t w_ret = FullWrite(dd, buf, n_read);
+            if (w_ret < 0)
             {
-                if (FullWrite(dd, cur, copy_span - cur) < 0)
-                {
-                    Log(LOG_LEVEL_ERR,
-                        "Failed while copying '%s' to '%s'"
-                        " (no space?) (write: %s)",
-                        source, destination, GetErrorStr());
-                    return false;
-                }
-
-                cur = copy_span;
+                Log(LOG_LEVEL_ERR,
+                    "Failed while copying '%s' to '%s'"
+                    " (no space?) (write: %s)",
+                    source, destination, GetErrorStr());
+                return false;
             }
         }
     }

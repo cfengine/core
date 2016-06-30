@@ -47,11 +47,11 @@ bool FileCanOpen(const char *path, const char *modes);
 
 /* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
    Return LEN upon success, write's (negative) error code otherwise.  */
-int FullWrite(int desc, const char *ptr, size_t len);
+ssize_t FullWrite(int desc, const char *ptr, size_t len);
 
 /* Read up to LEN bytes (or EOF) to PTR from descriptor DESC, retrying if interrupted.
    Return amount of bytes read upon success, -1 otherwise */
-int FullRead(int desc, char *ptr, size_t len);
+ssize_t FullRead(int desc, char *ptr, size_t len);
 
 int IsDirReal(const char *path);
 

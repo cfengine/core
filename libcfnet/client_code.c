@@ -490,42 +490,36 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 /*********************************************************************/
 
 
-static int FSWrite(const char *destination, int dd, const char *buf, size_t n_write)
+static int FSWrite(const char *destination, int dd,
+                   const char *buf, size_t n_write,
+                   bool *write_made_hole)
 {
-    const void *cur = buf;
-    const void *end = buf + n_write;
+    bool all_zeroes = (memcchr(buf, '\0', n_write) == NULL);
 
-    while (cur < end)
+    if (all_zeroes)                                     /* Write a hole */
     {
-        const void *skip_span = MemSpan(cur, 0, end - cur);
-        if (skip_span > cur)
+        off_t seek_ret = lseek(dd, n_write, SEEK_CUR);
+        if (seek_ret == (off_t) -1)
         {
-            if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Copy failed (no space?) while copying to '%s' from network '%s'",
-                    destination, GetErrorStr());
-                return false;
-            }
-
-            cur = skip_span;
+            Log(LOG_LEVEL_ERR,
+                "Failed while writing a hole to '%s' (lseek: %s)",
+                destination, GetErrorStr());
+            return false;
         }
-
-        const void *copy_span = MemSpanInverse(cur, 0, end - cur);
-        if (copy_span > cur)
+    }
+    else
+    {
+        ssize_t w_ret = FullWrite(dd, buf, n_write);
+        if (w_ret < 0)
         {
-            if (FullWrite(dd, cur, copy_span - cur) < 0)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Copy failed (no space?) while copying to '%s' from network '%s'",
-                    destination, GetErrorStr());
-                return false;
-            }
-
-            cur = copy_span;
+            Log(LOG_LEVEL_ERR,
+                "Failed while writing to '%s' (write: %s)",
+                destination, GetErrorStr());
+            return false;
         }
     }
 
+    *write_made_hole = all_zeroes;
     return true;
 }
 
@@ -585,6 +579,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
     buf = xmalloc(CF_BUFSIZE + sizeof(int));
 
+    bool last_write_made_hole = false;
     n_read_total = 0;
 
     while (more)
@@ -635,7 +630,8 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
         n_read_total += n_read;
 
-        if (!FSWrite(dest, dd, workbuf, towrite))
+        if (!FSWrite(dest, dd, workbuf, towrite,
+                     &last_write_made_hole))
         {
             Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s:%s'",
                 conn->this_server, source, dest, GetErrorStr());
@@ -651,20 +647,24 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
         }
     }
 
-    /* If the file ends with a `hole', something needs to be written at
-       the end.  Otherwise the kernel would truncate the file at the end
-       of the last write operation. Write a null character and truncate
-       it again.  */
+    /* If the file ends with a `hole', something needs to be written at the
+       end.  Otherwise the kernel would truncate the file at the end of the
+       last write operation. And we can't truncate past the end of the file on
+       some filesystems. So write a null character and truncate it again.  */
 
-    if (ftruncate(dd, n_read_total) < 0)
+    if (last_write_made_hole)
     {
-        Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
-            dest, GetErrorStr());
-        free(buf);
-        unlink(dest);
-        close(dd);
-        EVP_CIPHER_CTX_cleanup(&crypto_ctx);
-        return false;
+        if (FullWrite(dd, "", 1)        < 0 ||
+            ftruncate(dd, n_read_total) < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
+                dest, GetErrorStr());
+            free(buf);
+            unlink(dest);
+            close(dd);
+            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+            return false;
+        }
     }
 
     close(dd);
@@ -751,6 +751,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
           conn->this_server, source, (intmax_t)size);
 
     n_read_total = 0;
+    bool last_write_made_hole = false;
     while (n_read_total < size)
     {
         int toget = MIN(size - n_read_total, buf_size);
@@ -824,7 +825,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
             return false;
         }
 
-        if (!FSWrite(dest, dd, buf, n_read))
+        if (!FSWrite(dest, dd, buf, n_read,
+                     &last_write_made_hole))
         {
             Log(LOG_LEVEL_ERR,
                 "Local disk write failed copying '%s:%s' to '%s'. (FSWrite: %s)",
@@ -844,20 +846,24 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
         n_read_total += n_read;
     }
 
-    /* If the file ends with a `hole', something needs to be written at
-       the end.  Otherwise the kernel would truncate the file at the end
-       of the last write operation. Write a null character and truncate
-       it again.  */
+    /* If the file ends with a `hole', something needs to be written at the
+       end.  Otherwise the kernel would truncate the file at the end of the
+       last write operation. And we can't truncate past the end of the file on
+       some filesystems. So write a null character and truncate it again.  */
 
-    if (ftruncate(dd, n_read_total) < 0)
+    if (last_write_made_hole)
     {
-        Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
-            dest, GetErrorStr());
-        free(buf);
-        unlink(dest);
-        close(dd);
-        FlushFileStream(conn->conn_info->sd, size - n_read_total);
-        return false;
+        if (FullWrite(dd, "", 1)        < 0 ||
+            ftruncate(dd, n_read_total) < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
+                dest, GetErrorStr());
+            free(buf);
+            unlink(dest);
+            close(dd);
+            FlushFileStream(conn->conn_info->sd, size - n_read_total);
+            return false;
+        }
     }
 
     close(dd);

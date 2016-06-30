@@ -163,19 +163,7 @@ char *StringVFormat(const char *fmt, va_list ap);
  */
 char *StringFormat(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
 
-/**
- * @brief Find the initial segment of memory (up to #n bytes) consisting of character #c.
- *
- * @return first byte which is not #c, or #mem + #n if all bytes in memory segment are #c
- */
-void *MemSpan(const void *mem, char c, size_t n);
-
-/**
- * @brief Find the initial segment of memory (up to #n bytes) consisting not of character #c.
- *
- * @return first byte which is #c, or #mem + #n if none of bytes in memory segment are #c
- */
-void *MemSpanInverse(const void *mem, char c, size_t n);
+void *memcchr(const void *buf, int c, size_t buf_size);
 
 bool StringNotMatchingSetCapped(const char *isp, int limit,
                       const char *exclude, char *obuf);

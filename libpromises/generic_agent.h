@@ -141,4 +141,6 @@ bool GenericAgentPostLoadInit(const EvalContext *ctx);
 
 void SetupSignalsForAgent(void);
 
+void LoadAugments(EvalContext *ctx, GenericAgentConfig *config);
+
 #endif

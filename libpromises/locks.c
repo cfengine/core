@@ -919,89 +919,45 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
     int from_fd = open(from, O_RDONLY | O_BINARY);
     if (from_fd < 0)
     {
-        Log(LOG_LEVEL_WARNING, "Could not open %s. (open: '%s')", from_pretty_name, GetErrorStr());
-        goto cleanup_1;
+        Log(LOG_LEVEL_WARNING,
+            "Could not open '%s' (open: %s)",
+            from_pretty_name, GetErrorStr());
+        goto cleanup;
     }
 
     int to_fd = open(tmp_file_name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
     if (to_fd < 0)
     {
-        Log(LOG_LEVEL_WARNING, "Could not open %s temporary file. (open: '%s')", to_pretty_name, GetErrorStr());
-        goto cleanup_2;
+        Log(LOG_LEVEL_WARNING,
+            "Could not open '%s' temporary file (open: %s)",
+            to_pretty_name, GetErrorStr());
+        goto cleanup;
     }
 
-    char data[DEV_BSIZE];
-    while (1)
-    {
-        int read_status = read(from_fd, data, sizeof(data));
-        if (read_status < 0)
-        {
-            Log(LOG_LEVEL_WARNING, "Could not read from %s. (read: '%s')", from_pretty_name, GetErrorStr());
-            goto cleanup_4;
-        }
-        else if (read_status == 0)
-        {
-            break;
-        }
+    size_t total_bytes_written;
+    bool   last_write_was_hole;
+    bool ok1 = FileSparseCopy(from_fd, from_pretty_name,
+                              to_fd,   to_pretty_name, DEV_BSIZE,
+                              &total_bytes_written, &last_write_was_hole);
 
-        /* Did we read only zeroes?
-           Then write a hole, making it a sparse file. */
-        if (memcchr(data, '\0', read_status) == NULL)
-        {
-            /*
-             * TODO seek()ing is not enough to preserve sparse-ness on
-             * windows. TODO fix according to:
-             * https://msdn.microsoft.com/en-us/library/windows/desktop/aa365566%28v=vs.85%29.aspx
-             */
-            off_t seek_status = lseek(to_fd, read_status, SEEK_CUR);
-            if (seek_status == (off_t) -1)
-            {
-                Log(LOG_LEVEL_WARNING,
-                    "Could not seek in file '%s' (lseek: %s)",
-                    to_pretty_name, GetErrorStr());
-                goto cleanup_4;
-            }
-        }
-        else                                                  /* not sparse */
-        {
-            int write_status = write(to_fd, data, read_status);
-            if (write_status < 0)
-            {
-                Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: '%s')", to_pretty_name, GetErrorStr());
-                goto cleanup_4;
-            }
-            else if (write_status == 0)
-            {
-                Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: 'Unknown error')", to_pretty_name);
-                goto cleanup_4;
-            }
-        }
-    }
+    /* Make sure changes are persistent on disk, so database cannot get
+     * corrupted at system crash. */
+    bool do_sync = true;
+    bool ok2 = FileSparseClose(to_fd, to_pretty_name, do_sync,
+                               total_bytes_written, last_write_was_hole);
 
-    // Make sure changes are persistent on disk, so database cannot get corrupted at system crash.
-    if (fsync(to_fd) != 0)
-    {
-        Log(LOG_LEVEL_WARNING, "Could not sync %s file to disk. (fsync: '%s')", to_pretty_name, GetErrorStr());
-        goto cleanup_4;
-    }
-
-    close(to_fd);
     if (rename(tmp_file_name, to) != 0)
     {
-        Log(LOG_LEVEL_WARNING, "Could not move %s into place. (rename: '%s')", to_pretty_name, GetErrorStr());
-        goto cleanup_3;
+        Log(LOG_LEVEL_WARNING, "Could not move '%s' into place (rename: %s)",
+            to_pretty_name, GetErrorStr());
     }
 
-    // Finished.
-    goto cleanup_3;
-
-cleanup_4:
-    close(to_fd);
-cleanup_3:
+  cleanup:
+    if (from_fd != -1)
+    {
+        close(from_fd);
+    }
     unlink(tmp_file_name);
-cleanup_2:
-    close(from_fd);
-cleanup_1:
     free(tmp_file_name);
 }
 

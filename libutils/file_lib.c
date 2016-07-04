@@ -29,6 +29,7 @@
 #include <alloc.h>
 #include <libgen.h>
 #include <logging.h>
+#include <string_lib.h>                                         /* memcchr */
 
 #define SYMLINK_MAX_DEPTH 32
 
@@ -1041,4 +1042,171 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 bool DeleteDirectoryTree(const char *path)
 {
     return DeleteDirectoryTreeInternal(path, path);
+}
+
+/**
+ * @NOTE Better use FileSparseCopy() if you are copying file to file
+ *       (that one callse this function).
+ *
+ * @NOTE Always use FileSparseWrite() to close the file descriptor, to avoid
+ *       losing data.
+ */
+bool FileSparseWrite(int fd, const void *buf, size_t count,
+                     bool *wrote_hole)
+{
+    bool all_zeroes = (memcchr(buf, '\0', count) == NULL);
+
+    if (all_zeroes)                                     /* write a hole */
+    {
+        off_t seek_ret = lseek(fd, count, SEEK_CUR);
+        if (seek_ret == (off_t) -1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to write a hole in sparse file (lseek: %s)",
+                GetErrorStr());
+            return false;
+        }
+    }
+    else                                              /* write normally */
+    {
+        ssize_t w_ret = FullWrite(fd, buf, count);
+        if (w_ret < 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to write to destination file (write: %s)",
+                GetErrorStr());
+            return false;
+        }
+    }
+
+    *wrote_hole = all_zeroes;
+    return true;
+}
+
+/**
+ * Copy data jumping over areas filled by '\0' greater than blk_size, so
+ * files automatically become sparse if possible.
+ *
+ * File descriptors should already be open, the filenames #source and
+ * #destination are only for logging purposes.
+ *
+ * @NOTE Always use FileSparseClose() to close the file descriptor, to avoid
+ *       losing data.
+ */
+bool FileSparseCopy(int sd, const char *src_name,
+                    int dd, const char *dst_name,
+                    size_t blk_size,
+                    size_t *total_bytes_written,
+                    bool   *last_write_was_a_hole)
+{
+    assert(total_bytes_written   != NULL);
+    assert(last_write_was_a_hole != NULL);
+
+    const size_t buf_size  = blk_size;
+    void *buf              = xmalloc(buf_size);
+
+    size_t n_read_total = 0;
+    bool   retval       = false;
+
+    *last_write_was_a_hole = false;
+
+    while (true)
+    {
+        ssize_t n_read = FullRead(sd, buf, buf_size);
+        if (n_read < 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Unable to read source file while copying '%s' to '%s'"
+                " (read: %s)", src_name, dst_name, GetErrorStr());
+            break;
+        }
+        else if (n_read == 0)                                   /* EOF */
+        {
+            retval = true;
+            break;
+        }
+
+        bool ret = FileSparseWrite(dd, buf, n_read,
+                                   last_write_was_a_hole);
+        if (!ret)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to copy '%s' to '%s'",
+                src_name, dst_name);
+            break;
+        }
+
+        n_read_total += n_read;
+    }
+
+    free(buf);
+    *total_bytes_written   = n_read_total;
+    return retval;
+}
+
+/**
+ * Always close a written sparse file using this function, else truncation
+ * might occur if the last part was a hole.
+ *
+ * If the tail of the file was a hole (and hence lseek(2)ed on destination
+ * instead of being written), do a ftruncate(2) here to ensure the whole file
+ * is written to the disc. But ftruncate() fails with EPERM on non-native
+ * Linux filesystems (e.g. vfat, vboxfs) when the count is greater than the
+ * size of the file. So we write() one byte and then ftruncate() it back.
+ *
+ * No need for this function to return anything, since the filedescriptor is
+ * (attempted to) closed in either success or failure.
+ *
+ * TODO? instead of needing the #total_bytes_written parameter, we could
+ * figure the offset after writing the one byte using lseek(fd,0,SEEK_CUR) and
+ * truncate -1 from that offset. It's probably not worth adding an extra
+ * system call for simplifying code.
+ */
+bool FileSparseClose(int fd, const char *filename,
+                     bool do_sync,
+                     size_t total_bytes_written,
+                     bool last_write_was_hole)
+{
+    if (last_write_was_hole)
+    {
+        ssize_t ret1 = FullWrite(fd, "", 1);
+        if (ret1 == -1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to close sparse file '%s' (write: %s)",
+                filename, GetErrorStr());
+            close(fd);
+            return false;
+        }
+
+        int ret2 = ftruncate(fd, total_bytes_written);
+        if (ret2 == -1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to close sparse file '%s' (ftruncate: %s)",
+                filename, GetErrorStr());
+            close(fd);
+            return false;
+        }
+    }
+
+    if (do_sync)
+    {
+        if (fsync(fd) != 0)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Could not sync to disk file '%s' (fsync: %s)",
+                filename, GetErrorStr());
+        }
+    }
+
+    int ret3 = close(fd);
+    if (ret3 == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to close file '%s' (close: %s)",
+            filename, GetErrorStr());
+        return false;
+    }
+
+    return true;
 }

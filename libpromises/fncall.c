@@ -334,8 +334,8 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
     Rlist *expargs = NewExpArgs(ctx, policy, fp);
 
-    Writer *fncall_writer;
-    const char *fncall_string;
+    Writer *fncall_writer = NULL;
+    const char *fncall_string = "";
     if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
     {
         fncall_writer = StringWriter();

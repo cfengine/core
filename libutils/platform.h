@@ -794,6 +794,15 @@ struct timespec
 /* Copy file defines                                               */
 /*******************************************************************/
 
+/**
+ * DEV_BSIZE is 512 for most common platforms
+ *           (Linux, AIX on Power, Solaris etc).
+ *
+ * Exceptions:
+ *             HP-UX:       1024
+ *             AIX on PS/2: 4096
+ *             Windows:     undefined
+ */
 #ifndef DEV_BSIZE                       /* usually defined in <sys/param.h> */
 # ifdef BSIZE
 #  define DEV_BSIZE BSIZE
@@ -802,52 +811,52 @@ struct timespec
 # endif
 #endif
 
-/* Extract or fake data from a `struct stat'.
+/**
+   Extract or fake data from a `struct stat'.
    ST_BLKSIZE: Optimal I/O blocksize for the file, in bytes.
-               WARNING this is irrelevant to ST_NBLOCKS, and has to do with
-                       the optimal I/O unit for the filesystem.
-   ST_NBLOCKS: Number of blocks in the file,
-               **most commonly in DEV_BSIZE units**
+               This is tightly coupled to ST_NBLOCKS, i.e it must stand that
+               (s.st_size <= ST_NBLOCKS(s) * ST_BLKSIZE(s))
+   ST_NBLOCKS: Number of blocks in the file, **in ST_BLKSIZE units**
+               WARNING this is different than "stat.st_nblocks" on most systems
+   ST_NBYTES : "disk usage" of the file on the disk, **in bytes**.
 
    TODO on Windows here is how to get the "cluster size" i.e. the block size:
    - send IOCTL_DISK_GET_DRIVE_GEOMETRY_EX and use Geometry.BytesPerSector
      from DISK_GEOMETRY_EX structure
+   - To check if a file is sparse: File.GetAttributes().SparseFile
 */
 
-#ifndef HAVE_STRUCT_STAT_ST_BLOCKS
 /*
  * Known platforms that don't have stat.st_blocks:
- *   Windows MinGW
+ *   Windows (MinGW)
  */
+#ifndef HAVE_STRUCT_STAT_ST_BLOCKS
+
+
 # define ST_BLKSIZE(statbuf)    DEV_BSIZE
 # define ST_NBLOCKS(statbuf)    (((statbuf).st_size + DEV_BSIZE - 1) / DEV_BSIZE)
+# define ST_NBYTES(statbuf)     (ST_NBLOCKS(statbuf) * DEV_BSIZE)
+
 
 #else  /* HAVE_STRUCT_STAT_ST_BLOCKS */
   /* Some systems, like Sequents, return st_blksize of 0 on pipes. */
 # define ST_BLKSIZE(statbuf) ((statbuf).st_blksize > 0 \
                                ? (statbuf).st_blksize : DEV_BSIZE)
-# define ST_NBLOCKS(statbuf) ((statbuf).st_blocks)
-#endif
+# define ST_NBLOCKS(statbuf) ((ST_NBYTES(statbuf) + ST_BLKSIZE(statbuf) - 1) \
+                              / ST_BLKSIZE(statbuf))
+
+# if defined(_CRAY)
+#  define ST_NBYTES(statbuf) ((statbuf).st_blocks * ST_BLKSIZE(statbuf))
+# else
+   /* ======= DEFAULT ============================== */
+   /* Most OS give stat.st_blocks in DEV_BSIZE units */
+#  define ST_NBYTES(statbuf) ((statbuf).st_blocks * DEV_BSIZE)
+   /* ============================================== */
+# endif /* CRAY */
 
 
-#ifndef HAVE_STRUCT_STAT_ST_BLOCKS
-# define ST_NBLOCKS512 (((statbuf).st_size + 512 - 1) / 512)
-#else
-# if defined(__hpux)
-  /* HP-UX counts st_blocks in 1024-byte units (DEV_BSIZE==1024)
-     This loses when mixing HP-UX and BSD filesystems with NFS.  */
-#  define ST_NBLOCKS512(statbuf) ((statbuf).st_blocks * 2)
-# else  /* not hpux */
-#  if defined(_AIX) && defined(_I386)
-    /* AIX PS/2 counts st_blocks in 4K units.  */
-#   define ST_NBLOCKS512(statbuf) ((statbuf).st_blocks * 8)
-#  else  /* not AIX PS/2 */
-    /* ======= DEFAULT ======== */
-#   define ST_NBLOCKS512(statbuf) ((statbuf).st_blocks)
-    /* ======================== */
-#  endif /* AIX PS/2*/
-# endif /* hpux */
-#endif
+#endif /* HAVE_STRUCT_STAT_ST_BLOCKS */
+
 
 #ifndef SEEK_CUR
 # define SEEK_CUR 1

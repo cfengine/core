@@ -190,6 +190,7 @@ static bool CompareFileToBuffer(const char *filename,
     return true;
 }
 
+/* TODO move to files_lib.c */
 static bool FileIsSparse(const char *filename)
 {
     MAYBE_SYNC_NOW;
@@ -199,12 +200,12 @@ static bool FileIsSparse(const char *filename)
     assert_int_not_equal(ret, -1);
 
     Log(LOG_LEVEL_DEBUG,
-        " st_size=%ju ST_NBLOCKS=%ju ST_BLKSIZE=%ju DEV_BSIZE=%ju",
-        (uint64_t) statbuf.st_size,
+        " st_size=%ju ST_NBYTES=%ju ST_NBLOCKS=%ju ST_BLKSIZE=%ju DEV_BSIZE=%ju",
+        (uint64_t) statbuf.st_size, (uint64_t) ST_NBYTES(statbuf),
         (uint64_t) ST_NBLOCKS(statbuf), (uint64_t) ST_BLKSIZE(statbuf),
         (uint64_t) DEV_BSIZE);
 
-    if (statbuf.st_size <= ST_NBLOCKS(statbuf) * DEV_BSIZE)
+    if (statbuf.st_size <= ST_NBYTES(statbuf))
     {
         Log(LOG_LEVEL_DEBUG, "File is probably non-sparse");
         return false;

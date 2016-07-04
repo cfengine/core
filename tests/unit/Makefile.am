@@ -127,6 +127,7 @@ check_PROGRAMS = \
 	package_versions_compare_test \
 	files_lib_test \
 	file_lib_test \
+	files_copy_test \
 	map_test \
 	parsemode_test \
 	parser_test \
@@ -322,6 +323,9 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/writer.c
 file_lib_test_LDADD = libtest.la
 file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY
+
+files_copy_test_SOURCES  = files_copy_test.c
+files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la
 
 sort_test_SOURCES = sort_test.c
 sort_test_LDADD = libtest.la ../../libpromises/libpromises.la

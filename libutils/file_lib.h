@@ -113,4 +113,17 @@ bool SetCloseOnExec(int fd, bool enable);
  */
 bool DeleteDirectoryTree(const char *path);
 
+bool FileSparseWrite(int fd, const void *buf, size_t count,
+                     bool *wrote_hole);
+bool FileSparseCopy(int sd, const char *src_name,
+                    int dd, const char *dst_name,
+                    size_t blk_size,
+                    size_t *total_bytes_written,
+                    bool   *last_write_was_a_hole);
+bool FileSparseClose(int fd, const char *filename,
+                     bool do_sync,
+                     size_t total_bytes_written,
+                     bool last_write_was_hole);
+
+
 #endif

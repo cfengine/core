@@ -490,47 +490,13 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 /*********************************************************************/
 
 
-static int FSWrite(const char *destination, int dd,
-                   const char *buf, size_t n_write,
-                   bool *write_made_hole)
-{
-    bool all_zeroes = (memcchr(buf, '\0', n_write) == NULL);
-
-    if (all_zeroes)                                     /* Write a hole */
-    {
-        off_t seek_ret = lseek(dd, n_write, SEEK_CUR);
-        if (seek_ret == (off_t) -1)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Failed while writing a hole to '%s' (lseek: %s)",
-                destination, GetErrorStr());
-            return false;
-        }
-    }
-    else
-    {
-        ssize_t w_ret = FullWrite(dd, buf, n_write);
-        if (w_ret < 0)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Failed while writing to '%s' (write: %s)",
-                destination, GetErrorStr());
-            return false;
-        }
-    }
-
-    *write_made_hole = all_zeroes;
-    return true;
-}
-
 int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
 {
-    int dd, blocksize = 2048, n_read = 0, towrite, plainlen, more = true, finlen, cnt = 0;
+    int dd, blocksize = 2048, n_read = 0, plainlen, more = true, finlen, cnt = 0;
     int tosend, cipherlen = 0;
     char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
-    long n_read_total = 0;
     EVP_CIPHER_CTX crypto_ctx;
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
@@ -579,8 +545,8 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
     buf = xmalloc(CF_BUFSIZE + sizeof(int));
 
-    bool last_write_made_hole = false;
-    n_read_total = 0;
+    bool   last_write_made_hole = false;
+    size_t n_wrote_total        = 0;
 
     while (more)
     {
@@ -594,7 +560,8 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
         /* If the first thing we get is an error message, break. */
 
-        if ((n_read_total == 0) && (strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
+        if (n_wrote_total == 0 &&
+            strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0)
         {
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
             close(dd);
@@ -626,48 +593,38 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
             return false;
         }
 
-        towrite = n_read = plainlen + finlen;
+        n_read = plainlen + finlen;
 
-        n_read_total += n_read;
-
-        if (!FSWrite(dest, dd, workbuf, towrite,
-                     &last_write_made_hole))
+        bool w_ok = FileSparseWrite(dd, workbuf, n_read,
+                                    &last_write_made_hole);
+        if (!w_ok)
         {
-            Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s:%s'",
-                conn->this_server, source, dest, GetErrorStr());
-            if (conn)
-            {
-                conn->error = true;
-            }
+            Log(LOG_LEVEL_ERR,
+                "Local disk write failed copying '%s:%s' to '%s'",
+                conn->this_server, source, dest);
             free(buf);
             unlink(dest);
             close(dd);
+            conn->error = true;
             EVP_CIPHER_CTX_cleanup(&crypto_ctx);
             return false;
         }
+
+        n_wrote_total += n_read;
     }
 
-    /* If the file ends with a `hole', something needs to be written at the
-       end.  Otherwise the kernel would truncate the file at the end of the
-       last write operation. And we can't truncate past the end of the file on
-       some filesystems. So write a null character and truncate it again.  */
+    const bool do_sync = false;
 
-    if (last_write_made_hole)
+    bool ret = FileSparseClose(dd, dest, do_sync,
+                               n_wrote_total, last_write_made_hole);
+    if (!ret)
     {
-        if (FullWrite(dd, "", 1)        < 0 ||
-            ftruncate(dd, n_read_total) < 0)
-        {
-            Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
-                dest, GetErrorStr());
-            free(buf);
-            unlink(dest);
-            close(dd);
-            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
-            return false;
-        }
+        unlink(dest);
+        free(buf);
+        EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+        return false;
     }
 
-    close(dd);
     free(buf);
     EVP_CIPHER_CTX_cleanup(&crypto_ctx);
     return true;
@@ -693,9 +650,6 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
 {
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
-
-    off_t n_read_total = 0;
-    EVP_CIPHER_CTX crypto_ctx;
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
@@ -750,11 +704,11 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
     Log(LOG_LEVEL_VERBOSE, "Copying remote file '%s:%s', expecting %jd bytes",
           conn->this_server, source, (intmax_t)size);
 
-    n_read_total = 0;
-    bool last_write_made_hole = false;
-    while (n_read_total < size)
+    size_t n_wrote_total        = 0;
+    bool   last_write_made_hole = false;
+    while (n_wrote_total < size)
     {
-        int toget = MIN(size - n_read_total, buf_size);
+        int toget = MIN(size - n_wrote_total, buf_size);
 
         assert(toget > 0);
 
@@ -792,7 +746,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
 
         /* If the first thing we get is an error message, break. */
 
-        if ((n_read_total == 0) && (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
+        if (n_wrote_total == 0
+            && strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR) == 0))
         {
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied",
                 conn->this_server, source);
@@ -810,7 +765,6 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
             return false;
         }
 
-
         /* Check for mismatch between encryption here and on server. */
 
         int value = -1;
@@ -825,48 +779,36 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
             return false;
         }
 
-        if (!FSWrite(dest, dd, buf, n_read,
-                     &last_write_made_hole))
+        bool w_ok = FileSparseWrite(dd, buf, n_read,
+                                    &last_write_made_hole);
+        if (!w_ok)
         {
             Log(LOG_LEVEL_ERR,
-                "Local disk write failed copying '%s:%s' to '%s'. (FSWrite: %s)",
-                conn->this_server, source, dest, GetErrorStr());
-            if (conn)
-            {
-                conn->error = true;
-            }
+                "Local disk write failed copying '%s:%s' to '%s'",
+                conn->this_server, source, dest);
             free(buf);
             unlink(dest);
             close(dd);
-            FlushFileStream(conn->conn_info->sd, size - n_read_total);
-            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+            FlushFileStream(conn->conn_info->sd, size - n_wrote_total - n_read);
+            conn->error = true;
             return false;
         }
 
-        n_read_total += n_read;
+        n_wrote_total += n_read;
     }
 
-    /* If the file ends with a `hole', something needs to be written at the
-       end.  Otherwise the kernel would truncate the file at the end of the
-       last write operation. And we can't truncate past the end of the file on
-       some filesystems. So write a null character and truncate it again.  */
+    const bool do_sync = false;
 
-    if (last_write_made_hole)
+    bool ret = FileSparseClose(dd, dest, do_sync,
+                               n_wrote_total, last_write_made_hole);
+    if (!ret)
     {
-        if (FullWrite(dd, "", 1)        < 0 ||
-            ftruncate(dd, n_read_total) < 0)
-        {
-            Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
-                dest, GetErrorStr());
-            free(buf);
-            unlink(dest);
-            close(dd);
-            FlushFileStream(conn->conn_info->sd, size - n_read_total);
-            return false;
-        }
+        unlink(dest);
+        free(buf);
+        FlushFileStream(conn->conn_info->sd, size - n_wrote_total);
+        return false;
     }
 
-    close(dd);
     free(buf);
     return true;
 }

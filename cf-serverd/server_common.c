@@ -794,7 +794,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     }
 
     /* Is file sparse? */
-    if (statbuf.st_size > ST_NBLOCKS(statbuf) * DEV_BSIZE)
+    if (statbuf.st_size > ST_NBYTES(statbuf))
     {
         cfst.cf_makeholes = 1;  /* must have a hole to get checksum right */
     }

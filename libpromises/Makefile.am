@@ -231,5 +231,7 @@ cf__v_SED_1 =
 #
 # Some basic clean ups
 #
-CLEANFILES = *.gcno *.gcda $(BUILT_SOURCES)
-MOSTLYCLEANFILES = *~ *.orig *.rej
+# Use "make mostlyclean" if you want to keep the BUILT_SOURCES
+#
+CLEANFILES = $(BUILT_SOURCES)
+MOSTLYCLEANFILES =  *.gcno *.gcda *~ *.orig *.rej

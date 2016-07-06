@@ -2255,6 +2255,8 @@ static FnCallResult FnCallGetIndicesClassic(EvalContext *ctx, ARG_UNUSED const P
 static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     const char *name_str = RlistScalarValueSafe(finalargs);
+    bool allocated = false;
+    JsonElement *json = NULL;
 
     // Protect against collected args (their rval type will be data
     // container). This is a special case to preserve legacy behavior
@@ -2264,19 +2266,49 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
         VarRef *ref = ResolveAndQualifyVarName(fp, name_str);
         DataType type = CF_DATA_TYPE_NONE;
         EvalContextVariableGet(ctx, ref, &type);
-        VarRefDestroy(ref);
 
-        if (type != CF_DATA_TYPE_CONTAINER &&
-            StringMatchFull(".*[a-zA-Z0-9_](\\[[a-zA-Z0-9_]+\\])+$", name_str))
+        if (type != CF_DATA_TYPE_CONTAINER)
         {
-            return FnCallGetIndicesClassic(ctx, policy, fp, finalargs);
+            JsonParseError res = JsonParseWithLookup(ctx, &LookupVarRefToJson, &name_str, &json);
+            if (res == JSON_PARSE_OK)
+            {
+                if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    // VarNameOrInlineToJson() would now look up this primitive
+                    // in the variable table, returning a JSON container for
+                    // whatever type it is, but since we already know that it's
+                    // not a native container type (thanks to the
+                    // CF_DATA_TYPE_CONTAINER check above) we skip that, and
+                    // stick to the legacy data types.
+                    JsonDestroy(json);
+                    VarRefDestroy(ref);
+                    return FnCallGetIndicesClassic(ctx, policy, fp, finalargs);
+                }
+                else
+                {
+                    // Inline JSON of some sort.
+                    allocated = true;
+                }
+            }
+            else
+            {
+                // Invalid inline JSON. Same case as Classic case above.
+                VarRefDestroy(ref);
+                return FnCallGetIndicesClassic(ctx, policy, fp, finalargs);
+            }
         }
-    }
+        else
+        {
+            // A variable holding a container.
+            json = VarRefValueToJson(ctx, fp, ref, NULL, 0, true, &allocated);
+        }
 
-    // Try to load directly. This case will behave correctly whether
-    // finalrgs holds a scalar or not.
-    bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, true, &allocated);
+        VarRefDestroy(ref);
+    }
+    else
+    {
+        json = VarNameOrInlineToJson(ctx, fp, finalargs, true, &allocated);
+    }
 
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)

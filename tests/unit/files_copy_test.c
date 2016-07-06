@@ -62,6 +62,59 @@ int blk_size;                                      /* defined during init() */
 bool test_has_run[NTESTS + 1];
 bool success     [NTESTS + 1];
 
+
+/* Some filesystems don't support sparse files at all (swap fs on Solaris is
+ * one example). We create a fully sparse file (seek 1MB further) and check if
+ * it's sparse. If not, WE SKIP ALL SPARSENESS TESTS but we still run this
+ * unit test in order to test for integrity of data. */
+bool SPARSE_SUPPORT_OK = true;
+
+static bool FsSupportsSparseFiles(const char *filename)
+{
+    int fd = open(filename, O_CREAT | O_WRONLY | O_BINARY, 0700);
+    assert_int_not_equal(fd, -1);
+
+    /* 8MB for our temporary sparse file sounds good. */
+    const int sparse_file_size = 8 * 1024 * 1024;
+
+    off_t s_ret = lseek(fd, sparse_file_size, SEEK_CUR);
+    assert_int_equal(s_ret, sparse_file_size);
+
+    /* Make sure the file is not truncated by writing one byte
+       and taking it back. */
+    ssize_t w_ret = write(fd, "", 1);
+    assert_int_equal(w_ret, 1);
+
+    int tr_ret = ftruncate(fd, sparse_file_size);
+    assert_int_equal(tr_ret, 0);
+
+    /* On ZFS the file needs to be synced, else stat()
+       reports a temporary value for st_blocks! */
+    fsync(fd);
+
+    int c_ret = close(fd);
+    assert_int_equal(c_ret, 0);
+
+    struct stat statbuf;
+    int st_ret = stat(filename, &statbuf);
+    assert_int_not_equal(st_ret, -1);
+
+    int u_ret = unlink(filename);                               /* clean up */
+    assert_int_equal(u_ret, 0);
+
+    /* ACTUAL TEST: IS THE FILE SPARSE? */
+    if (ST_NBYTES(statbuf)  <  statbuf.st_size)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+
 static void init(void)
 {
     LogSetGlobalLevel(LOG_LEVEL_DEBUG);
@@ -92,6 +145,16 @@ static void init(void)
 
     int ret2 = mkdir(TEST_SUBDIR, 0700);
     assert_int_equal(ret2, 0);
+
+    SPARSE_SUPPORT_OK = true;
+    if (!FsSupportsSparseFiles(TEST_DST_FILE))
+    {
+        Log(LOG_LEVEL_NOTICE,
+            "filesystem for directory '%s' doesn't seem to support sparse files!"
+            " TEST WILL ONLY VERIFY FILE INTEGRITY!", TEST_DIR);
+
+        SPARSE_SUPPORT_OK = false;
+    }
 
     test_has_run[0] = true;
     success[0]      = true;
@@ -190,7 +253,7 @@ static bool CompareFileToBuffer(const char *filename,
     return true;
 }
 
-/* TODO move to files_lib.c */
+/* TODO isolate important code and move to files_lib.c. */
 static bool FileIsSparse(const char *filename)
 {
     MAYBE_SYNC_NOW;
@@ -237,8 +300,11 @@ static void test_sparse_files_1(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_false(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_false(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE);
     assert_true(data_ok);
@@ -264,8 +330,11 @@ static void test_sparse_files_2(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_false(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_false(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE);
     assert_true(data_ok);
@@ -291,8 +360,11 @@ static void test_sparse_files_3(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_false(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_false(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE);
     assert_true(data_ok);
@@ -318,8 +390,11 @@ static void test_sparse_files_4(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_false(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_false(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE);
     assert_true(data_ok);
@@ -345,8 +420,11 @@ static void test_sparse_files_5(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_true(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_true(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE);
     assert_true(data_ok);
@@ -372,8 +450,11 @@ static void test_sparse_files_6(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_true(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_true(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE);
     assert_true(data_ok);
@@ -399,8 +480,11 @@ static void test_sparse_files_7(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_true(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_true(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE);
     assert_true(data_ok);
@@ -428,8 +512,11 @@ static void test_sparse_files_8(void)
     bool ret = CopyRegularFileDisk(srcfile, dstfile);
     assert_true(ret);
 
-    bool is_sparse = FileIsSparse(dstfile);
-    assert_false(is_sparse);
+    if (SPARSE_SUPPORT_OK)
+    {
+        bool is_sparse = FileIsSparse(dstfile);
+        assert_false(is_sparse);
+    }
 
     bool data_ok = CompareFileToBuffer(dstfile, buf, TESTFILE_SIZE + DEV_BSIZE - 1);
     assert_true(data_ok);

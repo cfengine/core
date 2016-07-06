@@ -115,6 +115,8 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
         }
         else
         {
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                 "No edit changes to file '%s' need saving", ec->filename);
             *result = PROMISE_RESULT_NOOP;
         }
     }

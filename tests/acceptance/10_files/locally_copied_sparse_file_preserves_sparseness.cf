@@ -1,0 +1,86 @@
+# Test that locally copied files keep their sparsness
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(test.file[sparse])"
+      delete => tidy,
+      handle => "init_tidy_sparse";
+
+    "$(test.file[copy])"
+      delete => tidy,
+      handle => "init_tidy_copy";
+
+
+  commands:
+    "/bin/dd"
+      args => "if=/dev/zero of=$(test.file[sparse]) seek=1024 bs=1024 count=0",
+      if => not( fileexists( "$(test.file[sparse])" )),
+      depends_on => { "init_tidy_sparse", "init_tidy_copy" };
+}
+
+bundle agent test
+{
+  meta:
+    "description" string => "ENT-2769: Test that when a sparse file is copied locally the sparsness is preserved.";
+
+    "test_skip_unsupported" string => "!linux";
+
+  vars:
+    "file[sparse]" string => "$(G.testdir)/sparse";
+    "file[copy]" string => "$(G.testdir)/copy";
+
+  files:
+    "$(file[copy])"
+      copy_from => local_dcp( "$(file[sparse])" );
+}
+
+bundle agent check
+{
+  vars:
+    "size[sparse]"
+      string => filestat( "$(test.file[sparse])", size ),
+      if => fileexists( "$(test.file[sparse])" );
+
+    "size[copy]"
+      string => filestat( "$(test.file[copy])", size ),
+      if => fileexists( "$(test.file[copy])" );
+
+    "du[sparse]"
+      string => execresult( "/usr/bin/find $(test.file[sparse]) -printf %S", noshell),
+      if => fileexists( "$(test.file[sparse])" );
+
+    "du[copy]"
+      string => execresult( "/usr/bin/find $(test.file[copy]) -printf %S", noshell),
+      if => fileexists( "$(test.file[copy])" );
+
+  classes:
+    "size_match" expression => strcmp( "$(size[sparse])", "$(size[copy])" );
+    "du_zero" expression => strcmp( 0, "$(du[copy])" );
+
+    "OK" and => { "size_match", "du_zero" };
+
+  reports:
+    OK::
+      "$(this.promise_filename) Pass";
+
+    !OK::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG::
+      "Sparse filestat.size: $(size[sparse])";
+      "Sparse du -k: '$(du[sparse])'";
+      "Copy filestat.size: $(size[copy])";
+      "Copy du -k: '$(du[copy])'";
+    DEBUG.size_match::
+      "Sparse file and copy match in apparent size.";
+    DEBUG.du_zero::
+      "Copy of sparse file has actual size of zero according to the `find` utility.";
+
+}

@@ -30,6 +30,7 @@ bundle agent test
   meta:
     "description" string => "ENT-2769: Test that when a sparse file is copied locally the sparsness is preserved.";
 
+    "test_skip_unsupported" string => "!linux";
 
   vars:
     "file[sparse]" string => "$(G.testdir)/sparse";

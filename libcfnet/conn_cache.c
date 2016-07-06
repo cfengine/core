@@ -106,7 +106,7 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
 
 
         if (strcmp(server,  svp->conn->this_server) == 0 &&
-            ConnectionFlagsEqual(&flags, &svp->conn->flags) == 0 &&
+            ConnectionFlagsEqual(&flags, &svp->conn->flags) &&
             (port == svp->conn->this_port
              ||
              (port != NULL && svp->conn->this_port != NULL &&

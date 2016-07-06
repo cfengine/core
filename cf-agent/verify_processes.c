@@ -291,17 +291,18 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
                     killed = true;
                 }
 
-                if (kill((pid_t) pid, signal) < 0)
+                if (kill(pid, signal) < 0)
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
-                         "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)", RlistScalarValue(rp),
-                         signal, (intmax_t)pid, GetErrorStr());
+                         "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)",
+                         RlistScalarValue(rp), signal, (intmax_t)pid, GetErrorStr());
                     failure = true;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Signalled '%s' (%d) to process %jd (%s)",
-                         RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                         "Signalled '%s' (%d) to process %jd (%s)",
+                         RlistScalarValue(rp), signal, (intmax_t) pid, ip->name);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     failure = false;
                 }

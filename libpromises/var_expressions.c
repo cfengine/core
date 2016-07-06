@@ -419,9 +419,7 @@ char *VarRefToString(const VarRef *ref, bool qualified)
         BufferAppend(buf, "]", sizeof(char));
     }
 
-    char *var_string = xstrdup(BufferData(buf));
-    BufferDestroy(buf);
-    return var_string;
+    return BufferClose(buf);
 }
 
 char *VarRefMangle(const VarRef *ref)

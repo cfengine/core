@@ -1,0 +1,121 @@
+#######################################################
+#
+#Tries to edit a file in warn_only, and must have a kept class defined 
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "filename_kept" string => "shadow.kept";
+      "filename_failed" string => "shadow.failed";
+
+      "content" string =>
+      "nicolas:$1$NoSH4e.u$U4uEzaOuC0tmQThtI3hj00:16988:0:99999:7:::";
+
+      "name" string =>
+      "nicolas";
+
+      "field_kept" string =>
+      "$1$NoSH4e.u$U4uEzaOuC0tmQThtI3hj00";
+
+      "field_failed" string =>
+      "bad";
+
+  files:
+      "$(G.testfile).$(init.filename_kept)"
+        create => "true",
+        edit_line => init_insert("$(init.content)"),
+        edit_defaults => init_empty;
+
+      "$(G.testfile).$(init.filename_failed)"
+        create => "true",
+        edit_line => init_insert("$(init.content)"),
+        edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).$(init.filename_kept)"
+        create        => "false",
+        edit_line     => test_set_user_field("${init.name}", 2, "${init.field_kept}"),
+        action        => test_warn_only,
+        classes       => test_classes_generic("test_result_kept");
+
+      "$(G.testfile).$(init.filename_failed)"
+        create        => "false",
+        edit_line     => test_set_user_field("${init.name}", 2, "${init.field_failed}"),
+        action        => test_warn_only,
+        classes       => test_classes_generic("test_result_failed");
+}
+
+bundle edit_line test_set_user_field(user,field,val)
+{
+  field_edits:
+      "$(user):.*"
+      comment => "Edit a user attribute in the password file",
+      edit_field => test_col(":","$(field)","$(val)","set");
+}
+
+body edit_field test_col(split,col,newval,method)
+{
+      field_separator    => "$(split)";
+      select_field       => "$(col)";
+      value_separator    => ",";
+      field_value        => "$(newval)";
+      field_operation    => "$(method)";
+      extend_fields      => "true";
+      allow_blank_fields => "true";
+}
+
+body action test_warn_only
+{
+      action_policy => "warn";
+      ifelapsed => "60";
+}
+
+body classes test_classes_generic(x)
+{
+      promise_repaired => { "$(x)_repaired" };
+      repair_failed => { "$(x)_failed" };
+      repair_denied => { "$(x)_denied" };
+      repair_timeout => { "$(x)_timeout" };
+      promise_kept => { "$(x)_ok" };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  reports:
+    test_result_kept_ok.test_result_failed_failed::
+      "$(this.promise_filename) Pass";
+
+    !(test_result_kept_ok.test_result_failed_failed)::
+      "$(this.promise_filename) FAIL";
+}
+

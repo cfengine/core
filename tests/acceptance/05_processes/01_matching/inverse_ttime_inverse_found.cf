@@ -43,7 +43,7 @@ body process_count test_range
 
 body process_select test_select_high_users
 {
-      ttime_range => irange(0, accumulated(9,0,0,0,0,0));        # Anything
+      ttime_range => irange(0, accumulated(99,0,0,0,0,0));       # Anything
       process_result => "!ttime";                                # Nothing
 }
 

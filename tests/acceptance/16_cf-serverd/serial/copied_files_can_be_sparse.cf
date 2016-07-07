@@ -1,0 +1,51 @@
+# The agent writes sparse files when detecting chunks of zeros. Here we
+# verify that a NULL-filled file, is fully sparse when remotely copied.
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "../../run_with_server.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  meta:
+    "description" string => "ENT-2769: Test that files written are sparse when possible";
+
+    # Various exotic filesystems don't support sparseness, see the unit
+    # test "files_copy_test.c" for details.
+    "test_skip_unsupported" string => "!linux";
+
+  files:
+    "$(G.testdir)/source_file"
+      delete => tidy,
+      handle => "init_tidy_sparse";
+
+  commands:
+    # Create a 10MB sparse file
+    "/bin/dd"
+      args => "if=/dev/zero of=$(G.testdir)/source_file seek=1024 bs=1024 count=0",
+      if =>  not( fileexists( "$(G.testdir)/source_file" )),
+      depends_on => { "init_tidy_sparse" };
+}
+
+bundle agent test
+{
+  methods:
+      # source file is created in "init" bundle
+
+      # ensure destination files are not there
+      "any" usebundle => dcs_fini("$(G.testdir)/destfile_classic");
+      "any" usebundle => dcs_fini("$(G.testdir)/destfile_latest");
+
+      "any" usebundle => generate_key;
+      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
+
+      "any" usebundle => run_test("$(this.promise_filename).sub");
+
+      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
+#      "any" usebundle => dcs_fini("$(G.testdir)/destfile_classic");
+#      "any" usebundle => dcs_fini("$(G.testdir)/destfile_latest");
+#      "any" usebundle => dcs_fini("$(G.testdir)/source_file");
+}

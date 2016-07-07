@@ -28,6 +28,10 @@ Expr	<- SPACE Sum	        { yy->result = math_eval_pop(yy->stack, &(yy->stackp))
 Sum	<- Product ( PLUS  Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l + r, yy->stack, &(yy->stackp)); }
 		   / MINUS Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l - r, yy->stack, &(yy->stackp)); }
 		   / CLOSE_ENOUGH Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(fabs(l - r) < 0.00000000000000001, yy->stack, &(yy->stackp)); }
+		   / LESSEQ_THAN Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push((l < r || fabs(l - r) < 0.00000000000000001), yy->stack, &(yy->stackp)); }
+		   / LESS_THAN Product   	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l < r, yy->stack, &(yy->stackp)); }
+		   / GREATEREQ_THAN Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push((l > r || fabs(l - r) < 0.00000000000000001), yy->stack, &(yy->stackp)); }
+		   / GREATER_THAN Product   	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l > r, yy->stack, &(yy->stackp)); }
 		   )*
 
 Product	<- Value ( POW  Value		{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(pow(l, r), yy->stack, &(yy->stackp)); }
@@ -70,6 +74,10 @@ SI_Unit  <- [kK] SPACE { math_eval_push(1000, yy->stack, &(yy->stackp)); }
 
 F_NUMBER <- < '-'? [0-9]+ '.'? [0-9]* > SPACE
 CLOSE_ENOUGH	<- '==' SPACE
+LESSEQ_THAN	<- '<=' SPACE
+LESS_THAN	<- '<' SPACE
+GREATEREQ_THAN	<- '>=' SPACE
+GREATER_THAN	<- '>' SPACE
 
 PLUS	<- '+' SPACE
 MINUS	<- '-' SPACE

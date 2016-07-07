@@ -71,6 +71,14 @@ bool SPARSE_SUPPORT_OK = true;
 
 static bool FsSupportsSparseFiles(const char *filename)
 {
+#ifdef __hpux
+    Log(LOG_LEVEL_NOTICE, "HP-UX detected, skipping sparseness tests!"
+        " Not sure why, but on HP-UX with 'vxfs' filesystem,"
+        " the sparse files generated have /sometimes/ greater"
+        " 'disk usage' than their true size, and this is verified by du");
+    return false;
+#endif
+
     int fd = open(filename, O_CREAT | O_WRONLY | O_BINARY, 0700);
     assert_int_not_equal(fd, -1);
 
@@ -539,12 +547,7 @@ int main()
         unit_test(test_sparse_files_3),
         unit_test(test_sparse_files_4),
         unit_test(test_sparse_files_5),
-/* Not sure why, but on HP-UX with "vxfs" filesystem, the sparse file
- * generated in test_6 has actually greater "disk usage" than its length.
- * "du" verifies it. */
-#ifndef __hpux
         unit_test(test_sparse_files_6),
-#endif
         unit_test(test_sparse_files_7),
         unit_test(test_sparse_files_8),
         unit_test(finalise),

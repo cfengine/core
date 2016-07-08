@@ -585,6 +585,7 @@ case "$1" in
         if [ "$CF_ONLY_WEB_SERVICES" = "1" ]; then
             # On hosts we do not start any process when there is no
             # policy, so indicate this as an error.
+            echo "No policy found in $INPUTDIR/promises.cf, not starting core daemons" >&2
             exit 1
         fi
 

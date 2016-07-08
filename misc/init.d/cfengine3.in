@@ -583,7 +583,9 @@ case "$1" in
         enterprise_start
 
         if [ "$CF_ONLY_WEB_SERVICES" = "1" ]; then
-            exit 0
+            # On hosts we do not start any process when there is no
+            # policy, so indicate this as an error.
+            exit 1
         fi
 
         cf_start_core_daemons

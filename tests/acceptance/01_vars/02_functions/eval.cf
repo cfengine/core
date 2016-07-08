@@ -51,6 +51,14 @@ bundle agent init
       "values[32]" string => "step(-10)";
       "values[33]" string => "100k";
       "values[34]" string => "(200m - 100k) / (2t + 2t)";
+      "values[35]" string => "10 > 10";
+      "values[36]" string => "10 > 11";
+      "values[37]" string => "10 >= 10";
+      "values[38]" string => "10 >= 11";
+      "values[39]" string => "10 < 10";
+      "values[40]" string => "10 < 11";
+      "values[41]" string => "10 <= 10";
+      "values[42]" string => "10 <= 11";
 }
 
 
@@ -108,6 +116,14 @@ bundle agent check
       "verify[32]" string => '0.000000';
       "verify[33]" string => '100000.000000';
       "verify[34]" string => '0.000050';
+      "verify[35]" string => '0.000000';
+      "verify[36]" string => '0.000000';
+      "verify[37]" string => '1.000000';
+      "verify[38]" string => '0.000000';
+      "verify[39]" string => '0.000000';
+      "verify[40]" string => '1.000000';
+      "verify[41]" string => '1.000000';
+      "verify[42]" string => '1.000000';
 
       "indices" slist => getindices("verify");
 
@@ -116,17 +132,19 @@ bundle agent check
       "not_ok_$(indices)" not => strcmp("$(test.eval[$(indices)])", "$(verify[$(indices)])");
 
       "ok" and => { ok_0, ok_1, ok_3, ok_4, ok_5, ok_6, ok_7, ok_8,
-                    ok_9, ok_10, ok_11, ok_13, ok_14, ok_15, ok_16,
-                    ok_17, ok_18, ok_19, ok_20, ok_21, ok_23, ok_24,
-                    ok_25, ok_26, ok_27, ok_28, ok_29, ok_30, ok_31,
-                    ok_32, ok_33, ok_34 };
+                   ok_9, ok_10, ok_11, ok_13, ok_14, ok_15, ok_16,
+                   ok_17, ok_18, ok_19, ok_20, ok_21, ok_23, ok_24,
+                   ok_25, ok_26, ok_27, ok_28, ok_29, ok_30, ok_31,
+                   ok_32, ok_33, ok_34, ok_35, ok_36, ok_37, ok_38,
+                   ok_39, ok_40, ok_41, ok_42
+      };
 
   reports:
     DEBUG::
-      "OK math eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])'"
+      "OK math $(indices) eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])'"
       ifvarclass => "ok_$(indices)";
 
-      "FAIL math eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])' (expected '$(verify[$(indices)])')"
+      "FAIL math $(indices) eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])' (expected '$(verify[$(indices)])')"
       ifvarclass => "not_ok_$(indices)";
 
     ok::

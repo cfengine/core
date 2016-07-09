@@ -1243,7 +1243,7 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
     assert(!frame->path);
     frame->path = EvalContextStackPath(ctx);
 
-    Log(LOG_LEVEL_DEBUG, "PUSHED FRAME (type %d)", frame->type);
+    LogDebug(LOG_MOD_EVALCTX, "PUSHED FRAME (type %d)", frame->type);
 }
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
@@ -1445,7 +1445,7 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "POPPED FRAME (type %d)", last_frame_type);
+    LogDebug(LOG_MOD_EVALCTX, "POPPED FRAME (type %d)", last_frame_type);
 }
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)

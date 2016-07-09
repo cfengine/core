@@ -74,13 +74,16 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_r
     ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_redefine);
 
     Log(LOG_LEVEL_DEBUG, "Evaluating vars promise: %s", pp->promiser);
-    Log(LOG_LEVEL_DEBUG,
-        "    allow_redefine=%d, ok_redefine=%d, drop_undefined=%d, should_converge=%d",
-        allow_redefine, opts.ok_redefine, opts.drop_undefined, opts.should_converge);
+    LogDebug(LOG_MOD_VARS,
+             "allow_redefine=%d, ok_redefine=%d,"
+             " drop_undefined=%d, should_converge=%d",
+             allow_redefine, opts.ok_redefine,
+             opts.drop_undefined, opts.should_converge);
 
     if (!opts.should_converge)
     {
-        Log(LOG_LEVEL_DEBUG, "    Skipping vars promise because should_converge=false");
+        LogDebug(LOG_MOD_VARS,
+                 "Skipping vars promise because should_converge=false");
         return PROMISE_RESULT_NOOP;
     }
 

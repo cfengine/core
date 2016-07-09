@@ -312,9 +312,9 @@ static void MangleVarRefString(char *ref_str, size_t len)
 
     if (mangled_scope || ns != NULL)
     {
-        Log(LOG_LEVEL_DEBUG,
-            "Mangled namespaced/scoped variable for iterating over it: %.*s",
-            (int) len, ref_str);
+        LogDebug(LOG_MOD_ITERNGN,
+                 "Mangled namespaced/scoped variable for iterating over it: %.*s",
+                 (int) len, ref_str);
     }
 }
 
@@ -541,7 +541,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
                                          WheelCompareUnexpanded)  !=  NULL);
         if (same_var_found)
         {
-            Log(LOG_LEVEL_DEBUG,
+            LogDebug(LOG_MOD_ITERNGN,
                 "Skipped adding iteration wheel for already existing variable: %s",
                 new_wheel->varname_unexp);
             WheelDestroy(new_wheel);
@@ -553,7 +553,8 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
              * calls. Or it happens and this is an independent variable. So
              * now APPEND the wheel for this variable. */
             SeqAppend(iterctx->wheels, new_wheel);
-            Log(LOG_LEVEL_DEBUG,
+
+            LogDebug(LOG_MOD_ITERNGN,
                 "Added iteration wheel %zu for variable: %s",
                 SeqLength(iterctx->wheels) - 1,
                 new_wheel->varname_unexp);
@@ -578,7 +579,7 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
                             const EvalContext *evalctx,
                             char *s)
 {
-    Log(LOG_LEVEL_DEBUG, "PromiseIteratorPrepare(\"%s\")", s);
+    LogDebug(LOG_MOD_ITERNGN, "PromiseIteratorPrepare(\"%s\")", s);
     char *var_start = s + FindDollarParen(s);
 
     while (*var_start != '\0')
@@ -966,13 +967,13 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
          * result yet, it just loops over until it finds a meaningful one. */
         done = ! IteratorHasEmptyWheel(iterctx);
 
+        LogDebug(LOG_MOD_ITERNGN, "PromiseIteratorNext():"
+                 " count=%zu wheels_num=%zu current_wheel=%zd",
+                 iterctx->count, wheels_num, (ssize_t) i);
+
     /* TODO if not done, then we are re-Put()ing variables in the EvalContect,
      *      hopefully overwriting the previous values, but possibly not! */
     }
-
-    /* Log(LOG_LEVEL_DEBUG, */
-    /*     "PromiseIteratorNext(): count=%zu wheels_num=%zu current_wheel=%zd", */
-    /*     iterctx->count, wheels_num, (ssize_t) i); */
 
     iterctx->count++;
     return true;

@@ -109,8 +109,7 @@ Variable *VariableTableGet(const VariableTable *table, const VarRef *ref)
                   ref_s);
     }
 
-    // if (LogModuleActive(LOG_MODULE_VARIABLESTABLE))
-    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    if (LogModuleEnabled(LOG_MOD_VARTABLE))
     {
         Buffer *buf = BufferNew();
         BufferPrintf(buf, "VariableTableGet(%s): %s", ref_s,
@@ -133,7 +132,7 @@ Variable *VariableTableGet(const VariableTable *table, const VarRef *ref)
             free(value_s);
         }
 
-        Log(LOG_LEVEL_DEBUG, "%s", BufferGet(buf));
+        LogDebug(LOG_MOD_VARTABLE, "%s", BufferGet(buf));
 
         BufferDestroy(buf);
     }
@@ -176,10 +175,10 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
 
     /* TODO assert there are no CF_NS or '.' in the variable name? */
 
-    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    if (LogModuleEnabled(LOG_MOD_VARTABLE))
     {
         char *value_s = RvalToString(*rval);
-        Log(LOG_LEVEL_DEBUG, "VariableTablePut(%s): %s  => %s",
+        LogDebug(LOG_MOD_VARTABLE, "VariableTablePut(%s): %s  => %s",
             ref->lval, DataTypeToString(type),
             rval->item ? value_s : "EMPTY");
         free(value_s);

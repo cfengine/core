@@ -509,8 +509,8 @@ char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
 
     BufferDestroy(current_item);
 
-    Log(LOG_LEVEL_DEBUG, "ExpandScalar( %s : %s . %s )  =>  %s",
-        SAFENULL(ns), SAFENULL(scope), string, BufferData(out));
+    LogDebug(LOG_MOD_EXPAND, "ExpandScalar( %s : %s . %s )  =>  %s",
+             SAFENULL(ns), SAFENULL(scope), string, BufferData(out));
 
     return out_belongs_to_us ? BufferClose(out) : BufferGet(out);
 }

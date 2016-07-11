@@ -344,6 +344,12 @@ void switch_symlink_hook();
  */
 int safe_open(const char *pathname, int flags, ...)
 {
+    if (flags & O_TRUNC)
+    {
+        /* Undefined behaviour otherwise, according to the standard. */
+        assert((flags & O_RDWR) || (flags & O_WRONLY));
+    }
+
     if (!pathname)
     {
         errno = EINVAL;
@@ -378,21 +384,10 @@ int safe_open(const char *pathname, int flags, ...)
     strcpy(path, pathname);
     int currentfd;
     const char *first_dir;
-    char *next_component;
     bool trunc = false;
-    int orig_flags = flags;
+    const int orig_flags = flags;
+    char *next_component = path;
 
-    if (flags & O_TRUNC)
-    {
-        trunc = true;
-        /* We need to check after we have opened the file whether we opened the
-         * right one. But if we truncate it, the damage is already done, we have
-         * destroyed the contents. So save that flag and apply the truncation
-         * afterwards instead. */
-        flags &= ~O_TRUNC;
-    }
-
-    next_component = path;
     if (*next_component == '/')
     {
         first_dir = "/";
@@ -413,6 +408,7 @@ int safe_open(const char *pathname, int flags, ...)
         return -1;
     }
 
+    size_t final_size = (size_t) -1;
     while (next_component)
     {
         char *component = next_component;
@@ -440,8 +436,21 @@ int safe_open(const char *pathname, int flags, ...)
         // circumstances, if we are unlucky; it does not mean that someone is up to something bad.
         // So retry it a few times before giving up.
         int attempts = 3;
+        trunc = false;
         while (true)
         {
+            if ((  (flags & O_RDWR) || (flags & O_WRONLY))
+                && (flags & O_TRUNC))
+            {
+                trunc = true;
+                /* We need to check after we have opened the file whether we
+                 * opened the right one. But if we truncate it, the damage is
+                 * already done, we have destroyed the contents, and that file
+                 * might have been a symlink to /etc/shadow! So save that flag
+                 * and apply the truncation afterwards instead. */
+                flags &= ~O_TRUNC;
+            }
+
             if (restore_slash)
             {
                 *restore_slash = '\0';
@@ -458,15 +467,30 @@ int safe_open(const char *pathname, int flags, ...)
                 return -1;
             }
 
+            /*
+             * This testing entry point is about the following real-world
+             * scenario: There can be an attacker that at this point
+             * overwrites the existing file or writes a file, invalidating
+             * basically the previous fstatat().
+             *
+             * - We make sure that can't happen if the file did not exist, by
+             *   creating with O_EXCL.
+             * - We make sure that can't happen if the file existed, by
+             *   comparing with fstat() result after the open().
+             *
+             */
             TEST_SYMLINK_SWITCH_POINT
 
-            if (!next_component)
+            if (!next_component)                          /* last component */
             {
-                // Last component.
                 if (stat_before_result < 0)
                 {
                     // Doesn't exist. Make *sure* we create it.
+                    assert(flags & O_CREAT);
                     flags |= O_EXCL;
+
+                    /* No need to ftruncate() the file at the end. */
+                    trunc = false;
                 }
                 else
                 {
@@ -522,6 +546,8 @@ int safe_open(const char *pathname, int flags, ...)
                 currentfd = new_currentfd;
             }
 
+            /* If file did exist, we fstat() again and compare with previous. */
+
             if (stat_before_result == 0)
             {
                 if (fstat(currentfd, &stat_after) < 0)
@@ -537,6 +563,8 @@ int safe_open(const char *pathname, int flags, ...)
                     errno = ENOLINK;
                     return -1;
                 }
+
+                final_size = (size_t) stat_after.st_size;
             }
 
             // If we got here, we've been successful, so don't try again.
@@ -544,12 +572,24 @@ int safe_open(const char *pathname, int flags, ...)
         }
     }
 
+    /* Truncate if O_CREAT and the file preexisted. */
     if (trunc)
     {
-        if (ftruncate(currentfd, 0) < 0)
+        /* Do not truncate if the size is already zero, some
+         * filesystems don't support ftruncate() with offset>=size. */
+        assert(final_size != (size_t) -1);
+
+        if (final_size != 0)
         {
-            close(currentfd);
-            return -1;
+            int tr_ret = ftruncate(currentfd, 0);
+            if (tr_ret < 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "safe_open: unexpected failure (ftruncate: %s)",
+                    GetErrorStr());
+                close(currentfd);
+                return -1;
+            }
         }
     }
 
@@ -1150,7 +1190,7 @@ bool FileSparseCopy(int sd, const char *src_name,
  * If the tail of the file was a hole (and hence lseek(2)ed on destination
  * instead of being written), do a ftruncate(2) here to ensure the whole file
  * is written to the disc. But ftruncate() fails with EPERM on non-native
- * Linux filesystems (e.g. vfat, vboxfs) when the count is greater than the
+ * Linux filesystems (e.g. vfat, vboxfs) when the count is >= than the
  * size of the file. So we write() one byte and then ftruncate() it back.
  *
  * No need for this function to return anything, since the filedescriptor is

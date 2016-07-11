@@ -688,6 +688,137 @@ static void test_safe_open_empty(void)
     return_to_test_dir();
 }
 
+/* ***********  HELPERS ********************************************* */
+
+static intmax_t GetFileSize(const char *filename)
+{
+    struct stat statbuf;
+    int st_ret = lstat(filename, &statbuf);
+    assert_int_not_equal(st_ret, -1);
+    return (intmax_t) statbuf.st_size;
+}
+static void assert_file_not_exists(const char *filename)
+{
+    int acc_ret = access(filename, F_OK);
+    assert_int_equal(acc_ret, -1);
+    assert_int_equal(errno, ENOENT);
+}
+static void create_test_file(bool empty)
+{
+    unlink(TEST_FILE);
+
+    int fd = open(TEST_FILE, O_WRONLY|O_CREAT, 0644);
+    assert_int_not_equal(fd, -1);
+
+    if (!empty)
+    {
+        ssize_t w_ret = write(fd, TEST_STRING, strlen(TEST_STRING));
+        assert_int_equal(w_ret, strlen(TEST_STRING));
+    }
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), empty ? 0 : strlen(TEST_STRING));
+}
+
+/* ****************************************************************** */
+
+static void test_safe_open_TRUNC_existing_nonempty(void)
+{
+    setup_tempfiles();
+    create_test_file(false);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_TRUNC_existing_empty(void)
+{
+    setup_tempfiles();
+    create_test_file(true);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_TRUNC_nonexisting(void)
+{
+    setup_tempfiles();
+    unlink(TEST_FILE);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_equal(fd, -1);
+    assert_int_equal(errno, ENOENT);
+
+    assert_file_not_exists(TEST_FILE);
+
+    return_to_test_dir();
+}
+static void test_safe_open_CREAT_TRUNC_existing_nonempty(void)
+{
+    setup_tempfiles();
+    create_test_file(false);
+
+    /* TEST: O_CREAT | O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_CREAT_TRUNC_existing_empty(void)
+{
+    setup_tempfiles();
+    create_test_file(true);
+
+    /* TEST: O_CREAT | O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_CREAT_TRUNC_nonexisting(void)
+{
+    setup_tempfiles();
+    unlink(TEST_FILE);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+
 static void test_safe_fopen(void)
 {
     setup_tempfiles();
@@ -1385,6 +1516,13 @@ int main(int argc, char **argv)
             unit_test(test_safe_open_ending_slashes),
             unit_test(test_safe_open_null),
             unit_test(test_safe_open_empty),
+
+            unit_test(test_safe_open_TRUNC_existing_nonempty),
+            unit_test(test_safe_open_TRUNC_existing_empty),
+            unit_test(test_safe_open_TRUNC_nonexisting),
+            unit_test(test_safe_open_CREAT_TRUNC_existing_nonempty),
+            unit_test(test_safe_open_CREAT_TRUNC_existing_empty),
+            unit_test(test_safe_open_CREAT_TRUNC_nonexisting),
 
             unit_test(test_safe_fopen),
 

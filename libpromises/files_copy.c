@@ -56,7 +56,8 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
         goto end;
     }
 
-    /* Unlink to avoid link attacks, TODO race condition. */
+    /* unlink() + safe_open(O_CREAT|O_EXCL) to avoid
+       symlink attacks and races. */
     unlink(destination);
 
     int dd = safe_open(destination,

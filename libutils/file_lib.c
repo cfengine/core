@@ -485,8 +485,9 @@ int safe_open(const char *pathname, int flags, ...)
             {
                 if (stat_before_result < 0)
                 {
-                    // Doesn't exist. Make *sure* we create it.
                     assert(flags & O_CREAT);
+
+                    // Doesn't exist. Make sure *we* create it.
                     flags |= O_EXCL;
 
                     /* No need to ftruncate() the file at the end. */
@@ -500,6 +501,7 @@ int safe_open(const char *pathname, int flags, ...)
                         errno = EEXIST;
                         return -1;
                     }
+
                     // Already exists. Make sure we *don't* create it.
                     flags &= ~O_CREAT;
                 }
@@ -510,8 +512,8 @@ int safe_open(const char *pathname, int flags, ...)
                 int filefd = openat(currentfd, component, flags, mode);
                 if (filefd < 0)
                 {
-                    if ((stat_before_result < 0 && !(orig_flags & O_EXCL) && errno == EEXIST)
-                        || (stat_before_result >= 0 && orig_flags & O_CREAT && errno == ENOENT))
+                    if ((stat_before_result < 0  && !(orig_flags & O_EXCL)  && errno == EEXIST) ||
+                        (stat_before_result >= 0 &&  (orig_flags & O_CREAT) && errno == ENOENT))
                     {
                         if (--attempts >= 0)
                         {
@@ -555,7 +557,8 @@ int safe_open(const char *pathname, int flags, ...)
                     close(currentfd);
                     return -1;
                 }
-                if (stat_before.st_uid != stat_after.st_uid || stat_before.st_gid != stat_after.st_gid)
+                if (stat_before.st_uid != stat_after.st_uid ||
+                    stat_before.st_gid != stat_after.st_gid)
                 {
                     close(currentfd);
                     // Return ENOLINK to signal that the link cannot be followed

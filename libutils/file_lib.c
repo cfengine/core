@@ -439,8 +439,9 @@ int safe_open(const char *pathname, int flags, ...)
         trunc = false;
         while (true)
         {
-            if ((  (flags & O_RDWR) || (flags & O_WRONLY))
-                && (flags & O_TRUNC))
+
+            if ((  (orig_flags & O_RDWR) || (orig_flags & O_WRONLY))
+                && (orig_flags & O_TRUNC))
             {
                 trunc = true;
                 /* We need to check after we have opened the file whether we

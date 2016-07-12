@@ -1,4 +1,15 @@
 {
+  "c_keys": [
+    "s",
+    "f",
+    "k"
+  ],
+  "c_keys_f": [
+    "f1"
+  ],
+  "c_keys_s": [
+    "s1"
+  ],
   "fields": [
     "dirs",
     "fullname",
@@ -7,6 +18,10 @@
   "inline_fields": [
     "foo",
     "bar"
+  ],
+  "inline_function": [
+    "a",
+    "c"
   ],
   "inline_numfields": [
     "0",

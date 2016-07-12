@@ -15,8 +15,9 @@ my %options = (
                plain => 0,
                color => {
                          info => 'green',
-                         heading => 'red',
+                         heading => 'bold red',
                          body => 'yellow',
+                         error => 'red',
                         },
               );
 
@@ -88,9 +89,16 @@ sub wrap_color
     return color($c) . $text . color("reset");
 }
 
+sub emit_msg
+{
+    my ( $color, $msg ) = @_;
+    print wrap_color( $color,
+                      "$msg\n");
+}
+
 sub wanted
 {
-    open my $f, '<', $_;
+    open (my $f, '<', $_ ) || emit_msg('error', "Error reading $_") && return;
     my $found = 0;
 
     while (<$f>)

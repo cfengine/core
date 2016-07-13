@@ -1177,7 +1177,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
                 pass = true;
             }
 
-            if (pass)
+            if (pass != NULL)
             {
                 JsonElement *data = NULL;
                 bool allocated = false;
@@ -1279,6 +1279,11 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, ARG_UNUSED const P
 
 static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    if (!finalargs)
+    {
+        FatalError(ctx, "Function '%s' requires at least one argument", fp->name);
+    }
+
     Rlist *tags = NULL;
     StringSet *tagset = NULL;
 
@@ -1305,13 +1310,32 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    char* element;
+    char *key = NULL;
+    if (finalargs->next != NULL)
+    {
+        Buffer *keybuf = BufferNew();
+        BufferPrintf(keybuf, "%s=", RlistScalarValue(finalargs->next));
+        key = BufferClose(keybuf);
+    }
+
+    char *element;
     StringSetIterator it = StringSetIteratorInit(tagset);
     while ((element = SetIteratorNext(&it)))
     {
-        RlistAppendScalar(&tags, element);
+        if (key != NULL)
+        {
+            if (StringStartsWith(element, key))
+            {
+                RlistAppendScalar(&tags, element+strlen(key));
+            }
+        }
+        else
+        {
+            RlistAppendScalar(&tags, element);
+        }
     }
 
+    free(key);
     return (FnCallResult) { FNCALL_SUCCESS, { tags, RVAL_TYPE_LIST } };
 }
 
@@ -8842,8 +8866,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("format", CF_DATA_TYPE_STRING, FORMAT_ARGS, &FnCallFormat, "Applies a list of string values in arg2,arg3... to a string format in arg1 with sprintf() rules",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("getclassmetatags", CF_DATA_TYPE_STRING_LIST, GETCLASSMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a class's meta tags into an slist",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getclassmetatags", CF_DATA_TYPE_STRING_LIST, GETCLASSMETATAGS_ARGS, &FnCallGetMetaTags, "Collect the class arg1's meta tags into an slist, optionally collecting only tag key arg2",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getenv", CF_DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv, "Return the environment variable named arg1, truncated at arg2 characters",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getfields", CF_DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields, "Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4",
@@ -8860,8 +8884,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values in the list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a variable's meta tags into an slist",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect the variable arg1's meta tags into an slist, optionally collecting only tag key arg2",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("grep", CF_DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("groupexists", CF_DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists, "True if group or numerical id exists on this host",

@@ -1,0 +1,31 @@
+{
+  "tags1": [
+    "source=promise",
+    "mytag1"
+  ],
+  "tags2": [
+    "source=promise"
+  ],
+  "tags3": [
+    "source=promise",
+    "mytag3"
+  ],
+  "tags4": [
+    "source=promise"
+  ],
+  "tags5": [
+    "source=promise",
+    "mytag5",
+    "mytag51"
+  ],
+  "tags8": [
+    "1",
+    "2"
+  ],
+  "tags9": [],
+  "tagsa": [
+    "1",
+    "2"
+  ],
+  "tagsb": []
+}

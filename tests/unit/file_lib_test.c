@@ -688,6 +688,205 @@ static void test_safe_open_empty(void)
     return_to_test_dir();
 }
 
+/* ***********  HELPERS ********************************************* */
+
+static size_t GetFileSize(const char *filename)
+{
+    struct stat statbuf;
+    int st_ret = lstat(filename, &statbuf);
+    assert_int_not_equal(st_ret, -1);
+    return (size_t) statbuf.st_size;
+}
+static void assert_file_not_exists(const char *filename)
+{
+    int acc_ret = access(filename, F_OK);
+    assert_int_equal(acc_ret, -1);
+    assert_int_equal(errno, ENOENT);
+}
+static void create_test_file(bool empty)
+{
+    unlink(TEST_FILE);
+
+    int fd = open(TEST_FILE, O_WRONLY|O_CREAT, 0644);
+    assert_int_not_equal(fd, -1);
+
+    if (!empty)
+    {
+        ssize_t w_ret = write(fd, TEST_STRING, strlen(TEST_STRING));
+        assert_int_equal(w_ret, strlen(TEST_STRING));
+    }
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE),
+                     empty ? 0 : strlen(TEST_STRING));
+}
+
+/* ****************************************************************** */
+
+/* Make sure that opening a file with O_TRUNC always truncates it, even if
+ * opening is tried several times (there is a loop in the code that resets the
+ * "trunc" flag on retry, and this test simulates retrying by changing the
+ * file in the middle of the operation). */
+static void test_safe_open_TRUNC_safe_switched_symlink(void)
+{
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 3;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //switch_symlink_hook();
+
+    int fd = safe_open(TEMP_DIR "/" TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    size_t link_target_size =
+        GetFileSize(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE);
+
+    /* TRUNCATION SHOULD HAVE HAPPENED. */
+    assert_int_equal(link_target_size, 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_TRUNC_unsafe_switched_symlink(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    TEST_SYMLINK_COUNTDOWN = 3;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //switch_symlink_hook();
+
+    /* Since this test runs as root, we simulate an attack where the user
+     * overwrites the root-owned file with a symlink. The symlink target must
+     * *not* be truncated. */
+
+    /* 1. file is owned by root */
+    chown(TEMP_DIR "/" TEST_FILE, 0, 0);
+
+    /* 2. TEST, but with a user-owned symlink being injected
+     *in place of the file. */
+    int fd = safe_open(TEMP_DIR "/" TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_equal(fd, -1);
+
+    size_t link_target_size =
+        GetFileSize(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE);
+
+    /* TRUNCATION MUST NOT HAPPEN. */
+    assert_int_not_equal(link_target_size, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_open_TRUNC_existing_nonempty(void)
+{
+    setup_tempfiles();
+    create_test_file(false);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_TRUNC_existing_empty(void)
+{
+    setup_tempfiles();
+    create_test_file(true);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_TRUNC_nonexisting(void)
+{
+    setup_tempfiles();
+    unlink(TEST_FILE);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_TRUNC);
+    assert_int_equal(fd, -1);
+    assert_int_equal(errno, ENOENT);
+
+    assert_file_not_exists(TEST_FILE);
+
+    return_to_test_dir();
+}
+static void test_safe_open_CREAT_TRUNC_existing_nonempty(void)
+{
+    setup_tempfiles();
+    create_test_file(false);
+
+    /* TEST: O_CREAT | O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_CREAT_TRUNC_existing_empty(void)
+{
+    setup_tempfiles();
+    create_test_file(true);
+
+    /* TEST: O_CREAT | O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+static void test_safe_open_CREAT_TRUNC_nonexisting(void)
+{
+    setup_tempfiles();
+    unlink(TEST_FILE);
+
+    /* TEST: O_TRUNC */
+    int fd = safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC);
+    assert_int_not_equal(fd, -1);
+
+    int cl_ret = close(fd);
+    assert_int_not_equal(cl_ret, -1);
+
+    assert_int_equal(GetFileSize(TEST_FILE), 0);
+
+    return_to_test_dir();
+}
+
 static void test_safe_fopen(void)
 {
     setup_tempfiles();
@@ -1385,6 +1584,15 @@ int main(int argc, char **argv)
             unit_test(test_safe_open_ending_slashes),
             unit_test(test_safe_open_null),
             unit_test(test_safe_open_empty),
+
+            unit_test(test_safe_open_TRUNC_safe_switched_symlink),
+            unit_test(test_safe_open_TRUNC_unsafe_switched_symlink),
+            unit_test(test_safe_open_TRUNC_existing_nonempty),
+            unit_test(test_safe_open_TRUNC_existing_empty),
+            unit_test(test_safe_open_TRUNC_nonexisting),
+            unit_test(test_safe_open_CREAT_TRUNC_existing_nonempty),
+            unit_test(test_safe_open_CREAT_TRUNC_existing_empty),
+            unit_test(test_safe_open_CREAT_TRUNC_nonexisting),
 
             unit_test(test_safe_fopen),
 

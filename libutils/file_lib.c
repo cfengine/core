@@ -29,6 +29,7 @@
 #include <alloc.h>
 #include <libgen.h>
 #include <logging.h>
+#include <string_lib.h>                                         /* memcchr */
 
 #define SYMLINK_MAX_DEPTH 32
 
@@ -108,9 +109,9 @@ Writer *FileReadFromFd(int fd, size_t max_size, bool *truncated)
     }
 }
 
-int FullWrite(int desc, const char *ptr, size_t len)
+ssize_t FullWrite(int desc, const char *ptr, size_t len)
 {
-    int total_written = 0;
+    ssize_t total_written = 0;
 
     while (len > 0)
     {
@@ -134,13 +135,13 @@ int FullWrite(int desc, const char *ptr, size_t len)
     return total_written;
 }
 
-int FullRead(int fd, char *ptr, size_t len)
+ssize_t FullRead(int fd, char *ptr, size_t len)
 {
-    int total_read = 0;
+    ssize_t total_read = 0;
 
     while (len > 0)
     {
-        int bytes_read = read(fd, ptr, len);
+        ssize_t bytes_read = read(fd, ptr, len);
 
         if (bytes_read < 0)
         {
@@ -343,6 +344,12 @@ void switch_symlink_hook();
  */
 int safe_open(const char *pathname, int flags, ...)
 {
+    if (flags & O_TRUNC)
+    {
+        /* Undefined behaviour otherwise, according to the standard. */
+        assert((flags & O_RDWR) || (flags & O_WRONLY));
+    }
+
     if (!pathname)
     {
         errno = EINVAL;
@@ -377,21 +384,10 @@ int safe_open(const char *pathname, int flags, ...)
     strcpy(path, pathname);
     int currentfd;
     const char *first_dir;
-    char *next_component;
     bool trunc = false;
-    int orig_flags = flags;
+    const int orig_flags = flags;
+    char *next_component = path;
 
-    if (flags & O_TRUNC)
-    {
-        trunc = true;
-        /* We need to check after we have opened the file whether we opened the
-         * right one. But if we truncate it, the damage is already done, we have
-         * destroyed the contents. So save that flag and apply the truncation
-         * afterwards instead. */
-        flags &= ~O_TRUNC;
-    }
-
-    next_component = path;
     if (*next_component == '/')
     {
         first_dir = "/";
@@ -412,6 +408,7 @@ int safe_open(const char *pathname, int flags, ...)
         return -1;
     }
 
+    size_t final_size = (size_t) -1;
     while (next_component)
     {
         char *component = next_component;
@@ -439,8 +436,22 @@ int safe_open(const char *pathname, int flags, ...)
         // circumstances, if we are unlucky; it does not mean that someone is up to something bad.
         // So retry it a few times before giving up.
         int attempts = 3;
+        trunc = false;
         while (true)
         {
+
+            if ((  (orig_flags & O_RDWR) || (orig_flags & O_WRONLY))
+                && (orig_flags & O_TRUNC))
+            {
+                trunc = true;
+                /* We need to check after we have opened the file whether we
+                 * opened the right one. But if we truncate it, the damage is
+                 * already done, we have destroyed the contents, and that file
+                 * might have been a symlink to /etc/shadow! So save that flag
+                 * and apply the truncation afterwards instead. */
+                flags &= ~O_TRUNC;
+            }
+
             if (restore_slash)
             {
                 *restore_slash = '\0';
@@ -457,15 +468,31 @@ int safe_open(const char *pathname, int flags, ...)
                 return -1;
             }
 
+            /*
+             * This testing entry point is about the following real-world
+             * scenario: There can be an attacker that at this point
+             * overwrites the existing file or writes a file, invalidating
+             * basically the previous fstatat().
+             *
+             * - We make sure that can't happen if the file did not exist, by
+             *   creating with O_EXCL.
+             * - We make sure that can't happen if the file existed, by
+             *   comparing with fstat() result after the open().
+             *
+             */
             TEST_SYMLINK_SWITCH_POINT
 
-            if (!next_component)
+            if (!next_component)                          /* last component */
             {
-                // Last component.
                 if (stat_before_result < 0)
                 {
-                    // Doesn't exist. Make *sure* we create it.
+                    assert(flags & O_CREAT);
+
+                    // Doesn't exist. Make sure *we* create it.
                     flags |= O_EXCL;
+
+                    /* No need to ftruncate() the file at the end. */
+                    trunc = false;
                 }
                 else
                 {
@@ -475,6 +502,7 @@ int safe_open(const char *pathname, int flags, ...)
                         errno = EEXIST;
                         return -1;
                     }
+
                     // Already exists. Make sure we *don't* create it.
                     flags &= ~O_CREAT;
                 }
@@ -485,8 +513,8 @@ int safe_open(const char *pathname, int flags, ...)
                 int filefd = openat(currentfd, component, flags, mode);
                 if (filefd < 0)
                 {
-                    if ((stat_before_result < 0 && !(orig_flags & O_EXCL) && errno == EEXIST)
-                        || (stat_before_result >= 0 && orig_flags & O_CREAT && errno == ENOENT))
+                    if ((stat_before_result < 0  && !(orig_flags & O_EXCL)  && errno == EEXIST) ||
+                        (stat_before_result >= 0 &&  (orig_flags & O_CREAT) && errno == ENOENT))
                     {
                         if (--attempts >= 0)
                         {
@@ -521,6 +549,8 @@ int safe_open(const char *pathname, int flags, ...)
                 currentfd = new_currentfd;
             }
 
+            /* If file did exist, we fstat() again and compare with previous. */
+
             if (stat_before_result == 0)
             {
                 if (fstat(currentfd, &stat_after) < 0)
@@ -528,7 +558,8 @@ int safe_open(const char *pathname, int flags, ...)
                     close(currentfd);
                     return -1;
                 }
-                if (stat_before.st_uid != stat_after.st_uid || stat_before.st_gid != stat_after.st_gid)
+                if (stat_before.st_uid != stat_after.st_uid ||
+                    stat_before.st_gid != stat_after.st_gid)
                 {
                     close(currentfd);
                     // Return ENOLINK to signal that the link cannot be followed
@@ -536,6 +567,8 @@ int safe_open(const char *pathname, int flags, ...)
                     errno = ENOLINK;
                     return -1;
                 }
+
+                final_size = (size_t) stat_after.st_size;
             }
 
             // If we got here, we've been successful, so don't try again.
@@ -543,12 +576,24 @@ int safe_open(const char *pathname, int flags, ...)
         }
     }
 
+    /* Truncate if O_CREAT and the file preexisted. */
     if (trunc)
     {
-        if (ftruncate(currentfd, 0) < 0)
+        /* Do not truncate if the size is already zero, some
+         * filesystems don't support ftruncate() with offset>=size. */
+        assert(final_size != (size_t) -1);
+
+        if (final_size != 0)
         {
-            close(currentfd);
-            return -1;
+            int tr_ret = ftruncate(currentfd, 0);
+            if (tr_ret < 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "safe_open: unexpected failure (ftruncate: %s)",
+                    GetErrorStr());
+                close(currentfd);
+                return -1;
+            }
         }
     }
 
@@ -1041,4 +1086,171 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 bool DeleteDirectoryTree(const char *path)
 {
     return DeleteDirectoryTreeInternal(path, path);
+}
+
+/**
+ * @NOTE Better use FileSparseCopy() if you are copying file to file
+ *       (that one callse this function).
+ *
+ * @NOTE Always use FileSparseWrite() to close the file descriptor, to avoid
+ *       losing data.
+ */
+bool FileSparseWrite(int fd, const void *buf, size_t count,
+                     bool *wrote_hole)
+{
+    bool all_zeroes = (memcchr(buf, '\0', count) == NULL);
+
+    if (all_zeroes)                                     /* write a hole */
+    {
+        off_t seek_ret = lseek(fd, count, SEEK_CUR);
+        if (seek_ret == (off_t) -1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to write a hole in sparse file (lseek: %s)",
+                GetErrorStr());
+            return false;
+        }
+    }
+    else                                              /* write normally */
+    {
+        ssize_t w_ret = FullWrite(fd, buf, count);
+        if (w_ret < 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to write to destination file (write: %s)",
+                GetErrorStr());
+            return false;
+        }
+    }
+
+    *wrote_hole = all_zeroes;
+    return true;
+}
+
+/**
+ * Copy data jumping over areas filled by '\0' greater than blk_size, so
+ * files automatically become sparse if possible.
+ *
+ * File descriptors should already be open, the filenames #source and
+ * #destination are only for logging purposes.
+ *
+ * @NOTE Always use FileSparseClose() to close the file descriptor, to avoid
+ *       losing data.
+ */
+bool FileSparseCopy(int sd, const char *src_name,
+                    int dd, const char *dst_name,
+                    size_t blk_size,
+                    size_t *total_bytes_written,
+                    bool   *last_write_was_a_hole)
+{
+    assert(total_bytes_written   != NULL);
+    assert(last_write_was_a_hole != NULL);
+
+    const size_t buf_size  = blk_size;
+    void *buf              = xmalloc(buf_size);
+
+    size_t n_read_total = 0;
+    bool   retval       = false;
+
+    *last_write_was_a_hole = false;
+
+    while (true)
+    {
+        ssize_t n_read = FullRead(sd, buf, buf_size);
+        if (n_read < 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Unable to read source file while copying '%s' to '%s'"
+                " (read: %s)", src_name, dst_name, GetErrorStr());
+            break;
+        }
+        else if (n_read == 0)                                   /* EOF */
+        {
+            retval = true;
+            break;
+        }
+
+        bool ret = FileSparseWrite(dd, buf, n_read,
+                                   last_write_was_a_hole);
+        if (!ret)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to copy '%s' to '%s'",
+                src_name, dst_name);
+            break;
+        }
+
+        n_read_total += n_read;
+    }
+
+    free(buf);
+    *total_bytes_written   = n_read_total;
+    return retval;
+}
+
+/**
+ * Always close a written sparse file using this function, else truncation
+ * might occur if the last part was a hole.
+ *
+ * If the tail of the file was a hole (and hence lseek(2)ed on destination
+ * instead of being written), do a ftruncate(2) here to ensure the whole file
+ * is written to the disc. But ftruncate() fails with EPERM on non-native
+ * Linux filesystems (e.g. vfat, vboxfs) when the count is >= than the
+ * size of the file. So we write() one byte and then ftruncate() it back.
+ *
+ * No need for this function to return anything, since the filedescriptor is
+ * (attempted to) closed in either success or failure.
+ *
+ * TODO? instead of needing the #total_bytes_written parameter, we could
+ * figure the offset after writing the one byte using lseek(fd,0,SEEK_CUR) and
+ * truncate -1 from that offset. It's probably not worth adding an extra
+ * system call for simplifying code.
+ */
+bool FileSparseClose(int fd, const char *filename,
+                     bool do_sync,
+                     size_t total_bytes_written,
+                     bool last_write_was_hole)
+{
+    if (last_write_was_hole)
+    {
+        ssize_t ret1 = FullWrite(fd, "", 1);
+        if (ret1 == -1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to close sparse file '%s' (write: %s)",
+                filename, GetErrorStr());
+            close(fd);
+            return false;
+        }
+
+        int ret2 = ftruncate(fd, total_bytes_written);
+        if (ret2 == -1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to close sparse file '%s' (ftruncate: %s)",
+                filename, GetErrorStr());
+            close(fd);
+            return false;
+        }
+    }
+
+    if (do_sync)
+    {
+        if (fsync(fd) != 0)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Could not sync to disk file '%s' (fsync: %s)",
+                filename, GetErrorStr());
+        }
+    }
+
+    int ret3 = close(fd);
+    if (ret3 == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to close file '%s' (close: %s)",
+            filename, GetErrorStr());
+        return false;
+    }
+
+    return true;
 }

@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+
 #include <platform.h>
 
 #include <files_copy.h>
@@ -35,137 +36,61 @@
 #include <string_lib.h>
 #include <acl_tools.h>
 
-/*
- * Copy data jumping over areas filled by '\0', so files automatically become sparse if possible.
- */
-static bool CopyData(const char *source, int sd, const char *destination, int dd, char *buf, size_t buf_size)
-{
-    off_t n_read_total = 0;
-
-    while (true)
-    {
-        ssize_t n_read = read(sd, buf, buf_size);
-
-        if (n_read == -1)
-        {
-            if (errno == EINTR)
-            {
-                continue;
-            }
-
-            Log(LOG_LEVEL_ERR, "Unable to read source file while copying '%s' to '%s'. (read: %s)", source, destination, GetErrorStr());
-            return false;
-        }
-
-        if (n_read == 0)
-        {
-            /*
-             * As the tail of file may contain of bytes '\0' (and hence
-             * lseek(2)ed on destination instead of being written), do a
-             * ftruncate(2) here to ensure the whole file is written to the
-             * disc.
-             */
-            if (ftruncate(dd, n_read_total) < 0)
-            {
-                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' to '%s'. (ftruncate: %s)", source, destination, GetErrorStr());
-                return false;
-            }
-
-            return true;
-        }
-
-        n_read_total += n_read;
-
-        /* Copy/seek */
-
-        void *cur = buf;
-        void *end = buf + n_read;
-
-        while (cur < end)
-        {
-            void *skip_span = MemSpan(cur, 0, end - cur);
-            if (skip_span > cur)
-            {
-                if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
-                {
-                    Log(LOG_LEVEL_ERR, "Failed while copying '%s' to '%s' (no space?). (lseek: %s)", source, destination, GetErrorStr());
-                    return false;
-                }
-
-                cur = skip_span;
-            }
-
-
-            void *copy_span = MemSpanInverse(cur, 0, end - cur);
-            if (copy_span > cur)
-            {
-                if (FullWrite(dd, cur, copy_span - cur) < 0)
-                {
-                    Log(LOG_LEVEL_ERR, "Failed while copying '%s' to '%s' (no space?). (write: %s)", source, destination, GetErrorStr());
-                    return false;
-                }
-
-                cur = copy_span;
-            }
-        }
-    }
-}
 
 bool CopyRegularFileDisk(const char *source, const char *destination)
 {
-    int sd;
-    int dd = 0;
-    char *buf = 0;
-    bool result = false;
-
-    if ((sd = safe_open(source, O_RDONLY | O_BINARY)) == -1)
+    int sd = safe_open(source, O_RDONLY | O_BINARY);
+    if (sd == -1)
     {
-        Log(LOG_LEVEL_INFO, "Can't copy '%s'. (open: %s)", source, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Can't copy '%s' (open: %s)",
+            source, GetErrorStr());
         goto end;
     }
-    /*
-     * We need to stat the file in order to get the right source permissions.
-     */
-    struct stat statbuf;
 
+    /* We need to stat the file to get the right source permissions. */
+    struct stat statbuf;
     if (stat(source, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Can't copy '%s'. (stat: %s)", source, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Can't copy '%s' (stat: %s)",
+            source, GetErrorStr());
         goto end;
     }
 
-    unlink(destination);                /* To avoid link attacks */
+    /* unlink() + safe_open(O_CREAT|O_EXCL) to avoid
+       symlink attacks and races. */
+    unlink(destination);
 
-    if ((dd = safe_open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, statbuf.st_mode)) == -1)
+    int dd = safe_open(destination,
+                       O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY,
+                       statbuf.st_mode);
+    if (dd == -1)
     {
-        Log(LOG_LEVEL_INFO, "Unable to open destination file while copying '%s' to '%s'. (open: %s)", source, destination, GetErrorStr());
+        Log(LOG_LEVEL_INFO,
+            "Unable to open destination file while copying '%s' to '%s'"
+            " (open: %s)", source, destination, GetErrorStr());
         goto end;
     }
 
-    int buf_size = ST_BLKSIZE(dstat);
-    buf = xmalloc(buf_size);
+    size_t total_bytes_written;
+    bool   last_write_was_hole;
+    bool ok1 = FileSparseCopy(sd, source, dd, destination,
+                              ST_BLKSIZE(statbuf),
+                              &total_bytes_written, &last_write_was_hole);
+    bool do_sync = false;
+    bool ok2 = FileSparseClose(dd, destination, do_sync,
+                               total_bytes_written, last_write_was_hole);
 
-    result = CopyData(source, sd, destination, dd, buf, buf_size);
-    if (!result)
-    {
-        goto end;
-    }
-
-end:
-    if (buf)
-    {
-        free(buf);
-    }
-    if (dd)
-    {
-        close(dd);
-    }
-    if (!result)
+    if (!ok1 || !ok2)
     {
         unlink(destination);
     }
-    close(sd);
-    return result;
+
+  end:
+    if (sd != -1)
+    {
+        close(sd);
+    }
+    return ok1 && ok2;
 }
 
 bool CopyFilePermissionsDisk(const char *source, const char *destination)

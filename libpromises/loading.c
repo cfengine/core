@@ -51,7 +51,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
+Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
 {
     struct stat statbuf;
 

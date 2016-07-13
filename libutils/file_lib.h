@@ -47,11 +47,11 @@ bool FileCanOpen(const char *path, const char *modes);
 
 /* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
    Return LEN upon success, write's (negative) error code otherwise.  */
-int FullWrite(int desc, const char *ptr, size_t len);
+ssize_t FullWrite(int desc, const char *ptr, size_t len);
 
 /* Read up to LEN bytes (or EOF) to PTR from descriptor DESC, retrying if interrupted.
    Return amount of bytes read upon success, -1 otherwise */
-int FullRead(int desc, char *ptr, size_t len);
+ssize_t FullRead(int desc, char *ptr, size_t len);
 
 int IsDirReal(const char *path);
 
@@ -112,5 +112,18 @@ bool SetCloseOnExec(int fd, bool enable);
  * @return true if directory was deleted successfully, false if one or more files were not deleted.
  */
 bool DeleteDirectoryTree(const char *path);
+
+bool FileSparseWrite(int fd, const void *buf, size_t count,
+                     bool *wrote_hole);
+bool FileSparseCopy(int sd, const char *src_name,
+                    int dd, const char *dst_name,
+                    size_t blk_size,
+                    size_t *total_bytes_written,
+                    bool   *last_write_was_a_hole);
+bool FileSparseClose(int fd, const char *filename,
+                     bool do_sync,
+                     size_t total_bytes_written,
+                     bool last_write_was_hole);
+
 
 #endif

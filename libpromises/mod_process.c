@@ -52,7 +52,11 @@ static const ConstraintSyntax process_select_constraints[] =
     ConstraintSyntaxNewIntRange("rsize", CF_VALRANGE, "Range of integers matching the resident memory size of a process, in kilobytes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("status", "", "Regular expression matching the status field of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("stime_range", CF_TIMERANGE, "Range of integers matching the start time of a process", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewIntRange("ttime_range", CF_TIMERANGE, "Range of integers matching the total elapsed time of a process", SYNTAX_STATUS_NORMAL),
+    /* CF_VALRANGE insted of CF_TIMERANGE since ttime_range counts cumulative
+     * time, not absolute time since the epoch. See cumulative() that has
+     * maximum number of years 1000, that can easily surpass CF_TIMERANGE in
+     * seconds. */
+    ConstraintSyntaxNewIntRange("ttime_range", CF_VALRANGE, "Range of integers matching the total elapsed time of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("tty", "", "Regular expression matching the tty field of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("threads", CF_VALRANGE, "Range of integers matching the threads (NLWP) field of a process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntRange("vsize", CF_VALRANGE, "Range of integers matching the virtual memory size of a process, in kilobytes", SYNTAX_STATUS_NORMAL),

@@ -13,25 +13,10 @@ body common control
 
 #######################################################
 
-bundle agent init
+bundle common init
 {
-  vars:
-      "results" slist => { 1, "single string parameter",
-                           "hardclass OK", "bundle class OK",
-                           "5 parameters OK"
-      };
-
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_defaults => empty,
-      edit_line => init_insert;
-}
-
-bundle edit_line init_insert
-{
-  insert_lines:
-      "$(init.results)";
+  classes:
+      "myclass" expression => "any";
 }
 
 #######################################################
@@ -39,32 +24,25 @@ bundle edit_line init_insert
 bundle agent test
 {
   classes:
-      "myclass" expression => "any";
       "myclass2" expression => "any";
-      "secondpass" expression => "any";
   vars:
-    secondpass::
-      "vals" slist => {
-                        ifelse(1),
-                        ifelse("single string parameter"),
-                        ifelse("cfengine", "hardclass OK", "hardclass broken"),
-                        ifelse("myclass.myclass2", "bundle class OK", "bundle class broken"),
-                        ifelse("this is not true", "5 parameters broken",
-                               "this is also not true", "5 parameters broken 2",
-                               "5 parameters OK"),
-      };
+      "one" string => ifelse(1);
+      "single" string => ifelse("single string parameter");
+      "hardclass" string => ifelse("cfengine", "hardclass OK", "hardclass broken");
+      "empty" string => ifelse("cfengine", "", "hardclass broken");
+      "empty2" string => ifelse("!cfengine", "", "hardclass expected");
+      "five" string => ifelse("this is not true", "5 parameters broken",
+             "this is also not true", "5 parameters broken 2",
+             "5 parameters OK");
 
-  files:
-      "$(G.testfile).actual"
-      create => "true",
-      edit_defaults => empty,
-      edit_line => test_insert;
-}
+    any::
+      "mystring" string => ifelse("any","pass","!any","$(foo)","bar");
 
-bundle edit_line test_insert
-{
-  insert_lines:
-      "$(test.vals)";
+    myclass2::
+      "expression" string => ifelse("myclass.myclass2", "bundle class OK", "bundle class broken");
+
+  reports:
+      "ifelse result: $(mystring)";
 }
 
 #######################################################
@@ -72,7 +50,7 @@ bundle edit_line test_insert
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

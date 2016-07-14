@@ -1098,7 +1098,7 @@ typedef struct
     char *chdir;
     char *chroot;
     int preview;
-    int nooutput;
+    bool nooutput;
     int timeout;
 } ExecContain;
 

@@ -384,7 +384,8 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
             {
                 ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, module_tags, &persistence);
             }
-            else if ((!a.contain.nooutput) && (!EmptyString(line)))
+
+            if (!a.contain.nooutput && !EmptyString(line))
             {
                 lineOutLen = strlen(comm) + strlen(line) + 12;
 

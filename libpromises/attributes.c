@@ -364,7 +364,14 @@ ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp)
     e.owner = PromiseGetConstraintAsUid(ctx, "exec_owner", pp);
     e.group = PromiseGetConstraintAsGid(ctx, "exec_group", pp);
     e.preview = PromiseGetConstraintAsBoolean(ctx, "preview", pp);
-    e.nooutput = PromiseGetConstraintAsBoolean(ctx, "no_output", pp);
+    if (PromiseBundleOrBodyConstraintExists(ctx, "no_output", pp))
+    {
+        e.nooutput = PromiseGetConstraintAsBoolean(ctx, "no_output", pp);
+    }
+    else
+    {
+        e.nooutput = PromiseGetConstraintAsBoolean(ctx, "module", pp);
+    }
     e.timeout = PromiseGetConstraintAsInt(ctx, "exec_timeout", pp);
     e.chroot = PromiseGetConstraintAsRval(pp, "chroot", RVAL_TYPE_SCALAR);
     e.chdir = PromiseGetConstraintAsRval(pp, "chdir", RVAL_TYPE_SCALAR);

@@ -1,0 +1,33 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent test
+{
+  commands:
+      "$(G.cat) $(G.testdir)/module.output.txt"
+        module => "true",
+        contain => test_contain("false");
+
+      "$(G.cat) $(G.testdir)/module.no_output.txt"
+        module => "true",
+        contain => test_contain("true");
+
+      "$(G.cat) $(G.testdir)/module.default.txt"
+        module => "true";
+
+      "$(G.cat) $(G.testdir)/no_module.output.txt"
+        contain => test_contain("false");
+
+      "$(G.cat) $(G.testdir)/no_module.no_output.txt"
+        contain => test_contain("true");
+
+      "$(G.cat) $(G.testdir)/no_module.default.txt";
+}
+
+body contain test_contain(no_output)
+{
+    no_output => "$(no_output)";
+}

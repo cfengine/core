@@ -1,0 +1,36 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent init
+{
+  methods:
+      "init" usebundle => file_make("$(G.testdir)/module.output.txt",
+                                    "=myvar=good_output_1");
+
+      "init" usebundle => file_make("$(G.testdir)/module.no_output.txt",
+                                    "=myvar=bad_output");
+
+      "init" usebundle => file_make("$(G.testdir)/module.default.txt",
+                                    "=myvar=bad_output");
+
+      "init" usebundle => file_make("$(G.testdir)/no_module.output.txt",
+                                    "=myvar=good_output_2");
+
+      "init" usebundle => file_make("$(G.testdir)/no_module.no_output.txt",
+                                    "=myvar=bad_output");
+
+      "init" usebundle => file_make("$(G.testdir)/no_module.default.txt",
+                                    "=myvar=good_output_3");
+}
+
+bundle agent check
+{
+  methods:
+      "check" usebundle => dcs_passif_output(".*good_output_1.*good_output_2.*good_output_3.*",
+                                             ".*bad_output.*",
+                                             "$(sys.cf_agent) -D AUTO -Kf $(this.promise_filename).sub",
+                                             $(this.promise_filename));
+}

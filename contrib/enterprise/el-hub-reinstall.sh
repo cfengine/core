@@ -28,8 +28,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+if [[ $# -eq 0 ]]; then
+    echo "Usage: $0 /path/to/cfengine-nova-hub.rpm"
+    exit 1
+fi
 PKG=$1
 
+
+CURRENT_VERSION=$(/var/cfengine/bin/cf-promises -V | awk '/Enterprise/ { print $3 }')
 BACKUP=/tmp/CFEngine_Enterprise_${CURRENT_VERSION}.tar.gz
 EXTRACTION_ROOT=/
 

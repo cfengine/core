@@ -1725,7 +1725,7 @@ static JsonParseError JsonParseAsString(const char **data, char **str_out)
                  * \u{hex digits} - we have no way to represent the
                  * character they denote.  So keep them verbatim, for
                  * want of any other way to handle them; but warn. */
-                Log(LOG_LEVEL_WARNING,
+                Log(LOG_LEVEL_DEBUG,
                     "Keeping verbatim unrecognised JSON escape '%.6s'",
                     *data - 1); /* i.e. include the \ in the displayed escape */
                 WriterWriteChar(writer, '\\');
@@ -2375,4 +2375,3 @@ JsonElement* StringCaptureData(pcre *pattern, const char* regex, const char* dat
     JsonObjectRemoveKey(json, "0");
     return json;
 }
-

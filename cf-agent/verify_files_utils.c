@@ -3596,13 +3596,13 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
 
     if (attr.perms.groups->next == NULL && attr.perms.groups->gid == CF_UNKNOWN_GROUP)  // Only one non.existent item
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown group");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "None of the promised groups for '%s' exist -- see INFO logs for more", file );
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     }
 
     if (attr.perms.owners->next == NULL && attr.perms.owners->uid == CF_UNKNOWN_OWNER)  // Only one non.existent item
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown user");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "None of the promised owners for '%s' exist -- see INFO logs for more", file);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     }
 

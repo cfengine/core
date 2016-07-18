@@ -29,7 +29,7 @@ dnl # Run ./autogen.sh to build configure script
 dnl #
 dnl ##########################################################################
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.63)
 
 AC_INIT
 AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
@@ -41,18 +41,18 @@ dnl AM_INIT_AUTOMAKE.
 dnl
 AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
 
-m4_define([revision], m4_esyscmd_s([git rev-list -1 --abbrev-commit HEAD]))
+m4_define([revision], m4_normalize(m4_esyscmd([git rev-list -1 --abbrev-commit HEAD])))
 
-m4_define([cfversion_from_env], m4_esyscmd_s([echo $EXPLICIT_VERSION]))
-m4_ifblank(cfversion_from_env, [
-    m4_define([cfversion_from_detect], m4_esyscmd_s([misc/determine-version.py]))
+m4_define([cfversion_from_env], m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
+m4_ifval(cfversion_from_env, [
+    m4_define([cfversion], cfversion_from_env)
+], [
+    m4_define([cfversion_from_detect], m4_normalize(m4_esyscmd([misc/determine-version.py])))
     m4_if(m4_sysval, 0, [], [
         m4_fatal([Could not determine CFEngine version. Please set EXPLICIT_VERSION in the environment or make sure all git tags are up to date.])
     ])
     m4_define([cfversion], cfversion_from_detect[]a1.revision)
     m4_undefine([cfversion_from_detect])
-], [
-    m4_define([cfversion], cfversion_from_env)
 ])
 
 _AM_SET_OPTION([tar-ustar])

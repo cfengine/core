@@ -1525,30 +1525,23 @@ const PromiseType *BundleGetPromiseType(const Bundle *bp, const char *name)
 
 /****************************************************************************/
 
-static char *EscapeQuotes(const char *s, char *out, int outSz)
+static Buffer *EscapeQuotes(const char *raw, Buffer *out)
 {
-    char *spt;
     const char *spf;
-    int i = 0;
 
-    memset(out, 0, outSz);
-
-    for (spf = s, spt = out; (i < outSz - 2) && (*spf != '\0'); spf++, spt++, i++)
+    for (spf = raw; *spf != '\0'; spf++)
     {
         switch (*spf)
         {
         case '\'':
         case '\"':
-            *spt++ = '\\';
-            *spt = *spf;
-            i += 3;
+            BufferAppendChar(out, '\\');
             break;
 
         default:
-            *spt = *spf;
-            i++;
             break;
         }
+        BufferAppendChar(out, *spf);
     }
 
     return out;
@@ -1565,9 +1558,9 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
 
     case RVAL_TYPE_SCALAR:
     {
-        char buffer[CF_BUFSIZE];
+        Buffer *buffer = BufferNewWithCapacity(strlen(rval.item));
 
-        EscapeQuotes((const char *) rval.item, buffer, sizeof(buffer));
+        EscapeQuotes((const char *) rval.item, buffer);
 
         JsonElement *json_attribute = JsonObjectCreate(10);
 
@@ -1579,7 +1572,9 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
         {
             JsonObjectAppendString(json_attribute, "type", "string");
         }
-        JsonObjectAppendString(json_attribute, "value", buffer);
+        JsonObjectAppendString(json_attribute, "value", BufferData(buffer));
+
+        BufferDestroy(buffer);
 
         return json_attribute;
     }

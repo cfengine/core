@@ -1,0 +1,29 @@
+# Test that cf-promises doesn't fail if ppkeys are missing
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+classes:
+ "validated_ok" expression => returnszero("$(sys.cf_promises) -p json -f $(this.promise_filename).sub | $(G.grep) endflag", "useshell"),
+                     scope => "namespace";
+}
+
+bundle agent check
+{
+
+  reports:
+    validated_ok::
+      "$(this.promise_filename) Pass";
+    !validated_ok::
+      "$(this.promise_filename) FAIL";
+}

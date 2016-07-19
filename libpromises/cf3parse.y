@@ -29,6 +29,7 @@
 #include "parser.h"
 #include "parser_state.h"
 
+#include "logging.h"
 #include "fncall.h"
 #include "rlist.h"
 #include "item_lib.h"
@@ -36,7 +37,7 @@
 #include "mod_files.h"
 #include "string_lib.h"
 #include "logic_expressions.h"
-#include <json-yaml.h>
+#include "json-yaml.h"
 
 // FIX: remove
 #include "syntax.h"
@@ -64,7 +65,7 @@ static size_t CURRENT_PROMISER_LINE = 0;
 
 #define YYMALLOC xmalloc
 
-#define ParserDebug if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG) printf
+#define ParserDebug(...) LogDebug(LOG_MOD_PARSER, __VA_ARGS__)
 
 %}
 

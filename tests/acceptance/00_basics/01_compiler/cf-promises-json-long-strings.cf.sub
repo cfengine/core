@@ -1,0 +1,47 @@
+bundle agent main
+{
+vars:
+  "content" string => 
+    "flag
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+This is a file template containing variables to expan
+endflag";
+
+}

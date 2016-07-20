@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = SelectAndLoadPolicy(config, ctx, ALWAYS_VALIDATE, true);
-    
+
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
@@ -295,7 +295,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int c;
-    
+
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT, GetTTYInteractive());
     bool option_trust_server = false;
 ;
@@ -1047,7 +1047,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 continue;
             }
-            
+
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SELECT_END_MATCH_EOF].lval) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "SET select_end_match_eof %s", value);
@@ -1881,7 +1881,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance = 0.0;
-        
+
     delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
@@ -1900,7 +1900,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
         Log(LOG_LEVEL_VERBOSE, "A: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
         Log(LOG_LEVEL_VERBOSE, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
         Log(LOG_LEVEL_VERBOSE, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
-    
+
         bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
         Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",

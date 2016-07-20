@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
-    
+
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
@@ -172,7 +172,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     extern char *optarg;
     int c;
     char ld_library_path[CF_BUFSIZE];
-    
+
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR, GetTTYInteractive());
 
 

@@ -21,12 +21,7 @@
 # included file COSL.txt.
 
 #+begin_src cfengine3
-body common control
-{
-      bundlesequence => { "randomint_example" };
-}
-
-bundle agent randomint_example
+bundle agent main
 {
   vars:
       "low"    string => "4";

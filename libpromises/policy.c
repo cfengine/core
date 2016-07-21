@@ -2915,8 +2915,7 @@ Constraint *PromiseGetConstraintWithType(const Promise *pp, const char *lval, Rv
 }
 
 /**
- * @brief Get the first constraint from the promise. Checks that constraint does
- * not have any classes attached to it.
+ * @brief Get the first constraint from the promise
  *
  * Kill this function with fire once we have separated promise constraints and body constraints.
  *

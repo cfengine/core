@@ -1,0 +1,8 @@
+Pass by name: hosts=/etc/hosts
+Pass by name: auto_master=/etc/auto.master
+Pass by namespace:name: hosts=/etc/hosts
+Pass by namespace:name: auto_master=/etc/auto.master
+Pass by variable name: hosts=/etc/hosts
+Pass by variable:name: auto_master=/etc/auto.master
+Pass by variable name including namespace: hosts=/etc/hosts
+Pass by variable name including namespace: auto_master=/etc/auto.master

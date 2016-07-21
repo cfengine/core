@@ -3685,7 +3685,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
             }
             else if (!DONTDO)
             {
-                if (!uidmatch)
+                if (!uidmatch && uid != CF_SAME_OWNER)
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
                          "Owner of '%s' was %ju, setting to %ju",
@@ -3693,7 +3693,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 }
 
-                if (!gidmatch)
+                if (!gidmatch && gid != CF_SAME_GROUP)
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Group of '%s' was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
                          (uintmax_t)gid);

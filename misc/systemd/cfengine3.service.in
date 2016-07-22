@@ -1,6 +1,8 @@
 [Unit]
 Description=CFEngine 3 daemons
+Documentation=https://docs.cfengine.com
 After=syslog.target
+After=network.target
 Wants=cfengine3-web.service
 After=cfengine3-web.service
 

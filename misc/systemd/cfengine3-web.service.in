@@ -1,6 +1,7 @@
 [Unit]
 Description=CFEngine 3 Mission Portal daemons
 After=syslog.target
+After=network.target
 PartOf=cfengine3.service
 ConditionPathExists=@workdir@/bin/cfengine3-nova-hub-init-d.sh
 

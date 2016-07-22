@@ -1,5 +1,6 @@
 [Unit]
 Description=CFEngine 3 Mission Portal daemons
+Documentation=https://docs.cfengine.com
 After=syslog.target
 After=network.target
 PartOf=cfengine3.service

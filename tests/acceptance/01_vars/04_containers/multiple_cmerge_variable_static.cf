@@ -1,0 +1,139 @@
+# This policy is synthetic, but represents a real life pattern where data is
+# published from multiple bundles and then merged before use.
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "autorun" slist => bundlesmatching(".*", "autorun");
+
+  files:
+      "$(G.testfile)"
+        edit_line => empty;
+
+  methods:
+
+      "$(autorun)"
+
+        comment => "Bundles tagged with 'autorun' expect to be automatically
+                    actuated. Some of the policies publish data by tagging it
+                    for other policies to use later in the bundlesequence. This
+                    allows for the implementation of automatic cleanup when a
+                    service stops publishing specifc data.";
+}
+
+bundle agent test
+{
+  meta:
+
+      "description"
+        string => "Test that this real life pattern for loading data based on a
+                   bundle name and merging it for later use works.";
+
+  methods:
+
+      "cron"
+        comment => "Manage /etc/crontab using published cron rules";
+}
+
+bundle agent check
+{
+
+  methods:
+      "" usebundle => dcs_check_diff( $(G.testfile), "$(this.promise_filename).expected", $(this.promise_filename) );
+}
+
+bundle agent cron
+{
+  vars:
+      "published_rules"
+        slist => variablesmatching( ".*", "cron_rules" ),
+        comment => "We find all variables tagged with cron_rules so that we can
+                    merge them together and manage /etc/crontab from a single
+                    policy. Allowing other polices to easily subscribe to the
+                    service.";
+      "sorted"
+        slist => sort( published_rules, "lex" );
+
+      # It is possible to perform some data validation at this point. filtering
+      # or restricting what areas of policy are allowed to subscribe to the
+      # cron implementation.
+
+  methods:
+      # We use the cmerge bundle from the standard library to merge all of the
+      # data containers into a single container that will be used to render
+      # /etc/crontab
+      "" usebundle => cmerge("merged_cron_rules", @(sorted) );
+      "" usebundle => cron_entries( @(cmerge.merged_cron_rules) );
+}
+
+bundle agent cron_entries(rules)
+{
+  vars:
+      "s" string => format("%S", rules );
+
+  reports:
+      "$(this.bundle): '$(s)'"
+        report_to_file => "$(G.testfile)";
+}
+
+bundle edit_line empty
+{
+  delete_lines:
+      ".*";
+}
+bundle agent policy_1
+# This represents a bundle for some service. It might be some custom in house
+# written application. They publish information about some cron jobs they wish
+# to have run. That data originates in this case from a plain text file.
+{
+  meta:
+      "tags" slist => { "autorun" };
+
+  vars:
+      "cron"
+        data => readjson( "$(this.promise_filename).policy_1.cron.json"),
+        meta => { "cron_rules" };
+
+       "s" string => format( "%S", cron );
+
+  reports:
+      "$(this.bundle): cron = '$(s)'"
+        report_to_file => "$(G.testfile)";
+
+}
+
+bundle agent policy_2
+# This represents a bundle for some service. It might be some custom in house
+# written application. They publish information about some cron jobs they wish
+# to have run. That data originates in this case from a plain text file.
+{
+  meta:
+      "tags" slist => { "autorun" };
+
+  vars:
+      # # For example: Cron entries
+       "cron"
+
+         data => readjson( "$(this.promise_filename).policy_2.cron.json"),
+         meta => { "cron_rules" };
+
+       "s" string => format( "%S", cron );
+
+  reports:
+      "$(this.bundle): cron = '$(s)'"
+        report_to_file => "$(G.testfile)";
+}
+
+bundle agent cmerge(name, varlist)
+{
+  vars:
+      "$(name)" data => parsejson('[]'),            policy => "free";
+      "$(name)" data => mergedata($(name), $(varlist)), policy => "free"; # iterates!
+      "$(name)_str" string => format("%S", $(name)),    policy => "free";
+}

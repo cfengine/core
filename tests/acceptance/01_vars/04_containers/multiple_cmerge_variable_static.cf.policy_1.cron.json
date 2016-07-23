@@ -1,0 +1,10 @@
+[
+      {
+          "hour": "1",
+          "minute": "1",
+          "day": "1",
+          "month": "1",
+          "comment": "a backup job that runs",
+          "command": "/bin/echo 'back me up!'"
+      }
+]

@@ -23,8 +23,9 @@ bundle agent _group_state(group, state)
 bundle agent init
 {
   vars:
-    "absent_groups" slist => { "absentgroup1", "absentgroup2" };
-    "present_groups" slist => { "presentgroup1", "presentgroup2" };
+    # Group lengths up to 8 chars because of AIX and HP-UX limitations
+    "absent_groups" slist => { "abs_gr_1", "abs_gr_2" };
+    "present_groups" slist => { "pr_gr_1", "pr_gr_2" };
 
     "groups" slist => {
                        @(absent_groups),
@@ -61,7 +62,7 @@ bundle agent check
 {
   vars:
     "observed_gid" string => filestat($(G.testfile), gid);
-    "desired_gid" int => getgid("presentgroup1");
+    "desired_gid" int => getgid("pr_gr_1");
 
   reports:
     "$(this.promise_filename) Pass"

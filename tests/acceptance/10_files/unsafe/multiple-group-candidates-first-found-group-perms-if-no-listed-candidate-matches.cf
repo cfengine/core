@@ -7,17 +7,29 @@ body common control
 
 bundle agent _group_state(group, state)
 {
+  meta:
+    # no groupadd on windows
+    "test_skip_unsupported" string => "windows";
+
+  vars:
+  !aix::
+    "groupadd" string => "/usr/sbin/groupadd";
+    "groupdel" string => "/usr/sbin/groupdel";
+  aix::
+    "groupadd" string => "/usr/bin/mkgroup";
+    "groupdel" string => "/usr/sbin/rmgroup";
+
   classes:
    "_have_group" expression => groupexists( $(group) );
    "_want_$(state)" expression => "any";
 
   commands:
     !_have_group._want_present::
-    "/usr/sbin/groupadd"
+    "$(groupadd)"
       args => "$(group)";
 
     _have_group._want_absent::
-    "/usr/sbin/groupdel"
+    "$(groupdel)"
       args => "$(group)";
 }
 bundle agent init

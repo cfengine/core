@@ -3580,93 +3580,97 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
     struct group *gp;
     UidList *ulp;
     GidList *glp;
-    short uidmatch = false, gidmatch = false;
-    uid_t uid = CF_SAME_OWNER;
-    gid_t gid = CF_SAME_GROUP;
 
+    /* The groups to change ownership to, using lchown(uid,gid). */
+    uid_t uid = CF_UNKNOWN_OWNER;                       /* just init values */
+    gid_t gid = CF_UNKNOWN_GROUP;
+
+    /* SKIP if file is already owned by anyone of the promised owners. */
     for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
     {
         if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)        /* "same" matches anything */
         {
-            uid = ulp->uid;
-            uidmatch = true;
+            uid = CF_SAME_OWNER;      /* chown(-1) doesn't change ownership */
             break;
         }
     }
 
-    if (attr.perms.groups->next == NULL && attr.perms.groups->gid == CF_UNKNOWN_GROUP)  // Only one non.existent item
+    if (uid != CF_SAME_OWNER)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown group");
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        /* Change ownership to the first known user in the promised list. */
+        for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
+        {
+            if (ulp->uid != CF_UNKNOWN_OWNER)
+            {
+                uid = ulp->uid;
+                break;
+            }
+        }
+        if (ulp == NULL)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+                 "None of the promised owners for '%s' exist -- see INFO logs for more",
+                 file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            uid = CF_SAME_OWNER;      /* chown(-1) doesn't change ownership */
+        }
     }
+    assert(uid != CF_UNKNOWN_OWNER);
 
-    if (attr.perms.owners->next == NULL && attr.perms.owners->uid == CF_UNKNOWN_OWNER)  // Only one non.existent item
-    {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown user");
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-    }
-
+    /* SKIP if file is already group owned by anyone of the promised groups. */
     for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
     {
-        if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)        /* "same" matches anything */
+        if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)
         {
-            gid = glp->gid;
-            gidmatch = true;
+            gid = CF_SAME_GROUP;      /* chown(-1) doesn't change ownership */
             break;
         }
     }
 
-    if (uidmatch && gidmatch)
+    /* Change group ownership to the first known group in the promised list. */
+    if (gid != CF_SAME_GROUP)
     {
+        for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
+        {
+            if (glp->gid != CF_UNKNOWN_GROUP)
+            {
+                gid = glp->gid;
+                break;
+            }
+        }
+        if (glp == NULL)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+                 "None of the promised groups for '%s' exist -- see INFO logs for more",
+                 file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            gid = CF_SAME_GROUP;      /* chown(-1) doesn't change ownership */
+        }
+    }
+    assert(gid != CF_UNKNOWN_GROUP);
+
+    if (uid == CF_SAME_OWNER &&
+        gid == CF_SAME_GROUP)
+    {
+        /* User and group as promised, skip completely. */
         return false;
     }
     else
     {
-        if (!uidmatch)
-        {
-            for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
-            {
-                if (attr.perms.owners->uid != CF_UNKNOWN_OWNER)
-                {
-                    uid = attr.perms.owners->uid;       /* default is first (not unknown) item in list */
-                    break;
-                }
-            }
-        }
-
-        if (!gidmatch)
-        {
-            for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
-            {
-                if (attr.perms.groups->gid != CF_UNKNOWN_GROUP)
-                {
-                    gid = attr.perms.groups->gid;       /* default is first (not unknown) item in list */
-                    break;
-                }
-            }
-        }
-
         switch (attr.transaction.action)
         {
         case cfa_fix:
 
-            if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
+            if (uid != CF_SAME_OWNER)
             {
-                Log(LOG_LEVEL_VERBOSE, "Touching '%s'", file);
+                Log(LOG_LEVEL_DEBUG, "Change owner to uid '%ju' if possible",
+                    (uintmax_t) uid);
             }
-            else
-            {
-                if (uid != CF_SAME_OWNER)
-                {
-                    Log(LOG_LEVEL_DEBUG, "Change owner to uid '%ju' if possible",
-                        (uintmax_t) uid);
-                }
 
-                if (gid != CF_SAME_GROUP)
-                {
-                    Log(LOG_LEVEL_DEBUG, "Change group to gid '%ju' if possible",
-                        (uintmax_t) gid);
-                }
+            if (gid != CF_SAME_GROUP)
+            {
+                Log(LOG_LEVEL_DEBUG, "Change group to gid '%ju' if possible",
+                    (uintmax_t) gid);
             }
 
             if (!DONTDO && S_ISLNK(sb->st_mode))
@@ -3685,7 +3689,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
             }
             else if (!DONTDO)
             {
-                if (!uidmatch)
+                if (uid != CF_SAME_OWNER)
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
                          "Owner of '%s' was %ju, setting to %ju",
@@ -3693,10 +3697,11 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 }
 
-                if (!gidmatch)
+                if (gid != CF_SAME_GROUP)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Group of '%s' was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
-                         (uintmax_t)gid);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                         "Group of '%s' was %ju, setting to %ju",
+                         file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 }
 

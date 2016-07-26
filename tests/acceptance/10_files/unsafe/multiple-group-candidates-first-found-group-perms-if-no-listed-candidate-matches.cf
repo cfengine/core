@@ -1,0 +1,100 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent _group_state(group, state)
+{
+  meta:
+    # no groupadd on windows
+    "test_skip_unsupported" string => "windows";
+
+  vars:
+  !aix::
+    "groupadd" string => "/usr/sbin/groupadd";
+    "groupdel" string => "/usr/sbin/groupdel";
+  aix::
+    "groupadd" string => "/usr/bin/mkgroup";
+    "groupdel" string => "/usr/sbin/rmgroup";
+
+  classes:
+   "_have_group" expression => groupexists( $(group) );
+   "_want_$(state)" expression => "any";
+
+  commands:
+    !_have_group._want_present::
+    "$(groupadd)"
+      args => "$(group)";
+
+    _have_group._want_absent::
+    "$(groupdel)"
+      args => "$(group)";
+}
+bundle agent init
+{
+  vars:
+    # Group lengths up to 8 chars because of AIX and HP-UX limitations
+    "absent_groups" slist => { "abs_gr_1", "abs_gr_2" };
+    "present_groups" slist => { "pr_gr_1", "pr_gr_2" };
+
+    "groups" slist => {
+                       @(absent_groups),
+                       @(present_groups),
+                      };
+
+  methods:
+    "Ensure Groups Absent"
+      usebundle => _group_state( $(absent_groups), "absent" );
+
+    "Ensure Groups Present"
+      usebundle => _group_state( $(present_groups), "present" );
+
+  files:
+    "$(G.testfile)"
+      create => "true",
+      perms => g("root");
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "When a list of perms owners is provided if the perms do not match
+		 at least one of the owners then the perms are set to the first
+                 present owner.";
+
+  files:
+    "$(G.testfile)"
+      perms => g( @(init.groups) );
+}
+
+bundle agent check
+{
+  vars:
+    "observed_gid" string => filestat($(G.testfile), gid);
+    "desired_gid" int => getgid("pr_gr_1");
+
+  reports:
+    "$(this.promise_filename) Pass"
+      if => strcmp( $(observed_gid), $(desired_gid) );
+
+    "$(this.promise_filename) FAIL"
+      ifvarclass => not( strcmp( $(observed_gid), $(desired_gid) ) );
+
+}
+bundle agent cleanup
+{
+  methods:
+
+    "Ensure Groups Absent"
+      usebundle => _group_state( $(init.groups), "absent" );
+}
+body perms g(g)
+# @brief Set the file's group to the first presnet group
+# @param g A list of candidate groups for the file
+{
+      groups => { "$(g)" };
+}
+

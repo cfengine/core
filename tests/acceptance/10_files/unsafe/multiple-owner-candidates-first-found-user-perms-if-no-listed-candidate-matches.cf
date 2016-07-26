@@ -1,0 +1,72 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    # Username lengths up to 8 chars because of AIX and HP-UX limitations
+    "absent_users" slist => { "abs_us_1", "abs_us_2" };
+    "present_users" slist => { "pr_us_1", "pr_us_2" };
+
+    "users" slist => {
+                       @(absent_users),
+                       @(present_users),
+                      };
+
+  users:
+    "$(absent_users)"
+      policy => "absent";
+
+    "$(present_users)"
+      policy => "present";
+
+  files:
+    "$(G.testfile)"
+      create => "true",
+      perms => o("root");
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "When a list of perms owners is provided if the perms do not match
+		 at least one of the owners then the perms are set to the first
+                 present owner.";
+
+  files:
+    "$(G.testfile)"
+      perms => o( @(init.users) );
+}
+
+bundle agent check
+{
+  vars:
+    "observed_uid" string => filestat($(G.testfile), uid);
+    "desired_uid" int => getuid("pr_us_1");
+
+  reports:
+    "$(this.promise_filename) Pass"
+      if => strcmp( $(observed_uid), $(desired_uid) );
+
+    "$(this.promise_filename) FAIL"
+      ifvarclass => not( strcmp( $(observed_uid), $(desired_uid) ) );
+
+}
+bundle agent cleanup
+{
+  users:
+    "$(init.users)"
+      policy => "absent";
+}
+body perms o(u)
+# @brief Set the file's owner
+# @param u The username of the new owner
+{
+      owners => { "$(u)" };
+}
+

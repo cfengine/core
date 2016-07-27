@@ -562,8 +562,10 @@ cf_rm()
 ##### Source enterprise script, if present #####
 
 if [ -f "$CFENTERPRISE_INITD" ]; then
+    ENTERPRISE_SERVER=1
     CALLED_FROM_INITSCRIPT="1" . "$CFENTERPRISE_INITD"
 else
+    ENTERPRISE_SERVER=0
     alias enterprise_start=true
     alias enterprise_stop=true
     alias enterprise_status=true
@@ -583,6 +585,14 @@ case "$1" in
         enterprise_start
 
         if [ "$CF_ONLY_WEB_SERVICES" = "1" ]; then
+
+            if [ "$ENTERPRISE_SERVER" = "1" ]; then
+                # Enterprise servers automatically run "start" as part of package installation,
+                # at which point they don't have policy in inputs/, because they are not bootstrapped.
+                # This is not an error, like for community or enterprise clients (case below).
+                exit 0
+            fi
+
             # On hosts we do not start any process when there is no
             # policy, so indicate this as an error.
             echo "No policy found in $INPUTDIR/promises.cf, not starting core daemons" >&2

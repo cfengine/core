@@ -1,3 +1,22 @@
+3.9.1:
+	- Change: Log level for keeping verbatim JSON to DEBUG (CFE-2141)
+	- Change (masterfiles): Definition of from_cfexecd for
+	  cf-execd initiated runs (CFE-2386)
+	- Change: Switch processes restart_class logging to verbose
+	- Change: Enable agent component management policy on systemd hosts
+	  (CFE-2429)
+	- Change: Remove executable bit from systemd units (CFE-2436)
+	- Change: Require network before cfengine services (CFE-2435)
+	- Fix 'contain' attribute 'no_output' having no effect when
+	  the 'commands' promise is using 'module => "true"'. (CFE-2412)
+	- Fix: Services starting or stopping unnecessarily (CFE-2421)
+	- Fix occasional segfault when running getindices() on a
+	  variable that has indices of multiple depths (e.g. both "a[x]" and
+	  "a[x][y]"). (CFE-2397)
+	- Fix bug in files promise when multiple owners are promised
+	  but first one doesn't exist, and improve logging . (CFE-2432)
+	- fix: memory leaks
+
 3.9.0:
 	New features/additions:
 	- Classes promise: allow classes without an expression to default to defined.

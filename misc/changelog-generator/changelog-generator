@@ -217,7 +217,7 @@ for sha_entry in ENTRIES:
             if len(jiras) > 0:
                 tracker += " "
         if len(jiras) > 0:
-            tracker += "(JIRA " + ", ".join(sorted(jiras)) + ")"
+            tracker += "(" + ", ".join(sorted(jiras)) + ")"
     for entry in ENTRIES[sha_entry]:
         # Safety check. See if there are still numbers at least four digits long in
         # the output, and if so, warn about it. This may be ticket references that

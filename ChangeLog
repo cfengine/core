@@ -1,3 +1,47 @@
+3.7.4:
+	- Change: set_config_values uses bundle scoped classes
+	- Change: Require network before cfengine services (CFE-2435)
+	- Change: manage_variable_values_ini uses bundle scoped classes
+	- Change (masterfiles): Definition of from_cfexecd for cf-execd
+	  initiated runs (CFE-2386)
+	- Change: Remove executable bit from systemd units (CFE-2436)
+	- Change: set_variable_values uses bundle scoped classes
+	- Change: set_line_based should use bundle scoped classes (CFE-1959)
+	- Change: Switch processes restart_class logging to verbose
+	- Change: Enable agent component management policy on systemd hosts
+	  (CFE-2429)
+	- Change: set_config_values_matching uses bundle scoped classes
+	- Change: set_variable_values_ini uses bundle scoped classes
+	- Change: set_quoted_values uses bundle scoped classes
+	- Fix: cf-upgrade on SUSE
+	- Fix: bug which caused def.json not being able to define
+	  classes based on other hard classes. (CFE-2333)
+	- Fix: Services starting or stopping unnecessarily (CFE-2421)
+	- Fix "No such file or directory" LMDB error on heavily loaded hosts.
+	  (CFE-2300)
+	- Fix intermittent error message of type:
+	  "error: Process table lacks space for last columns: <cmd>" (CFE-2371)
+	- Fix use-after-free in ArrayMap and HashMap (Redmine #7952)
+	- storage: Properly initialize the list of current mounts (CFE-1803)
+	- Fix the lexer which could not handle empty newline(s)
+	  before a ```@endif```.
+	- Be less verbose if a network interface doesn't have a MAC address.
+	  (CFE-1995)
+	- Fix 'contain' attribute 'no_output' having no effect when
+	  the 'commands' promise is using 'module => "true"'. (CFE-2412)
+	- Fix bug in files promise when multiple owners are promised
+	  but first one doesn't exist, and improve logging . (CFE-2432)
+	- Package repositories are no more hit every time package promise
+	  is evaluated on SUSE.
+	- Fix: CFEngine choking on standard services (CFE-2086)
+	- Fix: Work around impaired class definition from augments (CFE-2333)
+	- groupexists() no longer fails to detect a group name
+	  starting with a digit. (CFE-2351)
+	- packagesmatching() and packageupdatesmatching() should work
+	  when new package promise is used. (CFE-2246)
+	- Improve logging when managing setuid/setgid
+	- Fix: memory leaks
+
 3.7.3
 	Behaviour changes:
 	- classesmatching(): order of classes changed

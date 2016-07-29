@@ -204,22 +204,19 @@ PackageActionPolicy PackageActionPolicyFromString(const char *s)
 
 char *Rlist2String(Rlist *list, char *sep)
 {
-    char line[CF_BUFSIZE];
-    Rlist *rp;
+    Writer *writer = StringWriter();
 
-    line[0] = '\0';
-
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        strcat(line, RlistScalarValue(rp));
+        RvalWrite(writer, rp->val);
 
-        if (rp->next)
+        if (rp->next != NULL)
         {
-            strcat(line, sep);
+            WriterWrite(writer, sep);
         }
     }
 
-    return xstrdup(line);
+    return StringWriterClose(writer);
 }
 
 /***************************************************************************/

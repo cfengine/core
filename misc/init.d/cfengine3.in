@@ -451,6 +451,22 @@ cf_status_daemon()
     fi
 }
 
+cf_status_postgres_daemon() {
+     local data_directory="$1"
+     local pidfile="${data_directory}/postmaster.pid"
+     local pids="$(cf_get_matching_pids --ignore-user "postgres")"
+
+     if [ -n "$pids" -a -f $pidfile ]; then
+         pid_from_file=$(sed -n 1p $pidfile)
+         if [ -n "$(echo $pids | egrep -w $pid_from_file)" ]; then
+             echo "postgres is running..."
+             return
+         fi
+     fi
+
+     echo "postgres is not running..."
+ }
+
 cf_start_core_daemons()
 {
     # start cf-execd

@@ -1,0 +1,23 @@
+bundle agent main
+{
+  methods:
+    "test"
+      action => expireafter_ten_sec;
+}
+
+body action expireafter_ten_sec
+{
+  expireafter => "10";
+}
+
+bundle agent test
+{
+  commands:
+    "/bin/sleep 30"
+      handle => "sleep";
+
+  reports:
+    "DID NOT TIMEOUT"
+      depends_on => { "sleep" };
+}
+

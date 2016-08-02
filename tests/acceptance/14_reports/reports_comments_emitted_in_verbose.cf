@@ -1,0 +1,22 @@
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" string => "Test that comments on reports are emitted in verbose output.";
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "" usebundle => dcs_passif_output(".*This is a comment about a report.*", "", "$(sys.cf_agent) -Kvf $(this.promise_filename).sub", $(this.promise_filename));
+}

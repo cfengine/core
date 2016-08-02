@@ -1,0 +1,26 @@
+# Test $(sys.inputdir), $(sys.masterdir), $(sys.libdir), $(sys.bindir), $(sys.failsafe_policy_path), $(sys.update_policy_path), $(sys.local_libdir)
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" string => "Test that comments on classes are emitted in verbose output.";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "CFE-2443" };
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "" usebundle => dcs_passif_output(".*This is a comment about test_class.*", "", "$(sys.cf_agent) -Kvf $(this.promise_filename).sub", $(this.promise_filename));
+}

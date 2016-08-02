@@ -1,0 +1,6 @@
+bundle agent main
+{
+  commands:
+    "/bin/echo 123"
+    action => my_undefined_body("echo_repaired");
+}

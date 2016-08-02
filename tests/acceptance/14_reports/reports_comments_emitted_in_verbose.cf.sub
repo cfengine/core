@@ -1,0 +1,6 @@
+bundle agent main
+{
+  reports:
+    "This is an example report"
+      comment => "This is a comment about a report";
+}

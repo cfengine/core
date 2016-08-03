@@ -1,0 +1,51 @@
+# Example policy showing features of reports type promises
+bundle agent main
+{
+  reports:
+      "It's reccomended that you always guard reports"
+        comment => "Remember by default output from cf-agent when run
+                    from cf-execd will be emailed";
+
+    DEBUG|DEBUG_main::
+      "Run with --define DEBUG or --define DEBUG_main to display this report";
+
+  methods:
+      "Actuate bundle that reports with a return value"
+        usebundle => bundle_with_return_value,
+        useresult => "return_array",
+        comment => "Reports can be used to return data into a parent bundle.
+                    This is useful in some re-usable bundle patterns.";
+
+  reports:
+      "I got '$(return_array[key])' returned from bundle_with_return_value";
+
+      "Reports can be redirected and appended to files"
+        report_to_file => "$(sys.workdir)/report_output.txt",
+        comment => "It's important to note that this will suppress the report
+                   from stdout.";
+
+      "Report content of a file:$(const.n)$(const.n)------------------------"
+        printfile => cat( $(this.promise_filename) );
+}
+
+bundle agent bundle_with_return_value
+{
+  reports:
+      "value from bundle_with_return_value"
+        bundle_return_value_index => "key";
+}
+
+body printfile cat(file)
+{
+      file_to_print   => "$(file)";
+      number_of_lines => "inf";
+}
+
+@if minimum_version(3.8)
+body printfile head(file)
+{
+      inherit_from => "cat";
+      # GNU head defaults to 10
+      number_of_lines => "10";
+}
+@endif

@@ -269,12 +269,12 @@ cat > expected.txt <<EOF
 	- Changelog commit with trailing dot. N53
 	- Changelog title with trailing dot. N54
 	- Changelog with Jira and Redmine ref. N57
-	  (Redmine #12345, #5555) (Jira ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	  (Redmine #12345, #5555) (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
 	- Changelog with Jira and Redmine. N56
-	  (Redmine #12345, #5555) (Jira ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
-	- Changelog with Jira. N55 (Jira ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	  (Redmine #12345, #5555) (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	- Changelog with Jira. N55 (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
 	- Changelog with inline Jira and Redmine ref. N57
-	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	  (Redmine #7777, #7778) (CFE-80, CFE-81)
 	- Changelog with suspicious number in it. N62
 	  1234
 	- Changelog with suspicious number outside of it. N63
@@ -300,14 +300,10 @@ cat > expected.txt <<EOF
 	- Should also be included, but separately and not twice. N32
 	- Should be in changelog though. N29
 	- Should be there N40 (Redmine #123, #1234)
-	- Some inline reference. N58
-	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
-	- Some inline reference. N60
-	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
-	- Some other reference. N59
-	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
-	- Some other reference. N61
-	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	- Some inline reference. N58 (Redmine #7777, #7778) (CFE-80, CFE-81)
+	- Some inline reference. N60 (Redmine #7777, #7778) (CFE-80, CFE-81)
+	- Some other reference. N59 (Redmine #7777, #7778) (CFE-80, CFE-81)
+	- Some other reference. N61 (Redmine #7777, #7778) (CFE-80, CFE-81)
 	- This should be in changelog N8
 	  And this N9
 	- This too. N33

@@ -264,7 +264,6 @@ Changelog: title'
 ################################################################################
 
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt
-cat stderr.txt >> result.txt
 cat > expected.txt <<EOF
 	- As well as this. N34
 	- Changelog commit with trailing dot. N53
@@ -276,6 +275,9 @@ cat > expected.txt <<EOF
 	- Changelog with Jira. N55 (Jira ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
 	- Changelog with inline Jira and Redmine ref. N57
 	  (Redmine #7777, #7778) (Jira CFE-80, CFE-81)
+	- Changelog with suspicious number in it. N62
+	  1234
+	- Changelog with suspicious number outside of it. N63
 	- Complete Fix for changelog N4
 	  Should be included N5
 	- Fix for changelog N1
@@ -311,6 +313,14 @@ cat > expected.txt <<EOF
 	- This too. N33
 EOF
 diff -u expected.txt result.txt
+
+# This line should be there, but no others (note the -v and the inverted error condition).
+if egrep -v '\*\*\* Commit [0-9a-f]{40} had a number 1234 which may be a ticket reference we missed\. Should be manually checked\.' stderr.txt
+then
+    echo 'Unexpected error message in:'
+    cat stderr.txt
+    exit 1
+fi
 
 ################################################################################
 

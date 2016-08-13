@@ -53,8 +53,7 @@ export TAR_OPTIONS
 
 EXTRA_DIST = ChangeLog INSTALL README.md LICENSE
 
-docsdir = $(docdir)
-docs_DATA = README.md ChangeLog
+doc_DATA = README.md ChangeLog
 
 #
 # Some basic clean ups

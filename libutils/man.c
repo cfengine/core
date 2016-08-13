@@ -134,7 +134,7 @@ static void WriteOptions(Writer *out, const struct option options[],
     {
         if (options[i].has_arg)
         {
-            WriterWriteF(out, ".IP \"--%s, -%c\" value\n%s\n", options[i].name, (char) options[i].val, option_hints[i]);
+            WriterWriteF(out, ".IP \"--%s, -%c value\"\n%s\n", options[i].name, (char) options[i].val, option_hints[i]);
         }
         else
         {

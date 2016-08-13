@@ -21,7 +21,7 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-sbin_PROGRAMS = cf-upgrade
+bin_PROGRAMS = cf-upgrade
 
 LIBS=				 # This tool should not link to anything
 AM_LDFLAGS=

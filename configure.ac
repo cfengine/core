@@ -203,7 +203,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     STATEDIR="default"
   fi
 
-  sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
+  bindir='${exec_prefix}/bin'
   projlibdir='${exec_prefix}/lib'
   mandir='${exec_prefix}/share/man'
 ])

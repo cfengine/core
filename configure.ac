@@ -168,13 +168,12 @@ AC_ARG_ENABLE([fhs],
 #
 
 AS_IF([test x"$enable_fhs" = xyes], [
-  projlibdir='${libdir}/cfengine'
-  datadir='${exec_prefix}/share/cfengine'
-  WORKDIR='${localstatedir}/lib/cfengine'
+  projlibdir='${pkglibdir}'
+  WORKDIR='${localstatedir}/lib/${PACKAGE}'
   MASTERDIR='default'
   INPUTDIR='default'
-  LOGDIR='${localstatedir}/lib/cfengine'
-  PIDDIR='${localstatedir}/lib/cfengine'
+  LOGDIR='${localstatedir}/log/${PACKAGE}'
+  PIDDIR='${runstatedir:-${localstatedir}/run}/${PACKAGE}'
   STATEDIR='default'
 ], [
   if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
@@ -198,17 +197,15 @@ AS_IF([test x"$enable_fhs" = xyes], [
       ;;
     esac
   else
-    WORKDIR="${localstatedir}/cfengine"
+    WORKDIR="${localstatedir}/${PACKAGE}"
     MASTERDIR="default"
     INPUTDIR="default"
-    LOGDIR="${localstatedir}/cfengine"
-    PIDDIR="${localstatedir}/cfengine"
+    LOGDIR="${localstatedir}/${PACKAGE}"
+    PIDDIR="${localstatedir}/${PACKAGE}"
     STATEDIR="default"
   fi
 
-  bindir='${exec_prefix}/bin'
-  projlibdir='${exec_prefix}/lib'
-  mandir='${exec_prefix}/share/man'
+  projlibdir='${libdir}'
 ])
 
 AC_SUBST(projlibdir)

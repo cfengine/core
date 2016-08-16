@@ -1,17 +1,13 @@
 [Unit]
-Description=CFEngine 3 daemons
-Documentation=https://docs.cfengine.com
+Description=CFEngine 3 umbrella service
+Documentation=https://docs.cfengine.com/
 After=syslog.target
-After=network.target
-Wants=cfengine3-web.service
-After=cfengine3-web.service
-
-[Service]
-Type=forking
-EnvironmentFile=@OS_ENVIRONMENT_PATH@/cfengine3
-Environment="CF_NO_WEB_SERVICES=1"
-ExecStart=/etc/init.d/cfengine3 start
-ExecStop=/etc/init.d/cfengine3 stop
 
 [Install]
 WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+ExecReload=/bin/true
+RemainAfterExit=yes

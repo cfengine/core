@@ -921,7 +921,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 
 AC_CHECK_FUNCS(sendto)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
-                                     #include <sys/socket.h>]], 
+                                     #include <sys/socket.h>]],
                                    [[extern ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)]])],
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 1, [Whether sendto returns ssize_t])],
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 0, [Whether sendto does not returns ssize_t])])
@@ -931,7 +931,7 @@ CF3_CHECK_PROPER_FUNC([ctime],
   [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
   [#define ctime rpl_ctime])
 CF3_REPLACE_PROPER_FUNC([ctime])
- 
+
 dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
@@ -1131,7 +1131,7 @@ AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
 # include <sys/param.h>
 #endif
 ])
-   
+
 dnl ######################################################################
 dnl Requirements for GetUptimeMinutes() to set $(sys.uptime)
 dnl ######################################################################
@@ -1155,7 +1155,7 @@ AC_CHECK_HEADERS(utmpx.h)
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
 dnl #######################################################################
- 
+
 rtry=none
 AC_MSG_CHECKING(for either struct rtentry or struct ortentry)
 AC_EGREP_HEADER(rtentry, net/route.h, rtry=rtentry)
@@ -1421,7 +1421,15 @@ AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
         fi
         AC_SUBST([SYSTEMD_SERVICE_PATH])
         AC_CONFIG_FILES([misc/systemd/cfengine3.service])
-        AC_CONFIG_FILES([misc/systemd/cfengine3-web.service])
+        AC_CONFIG_FILES([misc/systemd/cf-apache.service])
+        AC_CONFIG_FILES([misc/systemd/cf-consumer.service])
+        AC_CONFIG_FILES([misc/systemd/cf-execd.service])
+        AC_CONFIG_FILES([misc/systemd/cf-hub.service])
+        AC_CONFIG_FILES([misc/systemd/cf-monitord.service])
+        AC_CONFIG_FILES([misc/systemd/cf-postgres.service])
+        AC_CONFIG_FILES([misc/systemd/cf-redis-server.service])
+        AC_CONFIG_FILES([misc/systemd/cf-runalerts.service])
+        AC_CONFIG_FILES([misc/systemd/cf-serverd.service])
     fi
 ])
 AM_CONDITIONAL([WITH_SYSTEMD_SERVICE], [test -n "$SYSTEMD_SERVICE_PATH"])
@@ -1478,7 +1486,7 @@ if test x"$GCC" = "xyes"; then
             AC_MSG_RESULT(no)
             ;;
     esac
-else 
+else
     AC_MSG_RESULT(no)
 fi
 

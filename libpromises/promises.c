@@ -628,8 +628,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
         if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s',"
-                " for if/ifvarclass is not in scope", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
+                " because 'if'/'ifvarclass' is not defined", pp->promiser);
 
             *excluded = true;
             return pcopy;
@@ -643,7 +643,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         if (unless && IsVarClassDefined(ctx, unless, pcopy))
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s',"
-                " for unless is in scope", pp->promiser);
+                " because 'unless' is defined", pp->promiser);
 
             *excluded = true;
             return pcopy;

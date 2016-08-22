@@ -609,7 +609,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     {
         if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
         {
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_DEBUG,
                 "Skipping evaluation of classes promise as class '%s' is already set",
                 CanonifyName(pcopy->promiser));
 

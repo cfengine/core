@@ -312,7 +312,7 @@ static void MangleVarRefString(char *ref_str, size_t len)
 
     if (mangled_scope || ns != NULL)
     {
-        LogDebug(LOG_MOD_ITERNGN,
+        LogDebug(LOG_MOD_ITERATIONS,
                  "Mangled namespaced/scoped variable for iterating over it: %.*s",
                  (int) len, ref_str);
     }
@@ -541,7 +541,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
                                          WheelCompareUnexpanded)  !=  NULL);
         if (same_var_found)
         {
-            LogDebug(LOG_MOD_ITERNGN,
+            LogDebug(LOG_MOD_ITERATIONS,
                 "Skipped adding iteration wheel for already existing variable: %s",
                 new_wheel->varname_unexp);
             WheelDestroy(new_wheel);
@@ -554,7 +554,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
              * now APPEND the wheel for this variable. */
             SeqAppend(iterctx->wheels, new_wheel);
 
-            LogDebug(LOG_MOD_ITERNGN,
+            LogDebug(LOG_MOD_ITERATIONS,
                 "Added iteration wheel %zu for variable: %s",
                 SeqLength(iterctx->wheels) - 1,
                 new_wheel->varname_unexp);
@@ -579,7 +579,7 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
                             const EvalContext *evalctx,
                             char *s)
 {
-    LogDebug(LOG_MOD_ITERNGN, "PromiseIteratorPrepare(\"%s\")", s);
+    LogDebug(LOG_MOD_ITERATIONS, "PromiseIteratorPrepare(\"%s\")", s);
     char *var_start = s + FindDollarParen(s);
 
     while (*var_start != '\0')
@@ -967,7 +967,7 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
          * result yet, it just loops over until it finds a meaningful one. */
         done = ! IteratorHasEmptyWheel(iterctx);
 
-        LogDebug(LOG_MOD_ITERNGN, "PromiseIteratorNext():"
+        LogDebug(LOG_MOD_ITERATIONS, "PromiseIteratorNext():"
                  " count=%zu wheels_num=%zu current_wheel=%zd",
                  iterctx->count, wheels_num, (ssize_t) i);
 

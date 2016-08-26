@@ -57,7 +57,7 @@ enum LogModule
     LOG_MOD_NONE = 0,                         /* DEFAULT DEBUG LOGGING */
     LOG_MOD_EVALCTX,                          /* evaluator */
     LOG_MOD_EXPAND,                           /* variables expansion */
-    LOG_MOD_ITERNGN,                          /* evaluator iteration engine */
+    LOG_MOD_ITERATIONS,                       /* evaluator iteration engine */
     LOG_MOD_PARSER,                           /* yacc */
     LOG_MOD_VARTABLE,                         /* variables tables */
     LOG_MOD_VARS,                             /* variables promise */

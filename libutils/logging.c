@@ -319,7 +319,7 @@ static const char *log_modules[LOG_MOD_MAX] =
     "",
     "evalctx",
     "expand",
-    "iterngn",
+    "iterations",
     "parser",
     "vartable",
     "vars",

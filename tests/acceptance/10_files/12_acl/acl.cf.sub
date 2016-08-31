@@ -118,8 +118,8 @@ bundle agent init
                          "add_perm_user",
                          "rm_perm",
                          "overwrite_add_remove",
-                         #"default",
-                         #"default_specify",
+                         "default",
+                         "default_specify",
                        } ;
 
     windows::

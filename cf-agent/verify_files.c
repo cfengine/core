@@ -694,7 +694,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         {
             strcpy(edit_bundle_name, (char *) vp);
             args = NULL;
-        }             
+        }
         else
         {
             goto exit;
@@ -737,7 +737,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         {
             goto exit;
         }
-        
+
         Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_xml bundle '%s'", edit_bundle_name);
 
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_xml");
@@ -752,7 +752,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         }
     }
 
-    
+
     if (a.edit_template)
     {
         Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",

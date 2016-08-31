@@ -2138,10 +2138,6 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
     }
 #endif
 
-    if (attr.acl.acl_entries)
-    {
-        result = PromiseResultUpdate(result, VerifyACL(ctx, file, attr, pp));
-    }
 
 #ifndef __MINGW32__
     result = PromiseResultUpdate(result, VerifySetUidGid(ctx, file, dstat, dstat->st_mode, pp, attr));
@@ -2249,6 +2245,11 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
     }
 # endif
 #endif
+
+    if (attr.acl.acl_entries)
+    {
+        result = PromiseResultUpdate(result, VerifyACL(ctx, file, attr, pp));
+    }
 
     if (attr.touch)
     {

@@ -408,7 +408,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 /* Phase 1 - */
 
-    if ((exists && ((a.haverename) || (a.haveperms) || (a.havechange) || (a.transformer))) ||
+    if ((exists && ((a.haverename) || (a.haveperms) || (a.havechange) || (a.transformer)) || (a.acl.acl_entries != NULL)) ||
         ((exists || link) && a.havedelete))
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */

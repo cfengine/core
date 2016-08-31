@@ -132,7 +132,7 @@ void VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes at
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, CF_DATA_TYPE_STRING, "source=promise");        // Parameters may only be scalars
     Attributes org_attr = GetFilesAttributes(ctx, pp);
-    attr = GetExpandedAttributes(ctx, pp, &org_attr); 
+    attr = GetExpandedAttributes(ctx, pp, &org_attr);
 
     if (attr.transformer != NULL)
     {
@@ -975,7 +975,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
         {
             result = PromiseResultUpdate(result, VerifyCopy(ctx, newfrom, newto, attr, pp, inode_cache, conn));
         }
-        
+
         if (conn != NULL &&
             conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
         {
@@ -2079,7 +2079,6 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
     {
         newperm |= attr.perms.plus;
         newperm &= ~(attr.perms.minus);
-
         /* directories must have x set if r set, regardless  */
 
         if (S_ISDIR(dstat->st_mode))

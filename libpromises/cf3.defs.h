@@ -1305,7 +1305,7 @@ typedef struct
     char *package_version_equal_command;
 
     int package_noverify_returncode;
-    
+
     bool has_package_method;
     bool is_empty;
 } Packages;
@@ -1323,10 +1323,10 @@ typedef struct
 
 typedef struct
 {
-    Rlist *control_package_inventory; /* list of all inventory used package managers 
+    Rlist *control_package_inventory; /* list of all inventory used package managers
                                        * names taken from common control */
     char *control_package_module;    /* policy default package manager name */
-    Seq *package_modules_bodies; /* list of all discovered in policy PackageManagerBody 
+    Seq *package_modules_bodies; /* list of all discovered in policy PackageManagerBody
                                    * bodies taken from common control */
 } PackagePromiseContext;
 
@@ -1339,7 +1339,7 @@ typedef struct
     char *package_version;
     char *package_architecture;
     Rlist *package_options;
-    
+
     bool is_empty;
 } NewPackages;
 
@@ -1608,4 +1608,3 @@ extern const ConstraintSyntax CFEX_CONTROLBODY[];
 typedef struct ServerConnectionState_ ServerConnectionState;
 
 #endif
-

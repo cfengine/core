@@ -1486,6 +1486,7 @@ typedef struct
     int purge;
     short timeout;
     ProtocolVersion protocol_version;
+    bool missing_ok;
 } FileCopy;
 
 typedef struct

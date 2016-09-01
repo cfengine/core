@@ -10,6 +10,9 @@ copy_from_classic_protocol_success.cf
 # ref https://github.com/cfengine/core/commit/1ac4e0c8a177c32f8c47614ac7ea082e38092a52
 copied_files_can_be_sparse.cf
 
+# "missing_ok" attribute in body copy_from, introduced in 3.12
+copy_missing_ok.cf
+
 # These tests run two cf-serverd instances, and it is currently unsupported
 allow_path1_then_deny_path2_a.cf
 copy_from_ciphers_fail.cf

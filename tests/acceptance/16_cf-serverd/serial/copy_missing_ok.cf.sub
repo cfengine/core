@@ -1,0 +1,60 @@
+#######################################################
+#
+# Tries to copy using TLS (which is default now), from two servers: one
+# with the default TLS ciphers list and another with a non-default very
+# restricted one.
+#
+# It should fail since we are setting "tls_ciphers" to a cipher missing
+# in both servers.
+#
+#######################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+    files:
+        "$(G.testdir)/out/missing_ok"
+            classes => classes_generic("test"),
+            copy_from       => dcs_remote_cp_X("nodir/does_not_exist", "127.0.0.1", "true");
+
+        # try to copy a file after the previous was not found
+        "$(G.testdir)/out/second_file_should_be_ok"
+            classes => classes_generic("test2"),
+            copy_from       => dcs_remote_cp_X("source_file", "127.0.0.1", "false");
+}
+
+bundle agent check
+{
+    classes:
+        "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+    reports:
+        test_kept.test2_repaired::
+            "$(fn[1]) Pass";
+        test_failed|test_repaired|test2_failed::
+            "$(fn[1]) FAIL";
+}
+
+
+body copy_from dcs_remote_cp_X(from,server, missing_ok)
+# @brief Download a file from a remote server. They server is always trusted.
+#
+# @param from The location of the file on the remote server
+# @param server The hostname or IP of the server from which to download
+{
+    servers     => { "$(server)" };
+    source      => "$(G.testdir)/$(from)";
+    compare     => "mtime";
+    trustkey    => "true";
+    missing_ok  => "${missing_ok}";
+    portnumber  => "9876"; # localhost_open
+}

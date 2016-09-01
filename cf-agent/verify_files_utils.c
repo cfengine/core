@@ -2636,11 +2636,22 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     if (cf_stat(BufferData(source), &ssb, attr.copy, conn) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
-             "Can't stat file '%s' on '%s' in files.copy_from promise",
-             BufferData(source), conn ? conn->remoteip : "localhost");
-        BufferDestroy(source);
-        return PROMISE_RESULT_FAIL;
+        if (attr.copy.missing_ok)
+        {
+            cfPS(ctx, LOG_LEVEL_DEBUG, PROMISE_RESULT_NOOP, pp, attr,
+                 "Can't stat file '%s' on '%s' but promise is kept 'missing_ok' in files.copy_from promise",
+                 BufferData(source), conn ? conn->remoteip : "localhost");
+            BufferDestroy(source);
+            return PROMISE_RESULT_CHANGE;
+        }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+                 "Can't stat file '%s' on '%s' in files.copy_from promise",
+                 BufferData(source), conn ? conn->remoteip : "localhost");
+            BufferDestroy(source);
+            return PROMISE_RESULT_FAIL;
+        }
     }
 
     start = BeginMeasure();

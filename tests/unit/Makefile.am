@@ -183,8 +183,7 @@ check_PROGRAMS += \
 endif
 endif
 
-check_SCRIPTS = bootstrap_inc_uptodate_test.sh \
-	dynamic_dependency_test.sh
+check_SCRIPTS = dynamic_dependency_test.sh
 
 if WITH_INIT_D_SCRIPT
 check_SCRIPTS += init_script_test.sh

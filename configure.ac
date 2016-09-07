@@ -41,7 +41,6 @@ dnl AM_INIT_AUTOMAKE.
 dnl
 AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
 
-m4_define([revision], m4_normalize(m4_esyscmd([git rev-list -1 --abbrev-commit HEAD])))
 
 m4_define([cfversion_from_env], m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
 m4_ifval(cfversion_from_env, [
@@ -51,7 +50,7 @@ m4_ifval(cfversion_from_env, [
     m4_if(m4_sysval, 0, [], [
         m4_fatal([Could not determine CFEngine version. Please set EXPLICIT_VERSION in the environment or make sure all git tags are up to date.])
     ])
-    m4_define([cfversion], cfversion_from_detect[]a1.revision)
+    m4_define([cfversion], cfversion_from_detect)
     m4_undefine([cfversion_from_detect])
 ])
 
@@ -59,7 +58,8 @@ _AM_SET_OPTION([tar-ustar])
 AM_INIT_AUTOMAKE(cfengine, cfversion)
 AM_MAINTAINER_MODE([enable])
 
-m4_undefine([revision])
+cfengine_version=cfversion
+
 m4_undefine([cfversion])
 m4_undefine([cfversion_from_env])
 
@@ -1485,7 +1485,9 @@ dnl Summarize
 dnl ######################################################################
 
 AC_MSG_RESULT( )
-AC_MSG_RESULT(    Summary of options...)
+
+AC_MSG_RESULT(Summary:)
+AC_MSG_RESULT(> Version: $cfengine_version)
 
 AC_MSG_RESULT([> Required libraries])
 

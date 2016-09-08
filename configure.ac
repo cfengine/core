@@ -494,11 +494,17 @@ AC_ARG_WITH([libcurl],
 
 if test "x$with_libcurl" != xno; then
   CF3_WITH_LIBRARY(libcurl, [
-    AC_CHECK_LIB(curl, curl_global_init, [], [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl library); fi])
-    AC_CHECK_HEADERS([curl/curl.h], [libcurl_header_found=yes])
-    if test "x$libcurl_header_found" != "xyes" && test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl library headers); fi
+    AC_CHECK_LIB(curl, curl_global_init,
+      [libcurl_lib_found=yes],
+      [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl library); fi])
+    AC_CHECK_HEADERS([curl/curl.h],
+      [libcurl_header_found=yes],
+      [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl header files); fi])
   ])
  fi
+
+AM_CONDITIONAL(HAVE_LIBCURL,
+        [test "x$libcurl_lib_found" = xyes && test "x$libcurl_header_found" = xyes])
 
 dnl libyaml
 

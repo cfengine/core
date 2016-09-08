@@ -66,7 +66,10 @@ typedef enum
     // Collecting functions take a variable reference OR can accept a
     // nested function call. Either way, those parameters are
     // collected into a data container.
-    FNCALL_OPTION_COLLECTING = 1 << 2
+    FNCALL_OPTION_COLLECTING = 1 << 2,
+    // Delayed-evaluation functions will evaluate their arguments directly,
+    // so they can do things like maplist(canonify($(this)), mylist)
+    FNCALL_OPTION_DELAYED_EVALUATION = 1 << 3
 } FnCallOption;
 
 typedef struct
@@ -98,6 +101,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 const FnCallType *FnCallTypeGet(const char *name);
 
 FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, const FnCall *f);
+Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, const FnCallType *fp_type);
 
 // TODO: should probably demolish this eventually
 void FnCallShow(FILE *fout, const char *prefix, const FnCall *fp, const Rlist *args);

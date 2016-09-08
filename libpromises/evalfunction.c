@@ -2772,7 +2772,7 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
 
 /*********************************************************************/
 
-static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
 {
     if (!fp->caller)
     {
@@ -2783,25 +2783,37 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     bool mapdatamode = (strcmp(fp->name, "mapdata") == 0);
     Rlist *returnlist = NULL;
 
-    const char *conversion;
-    const char *arg_map;
-    const char *varname;
+    // This is a delayed evaluation function, so we have to resolve arguments ourselves
+    // We resolve them once now, to get the second or third argument with the iteration data
+    Rlist *expargs = NewExpArgs(ctx, policy, fp, NULL);
 
     Rlist *varpointer = NULL;
+    const char* conversion = NULL;
+
     if (mapdatamode)
     {
-        conversion = RlistScalarValue(finalargs);
-        arg_map = RlistScalarValue(finalargs->next);
-        varpointer = finalargs->next->next;
+        if (expargs == NULL || RlistIsUnresolved(expargs->next->next))
+        {
+            RlistDestroy(expargs);
+            return FnFailure();
+        }
+
+        conversion = RlistScalarValue(expargs);
+        varpointer = expargs->next->next;
     }
     else
     {
+        if (expargs == NULL || RlistIsUnresolved(expargs->next))
+        {
+            RlistDestroy(expargs);
+            return FnFailure();
+        }
+
         conversion = "none";
-        arg_map = RlistScalarValue(finalargs);
-        varpointer = finalargs->next;
+        varpointer = expargs->next;
     }
 
-    varname = RlistScalarValueSafe(varpointer);
+    const char* varname = RlistScalarValueSafe(varpointer);
 
     bool jsonmode      = (strcmp(conversion, "json")      == 0);
     bool canonifymode  = (strcmp(conversion, "canonify")  == 0);
@@ -2812,6 +2824,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     if (container == NULL)
     {
+        RlistDestroy(expargs);
         return FnFailure();
     }
 
@@ -2820,12 +2833,14 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         Log(LOG_LEVEL_ERR, "Function '%s' got an unexpected non-container from argument '%s'", fp->name, varname);
         JsonDestroyMaybe(container, allocated);
 
+        RlistDestroy(expargs);
         return FnFailure();
     }
 
     if (mapdatamode && json_pipemode)
     {
-        JsonElement *returnjson_pipe = ExecJSON_Pipe(arg_map, container);
+        JsonElement *returnjson_pipe = ExecJSON_Pipe(RlistScalarValue(expargs->next), container);
+        RlistDestroy(expargs);
 
         if (returnjson_pipe == NULL)
         {
@@ -2839,7 +2854,6 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     }
 
     Buffer *expbuf = BufferNew();
-
     if (JsonGetContainerType(container) != JSON_CONTAINER_TYPE_OBJECT)
     {
         JsonElement *temp = JsonObjectCreate(0);
@@ -2867,7 +2881,12 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
                                                  CF_DATA_TYPE_STRING, "source=function,function=maparray",
                                                  jsonmode);
 
+            // This is a delayed evaluation function, so we have to resolve arguments ourselves
+            // We resolve them every time now, to get the arg_map argument
+            Rlist *expargs = NewExpArgs(ctx, policy, fp, NULL);
+            const char *arg_map = RlistScalarValueSafe(mapdatamode ? expargs->next : expargs);
             ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
+            RlistDestroy(expargs);
 
             if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
                 strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
@@ -2912,7 +2931,12 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
                                                      CF_DATA_TYPE_STRING, "source=function,function=maparray",
                                                      jsonmode);
 
+                // This is a delayed evaluation function, so we have to resolve arguments ourselves
+                // We resolve them every time now, to get the arg_map argument
+                Rlist *local_expargs = NewExpArgs(ctx, policy, fp, NULL);
+                const char *arg_map = RlistScalarValueSafe(mapdatamode ? local_expargs->next : local_expargs);
                 ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
+                RlistDestroy(local_expargs);
 
                 if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
                     (havekey && (strstr(BufferData(expbuf), "$(this.k[1])") || strstr(BufferData(expbuf), "${this.k[1]}"))) ||
@@ -2927,6 +2951,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
                     BufferDestroy(expbuf);
                     JsonDestroyMaybe(container, allocated);
+                    RlistDestroy(expargs);
                     return FnFailure();
                 }
 
@@ -2954,6 +2979,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
     BufferDestroy(expbuf);
     JsonDestroyMaybe(container, allocated);
+    RlistDestroy(expargs);
 
     JsonElement *returnjson = NULL;
 
@@ -2993,20 +3019,30 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 /*********************************************************************/
 
 static FnCallResult FnCallMapList(EvalContext *ctx,
-                                  ARG_UNUSED const Policy *policy,
-                                  ARG_UNUSED const FnCall *fp,
-                                  const Rlist *finalargs)
+                                  const Policy *policy,
+                                  const FnCall *fp,
+                                  ARG_UNUSED const Rlist *finalargs)
 {
-    const char *arg_map = RlistScalarValue(finalargs);
-    const char *name_str = RlistScalarValueSafe(finalargs->next);
+    // This is a delayed evaluation function, so we have to resolve arguments ourselves
+    // We resolve them once now, to get the second argument
+    Rlist *expargs = NewExpArgs(ctx, policy, fp, NULL);
+
+    if (expargs == NULL || RlistIsUnresolved(expargs->next))
+    {
+        RlistDestroy(expargs);
+        return FnFailure();
+    }
+
+    const char *name_str = RlistScalarValueSafe(expargs->next);
 
     // try to load directly
     bool allocated = false;
-    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs->next, false, &allocated);
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, expargs->next, false, &allocated);
 
     // we failed to produce a valid JsonElement, so give up
     if (json == NULL)
     {
+        RlistDestroy(expargs);
         return FnFailure();
     }
     else if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
@@ -3014,6 +3050,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx,
         Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' was not a data container or list",
             fp->name, name_str);
         JsonDestroyMaybe(json, allocated);
+        RlistDestroy(expargs);
         return FnFailure();
     }
 
@@ -3028,7 +3065,12 @@ static FnCallResult FnCallMapList(EvalContext *ctx,
         BufferClear(expbuf);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", value, CF_DATA_TYPE_STRING, "source=function,function=maplist");
 
+        // This is a delayed evaluation function, so we have to resolve arguments ourselves
+        // We resolve them every time now, to get the first argument
+        Rlist *local_expargs = NewExpArgs(ctx, policy, fp, NULL);
+        const char *arg_map = RlistScalarValueSafe(local_expargs);
         ExpandScalar(ctx, NULL, "this", arg_map, expbuf);
+        RlistDestroy(local_expargs);
 
         if (strstr(BufferData(expbuf), "$(this)") || strstr(BufferData(expbuf), "${this}"))
         {
@@ -3036,6 +3078,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx,
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "this");
             BufferDestroy(expbuf);
             JsonDestroyMaybe(json, allocated);
+            RlistDestroy(expargs);
             return FnFailure();
         }
 
@@ -3044,6 +3087,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx,
     }
     BufferDestroy(expbuf);
     JsonDestroyMaybe(json, allocated);
+    RlistDestroy(expargs);
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }
@@ -8783,9 +8827,9 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("maparray", CF_DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapData, "Return a list with each element mapped from a list or array or data container by a pattern based on $(this.k) and $(this.v)",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("mapdata", CF_DATA_TYPE_CONTAINER, MAPDATA_ARGS, &FnCallMapData, "Return a data container with each element parsed from a JSON string applied to every key-value pair of the list or array or data container, given as $(this.k) and $(this.v)",
-                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING|FNCALL_OPTION_DELAYED_EVALUATION, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maplist", CF_DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a mapping of the list or array or data container with each element modified by a pattern based $(this)",
-                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING|FNCALL_OPTION_DELAYED_EVALUATION, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("mergedata", CF_DATA_TYPE_CONTAINER, MERGEDATA_ARGS, &FnCallMergeData, "Merge two or more items, each a list or array or data container",
                   FNCALL_OPTION_COLLECTING|FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("none", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if no element in the list or array or data container matches the given regular expression",

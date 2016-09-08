@@ -46,6 +46,7 @@ bundle agent test
       "array[last]" string => "last";
 
       "mapped" slist => maparray("key=$(this.k) value=$(this.v)", "array");
+      "mapped2" slist => maparray(concat("key=$(this.k) value=$(this.v)"), "array");
 
   files:
       "$(G.testfile).actual"
@@ -61,9 +62,11 @@ bundle edit_line test_insert
 {
   vars:
       "mapped" slist => { @{test.mapped} };
+      "mapped2" slist => { @{test.mapped2} };
 
   insert_lines:
       "$(mapped)";
+      "$(mapped2)";
 }
 
 #######################################################

@@ -230,6 +230,98 @@
   "mapdata_canonify_6_4": [
     "xvalue_should_be_avalue"
   ],
+  "mapdata_canonify_eval_1_1": [
+    "key___0",
+    "key___1",
+    "key___2"
+  ],
+  "mapdata_canonify_eval_1_2": [
+    "key___0__value___1",
+    "key___1__value___2",
+    "key___2__value___3"
+  ],
+  "mapdata_canonify_eval_1_3": [
+    "key___0__key2_____this_k_1____value___1",
+    "key___1__key2_____this_k_1____value___2",
+    "key___2__key2_____this_k_1____value___3"
+  ],
+  "mapdata_canonify_eval_1_4": [
+    "xvalue_should_be_0value",
+    "xvalue_should_be_1value",
+    "xvalue_should_be_2value"
+  ],
+  "mapdata_canonify_eval_2_1": [
+    "key___0",
+    "key___1",
+    "key___2"
+  ],
+  "mapdata_canonify_eval_2_2": [
+    "key___0__value___eleme_nt1",
+    "key___1__value___element2",
+    "key___2__value___element3"
+  ],
+  "mapdata_canonify_eval_2_3": [
+    "key___0__key2_____this_k_1____value___eleme_nt1",
+    "key___1__key2_____this_k_1____value___element2",
+    "key___2__key2_____this_k_1____value___element3"
+  ],
+  "mapdata_canonify_eval_2_4": [
+    "xvalue_should_be_0value",
+    "xvalue_should_be_1value",
+    "xvalue_should_be_2value"
+  ],
+  "mapdata_canonify_eval_3_1": [
+    "key___x_x"
+  ],
+  "mapdata_canonify_eval_3_2": [
+    "key___x_x__value___y_y"
+  ],
+  "mapdata_canonify_eval_3_3": [
+    "key___x_x__key2_____this_k_1____value___y_y"
+  ],
+  "mapdata_canonify_eval_3_4": [
+    "xvalue_should_be_xxvalue"
+  ],
+  "mapdata_canonify_eval_4_1": [],
+  "mapdata_canonify_eval_4_2": [],
+  "mapdata_canonify_eval_4_3": [],
+  "mapdata_canonify_eval_4_4": [],
+  "mapdata_canonify_eval_5_1": [
+    "key___mykey",
+    "key___anotherkey",
+    "key___lastkey_"
+  ],
+  "mapdata_canonify_eval_5_2": [
+    "key___mykey__value___myvalue",
+    "key___anotherkey__value___anothervalue",
+    "key___lastkey___value___o_ne",
+    "key___lastkey___value___two",
+    "key___lastkey___value___three"
+  ],
+  "mapdata_canonify_eval_5_3": [
+    "key___mykey__key2_____this_k_1____value___myvalue",
+    "key___anotherkey__key2_____this_k_1____value___anothervalue",
+    "key___lastkey___key2_____this_k_1____value___o_ne",
+    "key___lastkey___key2_____this_k_1____value___two",
+    "key___lastkey___key2_____this_k_1____value___three"
+  ],
+  "mapdata_canonify_eval_5_4": [
+    "xvalue_should_be_myvalue",
+    "xvalue_should_be_anothervalue",
+    "xvalue_should_be_lastvalue"
+  ],
+  "mapdata_canonify_eval_6_1": [
+    "key___a"
+  ],
+  "mapdata_canonify_eval_6_2": [
+    "key___a__value___c"
+  ],
+  "mapdata_canonify_eval_6_3": [
+    "key___a__key2___b__value___c"
+  ],
+  "mapdata_canonify_eval_6_4": [
+    "xvalue_should_be_avalue"
+  ],
   "mapdata_json_1_1": [],
   "mapdata_json_1_2": [
     {

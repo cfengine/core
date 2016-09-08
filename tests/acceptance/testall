@@ -85,6 +85,8 @@ UNSAFE_TESTS=${UNSAFE_TESTS:-0}
 export UNSAFE_TESTS
 LIBXML2_TESTS=${LIBXML2_TESTS:-1}
 export LIBXML2_TESTS
+LIBCURL_TESTS=${LIBCURL_TESTS:-1}
+export LIBCURL_TESTS
 BINDIR=${BINDIR:-}
 export BINDIR
 NO_CLEAN=${NO_CLEAN:-0}
@@ -255,6 +257,7 @@ usage() {
     echo "           otherwise you will get incorrect results."
     echo " --no-network disable tests in network directories."
     echo " --no-libxml2 disable tests involving xml file editing."
+    echo " --no-libcurl disable tests requiring built-in libcurl support."
     echo " --no-crashing disable tests that are expected to crash (for use with valgrind)."
     echo " --no-timed disable timed tests that may introduce wait times."
     echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
@@ -323,6 +326,10 @@ runtest() {
     then
         SKIP=1
         SKIPREASON="XML file editing tests are disabled"
+    elif [ "x$LIBCURL_TESTS" = "x0" ] && echo "$TEST" | grep '/01_vars/02_functions/network/url_get.cf$' > /dev/null
+    then
+        SKIP=1
+        SKIPREASON="libcurl tests are disabled"
     else
         SKIP=
         SKIPREASON=
@@ -709,6 +716,8 @@ do
             NETWORK_TESTS=0;;
         --no-libxml2)
             LIBXML2_TESTS=0;;
+        --no-libcurl)
+            LIBCURL_TESTS=0;;
         --no-crashing)
             CRASHING_TESTS=0;;
         --no-timed)
@@ -942,7 +951,7 @@ print_header() {
       echo ----------------------------------------------------------------------
       echo Total tests: $TESTS_COUNT
       echo
-      for feature in CRASHING_TESTS NETWORK_TESTS STAGING_TESTS UNSAFE_TESTS LIBXML2_TESTS
+      for feature in CRASHING_TESTS NETWORK_TESTS STAGING_TESTS UNSAFE_TESTS LIBXML2_TESTS LIBCURL_TESTS
       do
           if eval "[ \${$feature} -ne 0 ]"
           then

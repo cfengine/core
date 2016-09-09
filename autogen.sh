@@ -44,21 +44,18 @@ if broken_posix_shell >/dev/null 2>&1; then
     exit 42
 fi
 
-#
-# Do not set -e before switching to POSIX shell, as it will break the test
-# above.
-#
+# Valid only after having switched to POSIX shell.
 set -e
+
 
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-ORIGDIR=`pwd`
-cd $srcdir
+cd "$srcdir"
+autoreconf -Wno-portability --force --install -I m4  ||  exit
+cd -
 
-autoreconf -Wno-portability --force --install -I m4 || exit 1
-cd $ORIGDIR || exit $?
-
-if [ -z "$NO_CONFIGURE" ]; then
-  $srcdir/configure --enable-maintainer-mode "$@"
+if [ -z "$NO_CONFIGURE" ]
+then
+    "$srcdir"/configure --enable-maintainer-mode "$@"
 fi

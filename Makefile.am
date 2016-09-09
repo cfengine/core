@@ -51,7 +51,7 @@ TAR_OPTIONS = --owner=0 --group=0
 export TAR_OPTIONS
 
 
-EXTRA_DIST = ChangeLog INSTALL README.md LICENSE
+EXTRA_DIST = ChangeLog INSTALL README.md LICENSE CFVERSION
 
 docsdir = $(docdir)
 docs_DATA = README.md ChangeLog

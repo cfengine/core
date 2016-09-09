@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 import os
+from os.path import basename
 
 try:
     from subprocess import DEVNULL # py3k
@@ -66,7 +67,12 @@ def usage():
 
 def verbose_print(*args, **kwargs):
     if VERBOSE:
-        print(*args, file=sys.stderr, **kwargs)
+        print("%s:" % basename(sys.argv[0]),
+              *args, file=sys.stderr, **kwargs)
+
+def final_print(s):
+    verbose_print("SUCCESS, version detected is: %s" % s)
+    print(s)
 
 def extract_version_components(version):
     match = re.match("^([0-9]+)\\.([0-9]+)\\.([0-9]+)(.*)", version)
@@ -134,8 +140,8 @@ try:
     exact_tag = git.stdout.readlines()[0].strip()
     verbose_print("exact_tag  = %s" % exact_tag)
     (version_major, version_minor, version_patch, version_extra) = extract_version_components(exact_tag)
-    print("%s.%s.%s%s" % (version_major, version_minor, version_patch, version_extra))
-    exit(0)
+    final_print("%s.%s.%s%s" % (version_major, version_minor, version_patch, version_extra))
+    sys.exit(0)
 except IndexError:                          # command returned no output
     verbose_print("exact_tag  = not found")
     pass
@@ -185,7 +191,7 @@ verbose_print("all_tags   =", all_tags)
 
 if len(all_tags) > 1:
     # This is a new minor version
-    print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
+    final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
 else:
     # This is a new patch version.
     # A "pure" version with no extra tag info is considered higher than
@@ -194,6 +200,6 @@ else:
         patch_version = int(recent_patch)
     else:
         patch_version = int(recent_patch) + 1
-    print("%s.%s.%da.%s" % (recent_major, recent_minor, patch_version, abbrev_rev))
+    final_print("%s.%s.%da.%s" % (recent_major, recent_minor, patch_version, abbrev_rev))
 
 sys.exit(0)

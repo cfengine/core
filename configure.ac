@@ -42,16 +42,18 @@ dnl
 AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
 
 
-m4_define([cfversion_from_env], m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
+m4_define([cfversion_from_env],  m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
+m4_define([cfversion_from_file], m4_normalize(m4_esyscmd([cat CFVERSION])))
 m4_ifval(cfversion_from_env, [
     m4_define([cfversion], cfversion_from_env)
 ], [
-    m4_define([cfversion_from_detect], m4_normalize(m4_esyscmd([misc/determine-version.py 2>/dev/null])))
-    m4_if(m4_sysval, 0, [], [
-        m4_fatal([Could not determine CFEngine version. Please set EXPLICIT_VERSION in the environment or make sure all git tags are up to date.])
+    m4_ifval(cfversion_from_file, [
+        m4_define([cfversion], cfversion_from_file)
+    ], [
+        m4_fatal([Could not determine CFEngine version;
+                  please set EXPLICIT_VERSION in the environment,
+                  or make sure all git tags are up to date and rerun autogen.sh])
     ])
-    m4_define([cfversion], cfversion_from_detect)
-    m4_undefine([cfversion_from_detect])
 ])
 
 _AM_SET_OPTION([tar-ustar])
@@ -61,6 +63,7 @@ AM_MAINTAINER_MODE([enable])
 cfengine_version=cfversion
 
 m4_undefine([cfversion])
+m4_undefine([cfversion_from_file])
 m4_undefine([cfversion_from_env])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")

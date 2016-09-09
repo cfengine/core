@@ -52,10 +52,19 @@ srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
 cd "$srcdir"
+
+echo "$0: Running determine-version.py ..."
+rm -f CFVERSION
+misc/determine-version.py > CFVERSION \
+    || echo "$0: Unable to auto-detect CFEngine version, continuing"
+
+echo "$0: Running autoreconf ..."
 autoreconf -Wno-portability --force --install -I m4  ||  exit
-cd -
+
+cd -                # back to srcdir
 
 if [ -z "$NO_CONFIGURE" ]
 then
+    echo "$0: Running configure ..."
     "$srcdir"/configure --enable-maintainer-mode "$@"
 fi

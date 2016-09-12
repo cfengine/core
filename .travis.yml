@@ -3,17 +3,13 @@ sudo: required
 
 compiler:
   - gcc
-# - clang
 os:
   - linux
-# - osx
 
 addons:
-  apt:
-    packages:
   artifacts:
     paths:
-    - artifacts/
+      - artifacts/
 
 env:
   global:
@@ -21,62 +17,73 @@ env:
     - CFLAGS="-g1 -O1"
       # upload log files, tarballs etc artifacts from the build.
     - ARTIFACTS_BUCKET=cfengine-travis-artifacts
+      # 2 cores according to: https://docs.travis-ci.com/user/ci-environment/
+    - MAKEFLAGS=-j3
 
-#matrix:
-#  include:
-
-    # JOB 0  --  first because it's the fastest so we get quick feedback
-    # - env: STYLE_CHECK_JOB=1
-
-    # JOB 1
-#    - env: CFLAGS="-g1 -O1"
+  # Parallel jobs listed here; fastest jobs should come first to give
+  # feedback ASAP. For more info read this:
+  # https://docs.travis-ci.com/user/multi-os/
+  matrix:
+    # - env: JOB_TYPE=style_check
+    - JOB_TYPE=compile_and_unit_test
+    - JOB_TYPE=acceptance_tests_common_etc
+    - JOB_TYPE=acceptance_tests_unsafe_serial_network
 
 
 before_install:
-  - sudo apt-get -qq update
-    # Needed to build
-  - sudo apt-get install -y libssl-dev libpam0g-dev libtokyocabinet-dev
-    # Optional
-  - sudo apt-get install -y libxml2-dev libacl1-dev
+- sudo apt-get -qq update
+  # Needed to build
+- sudo apt-get install -y libssl-dev libpam0g-dev libtokyocabinet-dev
+  # Optional
+- sudo apt-get install -y libxml2-dev libacl1-dev
 
 
 script:
 - INSTDIR=$HOME/cf_install
 - cd $TRAVIS_BUILD_DIR
 
-  # JOB 0
-- if [ x$STYLE_CHECK_JOB = x1 ];
-  then
-      sh tests/style_check.sh;
-      exit;
-  fi
+# - if [ "$JOB_TYPE" = style_check ];
+#   then
+#       # sh tests/misc/style_check.sh;
+#       exit 0;
+#   fi
 
   # Fetch the tags from upstream, even if we are running on a foreign clone;
   # Needed for determine-version.py to work
-- git remote add upstream https://github.com/cfengine/core.git;
-  git fetch upstream 'refs/tags/*:refs/tags/*';
+- git remote add upstream https://github.com/cfengine/core.git  &&
+  git fetch -q upstream 'refs/tags/*:refs/tags/*'
 
 - NO_CONFIGURE=1 ./autogen.sh
 - ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR
 
 - make dist
-- export DIST_TARBALL=`echo cfengine-*.tar.gz`
-
 - make
 
-- make -C tests/unit check
+- if [ "$JOB_TYPE" = compile_and_unit_test ];
+  then
+      make -C tests/unit check;
+      exit;
+  fi
 
-- chmod -R go-w tests/acceptance
-- make -C tests/acceptance check
+- cd tests/acceptance
+- chmod -R go-w .
 
-# TODO tests in parallel jobs:
-# 1. unit tests
-# 2. default acceptance tests
-# 3. unsafe acceptance tests
+- if [ "$JOB_TYPE" = acceptance_tests_common_etc ];
+  then
+      ./testall --tests=common,timed,errorexit,libxml2,libcurl;
+      exit;
+  fi
+- if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network ];
+  then
+      ./testall --tests=unsafe,serial,network --gainroot=sudo;
+      exit;
+  fi
+
 
 before_deploy:
-# A tag ending with "number.number" is not a prerelease
 
+- export DIST_TARBALL=`echo cfengine-*.tar.gz`
+  # A tag ending with "number.number" is not a prerelease
 - if echo $DIST_TARBALL | grep -E -q '[0-9]{1,2}\.[0-9]{1,2}\.tar\.gz';
   then
       IS_PRERELEASE=false;
@@ -85,19 +92,20 @@ before_deploy:
   fi;
   export IS_PRERELEASE
 
-deploy:
+
 # We deploy when setting tags only, which basically never happens
 # on master branch. Cherry-pick this part and alter it properly into
 # the release branches.
 
+deploy:
   skip_cleanup: true
   provider: releases
   # Remember to set it as private variable in Travis-CI settings
   api_key: $GITHUB_RELEASE_TOKEN
-# Does not work, I get the error that "true" is not a boolean
-#  prerelease: $IS_PRERELEASE
+  # Does not work, I get the error that "true" is not a boolean
+  #  prerelease: $IS_PRERELEASE
   file:
-  - "$DIST_TARBALL"
+    - "$DIST_TARBALL"
   on:
     tags: true
     # Avoid upload from all the multiple parallel matrix jobs

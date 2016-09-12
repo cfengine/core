@@ -73,20 +73,19 @@ XML=test.xml
 WHOAMI=/c/Windows/System32/whoami.exe
 BASE_WORKDIR="$(pwd)/workdir"
 QUIET=
-TIMED_TESTS=${TIMED_TESTS:-1}
-export TIMED_TESTS
-CRASHING_TESTS=${CRASHING_TESTS:-1}
-export CRASHING_TESTS
-STAGING_TESTS=${STAGING_TESTS:-0}
-export STAGING_TESTS
-NETWORK_TESTS=${NETWORK_TESTS:-1}
-export NETWORK_TESTS
-UNSAFE_TESTS=${UNSAFE_TESTS:-0}
-export UNSAFE_TESTS
-LIBXML2_TESTS=${LIBXML2_TESTS:-1}
-export LIBXML2_TESTS
-LIBCURL_TESTS=${LIBCURL_TESTS:-1}
-export LIBCURL_TESTS
+
+# Default test types to run if --tests= is not passed
+COMMON_TESTS=1    ; export COMMON_TESTS
+TIMED_TESTS=1     ; export TIMED_TESTS
+ERROREXIT_TESTS=1 ; export ERROREXIT_TESTS
+SERIAL_TESTS=1    ; export SERIAL_TESTS
+NETWORK_TESTS=1   ; export NETWORK_TESTS
+LIBXML2_TESTS=1   ; export LIBXML2_TESTS
+LIBCURL_TESTS=1   ; export LIBCURL_TESTS
+UNSAFE_TESTS=0    ; export UNSAFE_TESTS
+STAGING_TESTS=0   ; export STAGING_TESTS
+
+
 BINDIR=${BINDIR:-}
 export BINDIR
 NO_CLEAN=${NO_CLEAN:-0}
@@ -211,11 +210,11 @@ unix_seconds() {
 }
 
 usage() {
-    echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
+    echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--tests=...] [--gdb] [--printlog] [<test> <test>...]"
     echo
     echo "If no test is given, all standard tests are run:"
     echo "  Tests with names of form <file>.cf are expected to run successfully"
-    echo "  Tests with names of form <file>.x.cf are expected to crash"
+    echo "  Tests with names of form <file>.x.cf are expected to exit with error"
     echo "Set ${COLOR_SUCCESS}CFENGINE_COLOR=1${COLOR_NORMAL} to get ANSI color markers where appropriate."
     echo
     echo "If arguments are given, those are executed as tests"
@@ -249,17 +248,12 @@ usage() {
     echo "               defaults to $DEFLIBTOOL."
     echo " --include Include the file or directory given in the workdir before the test"
     echo "           starts. This option may be given several times."
-    echo " --staging enable tests in staging directories. They are not expected to pass."
-    echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
-    echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
-    echo "           this option without a backup."
-    echo "           If you use this option you should also use --gainroot=sudo,"
-    echo "           otherwise you will get incorrect results."
-    echo " --no-network disable tests in network directories."
-    echo " --no-libxml2 disable tests involving xml file editing."
-    echo " --no-libcurl disable tests requiring built-in libcurl support."
-    echo " --no-crashing disable tests that are expected to crash (for use with valgrind)."
-    echo " --no-timed disable timed tests that may introduce wait times."
+    echo " --tests=common,network,serial,timed,errorexit,libxml2,libcurl"
+    echo "           This is the default value, you can also add from the following:"
+    echo "           unsafe,staging"
+    echo "           NOTE: 'staging' tests are not expected to pass"
+    echo "           WARN: 'unsafe' tests modify the system they are running on and can cause DAMAGE!"
+    echo "                          If you use this option you should also use --gainroot=sudo."
     echo " --printlog   print the full test.log output immediately.  Override with $PRINTLOG"
     echo " --gdb          Run test under GDB"
     echo " --valgrind     Run test under Valgrind"
@@ -278,6 +272,17 @@ workdir() {
     echo "$BASE_WORKDIR/$(echo "$1" | sed 's,[./],_,g')"
 }
 
+# Example:    fgrepvar 'word'  VARNAME
+# Silent fgrep for variables: search for "word" in $VARNAME
+fgrepvar() {
+    eval echo \$$2  |  fgrep "$1"  >  /dev/null
+}
+
+# Same but instead of word search for a regex
+grepvar() {
+    eval echo \$$2  |  grep "$1"  >  /dev/null
+}
+
 # Takes the following arguments:
 # 1. Agent - The agent to execute.
 # 2. Test - The test to execute.
@@ -285,8 +290,8 @@ workdir() {
 # 4. Timeout variable - [Optional] The name of the variable to put the next
 #        timeout into. Used by timed tests.
 runtest() {
-    # Clear local variables
-    unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE TEST_DESCRIPTION TEST_STORY TEST_COVERS
+    # Clear/Reset local variables
+    unset AGENT TEST TEST_TYPE EXTRATEXT SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE TEST_DESCRIPTION TEST_STORY TEST_COVERS
 
     AGENT="$1"
     TEST="$2"
@@ -299,40 +304,57 @@ runtest() {
         printf "$TEST "
     fi
 
-    if echo "$TEST" | fgrep -e .x.cf > /dev/null
-    then
-        EXPECTED_CRASH=1
-    else
-        EXPECTED_CRASH=
-    fi
+    case "$TEST" in
+        *.x.cf)       TEST_TYPE=errorexit &&
+                      EXTRATEXT='(expected to exit with error)'  ;;
+        */staging/*)  TEST_TYPE=staging   ;;
+        */unsafe/*)   TEST_TYPE=unsafe    ;;
+        */network/*)  TEST_TYPE=network   ;;
+        */timed/*)    TEST_TYPE=timed     ;;
+        *[/_]serial[/_.]*)  TEST_TYPE=serial  ;;
+        */11_xml_edits/*)   TEST_TYPE=libxml2 ;;
+        */01_vars/02_functions/network/url_get.cf)    TEST_TYPE=libcurl ;;
+        *)            TEST_TYPE=common    ;;
+    esac
 
-    if [ "x$CRASHING_TESTS" = "x0" ] && [ "x$EXPECTED_CRASH" = "x1" ]
+    SKIP=0                          # by default the test is not skipped
+    SKIPREASON=
+    if [ $ERROREXIT_TESTS = 0  -a  $TEST_TYPE = errorexit ]
     then
         SKIP=1
-        SKIPREASON="${COLOR_WARNING}Crashing tests are disabled${COLOR_NORMAL}"
-    elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep '/staging/' > /dev/null
+        SKIPREASON="${COLOR_WARNING}'errorexit' tests are disabled${COLOR_NORMAL}"
+    elif [ $STAGING_TESTS = 0  -a  $TEST_TYPE = staging ]
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}Staging tests are disabled${COLOR_NORMAL}"
-    elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep '/unsafe/' > /dev/null
+    elif [ $UNSAFE_TESTS = 0  -a  $TEST_TYPE = unsafe ]
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}Unsafe tests are disabled${COLOR_NORMAL}"
-    elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep '/network/' > /dev/null
+    elif [ $NETWORK_TESTS = 0  -a  $TEST_TYPE = network ]
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}Network-dependent tests are disabled${COLOR_NORMAL}"
-    elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep '/11_xml_edits/' > /dev/null
+    elif [ $TIMED_TESTS = 0  -a  $TEST_TYPE = timed ]
     then
         SKIP=1
-        SKIPREASON="XML file editing tests are disabled"
-    elif [ "x$LIBCURL_TESTS" = "x0" ] && echo "$TEST" | grep '/01_vars/02_functions/network/url_get.cf$' > /dev/null
+        SKIPREASON="${COLOR_WARNING}Timed tests are disabled${COLOR_NORMAL}"
+    elif [ $SERIAL_TESTS = 0  -a  $TEST_TYPE = serial ]
     then
         SKIP=1
-        SKIPREASON="libcurl tests are disabled"
-    else
-        SKIP=
-        SKIPREASON=
+        SKIPREASON="${COLOR_WARNING}Serial tests are disabled${COLOR_NORMAL}"
+    elif [ $LIBXML2_TESTS = 0  -a  $TEST_TYPE = libxml2 ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}XML file editing tests are disabled${COLOR_NORMAL}"
+    elif [ $LIBCURL_TESTS = 0  -a  $TEST_TYPE = libcurl ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}libcurl tests are disabled${COLOR_NORMAL}"
+    elif [ $COMMON_TESTS = 0  -a  $TEST_TYPE = common ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}Common tests are disabled${COLOR_NORMAL}"
     fi
 
     TEST_START_TIME=$(unix_seconds)
@@ -354,13 +376,13 @@ runtest() {
         eval $NEXT_TIMEOUT_VAR=
     fi
 
-    if [ -n "$SKIP" ]
+    if [ "$SKIP" = 1 ]                                 # Skip
     then
         TEST_END_TIME=$TEST_START_TIME
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped ($SKIPREASON)${COLOR_NORMAL}"
-    else
 
+    else                                               # Do not skip
         # Prepare workdir
         if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]
         then
@@ -405,7 +427,7 @@ runtest() {
         fi
 
         ( echo ----------------------------------------------------------------------
-          echo "$TEST"${EXPECTED_CRASH:+ \(expected to crash\)}${SKIPREASON:+ \($SKIPREASON\)}
+          echo "$TEST" "$EXTRATEXT"
           echo ----------------------------------------------------------------------
         ) >> "$WORKDIR/$LOG"
 
@@ -426,7 +448,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             printf "gdb --args " >> "$WORKDIR/runtest"
         fi
 
-        if [ -n "$USE_VALGRIND" ] && [ x"$EXPECTED_CRASH" = "x" ]
+        if [ -n "$USE_VALGRIND"  -a  $TEST_TYPE = errorexit ]
         then
             if grep libtool < "$AGENT" > /dev/null
             then
@@ -468,7 +490,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
 
         RESULT_MSG=
-        if [ -z "$EXPECTED_CRASH" ]
+        if [ $TEST_TYPE != errorexit ]
         then
             # We need to be careful when matching test outcomes. Because of convergence
             # passes, a test may output FAIL before it outputs Pass; in this case the
@@ -536,7 +558,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL${COLOR_NORMAL}"
             fi
-        else
+        else                                     # TEST_TYPE = errorexit
             if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ]
             then
                 RESULT=Pass
@@ -544,10 +566,10 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             elif [ $RETVAL -ge 128 ]
             then
                 RESULT=FAIL
-                RESULT_MSG="${COLOR_FAILURE}FAIL (Crashed)${COLOR_NORMAL}"
+                RESULT_MSG="${COLOR_FAILURE}FAIL (CRASH!!! THIS IS A BUG!)${COLOR_NORMAL}"
             else
                 RESULT=FAIL
-                RESULT_MSG="${COLOR_FAILURE}FAIL (Failed to exit with non-zero status)${COLOR_NORMAL}"
+                RESULT_MSG="${COLOR_FAILURE}FAIL (Failed to exit with error!)${COLOR_NORMAL}"
             fi
         fi
 
@@ -575,7 +597,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
         echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">"
     fi >> "$WORKDIR/$XML"
 
-    
+
     # Fill test metadata if any
     if [ ! -z "$TEST_DESCRIPTION" ] || [ ! -z "$TEST_STORY" ] || [ ! -z "$TEST_COVERS" ]
     then
@@ -672,7 +694,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             printf '-'
         elif [ "$RESULT" = FAIL ]
         then
-            if [ -n "$EXPECTED_CRASH" ]
+            if [ $TEST_TYPE = errorexit ]
             then
                 printf '!'
             else
@@ -687,6 +709,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
         echo
     ) >> "$WORKDIR/$LOG"
 }
+
 
 ORIG_ARGS=
 while true
@@ -708,20 +731,37 @@ do
             USE_INOTIFYWATCH=1;;
         --inotifywait)
             USE_INOTIFYWAIT=1;;
-        --staging)
-            STAGING_TESTS=1;;
-        --unsafe)
-            UNSAFE_TESTS=1;;
-        --no-network)
-            NETWORK_TESTS=0;;
-        --no-libxml2)
-            LIBXML2_TESTS=0;;
-        --no-libcurl)
-            LIBCURL_TESTS=0;;
-        --no-crashing)
-            CRASHING_TESTS=0;;
-        --no-timed)
-            TIMED_TESTS=0;;
+        --tests=*)
+
+            # Deselect all test types, in order to have only the ones
+            # given as arguments
+            COMMON_TESTS=0
+            TIMED_TESTS=0
+            ERROREXIT_TESTS=0
+            SERIAL_TESTS=0
+            NETWORK_TESTS=0
+            LIBXML2_TESTS=0
+            LIBCURL_TESTS=0
+            UNSAFE_TESTS=0
+            STAGING_TESTS=0
+
+            tests_selected=${1#--tests=}
+            for testtype in `echo $tests_selected | tr , ' '`
+            do
+                case "$testtype" in
+                    common)      COMMON_TESTS=1;;
+                    timed)       TIMED_TESTS=1;;
+                    errorexit)   ERROREXIT_TESTS=1;;
+                    serial)      SERIAL_TESTS=1;;
+                    network)     NETWORK_TESTS=1;;
+                    libxml2)     LIBXML2_TESTS=1;;
+                    libcurl)     LIBCURL_TESTS=1;;
+                    unsafe)      UNSAFE_TESTS=1;;
+                    staging)     STAGING_TESTS=1;;
+                esac
+            done
+            ;;
+
         --agent=*)
             AGENT=${1#--agent=};;
         --baseclasses=*)
@@ -951,15 +991,22 @@ print_header() {
       echo ----------------------------------------------------------------------
       echo Total tests: $TESTS_COUNT
       echo
-      for feature in CRASHING_TESTS NETWORK_TESTS STAGING_TESTS UNSAFE_TESTS LIBXML2_TESTS LIBCURL_TESTS
+      for feature in COMMON_TESTS TIMED_TESTS ERROREXIT_TESTS SERIAL_TESTS NETWORK_TESTS LIBXML2_TESTS LIBCURL_TESTS UNSAFE_TESTS STAGING_TESTS
       do
-          if eval "[ \${$feature} -ne 0 ]"
+          if eval "[ \${$feature} != 0 ]"
           then
-              echo $feature: enabled
+              printf '%20s: %s\n' $feature enabled
           else
-              echo $feature: disabled
+              printf '%20s: %s\n' $feature disabled
           fi
       done
+      echo
+      if [ x$PARALLEL = x1 ]
+      then
+          echo "Test run is PARALLEL with MAKEFLAGS=$MAKEFLAGS"
+      else
+          echo "Test run is not parallel ${MAKEFLAGS:+(MAKEFLAGS=$MAKEFLAGS)}"
+      fi
       echo
     ) | tee "$LOG" | tee "$SUMMARY" >&7
 }
@@ -1157,8 +1204,10 @@ run_all_tests_using_make() {
     done
 }
 
+
+
 #
-# Now run the tests
+# ========== RUN THE TESTS ==========
 #
 
 # isEnabled? USE_INOTIFYWATCH

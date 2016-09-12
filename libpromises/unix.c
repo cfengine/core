@@ -207,7 +207,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
 
             if (LogGetGlobalLevel() < LOG_LEVEL_INFO)
             {
-                if ((devnull = safe_open("/dev/null", O_WRONLY)) == -1)
+                if ((devnull = open("/dev/null", O_WRONLY)) == -1)
                 {
                     Log(LOG_LEVEL_ERR, "Command '%s' failed. (open: %s)", command, GetErrorStr());
                     exit(EXIT_FAILURE);

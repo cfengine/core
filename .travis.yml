@@ -1,11 +1,6 @@
 language: c
 sudo: required
 
-compiler:
-  - gcc
-os:
-  - linux
-
 addons:
   artifacts:
     paths:
@@ -20,14 +15,16 @@ env:
       # 2 cores according to: https://docs.travis-ci.com/user/ci-environment/
     - MAKEFLAGS=-j3
 
-  # Parallel jobs listed here; fastest jobs should come first to give
-  # feedback ASAP. For more info read this:
-  # https://docs.travis-ci.com/user/multi-os/
-  matrix:
-    # - env: JOB_TYPE=style_check
-    - JOB_TYPE=compile_and_unit_test
-    - JOB_TYPE=acceptance_tests_common_etc
-    - JOB_TYPE=acceptance_tests_unsafe_serial_network
+# Parallel jobs listed here; fastest jobs should come first to give
+# feedback ASAP. For more info read this:
+# https://docs.travis-ci.com/user/multi-os/
+matrix:
+  include:
+    - env: JOB_TYPE=compile_and_unit_test
+    - env: JOB_TYPE=acceptance_tests_common_etc
+      # The unsafe acceptance tests don't work with SIMFS which is the default
+      # filesystem in Travis; so change OS to Trusty, which uses ext4.
+    - env: JOB_TYPE=acceptance_tests_unsafe_serial_network
 
 
 before_install:

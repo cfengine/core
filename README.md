@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cfengine/core.svg?branch=master)](https://travis-ci.org/cfengine/core)
+
 # CFEngine 3
 
 CFEngine 3 is a popular open source configuration management system. Its primary

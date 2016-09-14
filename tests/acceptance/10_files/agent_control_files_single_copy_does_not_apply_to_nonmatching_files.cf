@@ -1,0 +1,54 @@
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+body agent control
+{
+  files_single_copy => { @(def.control_agent_files_single_copy) };
+}
+# NOTE that def.control_agent_files_single_copy DOES NOT EXIST
+bundle agent init
+{
+  vars:
+    "copy_files" slist => { "one", "two" };
+
+   files:
+    "$(G.testdir)/$(copy_files)"
+      create => "true",
+      edit_line => insert_lines("$(copy_files)");
+}
+
+bundle agent test
+{
+  meta:
+      "description" string => "Test that files_single_copy does not prevent file patterns that do not match from being copied multiple times.";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2459" };
+
+  files:
+
+    # Here we iterate over each copy_file to promise the content
+    # of the testfile. We expect that with files_single_copy in
+    # effect only the first file should be copied.
+
+    "$(G.testfile)"
+      copy_from => local_dcp( "$(G.testdir)/$(init.copy_files)" );
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  methods:
+    "" usebundle => dcs_check_diff($(G.testfile), "$(G.testdir)/two", $(this.promise_filename));
+}

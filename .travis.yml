@@ -1,0 +1,119 @@
+language: c
+sudo: required
+
+addons:
+  artifacts:
+    paths:
+      - artifacts/
+
+env:
+  global:
+      # Quickest to build, fast performing, debugable builds.
+    - CFLAGS="-g1 -O1"
+      # upload log files, tarballs etc artifacts from the build.
+    - ARTIFACTS_BUCKET=cfengine-travis-artifacts
+      # 2 cores according to: https://docs.travis-ci.com/user/ci-environment/
+    - MAKEFLAGS=-j3
+
+# Parallel jobs listed here; fastest jobs should come first to give
+# feedback ASAP. For more info read this:
+# https://docs.travis-ci.com/user/multi-os/
+matrix:
+  include:
+    - env: JOB_TYPE=compile_and_unit_test
+    - env: JOB_TYPE=acceptance_tests_common_etc
+      # The unsafe acceptance tests don't work with SIMFS which is the default
+      # filesystem in Travis; so change OS to Trusty, which uses ext4.
+    - env: JOB_TYPE=acceptance_tests_unsafe_serial_network
+
+
+before_install:
+- sudo apt-get -qq update
+  # Needed to build
+- sudo apt-get install -y libssl-dev libpam0g-dev libtokyocabinet-dev
+  # Optional
+- sudo apt-get install -y libxml2-dev libacl1-dev
+
+
+script:
+- INSTDIR=$HOME/cf_install
+- cd $TRAVIS_BUILD_DIR
+
+# - if [ "$JOB_TYPE" = style_check ];
+#   then
+#       # sh tests/misc/style_check.sh;
+#       exit 0;
+#   fi
+
+  # Fetch the tags from upstream, even if we are running on a foreign clone;
+  # Needed for determine-version.py to work
+- git remote add upstream https://github.com/cfengine/core.git  &&
+  git fetch -q upstream 'refs/tags/*:refs/tags/*'
+
+- NO_CONFIGURE=1 ./autogen.sh
+- ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR
+
+- make dist
+- make
+
+- if [ "$JOB_TYPE" = compile_and_unit_test ];
+  then
+      make -C tests/unit check;
+      return;
+  fi
+
+- cd tests/acceptance
+- chmod -R go-w .
+
+- if [ "$JOB_TYPE" = acceptance_tests_common_etc ];
+  then
+      ./testall --tests=common,timed,errorexit,libxml2,libcurl;
+      return;
+  fi
+  # TODO add unsafe to the list underneath; there is a permissions problem to be fixed first when setting --gainroot=sudo.
+- if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network ];
+  then
+      ./testall --tests=serial,network;
+      return;
+  fi
+
+
+before_deploy:
+
+- export DIST_TARBALL=`echo cfengine-*.tar.gz`
+  # A tag ending with "number.number" is not a prerelease
+- if echo $DIST_TARBALL | grep -E -q '[0-9]{1,2}\.[0-9]{1,2}\.tar\.gz';
+  then
+      IS_PRERELEASE=false;
+  else
+      IS_PRERELEASE=true;
+  fi;
+  export IS_PRERELEASE
+
+
+# We deploy when setting tags only, which basically never happens
+# on master branch. Cherry-pick this part and alter it properly into
+# the release branches.
+
+deploy:
+  skip_cleanup: true
+  provider: releases
+  # Remember to set it as private variable in Travis-CI settings
+  api_key: $GITHUB_RELEASE_TOKEN
+  # Does not work, I get the error that "true" is not a boolean
+  #  prerelease: $IS_PRERELEASE
+  file:
+    - "$DIST_TARBALL"
+  on:
+    tags: true
+    # Avoid upload from all the multiple parallel matrix jobs
+    condition: "$CF_VERSION = latest"
+
+
+after_script:
+- mkdir artifacts
+- test "x$DIST_TARBALL" != x  &&  cp "$DIST_TARBALL" artifacts/
+- gzip config.log  &&  mv config.log.gz artifacts/
+- gzip tests/acceptance/summary.log  &&  mv tests/acceptance/summary.log.gz artifacts/acceptance_summary.log.gz
+- gzip tests/acceptance/test.log     &&  mv tests/acceptance/test.log.gz    artifacts/acceptance.log.gz
+- zip -r artifacts/acceptance_workdir.zip tests/acceptance/workdir

@@ -41,26 +41,29 @@ dnl AM_INIT_AUTOMAKE.
 dnl
 AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
 
-m4_define([revision], m4_normalize(m4_esyscmd([git rev-list -1 --abbrev-commit HEAD])))
 
-m4_define([cfversion_from_env], m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
+m4_define([cfversion_from_env],  m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
+m4_define([cfversion_from_file], m4_normalize(m4_esyscmd([cat CFVERSION])))
 m4_ifval(cfversion_from_env, [
     m4_define([cfversion], cfversion_from_env)
 ], [
-    m4_define([cfversion_from_detect], m4_normalize(m4_esyscmd([misc/determine-version.py])))
-    m4_if(m4_sysval, 0, [], [
-        m4_fatal([Could not determine CFEngine version. Please set EXPLICIT_VERSION in the environment or make sure all git tags are up to date.])
+    m4_ifval(cfversion_from_file, [
+        m4_define([cfversion], cfversion_from_file)
+    ], [
+        m4_fatal([Could not determine CFEngine version;
+                  please set EXPLICIT_VERSION in the environment,
+                  or make sure all git tags are up to date and rerun autogen.sh])
     ])
-    m4_define([cfversion], cfversion_from_detect[]a1.revision)
-    m4_undefine([cfversion_from_detect])
 ])
 
 _AM_SET_OPTION([tar-ustar])
 AM_INIT_AUTOMAKE(cfengine, cfversion)
 AM_MAINTAINER_MODE([enable])
 
-m4_undefine([revision])
+cfengine_version=cfversion
+
 m4_undefine([cfversion])
+m4_undefine([cfversion_from_file])
 m4_undefine([cfversion_from_env])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
@@ -467,7 +470,8 @@ AC_ARG_WITH([libvirt],
     [AS_HELP_STRING([--with-libvirt[[=PATH]]], [support virtual machine management])],
     [], [with_libvirt=check])
 
-if test "x$with_libvirt" != xno; then
+if test "x$with_libvirt" != xno
+then
    CF3_WITH_LIBRARY(libvirt, [
       AC_CHECK_LIB(virt, virConnectOpen, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library); fi])
       AC_CHECK_HEADERS(libvirt/libvirt.h, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library headers); fi])
@@ -479,39 +483,54 @@ dnl libacl
 AC_ARG_WITH([libacl],
     [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path])], [], [with_libacl=check])
 
-if test "x$with_libacl" != xno; then
+if test "x$with_libacl" != xno
+then
   CF3_WITH_LIBRARY(libacl, [
-    AC_CHECK_LIB(acl, acl_init, [], [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
-    AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h], [libacl_header_found=yes])
-    if test "x$libacl_header_found" != "xyes" && test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library headers); fi
+    AC_CHECK_LIB(acl, acl_init,
+      [libacl_lib_found=yes],
+      [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
+    AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h],
+      [libacl_header_found=yes],
+      [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl header files); fi])
   ])
- fi
+fi
 
 dnl libcurl
 
 AC_ARG_WITH([libcurl],
     [AS_HELP_STRING([--with-libcurl[[=PATH]]], [Specify libcurl path])], [], [with_libcurl=check])
 
-if test "x$with_libcurl" != xno; then
+if test "x$with_libcurl" != xno
+then
   CF3_WITH_LIBRARY(libcurl, [
-    AC_CHECK_LIB(curl, curl_global_init, [], [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl library); fi])
-    AC_CHECK_HEADERS([curl/curl.h], [libcurl_header_found=yes])
-    if test "x$libcurl_header_found" != "xyes" && test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl library headers); fi
+    AC_CHECK_LIB(curl, curl_global_init,
+      [libcurl_lib_found=yes],
+      [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl library); fi])
+    AC_CHECK_HEADERS([curl/curl.h],
+      [libcurl_header_found=yes],
+      [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl header files); fi])
   ])
- fi
+fi
+
+AM_CONDITIONAL(HAVE_LIBCURL,
+        [test "x$libcurl_lib_found" = xyes && test "x$libcurl_header_found" = xyes])
 
 dnl libyaml
 
 AC_ARG_WITH([libyaml],
     [AS_HELP_STRING([--with-libyaml[[=PATH]]], [Specify libyaml path])], [], [with_libyaml=check])
 
-if test "x$with_libyaml" != xno; then
+if test "x$with_libyaml" != xno
+then
   CF3_WITH_LIBRARY(libyaml, [
-    AC_CHECK_LIB(yaml, yaml_parser_initialize, [], [if test "x$with_libyaml" != xcheck; then AC_MSG_ERROR(Cannot find libyaml library); fi])
-    AC_CHECK_HEADERS([yaml.h], [libyaml_header_found=yes])
-    if test "x$libyaml_header_found" != "xyes" && test "x$with_libyaml" != xcheck; then AC_MSG_ERROR(Cannot find libyaml library headers); fi
+    AC_CHECK_LIB(yaml, yaml_parser_initialize,
+      [libyaml_lib_found=yes],
+      [if test "x$with_libyaml" != xcheck; then AC_MSG_ERROR(Cannot find libyaml library); fi])
+    AC_CHECK_HEADERS(yaml.h,
+      [libyaml_header_found=yes],
+      [if test "x$with_libyaml" != xcheck; then AC_MSG_ERROR(Cannot find libyaml header files); fi])
   ])
- fi
+fi
 
 dnl libxml2
 
@@ -1514,7 +1533,9 @@ dnl Summarize
 dnl ######################################################################
 
 AC_MSG_RESULT( )
-AC_MSG_RESULT(    Summary of options...)
+
+AC_MSG_RESULT(Summary:)
+AC_MSG_RESULT(> Version: $cfengine_version)
 
 AC_MSG_RESULT([> Required libraries])
 

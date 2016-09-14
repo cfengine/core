@@ -13,6 +13,8 @@ Makefile
 Makefile.in
 stamp-h1
 
+# Created by autogen.sh
+/CFVERSION
 /aclocal.m4
 /autom4te.cache
 /compile
@@ -22,6 +24,7 @@ stamp-h1
 /config.sub
 /configure
 /depcomp
+
 /install-sh
 /libtool
 /ltmain.sh

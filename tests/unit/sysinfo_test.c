@@ -5,13 +5,12 @@
 static void test_uptime(void)
 {
     /*
-     * Assume we have been online at least five minutes, and less than two years.
-     * If two years is not long enough, stop watching that uptime counter and
-     * reboot the machine, dammit! :-)
+     * Assume we have been online at least one minute, and less than 5 years.
+     * Should be good enough for everyone...
      */
     int uptime = GetUptimeMinutes(time(NULL));
     printf("Uptime: %.2f days\n", uptime / (60.0 * 24));
-    assert_in_range(uptime, 5, 60*24*365*2);
+    assert_in_range(uptime, 1, 60*24*365*5);
 }
 
 int main()

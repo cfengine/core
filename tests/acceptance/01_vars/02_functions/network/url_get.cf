@@ -25,7 +25,7 @@ bundle agent init
 }';
 
       "options_clean" data => '{}';
-      "res1" data => url_get("http://cfengine.com", options_clean);
+      "res1" data => url_get("http://acme.com", options_clean);
       "res2" data => url_get("http://nosuchcfenginehost.com", options_clean);
       # static content, we hope won't change much
       "res3" data => url_get("http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js", options_limit);

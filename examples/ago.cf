@@ -46,8 +46,8 @@ bundle agent testbundle
 body process_select proc_finder
 
 {
-      # Processes started between 100 years + 5.5 hours and 20 minutes ago
-      stime_range => irange(ago(100,0,0,5,30,0),ago(0,0,0,0,20,0));
+      # Processes started between 100 years + 5.5 hours and 1 minute ago
+      stime_range => irange(ago(100,0,0,5,30,0),ago(0,0,0,0,1,0));
       process_result => "stime";
 }
 

@@ -745,8 +745,8 @@ do
             UNSAFE_TESTS=0
             STAGING_TESTS=0
 
-            tests_selected=${1#--tests=}
-            for testtype in `echo $tests_selected | tr , ' '`
+            TESTS_SELECTED=${1#--tests=}
+            for testtype in `echo $TESTS_SELECTED | tr , ' '`
             do
                 case "$testtype" in
                     common)      COMMON_TESTS=1;;
@@ -1131,6 +1131,16 @@ run_all_tests() {
     done
 }
 
+
+# TODO this function is currently creating a Makefile with all possible
+#      tests, either they will run or be skipped. The proper way is to
+#      do all the checks that now are in runtest(), and add the test
+#      here only if it will run. This should be done higher up, where
+#      ALL_TESTS is populated.
+#
+#      When this is done, there won't be a need to pass --tests=... down
+#      the makefile subexecutions.
+
 run_all_tests_using_make() {
     MAKEFILE=Makefile.testall
 
@@ -1180,7 +1190,7 @@ run_all_tests_using_make() {
         do
             if eval test -n '"$MAKE_RECIPE_LIST'$i'"'
             then
-                eval printf '"serial_block$i:\n\t@-$0 --stay-in-workdir -j1 $MAKE_RECIPE_LIST'$i'\n\n"'
+                eval printf '"serial_block$i:\n\t@-$0 --stay-in-workdir -j1 ${TESTS_SELECTED:+--tests=$TESTS_SELECTED} $MAKE_RECIPE_LIST'$i'\n\n"'
             fi
             printf "serial_block$i: serial_block$(($i-1)) parallel_block$(($i-1))\n\n"
             eval printf '"parallel_block$i: $MAKE_TARGET_LIST'$i'\n\n"'
@@ -1193,7 +1203,7 @@ run_all_tests_using_make() {
             i=$(($i + 1))
         done
 
-        printf "%%_rule: %%\n\t@-$0 --stay-in-workdir -j1 \$<\n\n"
+        printf "%%_rule: %%\n\t@-$0 --stay-in-workdir -j1 ${TESTS_SELECTED:+--tests=$TESTS_SELECTED} \$<\n\n"
     ) > $MAKEFILE
 
     ${MAKE:-make} -k -f $MAKEFILE

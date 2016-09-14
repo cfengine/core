@@ -73,9 +73,10 @@ script:
       ./testall --tests=common,timed,errorexit,libxml2,libcurl;
       return;
   fi
+  # TODO add unsafe to the list underneath; there is a permissions problem to be fixed first when setting --gainroot=sudo.
 - if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network ];
   then
-      ./testall --tests=unsafe,serial,network --gainroot=sudo;
+      ./testall --tests=serial,network;
       return;
   fi
 

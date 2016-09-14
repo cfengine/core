@@ -71,12 +71,19 @@ TESTS_ENVIRONMENT = env \
 	CF_KEY=`pwd`/../../cf-key/cf-key \
 	RPMVERCMP=`pwd`/../../ext/rpmvercmp \
 	MOCK_PACKAGE_MANAGER=`pwd`/mock_package_manager
+
 if !HAVE_LIBXML2
 TESTS_ENVIRONMENT += LIBXML2_TESTS=0
 endif
 
+if !HAVE_LIBCURL
+TESTS_ENVIRONMENT += LIBCURL_TESTS=0
+endif
+
 check-local:
-	@+MAKE=$(MAKE) ./testall
+        # Keep the '+' in front for the command, needed for the sub-make
+        # to run in parallel; TODO fix "make -n" not working.
+	+ MAKE=$(MAKE) ./testall
 
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \

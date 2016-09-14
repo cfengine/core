@@ -8,5 +8,6 @@ fi
 
 cd "$(dirname $0)/../.."
 
-tar --format=ustar -cf /dev/null *
+tar --exclude="tests/acceptance/workdir" --format=ustar -cf /dev/null *
+
 exit $?

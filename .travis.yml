@@ -111,6 +111,7 @@ deploy:
 
 
 after_script:
+- cd $TRAVIS_BUILD_DIR
 - mkdir artifacts
 - test "x$DIST_TARBALL" != x  &&  cp "$DIST_TARBALL" artifacts/
 - gzip config.log  &&  mv config.log.gz artifacts/

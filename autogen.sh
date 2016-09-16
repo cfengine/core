@@ -61,7 +61,7 @@ misc/determine-version.py > CFVERSION \
 echo "$0: Running autoreconf ..."
 autoreconf -Wno-portability --force --install -I m4  ||  exit
 
-cd -                # back to srcdir
+cd -                # back to original directory
 
 if [ -z "$NO_CONFIGURE" ]
 then

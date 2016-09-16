@@ -872,6 +872,7 @@ fi
 find_default_binary()
 {
     [ -x "`pwd`/../../../core/$2/$2" ] && eval $1=\""`pwd`/../../../core/$2/$2"\"
+    [ -x "`pwd`/../../../core/ext/$2" ] && eval $1=\""`pwd`/../../../core/ext/$2"\"
     [ -x "`pwd`/../../ext/$2" ] && eval $1=\""`pwd`/../../ext/$2"\"
     [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
     [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"

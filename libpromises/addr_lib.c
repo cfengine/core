@@ -576,25 +576,48 @@ bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
  */
 void ParseHostPort(char *s, char **hostname, char **port)
 {
-    char *h, *p;                              /* hostname, port temporaries */
+    char *h, *p;                            // hostname, port temporaries
 
-    if (s[0] == '[')                           /* IPv6 form: [address]:port */
+    h = s;
+    p = NULL;
+
+    char *first_colon = strchr(s, ':');
+    char *first_dot   = strchr(s, '.');
+
+    if (s[0] == '[')                       // [host or ip]:port
     {
         h = s + 1;
         p = strchr(h, ']');
         if (p != NULL)
         {
-            *p = '\0';                           /* '\0'-terminate hostname */
-            p = (p[1] == ':') ? p+2 : NULL;
+            *p = '\0';                     // '\0' terminate host name
+            if (p[1] == ':')               // move port* forward
+            {
+                p += 2;
+            }
         }
     }
-    else                                       /* normal form: address:port */
+    else if (first_colon == NULL)          // no colon, no port, host correct
     {
-        h = s;
+        // Do nothing
+    }
+    else if (first_dot == NULL || first_colon < first_dot)
+    {
+        // If only one colon: (cfengine.com:222 or localhost:)
+        if (strchr(first_colon + 1, ':') == NULL)
+        {
+            *first_colon = '\0';
+            p = first_colon + 1;
+        }
+        // Multiple colons means IPv6 address without port, host correct
+    }
+    else        // (first_dot < first_colon) : IPv4 or hostname, can have port
+    {
+        assert(first_dot < first_colon);
         p = strchr(h, ':');
         if (p != NULL)
         {
-            *p = '\0';                           /* '\0'-terminate hostname */
+            *p = '\0';                     // '\0'-terminate hostname
             p++;
         }
     }

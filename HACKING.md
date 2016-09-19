@@ -181,7 +181,7 @@ Coding Style
 ------------
 
 * Loosely based on Allman-4 and the
-  [Google C++ Style Guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
+  [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 * Keep in mind that code should be readable by non C experts.
   If you are a Guru, try to restrain yourself, only do magic when
   absolutely necessary.
@@ -435,5 +435,5 @@ following:
 It's worth noting that we strive to have bugtracker tickets
 for most changes, and they should be mentioned in the ChangeLog
 entries. In fact if anywhere in the commit message the
-string ```Redmine #1234``` or ```Jira #1234``` is found, it will be 
+string ```Redmine #1234``` or ```Jira #1234``` is found, it will be
 automatically added to the ChangeLog.

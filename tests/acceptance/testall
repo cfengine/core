@@ -474,6 +474,9 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
         TEST_END_TIME=$(unix_seconds)
 
+        # This script does not run under GAINROOT but it needs to write logs
+        $GAINROOT chmod ugo+rwxt "$WORKDIR"
+
         # Try to collect test metadata if any
         if egrep "R: test description: " $OUTFILE > /dev/null
         then

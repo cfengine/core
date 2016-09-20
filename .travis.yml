@@ -71,9 +71,11 @@ script:
       return;
   fi
   # TODO add unsafe to the list underneath; there is a permissions problem to be fixed first when setting --gainroot=sudo.
+
+  # WARNING: the following job runs the selected tests as root!
 - if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network ];
   then
-      ./testall --tests=serial,network;
+      ./testall --gainroot=sudo --tests=serial,network,unsafe;
       return;
   fi
 

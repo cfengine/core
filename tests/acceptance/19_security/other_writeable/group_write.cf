@@ -50,7 +50,8 @@ bundle agent test
 {
 
   vars:
-    "agent_output" string => execresult("$(sys.cf_agent) -f $(G.testfile)", "noshell");
+    "agent_output" string => execresult("$(sys.cf_agent) -f $(G.testfile)", "noshell"),
+      if => fileexists("$(G.testfile)");
 
   classes:
     "security_exception"

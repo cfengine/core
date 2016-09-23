@@ -354,7 +354,7 @@ runtest() {
     # Create workdir
     WORKDIR="$(workdir "$TEST")"
     OUTFILE="$WORKDIR/output.log"
-    rm -f "$OUTFILE"
+
     if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]
     then
         # Don't reset workdir if this is a subsequent pass.
@@ -362,6 +362,14 @@ runtest() {
         mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
         chmod ugo+rwxt "$WORKDIR/tmp"
     fi
+
+    # For unknown reason on the second pass, this file is root-owned, so we need GAINROOT here
+    $GAINROOT rm -f "$OUTFILE"
+
+    # Make sure these files are owned by the script, for some reason
+    # each agent execution or each pass, messes this up.
+    $GAINROOT touch        "$OUTFILE" "$WORKDIR/$LOG" "$WORKDIR/$SUMMARY" "$WORKDIR/$XML"
+    $GAINROOT chown $USER  "$OUTFILE" "$WORKDIR/$LOG" "$WORKDIR/$SUMMARY" "$WORKDIR/$XML"
 
     if [ -n "$NEXT_TIMEOUT_VAR" ]
     then
@@ -376,9 +384,10 @@ runtest() {
 
     else                                               # Do not skip
         # Prepare workdir
+
+        # Don't copy into workdir if this is a subsequent pass.
         if [ -z "$PASS_NUM" ] || [ "$PASS_NUM" -eq 1 ]
         then
-            # Don't copy into workdir if this is a subsequent pass.
             if [ -n "$BINDIR" ]
             then
                 # Copy everything, because Windows depends on DLLs.
@@ -459,15 +468,13 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
         else
             eval $GAINROOT "$WORKDIR/runtest" >>$OUTFILE 2>&1
         fi
+
         RETVAL=$?
+        TEST_END_TIME=$(unix_seconds)
+
         cat $OUTFILE >> "$WORKDIR/$LOG"
         echo >> "$WORKDIR/$LOG"
         echo "Return code is $RETVAL." >> "$WORKDIR/$LOG"
-
-        TEST_END_TIME=$(unix_seconds)
-
-        # This script does not run under GAINROOT but it needs to write logs
-        $GAINROOT chmod ugo+rwxt "$WORKDIR"
 
         # Try to collect test metadata if any
         if egrep "R: test description: " $OUTFILE > /dev/null
@@ -482,7 +489,6 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
         then
             TEST_COVERS="$(egrep "R: test covers" $OUTFILE | sed -e "s,.*test covers: \([A-Za-z0-9_]*\),\1,")"
         fi
-
 
         RESULT_MSG=
         if [ $TEST_TYPE != errorexit ]
@@ -578,7 +584,6 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             RESULT_MSG="${COLOR_FAILURE}$RESULT_MSG (UNEXPECTED FAILURE)${COLOR_NORMAL}"
         fi
     fi
-
 
     if [ "$RESULT" = "XFAIL" -o "$RESULT" = "SFAIL" ]
     then
@@ -1076,7 +1081,8 @@ collect_results()
             cat "$WORKDIR/$file" >> "$file"
             if [ "$NO_CLEAN" = "0" ]
             then
-                rm -f "$WORKDIR/$file"
+                # For unknown reason after the second pass, these file are root-owned, so we need GAINROOT here
+                $GAINROOT rm -f "$WORKDIR/$file"
             fi
         fi
     done

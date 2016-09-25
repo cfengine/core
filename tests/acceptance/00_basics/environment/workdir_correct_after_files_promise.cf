@@ -15,7 +15,7 @@ bundle agent check
   meta:
 
     # This test should be skipped on non linux hosts when its fixed (or
-    # improved to do something similar on platforms that dont have /bin/pwd
+    # improved to do something similar on platforms that don't have /bin/pwd
     "test_soft_fail"
       string => "any",
       meta =>  { "redmine7569" };

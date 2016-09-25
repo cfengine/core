@@ -114,7 +114,7 @@ bundle agent method_kept
 
 bundle agent method_repaired
 {
-# This bundle runs a command that retuns 0 and is by default considered
+# This bundle runs a command that returns 0 and is by default considered
 # repaired, so the bundle will be considered repaired
   commands:
     "$(G.true)"

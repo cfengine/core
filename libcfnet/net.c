@@ -158,7 +158,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
         ret = -1;
     }
 
-    /* If error occured or recv() timeout or if connection was gracefully
+    /* If error occurred or recv() timeout or if connection was gracefully
      * closed. Connection has been finalised. */
     if (ret <= 0)
     {

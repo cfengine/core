@@ -153,7 +153,7 @@
 	- Change: Policy files specified in the "inputs" section of
 	  def.json will no longer be auto-loaded. One has to refer to the
 	  which are using the "inputs" field inside def.json. (Redmine #7961)
-	- Change: Seperate binary details from policy update (Redmine #7662)
+	- Change: Separate binary details from policy update (Redmine #7662)
 	- Add guard for binary upgrade during bootstrap (Redmine #7861)
 	- Change: Modernize pkg module and package_method
 	- Remove: Userdir apache module
@@ -402,7 +402,7 @@
 	- Add url_get() function. (Redmine #6480)
 	- Add @if feature() syntax
 	  @if feature work like @if minimum_version but allows distinguishing
-	  between features choosen at compile time.
+	  between features chosen at compile time.
 	- Extend module protocol to create persistent classes.
 	  To use it, have the module print a line with "^persistence=<minutes>"
 	  before printing any class names. "persistence=0" goes back to non-
@@ -422,7 +422,7 @@
 	- Long promiser strings with multiple lines are now
 	  abbreviated in logs. (Redmine #3964)
 	- Change: Reunify Version based policy split
-	- Change: Seperate binary details from policy update (Redmine #7662)
+	- Change: Separate binary details from policy update (Redmine #7662)
 	- Remove /var/cfengine/cf3.<host>.runlog. (Redmine #6957)
 	- Change: sys.libdir and sys.local_libdir to non version specific path
 	    - sys.libdir now resolves to $(sys.inputdir)/lib
@@ -430,7 +430,7 @@
 	- Moved the following files to /var/cfengine/log/:
 	    - /var/cfengine/promise_summary.log
 	    - /var/cfengine/cfagent.<host>.log
-	- Change: Seperate binary details from policy update (Redmine #7662)
+	- Change: Separate binary details from policy update (Redmine #7662)
 	- Remove: Support for email settings from augments_file (Redmine #7682)
 
 	Bug fixes:
@@ -487,10 +487,10 @@
 	  (Redmine #7634)
 	- If file_select.file_types is set to symlink and there
 	  are regular files in the scanned directory, CFEngine no longer
-	  produces an unneccessary error message. (Redmine #6996)
+	  produces an unnecessary error message. (Redmine #6996)
 	- Fix 'AIX_PREINSTALL_ALREADY_DONE.txt: cannot create' error
 	  message on AIX.
-	- Fix package promise not removing dependant packages. (Redmine #7424)
+	- Fix package promise not removing dependent packages. (Redmine #7424)
 	- Fix: Solaris packages no longer contain duplicate library
 	  files, but instead symlinks to them. (Redmine #7591)
 	- Fix select_class not setting class when used in common bundle with slist.
@@ -654,7 +654,7 @@
 	  (Redmine #6708)
 	- If file_select.file_types is set to symlink and there
 	  are regular files in the scanned directory, CFEngine no longer
-	  produces an unneccessary error message. (Redmine #6996)
+	  produces an unnecessary error message. (Redmine #6996)
 	- Fix: Solaris packages no longer contain duplicate library
 	  files, but instead symlinks to them. (Redmine #7591)
 	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor

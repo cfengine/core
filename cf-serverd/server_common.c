@@ -1599,7 +1599,7 @@ static bool AuthorizeDelimitedArgs(const ServerConnectionState *conn,
 /**
  * @return #true if the connection should remain open for next requests, or
  *         #false if the server should actively close it - for example when
- *         protocol errors have occured.
+ *         protocol errors have occurred.
  */
 bool DoExec2(const EvalContext *ctx,
              ServerConnectionState *conn,

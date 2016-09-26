@@ -890,7 +890,7 @@ bundle edit_line set_config_values(v)
                     keep the settings near any inline documentation. If there
                     are multiple comments, then we don't try to replace them and
                     instead will later append the new value after the first
-                    commented occurance of $(index).",
+                    commented occurrence of $(index).",
         handle => "set_config_values_replace_commented_line",
         replace_with => value("$(index) $($(v)[$(index)])"),
           ifvarclass => "!line_exists_$(cindex[$(index)]).!replace_attempted_$(cindex[$(index)])_reached.!multiple_comments_$(cindex[$(index)])",
@@ -904,7 +904,7 @@ bundle edit_line set_config_values(v)
            classes => results("bundle", "replace_attempted_$(cindex[$(index)])");
 
   insert_lines:
-      # If the line doesn't exist, or there is more than one occurance
+      # If the line doesn't exist, or there is more than one occurrence
       # of the LHS commented out, insert a new line and try to place it
       # after the commented LHS (keep new line with old comments)
       "$(index) $($(v)[$(index)])"

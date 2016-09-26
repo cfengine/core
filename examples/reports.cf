@@ -2,7 +2,7 @@
 bundle agent main
 {
   reports:
-      "It's reccomended that you always guard reports"
+      "It's recommended that you always guard reports"
         comment => "Remember by default output from cf-agent when run
                     from cf-execd will be emailed";
 

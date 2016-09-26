@@ -167,7 +167,7 @@ bundle agent failsafe_cfe_internal_update
   processes:
 
       # TODO: Decide if this class guard is appropriate. Should we
-      # guard checking of cf-execd process runnning to when inputs are
+      # guard checking of cf-execd process running to when inputs are
       # repaired
     !windows.inputdir_update_repaired::
 
@@ -208,7 +208,7 @@ bundle agent failsafe_cfe_internal_update
         classes => failsafe_results("namespace", "cf_serverd_running"),
         comment => "cf-serverd is needed on policy hubs or remote
                     clients will not be able to get policy. Clients do
-                    not have a strong dependancy on cf-serverd and if
+                    not have a strong dependency on cf-serverd and if
                     the component is necessay it is expected to be
                     started by a separate policy.";
 

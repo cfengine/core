@@ -40,7 +40,7 @@ The script can now make use of the variables. Running the script (without any ar
     	-? --help  :  usage
         
 ##Supported definition parameters
-All definition parameters for `optparse.define` are provided as `key=value` pairs, seperated by an `=` sign.
+All definition parameters for `optparse.define` are provided as `key=value` pairs, separated by an `=` sign.
 ####`short`
 a short, single-letter name for the option
 ####`long`

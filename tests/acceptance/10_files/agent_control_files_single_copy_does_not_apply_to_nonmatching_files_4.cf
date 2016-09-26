@@ -11,8 +11,8 @@ body common control
 
 body agent control
 {
-  # Here we test a sane filename pattern against a file we definately
-  # arent copying. But this time we are using a variable witin the
+  # Here we test a sane filename pattern against a file we definitely
+  # aren't copying. But this time we are using a variable witin the
   # pattern.
   files_single_copy => { "$(sys.workdir)/state/WORKAROUND-CFE-2459" };
 }

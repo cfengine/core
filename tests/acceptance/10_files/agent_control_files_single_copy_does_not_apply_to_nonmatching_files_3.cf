@@ -11,8 +11,8 @@ body common control
 
 body agent control
 {
-  # Here we test a sane filename pattern against a file we definately
-  # arent copying.
+  # Here we test a sane filename pattern against a file we definitely
+  # aren't copying.
   files_single_copy => { "/var/cfengine/state/WORKAROUND-CFE-2459" };
 }
 

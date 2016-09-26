@@ -299,7 +299,7 @@ body common control
 #######################################################
 
 bundle agent init
-# Initalize the environment and prepare for test
+# Initialize the environment and prepare for test
 {
 
 }

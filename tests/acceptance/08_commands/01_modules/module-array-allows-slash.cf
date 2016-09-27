@@ -1,0 +1,65 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" string => "Test that arrays defined by modules can contain slashes just like classic arrays.";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2478" };
+
+  commands:
+
+    # Define a simple classic array using the module protocol.
+
+      "$(G.echo)"
+        args => "=array[key]=array_key_value",
+        module => "true";
+
+    # Define a classic array where the key contains a backslash using the module protocol.
+
+      "$(G.echo)"
+        args => "=array[/path/key]=array_path_key_value",
+        module => "true";
+
+  vars:
+
+    # Define a classic array where the key contains a backslash.
+
+    "array[/path/key]" string => "another_array_path_key_value";
+
+    #Find all the array entries defined by the module commands.
+    "v" slist => variablesmatching("default:echo\.*array.*");
+
+  reports:
+    DEBUG::
+     "Found variable '$(v)'";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    # Construct strings from the array values for comparison and test pass/fail
+    "expected" string => "array_value array_path_key_value another_array_path_key_value";
+    "actual" string => "$(echo.array[key]) $(echo.array[/path/key]) $(test.array[/path/key])";
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(expected),
+                                       $(actual),
+                                       $(this.promise_filename),
+                                       "no");
+
+  reports:
+    DEBUG::
+      "module array[key] = '$(echo.array[key])'";
+      "module array[/path/key] = '$(echo.array[/path/key])'";
+      "classic array[/path/key] = '$(test.array[/path/key])'";
+}

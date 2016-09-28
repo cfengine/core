@@ -54,6 +54,8 @@ script:
 - ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR
 
 - make dist
+- export DIST_TARBALL=`echo cfengine-*.tar.gz`
+
 - make
 
 - if [ "$JOB_TYPE" = compile_and_unit_test ];
@@ -81,7 +83,6 @@ script:
 
 before_deploy:
 
-- export DIST_TARBALL=`echo cfengine-*.tar.gz`
   # A tag ending with "number.number" is not a prerelease
 - if echo $DIST_TARBALL | grep -E -q '[0-9]{1,2}\.[0-9]{1,2}\.tar\.gz';
   then

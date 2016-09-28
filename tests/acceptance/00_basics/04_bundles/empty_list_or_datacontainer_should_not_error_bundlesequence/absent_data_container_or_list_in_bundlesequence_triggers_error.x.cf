@@ -1,0 +1,26 @@
+body common control
+{
+  bundlesequence => { def, test, check, @(def.bundlesequnece_end) };
+}
+
+bundle common def
+{
+  vars:
+    "v" slist => variablesmatching("default\:def.*");
+
+  reports:
+    DEBUG::
+      "Def Varaiable: $(v)";
+}
+
+bundle agent test
+{
+  meta:
+    "description" string => "Test that a non existing data container or list triggers an undefined bundle error";
+}
+
+bundle agent check 
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}

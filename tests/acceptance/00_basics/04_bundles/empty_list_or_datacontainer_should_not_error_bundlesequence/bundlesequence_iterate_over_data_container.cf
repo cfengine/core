@@ -1,0 +1,62 @@
+body common control
+{
+  inputs => { "../../../default.cf.sub" };
+  bundlesequence => { collect_stories_metadata, test_precheck, def, test, @(def.container), check };
+}
+
+bundle common def
+{
+  vars:
+    "v" slist => variablesmatching("default\:def.*");
+    "m" data => mergedata( "def.missing" );
+    "values" slist => getvalues(m);
+    "indices" slist => getindices(m);
+    "container" data => parsejson('[ "one", "two" ]');
+#    "list" slist => { "one", "two" };
+#    "container" data => mergedata(list);
+
+  reports:
+    DEBUG::
+      "Def Varaiable: $(v)";
+      "container: $(container)";
+}
+
+bundle agent one
+{
+  classes:
+   # We check for this class in bundle agent check
+    "actuated_bundle_agent_$(this.bundle)" expression => "any", scope => "namespace";
+
+  reports: "one";
+}
+
+bundle agent two
+{
+  classes:
+   # We check for this class in bundle agent check
+    "actuated_bundle_agent_$(this.bundle)" expression => "any", scope => "namespace";
+
+  reports: "two";
+}
+
+
+bundle agent test
+{
+  meta:
+    "description" string => "Test that bundlesequence in body common control can iterate over a data container.";
+
+      # This was working in 3.7.4 but has regressed.
+      "test_soft_fail"
+        string => "!cfengine_3_7",
+        meta => { "CFE-2460"};
+}
+
+bundle agent check
+{
+  reports:
+    actuated_bundle_agent_one.actuated_bundle_agent_two::
+      "$(this.promise_filename) Pass";
+
+    !(actuated_bundle_agent_one.actuated_bundle_agent_two)::
+      "$(this.promise_filename) FAIL";
+}

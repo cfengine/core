@@ -265,16 +265,17 @@ StringSet *PolicySourceFiles(const Policy *policy)
 
 /*************************************************************************/
 
-static char *StripNamespace(const char *full_symbol)
+static const char *StripNamespace(const char *full_symbol)
 {
     char *sep = strchr(full_symbol, CF_NS);
-    if (sep)
+
+    if (sep == NULL)
     {
-        return xstrdup(sep + 1);
+        return full_symbol;
     }
     else
     {
-        return xstrdup(full_symbol);
+        return sep + 1;
     }
 }
 
@@ -293,13 +294,11 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         Body *bp = SeqAt(policy->bodies, i);
+        const char *body_symbol = StripNamespace(bp->name);
 
-        char *body_symbol = StripNamespace(bp->name);
-
-        if (strcmp(bp->type, type) == 0 && strcmp(body_symbol, name) == 0)
+        if (strcmp(bp->type, type)    == 0 &&
+            strcmp(body_symbol, name) == 0)
         {
-            free(body_symbol);
-
             // allow namespace to be optionally matched
             if (ns && strcmp(bp->ns, ns) != 0)
             {
@@ -308,8 +307,6 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
 
             return bp;
         }
-
-        free(body_symbol);
     }
 
     return NULL;
@@ -327,19 +324,17 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
  */
 Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, const char *name)
 {
+    const char *bundle_symbol = StripNamespace(name);
+
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
-
-        char *bundle_symbol = StripNamespace(name);
 
         if ((type == NULL || strcmp(bp->type, type) == 0)
             &&
             ((strcmp(bp->name, bundle_symbol) == 0) ||
              (strcmp(bp->name, name)          == 0)))
         {
-            free(bundle_symbol);
-
             // allow namespace to be optionally matched
             if (ns && strcmp(bp->ns, ns) != 0)
             {
@@ -348,8 +343,6 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
 
             return bp;
         }
-
-        free(bundle_symbol);
     }
 
     return NULL;

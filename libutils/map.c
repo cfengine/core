@@ -158,6 +158,8 @@ static void ConvertToHashMap(Map *map)
 bool MapInsert(Map *map, void *key, void *value)
 {
     assert(map != NULL);
+    /* MapGet() is not capable of handling NULL values. */
+    assert(value != NULL);
 
     if (IsArrayMap(map))
     {
@@ -200,11 +202,20 @@ bool MapHasKey(const Map *map, const void *key)
     return MapGetRaw(map, key) != NULL;
 }
 
+/* NULL return means not found, or value was NULL! TODO fix, it should only
+ * mean one thing. I added the assert() to make sure we never store NULL
+ * values. */
 void *MapGet(Map *map, const void *key)
 {
     assert(map != NULL);
     MapKeyValue *kv = MapGetRaw(map, key);
-    return kv ? kv->value : NULL;
+    if (kv != NULL)
+    {
+        assert(kv->value != NULL);
+        return kv->value;
+    }
+
+    return NULL;
 }
 
 bool MapRemove(Map *map, const void *key)

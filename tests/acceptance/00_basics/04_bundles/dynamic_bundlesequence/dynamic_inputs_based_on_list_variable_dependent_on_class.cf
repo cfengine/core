@@ -1,0 +1,25 @@
+body common control
+{
+    inputs         => { @(inventory.inputs)  };
+    bundlesequence => { @(inventory.bundles) };
+}
+
+bundle common inventory
+{
+    classes:
+        "this_is_true" expression => "any";
+
+    vars:
+      !this_is_true::
+        "inputs"  slist => { };
+        "bundles" slist => { "bad" };
+      this_is_true::
+        "inputs"  slist => { "$(this.promise_filename).sub" };
+        "bundles" slist => { "good" };
+}
+
+bundle agent bad
+{
+    reports:
+        "$(this.promise_filename) FAIL";
+}

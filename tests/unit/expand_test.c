@@ -62,7 +62,7 @@ static void test_extract_reference(void)
     test_extract_reference_("$(x${$(y)}) $(y) ${x${z}}", true, "$(x${$(y)})", "x${$(y)}");
 }
 
-
+#if 0
 static void test_map_iterators_from_rval_empty(void **state)
 {
     EvalContext *ctx = *state;
@@ -245,7 +245,7 @@ static void test_map_iterators_from_rval_naked_list_var_namespace(void **state)
     EvalContextStackPopFrame(ctx);
     PolicyDestroy(p);
 }
-
+#endif
 static void test_expand_scalar_two_scalars_concat(void **state)
 {
     EvalContext *ctx = *state;
@@ -564,10 +564,12 @@ int main()
     {
         unit_test(test_extract_scalar_prefix),
         unit_test(test_extract_reference),
+#if 0
         unit_test_setup_teardown(test_map_iterators_from_rval_empty, test_setup, test_teardown),
         unit_test_setup_teardown(test_map_iterators_from_rval_literal, test_setup, test_teardown),
         unit_test_setup_teardown(test_map_iterators_from_rval_naked_list_var, test_setup, test_teardown),
         unit_test_setup_teardown(test_map_iterators_from_rval_naked_list_var_namespace, test_setup, test_teardown),
+#endif
         unit_test_setup_teardown(test_expand_scalar_two_scalars_concat, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_scalar_two_scalars_nested, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_scalar_array_concat, test_setup, test_teardown),

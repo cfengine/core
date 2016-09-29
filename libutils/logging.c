@@ -27,6 +27,7 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 
+
 char VPREFIX[1024] = ""; /* GLOBAL_C */
 
 static char AgentType[80] = "generic";
@@ -309,6 +310,148 @@ void Log(LogLevel level, const char *fmt, ...)
     VLog(level, fmt, ap);
     va_end(ap);
 }
+
+
+
+static bool module_is_enabled[LOG_MOD_MAX];
+static const char *log_modules[LOG_MOD_MAX] =
+{
+    "",
+    "evalctx",
+    "expand",
+    "iterations",
+    "parser",
+    "vartable",
+    "vars",
+};
+
+static enum LogModule LogModuleFromString(const char *s)
+{
+    for (enum LogModule i = 0; i < LOG_MOD_MAX; i++)
+    {
+        if (strcmp(log_modules[i], s) == 0)
+        {
+            return i;
+        }
+    }
+
+    return LOG_MOD_NONE;
+}
+
+void LogEnableModule(enum LogModule mod)
+{
+    assert(mod < LOG_MOD_MAX);
+
+    module_is_enabled[mod] = true;
+}
+
+void LogModuleHelp(void)
+{
+    printf("\n--log-modules accepts a comma separated list of one or more of the following:\n\n");
+    printf("    help\n");
+    printf("    all\n");
+    for (enum LogModule i = LOG_MOD_NONE + 1;  i < LOG_MOD_MAX;  i++)
+    {
+        printf("    %s\n", log_modules[i]);
+    }
+    printf("\n");
+}
+
+/**
+ * Parse a string of modules, and enable the relevant DEBUG logging modules.
+ * Example strings:
+ *
+ *   all         : enables all debug modules
+ *   help        : enables nothing, but prints a help message
+ *   iterctx     : enables the "iterctx" debug logging module
+ *   iterctx,vars: enables the 2 debug modules, "iterctx" and "vars"
+ *
+ * @NOTE modifies string #s but restores it before returning.
+ */
+bool LogEnableModulesFromString(char *s)
+{
+    bool retval = true;
+
+    const char *token = s;
+    char saved_sep = ',';                     /* any non-NULL value will do */
+    while (saved_sep != '\0' && retval != false)
+    {
+        char *next_token = strchrnul(token, ',');
+        saved_sep        = *next_token;
+        *next_token      = '\0';                      /* modify parameter s */
+        size_t token_len = next_token - token;
+
+        if (strcmp(token, "help") == 0)
+        {
+            LogModuleHelp();
+            retval = false;                                   /* early exit */
+        }
+        else if (strcmp(token, "all") == 0)
+        {
+            for (enum LogModule j = LOG_MOD_NONE + 1; j < LOG_MOD_MAX; j++)
+            {
+                LogEnableModule(j);
+            }
+        }
+        else
+        {
+            enum LogModule mod = LogModuleFromString(token);
+
+            assert(mod < LOG_MOD_MAX);
+            if (mod == LOG_MOD_NONE)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Unknown debug logging module '%*s'",
+                    (int) token_len, token);
+            }
+            else
+            {
+                LogEnableModule(mod);
+            }
+        }
+
+
+        *next_token = saved_sep;            /* restore modified parameter s */
+        next_token++;                       /* bypass comma */
+        token = next_token;
+    }
+
+    return retval;
+}
+
+bool LogModuleEnabled(enum LogModule mod)
+{
+    assert(mod > LOG_MOD_NONE);
+    assert(mod < LOG_MOD_MAX);
+
+    if (module_is_enabled[mod])
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void LogDebug(enum LogModule mod, const char *fmt, ...)
+{
+    assert(mod < LOG_MOD_MAX);
+
+    /* Did we forget any entry in log_modules? Should be a static assert. */
+    assert(sizeof(log_modules) / sizeof(log_modules[0]) == LOG_MOD_MAX);
+
+    if (LogModuleEnabled(mod))
+    {
+        va_list ap;
+        va_start(ap, fmt);
+        VLog(LOG_LEVEL_DEBUG, fmt, ap);
+        va_end(ap);
+        /* VLog(LOG_LEVEL_DEBUG, "%s: ...", */
+        /*      debug_modules_description[mod_order], ...); */
+    }
+}
+
 
 void LogSetGlobalLevel(LogLevel level)
 {

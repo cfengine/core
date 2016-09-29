@@ -24,14 +24,15 @@
 
 SUBDIRS = 25_cf-execd
 
-AM_CPPFLAGS = $(ENTERPRISE_CFLAGS) \
+AM_CPPFLAGS = $(CORE_CPPFLAGS) $(ENTERPRISE_CFLAGS) \
 	-I$(top_srcdir)/libpromises \
 	-I$(top_srcdir)/libutils \
-	-I$(top_srcdir)/libcfnet \
-	$(OPENSSL_CPPFLAGS)
+	-I$(top_srcdir)/libcfnet
 
-AM_CFLAGS = \
-	$(OPENSSL_CFLAGS)
+AM_CFLAGS  = $(CORE_CFLAGS)
+AM_LDFLAGS = $(CORE_LDFLAGS)
+LIBS       = $(CORE_LIBS)
+
 
 noinst_PROGRAMS =
 

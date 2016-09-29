@@ -42,12 +42,12 @@ bundle edit_line init_insert
       "key='string6abc' value='   abc'";
       "key='string-6abc' value='abc   '";
       "key='2strings-6abc-6def' value='abc   def   '";
+      "key='S_empty_list' value='{  }'";
       "key='badend' value='ends badly '";
       "key='escape' value='% should be a single percent'";
       "key='S_123_list' value='{ \"one\", \"two\", \"\\\"three\\\"\" }'";
       "key='S_container_1' value='[null]'";
       "key='S_container_2' value='[{\"x\":123},\"yz\"]'";
-      "key='S_empty_list' value='{ --empty-list-- }'";
 }
 
 #######################################################

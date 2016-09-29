@@ -2,6 +2,8 @@
 #
 # Test list iteration over cf_null special blank characters, all blank
 #
+# NOTE: tests conditions have been reversed! cf_null is no longer
+#       treated specially!
 #######################################################
 
 body common control
@@ -20,8 +22,8 @@ bundle agent init
   files:
       "$(G.testfile).expected"
       create => "true",
-      edit_defaults => init_empty;
-
+      edit_defaults => init_empty,
+      edit_line => init_insert("cf_null");
 }
 
 bundle edit_line init_insert(str)

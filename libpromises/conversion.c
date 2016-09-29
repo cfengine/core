@@ -723,6 +723,21 @@ const char *DataTypeShortToType(char *short_type)
     return "unknown type";
 }
 
+bool DataTypeIsIterable(DataType t)
+{
+    if (t == CF_DATA_TYPE_STRING_LIST ||
+        t == CF_DATA_TYPE_INT_LIST    ||
+        t == CF_DATA_TYPE_REAL_LIST   ||
+        t == CF_DATA_TYPE_CONTAINER)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 int CoarseLaterThan(const char *bigger, const char *smaller)
 {
     char month_small[CF_SMALLBUF];

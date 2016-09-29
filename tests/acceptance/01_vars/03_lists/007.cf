@@ -1,5 +1,8 @@
 # Test that cf_null lists can be joined
 
+# NOTE: tests conditions have been reversed! cf_null is no longer
+#       treated specially!
+
 body common control
 {
       inputs => { "../../default.cf.sub" };
@@ -28,7 +31,7 @@ bundle agent check
   classes:
       "ok1" expression => strcmp($(joined), "");
 
-      "ok" and => { "ok1" };
+      "ok" not => "ok1";    # the list should contain cf_null
 
   reports:
     ok::
@@ -36,5 +39,5 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
     DEBUG::
-      "Expected empty string, got $(joined)!";
+      "Expected cf_null string, got $(joined)!";
 }

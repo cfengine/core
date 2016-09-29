@@ -569,15 +569,18 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     *excluded = false;
 
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
-    if (!returnval.item || (strcmp(returnval.item, CF_NULL_VALUE) == 0))
+    if (returnval.item == NULL)
     {
-        RvalDestroy(returnval);
+        assert(returnval.type == RVAL_TYPE_LIST ||
+               returnval.type == RVAL_TYPE_NOPROMISEE);
+        /* TODO Log() empty slist, promise skipped? */
         *excluded = true;
         return NULL;
     }
     Promise *pcopy = xcalloc(1, sizeof(Promise));
     pcopy->promiser = RvalScalarValue(returnval);
 
+    /* TODO remove the conditions here for fixing redmine#7880. */
     if ((strcmp("files", pp->parent_promise_type->name) != 0) &&
         (strcmp("storage", pp->parent_promise_type->name) != 0))
     {
@@ -606,7 +609,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     {
         if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
         {
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_DEBUG,
                 "Skipping evaluation of classes promise as class '%s' is already set",
                 CanonifyName(pcopy->promiser));
 
@@ -625,8 +628,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
         if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s',"
-                " for if/ifvarclass is not in scope", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
+                " because 'if'/'ifvarclass' is not defined", pp->promiser);
 
             *excluded = true;
             return pcopy;
@@ -640,7 +643,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         if (unless && IsVarClassDefined(ctx, unless, pcopy))
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s',"
-                " for unless is in scope", pp->promiser);
+                " because 'unless' is defined", pp->promiser);
 
             *excluded = true;
             return pcopy;
@@ -673,8 +676,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
         // special constraints ifvarclass and depends_on are evaluated before the rest of the constraints
         if (strcmp(cp->lval, "ifvarclass") == 0 ||
-            strcmp(cp->lval, "if") == 0 ||
-            strcmp(cp->lval, "unless") == 0 ||
+            strcmp(cp->lval, "if")         == 0 ||
+            strcmp(cp->lval, "unless")     == 0 ||
             strcmp(cp->lval, "depends_on") == 0)
         {
             continue;

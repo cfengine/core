@@ -83,6 +83,9 @@ static bool PromiseCheck(const Promise *pp, Seq *errors);
 
 /*************************************************************************/
 
+/**
+ * @brief Return a default bundle name for this method/service
+ */
 Rval DefaultBundleConstraint(const Promise *pp, char *promisetype)
 {
     static char name[CF_BUFSIZE];
@@ -262,33 +265,40 @@ StringSet *PolicySourceFiles(const Policy *policy)
 
 /*************************************************************************/
 
-static char *StripNamespace(const char *full_symbol)
+static const char *StripNamespace(const char *full_symbol)
 {
     char *sep = strchr(full_symbol, CF_NS);
-    if (sep)
+
+    if (sep == NULL)
     {
-        return xstrdup(sep + 1);
+        return full_symbol;
     }
     else
     {
-        return xstrdup(full_symbol);
+        return sep + 1;
     }
 }
 
 /*************************************************************************/
 
+/**
+ * @brief Query a policy for a body
+ * @param policy The policy to query
+ * @param ns Namespace filter (optionally NULL)
+ * @param type Body type filter
+ * @param name Body name filter
+ * @return Body child object if found, otherwise NULL
+ */
 Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name)
 {
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         Body *bp = SeqAt(policy->bodies, i);
+        const char *body_symbol = StripNamespace(bp->name);
 
-        char *body_symbol = StripNamespace(bp->name);
-
-        if (strcmp(bp->type, type) == 0 && strcmp(body_symbol, name) == 0)
+        if (strcmp(bp->type, type)    == 0 &&
+            strcmp(body_symbol, name) == 0)
         {
-            free(body_symbol);
-
             // allow namespace to be optionally matched
             if (ns && strcmp(bp->ns, ns) != 0)
             {
@@ -297,8 +307,6 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
 
             return bp;
         }
-
-        free(body_symbol);
     }
 
     return NULL;
@@ -306,18 +314,27 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
 
 /*************************************************************************/
 
+/**
+ * @brief Query a policy for a bundle
+ * @param policy The policy to query
+ * @param ns Namespace filter (optionally NULL)
+ * @param type Bundle type filter
+ * @param name Bundle name filter
+ * @return Bundle child object if found, otherwise NULL
+ */
 Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, const char *name)
 {
+    const char *bundle_symbol = StripNamespace(name);
+
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        char *bundle_symbol = StripNamespace(name);
-
-        if ((!type || strcmp(bp->type, type) == 0) && ((strcmp(bundle_symbol, bp->name) == 0) || (strcmp(bp->name, name) == 0)))
+        if ((type == NULL || strcmp(bp->type, type) == 0)
+            &&
+            ((strcmp(bp->name, bundle_symbol) == 0) ||
+             (strcmp(bp->name, name)          == 0)))
         {
-            free(bundle_symbol);
-
             // allow namespace to be optionally matched
             if (ns && strcmp(bp->ns, ns) != 0)
             {
@@ -326,8 +343,6 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
 
             return bp;
         }
-
-        free(bundle_symbol);
     }
 
     return NULL;
@@ -335,6 +350,11 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
 
 /*************************************************************************/
 
+/**
+ * @brief Check to see if a policy is runnable (contains body common control)
+ * @param policy Policy to check
+ * @return True if policy is runnable
+ */
 bool PolicyIsRunnable(const Policy *policy)
 {
     return PolicyGetBody(policy, NULL, "common", "control") != NULL;
@@ -342,6 +362,12 @@ bool PolicyIsRunnable(const Policy *policy)
 
 /*************************************************************************/
 
+/**
+ * @brief Merge two partial policy objects. The memory for the child objects of the original policies are transferred to the new parent.
+ * @param a
+ * @param b
+ * @return Merged policy
+ */
 Policy *PolicyMerge(Policy *a, Policy *b)
 {
     Policy *result = PolicyNew();
@@ -396,6 +422,11 @@ const char *ConstraintGetNamespace(const Constraint *cp)
 
 /*************************************************************************/
 
+/**
+ * @brief Convenience function to get the policy object associated with a promise
+ * @param promise
+ * @return Policy object
+ */
 const Policy *PolicyFromPromise(const Promise *promise)
 {
     assert(promise);
@@ -717,7 +748,7 @@ static const char *RvalFullSymbol(const Rval *rval)
 }
 
 /**
- * @return A copy of the namespace compoent of an Rval, or NULL. e.g. "foo:bar""foo"
+ * @return A copy of the namespace component of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
  */
 char *QualifiedNameNamespaceComponent(const char *qualified_name)
 {
@@ -735,7 +766,7 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name)
 }
 
 /**
- * @return A copy of the symbol compoent of an Rval, or NULL. e.g. "foo:bar""bar"
+ * @return A copy of the symbol compoent of a qualified name, or NULL. e.g. "foo:bar" -> "bar"
  */
 char *QualifiedNameScopeComponent(const char *qualified_name)
 {
@@ -961,6 +992,13 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
     return success;
 }
 
+/**
+ * @brief Check a runnable policy DOM for errors
+ * @param policy Policy to check
+ * @param errors Sequence of PolicyError to append errors to
+ * @param ignore_missing_bundles Whether to ignore missing bundle references
+ * @return True if no new errors are found
+ */
 bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles)
 {
     bool success = true;
@@ -978,6 +1016,12 @@ bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *erro
     return success;
 }
 
+/**
+ * @brief Check a partial policy DOM for errors
+ * @param policy Policy to check
+ * @param errors Sequence of PolicyError to append errors to
+ * @return True if no new errors are found
+ */
 bool PolicyCheckPartial(const Policy *policy, Seq *errors)
 {
     bool success = true;
@@ -1756,6 +1800,11 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
     return json_contexts;
 }
 
+/**
+ * @brief Serialize a bundle as JSON
+ * @param bundle The bundle to serialize
+ * @return A JsonElement representing the input bundle
+ */
 JsonElement *BundleToJson(const Bundle *bundle)
 {
     JsonElement *json_bundle = JsonObjectCreate(10);
@@ -1804,7 +1853,11 @@ JsonElement *BundleToJson(const Bundle *bundle)
     return json_bundle;
 }
 
-
+/**
+ * @brief Serialize a body as JSON
+ * @param body The body to serialize
+ * @return A JsonElement representing the input body
+ */
 JsonElement *BodyToJson(const Body *body)
 {
     JsonElement *json_body = JsonObjectCreate(10);
@@ -1836,6 +1889,11 @@ JsonElement *BodyToJson(const Body *body)
     return json_body;
 }
 
+/**
+ * @brief Serialize a policy as JSON
+ * @param policy The policy to serialize
+ * @return A JsonElement representing the input policy
+ */
 JsonElement *PolicyToJson(const Policy *policy)
 {
     JsonElement *json_policy = JsonObjectCreate(10);
@@ -2011,6 +2069,11 @@ void BundleToString(Writer *writer, Bundle *bundle)
     WriterWrite(writer, "\n}\n");
 }
 
+/**
+ * @brief Pretty-print a policy
+ * @param policy The policy to print
+ * @param writer Writer to write into
+ */
 void PolicyToString(const Policy *policy, Writer *writer)
 {
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -2214,7 +2277,11 @@ static Body *PolicyAppendBodyJson(Policy *policy, JsonElement *json_body)
     return body;
 }
 
-
+/**
+ * @brief Deserialize a policy from JSON
+ * @param json_policy JSON to deserialize
+ * @return A policy DOM
+ */
 Policy *PolicyFromJson(JsonElement *json_policy)
 {
     Policy *policy = PolicyNew();
@@ -2240,7 +2307,12 @@ Policy *PolicyFromJson(JsonElement *json_policy)
     return policy;
 }
 
-
+/**
+ * @brief A sequence of constraints matching the l-value.
+ * @param body Body to query
+ * @param lval l-value to match
+ * @return Sequence of pointers to the constraints. Destroying it does not alter the DOM.
+ */
 Seq *BodyGetConstraint(Body *body, const char *lval)
 {
     Seq *matches = SeqNew(5, NULL);
@@ -2271,6 +2343,11 @@ bool BodyHasConstraint(const Body *body, const char *lval)
     return false;
 }
 
+/**
+ * @brief Get the context of the given constraint
+ * @param cp
+ * @return context. never returns NULL.
+ */
 const char *ConstraintContext(const Constraint *cp)
 {
     switch (cp->type)
@@ -2287,6 +2364,11 @@ const char *ConstraintContext(const Constraint *cp)
     }
 }
 
+/**
+ * @brief Returns the first effective constraint from a list of candidates, depending on evaluation state.
+ * @param constraints The list of potential candidates
+ * @return The effective constraint, or NULL if none are found.
+ */
 Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints)
 {
     for (size_t i = 0; i < SeqLength(constraints); i++)
@@ -2317,6 +2399,12 @@ void ConstraintDestroy(Constraint *cp)
 
 /*****************************************************************************/
 
+/**
+ * @brief Get the trinary boolean value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param list
+ * @return True/false, or CF_UNDEFINED if not found
+ */
 int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_UNDEFINED;
@@ -2371,6 +2459,12 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
 
 /*****************************************************************************/
 
+/**
+ * @brief Get the trinary boolean value of the first effective constraint found matching
+ * @param lval
+ * @param constraints
+ * @return True/false, or CF_UNDEFINED if not found
+ */
 int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq *constraints)
 {
     int retval = CF_UNDEFINED;
@@ -2526,6 +2620,9 @@ static void PromiseTypePath(Writer *w, const PromiseType *pt)
     WriterWrite(w, pt->name);
 }
 
+/**
+ * @brief Write a string describing the promise location in policy, e.g. /default/foo/packages/'emacs'
+ */
 void PromisePath(Writer *w, const Promise *pp)
 {
     PromiseTypePath(w, pp->parent_promise_type);
@@ -2535,11 +2632,22 @@ void PromisePath(Writer *w, const Promise *pp)
     WriterWriteChar(w, '\'');
 }
 
+/**
+ * @brief Return handle of the promise.
+ * @param pp
+ * @return Promise handle or NULL if no handle is provided
+ */
 const char *PromiseGetHandle(const Promise *pp)
 {
     return (const char *)PromiseGetImmediateRvalValue("handle", pp, RVAL_TYPE_SCALAR);
 }
 
+/**
+ * @brief Get the int value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param pp
+ * @return Int value, or CF_NOINT
+ */
 int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_NOINT;
@@ -2562,6 +2670,10 @@ int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Pr
 
 /*****************************************************************************/
 
+/**
+ * @brief Get the real value of the first effective constraint found matching, from a promise
+ * @return true if value could be extracted
+ */
 bool PromiseGetConstraintAsReal(const EvalContext *ctx, const char *lval, const Promise *pp, double *value_out)
 {
     const Constraint *cp = PromiseGetConstraint(pp, lval);
@@ -2607,6 +2719,12 @@ static bool Str2Mode(const char *s, mode_t *mode_out)
     return true;
 }
 
+/**
+ * @brief Get the octal value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param list
+ * @return Double value, or 077 if not found
+ */
 mode_t PromiseGetConstraintAsOctal(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     mode_t retval = 077;
@@ -2645,6 +2763,12 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
 
 #else /* !__MINGW32__ */
 
+/**
+ * @brief Get the uid value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param pp
+ * @return Uid value, or CF_SAME_OWNER if not found
+ */
 uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_SAME_OWNER;
@@ -2681,6 +2805,12 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
 
 #else /* !__MINGW32__ */
 
+/**
+ * @brief Get the uid value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param pp
+ * @return Gid value, or CF_SAME_GROUP if not found
+ */
 gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promise *pp)
 {
     int retval = CF_SAME_GROUP;
@@ -2707,6 +2837,12 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
 
 /*****************************************************************************/
 
+/**
+ * @brief Get the Rlist value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param list
+ * @return Rlist or NULL if not found (note: same as empty list)
+ */
 // FIX: promise constrained classed?
 Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
@@ -2726,6 +2862,12 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
     return NULL;
 }
 
+/**
+ * @brief Get the first effective constraint from the promise, also does some checking
+ * @param promise
+ * @param lval
+ * @return Effective constraint if found, otherwise NULL
+ */
 Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
 {
     if (!pp)
@@ -2765,7 +2907,15 @@ Constraint *PromiseGetConstraintWithType(const Promise *pp, const char *lval, Rv
     return NULL;
 }
 
-
+/**
+ * @brief Get the first constraint from the promise
+ *
+ * Kill this function with fire once we have separated promise constraints and body constraints.
+ *
+ * @param promise
+ * @param lval
+ * @return Constraint if found, otherwise NULL
+ */
 Constraint *PromiseGetImmediateConstraint(const Promise *pp, const char *lval)
 {
     if (pp == NULL)
@@ -2794,6 +2944,17 @@ Constraint *PromiseGetImmediateConstraint(const Promise *pp, const char *lval)
     return NULL;
 }
 
+/**
+ * @brief Get the Rval value of the first constraint that matches the given
+ * type. Checks that this constraint does not have any contexts attached.
+ *
+ * Kill this function with fire once we have separated body constraints and bundle constraints.
+ *
+ * @param lval
+ * @param promise
+ * @param type
+ * @return Rval value if found, NULL otherwise
+ */
 void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType rtype)
 {
     const Constraint *constraint = PromiseGetImmediateConstraint(pp, lval);
@@ -2810,6 +2971,13 @@ void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType
 
 /*****************************************************************************/
 
+/**
+ * @brief Get the Rval value of the first effective constraint that matches the given type
+ * @param lval
+ * @param promise
+ * @param type
+ * @return Rval value if found, NULL otherwise
+ */
 void *PromiseGetConstraintAsRval(const Promise *pp, const char *lval, RvalType rtype)
 {
     const Constraint *constraint = PromiseGetConstraint(pp, lval);
@@ -2976,6 +3144,9 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
     return SYNTAX_TYPE_MATCH_OK;
 }
 
+/**
+ * @brief Check whether the promise type is allowed one
+ */
 /* FIXME: need to be done automatically */
 bool BundleTypeCheck(const char *name)
 {

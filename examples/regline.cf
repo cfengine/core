@@ -59,7 +59,7 @@ bundle agent main
 }
 #+end_src
 
-#+begin_src example_output
+#+begin_src random_example_output
 #@ ```
 #@ R: I found that IPv4 forwarding is disabled.
 #@ ```

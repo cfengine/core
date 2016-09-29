@@ -110,7 +110,8 @@ static const struct option OPTIONS[] =
     {"timeout", required_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
-    /* Only long option for the following! */
+    /* Only long option for the rest */
+    {"log-modules", required_argument, 0, 0},
     {"remote-bundles", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
@@ -134,6 +135,7 @@ static const char *const HINTS[] =
     "Connection timeout, seconds",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     "Bundles to execute on the remote agent",
     NULL
 };
@@ -387,7 +389,15 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         /* long options only */
         case 0:
 
-            if (strcmp(OPTIONS[longopt_idx].name, "remote-bundles") == 0)
+            if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
+            {
+                bool ret = LogEnableModulesFromString(optarg);
+                if (!ret)
+                {
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else if (strcmp(OPTIONS[longopt_idx].name, "remote-bundles") == 0)
             {
                 size_t len = strlen(REMOTEBUNDLES);
                 StrCatDelim(REMOTEBUNDLES, sizeof(REMOTEBUNDLES), &len,
@@ -566,10 +576,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_runagent");
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            DataType value_type;
+            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
-            if (!value)
+            /* If var not found, or if it's an empty list. */
+            if (value_type == CF_DATA_TYPE_NONE || value == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in runagent control body", cp->lval);
                 continue;

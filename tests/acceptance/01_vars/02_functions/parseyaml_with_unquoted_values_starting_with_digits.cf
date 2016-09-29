@@ -27,6 +27,6 @@ bundle agent test
       PASS.FAIL::
          "$(this.promise_filename) EXCEPTION";
       DEBUG::
-         "version => ${sys.cf_version}"; 
+         "version => ${sys.cf_version}";
          "class   => ${d[0][class]}";
 }

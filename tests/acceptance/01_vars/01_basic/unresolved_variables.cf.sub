@@ -66,4 +66,12 @@ bundle agent etc_nologin()
 
   files:
       "$(etc_nologin)" create => "true";
+
+  reports:
+      "$(etc_nologin)";
 }
+# THIS LAST BUNDLE IS FAILING!
+# TODO implement skipping of promises that have unresolved variables; ways:
+#   a. scan for dollar-paren and skip if found
+#      -- this will make it impossible to have any dollar-paren strings
+#   b. check if the dollar-paren variable is in any vars promise ...

@@ -1,4 +1,4 @@
-# Check that we are not trying to load "cf_null" as an input_file
+# Check that it's OK to have an empty list in inputs
 
 body common control
 {
@@ -10,7 +10,7 @@ body common control
 bundle common g
 {
   vars:
-      "inputs" slist => { "cf_null" };
+      "inputs" slist => { };
 }
 
 bundle agent check

@@ -18,9 +18,7 @@
     "one",
     "one"
   ],
-  "d1_exactdot": [
-    "cf_null"
-  ],
+  "d1_exactdot": [],
   "d1_fgrep09": [
     "1",
     "2",
@@ -43,9 +41,7 @@
     "two",
     "three"
   ],
-  "d1_max0": [
-    "cf_null"
-  ],
+  "d1_max0": [],
   "d1_max2": [
     "1",
     "2"
@@ -63,12 +59,8 @@
     "two": 2,
     "x": "y"
   },
-  "d2_exact1": [
-    "cf_null"
-  ],
-  "d2_exactdot": [
-    "cf_null"
-  ],
+  "d2_exact1": [],
+  "d2_exactdot": [],
   "d2_fgrep09": [
     "1",
     "2",
@@ -84,9 +76,7 @@
     "b",
     "q"
   ],
-  "d2_max0": [
-    "cf_null"
-  ],
+  "d2_max0": [],
   "d2_max2": [
     "1",
     "2"
@@ -100,36 +90,16 @@
     "q"
   ],
   "dempty": [],
-  "dempty_exact1": [
-    "cf_null"
-  ],
-  "dempty_exactdot": [
-    "cf_null"
-  ],
-  "dempty_fgrep09": [
-    "cf_null"
-  ],
-  "dempty_grep09": [
-    "cf_null"
-  ],
-  "dempty_invert": [
-    "cf_null"
-  ],
-  "dempty_max0": [
-    "cf_null"
-  ],
-  "dempty_max2": [
-    "cf_null"
-  ],
-  "dempty_regexdot": [
-    "cf_null"
-  ],
-  "inline_exact1": [
-    "cf_null"
-  ],
-  "inline_exactdot": [
-    "cf_null"
-  ],
+  "dempty_exact1": [],
+  "dempty_exactdot": [],
+  "dempty_fgrep09": [],
+  "dempty_grep09": [],
+  "dempty_invert": [],
+  "dempty_max0": [],
+  "dempty_max2": [],
+  "dempty_regexdot": [],
+  "inline_exact1": [],
+  "inline_exactdot": [],
   "inline_fgrep09": [
     "1",
     "2",
@@ -140,12 +110,8 @@
     "2",
     "3"
   ],
-  "inline_invert": [
-    "cf_null"
-  ],
-  "inline_max0": [
-    "cf_null"
-  ],
+  "inline_invert": [],
+  "inline_max0": [],
   "inline_max2": [
     "1",
     "2"
@@ -177,9 +143,7 @@
     "one",
     "one"
   ],
-  "s1_exactdot": [
-    "cf_null"
-  ],
+  "s1_exactdot": [],
   "s1_fgrep09": [
     "1",
     "2",
@@ -199,9 +163,7 @@
     "two",
     "three"
   ],
-  "s1_max0": [
-    "cf_null"
-  ],
+  "s1_max0": [],
   "s1_max2": [
     "1",
     "2"

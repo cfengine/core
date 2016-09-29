@@ -29,6 +29,7 @@
 #include <writer.h>
 #include <json.h>
 
+/* NOTE: an empty Rlist is simply NULL. */
 struct Rlist_
 {
     Rval val;
@@ -90,6 +91,8 @@ Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool 
 Rlist *RlistFromSplitString(const char *string, char sep);
 Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_entries, bool allow_blanks);
 Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max);
+Rlist *RlistFromContainer(const JsonElement *container);
+
 void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));

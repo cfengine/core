@@ -160,6 +160,39 @@ Attributes GetPackageAttributes(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
+static User GetUserConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    User u;
+    char *value;
+
+    value = PromiseGetConstraintAsRval(pp, "policy", RVAL_TYPE_SCALAR);
+    u.policy = UserStateFromString(value);
+
+    u.uid = PromiseGetConstraintAsRval(pp, "uid", RVAL_TYPE_SCALAR);
+
+    value = PromiseGetConstraintAsRval(pp, "format", RVAL_TYPE_SCALAR);
+    u.password_format = PasswordFormatFromString(value);
+    u.password = PromiseGetConstraintAsRval(pp, "data", RVAL_TYPE_SCALAR);
+    u.description = PromiseGetConstraintAsRval(pp, "description", RVAL_TYPE_SCALAR);
+
+    u.group_primary = PromiseGetConstraintAsRval(pp, "group_primary", RVAL_TYPE_SCALAR);
+    u.home_dir = PromiseGetConstraintAsRval(pp, "home_dir", RVAL_TYPE_SCALAR);
+    u.shell = PromiseGetConstraintAsRval(pp, "shell", RVAL_TYPE_SCALAR);
+
+    u.groups_secondary = PromiseGetConstraintAsList(ctx, "groups_secondary", pp);
+
+    const Constraint *cp = PromiseGetImmediateConstraint(pp, "groups_secondary");
+    u.groups_secondary_given = (cp != NULL);
+
+    if (value && ((u.policy) == USER_STATE_NONE))
+    {
+        Log(LOG_LEVEL_ERR, "Unsupported user policy '%s' in users promise", value);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+    }
+
+    return u;
+}
+
 Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
@@ -1749,34 +1782,4 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
     }
 
     return d;
-}
-/*******************************************************************/
-
-User GetUserConstraints(const EvalContext *ctx, const Promise *pp)
-{
-    User u;
-    char *value;
-
-    value = PromiseGetConstraintAsRval(pp, "policy", RVAL_TYPE_SCALAR);
-    u.policy = UserStateFromString(value);
-
-    u.uid = PromiseGetConstraintAsRval(pp, "uid", RVAL_TYPE_SCALAR);
-
-    value = PromiseGetConstraintAsRval(pp, "format", RVAL_TYPE_SCALAR);
-    u.password_format = PasswordFormatFromString(value);
-    u.password = PromiseGetConstraintAsRval(pp, "data", RVAL_TYPE_SCALAR);
-    u.description = PromiseGetConstraintAsRval(pp, "description", RVAL_TYPE_SCALAR);
-
-    u.group_primary = PromiseGetConstraintAsRval(pp, "group_primary", RVAL_TYPE_SCALAR);
-    u.groups_secondary = PromiseGetConstraintAsList(ctx, "groups_secondary", pp);
-    u.home_dir = PromiseGetConstraintAsRval(pp, "home_dir", RVAL_TYPE_SCALAR);
-    u.shell = PromiseGetConstraintAsRval(pp, "shell", RVAL_TYPE_SCALAR);
-
-    if (value && ((u.policy) == USER_STATE_NONE))
-    {
-        Log(LOG_LEVEL_ERR, "Unsupported user policy '%s' in users promise", value);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-    }
-
-    return u;
 }

@@ -33,7 +33,6 @@ bundle agent init
                            "element #0 of the test list: 1",
                            "element #1 of the test list: 2",
                            "element #10 of the test list: one",
-                           "element #1000 of the test list: $(test#test[1000])",
                            "element #11 of the test list: two",
                            "element #2 of the test list: 3",
                            "element #6 of the test list: long string",

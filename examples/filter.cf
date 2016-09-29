@@ -85,14 +85,14 @@ bundle agent test
 #@ R: The filter-grepped list (only single digits from test) is { "1", "2", "3" }
 #@ R: The filter-grepped list (only single digits from test2) is { "1", "2", "3" }
 #@ R: The filter-exact list, looking for only 'one' in test, is { "one", "one" }
-#@ R: The filter-exact list, looking for only 'one' in test2, is { --empty-list-- }
-#@ R: This list should be empty, the '.' is not literally in the list test: { --empty-list-- }
-#@ R: This list should be empty, the '.' is not literally in the list test2: { --empty-list-- }
+#@ R: The filter-exact list, looking for only 'one' in test2, is {  }
+#@ R: This list should be empty, the '.' is not literally in the list test: {  }
+#@ R: This list should be empty, the '.' is not literally in the list test2: {  }
 #@ R: The filter-invert list, looking for non-digits in test, is { "one", "two", "three", "long string", "one", "two", "three" }
 #@ R: The filter-invert list, looking for non-digits in test2, is { "ab", "c" }
 #@ R: The filter-bound list, matching at most 2 items from the whole list test, is { "1", "2" }
 #@ R: The filter-bound list, matching at most 2 items from the whole list test2, is { "1", "2" }
-#@ R: This list should be empty because 0 elements of test were requested: { --empty-list-- }
-#@ R: This list should be empty because 0 elements of test2 were requested: { --empty-list-- }
+#@ R: This list should be empty because 0 elements of test were requested: {  }
+#@ R: This list should be empty because 0 elements of test2 were requested: {  }
 #@ ```
 #+end_src

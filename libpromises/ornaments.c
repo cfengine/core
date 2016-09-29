@@ -31,7 +31,84 @@
 #include <promises.h>                                          /* PromiseID */
 
 
-/****************************************************************************************/
+/**
+ * @brief Like StringAppend(), but replace characters '*' and '#' with their visible counterparts.
+ * @param buffer Buffer to be used.
+ * @param src    Constant string to append
+ * @param n      Total size of dst buffer. The string will be truncated if this is exceeded.
+ */
+static bool StringAppendPromise(char *dst, const char *src, size_t n)
+{
+    int i, j;
+    n--;
+    for (i = 0; i < n && dst[i]; i++)
+    {
+    }
+    for (j = 0; i < n && src[j]; i++, j++)
+    {
+        const char ch = src[j];
+        switch (ch)
+        {
+        case CF_MANGLED_NS:
+            dst[i] = ':';
+            break;
+
+        case CF_MANGLED_SCOPE:
+            dst[i] = '.';
+            break;
+
+        default:
+            dst[i] = ch;
+            break;
+        }
+    }
+    dst[i] = '\0';
+    return (i < n || !src[j]);
+}
+
+/**
+ * @brief Like @c BufferAppendPromiseStr, but if @c str contains newlines
+ *   and is longer than 2*N+3, then only copy an abbreviated version
+ *   consisting of the first and last N characters, separated by @c `...`
+ * @param buffer Buffer to be used.
+ * @param str    Constant string to append
+ * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
+ * @param max_fragment Max. length of initial/final segment of @c str to keep
+ * @note 2*max_fragment+3 is the maximum length of the appended string (excl. terminating NULL)
+ *
+ */
+static bool StringAppendAbbreviatedPromise(char *dst, const char *src, size_t n,
+                                           const size_t max_fragment)
+{
+    /* check if `src` contains a new line (may happen for "insert_lines") */
+    const char *const nl = strchr(src, '\n');
+    if (nl == NULL)
+    {
+        return StringAppendPromise(dst, src, n);
+    }
+    else
+    {
+        /* `src` contains a newline: abbreviate it by taking the first and last few characters */
+        static const char sep[] = "...";
+        char abbr[sizeof(sep) + 2 * max_fragment];
+        const int head = (nl > src + max_fragment) ? max_fragment : (nl - src);
+        const char * last_line = strrchr(src, '\n') + 1;
+        assert(last_line); /* not max_fragmentULL, we know we have at least one '\n' */
+        const int tail = strlen(last_line);
+        if (tail > max_fragment)
+        {
+            last_line += tail - max_fragment;
+        }
+        memcpy(abbr, src, head);
+        strcpy(abbr + head, sep);
+        strcat(abbr, last_line);
+        return StringAppendPromise(dst, abbr, n);
+    }
+}
+
+
+/*********************************************************************/
+
 
 void SpecialTypeBanner(TypeSequence type, int pass)
 {
@@ -46,8 +123,6 @@ void SpecialTypeBanner(TypeSequence type, int pass)
         Log(LOG_LEVEL_VERBOSE, "V: BEGIN variables (pass %d)", pass);
     }
 }
-
-/****************************************************************************************/
 
 void PromiseBanner(EvalContext *ctx, const Promise *pp)
 {
@@ -128,8 +203,6 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
     }
 }
 
-/****************************************************************************************/
-
 void Legend()
 {
     Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
@@ -143,8 +216,6 @@ void Legend()
     Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
 }
 
-/****************************************************************************************/
-
 void Banner(const char *s)
 {
     Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
@@ -152,8 +223,6 @@ void Banner(const char *s)
     Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
 
 }
-
-/****************************************************************************************/
 
 void BundleBanner(const Bundle *bp, const Rlist *params)
 {
@@ -173,8 +242,6 @@ void BundleBanner(const Bundle *bp, const Rlist *params)
 
     Log(LOG_LEVEL_VERBOSE, "B: *****************************************************************");
 }
-
-/****************************************************************************************/
 
 void EndBundleBanner(const Bundle *bp)
 {

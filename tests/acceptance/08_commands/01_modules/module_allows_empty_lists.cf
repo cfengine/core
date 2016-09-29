@@ -43,9 +43,9 @@ bundle agent check
       expression => strcmp( 0, $(length_of_list_from_module) );
 
     "ok"
-      and => { "have_list_from_module", "list_from_module_length_0" }, 
+      and => { "have_list_from_module", "list_from_module_length_0" },
       comment => "OK since we can both define an empty list, and its length is 0";
-      
+
   reports:
     DEBUG|DEBUG_check::
     "DEBUG $(this.bundle): Module defined 'default:cat.list_from_module'"

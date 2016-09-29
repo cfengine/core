@@ -14,7 +14,7 @@ bundle agent init
       "$(G.testdir)/." create => "true";
 }
 
-bundle agent test 
+bundle agent test
 {
   vars:
       "files" slist => { "want_file", "dont_want_file" };
@@ -23,13 +23,13 @@ bundle agent test
       "want_file" expression => "any";
 
       "test" expression => returnszero("$(G.touch) $(G.testdir)/$(files)", "noshell"),
-      ifvarclass => "$(files)";
+          ifvarclass => "$(files)";
 }
 
 bundle agent check
 {
   classes:
-      "$(test.files)_exists" expression => fileexists("$(G.testdir)/$(test.files)"); 
+      "$(test.files)_exists" expression => fileexists("$(G.testdir)/$(test.files)");
 
       "ok" expression => "want_file_exists.!dont_want_file_exists";
 

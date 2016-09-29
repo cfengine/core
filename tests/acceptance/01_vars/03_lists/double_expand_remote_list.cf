@@ -11,9 +11,12 @@ body common control
 bundle agent check
 {
   meta:
+    # "tags"
+    #   slist => { "redmine#6866" };
     "test_soft_fail"
       meta => { "redmine#6866" },
       string => "any";
+
 
   vars:
     "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";

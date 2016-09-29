@@ -59,23 +59,17 @@ VarRef *VarRefCopyIndexless(const VarRef *ref);
 
 VarRef *VarRefParse(const char *var_ref_string);
 
-/**
- * @brief Parse the variable reference in the context of a bundle. This means
- *        that the VarRef will inherit scope and namespace of the bundle if
- *        these are not specified explicitly in the string.
- */
 VarRef *VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle);
 VarRef *VarRefParseFromScope(const char *var_ref_string, const char *scope);
-VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator);
+VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name,
+                                         const char *_ns, const char *_scope,
+                                         char ns_separator, char scope_separator);
 VarRef VarRefConst(const char *ns, const char *scope, const char *lval);
 
 void VarRefDestroy        (VarRef *ref);
 void VarRefDestroy_untyped(void   *ref);
 
 char *VarRefToString(const VarRef *ref, bool qualified);
-
-char *VarRefMangle(const VarRef *ref);
-VarRef *VarRefDeMangle(const char *mangled_var_ref);
 
 void VarRefSetMeta(VarRef *ref, bool enabled);
 

@@ -22,7 +22,7 @@ bundle agent check
 
   vars:
     # When the agent runs the test, pwd should not return /tmp
-    "fail_string" string => 'Q: ".../bin/pwd": /tmp';
+    "fail_string" string => 'Q: ".*/bin/pwd": /tmp';
     "command" string => "$(sys.cf-agent) -KIf $(this.promise_filename).sub -DAUTO";
 
   methods:

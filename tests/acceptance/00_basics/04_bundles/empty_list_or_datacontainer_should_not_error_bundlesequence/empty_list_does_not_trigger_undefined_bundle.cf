@@ -20,7 +20,7 @@ bundle agent test
     "description" string => "Test that an empty list does not trigger an undefined bundle error";
 }
 
-bundle agent check 
+bundle agent check
 {
   reports:
     "$(this.promise_filename) Pass";

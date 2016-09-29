@@ -186,6 +186,8 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {"timestamp", no_argument, 0, 'l'},
+    /* Only long option for the rest */
+    {"log-modules", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -210,6 +212,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     "Log timestamps on each line of log output",
+    "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     NULL
 };
 
@@ -234,7 +237,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = SelectAndLoadPolicy(config, ctx, ALWAYS_VALIDATE, true);
-    
+
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
@@ -292,7 +295,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int c;
-    
+
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT, GetTTYInteractive());
     bool option_trust_server = false;
 ;
@@ -306,8 +309,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
     FreeFixedStringArray(argc_new, argv_tmp);
 
+    int longopt_idx;
     while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:w:D:N:VxMB:b:hC::ElT::",
-                            OPTIONS, NULL))
+                            OPTIONS, &longopt_idx))
            != -1)
     {
         switch (c)
@@ -517,6 +521,19 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
             break;
 
+        /* long options only */
+        case 0:
+
+            if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
+            {
+                bool ret = LogEnableModulesFromString(optarg);
+                if (!ret)
+                {
+                    exit(EXIT_FAILURE);
+                }
+            }
+            break;
+
         default:
             {
                 Writer *w = FileWriter(stdout);
@@ -718,9 +735,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_agent");
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            DataType value_type;
+            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
             VarRefDestroy(ref);
-            if (!value)
+
+            /* If var not found, or if it's an empty list. */
+            if (value_type == CF_DATA_TYPE_NONE || value == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in agent control body", cp->lval);
                 continue;
@@ -1027,7 +1047,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 continue;
             }
-            
+
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SELECT_END_MATCH_EOF].lval) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "SET select_end_match_eof %s", value);
@@ -1130,11 +1150,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         {
         case RVAL_TYPE_SCALAR:
             name = RlistScalarValue(rp);
-            if (strcmp(name, CF_NULL_VALUE) == 0)
-            {
-                continue;
-            }
-
             break;
         case RVAL_TYPE_FNCALL:
             name = RlistFnCallValue(rp)->name;
@@ -1197,10 +1212,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             name = RlistScalarValue(rp);
             args = NULL;
             break;
-        }
-        if (!strcmp(name, CF_NULL_VALUE))
-        {
-            continue;
         }
 
         EvalContextSetBundleArgs(ctx, args);
@@ -1533,10 +1544,11 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     if (strcmp("meta", pp->parent_promise_type->name) == 0 ||
         strcmp("vars", pp->parent_promise_type->name) == 0)
     {
+        Log(LOG_LEVEL_VERBOSE, "V:     Computing value of '%s'", pp->promiser);
+
         result = VerifyVarPromise(ctx, pp, true);
         if (result != PROMISE_RESULT_FAIL)
         {
-            Log(LOG_LEVEL_VERBOSE, "V:     Computing value of \"%s\"", pp->promiser);
             if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
             {
                 LogVariableValue(ctx, pp);
@@ -1869,7 +1881,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 {
     double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
     double bundle_compliance = 0.0;
-        
+
     delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
     delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
@@ -1888,7 +1900,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
         Log(LOG_LEVEL_VERBOSE, "A: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
         Log(LOG_LEVEL_VERBOSE, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
         Log(LOG_LEVEL_VERBOSE, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
-    
+
         bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
         Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
@@ -1908,7 +1920,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     }
 
     // return the worst case for the bundle status
-    
+
     if (delta_pr_notkept > 0)
     {
         return PROMISE_RESULT_FAIL;

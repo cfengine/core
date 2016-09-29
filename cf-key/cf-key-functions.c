@@ -466,7 +466,7 @@ int ForceKeyRemoval(const char *hash)
                     continue;
                 }
                 if (!strncmp(hash, value, strlen(hash)))
-                { 
+                {
                     SeqAppend(hostips, xstrdup(key + 1));
                 }
             }
@@ -538,7 +538,7 @@ int ForceIpAddressRemoval(const char *ip)
                     continue;
                 }
                 if (!strncmp(ip, value, strlen(ip)))
-                { 
+                {
                     SeqAppend(hostkeys, xstrdup(key + 1));
                 }
             }

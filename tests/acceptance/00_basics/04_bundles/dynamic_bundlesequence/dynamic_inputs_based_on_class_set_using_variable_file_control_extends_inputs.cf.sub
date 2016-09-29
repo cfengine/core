@@ -5,13 +5,11 @@
 # include only app files neaded based on list built from array
 # Lexicly sorted bundles activated with methods promise
 body common control
-#
 {
     bundlesequence => { "classify", "map_role_bundles", "go" };
 }
 
 bundle common classify
-#
 {
   vars:
       "variable" string => "vmware";
@@ -23,7 +21,6 @@ bundle common classify
 }
 
 bundle common map_role_bundles
-#
 {
   vars:
     # Define bundles
@@ -55,7 +52,6 @@ bundle common map_role_bundles
 }
 
 bundle agent go
-#
 {
   vars:
       "bundles" slist => { @(map_role_bundles.bundles) };

@@ -30,14 +30,18 @@
 /**
   @brief Sequence data-structure.
 
-  This is an array-list loosely modeled on GSequence. It is a managed array of void pointers and can be used to store
-  arbitrary data. The array list will auto-expand by a factor of EXPAND_FACTOR (e.g. 2) when necessary, but not contract.
-  Because sequence is content agnostic, it does not support the usual copy semantics found in other CFEngine structures,
-  such as RList. Thus, appending an item to a Sequence may imply a transfer of ownership. Clients that require copy semantics
-  should therefore make sure that elements are copied before they are appended. Some Sequence operations may remove some or
-  all of the elements held. In order to do so safely, it's incumbent upon the client to supply the necessary item
-  destructor to the Sequence constructor. If the item destructor argument is NULL, Sequence will not attempt to free
-  the item memory held.
+  This is an array-list loosely modeled on GSequence. It is a managed array of
+  void pointers and can be used to store arbitrary data. The array list will
+  auto-expand by a factor of EXPAND_FACTOR (e.g. 2) when necessary, but not
+  contract.  Because sequence is content agnostic, it does not support the
+  usual copy semantics found in other CFEngine structures, such as
+  RList. Thus, appending an item to a Sequence may imply a transfer of
+  ownership. Clients that require copy semantics should therefore make sure
+  that elements are copied before they are appended. Some Sequence operations
+  may remove some or all of the elements held. In order to do so safely, it's
+  incumbent upon the client to supply the necessary item destructor to the
+  Sequence constructor. If the item destructor argument is NULL, Sequence will
+  not attempt to free the item memory held.
 */
 typedef struct
 {

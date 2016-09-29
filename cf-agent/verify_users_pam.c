@@ -994,15 +994,13 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
             CFUSR_SETBIT (*changemap, i_group);
         }
     }
-    if (u.groups_secondary != NULL)
+
+    if (u.groups_secondary_given)
     {
         StringSet *wanted_groups = StringSetNew();
         for (Rlist *ptr = u.groups_secondary; ptr; ptr = ptr->next)
         {
-            if (strcmp(RvalScalarValue(ptr->val), CF_NULL_VALUE) != 0)
-            {
-                StringSetAdd(wanted_groups, xstrdup(RvalScalarValue(ptr->val)));
-            }
+            StringSetAdd(wanted_groups, xstrdup(RvalScalarValue(ptr->val)));
         }
         TransformGidsToGroups(&wanted_groups);
         StringSet *current_groups = StringSetNew();
@@ -1120,23 +1118,22 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         StringAppend(cmd, u.group_primary, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
-    if (u.groups_secondary != NULL)
+
+    if (u.groups_secondary_given)
     {
         // TODO: Should check that groups exist
         strlcpy(sec_group_args, " -G \"", sizeof(sec_group_args));
         char sep[2] = { '\0', '\0' };
         for (Rlist *i = u.groups_secondary; i; i = i->next)
         {
-            if (strcmp(RvalScalarValue(i->val), CF_NULL_VALUE) != 0)
-            {
-                StringAppend(sec_group_args, sep, sizeof(sec_group_args));
-                StringAppend(sec_group_args, RvalScalarValue(i->val), sizeof(sec_group_args));
-                sep[0] = ',';
-            }
+            StringAppend(sec_group_args, sep, sizeof(sec_group_args));
+            StringAppend(sec_group_args, RvalScalarValue(i->val), sizeof(sec_group_args));
+            sep[0] = ',';
         }
         StringAppend(sec_group_args, "\"", sizeof(sec_group_args));
         StringAppend(cmd, sec_group_args, sizeof(cmd));
     }
+
     if (u.home_dir != NULL && strcmp (u.home_dir, ""))
     {
         StringAppend(cmd, " -d \"", sizeof(cmd));
@@ -1178,7 +1175,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
             return false;
         }
 
-        if (u.groups_secondary != NULL)
+        if (u.groups_secondary_given)
         {
             // Work around issue on AIX. Always set secondary groups a second time, because AIX
             // likes to assign the primary group as the secondary group as well, even if we didn't
@@ -1382,12 +1379,9 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
             char sep[2] = { '\0', '\0' };
             for (Rlist *i = u.groups_secondary; i; i = i->next)
             {
-                if (strcmp(RvalScalarValue(i->val), CF_NULL_VALUE) != 0)
-                {
-                    StringAppend(cmd, sep, sizeof(cmd));
-                    StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
-                    sep[0] = ',';
-                }
+                StringAppend(cmd, sep, sizeof(cmd));
+                StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
+                sep[0] = ',';
             }
             StringAppend(cmd, "\" ", sizeof(cmd));
             StringAppend(cmd, puser, sizeof(cmd));

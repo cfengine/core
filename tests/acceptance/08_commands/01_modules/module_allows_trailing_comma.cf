@@ -42,10 +42,10 @@ bundle agent check
       expression => strcmp(1, $(length_of_list_from_module));
 
     "ok"
-      and => { "have_list_from_module", "list_from_module_length_1" }, 
+      and => { "have_list_from_module", "list_from_module_length_1" },
       comment => "OK since we can both define a list with a trailing comma, and
                   its length is 1 as expected";
-      
+
   reports:
     DEBUG|DEBUG_check::
     "DEBUG $(this.bundle): Module defined 'default:cat.list_from_module'"
@@ -61,7 +61,6 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 
-    
 }
 
 ### PROJECT_ID: core

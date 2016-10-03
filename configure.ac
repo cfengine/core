@@ -31,17 +31,6 @@ dnl ##########################################################################
 
 AC_PREREQ(2.63)
 
-AC_INIT
-AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
-AC_CANONICAL_TARGET
-
-dnl
-dnl This program needs to be checked early, as MAKEINFO variable is expanded in
-dnl AM_INIT_AUTOMAKE.
-dnl
-AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
-
-
 m4_define([cfversion_from_env],  m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
 m4_define([cfversion_from_file], m4_normalize(m4_esyscmd([cat CFVERSION])))
 m4_ifval(cfversion_from_env, [
@@ -56,8 +45,31 @@ m4_ifval(cfversion_from_env, [
     ])
 ])
 
-_AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, cfversion)
+
+AC_INIT(cfengine, cfversion)
+AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
+AC_CANONICAL_TARGET
+
+dnl
+dnl This program needs to be checked early, as MAKEINFO variable is expanded in
+dnl AM_INIT_AUTOMAKE.
+dnl
+AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo)
+
+
+dnl Parallel unit tests are causing spurious failures across several systems,
+dnl particularly those doing process testing.
+dnl Unfortunately the option to disable parallel tests (serial-tests) doesn't
+dnl exist in automake 1.11 and earlier, so we need to do this complicated logic
+dnl to determine whether we can disable it or not. If it doesn't exist as an
+dnl option, then serial tests are already the default.
+AC_MSG_CHECKING([automake version])
+m4_define(AUTOMAKE_VERSION, m4_normalize(m4_esyscmd([automake --version 2>&1 | sed -ne '/^automake/{s/^automake.* \([^ ][^ ]*\)$/\1/; p}'])))
+m4_define(SERIAL_TESTS, m4_bmatch(AUTOMAKE_VERSION, [^1\.\([0-9]\|1[0-1]\)\(\.\|$\)], [], [serial-tests]))
+AC_MSG_RESULT(AUTOMAKE_VERSION)
+
+
+AM_INIT_AUTOMAKE([tar-ustar] SERIAL_TESTS)
 AM_MAINTAINER_MODE([enable])
 
 cfengine_version=cfversion

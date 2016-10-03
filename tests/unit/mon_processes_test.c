@@ -3,6 +3,7 @@
 #include "generic_agent.h"
 #include "item_lib.h"
 #include "mon.h"
+#include <logging.h>                                   /* LogSetGlobalLevel */
 #include <misc_lib.h>                                          /* xsnprintf */
 #include <known_dirs.h>
 
@@ -52,9 +53,11 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
     }
     while (fgets(vbuff, CF_BUFSIZE, fp) != NULL)
     {
-        sscanf(vbuff, "%s", user);
+        int ret = sscanf(vbuff, "%s", user);
 
-        if (strcmp(user, "USER") == 0)
+        if (ret != 1 ||
+            strcmp(user, "") == 0 ||
+            strcmp(user, "USER") == 0)
         {
             continue;
         }
@@ -80,9 +83,6 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
 
 void test_processes_monitor(void)
 {
-# ifdef __sun
-  return; //redmine 6316
-# endif
     double cf_this[100] = { 0.0 };
     MonProcessesGatherData(cf_this);
     MonProcessesGatherData(cf_this);
@@ -90,12 +90,9 @@ void test_processes_monitor(void)
 
     int usr, rusr, ousr;
     usr = rusr = ousr = 0;
+
     bool res = GetSysUsers(&usr, &rusr, &ousr);
-    if (!res)
-    {
-        assert_true(1);
-        return;
-    }
+    assert_true(res);
 
     usr  = 3*usr;
     rusr = 3*rusr;
@@ -114,6 +111,7 @@ void test_processes_monitor(void)
 
 int main()
 {
+    LogSetGlobalLevel(LOG_LEVEL_DEBUG);
     strcpy(CFWORKDIR, "data");
 
 #if defined(__sun)

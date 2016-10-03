@@ -44,7 +44,6 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
 void MonProcessesGatherData(double *cf_this)
 {
     Item *userList = NULL;
-    char vbuff[CF_BUFSIZE];
     int numProcUsers = 0;
     int numRootProcs = 0;
     int numOtherProcs = 0;
@@ -58,26 +57,27 @@ void MonProcessesGatherData(double *cf_this)
     cf_this[ob_rootprocs] += numRootProcs;
     cf_this[ob_otherprocs] += numOtherProcs;
 
-    snprintf(vbuff, CF_MAXVARSIZE, "%s/cf_users", GetStateDir());
+    char vbuff[CF_MAXVARSIZE];
+    xsnprintf(vbuff, sizeof(vbuff), "%s/cf_users", GetStateDir());
     MapName(vbuff);
-    RawSaveItemList(userList, vbuff, NewLineMode_Unix);
 
+    RawSaveItemList(userList, vbuff, NewLineMode_Unix);
     DeleteItemList(userList);
 
-    Log(LOG_LEVEL_VERBOSE, "(Users,root,other) = (%d,%d,%d)", (int) cf_this[ob_users], (int) cf_this[ob_rootprocs],
-          (int) cf_this[ob_otherprocs]);
+    Log(LOG_LEVEL_VERBOSE, "(Users,root,other) = (%d,%d,%d)",
+        (int) cf_this[ob_users], (int) cf_this[ob_rootprocs],
+        (int) cf_this[ob_otherprocs]);
 }
 
 #ifndef __MINGW32__
 
 static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
-    FILE *pp;
     char pscomm[CF_BUFSIZE];
-    char user[CF_MAXVARSIZE];
+    xsnprintf(pscomm, sizeof(pscomm), "%s %s",
+              VPSCOMM[VPSHARDCLASS], VPSOPTS[VPSHARDCLASS]);
 
-    snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VPSHARDCLASS], VPSOPTS[VPSHARDCLASS]);
-
+    FILE *pp;
     if ((pp = cf_popen(pscomm, "r", true)) == NULL)
     {
         /* FIXME: no logging */
@@ -99,7 +99,7 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
 
     for (;;)
     {
-        ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
+        res = CfReadLine(&vbuff, &vbuff_size, pp);
         if (res == -1)
         {
             if (!feof(pp))
@@ -115,9 +115,13 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
             }
         }
 
-        sscanf(vbuff, "%s", user);
+        char user[64];
+        int ret = sscanf(vbuff, " %63s ", user);
 
-        if (strcmp(user, "USER") == 0)
+        /* CFE-1560: Skip the username if it starts with a digit, this means
+         * that we are reading the PID! Happens on some platforms (e.g. AIX)
+         * where zombie processes have an empty username field in ps. */
+        if (ret != 1 || user[0] == '\0' || isdigit(user[0]))
         {
             continue;
         }
@@ -138,6 +142,12 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
         }
     }
 
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
+        char *s = ItemList2CSV(*userList);
+        Log(LOG_LEVEL_DEBUG, "Users in the process table: (%s)", s);
+        free(s);
+    }
     cf_pclose(pp);
     free(vbuff);
     return true;

@@ -642,16 +642,11 @@ char *ItemList2CSV(const Item *list)
 {
     /* After each entry, we need space for either a ',' (before the
      * next entry) or a final '\0'. */
-    int s_size = ItemListSize(list) + ListLen(list);
-    if (s_size == 0)
-    {
-        s_size = 1;
-    }
-
-    char *s = xmalloc(s_size);
+    int len = ItemListSize(list) + ListLen(list);
+    char *s = xmalloc(len);
     *s = '\0';
 
-    /* No point cycle-checking; done while computing s_size. */
+    /* No point cycle-checking; done while computing len. */
     for (const Item *ip = list; ip != NULL; ip = ip->next)
     {
         if (ip->name)
@@ -664,8 +659,7 @@ char *ItemList2CSV(const Item *list)
             strcat(s, ",");
         }
     }
-
-    assert(strlen(s) + 1 == s_size);
+    assert(strlen(s) + 1 == len);
 
     return s;
 }

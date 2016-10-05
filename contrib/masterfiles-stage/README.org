@@ -36,25 +36,30 @@ simple environments this will be `$(sys.masterdir)` (typically
 * Current Features
 - Supported upstreams
   - VCS_TYPE="GIT"
-  - VCS_TYPE="GIT_TAG_OR_COMMIT"
+  - VCS_TYPE="GIT_POLICY_CHANNELS"
   - VCS_TYPE="SVN"
 
 * Dependencies
 This script has the following dependencies
 - bash
-- rsync
+- rsync (SVN only)
+- md5sum (SVN only)
 - git|svn
+
+git version 1.7.1 was used for testing GIT and GIT_POLICY_CHANNELS;
+earlier versions of git may or may not work.
 
 * Installation
 Installation simply consists of saving `masterfiles-stage.sh` and its
-supporting `common.sh` to the same directory on your hub and making
-sure that `masterfiles-stage.sh` is executable.
+supporting `common.sh` to the same directory on your policy server
+and making sure that `masterfiles-stage.sh` is executable.
 
 #+begin_src example
   wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/masterfiles-stage.sh -O /var/cfengine/bin/masterfiles-stage.sh
   wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/common.sh
-  chown root:root /var/cfengine/bin/masterfiles-stage.sh
+  chown root:root /var/cfengine/bin/masterfiles-stage.sh /var/cfengine/bin/common.sh
   chmod 555 /var/cfengine/bin/masterfiles-stage.sh
+  chmod 444 /var/cfengine/bin/common.sh
 #+end_src
 
 *Warning:* The above commands may not work out of the box depending on
@@ -64,42 +69,76 @@ sure that `masterfiles-stage.sh` is executable.
 
 The `masterfiles-stage.sh` script takes options in order to specify the
 directory where the masterfiles should be deployed after staging, as well as
-the file that contains the paramaters that should be used in order to interface
+the file that contains the parameters that should be used in order to interface
 with the given upstream source implementation (git url, branch etc ..)
+Run masterfiles-stage.sh --help to see exact option flags.
 
-- `MASTERDIR` is the fully qualified path to the location that you
-  want masterfiles to be deployed to after successful staging.
-
-- `PARAMS` is the fully qualified path to the location of the
+- `PARAMS` is the absolute path to the location of the
   parameter set that describes information needed by the selected
   staging method (currently referred to as `VCS_TYPE`). The format of
   the file is a simple KEY="VALUE". It is sourced by the
   `masterfiles-stage.sh` script. Each staging method or `VCS_TYPE`
-  defines may define its own parameters. It is recommended that the
+  defined may define its own parameters. It is recommended that the
   parameters defined by the `VCS_TYPE` be prefixed with the `VCS_TYPE`
   so as not to conflict with other staging methods.
 
   Example PARAMS files can be found [[file:example_params/][here]].
+
+- `MASTERDIR` is the abolute path to the location that you
+  want masterfiles to be deployed to after successful staging.
+  The default is `/var/cfengine/masterfiles` but please note that
+  you can override this value either with an option on the command line,
+  or by specifying the value of `MASTERDIR` inside of your `PARAMS` file.
+  (The value specified in `PARAMS`, if there is one, will take precedence
+  over an option specified on the command line.)
+
 
 *** Reserved Parameters
 The following parameters are in use, be sure to avoid their collision
 when developing new staging methods.
 
 - VCS_TYPE - The staging method to use
-  - Currently supported: (GIT|GIT_TAG_OR_COMMIT|SVN)
+  - Currently supported: (GIT|GIT_POLICY_CHANNELS|SVN)
 
 - GIT_URL - The URL to the git repository
   - Example values:
     - https://gitlab.com/nickanderson/masterfiles_demo_3.7.git
     - git@gitlab.com:nickanderson/masterfiles_demo_3.7.git
 
-- GIT_BRANCH - The git branch to checkout
-  - master
-
-- GIT_TAG_OR_COMMIT
+- GIT_BRANCH - The git refspec to checkout.
+  It can be a branch name, a tag name, a commit hash or a partial hash.
   - Example values:
+    - master
+    - my_tag
     - 88335d36b48c8808b12b48667a463182dc8d0338
-    - mytag
+    - cb375d0f
+
+- dir_to_hold_mirror - The directory where the git mirror repo will
+  be created for GIT_POLICY_CHANNELS.  (With VCS_TYPE=GIT, the repo
+  is placed alongside of ROOT.)
+  - Example value:
+    - /opt/cfengine
+
+- channel_config - a `bash` array containing configuration data
+  for multiple policy channels.  Effectively, it contains multiple
+  values for both MASTERDIR and GIT_BRANCH.
+  - Example value assignment:
+
+```
+chan_deploy="/var/cfengine/policy_channels"
+# chan_deploy is not otherwise used, but can be used to reduce the
+# verbosity of the chan_config value assignments.
+
+# channel_config is first set as an empty array, then appended to.
+# The format is, after the initial empty array value is set:
+# channel_config+=( "/absolute/path/to/deploy/to"  "git_reference_specifier" )
+channel_config=()
+channel_config+=( "$chan_deploy/channel_1"    "my_branch_name" )
+channel_config+=( "$chan_deploy/channel_2"    "my_tag_name" )
+channel_config+=( "/var/cfengine/masterfiles" "362e11b705" )
+# Note that channel_config must have an even number of elements
+# and that absolute pathnames must be used.
+```
 
 - SVN_URL - The URL to the svn repository
 
@@ -121,7 +160,7 @@ have no effect on functionality of `masterfiles-stage.sh`
   operations (not used by `masterfiles-stage.sh`)
   - This is used by Design Center in CFEngine Enterprise
 
-- PKEY - Private SSH Key used for authrorization when pushing
+- PKEY - Private SSH Key used for authorization when pushing
   integrated write operations
   - This is used by Design Center in CFEngine Enterprise
 
@@ -129,14 +168,14 @@ have no effect on functionality of `masterfiles-stage.sh`
   - This is used by Design Center in CFEngine Enterprise
 
 *** Special Note
-The executing user may require addational configuration in order to
+The executing user may require additional configuration in order to
 successfully authenticate. The specifics depend on the specifics of
 your upstream repository. For example, an upstream repository over
 http or https that allows anonymous access may need no additional
 configuration, but an upstream that uses ssh keys for authentication
 may require trust establishment (accepting the host key fingerprint),
 and the presence of an ssh key for authentication. Depending on the
-security requirements of your orginization, you may use a
+security requirements of your organization, you may use a
 passphraseless key, or you may use something like ssh-agent.
 
 
@@ -147,7 +186,7 @@ The script can be invoked manually:
 #+begin_example
   /var/cfengine/bin/masterfiles-stage.sh -d /tmp/deployed_masterfiles -p /var/cfengine/masterfiles-stage_parmas/PARAMS_example_git_branch.sh
   tail -n1 /var/cfengine/outputs/dc-scripts.log
-  Successfully deployed branch 'master' from 'https://gitlab.com/nickanderson/masterfiles_demo_3.7.git' to '/var/cfengine/masterfiles' on Sun Dec  6 23:00:34 UTC 2015
+  Successfully deployed 'master' from 'https://gitlab.com/nickanderson/masterfiles_demo_3.7.git' to '/var/cfengine/masterfiles' on Sun Dec  6 23:00:34 UTC 2015
 #+end_example
 
 Or execution can be automated with CFEngine.
@@ -172,11 +211,26 @@ bundle agent stage_masterfiles
 }
 #+end_src
 
+If the params file is placed in the default location
+`/opt/cfengine/dc-scripts/params.sh`, and if the value of `MASTERDIR`
+is specified in the params file, the CFEngine code can be as simple as:
+
+#+begin_src cfengine3
+bundle agent stage_masterfiles
+{
+  commands:
+    policy_server::
+      "/var/cfengine/bin/masterfiles-stage.sh";
+}
+#+end_src
+
+
 * Phased Rollout with Multiple Staged Masterfiles
 
 The `masterfiles-stage.sh` script can support an implementation for
 phased rollout. Phased Rollout is the process of releasing a *policy*
 change to a population in a controlled manner.
+(GIT_POLICY_CHANNELS is one such implementation.)
 
 Read [[file:phased_rollout/README.org][this document]] for further information on using the
 `masterfiles-stage.sh` to help accomplish a phased roll out.

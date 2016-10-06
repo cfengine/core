@@ -57,8 +57,14 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 
 /******************************************************************/
 
-static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp)
+Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, const FnCallType *fp_type)
 {
+    // Functions with delayed evaluation will call this themselves later
+    if (fp_type && fp_type->options & FNCALL_OPTION_DELAYED_EVALUATION)
+    {
+        return RlistCopy(fp->args);
+    }
+
     const FnCallType *fn = FnCallTypeGet(fp->name);
     {
         int len = RlistLen(fp->args);
@@ -329,7 +335,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    Rlist *expargs = NewExpArgs(ctx, policy, fp);
+    Rlist *expargs = NewExpArgs(ctx, policy, fp, fp_type);
 
     Writer *fncall_writer = NULL;
     const char *fncall_string = "";
@@ -340,7 +346,9 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         fncall_string = StringWriterData(fncall_writer);
     }
 
-    if (RlistIsUnresolved(expargs))
+    // Check if arguments are resolved, except for delayed evaluation functions
+    if ( ! (fp_type->options & FNCALL_OPTION_DELAYED_EVALUATION) &&
+         RlistIsUnresolved(expargs))
     {
         // Special case: ifelse(isvariable("x"), $(x), "default")
         // (the first argument will come down expanded as "!any")

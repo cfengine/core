@@ -1,0 +1,28 @@
+#######################################################
+#
+# Test 'getuserinfo' function
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+      # this is pretty much all we can test across platforms
+      "info_root" string => nth(getuserinfo("root"), "username");
+      "info_0" string => nth(getuserinfo(0), "uid");
+}
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

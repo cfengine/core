@@ -1,0 +1,3 @@
+policy_2: cron = '[{"command":"/bin/echo 'Hi there'","comment":"This job is a failsafe to keep cfengine services running","day":"*","hour":"*","minute":"*","month":"*"}]'
+policy_1: cron = '[{"command":"/bin/echo 'back me up!'","comment":"a backup job that runs","day":"1","hour":"1","minute":"1","month":"1"}]'
+cron_entries: '[{"command":"/bin/echo 'back me up!'","comment":"a backup job that runs","day":"1","hour":"1","minute":"1","month":"1"},{"command":"/bin/echo 'Hi there'","comment":"This job is a failsafe to keep cfengine services running","day":"*","hour":"*","minute":"*","month":"*"}]'

@@ -301,7 +301,7 @@ int RemoveKeys(const char *input, bool must_be_coherent)
     }
     else if (removed_input + removed_equivalent == 0)
     {
-        Log(LOG_LEVEL_ERR, "No key file(s) for entry '%s' were found on the filesytem", input);
+        Log(LOG_LEVEL_ERR, "No key file(s) for entry '%s' were found on the filesystem", input);
         return 1;
     }
     else

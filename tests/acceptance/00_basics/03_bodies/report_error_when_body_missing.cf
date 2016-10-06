@@ -1,0 +1,24 @@
+body common control
+{
+      inputs => {
+                  "../../default.cf.sub",
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" string => "Test that a sensible error message is emitted when a body is undefined.";
+
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "class_defined_from_included_bundle";
+  methods:
+      "" usebundle => dcs_passif_output(".*Undefined body my_undefined_body.*", "", "$(sys.cf_agent) -Kf $(this.promise_filename).sub", $(this.promise_filename));
+
+}

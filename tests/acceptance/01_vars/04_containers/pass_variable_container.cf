@@ -1,0 +1,90 @@
+#######################################################
+#
+# Test datacontainers can be passed with a variable name.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  meta:
+    "tags" slist => { "find" };
+
+  vars:
+# We want to be sure we can reference this data subsequently
+  "d" data => parsejson( '{
+"hosts": {
+  "path": "/etc/hosts"
+  },
+"auto_master" {
+  "path": "/etc/auto.master"
+}
+}');
+
+}
+
+bundle agent test 
+{
+
+  meta:
+    "description" string => "Test that variable data containers can be passed.";
+    "test_soft_fail"
+      string => "any",
+      meta => { "CFE-2434" };
+
+  vars:
+    "found" slist  => bundlesmatching(".*", "find");
+    # "ns_bundle" string => "default:init"; # This is the same content as the
+    # "found" variable, so we just use that instead.
+
+    "bundle" string => "init";
+
+  methods:
+  # These work.
+    "" usebundle => report_data("Pass by name:", @(init.d));
+    "" usebundle => report_data("Pass by namespace:name:", @(default:init.d));
+
+ # These do not work. (Note: Quotes are required for this, ideally they
+ # wouldn't be but thats a seperate issue.)
+    "" usebundle => report_data("Pass by variable name", "@($(bundle).d)");
+    "" usebundle => report_data("Pass by variable name including namespace:", "@($(found).d)");
+
+}
+
+bundle agent check
+{
+  methods:
+    "" usebundle => dcs_check_diff( $(G.testfile),
+                                    "$(this.promise_filename).expected",
+                                    $(this.promise_filename));
+}
+
+
+bundle agent report_data(id, datacontainer)
+{
+  vars:
+    "keys" slist => getindices("datacontainer");
+
+  classes:
+    "some_keys" expression => some(".*", keys);
+
+  reports:
+    DEBUG::
+    "$(id) found keys in data container"
+      if => "some_keys";
+
+    "$(id) did *not* find keys in data container"
+      unless => "some_keys";
+
+    any::
+    "$(id) $(keys)=$(datacontainer[$(keys)][path])"
+      report_to_file => "$(G.testfile)";
+}

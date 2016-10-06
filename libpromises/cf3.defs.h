@@ -1418,22 +1418,12 @@ typedef struct
 
 /*************************************************************************/
 
-typedef enum
-{
-    SERVICE_POLICY_START,
-    SERVICE_POLICY_STOP,
-    SERVICE_POLICY_DISABLE,
-    SERVICE_POLICY_RESTART,
-    SERVICE_POLICY_RELOAD,
-    SERVICE_POLICY_NONE
-} ServicePolicy;
-
 typedef struct
 {
     Rlist *service_depend;
     char *service_type;
     char *service_args;
-    ServicePolicy service_policy;
+    char *service_policy;
     char *service_autostart_policy;
     char *service_depend_chain;
     FnCall *service_method;

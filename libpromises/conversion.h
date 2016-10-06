@@ -48,7 +48,6 @@ AclMethod AclMethodFromString(const char *string);
 AclType AclTypeFromString(const char *string);
 AclDefault AclDefaultFromString(const char *string);
 AclInherit AclInheritFromString(const char *string);
-ServicePolicy ServicePolicyFromString(const char *string);
 int SignalFromString(const char *s);
 int SyslogPriorityFromString(const char *s);
 ShellType ShellTypeFromString(const char *s);

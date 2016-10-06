@@ -1,6 +1,20 @@
 {
   "empty": [],
   "mapped_empty": [],
+  "mapped_function1": [
+    "      zero",
+    "       two",
+    "   three's",
+    "four-fore:",
+    "      last"
+  ],
+  "mapped_function2": [
+    "a_or_b",
+    "b_and_c",
+    "c_d",
+    "e"
+  ],
+  "mapped_function_empty": [],
   "mapped_inline": [
     "value=a",
     "value=b",

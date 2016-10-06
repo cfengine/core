@@ -22,6 +22,9 @@ bundle agent test
       "mapped_testlist" slist => maplist("value=$(this)", "testlist");
       "mapped_empty" slist => maplist("value=$(this)", empty);
       "mapped_inline" slist => maplist("value=$(this)", '["a", "b", "c"]');
+      "mapped_function_empty" slist => maplist(canonify($(this)), empty);
+      "mapped_function1" slist => maplist(format("%10.10s", $(this)), testlist);
+      "mapped_function2" slist => maplist(canonify($(this)), '["a or b", "b and c", "c+d", "e"]');
 }
 
 #######################################################

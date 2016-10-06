@@ -8,7 +8,7 @@ bundle agent test
 {
   vars:
       "services" slist => { "single" };
-      "policies" slist => { "start", "stop", "restart" };
+      "policies" slist => { "enable", "disable", "start", "stop", "restart", "reload", "custom" };
 
   services:
       "$(services)"
@@ -39,8 +39,8 @@ bundle agent check
       inherit => "true";
 
     any::
-      "report" usebundle => dcs_passif_expected('single_start_kept,single_stop_kept,single_restart_kept',
-                                                'single_start_repaired,single_start_failed,single_start_denied,single_start_timeout,single_stop_repaired,single_stop_failed,single_stop_denied,single_stop_timeout,single_restart_repaired,single_restart_failed,single_restart_denied,single_restart_timeout',
+      "report" usebundle => dcs_passif_expected('single_enable_kept,single_disable_kept,single_start_kept,single_stop_kept,single_restart_kept,single_reload_kept,single_custom_kept',
+                                                'single_enable_repaired,single_enable_failed,single_enable_denied,single_enable_timeout,single_disable_repaired,single_disable_failed,single_disable_denied,single_disable_timeout,single_start_repaired,single_start_failed,single_start_denied,single_start_timeout,single_stop_repaired,single_stop_failed,single_stop_denied,single_stop_timeout,single_restart_repaired,single_restart_failed,single_restart_denied,single_restart_timeout,single_reload_repaired,single_reload_failed,single_reload_denied,single_reload_timeout,single_custom_repaired,single_custom_failed,single_custom_denied,single_custom_timeout',
                                                 $(this.promise_filename));
 
   reports:

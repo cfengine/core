@@ -1,0 +1,10 @@
+[
+      {
+          "hour": "*",
+          "minute": "*",
+          "day": "*",
+          "month": "*",
+          "comment": "This job is a failsafe to keep cfengine services running",
+          "command": "/bin/echo 'Hi there'"
+      }
+]

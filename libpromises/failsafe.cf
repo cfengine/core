@@ -34,6 +34,9 @@ body agent control
 {
       # Bootstrapping can't continue without keys
       abortclasses => { "no_ppkeys_ABORT_kept" };
+      # Make sure that running failsafe many times in a row does not
+      # change functionality
+      ifelapsed => "0";
 }
 
 ################################################################################

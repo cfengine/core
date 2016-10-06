@@ -448,6 +448,7 @@ cf_status_daemon()
         fi
     else
         echo "$base_daemon is not running"
+        return 3
     fi
 }
 
@@ -525,20 +526,33 @@ cf_stop_core_daemons()
 
 cf_status_core_daemons()
 {
+    local cf_status_core_daemons_exit=0
     # status cf-execd
     if [ "$RUN_CF_EXECD" = "1" ]; then
         cf_status_daemon "$CFEXECD"
+        if [ "$?" = "3" ]; then
+            cf_status_core_daemons_exit=3
+        fi
     fi
 
     # status cf-serverd
     if [ "$RUN_CF_SERVERD" = "1" ]; then
         cf_status_daemon "$CFSERVD"
+        if [ "$?" = "3" ]; then
+            cf_status_core_daemons_exit=3
+        fi
     fi
 
     # status cf-monitord
     if [ "$RUN_CF_MONITORD" = "1" ]; then
         cf_status_daemon "$CFMOND"
+        if [ "$?" = "3" ]; then
+            cf_status_core_daemons_exit=3
+        fi
     fi
+
+    # Return the exit code
+    return $cf_status_core_daemons_exit
 }
 
 cf_touch()
@@ -623,7 +637,7 @@ case "$1" in
 
         cf_status_core_daemons
 
-        exit 0
+        exit $?
         ;;
     restart|reload|force-reload)
         $0 stop

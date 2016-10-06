@@ -156,7 +156,7 @@ static bool init_test_server()
         const EVP_MD *md = EVP_get_digestbyname("sha384");
         if (md == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Uknown digest algorithm %s",
+            Log(LOG_LEVEL_ERR, "Unknown digest algorithm %s",
                 "sha384");
             return false;
         }

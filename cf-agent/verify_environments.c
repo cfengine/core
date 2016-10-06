@@ -419,7 +419,7 @@ static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhyper
         break;
 
     default:
-        Log(LOG_LEVEL_INFO, "No recogized state specified for this network environment");
+        Log(LOG_LEVEL_INFO, "No recognized state specified for this network environment");
         break;
     }
 

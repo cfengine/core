@@ -460,7 +460,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
     const EVP_MD *md = EVP_get_digestbyname("sha384");
     if (md == NULL)
     {
-        Log(LOG_LEVEL_ERR, "OpenSSL: Uknown digest algorithm %s",
+        Log(LOG_LEVEL_ERR, "OpenSSL: Unknown digest algorithm %s",
             "sha384");
         goto err3;
     }

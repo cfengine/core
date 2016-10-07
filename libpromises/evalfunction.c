@@ -828,24 +828,12 @@ static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         }
     }
 
-    if (pw == NULL)
+    JsonElement *result = GetUserInfo(pw);
+
+    if (result == NULL)
     {
         return FnFailure();
     }
-
-
-    JsonElement *result = JsonObjectCreate(10);
-    JsonObjectAppendString(result, "username", pw->pw_name);
-    JsonObjectAppendString(result, "description", pw->pw_gecos);
-    JsonObjectAppendString(result, "home_dir", pw->pw_dir);
-    JsonObjectAppendString(result, "shell", pw->pw_shell);
-    JsonObjectAppendInteger(result, "uid", pw->pw_uid);
-    JsonObjectAppendInteger(result, "gid", pw->pw_gid);
-    //JsonObjectAppendBool(result, "locked", IsAccountLocked(pw->pw_name, pw));
-    // TODO: password: { format: "hash", data: { ...GetPasswordHash()... } }
-    // TODO: group_primary: name of group
-    // TODO: groups_secondary: [ names of groups ]
-    // TODO: gids_secondary: [ gids of groups ]
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
 }

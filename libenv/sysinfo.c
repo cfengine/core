@@ -2881,6 +2881,56 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
 
 /*****************************************************************************/
 
+JsonElement* GetUserInfo(const void *passwd)
+{
+#ifdef __MINGW32__
+    return NULL;
+#else /* !__MINGW32__ */
+
+    // we lose the const to set pw if passwd is NULL
+    struct passwd *pw = (struct passwd*) passwd;
+
+    if (pw == NULL)
+    {
+        pw = getpwuid(getuid());
+    }
+
+    if (pw == NULL)
+    {
+        return NULL;
+    }
+
+    JsonElement *result = JsonObjectCreate(10);
+    JsonObjectAppendString(result, "username", pw->pw_name);
+    JsonObjectAppendString(result, "description", pw->pw_gecos);
+    JsonObjectAppendString(result, "home_dir", pw->pw_dir);
+    JsonObjectAppendString(result, "shell", pw->pw_shell);
+    JsonObjectAppendInteger(result, "uid", pw->pw_uid);
+    JsonObjectAppendInteger(result, "gid", pw->pw_gid);
+    //JsonObjectAppendBool(result, "locked", IsAccountLocked(pw->pw_name, pw));
+    // TODO: password: { format: "hash", data: { ...GetPasswordHash()... } }
+    // TODO: group_primary: name of group
+    // TODO: groups_secondary: [ names of groups ]
+    // TODO: gids_secondary: [ gids of groups ]
+
+    return result;
+#endif
+}
+
+/*****************************************************************************/
+
+void GetSysVars(EvalContext *ctx)
+{
+    JsonElement *info = GetUserInfo(NULL);
+    if (info != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "user_data", info, CF_DATA_TYPE_CONTAINER,
+                                      "source=agent,user_info");
+    }
+}
+
+/*****************************************************************************/
+
 void GetDefVars(EvalContext *ctx)
 {
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, "jq", "jq --compact-output --monochrome-output --ascii-output --unbuffered --sort-keys",
@@ -2896,5 +2946,6 @@ void DetectEnvironment(EvalContext *ctx)
     Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);
+    GetSysVars(ctx);
     GetDefVars(ctx);
 }

@@ -851,7 +851,7 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 #if !defined(__MINGW32__)
 static void OpenLog(int facility)
 {
-    openlog(VPREFIX, LOG_PID | LOG_NOWAIT | LOG_ODELAY, facility);
+    openlog(NULL, LOG_PID | LOG_NOWAIT | LOG_ODELAY, facility);
 }
 #endif
 

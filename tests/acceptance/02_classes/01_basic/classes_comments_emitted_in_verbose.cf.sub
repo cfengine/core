@@ -1,0 +1,7 @@
+bundle agent main
+{
+  classes:
+    "test_class"
+      expression => "any",
+      comment => "This is a comment about test_class";
+}

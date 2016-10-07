@@ -209,7 +209,7 @@ static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
     return ref;
 }
 
-static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const VarRef *ref,
+static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, const VarRef *ref,
                                       const DataType disallowed_datatypes[], size_t disallowed_count,
                                       bool allow_scalars, bool *allocated)
 {

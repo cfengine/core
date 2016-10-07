@@ -25,9 +25,11 @@
 #
 ################################################################################
 
+
 ################################################################################
 # Test whether the init script correctly starts and kills processes.
 ################################################################################
+
 
 #
 # Detect and replace non-POSIX shell
@@ -43,16 +45,19 @@ broken_posix_shell()
     test "$foo" != "1"
 }
 
-if broken_posix_shell >/dev/null 2>&1; then
+if broken_posix_shell >/dev/null 2>&1
+then
     try_exec /usr/xpg4/bin/sh "$0" "$@"
     echo "No compatible shell script interpreter found."
     echo "Please find a POSIX shell for your system."
     exit 42
 fi
 
+
 ################################################################################
 # Preparation
 ################################################################################
+
 
 export CFTEST_PREFIX=/tmp/init_script_test.sh.$$
 # Use alternate binary names to avoid killing actual system processes.
@@ -60,19 +65,27 @@ export CFTEST_CFEXECD=$CFTEST_PREFIX/bin/cf-test-execd
 export CFTEST_CFSERVD=$CFTEST_PREFIX/bin/cf-test-serverd
 export CFTEST_CFMOND=$CFTEST_PREFIX/bin/cf-test-monitord
 export CFTEST_CFAGENT=$CFTEST_PREFIX/bin/cf-test-agent
+export OUTFILE=$CFTEST_PREFIX/outfile
 
 rm -rf $CFTEST_PREFIX
 mkdir -p $CFTEST_PREFIX/bin
 mkdir -p $CFTEST_PREFIX/inputs
 
-if [ "$1" != "sub-invocation" ]; then
+
+# CALL OURSELVES AND EXIT. W-H-Y-?
+if [ "$1" != "sub-invocation" ]
+then
     # Redirect to log, and only print if there's an error.
-    if ! "$0" sub-invocation > $CFTEST_PREFIX/test-output.log 2>&1; then
+    if ! sh -x "$0" sub-invocation   > $CFTEST_PREFIX/test-output.log  2>&1
+    then
+        # Sub-invocation FAILED!
         echo "FAIL: Output from test:"
         cat $CFTEST_PREFIX/test-output.log
         exit 1
+    else
+        # Sub-invocation SUCCESS
+        exit 0
     fi
-    exit 0
 fi
 
 # Fail on any error.
@@ -85,7 +98,8 @@ cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-agent
 
 touch $CFTEST_PREFIX/inputs/promises.cf
 
-if ps --help | egrep -e '--cols\b' > /dev/null; then
+if ps --help | egrep -e '--cols\b' > /dev/null
+then
     # There is a bug in SUSE which means that ps output will be truncated even
     # when piped to grep, if the terminal size is small. However using --cols
     # will override it.
@@ -94,23 +108,26 @@ else
     PS_OPTIONS=
 fi
 
+
 ################################################################################
 # Functions
 ################################################################################
+
 
 match_pid()
 {
     if [ "$(ps $PS_OPTIONS -ef|grep -v grep|grep "$1"|awk -F' ' '{print $2}')" != "" ]
     then
-        return 0
+        return 0                                                # PID found
     else
-        return 1
+        return 1                                                # PID not found
     fi
 }
 
 matching_pid_exists()
 {
-    if ! match_pid "$1"; then
+    if ! match_pid "$1"
+    then
         echo "FAIL: No such process: $1"
         return 1
     fi
@@ -118,7 +135,8 @@ matching_pid_exists()
 
 no_matching_pid_exists()
 {
-    if match_pid "$1"; then
+    if match_pid "$1"
+    then
         echo "FAIL: Unexpected process: $1"
         return 1
     fi
@@ -127,10 +145,13 @@ no_matching_pid_exists()
 # Shortcut to check that no daemons/agents are running.
 verify_none_running()
 {
+    # Save some verbosity
+    ( set +x
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-execd
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-serverd
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-monitord
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-agent
+    )
 }
 
 # Simply a workaround for the fact that '!' disables error checking with "set
@@ -140,24 +161,23 @@ negate()
     ! "$@"
 }
 
+
 ################################################################################
 # Test
 ################################################################################
 
-# Enable verbose mode.
-set -v
 
-# Normal starting.
+echo "TEST: Normal starting"
 ../../misc/init.d/cfengine3 start
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-execd
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-serverd
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-monitord
 
-# Normal stopping.
+echo "TEST: Normal stopping"
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
-# Stopping when a daemon is missing.
+echo "TEST: Stopping when a daemon is missing"
 $CFTEST_PREFIX/bin/cf-test-execd
 ../../misc/init.d/cfengine3 stop
 verify_none_running
@@ -165,20 +185,20 @@ $CFTEST_PREFIX/bin/cf-test-monitord
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
-# Stopping daemons and agents
+echo "TEST: Stopping daemons and agents"
 $CFTEST_PREFIX/bin/cf-test-execd --spawn-process $CFTEST_PREFIX/bin cf-test-agent
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-execd
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
-# Stopping daemons and an agent launched just at signal time
+echo "TEST: Stopping daemons and an agent launched just at signal time"
 $CFTEST_PREFIX/bin/cf-test-execd --spawn-process-on-signal $CFTEST_PREFIX/bin cf-test-agent
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-execd
 no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-agent
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
-# Stopping a chain of daemons and agents each spawning each other.
+echo "TEST: Stopping a chain of daemons and agents each spawning each other"
 $CFTEST_PREFIX/bin/cf-test-execd \
     --spawn-process-on-signal $CFTEST_PREFIX/bin cf-test-agent --pass-to-next-process \
     --spawn-process-on-signal $CFTEST_PREFIX/bin cf-test-execd --pass-to-next-process \
@@ -188,6 +208,7 @@ no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-agent
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
+echo "TEST: KILLing a bunch of agents and daemons"
 # Stopping a ludicrously long chain of daemons and agents each spawning each
 # other. This will test the SIGKILL capacity of the script, since normal killing
 # won't be enough before the iteration count runs out.
@@ -230,14 +251,13 @@ no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-agent
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
-# Stopping a daemon that just won't die.
+echo "TEST: Stopping a daemon that just won't die"
 $CFTEST_PREFIX/bin/cf-test-execd --refuse-to-die
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-execd
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
-# Most extreme case, a long chain of daemons and agents where they all refuse to
-# die.
+echo "TEST: Most extreme case, a long chain of daemons and agents where they all refuse to die"
 $CFTEST_PREFIX/bin/cf-test-execd \
     --refuse-to-die --spawn-process-on-signal $CFTEST_PREFIX/bin cf-test-agent --pass-to-next-process \
     --refuse-to-die --spawn-process-on-signal $CFTEST_PREFIX/bin cf-test-execd --pass-to-next-process \
@@ -277,63 +297,76 @@ no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-agent
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
-# Verify that status of one daemon works.
+echo "TEST: Verify that status of one daemon works"
 verify_none_running
 $CFTEST_PREFIX/bin/cf-test-execd
-OUTPUT="$(../../misc/init.d/cfengine3 status)"
-echo "$OUTPUT"
-for i in cf-test-serverd cf-test-monitord; do
-    echo "$OUTPUT" | grep "$i.*is not running"
+../../misc/init.d/cfengine3 status  >  $OUTFILE  \
+    && retcode=$? || retcode=$?
+for i in cf-test-serverd cf-test-monitord
+do
+    cat $OUTFILE | grep "$i.*is not running"
 done
-echo "$OUTPUT" | egrep "cf-test-execd.*(\.|is )running"
-echo "$OUTPUT" | negate grep -i "Warning"
+cat $OUTFILE | egrep "cf-test-execd.*(\.|is )running"
+cat $OUTFILE | negate grep -i "Warning"
+# When a process is missing retcode must be 3
+test $retcode = 3
 
-# Verify that status of all daemons works.
+echo "TEST: Verify that status of all daemons works"
 $CFTEST_PREFIX/bin/cf-test-serverd
 $CFTEST_PREFIX/bin/cf-test-monitord
-OUTPUT="$(../../misc/init.d/cfengine3 status)"
-echo "$OUTPUT"
-for i in cf-test-execd cf-test-serverd cf-test-monitord; do
-    echo "$OUTPUT" | egrep "$i.*(\.|is )running"
+../../misc/init.d/cfengine3 status  >  $OUTFILE  \
+    && retcode=$? || retcode=$?
+for i in cf-test-execd cf-test-serverd cf-test-monitord
+do
+    cat $OUTFILE | egrep "$i.*(\.|is )running"
 done
-echo "$OUTPUT" | negate grep -i "is not running"
-echo "$OUTPUT" | negate grep -i "Warning"
+cat $OUTFILE | negate grep -i "is not running"
+cat $OUTFILE | negate grep -i "Warning"
+test $retcode = 0
 
-# Verify that status of no daemons works.
+echo "TEST: Verify that status of no daemons works"
 ../../misc/init.d/cfengine3 stop
 verify_none_running
-OUTPUT="$(../../misc/init.d/cfengine3 status)"
-echo "$OUTPUT"
-for i in cf-test-execd cf-test-serverd cf-test-monitord; do
-    echo "$OUTPUT" | grep "$i.*is not running"
+../../misc/init.d/cfengine3 status  >  $OUTFILE  \
+    && retcode=$? || retcode=$?
+for i in cf-test-execd cf-test-serverd cf-test-monitord
+do
+    cat $OUTFILE | grep "$i.*is not running"
 done
-echo "$OUTPUT" | negate egrep -i "(\.|is )running"
-echo "$OUTPUT" | negate grep -i "Warning"
+cat $OUTFILE | negate egrep -i "(\.|is )running"
+cat $OUTFILE | negate grep -i "Warning"
+# When a process is missing retcode must be 3
+test $retcode = 3
 
-# Verify that we get warnings about multiple daemons.
+echo "TEST: Verify that we get warnings about multiple daemons"
 verify_none_running
 $CFTEST_PREFIX/bin/cf-test-execd
 $CFTEST_PREFIX/bin/cf-test-execd
-OUTPUT="$(../../misc/init.d/cfengine3 status)"
-echo "$OUTPUT"
-for i in cf-test-serverd cf-test-monitord; do
-    echo "$OUTPUT" | grep "$i.*is not running"
+../../misc/init.d/cfengine3 status  >  $OUTFILE  \
+    && retcode=$? || retcode=$?
+for i in cf-test-serverd cf-test-monitord
+do
+    cat $OUTFILE | grep "$i.*is not running"
 done
-echo "$OUTPUT" | egrep "cf-test-execd.*(\.|is )running"
-echo "$OUTPUT" | grep -i "Warning.*multiple"
+cat $OUTFILE | egrep "cf-test-execd.*(\.|is )running"
+cat $OUTFILE | grep -i "Warning.*multiple"
+test $retcode = 3                # TODO should the retcode really be 3 ?
 
-# Verify that we get warnings about wrong PID file.
+echo "TEST: Verify that we get warnings about wrong PID file"
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 $CFTEST_PREFIX/bin/cf-test-execd
 echo 9999999 > $CFTEST_PREFIX/cf-test-execd.pid
-OUTPUT="$(../../misc/init.d/cfengine3 status)"
-echo "$OUTPUT"
-for i in cf-test-serverd cf-test-monitord; do
-    echo "$OUTPUT" | grep "$i.*is not running"
+../../misc/init.d/cfengine3 status  >  $OUTFILE  \
+    && retcode=$? || retcode=$?
+for i in cf-test-serverd cf-test-monitord
+do
+    cat $OUTFILE | grep "$i.*is not running"
 done
-echo "$OUTPUT" | egrep "cf-test-execd.*(\.|is )running"
-echo "$OUTPUT" | grep -i "Warning.*$CFTEST_PREFIX/cf-test-execd.pid"
+cat $OUTFILE | egrep "cf-test-execd.*(\.|is )running"
+cat $OUTFILE | grep -i "Warning.*$CFTEST_PREFIX/cf-test-execd.pid"
+test $retcode = 3                # TODO should the retcode really be 3 ?
+
 
 ################################################################################
 # Cleanup

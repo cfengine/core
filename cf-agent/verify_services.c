@@ -105,8 +105,11 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
 
 static void SetServiceDefaults(Attributes *a)
 {
-    if ((a->service.service_policy == NULL) || strcmp(a->service.service_policy, "") == 0)
+    if ((a->service.service_policy == NULL) ||
+        strcmp(a->service.service_policy, "") == 0)
     {
+        Log(LOG_LEVEL_VERBOSE,
+            "Attribute 'service_policy' was not set, defaulting to: 'start'");
         a->service.service_policy = "start";
     }
 

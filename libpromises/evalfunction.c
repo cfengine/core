@@ -209,7 +209,7 @@ static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
     return ref;
 }
 
-static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const VarRef *ref,
+static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, const VarRef *ref,
                                       const DataType disallowed_datatypes[], size_t disallowed_count,
                                       bool allow_scalars, bool *allocated)
 {
@@ -787,21 +787,20 @@ static FnCallResult FnCallIP2Host(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
-#ifdef __MINGW32__
+/* TODO move platform-specific code to libenv. */
 
 static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    // TODO: surely there's something we can do???
+#ifdef __MINGW32__
+    // TODO NetUserGetInfo(NULL, username, 1, &buf), see:
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/aa370654(v=vs.85).aspx
     return FnFailure();
-}
 
 #else /* !__MINGW32__ */
 
-static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
     struct passwd *pw = NULL;
 
-    if (NULL == finalargs)
+    if (finalargs == NULL)
     {
         pw = getpwuid(getuid());
     }
@@ -836,23 +835,18 @@ static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
-}
-
 #endif
+}
 
 /*********************************************************************/
 
-#ifdef __MINGW32__
-
-static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
+static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    return FnFailure();
-}
+#ifdef __MINGW32__
+    return FnFailure();                                         /* TODO */
 
 #else /* !__MINGW32__ */
 
-static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
     struct passwd *pw = getpwnam(RlistScalarValue(finalargs));
 
     if (pw == NULL)
@@ -861,23 +855,18 @@ static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
     }
 
     return FnReturnF("%ju", (uintmax_t)pw->pw_uid);
+#endif
 }
-
-#endif /* !__MINGW32__ */
 
 /*********************************************************************/
 
-#ifdef __MINGW32__
-
-static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
+static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    return FnFailure();
-}
+#ifdef __MINGW32__
+    return FnFailure();                                         /* TODO */
 
 #else /* !__MINGW32__ */
 
-static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
-{
     struct group *gr = getgrnam(RlistScalarValue(finalargs));
 
     if (gr == NULL)
@@ -886,9 +875,8 @@ static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
     }
 
     return FnReturnF("%ju", (uintmax_t)gr->gr_gid);
+#endif
 }
-
-#endif /* __MINGW32__ */
 
 /*********************************************************************/
 

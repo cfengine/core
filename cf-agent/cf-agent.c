@@ -1050,7 +1050,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SELECT_END_MATCH_EOF].lval) == 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "SET select_end_match_eof %s", value);
+                Log(LOG_LEVEL_VERBOSE, "SET select_end_match_eof %s", (char *) value);
                 EvalContextSetSelectEndMatchEof(ctx, BooleanFromString(value));
             }
 
@@ -1058,7 +1058,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             {
                 config->agent_specific.agent.report_class_log = BooleanFromString(value);
 
-                Log(LOG_LEVEL_VERBOSE, "Setting report_class_log to %s", 
+                Log(LOG_LEVEL_VERBOSE, "Setting report_class_log to %s",
                     config->agent_specific.agent.report_class_log? "true" : "false");
                 continue;
             }
@@ -1470,7 +1470,7 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
         VarRefDestroy(ref);
     }
 
-    return VerifyVarPromise(ctx, pp, true);
+    return VerifyVarPromise(ctx, pp, NULL);
 }
 
 static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
@@ -1546,7 +1546,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     {
         Log(LOG_LEVEL_VERBOSE, "V:     Computing value of '%s'", pp->promiser);
 
-        result = VerifyVarPromise(ctx, pp, true);
+        result = VerifyVarPromise(ctx, pp, NULL);
         if (result != PROMISE_RESULT_FAIL)
         {
             if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)

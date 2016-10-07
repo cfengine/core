@@ -2881,10 +2881,13 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
 
 /*****************************************************************************/
 
+/* TODO accept a const char * and move the ifdefs away from
+ *      evalfunction.c:FnCallGetUserInfo() to here. */
 JsonElement* GetUserInfo(const void *passwd)
 {
 #ifdef __MINGW32__
     return NULL;
+
 #else /* !__MINGW32__ */
 
     // we lose the const to set pw if passwd is NULL
@@ -2921,6 +2924,7 @@ JsonElement* GetUserInfo(const void *passwd)
 
 void GetSysVars(EvalContext *ctx)
 {
+    /* Get info for current user. */
     JsonElement *info = GetUserInfo(NULL);
     if (info != NULL)
     {

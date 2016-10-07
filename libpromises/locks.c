@@ -946,6 +946,13 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
     bool ok2 = FileSparseClose(to_fd, to_pretty_name, do_sync,
                                total_bytes_written, last_write_was_hole);
 
+    if (!ok1 || !ok2)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Error while moving database from '%s' to '%s'",
+            from_pretty_name, to_pretty_name);
+    }
+
     if (rename(tmp_file_name, to) != 0)
     {
         Log(LOG_LEVEL_WARNING, "Could not move '%s' into place (rename: %s)",

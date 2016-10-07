@@ -30,7 +30,7 @@
 #include <policy.h>
 
 
-PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_redefine);
+PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, void *param);
 
 
 #endif

@@ -641,7 +641,7 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
 
     if (strcmp(pp->parent_promise_type->name, "vars") == 0)
     {
-        return VerifyVarPromise(ctx, pp, false);
+        return VerifyVarPromise(ctx, pp, NULL);
     }
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)

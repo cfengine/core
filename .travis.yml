@@ -51,7 +51,7 @@ script:
   git fetch -q upstream 'refs/tags/*:refs/tags/*'
 
 - NO_CONFIGURE=1 ./autogen.sh
-- ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR
+- ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script
 
 - make dist
 - export DIST_TARBALL=`echo cfengine-*.tar.gz`

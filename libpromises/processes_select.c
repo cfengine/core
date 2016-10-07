@@ -1554,7 +1554,8 @@ int LoadProcessTable()
 
 # endif
 
-    bool header = true;
+    ARG_UNUSED bool header = true;           /* used only if HAVE_GETZONEID */
+
     for (;;)
     {
         ssize_t res = CfReadLine(&vbuff, &vbuff_size, prp);

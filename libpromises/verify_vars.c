@@ -49,7 +49,7 @@ typedef struct
 } ConvergeVariableOptions;
 
 
-static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine);
+static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp);
 static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level);
 static bool CompareRval(const void *rval1_item, RvalType rval1_type, const void *rval2_item, RvalType rval2_type);
 
@@ -69,16 +69,15 @@ static bool IsValidVariableName(const char *var_name)
 // TODO why not printing that new definition is skipped?
 // TODO what with ifdefined?
 
-PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_redefine)
+PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
+                               ARG_UNUSED void *param)
 {
-    ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_redefine);
+    ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp);
 
     Log(LOG_LEVEL_DEBUG, "Evaluating vars promise: %s", pp->promiser);
     LogDebug(LOG_MOD_VARS,
-             "allow_redefine=%d, ok_redefine=%d,"
-             " drop_undefined=%d, should_converge=%d",
-             allow_redefine, opts.ok_redefine,
-             opts.drop_undefined, opts.should_converge);
+             "ok_redefine=%d, drop_undefined=%d, should_converge=%d",
+             opts.ok_redefine, opts.drop_undefined, opts.should_converge);
 
     if (!opts.should_converge)
     {
@@ -546,7 +545,7 @@ static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, cons
 /**
  * @brief Collects variable constraints controlling how the promise should be converged
  */
-static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine)
+static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp)
 {
     ConvergeVariableOptions opts;
     opts.drop_undefined = false;

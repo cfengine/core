@@ -230,9 +230,9 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         if (strcmp(pexp->parent_promise_type->name, "vars") == 0 ||
             strcmp(pexp->parent_promise_type->name, "meta") == 0)
         {
-            if (act_on_promise != (void *) &VerifyVarPromise)
+            if (act_on_promise != &VerifyVarPromise)
             {
-                VerifyVarPromise(ctx, pexp, true);  /* true==allow_redefine */
+                VerifyVarPromise(ctx, pexp, NULL);
             }
         }
 
@@ -650,8 +650,7 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
     /* Necessary to parse vars *before* classes for cases like this:
      * 00_basics/04_bundles/dynamic_bundlesequence/dynamic_inputs_based_on_class_set_using_variable_file_control_extends_inputs.cf.sub
      *   --  see bundle "classify". */
-    BundleResolvePromiseType(ctx, bundle, "vars",
-                             (PromiseActuator *) VerifyVarPromise);
+    BundleResolvePromiseType(ctx, bundle, "vars", VerifyVarPromise);
 
     /* PRE-EVAL: evaluate classes of common bundles. */
     if (strcmp(bundle->type, "common") == 0)
@@ -662,8 +661,7 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
     /* Necessary to also parse vars *after* classes,
      * because "inputs" might be affected in cases like:
      * 00_basics/04_bundles/dynamic_bundlesequence/dynamic_inputs_based_on_list_variable_dependent_on_class.cf */
-    BundleResolvePromiseType(ctx, bundle, "vars",
-                             (PromiseActuator *) VerifyVarPromise);
+    BundleResolvePromiseType(ctx, bundle, "vars", VerifyVarPromise);
 }
 
 ProtocolVersion ProtocolVersionParse(const char *s)

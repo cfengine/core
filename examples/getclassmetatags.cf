@@ -29,13 +29,15 @@ body common control
 bundle agent example
 {
   classes:
-      "c" expression => "any", meta => { "mytag" };
+      "c" expression => "any", meta => { "mytag", "other=once", "other=twice" };
 
   vars:
       "ctags" slist => getclassmetatags("c");
+      "othertag_values" slist => getclassmetatags("c", "other");
 
   reports:
       "Found tags: $(ctags)";
+      "Found tags for key 'other': $(othertag_values)";
 
 }
 #+end_src
@@ -44,5 +46,9 @@ bundle agent example
 #@ ```
 #@ R: Found tags: source=promise
 #@ R: Found tags: mytag
+#@ R: Found tags: other=once
+#@ R: Found tags: other=twice
+#@ R: Found tags for key 'other': once
+#@ R: Found tags for key 'other': twice
 #@ ```
 #+end_src

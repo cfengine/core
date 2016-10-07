@@ -6322,7 +6322,7 @@ static FnCallResult FnCallReadRealList(EvalContext *ctx, ARG_UNUSED const Policy
 
 JsonElement *ReadDataFile(const char* log_identifier, const char* input_path, const char* requested_mode, size_t size_max)
 {
-    const char* myname = log_identifier ? log_identifier : "ReadDataFile";
+    const char *myname = log_identifier ? log_identifier : "ReadDataFile";
 
     if (strcmp("CSV", requested_mode) == 0 ||
         strcmp("ENV", requested_mode) == 0)
@@ -6357,8 +6357,8 @@ JsonElement *ReadDataFile(const char* log_identifier, const char* input_path, co
                 byte_count += strlen(line);
                 if (byte_count > size_max)
                 {
-                    Log(LOG_LEVEL_VERBOSE, "%s: line %d from ENV file '%s' exceeded byte limit %lu, done with file",
-                        myname, linenumber, input_path, (long unsigned int)size_max);
+                    Log(LOG_LEVEL_VERBOSE, "%s: line %d from ENV file '%s' exceeded byte limit %zu, done with file",
+                        myname, linenumber, input_path, size_max);
                     free(line);
                     break;
                 }
@@ -6372,30 +6372,30 @@ JsonElement *ReadDataFile(const char* log_identifier, const char* input_path, co
                     Rlist *pieces = RlistFromSplitRegex(line, "=", 2, true);
                     if (pieces && pieces->next)
                     {
-                        const char* v = RlistScalarValueSafe(pieces->next);
+                        const char *v = RlistScalarValue(pieces->next);
                         if (strlen(v) > 1 && v[0] == '"' && v[strlen(v)-1] == '"')
                         {
-                            char* decoded = JsonDecodeString(v);
-                            // cut off the last character
+                            char *decoded = JsonDecodeString(v);
+                            // Cut off the last character to terminate the
+                            // string before the last " character.
                             decoded[strlen(decoded)-1] = '\0';
-                            JsonObjectAppendString(json, RlistScalarValueSafe(pieces), decoded+1);
+                            // ...then append the string starting after the first "
+                            // character, resulting in the string itself.
+                            JsonObjectAppendString(json, RlistScalarValue(pieces), decoded+1);
                             free(decoded);
                         }
                         else
                         {
-                            JsonObjectAppendString(json, RlistScalarValueSafe(pieces), v);
+                            JsonObjectAppendString(json, RlistScalarValue(pieces), v);
                         }
                     }
                     else
                     {
-                        Log(LOG_LEVEL_INFO, "%s: line %d from %s file '%s' was not in the format k=v",
+                        Log(LOG_LEVEL_VERBOSE, "%s: skipping line %d from %s ENV file '%s' because it was not in the format k=v",
                             myname, linenumber, requested_mode, input_path);
                     }
 
-                    if (pieces)
-                    {
-                        RlistDestroy(pieces);
-                    }
+                    RlistDestroy(pieces);
                 }
             }
 
@@ -6452,7 +6452,7 @@ JsonElement *ReadDataFile(const char* log_identifier, const char* input_path, co
     }
 
     bool yaml_mode = (strcmp(requested_mode, "YAML") == 0);
-    const char* data_type = requested_mode;
+    const char *data_type = requested_mode;
 
     JsonElement *json = NULL;
     JsonParseError res;

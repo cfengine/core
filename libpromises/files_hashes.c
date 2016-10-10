@@ -234,7 +234,7 @@ char *SkipHashType(char *hash)
 {
     char *str = hash;
 
-    if(BEGINSWITH(hash, "MD5=") || BEGINSWITH(hash, "SHA="))
+    if(STARTSWITH(hash, "MD5=") || STARTSWITH(hash, "SHA="))
     {
         str = hash + 4;
     }

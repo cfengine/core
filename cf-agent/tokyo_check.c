@@ -83,19 +83,18 @@ typedef struct DBMeta
 static DBMeta *DBMetaNewDirect(const char *dbfilename)
 {
     char hbuf[256];
-    DBMeta *dbmeta;
+    DBMeta *dbmeta = xcalloc(1, sizeof(*dbmeta));
 
-    dbmeta = (DBMeta *) xcalloc(1, sizeof(DBMeta));
-
-    realpath(dbfilename, dbmeta->dbpath);
-    if (-1 == (dbmeta->fd = open(dbmeta->dbpath, O_RDONLY)))
+    char *p = realpath(dbfilename, dbmeta->dbpath);
+    if (p  == NULL ||
+        -1 == (dbmeta->fd = open(dbmeta->dbpath, O_RDONLY)))
     {
-        Log(LOG_LEVEL_ERR, "Failure opening file '%s'. (open: %s)", dbmeta->dbpath,
-                GetErrorStr());
-        if (dbmeta)
-        {
-            free(dbmeta);
-        }
+        Log(LOG_LEVEL_ERR, "Failure opening file '%s' (%s: %s)",
+            (p == NULL) ? dbfilename : dbmeta->dbpath,
+            (p == NULL) ? "realpath" : "open",
+            GetErrorStr());
+
+        free(dbmeta);
         return NULL;
     }
 

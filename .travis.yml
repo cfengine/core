@@ -56,12 +56,13 @@ script:
 - make dist
 - export DIST_TARBALL=`echo cfengine-*.tar.gz`
 
-- make
-
 - if [ "$JOB_TYPE" = compile_and_unit_test ];
   then
+      make CFLAGS=-Werror  &&
       make -C tests/unit check;
       return;
+  else
+      make;
   fi
 
 - cd tests/acceptance

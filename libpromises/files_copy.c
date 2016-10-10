@@ -39,6 +39,8 @@
 
 bool CopyRegularFileDisk(const char *source, const char *destination)
 {
+    bool ok1 = false, ok2 = false;       /* initialize before the goto end; */
+
     int sd = safe_open(source, O_RDONLY | O_BINARY);
     if (sd == -1)
     {
@@ -73,12 +75,12 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
 
     size_t total_bytes_written;
     bool   last_write_was_hole;
-    bool ok1 = FileSparseCopy(sd, source, dd, destination,
-                              ST_BLKSIZE(statbuf),
-                              &total_bytes_written, &last_write_was_hole);
+    ok1 = FileSparseCopy(sd, source, dd, destination,
+                         ST_BLKSIZE(statbuf),
+                         &total_bytes_written, &last_write_was_hole);
     bool do_sync = false;
-    bool ok2 = FileSparseClose(dd, destination, do_sync,
-                               total_bytes_written, last_write_was_hole);
+    ok2= FileSparseClose(dd, destination, do_sync,
+                         total_bytes_written, last_write_was_hole);
 
     if (!ok1 || !ok2)
     {

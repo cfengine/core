@@ -1165,7 +1165,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
                 pass = true;
             }
 
-            if (pass != NULL)
+            if (pass)
             {
                 JsonElement *data = NULL;
                 bool allocated = false;

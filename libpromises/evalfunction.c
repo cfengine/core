@@ -2946,6 +2946,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
     if (mapdatamode && json_pipemode)
     {
         JsonElement *returnjson_pipe = ExecJSON_Pipe(RlistScalarValue(expargs->next), container);
+
         RlistDestroy(expargs);
 
         if (returnjson_pipe == NULL)
@@ -2989,10 +2990,10 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
             // This is a delayed evaluation function, so we have to resolve arguments ourselves
             // We resolve them every time now, to get the arg_map argument
-            Rlist *expargs = NewExpArgs(ctx, policy, fp, NULL);
-            const char *arg_map = RlistScalarValueSafe(mapdatamode ? expargs->next : expargs);
+            Rlist *local_expargs = NewExpArgs(ctx, policy, fp, NULL);
+            const char *arg_map = RlistScalarValueSafe(mapdatamode ? local_expargs->next : local_expargs);
             ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
-            RlistDestroy(expargs);
+            RlistDestroy(local_expargs);
 
             if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
                 strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
@@ -3002,6 +3003,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
                 EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
                 BufferDestroy(expbuf);
                 JsonDestroyMaybe(container, allocated);
+                RlistDestroy(expargs);
                 return FnFailure();
             }
 

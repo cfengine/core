@@ -196,6 +196,11 @@ for repo in repos:
                 LINKED_SHAS[match.group(1)].append(sha)
                 continue
 
+            match = re.match("^Signed-off-by:.*", line, re.IGNORECASE)
+            if match:
+                # Ignore such lines.
+                continue
+
             if log_entry_local:
                 log_entry += "\n" + line
             else:

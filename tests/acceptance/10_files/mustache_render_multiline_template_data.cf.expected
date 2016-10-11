@@ -1,0 +1,16 @@
+{
+  "key": "value",
+  "key2": [
+    "list",
+    "elements"
+  ],
+  "key3": {
+    "complex": {
+      "data": "structure",
+      "with": [
+        "deep",
+        "data"
+      ]
+    }
+  }
+}

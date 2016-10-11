@@ -2,11 +2,12 @@
 Description=CFEngine Enterprise Report Consumer
 PartOf=cfengine3.service
 After=syslog.target
-After=cf-postgres.service
-After=cf-redis-server.service
 ConditionPathExists=@workdir@/bin/cf-consumer
-BindsTo=cf-redis-server.service
+
+After=cf-postgres.service
 BindsTo=cf-postgres.service
+After=cf-redis-server.service
+BindsTo=cf-redis-server.service
 
 [Service]
 Type=simple

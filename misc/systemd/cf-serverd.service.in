@@ -1,0 +1,16 @@
+[Unit]
+Description=CFEngine Enterprise file server
+After=syslog.target
+After=network.target
+ConditionPathExists=@workdir@/bin/cf-serverd
+PartOf=cfengine3.service
+
+[Service]
+Type=simple
+ExecStart=@workdir@/bin/cf-serverd --no-fork
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=cfengine3.service

@@ -1,0 +1,20 @@
+[Unit]
+Description=CFEngine Enterprise Hub Report Collector
+PartOf=cfengine3.service
+ConditionPathExists=@workdir@/bin/cf-hub
+After=syslog.target
+After=network.target
+After=cf-redis-server.service
+Requires=cf-redis-server.service
+BindsTo=cf-redis-server.service
+
+[Service]
+Type=simple
+ExecStart=@workdir@/bin/cf-hub -F
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=cfengine3.service
+WantedBy=cf-redis-server.service

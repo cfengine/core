@@ -263,6 +263,22 @@ Changelog: title'
 
 ################################################################################
 
+git commit --allow-empty -m 'Changelog with signed-off N64
+
+Commit message
+Signed-off-by: Hacker
+Changelog: commit'
+
+################################################################################
+
+git commit --allow-empty -m 'Changelog with invalid signed-off N65
+
+Commit message
+Mention "Signed-off-by: " mid sentence
+Changelog: commit'
+
+################################################################################
+
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt
 cat > expected.txt <<EOF
 	- As well as this. N34
@@ -275,6 +291,11 @@ cat > expected.txt <<EOF
 	- Changelog with Jira. N55 (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
 	- Changelog with inline Jira and Redmine ref. N57
 	  (Redmine #7777, #7778) (CFE-80, CFE-81)
+	- Changelog with invalid signed-off N65
+	  Commit message
+	  Mention "Signed-off-by: " mid sentence
+	- Changelog with signed-off N64
+	  Commit message
 	- Changelog with suspicious number in it. N62
 	  1234
 	- Changelog with suspicious number outside of it. N63

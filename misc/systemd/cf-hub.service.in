@@ -5,7 +5,6 @@ ConditionPathExists=@workdir@/bin/cf-hub
 After=syslog.target
 After=network.target
 After=cf-redis-server.service
-Requires=cf-redis-server.service
 BindsTo=cf-redis-server.service
 
 [Service]

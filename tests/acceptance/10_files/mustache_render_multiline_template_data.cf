@@ -1,0 +1,39 @@
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that data passed to edit_template can be rendered as multiline JSON.";
+}
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test 
+{
+  vars:
+    "template_target" string => "$(G.testfile)";
+
+    "data" data => parsejson('{ "key": "value", "key2": [ "list", "elements" ], "key3": { "complex": { "data": "structure", "with": [ "deep", "data" ] } } }');
+
+  files:
+      "$(template_target)"
+        create => "true";
+
+
+      "$(template_target)"
+        edit_template => "$(this.promise_filename).mustache",
+        template_method => "mustache",
+        template_data => mergedata(data);
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "check"
+      usebundle => dcs_check_diff( $(test.template_target), "$(this.promise_filename).expected", $(this.promise_filename));
+}

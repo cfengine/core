@@ -328,6 +328,7 @@ bundle agent dcs_check_state_prep(state_container)
 }
 
 bundle agent dcs_check_diff(file1, file2, test)
+# @brief Pass if two files do not differ.
 {
   methods:
       "any" usebundle => dcs_check_diff_expected($(file1),

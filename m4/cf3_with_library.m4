@@ -39,9 +39,14 @@ AC_DEFUN([CF3_WITH_LIBRARY],
   #
   # Populate ${LIBRARY}_{PATH,CFLAGS,LDFLAGS} according to arguments
   #
-  if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck && test "x$with_[$1]" != x; then
+  if test "x$with_[$1]" != xyes &&
+     test "x$with_[$1]" != xcheck &&
+     test "x$with_[$1]" != x
+  then
     test -z "$ULN[]_PATH" && ULN[]_PATH="$with_[$1]"
-    if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
+    if test "x$with_[$1]" != x/usr &&
+       test "x$with_[$1]" != x/
+    then
       test -z "$ULN[]_CFLAGS" && ULN[]_CFLAGS=""
       test -z "$ULN[]_CPPFLAGS" && ULN[]_CPPFLAGS="-I$with_[$1]/include"
       test -z "$ULN[]_LDFLAGS" && ULN[]_LDFLAGS="-L$with_[$1]/lib"
@@ -76,10 +81,12 @@ AC_DEFUN([CF3_WITH_LIBRARY],
   # libtool understands -R$path, but we are not using libtool in configure
   # snippets, so -R$path goes to $pkg_LDFLAGS only after autoconf tests
   #
-  if test "x$with_[$1]" != xyes && test "x$with_[$1]" != xcheck; then
-    if test "x$with_[$1]" != x/usr && test "x$with_[$1]" != x/; then
-      ULN[]_LDFLAGS="$ULN[]_LDFLAGS -R$with_[$1]/lib"
-    fi
+  if test "x$with_[$1]" != xyes &&
+     test "x$with_[$1]" != xcheck &&
+     test "x$with_[$1]" != x/usr &&
+     test "x$with_[$1]" != x/
+  then
+    ULN[]_LDFLAGS="$ULN[]_LDFLAGS -R$with_[$1]/lib"
   fi
 
   #

@@ -3,7 +3,7 @@
 body common control
 {
       bundlesequence => { "access_rules" };
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../../default.cf.sub" };
 
 }
 

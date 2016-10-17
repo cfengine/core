@@ -441,9 +441,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
              *   CollectCallStart();  // both
              */
 
-            char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
-            SetPolicyServer(ctx, existing_policy_server);
-            free(existing_policy_server);
+            SetPolicyServerFromFile(ctx, GetWorkDir());
 
             UpdateLastPolicyUpdateTime(ctx);
 

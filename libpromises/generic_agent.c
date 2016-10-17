@@ -64,6 +64,7 @@
 #include <cf-windows-functions.h>
 #include <loading.h>
 #include <signals.h>
+#include <addr_lib.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -142,7 +143,7 @@ void MarkAsPolicyServer(EvalContext *ctx)
 Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool validate_policy, bool write_validated_file)
 {
     Policy *policy = NULL;
-    
+
     if (GenericAgentCheckPolicy(config, validate_policy, write_validated_file))
     {
         policy = LoadPolicy(ctx, config);
@@ -156,7 +157,7 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
     {
         Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
         EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
-        
+
         if (CheckAndGenerateFailsafe(GetInputDir(), "failsafe.cf"))
         {
             GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
@@ -435,7 +436,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     LoadAugments(ctx, config);
 
     const char *bootstrap_arg =
-        config->agent_specific.agent.bootstrap_policy_server;
+        config->agent_specific.agent.bootstrap_argument;
+    const char *bootstrap_ip =
+        config->agent_specific.agent.bootstrap_ip;
 
     /* Are we bootstrapping the agent? */
     if (config->agent_type == AGENT_TYPE_AGENT && bootstrap_arg != NULL)
@@ -457,8 +460,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         }
         GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
 
-        char canonified_ipaddr[strlen(bootstrap_arg) + 1];
-        StringCanonify(canonified_ipaddr, bootstrap_arg);
+        char canonified_ipaddr[strlen(bootstrap_ip) + 1];
+        StringCanonify(canonified_ipaddr, bootstrap_ip);
 
         bool am_policy_server =
             EvalContextClassGet(ctx, NULL, canonified_ipaddr) != NULL;
@@ -495,7 +498,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         WriteAmPolicyHubFile(am_policy_server);
 
         WritePolicyServerFile(GetWorkDir(), bootstrap_arg);
-        SetPolicyServer(ctx, bootstrap_arg);
+        SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_host,
+                             config->agent_specific.agent.bootstrap_port);
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);
@@ -507,7 +511,10 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
                 existing_policy_server);
-            SetPolicyServer(ctx, existing_policy_server);
+            char* host = NULL;
+            char* port = NULL;
+            ParseHostPort(existing_policy_server, &host, &port);
+            SetPolicyServer(ctx, host, port);
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
         }
@@ -576,7 +583,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
                                                 GetAmPolicyHub()); // write release ID?
             }
 
-            if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
+            if (config->agent_specific.agent.bootstrap_argument && !policy_check_ok)
             {
                 Log(LOG_LEVEL_VERBOSE, "Policy is not valid, but proceeding with bootstrap");
                 return true;
@@ -1001,9 +1008,12 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
         LoadSecretKeys();
-        char *bootstrapped_policy_server = ReadPolicyServerFile(workdir);
-        PolicyHubUpdateKeys(bootstrapped_policy_server);
-        free(bootstrapped_policy_server);
+        char* ipaddr = NULL;
+        char* port = NULL;
+        LookUpPolicyServerFile(workdir, &ipaddr, &port);
+        PolicyHubUpdateKeys(ipaddr);
+        free(ipaddr);
+        free(port);
     }
 
     size_t cwd_size = PATH_MAX;
@@ -1803,7 +1813,10 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
 
     config->protocol_version = CF_PROTOCOL_UNDEFINED;
 
-    config->agent_specific.agent.bootstrap_policy_server = NULL;
+    config->agent_specific.agent.bootstrap_argument = NULL;
+    config->agent_specific.agent.bootstrap_ip = NULL;
+    config->agent_specific.agent.bootstrap_port = NULL;
+    config->agent_specific.agent.bootstrap_host = NULL;
 
     /* By default we trust the network when bootstrapping. */
     config->agent_specific.agent.bootstrap_trust_server = true;
@@ -1840,6 +1853,10 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
         free(config->original_input_file);
         free(config->input_file);
         free(config->input_dir);
+        free(config->agent_specific.agent.bootstrap_argument);
+        free(config->agent_specific.agent.bootstrap_host);
+        free(config->agent_specific.agent.bootstrap_ip);
+        free(config->agent_specific.agent.bootstrap_port);
         free(config);
     }
 }
@@ -1906,20 +1923,20 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 bool CheckAndGenerateFailsafe(const char *inputdir, const char *input_file)
 {
     char failsafe_path[CF_BUFSIZE];
-    
+
     if (strlen(inputdir) + strlen(input_file) > sizeof(failsafe_path) - 2)
     {
         Log(LOG_LEVEL_ERR,
             "Unable to generate path for %s/%s file. Path too long.",
             inputdir, input_file);
-        /* We could create dynamically allocated buffer able to hold the 
+        /* We could create dynamically allocated buffer able to hold the
            whole content of the path but this should be unlikely that we
            will end up here. */
         return false;
     }
     snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/%s", inputdir, input_file);
     MapName(failsafe_path);
-    
+
     if (access(failsafe_path, R_OK) != 0)
     {
         return WriteBuiltinFailsafePolicyToPath(failsafe_path);

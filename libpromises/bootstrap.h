@@ -32,7 +32,9 @@
  * @param ctx EvalContext is used to set related variables
  * @param new_policy_server IP of new policy server
  */
-void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
+void SetPolicyServer(EvalContext *ctx, const char *new_policy_server, const char* port);
+
+void SetPolicyServerFromFile(EvalContext *ctx, const char* workdir);
 
 /**
  * @brief Updates sys.last_policy_update variable from $(sys.masterdir)/cf_promises_validated
@@ -40,10 +42,12 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
  */
 void UpdateLastPolicyUpdateTime(EvalContext *ctx);
 
-/**
- * @return The contents of policy_server.dat, or NULL if file is not found. Return value must be freed.
- */
-char *ReadPolicyServerFile(const char *workdir);
+char* ReadPolicyServerFile(const char *workdir);
+
+bool ParsePolicyServerFile(const char *workdir, char** host, char** port);
+
+bool LookUpPolicyServerFile(const char *workdir, char** ipaddr, char** port);
+
 
 /**
  * @brief Write new_policy_server to the policy_server.dat file.

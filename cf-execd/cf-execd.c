@@ -573,11 +573,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         PolicyDestroy(*policy);
         *policy = NULL;
 
-        {
-            char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
-            SetPolicyServer(ctx, existing_policy_server);
-            free(existing_policy_server);
-        }
+        SetPolicyServerFromFile(ctx, GetWorkDir());
         UpdateLastPolicyUpdateTime(ctx);
 
         DetectEnvironment(ctx);
@@ -626,4 +622,3 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     Log(LOG_LEVEL_VERBOSE, "Nothing to do at %s", ctime(&CFSTARTTIME));
     return false;
 }
-

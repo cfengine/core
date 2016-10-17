@@ -834,4 +834,3 @@ static int Dialogue(int sd, const char *s)
 
     return ((f == '2') || (f == '3'));  /* return code 200 or 300 from smtp */
 }
-

@@ -35,6 +35,8 @@
 #include <string_lib.h>
 #include <files_lib.h>
 #include <known_dirs.h>
+#include <addr_lib.h>
+#include <communication.h>
 
 #include <assert.h>
 
@@ -116,18 +118,47 @@ bool WriteAmPolicyHubFile(bool am_policy_hub)
  * policy_server.dat file has been removed. Then this function will be called
  * with NULL as new_policy_server, and cf-serverd will keep running even
  * without a policy server set. */
-void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
+void SetPolicyServer(EvalContext *ctx, const char *host, const char* port)
 {
-    if (new_policy_server)
+    if (host != NULL)
     {
-        xsnprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", new_policy_server, CF_DATA_TYPE_STRING, "source=bootstrap");
+        xsnprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", host);
+        EvalContextVariablePutSpecial( ctx,  SPECIAL_SCOPE_SYS, "policy_hub",
+                                       host, CF_DATA_TYPE_STRING,
+                                       "source=bootstrap" );
+        if (port != NULL && port[0] != '\n')
+        {
+            EvalContextVariablePutSpecial( ctx, SPECIAL_SCOPE_SYS,
+                                           "policy_hub_port", port,
+                                           CF_DATA_TYPE_STRING,
+                                           "source=bootstrap" );
+        }
+        else
+        {
+            EvalContextVariablePutSpecial( ctx, SPECIAL_SCOPE_SYS,
+                                           "policy_hub_port", "5308",
+                                           CF_DATA_TYPE_STRING,
+                                           "source=bootstrap" );
+        }
     }
     else
     {
         strcpy(POLICY_SERVER, "");
-        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub");
+        EvalContextVariableRemoveSpecial( ctx, SPECIAL_SCOPE_SYS,
+                                          "policy_hub" );
+        EvalContextVariableRemoveSpecial( ctx, SPECIAL_SCOPE_SYS,
+                                          "policy_hub_port" );
     }
+}
+
+void SetPolicyServerFromFile(EvalContext *ctx, const char* workdir)
+{
+    char* host = NULL;
+    char* port = NULL;
+    ParsePolicyServerFile(workdir, &host, &port);
+    SetPolicyServer(ctx, host, port);
+    free(host);
+    free(port);
 }
 
 /* Set "sys.last_policy_update" variable. */
@@ -157,13 +188,16 @@ static char *PolicyServerFilename(const char *workdir)
     return StringFormat("%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);
 }
 
+/**
+ * Reads out the content from policy_server.dat file
+ * @return: contents of file in char*, NULL if fopen failed, must be freed(!)
+ */
 char *ReadPolicyServerFile(const char *workdir)
 {
     char contents[CF_MAX_IP_LEN] = "";
 
     char *filename = PolicyServerFilename(workdir);
     FILE *fp = fopen(filename, "r");
-    free(filename);
 
     if (fp)
     {
@@ -173,12 +207,67 @@ char *ReadPolicyServerFile(const char *workdir)
             return NULL;
         }
         fclose(fp);
+        free(filename);
         return xstrdup(contents);
     }
     else
     {
+        Log( LOG_LEVEL_VERBOSE, "Could not open file '%s' (fopen: %s)",
+             filename, GetErrorStr() );
+
+        free(filename);
         return NULL;
     }
+}
+
+/**
+ * Combines reading the policy server file and parsing
+ * Output data is stored in host and port
+ * @return: true = success, false = fopen failed
+ */
+bool ParsePolicyServerFile(const char *workdir, char **host, char **port)
+{
+    char* contents = ReadPolicyServerFile(workdir);
+    if (contents == NULL)
+    {
+        return false;
+    }
+    (*host) = NULL;
+    (*port) = NULL;
+
+    ParseHostPort(contents, host, port);
+    (*host) = xstrdup(*host);
+    if (*port != NULL)
+    {
+        (*port) = xstrdup(*port);
+    }
+    free(contents);
+    return true;
+}
+
+/**
+ * Combines reading the policy server file, parsing and lookup (host->ip)
+ * Output data is stored in ipaddr and port
+ * @return: false if either file read or ip lookup failed.
+ */
+bool LookUpPolicyServerFile(const char *workdir, char **ipaddr, char **port)
+{
+    char* host;
+    bool file_read = ParsePolicyServerFile(workdir, &host, port);
+    if (file_read == false)
+    {
+        return false;
+    }
+    char tmp_ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(tmp_ipaddr, host, sizeof(tmp_ipaddr)) == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Unable to resolve policy server host: %s", host);
+        return false;
+    }
+    (*ipaddr) = xstrdup(tmp_ipaddr);
+    free(host);
+    return true;
 }
 
 bool WritePolicyServerFile(const char *workdir, const char *new_policy_server)

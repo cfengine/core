@@ -386,6 +386,7 @@ body copy_from failsafe_scp(from)
       trustkey    => "true";
     !policy_server::
       servers => { "$(sys.policy_hub)" };
+      portnumber => "$(sys.policy_hub_port)";
 }
 ############################################
 body depth_search failsafe_recurse(d)

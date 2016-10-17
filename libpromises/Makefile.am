@@ -118,6 +118,7 @@ libpromises_la_SOURCES = \
         mod_knowledge.c mod_knowledge.h \
         mod_users.c mod_users.h \
         modes.c \
+        monitoring_read.c monitoring_read.h \
         mutex.c mutex.h \
         ornaments.c ornaments.h \
         policy.c policy.h \

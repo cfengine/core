@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Northern.tech AS
+   Copyright 2018 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -23,14 +23,18 @@
 */
 
 
-#ifndef CFENGINE_VERIFY_MEASUREMENTS_H
-#define CFENGINE_VERIFY_MEASUREMENTS_H
+#ifndef CFENGINE_SHARED_KSTAT_H
+#define CFENGINE_SHARED_KSTAT_H
 
 
-#include <cf3.defs.h>
+#include <platform.h>
+
+#include <kstat.h>
 
 
-PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp);
+/* Shared access to Solaris kstat service */
+
+kstat_ctl_t *GetKstatHandle(void);
 
 
 #endif

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Northern.tech AS
+   Copyright 2018 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -22,25 +22,15 @@
   included file COSL.txt.
 */
 
-#include <cf-monitord-enterprise-stubs.h>
 
-ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, MonOtherInit)
-{
-}
+#include <cf3.defs.h>
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, MonOtherGatherData, ARG_UNUSED double *, cf_this)
-{
-}
+#include <probes.h>
 
-ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, HistoryUpdate, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED Averages, newvals)
-{
-}
 
-ENTERPRISE_FUNC_4ARG_DEFINE_STUB(PromiseResult, VerifyMeasurement,
-                                 ARG_UNUSED EvalContext *, ctx,
-                                 ARG_UNUSED double *, this,
-                                 ARG_UNUSED Attributes, a,
-                                 ARG_UNUSED const Promise *, pp)
+ProbeGatherData MonMemoryInit(const char **name, const char **error)
 {
-    return PROMISE_RESULT_NOOP;
+    *name = "";
+    *error = "Not avaliable";
+    return NULL;
 }

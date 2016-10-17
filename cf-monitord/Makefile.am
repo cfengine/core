@@ -40,7 +40,6 @@ libcf_monitord_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_monitord_la_SOURCES = \
         verify_measurements.c verify_measurements.h \
-	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h \
         env_monitor.c env_monitor.h \
         mon.h \
         mon_cpu.c \
@@ -51,7 +50,27 @@ libcf_monitord_la_SOURCES = \
         mon_network.c \
         mon_processes.c \
         mon_temp.c \
+        history.c history.h \
+        mon_cumulative.c mon_cumulative.h \
+        probes.c probes.h \
+        monitoring.c monitoring.h \
         cf-monitord.c
+
+if LINUX
+libcf_monitord_la_SOURCES += mon_io_linux.c mon_mem_linux.c
+endif
+
+if SOLARIS
+libcf_monitord_la_SOURCES += mon_mem_solaris.c shared_kstat.c shared_kstat.h
+endif
+
+if !LINUX
+libcf_monitord_la_SOURCES += mon_io_stub.c
+if !SOLARIS
+libcf_monitord_la_SOURCES += mon_mem_stub.c
+endif
+endif
+
 
 if !BUILTIN_EXTENSIONS
  bin_PROGRAMS = cf-monitord

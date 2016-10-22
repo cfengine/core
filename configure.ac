@@ -490,6 +490,11 @@ then
    ])
 fi
 
+dnl  BIG FAT WARNING FOR AC_CHECK_LIB: *always* leave the
+dnl  "action-if-yes" parameter empty else LIBS is not changed and C
+dnl  define is not generated!  Or use AC_SEARCH_LIBS for a better
+dnl  interface.
+
 dnl libacl
 
 AC_ARG_WITH([libacl],
@@ -499,7 +504,7 @@ if test "x$with_libacl" != xno
 then
   CF3_WITH_LIBRARY(libacl, [
     AC_CHECK_LIB(acl, acl_init,
-      [libacl_lib_found=yes],
+      [],
       [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
     AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h],
       [libacl_header_found=yes],
@@ -516,8 +521,13 @@ if test "x$with_libcurl" != xno
 then
   CF3_WITH_LIBRARY(libcurl, [
     AC_CHECK_LIB(curl, curl_global_init,
-      [libcurl_lib_found=yes],
-      [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl library); fi])
+      [],
+      [  libcurl_lib_found=no;
+         if test "x$with_libcurl" != xcheck;
+         then
+             AC_MSG_ERROR(Cannot find libcurl library);
+         fi
+      ])
     AC_CHECK_HEADERS([curl/curl.h],
       [libcurl_header_found=yes],
       [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl header files); fi])
@@ -525,7 +535,7 @@ then
 fi
 
 AM_CONDITIONAL(HAVE_LIBCURL,
-        [test "x$libcurl_lib_found" = xyes && test "x$libcurl_header_found" = xyes])
+        [test "x$libcurl_lib_found" != xno && test "x$libcurl_header_found" = xyes])
 
 dnl libyaml
 
@@ -536,7 +546,7 @@ if test "x$with_libyaml" != xno
 then
   CF3_WITH_LIBRARY(libyaml, [
     AC_CHECK_LIB(yaml, yaml_parser_initialize,
-      [libyaml_lib_found=yes],
+      [],
       [if test "x$with_libyaml" != xcheck; then AC_MSG_ERROR(Cannot find libyaml library); fi])
     AC_CHECK_HEADERS(yaml.h,
       [libyaml_header_found=yes],

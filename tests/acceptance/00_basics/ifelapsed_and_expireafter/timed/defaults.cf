@@ -4,9 +4,9 @@
 # We repeatedly run four promises, all adding a line of text to a file. What we
 # test is how many times the line gets added to the file, depending on the
 # value of ifelapsed and expireafter. The promise is carried out three times,
-# once at 0 seconds, once at 20 seconds, and once at 65 seconds.
+# once at 0 seconds, once at 20 seconds, and once at 75 seconds.
 #
-# Seconds        0----------------20----------------65      No. lines
+# Seconds        0----------------20----------------75      No. lines
 # LR + DE       Add              Noop              Noop        1
 # LR + SE       Add              Noop              Add         2
 # SR + DI       Add              Noop              Add         2
@@ -30,8 +30,9 @@ bundle agent init
   meta:
       # Backgrounding doesn't work properly on Windows or with fakeroot.
       # In addition, RHEL4 seems to have some problem killing the test
-      # afterwards, and HP-UX is too slow for timing to be accurate.
-      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux";
+      # afterwards, and HP-UX and Solaris 9 are too slow for timing to
+      # be accurate.
+      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux|sunos_5_9";
 
   methods:
     test_pass_4::
@@ -55,7 +56,7 @@ bundle agent test
 
   commands:
     test_pass_1|test_pass_2|test_pass_3::
-      "$(G.no_fds) $(sys.cf_agent) -D $(cases) -f $(this.promise_filename).sub 1>>$(G.testfile).$(cases).output.log 2>&1 &"
+      "$(G.no_fds) $(sys.cf_agent) -Il -D $(cases) -f $(this.promise_filename).sub 1>>$(G.testfile).$(cases).output.log 2>&1 &"
         contain => in_shell;
 }
 
@@ -65,7 +66,7 @@ bundle agent check
     test_pass_1::
       "any" usebundle => dcs_wait($(this.promise_filename), 20);
     test_pass_2::
-      "any" usebundle => dcs_wait($(this.promise_filename), 45);
+      "any" usebundle => dcs_wait($(this.promise_filename), 55);
     test_pass_3::
       # Final delay is just to make sure all background echos have happened, and
       # all sub agents have exited. Failure to do so can make the sub agents try

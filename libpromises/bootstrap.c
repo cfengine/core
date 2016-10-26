@@ -37,6 +37,7 @@
 #include <known_dirs.h>
 #include <addr_lib.h>
 #include <communication.h>
+#include <client_code.h>
 
 #include <assert.h>
 
@@ -136,7 +137,8 @@ void SetPolicyServer(EvalContext *ctx, const char *host, const char* port)
         else
         {
             EvalContextVariablePutSpecial( ctx, SPECIAL_SCOPE_SYS,
-                                           "policy_hub_port", "5308",
+                                           "policy_hub_port",
+                                           CFENGINE_PORT_STR,
                                            CF_DATA_TYPE_STRING,
                                            "source=bootstrap" );
         }
@@ -153,8 +155,7 @@ void SetPolicyServer(EvalContext *ctx, const char *host, const char* port)
 
 void SetPolicyServerFromFile(EvalContext *ctx, const char* workdir)
 {
-    char* host = NULL;
-    char* port = NULL;
+    char *host = NULL, *port = NULL;
     ParsePolicyServerFile(workdir, &host, &port);
     SetPolicyServer(ctx, host, port);
     free(host);

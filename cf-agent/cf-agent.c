@@ -378,8 +378,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 OpenNetwork();
 
                 config->agent_specific.agent.bootstrap_argument = xstrdup(optarg);
-                char * host;
-                char * port;
+
+                char *host, *port;
                 ParseHostPort(optarg, &host, &port);
 
                 char ipaddr[CF_MAX_IP_LEN] = "";

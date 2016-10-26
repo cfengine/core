@@ -1008,8 +1008,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
         LoadSecretKeys();
-        char* ipaddr = NULL;
-        char* port = NULL;
+        char *ipaddr = NULL, *port = NULL;
         LookUpPolicyServerFile(workdir, &ipaddr, &port);
         PolicyHubUpdateKeys(ipaddr);
         free(ipaddr);

@@ -41,7 +41,7 @@ enum generic_agent_config_common_policy_output_format
     GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF_FULL,
     GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON_FULL
 };
- 
+
 typedef struct
 {
     AgentType agent_type;
@@ -82,7 +82,10 @@ typedef struct
         } common;
         struct
         {
-            char *bootstrap_policy_server;
+            char *bootstrap_argument;
+            char *bootstrap_ip;
+            char *bootstrap_port;
+            char *bootstrap_host;
             bool bootstrap_trust_server;
 
             // BODY AGENT CONTROL

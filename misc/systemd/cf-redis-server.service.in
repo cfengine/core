@@ -9,8 +9,9 @@ Wants=cf-hub.service
 Before=cf-consumer.service
 
 [Service]
-Type=simple
+Type=forking
 ExecStart=@workdir@/bin/redis-server @workdir@/config/redis.conf
+PIDFile=@workdir@/redis-server.pid
 Restart=always
 RestartSec=10
 

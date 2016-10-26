@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 
     PolicyDestroy(policy); /* Can we safely do this earlier ? */
     int ret = 0;
-    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
+    if (config->agent_specific.agent.bootstrap_argument && !VerifyBootstrap())
     {
         RemovePolicyServerFile(GetWorkDir());
         WriteAmPolicyHubFile(false);
@@ -377,13 +377,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 // temporary assure that network functions are working
                 OpenNetwork();
 
-                char mapped_policy_server[CF_MAX_IP_LEN] = "";
-                if (Hostname2IPString(mapped_policy_server, optarg,
-                                      sizeof(mapped_policy_server)) == -1)
+                config->agent_specific.agent.bootstrap_argument = xstrdup(optarg);
+                char * host;
+                char * port;
+                ParseHostPort(optarg, &host, &port);
+
+                char ipaddr[CF_MAX_IP_LEN] = "";
+                if (Hostname2IPString(ipaddr, host,sizeof(ipaddr)) == -1)
                 {
                     Log(LOG_LEVEL_ERR,
                         "Could not resolve hostname '%s', unable to bootstrap",
-                        optarg);
+                        host);
                     exit(EXIT_FAILURE);
                 }
 
@@ -391,10 +395,19 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
                 MINUSF = true;
                 config->ignore_locks = true;
-                GenericAgentConfigSetInputFile(config, GetInputDir(),
-                                               "promises.cf");
-                config->agent_specific.agent.bootstrap_policy_server =
-                    xstrdup(mapped_policy_server);
+                GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
+
+                config->agent_specific.agent.bootstrap_ip = xstrdup(ipaddr);
+                config->agent_specific.agent.bootstrap_host = xstrdup(host);
+
+                if (port == NULL)
+                {
+                    config->agent_specific.agent.bootstrap_port = NULL;
+                }
+                else
+                {
+                    config->agent_specific.agent.bootstrap_port = xstrdup(port);
+                }
             }
             break;
 
@@ -552,7 +565,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     }
 
     if (option_trust_server &&
-        config->agent_specific.agent.bootstrap_policy_server == NULL)
+        config->agent_specific.agent.bootstrap_argument == NULL)
     {
         Log(LOG_LEVEL_ERR,
             "Option --trust-server can only be used when bootstrapping");
@@ -1109,7 +1122,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
     Nova_Initialize(ctx);
 
     // If not have been enabled above then should be disabled.
-    // By default it's enabled to catch all set classes on startup stage 
+    // By default it's enabled to catch all set classes on startup stage
     // before this part of the policy is processed.
     if (!config->agent_specific.agent.report_class_log)
     {
@@ -1967,7 +1980,7 @@ static int AutomaticBootstrap(GenericAgentConfig *config)
 
         if (strlen(ipaddr) < sizeof(POLICY_SERVER))
         {
-            config->agent_specific.agent.bootstrap_policy_server = xstrdup(ipaddr);
+            config->agent_specific.agent.bootstrap_argument = xstrdup(ipaddr);
             ret = 0;
         }
         else

@@ -1,7 +1,7 @@
 [Unit]
 Description=CFEngine Enterprise Hub Report Collector
 PartOf=cfengine3.service
-ConditionPathExists=@workdir@/bin/cf-hub --no-fork
+ConditionPathExists=@workdir@/bin/cf-hub
 ConditionPathExists=@workdir@/inputs/promises.cf
 After=syslog.target
 After=network.target
@@ -10,7 +10,7 @@ BindsTo=cf-redis-server.service
 
 [Service]
 Type=simple
-ExecStart=@workdir@/bin/cf-hub -F
+ExecStart=@workdir@/bin/cf-hub  --no-fork
 Restart=always
 RestartSec=10
 

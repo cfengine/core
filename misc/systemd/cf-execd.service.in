@@ -2,6 +2,7 @@
 Description=CFEngine Enterprise Execution Scheduler
 After=syslog.target
 ConditionPathExists=@workdir@/bin/cf-execd
+ConditionPathExists=@workdir@/inputs/promises.cf
 PartOf=cfengine3.service
 
 [Service]

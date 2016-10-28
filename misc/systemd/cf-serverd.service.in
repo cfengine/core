@@ -3,6 +3,8 @@ Description=CFEngine Enterprise file server
 After=syslog.target
 After=network.target
 ConditionPathExists=@workdir@/bin/cf-serverd
+ConditionPathExists=@workdir@/policy_server.dat
+ConditionPathExists=@workdir@/inputs/promises.cf
 PartOf=cfengine3.service
 
 [Service]

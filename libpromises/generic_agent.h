@@ -83,9 +83,9 @@ typedef struct
         struct
         {
             char *bootstrap_argument;
-            char *bootstrap_ip;
-            char *bootstrap_port;
             char *bootstrap_host;
+            char *bootstrap_port;
+            char *bootstrap_ip;
             bool bootstrap_trust_server;
 
             // BODY AGENT CONTROL

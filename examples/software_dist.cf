@@ -66,9 +66,9 @@ bundle agent check_software
       };
 
   methods:
-      #  "any" usebundle => add_software( "@(check_software.include_software)", "$(sys.policy_hub)" );
-      #  "any" usebundle => update_software( "@(check_software.autoupdate_software)", "$(sys.policy_hub)" );
-      #  "any" usebundle => remove_software( "@(check_software.exclude_software)", "$(sys.policy_hub)" );
+      #  "any" usebundle => add_software( "@(check_software.include_software)", "$(sys.policy_hub_ip)" );
+      #  "any" usebundle => update_software( "@(check_software.autoupdate_software)", "$(sys.policy_hub_ip)" );
+      #  "any" usebundle => remove_software( "@(check_software.exclude_software)", "$(sys.policy_hub_ip)" );
 }
 
 #########################################################################

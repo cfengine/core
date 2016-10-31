@@ -119,47 +119,75 @@ bool WriteAmPolicyHubFile(bool am_policy_hub)
  * policy_server.dat file has been removed. Then this function will be called
  * with NULL as new_policy_server, and cf-serverd will keep running even
  * without a policy server set. */
-void SetPolicyServer(EvalContext *ctx, const char *host, const char* port)
+void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
-    if (host != NULL)
+    if (new_policy_server == NULL || new_policy_server[0] == '\0')
     {
-        xsnprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", host);
-        EvalContextVariablePutSpecial( ctx,  SPECIAL_SCOPE_SYS, "policy_hub",
-                                       host, CF_DATA_TYPE_STRING,
-                                       "source=bootstrap" );
-        if (port != NULL && port[0] != '\n')
-        {
-            EvalContextVariablePutSpecial( ctx, SPECIAL_SCOPE_SYS,
-                                           "policy_hub_port", port,
-                                           CF_DATA_TYPE_STRING,
-                                           "source=bootstrap" );
-        }
-        else
-        {
-            EvalContextVariablePutSpecial( ctx, SPECIAL_SCOPE_SYS,
-                                           "policy_hub_port",
-                                           CFENGINE_PORT_STR,
-                                           CF_DATA_TYPE_STRING,
-                                           "source=bootstrap" );
-        }
-    }
-    else
-    {
+
         strcpy(POLICY_SERVER, "");
-        EvalContextVariableRemoveSpecial( ctx, SPECIAL_SCOPE_SYS,
-                                          "policy_hub" );
-        EvalContextVariableRemoveSpecial( ctx, SPECIAL_SCOPE_SYS,
-                                          "policy_hub_port" );
+        EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
+                                            "policy_hub" );
+        EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
+                                            "policy_hub_ip" );
+        EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
+                                            "policy_hub_port" );
+        return;
+    }
+
+    //xsnprintf(POLICY_SERVER, CF_MAX_SERVER_LEN, "%s", new_policy_server);
+
+    // Use a copy(buffer) as ParseHostPort will insert null bytes:
+    char *host, *port;
+    char buffer[CF_MAX_SERVER_LEN];
+    xsnprintf(buffer, CF_MAX_SERVER_LEN, "%s", new_policy_server);
+    ParseHostPort(buffer, &host, &port);
+
+    EvalContextVariablePutSpecial(  ctx,  SPECIAL_SCOPE_SYS,
+                                    "policy_hub", host,
+                                    CF_DATA_TYPE_STRING,
+                                    "source=bootstrap" );
+
+    // Set the sys.policy_hub_ip variable:
+    char ip[CF_MAX_IP_LEN] = "";
+    int ret = Hostname2IPString(ip, host, CF_MAX_IP_LEN);
+    if (ret == 0)
+    {
+        EvalContextVariablePutSpecial(  ctx,  SPECIAL_SCOPE_SYS,
+                                        "policy_hub_ip", ip,
+                                        CF_DATA_TYPE_STRING,
+                                        "derived-from=sys.policy_hub" );
+        xsnprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", ip);
+    }
+    else // IP Lookup failed
+    {
+        EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
+                                            "policy_hub_ip" );
+        strcpy(POLICY_SERVER, "");
+    }
+
+    // Set the sys.policy_hub_port variable:
+    if (port != NULL && port[0] != '\n')
+    {
+        EvalContextVariablePutSpecial( ctx, SPECIAL_SCOPE_SYS,
+                                       "policy_hub_port", port,
+                                       CF_DATA_TYPE_STRING,
+                                       "source=bootstrap" );
+    }
+    else // Default value (5308) is set
+    {
+        EvalContextVariablePutSpecial( ctx, SPECIAL_SCOPE_SYS,
+                                       "policy_hub_port",
+                                       CFENGINE_PORT_STR,
+                                       CF_DATA_TYPE_STRING,
+                                       "source=bootstrap" );
     }
 }
 
 void SetPolicyServerFromFile(EvalContext *ctx, const char* workdir)
 {
-    char *host = NULL, *port = NULL;
-    ParsePolicyServerFile(workdir, &host, &port);
-    SetPolicyServer(ctx, host, port);
-    free(host);
-    free(port);
+    char* contents = ReadPolicyServerFile(workdir);
+    SetPolicyServer(ctx, contents);
+    free(contents);
 }
 
 /* Set "sys.last_policy_update" variable. */

@@ -498,8 +498,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         WriteAmPolicyHubFile(am_policy_server);
 
         WritePolicyServerFile(GetWorkDir(), bootstrap_arg);
-        SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_host,
-                             config->agent_specific.agent.bootstrap_port);
+        SetPolicyServer(ctx, bootstrap_arg);
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);
@@ -511,10 +510,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
                 existing_policy_server);
-            char* host = NULL;
-            char* port = NULL;
-            ParseHostPort(existing_policy_server, &host, &port);
-            SetPolicyServer(ctx, host, port);
+            SetPolicyServer(ctx, existing_policy_server);
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
         }

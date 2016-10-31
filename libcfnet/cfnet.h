@@ -40,7 +40,13 @@ extern int CFENGINE_PORT;                              /* GLOBAL_P GLOBAL_E */
    (assuming max 64*8 = 512-bit cipher block size). */
 #define CF_BUFSIZE 4096
 #define CF_SMALLBUF 128
+
 #define CF_MAX_IP_LEN 64                    /* max IPv4/IPv6 address length */
+#define CF_MAX_PORT_LEN 6
+#define CF_MAX_HOST_LEN 256
+// Since both have 1 extra for null byte, we don't need to add 1 for ':'
+#define CF_MAX_SERVER_LEN (CF_MAX_HOST_LEN + CF_MAX_PORT_LEN)
+
 #define CF_DONE 't'
 #define CF_MORE 'm'
 #define SOCKET_INVALID -1

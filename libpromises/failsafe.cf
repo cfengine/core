@@ -283,7 +283,7 @@ bundle agent failsafe_cfe_internal_report
 
     bootstrap_mode::
 
-      "Bootstrapping from host '$(sys.policy_hub)' via built-in policy '$(this.promise_filename)'"
+      "Bootstrapping from host '$(sys.policy_hub_ip)' via built-in policy '$(this.promise_filename)'"
         handle => "failsafe_cfe_internal_bootstrap_update_reports_bootstrap_notification",
         comment => "Be sure to inform the user that they have triggerd a bootstrap.";
 
@@ -313,15 +313,15 @@ bundle agent failsafe_cfe_internal_report
       # TODO: Come up with better conditions. These seem weak.
       #  - Potentially use returnszero() with cf-promises?
 
-      "Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)
+      "Failed to copy policy from policy server at $(sys.policy_hub_ip):$(sys.masterdir)
        Please check
-       * cf-serverd is running on $(sys.policy_hub)
+       * cf-serverd is running on $(sys.policy_hub_ip)
        * CFEngine version on the policy hub is 3.6.0 or latest - otherwise you need to tweak the protocol_version setting
-       * network connectivity to $(sys.policy_hub) on port 5308
+       * network connectivity to $(sys.policy_hub_ip) on port 5308
        * masterfiles 'body server control' - in particular allowconnects, trustkeysfrom and skipverify
        * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny
-       It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.
-       When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
+       It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub_ip) to diagnose connection issues.
+       When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub_ip) before retrying."
       handle => "failsafe_cfe_internal_bootstrap_update_reports_did_not_get_policy";
 
     systemctl_restart_cfengine3_repaired::
@@ -385,7 +385,7 @@ body copy_from failsafe_scp(from)
     trust_server::
       trustkey    => "true";
     !policy_server::
-      servers => { "$(sys.policy_hub)" };
+      servers => { "$(sys.policy_hub_ip)" };
       portnumber => "$(sys.policy_hub_port)";
 }
 ############################################

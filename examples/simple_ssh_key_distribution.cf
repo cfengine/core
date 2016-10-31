@@ -6,7 +6,7 @@ bundle common ssh_key_info
                  directory and server keys should be sourced from.";
 
   vars:
-    "key_server" string => "$(sys.policy_hub)";
+    "key_server" string => "$(sys.policy_hub_ip)";
 
     # We set the path to the repo in a common bundle so that we can reference
     # the same path when defining access rules and when copying files.

@@ -32,7 +32,7 @@
  * @param ctx EvalContext is used to set related variables
  * @param new_policy_server IP of new policy server
  */
-void SetPolicyServer(EvalContext *ctx, const char *new_policy_server, const char* port);
+void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
 
 void SetPolicyServerFromFile(EvalContext *ctx, const char* workdir);
 

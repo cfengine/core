@@ -1,3 +1,132 @@
+3.10.0:
+	New features/additions:
+	- All new features/additions for 3.8 and 3.9 are also included in 3.10.
+	- Add: Classes body tailored for use with diff
+	- New feature: Classes promise: allow classes without an expression to default to defined.
+	- Support for custom ports and host names as policy hub (CFE-953)
+	- Add: Definition of from_cfexecd for cf-execd initiated runs
+	  (CFE-2386)
+	- Add < <= > >= operators to eval().
+	- Add testing jUnit and TAP bundles and include them in stdlib.cf
+	- New function isipinsubnet() (ENT-7949)
+	- LogDebug(): implement module-based debug logging.
+	  Now most DEBUG messages are *not* printed even when "-d" is in use, but
+	  the specific debug module has to be enabled on the command line. For
+	  example to enable all log modules, run:
+	  cf-agent -d --log-modules=all
+	- Add: edit_line contains_literal_string to stdlib
+	- add variablesmatching_as_data() function paralleling variablesmatching()
+	  (Redmine #7885)
+	- Allow specifying agent maxconnections via def.json (CFE-2461)
+	- Add getuserinfo() function
+	- Add body agent control select_end_match_eof option. (CFE-2390)
+
+	Changes:
+	- Rewrite iteration engine to avoid combinatorial explosion with nested variable expansions.
+	  This speeds up enormously the execution of policies that included long
+	  slists or JSON containers, that in the past didn't even terminate.
+	  Change: "cf_null" string literal was changed to not be something
+	          special, and it's now a string that can be used anywhere, like
+	          in slists or part of bundlesequence etc.
+	  NOTE: Old policy should be grep'ed for "cf_null" and in case such
+	        occurences were handled specially, they should be reworked.
+	  Change: "--empty-list--" is now never printed by format(),
+	          an empty list is now printed as "{  }".
+	  Change: Order of pre-evaluation was slightly changed, A new "vars" pass
+	          at the beginning of pre-evaluation was added. It used to be
+	          classes-vars, but it was changed to vars-classes-vars. As a
+	          result some classes or variables might be evaluated at a
+	          different time than before. As always try to write policy code that works no matter what the
+	          order of execution is.
+	          One way is to always *guard* the execution of functions to avoid
+	          bogus function results.  For example the following will avoid
+	          running execresult() bevore the file has been created:
+	            execresult("cmd /path/to/filename") if => fileexists("/path/to/filename");
+	  C internals: NULL Rlist is now perfectly valid, in fact it is the only
+	               way to denote an empty Rlist.
+	  C internals: Since a slist variable can be NULL, API of
+	               EvalContextVariableGet() changed: The way to detect if a
+	               variable is found, is not to check return value for NULL,
+	               but to check returned *type* for CF_DATA_TYPE_NONE.
+	               Fixed what I could find as wrong API uses. (CFE-2162)
+	- Allow arbitrary service policies (CFE-2402)
+	- Behaviour change: cf-execd: Do not append -Dfrom_cfexecd to exec_command .
+	  (CFE-2386)
+	- Failsafe/Bootstrap no longer copy files starting with .git (like .gitignore) or .mailmap
+	  (CFE-2439)
+	- Change: Enable strict transport security
+	- Change: Disable http TRACE method
+	- Change: Verify transfered files during policy update
+	- Allow getvariablemetatags() and getclassmetatags() to get a specific tag key
+	- Change: Use more restrictive unix socket perms (ENT-2705)
+	- Add sys.user_data container for user starting agent.
+	- Pass package promise options to underlying apt-get call (#802)
+	  (CFE-2468)
+	- Change: Enable agent component management policy on systemd hosts
+	  (CFE-2429)
+	- Change: Switch processes restart_class logging to verbose
+	- Change: Log level for keeping verbatim JSON to DEBUG (CFE-2141)
+	- Change: Require network before cfengine services (CFE-2435)
+
+	Bug fixes:
+	- fix files promise not setting ACL properly on directories. (CFE-616)
+	- Upgrade CFEngine dependencies to the following versions:
+	  - lixml2 2.9.4
+	  - OpenSSL 1.0.2j
+	  - LibYAML 0.1.7
+	  - Curl 7.50.3
+	- Fix cumulative() to accept up to 1000 years, like it's documented.
+	- Fixed parsing of host name/IP and port number in cf-runagent
+	  (CFE-546)
+	- Fix intermittent error message of type:
+	  "error: Process table lacks space for last columns: <cmd>" (CFE-2371)
+	- storage: Properly initialize the list of current mounts (CFE-1803)
+	- Fix 'contain' attribute 'no_output' having no effect when
+	  the 'commands' promise is using 'module => "true"'. (CFE-2412)
+	- Fix bug which caused empty emails to be sent from cf-execd
+	  if there was no previous output log and the new log was fully filtered
+	  by email filters. (ENT-2739)
+	- allow ifelse(FALSE, $(x), "something else") to work. (CFE-2260)
+	- Fix connection cache, reuse connections when possible. (CFE-2447)
+	- Fix rare bug that would sometimes prevent redis-server from launching.
+	- Fix bug in files promise when multiple owners are promised
+	  but first one doesn't exist, and improve logging . (CFE-2432)
+	- define kept outcome with action warn if edit_line is as expected
+	  (CFE-2424)
+	- Example using getvariablemetatags() and getclassmetatags() to get a specific tag key
+	- Remove 2k limit on strings length when writing JSON policies
+	  (CFE-2383)
+	- Fix ttime_range constraint to go higher than 2G as number of seconds.
+	- Change: cronjob bundle tolerates different spacing
+	- Allow editing fields in lines longer than 4k (CFE-2438)
+	- Don't send empty emails for logs where everything is filtered.
+	  (ENT-2739)
+	- allow maplist(), maparray(), and mapdata() to evaluate function calls during iteration
+	  (ARCHIVE-1619)
+	- insert_lines is no longer implicitly matching EOF as
+	  end of the region if 'select_end' pattern is not matched . (CFE-2263)
+	- Change: Remove executable bit from systemd units (CFE-2436)
+	- cf-serverd should reload def.json when reloading policy (CFE-2406)
+	- Fix cf-monitord detection of usernames of the process table on AIX.
+	- Speed up local and remote file copying and fix spurious errors.
+	  (ENT-2769)
+	- Fix occasional segfault when running getindices() on a
+	  variable that has indices of multiple depths (e.g. both "a[x]" and
+	  "a[x][y]"). (CFE-2397)
+	- When no file is provided when calling cf-promises
+	  with cf or json output, use promises.cf by default. This restores the
+	  previous behavior. (CFE-2375)
+	- Fix: Services starting or stopping unnecessarily (CFE-2421)
+	- Change: Split systemd units (CFE-2278)
+	- EOF is  matched as an end of the region in edit_line
+	  promises only if 'select_end_match_eof' parameter is true. (CFE-2263)
+	- Fix double logging of output_prefix, and log process name for cf-agent syslog messages.
+	  (CFE-2225)
+	- Be less verbose if a network interface doesn't have a MAC address.
+	  (CFE-1995)
+	- Fix: CFEngine choking on standard services (CFE-2806)
+
+
 3.9.0:
 	New features/additions:
 	- Add optional interface parameter to iprange() to match only one interface.

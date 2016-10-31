@@ -118,7 +118,7 @@ for repo in repos:
         log_entry_local = False
         log_entry = ""
         for line in blob.stdout:
-            line = line.rstrip('\n')
+            line = line.strip()
             if line == "":
                 if not msg_started:
                     msg_started = True

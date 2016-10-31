@@ -1981,6 +1981,8 @@ static int AutomaticBootstrap(GenericAgentConfig *config)
         if (strlen(ipaddr) < sizeof(POLICY_SERVER))
         {
             config->agent_specific.agent.bootstrap_argument = xstrdup(ipaddr);
+            config->agent_specific.agent.bootstrap_ip       = xstrdup(ipaddr);
+            config->agent_specific.agent.bootstrap_host     = xstrdup(ipaddr);
             ret = 0;
         }
         else

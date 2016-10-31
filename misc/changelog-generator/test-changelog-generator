@@ -279,6 +279,18 @@ Changelog: commit'
 
 ################################################################################
 
+# A bit tricky to make this commit, because normal git-commit cleans up \r.
+# But it *is* in our Git history (1f900885d2aebda3e23ca5129d37f5e75eb83ee4)
+git reset --hard $(git commit-tree -p $(git rev-parse HEAD) $(git cat-file commit HEAD | grep '^tree ' | sed -e 's/^tree //') <<EOF)
+Changelog with Windows line endings N66
+
+Changelog: title
+
+stuff stuff
+EOF
+
+################################################################################
+
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt
 cat > expected.txt <<EOF
 	- As well as this. N34
@@ -289,6 +301,7 @@ cat > expected.txt <<EOF
 	- Changelog with Jira and Redmine. N56
 	  (Redmine #12345, #5555) (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
 	- Changelog with Jira. N55 (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	- Changelog with Windows line endings N66
 	- Changelog with inline Jira and Redmine ref. N57
 	  (Redmine #7777, #7778) (CFE-80, CFE-81)
 	- Changelog with invalid signed-off N65

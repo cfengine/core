@@ -268,7 +268,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
         {
             Writer *w = FileWriter(stdout);
-            GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
         exit(EXIT_SUCCESS);
@@ -303,7 +303,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
         {
             Writer *w = FileWriter(stdout);
-            GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
         exit(EXIT_FAILURE);

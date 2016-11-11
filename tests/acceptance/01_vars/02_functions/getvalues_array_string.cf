@@ -1,0 +1,45 @@
+#######################################################
+#
+# Test getvalues()
+#
+#######################################################
+
+# If we run getvalues on a classic array index that contains a string
+# we should end up with a list made up of that single value
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+
+  vars:
+      "array[string]" string => "scrumdiddlyumptious";
+      "values" slist => getvalues("array[string]");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "expected" slist => { "scrumdiddlyumptious" };
+    "diff" slist => difference( expected, "test.values" );
+ 
+  classes:
+    "_pass" expression => strcmp( length( diff ), 0 );
+
+  methods:
+   
+    _pass:: 
+      "pass" usebundle => dcs_pass("$(this.promise_filename)");
+
+    !_pass::
+      "pass" usebundle => dcs_fail("$(this.promise_filename)");
+}

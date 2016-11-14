@@ -226,7 +226,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
             {
                 Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
+                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
             exit(EXIT_SUCCESS);
@@ -275,7 +275,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
             {
                 Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
+                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
             exit(EXIT_FAILURE);

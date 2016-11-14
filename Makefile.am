@@ -65,7 +65,7 @@ MOSTLYCLEANFILES = *~
 # Get everything removed down to where rebuilding requires:
 # "configure; make; make install"
 #
-DISTCLEANFILES = 
+DISTCLEANFILES =
 
 #
 # Get everything removed down to where rebuilding requires:
@@ -86,6 +86,7 @@ install-data-local:
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/modules
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/outputs
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/ppkeys
+	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/plugins
 
 
 #

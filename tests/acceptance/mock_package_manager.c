@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
         default:
             {
                 Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
+                WriterWriteHelp(w, "mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
                 FileWriterDetach(w);
             }
             exit(EXIT_FAILURE);

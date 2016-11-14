@@ -291,7 +291,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
             {
                 Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
+                WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
                 FileWriterDetach(w);
             }
             exit(EXIT_SUCCESS);
@@ -326,7 +326,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
             {
                 Writer *w = FileWriter(stdout);
-                GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
+                WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
                 FileWriterDetach(w);
             }
             exit(EXIT_FAILURE);

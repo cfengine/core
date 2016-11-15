@@ -325,6 +325,16 @@ EOF
 
 ################################################################################
 
+git commit --allow-empty -m 'CFE-1234 has no JIRA string in front.
+
+Changelog: Make sure the bugtracker reference is taken from the title
+           and goes after this message. The title should not be
+           included. N68'
+
+################################################################################
+
+
+
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt
 cat > expected.txt <<EOF
 	- As well as this. N34
@@ -350,6 +360,9 @@ cat > expected.txt <<EOF
 	- Complete Fix for changelog N4
 	  Should be included N5
 	- Fix for changelog N1
+	- Make sure the bugtracker reference is taken from the title
+	             and goes after this message. The title should not be
+	             included. N68 (CFE-1234)
 	- Redmine duplicate (commit) N51
 	  More stuff. N52 (Redmine #1234)
 	- Redmine entries in parentheses (commit) N45

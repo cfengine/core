@@ -228,11 +228,15 @@ bool Address2Hostkey(char *dst, size_t dst_size, const char *address)
         {
             retval = Address2HostkeyInDB(db, address, dst);
             CloseDB(db);
+
+            if (!retval)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Key digest for address '%s' was not found in lastseen db!",
+                    address);
+            }
         }
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Key digest for address '%s' is %s", address,
-        retval ? dst : "not found!");
 
     return retval;
 }

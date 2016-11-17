@@ -33,6 +33,7 @@
 #include <signals.h>
 #include <processes_select.h>
 #include <bootstrap.h>
+#include <policy_server.h>
 #include <sysinfo.h>
 #include <timeout.h>
 #include <time_classes.h>

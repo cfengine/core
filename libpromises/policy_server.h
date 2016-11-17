@@ -22,33 +22,22 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_BOOTSTRAP_H
-#define CFENGINE_BOOTSTRAP_H
+/** @file
+ * @brief Access to Policy Server IP Address, hostname and port number.
+ *
+ * Provides a simple get/set interface for the policy server variables.
+ * Does hostname resolution behind the scenes.
+ */
+
+#ifndef CFENGINE_POLICYSERVER_H
+#define CFENGINE_POLICYSERVER_H
 
 #include <cf3.defs.h>
 
-
-void EvalContextSetPolicyServer(EvalContext *ctx, const char *new_policy_server);
-
-// POLICY SERVER FILE FUNCTIONS:
-char* ReadPolicyServerFile(const char *workdir);
-void SetPolicyServerFromFile(EvalContext *ctx, const char *workdir);
-bool ParsePolicyServerFile(const char *workdir, char **host, char **port);
-bool LookUpPolicyServerFile(const char *workdir, char **ipaddr, char **port);
-bool WritePolicyServerFile(const char *workdir, const char *new_policy_server);
-bool RemovePolicyServerFile(const char *workdir);
-
-// POLICY HUB FUNCTIONS:
-void UpdateLastPolicyUpdateTime(EvalContext *ctx);
-bool GetAmPolicyHub(void);
-bool WriteAmPolicyHubFile(bool am_policy_hub);
-
-// FAILSAFE FUNCTIONS:
-bool WriteBuiltinFailsafePolicy(const char *workdir);
-bool WriteBuiltinFailsafePolicyToPath(const char *filename);
-
-// POLICY FILE FUNCTIONS:
-bool RemoveAllExistingPolicyInInputs(const char *inputdir);
-bool MasterfileExists(const char *masterdir);
+void PolicyServerSet(const char *new_policy_server);
+const char *PolicyServerGet();
+const char *PolicyServerGetIP();
+const char *PolicyServerGetHost();
+const char *PolicyServerGetPort();
 
 #endif

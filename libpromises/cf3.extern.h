@@ -58,7 +58,6 @@ extern int VEXPIREAFTER;
 extern const char *const OBS[CF_OBSERVABLES][2];
 
 extern bool FIPS_MODE;
-extern char POLICY_SERVER[CF_MAX_IP_LEN];
 extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 

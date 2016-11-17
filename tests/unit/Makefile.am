@@ -173,6 +173,7 @@ check_PROGRAMS = \
 	ring_buffer_test \
 	strlist_test \
 	addr_lib_test \
+	policy_server_test \
 	libcompat_test \
 	split_process_line_test \
 	new_packages_promise_test \

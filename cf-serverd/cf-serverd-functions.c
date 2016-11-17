@@ -25,10 +25,11 @@
 #include <cf-serverd-functions.h>
 #include <cf-serverd-enterprise-stubs.h>
 
-#include "server_access.h"
+#include <server_access.h>
 #include <client_code.h>
 #include <server_transform.h>
 #include <bootstrap.h>
+#include <policy_server.h>
 #include <scope.h>
 #include <signals.h>
 #include <systype.h>
@@ -751,7 +752,7 @@ static void CollectCallIfDue(EvalContext *ctx)
 
             ConnectionInfoSetSocket(info, new_client);
             info->is_call_collect = true; /* Mark processed when done. */
-            ServerEntryPoint(ctx, POLICY_SERVER, info);
+            ServerEntryPoint(ctx, PolicyServerGetIP(), info);
         }
     }
 }

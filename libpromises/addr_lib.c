@@ -575,6 +575,53 @@ bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
     return false;
 }
 
+char *TrimWhitespace(char *s)
+{
+    if ( NULL_OR_EMPTY(s) )
+    {
+        return NULL;
+    }
+
+    // Leading whitespace:
+    while (isspace(s[0]))
+    {
+        ++s;
+    }
+
+    // Empty string (only whitespace):
+    if (s[0] == '\0')
+    {
+        return NULL;
+    }
+
+    // Trailing whitespace:
+    char *end = s + strlen(s) - 1; // Last byte before '\0'
+    while ( isspace(end[0]) )
+    {
+        --end;
+    }
+    end[1] = '\0';   // Null terminate string after last non space char
+
+    return s;
+}
+
+/**
+ * Simple check to avoid writing to illegal memory addresses.
+ * NOT a proper test for valid IP.
+ */
+static AddressType AddressTypeCheckValidity(char *s, AddressType address_type)
+{
+    if(NULL_OR_EMPTY(s))
+    {
+        return ADDRESS_TYPE_OTHER;
+    }
+    if(strlen(s) >= CF_MAX_IP_LEN)
+    {
+        return ADDRESS_TYPE_OTHER;
+    }
+    return address_type;
+}
+
 /**
  * Parses "hostname:port" or "[hostname]:port", where hostname may also be
  * IPv4 or IPv6 address string.
@@ -583,9 +630,18 @@ bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
  * @param port will point to the port, or NULL if no or empty port
  * @WARNING modifies #s to '\0' terminate hostname if followed by port.
  */
-void ParseHostPort(char *s, char **hostname, char **port)
+AddressType ParseHostPort(char *s, char **hostname, char **port)
 {
-    char *h, *p;                            // hostname, port temporaries
+    s = TrimWhitespace(s);
+    if ( NULL_OR_EMPTY(s) )
+    {
+        *hostname = NULL;
+        *port     = NULL;
+        return ADDRESS_TYPE_OTHER;
+    }
+
+    AddressType address_type = ADDRESS_TYPE_OTHER;
+    char *h, *p; // hostname, port temporaries
 
     h = s;
     p = NULL;
@@ -593,22 +649,34 @@ void ParseHostPort(char *s, char **hostname, char **port)
     char *first_colon = strchr(s, ':');
     char *first_dot   = strchr(s, '.');
 
-    if (s[0] == '[')                       // [host or ip]:port
+    if (s[0] == '[')     // [host or ip]:port
     {
         h = s + 1;
         p = strchr(h, ']');
         if (p != NULL)
         {
-            *p = '\0';                     // '\0' terminate host name
-            if (p[1] == ':')               // move port* forward
+            if (first_colon != NULL && first_colon < p)
+            {
+                address_type = ADDRESS_TYPE_IPV6;
+            }
+            else if (isdigit(h[0]))
+            {
+                address_type = ADDRESS_TYPE_IPV4;
+            } // (else it's other by default)
+
+            *p = '\0';        // '\0' terminate host name
+            if (p[1] == ':')  // move port* forward
             {
                 p += 2;
             }
         }
     }
-    else if (first_colon == NULL)          // no colon, no port, host correct
+    else if (first_colon == NULL)    // localhost, 192.168.0.1
     {
-        // Do nothing
+        if (isdigit(h[0]))
+        {
+            address_type = ADDRESS_TYPE_IPV4;
+        }
     }
     else if (first_dot == NULL || first_colon < first_dot)
     {
@@ -618,19 +686,27 @@ void ParseHostPort(char *s, char **hostname, char **port)
             *first_colon = '\0';
             p = first_colon + 1;
         }
-        // Multiple colons means IPv6 address without port, host correct
+        else // Multiple colons:
+        {
+            address_type = ADDRESS_TYPE_IPV6;
+        }
     }
-    else        // (first_dot < first_colon) : IPv4 or hostname, can have port
+    else // (first_dot < first_colon) : IPv4 or hostname
     {
-        assert(first_dot < first_colon);
         p = strchr(h, ':');
         if (p != NULL)
         {
-            *p = '\0';                     // '\0'-terminate hostname
+            *p = '\0'; // '\0'-terminate hostname
             p++;
+        }
+        if (isdigit(h[0]))
+        {
+            address_type = ADDRESS_TYPE_IPV4;
         }
     }
 
     *hostname =              (h[0] != '\0') ? h : NULL;
     *port     = (p != NULL && p[0] != '\0') ? p : NULL;
+
+    return AddressTypeCheckValidity(*hostname, address_type);
 }

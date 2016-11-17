@@ -84,11 +84,9 @@ bundle server access_rules()
       "delta"
       comment       => "Grant access to cfengine hub to collect report deltas",
       resource_type => "query",
-      admit         => { "$(sys.policy_hub_ip)"  };
+      admit         => { "$(sys.policy_hub)"  };
       "full"
       comment       => "Grant access to cfengine hub to collect full report dump",
       resource_type => "query",
-      admit         => { "$(sys.policy_hub_ip)"  };
+      admit         => { "$(sys.policy_hub)"  };
 }
-
-

@@ -198,7 +198,7 @@ bundle agent git_update
    "$(inputs_dir)/cf_promises_validated"
         comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
          handle => "check_valid_update",
-      copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub_ip)"),
+      copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
          action => u_immediate,
         classes => u_if_repaired("validated_updates_ready");
 
@@ -218,7 +218,7 @@ bundle agent git_update
    "$(inputs_dir)"
            comment => "Copy policy updates from master source on policy server if a new validation was acquired",
             handle => "update_files_inputs_dir",
-         copy_from => u_rcp("$(master_location)","$(sys.policy_hub_ip)"),
+         copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
       depth_search => u_recurse("inf"),
       file_select  => u_input_files,
         depends_on => { "check_valid_update" },

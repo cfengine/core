@@ -73,6 +73,7 @@
 #include <syslog_client.h>
 #include <man.h>
 #include <bootstrap.h>
+#include <policy_server.h>
 #include <misc_lib.h>
 #include <buffer.h>
 #include <loading.h>
@@ -1852,7 +1853,8 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const 
 
 static bool VerifyBootstrap(void)
 {
-    if (NULL_OR_EMPTY(POLICY_SERVER))
+    const char *policy_server = PolicyServerGet();
+    if (NULL_OR_EMPTY(policy_server))
     {
         Log(LOG_LEVEL_ERR, "Bootstrapping failed, no policy server is specified");
         return false;
@@ -1882,7 +1884,8 @@ static bool VerifyBootstrap(void)
         return false;
     }
 
-    Log(LOG_LEVEL_NOTICE, "Bootstrap to '%s' completed successfully!", POLICY_SERVER);
+
+    Log(LOG_LEVEL_NOTICE, "Bootstrap to '%s' completed successfully!", policy_server);
     return true;
 }
 
@@ -1978,7 +1981,8 @@ static int AutomaticBootstrap(GenericAgentConfig *config)
         Log(LOG_LEVEL_NOTICE, "Autodiscovered hub installed on hostname '%s', IP address '%s'",
             hostname, ipaddr);
 
-        if (strlen(ipaddr) < sizeof(POLICY_SERVER))
+        // TODO: This is a very bad way to check for valid IP(?)
+        if (strlen(ipaddr) < CF_MAX_IP_LEN)
         {
             config->agent_specific.agent.bootstrap_argument = xstrdup(ipaddr);
             config->agent_specific.agent.bootstrap_ip       = xstrdup(ipaddr);

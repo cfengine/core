@@ -26,6 +26,7 @@
 #include <generic_agent.h>
 
 #include <bootstrap.h>
+#include <policy_server.h>
 #include <sysinfo.h>
 #include <known_dirs.h>
 #include <eval_context.h>
@@ -498,7 +499,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         WriteAmPolicyHubFile(am_policy_server);
 
         WritePolicyServerFile(GetWorkDir(), bootstrap_arg);
-        SetPolicyServer(ctx, bootstrap_arg);
+        EvalContextSetPolicyServer(ctx, bootstrap_arg);
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);
@@ -510,7 +511,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
                 existing_policy_server);
-            SetPolicyServer(ctx, existing_policy_server);
+            EvalContextSetPolicyServer(ctx, existing_policy_server);
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
         }

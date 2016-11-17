@@ -33,6 +33,13 @@ bool FuzzyHostParse(const char *arg2);
 int FuzzyHostMatch(const char *arg0, const char *arg1, const char *basename);
 bool FuzzyMatchParse(const char *item);
 bool IsInterfaceAddress(const Item *ip_addresses, const char *adr);
-void ParseHostPort(char *s, char **hostname, char **port);
+
+typedef enum {
+    ADDRESS_TYPE_OTHER, // Hostname or invalid
+    ADDRESS_TYPE_IPV4,
+    ADDRESS_TYPE_IPV6
+} AddressType;
+
+AddressType ParseHostPort(char *s, char **hostname, char **port);
 
 #endif

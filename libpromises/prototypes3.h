@@ -63,7 +63,7 @@ ENTERPRISE_FUNC_1ARG_DECLARE(const EVP_CIPHER *, CfengineCipher, char, type);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EnterpriseContext, EvalContext *, ctx);
 ENTERPRISE_FUNC_0ARG_DECLARE(const char *, GetConsolePrefix);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, LoadSlowlyVaryingObservations, EvalContext *, ctx);
-ENTERPRISE_FUNC_6ARG_DECLARE(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle, char *, server, int, encrypted, char *, rcv);
+ENTERPRISE_FUNC_6ARG_DECLARE(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle, const char *, server, int, encrypted, char *, rcv);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LogTotalCompliance, const char *, version, int, background_tasks);
 #if defined(__MINGW32__)
 ENTERPRISE_FUNC_4ARG_DECLARE(int, GetRegistryValue, const char *, key, char *, name, char *, buf, int, bufSz);

@@ -493,58 +493,65 @@ Interval IntervalFromString(const char *string)
 
 bool DoubleFromString(const char *s, double *value_out)
 {
-    static const double NO_DOUBLE = -123.45;
+    double d;
+    char quantifier, remainder;
 
-    double a = NO_DOUBLE;
-    char remainder[CF_BUFSIZE];
-    char c = 'X';
+    assert(s         != NULL);
+    assert(value_out != NULL);
 
-    if (s == NULL)
+    int ret = sscanf(s, "%lf%c %c", &d, &quantifier, &remainder);
+
+    if (ret < 1)
     {
+        Log(LOG_LEVEL_ERR, "Failed to parse real number: %s", s);
         return false;
     }
-
-    remainder[0] = '\0';
-
-    sscanf(s, "%lf%c%s", &a, &c, remainder);
-
-    if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
+    else if (ret == 3)                               /* non-space remainder */
     {
-        Log(LOG_LEVEL_ERR, "Reading assumed real value '%s', anomalous remainder '%s'", s, remainder);
+        Log(LOG_LEVEL_ERR,
+            "Anomalous remainder '%c' while parsing real number: %s",
+            remainder, s);
         return false;
     }
-    else
+    else if (ret == 1)                                /* no quantifier char */
     {
-        switch (c)
+        /* nop */
+    }
+    else                                                  /* got quantifier */
+    {
+        assert(ret == 2);
+
+        switch (quantifier)
         {
         case 'k':
-            a = 1000 * a;
+            d *= 1000;
             break;
         case 'K':
-            a = 1024 * a;
+            d *= 1024;
             break;
         case 'm':
-            a = 1000 * 1000 * a;
+            d *= 1000 * 1000;
             break;
         case 'M':
-            a = 1024 * 1024 * a;
+            d *= 1024 * 1024;
             break;
         case 'g':
-            a = 1000 * 1000 * 1000 * a;
+            d *= 1000 * 1000 * 1000;
             break;
         case 'G':
-            a = 1024 * 1024 * 1024 * a;
+            d *= 1024 * 1024 * 1024;
             break;
         case '%':
-            if ((a < 0) || (a > 100))
+            if ((d < 0) || (d > 100))
             {
-                Log(LOG_LEVEL_ERR, "Percentage out of range (%.2lf)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range (%.2lf)", d);
                 return false;
             }
             else
             {
                 /* Represent percentages internally as negative numbers */
-                a = -a;
+                /* TODO fix? */
+                d *= -1;
             }
             break;
 
@@ -552,11 +559,16 @@ bool DoubleFromString(const char *s, double *value_out)
             break;
 
         default:
+            Log(LOG_LEVEL_VERBOSE,
+                "Ignoring bad quantifier '%c' in real number: %s",
+                quantifier, s);
             break;
         }
     }
 
-    *value_out = a;
+    assert(ret == 1  ||  ret == 2);
+
+    *value_out = d;
     return true;
 }
 

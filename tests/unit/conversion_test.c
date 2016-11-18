@@ -5,16 +5,68 @@
 
 static void test_double_from_string(void)
 {
-    {
-        double val;
-        assert_true(DoubleFromString("1.2k", &val));
-        assert_double_close(1200.0, val);
-    }
+    double val;
 
-    {
-        double val;
-        assert_false(DoubleFromString("abc", &val));
-    }
+    /* ===== TESTING SUCCESS ===== */
+
+    assert_true(DoubleFromString("1.2k", &val));
+    assert_double_close(1200.0, val);
+
+    assert_true(DoubleFromString("1m", &val));
+    assert_double_close(1000000.0, val);
+
+    assert_true(DoubleFromString("1K", &val));
+    assert_double_close(1024.0, val);
+
+    /* Previously reserved as NO_DOUBLE define. */
+    assert_true(DoubleFromString("-123.45", &val));
+    assert_double_close(-123.45, val);
+
+    assert_true(DoubleFromString("0.1", &val));
+    assert_double_close(0.1, val);
+
+    /* leading space is OK. */
+    assert_true(DoubleFromString(" 0.2", &val));
+    assert_double_close(0.2, val);
+    assert_true(DoubleFromString(" 0.2k", &val));
+    assert_double_close(200., val);
+
+    assert_true(DoubleFromString("0.1%", &val));
+    /* Currently percentages are stored as negatives; TODO FIX! */
+    assert_double_close(-0.1, val);
+
+    /* Space quantifier ignored. */
+    assert_true(DoubleFromString("1233 ", &val));
+    assert_double_close(1233, val);
+
+    assert_true(DoubleFromString("1112    ", &val));
+    assert_double_close(1112, val);
+
+    /* Invalid quantifier, ignored for backwards compatibility. */
+    assert_true(DoubleFromString("11.1o", &val));
+    assert_double_close(11.1, val);
+
+    /* ===== ERROR RETURN ===== */
+
+    /* Verify that parameter is not modified. */
+    double old_val = val;
+
+    assert_false(DoubleFromString("", &val));
+    assert_false(DoubleFromString(" ", &val));
+    assert_false(DoubleFromString("  ", &val));
+    assert_false(DoubleFromString("abc", &val));
+    assert_false(DoubleFromString("G1", &val));
+
+    /* Anomalous remainders. */
+    assert_false(DoubleFromString("123adf", &val));
+    assert_false(DoubleFromString("123 adf", &val));
+    assert_false(DoubleFromString("123   adf", &val));
+    assert_false(DoubleFromString("123   adf", &val));
+
+    assert_false(DoubleFromString("123$(remainder)", &val));
+
+
+    assert_true(val == old_val);
 }
 
 static void test_CommandArg0_bound(void)

@@ -927,12 +927,10 @@ static int IsSpace(char *remainder)
 
 bool IsRealNumber(const char *s)
 {
-    static const double NO_DOUBLE = -123.45;
-    double a = NO_DOUBLE;
+    double d;
+    int ret = sscanf(s, "%lf", &d);
 
-    sscanf(s, "%lf", &a);
-
-    if (a == NO_DOUBLE)
+    if (ret != 1)
     {
         return false;
     }

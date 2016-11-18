@@ -1469,7 +1469,7 @@ dnl #####################################################################
 AC_MSG_CHECKING(for Xen cpuid-based HVM detection)
 if test x"$GCC" = "xyes"; then
     case $host_cpu in
-        i[[3456]]86*|x86_64*)
+        i[[3456]]86*|x86_64*|amd64)
             AC_DEFINE(XEN_CPUID_SUPPORT, 1, [Define if XEN cpuid-based HVM detection is available.])
             AC_MSG_RESULT(yes)
             ;;

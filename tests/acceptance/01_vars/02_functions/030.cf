@@ -1,13 +1,13 @@
 #######################################################
 #
-# Test readintlist() issue 364
+# Test readintlist() with reals
 #
 #######################################################
 
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
+      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -16,7 +16,7 @@ bundle agent init
   files:
       "$(G.testfile)"
       delete => init_delete;
-      
+
       "$(G.testfile)"
       create => "true",
       edit_line => init_fill_in;
@@ -53,12 +53,12 @@ bundle agent check
 
   classes:
       "ok_list" not => strcmp("won't match", "$(nums)");
-      "ok123" expression => strcmp("123.456", "$(nums)");
-      "ok789" expression => strcmp("789", "$(nums)");
-      "ok" and => { "ok_list", "ok123", "ok789",
-		    islessthan("$(test.sum)", "912.457"),
-		    isgreaterthan("$(test.sum)", "912.455")
-      };
+      "ok1" not => strcmp("123.456", "$(nums)");
+      "ok2" not => strcmp("123", "$(nums)");
+      # One failure and the readintlist aborts parsing the rest
+      "ok3" not => strcmp("789", "$(nums)");
+
+      "ok" and => { "ok_list", "ok1", "ok2", "ok3" };
 
   reports:
     DEBUG::

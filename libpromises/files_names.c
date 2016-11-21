@@ -149,27 +149,24 @@ Returns true if so, false otherwise.
 
 /*********************************************************************/
 
-/**
- * @TODO fix the dangerous path lengths
- */
-char *JoinSuffix(char *path, const char *leaf)
+char *JoinSuffix(char *path, size_t path_size, const char *leaf)
 {
     int len = strlen(leaf);
 
-    if (Chop(path, CF_EXPANDSIZE) == -1)
+    if (Chop(path, path_size) == -1)
     {
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     DeleteSlash(path);
 
-    if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
+    if (strlen(path) + len + 1 > path_size)
     {
-        Log(LOG_LEVEL_ERR, "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s",
+        Log(LOG_LEVEL_ERR, "JoinSuffix: Internal limit reached. Tried to add %s to %s",
               leaf, path);
         return NULL;
     }
 
-    strcat(path, leaf);
+    strlcat(path, leaf, path_size);
     return path;
 }
 

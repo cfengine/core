@@ -32,6 +32,7 @@
 #include <alloc.h>                            /* xmemdup */
 #include <logging.h>                          /* Log */
 #include <crypto.h>                           /* EncryptString */
+#include <misc_lib.h>                         /* ProgrammingError */
 
 static void NewStatCache(Stat *data, AgentConnection *conn)
 {
@@ -145,11 +146,19 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
 
         snprintf(in, CF_BUFSIZE - 1, "SYNCH %jd STAT %s",
                  (intmax_t) tloc, file);
-        int cipherlen = EncryptString(conn->encryption_type, in, out,
-                                      conn->session_key, strlen(in) + 1);
+        int cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1,
+                                      conn->encryption_type, conn->session_key);
+
+        tosend = cipherlen + CF_PROTO_OFFSET;
+
+        if(tosend > sizeof(sendbuffer))
+        {
+            ProgrammingError("cf_remote_stat: tosend (%d) > sendbuffer (%ld)",
+                             tosend, sizeof(sendbuffer));
+        }
+
         snprintf(sendbuffer, CF_BUFSIZE - 1, "SSYNCH %d", cipherlen);
         memcpy(sendbuffer + CF_PROTO_OFFSET, out, cipherlen);
-        tosend = cipherlen + CF_PROTO_OFFSET;
     }
     else
     {

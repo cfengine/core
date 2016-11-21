@@ -151,7 +151,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
         else
         {
             long i, from = -1, to = -1, cmp = -1;
-            char buffer1[CF_MAX_IP_LEN], buffer2[CF_MAX_IP_LEN];
+            char buffer1[64], buffer2[64];
 
             const char *sp1 = s1;
             const char *sp2 = s2;
@@ -159,7 +159,8 @@ int FuzzySetMatch(const char *s1, const char *s2)
             for (i = 0; i < 4; i++)
             {
                 buffer1[0] = '\0';
-                sscanf(sp1, "%[^.]", buffer1);
+                sscanf(sp1, "%63[^.]", buffer1);
+                buffer1[63] = '\0';
 
                 if (strlen(buffer1) == 0)
                 {
@@ -167,7 +168,10 @@ int FuzzySetMatch(const char *s1, const char *s2)
                 }
 
                 sp1 += strlen(buffer1) + 1;
-                sscanf(sp2, "%[^.]", buffer2);
+
+                sscanf(sp2, "%63[^.]", buffer2);
+                buffer2[63] = '\0';
+
                 sp2 += strlen(buffer2) + 1;
 
                 if (strstr(buffer1, "-"))
@@ -250,16 +254,21 @@ int FuzzySetMatch(const char *s1, const char *s2)
         else
         {
             long i, from = -1, to = -1, cmp = -1;
-            char buffer1[CF_MAX_IP_LEN], buffer2[CF_MAX_IP_LEN];
+            char buffer1[64], buffer2[64];
 
             const char *sp1 = s1;
             const char *sp2 = s2;
 
             for (i = 0; i < 8; i++)
             {
-                sscanf(sp1, "%[^:]", buffer1);
+                sscanf(sp1, "%63[^:]", buffer1);
+                buffer1[63] = '\0';
+
                 sp1 += strlen(buffer1) + 1;
-                sscanf(sp2, "%[^:]", buffer2);
+
+                sscanf(sp2, "%63[^:]", buffer2);
+                buffer2[63] = '\0';
+
                 sp2 += strlen(buffer2) + 1;
 
                 if (strstr(buffer1, "-"))

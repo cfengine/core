@@ -178,7 +178,7 @@ static char *PolicyServerFilename(const char *workdir)
  */
 char *ReadPolicyServerFile(const char *workdir)
 {
-    char contents[CF_MAX_IP_LEN] = "";
+    char contents[CF_MAX_SERVER_LEN] = "";
 
     char *filename = PolicyServerFilename(workdir);
     FILE *fp = fopen(filename, "r");
@@ -301,7 +301,7 @@ bool WritePolicyServerFile(const char *workdir, const char *new_policy_server)
         return false;
     }
 
-    fprintf(file, "%s", new_policy_server);
+    fprintf(file, "%s\n", new_policy_server);
     fclose(file);
 
     free(filename);

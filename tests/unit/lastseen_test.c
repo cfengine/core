@@ -178,7 +178,7 @@ static void test_remove(void)
     UpdateLastSawHost("SHA-12345", "127.0.0.64", false, 556);
 
     //RemoveHostFromLastSeen("SHA-12345");
-    DeleteDigestFromLastSeen("SHA-12345", NULL);
+    DeleteDigestFromLastSeen("SHA-12345", NULL, 0);
 
     DBHandle *db;
     OpenDB(&db, dbid_lastseen);

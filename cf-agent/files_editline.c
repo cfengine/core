@@ -208,7 +208,8 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
             // Get Action operator
             if (strncmp(buffer, "[%CFEngine", strlen("[%CFEngine")) == 0)
             {
-                char op[CF_BUFSIZE], brack[CF_SMALLBUF];
+                char op[CF_BUFSIZE]     = "";
+                char brack[CF_SMALLBUF] = "";
 
                 sscanf(buffer+strlen("[%CFEngine"), "%1024s %s", op, brack);
 

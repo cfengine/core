@@ -173,7 +173,7 @@ static void OpenVZ_Detect(EvalContext *ctx);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
-static int Xen_Hv_Check(void);
+static bool Xen_Hv_Check(EvalContext *ctx);
 #endif
 
 static bool ReadLine(const char *filename, char *buf, int bufsize);
@@ -1195,7 +1195,14 @@ static void OSClasses(EvalContext *ctx)
     {
         Xen_Domain(ctx);
     }
-
+#ifdef XEN_CPUID_SUPPORT
+    else if (Xen_Hv_Check(ctx))
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
+        EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
+        EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
+    }
+#endif /* XEN_CPUID_SUPPORT */
     if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
@@ -1211,15 +1218,6 @@ static void OSClasses(EvalContext *ctx)
     {
         OpenVZ_Detect(ctx);
     }
-
-#ifdef XEN_CPUID_SUPPORT
-    else if (Xen_Hv_Check())
-    {
-        Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
-        EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
-        EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
-    }
-#endif
 
 #else
 
@@ -2635,24 +2633,48 @@ static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx,
 
 /******************************************************************/
 
-static int Xen_Hv_Check(void)
+static bool Xen_Hv_Check(EvalContext *ctx)
 {
-    uint32_t eax;
+    /* CPUID interface to Xen from arch-x86/cpuid.h:
+     * Leaf 1 (0x40000000)
+     * EAX: Largest Xen-information leaf. All leaves up to an including @EAX
+     *   are supported by the Xen host.
+     * EBX-EDX: "XenVMMXenVMM" signature, allowing positive identification
+     *   of a Xen host.
+     *
+     * Additional information can be found in the Hypervisor CPUID
+     * Interface Proposal (https://lkml.org/lkml/2008/10/1/246)
+     */
+
+    if(IsDefinedClass(ctx, "redhat_4|centos_4"))
+    {
+        Log(LOG_LEVEL_DEBUG, "Skipping Xen_Hv_Check() to avoid a segfault on RHEL 4");
+        return false;
+    }
+
+    uint32_t eax, base;
     union
     {
         uint32_t u[3];
         char s[13];
     } sig = {{0}};
 
-    Xen_Cpuid(0x40000000, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
-
-    if (strcmp("XenVMMXenVMM", sig.s) || (eax < 0x40000002))
+    for (base = 0x40000000; base < 0x40010000; base += 0x100)
     {
-        return 0;
+        Xen_Cpuid(base, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
+        if (strcmp("XenVMMXenVMM", sig.s) == 0)
+        {
+            if ((eax - base) < 2)
+            {
+                Log(LOG_LEVEL_ERR, "Insufficient Xen CPUID Leaves. eax=%x at base %x\n", eax, base);
+                return false;
+            }
+            Log(LOG_LEVEL_VERBOSE, "Found Xen CPUID Leaf. eax=%x at base %x\n", eax, base);
+            return true;
+        }
     }
 
-    Xen_Cpuid(0x40000001, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
-    return 1;
+    return false;
 }
 
 #endif

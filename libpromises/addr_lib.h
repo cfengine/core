@@ -40,6 +40,7 @@ typedef enum {
     ADDRESS_TYPE_IPV6
 } AddressType;
 
+char *TrimWhitespace(char *s);
 AddressType ParseHostPort(char *s, char **hostname, char **port);
 
 #endif

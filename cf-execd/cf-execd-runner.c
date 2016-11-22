@@ -40,6 +40,7 @@
 #include <crypto.h>
 #include <known_dirs.h>
 #include <bootstrap.h>
+#include <policy_server.h>
 #include <files_hashes.h>
 #include <item_lib.h>
 

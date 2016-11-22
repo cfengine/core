@@ -24,20 +24,20 @@
 #
 #   NOTE: Windows needs to support WMI queries about installed msi files
 #         in order for Cfengine to detect them. On Windows 2003,
-#         go to Control Panel -> Add/Remove Programs -> 
+#         go to Control Panel -> Add/Remove Programs ->
 #         Windows Components -> Mgmnt and Monitoring Tools and check
 #         WMI Windows Installer Provider.
 #
 #   NOTE: Naming conventions are important when updating packages.
-#         By default, Cfengine expects "name-version-arch.msi" 
-#         on Windows, where name is lowercase, and arch is 
+#         By default, Cfengine expects "name-version-arch.msi"
+#         on Windows, where name is lowercase, and arch is
 #         i686 or x86_64. No spaces should be included in the filename.
 #         The Caption and Version fields inside the msi package
-#         are important. They must correspond to the file name as 
-#         follows: name = lowercase(spacetodash(Caption)), 
-#         version = Version. For any msi-file, use InstEd 
-#         (www.instedit.com) to check/modify the 
-#         Caption and Version fields 
+#         are important. They must correspond to the file name as
+#         follows: name = lowercase(spacetodash(Caption)),
+#         version = Version. For any msi-file, use InstEd
+#         (www.instedit.com) to check/modify the
+#         Caption and Version fields
 #         (Tables->Property->ProductName/ProductVersion).
 #
 #         For example, ProductName "CFEngine Nova" with ProductVersion
@@ -56,9 +56,9 @@ bundle agent check_software
       };
 
       # this software gets updated if it is installed
-      "autoupdate_software" slist => { 
+      "autoupdate_software" slist => {
 				       "7-zip"
-      };							 
+      };
 
       # software to uninstall if it is installed
       "exclude_software" slist => {
@@ -78,7 +78,7 @@ bundle agent add_software(pkg_name, srv)
   vars:
       # dir to install from locally - can also check multiple directories
       "local_software_dir" string => "C:\Program Files\Cfengine\software\add";
-      
+
   files:
 
       "$(local_software_dir)"
@@ -110,7 +110,7 @@ bundle agent update_software(sw_names, srv)
   vars:
       # dir to install from locally - can also check multiple directories
       "local_software_dir" string => "C:\Program Files\Cfengine\software\update";
-      
+
   files:
 
       "$(local_software_dir)"
@@ -118,8 +118,8 @@ bundle agent update_software(sw_names, srv)
       depth_search => recurse("1"),
       classes => if_repaired("got_newpkg"),
       comment => "Copy software updates from remote repository";
-      
-      
+
+
   packages:
 
       # When to check if the package is updated ?
@@ -132,7 +132,7 @@ bundle agent update_software(sw_names, srv)
       package_method           => msi_explicit( "$(local_software_dir)" ),
       classes                  => if_else("update_success", "update_fail");
 
-      
+
     reports::
     update_fail::
       "Failed to update one or more packages";
@@ -145,7 +145,7 @@ bundle agent remove_software(pkg_name, srv)
   vars:
       # dir to install from locally - can also check multiple directories
       "local_software_dir" string => "C:\Program Files\Cfengine\software\remove";
-      
+
   files:
 
       "$(local_software_dir)"

@@ -22,25 +22,22 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_ADDR_LIB_H
-#define CFENGINE_ADDR_LIB_H
+/** @file
+ * @brief Access to Policy Server IP Address, hostname and port number.
+ *
+ * Provides a simple get/set interface for the policy server variables.
+ * Does hostname resolution behind the scenes.
+ */
+
+#ifndef CFENGINE_POLICYSERVER_H
+#define CFENGINE_POLICYSERVER_H
 
 #include <cf3.defs.h>
 
-bool IsLoopbackAddress(const char *address);
-int FuzzySetMatch(const char *s1, const char *s2);
-bool FuzzyHostParse(const char *arg2);
-int FuzzyHostMatch(const char *arg0, const char *arg1, const char *basename);
-bool FuzzyMatchParse(const char *item);
-bool IsInterfaceAddress(const Item *ip_addresses, const char *adr);
-
-typedef enum {
-    ADDRESS_TYPE_OTHER, // Hostname or invalid
-    ADDRESS_TYPE_IPV4,
-    ADDRESS_TYPE_IPV6
-} AddressType;
-
-char *TrimWhitespace(char *s);
-AddressType ParseHostPort(char *s, char **hostname, char **port);
+void PolicyServerSet(const char *new_policy_server);
+const char *PolicyServerGet();
+const char *PolicyServerGetIP();
+const char *PolicyServerGetHost();
+const char *PolicyServerGetPort();
 
 #endif

@@ -24,6 +24,7 @@
 
 #include <evalfunction.h>
 
+#include <policy_server.h>
 #include <promises.h>
 #include <dir.h>
 #include <dbm_api.h>
@@ -5300,8 +5301,7 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx,
         buffer[0] = '\0';
 
         Log(LOG_LEVEL_VERBOSE, "Accessing hub knowledge base for '%s'", handle);
-
-        char *ret = GetRemoteScalar(ctx, "VAR", handle, POLICY_SERVER,
+        char *ret = GetRemoteScalar(ctx, "VAR", handle, PolicyServerGetIP(),
                                     true, buffer);
         if (ret == NULL)
         {

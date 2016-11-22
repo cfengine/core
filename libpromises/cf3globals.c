@@ -48,8 +48,6 @@ AgentType THIS_AGENT_TYPE; /* GLOBAL_C, initialized later */
 
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
 
-char POLICY_SERVER[CF_MAX_IP_LEN] = ""; /* GLOBAL_X */
-
 /*****************************************************************************/
 /* Compatibility infrastructure                                              */
 /*****************************************************************************/

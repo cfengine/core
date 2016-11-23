@@ -1,0 +1,34 @@
+# you can run this test directly with
+
+# CFENGINE_TEST_OVERRIDE_PROCDIR=`pwd`/01_vars/02_functions/proc ./testall 01_vars/02_functions/sysctl.cf.sub
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+      "sysctl" data => data_sysctlvalues();
+      "tested" slist => { "net.ipv4.tcp_mem", "net.unix.max_dgram_qlen" };
+      "values[$(tested)]" string => sysctlvalue($(tested));
+}
+
+bundle agent check
+{
+  vars:
+      "testname" string => regex_replace($(this.promise_filename), "\\.sub$", "", "");
+
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(testname));
+
+    test_debug::
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

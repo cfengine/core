@@ -410,50 +410,60 @@ static void RegisterLockCleanup(void)
     RegisterAtExitFunction(&LocksCleanup);
 }
 
-static char *BodyName(const Promise *pp)
+/**
+ * Return a type template for the promise for lock-type
+ * identification. WARNING: instead of truncation, it does not include any
+ * parts (i.e. constraints or promise type) that don't fit.
+ *
+ * @WARNING currently it only prints up to the 5 first constraints (WHY?)
+ */
+static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
 {
-    char *name, *sp;
-    int size = 0;
+    char *sp       = pp->parent_promise_type->name;
+    size_t sp_len  = strlen(sp);
 
-/* Return a type template for the promise body for lock-type identification */
+    dst[0]         = '\0';
+    size_t dst_len = 0;
 
-    name = xmalloc(CF_MAXVARSIZE);
-
-    sp = pp->parent_promise_type->name;
-
-    if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+    if (sp_len + 1 < dst_size)
     {
-        strcpy(name, sp);
-        strcat(name, ".");
-        size += strlen(sp);
+        strcpy(dst, sp);
+        strcat(dst, ".");
+        dst_len += sp_len + 1;
     }
 
-    if (pp->conlist)
+    if (pp->conlist != NULL)
     {
-        for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
+        /* Number of constraints (attributes) of that promise. */
+        size_t cons_num = SeqLength(pp->conlist);
+        for (size_t i = 0;  (i < 5) && (i < cons_num);  i++)
         {
-            Constraint *cp = SeqAt(pp->conlist, i);
+            Constraint *cp  = SeqAt(pp->conlist, i);
+            const char *con = cp->lval;                    /* the constraint */
 
-            if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
+            /* Exception for args (promise type commands),
+               by symmetry, for locking. */
+            if (strcmp(con, "args") == 0)
             {
                 continue;
             }
 
-            if (strcmp(cp->lval, "arglist") == 0)      /* Exception for arglist, by symmetry, for locking */
+            /* Exception for arglist (promise type commands),
+               by symmetry, for locking. */
+            if (strcmp(con, "arglist") == 0)
             {
                 continue;
             }
 
-            if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+            size_t con_len = strlen(con);
+            if (dst_len + con_len + 1 < dst_size)
             {
-                strcat(name, cp->lval);
-                strcat(name, ".");
-                size += strlen(cp->lval);
+                strcat(dst, con);
+                strcat(dst, ".");
+                dst_len += con_len + 1;
             }
         }
     }
-
-    return name;
 }
 
 #ifdef __MINGW32__
@@ -656,11 +666,13 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         return CfLockNull();
     }
 
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
     char str_digest[CF_HOSTKEY_STRING_SIZE];
-    HashPrintSafe(str_digest, sizeof(str_digest), digest,
-                  CF_DEFAULT_DIGEST, true);
+    {
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
+        HashPrintSafe(str_digest, sizeof(str_digest), digest,
+                      CF_DEFAULT_DIGEST, true);
+    }
 
     if (EvalContextPromiseLockCacheContains(ctx, str_digest))
     {
@@ -676,17 +688,22 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         return CfLockNew(NULL, "dummy", true);
     }
 
-    char *promise = BodyName(pp);
-    char cc_operator[CF_BUFSIZE], cc_operand[CF_BUFSIZE];
-    snprintf(cc_operator, CF_MAXVARSIZE - 1, "%s-%s", promise, host);
+    char cc_operator[CF_MAXVARSIZE];
+    {
+        char promise[CF_MAXVARSIZE - CF_BUFFERMARGIN];
+        PromiseTypeString(promise, sizeof(promise), pp);
+        snprintf(cc_operator, sizeof(cc_operator), "%s-%s", promise, host);
+    }
+
+    char cc_operand[CF_BUFSIZE];
     strlcpy(cc_operand, operand, CF_BUFSIZE);
     CanonifyNameInPlace(cc_operand);
     RemoveDates(cc_operand);
 
-    free(promise);
 
-    Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d", cc_operator, cc_operand, tc.expireafter,
-        tc.ifelapsed);
+    Log(LOG_LEVEL_DEBUG,
+        "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d",
+        cc_operator, cc_operand, tc.expireafter, tc.ifelapsed);
 
     int sum = 0;
     for (int i = 0; cc_operator[i] != '\0'; i++)
@@ -699,13 +716,18 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
     }
 
+    const char *bundle_name = PromiseGetBundle(pp)->name;
+
     char cflock[CF_BUFSIZE] = "";
-    snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
+    snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s",
+             bundle_name, cc_operator, cc_operand, sum, str_digest);
 
     char cflast[CF_BUFSIZE] = "";
-    snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
+    snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s",
+             bundle_name, cc_operator, cc_operand, sum, str_digest);
 
-    Log(LOG_LEVEL_DEBUG, "Locking bundle '%s' with lock '%s'", PromiseGetBundle(pp)->name, cflock);
+    Log(LOG_LEVEL_DEBUG, "Locking bundle '%s' with lock '%s'",
+        bundle_name, cflock);
 
     // Now see if we can get exclusivity to edit the locks
     WaitForCriticalSection(CF_CRITIAL_SECTION);
@@ -720,7 +742,8 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     {
         if (elapsedtime < 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
+            Log(LOG_LEVEL_VERBOSE,
+                "XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
                 (intmax_t) elapsedtime);
             ReleaseCriticalSection(CF_CRITIAL_SECTION);
             return CfLockNull();
@@ -728,8 +751,9 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
         if (elapsedtime < tc.ifelapsed)
         {
-            Log(LOG_LEVEL_VERBOSE, "XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
-                (intmax_t) elapsedtime, tc.ifelapsed);
+            Log(LOG_LEVEL_VERBOSE,
+                "XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)",
+                cflast, (intmax_t) elapsedtime, tc.ifelapsed);
             ReleaseCriticalSection(CF_CRITIAL_SECTION);
             return CfLockNull();
         }
@@ -752,7 +776,9 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
                 if (KillLockHolder(cflock))
                 {
-                    Log(LOG_LEVEL_INFO, "Lock expired, process with PID %jd killed", (intmax_t)pid);
+                    Log(LOG_LEVEL_INFO,
+                        "Lock expired, process with PID %jd killed",
+                        (intmax_t) pid);
                     unlink(cflock);
                 }
                 else

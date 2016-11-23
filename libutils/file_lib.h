@@ -27,6 +27,7 @@
 
 #include <platform.h>
 #include <writer.h>
+#include <set.h>
 
 typedef enum
 {
@@ -80,6 +81,8 @@ NewLineMode FileNewLineMode(const char *file);
 # define FILE_SEPARATOR_STR "/"
 #endif
 
+StringSet* GlobFileList(const char *pattern);
+
 bool IsAbsoluteFileName(const char *f);
 char *MapName(char *s);
 char *MapNameCopy(const char *s);
@@ -130,5 +133,11 @@ bool FileSparseClose(int fd, const char *filename,
  * @return -1 on error OR EOF, so check. Or bytes in buff without excluding terminator.
  */
 ssize_t CfReadLine(char **buff, size_t *size, FILE *fp);
+
+/**
+ * @brief For testing things against /proc, uses env var CFENGINE_TEST_OVERRIDE_PROCDIR
+ * @return the extra directory to add BEFORE /proc in the path
+ */
+const char* GetRelocatedProcdirRoot();
 
 #endif

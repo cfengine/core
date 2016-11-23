@@ -1,0 +1,12 @@
+{
+  "sysctl": {
+    "net.ipv4.tcp_mem": "383133\t510845\t766266",
+    "net.unix.max_dgram_qlen": "512"
+  },
+  "tested": [
+    "net.ipv4.tcp_mem",
+    "net.unix.max_dgram_qlen"
+  ],
+  "values[net.ipv4.tcp_mem]": "383133\t510845\t766266",
+  "values[net.unix.max_dgram_qlen]": "512"
+}

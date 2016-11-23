@@ -74,10 +74,6 @@
 
 #include <libgen.h>
 
-#ifndef __MINGW32__
-#include <glob.h>
-#endif
-
 #include <ctype.h>
 
 #ifdef HAVE_LIBCURL
@@ -785,6 +781,122 @@ static FnCallResult FnCallIP2Host(ARG_UNUSED EvalContext *ctx,
            return ip address in case resolution fails. */
         return FnReturn(ip);
     }
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallSysctlValue(ARG_UNUSED EvalContext *ctx,
+                                      ARG_UNUSED ARG_UNUSED const Policy *policy,
+                                      const FnCall *fp,
+                                      const Rlist *finalargs)
+{
+#ifdef __linux__
+    const bool sysctlvalue_mode = (strcmp(fp->name, "sysctlvalue") == 0);
+
+    size_t max_sysctl_data = 16 * 1024;
+    Buffer *procrootbuf = BufferNew();
+    // Assumes that FILE_SEPARATOR is /
+    BufferAppendString(procrootbuf, GetRelocatedProcdirRoot());
+    BufferAppendString(procrootbuf, "/proc/sys");
+
+    if (sysctlvalue_mode)
+    {
+        Buffer *key = BufferNewFrom(RlistScalarValue(finalargs),
+                                    strlen(RlistScalarValue(finalargs)));
+
+        // Note that in the single-key mode, we just reuse procrootbuf.
+        Buffer *filenamebuf = procrootbuf;
+        // Assumes that FILE_SEPARATOR is /
+        BufferAppendChar(filenamebuf, '/');
+        BufferSearchAndReplace(key, "\\.", "/", "gT");
+        BufferAppendString(filenamebuf, BufferData(key));
+        BufferDestroy(key);
+
+        if (IsDir(BufferData(filenamebuf)))
+        {
+            Log(LOG_LEVEL_INFO, "Error while reading file '%s' because it's a directory (%s)",
+                BufferData(filenamebuf), GetErrorStr());
+            BufferDestroy(filenamebuf);
+            return FnFailure();
+        }
+
+        Writer *w = NULL;
+        bool truncated = false;
+        int fd = safe_open(BufferData(filenamebuf), O_RDONLY | O_TEXT);
+        if (fd >= 0)
+        {
+            w = FileReadFromFd(fd, max_sysctl_data, &truncated);
+            close(fd);
+        }
+
+        if (w == NULL)
+        {
+            Log(LOG_LEVEL_INFO, "Error while reading file '%s' (%s)",
+                BufferData(filenamebuf), GetErrorStr());
+            BufferDestroy(filenamebuf);
+            return FnFailure();
+        }
+
+        BufferDestroy(filenamebuf);
+
+        char *result = StringWriterClose(w);
+        StripTrailingNewline(result, max_sysctl_data);
+        return FnReturnNoCopy(result);
+    }
+
+    JsonElement *sysctl_data = JsonObjectCreate(10);
+
+    // For the remaining operations, we want the trailing slash on this.
+    BufferAppendChar(procrootbuf, '/');
+
+    Buffer *filematchbuf = BufferCopy(procrootbuf);
+    BufferAppendString(filematchbuf, "**/*");
+
+    StringSet *sysctls = GlobFileList(BufferData(filematchbuf));
+    BufferDestroy(filematchbuf);
+
+    StringSetIterator it = StringSetIteratorInit(sysctls);
+    const char *filename = NULL;
+    while ((filename = StringSetIteratorNext(&it)))
+    {
+        Writer *w = NULL;
+        bool truncated = false;
+
+        if (IsDir(filename))
+        {
+            // No warning: this is normal as we match wildcards.
+            continue;
+        }
+
+        int fd = safe_open(filename, O_RDONLY | O_TEXT);
+        if (fd >= 0)
+        {
+            w = FileReadFromFd(fd, max_sysctl_data, &truncated);
+            close(fd);
+        }
+
+        if (!w)
+        {
+            Log(LOG_LEVEL_INFO, "Error while reading file '%s' (%s)",
+                filename, GetErrorStr());
+            continue;
+        }
+
+        char *result = StringWriterClose(w);
+        StripTrailingNewline(result, max_sysctl_data);
+
+        Buffer *var = BufferNewFrom(filename, strlen(filename));
+        BufferSearchAndReplace(var, BufferData(procrootbuf), "", "T");
+        BufferSearchAndReplace(var, "/", ".", "gT");
+        JsonObjectAppendString(sysctl_data, BufferData(var), result);
+        BufferDestroy(var);
+    }
+
+    BufferDestroy(procrootbuf);
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sysctl_data, RVAL_TYPE_CONTAINER } };
+#else
+    return FnFailure();
+#endif
 }
 
 /*********************************************************************/
@@ -4073,45 +4185,19 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
             continue;
         }
 
-        glob_t globbuf;
-        int globflags = 0; // TODO: maybe add GLOB_BRACE later
+        StringSet *found = GlobFileList(pattern);
 
-        const char* r_candidates[] = { "*", "*/*", "*/*/*", "*/*/*/*", "*/*/*/*/*", "*/*/*/*/*/*" };
-        bool starstar = strstr(pattern, "**");
-        const char** candidates   = starstar ? r_candidates : NULL;
-        const int candidate_count = starstar ? 6 : 1;
+        char fname[CF_BUFSIZE];
 
-        for (int pi = 0; pi < candidate_count; pi++)
+        StringSetIterator it = StringSetIteratorInit(found);
+        const char *element = NULL;
+        while ((element = StringSetIteratorNext(&it)))
         {
-            char *expanded = starstar ?
-                SearchAndReplace(pattern, "**", candidates[pi]) :
-                xstrdup(pattern);
-
-#ifdef _WIN32
-            if (strchr(expanded, '\\'))
-            {
-                Log(LOG_LEVEL_VERBOSE, "Found backslash escape character in glob pattern '%s'. "
-                    "Was forward slash intended?", expanded);
-            }
-#endif
-
-            if (glob(expanded, globflags, NULL, &globbuf) == 0)
-            {
-                for (int i = 0; i < globbuf.gl_pathc; i++)
-                {
-                    char* found = globbuf.gl_pathv[i];
-                    char fname[CF_BUFSIZE];
-                    // TODO: this truncates the filename and may be removed
-                    // if Rlist and the core are OK with that possibility
-                    strlcpy(fname, found, CF_BUFSIZE);
-                    Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
-                    RlistAppendScalarIdemp(&returnlist, fname);
-                }
-
-                globfree(&globbuf);
-            }
-
-            free(expanded);
+            // TODO: this truncates the filename and may be removed
+            // if Rlist and the core are OK with that possibility
+            strlcpy(fname, element, CF_BUFSIZE);
+            Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
+            RlistAppendScalarIdemp(&returnlist, fname);
         }
     }
 
@@ -8734,6 +8820,18 @@ static const FnCallArg CFENGINE_CALLERS_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg SYSCTLVALUE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "sysctl key"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg DATA_SYSCTLVALUES_ARGS[] =
+{
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -9012,6 +9110,10 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("sublist", CF_DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list or array or data container arg1.",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("sysctlvalue", CF_DATA_TYPE_STRING, SYSCTLVALUE_ARGS, &FnCallSysctlValue, "Returns a value for sysctl key arg1 pair",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("data_sysctlvalues", CF_DATA_TYPE_CONTAINER, DATA_SYSCTLVALUES_ARGS, &FnCallSysctlValue, "Returns a data container map of all the sysctl key,value pairs",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("translatepath", CF_DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath, "Translate path separators from Unix style to the host's native",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("unique", CF_DATA_TYPE_STRING_LIST, UNIQUE_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1",

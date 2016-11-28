@@ -1,8 +1,6 @@
-
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
+    bundlesequence => { "test" };
 }
 
 bundle agent test
@@ -37,9 +35,9 @@ bundle agent test
     any::
       "CFEngine version: $(sys.cf_version)";
 
-      "Pass $(this.promise_filename)"
+      "$(this.promise_filename) Pass"
         if => and(isvariable(a), isvariable(b));
 
-      "FAIL $(this.promise_filename)"
+      "$(this.promise_filename) FAIL"
         if => not(and(isvariable(a), isvariable(b)));
 }

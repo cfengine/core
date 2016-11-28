@@ -2393,7 +2393,11 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
     {
-        return FnFailure();
+        /* CFE-2479: Inexistent variable, return an empty slist. */
+        Log(LOG_LEVEL_DEBUG, "getvalues('%s'):"
+            " unresolvable variable, returning an empty list",
+            RlistScalarValueSafe(finalargs));
+        return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
     }
 
     Rlist *values = NULL;

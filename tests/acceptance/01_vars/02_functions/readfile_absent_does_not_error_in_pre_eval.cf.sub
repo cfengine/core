@@ -1,0 +1,23 @@
+body common control
+{
+    bundlesequence =>{ main };
+}
+
+###########################################################
+
+bundle agent pre_evaluated
+{
+  vars:
+    "none" string => readfile("/tmp/supercalifragilisticexpialidocious", 33);
+}
+
+bundle agent main
+{
+  meta:
+
+    "description"
+      string => "Test that readfile() does not throw an error during pre-eval if the file does not exist.";
+
+  reports:
+    "Hello World!";
+}

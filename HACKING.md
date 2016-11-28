@@ -161,7 +161,7 @@ to a policy server.
 1. Resolve IP of policy server.
 2. Remove existing files in outputs.
 3. Write built-in failsafe.cf to outputs.
-4. Write IP of policy server to policy_server.dat, optionally also
+4. Write IP address or hostname of policy server to policy_server.dat, optionally also
    marker file am_policy_server.
 5. Proceed using failsafe.cf as input file.
 5a. Evaluating failsafe.cf, fetches policy files from the policy server.

@@ -1,0 +1,43 @@
+body common control
+{
+    bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  meta:
+      "description" string => "Test that getindices() and getvalues() return the same data when run against an empty data container";
+
+      "test_soft_fail"
+        string => "cfengine_3_9_1",
+        meta => { "CFE-2479" },
+        comment => "This regression was found in 3.9.1 from 3.7.4. Soft failing
+                    for already released version where tests will fail.";
+
+  vars:
+      # Because def.does_not_exist does in fact not exist, we expect this will
+      # produce an empty data container.
+      "data" data => mergedata("def.does_not_exist");
+
+      "a" slist => getindices(data);
+      "b" slist => getvalues(data);
+
+  reports:
+    DEBUG::
+      "a is variable"
+        if => isvariable(a);
+      "b is variable"
+        if => isvariable(b);
+
+      "getindices and getvalues do not behave the same when run against an empty data container."
+        if => not(and(isvariable(a), isvariable(b)));
+
+    any::
+      "CFEngine version: $(sys.cf_version)";
+
+      "$(this.promise_filename) Pass"
+        if => and(isvariable(a), isvariable(b));
+
+      "$(this.promise_filename) FAIL"
+        if => not(and(isvariable(a), isvariable(b)));
+}

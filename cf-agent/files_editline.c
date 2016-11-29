@@ -1525,7 +1525,7 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
                 }
 
                 // Realloc and retry on truncation
-                if (strlcpy(final, work, final_size) >= final_size - 1)
+                if (strlcpy(final, work, final_size) >= final_size)
                 {
                     final = xrealloc(final, work_size);
                     final_size = work_size;

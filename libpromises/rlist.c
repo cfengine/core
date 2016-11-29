@@ -1486,9 +1486,9 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                     insert_after = insert_after->next;
                 }
 
-                RlistDestroyEntry(list, at_node);   /* Delete @{blah} entry */
                 /* Make sure we won't miss any element. */
                 assert(insert_after->next == next);
+                RlistDestroyEntry(list, at_node);   /* Delete @{blah} entry */
 
                 char *list_s = RlistToString(*list);
                 Log(LOG_LEVEL_DEBUG, "Flattened slist: %s", list_s);

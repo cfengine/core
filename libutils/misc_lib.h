@@ -31,7 +31,14 @@
 
 
 #define ProgrammingError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
-#define UnexpectedError(...) __UnexpectedError(__FILE__, __LINE__, __VA_ARGS__)
+
+/* TODO UnexpectedError() needs
+ * to be rate limited to avoid spamming the console.  */
+#ifndef NDEBUG
+# define UnexpectedError(...) __ProgrammingError(__FILE__, __LINE__, __VA_ARGS__)
+#else
+# define UnexpectedError(...) __UnexpectedError(__FILE__, __LINE__, __VA_ARGS__)
+#endif
 
 
 /**
@@ -41,22 +48,11 @@
  *  else execution aborts.
  */
 
-#ifndef NDEBUG
-# define CF_ASSERT(condition, ...)                                      \
-    do {                                                                \
-        if (!(condition))                                               \
-            ProgrammingError(__VA_ARGS__);                              \
-    } while(0)
-#else
-  /* TODO UnexpectedError() needs
-   * to be rate limited to avoid spamming the console.  */
 # define CF_ASSERT(condition, ...)                                      \
     do {                                                                \
         if (!(condition))                                               \
             UnexpectedError(__VA_ARGS__);                               \
     } while(0)
-#endif
-
 
 /**
  * CF_ASSERT_FIX(condition, fix, message...)
@@ -65,16 +61,6 @@
  * and execution continues. If not NDEBUG, the #fix is ignored and execution
  * is aborted.
  */
-
-#ifndef NDEBUG
-# define CF_ASSERT_FIX(condition, fix, ...)                             \
-    {                                                                   \
-        if (!(condition))                                               \
-            ProgrammingError(__VA_ARGS__);                              \
-    }
-#else
-  /* TODO UnexpectedError() needs
-   * to be rate limited to avoid spamming the console.  */
 # define CF_ASSERT_FIX(condition, fix, ...)                             \
     {                                                                   \
         if (!(condition))                                               \
@@ -83,7 +69,6 @@
             (fix);                                                      \
         }                                                               \
     }
-#endif
 
 
 #define ISPOW2(n)     (  (n)>0  &&  ((((n) & ((n)-1)) == 0))  )

@@ -154,7 +154,7 @@
 	- Implement new regex_replace() function. (Redmine #7346)
 	- Add log rotation policy for state/classes.jsonl log. (Redmine #7951)
 	- Added collect_vars utility bundle to stdlib
-	- Intoduce report_class_log attribute to body agent common.
+	- Intoduce report_class_log attribute to body agent control.
 	  (Redmine #7951)
 	- Add standard_services service_method allowing for explicit usage
 	- cf-promises --show-vars can now show JSON variables.

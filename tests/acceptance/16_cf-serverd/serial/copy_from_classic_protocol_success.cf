@@ -14,13 +14,10 @@ bundle agent test
 
       # ensure destination files are not there
       "any" usebundle => dcs_fini("$(G.testdir)/destfile1");
-      "any" usebundle => dcs_fini("$(G.testdir)/destfile2");
 
       "any" usebundle => generate_key;
 
       "any" usebundle => start_server("$(this.promise_dirname)/allowlegacyconnects_open.srv");
-      "any" usebundle => start_server("$(this.promise_dirname)/allowlegacyconnects_absent.srv");
       "any" usebundle => run_test("$(this.promise_filename).sub");
       "any" usebundle => stop_server("$(this.promise_dirname)/allowlegacyconnects_open.srv");
-      "any" usebundle => stop_server("$(this.promise_dirname)/allowlegacyconnects_absent.srv");
 }

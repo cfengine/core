@@ -1,10 +1,9 @@
 #######################################################
 #
 # Tries to copy using the "classic" protocol, from a server that has
-# "allowlegacyconnects" open, and from a server that doesn't specify it
-# at all.
+# "allowlegacyconnects" open.
 #
-# Both cases should succeed.
+# It should succeed.
 #
 #######################################################
 
@@ -28,10 +27,6 @@ bundle agent test
       "$(G.testdir)/destfile1"
           copy_from => dcs_remote_cp("simple_source", "127.0.0.1", "9890"),
           classes   => classes_generic("copy1");
-      # Copy from server with allowlegacyconnects absent.
-      "$(G.testdir)/destfile2"
-          copy_from => dcs_remote_cp("simple_source", "127.0.0.1", "9891"),
-          classes   => classes_generic("copy2");
 }
 
 #######################################################
@@ -41,10 +36,9 @@ bundle agent check
   classes:
       "dummy"   expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
       "exists1" expression => fileexists("$(G.testdir)/destfile1");
-      "exists2" expression => fileexists("$(G.testdir)/destfile2");
 
   reports:
 
-    (copy1_repaired.!copy2_repaired).(exists1.!exists2).(!copy1_failed.copy2_failed)::
+    copy1_repaired.exists1.!copy1_failed::
       "$(fn[1]) Pass";
 }

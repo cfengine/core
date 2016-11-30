@@ -183,6 +183,17 @@ static void test_get_next_line()
     fclose(fp);
 }
 
+/* A memory corruption (off-by-one write) used to occur with this string,
+ * detectable by valgrind and crashing some non-linux platforms. */
+static void test_new_csv_reader_zd3151_ENT3023()
+{
+    const char *input = "default.cfe_autorun_inventory_proc.cpuinfo_array[337][0";
+    Seq *list = SeqParseCsvString(input);
+    assert_int_equal(SeqLength(list), 1);
+    assert_string_equal(input, SeqAt(list, 0));
+    SeqDestroy(list);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -194,7 +205,8 @@ int main()
         unit_test(test_new_csv_reader_lfln_at_end),
         unit_test(test_new_csv_reader_lfln_at_end2),
         unit_test(test_new_csv_reader_lfln_at_end3),
-        unit_test(test_get_next_line)
+        unit_test(test_get_next_line),
+        unit_test(test_new_csv_reader_zd3151_ENT3023),
     };
 
     return run_tests(tests);

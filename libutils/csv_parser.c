@@ -60,12 +60,12 @@ typedef enum {
     CSV_ERR_UNKNOWN_STATE,
     CSV_ERR_UNEXPECTED_END,
     CSV_ERR_INVALID_INPUT
-} csv_parser_error; 
+} csv_parser_error;
 
 
 /**
  @brief parse CSV-formatted line and put its content in a list
- 
+
  @param[in] str: is the CSV string to parse
  @param[out] newlist: list of elements found
 
@@ -80,16 +80,15 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
         return CSV_ERR_INVALID_INPUT;
     }
 
-    const char *s = str;
-    csv_state current_state = CSV_ST_NEW_LINE;
-    csv_parser_error ret;
-
     char *snatched = xmalloc(strlen(str) + 1);
     snatched[0] = '\0';
-    char *sn = snatched ;
-    *sn = '\0';
+    char *sn = snatched;
 
-    while (*s)
+    csv_parser_error ret;
+    csv_state current_state = CSV_ST_NEW_LINE;             /* initial state */
+    const char *s;
+
+    for (s = str;  *s != '\0';  s++)
     {
         switch(current_state) {
             case CSV_ST_ERROR:
@@ -100,15 +99,15 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                 if (CSVCL_SEP(*s))
                 {
                     *sn = '\0'; sn = NULL;
-                    SeqAppend(*newlist, (void *)xstrdup(""));
+                    SeqAppend(*newlist, xstrdup(""));
                     current_state = CSV_ST_SEPARATOR;
                 }
-                else if (CSVCL_BLANK(*s)) 
+                else if (CSVCL_BLANK(*s))
                 {
                     *sn = *s; sn++;
                     current_state = CSV_ST_PRE_START_SPACE;
                 }
-                else if (CSVCL_QUOTE(*s)) 
+                else if (CSVCL_QUOTE(*s))
                 {
                     snatched[0] = '\0'; sn = NULL;
                     current_state = CSV_ST_LEADING_QUOTE;
@@ -118,23 +117,22 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     *sn = *s; sn++;
                     current_state = CSV_ST_NO_QUOTE_MODE;
                 }
-                s++;
                 break;
 
             case CSV_ST_PRE_START_SPACE:
                 if (CSVCL_SEP(*s))
                 {
                     *sn = '\0'; sn = NULL;
-                    SeqAppend(*newlist, (void *)xstrdup(snatched));
+                    SeqAppend(*newlist, xstrdup(snatched));
                     snatched[0] = '\0';
                     current_state = CSV_ST_SEPARATOR;
                 }
-                else if (CSVCL_BLANK(*s)) 
+                else if (CSVCL_BLANK(*s))
                 {
                     *sn = *s; sn++;
                     current_state = CSV_ST_PRE_START_SPACE;
                 }
-                else if (CSVCL_QUOTE(*s)) 
+                else if (CSVCL_QUOTE(*s))
                 {
                     snatched[0] = '\0'; sn = NULL;
                     current_state = CSV_ST_LEADING_QUOTE;
@@ -144,18 +142,17 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     *sn = *s; sn++;
                     current_state = CSV_ST_NO_QUOTE_MODE;
                 }
-                s++;
                 break;
 
             case CSV_ST_NO_QUOTE_MODE:
                 if (CSVCL_SEP(*s))
                 {
                     *sn = '\0'; sn = NULL;
-                    SeqAppend(*newlist, (void *)xstrdup(snatched));
+                    SeqAppend(*newlist, xstrdup(snatched));
                     snatched[0] = '\0';
                     current_state = CSV_ST_SEPARATOR;
                 }
-                else if (CSVCL_QUOTE(*s)) 
+                else if (CSVCL_QUOTE(*s))
                 {
                     snatched[0] = '\0'; sn = NULL;
                     current_state = CSV_ST_ERROR;
@@ -165,22 +162,21 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     *sn = *s; sn++;
                     current_state = CSV_ST_NO_QUOTE_MODE;
                 }
-                s++;
                 break;
 
             case CSV_ST_SEPARATOR:
                 if (CSVCL_SEP(*s))
                 {
                     snatched[0] = '\0'; sn = NULL;
-                    SeqAppend(*newlist, (void *)xstrdup(snatched));
+                    SeqAppend(*newlist, xstrdup(snatched));
                     current_state = CSV_ST_SEPARATOR;
                 }
-                else if (CSVCL_BLANK(*s)) 
+                else if (CSVCL_BLANK(*s))
                 {
                     sn = snatched; *sn = *s; sn++;
                     current_state = CSV_ST_PRE_START_SPACE;
                 }
-                else if (CSVCL_QUOTE(*s)) 
+                else if (CSVCL_QUOTE(*s))
                 {
                     snatched[0] = '\0'; sn = NULL;
                     current_state = CSV_ST_LEADING_QUOTE;
@@ -190,11 +186,10 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     sn = snatched; *sn = *s; sn++;
                     current_state = CSV_ST_NO_QUOTE_MODE;
                 }
-                s++;
                 break;
 
             case CSV_ST_LEADING_QUOTE:
-                if (CSVCL_QUOTE(*s)) 
+                if (CSVCL_QUOTE(*s))
                 {
                     sn = snatched;
                     current_state = CSV_ST_INTERNAL_QUOTE;
@@ -205,21 +200,20 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     *sn = *s; sn++;
                     current_state = CSV_ST_WITH_QUOTE_MODE;
                 }
-                s++;
                 break;
 
             case CSV_ST_INTERNAL_QUOTE:
                 if (CSVCL_SEP(*s))
                 {
                     *sn = '\0'; sn = NULL;
-                    SeqAppend(*newlist, (void *)xstrdup(snatched));
+                    SeqAppend(*newlist, xstrdup(snatched));
                     current_state = CSV_ST_SEPARATOR;
                 }
-                else if (CSVCL_BLANK(*s)) 
+                else if (CSVCL_BLANK(*s))
                 {
                     current_state = CSV_ST_SPACE_AFTER_QUOTE;
                 }
-                else if (CSVCL_QUOTE(*s)) 
+                else if (CSVCL_QUOTE(*s))
                 {
                     *sn = *s; sn++;
                     current_state = CSV_ST_WITH_QUOTE_MODE;
@@ -229,11 +223,10 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     snatched[0] = '\0'; sn++;
                     current_state = CSV_ST_ERROR;
                 }
-                s++;
                 break;
 
             case CSV_ST_WITH_QUOTE_MODE:
-                if (CSVCL_QUOTE(*s)) 
+                if (CSVCL_QUOTE(*s))
                 {
                     current_state = CSV_ST_INTERNAL_QUOTE;
                 }
@@ -242,17 +235,16 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     *sn = *s; sn++;
                     current_state = CSV_ST_WITH_QUOTE_MODE;
                 }
-                s++;
                 break;
 
             case CSV_ST_SPACE_AFTER_QUOTE:
                 if (CSVCL_SEP(*s))
                 {
                     sn = NULL;
-                    SeqAppend(*newlist, (void *)xstrdup(snatched));
+                    SeqAppend(*newlist, xstrdup(snatched));
                     current_state = CSV_ST_SEPARATOR;
                 }
-                else if (CSVCL_BLANK(*s)) 
+                else if (CSVCL_BLANK(*s))
                 {
                     if (sn != NULL)
                     {
@@ -266,24 +258,28 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                     snatched[0] = '\0'; sn = NULL;
                     current_state = CSV_ST_ERROR;
                 }
-                s++;
                 break;
 
             default:
                 ret = CSV_ERR_UNKNOWN_STATE;
                 goto clean;
-                break;
         }
     }
 
-    if (current_state != CSV_ST_LEADING_QUOTE && current_state != CSV_ST_WITH_QUOTE_MODE )
+    assert(*s == '\0');
+
+    if (current_state != CSV_ST_LEADING_QUOTE &&
+        current_state != CSV_ST_WITH_QUOTE_MODE )
     {
         if (sn != NULL)
         {
-            *sn = *s; sn++;
-            *sn = '\0'; sn = NULL;
+            *sn = *s;                            /* write the trailing '\0' */
+            sn = NULL;
         }
-        if(current_state == CSV_ST_NO_QUOTE_MODE || current_state == CSV_ST_PRE_START_SPACE)
+
+        /* Trim trailing CRLF. */
+        if(current_state == CSV_ST_NO_QUOTE_MODE ||
+           current_state == CSV_ST_PRE_START_SPACE)
         {
             int len = strlen(snatched);
             if (len > 1 && snatched[len - 2] == '\r' && snatched[len - 1] == '\n')
@@ -291,10 +287,11 @@ static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
                 snatched[len - 2] = '\0';
             }
         }
-        SeqAppend(*newlist, (void *)xstrdup(snatched));
+
+        SeqAppend(*newlist, xstrdup(snatched));
         snatched[0] = '\0';
     }
-    else
+    else                                     /* LEADING_QUOTE or WITH_QUOTE */
     {
         ret = CSV_ERR_UNEXPECTED_END;
         goto clean;

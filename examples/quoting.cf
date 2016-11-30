@@ -1,0 +1,34 @@
+bundle agent main
+# @brief Example showing various ways of quoting in CFEngine.
+{
+  vars:
+    'single' string => 'single quotes';
+    `backtick` string => `backtick quotes`;
+    "double" string => "double";
+    'single_escape' string => 'You can \'escape\' single quotes';
+    "double_escape" string => "You can \"escape\" double quotes";
+    `backtick_escape` string => `Note: You can't escape backtick quotes`;
+
+  reports:
+    "$(single)";
+    `$(backtick)`;
+    `$(double)`;
+    '$(single_escape)';
+    "$(double_escape)";
+    `$(backtick_escape)`;
+}
+
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: single quotes
+#@ R: backtick quotes
+#@ R: double
+#@ R: You can 'escape' single quotes
+#@ R: You can "escape" double quotes
+#@ R: Note: You can't escape backtick quotes
+#@ ```
+#+end_src
+
+
+

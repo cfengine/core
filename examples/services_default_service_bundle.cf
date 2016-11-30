@@ -1,0 +1,29 @@
+bundle agent main
+# @brief Example showing how service_bundle is defaulted.
+{
+  services:
+      "my-custom-service"
+      service_method => my_custom_service,
+      service_policy => "stop";
+}
+
+body service_method my_custom_service
+{
+      service_type => "generic";
+}
+
+bundle agent service_my_custom_service(service, state)
+{
+  reports:
+      "$(service) should have state $(state)";
+}
+
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: my-custom-service should have state stop
+#@ ```
+#+end_src
+
+
+

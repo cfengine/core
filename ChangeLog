@@ -882,7 +882,7 @@
           will cause it to return true ("any") if the calculated result is
           non-zero, and false ("!any") if it is zero.
         - New list_ifelse() function
-        - New mapjson() function as well as JSON support in maparray().
+        - New mapdata() function as well as JSON support in maparray().
         - filestat() function now supports "xattr" argument for extended
           attributes.
         - "ifvarclass" now has "if" as an alias, and "unless" as an inverse

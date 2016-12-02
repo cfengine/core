@@ -26,6 +26,7 @@
 #include <generic_agent.h>
 
 #include <bootstrap.h>
+#include <policy_server.h>
 #include <sysinfo.h>
 #include <known_dirs.h>
 #include <eval_context.h>
@@ -498,8 +499,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         WriteAmPolicyHubFile(am_policy_server);
 
         WritePolicyServerFile(GetWorkDir(), bootstrap_arg);
-        SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_host,
-                             config->agent_specific.agent.bootstrap_port);
+        EvalContextSetPolicyServer(ctx, bootstrap_arg);
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);
@@ -511,10 +511,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
                 existing_policy_server);
-            char* host = NULL;
-            char* port = NULL;
-            ParseHostPort(existing_policy_server, &host, &port);
-            SetPolicyServer(ctx, host, port);
+            EvalContextSetPolicyServer(ctx, existing_policy_server);
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
         }
@@ -1008,8 +1005,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
         LoadSecretKeys();
-        char* ipaddr = NULL;
-        char* port = NULL;
+        char *ipaddr = NULL, *port = NULL;
         LookUpPolicyServerFile(workdir, &ipaddr, &port);
         PolicyHubUpdateKeys(ipaddr);
         free(ipaddr);
@@ -1595,39 +1591,6 @@ const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const
     }
 
     return MapName(input_path);
-}
-
-void GenericAgentWriteHelp(Writer *w, const char *component, const struct option options[], const char *const hints[], bool accepts_file_argument)
-{
-    WriterWriteF(w, "Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
-
-    WriterWriteF(w, "\nOptions:\n");
-
-    for (int i = 0; options[i].name != NULL; i++)
-    {
-        char short_option[] = ", -*";
-        if (options[i].val < 128)
-        {
-            // Within ASCII range, means there is a short option.
-            short_option[3] = options[i].val;
-        }
-        else
-        {
-            // No short option.
-            short_option[0] = '\0';
-        }
-        if (options[i].has_arg)
-        {
-            WriterWriteF(w, "  --%-12s%s value - %s\n", options[i].name, short_option, hints[i]);
-        }
-        else
-        {
-            WriterWriteF(w, "  --%-12s%-10s - %s\n", options[i].name, short_option, hints[i]);
-        }
-    }
-
-    WriterWriteF(w, "\nWebsite: http://www.cfengine.com\n");
-    WriterWriteF(w, "This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
 }
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentWriteVersion, Writer *, w)

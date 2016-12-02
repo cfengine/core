@@ -283,7 +283,7 @@ int RemoveKeys(const char *input, bool must_be_coherent)
     char equivalent[CF_BUFSIZE];
     equivalent[0] = '\0';
 
-    res = RemoveKeysFromLastSeen(input, must_be_coherent, equivalent);
+    res = RemoveKeysFromLastSeen(input, must_be_coherent, equivalent, sizeof(equivalent));
     if (res!=0)
     {
         return res;

@@ -29,6 +29,7 @@
 #include <files_interfaces.h>
 #include <string_lib.h>
 #include <bootstrap.h>
+#include <policy_server.h>
 #include <dbm_api.h>
 #include <dbm_priv.h>
 #include <tokyo_check.h>
@@ -169,7 +170,7 @@ static AgentDiagnosticsResult AgentDiagnosticsCheckDB(ARG_UNUSED const char *wor
                 }
             }
             return AgentDiagnosticsResultNew(true, xstrdup("OK"));
-            
+
         }
     }
 }

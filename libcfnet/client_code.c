@@ -319,10 +319,18 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         }
 
         snprintf(in, CF_BUFSIZE, "OPENDIR %s", dirname);
-        cipherlen = EncryptString(conn->encryption_type, in, out, conn->session_key, strlen(in) + 1);
+        cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
+
+        tosend = cipherlen + CF_PROTO_OFFSET;
+
+        if(tosend > sizeof(sendbuffer))
+        {
+            ProgrammingError("RemoteDirList: tosend (%d) > sendbuffer (%ld)",
+                             tosend, sizeof(sendbuffer));
+        }
+
         snprintf(sendbuffer, CF_BUFSIZE - 1, "SOPENDIR %d", cipherlen);
         memcpy(sendbuffer + CF_PROTO_OFFSET, out, cipherlen);
-        tosend = cipherlen + CF_PROTO_OFFSET;
     }
     else
     {
@@ -351,8 +359,8 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         if (encrypt)
         {
             memcpy(in, recvbuffer, nbytes);
-            DecryptString(conn->encryption_type, in, recvbuffer,
-                          conn->session_key, nbytes);
+            DecryptString(recvbuffer, sizeof(recvbuffer), in, nbytes,
+                          conn->encryption_type, conn->session_key);
         }
 
         if (recvbuffer[0] == '\0')
@@ -441,11 +449,20 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
         }
 
         cipherlen =
-            EncryptString(conn->encryption_type, in, out, conn->session_key,
-                          strlen(in) + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN);
+            EncryptString(out, sizeof(out), in,
+                          strlen(in) + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN,
+                          conn->encryption_type, conn->session_key);
+
+        tosend = cipherlen + CF_PROTO_OFFSET;
+
+        if(tosend > sizeof(sendbuffer))
+        {
+            ProgrammingError("CompareHashNet: tosend (%d) > sendbuffer (%ld)",
+                             tosend, sizeof(sendbuffer));
+        }
+
         snprintf(sendbuffer, CF_BUFSIZE, "SMD5 %d", cipherlen);
         memcpy(sendbuffer + CF_PROTO_OFFSET, out, cipherlen);
-        tosend = cipherlen + CF_PROTO_OFFSET;
     }
     else
     {
@@ -529,10 +546,18 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
     EVP_CIPHER_CTX_init(&crypto_ctx);
 
     snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
-    cipherlen = EncryptString(conn->encryption_type, in, out, conn->session_key, strlen(in) + 1);
+    cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
+
+    tosend = cipherlen + CF_PROTO_OFFSET;
+
+    if(tosend > sizeof(workbuf))
+    {
+        ProgrammingError("EncryptCopyRegularFileNet: tosend (%d) > workbuf (%ld)",
+                         tosend, sizeof(workbuf));
+    }
+
     snprintf(workbuf, CF_BUFSIZE, "SGET %4d %4d", cipherlen, blocksize);
     memcpy(workbuf + CF_PROTO_OFFSET, out, cipherlen);
-    tosend = cipherlen + CF_PROTO_OFFSET;
 
 /* Send proposition C0 - query */
 

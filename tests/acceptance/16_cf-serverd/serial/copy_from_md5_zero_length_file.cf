@@ -16,9 +16,9 @@ bundle agent test
       "any" usebundle => dcs_fini("$(G.testdir)/destfile_latest");
 
       "any" usebundle => generate_key;
-      "any" usebundle => start_server("$(this.promise_dirname)/allowlegacyconnects_present.srv");
+      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
 
       "any" usebundle => run_test("$(this.promise_filename).sub");
 
-      "any" usebundle => stop_server("$(this.promise_dirname)/allowlegacyconnects_present.srv");
+      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
 }

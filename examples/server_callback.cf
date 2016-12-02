@@ -90,5 +90,3 @@ bundle server access_rules()
       resource_type => "query",
       admit         => { "$(sys.policy_hub)"  };
 }
-
-

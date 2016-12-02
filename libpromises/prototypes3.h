@@ -63,7 +63,7 @@ ENTERPRISE_FUNC_1ARG_DECLARE(const EVP_CIPHER *, CfengineCipher, char, type);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EnterpriseContext, EvalContext *, ctx);
 ENTERPRISE_FUNC_0ARG_DECLARE(const char *, GetConsolePrefix);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, LoadSlowlyVaryingObservations, EvalContext *, ctx);
-ENTERPRISE_FUNC_6ARG_DECLARE(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle, char *, server, int, encrypted, char *, rcv);
+ENTERPRISE_FUNC_6ARG_DECLARE(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle, const char *, server, int, encrypted, char *, rcv);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LogTotalCompliance, const char *, version, int, background_tasks);
 #if defined(__MINGW32__)
 ENTERPRISE_FUNC_4ARG_DECLARE(int, GetRegistryValue, const char *, key, char *, name, char *, buf, int, bufSz);
@@ -75,7 +75,6 @@ ENTERPRISE_FUNC_8ARG_DECLARE(void *, CfRegLDAP, EvalContext *, ctx, char *, uri,
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, CacheUnreliableValue, char *, caller, char *, handle, char *, buffer);
 ENTERPRISE_FUNC_3ARG_DECLARE(int, RetrieveUnreliableValue, char *, caller, char *, handle, char *, buffer);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TranslatePath, char *, new, const char *, old);
-ENTERPRISE_VOID_FUNC_4ARG_DECLARE(void, TrackValue, char *, date, double, kept, double, repaired, double, notkept);
 ENTERPRISE_FUNC_4ARG_DECLARE(bool, ListHostsWithClass, EvalContext *, ctx, Rlist **, return_list, char *, class_name, char *, return_format);
 
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, GetObservable, int, i, char *, name, char *, desc);

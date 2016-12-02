@@ -647,14 +647,14 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
         "Resolving classes and variables in 'bundle %s %s'",
         bundle->type, bundle->name);
 
-    /* Necessary to parse vars *before* classes for cases like this:
-     * 00_basics/04_bundles/dynamic_bundlesequence/dynamic_inputs_based_on_class_set_using_variable_file_control_extends_inputs.cf.sub
-     *   --  see bundle "classify". */
-    BundleResolvePromiseType(ctx, bundle, "vars", VerifyVarPromise);
-
     /* PRE-EVAL: evaluate classes of common bundles. */
     if (strcmp(bundle->type, "common") == 0)
     {
+        /* Necessary to parse vars *before* classes for cases like this:
+         * 00_basics/04_bundles/dynamic_bundlesequence/dynamic_inputs_based_on_class_set_using_variable_file_control_extends_inputs.cf.sub
+         *   --  see bundle "classify". */
+        BundleResolvePromiseType(ctx, bundle, "vars", VerifyVarPromise);
+
         BundleResolvePromiseType(ctx, bundle, "classes", VerifyClassPromise);
     }
 

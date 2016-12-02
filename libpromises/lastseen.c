@@ -154,7 +154,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 /*****************************************************************************/
 
 /* Lookup a reverse entry (IP->KeyHash) in lastseen database. */
-static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
+static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result, size_t result_size)
 {
     char address_key[CF_BUFSIZE];
     char hostkey[CF_BUFSIZE];
@@ -185,7 +185,7 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result)
     }
 #endif
 
-    strlcpy(result, hostkey, CF_BUFSIZE);
+    strlcpy(result, hostkey, result_size);
     return true;
 }
 
@@ -226,13 +226,17 @@ bool Address2Hostkey(char *dst, size_t dst_size, const char *address)
         DBHandle *db;
         if (OpenDB(&db, dbid_lastseen))
         {
-            retval = Address2HostkeyInDB(db, address, dst);
+            retval = Address2HostkeyInDB(db, address, dst, dst_size);
             CloseDB(db);
+
+            if (!retval)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Key digest for address '%s' was not found in lastseen db!",
+                    address);
+            }
         }
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Key digest for address '%s' is %s", address,
-        retval ? dst : "not found!");
 
     return retval;
 }
@@ -437,9 +441,10 @@ bool IsLastSeenCoherent(void)
  * @param[in]     ip : either in (SHA/MD5 format)
  * @param[in,out] digest: return corresponding digest of input host.
  *                        If NULL, return nothing
+ * @param[in] digest_size: size of digest parameter
  * @retval true if entry was deleted, false otherwise
  */
-bool DeleteIpFromLastSeen(const char *ip, char *digest)
+bool DeleteIpFromLastSeen(const char *ip, char *digest, size_t digest_size)
 {
     DBHandle *db;
     bool res = false;
@@ -472,7 +477,7 @@ bool DeleteIpFromLastSeen(const char *ip, char *digest)
         {
             if (digest != NULL)
             {
-                strlcpy(digest, bufkey + 1, CF_BUFSIZE);
+                strlcpy(digest, bufkey + 1, digest_size);
             }
             DeleteDB(db, bufkey);
             DeleteDB(db, bufhost);
@@ -504,9 +509,10 @@ clean:
  * @param[in]     key : either in (SHA/MD5 format)
  * @param[in,out] ip  : return the key corresponding host.
  *                      If NULL, return nothing
+ * @param[in] ip_size : length of ip parameter
  * @retval true if entry was deleted, false otherwise
  */
-bool DeleteDigestFromLastSeen(const char *key, char *ip)
+bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size)
 {
     DBHandle *db;
     bool res = false;
@@ -538,7 +544,7 @@ bool DeleteDigestFromLastSeen(const char *key, char *ip)
         {
             if (ip != NULL)
             {
-                strcpy(ip, host);
+                strlcpy(ip, host, ip_size);
             }
             DeleteDB(db, bufhost);
             DeleteDB(db, bufkey);
@@ -684,7 +690,7 @@ int LastSeenHostKeyCount(void)
  * @retval 0 if entry was deleted, <>0 otherwise
  */
 int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
-                           char *equivalent)
+                           char *equivalent, size_t equivalent_size)
 {
     bool is_coherent = false;
 
@@ -704,7 +710,7 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
     if (is_digest == true)
     {
         Log(LOG_LEVEL_VERBOSE, "Removing digest '%s' from lastseen database\n", input);
-        if (DeleteDigestFromLastSeen(input, equivalent) == false)
+        if (DeleteDigestFromLastSeen(input, equivalent, equivalent_size) == false)
         {
             Log(LOG_LEVEL_ERR, "Unable to remove digest from lastseen database.");
             return 252;
@@ -713,7 +719,7 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
     else
     {
         Log(LOG_LEVEL_VERBOSE, "Removing host '%s' from lastseen database\n", input);
-        if (DeleteIpFromLastSeen(input, equivalent) == false)
+        if (DeleteIpFromLastSeen(input, equivalent, equivalent_size) == false)
         {
             Log(LOG_LEVEL_ERR, "Unable to remove host from lastseen database.");
             return 253;

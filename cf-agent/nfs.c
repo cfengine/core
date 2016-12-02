@@ -132,7 +132,6 @@ bool LoadMountInfo(Seq *list)
 {
     FILE *pp;
     char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE], buf3[CF_BUFSIZE];
-    char host[CF_MAXVARSIZE], source[CF_BUFSIZE], mounton[CF_BUFSIZE];
     int i, nfs = false;
 
     for (i = 0; VMOUNTCOMM[VSYSTEMHARDCLASS][i] != ' '; i++)
@@ -155,7 +154,7 @@ bool LoadMountInfo(Seq *list)
 
     for (;;)
     {
-        buf1[0] = buf2[0] = buf3[0] = source[0] = '\0';
+        buf1[0] = buf2[0] = buf3[0] = '\0';
         nfs = false;
 
         ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
@@ -179,6 +178,7 @@ bool LoadMountInfo(Seq *list)
             nfs = true;
         }
 
+        // security note: buff is CF_BUFSIZE, so that is the max that can be written to buf1, buf2 or buf3
         sscanf(vbuff, "%s%s%s", buf1, buf2, buf3);
 
         if ((vbuff[0] == '\0') || (vbuff[0] == '\n'))
@@ -216,46 +216,52 @@ bool LoadMountInfo(Seq *list)
             return false;
         }
 
+        // host: max FQDN is 255 chars (max IPv6 with IPv4 tunneling is 45 chars)
+        // source, mounton: hardcoding max path length to 1023; longer is very unlikely
+        char host[256], source[1024], mounton[1024];
+        host[0] = source[0] = mounton[0] = '\0';
+
+
 #if defined(__sun) || defined(__hpux)
         if (IsAbsoluteFileName(buf3))
         {
-            strcpy(host, "localhost");
-            strcpy(mounton, buf1);
+            strlcpy(host, "localhost", sizeof(host));
+            strlcpy(mounton, buf1, sizeof(mounton));
         }
         else
         {
-            sscanf(buf1, "%[^:]:%s", host, source);
-            strcpy(mounton, buf1);
+            sscanf(buf1, "%255[^:]:%1023s", host, source);
+            strlcpy(mounton, buf1, sizeof(mounton));
         }
 #elif defined(_AIX)
         /* skip header */
 
         if (IsAbsoluteFileName(buf1))
         {
-            strcpy(host, "localhost");
-            strcpy(mounton, buf2);
+            strlcpy(host, "localhost", sizeof(host));
+            strlcpy(mounton, buf2, sizeof(mounton));
         }
         else
         {
-            strcpy(host, buf1);
-            strcpy(source, buf1);
-            strcpy(mounton, buf3);
+            strlcpy(host, buf1, sizeof(host));
+            strlcpy(source, buf1, sizeof(source));
+            strlcpy(mounton, buf3, sizeof(mounton));
         }
 #elif defined(__CYGWIN__)
-        strcpy(mounton, buf2);
-        strcpy(host, buf1);
+        strlcpy(mounton, buf2, sizeof(mounton));
+        strlcpy(host, buf1, sizeof(host));
 #elif defined(sco) || defined(__SCO_DS)
         Log(LOG_LEVEL_ERR, "Don't understand SCO mount format, no data");
 #else
         if (IsAbsoluteFileName(buf1))
         {
-            strcpy(host, "localhost");
-            strcpy(mounton, buf3);
+            strlcpy(host, "localhost", sizeof(host));
+            strlcpy(mounton, buf3, sizeof(mounton));
         }
         else
         {
-            sscanf(buf1, "%[^:]:%s", host, source);
-            strcpy(mounton, buf3);
+            sscanf(buf1, "%255[^:]:%1023s", host, source);
+            strlcpy(mounton, buf3, sizeof(mounton));
         }
 #endif
 

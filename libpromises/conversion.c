@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+
 #include <conversion.h>
 
 #include <promises.h>
@@ -33,10 +34,6 @@
 #include <rlist.h>
 #include <string_lib.h>
 
-
-static int IsSpace(char *remainder);
-
-/***************************************************************/
 
 const char *MapAddress(const char *unspec_address)
 {                               /* Is the address a mapped ipv4 over ipv6 address */
@@ -383,74 +380,101 @@ bool BooleanFromString(const char *s)
 
 /****************************************************************************/
 
+/**
+ * @NOTE parameter #s might be NULL. It's already used by design like that,
+ *       for example parsing inexistent attributes in GetVolumeConstraints().
+ *
+ * @TODO see DoubleFromString(): return bool, have a value_out parameter, and
+ *       kill CF_NOINT (goes deep!)
+ */
 long IntFromString(const char *s)
 {
-    long long a = CF_NOINT;
-    char c = 'X';
-    char remainder[CF_BUFSIZE];
+    long long ll = CF_NOINT;
+    char quantifier, remainder;
 
     if (s == NULL)
     {
         return CF_NOINT;
     }
-
     if (strcmp(s, "inf") == 0)
     {
         return (long) CF_INFINITY;
     }
-
     if (strcmp(s, "now") == 0)
     {
         return (long) CFSTARTTIME;
     }
 
-    remainder[0] = '\0';
+    int ret = sscanf(s, "%lld%c %c", &ll, &quantifier, &remainder);
 
-    sscanf(s, "%lld%c%s", &a, &c, remainder);
-
-// Test whether remainder is space only
-
-    if ((a == CF_NOINT) || (!IsSpace(remainder)))
+    if (ret < 1 || ll == CF_NOINT)
     {
-        Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%s'",
-              s, remainder);
-        if (strchr(s, '$'))
+        if (strchr(s, '$') != NULL)      /* don't log error, might converge */
         {
-            Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
+            Log(LOG_LEVEL_VERBOSE,
+                "Ignoring failed to parse integer '%s'"
+                " because of possibly unexpanded variable", s);
         }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Failed to parse integer number: %s", s);
+        }
+    }
+    else if (ret == 3)
+    {
+        ll = CF_NOINT;
+        if (quantifier == '$')           /* don't log error, might converge */
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Ignoring failed to parse integer '%s'"
+                " because of possibly unexpanded variable", s);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR,
+                "Anomalous ending '%c%c' while parsing integer number: %s",
+                quantifier, remainder, s);
+        }
+    }
+    else if (ret == 1)                                     /* no quantifier */
+    {
+        /* nop */
     }
     else
     {
-        switch (c)
+        assert(ret == 2);
+
+        switch (quantifier)
         {
         case 'k':
-            a = 1000 * a;
+            ll *= 1000;
             break;
         case 'K':
-            a = 1024 * a;
+            ll *= 1024;
             break;
         case 'm':
-            a = 1000 * 1000 * a;
+            ll *= 1000 * 1000;
             break;
         case 'M':
-            a = 1024 * 1024 * a;
+            ll *= 1024 * 1024;
             break;
         case 'g':
-            a = 1000 * 1000 * 1000 * a;
+            ll *= 1000 * 1000 * 1000;
             break;
         case 'G':
-            a = 1024 * 1024 * 1024 * a;
+            ll *= 1024 * 1024 * 1024;
             break;
         case '%':
-            if ((a < 0) || (a > 100))
+            if ((ll < 0) || (ll > 100))
             {
-                Log(LOG_LEVEL_ERR, "Percentage out of range (%lld)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range: %lld", ll);
                 return CF_NOINT;
             }
             else
             {
                 /* Represent percentages internally as negative numbers */
-                a = -a;
+                /* TODO fix? */
+                ll *= -1;
             }
             break;
 
@@ -458,6 +482,9 @@ long IntFromString(const char *s)
             break;
 
         default:
+            Log(LOG_LEVEL_VERBOSE,
+                "Ignoring bad quantifier '%c' in integer: %s",
+                quantifier, s);
             break;
         }
     }
@@ -466,14 +493,14 @@ long IntFromString(const char *s)
      * but it is prone to coding errors, so even better bring OpenBSD's
      * strtonum() for proper conversions. */
 
-    if (a < LONG_MIN)
+    if (ll < LONG_MIN)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Number '%s' underflows a long int, truncating to %ld",
             s, LONG_MIN);
         return LONG_MIN;
     }
-    else if (a > LONG_MAX)
+    else if (ll > LONG_MAX)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Number '%s' overflows a long int, truncating to %ld",
@@ -481,7 +508,7 @@ long IntFromString(const char *s)
         return LONG_MAX;
     }
 
-    return (long) a;
+    return (long) ll;
 }
 
 Interval IntervalFromString(const char *string)
@@ -493,58 +520,65 @@ Interval IntervalFromString(const char *string)
 
 bool DoubleFromString(const char *s, double *value_out)
 {
-    static const double NO_DOUBLE = -123.45;
+    double d;
+    char quantifier, remainder;
 
-    double a = NO_DOUBLE;
-    char remainder[CF_BUFSIZE];
-    char c = 'X';
+    assert(s         != NULL);
+    assert(value_out != NULL);
 
-    if (s == NULL)
+    int ret = sscanf(s, "%lf%c %c", &d, &quantifier, &remainder);
+
+    if (ret < 1)
     {
+        Log(LOG_LEVEL_ERR, "Failed to parse real number: %s", s);
         return false;
     }
-
-    remainder[0] = '\0';
-
-    sscanf(s, "%lf%c%s", &a, &c, remainder);
-
-    if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
+    else if (ret == 3)                               /* non-space remainder */
     {
-        Log(LOG_LEVEL_ERR, "Reading assumed real value '%s', anomalous remainder '%s'", s, remainder);
+        Log(LOG_LEVEL_ERR,
+            "Anomalous ending '%c%c' while parsing real number: %s",
+            quantifier, remainder, s);
         return false;
     }
-    else
+    else if (ret == 1)                                /* no quantifier char */
     {
-        switch (c)
+        /* nop */
+    }
+    else                                                  /* got quantifier */
+    {
+        assert(ret == 2);
+
+        switch (quantifier)
         {
         case 'k':
-            a = 1000 * a;
+            d *= 1000;
             break;
         case 'K':
-            a = 1024 * a;
+            d *= 1024;
             break;
         case 'm':
-            a = 1000 * 1000 * a;
+            d *= 1000 * 1000;
             break;
         case 'M':
-            a = 1024 * 1024 * a;
+            d *= 1024 * 1024;
             break;
         case 'g':
-            a = 1000 * 1000 * 1000 * a;
+            d *= 1000 * 1000 * 1000;
             break;
         case 'G':
-            a = 1024 * 1024 * 1024 * a;
+            d *= 1024 * 1024 * 1024;
             break;
         case '%':
-            if ((a < 0) || (a > 100))
+            if ((d < 0) || (d > 100))
             {
-                Log(LOG_LEVEL_ERR, "Percentage out of range (%.2lf)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range: %.2lf", d);
                 return false;
             }
             else
             {
                 /* Represent percentages internally as negative numbers */
-                a = -a;
+                /* TODO fix? */
+                d *= -1;
             }
             break;
 
@@ -552,11 +586,16 @@ bool DoubleFromString(const char *s, double *value_out)
             break;
 
         default:
+            Log(LOG_LEVEL_VERBOSE,
+                "Ignoring bad quantifier '%c' in real number: %s",
+                quantifier, s);
             break;
         }
     }
 
-    *value_out = a;
+    assert(ret == 1  ||  ret == 2);
+
+    *value_out = d;
     return true;
 }
 
@@ -896,31 +935,14 @@ void CommandPrefix(char *execstr, char *comm)
     strncpy(comm, sp, 15);
 }
 
-static int IsSpace(char *remainder)
-{
-    char *sp;
-
-    for (sp = remainder; *sp != '\0'; sp++)
-    {
-        if (!isspace((int)*sp))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 /*******************************************************************/
 
 bool IsRealNumber(const char *s)
 {
-    static const double NO_DOUBLE = -123.45;
-    double a = NO_DOUBLE;
+    double d;
+    int ret = sscanf(s, "%lf", &d);
 
-    sscanf(s, "%lf", &a);
-
-    if (a == NO_DOUBLE)
+    if (ret != 1)
     {
         return false;
     }

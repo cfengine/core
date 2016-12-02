@@ -432,8 +432,8 @@ following:
 * To use the entire commit message in the ChangeLog:
 ```Changelog: Commit```
 
-It's worth noting that we strive to have bugtracker tickets
-for most changes, and they should be mentioned in the ChangeLog
-entries. In fact if anywhere in the commit message the
-string ```Redmine #1234``` or ```Jira #1234``` is found, it will be
+It's worth noting that we strive to have bugtracker tickets for most
+changes, and they should be mentioned in the ChangeLog entries. In fact
+if anywhere in the commit message the string ```CFE-1234``` is found
+(referring to a ticket from https://tracker.mender.io ), it will be
 automatically added to the ChangeLog.

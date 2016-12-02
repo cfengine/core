@@ -317,7 +317,7 @@ bundle agent failsafe_cfe_internal_report
        Please check
        * cf-serverd is running on $(sys.policy_hub)
        * CFEngine version on the policy hub is 3.6.0 or latest - otherwise you need to tweak the protocol_version setting
-       * network connectivity to $(sys.policy_hub) on port 5308
+       * network connectivity to $(sys.policy_hub) on port $(sys.policy_hub_port)
        * masterfiles 'body server control' - in particular allowconnects, trustkeysfrom and skipverify
        * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny
        It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.

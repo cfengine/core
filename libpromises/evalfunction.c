@@ -2203,12 +2203,20 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
-// This is needed for literally one acceptance test:
-// 01_vars/02_functions/getindices_returns_expected_list_from_array.cf
-//
-// The case is that we have a[x] = "1" AND a[x][y] = "2" which is
-// ambiguous, but classic CFEngine arrays allow it. So we want the
-// classic getindices("a[x]") to return "y" in this case.
+/**
+ * Look for the indices of a variable in #finalargs if it is an array.
+ *
+ * @return *Always* return an slist of the indices; if the variable is not an
+ *         array or does not resolve at all, return an empty slist.
+ *
+ * @NOTE
+ * This is needed for literally one acceptance test:
+ * 01_vars/02_functions/getindices_returns_expected_list_from_array.cf
+ *
+ * The case is that we have a[x] = "1" AND a[x][y] = "2" which is
+ * ambiguous, but classic CFEngine arrays allow it. So we want the
+ * classic getindices("a[x]") to return "y" in this case.
+ */
 static FnCallResult FnCallGetIndicesClassic(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
@@ -2223,7 +2231,8 @@ static FnCallResult FnCallGetIndicesClassic(EvalContext *ctx, ARG_UNUSED const P
         {
             Log(LOG_LEVEL_WARNING,
                 "Function '%s' was given an unqualified variable reference, "
-                "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                "and it was not called from a promise. "
+                "No way to automatically qualify the reference '%s'",
                 fp->name, RlistScalarValue(finalargs));
             VarRefDestroy(ref);
             return FnFailure();
@@ -2233,14 +2242,21 @@ static FnCallResult FnCallGetIndicesClassic(EvalContext *ctx, ARG_UNUSED const P
     Rlist *keys = NULL;
 
     VariableTableIterator *iter = EvalContextVariableTableFromRefIteratorNew(ctx, ref);
-    const Variable *var;
-    while ((var = VariableTableIteratorNext(iter)))
+    const Variable *itervar;
+    while ((itervar = VariableTableIteratorNext(iter)) != NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "%s: from %s got ref num_indices %zd and variable's num_indices %zd",
-            fp->name, RlistScalarValue(finalargs), ref->num_indices, var->ref->num_indices);
-        if (ref->num_indices < var->ref->num_indices)
+        /*
+        Log(LOG_LEVEL_DEBUG,
+            "%s(%s): got itervar->ref->num_indices %zu while ref->num_indices is %zu",
+            fp->name, RlistScalarValue(finalargs),
+            itervar->ref->num_indices, ref->num_indices);
+        */
+        /* Does the variable we found have more indices than the one we
+         * requested? For example, if we requested the variable "blah", it has
+         * 0 indices, so a found variable blah[i] will be acceptable. */
+        if (itervar->ref->num_indices > ref->num_indices)
         {
-            RlistAppendScalarIdemp(&keys, var->ref->indices[ref->num_indices]);
+            RlistAppendScalarIdemp(&keys, itervar->ref->indices[ref->num_indices]);
         }
     }
 
@@ -2267,7 +2283,16 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
         DataType type = CF_DATA_TYPE_NONE;
         EvalContextVariableGet(ctx, ref, &type);
 
-        if (type != CF_DATA_TYPE_CONTAINER)
+        /* A variable holding a data container. */
+        if (type == CF_DATA_TYPE_CONTAINER)
+        {
+            json = VarRefValueToJson(ctx, fp, ref, NULL, 0, true, &allocated);
+        }
+        /* Resolves to a different type or does not resolve at all. It's
+         * normal not to resolve, for example "blah" will not resolve if the
+         * variable table only contains "blah[1]"; we have to go through
+         * FnCallGetIndicesClassic() to extract these indices. */
+        else
         {
             JsonParseError res = JsonParseWithLookup(ctx, &LookupVarRefToJson, &name_str, &json);
             if (res == JSON_PARSE_OK)
@@ -2292,15 +2317,10 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
             }
             else
             {
-                // Invalid inline JSON. Same case as Classic case above.
+                /* Invalid inline JSON. */
                 VarRefDestroy(ref);
                 return FnCallGetIndicesClassic(ctx, policy, fp, finalargs);
             }
-        }
-        else
-        {
-            // A variable holding a container.
-            json = VarRefValueToJson(ctx, fp, ref, NULL, 0, true, &allocated);
         }
 
         VarRefDestroy(ref);
@@ -2393,7 +2413,11 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
     // we failed to produce a valid JsonElement, so give up
     if (NULL == json)
     {
-        return FnFailure();
+        /* CFE-2479: Inexistent variable, return an empty slist. */
+        Log(LOG_LEVEL_DEBUG, "getvalues('%s'):"
+            " unresolvable variable, returning an empty list",
+            RlistScalarValueSafe(finalargs));
+        return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
     }
 
     Rlist *values = NULL;

@@ -78,7 +78,7 @@ bool BootstrapAllowed(void)
  * @brief Sets both internal C variables as well as policy sys variables.
  *
  * Called at bootstrap and after reading policy_server.dat.
- * Changes sys.policy_hub, sys.policy_hub_ip and sys.policy_hub_port.
+ * Changes sys.policy_hub and sys.policy_hub_port.
  * NULL is an acceptable value for new_policy_server. Could happen when an
  * already bootstrapped server re-parses its policies, and the
  * policy_server.dat file has been removed. Then this function will be called
@@ -96,41 +96,15 @@ void EvalContextSetPolicyServer(EvalContext *ctx, const char *new_policy_server)
         EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
                                             "policy_hub" );
         EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
-                                            "policy_hub_ip" );
-        EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
                                             "policy_hub_port" );
         return;
     }
 
     PolicyServerSet(new_policy_server);
     const char *ip = PolicyServerGetIP();
-    const char *host = PolicyServerGetHost();
-
-    // Set the sys.policy_hub_ip variable:
-    if ( ip != NULL )
-    {
-        const char *tag = (host != NULL) ?  "derived-from=sys.policy_hub" :
-                                            "source=bootstrap";
-        EvalContextVariablePutSpecial(  ctx,  SPECIAL_SCOPE_SYS,
-                                        "policy_hub_ip", ip,
-                                        CF_DATA_TYPE_STRING, tag );
-    }
-    else
-    {
-        EvalContextVariableRemoveSpecial(   ctx, SPECIAL_SCOPE_SYS,
-                                            "policy_hub_ip" );
-    }
-
 
     // Set the sys.policy_hub variable:
-    if ( host != NULL )
-    {
-        EvalContextVariablePutSpecial(  ctx,  SPECIAL_SCOPE_SYS,
-                                        "policy_hub", host,
-                                        CF_DATA_TYPE_STRING,
-                                        "source=bootstrap" );
-    }
-    else if (ip != NULL)
+    if ( ip != NULL )
     {
         EvalContextVariablePutSpecial(  ctx,  SPECIAL_SCOPE_SYS,
                                         "policy_hub", ip,

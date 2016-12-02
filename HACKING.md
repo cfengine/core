@@ -158,17 +158,22 @@ The following outlines the normal execution of a *cf-agent* run.
 The following outlines the steps taken by agent during a successful bootstrap
 to a policy server.
 
-1. Resolve IP of policy server.
-2. Remove existing files in outputs.
-3. Write built-in failsafe.cf to outputs.
-4. Write IP address or hostname of policy server to policy_server.dat, optionally also
-   marker file am_policy_server.
-5. Proceed using failsafe.cf as input file.
-5a. Evaluating failsafe.cf, fetches policy files from the policy server.
-5b. Evaluating failsafe.cf, starts *cf-execd*.
+1. Remove all files in `inputs` directory
+2. Write built-in `inputs/failsafe.cf`
+3. Write policy server address or hostname, as was the argument
+   to `--bootstrap` option, to `policy_server.dat`.
+4. If the host was bootstrapped to the machine's own IP address, then it
+   is a policy server, and the file `state/am_policy_hub` is touched as
+   marker.
+5. cf-agent runs using `failsafe.cf` as input file:
+5a. Runs `cf-key` to generate `localhost.{priv,pub}` keys inside
+    `ppkeys` directory.
+5b. Fetches policy files from the policy server.
+5c. Starts `cf-execd`
+5d. Runs `cf-agent -f update.cf`
 6. Agent finishes.
-7. *cf-execd* continues to run *cf-agent* periodically with policy
-   from */inputs*.
+7. `cf-execd` continues to run `cf-agent` periodically with policy
+   from `inputs` directory.
 
 ### cf-monitord
 

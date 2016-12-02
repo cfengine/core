@@ -1409,25 +1409,19 @@ static int SanityCheckDeletions(Attributes a, const Promise *pp)
 /* XXX */
 static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
 {
-    Rlist *rp;
-    char *sp, *spto, *firstchar, *lastchar;
-    InsertMatchType opt;
-    Item *list = SplitString(camel, '\n'), *ip;
-    int direct_cmp = false, ok = false, escaped = false;
     char *final = NULL;
-    size_t final_size = 0;
-    char *work = NULL;
-    size_t work_size = 0;
+    bool ok      = false;
+    bool escaped = false;
+    Item *list = SplitString(camel, '\n');
 
     //Split into separate lines first
-    for (ip = list; ip != NULL; ip = ip->next)
+    for (Item *ip = list; ip != NULL; ip = ip->next)
     {
         ok = false;
-        direct_cmp = (strcmp(camel, haystack) == 0);
-        final = xstrdup(ip->name);
-        final_size = strlen(final) + 1;
-        work = NULL;
-        work_size = final_size;
+        bool direct_cmp = (strcmp(camel, haystack) == 0);
+
+        final             = xstrdup(ip->name);
+        size_t final_size = strlen(final) + 1;
 
         if (insert_match == NULL)
         {
@@ -1436,9 +1430,10 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
             break;
         }
 
-        for (rp = insert_match; rp != NULL; rp = rp->next)
+        for (Rlist *rp = insert_match; rp != NULL; rp = rp->next)
         {
-            opt = InsertMatchTypeFromString(RlistScalarValue(rp));
+            const InsertMatchType opt =
+                InsertMatchTypeFromString(RlistScalarValue(rp));
 
             /* Exact match can be done immediately */
 
@@ -1472,17 +1467,22 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
             if (opt == INSERT_MATCH_TYPE_IGNORE_EMBEDDED)
             {
                 // Strip initial and final first
-                // Since we're stripping space and replacing it with \s+, we need to account for that
-                // when allocating work
+                char *firstchar, *lastchar;
                 for (firstchar = final; isspace((int)*firstchar); firstchar++);
                 for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--);
-                work_size = final_size + 6;
-                work = xcalloc(1, work_size);
-                size_t required_size = 0;
-                char toadd[] = {'\0', '\0', '\0', '\0'};
 
-                for (sp = final, spto = work; *sp != '\0'; sp++, spto += strlen(toadd), toadd[0] = '\0')
+                // Since we're stripping space and replacing it with \s+, we need to account for that
+                // when allocating work
+                size_t work_size = final_size + 6;        /* allocated size */
+                char  *work      = xcalloc(1, work_size);
+
+                /* We start only with the terminating '\0'. */
+                size_t required_size = 1;
+
+                for (char *sp = final; *sp != '\0'; sp++)
                 {
+                    char toadd[4];
+
                     if ((sp > firstchar) && (sp < lastchar))
                     {
                         if (isspace((int)*sp))
@@ -1490,11 +1490,10 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
                             while (isspace((int)*(sp + 1)))
                             {
                                 sp++;
-                                required_size++;
                             }
 
                             required_size += 3;
-                            strlcpy(toadd, "\\s+", sizeof(toadd));
+                            strcpy(toadd, "\\s+");
                         }
                         else
                         {
@@ -1512,28 +1511,21 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
 
                     if (required_size > work_size)
                     {
-                        // Increase required_size by a small amount, so we don't reallocate every
-                        // iteration
+                        // Increase by a small amount extra, so we don't
+                        // reallocate every iteration
                         work_size = required_size + 12;
                         work = xrealloc(work, work_size);
                     }
 
-                    if (strlcat(spto, toadd, work_size) >= work_size - 1)
+                    if (strlcat(work, toadd, work_size) >= work_size)
                     {
-                        UnexpectedError("Truncation concatenating %s and %s", spto, toadd);
+                        UnexpectedError("Truncation concatenating '%s' to: %s",
+                                        toadd, work);
                     }
                 }
-                required_size += 1;
-
-                if (required_size > work_size)
-                {
-                    work_size = required_size + 12;
-                    work = xrealloc(work, work_size);
-                }
-
 
                 // Realloc and retry on truncation
-                if (strlcpy(final, work, final_size) >= final_size - 1)
+                if (strlcpy(final, work, final_size) >= final_size)
                 {
                     final = xrealloc(final, work_size);
                     final_size = work_size;
@@ -1541,16 +1533,16 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
                 }
 
                 free(work);
-                work = NULL;
             }
-
-            if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
+            else if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
             {
                 if (strncmp(final, "\\s*", 3) != 0)
                 {
+                    char *sp;
                     for (sp = final; isspace((int)*sp); sp++);
-                    work_size = final_size + 3;
-                    work = xcalloc(1, work_size);
+
+                    size_t work_size = final_size + 3;
+                    char  *work      = xcalloc(1, work_size);
                     strcpy(work, sp);
 
                     if (snprintf(final, final_size, "\\s*%s", work) >= final_size - 1)
@@ -1561,18 +1553,17 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
                     }
 
                     free(work);
-                    work = NULL;
                 }
             }
-
-            if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
+            else if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
                 if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
                 {
-                    work_size = final_size + 3;
-                    work = xcalloc(1, work_size);
+                    size_t work_size = final_size + 3;
+                    char  *work      = xcalloc(1, work_size);
                     strcpy(work, final);
 
+                    char *sp;
                     for (sp = work + strlen(work) - 1; (sp > work) && (isspace((int)*sp)); sp--);
                     *++sp = '\0';
                     if (snprintf(final, final_size, "%s\\s*", work) >= final_size - 1)
@@ -1583,13 +1574,13 @@ static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack
                     }
 
                     free(work);
-                    work = NULL;
                 }
             }
 
             ok = ok || (FullTextMatch(ctx, final, haystack));
         }
 
+        assert(final_size > strlen(final));
         free(final);
         final = NULL;
         if (!ok)                // All lines in region need to match to avoid insertions

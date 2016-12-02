@@ -248,9 +248,7 @@ cf_start_daemon()
     shift
     local base_daemon="$(basename "$daemon")"
 
-    if [ "$DEBIAN" != "1" ] || [ "$SSD" != "1" ]; then
-        echo "Starting $base_daemon..."
-    fi
+    echo -n "Starting $base_daemon..."
 
     # Redhat/Centos/Fedora
     if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
@@ -271,7 +269,7 @@ cf_start_daemon()
 
     # Debian/Ubuntu
     elif [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
-        /sbin/start-stop-daemon --start --pidfile "$(printf "$PIDFILE_TEMPLATE" "$base_daemon")" --verbose --exec "$daemon" -- "$@"
+        /sbin/start-stop-daemon --start --pidfile "$(printf "$PIDFILE_TEMPLATE" "$base_daemon")" --exec "$daemon" -- "$@"
         cf_touch "$LOCKDIR/$base_daemon"
     elif [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
         "$daemon" "$@"
@@ -281,6 +279,8 @@ cf_start_daemon()
     else
         "$daemon" "$@"
     fi
+
+    echo
 }
 
 # Return 0 if any daemon was attempted killed, 1 otherwise.

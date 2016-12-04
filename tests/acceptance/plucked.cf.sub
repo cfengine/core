@@ -612,20 +612,20 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
 
       # If the line is there, but commented out, first uncomment it
       "#+\s*$(index)\s*=.*"
-      select_region => INI_section("$(sectionName)"),
+      select_region => INI_section(escape("$(sectionName)")),
       edit_field => col("=","1","$(index)","set"),
       ifvarclass => "edit_$(cindex[$(index)])";
 
       # match a line starting like the key something
       "$(index)\s*=.*"
       edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
-      select_region => INI_section("$(sectionName)"),
+      select_region => INI_section(escape("$(sectionName)")),
       classes => results("bundle", "manage_variable_values_ini_not_$(cindex[$(index)])"),
       ifvarclass => "edit_$(cindex[$(index)])";
 
   delete_lines:
       ".*"
-      select_region => INI_section("$(sectionName)"),
+      select_region => INI_section(escape("$(sectionName)")),
       comment       => "Remove all entries in the region so there are no extra entries";
 
   insert_lines:
@@ -634,7 +634,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
       comment => "Insert lines";
 
       "$(index)=$($(tab)[$(sectionName)][$(index)])"
-      select_region => INI_section("$(sectionName)"),
+      select_region => INI_section(escape("$(sectionName)")),
         ifvarclass => "!(manage_variable_values_ini_not_$(cindex[$(index)])_kept|manage_variable_values_ini_not_$(cindex[$(index)])_repaired).edit_$(cindex[$(index)])";
 
 }
@@ -1386,6 +1386,10 @@ body select_region INI_section(x)
 {
       select_start => "\[$(x)\]\s*";
       select_end => "\[.*\]\s*";
+
+@if minimum_version(3.10)
+      select_end_match_eof => "true";
+@endif
 }
 
 body edit_defaults empty

@@ -103,4 +103,4 @@ CLEANFILES = *.gcno *.gcda Makefile.testall
 
 pluck:
 	echo '### This is an auto-generated file, see Makefile.am and `make pluck` ###' > plucked.cf.sub
-	../../contrib/cf-locate/cf-locate -f -p '( if_|run_|warn_only|\skept_successful_command|append_if_no_line\(|regex_replace|set_user_field|set_variable_values\(|edit_field|set_line_based|location|replace_with|_cp|_dcp|empty|shell|immediate|body\s+perms\s+m\(|body\s+perms\s+g\(|body\s+perms\s+mode\(|perms\s+mog\(| m\b|recurse|tidy| all|classes_generic|classes\s+results\(| start|always|^value|edit_field line|insert_lines|(link|copy)from| file_mustache| (file|dir)_(copy|tidy|sync|make\(|empty|link|hardlink))' ../../../masterfiles/lib/*.cf >> plucked.cf.sub
+	../../contrib/cf-locate/cf-locate -f -p '( if_|run_|warn_only|INI_section|kept_successful_command|edit_line|set_user_field|set_variable_values\(|edit_field|set_line_based|location|replace_with|_cp|_dcp|empty|shell|immediate|perms| m\b|recurse|tidy| all|classes_generic|results| start|always|^value|edit_field line|insert_lines|(link|copy)from| file_mustache| (file|dir)_(copy|tidy|sync|make|empty|link|hardlink))' ../../../masterfiles/lib/*.cf >> plucked.cf.sub

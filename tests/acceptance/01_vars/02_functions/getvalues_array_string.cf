@@ -18,7 +18,6 @@ body common control
 
 bundle agent test
 {
-
   vars:
       "array[string]" string => "scrumdiddlyumptious";
       "values" slist => getvalues("array[string]");
@@ -31,13 +30,13 @@ bundle agent check
   vars:
     "expected" slist => { "scrumdiddlyumptious" };
     "diff" slist => difference( expected, "test.values" );
- 
+
   classes:
     "_pass" expression => strcmp( length( diff ), 0 );
 
   methods:
-   
-    _pass:: 
+
+    _pass::
       "pass" usebundle => dcs_pass("$(this.promise_filename)");
 
     !_pass::

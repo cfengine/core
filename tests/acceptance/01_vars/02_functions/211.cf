@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test getvalues(), size 0
+# Test getvalues(string), should return the string itself
 #
 #######################################################
 
@@ -17,10 +17,24 @@ bundle agent init
 {
   vars:
       "dummy" string => "dummy";
+      "expected" string => "blah";
 
   files:
       "$(G.testfile).expected"
-      create => "true";
+      create => "true",
+      edit_line => init_insert("$(init.expected)"),
+      edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -28,7 +42,7 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "array" string => "zero"; # Intentionally not an array
+      "array" string => "blah"; # Intentionally not an array
 
       "vals" slist => getvalues("array");
 

@@ -34,7 +34,8 @@ c z
 a cf_null
 b cf_null
 c cf_null
-cf_null";
+cf_null
+blah";
 
   files:
       "$(G.testfile).$(states)"
@@ -73,7 +74,7 @@ bundle edit_line test_insert
       "null" slist => { "cf_null" };
       "nulls" slist => { "cf_null", "cf_null", "cf_null" };
 
-      "not_an_array" string => "zero";
+      "not_an_array" string => "blah";
       "no_values" slist => getvalues("not_an_array");
 
   insert_lines:

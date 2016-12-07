@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/cfengine/core.svg?branch=master)](https://travis-ci.org/cfengine/core)
+[![Build Status](https://travis-ci.org/cfengine/core.svg?branch=3.10.x)](https://travis-ci.org/cfengine/core/branches)
 
 # CFEngine 3
 

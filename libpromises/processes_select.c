@@ -1451,7 +1451,8 @@ static void LoadPlatformExtraTable(void)
     {
         Log(LOG_LEVEL_WARNING, "Command returned non-zero while gathering "
             "extra process information.");
-        ClearPlatformExtraTable();
+        // Make an empty map, in this case. The information can't be trusted.
+        StringMapClear(UCB_PS_MAP);
     }
 }
 

@@ -279,16 +279,64 @@ Changelog: commit'
 
 ################################################################################
 
+# A bit tricky to make this commit, because normal git-commit cleans up \r.
+# But it *is* in our Git history (1f900885d2aebda3e23ca5129d37f5e75eb83ee4)
+TREE=$(git cat-file commit HEAD | grep '^tree ' | sed -e 's/^tree //')
+git reset --hard $(git commit-tree -p $(git rev-parse HEAD) $TREE <<EOF)
+Changelog with Windows line endings N66
+
+Changelog: title
+
+stuff stuff
+EOF
+
+################################################################################
+
+# We just generate an invalid GPG signature (it is from a random commit in core
+# and won't be valid, but that doesn't matter).
+TREE=$(git cat-file commit HEAD | grep '^tree ' | sed -e 's/^tree //')
+git reset --hard $(git hash-object -w -t commit --stdin <<EOF)
+tree $TREE
+parent $(git rev-parse HEAD)
+author whatever <whatever@whatever.com> 1461929235 -0400
+committer whatever <whatever@whatever.com> 1461929235 -0400
+gpgsig -----BEGIN PGP SIGNATURE-----
+ Version: GnuPG v1
+ 
+ iQIcBAABAgAGBQJXI0UTAAoJEBHyPQpOS53uB9MP/06LBhE/i7BL37EANEMoUUM2
+ gZwSiJ4HYF6lwNBBHNz/KYkUdh2B16m8mM1l9uePlMfhuA/xVlwP18shLaKDxdMA
+ zqt3+x6nPMHyx/WrPgOt+4hCyp+AYX/VQ0SaJGGKoOY9MJ9uOichu8iEfrNU333M
+ ePVKWRSA1p2+sxoq+oX63kx/x9/BK59GVKKF1/bsiAXjfNKfkmDLe4T4/0bpZYg1
+ fDPXhUsHn2flF6sK3P/1hkgi/gJhsWRLZUqcj9HS3IwGSUGRIx5xzGvanD9nAnwg
+ eeFRAQ6UbNN032yjKr2cs9HoJuHTwpk1t6bDX/Ti17rrDtvSKFLBxMOFGJFl09/k
+ Ltmul9+KUbWZMVymtbWekgVA05FEBqpaJpZ89NvFM9vrl+lfn4AN84e1B/6M8jWI
+ VSS/C4jyAlKl7YWqBbzSh/ES+JBX3JwRO+KYCBYOE97TRZtgeFeNzF8HaRO4Ndnp
+ 7uJmeMhXLpBwXU0vUmoCRSJGEacnCZqDdrCE2XoUjzl1DKrdJT6RDXkgwZa8Hu3A
+ lEIXmIUMLTtbVSDOo+Ls5npaptlDOlG8cvCZFEcbKtjTfHcnpi8Kx+qNyGxuc79i
+ oGDhfxWFpCJK+TsrXZHoU6/d0ROmGynxYXWutlStreGQjMucML5vOXkKI5OHflVN
+ ioeZTiztfyD5AwfmioMb
+ =k68w
+ -----END PGP SIGNATURE-----
+
+Changelog with GPG entry N67
+
+Changelog: Commit
+EOF
+
+################################################################################
+
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt
 cat > expected.txt <<EOF
 	- As well as this. N34
 	- Changelog commit with trailing dot. N53
 	- Changelog title with trailing dot. N54
+	- Changelog with GPG entry N67
 	- Changelog with Jira and Redmine ref. N57
 	  (Redmine #12345, #5555) (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
 	- Changelog with Jira and Redmine. N56
 	  (Redmine #12345, #5555) (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
 	- Changelog with Jira. N55 (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	- Changelog with Windows line endings N66
 	- Changelog with inline Jira and Redmine ref. N57
 	  (Redmine #7777, #7778) (CFE-80, CFE-81)
 	- Changelog with invalid signed-off N65

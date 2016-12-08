@@ -1,0 +1,58 @@
+# Similar to ./getvalues.cf (getting values from a speicifc array index) but on
+# a foregin array instead of in the same bundle.
+bundle agent main
+{
+  methods:
+    "init";
+    "test";
+    "check";
+}
+bundle agent init
+{
+  vars:
+      "array[key1]" string => "k1v";
+      "array[key2]" slist => { "k2v" };
+      "array[key1][subkey1]" string => "k1s1v";
+      "array[key1][subkey2]" slist => { "k2s1v" };
+
+      "array_values_key1" slist => getvalues("array[key1]");
+  reports:
+   DEBUG::
+      "$(this.bundle) array_values_key1= $(array_values_key1)";
+}
+bundle agent test
+{
+  vars:
+      # Expected { "k1s1v", "k2s1v" };
+      "array_values_key1" slist => getvalues("init.array[key1]");
+
+  reports:
+   DEBUG::
+      "$(this.bundle) array_values_key1= $(array_values_key1)";
+}
+bundle agent check
+{
+  vars:
+    "expected_values" slist => { "k1s1v", "k2s1v" };
+
+    # diff_values contains unique values test.array_values not in expected_values
+    "diff_values" slist => difference( "test.array_values_key1", expected_values );
+    # intersection_values contains values in test.array_values that are also in expected_values
+    "intersection_values" slist => intersection( "test.array_values_key1", expected_values );
+
+  classes:
+    "pass_diff" expression => strcmp( length(diff_values), 0 );
+    "pass_intersection" expression => strcmp( length(intersection_values), 2);
+    "pass" expression => "pass_diff.pass_intersection";
+
+  reports:
+    DEBUG::
+      "$(this.bundle) Expect $(expected_values)";
+      "$(this.bundle) diff_value $(diff_values)";
+      "$(this.bundle) intersection_value $(intersection_values)";
+    pass::
+      "$(this.promise_filename) Pass";
+    !pass::
+      "$(this.promise_filename) FAIL";
+}
+

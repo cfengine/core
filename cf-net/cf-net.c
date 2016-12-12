@@ -31,6 +31,8 @@
 #include <addr_lib.h>           // ParseHostPort
 #include <net.h>                // SocketConnect
 #include <time.h>               // time_t, time, difftime
+#include <stat_cache.h>         // cf_remote_stat
+#include <string_lib.h>         // ToLowerStrInplace
 // TODO: MOVE addr_lib out of libpromises....
 /*
 #include <generic_agent.h>
@@ -42,7 +44,6 @@
 #include <conversion.h>
 #include <vars.h>
 #include <communication.h>
-#include <string_lib.h>
 #include <rlist.h>
 #include <scope.h>
 #include <policy.h>
@@ -77,8 +78,6 @@ static const struct option OPTIONS[] =
     {"version",     no_argument,        0, 'V'},
     {"interactive", no_argument,        0, 'i'},
     {"timestamp",   no_argument,        0, 'l'},
-    {"background",  optional_argument,  0, 'b'},
-    {"timeout",     required_argument,  0, 't'},
     {NULL,          0,                  0, '\0'}
 };
 
@@ -92,10 +91,8 @@ static const char *const HINTS[] =
     "Enable basic information output",
     "Do not perform action, only output what to do",
     "Output the version of the software",
-    "Enable interactive mode for key trust",
+    "Enable interactive mode",
     "Log timestamps on each line of log output",
-    "Parallelize connections (50 by default)",
-    "Connection timeout, seconds",
     NULL
 };
 
@@ -114,31 +111,28 @@ typedef struct
 } CFNetOptions;
 
 void CFNetSetDefault(CFNetOptions *opts);
-int CFNetRun(CFNetOptions *opts, char *cmd, char **args);
-int CFNetParse( int argc, char **argv,
-                CFNetOptions *opts, char **cmd, char ***args );
+int CFNetRun(CFNetOptions *opts, const char *CMD,char **args);
+int CFNetParse(int argc, char **argv,                        // Inputs
+               CFNetOptions *opts, char **cmd, char ***args); // Outputs
 
 int main(int argc, char **argv)
 {
     CFNetOptions opts;
-    char *cmd = NULL;
-    char **args = NULL;
+    char *cmd;
+    char **args;
 
-    int ret = CFNetParse(   argc, argv,          // Inputs
-                            &opts, &cmd, &args); // Outputs
+    int ret = CFNetParse(argc, argv,          // Inputs
+                         &opts, &cmd, &args); // Outputs
     if (ret == -1)
     {
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     ret = CFNetRun(&opts, cmd, args);
     return ret;
 }
 
 void CFNetSetDefault(CFNetOptions *opts){
-    if (opts == NULL)
-    {
-        return;
-    }
+    assert(opts != NULL);
     opts->debug       = false;
     opts->verbose     = false;
     opts->inform      = false;
@@ -150,30 +144,32 @@ void CFNetSetDefault(CFNetOptions *opts){
     opts->timeout     = 0;
 }
 
-int CFNetParse( int argc, char **argv,
-                CFNetOptions *opts, char **cmd, char ***args )
+int CFNetHelp(const char* topic){
+    printf("Unused topic: %s.\n", topic);
+    Writer *w = FileWriter(stdout);
+    WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, true);
+    FileWriterDetach(w);
+    exit(EXIT_SUCCESS);
+}
+
+int CFNetParse(int argc, char **argv,
+               CFNetOptions *opts, char **cmd, char ***args)
 {
+    assert(opts != NULL);
     extern char *optarg;
     extern int optind;//, opterr, optopt;
-    if (opts == NULL)
-    {
-        return -1;
-    }
     CFNetSetDefault(opts);
     int c = 0;
     int start_index = 1;
-    while ((c = getopt_long(    argc, argv, "hMdvInVilb:t:",
-                                OPTIONS, &start_index))
+    while ((c = getopt_long(argc, argv, "hMdvInVilb:t:",
+                            OPTIONS, &start_index))
             != -1)
     {
         switch (c)
         {
             case 'h':
             {
-                Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, true);
-                FileWriterDetach(w);
-                exit(EXIT_SUCCESS);
+                CFNetHelp(NULL);
                 break;
             }
             case 'd':
@@ -257,33 +253,45 @@ int CFNetPrint(char **args)
     return 0;
 }
 
-
-int CFNetConnectSingle(char *server)
+void CFNetInit()
 {
     CryptoInitialize();
     LoadSecretKeys();
     cfnet_init(NULL, NULL);
+}
+
+AgentConnection* CFNetOpenConnection(char *server)
+{
+
+    AgentConnection *conn = NULL;
     ConnectionFlags connflags = {
         .protocol_version = CF_PROTOCOL_LATEST,
         .trust_server = true
     };
-    int err = 0;
-    AgentConnection *conn = NULL;
+    int err;
+    char *buf = xstrdup(server);
+    char *host, *port;
+    ParseHostPort(buf, &host, &port);
+    if (port == NULL)
     {
-        char *buf = xstrdup(server);
-        char *host, *port;
-        ParseHostPort(buf, &host, &port);
-        if (port == NULL)
-        {
-            port = CFENGINE_PORT_STR;
-        }
-        conn = ServerConnection(host, port, 30, connflags, &err);
-        free(buf);
+        port = CFENGINE_PORT_STR;
     }
+    conn = ServerConnection(host, port, 30, connflags, &err);
+    free(buf);
     if (conn == NULL)
     {
         nprint("Failed to connect to '%s'.\n", server);
-        return 1;
+        return NULL;
+    }
+    return conn;
+}
+
+int CFNetConnectSingle(char *server)
+{
+    AgentConnection *conn = CFNetOpenConnection(server);
+    if (conn == NULL)
+    {
+        return -1;
     }
     nprint("Connected & authenticated successfully to '%s'.\n", server);
     DeleteAgentConn(conn);
@@ -298,6 +306,74 @@ int CFNetConnect(char **args)
         CFNetConnectSingle(args[i]);
         cfnet_silent = true;
     }
+    return 0;
+}
+
+void CFNetStatPrint(const char* file, int st_mode)
+{
+    if (S_ISDIR(st_mode))
+    {
+        nprint("'%s' is a directory.\n", file);
+    }
+    else if (S_ISREG(st_mode))
+    {
+        nprint("'%s' is a regular file.\n", file);
+    }
+    else if (S_ISSOCK(st_mode))
+    {
+        nprint("'%s' is a socket.\n", file);
+    }
+    else if (S_ISCHR(st_mode))
+    {
+        nprint("'%s' is a character device file.\n", file);
+    }
+    else if (S_ISBLK(st_mode))
+    {
+        nprint("'%s' is a block device file.\n", file);
+    }
+    else if (S_ISFIFO(st_mode))
+    {
+        nprint("'%s' is a named pipe (FIFO).\n", file);
+    }
+    else if (S_ISLNK(st_mode))
+    {
+        nprint("'%s' is a symbolic link.\n", file);
+    }
+    else
+    {
+        nprint("'%s' has an unrecognized st_mode.\n", file);
+    }
+}
+
+int CFNetStat(char **args)
+{
+    char *server = args[0];
+    char *file = args[1];
+    AgentConnection *conn = CFNetOpenConnection(server);
+    if (conn == NULL)
+    {
+        return -1;
+    }
+    bool encrypt = true;
+    struct stat sb;
+    int r = cf_remote_stat(conn, encrypt, file, &sb, "file");
+    if (r!= 0)
+    {
+        nprint("Could not stat: '%s'.\n", file);
+        // nprint("(Check cf-serverd output for more info)\n");
+    }
+    else
+    {
+        Log(LOG_LEVEL_INFO, "Detailed stat output:\n"
+                            "mode  = %jo, \tsize = %jd,\n"
+                            "uid   = %ju, \tgid = %ju,\n"
+                            "atime = %jd, \tmtime = %jd\n",
+            (uintmax_t) sb.st_mode,  (intmax_t)  sb.st_size,
+            (uintmax_t) sb.st_uid,   (uintmax_t) sb.st_gid,
+            (intmax_t)  sb.st_atime, (intmax_t)  sb.st_mtime);
+        CFNetStatPrint(file, sb.st_mode);
+    }
+    DeleteAgentConn(conn);
     return 0;
 }
 
@@ -379,14 +455,20 @@ int CFNetCommandSwitch(char *cmd, char **args)
 {
     CFNetIfMatchRun(cmd, "print",    CFNetPrint(args));
     CFNetIfMatchRun(cmd, "connect",  CFNetConnect(args));
+    CFNetIfMatchRun(cmd, "stat",     CFNetStat(args));
     CFNetIfMatchRun(cmd, "multi",    CFNetMulti(args[0]));
     CFNetIfMatchRun(cmd, "multitls", CFNetMultiTLS(args[0]));
+    CFNetIfMatchRun(cmd, "help",     CFNetHelp(args[0]));
     printf("'%s' is not a valid cf-net command.\n", cmd);
     return 1;
 }
 
-int CFNetRun(CFNetOptions *opts, char *cmd, char **args)
+int CFNetRun(CFNetOptions *opts, const char *CMD, char **args)
 {
+    char* cmd = xstrdup(CMD);
+
+    ToLowerStrInplace(cmd);
+
     if(opts->inform)
     {
         LogSetGlobalLevel(LOG_LEVEL_INFO);
@@ -405,6 +487,8 @@ int CFNetRun(CFNetOptions *opts, char *cmd, char **args)
     {
         Log(LOG_LEVEL_VERBOSE, "%s\n", args[i]);
     }
+    CFNetInit();
     int ret = CFNetCommandSwitch(cmd, args);
+    free(cmd);
     return ret;
 }

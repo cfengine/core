@@ -2930,6 +2930,7 @@ void GetSysVars(EvalContext *ctx)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "user_data", info, CF_DATA_TYPE_CONTAINER,
                                       "source=agent,user_info");
+        JsonDestroy(info);
     }
 }
 

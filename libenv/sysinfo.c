@@ -2928,7 +2928,8 @@ void GetSysVars(EvalContext *ctx)
     JsonElement *info = GetUserInfo(NULL);
     if (info != NULL)
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "user_data", info, CF_DATA_TYPE_CONTAINER,
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "user_data",
+                                      info, CF_DATA_TYPE_CONTAINER,
                                       "source=agent,user_info");
         JsonDestroy(info);
     }
@@ -2938,8 +2939,10 @@ void GetSysVars(EvalContext *ctx)
 
 void GetDefVars(EvalContext *ctx)
 {
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, "jq", "jq --compact-output --monochrome-output --ascii-output --unbuffered --sort-keys",
-                                  CF_DATA_TYPE_STRING, "invocation,source=agent,command_name=jq");
+    EvalContextVariablePutSpecial(
+        ctx, SPECIAL_SCOPE_DEF, "jq",
+        "jq --compact-output --monochrome-output --ascii-output --unbuffered --sort-keys",
+        CF_DATA_TYPE_STRING, "invocation,source=agent,command_name=jq");
 }
 /*****************************************************************************/
 

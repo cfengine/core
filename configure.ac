@@ -64,7 +64,7 @@ dnl exist in automake 1.11 and earlier, so we need to do this complicated logic
 dnl to determine whether we can disable it or not. If it doesn't exist as an
 dnl option, then serial tests are already the default.
 AC_MSG_CHECKING([automake version])
-m4_define(AUTOMAKE_VERSION, m4_normalize(m4_esyscmd([automake --version 2>&1 | sed -ne '/^automake/{s/^automake.* \([^ ][^ ]*\)$/\1/; p}'])))
+m4_define(AUTOMAKE_VERSION, m4_normalize(m4_esyscmd([automake --version 2>&1 | sed -ne '/^automake/{s/^automake.* \([^ ][^ ]*\)$/\1/; p;}'])))
 m4_define(SERIAL_TESTS, m4_bmatch(AUTOMAKE_VERSION, [^1\.\([0-9]\|1[0-1]\)\(\.\|$\)], [], [serial-tests]))
 AC_MSG_RESULT(AUTOMAKE_VERSION)
 
@@ -683,7 +683,12 @@ AC_TYPE_MODE_T
 AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_TYPE_PID_T
-AC_CHECK_TYPES(clockid_t)
+AC_CHECK_TYPES(clockid_t, [], [], [[
+#ifdef HAVE_TIME_H
+# include <time.h>
+#endif
+]])
+
 AC_CHECK_TYPES(socklen_t, [], [], [[
 #ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>

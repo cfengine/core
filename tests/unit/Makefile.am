@@ -204,6 +204,13 @@ XFAIL_TESTS = evalfunction_test     # Redmine 6318
 XFAIL_TESTS += set_domainname_test  # Redmine 6317
 endif
 
+if MACOSX
+XFAIL_TESTS = set_domainname_test
+XFAIL_TESTS += evalfunction_test
+XFAIL_TESTS += process_test
+XFAIL_TESTS += mon_processes_test
+endif
+
 if HPUX
 XFAIL_TESTS = mon_load_test # Redmine #3569
 endif

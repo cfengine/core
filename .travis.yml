@@ -1,5 +1,4 @@
 language: c
-sudo: required
 
 addons:
   artifacts:
@@ -8,6 +7,7 @@ addons:
 
 env:
   global:
+    - CI_NODE_TOTAL=6
       # Quickest to build, fast performing, debugable builds.
     - CFLAGS="-g1 -O1"
       # upload log files, tarballs etc artifacts from the build.
@@ -20,104 +20,43 @@ env:
 # https://docs.travis-ci.com/user/multi-os/
 matrix:
   include:
-    - env: JOB_TYPE=compile_and_unit_test
-    - env: JOB_TYPE=acceptance_tests_common
+    - os: linux
+      sudo: required
+      env: JOB_TYPE=compile_and_unit_test
+    - os: linux
+      sudo: required
+      env: JOB_TYPE=acceptance_tests_common
       # The unsafe acceptance tests don't work with SIMFS which is the default
       # filesystem in Travis; so change OS to Trusty, which uses ext4.
-    - env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
-
+    - os: linux
+      sudo: required
+      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
 
 before_install:
-- sudo apt-get -qq update
-  # Needed to build
-- sudo apt-get install -y libssl-dev libpam0g-dev libtokyocabinet-dev
-  # Optional
-- sudo apt-get install -y libxml2-dev libacl1-dev
-
+  - chmod ug+x ./travis-scripts/*
+  - source ./travis-scripts/before_install.sh
 
 script:
-- INSTDIR=$HOME/cf_install
-- cd $TRAVIS_BUILD_DIR
-
-# - if [ "$JOB_TYPE" = style_check ];
-#   then
-#       # sh tests/misc/style_check.sh;
-#       exit 0;
-#   fi
-
-  # Fetch the tags from upstream, even if we are running on a foreign clone;
-  # Needed for determine-version.py to work
-- git remote add upstream https://github.com/cfengine/core.git  &&
-  git fetch -q upstream 'refs/tags/*:refs/tags/*'
-
-- NO_CONFIGURE=1 ./autogen.sh
-- ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script
-
-- make dist
-- export DIST_TARBALL=`echo cfengine-*.tar.gz`
-
-- if [ "$JOB_TYPE" = compile_and_unit_test ];
-  then
-      make CFLAGS=-Werror  &&
-      make -C tests/unit check;
-      return;
-  else
-      make;
-  fi
-
-- cd tests/acceptance
-- chmod -R go-w .
-
-- if [ "$JOB_TYPE" = acceptance_tests_common ];
-  then
-      ./testall --tests=common;
-      return;
-  fi
-
-  # WARNING: the following job runs the selected tests as root!
-- if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network_etc ];
-  then
-      ./testall --gainroot=sudo --tests=timed,errorexit,libxml2,libcurl,serial,network,unsafe;
-      return;
-  fi
-
+  - source ./travis-scripts/script.sh
 
 before_deploy:
-
-  # A tag ending with "number.number" is not a prerelease
-- if echo $DIST_TARBALL | grep -E -q '[0-9]{1,2}\.[0-9]{1,2}\.tar\.gz';
-  then
-      IS_PRERELEASE=false;
-  else
-      IS_PRERELEASE=true;
-  fi;
-  export IS_PRERELEASE
-
+  - source ./travis-scripts/before_deploy.sh
 
 # We deploy when setting tags only, which basically never happens
 # on master branch. Cherry-pick this part and alter it properly into
 # the release branches.
-
 deploy:
   skip_cleanup: true
   provider: releases
   # Remember to set it as private variable in Travis-CI settings
   api_key: $GITHUB_RELEASE_TOKEN
   # Does not work, I get the error that "true" is not a boolean
-  #  prerelease: $IS_PRERELEASE
-  file:
-    - "$DIST_TARBALL"
+  prerelease: $IS_PRERELEASE
+  file: "$DIST_TARBALL"
   on:
     tags: true
     # Avoid upload from all the multiple parallel matrix jobs
     condition: "$CF_VERSION = latest"
 
-
 after_script:
-- cd $TRAVIS_BUILD_DIR
-- mkdir artifacts
-- test "x$DIST_TARBALL" != x  &&  cp --verbose "$DIST_TARBALL" artifacts/
-- gzip config.log  &&  mv config.log.gz artifacts/
-- gzip tests/acceptance/summary.log  &&  mv tests/acceptance/summary.log.gz artifacts/acceptance_summary.log.gz
-- gzip tests/acceptance/test.log     &&  mv tests/acceptance/test.log.gz    artifacts/acceptance.log.gz
-- zip -r artifacts/acceptance_workdir.zip tests/acceptance/workdir
+  - source ./travis-scripts/after_script.sh

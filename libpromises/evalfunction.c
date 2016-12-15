@@ -2523,13 +2523,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
         return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
     }
 
-    Rlist *values = NULL;
-    if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
-    {
-        JsonDestroyMaybe(json, allocated);
-        return (FnCallResult) { FNCALL_SUCCESS, { values, RVAL_TYPE_LIST } };
-    }
-
+    Rlist *values = NULL;                      /* start with an empty Rlist */
     CollectContainerValues(ctx, &values, json);
 
     JsonDestroyMaybe(json, allocated);

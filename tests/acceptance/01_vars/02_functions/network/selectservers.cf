@@ -24,7 +24,7 @@ bundle agent test
 
       # The first two hosts listen to port 80, the third does not listen
       # to port 80, the fourth does not even resolve
-      "hosts"     slist   => { "cfengine.com", "www.ntua.gr", "8.8.8.8", "inexistent-server" };
+      "hosts"     slist   => { "cfengine.com", "www.ntua.gr", "smtp.mail.yahoo.com", "inexistent-server" };
       "retval"    int     => selectservers("@(hosts)","80","","","100","alive_servers");
 }
 

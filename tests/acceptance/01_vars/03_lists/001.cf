@@ -30,7 +30,8 @@ b y
 b z
 c x
 c y
-c z";
+c z
+blah";
 
   files:
       "$(G.testfile).$(states)"
@@ -69,7 +70,7 @@ bundle edit_line test_insert
       "null" slist => { "cf_null" };
       "nulls" slist => { "cf_null", "cf_null", "cf_null" };
 
-      "not_an_array" string => "zero";
+      "not_an_array" string => "blah";
       "no_values" slist => getvalues("not_an_array");
 
   insert_lines:

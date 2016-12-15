@@ -1,0 +1,50 @@
+#######################################################
+#
+# CFE-2532: failure to get one file causes all subsequent copy_from
+#           promises to also fail
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  files:
+      # Copy 1st file successfully
+      "$(G.testdir)/destfile1"
+          copy_from => dcs_remote_cp("simple_source", "127.0.0.1", "9876"),
+          classes   => classes_generic("copy1");
+      # Copy 2nd file, WILL FAIL
+      "$(G.testdir)/destfile2"
+          copy_from => dcs_remote_cp("DOES_NOT_EXIST", "127.0.0.1", "9876"),
+          classes   => classes_generic("copy2");
+      # Copy 3rd file, MUST SUCCEED DESPITE PREVIOUS FAILURE
+      "$(G.testdir)/destfile3"
+          copy_from => dcs_remote_cp("simple_source", "127.0.0.1", "9876"),
+          classes   => classes_generic("copy3");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "dummy"   expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+      "exists1" expression => fileexists("$(G.testdir)/destfile1");
+      "exists2" expression => fileexists("$(G.testdir)/destfile2");
+      "exists3" expression => fileexists("$(G.testdir)/destfile3");
+
+  reports:
+
+    copy1_repaired.exists1.!copy1_failed . copy3_repaired.exists3.!copy3_failed . !copy2_repaired.!exists2.copy2_failed ::
+      "$(fn[1]) Pass";
+}

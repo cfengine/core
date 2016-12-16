@@ -155,9 +155,6 @@
 	- getvalues() now behaves correctly for old CFEngine arrays of depth 1.
 	  Known issues: getvalues() still misbehaves with double-indexed arrays
 	  (see (CFE-2504, CFE-2536)
-	- Fix ability to select INI region with metachars (CFE-2519)
-	- Fix rare bug that would sometimes prevent redis-server from launching.
-
 
 3.9.0:
 	New features/additions:

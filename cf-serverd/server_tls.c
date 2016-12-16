@@ -704,7 +704,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         zret = PreprocessRequestPath(filename, sizeof(filename));
         if (zret == (size_t) -1)
         {
-            goto protocol_error;
+            RefuseAccess(conn, recvbuffer);
+            return true;
         }
 
         PathRemoveTrailingSlash(filename, strlen(filename));
@@ -765,7 +766,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         zret = PreprocessRequestPath(filename, sizeof(filename) - 1);
         if (zret == (size_t) -1)
         {
-            goto protocol_error;
+            RefuseAccess(conn, recvbuffer);
+            return true;
         }
 
         /* OPENDIR *must* be directory. */
@@ -897,7 +899,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         zret = PreprocessRequestPath(filename, sizeof(filename));
         if (zret == (size_t) -1)
         {
-            goto protocol_error;
+            RefuseAccess(conn, recvbuffer);
+            return true;
         }
 
         PathRemoveTrailingSlash(filename, strlen(filename));

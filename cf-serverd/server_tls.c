@@ -558,6 +558,15 @@ static ProtocolCommandNew GetCommandNew(char *str)
 }
 
 
+/**
+ * Currently this function returns false when we want the connection
+ * closed, and true, when we want to proceed further with requests.
+ *
+ * @TODO So we need this function to return more than true/false, because now
+ * we return true even when access is denied! E.g. return -1 for error, 0 on
+ * success, 1 on access denied. It can be an option if connection will close
+ * on denial.
+ */
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
     /* The CF_BUFEXT extra space is there to ensure we're not *reading* out of
@@ -581,7 +590,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     if (received == -1)
     {
-        /* Already logged in case of error. */
+        /* Already Log()ged in case of error. */
         return false;
     }
     if (received > CF_BUFSIZE - 1)
@@ -814,6 +823,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
+        Log(LOG_LEVEL_DEBUG, "Clocks were off by %ld",
+            (long) tloc - (long) trem);
+
         if (DENYBADCLOCKS && (drift * drift > CLOCK_DRIFT * CLOCK_DRIFT))
         {
             snprintf(sendbuffer, sizeof(sendbuffer),
@@ -823,11 +835,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
             return true;
         }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "Clocks were off by %ld", (long) tloc - (long) trem);
-            StatFile(conn, sendbuffer, filename);
-        }
+
+        StatFile(conn, sendbuffer, filename);
 
         return true;
     }
@@ -1022,11 +1031,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     /* We should only reach this point if something went really bad, and
      * close connection. In all other cases (like access denied) connection
      * shouldn't be closed.
-
-     * TODO So we need this function to return more than true/false, because
-     * now we return true even when access is denied! E.g. return -1 for
-     * error, 0 on success, 1 on access denied. It can be an option if
-     * connection will close on denial. */
+     */
 
 protocol_error:
     strcpy(sendbuffer, "BAD: Request denied");

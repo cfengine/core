@@ -20,6 +20,9 @@
 	- Allow specifying agent maxconnections via def.json (CFE-2461)
 	- Add getuserinfo() function
 	- Add body agent control select_end_match_eof option. (CFE-2390)
+	- Add class to enable post transfer verification during policy updates
+	- Add ability to append to bundlesequnece with def.json (CFE-2460)
+	- policy_server.dat now appends a newline and supports host & port
 
 	Changes:
 	- Rewrite iteration engine to avoid combinatorial explosion with nested variable expansions.
@@ -67,6 +70,22 @@
 	- Change: Switch processes restart_class logging to verbose
 	- Change: Log level for keeping verbatim JSON to DEBUG (CFE-2141)
 	- Change: Require network before cfengine services (CFE-2435)
+	- Behaviour change: getvalues(inexistent_var) returns an empty list.
+	  Restores 3.7.x and earlier behaviour. (CFE-2479)
+	- Behaviour change: when used with CFEngine 3.10.0 or greater,
+	  bundles set_config_values() and set_line_based() are appending a
+	  trailing space when inserting a configuration option with empty value.
+	  (CFE-2466)
+	- Behaviour change: it always returns a list now. Even when v is a simple
+	  string (i.e. not an iterable) it will return an slist with one element:
+	  the value of the string variable.
+	- Behaviour change: readintlist() now prints an error if the
+	  file contains real numbers, not integers, and aborts; previously it was
+	  printing an info-level error message, was half-reading an integer out of
+	  the real, and was continuing successfully.
+	- Ensure synchronous start and stop with systemctl (ENT-2841)
+	- Change select_region INI_section to match end of section or end of file
+	  (CFE-2519)
 
 	Bug fixes:
 	- fix files promise not setting ACL properly on directories. (CFE-616)
@@ -125,6 +144,19 @@
 	- Be less verbose if a network interface doesn't have a MAC address.
 	  (CFE-1995)
 	- Fix: CFEngine choking on standard services (CFE-2806)
+	- fix insert_lines related memory corruption (CFE-2520)
+	- fix cf-serverd crash when reporting corrupted data. (ENT-3023)
+	- Fix ability to manage INI sections with metachars for
+	  manage_variable_values_ini and set_variable_values_ini (CFE-2519)
+	- Fix apt_get package module incorrectly using interactive mode.
+	- Fix crash on Solaris when ps ucb variant is not available. (CFE-2506)
+	- cf-serverd: Do not close connection when file does not exist.
+	  (CFE-2532)
+	- getvalues() now behaves correctly for old CFEngine arrays of depth 1.
+	  Known issues: getvalues() still misbehaves with double-indexed arrays
+	  (see (CFE-2504, CFE-2536)
+	- Fix ability to select INI region with metachars (CFE-2519)
+	- Fix rare bug that would sometimes prevent redis-server from launching.
 
 
 3.9.0:

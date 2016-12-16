@@ -1,3 +1,41 @@
+3.9.2:
+	- cf-serverd: Do not close connection when file does not exist.
+	  (CFE-2532)
+	- Allow editing fields in lines longer than 4k (CFE-2438)
+	- fix files promise not setting ACL properly on directories. (CFE-616)
+	- Fix connection cache, reuse connections when possible. (CFE-2447)
+	- When no file is provided when calling cf-promises
+	  with cf or json output, use promises.cf by default. This restores the
+	  previous behavior. (CFE-2375)
+	- Fix apt_get package module incorrectly using interactive mode.
+	- Allow specifying agent maxconnections via def.json (CFE-2461)
+	- Fix crash on Solaris when ps ucb variant is not available. (CFE-2506)
+	- Behaviour change: getvalues(inexistent_var) returns an empty list.
+	  Restores 3.7.x and earlier behaviour. (CFE-2479)
+	- Add: Ensure appropriate permissions for SSL files (ENT-760)
+	- ,Fix double logging of output_prefix, and log process name for cf-agent syslog messages.
+	  (CFE-2225)
+	- Remove 2k limit on strings length when writing JSON policies
+	  (CFE-2383)
+	- Bugfix: getvalues() now behaves correctly for old CFEngine
+	  arrays of depth 1.
+	- Behaviour change: it always returns a list now. Even when v is a simple
+	  string (i.e. not an iterable) it will return an slist with one element:
+	  the value of the string variable.
+	  Known issues: getvalues() still misbehaves with double-indexed arrays
+	  (seeand. (CFE-2504, CFE-2536)
+	- Fix ttime_range constraint to go higher than 2G as number of seconds.
+	- fix cf-serverd crash when reporting corrupted data. (ENT-3023)
+	- cf-serverd should reload def.json when reloading policy (CFE-2406)
+	- Fixed parsing of host name/IP and port number in cf-runagent
+	  (CFE-546)
+	- Fix cumulative() to accept up to 1000 years, like it's documented.
+	- Enterprise: Fix Postgres database migration from 3.8- to 3.9+.
+	  (ENT-2760)
+	- fix insert_lines related memory corruption (CFE-2520)
+	- define kept outcome with action warn if edit_line is as expected
+	  (CFE-2424)
+
 3.9.1:
 	- Change: Log level for keeping verbatim JSON to DEBUG (CFE-2141)
 	- Change (masterfiles): Definition of from_cfexecd for

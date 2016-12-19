@@ -28,6 +28,8 @@ bundle agent check
     # Since the agent is run with dry-run (-n) there should be no statement of permissions changing.
     # In fact, permissions are not changed, the agent only says they are, so it is only the false statement that needs to be checked.
     "test_agent_output"
-      usebundle => dcs_passif_output(".*has permission 0777 - \[should be 0700\].*", ".*had permission 0777, changed it to 0700.*", $(command), $(this.promise_filename));
+      usebundle => dcs_passif_output(".*has permission 0777.*should be 0700.*",
+                                     ".*had permission 0777, changed it to 0700.*",
+                                     $(command), $(this.promise_filename));
 
 }

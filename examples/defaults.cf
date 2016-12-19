@@ -25,15 +25,9 @@
 # Default values for variables and parameters, introduced 3.4.0
 #
 
-body common control
-
-{
-      bundlesequence  => { "example" };
-}
-
 ###########################################################
 
-bundle agent example
+bundle agent main
 
 {     
   defaults:
@@ -82,4 +76,15 @@ bundle agent mymethod(a,b)
 
 }
 
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: The value of a is AAAAAAAAA
+#@ R: The value of b is bbb
+#@ R: The value of no_return is ok
+#@ R: The default value of X is I am a default value
+#@ R: The default value of Y is I am a default list item 1
+#@ R: The default value of Y is I am a default list item 2
+#@ ```
+#+end_src
 

@@ -46,7 +46,10 @@ JsonElement *RvalContainerValue(Rval rval);
 
 const char *RvalTypeToString(RvalType type);
 
-Rval RvalNew(const void *item, RvalType type);
+Rval RvalNULL(void);
+Rval RvalNew(const void *item, RvalType type); // copies
+Rval RvalNewScalar(const void *item);    // copies
+Rval RvalNewUseScalar(const void *item); // doesn't copy
 Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map);
 Rval RvalCopy(Rval rval);
 Rval RvalCopyRewriter(Rval rval, JsonElement *map);

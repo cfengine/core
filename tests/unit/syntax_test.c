@@ -104,7 +104,7 @@ static void test_copy_from_servers(void)
 
 static void test_typecheck_null_rval(void)
 {
-    SyntaxTypeMatch err = CheckConstraintTypeMatch("whatever", (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+    SyntaxTypeMatch err = CheckConstraintTypeMatch("whatever", RvalNULL(),
                                                    CF_DATA_TYPE_STRING, "abc", 0);
     assert_int_equal(SYNTAX_TYPE_MATCH_ERROR_GOT_NULL, err);
 }

@@ -48,8 +48,7 @@ void CopyBodyConstraintsToPromise(EvalContext *ctx, Promise *pp,
 
         if (IsDefinedClass(ctx, scp->classes))
         {
-            Rval returnval = ExpandPrivateRval(ctx, NULL, "body",
-                                               scp->rval.item, scp->rval.type);
+            Rval returnval = ExpandPrivateRval(ctx, NULL, "body", scp->rval);
             PromiseAppendConstraint(pp, scp->lval, returnval, false);
         }
     }
@@ -165,8 +164,7 @@ static void AppendExpandedBodies(EvalContext *ctx, Promise *pcopy,
                 /* Expand body vars; note it has to happen ONLY ONCE. */
                 if (expand_body_vars)
                 {
-                    Rval newrv2 = ExpandPrivateRval(ctx, NULL, "body",
-                                                    newrv.item, newrv.type);
+                    Rval newrv2 = ExpandPrivateRval(ctx, NULL, "body", newrv);
                     RvalDestroy(newrv);
                     newrv = newrv2;
                 }
@@ -568,7 +566,13 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
     *excluded = false;
 
-    Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
+    const Constraint *promiser_attribute = PromiseGetConstraint(pp, "promiser_attribute");
+
+    Rval returnval = promiser_attribute ?
+        ExpandPrivateRval(ctx, NULL, "this", promiser_attribute->rval) :
+        ExpandPrivateRval(ctx, NULL, "this", (Rval) {pp->promiser, RVAL_TYPE_SCALAR});
+
+
     if (returnval.item == NULL)
     {
         assert(returnval.type == RVAL_TYPE_LIST ||
@@ -577,8 +581,19 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         *excluded = true;
         return NULL;
     }
+
     Promise *pcopy = xcalloc(1, sizeof(Promise));
-    pcopy->promiser = RvalScalarValue(returnval);
+
+    // if expanding the promiser_attribute did something, use it as the promiser now
+    if (RVAL_TYPE_SCALAR == returnval.type)
+    {
+        pcopy->promiser = xstrdup(RvalScalarValue(returnval));
+    }
+    else
+    {
+        pcopy->promiser = RvalToString(promiser_attribute->rval);
+        CanonifyNameInPlace(pcopy->promiser);
+    }
 
     /* TODO remove the conditions here for fixing redmine#7880. */
     if ((strcmp("files", pp->parent_promise_type->name) != 0) &&

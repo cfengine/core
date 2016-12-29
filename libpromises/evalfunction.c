@@ -3554,7 +3554,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                                         "select_server_bundle", "agent", NULL, NULL);
         PromiseType *tp = BundleAppendPromiseType(bp, "select_server");
 
-        PromiseTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);
+        PromiseTypeAppendPromise(tp, "function", RvalNULL(), NULL, NULL);
     }
 
     size_t count = 0;

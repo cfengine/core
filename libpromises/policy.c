@@ -1316,8 +1316,8 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     if (strcmp("service_method", body->name) == 0)
     {
         Rlist *args = NULL;
-        RlistAppendRval(&args, RvalNew("$(this.promiser)", RVAL_TYPE_SCALAR));
-        RlistAppendRval(&args, RvalNew("$(this.service_policy)", RVAL_TYPE_SCALAR));
+        RlistAppendRval(&args, RvalNewScalar("$(this.promiser)"));
+        RlistAppendRval(&args, RvalNewScalar("$(this.service_policy)"));
 
         FnCall *service_bundle = FnCallNew("standard_services", args);
         BodyAppendConstraint(body, "service_bundle", (Rval) { service_bundle, RVAL_TYPE_FNCALL }, "any", false);
@@ -1356,7 +1356,8 @@ PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
 
 /*******************************************************************/
 
-Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses)
+
+Promise *PromiseTypeAppendPromiseWithPromiserAttribute(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses, Rval promiser_attribute)
 {
     assert(promiser && "Missing promiser");
     assert(type && "Missing promise type");
@@ -1384,10 +1385,20 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
 
     if (varclasses != NULL)
     {
-        PromiseAppendConstraint(pp, "ifvarclass", RvalNew(varclasses, RVAL_TYPE_SCALAR), true);
+        PromiseAppendConstraint(pp, "ifvarclass", RvalNewScalar(varclasses), true);
+    }
+
+    if (promiser_attribute.item)
+    {
+        PromiseAppendConstraint(pp, "promiser_attribute", RvalCopy(promiser_attribute), false);
     }
 
     return pp;
+}
+
+Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses)
+{
+    return PromiseTypeAppendPromiseWithPromiserAttribute(type, promiser, promisee, classes, varclasses, RvalNULL());
 }
 
 static void BundleDestroy(Bundle *bundle)
@@ -1502,7 +1513,7 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
                                   RvalScalarValue(old_cp->rval),
                                   RvalScalarValue(rval));
                     RvalDestroy(cp->rval);
-                    rval = RvalNew(BufferData(grow), RVAL_TYPE_SCALAR);
+                    rval = RvalNewScalar(BufferData(grow));
                     BufferDestroy(grow);
                     cp->rval = rval;
                 }
@@ -2158,7 +2169,7 @@ static Promise *PromiseTypeAppendPromiseJson(PromiseType *promise_type, JsonElem
 {
     const char *promiser = JsonObjectGetAsString(json_promise, "promiser");
 
-    Promise *promise = PromiseTypeAppendPromise(promise_type, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
+    Promise *promise = PromiseTypeAppendPromise(promise_type, promiser, RvalNULL(), context, NULL);
 
     JsonElement *json_attributes = JsonObjectGetAsArray(json_promise, "attributes");
     for (size_t i = 0; i < JsonLength(json_attributes); i++)

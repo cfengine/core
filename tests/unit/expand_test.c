@@ -410,7 +410,7 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
-    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
+    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", RvalNULL(), "any", NULL);
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
@@ -465,7 +465,7 @@ static void test_expand_promise_slist(void **state)
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
-    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
+    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", RvalNULL(), "any", NULL);
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
@@ -533,7 +533,7 @@ static void test_expand_promise_array_with_slist_arg(void **state)
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
-    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
+    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", RvalNULL(), "any", NULL);
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     EvalContextStackPushPromiseTypeFrame(ctx, promise_type);

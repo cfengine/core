@@ -975,6 +975,27 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
      *      hopefully overwriting the previous values, but possibly not! */
     }
 
+    // Recompute `with`
+    for (size_t i = 0; i < SeqLength(iterctx->pp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(iterctx->pp->conlist, i);
+        if (StringSafeEqual(cp->lval, "with"))
+        {
+            Rval final = EvaluateFinalRval(evalctx, PromiseGetPolicy(iterctx->pp), NULL,
+                                           "this", cp->rval, false, iterctx->pp);
+            if (final.type == RVAL_TYPE_SCALAR && !IsCf3VarString(RvalScalarValue(final)))
+            {
+                EvalContextVariablePutSpecial(evalctx, SPECIAL_SCOPE_THIS,
+                                              "with", RvalScalarValue(final),
+                                              CF_DATA_TYPE_STRING,
+                                              "source=promise_iteration/with");
+            }
+            else
+            {
+                RvalDestroy(final);
+            }
+        }
+    }
     iterctx->count++;
     return true;
 }

@@ -1381,6 +1381,25 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");
+
+    // Recompute `with`
+    for (size_t i = 0; i < SeqLength(owner->conlist); i++)
+    {
+        Constraint *cp = SeqAt(owner->conlist, i);
+        if (StringSafeEqual(cp->lval, "with"))
+        {
+            Rval final = EvaluateFinalRval(ctx, PromiseGetPolicy(owner), NULL,
+                                           "this", cp->rval, false, owner);
+            if (final.type == RVAL_TYPE_SCALAR && !IsCf3VarString(RvalScalarValue(final)))
+            {
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "with", RvalScalarValue(final), CF_DATA_TYPE_STRING, "source=promise_iteration/with");
+            }
+            else
+            {
+                RvalDestroy(final);
+            }
+        }
+    }
 }
 
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx)

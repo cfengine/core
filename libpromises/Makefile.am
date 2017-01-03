@@ -55,7 +55,6 @@ libpromises_la_SOURCES = \
         cf3lex.l \
         acl_tools.h acl_tools_posix.c \
         actuator.c actuator.h \
-        addr_lib.c addr_lib.h \
         assoc.c assoc.h \
         audit.c audit.h \
         attributes.c attributes.h \

@@ -23,12 +23,13 @@
 */
 
 #include <addr_lib.h>
+#include <cfnet.h>
 
-#include <item_lib.h>
 #include <logging.h>
 #include <string_lib.h>
 
 #define CF_ADDRSIZE 128
+#define CF_MAXVARSIZE 1024
 
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
@@ -556,22 +557,6 @@ bool IsLoopbackAddress(const char *address)
         return true;
     }
 
-    return false;
-}
-
-bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
- /* Does this address belong to a local interface */
-{
-    for (const Item *ip = ip_addresses; ip != NULL; ip = ip->next)
-    {
-        if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
-        {
-            Log(LOG_LEVEL_DEBUG, "Identifying '%s' as one of my interfaces", adr);
-            return true;
-        }
-    }
-
-    Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
     return false;
 }
 

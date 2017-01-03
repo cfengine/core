@@ -93,5 +93,6 @@ void SetItemListCounter(Item *ptr, const char *string, int value);
 char *ItemList2CSV(const Item *list);
 size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size, char separator);
 int ItemListSize(const Item *list);
+bool IsInterfaceAddress(const Item *ip_addresses, const char *adr);
 
 #endif

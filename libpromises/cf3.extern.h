@@ -67,7 +67,7 @@ extern const char *const CF_AGENTTYPES[];
 
 extern int CFA_MAXTHREADS;
 extern AgentType THIS_AGENT_TYPE;
-extern int LASTSEENEXPIREAFTER;
+extern long LASTSEENEXPIREAFTER;
 extern const char *DEFAULT_COPYTYPE;
 
 extern const char *const DAY_TEXT[];

@@ -46,7 +46,7 @@ static void wait_for_child(bool impatient)
         {
             errno = 0;
             int ret = kill(SPAWNED_PID, SIGKILL);
-            if (ret == -1 && errno == ESRCH);
+            if (ret == -1 && errno == ESRCH)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Child process to be killed does not exist (PID %jd)",
@@ -954,7 +954,7 @@ static void test_take_listen_message(void)
                 assert_true(none && "can receive fd ignoring message");
                 assert_true(chat && "can use the received fds");
 
-                if (waitpid(new_pid, NULL, 1) > 0);
+                if (waitpid(new_pid, NULL, 1) > 0)
                 {
                     SPAWNED_PID = -1;
                 }
@@ -1134,7 +1134,7 @@ static void test_take_listen_silent(void)
                 assert_true(none && "can receive fd ignoring no message");
                 assert_true(chat && "can use the received fds");
 
-                if (waitpid(new_pid, NULL, 1) > 0);
+                if (waitpid(new_pid, NULL, 1) > 0)
                 {
                     SPAWNED_PID = -1;
                 }

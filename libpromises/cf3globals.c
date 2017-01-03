@@ -46,7 +46,7 @@ AgentType THIS_AGENT_TYPE; /* GLOBAL_C, initialized later */
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
-int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
+long LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
 
 /*****************************************************************************/
 /* Compatibility infrastructure                                              */

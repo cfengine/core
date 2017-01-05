@@ -43,7 +43,7 @@ struct DBHandle_
 {
     /* Filename of database file */
     char *filename;
-    
+
     /* Name of specific sub-db */
     char *subname;
 
@@ -148,7 +148,7 @@ char *DBIdToSubPath(dbid id, const char *subdb_name)
         ProgrammingError("Unable to construct sub database filename for file"
                 "%s_%s", DB_PATHS_STATEDIR[id], subdb_name);
     }
-    
+
     char *native_filename = MapNameCopy(filename);
     free(filename);
 
@@ -195,9 +195,9 @@ bool IsSubHandle(DBHandle *handle, dbid id, const char *name)
 static DBHandle *DBHandleGetSubDB(dbid id, const char *name)
 {
     ThreadLock(&db_handles_lock);
-    
+
     DynamicDBHandles *handles_list = db_dynamic_handles;
-    
+
     while (handles_list)
     {
         if (IsSubHandle(handles_list->handle, id, name))
@@ -207,26 +207,26 @@ static DBHandle *DBHandleGetSubDB(dbid id, const char *name)
         }
         handles_list = handles_list->next;
     }
-    
+
     DBHandle *handle = xcalloc(1, sizeof(DBHandle));
     handle->filename = DBIdToSubPath(id, name);
     handle->subname = SafeStringDuplicate(name);
-    
+
     /* Initialize mutexes as error-checking ones. */
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
     pthread_mutex_init(&handle->lock, &attr);
     pthread_mutexattr_destroy(&attr);
-    
+
     /* Prepend handle to global list. */
     handles_list = xcalloc(1, sizeof(DynamicDBHandles));
     handles_list->handle = handle;
     handles_list->next = db_dynamic_handles;
     db_dynamic_handles = handles_list;
-    
+
     ThreadUnlock(&db_handles_lock);
-    
+
     return handle;
 }
 
@@ -311,7 +311,7 @@ void CloseAllDBExit()
             CloseDBInstance(&db_handles[i]);
         }
     }
-    
+
     DynamicDBHandles *db_dynamic_handles_list = db_dynamic_handles;
     while (db_dynamic_handles_list)
     {
@@ -432,11 +432,11 @@ void CloseDB(DBHandle *handle)
 bool CleanDB(DBHandle *handle)
 {
     ThreadLock(&handle->lock);
-    
+
     bool ret = DBPrivClean(handle->priv);
-    
+
     ThreadUnlock(&handle->lock);
-    
+
     return ret;
 }
 

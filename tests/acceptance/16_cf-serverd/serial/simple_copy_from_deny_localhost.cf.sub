@@ -72,5 +72,4 @@ bundle agent check
       "$(fn[1]) Pass";
     repaired1_classic|repaired1_latest|repaired2_classic|repaired2_latest::
       "$(fn[1]) FAIL";
-
 }

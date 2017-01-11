@@ -1080,3 +1080,19 @@ Item *RawLoadItemList(const char *filename)
 
     return ReverseItemList(list);
 }
+
+bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
+ /* Does this address belong to a local interface */
+{
+    for (const Item *ip = ip_addresses; ip != NULL; ip = ip->next)
+    {
+        if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "Identifying '%s' as one of my interfaces", adr);
+            return true;
+        }
+    }
+
+    Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
+    return false;
+}

@@ -40,6 +40,7 @@ SUBDIRS = libcompat \
 	cf-runagent \
 	cf-serverd \
 	cf-upgrade \
+	cf-net \
 	misc \
 	ext \
 	examples \

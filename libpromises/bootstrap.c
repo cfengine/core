@@ -135,172 +135,22 @@ void EvalContextSetPolicyServer(EvalContext *ctx, const char *new_policy_server)
     }
 }
 
-
 //*******************************************************************
 // POLICY SERVER FILE FUNCTIONS:
 //*******************************************************************
-
-static char *PolicyServerFilename(const char *workdir)
-{
-   return StringFormat("%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);
-}
-
-/**
- * @brief     Reads the policy_server.dat file.
- * @param[in] workdir the directory of policy_server.dat usually GetWorkDir()
- * @return    Contents of policy_server.dat file. Null terminated.
- */
-char *ReadPolicyServerFile(const char *workdir)
-{
-    char contents[CF_MAX_SERVER_LEN] = "";
-
-    char *filename = PolicyServerFilename(workdir);
-    FILE *fp = fopen(filename, "r");
-    if (fp == NULL)
-    {
-        Log( LOG_LEVEL_VERBOSE, "Could not open file '%s' (fopen: %s)",
-             filename, GetErrorStr() );
-        free(filename);
-        return NULL;
-    }
-
-    if (fgets(contents, CF_MAX_SERVER_LEN, fp) == NULL)
-    {
-        Log( LOG_LEVEL_VERBOSE, "Could not read file '%s' (fgets: %s)",
-             filename, GetErrorStr() );
-        free(filename);
-        fclose(fp);
-        return NULL;
-    }
-    fclose(fp);
-    char *start = TrimWhitespace(contents);
-    free(filename);
-    return xstrdup(start);
-}
 
 /**
  * @brief     Reads the policy_server.dat and sets the internal variables.
  * @param[in] ctx EvalContext used by EvalContextSetPolicyServer()
  * @param[in] workdir the directory of policy_server.dat usually GetWorkDir()
  */
- void SetPolicyServerFromFile(EvalContext *ctx, const char *workdir)
+ void EvalContextSetPolicyServerFromFile(EvalContext *ctx, const char *workdir)
  {
-     char *contents = ReadPolicyServerFile(workdir);
+     char *contents = PolicyServerReadFile(workdir);
      EvalContextSetPolicyServer(ctx, contents);
      free(contents);
  }
 
-
-/**
- * @brief      Reads and parses the policy_server.dat file.
- *
- * @code{.c}
- * //Typical usage:
- * char *host, *port;
- * bool file_read = ParsePolicyServerFile(GetWorkDir(), &host, &port);
- * printf( "host is %s", file_read ? host : "unavailable" );
- * free(host); free(port);
- * @endcode
- *
- * @param[in]  workdir The directory of policy_server.dat usually GetWorkDir()
- * @param[out] host pointer at this address will be hostname string (strdup)
- * @param[out] port pointer at this address will be port string (strdup)
- * @attention  host* and port* must be freed.
- * @return     Contents of policy_server.dat file. Null terminated.
- */
-bool ParsePolicyServerFile(const char *workdir, char **host, char **port)
-{
-    char *contents = ReadPolicyServerFile(workdir);
-    if (contents == NULL)
-    {
-        return false;
-    }
-    (*host) = NULL;
-    (*port) = NULL;
-
-    ParseHostPort(contents, host, port);
-    (*host) = xstrdup(*host);
-    if (*port != NULL)
-    {
-        (*port) = xstrdup(*port);
-    }
-    free(contents);
-    return true;
-}
-
-/**
- * @brief      Reads and parses the policy_server.dat file.
- *
- * @param[in]  workdir The directory of policy_server.dat usually GetWorkDir()
- * @param[out] ipaddr pointer at this address will be hostname string (strdup)
- * @param[out] port pointer at this address will be port string (strdup)
- * @attention  ipaddr* and port* must be freed.
- * @return     Contents of policy_server.dat file. Null terminated.
- * @see        ParsePolicyServerFile
- */
-bool LookUpPolicyServerFile(const char *workdir, char **ipaddr, char **port)
-{
-    char *host;
-    bool file_read = ParsePolicyServerFile(workdir, &host, port);
-    if (file_read == false)
-    {
-        return false;
-    }
-    char tmp_ipaddr[CF_MAX_IP_LEN];
-    if (Hostname2IPString(tmp_ipaddr, host, sizeof(tmp_ipaddr)) == -1)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Unable to resolve policy server host: %s", host);
-        return false;
-    }
-    (*ipaddr) = xstrdup(tmp_ipaddr);
-    free(host);
-    return true;
-}
-
-/**
- * @brief     Write new_policy_server to the policy_server.dat file.
- * @param[in] workdir The directory of policy_server.dat, usually GetWorkDir()
- * @param[in] new_policy_server The host:port string defining the server
- * @return    True if successful
- */
-bool WritePolicyServerFile(const char *workdir, const char *new_policy_server)
-{
-    char *filename = PolicyServerFilename(workdir);
-
-    FILE *file = fopen(filename, "w");
-    if (file == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to write policy server file '%s' (fopen: %s)", filename, GetErrorStr());
-        free(filename);
-        return false;
-    }
-
-    fprintf(file, "%s\n", new_policy_server);
-    fclose(file);
-
-    free(filename);
-    return true;
-}
-
-/**
- * @brief     Remove the policy_server.dat file
- * @param[in] workdir The directory of policy_server.dat, usually GetWorkDir()
- * @return    True if successful
- */
-bool RemovePolicyServerFile(const char *workdir)
-{
-    char *filename = PolicyServerFilename(workdir);
-
-    if (unlink(filename) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to remove file '%s'. (unlink: %s)", filename, GetErrorStr());
-        free(filename);
-        return false;
-    }
-
-    return true;
-}
 
 
 //*******************************************************************

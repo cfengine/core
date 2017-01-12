@@ -574,7 +574,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         PolicyDestroy(*policy);
         *policy = NULL;
 
-        SetPolicyServerFromFile(ctx, GetWorkDir());
+        EvalContextSetPolicyServerFromFile(ctx, GetWorkDir());
         UpdateLastPolicyUpdateTime(ctx);
 
         DetectEnvironment(ctx);

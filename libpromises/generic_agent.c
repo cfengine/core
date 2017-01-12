@@ -498,7 +498,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         WriteAmPolicyHubFile(am_policy_server);
 
-        WritePolicyServerFile(GetWorkDir(), bootstrap_arg);
+        PolicyServerWriteFile(GetWorkDir(), bootstrap_arg);
         EvalContextSetPolicyServer(ctx, bootstrap_arg);
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
@@ -506,7 +506,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     }
     else
     {
-        char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+        char *existing_policy_server = PolicyServerReadFile(GetWorkDir());
         if (existing_policy_server)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
@@ -1017,7 +1017,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         LoadSecretKeys();
         char *ipaddr = NULL, *port = NULL;
-        LookUpPolicyServerFile(workdir, &ipaddr, &port);
+        PolicyServerLookUpFile(workdir, &ipaddr, &port);
         PolicyHubUpdateKeys(ipaddr);
         free(ipaddr);
         free(port);

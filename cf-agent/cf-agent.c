@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
     int ret = 0;
     if (config->agent_specific.agent.bootstrap_argument && !VerifyBootstrap())
     {
-        RemovePolicyServerFile(GetWorkDir());
+        PolicyServerRemoveFile(GetWorkDir());
         WriteAmPolicyHubFile(false);
         ret = 1;
     }

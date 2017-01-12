@@ -200,7 +200,7 @@ static char *PolicyServerFilename(const char *workdir)
 /**
  * @brief     Reads the policy_server.dat file.
  * @param[in] workdir the directory of policy_server.dat usually GetWorkDir()
- * @return    Contents of policy_server.dat file. Null terminated.
+ * @return    Trimmed contents of policy_server.dat file. Null terminated. 
  */
 char *PolicyServerReadFile(const char *workdir)
 {

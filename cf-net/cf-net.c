@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-//#include <unix.h>
+#include <cf-net.h>
 #include <logging.h>            // Log, LogSetGlobalLevel
 
 #include <man.h>                // ManPageWrite
@@ -33,8 +33,11 @@
 #include <time.h>               // time_t, time, difftime
 #include <stat_cache.h>         // cf_remote_stat
 #include <string_lib.h>         // ToLowerStrInplace
-// TODO: MOVE addr_lib out of libpromises....
+#include <writer.h>
+#include <policy_server.h>      // PolicyServerReadFile
+
 /*
+#include <unix.h>
 #include <generic_agent.h>
 #include <known_dirs.h>
 #include <eval_context.h>
@@ -53,116 +56,127 @@
 #include <expand.h>
 #include <files_hashes.h>
 */
-#define CF_NET_VERSION "0.0.0"
 
-static bool cfnet_silent = false;
-#define nprint(fmt, args...); {if(!cfnet_silent) printf(fmt, ##args);}
 
-// TODO: Add usage and list of commands for usability
 static const char *const CF_NET_SHORT_DESCRIPTION =
-    "command line interface (cli) for libcfnet";
+    "Command-Line Interface (CLI) for libcfnet.";
 
 static const char *const CF_NET_MANPAGE_LONG_DESCRIPTION =
-    "TODO - this man page is not written yet." //TODO
-    "...";
+    "TODO - this man page is not written yet.";
 
-// TODO: Check that these are correct later
+static const Description COMMANDS[] =
+{
+    {"help",    "Prints general help or per topic",             "cf-net help [command]"},
+    {"connect", "Checks if host(s) is available by connecting", "cf-net -H 192.168.50.50 connect"},
+    {"stat",    "Look at type of file",                         "cf-net -H 192.168.50.50 stat /var/cfengine/masterfiles/update.cf"},
+    {NULL, NULL, NULL}
+};
+
 static const struct option OPTIONS[] =
 {
-    {"help",        no_argument,        0, 'h'}, // TODO Use flags here instead
+    {"help",        no_argument,        0, 'h'},
     {"manpage",     no_argument,        0, 'M'},
+    {"host",        required_argument,  0, 'H'},
     {"debug",       no_argument,        0, 'd'},
     {"verbose",     no_argument,        0, 'v'},
     {"inform",      no_argument,        0, 'I'},
-    {"dry-run",     no_argument,        0, 'n'},
-    {"version",     no_argument,        0, 'V'},
-    {"interactive", no_argument,        0, 'i'},
-    {"timestamp",   no_argument,        0, 'l'},
     {NULL,          0,                  0, '\0'}
 };
 
-// TODO: Check that these are correct later
 static const char *const HINTS[] =
 {
     "Print the help message",
     "Print the man page",
+    "Host to use (defaults to policy_server.dat)",
     "Enable debugging output",
     "Enable verbose output",
     "Enable basic information output",
-    "Do not perform action, only output what to do",
-    "Output the version of the software",
-    "Enable interactive mode",
-    "Log timestamps on each line of log output",
     NULL
 };
 
-// TODO: Consider global variables for performance and code style(?)
-typedef struct
-{
-    bool debug;
-    bool verbose;
-    bool inform;
-    bool dry_run;
-    bool version;
-    bool interactive;
-    bool timestamp;
-    int background;
-    int timeout;
-} CFNetOptions;
-
-void CFNetSetDefault(CFNetOptions *opts);
-int CFNetRun(CFNetOptions *opts, const char *CMD,char **args);
-int CFNetParse(int argc, char **argv,                        // Inputs
-               CFNetOptions *opts, char **cmd, char ***args); // Outputs
+//*******************************************************************
+// MAIN:
+//*******************************************************************
 
 int main(int argc, char **argv)
 {
     CFNetOptions opts;
     char *cmd;
     char **args;
-
-    int ret = CFNetParse(argc, argv,          // Inputs
-                         &opts, &cmd, &args); // Outputs
-    if (ret == -1)
+    char *hostnames = NULL;
+    int ret = CFNetParse(argc, argv,                      // Inputs
+                         &opts, &cmd, &args, &hostnames); // Outputs
+    if (ret != 0)
     {
         exit(EXIT_FAILURE);
     }
-    ret = CFNetRun(&opts, cmd, args);
+    ret = CFNetRun(&opts, cmd, args, hostnames);  // Commands return exit code
     return ret;
 }
+
+//*******************************************************************
+// INIT:
+//*******************************************************************
 
 void CFNetSetDefault(CFNetOptions *opts){
     assert(opts != NULL);
     opts->debug       = false;
     opts->verbose     = false;
     opts->inform      = false;
-    opts->dry_run     = false;
-    opts->version     = false;
-    opts->interactive = false;
-    opts->timestamp   = false;
-    opts->background  = 0;
-    opts->timeout     = 0;
 }
 
-int CFNetHelp(const char* topic){
-    printf("Unused topic: %s.\n", topic);
-    Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, true);
-    FileWriterDetach(w);
-    exit(EXIT_SUCCESS);
+void CFNetInit()
+{
+    CryptoInitialize();
+    LoadSecretKeys();
+    cfnet_init(NULL, NULL);
 }
+
+//*******************************************************************
+// MAIN LOGIC:
+//*******************************************************************
+
+void print_argv(char ** argv)
+{
+    for (int i = 0; argv[i] != NULL; ++i)
+    {
+        printf("argv[%i]: '%s'\n", i, argv[i]);
+    }
+}
+
+char* RequireHostname(char *hostnames)
+{
+    if (hostnames == NULL)
+    {
+        char* policy_server = PolicyServerReadFile("/var/cfengine/");
+        if (policy_server == NULL)
+        {
+            printf("Error: no host name (and no policy_server.dat)");
+            exit(EXIT_FAILURE);
+        }
+        return policy_server;
+    }
+    return hostnames;
+}
+
 
 int CFNetParse(int argc, char **argv,
-               CFNetOptions *opts, char **cmd, char ***args)
+               CFNetOptions *opts, char **cmd, char ***args, char **hostnames)
 {
     assert(opts != NULL);
+    if (argc <= 1)
+    {
+        CFNetHelp(NULL);
+        return 0;
+    }
+    extern int optind;
     extern char *optarg;
-    extern int optind;//, opterr, optopt;
     CFNetSetDefault(opts);
+    *hostnames = NULL;
     int c = 0;
     int start_index = 1;
-    while ((c = getopt_long(argc, argv, "hMdvInVilb:t:",
-                            OPTIONS, &start_index))
+    const char *optstr = "+hMH:dvI"; // + means stop for non opt arg. :)
+    while ((c = getopt_long(argc, argv, optstr, OPTIONS, &start_index))
             != -1)
     {
         switch (c)
@@ -170,6 +184,24 @@ int CFNetParse(int argc, char **argv,
             case 'h':
             {
                 CFNetHelp(NULL);
+                break;
+            }
+            case 'M':
+            {
+                // TODO: How do we actually add a man page
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-net", time(NULL),
+                             CF_NET_SHORT_DESCRIPTION,
+                             CF_NET_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+                break;
+            }
+            case 'H':
+            {
+                *hostnames = xstrdup(optarg);
                 break;
             }
             case 'd':
@@ -187,52 +219,9 @@ int CFNetParse(int argc, char **argv,
                 opts->inform = true;
                 break;
             }
-            case 'n':
-            {
-                opts->dry_run = true; // TODO: Not in use
-                break;
-            }
-            case 'V':
-            {
-                printf("cf-net version number "CF_NET_VERSION"\n");
-                exit(EXIT_SUCCESS);
-                break;
-            }
-            case 'i':
-            {
-                opts->interactive = true; // TODO: Not in use
-                break;
-            }
-            case 'l':
-            {
-                opts->timestamp = true; // TODO: Not in use
-                break;
-            }
-            case 'b':
-            {
-                opts->background = atoi(optarg); // TODO: Not in use
-                break;
-            }
-            case 't':
-            {
-                opts->timeout = atoi(optarg); // TODO: Not in use
-                break;
-            }
-            case 'M':
-            {
-                // TODO: How do we actually add a man page
-                Writer *out = FileWriter(stdout);
-                ManPageWrite(out, "cf-net", time(NULL),
-                             CF_NET_SHORT_DESCRIPTION,
-                             CF_NET_MANPAGE_LONG_DESCRIPTION,
-                             OPTIONS, HINTS,
-                             true);
-                FileWriterDetach(out);
-                exit(EXIT_SUCCESS);
-                break;
-            }
             default:
             {
+                printf("Default optarg = '%s', c = '%c' = %i", optarg, c, (int)c);
                 break;
             }
         }
@@ -242,228 +231,24 @@ int CFNetParse(int argc, char **argv,
     return 0;
 }
 
-// Just for testing argument parsing
-int CFNetPrint(char **args)
-{
-    for (int i = 0; args[i] != NULL; ++i)
-    {
-        printf("%s ", args[i]);
-    }
-    printf("\n");
-    return 0;
-}
-
-void CFNetInit()
-{
-    CryptoInitialize();
-    LoadSecretKeys();
-    cfnet_init(NULL, NULL);
-}
-
-AgentConnection* CFNetOpenConnection(char *server)
-{
-
-    AgentConnection *conn = NULL;
-    ConnectionFlags connflags = {
-        .protocol_version = CF_PROTOCOL_LATEST,
-        .trust_server = true
-    };
-    int err;
-    char *buf = xstrdup(server);
-    char *host, *port;
-    ParseHostPort(buf, &host, &port);
-    if (port == NULL)
-    {
-        port = CFENGINE_PORT_STR;
-    }
-    conn = ServerConnection(host, port, 30, connflags, &err);
-    free(buf);
-    if (conn == NULL)
-    {
-        nprint("Failed to connect to '%s'.\n", server);
-        return NULL;
-    }
-    return conn;
-}
-
-int CFNetConnectSingle(char *server)
-{
-    AgentConnection *conn = CFNetOpenConnection(server);
-    if (conn == NULL)
-    {
-        return -1;
-    }
-    nprint("Connected & authenticated successfully to '%s'.\n", server);
-    DeleteAgentConn(conn);
-    return 0;
-}
-
-int CFNetConnect(char **args)
-{
-    for (int i = 0; args[i] != NULL; ++i)
-    {
-        cfnet_silent = false;
-        CFNetConnectSingle(args[i]);
-        cfnet_silent = true;
-    }
-    return 0;
-}
-
-void CFNetStatPrint(const char* file, int st_mode)
-{
-    if (S_ISDIR(st_mode))
-    {
-        nprint("'%s' is a directory.\n", file);
-    }
-    else if (S_ISREG(st_mode))
-    {
-        nprint("'%s' is a regular file.\n", file);
-    }
-    else if (S_ISSOCK(st_mode))
-    {
-        nprint("'%s' is a socket.\n", file);
-    }
-    else if (S_ISCHR(st_mode))
-    {
-        nprint("'%s' is a character device file.\n", file);
-    }
-    else if (S_ISBLK(st_mode))
-    {
-        nprint("'%s' is a block device file.\n", file);
-    }
-    else if (S_ISFIFO(st_mode))
-    {
-        nprint("'%s' is a named pipe (FIFO).\n", file);
-    }
-    else if (S_ISLNK(st_mode))
-    {
-        nprint("'%s' is a symbolic link.\n", file);
-    }
-    else
-    {
-        nprint("'%s' has an unrecognized st_mode.\n", file);
-    }
-}
-
-int CFNetStat(char **args)
-{
-    char *server = args[0];
-    char *file = args[1];
-    AgentConnection *conn = CFNetOpenConnection(server);
-    if (conn == NULL)
-    {
-        return -1;
-    }
-    bool encrypt = true;
-    struct stat sb;
-    int r = cf_remote_stat(conn, encrypt, file, &sb, "file");
-    if (r!= 0)
-    {
-        nprint("Could not stat: '%s'.\n", file);
-        // nprint("(Check cf-serverd output for more info)\n");
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Detailed stat output:\n"
-                            "mode  = %jo, \tsize = %jd,\n"
-                            "uid   = %ju, \tgid = %ju,\n"
-                            "atime = %jd, \tmtime = %jd\n",
-            (uintmax_t) sb.st_mode,  (intmax_t)  sb.st_size,
-            (uintmax_t) sb.st_uid,   (uintmax_t) sb.st_gid,
-            (intmax_t)  sb.st_atime, (intmax_t)  sb.st_mtime);
-        CFNetStatPrint(file, sb.st_mode);
-    }
-    DeleteAgentConn(conn);
-    return 0;
-}
-
-int JustConnect(char *server, char* port)
-{
-    char txtaddr[CF_MAX_IP_LEN] = "";
-    return SocketConnect(server, port, 100, true,
-                         txtaddr, sizeof(txtaddr));
-}
-
-int CFNetMulti(char *server)
-{
-    time_t start;
-    time(&start);
-
-    int ret = 0;
-    int attempts = 0;
-
-    nprint("Connecting repeatedly to '%s' without handshakes.\n",server);
-    attempts = 0;
-
-    char *buf = xstrdup(server);
-    char *host, *port;
-    ParseHostPort(buf, &host, &port);
-    if (port == NULL)
-    {
-        port = CFENGINE_PORT_STR;
-    }
-
-    ret = 0;
-    while(ret != -1)
-    {
-        ret = JustConnect(host, port);
-        attempts++;
-    }
-
-    free(buf);
-    nprint("Server unavailable after %i attempts.\n", attempts);
-
-    time_t stop;
-    time(&stop);
-    double seconds = difftime(stop,start);
-    nprint("%s(): '%s' unavailable after %.f seconds (%i attempts).\n", __FUNCTION__, server, seconds, attempts);
-    return 0;
-}
-
-int CFNetMultiTLS(char *server)
-{
-    time_t start;
-    time(&start);
-
-    nprint("Multiple handshakes to '%s'.\n", server);
-    cfnet_silent = true;
-    int ret = 0;
-    int attempts = 0;
-    while(ret == 0)
-    {
-        ret = CFNetConnectSingle(server);
-        ++attempts;
-    }
-    cfnet_silent = false;
-    time_t stop;
-    time(&stop);
-
-    double seconds = difftime(stop,start);
-    nprint("%s(): '%s' unavailable after %.f seconds (%i attempts).\n", __FUNCTION__, server, seconds, attempts);
-    CFNetMulti(server);
-    return 0;
-}
-
 #define CFNetIfMatchRun(cmd_string, comparison, functioncall)\
     if (strcmp(cmd_string, comparison) == 0)\
     {\
         return functioncall;\
     }\
 
-// Macro returns on match(!)
-int CFNetCommandSwitch(char *cmd, char **args)
+// ^ Macro returns on match(!)
+int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname, char *cmd, char **args)
 {
-    CFNetIfMatchRun(cmd, "print",    CFNetPrint(args));
-    CFNetIfMatchRun(cmd, "connect",  CFNetConnect(args));
-    CFNetIfMatchRun(cmd, "stat",     CFNetStat(args));
-    CFNetIfMatchRun(cmd, "multi",    CFNetMulti(args[0]));
-    CFNetIfMatchRun(cmd, "multitls", CFNetMultiTLS(args[0]));
-    CFNetIfMatchRun(cmd, "help",     CFNetHelp(args[0]));
+    CFNetIfMatchRun(cmd, "connect",  CFNetConnect(opts, hostname, args));
+    CFNetIfMatchRun(cmd, "stat",     CFNetStat(opts, hostname, args));
+    CFNetIfMatchRun(cmd, "multi",    CFNetMulti(hostname));
+    CFNetIfMatchRun(cmd, "multitls", CFNetMultiTLS(hostname));
     printf("'%s' is not a valid cf-net command.\n", cmd);
     return 1;
 }
 
-int CFNetRun(CFNetOptions *opts, const char *CMD, char **args)
+int CFNetRun(CFNetOptions *opts, const char *CMD, char **args, char *hostnames)
 {
     char* cmd = xstrdup(CMD);
 
@@ -487,8 +272,281 @@ int CFNetRun(CFNetOptions *opts, const char *CMD, char **args)
     {
         Log(LOG_LEVEL_VERBOSE, "%s\n", args[i]);
     }
+
+    if (strcmp(cmd, "help") == 0)
+    {
+        return CFNetHelp(args[0]);
+    }
+
     CFNetInit();
-    int ret = CFNetCommandSwitch(cmd, args);
+    char *hosts = RequireHostname(hostnames);
+    int ret = 0;
+    char *hostname = strtok(hosts, ",");
+    while (hostname != NULL){
+        CFNetCommandSwitch(opts, hostname, cmd, args);
+        hostname = strtok(NULL, ",");
+    }
+    free(hosts);
     free(cmd);
     return ret;
+}
+
+//*******************************************************************
+// PROTOCOL:
+//*******************************************************************
+
+AgentConnection* CFNetOpenConnection(const char *server)
+{
+    AgentConnection *conn = NULL;
+    ConnectionFlags connflags =
+    {
+        .protocol_version = CF_PROTOCOL_LATEST,
+        .trust_server = true
+    };
+    int err;
+    char *buf = xstrdup(server);
+    char *host, *port;
+    ParseHostPort(buf, &host, &port);
+    if (port == NULL)
+    {
+        port = CFENGINE_PORT_STR;
+    }
+    conn = ServerConnection(host, port, 30, connflags, &err);
+    free(buf);
+    if (conn == NULL)
+    {
+        printf("Failed to connect to '%s'.\n", server);
+        return NULL;
+    }
+    return conn;
+}
+
+int JustConnect(const char *server, char *port)
+{
+    char txtaddr[CF_MAX_IP_LEN] = "";
+    return SocketConnect(server, port, 100, true,
+                         txtaddr, sizeof(txtaddr));
+}
+
+//*******************************************************************
+// COMMANDS:
+//*******************************************************************
+
+int CFNetHelpTopic(const char *topic)
+{
+    assert(topic != NULL);
+    bool found = false;
+    for (int i = 0; COMMANDS[i].name != NULL; ++i)
+    {
+        if (strcmp(COMMANDS[i].name, topic) == 0)
+        {
+            printf("Command:     %s\n",  COMMANDS[i].name);
+            printf("Usage:       %s\n",  COMMANDS[i].usage);
+            printf("Description: %s.\n", COMMANDS[i].description);
+            found = true;
+            break;
+        }
+    }
+
+    // Add more detailed explanation here if necessary:
+    if (strcmp("help", topic) == 0)
+    {
+        printf("\nYou did it, you used the help command!\n");
+    }
+    else if (strcmp("stat", topic) == 0)
+    {
+        printf("\nFor security reasons the server doesn't give any additional"
+               "\ninformation if unsuccessful. 'Could not stat' message can"
+               "\nindicate wrong path, the file doesn't exist, permission "
+               "\ndenied, or something else.\n");
+    }
+    else
+    {
+        if (found == false)
+        {
+            printf("Unknown help topic: '%s'\n", topic);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int CFNetHelp(const char *topic)
+{
+    if (topic != NULL)
+    {
+        CFNetHelpTopic(topic);
+    }
+    else
+    {
+        Writer *w = FileWriter(stdout);
+        WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, false, COMMANDS);
+        FileWriterDetach(w);
+        exit(EXIT_SUCCESS);
+    }
+    return 0;
+}
+
+int CFNetConnectSingle(const char *server, bool print)
+{
+    AgentConnection *conn = CFNetOpenConnection(server);
+    if (conn == NULL)
+    {
+        return 1;
+    }
+    if (print == true)
+    {
+        printf("Connected & authenticated successfully to '%s'.\n", server);
+    }
+    DeleteAgentConn(conn);
+    return 0;
+}
+
+int CFNetConnect(CFNetOptions *opts, const char* hostname, char **args)
+{
+    if (hostname != NULL)
+    {
+        CFNetConnectSingle(hostname, true); // FIXME
+        return 0;
+    }
+    // TODO
+    if (args == NULL)
+    {
+        return 0;
+    }
+    if (opts->used_default)
+    {
+        return 0;
+    }
+    for (int i = 0; args[i] != NULL; ++i)
+    {
+        CFNetConnectSingle(args[i], true);
+    }
+    return 0;
+}
+
+void CFNetStatPrint(const char *file, int st_mode, const char *server)
+{
+    printf("%s:", server);
+    if (S_ISDIR(st_mode))
+    {
+        printf("'%s' is a directory.\n", file);
+    }
+    else if (S_ISREG(st_mode))
+    {
+        printf("'%s' is a regular file.\n", file);
+    }
+    else if (S_ISSOCK(st_mode))
+    {
+        printf("'%s' is a socket.\n", file);
+    }
+    else if (S_ISCHR(st_mode))
+    {
+        printf("'%s' is a character device file.\n", file);
+    }
+    else if (S_ISBLK(st_mode))
+    {
+        printf("'%s' is a block device file.\n", file);
+    }
+    else if (S_ISFIFO(st_mode))
+    {
+        printf("'%s' is a named pipe (FIFO).\n", file);
+    }
+    else if (S_ISLNK(st_mode))
+    {
+        printf("'%s' is a symbolic link.\n", file);
+    }
+    else
+    {
+        printf("'%s' has an unrecognized st_mode.\n", file);
+    }
+}
+
+int CFNetStat(CFNetOptions *opts, const char* hostname, char **args)
+{
+    assert(opts);
+    char *file = args[0];
+    AgentConnection *conn = CFNetOpenConnection(hostname);// FIXME
+    if (conn == NULL)
+    {
+        return 1;
+    }
+    bool encrypt = true;
+    struct stat sb;
+    int r = cf_remote_stat(conn, encrypt, file, &sb, "file");
+    if (r!= 0)
+    {
+        printf("Could not stat: '%s'.\n", file);
+    }
+    else
+    {
+        Log(LOG_LEVEL_INFO, "Detailed stat output:\n"
+                            "mode  = %jo, \tsize = %jd,\n"
+                            "uid   = %ju, \tgid = %ju,\n"
+                            "atime = %jd, \tmtime = %jd\n",
+            (uintmax_t) sb.st_mode,  (intmax_t)  sb.st_size,
+            (uintmax_t) sb.st_uid,   (uintmax_t) sb.st_gid,
+            (intmax_t)  sb.st_atime, (intmax_t)  sb.st_mtime);
+        CFNetStatPrint(file, sb.st_mode, hostname);
+    }
+    DeleteAgentConn(conn);
+    return 0;
+}
+
+int CFNetMulti(const char *server)
+{
+    time_t start;
+    time(&start);
+
+    int ret = 0;
+    int attempts = 0;
+
+    printf("Connecting repeatedly to '%s' without handshakes.\n",server);
+    attempts = 0;
+
+    char *buf = xstrdup(server);
+    char *host, *port;
+    ParseHostPort(buf, &host, &port);
+    if (port == NULL)
+    {
+        port = CFENGINE_PORT_STR;
+    }
+
+    ret = 0;
+    while(ret != 1)
+    {
+        ret = JustConnect(host, port);
+        attempts++;
+    }
+
+    free(buf);
+    printf("Server unavailable after %i attempts.\n", attempts);
+
+    time_t stop;
+    time(&stop);
+    double seconds = difftime(stop,start);
+    printf("%s(): '%s' unavailable after %.f seconds (%i attempts).\n", __FUNCTION__, server, seconds, attempts);
+    return 0;
+}
+
+int CFNetMultiTLS(const char *server)
+{
+    time_t start;
+    time(&start);
+
+    printf("Multiple handshakes to '%s'.\n", server);
+    int ret = 0;
+    int attempts = 0;
+    while(ret == 0)
+    {
+        ret = CFNetConnectSingle(server, false);
+        ++attempts;
+    }
+    time_t stop;
+    time(&stop);
+
+    double seconds = difftime(stop,start);
+    printf("%s(): '%s' unavailable after %.f seconds (%i attempts).\n", __FUNCTION__, server, seconds, attempts);
+    CFNetMulti(server);
+    return 0;
 }

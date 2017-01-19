@@ -1,0 +1,22 @@
+# If you find an openssl suppression that is not included here, please submit it.
+#
+# The following command can be used to automatically generate very specific
+# suppressions. With a little editting they can be quickly generalized.
+#
+# valgrind --leak-check=full [--show-reachable=yes] --gen-suppressions=yes <binary> <args>
+#
+# http://valgrind.org/docs/manual/manual-core.html#manual-core.suppress
+
+{
+  Openssl - Cond
+  Memcheck:Cond
+  ...
+  obj:/usr/*lib*/libcrypto*
+}
+{
+  Openssl - Value8
+  Memcheck:Value8
+  ...
+  obj:/usr/*lib*/libcrypto*
+}
+

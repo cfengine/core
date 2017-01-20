@@ -14,11 +14,7 @@ bundle agent test
 {
   meta:
       "description" -> { "CFE-2551" }
-        string => "Test that variables defined in other bundles with the same name are not included in a merged result";
-
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-2551" };
+        string => "Test that it is not possible to expand data from another namespce during merging. This is because of the colon (:).";
 
   vars:
 
@@ -42,7 +38,7 @@ bundle agent test_merged_low
       # We expect that only the values from the classic array vars1 in this
       # bundle will be merged together. And thus, we should only end up with ={ "vars1" : { "c": "string c" } }=
 
-      "merged_data_vars" data => mergedata('{ "vars1": default:test_merged_low.vars1 }');
+      "merged_data_vars" data => mergedata('{ "vars1": $(this.namespace):$(this.bundle).vars1 }');
       "merged_data_vars_str" string => format( "%S", merged_data_vars );
 
   reports:

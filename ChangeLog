@@ -76,7 +76,7 @@
 	  bundles set_config_values() and set_line_based() are appending a
 	  trailing space when inserting a configuration option with empty value.
 	  (CFE-2466)
-	- Behaviour change: it always returns a list now. Even when v is a simple
+	- Behaviour change: getvalues() always returns a list now. Even when v is a simple
 	  string (i.e. not an iterable) it will return an slist with one element:
 	  the value of the string variable.
 	- Behaviour change: readintlist() now prints an error if the

@@ -29,29 +29,44 @@ body common control
 bundle common g
 {
   vars:
+
+      # Here we find all bundles in the default namespace whos name starts with
+      # run.
+
       "todo" slist => bundlesmatching("default:run.*");
 }
 
 bundle agent mefirst
 {
   methods:
-      # note this is a dynamic bundle sequence!
+
+      # Here, we actuate each of the bundles that were found using
+      # bundlesmatching in bundle common g.
+
       "" usebundle => $(g.todo);
 }
 
 bundle agent run_deprecated
 {
   meta:
+      # This bundle is tagged with deprecated
       "tags" slist => { "deprecated" };
 }
 
 bundle agent run_123_456
 {
   vars:
+      # Here we find all bundles in our policy.
       "bundles" slist => bundlesmatching(".*");
+
+      # Here we find all the bundles that are tagged as deprecated.
       "deprecated_bundles" slist => bundlesmatching(".*", "deprecated");
+
+      # Here we find all bundles that match 891 (none will).
       "no_bundles" slist => bundlesmatching("891");
+
   reports:
+      # Here we report on our findings:
       "bundles = $(bundles)";
       "deprecated bundles = $(deprecated_bundles)";
       "no bundles = $(no_bundles)";

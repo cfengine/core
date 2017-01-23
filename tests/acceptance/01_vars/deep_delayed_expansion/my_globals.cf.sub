@@ -1,0 +1,5 @@
+bundle common my_globals
+{
+  vars:
+    "policy_root" string => "$(def.policy_root)";
+}

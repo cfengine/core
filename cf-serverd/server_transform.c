@@ -260,12 +260,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
     /* Now expand */
 
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_SERVER);
+
+#define IsControlBody(e) (strcmp(cp->lval, CFS_CONTROLBODY[e].lval) == 0)
+
     if (constraints)
     {
         for (size_t i = 0; i < SeqLength(constraints); i++)
         {
             Constraint *cp = SeqAt(constraints, i);
-#define IsControlBody(e) (strcmp(cp->lval, CFS_CONTROLBODY[e].lval) == 0)
 
             if (!IsDefinedClass(ctx, cp->classes))
             {
@@ -457,8 +459,10 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 Log(LOG_LEVEL_VERBOSE, "Setting allowtlsversion to: %s",
                     SV.allowtlsversion);
             }
-#undef IsControlBody
         }
+
+#undef IsControlBody
+
     }
 
     const void *value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST);

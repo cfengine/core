@@ -26,6 +26,7 @@
 
 #include <server.h>
 
+#include <sys/resource.h>
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <files_names.h>
@@ -243,6 +244,26 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
 
 /*******************************************************************/
 
+static bool SetMaxOpenFiles(int n)
+{
+    const struct rlimit lim = {
+        .rlim_cur = n,
+        .rlim_max = n,
+    };
+    int ret = setrlimit(RLIMIT_NOFILE, &lim);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Failed setting max open files limit"
+            " (setrlimit(NOFILE, %d): %s)", n, GetErrorStr());
+        return false;
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Setting max open files rlimit to %d", n);
+        return true;
+    }
+}
+
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     CFD_MAXPROCESSES = 30;
@@ -308,6 +329,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 Log(LOG_LEVEL_VERBOSE,
                     "Setting maxconnections to %d",
                     CFD_MAXPROCESSES);
+
+                SetMaxOpenFiles(CFD_MAXPROCESSES * 2 + 10);
+
                 /* The handling of max_readers in LMDB is not ideal, but
                  * here is how it is right now: We know that both cf-serverd and
                  * cf-hub will access the lastseen database. Worst case every

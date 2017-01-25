@@ -253,8 +253,10 @@ static bool SetMaxOpenFiles(int n)
     int ret = setrlimit(RLIMIT_NOFILE, &lim);
     if (ret == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Failed setting max open files limit"
+        Log(LOG_LEVEL_INFO, "Failed setting max open files limit"
             " (setrlimit(NOFILE, %d): %s)", n, GetErrorStr());
+        Log(LOG_LEVEL_INFO,
+            "Please ensure that 'nofile' ulimit is at least 2x maxconnections");
         return false;
     }
     else
@@ -325,12 +327,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             else if (IsControlBody(SERVER_CONTROL_MAX_CONNECTIONS))
             {
                 CFD_MAXPROCESSES = (int) IntFromString(value);
-                MAXTRIES = CFD_MAXPROCESSES / 3;
-                Log(LOG_LEVEL_VERBOSE,
-                    "Setting maxconnections to %d",
-                    CFD_MAXPROCESSES);
 
-                SetMaxOpenFiles(CFD_MAXPROCESSES * 2 + 10);
+                /* Ease apoptosis limits. */
+                MAXTRIES = CFD_MAXPROCESSES / 3;
 
                 /* The handling of max_readers in LMDB is not ideal, but
                  * here is how it is right now: We know that both cf-serverd and
@@ -340,8 +339,13 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                  * those two values together to provide a safe ceiling. In
                  * addition, cf-agent can access the database occasionally as
                  * well, so add a few extra for that too. */
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting maxconnections to %d", CFD_MAXPROCESSES);
                 DBSetMaximumConcurrentTransactions(CFD_MAXPROCESSES
                                                    + EnterpriseGetMaxCfHubProcesses() + 10);
+
+                /* Set RLIMIT_NOFILE to be enough for all threads. */
+                SetMaxOpenFiles(CFD_MAXPROCESSES * 2 + 10);
             }
             else if (IsControlBody(SERVER_CONTROL_CALL_COLLECT_INTERVAL))
             {

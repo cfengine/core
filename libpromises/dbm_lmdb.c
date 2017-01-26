@@ -193,8 +193,9 @@ static int LmdbEnvOpen(MDB_env *env, const char *path, unsigned int flags, mdb_m
         {
             return rc;
         }
-
-#if HAVE_DECL_SCHED_YIELD && defined(HAVE_SCHED_YIELD)
+#if defined(__MINGW32__)
+        sleep(0); // Testing this instead of sched_yield on windows
+#elif HAVE_DECL_SCHED_YIELD && defined(HAVE_SCHED_YIELD)
         // Not required for this to work, but makes it less likely that the race
         // condition will persist.
         sched_yield();
@@ -351,15 +352,15 @@ bool DBPrivClean(DBPriv *db)
 {
     DBTxn *txn;
     int rc = GetWriteTransaction(db, &txn);
-    
+
     if (rc != MDB_SUCCESS)
     {
         Log(LOG_LEVEL_ERR, "Unable to get write transaction: %s", mdb_strerror(rc));
         return false;
     }
-    
+
     assert(!txn->cursor_open);
-    
+
     return mdb_drop(txn->txn, db->dbi, EMPTY_DB);
 }
 

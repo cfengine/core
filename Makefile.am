@@ -92,7 +92,7 @@ install-data-local:
 tar-package:
 	pkgdir=`mktemp -d`  &&  export pkgdir  &&  \
 	origdir=`pwd`       &&  export origdir &&  \
-	$(MAKE) prefix=$$pkgdir install  &&  \
+	$(MAKE) DESTDIR=$$pkgdir install  &&  \
 	(   cd $$pkgdir  &&  \
             find . -name '*.cf*' | xargs -n1 chmod go-w  &&  \
 	    tardir=.  &&  $(am__tar) |  \

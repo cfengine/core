@@ -89,6 +89,18 @@ install-data-local:
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/plugins
 
 
+tar-package:
+	pkgdir=`mktemp -d`  &&  export pkgdir  &&  \
+	origdir=`pwd`       &&  export origdir &&  \
+	$(MAKE) prefix=$$pkgdir install  &&  \
+	(   cd $$pkgdir  &&  \
+            find . -name '*.cf*' | xargs -n1 chmod go-w  &&  \
+	    tardir=.  &&  $(am__tar) |  \
+	        GZIP=$(GZIP_ENV) gzip -c  \
+	        > "$$origdir"/$(PACKAGE)-$(VERSION).pkg.tar.gz  \
+	)  ;  \
+	[ x$$pkgdir != x ]  &&  rm -rf $$pkgdir
+
 #
 # Code coverage
 #

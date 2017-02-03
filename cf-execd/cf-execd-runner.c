@@ -761,7 +761,7 @@ static void MailResult(const ExecConfig *config, const char *file)
             snprintf(line, line_size,
                      "\r\n[Mail truncated by CFEngine. File is at %s on %s]\r\n",
                      file, config->fq_name);
-            if (send(sd, line, strlen(line), 0))
+            if (send(sd, line, strlen(line), 0) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Error while sending mail to mailserver "
                     "'%s'. (send: '%s')", config->mail_server, GetErrorStr());

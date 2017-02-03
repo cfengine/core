@@ -24,7 +24,7 @@ bundle agent init
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "sunos_5_11",
+      "test_soft_fail" string => "sunos_5_11|sunos_i86pc_5_10",
         meta => { "redmine5234" };
 
   vars:

@@ -152,6 +152,7 @@ void CalculateDomainName(const char *nodename, const char *dnsname,
 #ifdef __linux__
 static int Linux_Fedora_Version(EvalContext *ctx);
 static int Linux_Redhat_Version(EvalContext *ctx);
+static void Linux_Amazon_Version(EvalContext *ctx);
 static void Linux_Oracle_VM_Server_Version(EvalContext *ctx);
 static void Linux_Oracle_Version(EvalContext *ctx);
 static int Linux_Suse_Version(EvalContext *ctx);
@@ -1063,6 +1064,11 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/SuSE-release", &statbuf) != -1)
     {
         Linux_Suse_Version(ctx);
+    }
+
+    if (stat("/etc/system-release", &statbuf) != -1)
+    {
+        Linux_Amazon_Version(ctx);
     }
 
 # define SLACKWARE_ANCIENT_VERSION_FILENAME "/etc/slackware-release"
@@ -2307,6 +2313,38 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
     }
 
     return 0;
+}
+
+/******************************************************************/
+
+static void Linux_Amazon_Version(EvalContext *ctx)
+{
+    char buffer[CF_BUFSIZE];
+
+    // Amazon Linux AMI release 2016.09
+
+    if (ReadLine("/etc/system-release", buffer, sizeof(buffer)))
+    {
+        if (strstr(buffer, "Amazon") != NULL)
+        {
+            EvalContextClassPutHard(ctx, "amazon_linux",
+                "inventory,attribute_name=none,source=agent"
+                ",derived-from-file=/etc/system-release");
+
+            char version[128];
+            if (sscanf(buffer, "%*s %*s %*s %*s %127s", version) == 1)
+            {
+                char class[CF_MAXVARSIZE];
+
+                CanonifyNameInPlace(version);
+                snprintf(class, sizeof(class), "amazon_linux_%s", version);
+                EvalContextClassPutHard(ctx, class,
+                    "inventory,attribute_name=none,source=agent"
+                    ",derived-from-file=/etc/system-release");
+            }
+            SetFlavour(ctx, "AmazonLinux");
+        }
+    }
 }
 
 /******************************************************************/

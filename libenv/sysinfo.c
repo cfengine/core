@@ -2327,13 +2327,20 @@ static void Linux_Amazon_Version(EvalContext *ctx)
     {
         if (strstr(buffer, "Amazon") != NULL)
         {
-            char version[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
-            EvalContextClassPutHard(ctx, "amazon_linux", "inventory,attribute_name=none,source=agent,derived-from-file=/etc/system-release");
-            if (sscanf(buffer, "%*s %*s %*s %*s %s", version) > 0)
+            EvalContextClassPutHard(ctx, "amazon_linux",
+                "inventory,attribute_name=none,source=agent"
+                ",derived-from-file=/etc/system-release");
+
+            char version[128];
+            if (sscanf(buffer, "%*s %*s %*s %*s %127s", version) == 1)
             {
+                char class[CF_MAXVARSIZE];
+
                 CanonifyNameInPlace(version);
-                snprintf(class, CF_MAXVARSIZE, "amazon_linux_%s", version);
-                EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent,derived-from-file=/etc/system-release");
+                snprintf(class, sizeof(class), "amazon_linux_%s", version);
+                EvalContextClassPutHard(ctx, class,
+                    "inventory,attribute_name=none,source=agent"
+                    ",derived-from-file=/etc/system-release");
             }
             SetFlavour(ctx, "AmazonLinux");
         }

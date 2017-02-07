@@ -34,5 +34,25 @@ void _assert_double_close(double left, double right, const char *const file, con
 void test_progress(void);
 void test_progress_end(void);
 
+// like assert_string_equal, but better with respect to pointers:
+// if a and b are NULL, returns true
+// if a or b is NULL print error using assert_int
+// if a and b are not NULL, use assert_string
+#define assert_string_int_equal(a, b)\
+{\
+    const char* x = a;\
+    const char* y = b;\
+    if (x!=y)\
+    {\
+        if (x==NULL||y==NULL)\
+        {\
+            assert_int_equal(x, y);\
+        }\
+        else\
+        {\
+            assert_string_equal(x, y);\
+        }\
+    }\
+}\
 
 #endif

@@ -764,7 +764,7 @@ static void test_safe_open_TRUNC_unsafe_switched_symlink(void)
 
     setup_tempfiles();
 
-    TEST_SYMLINK_COUNTDOWN = 3;
+    TEST_SYMLINK_COUNTDOWN = 2;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
     // Not calling this function will call it right in the middle of the
@@ -776,10 +776,11 @@ static void test_safe_open_TRUNC_unsafe_switched_symlink(void)
      * *not* be truncated. */
 
     /* 1. file is owned by root */
-    chown(TEMP_DIR "/" TEST_FILE, 0, 0);
+    assert_int_equal(chown(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(chown(TEMP_DIR "/" TEST_FILE, 0, 0), 0);
 
     /* 2. TEST, but with a user-owned symlink being injected
-     *in place of the file. */
+     * in place of the file. */
     int fd = safe_open(TEMP_DIR "/" TEST_FILE, O_WRONLY | O_TRUNC);
     assert_int_equal(fd, -1);
 

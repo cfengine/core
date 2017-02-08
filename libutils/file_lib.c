@@ -330,7 +330,8 @@ void switch_symlink_hook();
 
 /**
  * Opens a file safely. It will follow symlinks, but only if the symlink is trusted,
- * that is, if the owner of the symlink and the owner of the target are the same.
+ * that is, if the owner of the symlink and the owner of the target are the same,
+ * or if the owner of the symlink is either root or the user running the current process.
  * All components are checked, even symlinks encountered in earlier parts of the
  * path name.
  *
@@ -387,6 +388,7 @@ int safe_open(const char *pathname, int flags, ...)
     bool trunc = false;
     const int orig_flags = flags;
     char *next_component = path;
+    bool p_uid;
 
     if (*next_component == '/')
     {
@@ -407,6 +409,9 @@ int safe_open(const char *pathname, int flags, ...)
     {
         return -1;
     }
+
+    // current process user id
+    p_uid = geteuid();
 
     size_t final_size = (size_t) -1;
     while (next_component)
@@ -558,8 +563,14 @@ int safe_open(const char *pathname, int flags, ...)
                     close(currentfd);
                     return -1;
                 }
-                if (stat_before.st_uid != stat_after.st_uid ||
-                    stat_before.st_gid != stat_after.st_gid)
+                // Some attacks may use symlinks to get higher privileges
+                // The safe cases are:
+                // * symlinks owned by root
+                // * symlinks owned by the user running the process
+                // * symlinks that have the same owner and group as the destination
+                if (stat_before.st_uid != 0 &&
+                    stat_before.st_uid != p_uid &&
+                    (stat_before.st_uid != stat_after.st_uid || stat_before.st_gid != stat_after.st_gid))
                 {
                     close(currentfd);
                     // Return ENOLINK to signal that the link cannot be followed
@@ -603,7 +614,8 @@ int safe_open(const char *pathname, int flags, ...)
 
 /**
  * Opens a file safely. It will follow symlinks, but only if the symlink is trusted,
- * that is, if the owner of the symlink and the owner of the target are the same.
+ * that is, if the owner of the symlink and the owner of the target are the same,
+ * or if the owner of the symlink is either root or the user running the current process.
  * All components are checked, even symlinks encountered in earlier parts of the
  * path name.
  *
@@ -736,6 +748,7 @@ static int safe_open_true_parent_dir(const char *path,
     char *parent_dir = dirname(parent_dir_alloc);
     char *leaf = basename(leaf_alloc);
     struct stat statbuf;
+    uid_t p_uid = geteuid();
 
     if ((dirfd = safe_open(parent_dir, O_RDONLY)) == -1)
     {
@@ -747,7 +760,15 @@ static int safe_open_true_parent_dir(const char *path,
         goto cleanup;
     }
 
-    if (traversed_link && (link_user != statbuf.st_uid || link_group != statbuf.st_gid))
+    // Some attacks may use symlinks to get higher privileges
+    // The safe cases are:
+    // * symlinks owned by root
+    // * symlinks owned by the user running the process
+    // * symlinks that have the same owner and group as the destination
+    if (traversed_link &&
+        link_user != 0 &&
+        link_user != p_uid &&
+        (link_user != statbuf.st_uid || link_group != statbuf.st_gid))
     {
         errno = ENOLINK;
         ret = -1;

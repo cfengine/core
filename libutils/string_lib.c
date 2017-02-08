@@ -77,7 +77,7 @@ unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
     h ^= (h >> 11);
     h += (h << 15);
 
-    return (h & (max - 1));
+    return (h % max);
 }
 
 unsigned int StringHash_untyped(const void *str, unsigned int seed, unsigned int max)

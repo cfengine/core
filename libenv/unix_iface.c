@@ -612,7 +612,8 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
         return;
     }
 #else
-    if (!FileCanOpen("/sbin/ifconfig", "r") || ((pp = cf_popen("/sbin/ifconfig -a", "r", true)) == NULL))
+    if ((!FileCanOpen("/sbin/ifconfig", "r") || ((pp = cf_popen("/sbin/ifconfig -a", "r", true)) == NULL)) &&
+        (!FileCanOpen("/bin/ifconfig", "r") || ((pp = cf_popen("/bin/ifconfig -a", "r", true)) == NULL)))
     {
         Log(LOG_LEVEL_VERBOSE, "Could not find interface info");
         return;

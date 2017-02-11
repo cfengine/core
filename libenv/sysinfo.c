@@ -1135,7 +1135,14 @@ static void OSClasses(EvalContext *ctx)
     {
         Xen_Domain(ctx);
     }
-
+#ifdef XEN_CPUID_SUPPORT
+    else if (Xen_Hv_Check())
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
+        EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
+        EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
+    }
+#endif /* XEN_CPUID_SUPPORT */
     if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
@@ -1151,15 +1158,6 @@ static void OSClasses(EvalContext *ctx)
     {
         OpenVZ_Detect(ctx);
     }
-
-#ifdef XEN_CPUID_SUPPORT
-    else if (Xen_Hv_Check())
-    {
-        Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
-        EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
-        EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
-    }
-#endif
 
 #else
 
@@ -2577,21 +2575,20 @@ static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx,
 
 static int Xen_Hv_Check(void)
 {
-    uint32_t eax;
+    uint32_t eax, base;
     union
     {
         uint32_t u[3];
         char s[13];
     } sig = {{0}};
 
-    Xen_Cpuid(0x40000000, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
-
-    if (strcmp("XenVMMXenVMM", sig.s) || (eax < 0x40000002))
+    for (base = 0x40000000; base < 0x40010000; base += 0x100)
     {
-        return 0;
+        Xen_Cpuid(base, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
+        if (strcmp("XenVMMXenVMM", sig.s) && eax >= (base + 2))
+            return 0;
     }
 
-    Xen_Cpuid(0x40000001, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
     return 1;
 }
 

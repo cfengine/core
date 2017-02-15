@@ -25,8 +25,8 @@ bundle agent main
 {
     processes:
 
-      # Any sleep processes not running as vagrant should be killed
-      # on sight.
+      # Any /usr/local/web/tomcat-logviewer processes not
+      # running as buildsrv should be killed on sight.
 
       "/usr/local/web/tomcat-logviewer" -> { "security" }
         process_select => not_running_as("buildsrv"),

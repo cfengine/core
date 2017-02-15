@@ -1,0 +1,51 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+bundle agent main
+{
+    processes:
+
+      # Any sleep processes not running as vagrant should be killed
+      # on sight.
+
+      "/usr/local/web/tomcat-logviewer" -> { "security" }
+        process_select => not_running_as("buildsrv"),
+        signals => { "kill" },
+	comment => "It is against the security policy for this
+                    service to run under the wrong user id.";
+}
+
+body process_select not_running_as(owner)
+# @brief select processes that are not running as the expected owner
+# @param owner
+{
+  process_owner => { $(owner) };
+  process_result => "!process_owner";
+}
+#+end_src
+###############################################################################
+#+begin_src static_example_output
+#@ ```
+#@ info: Signalled 'kill' (9) to process 7211 (root      7211  7199  7211  0.0  0.1 100908   0       596    1 15:26       00:06 00:00:00 /usr/local/web/tomcat-logviewer 500)
+#@ ```
+#+end_src

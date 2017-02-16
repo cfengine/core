@@ -43,12 +43,10 @@ void CFNetSetDefault(CFNetOptions *opts);
 void CFNetInit();
 
 // MAIN LOGIC:
-int CFNetParse(int argc, char **argv,           // INPUTS
-               CFNetOptions *opts, char **cmd,  // OUTPUTS
-               char ***args, char **hostnames); // OUTPUTS
-int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname,
-                       char *cmd, char **args);
-int CFNetRun(CFNetOptions *opts, const char *CMD, char **args, char *hostnames);
+int CFNetParse(int argc, char **argv,                               // INPUTS
+               CFNetOptions *opts, char ***args, char **hostnames); // OUTPUTS
+int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname, char **args);
+int CFNetRun(CFNetOptions *opts, char **args, char *hostnames);
 char *RequireHostname(char *hostnames);
 
 // PROTOCOL:
@@ -64,6 +62,8 @@ int CFNetConnect(CFNetOptions *opts, const char* hostname, char **args);
 
 void CFNetStatPrint(const char* file, int st_mode, const char *server);
 int CFNetStat(CFNetOptions *opts, const char* hostname, char **args);
+
+int CFNetGet(CFNetOptions *opts, const char* hostname, char **args);
 
 int CFNetMulti(const char *server);
 int CFNetMultiTLS(const char *server);

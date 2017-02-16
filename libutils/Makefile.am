@@ -47,6 +47,7 @@ libutils_la_SOURCES = \
 	proc_keyvalue.c proc_keyvalue.h \
 	bool.h \
 	json.c json.h json-priv.h \
+	json-utils.c json-utils.h \
 	json-yaml.c json-yaml.h \
 	refcount.c refcount.h \
 	list.c list.h \

@@ -22,23 +22,14 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_ADDR_LIB_H
-#define CFENGINE_ADDR_LIB_H
+#ifndef CFENGINE_JSON_UTILS_H
+#define CFENGINE_JSON_UTILS_H
 
-#include <platform.h>
+#include <json.h>
 
-bool IsLoopbackAddress(const char *address);
-int FuzzySetMatch(const char *s1, const char *s2);
-bool FuzzyHostParse(const char *arg2);
-int FuzzyHostMatch(const char *arg0, const char *arg1, const char *basename);
-bool FuzzyMatchParse(const char *item);
+void ParseEnvLine(char *raw_line, char **key_out, char **value_out, const char *filename_for_log, int linenumber);
+bool JsonParseEnvFile(const char *input_path, size_t size_max, JsonElement **json_out);
+bool JsonParseCsvFile(const char *path, size_t size_max, JsonElement **json_out);
+JsonElement *JsonReadDataFile(const char *log_identifier, const char *input_path, const char *requested_mode, size_t size_max);
 
-typedef enum {
-    ADDRESS_TYPE_OTHER, // Hostname or invalid
-    ADDRESS_TYPE_IPV4,
-    ADDRESS_TYPE_IPV6
-} AddressType;
-
-AddressType ParseHostPort(char *s, char **hostname, char **port);
-
-#endif
+#endif // CFENGINE_JSON_UTILS_H

@@ -560,36 +560,6 @@ bool IsLoopbackAddress(const char *address)
     return false;
 }
 
-char *TrimWhitespace(char *s)
-{
-    if ( NULL_OR_EMPTY(s) )
-    {
-        return NULL;
-    }
-
-    // Leading whitespace:
-    while (isspace(s[0]))
-    {
-        ++s;
-    }
-
-    // Empty string (only whitespace):
-    if (s[0] == '\0')
-    {
-        return NULL;
-    }
-
-    // Trailing whitespace:
-    char *end = s + strlen(s) - 1; // Last byte before '\0'
-    while ( isspace(end[0]) )
-    {
-        --end;
-    }
-    end[1] = '\0';   // Null terminate string after last non space char
-
-    return s;
-}
-
 /**
  * Simple check to avoid writing to illegal memory addresses.
  * NOT a proper test for valid IP.

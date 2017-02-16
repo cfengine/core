@@ -50,6 +50,7 @@
 #include <ornaments.h>
 #include <feature.h>
 #include <evalfunction.h>
+#include <json-utils.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -588,22 +589,6 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), CF_DATA_TYPE_STRING, "source=agent");
 
-    struct stat statbuf;
-    JsonElement *os_release_json = NULL;
-    if (stat("/etc/os-release", &statbuf) != -1)
-    {
-        os_release_json = ReadDataFile("system info discovery", "/etc/os-release", "ENV", 100 * 1024);
-    }
-    else if (stat("/usr/lib/os-release", &statbuf) != -1)
-    {
-        os_release_json = ReadDataFile("system info discovery", "/usr/lib/os-release", "ENV", 100 * 1024);
-    }
-
-    if (os_release_json != NULL)
-    {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os_release", os_release_json, CF_DATA_TYPE_CONTAINER, "source=agent,os,release,derived_from=/etc/os-release");
-    }
-
     snprintf(workbuf, CF_BUFSIZE, "%s%cbin", workdir, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
@@ -1086,6 +1071,30 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/system-release", &statbuf) != -1)
     {
         Linux_Amazon_Version(ctx);
+    }
+    
+    JsonElement *os_release_json = NULL;
+    if (access("/etc/os-release", R_OK) != -1)
+    {
+        os_release_json = JsonReadDataFile("system info discovery", "/etc/os-release", "ENV", 100 * 1024);
+    }
+    else if (access("/usr/lib/os-release", R_OK) != -1)
+    {
+        os_release_json = JsonReadDataFile("system info discovery", "/usr/lib/os-release", "ENV", 100 * 1024);
+    }
+
+    if (os_release_json != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os_release", os_release_json, CF_DATA_TYPE_CONTAINER, "source=agent,os,release,derived_from=/etc/os-release");
+        const char *os_release_id = JsonObjectGetAsString(os_release_json, "ID");
+        if(os_release_id != NULL)
+        {
+            if(strcmp(os_release_id, "coreos") == 0)
+            {
+                EvalContextClassPutHard(ctx, "coreos", "inventory,attribute_name=none,source=agent");
+            }
+        }
+        JsonDestroy(os_release_json);
     }
 
 # define SLACKWARE_ANCIENT_VERSION_FILENAME "/etc/slackware-release"

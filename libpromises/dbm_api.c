@@ -194,7 +194,10 @@ bool IsSubHandle(DBHandle *handle, dbid id, const char *name)
 
 static DBHandle *DBHandleGetSubDB(dbid id, const char *name)
 {
-    ThreadLock(&db_handles_lock);
+    if (!ThreadLock(&db_handles_lock))
+    {
+        return NULL;
+    }
 
     DynamicDBHandles *handles_list = db_dynamic_handles;
 
@@ -234,23 +237,28 @@ static DBHandle *DBHandleGet(int id)
 {
     assert(id >= 0 && id < dbid_max);
 
-    ThreadLock(&db_handles_lock);
-
-    if (db_handles[id].filename == NULL)
+    if (ThreadLock(&db_handles_lock))
     {
-        db_handles[id].filename = DBIdToPath(id);
+        if (db_handles[id].filename == NULL)
+        {
+            db_handles[id].filename = DBIdToPath(id);
 
-        /* Initialize mutexes as error-checking ones. */
-        pthread_mutexattr_t attr;
-        pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
-        pthread_mutex_init(&db_handles[id].lock, &attr);
-        pthread_mutexattr_destroy(&attr);
+            /* Initialize mutexes as error-checking ones. */
+            pthread_mutexattr_t attr;
+            pthread_mutexattr_init(&attr);
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+            pthread_mutex_init(&db_handles[id].lock, &attr);
+            pthread_mutexattr_destroy(&attr);
+        }
+
+        ThreadUnlock(&db_handles_lock);
+
+        return &db_handles[id];
     }
-
-    ThreadUnlock(&db_handles_lock);
-
-    return &db_handles[id];
+    else
+    {
+        return NULL;
+    }
 }
 
 static inline
@@ -344,59 +352,63 @@ void DBSetMaximumConcurrentTransactions(int max_txn)
 static inline
 bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
 {
-    ThreadLock(&handle->lock);
-
-    if (handle->refcount == 0)
+    if (ThreadLock(&handle->lock))
     {
-        int lock_fd = DBPathLock(handle->filename);
-
-        if(lock_fd != -1)
+        if (handle->refcount == 0)
         {
-            handle->priv = DBPrivOpenDB(handle->filename, id);
+            int lock_fd = DBPathLock(handle->filename);
 
-            if (handle->priv == DB_PRIV_DATABASE_BROKEN)
+            if(lock_fd != -1)
             {
-                DBPathMoveBroken(handle->filename);
                 handle->priv = DBPrivOpenDB(handle->filename, id);
+
                 if (handle->priv == DB_PRIV_DATABASE_BROKEN)
                 {
+                    DBPathMoveBroken(handle->filename);
+                    handle->priv = DBPrivOpenDB(handle->filename, id);
+                    if (handle->priv == DB_PRIV_DATABASE_BROKEN)
+                    {
+                        handle->priv = NULL;
+                    }
+                }
+
+                DBPathUnLock(lock_fd);
+            }
+
+            if (handle->priv)
+            {
+                if (!DBMigrate(handle, id))
+                {
+                    DBPrivCloseDB(handle->priv);
                     handle->priv = NULL;
                 }
             }
-
-            DBPathUnLock(lock_fd);
         }
 
         if (handle->priv)
         {
-            if (!DBMigrate(handle, id))
-            {
-                DBPrivCloseDB(handle->priv);
-                handle->priv = NULL;
-            }
+            handle->refcount++;
+            *dbp = handle;
+
+            /* Only register shutdown handler if any database was opened
+             * correctly. Otherwise this shutdown caller may be called too early,
+             * and shutdown handler installed by the database library may end up
+             * being called before CloseAllDB function */
+
+            pthread_once(&db_shutdown_once, RegisterShutdownHandler);
         }
-    }
+        else
+        {
+            *dbp = NULL;
+        }
 
-    if (handle->priv)
-    {
-        handle->refcount++;
-        *dbp = handle;
-
-        /* Only register shutdown handler if any database was opened
-         * correctly. Otherwise this shutdown caller may be called too early,
-         * and shutdown handler installed by the database library may end up
-         * being called before CloseAllDB function */
-
-        pthread_once(&db_shutdown_once, RegisterShutdownHandler);
+        ThreadUnlock(&handle->lock);
+        return *dbp != NULL;
     }
     else
     {
-        *dbp = NULL;
+        return false;
     }
-
-    ThreadUnlock(&handle->lock);
-
-    return *dbp != NULL;
 }
 
 bool OpenSubDB(DBHandle **dbp, dbid id, const char *sub_name)
@@ -413,30 +425,40 @@ bool OpenDB(DBHandle **dbp, dbid id)
 
 void CloseDB(DBHandle *handle)
 {
-    ThreadLock(&handle->lock);
-
-    DBPrivCommit(handle->priv);
-
-    if (handle->refcount < 1)
+    /* Skip in case of nested locking, for example signal handler.
+     * DB behaviour becomes erratic otherwise (CFE-1996). */
+    if (ThreadLock(&handle->lock))
     {
-        Log(LOG_LEVEL_ERR, "Trying to close database %s which is not open", handle->filename);
-    }
-    else if (--handle->refcount == 0)
-    {
-        DBPrivCloseDB(handle->priv);
-    }
+        DBPrivCommit(handle->priv);
 
-    ThreadUnlock(&handle->lock);
+        if (handle->refcount < 1)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Trying to close database which is not open: %s",
+                handle->filename);
+        }
+        else
+        {
+            handle->refcount--;
+            if (handle->refcount == 0)
+            {
+                DBPrivCloseDB(handle->priv);
+            }
+        }
+
+        ThreadUnlock(&handle->lock);
+    }
 }
 
 bool CleanDB(DBHandle *handle)
 {
-    ThreadLock(&handle->lock);
+    bool ret = false;
+    if (ThreadLock(&handle->lock))
+    {
+        ret = DBPrivClean(handle->priv);
 
-    bool ret = DBPrivClean(handle->priv);
-
-    ThreadUnlock(&handle->lock);
-
+        ThreadUnlock(&handle->lock);
+    }
     return ret;
 }
 

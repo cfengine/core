@@ -269,7 +269,7 @@ static bool AuthorizeClass(const ServerConnectionState *conn,
     Log(LOG_LEVEL_DEBUG, "Authorizing class: %s", class);
 
     const char *ACCEPT =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_";
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_:";
     size_t acceptable_chars = strspn(class, ACCEPT);
     size_t class_len = strlen(class);
 

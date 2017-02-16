@@ -26,6 +26,7 @@
 
 #include <server.h>
 
+#include <sys/resource.h>
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <files_names.h>
@@ -243,6 +244,28 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
 
 /*******************************************************************/
 
+static bool SetMaxOpenFiles(int n)
+{
+    const struct rlimit lim = {
+        .rlim_cur = n,
+        .rlim_max = n,
+    };
+    int ret = setrlimit(RLIMIT_NOFILE, &lim);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_INFO, "Failed setting max open files limit"
+            " (setrlimit(NOFILE, %d): %s)", n, GetErrorStr());
+        Log(LOG_LEVEL_INFO,
+            "Please ensure that 'nofile' ulimit is at least 2x maxconnections");
+        return false;
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Setting max open files rlimit to %d", n);
+        return true;
+    }
+}
+
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     CFD_MAXPROCESSES = 30;
@@ -260,12 +283,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
     /* Now expand */
 
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_SERVER);
+
+#define IsControlBody(e) (strcmp(cp->lval, CFS_CONTROLBODY[e].lval) == 0)
+
     if (constraints)
     {
         for (size_t i = 0; i < SeqLength(constraints); i++)
         {
             Constraint *cp = SeqAt(constraints, i);
-#define IsControlBody(e) (strcmp(cp->lval, CFS_CONTROLBODY[e].lval) == 0)
 
             if (!IsDefinedClass(ctx, cp->classes))
             {
@@ -302,10 +327,10 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             else if (IsControlBody(SERVER_CONTROL_MAX_CONNECTIONS))
             {
                 CFD_MAXPROCESSES = (int) IntFromString(value);
+
+                /* Ease apoptosis limits. */
                 MAXTRIES = CFD_MAXPROCESSES / 3;
-                Log(LOG_LEVEL_VERBOSE,
-                    "Setting maxconnections to %d",
-                    CFD_MAXPROCESSES);
+
                 /* The handling of max_readers in LMDB is not ideal, but
                  * here is how it is right now: We know that both cf-serverd and
                  * cf-hub will access the lastseen database. Worst case every
@@ -314,9 +339,13 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                  * those two values together to provide a safe ceiling. In
                  * addition, cf-agent can access the database occasionally as
                  * well, so add a few extra for that too. */
+                Log(LOG_LEVEL_VERBOSE,
+                    "Setting maxconnections to %d", CFD_MAXPROCESSES);
                 DBSetMaximumConcurrentTransactions(CFD_MAXPROCESSES
                                                    + EnterpriseGetMaxCfHubProcesses() + 10);
-                continue;
+
+                /* Set RLIMIT_NOFILE to be enough for all threads. */
+                SetMaxOpenFiles(CFD_MAXPROCESSES * 2 + 10);
             }
             else if (IsControlBody(SERVER_CONTROL_CALL_COLLECT_INTERVAL))
             {
@@ -457,8 +486,10 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 Log(LOG_LEVEL_VERBOSE, "Setting allowtlsversion to: %s",
                     SV.allowtlsversion);
             }
-#undef IsControlBody
         }
+
+#undef IsControlBody
+
     }
 
     const void *value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST);

@@ -29,7 +29,7 @@
 #include <client_code.h>        // ServerConnection
 #include <crypto.h>             // CryptoInitialize
 #include <addr_lib.h>           // ParseHostPort
-#include <net.h>                // SocketConnect
+#include <net.h>                // SocketConnect() SendTransaction()
 #include <time.h>               // time_t, time, difftime
 #include <stat_cache.h>         // cf_remote_stat
 #include <string_lib.h>         // ToLowerStrInplace
@@ -67,8 +67,9 @@ static const char *const CF_NET_MANPAGE_LONG_DESCRIPTION =
 static const Description COMMANDS[] =
 {
     {"help",    "Prints general help or per topic",             "cf-net help [command]"},
-    {"connect", "Checks if host(s) is available by connecting", "cf-net -H 192.168.50.50 connect"},
-    {"stat",    "Look at type of file",                         "cf-net -H 192.168.50.50 stat /var/cfengine/masterfiles/update.cf"},
+    {"connect", "Checks if host(s) is available by connecting", "cf-net -H 192.168.50.50,192.168.50.51 connect"},
+    {"stat",    "Look at type of file",                         "cf-net stat masterfiles/update.cf"},
+    {"get",     "Get file from server",                         "cf-net get masterfiles/update.cf -o download.cf"},
     {NULL, NULL, NULL}
 };
 
@@ -87,7 +88,7 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Print the man page",
-    "Host to use (defaults to policy_server.dat)",
+    "Hostname or IP of server (defaults to policy_server.dat)",
     "Enable debugging output",
     "Enable verbose output",
     "Enable basic information output",
@@ -101,16 +102,15 @@ static const char *const HINTS[] =
 int main(int argc, char **argv)
 {
     CFNetOptions opts;
-    char *cmd;
     char **args;
     char *hostnames = NULL;
-    int ret = CFNetParse(argc, argv,                      // Inputs
-                         &opts, &cmd, &args, &hostnames); // Outputs
+    int ret = CFNetParse(argc, argv,                // Inputs
+                         &opts, &args, &hostnames); // Outputs
     if (ret != 0)
     {
         exit(EXIT_FAILURE);
     }
-    ret = CFNetRun(&opts, cmd, args, hostnames);  // Commands return exit code
+    ret = CFNetRun(&opts, args, hostnames);  // Commands return exit code
     return ret;
 }
 
@@ -161,7 +161,7 @@ char* RequireHostname(char *hostnames)
 
 
 int CFNetParse(int argc, char **argv,
-               CFNetOptions *opts, char **cmd, char ***args, char **hostnames)
+               CFNetOptions *opts, char ***args, char **hostnames)
 {
     assert(opts != NULL);
     if (argc <= 1)
@@ -226,8 +226,7 @@ int CFNetParse(int argc, char **argv,
             }
         }
     }
-    (*cmd) = argv[optind];
-    (*args) = &(argv[optind+1]);
+    (*args) = &(argv[optind]);
     return 0;
 }
 
@@ -238,19 +237,20 @@ int CFNetParse(int argc, char **argv,
     }\
 
 // ^ Macro returns on match(!)
-int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname, char *cmd, char **args)
+int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname, char **args)
 {
-    CFNetIfMatchRun(cmd, "connect",  CFNetConnect(opts, hostname, args));
-    CFNetIfMatchRun(cmd, "stat",     CFNetStat(opts, hostname, args));
-    CFNetIfMatchRun(cmd, "multi",    CFNetMulti(hostname));
-    CFNetIfMatchRun(cmd, "multitls", CFNetMultiTLS(hostname));
-    printf("'%s' is not a valid cf-net command.\n", cmd);
+    CFNetIfMatchRun(args[0], "connect",  CFNetConnect(opts, hostname, args));
+    CFNetIfMatchRun(args[0], "stat",     CFNetStat(opts, hostname, args));
+    CFNetIfMatchRun(args[0], "get",      CFNetGet(opts, hostname, args));
+    CFNetIfMatchRun(args[0], "multi",    CFNetMulti(hostname));
+    CFNetIfMatchRun(args[0], "multitls", CFNetMultiTLS(hostname));
+    printf("'%s' is not a valid cf-net command.\n", args[0]);
     return 1;
 }
 
-int CFNetRun(CFNetOptions *opts, const char *CMD, char **args, char *hostnames)
+int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
 {
-    char* cmd = xstrdup(CMD);
+    char* cmd = args[0];
 
     ToLowerStrInplace(cmd);
 
@@ -264,13 +264,13 @@ int CFNetRun(CFNetOptions *opts, const char *CMD, char **args, char *hostnames)
     }
     if(opts->debug)
     {
-        LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+        LogSetGlobalLevel(LOG_LEVEL_DEBUG);
     }
 
     Log(LOG_LEVEL_VERBOSE, "Running command '%s' with argument(s):\n", cmd);
-    for (int i = 0; args[i] != NULL; ++i)
+    for (int i = 1; args[i] != NULL; ++i)
     {
-        Log(LOG_LEVEL_VERBOSE, "%s\n", args[i]);
+        Log(LOG_LEVEL_VERBOSE, "argv[%i]=%s\n", i, args[i]);
     }
 
     if (strcmp(cmd, "help") == 0)
@@ -283,11 +283,10 @@ int CFNetRun(CFNetOptions *opts, const char *CMD, char **args, char *hostnames)
     int ret = 0;
     char *hostname = strtok(hosts, ",");
     while (hostname != NULL){
-        CFNetCommandSwitch(opts, hostname, cmd, args);
+        CFNetCommandSwitch(opts, hostname, args);
         hostname = strtok(NULL, ",");
     }
     free(hosts);
-    free(cmd);
     return ret;
 }
 
@@ -360,6 +359,14 @@ int CFNetHelpTopic(const char *topic)
                "\nindicate wrong path, the file doesn't exist, permission "
                "\ndenied, or something else.\n");
     }
+    else if (strcmp("get", topic) == 0)
+    {
+        printf("\ncf-net get is comprised of two requests, STAT and GET."
+               "\nThe CFEngine GET protocol command requires a STAT first to"
+               "\ndetermine file size. By default the file is saved as its"
+               "\nbasename in current working directory (cwd). Override this"
+               "\nusing the -o filename option (-o - for stdout).\n");
+    }
     else
     {
         if (found == false)
@@ -398,7 +405,7 @@ int CFNetConnectSingle(const char *server, bool print)
     {
         printf("Connected & authenticated successfully to '%s'.\n", server);
     }
-    DeleteAgentConn(conn);
+    DisconnectServer(conn);
     return 0;
 }
 
@@ -489,7 +496,120 @@ int CFNetStat(CFNetOptions *opts, const char* hostname, char **args)
             (intmax_t)  sb.st_atime, (intmax_t)  sb.st_mtime);
         CFNetStatPrint(file, sb.st_mode, hostname);
     }
-    DeleteAgentConn(conn);
+
+    DisconnectServer(conn);
+    return 0;
+}
+
+static int invalid_command(const char *cmd)
+{
+    printf("Invalid, see: 'cf-net help %s' for more info\n", cmd);
+    return -1;
+}
+
+
+int CFNetGet(CFNetOptions *opts, const char* hostname, char **args)
+{
+    assert(opts);
+    assert(hostname);
+    assert(args);
+    AgentConnection *conn = CFNetOpenConnection(hostname);
+    if (conn == NULL)
+    {
+        return 1;
+    }
+    char *local_file = NULL;
+
+    // TODO: Propagate argv and argc from main()
+    int argc = 0;
+    while (args[argc] != NULL)
+    {
+        ++argc;
+    }
+
+    static struct option longopts[] = {
+         { "output",     required_argument,      NULL,           'o' },
+         { NULL,         0,                      NULL,           0   }
+    };
+    assert(opts != NULL);
+    if (argc <= 1)
+    {
+        return invalid_command("get");
+    }
+    extern int optind;
+    optind = 0;
+    extern char *optarg;
+    int c = 0;
+    int start_index = 1;
+    // TODO: Experiment with more user friendly leading - optstring
+    const char *optstr = "+o:"; // + means stop for non opt arg. :)
+    bool specified_path = false;
+    while ((c = getopt_long(argc, args, optstr, longopts, &start_index))
+            != -1)
+    {
+        switch (c)
+        {
+            case 'o':
+            {
+                local_file = xstrdup(optarg);
+                specified_path = true;
+                break;
+            }
+            case ':':
+            {
+                return invalid_command("get");
+                break;
+            }
+            case '?':
+            {
+                return invalid_command("get");
+                break;
+            }
+            default:
+            {
+                printf("Default optarg = '%s', c = '%c' = %i", optarg, c, (int)c);
+                break;
+            }
+        }
+    }
+    args = &(args[optind]);
+    argc -= optind;
+    const char *remote_file = args[0];
+
+    if(local_file == NULL)
+    {
+        char *last = strrchr(remote_file, '/');
+        if (last != NULL)
+        {
+            local_file = xstrdup(last + 1);
+        }
+        else
+        {
+            local_file = xstrdup(remote_file);
+        }
+    }
+
+    if (specified_path && strcmp(local_file, "-") == 0)
+    {
+         // TODO: Should rewrite CopyRegularFileNet etc. to take fd argument
+         // and a simple helper function to open a file as well.
+        printf("Output to stdout not yet implemented (TODO)");
+        free(local_file);
+        return -1;
+    }
+
+    struct stat sb;
+    int r = cf_remote_stat(conn, true, remote_file, &sb, "file");
+    if (r!= 0)
+    {
+        printf("Could not stat: '%s'.\n", remote_file);
+    }
+    else
+    {
+        CopyRegularFileNet(remote_file, local_file, sb.st_size, true, conn);
+    }
+    free(local_file);
+    DisconnectServer(conn);
     return 0;
 }
 

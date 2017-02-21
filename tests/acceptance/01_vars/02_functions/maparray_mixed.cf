@@ -1,0 +1,87 @@
+#######################################################
+#
+# Test maparray()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" string => "Test that maparray can expand variables with this and without this at the same time.";
+
+      "test_soft_fail" string => "any", meta => { "CFE-2590" };
+
+  vars:
+
+      "ntp_servers"          string     => ifelse(
+        "cfengine", '
+            { "kali01":
+              { "address"    : "172.27.82.22",
+                "key"        : "232",
+                "trustedkey" : [ "232", "242", "252" ],
+                "serverkey"  : "213"
+              },
+              "kali02":
+              { "address"    : "172.27.82.23",
+                "key"        : "232",
+                "trustedkey" : [ "232", "242", "252" ],
+                "serverkey"  : "213"
+              },
+              "kali03":
+              { "address"    : "172.27.82.24",
+                "key"        : "232",
+                "trustedkey" : [ "232", "242", "252" ],
+                "serverkey"  : "213"
+              }
+            }',
+        "EOP", '
+            { "nexus":
+              { "address"    : "134.152.192.11",
+                "key"        : "",
+                "trustedkey" : [ "" ],
+                "serverkey"  : ""
+              }
+            }',
+        "undefined");
+
+      "ntp"                  data       => parsejson($(ntp_servers));
+      "i"                    slist      => getindices("ntp");
+
+      "key[$(i)]"            string     => ifelse(isgreaterthan( string_length("$(ntp[$(i)][key])"), "0" ), "key",
+                                           " ");
+
+      # In 3.9.2 $(key[$(i)]) is expanded in the maparray used below. In 3.10 it
+      # is not expanded and the literal is left in each entry of the resulting
+      # slist.
+
+      "commands"             slist      => maparray("server $(ntp[$(this.k)][address]) iburst $(key[$(i)]) $(ntp[$(this.k)][key])  # $(this.k)", "ntp");
+
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_template => "$(this.promise_dirname)/multiline_json.mustache",
+      template_method => "mustache",
+      template_data => bundlestate("test");
+
+  reports:
+    DEBUG::
+      "$(commands)";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(this.promise_filename).expected",
+                                           "$(this.promise_filename)");
+}

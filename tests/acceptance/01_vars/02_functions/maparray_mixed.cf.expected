@@ -1,0 +1,48 @@
+{
+  "commands": [
+    "server 172.27.82.22 iburst key 232  # kali01",
+    "server 172.27.82.23 iburst key 232  # kali02",
+    "server 172.27.82.24 iburst key 232  # kali03"
+  ],
+  "i": [
+    "kali01",
+    "kali02",
+    "kali03"
+  ],
+  "key[kali01]": "key",
+  "key[kali02]": "key",
+  "key[kali03]": "key",
+  "ntp": {
+    "kali01": {
+      "address": "172.27.82.22",
+      "key": "232",
+      "serverkey": "213",
+      "trustedkey": [
+        "232",
+        "242",
+        "252"
+      ]
+    },
+    "kali02": {
+      "address": "172.27.82.23",
+      "key": "232",
+      "serverkey": "213",
+      "trustedkey": [
+        "232",
+        "242",
+        "252"
+      ]
+    },
+    "kali03": {
+      "address": "172.27.82.24",
+      "key": "232",
+      "serverkey": "213",
+      "trustedkey": [
+        "232",
+        "242",
+        "252"
+      ]
+    }
+  },
+  "ntp_servers": "\n            { \"kali01\":\n              { \"address\"    : \"172.27.82.22\",\n                \"key\"        : \"232\",\n                \"trustedkey\" : [ \"232\", \"242\", \"252\" ],\n                \"serverkey\"  : \"213\"\n              },\n              \"kali02\":\n              { \"address\"    : \"172.27.82.23\",\n                \"key\"        : \"232\",\n                \"trustedkey\" : [ \"232\", \"242\", \"252\" ],\n                \"serverkey\"  : \"213\"\n              },\n              \"kali03\":\n              { \"address\"    : \"172.27.82.24\",\n                \"key\"        : \"232\",\n                \"trustedkey\" : [ \"232\", \"242\", \"252\" ],\n                \"serverkey\"  : \"213\"\n              }\n            }"
+}

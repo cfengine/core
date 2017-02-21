@@ -174,6 +174,7 @@ char *ReadPolicyServerFile(const char *workdir)
     }
     fclose(fp);
     char *start = TrimWhitespace(contents);
+    free(filename);
     return xstrdup(start);
 }
 

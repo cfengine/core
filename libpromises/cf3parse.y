@@ -127,7 +127,7 @@ bundletype_values:     typeid
                                INSTALL_SKIP = true;
                            }
                        }
-                     | error 
+                     | error
                        {
                            yyclearin;
                            ParseError("Expected bundle type, wrong input '%s'", yytext);
@@ -141,7 +141,7 @@ bundleid:              bundleid_values
                        }
 
 bundleid_values:       symbol
-                     | error 
+                     | error
                        {
                            yyclearin;
                            ParseError("Expected bundle identifier, wrong input '%s'", yytext);
@@ -211,7 +211,7 @@ symbol:                IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-arglist:               /* Empty */ 
+arglist:               /* Empty */
                      | arglist_begin aitems arglist_end
                      | arglist_begin arglist_end
                      | arglist_begin error
@@ -312,12 +312,12 @@ bundle_decl:           /* empty */
 
 bundle_statements:     bundle_statement
                      | bundle_statements bundle_statement
-                     | error 
+                     | error
                        {
                           INSTALL_SKIP = true;
                           ParseError("Expected promise type, got '%s'", yytext);
                           ParserDebug("P:promise_type:error yychar = %d, %c, yyempty = %d\n", yychar, yychar, YYEMPTY);
-                          yyclearin; 
+                          yyclearin;
                        }
 
 
@@ -586,10 +586,12 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                (item[1] == '(' || item[1] == '{'))
                                            {
                                                Rlist *synthetic_args = NULL;
-                                               RlistAppendScalar(&synthetic_args, xstrndup(P.rval.item+2, strlen(P.rval.item)-3 ));
+                                               char *tmp = xstrndup(P.rval.item+2, strlen(P.rval.item)-3 );
+                                               RlistAppendScalar(&synthetic_args, tmp);
+                                               free(tmp);
                                                RvalDestroy(P.rval);
 
-                                               P.rval = (Rval) { FnCallNew(xstrdup("mergedata"), synthetic_args), RVAL_TYPE_FNCALL };
+                                               P.rval = (Rval) { FnCallNew("mergedata", synthetic_args), RVAL_TYPE_FNCALL };
                                            }
                                            // convert 'json or yaml' to direct container or parsejson(x) or parseyaml(x)
                                            else if (P.rval.type == RVAL_TYPE_SCALAR &&
@@ -881,7 +883,7 @@ selection:             selection_id                         /* BODY ONLY */
                                    }
                                }
                            }
-                           
+
                            RvalDestroy(P.rval);
                            P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                        }

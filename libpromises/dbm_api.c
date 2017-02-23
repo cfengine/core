@@ -323,6 +323,7 @@ void CloseAllDBExit()
         db_dynamic_handles_list = db_dynamic_handles_list->next;
         free(handle);
     }
+    free(db_dynamic_handles);
     db_dynamic_handles = NULL;
 }
 

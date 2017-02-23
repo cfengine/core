@@ -890,6 +890,8 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
         {
             Log(LOG_LEVEL_VERBOSE, "have invalid constraint while resolving"
                     "package promise body: %s", cp->lval);
+
+            RvalDestroy(returnval);
             continue;
         }
 
@@ -912,6 +914,7 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
             /* This should be handled by the parser. */
             assert(0);
         }
+        RvalDestroy(returnval);
     }
     AddPackageModuleToContext(ctx, new_manager);
 }

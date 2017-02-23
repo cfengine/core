@@ -87,11 +87,11 @@ void test_processes_monitor(void)
     MonProcessesGatherData(cf_this);
     MonProcessesGatherData(cf_this);
     MonProcessesGatherData(cf_this);
-    int usr, rusr, ousr;
 
+    int usr, rusr, ousr;
     usr = rusr = ousr = 0;
     bool res = GetSysUsers(&usr, &rusr, &ousr);
-    if (res == false )
+    if (!res)
     {
         assert_true(1);
         return;
@@ -100,9 +100,16 @@ void test_processes_monitor(void)
     usr  = 3*usr;
     rusr = 3*rusr;
     ousr = 3*ousr;
-    int upper = (int)((double)usr*1.10);
-    int lower = (int)((double)usr*0.90);
-    assert_in_range((long long)cf_this[ob_users], lower, upper);
+
+    Log(LOG_LEVEL_NOTICE, "Counted %d/3 different users on the process table,"
+        " while CFEngine counted %f/3", usr, cf_this[ob_users]);
+    Log(LOG_LEVEL_NOTICE, "This is a non-deterministic test,"
+        " the two numbers should be *about* the same since the 'ps'"
+        " commands run very close to each other");
+
+    int upper = (int) ((double) usr*1.10);
+    int lower = (int) ((double) usr*0.90);
+    assert_in_range((long long) cf_this[ob_users], lower, upper);
 }
 
 int main()

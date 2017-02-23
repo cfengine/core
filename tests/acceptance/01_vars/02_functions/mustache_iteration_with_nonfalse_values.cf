@@ -1,6 +1,10 @@
-body file control { inputs => { "../../default.cf.sub" }; }
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
 bundle agent test{ meta: "test_soft_fail" string => "any", meta => { "CFE-2535" }; }
-bundle agent main {
+bundle agent check {
   vars:
     "json" data => '{"test":[ 
       {"a?":{"val":"a1"}},

@@ -1477,17 +1477,21 @@ Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bo
                 {
                 case RVAL_TYPE_FNCALL: // case 1: merge FnCall with scalar
                 {
-                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: merging PREVIOUS %s string context rval %s", old_cp->lval, RvalToString(old_cp->rval));
-                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: merging NEW %s rval %s", old_cp->lval, RvalToString(old_cp->rval));
+                    char * rval_string = RvalToString(old_cp->rval);
+                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: merging PREVIOUS %s string context rval %s", old_cp->lval, rval_string);
+                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: merging NEW %s rval %s", old_cp->lval, rval_string);
+                    free(rval_string);
 
                     Rlist *synthetic_args = NULL;
-                    RlistAppendScalar(&synthetic_args, xstrdup(RvalScalarValue(old_cp->rval)));
+                    RlistAppendScalar(&synthetic_args, RvalScalarValue(old_cp->rval));
 
                     // append the old Rval (a function call) under the arguments of the new one
                     RlistAppend(&synthetic_args, rval.item, RVAL_TYPE_FNCALL);
 
-                    Rval replacement = (Rval) { FnCallNew(xstrdup("and"), synthetic_args), RVAL_TYPE_FNCALL };
-                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: MERGED %s rval %s", old_cp->lval, RvalToString(replacement));
+                    Rval replacement = (Rval) { FnCallNew("and", synthetic_args), RVAL_TYPE_FNCALL };
+                    rval_string = RvalToString(replacement);
+                    Log(LOG_LEVEL_DEBUG, "PromiseAppendConstraint: MERGED %s rval %s", old_cp->lval, rval_string);
+                    free(rval_string);
 
                     // overwrite the old Constraint rval with its replacement
                     RvalDestroy(cp->rval);

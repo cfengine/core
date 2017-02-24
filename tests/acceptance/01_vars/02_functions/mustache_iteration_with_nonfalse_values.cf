@@ -3,12 +3,19 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence => { default("$(this.promise_filename)") };
 }
-bundle agent test{ meta: "test_soft_fail" string => "any", meta => { "CFE-2535" }; }
+bundle agent test
+{
+  meta:
+      "test_soft_fail"
+        string => "any",
+      meta => { "CFE-2535" };
+}
+
 bundle agent check {
   vars:
-    "json" data => '{"test":[ 
+    "json" data => '{"test":[
       {"a?":{"val":"a1"}},
-      {"b?":{"val":"b2"}}, 
+      {"b?":{"val":"b2"}},
       {"a?":{"val":"a3"}}
     ]}';
     "json_str" string => format("%S", 'json');
@@ -29,7 +36,7 @@ A:a3,B:
     "$(this.promise_filename) Pass"
       if => strcmp( $(result), $(expected) );
 
-    "$(this.promise_filename) Fail"
+    "$(this.promise_filename) FAIL"
       unless => strcmp( $(result), $(expected) );
 
     EXTRA::

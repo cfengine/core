@@ -1,0 +1,39 @@
+body common control
+{
+
+   # If you want to see this work on 3.6.x comment out
+   # inputs and bundlesequence, and inline the following
+   # bundles from  dcs.cf.sub
+   # - dcs_passif_output
+   # - dcs_passif_expected
+   # - dcs_passif
+
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+#    bundlesequence => { "test", "check" };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  meta:
+
+    "description"
+      string => "Test that readfile() does not throw an error during pre-eval if the file does not exist.";
+
+}
+
+###########################################################
+
+bundle agent check
+{
+
+  methods:
+      "check"
+        usebundle => dcs_passif_output(".*Hello World.*", ".*failed to read file.*",
+                                       "$(sys.cf_agent) -Kf $(this.promise_filename).sub", $(this.promise_filename));
+                                             
+}
+

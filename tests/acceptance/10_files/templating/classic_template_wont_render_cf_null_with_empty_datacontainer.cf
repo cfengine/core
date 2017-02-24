@@ -7,7 +7,7 @@ body common control
 
 }
 
-bundle agent test 
+bundle agent test
 {
   meta:
     "description" string => "Test that classic templates will not render
@@ -15,7 +15,7 @@ bundle agent test
                              container.";
 
     "test_soft_fail"
-      string => "any",
+      string => "cfengine_3_7|cfengine_3_8|cfengine_3_9",
       meta => { "CFE-2422" };
 
   vars:
@@ -43,7 +43,7 @@ bundle agent check
     # cf_null is found in the rendered file.
 
     "fail" expression => "!some_content|cf_null_in_rendered_file";
-  
+
   methods:
     ok::
       "" usebundle => dcs_pass( $(this.promise_filename) );

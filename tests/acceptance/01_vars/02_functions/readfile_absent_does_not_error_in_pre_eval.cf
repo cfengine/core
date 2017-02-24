@@ -23,6 +23,7 @@ bundle agent test
     "description"
       string => "Test that readfile() does not throw an error during pre-eval if the file does not exist.";
 
+    "test_soft_fail" string => "any", meta => { "CFE-2512" };
 }
 
 ###########################################################

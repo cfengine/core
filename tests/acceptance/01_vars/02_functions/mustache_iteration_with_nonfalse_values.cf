@@ -1,0 +1,48 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+bundle agent test
+{
+  meta:
+      "test_soft_fail"
+        string => "any",
+      meta => { "CFE-2535" };
+}
+
+bundle agent check {
+  vars:
+    "json" data => '{"test":[
+      {"a?":{"val":"a1"}},
+      {"b?":{"val":"b2"}},
+      {"a?":{"val":"a3"}}
+    ]}';
+    "json_str" string => format("%S", 'json');
+    "result" string => string_mustache('{{#test}}
+---
+A:{{#a?}}{{val}}{{/a?}}, B:{{#b?}}{{val}}{{/b?}}
+{{/test}}', json);
+    "expected" string => "---
+A:a1, B:
+---
+A:, B:b2
+---
+A:a3,B:
+";
+
+
+  reports:
+    "$(this.promise_filename) Pass"
+      if => strcmp( $(result), $(expected) );
+
+    "$(this.promise_filename) FAIL"
+      unless => strcmp( $(result), $(expected) );
+
+    EXTRA::
+    "$(sys.cf_version)";
+      "Result:
+$(result)";
+      "Should be:
+$(expected)";
+}

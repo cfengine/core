@@ -6244,7 +6244,7 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         return FnReturnNoCopy(contents);
     }
 
-    Log(LOG_LEVEL_ERR, "Function '%s' failed to read file: %s",
+    Log(LOG_LEVEL_VERBOSE, "Function '%s' failed to read file: %s",
         fp->name, filename);
     return FnFailure();
 }

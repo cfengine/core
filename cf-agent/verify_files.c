@@ -390,7 +390,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         {
             if (a.havedepthsearch)
             {
-                Log(LOG_LEVEL_WARNING,
+                Log(LOG_LEVEL_DEBUG,
                     "depth_search (recursion) is promised for a base object '%s' that is not a directory",
                       path);
                 goto exit;

@@ -6,6 +6,10 @@ addons:
     paths:
       - artifacts/
 
+matrix:
+  - linux
+  - osx
+ 
 env:
   global:
       # Quickest to build, fast performing, debugable builds.

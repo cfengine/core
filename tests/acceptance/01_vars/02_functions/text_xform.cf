@@ -9,7 +9,8 @@ bundle agent test
 {
   vars:
       "tests" slist => { "q1", "q2", "q3", "q4" };
-      "offsets" ilist => { "0", "1", "20", "26", "27", "28", "10240" };
+      "offsets" ilist => { "-1", "-2", "-5", "-10", "-20", "-26", "-27", "-28", "-10240",
+                          "0", "1", "2", "5", "10", "20", "26", "27", "28", "10240" };
       "fn1" slist => { "string_head", "string_tail" };
       "data[q1]" string => "this is the Question";
       "data[q2]" string => "";

@@ -1,0 +1,91 @@
+body common control
+{
+#  ignore_missing_bundles => "true";
+
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+
+}
+
+bundle agent test
+{
+  meta:
+    "description" string => "Test that classic templates will not render
+			     cf_null when dereferencing an absent data
+                             container.";
+
+    "test_soft_fail"
+      string => "cfengine_3_7|cfengine_3_8|cfengine_3_9",
+      meta => { "CFE-2422" };
+
+  vars:
+    # No vars are expected to be found here
+    "matching_vars" slist => variablesmatching(".*", "nomatch");
+
+  methods:
+    "any" usebundle => cmerge( "absent_container", @(matching_vars) );
+    "any" usebundle => template_file( $(G.testfile),
+                                      "$(this.promise_filename).tpl",
+                                      @(cmerge.absent_container));
+}
+
+bundle agent check
+{
+  classes:
+    "some_content" expression => regline( "This is a test file", $(G.testfile) );
+    "cf_null_in_rendered_file" expression => regline( ".*cf_null.*", $(G.testfile) );
+
+    # The test should pass if the file is rendered without cf_null in the file
+
+    "ok" expression => "some_content.!cf_null_in_rendered_file";
+
+    # The test should fail if the expected contnet is not rendered or if
+    # cf_null is found in the rendered file.
+
+    "fail" expression => "!some_content|cf_null_in_rendered_file";
+
+  methods:
+    ok::
+      "" usebundle => dcs_pass( $(this.promise_filename) );
+
+    fail::
+      "" usebundle => dcs_fail( $(this.promise_filename) );
+
+  reports:
+    DEBUG::
+      "Found some correct content in rendered file"
+        if => "some_content";
+
+      "Found cf_null in rendered file but should not have"
+        if => "cf_null_in_rendered_file";
+}
+
+bundle agent template_file(file, template, data_container)
+{
+
+# Note: the classic template looks inside this bundle to dereference various
+# values from data_container.
+
+  vars:
+    "index" slist => getindices("data_container");
+
+  files:
+    "$(file)"
+      create => "true",
+      edit_template => "$(template)";
+
+  reports:
+    "$(this.bundle)";
+}
+
+### Picked from the STDLIB ### 
+
+bundle agent cmerge(name, varlist)
+{
+  vars:
+      "$(name)" data => parsejson('[]'),            policy => "free";
+      "$(name)" data => mergedata($(name), $(varlist)), policy => "free"; # iterates!
+      "$(name)_str" string => format("%S", $(name)),    policy => "free";
+}
+
+

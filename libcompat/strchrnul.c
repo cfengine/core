@@ -12,7 +12,7 @@ char *strchrnul(const char *s, int c)
 
     if (p == NULL)
     {
-        return s + strlen(s);
+        return (char *)(s + strlen(s));
     }
     else
     {

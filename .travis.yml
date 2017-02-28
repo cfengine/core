@@ -31,6 +31,22 @@ matrix:
     - os: linux
       sudo: required
       env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
+    - os: osx
+      env: JOB_TYPE=compile_only
+      sudo: false
+#    - os: osx
+#      sudo: required
+#      env: JOB_TYPE=acceptance_tests_common
+#    - os: osx
+#      sudo: required
+#      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
+#  allow_failures:
+#    - os: osx
+#      sudo: required
+#      env: JOB_TYPE=acceptance_tests_common
+#    - os: osx
+#      sudo: required
+#      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
 
 before_install:
   - chmod ug+x ./travis-scripts/*

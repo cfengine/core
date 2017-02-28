@@ -26,27 +26,6 @@ bool test_empty(const char *a)
     assert_int_equal(test_empty(d), false);\
 }\
 
-// like assert_string_equal, but better with respect to pointers:
-// if a and b are NULL, returns true
-// if a or b is NULL print error using assert_int
-// if a and b are not NULL, use assert_string
-#define assert_string_int_equal(a, b)\
-{\
-    const char* x = a;\
-    const char* y = b;\
-    if (x!=y)\
-    {\
-        if (x==NULL||y==NULL)\
-        {\
-            assert_int_equal(x, y);\
-        }\
-        else\
-        {\
-            assert_string_equal(x, y);\
-        }\
-    }\
-}\
-
 // General test of all variables (get functions)
 #define test_one_case_generic(set, get, host, port, ip)\
 {\

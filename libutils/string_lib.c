@@ -857,6 +857,33 @@ int Chop(char *str, size_t max_length)
     return 0;
 }
 
+char *TrimWhitespace(char *s)
+{
+    assert(s);
+
+    // Leading whitespace:
+    while (isspace(s[0]))
+    {
+        ++s;
+    }
+
+    // Empty string (only whitespace):
+    if (s[0] == '\0')
+    {
+        return s;
+    }
+
+    // Trailing whitespace:
+    char *end = s + strlen(s) - 1; // Last byte before '\0'
+    while ( isspace(end[0]) )
+    {
+        --end;
+    }
+    end[1] = '\0';   // Null terminate string after last non space char
+
+    return s;
+}
+
 bool StringEndsWithCase(const char *str, const char *suffix, const bool case_fold)
 {
     size_t str_len = strlen(str);

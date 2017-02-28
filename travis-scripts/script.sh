@@ -24,7 +24,10 @@ fi
 make dist
 export DIST_TARBALL=`echo cfengine-*.tar.gz`
 
-if [ "$JOB_TYPE" = compile_and_unit_test ];
+if ["$JOB_TYPE" = compile_only ];
+then
+     make CFLAGS=-Werror;
+elif [ "$JOB_TYPE" = compile_and_unit_test ];
 then
     make CFLAGS=-Werror  &&
     make -C tests/unit check;

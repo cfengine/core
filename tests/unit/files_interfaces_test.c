@@ -2,6 +2,7 @@
 
 #include <files_interfaces.h>
 #include <misc_lib.h>                                          /* xsnprintf */
+#include <file_lib.h>          // CfReadLine()
 
 
 #define FILE_SIZE (sizeof(FILE_CONTENTS) - 1)
@@ -109,4 +110,3 @@ int main()
     tests_teardown();
     return ret;
 }
-

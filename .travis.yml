@@ -56,7 +56,7 @@ script:
   - source ./travis-scripts/script.sh
 
 before_deploy:
-  - source ./travis-scripts/before_deply.sh
+  - source ./travis-scripts/before_deploy.sh
 
 # We deploy when setting tags only, which basically never happens
 # on master branch. Cherry-pick this part and alter it properly into

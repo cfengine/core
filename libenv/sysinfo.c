@@ -995,6 +995,7 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
         xasprintf(&tags,
                   "inventory,attribute_name=none,source=agent,derived-from-file=%s",
                   file_path);
+
         const char *const_os_release_id = JsonObjectGetAsString(os_release_json, "ID");
         const char *const_os_release_version = JsonObjectGetAsString(os_release_json, "VERSION");
         

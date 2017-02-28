@@ -110,4 +110,3 @@ int main()
     tests_teardown();
     return ret;
 }
-

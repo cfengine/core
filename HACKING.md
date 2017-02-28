@@ -3,7 +3,7 @@ How to contribute to CFEngine
 
 Thanks for considering contributing to CFEngine! We take pull-requests
 [on GitHub](https://github.com/cfengine/core/pulls) and we have a public
-[Redmine bug-tracker](https://dev.cfengine.com). Discussion is taking place
+[bug-tracker](https://tracker.mender.io/projects/CFE/issues/). Discussion is taking place
 on the [dev-cfengine](https://groups.google.com/forum/#!forum/dev-cfengine)
 and [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine)
 mailing lists. You'll find us chatting on Freenode's IRC channels

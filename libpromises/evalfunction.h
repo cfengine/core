@@ -41,5 +41,4 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, const Policy *policy, const FnC
 FnCallResult FnCallUserExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 
 JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle);
-
 #endif

@@ -49,6 +49,8 @@
 #include <cf-windows-functions.h>
 #include <ornaments.h>
 #include <feature.h>
+#include <evalfunction.h>
+#include <json-utils.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -982,6 +984,52 @@ static void SetFlavour(EvalContext *ctx, const char *flavour)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
 }
 
+static void OSReleaseParse(EvalContext *ctx, const char *file_path)
+{
+    JsonElement *os_release_json = JsonReadDataFile("system info discovery",
+                                                    file_path, "ENV",
+                                                    100 * 1024);
+    if (os_release_json != NULL)
+    {
+        char *tags;
+        xasprintf(&tags,
+                  "inventory,attribute_name=none,source=agent,derived-from-file=%s",
+                  file_path);
+        const char *const_os_release_id = JsonObjectGetAsString(os_release_json, "ID");
+        const char *const_os_release_version = JsonObjectGetAsString(os_release_json, "VERSION");
+        
+        // This is currently only used for CoreOS, but can be expanded:
+        if (const_os_release_id != NULL && strcmp(const_os_release_id, "coreos") == 0)
+        {
+            EvalContextClassPutHard(ctx, "coreos", tags);
+            char *os_release_id = xstrdup(const_os_release_id);
+            CanonifyNameInPlace(os_release_id);
+            if (const_os_release_version != NULL)
+            {
+                char *os_release_version = xstrdup(const_os_release_version);
+                CanonifyNameInPlace(os_release_version);
+                char *os_release_flavor;
+                xasprintf(&os_release_flavor, "%s_%s",
+                          os_release_id, os_release_version);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor",
+                                              os_release_flavor, CF_DATA_TYPE_STRING,
+                                              tags);
+                char *last_underscore;
+                while ( (last_underscore = strrchr(os_release_flavor, '_')) != NULL )
+                {
+                    EvalContextClassPutHard(ctx, os_release_flavor, tags);
+                    *last_underscore = '\0';
+                }
+                free(os_release_version);
+                free(os_release_flavor);
+            }
+            free(os_release_id);
+        }
+        free(tags);
+        JsonDestroy(os_release_json);
+    }
+}
+
 static void OSClasses(EvalContext *ctx)
 {
 #ifdef __linux__
@@ -1021,10 +1069,22 @@ static void OSClasses(EvalContext *ctx)
         }
     }
 
-/* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
-   we test for those distributions first */
 
     struct stat statbuf;
+
+    // os-release is used to set sys.os_release as well as
+    // classes and vars on CoreOS:
+    if (access("/etc/os-release", R_OK) != -1)
+    {
+        OSReleaseParse(ctx, "/etc/os-release");
+    }
+    else if (access("/usr/lib/os-release", R_OK) != -1)
+    {
+        OSReleaseParse(ctx, "/usr/lib/os-release");
+    }
+
+/* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
+   we test for those distributions first */
 
     if (stat("/etc/mandriva-release", &statbuf) != -1)
     {

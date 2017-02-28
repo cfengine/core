@@ -106,6 +106,7 @@ check_PROGRAMS = \
 	str_test \
 	json_test \
 	csv_parser_test \
+	env_file_test \
 	evalfunction_test \
 	eval_context_test \
 	regex_test \

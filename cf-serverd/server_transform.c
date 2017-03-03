@@ -26,7 +26,6 @@
 
 #include <server.h>
 
-#include <sys/resource.h>
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <files_names.h>
@@ -245,6 +244,7 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
 /*******************************************************************/
 
 static bool SetMaxOpenFiles(int n)
+#ifdef HAVE_SYS_RESOURCE_H
 {
     const struct rlimit lim = {
         .rlim_cur = n,
@@ -265,6 +265,13 @@ static bool SetMaxOpenFiles(int n)
         return true;
     }
 }
+#else  /* MinGW */
+{
+    Log(LOG_LEVEL_VERBOSE,
+        "Platform does not support setrlimit(NOFILE), max open files not set");
+    return false;
+}
+#endif  /* HAVE_SYS_RESOURCE_H */
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {

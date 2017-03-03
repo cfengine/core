@@ -4689,8 +4689,8 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
         return FnFailure();
     }
 
-
-    char *jstring = NULL;
+    const char *jstring = NULL;
+    FnCallResult result;
     if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_CONTAINER)
     {
         JsonContainerType ct = JsonGetContainerType(json);
@@ -4716,7 +4716,11 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
         if (jelement != NULL &&
             JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
         {
-            jstring = xstrdup(JsonPrimitiveGetAsString(jelement));
+            jstring = JsonPrimitiveGetAsString(jelement);
+            if (jstring != NULL)
+            {
+                result = FnReturn(jstring);
+            }
         }
     }
 
@@ -4727,7 +4731,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
         return FnFailure();
     }
 
-    return FnReturn(jstring);
+    return result;
 }
 
 /*********************************************************************/

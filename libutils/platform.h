@@ -335,6 +335,10 @@ void globfree(glob_t *pglob);
 # include <sys/time.h>
 #endif
 
+#ifdef HAVE_SYS_RESOURCE_H
+# include <sys/resource.h>
+#endif
+
 #ifndef __MINGW32__
 # include <pwd.h>
 # include <grp.h>

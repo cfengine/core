@@ -884,11 +884,22 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     InitializeWindows();
 #endif
 
+    /* Set output to line-buffered to avoid truncated debug logs. */
+
     /* Bug on HP-UX: Buffered output is discarded if you switch buffering mode
        without flushing the buffered output first. This will happen anyway when
        switching modes, so no performance is lost. */
     fflush(stdout);
+
+#ifndef SUNOS_5
     setlinebuf(stdout);
+#else
+    /* CFE-2527: On Solaris we avoid calling setlinebuf, since fprintf() on
+       Solaris 10 and 11 truncates output under certain conditions. We fully
+       disable buffering to avoid truncated debug logs; performance impact
+       should be minimal because we mostly write full lines anyway. */
+    setvbuf(stdout, NULL, _IONBF, 0);
+#endif
 
     DetermineCfenginePort();
 

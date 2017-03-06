@@ -246,7 +246,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
     if (DONTDO && (!a.contain.preview))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Would execute script '%s'", cmdline);
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Would execute script '%s'", cmdline);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }

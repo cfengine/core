@@ -86,8 +86,8 @@ int NovaWin_NameToSid(char *name, SID *sid, DWORD sidSz);
 int NovaWin_SidToName(SID *sid, char *name, int nameSz);
 int NovaWin_StringToSid(char *stringSid, SID *sid, int sidSz);
 
-FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
-FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
+FnCallResult FnCallUserExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
+FnCallResult FnCallGroupExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 
 /* win_wmi.c */
 

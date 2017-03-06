@@ -189,7 +189,10 @@ char *DBIdToPath(dbid id)
 static
 bool IsSubHandle(DBHandle *handle, dbid id, const char *name)
 {
-    return StringSafeEqual(handle->filename, DBIdToSubPath(id, name));
+    char *sub_path = DBIdToSubPath(id, name);
+    bool result = StringSafeEqual(handle->filename, sub_path);
+    free(sub_path);
+    return result;
 }
 
 static DBHandle *DBHandleGetSubDB(dbid id, const char *name)
@@ -320,6 +323,7 @@ void CloseAllDBExit()
         db_dynamic_handles_list = db_dynamic_handles_list->next;
         free(handle);
     }
+    free(db_dynamic_handles);
     db_dynamic_handles = NULL;
 }
 
@@ -620,4 +624,3 @@ StringMap *LoadDatabaseToStringMap(dbid database_id)
 
     return db_map;
 }
-

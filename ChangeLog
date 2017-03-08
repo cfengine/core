@@ -1,3 +1,23 @@
+3.10.1:
+	New features/additions:
+	- "make tar-package" should create a tarball with the contents of
+	  "make install" (ENT-3041)
+
+	Bugfixes:
+	- Fix rare output truncation on Solaris 10/11 (CFE-2527)
+	- Change: Don't error during dry run for proposed execution. (CFE-2561)
+	- prevent LMDB assertion on AIX by ensuring nested DB calls are
+	  not occuring during signal handler cleanup (CFE-1996)
+	- Detect Amazon Linux and set "AmazonLinux" hard class and
+	  sys.flavour variable.
+	- Fix "lastseenexpireafter" 32-bit signed int overflow.
+	- Add missing pcre build flags to cf-key (CFE-2525)
+	- Fix a bug which could cause cf-execd to believe there was
+	  an error when sending the email report, when there really wasn't.
+	- cf-serverd: Auto configure max open files ulimit according to
+	  maxconnections (CFE-2575)
+	- Added vars and classes for CoreOS (ENT-3043)
+
 3.10.0:
 	New features/additions:
 	- All new features/additions for 3.8 and 3.9 are also included in 3.10.

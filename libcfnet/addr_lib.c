@@ -29,7 +29,7 @@
 #include <string_lib.h>
 
 #define CF_ADDRSIZE 128
-#define CF_MAXVARSIZE 1024
+
 
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
@@ -326,11 +326,11 @@ bool FuzzyHostParse(const char *arg2)
 
 int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost)
 {
-    char *sp, refbase[CF_MAXVARSIZE];
+    char *sp, refbase[1024];
     long cmp = -1, start = -1, end = -1;
     char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE];
 
-    strlcpy(refbase, refhost, CF_MAXVARSIZE);
+    strlcpy(refbase, refhost, sizeof(refbase));
     sp = refbase + strlen(refbase) - 1;
 
     while (isdigit((int) *sp))

@@ -30,6 +30,7 @@
 #include <promises.h>
 #include <match_scope.h>
 #include <string_lib.h>
+#include <files_lib.h>
 #include <pipes.h>
 #include <promises.h>
 #include <exec_tools.h>

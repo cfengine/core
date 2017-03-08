@@ -433,5 +433,6 @@ JsonPrimitiveType JsonIteratorCurrentPrimitiveType(const JsonIterator *iter);
 bool JsonIteratorHasMore(const JsonIterator *iter);
 
 JsonElement* StringCaptureData(pcre *pattern, const char* regex, const char* data);
+char *JsonDecodeString(const char *encoded_string);
 
 #endif

@@ -125,5 +125,10 @@ bool FileSparseClose(int fd, const char *filename,
                      size_t total_bytes_written,
                      bool last_write_was_hole);
 
+/**
+ * @brief Works exactly like posix 'getline', EXCEPT it does not include carriage return at the end.
+ * @return -1 on error OR EOF, so check. Or bytes in buff without excluding terminator.
+ */
+ssize_t CfReadLine(char **buff, size_t *size, FILE *fp);
 
 #endif

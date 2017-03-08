@@ -29,6 +29,7 @@
 #include <pipes.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <file_lib.h>
 #include <generic_agent.h> // CloseLog
 
 /********************************************************************/

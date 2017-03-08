@@ -23,12 +23,13 @@
 */
 
 #include <addr_lib.h>
+#include <cfnet.h>
 
-#include <item_lib.h>
 #include <logging.h>
 #include <string_lib.h>
 
 #define CF_ADDRSIZE 128
+
 
 /* Match two IP strings - with : or . in hex or decimal
    s1 is the test string, and s2 is the reference e.g.
@@ -325,11 +326,11 @@ bool FuzzyHostParse(const char *arg2)
 
 int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost)
 {
-    char *sp, refbase[CF_MAXVARSIZE];
+    char *sp, refbase[1024];
     long cmp = -1, start = -1, end = -1;
     char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE];
 
-    strlcpy(refbase, refhost, CF_MAXVARSIZE);
+    strlcpy(refbase, refhost, sizeof(refbase));
     sp = refbase + strlen(refbase) - 1;
 
     while (isdigit((int) *sp))
@@ -557,52 +558,6 @@ bool IsLoopbackAddress(const char *address)
     }
 
     return false;
-}
-
-bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
- /* Does this address belong to a local interface */
-{
-    for (const Item *ip = ip_addresses; ip != NULL; ip = ip->next)
-    {
-        if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
-        {
-            Log(LOG_LEVEL_DEBUG, "Identifying '%s' as one of my interfaces", adr);
-            return true;
-        }
-    }
-
-    Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
-    return false;
-}
-
-char *TrimWhitespace(char *s)
-{
-    if ( NULL_OR_EMPTY(s) )
-    {
-        return NULL;
-    }
-
-    // Leading whitespace:
-    while (isspace(s[0]))
-    {
-        ++s;
-    }
-
-    // Empty string (only whitespace):
-    if (s[0] == '\0')
-    {
-        return NULL;
-    }
-
-    // Trailing whitespace:
-    char *end = s + strlen(s) - 1; // Last byte before '\0'
-    while ( isspace(end[0]) )
-    {
-        --end;
-    }
-    end[1] = '\0';   // Null terminate string after last non space char
-
-    return s;
 }
 
 /**

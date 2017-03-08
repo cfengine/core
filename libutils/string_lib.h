@@ -121,6 +121,8 @@ int StripTrailingNewline(char *str, size_t max_length);
  */
 int Chop(char *str, size_t max_length);
 
+char *TrimWhitespace(char *s);
+
 /**
  * @brief Check if a string ends with the given suffix
  * @param str

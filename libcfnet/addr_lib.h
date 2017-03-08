@@ -25,14 +25,13 @@
 #ifndef CFENGINE_ADDR_LIB_H
 #define CFENGINE_ADDR_LIB_H
 
-#include <cf3.defs.h>
+#include <platform.h>
 
 bool IsLoopbackAddress(const char *address);
 int FuzzySetMatch(const char *s1, const char *s2);
 bool FuzzyHostParse(const char *arg2);
 int FuzzyHostMatch(const char *arg0, const char *arg1, const char *basename);
 bool FuzzyMatchParse(const char *item);
-bool IsInterfaceAddress(const Item *ip_addresses, const char *adr);
 
 typedef enum {
     ADDRESS_TYPE_OTHER, // Hostname or invalid
@@ -40,7 +39,6 @@ typedef enum {
     ADDRESS_TYPE_IPV6
 } AddressType;
 
-char *TrimWhitespace(char *s);
 AddressType ParseHostPort(char *s, char **hostname, char **port);
 
 #endif

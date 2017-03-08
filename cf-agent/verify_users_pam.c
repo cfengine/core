@@ -32,6 +32,7 @@
 #include <pipes.h>
 #include <files_copy.h>
 #include <files_interfaces.h>
+#include <files_lib.h>
 #include <eval_context.h>
 
 #include <cf3.defs.h>

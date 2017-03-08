@@ -22,36 +22,14 @@
   included file COSL.txt.
 */
 
-#include <files_interfaces.h>
+#ifndef CFENGINE_JSON_UTILS_H
+#define CFENGINE_JSON_UTILS_H
 
-#include <eval_context.h>
-#include <promises.h>
-#include <dir.h>
-#include <files_names.h>
-#include <files_hashes.h>
-#include <files_copy.h>
-#include <item_lib.h>
-#include <vars.h>
-#include <matching.h>
-#include <client_code.h>
-#include <string_lib.h>
-#include <rlist.h>
-#include <stat_cache.h>                                      /* remote_stat */
+#include <json.h>
 
-int cf_lstat(const char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
-{
-    if (conn == NULL)
-    {
-        int ret = lstat(file, buf);
-        if (ret == -1)
-        {
-            Log(LOG_LEVEL_ERR, "lstat: %s", GetErrorStr());
-        }
-        return ret;
-    }
-    else
-    {
-        assert(fc.servers && strcmp(fc.servers->val.item, "localhost"));
-        return cf_remote_stat(conn, fc.encrypt, file, buf, "link");
-    }
-}
+void ParseEnvLine(char *raw_line, char **key_out, char **value_out, const char *filename_for_log, int linenumber);
+bool JsonParseEnvFile(const char *input_path, size_t size_max, JsonElement **json_out);
+bool JsonParseCsvFile(const char *path, size_t size_max, JsonElement **json_out);
+JsonElement *JsonReadDataFile(const char *log_identifier, const char *input_path, const char *requested_mode, size_t size_max);
+
+#endif // CFENGINE_JSON_UTILS_H

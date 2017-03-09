@@ -1084,20 +1084,19 @@ void PurgeLocks(void)
 
         if (now - entry->time > (time_t) CF_LOCKHORIZON)
         {
-            Log(LOG_LEVEL_VERBOSE, " --> Purging lock (%jd) %s", (intmax_t)(now - entry->time), key);
+            Log(LOG_LEVEL_VERBOSE, "Purging lock (%jd s elapsed): %s",
+                (intmax_t) (now - entry->time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "Finished purging locks in '%s()'", __FUNCTION__);
+    Log(LOG_LEVEL_DEBUG, "Finished purging locks");
 
     lock_horizon.time = now;
     DeleteDBCursor(dbcp);
 
     WriteDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
     CloseLock(dbp);
-
-    Log(LOG_LEVEL_DEBUG, "Exiting '%s()'", __FUNCTION__);
 }
 
 int WriteLock(const char *name)

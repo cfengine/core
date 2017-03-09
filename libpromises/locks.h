@@ -27,22 +27,32 @@
 
 #include <cf3.defs.h>
 
-time_t FindLockTime(const char *name);
 
-CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now, TransactionContext tc, const Promise *pp, bool ignoreProcesses);
+CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
+                   time_t now, TransactionContext tc, const Promise *pp,
+                   bool ignoreProcesses);
 void YieldCurrentLock(CfLock lock);
 void YieldCurrentLockAndRemoveFromCache(EvalContext *ctx, CfLock lock,
                                         const char *operand, const Promise *pp);
-void GetLockName(char *lockname, const char *locktype, const char *base, const Rlist *params);
-
+void GetLockName(char *lockname, const char *locktype,
+                 const char *base, const Rlist *params);
 void PurgeLocks(void);
 void BackupLockDatabase(void);
-void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 
+
+/* TODO remove from header file, these are currently only used internally! */
 int WriteLock(const char *lock);
 CF_DB *OpenLock(void);
 void CloseLock(CF_DB *dbp);
+time_t FindLockTime(const char *name);
 
+
+/* These are only used in ENT! TODO fix and remove from header file. */
 void WaitForCriticalSection(const char *section_id);
 void ReleaseCriticalSection(const char *section_id);
+void PromiseRuntimeHash(const Promise *pp, const char *salt,
+                        unsigned char digest[EVP_MAX_MD_SIZE + 1],
+                        HashMethod type);
+
+
 #endif

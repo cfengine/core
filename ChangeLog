@@ -1,3 +1,42 @@
+3.7.5:
+	Changes:
+	- cf-serverd now accepts namespaced:classes passed with
+	  cf-runagent -D (Redmine #7856)
+	- Don't error during dry run for proposed execution (CFE-2561)
+	- Pass package promise options to underlying apt-get call (#802)
+	  (CFE-2468)
+	- Change log level for keeping verbatim JSON to DEBUG (CFE-2141)
+
+	Bugfixes:
+	- Make stock policy update more resiliant (CFE-2587)
+	- Allow specifying agent maxconnections via def.json (CFE-2461)
+	- fix files promise not setting ACL properly on directories. (CFE-616)
+	- fix cf-serverd crash when reporting corrupted data. (ENT-3023)
+	- Add default report collection exclusion based on promise handle
+	  (ENT-3061)
+	- Remove 2k limit on strings length when writing JSON policies
+	  (CFE-2383)
+	- Make apt_get module compatible with Ubuntu 16.04 (CFE-2445)
+	- fix insert_lines related memory corruption (CFE-2520)
+	- cf-serverd should reload def.json when reloading policy (CFE-2406)
+	- Ensure MP SSL Cert is readable (ENT-3050)
+	- Fix connection cache, reuse connections when possible (CFE-2447)
+	- Remove: Deprecated usage of sql_lite (ENT-2812)
+	- Fix systemd unit restart when not running (CFE-2541)
+	- Fix rare output truncation on Solaris 10/11 (CFE-2527)
+	- define kept outcome with action warn if edit_line is as expected
+	  (CFE-2424)
+	- Allow editing fields in lines longer than 4k (CFE-2438)
+	- Make apt_get package module version aware (CFE-2360)
+	- Fixed parsing of host name/IP and port number in cf-runagent
+	  (CFE-546)
+	- Fix apt_get package module incorrectly using interactive mode.
+	- cf-serverd: Do not close connection when file does not exist.
+	  (CFE-2532)
+	- Fix double logging of output_prefix, and log process name for
+	  cf-agent syslog messages (CFE-2225)
+	- Fix "lastseenexpireafter" 32-bit signed int overflow.
+
 3.7.4:
 	- Change: set_config_values uses bundle scoped classes
 	- Change: Require network before cfengine services (CFE-2435)

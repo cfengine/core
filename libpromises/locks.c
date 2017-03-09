@@ -95,19 +95,19 @@ static inline void log_lock(const char *op,
     {
         if (lock_data)
         {
-            Log(LOG_LEVEL_DEBUG, "%s lock operation in '%s()'. "
-                "lock_id = '%s', lock_checksum = '%s', "
-                "lock.pid = '%d', lock.time = '%d', "
-                "lock.process_start_time = '%d'",
-                op, function, lock, lock_sum,
-                (int)lock_data->pid, (int)lock_data->time,
-                (int)lock_data->process_start_time);
+            LogDebug(LOG_MOD_LOCKS, "%s lock operation in '%s()': "
+                     "lock_id = '%s', lock_checksum = '%s', "
+                     "lock.pid = '%d', lock.time = '%d', "
+                     "lock.process_start_time = '%d'",
+                     op, function, lock, lock_sum,
+                     (int)lock_data->pid, (int)lock_data->time,
+                     (int)lock_data->process_start_time);
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "%s lock operation in '%s()'. "
-                "lock_id = '%s', lock_checksum = '%s'",
-                op, function, lock, lock_sum);
+            LogDebug(LOG_MOD_LOCKS, "%s lock operation in '%s()'. "
+                     "lock_id = '%s', lock_checksum = '%s'",
+                     op, function, lock, lock_sum);
         }
     }
 }
@@ -115,7 +115,7 @@ static inline void log_lock(const char *op,
 static void GenerateMd5Hash(const char *istring, char *ohash)
 {
     if (!strcmp(istring, "CF_CRITICAL_SECTION"))
-    { 
+    {
         strcpy(ohash, istring);
         return;
     }
@@ -1075,8 +1075,7 @@ void PurgeLocks(void)
             continue;
         }
 #else
-        if (strncmp(key, "last.internal_bundle.track_license.handle",
-                    strlen("last.internal_bundle.track_license.handle")) == 0)
+        if (STARTSWITH(key, "last.internal_bundle.track_license.handle"))
         {
             continue;
         }
@@ -1084,20 +1083,19 @@ void PurgeLocks(void)
 
         if (now - entry->time > (time_t) CF_LOCKHORIZON)
         {
-            Log(LOG_LEVEL_VERBOSE, " --> Purging lock (%jd) %s", (intmax_t)(now - entry->time), key);
+            Log(LOG_LEVEL_VERBOSE, "Purging lock (%jd s elapsed): %s",
+                (intmax_t) (now - entry->time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "Finished purging locks in '%s()'", __FUNCTION__);
+    Log(LOG_LEVEL_DEBUG, "Finished purging locks");
 
     lock_horizon.time = now;
     DeleteDBCursor(dbcp);
 
     WriteDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
     CloseLock(dbp);
-
-    Log(LOG_LEVEL_DEBUG, "Exiting '%s()'", __FUNCTION__);
 }
 
 int WriteLock(const char *name)

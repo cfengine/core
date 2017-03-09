@@ -1075,8 +1075,7 @@ void PurgeLocks(void)
             continue;
         }
 #else
-        if (strncmp(key, "last.internal_bundle.track_license.handle",
-                    strlen("last.internal_bundle.track_license.handle")) == 0)
+        if (STARTSWITH(key, "last.internal_bundle.track_license.handle"))
         {
             continue;
         }

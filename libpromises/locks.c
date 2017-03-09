@@ -95,19 +95,19 @@ static inline void log_lock(const char *op,
     {
         if (lock_data)
         {
-            Log(LOG_LEVEL_DEBUG, "%s lock operation in '%s()'. "
-                "lock_id = '%s', lock_checksum = '%s', "
-                "lock.pid = '%d', lock.time = '%d', "
-                "lock.process_start_time = '%d'",
-                op, function, lock, lock_sum,
-                (int)lock_data->pid, (int)lock_data->time,
-                (int)lock_data->process_start_time);
+            LogDebug(LOG_MOD_LOCKS, "%s lock operation in '%s()': "
+                     "lock_id = '%s', lock_checksum = '%s', "
+                     "lock.pid = '%d', lock.time = '%d', "
+                     "lock.process_start_time = '%d'",
+                     op, function, lock, lock_sum,
+                     (int)lock_data->pid, (int)lock_data->time,
+                     (int)lock_data->process_start_time);
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "%s lock operation in '%s()'. "
-                "lock_id = '%s', lock_checksum = '%s'",
-                op, function, lock, lock_sum);
+            LogDebug(LOG_MOD_LOCKS, "%s lock operation in '%s()'. "
+                     "lock_id = '%s', lock_checksum = '%s'",
+                     op, function, lock, lock_sum);
         }
     }
 }
@@ -115,7 +115,7 @@ static inline void log_lock(const char *op,
 static void GenerateMd5Hash(const char *istring, char *ohash)
 {
     if (!strcmp(istring, "CF_CRITICAL_SECTION"))
-    { 
+    {
         strcpy(ohash, istring);
         return;
     }

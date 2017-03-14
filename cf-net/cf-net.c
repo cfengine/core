@@ -70,6 +70,7 @@ static const Description COMMANDS[] =
     {"connect", "Checks if host(s) is available by connecting", "cf-net -H 192.168.50.50,192.168.50.51 connect"},
     {"stat",    "Look at type of file",                         "cf-net stat masterfiles/update.cf"},
     {"get",     "Get file from server",                         "cf-net get masterfiles/update.cf -o download.cf"},
+    {"opendir", "List files and folders in a directory",        "cf-net opendir masterfiles"},
     {NULL, NULL, NULL}
 };
 
@@ -242,6 +243,7 @@ int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname, char **args)
     CFNetIfMatchRun(args[0], "connect",  CFNetConnect(opts, hostname, args));
     CFNetIfMatchRun(args[0], "stat",     CFNetStat(opts, hostname, args));
     CFNetIfMatchRun(args[0], "get",      CFNetGet(opts, hostname, args));
+    CFNetIfMatchRun(args[0], "opendir",  CFNetOpenDir(opts, hostname, args));
     CFNetIfMatchRun(args[0], "multi",    CFNetMulti(hostname));
     CFNetIfMatchRun(args[0], "multitls", CFNetMultiTLS(hostname));
     printf("'%s' is not a valid cf-net command.\n", args[0]);
@@ -275,7 +277,7 @@ int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
 
     if (strcmp(cmd, "help") == 0)
     {
-        return CFNetHelp(args[0]);
+        return CFNetHelp(args[1]);
     }
 
     CFNetInit();
@@ -609,6 +611,50 @@ int CFNetGet(CFNetOptions *opts, const char* hostname, char **args)
         CopyRegularFileNet(remote_file, local_file, sb.st_size, true, conn);
     }
     free(local_file);
+    DisconnectServer(conn);
+    return 0;
+}
+
+void PrintDirs(const Item *list)
+{
+    const Item *ip = list;
+
+    while (ip != NULL)
+    {
+        // TODO: I hate this:
+        struct dirent *de = (struct dirent *) ip->name;
+        printf("%s\n", de->d_name);
+
+        ip = ip->next;
+    }
+}
+
+int CFNetOpenDir(CFNetOptions *opts, const char* hostname, char **args)
+{
+    assert(opts);
+    assert(hostname);
+    assert(args);
+    AgentConnection *conn = CFNetOpenConnection(hostname);
+    if (conn == NULL)
+    {
+        return 1;
+    }
+
+    // TODO: Propagate argv and argc from main()
+    int argc = 0;
+    while (args[argc] != NULL)
+    {
+        ++argc;
+    }
+    if (argc <= 1)
+    {
+        return invalid_command("opendir");
+    }
+
+    const char *remote_path = args[1];
+
+    Item *items = RemoteDirList(remote_path, false, conn);
+    PrintDirs(items);
     DisconnectServer(conn);
     return 0;
 }

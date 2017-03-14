@@ -28,7 +28,7 @@
 #include <platform.h>
 #include <client_code.h>        // AgentConnection
 
-#define CF_NET_VERSION "0.0.0"
+#define CF_NET_VERSION "0.1.0"
 
 typedef struct
 {
@@ -64,6 +64,8 @@ void CFNetStatPrint(const char* file, int st_mode, const char *server);
 int CFNetStat(CFNetOptions *opts, const char* hostname, char **args);
 
 int CFNetGet(CFNetOptions *opts, const char* hostname, char **args);
+
+int CFNetOpenDir(CFNetOptions *opts, const char* hostname, char **args);
 
 int CFNetMulti(const char *server);
 int CFNetMultiTLS(const char *server);

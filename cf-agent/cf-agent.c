@@ -189,6 +189,8 @@ static const struct option OPTIONS[] =
     {"timestamp", no_argument, 0, 'l'},
     /* Only long option for the rest */
     {"log-modules", required_argument, 0, 0},
+    {"show-evaluated-classes", optional_argument, 0, 0 },
+    {"show-evaluated-vars", optional_argument, 0, 0 },
     {NULL, 0, 0, '\0'}
 };
 
@@ -214,6 +216,8 @@ static const char *const HINTS[] =
     "Disable extension loading (used while upgrading)",
     "Log timestamps on each line of log output",
     "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
+    "Show *final* evaluated classes, including those defined in common bundles in policy. Optionally can take a regular expression.",
+    "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
     NULL
 };
 
@@ -265,6 +269,18 @@ int main(int argc, char *argv[])
 
     PurgeLocks();
     BackupLockDatabase();
+
+    if (config->agent_specific.common.show_classes != NULL)
+    {
+        GenericAgentShowContextsFormatted(ctx, config->agent_specific.common.show_classes);
+        free(config->agent_specific.common.show_classes);
+    }
+
+    if (config->agent_specific.common.show_variables != NULL)
+    {
+        GenericAgentShowVariablesFormatted(ctx, config->agent_specific.common.show_variables);
+        free(config->agent_specific.common.show_variables);
+    }
 
     PolicyDestroy(policy); /* Can we safely do this earlier ? */
     int ret = 0;
@@ -546,7 +562,23 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
             }
-            break;
+            else if (strcmp(OPTIONS[longopt_idx].name, "show-evaluated-classes") == 0)
+            {
+                if (optarg == NULL)
+                {
+                    optarg = ".*";
+                }
+                config->agent_specific.common.show_classes = xstrdup(optarg);
+            }
+            else if (strcmp(OPTIONS[longopt_idx].name, "show-evaluated-vars") == 0)
+            {
+                if (optarg == NULL)
+                {
+                    optarg = ".*";
+                }
+                config->agent_specific.common.show_variables = xstrdup(optarg);
+            }
+    break;
 
         default:
             {

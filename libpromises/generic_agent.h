@@ -145,4 +145,7 @@ void SetupSignalsForAgent(void);
 
 void LoadAugments(EvalContext *ctx, GenericAgentConfig *config);
 
+void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp);
+void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp);
+
 #endif

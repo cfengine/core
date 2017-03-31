@@ -57,6 +57,8 @@ VarRef *VarRefCopy(const VarRef *ref);
 VarRef *VarRefCopyLocalized(const VarRef *ref);
 VarRef *VarRefCopyIndexless(const VarRef *ref);
 
+bool is_this_not_special(const char *scope, const char *lval);
+
 VarRef *VarRefParse(const char *var_ref_string);
 
 VarRef *VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle);

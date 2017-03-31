@@ -341,23 +341,3 @@ void VariableTableIteratorDestroy(VariableTableIterator *iter)
         free(iter);
     }
 }
-
-VariableTable *VariableTableCopyLocalized(const VariableTable *table, const char *ns, const char *scope)
-{
-    VariableTable *localized_copy = VariableTableNew();
-
-    VariableTableIterator *iter = VariableTableIteratorNew(table, ns, scope, NULL);
-    Variable *foreign_var = NULL;
-    while ((foreign_var = VariableTableIteratorNext(iter)))
-    {
-        /* TODO why is tags NULL here? Shouldn't it be an exact copy of
-         * foreign_var->tags? */
-        Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref),
-                                              RvalCopy(foreign_var->rval), foreign_var->type,
-                                              NULL, foreign_var->promise);
-        VarMapInsert(localized_copy->vars, localized_var->ref, localized_var);
-    }
-    VariableTableIteratorDestroy(iter);
-
-    return localized_copy;
-}

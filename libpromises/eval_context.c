@@ -1334,16 +1334,8 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
 
     EvalContextStackPushFrame(ctx, frame);
 
-    if (copy_bundle_context)
-    {
-        frame->data.promise.vars = VariableTableCopyLocalized(ctx->global_variables,
-                                                              EvalContextStackCurrentBundle(ctx)->ns,
-                                                              EvalContextStackCurrentBundle(ctx)->name);
-    }
-    else
-    {
-        frame->data.promise.vars = VariableTableNew();
-    }
+    // Ignore copy_bundle_context and create an empty table
+    frame->data.promise.vars = VariableTableNew();
 
     if (PromiseGetBundle(owner)->source_path)
     {
@@ -1934,6 +1926,8 @@ static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
             return frame ? frame->data.body.vars : NULL;
         }
 
+    // "this" variables can be in local or global variable table (when this is used for non-special
+    // varables), so return local as VariableResolve will try global table anyway.
     case SPECIAL_SCOPE_THIS:
         {
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
@@ -2024,6 +2018,7 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
 
     case STACK_FRAME_TYPE_PROMISE:
     case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        // This is necessary to allow special "this" variable to work when used without "this".
         VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
         break;
     }
@@ -2073,9 +2068,6 @@ bool EvalContextVariablePut(EvalContext *ctx,
  * means that an unqualified reference will be looked up in the context of the top
  * stack frame. Note that when evaluating a promise, this will qualify a reference
  * to the 'this' scope.
- *
- * Ideally, this function should resolve a variable by walking down the stack, but
- * this is pending rework in variable iteration.
  */
 static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
 {
@@ -2084,16 +2076,29 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     if (!VarRefIsQualified(ref))
     {
         VarRef *qref = VarRefCopy(ref);
+        // Warning: This will "qualify" non-scoped variables in a promise to this.variable
         VarRefStackQualify(ctx, qref);
         Variable *ret = VariableResolve(ctx, qref);
         VarRefDestroy(qref);
         return ret;
     }
 
+    /*
+     * We will make a first lookup that works in almost all cases: will look for local
+     * or global variables, depending of the current scope.
+     *
+     * The only case it does not work is when we have a "this.custom_variable" variable
+     * because we will search is local promise scope the variable is in the global
+     * variable table. In this case, we will look for the variable in the current bundle.
+     */
+
+    // Get the variable table associated to the scope
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
+
+    Variable *var;
     if (table)
     {
-        Variable *var = VariableTableGet(table, ref);
+        var = VariableTableGet(table, ref);
         if (var)
         {
             return var;
@@ -2109,6 +2114,17 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
                 return var;
             }
         }
+    }
+
+    // Try to qualify "this." variable to "current_bundle."
+    const Bundle *last_bundle = EvalContextStackCurrentBundle(ctx);
+    if (last_bundle && strcmp(ref->scope, SpecialScopeToString(SPECIAL_SCOPE_THIS)) == 0)
+    {
+        VarRef *qref = VarRefCopy(ref);
+        VarRefQualify(qref, last_bundle->ns, last_bundle->name);
+        var = VariableResolve(ctx, qref);
+        VarRefDestroy(qref);
+        return var;
     }
 
     return NULL;
@@ -2147,27 +2163,6 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
                 *type_out = var->type;
             }
             return var->rval.item;
-        }
-    }
-    else if (!VarRefIsQualified(ref))
-    {
-        /*
-         * FALLBACK: Because VariableResolve currently does not walk the stack
-         * (rather, it looks at only the top frame), we do an explicit retry
-         * here to qualify an unqualified reference to the current bundle.
-         *
-         * This is overly complicated, and will go away as soon as
-         * VariableResolve can walk the stack (which is pending rework in
-         * variable iteration).
-         */
-        const Bundle *bp = EvalContextStackCurrentBundle(ctx);
-        if (bp)
-        {
-            VarRef *qref = VarRefCopy(ref);
-            VarRefQualify(qref, bp->ns, bp->name);
-            const void *ret = EvalContextVariableGet(ctx, qref, type_out);
-            VarRefDestroy(qref);
-            return ret;
         }
     }
 

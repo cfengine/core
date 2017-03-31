@@ -1,0 +1,83 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  vars:
+    "var"      slist => { "var in test" };
+    "var_test" slist => { "var_test in test" };
+
+  methods: 
+    "any" usebundle => inter;
+}
+
+bundle agent inter
+{
+  vars:
+    "var" slist => { "var in inter" };
+    "k" slist => { "k in inter" };
+
+  methods:
+    "any1" usebundle => final("test1", @(this.var_test));
+    "any2" usebundle => final("test2", @(var_test));
+    "any3" usebundle => final("test3", @(this.var));
+    "any4" usebundle => final("test4", @(var));
+    "any5" usebundle => final("test5", @(this.k));
+    "any6" usebundle => final("test6", @(k));
+    "any7" usebundle => final("test7", @(this.bundle));
+    "any8" usebundle => final("test8", @(bundle));
+}
+
+bundle agent final(name, param)
+{
+  vars:
+    "${name}" string => "${param}";
+}
+
+bundle agent check
+{
+
+  classes:
+
+    "ok1" not => strcmp("var_test in test", "${final.test1}");
+    "ok2" not => strcmp("var_test in test", "${final.test2}");
+    "ok3" expression => strcmp("var in inter", "${final.test3}");
+    "ok4" expression => strcmp("var in inter", "${final.test4}");
+    "ok5" not => strcmp("k in inter", "${final.test5}");
+    "ok6" expression => strcmp("k in inter", "${final.test6}");
+    "ok7" not => strcmp("inter", "${final.test7}");
+    "ok8" not => strcmp("inter", "${final.test8}");
+
+    "ok" expression => "ok1.ok2.ok3.ok4.ok5.ok6.ok7.ok8";    
+
+  reports:
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "FAIL";
+
+    !ok1::
+      "variable '${final.test1}' = 'var_test in test'";
+    !ok2::
+      "variable '${final.test2}' = 'var_test in test'";
+    !ok3::
+      "variable '${final.test3}' != 'var in inter'";
+    !ok4::
+      "variable '${final.test4}' != 'var in inter'";
+    !ok5::
+      "variable '${final.test5}' = 'k in inter'";
+    !ok6::
+      "variable '${final.test6}' != 'k in inter'";
+    !ok7::
+      "variable '${final.test7}' = 'inter'";
+    !ok8::
+      "variable '${final.test8}' = 'inter'";
+}
+
+

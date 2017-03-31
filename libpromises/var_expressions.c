@@ -320,6 +320,16 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name,
         {
             _ns = NULL;
         }
+
+        /*
+         * Force considering non-special "this." variables as unqualified.
+         * This allows qualifying bundle parameters passed as reference with a "this" scope
+         * in the calling bundle.
+         */
+        if (is_this_not_special(scope, lval)) {
+            free(scope);
+            scope = NULL;
+        }
     }
 
     VarRef *ref = xmalloc(sizeof(VarRef));
@@ -331,6 +341,29 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name,
     ref->num_indices = num_indices;
 
     return ref;
+}
+
+/*
+ * This function will return true if the given variable is
+ * a this.something variable that is an alias to a non-special local variable.
+ */
+bool is_this_not_special(const char *scope, const char *lval) {
+    // TODO: better way to get this list?
+    const char *special_this_variables[] = {"v","k","this","service_policy","promiser","promiser_uid","promiser_gid","promiser_pid","promiser_ppid","bundle","handle","namespace","promise_filename","promise_dirname","promise_linenumber", NULL};
+
+    if (!scope) {
+        return false;
+    }
+
+    if (SpecialScopeFromString(scope) != SPECIAL_SCOPE_THIS) {
+        return false;
+    }
+
+    if (IsStrIn(lval, special_this_variables)) {
+        return false;
+    }
+
+    return true;
 }
 
 VarRef *VarRefParse(const char *var_ref_string)

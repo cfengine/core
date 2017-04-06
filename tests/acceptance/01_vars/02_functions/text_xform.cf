@@ -1,31 +1,16 @@
-#######################################################
-#
-# Test the * functions()
-#
-#######################################################
-
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+      bundlesequence => { default("$(this.promise_filename)") };
       version => "1.0";
 }
-
-#######################################################
-
-bundle agent init
-{
-  vars:
-      "dummy" string => "dummy";
-}
-
-#######################################################
 
 bundle agent test
 {
   vars:
       "tests" slist => { "q1", "q2", "q3", "q4" };
-      "offsets" ilist => { "0", "1", "20", "26", "27", "28", "10240" };
+      "offsets" ilist => { "-1", "-2", "-5", "-10", "-20", "-26", "-27", "-28", "-10240",
+                          "0", "1", "2", "5", "10", "20", "26", "27", "28", "10240" };
       "fn1" slist => { "string_head", "string_tail" };
       "data[q1]" string => "this is the Question";
       "data[q2]" string => "";
@@ -40,133 +25,14 @@ bundle agent test
       "data[$(tests)_string_downcase]" string => string_downcase("$(data[$(tests)])");
       "data[$(tests)_string_head_$(offsets)]" string => string_head("$(data[$(tests)])", $(offsets));
       "data[$(tests)_string_tail_$(offsets)]" string => string_tail("$(data[$(tests)])", $(offsets));
-
-      "expected[q1_string_reverse]" string => "noitseuQ eht si siht";
-      "expected[q1_string_length]" int => "20";
-      "expected[q1_string_upcase]" string => "THIS IS THE QUESTION";
-      "expected[q1_string_downcase]" string => "this is the question";
-      "expected[q1_string_head_0]" string => "";
-      "expected[q1_string_tail_0]" string => "";
-      "expected[q1_string_head_1]" string => "t";
-      "expected[q1_string_tail_1]" string => "n";
-      "expected[q1_$(fn1)_20]" string => "$(data[q1])";
-      "expected[q1_$(fn1)_26]" string => "$(data[q1])";
-      "expected[q1_$(fn1)_27]" string => "$(data[q1])";
-      "expected[q1_$(fn1)_28]" string => "$(data[q1])";
-      "expected[q1_$(fn1)_10240]" string => "$(data[q1])";
-
-      "expected[q2_string_reverse]" string => "";
-      "expected[q2_string_length]" int => "0";
-      "expected[q2_string_upcase]" string => "";
-      "expected[q2_string_downcase]" string => "";
-      "expected[q2_$(fn1)_$(offsets)]" string => "";
-
-      "expected[q3_string_reverse]" string => "
-
-elpmis $(const.t) ton si txet emos";
-      "expected[q3_string_length]" int => "27";
-      "expected[q3_string_upcase]" string => "SOME TEXT IS NOT $(const.t) SIMPLE
-
-";
-      "expected[q3_string_downcase]" string => "$(data[q3])";
-      "expected[q3_$(fn1)_0]" string => "";
-      "expected[q3_string_head_1]" string => "s";
-      "expected[q3_string_tail_1]" string => "
-";
-      "expected[q3_string_head_20]" string => "some text is not $(const.t) s";
-      "expected[q3_string_tail_20]" string => "xt is not $(const.t) simple
-
-";
-      "expected[q3_string_head_26]" string => "some text is not $(const.t) simple
-";
-      "expected[q3_string_tail_26]" string => "ome text is not $(const.t) simple
-
-";
-      "expected[q3_$(fn1)_27]" string => "$(data[q3])";
-      "expected[q3_$(fn1)_28]" string => "$(data[q3])";
-      "expected[q3_$(fn1)_10240]" string => "$(data[q3])";
-
-      "expected[q4_string_reverse]" string => readfile("$(this.promise_filename).reverse.txt", "inf");
-      "expected[q4_string_length]" int => "10240";
-      "expected[q4_string_upcase]" string => readfile("$(this.promise_filename).uppercase.txt", "inf");
-      "expected[q4_string_downcase]" string => readfile("$(this.promise_filename).lowercase.txt", "inf");
-      "expected[q4_string_head_0]" string => "";
-      "expected[q4_string_tail_0]" string => "";
-      "expected[q4_string_head_1]" string => "a";
-      "expected[q4_string_tail_1]" string => "j";
-      "expected[q4_string_head_20]" string => readfile("$(this.promise_filename).txt", "20");
-      "expected[q4_string_tail_20]" string => readfile("$(this.promise_filename).tail20.txt", "20");
-      "expected[q4_string_head_26]" string => readfile("$(this.promise_filename).txt", "26");
-      "expected[q4_string_tail_26]" string => readfile("$(this.promise_filename).tail26.txt", "26");
-      "expected[q4_string_head_27]" string => readfile("$(this.promise_filename).txt", "27");
-      "expected[q4_string_tail_27]" string => readfile("$(this.promise_filename).tail27.txt", "27");
-      "expected[q4_string_head_28]" string => readfile("$(this.promise_filename).txt", "28");
-      "expected[q4_string_tail_28]" string => readfile("$(this.promise_filename).tail28.txt", "28");
-      "expected[q4_string_head_10240]" string => "$(data[q4])";
-      "expected[q4_string_tail_10240]" string => "$(data[q4])";
 }
 
 #######################################################
 
 bundle agent check
 {
-  vars:
-      "tests" slist => { @(test.tests) };
-      "fn0" slist => { "string_reverse", "string_length", "string_upcase", "string_downcase" };
-      "fn1" slist => { @(test.fn1) };
-      "offsets" ilist => { @(test.offsets) };
-
-  classes:
-      "ok_$(tests)_$(fn0)" expression => strcmp("$(test.expected[$(tests)_$(fn0)])",
-                                                "$(test.data[$(tests)_$(fn0)])");
-
-      "not_ok_$(tests)_$(fn0)" not => strcmp("$(test.expected[$(tests)_$(fn0)])",
-                                             "$(test.data[$(tests)_$(fn0)])");
-
-      "ok_$(tests)_$(fn1)_$(offsets)" expression => strcmp("$(test.expected[$(tests)_$(fn1)_$(offsets)])",
-                                                           "$(test.data[$(tests)_$(fn1)_$(offsets)])");
-
-      "not_ok_$(tests)_$(fn1)_$(offsets)" not => strcmp("$(test.expected[$(tests)_$(fn1)_$(offsets)])",
-                                                        "$(test.data[$(tests)_$(fn1)_$(offsets)])");
-
-      "ok" and => { 'ok_q1_string_reverse', 'ok_q2_string_reverse', 'ok_q3_string_reverse', 'ok_q4_string_reverse',
-                    'ok_q1_string_length', 'ok_q2_string_length', 'ok_q3_string_length', 'ok_q4_string_length',
-                    'ok_q1_string_upcase', 'ok_q2_string_upcase', 'ok_q3_string_upcase', 'ok_q4_string_upcase',
-                    'ok_q1_string_downcase', 'ok_q2_string_downcase', 'ok_q3_string_downcase', 'ok_q4_string_downcase',
-
-                    'ok_q1_string_head_0', 'ok_q2_string_head_0', 'ok_q3_string_head_0', 'ok_q4_string_head_0',
-                    'ok_q1_string_tail_0', 'ok_q2_string_tail_0', 'ok_q3_string_tail_0', 'ok_q4_string_tail_0',
-                    'ok_q1_string_head_1', 'ok_q2_string_head_1', 'ok_q3_string_head_1', 'ok_q4_string_head_1',
-                    'ok_q1_string_tail_1', 'ok_q2_string_tail_1', 'ok_q3_string_tail_1', 'ok_q4_string_tail_1',
-                    'ok_q1_string_head_20', 'ok_q2_string_head_20', 'ok_q3_string_head_20', 'ok_q4_string_head_20',
-                    'ok_q1_string_tail_20', 'ok_q2_string_tail_20', 'ok_q3_string_tail_20', 'ok_q4_string_tail_20',
-                    'ok_q1_string_head_26', 'ok_q2_string_head_26', 'ok_q3_string_head_26', 'ok_q4_string_head_26',
-                    'ok_q1_string_tail_26', 'ok_q2_string_tail_26', 'ok_q3_string_tail_26', 'ok_q4_string_tail_26',
-                    'ok_q1_string_head_27', 'ok_q2_string_head_27', 'ok_q3_string_head_27', 'ok_q4_string_head_27',
-                    'ok_q1_string_tail_27', 'ok_q2_string_tail_27', 'ok_q3_string_tail_27', 'ok_q4_string_tail_27',
-                    'ok_q1_string_head_28', 'ok_q2_string_head_28', 'ok_q3_string_head_28', 'ok_q4_string_head_28',
-                    'ok_q1_string_tail_28', 'ok_q2_string_tail_28', 'ok_q3_string_tail_28', 'ok_q4_string_tail_28',
-                    'ok_q1_string_head_10240', 'ok_q2_string_head_10240', 'ok_q3_string_head_10240', 'ok_q4_string_head_10240',
-                    'ok_q1_string_tail_10240', 'ok_q2_string_tail_10240', 'ok_q3_string_tail_10240', 'ok_q4_string_tail_10240'
-      };
-
-  reports:
-    DEBUG::
-      "OK: test $(tests) with function $(fn0) passes"
-      ifvarclass => "ok_$(tests)_$(fn0)";
-
-      "NOT OK: test $(tests) with function $(fn0) failed; expected = '$(test.expected[$(tests)_$(fn0)])' actual = '$(test.data[$(tests)_$(fn0)])'"
-      ifvarclass => "not_ok_$(tests)_$(fn0)";
-
-      "OK: test $(tests) with function $(fn1)($(offsets)) passes"
-      ifvarclass => "ok_$(tests)_$(fn1)_$(offsets)";
-
-      "NOT OK: test $(tests) with function $(fn1)($(offsets)) failed; expected = '$(test.expected[$(tests)_$(fn1)_$(offsets)])' actual = '$(test.data[$(tests)_$(fn1)_$(offsets)])'"
-      ifvarclass => "not_ok_$(tests)_$(fn1)_$(offsets)";
-
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }
-

@@ -33,9 +33,9 @@ bundle agent main
 
       # This will make symlinks to each file in /var/cfengine/bin
       # for example:
-      # '/usr/local/sbin/cf-agent' -> '/var/cfengine/bin/cf-agent'
-      # '/usr/local/sbin/cf-serverd' -> '/var/cfengine/bin/cf-serverd'
-      "/usr/local/sbin"
+      # '/usr/local/bin/cf-agent' -> '/var/cfengine/bin/cf-agent'
+      # '/usr/local/bin/cf-serverd' -> '/var/cfengine/bin/cf-serverd'
+      "/usr/local/bin"
         link_from => linkchildren("/var/cfengine/bin"),
 	comment => "We like for cfengine binaries to be available inside of the
                     common $PATH";

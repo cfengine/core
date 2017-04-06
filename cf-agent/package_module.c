@@ -1073,7 +1073,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Package '%s' is already in the latest version. "
-                "Skipping instalation.", package_info->name);
+                "Skipping installation.", package_info->name);
 
             return PROMISE_RESULT_NOOP;
         }
@@ -1115,7 +1115,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Package version from updates matches one installed. "
-                    "Skipping package instalation.");
+                    "Skipping package installation.");
                 res = PromiseResultUpdate(res, PROMISE_RESULT_NOOP);
                 continue;
             }

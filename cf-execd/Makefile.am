@@ -50,7 +50,7 @@ libcf_execd_test_la_LIBADD = $(libcf_execd_la_LIBADD)
 libcf_execd_test_la_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_CF_EXECD
 
 if !BUILTIN_EXTENSIONS
- sbin_PROGRAMS = cf-execd
+ bin_PROGRAMS = cf-execd
  # Workaround for automake madness (try removing it if you want to know why).
  cf_execd_CFLAGS = $(AM_CFLAGS)
  cf_execd_LDADD = libcf-execd.la

@@ -249,9 +249,9 @@ bundle agent git_update
             action => u_immediate,
         ifvarclass => "hpux";
 
-   "/usr/local/sbin"
-           comment => "Ensure cfengine binaries were copied to /usr/local/sbin",
-            handle => "update_files_usr_local_sbin",
+   "/usr/local/bin"
+           comment => "Ensure cfengine binaries were copied to /usr/local/bin",
+            handle => "update_files_usr_local_bin",
              perms => u_m("755"),
          copy_from => u_cp_nobck("$(sys.workdir)/bin"),
        file_select => u_cf3_files,

@@ -1696,14 +1696,20 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_head"))
     {
-        const long max = IntFromString(RlistScalarValue(finalargs->next));
+        long max = IntFromString(RlistScalarValue(finalargs->next));
+        // A negative offset -N on string_head() means the user wants up to the Nth from the end
         if (max < 0)
         {
-            Log(LOG_LEVEL_ERR, "string_head called with negative value %ld", max);
-            free(buf);
-            return FnFailure();
+            max = len - labs(max);
         }
-        else if (max < bufsiz)
+
+        // If the negative offset was too big, return an empty string
+        if (max < 0)
+        {
+            max = 0;
+        }
+
+        if (max < bufsiz)
         {
             buf[max] = '\0';
         }
@@ -1711,11 +1717,12 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     else if (!strcmp(fp->name, "string_tail"))
     {
         const long max = IntFromString(RlistScalarValue(finalargs->next));
+        // A negative offset -N on string_tail() means the user wants up to the Nth from the start
+
         if (max < 0)
         {
-            Log(LOG_LEVEL_ERR, "string_tail called with negative value %ld", max);
-            free(buf);
-            return FnFailure();
+            size_t offset = MIN(labs(max), len);
+            memcpy(buf, string + offset , len - offset + 1);
         }
         else if (max < len)
         {

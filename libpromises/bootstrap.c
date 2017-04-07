@@ -146,7 +146,7 @@ void UpdateLastPolicyUpdateTime(EvalContext *ctx)
         }
     }
 
-    char timebuf[26];
+    char timebuf[26] = { 0 };
     cf_strtimestamp_local(sb.st_mtime, timebuf);
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "last_policy_update", timebuf, CF_DATA_TYPE_STRING, "source=agent");

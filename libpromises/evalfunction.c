@@ -4608,35 +4608,46 @@ static FnCallResult FnCallFold(EvalContext *ctx,
     return FnFailure();
 }
 
-/*********************************************************************/
-/* This function has been removed from the function list for now     */
-/*********************************************************************/
-#ifdef SUPPORT_FNCALL_DATATYPE
 static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    if (NULL == finalargs)
+    {
+        Log(LOG_LEVEL_ERR, "%s: requres at least one argument", fp->name);
+        return FnFailure();
+    }
+
     const char* const varname = RlistScalarValue(finalargs);
 
     VarRef* const ref = VarRefParse(varname);
     DataType type;
+    if (!ref)
+    {
+        // no such variable
+        return FnFailure();
+    }
+
     const void *value = EvalContextVariableGet(ctx, ref, &type);
     VarRefDestroy(ref);
 
-    Writer* const typestring = StringWriter();
+    const char* major = NULL;
+    const char* minor = NULL;
+
+    const bool check_mode = (0 == strcmp(fp->name, "is_datatype"));
 
     if (type == CF_DATA_TYPE_CONTAINER)
     {
-
         const JsonElement* const jelement = value;
+        major = DataTypeToString(type);
 
         if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_CONTAINER)
         {
             switch (JsonGetContainerType(jelement))
             {
             case JSON_CONTAINER_TYPE_OBJECT:
-                WriterWrite(typestring, "json_object");
+                minor = "object";
                 break;
             case JSON_CONTAINER_TYPE_ARRAY:
-                WriterWrite(typestring, "json_array");
+                minor = "array";
                 break;
             }
         }
@@ -4644,34 +4655,86 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
         {
             switch (JsonGetPrimitiveType(jelement))
             {
-            case JSON_PRIMITIVE_TYPE_STRING:
-                WriterWrite(typestring, "json_string");
-                break;
-            case JSON_PRIMITIVE_TYPE_INTEGER:
-                WriterWrite(typestring, "json_integer");
-                break;
-            case JSON_PRIMITIVE_TYPE_REAL:
-                WriterWrite(typestring, "json_real");
-                break;
-            case JSON_PRIMITIVE_TYPE_BOOL:
-                WriterWrite(typestring, "json_bool");
-                break;
             case JSON_PRIMITIVE_TYPE_NULL:
-                WriterWrite(typestring, "json_null");
+                minor = "null";
+                break;
+            default:
+                minor = JsonPrimitiveTypeToString(JsonGetPrimitiveType(jelement));
                 break;
             }
         }
 
     }
-    else
+    else if (type == CF_DATA_TYPE_STRING ||
+             type == CF_DATA_TYPE_INT ||
+             type == CF_DATA_TYPE_REAL)
     {
-        Log(LOG_LEVEL_VERBOSE, "%s: variable '%s' is not a data container", fp->name, varname);
+        major = DataTypeToString(type);
+        minor = NULL;
+    }
+    else if (type == CF_DATA_TYPE_STRING_LIST ||
+             type == CF_DATA_TYPE_INT_LIST ||
+             type == CF_DATA_TYPE_REAL_LIST)
+    {
+        major = DataTypeToString(type);
+        minor = NULL;
+    }
+    else if (type == CF_DATA_TYPE_INT_RANGE ||
+             type == CF_DATA_TYPE_REAL_RANGE)
+    {
+        major = DataTypeToString(type);
+        minor = NULL;
+    }
+
+    if (major == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s: the data type of variable '%s' could not be found", fp->name, varname);
         return FnFailure();
     }
 
-    return FnReturnNoCopy(StringWriterClose(typestring));
+    // This flow for datatype() uses the major and minor values determined above
+    if (!check_mode)
+    {
+        if (minor == NULL)
+        {
+            return FnReturnF("%s", major);
+        }
+
+        // else...
+        return FnReturnF("%s %s", major, minor);
+    }
+
+    // This flow for is_datatype() uses the major and minor values determined above
+    if (NULL == finalargs->next)
+    {
+        Log(LOG_LEVEL_ERR, "%s: requres at least two arguments", fp->name);
+        return FnFailure();
+    }
+
+    const char* const major_check = RlistScalarValue(finalargs->next);
+    if (major != NULL && strcmp(major, major_check) != 0)
+    {
+        return FnReturnContext(false);
+    }
+
+    // If no minor was requested, anything is OK
+    if (finalargs->next->next == NULL)
+    {
+        return FnReturnContext(true);
+    }
+
+    // else, the last argument has to match the minor type we found
+    const char* const minor_check = RlistScalarValue(finalargs->next->next);
+    if (minor != NULL && strcmp(minor, minor_check) != 0)
+    {
+        return FnReturnContext(false);
+    }
+
+    // Else, a minor check was requested but the data type doesn't match it OR
+    // doesn't have a minor
+    return FnReturnContext(false);
 }
-#endif /* unused code */
+
 /*********************************************************************/
 
 static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
@@ -8741,6 +8804,20 @@ static const FnCallArg CFENGINE_CALLERS_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg DATATYPE_ARGS[] =
+{
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "Variable identifier"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg IS_DATATYPE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Variable identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Type to check"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Optional subtype to check"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -9092,5 +9169,10 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("network_connections", CF_DATA_TYPE_CONTAINER, NETWORK_CONNECTIONS_ARGS, &FnCallNetworkConnections, "Get the full list of TCP, TCP6, UDP, and UDP6 connections from /proc/net",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
 
+    // Data type probe and information functions
+    FnCallTypeNew("datatype", CF_DATA_TYPE_STRING, DATATYPE_ARGS, &FnCallDatatype, "Return the type and subtype of a variable",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("is_datatype", CF_DATA_TYPE_CONTEXT, IS_DATATYPE_ARGS, &FnCallDatatype, "True if the type and subtype of a variable match arg1 and optionally arg2",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNewNull()
 };

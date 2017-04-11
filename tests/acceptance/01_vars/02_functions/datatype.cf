@@ -1,0 +1,73 @@
+###########################################################
+#
+# Test datatype() and is_datatype()
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent init
+{
+  vars:
+      "s" string => "foo";
+      "i" int => "200";
+      "r" real => "300.0";
+
+      "sl" slist => { "a" };
+      "il" ilist => { "1" };
+      "rl" rlist => { "1.0" };
+
+      "container" data => '{ "int": 100, "string": "", "real": 100.23, "false": false, "true": true, "null": null, "array": [ 1, 2, 3 ] }';
+}
+
+bundle agent test
+{
+  vars:
+      "s" string => "foo";
+      "i" int => "200";
+      "r" real => "300.0";
+
+      "sl" slist => { "a" };
+      "il" ilist => { "1" };
+      "rl" rlist => { "1.0" };
+
+      "container" data => '{ "int": 100, "string": "", "real": 100.23, "false": false, "true": true, "null": null, "array": [ 1, 2, 3 ] }';
+
+      "vars" slist => { "s", "i", "r", "rl", "il", "sl",
+                       "container", "container[int]", "container[string]", "container[real]",
+                       "container[false]", "container[true]", "container[null]",
+                       "container[array]",
+                       "nonesuch",
+      };
+
+      "datatype[$(vars)]" string => datatype($(vars));
+      "datatype[init.$(vars)]" string => datatype("init.$(vars)");
+
+      "majors" slist => { "data", "string", "int", "real", "ilist", "slist", "rlist" };
+      "minors" slist => { "array", "object", "number", "boolean", "null", "string", "int", "real" };
+
+      "found" slist => sort(classesmatching(".*", "collect"));
+
+  classes:
+      "is_$(majors)_$(vars)" expression => is_datatype($(vars), $(majors)),
+        meta => { "collect" };
+      "is_$(majors)_$(minors)_$(vars)" expression => is_datatype($(vars), $(majors), $(minors)),
+        meta => { "collect" };
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

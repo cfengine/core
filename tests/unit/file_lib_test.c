@@ -775,9 +775,8 @@ static void test_safe_open_TRUNC_unsafe_switched_symlink(void)
      * overwrites the root-owned file with a symlink. The symlink target must
      * *not* be truncated. */
 
-    /* 1. file is owned by root */
+    /* 1. target is owned by root */
     assert_int_equal(chown(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
-    assert_int_equal(chown(TEMP_DIR "/" TEST_FILE, 0, 0), 0);
 
     /* 2. TEST, but with a user-owned symlink being injected
      * in place of the file. */

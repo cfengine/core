@@ -31,6 +31,10 @@
 #include <logging.h>
 #include <string_lib.h>                                         /* memcchr */
 
+#ifndef __MINGW32__
+#include <glob.h>
+#endif
+
 #define SYMLINK_MAX_DEPTH 32
 
 bool FileCanOpen(const char *path, const char *modes)
@@ -1270,4 +1274,62 @@ ssize_t CfReadLine(char **buff, size_t *size, FILE *fp)
     }
 
     return b;
+}
+
+StringSet* GlobFileList(const char *pattern)
+{
+    StringSet *set = StringSetNew();
+    glob_t globbuf;
+    int globflags = 0; // TODO: maybe add GLOB_BRACE later
+
+    const char* r_candidates[] = { "*", "*/*", "*/*/*", "*/*/*/*", "*/*/*/*/*", "*/*/*/*/*/*" };
+    bool starstar = strstr(pattern, "**");
+    const char** candidates   = starstar ? r_candidates : NULL;
+    const int candidate_count = starstar ? 6 : 1;
+
+    for (int pi = 0; pi < candidate_count; pi++)
+    {
+        char *expanded = starstar ?
+            SearchAndReplace(pattern, "**", candidates[pi]) :
+            xstrdup(pattern);
+
+#ifdef _WIN32
+        if (strchr(expanded, '\\'))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Found backslash escape character in glob pattern '%s'. "
+                "Was forward slash intended?", expanded);
+        }
+#endif
+
+        if (glob(expanded, globflags, NULL, &globbuf) == 0)
+        {
+            for (int i = 0; i < globbuf.gl_pathc; i++)
+            {
+                StringSetAdd(set, xstrdup(globbuf.gl_pathv[i]));
+            }
+
+            globfree(&globbuf);
+        }
+
+        free(expanded);
+    }
+
+    return set;
+}
+
+/*******************************************************************/
+
+const char* GetRelocatedProcdirRoot()
+{
+    const char *procdir = getenv("CFENGINE_TEST_OVERRIDE_PROCDIR");
+    if (procdir == NULL)
+    {
+        procdir = "";
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Overriding /proc location to be %s", procdir);
+    }
+
+    return procdir;
 }

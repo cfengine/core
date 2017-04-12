@@ -328,6 +328,12 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/misc_lib.c \
 	../../libutils/string_lib.c \
 	../../libutils/sequence.c \
+	../../libutils/set.c \
+	../../libutils/buffer.c \
+	../../libutils/pcre_wrap.c \
+	../../libutils/regex.c \
+	../../libutils/json.c \
+	../../libutils/json-yaml.c \
 	../../libutils/unix_dir.c \
 	../../libutils/writer.c
 file_lib_test_LDADD = libtest.la

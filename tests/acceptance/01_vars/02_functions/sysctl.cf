@@ -1,0 +1,17 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  meta:
+      "test_skip_unsupported" string => "!linux";
+
+  commands:
+      "$(G.env) CFENGINE_TEST_OVERRIDE_PROCDIR=$(this.promise_dirname)/proc $(sys.cf_agent) -DAUTO -f $(this.promise_filename).sub";
+}

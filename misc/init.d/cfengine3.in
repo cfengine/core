@@ -254,9 +254,11 @@ cf_start_daemon()
     if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
         daemon "$daemon" "$@"
         cf_touch "/var/lock/subsys/$base_daemon"
+        cf_touch "/var/lock/subsys/cfengine3"
     elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
         "$daemon" "$@"
         cf_touch "/var/lock/subsys/$base_daemon"
+        cf_touch "/var/lock/subsys/cfengine3"
 
     # SUSE
     elif [ "$SUSE" = "1" ] && [ "$PROC" = "1" ]; then
@@ -347,10 +349,12 @@ cf_stop_daemon()
     if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
         if [ -f "/var/lock/subsys/$base_daemon" ]; then
             cf_rm -f "/var/lock/subsys/$base_daemon"
+            cf_rm -f "/var/lock/subsys/cfengine3"
         fi
     elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
         if [ -f "/var/lock/subsys/$base_daemon" ]; then
             cf_rm -f "/var/lock/subsys/$base_daemon"
+            cf_rm -f "/var/lock/subsys/cfengine3"
         fi
 
     # SUSE

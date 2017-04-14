@@ -254,6 +254,7 @@ cf_start_daemon()
     if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
         daemon "$daemon" "$@"
         cf_touch "/var/lock/subsys/$base_daemon"
+        cf_touch "/var/lock/subsys/cfengine3"
     elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
         "$daemon" "$@"
         cf_touch "/var/lock/subsys/$base_daemon"
@@ -347,10 +348,12 @@ cf_stop_daemon()
     if [ "$REDHAT" = "1" ] && [ "$FUNC" = "1" ]; then
         if [ -f "/var/lock/subsys/$base_daemon" ]; then
             cf_rm -f "/var/lock/subsys/$base_daemon"
+            cf_rm -f "/var/lock/subsys/cfengine3"
         fi
     elif [ "$REDHAT" = "1" ] && [ "$FUNC" = "0" ]; then
         if [ -f "/var/lock/subsys/$base_daemon" ]; then
             cf_rm -f "/var/lock/subsys/$base_daemon"
+            cf_rm -f "/var/lock/subsys/cfengine3"
         fi
 
     # SUSE
@@ -479,6 +482,8 @@ cf_stop_core_daemons()
     # one more complete round of process detection to make *sure* that nothing
     # is alive. As long as something is alive we will always require another
     # round, up to STOP_ATTEMPTS times.
+
+    echo "Shutting down cfengine3"
 
     local iter=1
     while [ $iter -le $STOP_ATTEMPTS ]; do

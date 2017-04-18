@@ -1,0 +1,100 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+
+      "description" string => "Test that variable class expressions and the if alias work together as expected.";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2615" };
+
+  vars:
+      "x" string => "x";
+
+  classes:
+      "DEBUG" expression => "any";
+      "one$(x)" expression => "any";
+
+      # These expressions are here purely for illustration. The classes two and
+      # three are never set.
+
+      "two" expression => "!any";
+      "three" expression => "!any";
+
+ # Here, after the variable class expression "one$(x)":: is where all of the
+ # test cases are described.
+
+    "one$(x)"::
+
+      "FAIL_if"
+        expression => "any",
+        meta => { "failtest" },
+        if => "two|three",
+        comment => "We expect the class 'onex' to be defined, but since neither
+                   'two' nor 'three' are defined this class should not be set.
+                   This seems to have something to do with the combination of a
+                   variable class expression AND the use of the if attribute.
+                   Note, ifvarclass does not seem to be affected.";
+
+      "FAIL_ifvarclass"
+        expression => "any",
+        meta => { "failtest" },
+        ifvarclass => "two|three";
+
+      "FAIL_if_or"
+        expression => "any",
+        meta => { "failtest" },
+        if => or("two", "three");
+
+      "FAIL_ifvarclass_or"
+        expression => "any",
+        meta => { "failtest" },
+        ifvarclass => or("two", "three");
+
+      "FAIL_unless"
+        expression => "any",
+        meta => { "failtest" },
+        unless => "!two.!three";
+
+      "FAIL_unless_not"
+        expression => "any",
+        meta => { "failtest" },
+        unless => not("two|three");
+
+  vars:
+     "FAIL_classes" slist => classesmatching( ".*", "failtest" );
+
+  commands:
+
+     "/bin/true"
+       handle => "delay",
+       comment => "This is a benign promise that is used to delay detection of
+                   failure classes until after normal order begins.";
+
+  classes:
+     "no_FAIL_classes"
+       expression => none(".*", FAIL_classes),
+       depends_on => { "delay" };
+
+     "FAIL_classes"
+       expression => some(".*", FAIL_classes);
+
+
+  reports:
+    DEBUG|EXTRA::
+      "CFEngine $(sys.cf_version)";
+      "Found class indicating failure '$(FAIL_classes)'";
+
+    FAIL_classes::
+      "$(this.promise_dirname) FAIL";
+
+    no_FAIL_classes::
+      "$(this.promise_dirname) Pass";
+}

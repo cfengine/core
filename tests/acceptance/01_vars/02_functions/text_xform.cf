@@ -25,6 +25,10 @@ bundle agent test
       "data[$(tests)_string_downcase]" string => string_downcase("$(data[$(tests)])");
       "data[$(tests)_string_head_$(offsets)]" string => string_head("$(data[$(tests)])", $(offsets));
       "data[$(tests)_string_tail_$(offsets)]" string => string_tail("$(data[$(tests)])", $(offsets));
+      "data[$(tests)_string_head_inline_pos]" string => string_head("$(data[$(tests)])", 3);
+      "data[$(tests)_string_tail_inline_pos]" string => string_tail("$(data[$(tests)])", 3);
+      "data[$(tests)_string_head_inline_neg]" string => string_head("$(data[$(tests)])", "-3");
+      "data[$(tests)_string_tail_inline_neg]" string => string_tail("$(data[$(tests)])", "-3");
 }
 
 #######################################################

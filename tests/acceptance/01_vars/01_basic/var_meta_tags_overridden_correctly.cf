@@ -1,0 +1,51 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+bundle agent init
+{
+
+  meta:
+
+    "description" -> { "CFE-2601" }
+      string => "Test that meta tags are correct when a variable is re-defined with new meta tags.";
+
+  vars:
+    "myvar"
+      string => "first definition tagged with first",
+      meta => { "first" };
+
+    # We expect the last definition to win.
+    "myvar"
+      string => "second definition tagged with second",
+      meta => { "second" };
+}
+
+bundle agent check
+{
+  vars:
+    "vars_tagged_first" slist => variablesmatching(".*", "first");
+    "vars_tagged_second" slist => variablesmatching(".*", "second");
+
+  reports:
+    DEBUG|EXTRA::
+
+      "Running CFEngine $(sys.cf_version)";  
+      "Tagged with first: $(vars_tagged_first)";
+      "Tagged with second: $(vars_tagged_second)";
+
+      "default:init.myvar is NOT tagged with first"
+        if => none("default:init.myvar", vars_tagged_first);
+
+      "default:init.myvar is only var tagged with second"
+        if => every("default:init.myvar", vars_tagged_second);
+
+    any::
+      "$(this.promise_filename) Pass"
+        if => and(none("default:init.myvar", vars_tagged_first), every("default:init.myvar", vars_tagged_second));
+
+      "$(this.promise_filename) FAIL"
+        if => not(and(none("default:init.myvar", vars_tagged_first), every("default:init.myvar", vars_tagged_second)));
+}

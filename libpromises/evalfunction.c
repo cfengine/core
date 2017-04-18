@@ -8751,7 +8751,7 @@ static const FnCallArg XFORM_ARGS[] =
 static const FnCallArg XFORM_SUBSTR_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input string"},
-    {CF_VALRANGE, CF_DATA_TYPE_INT, "Maximum number of characters to return"},
+    {CF_INTRANGE, CF_DATA_TYPE_INT, "Maximum number of characters to return"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

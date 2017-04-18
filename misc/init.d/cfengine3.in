@@ -430,9 +430,11 @@ cf_status_daemon()
         echo "Warning: PID file '$pidfile' does not contain the right PID ('$pids' != '$daemon_status'). Should restart CFEngine."
     fi
 
-    # cf-consumer is expected to have multiple pids, so if checking status for
-    # cf-consumer, skip detection of multiple pids to avoid false alarms
-    if [ "${base_daemon}" != "cf-consumer" ]; then
+    # cf-consumer and httpd are expected to have multiple pids, so if checking
+    # status for cf-consumer, skip detection of multiple pids to avoid false
+    # alarms
+
+    if [ "${base_daemon}" != "cf-consumer" ] && [ "${base_daemon}" != "httpd" ]; then
         # Lack of quotes around $pids is important to eliminate newlines.
         if [ -n "$(echo $pids | grep '[^0-9]')" ]; then
             echo "Warning: Multiple $base_daemon processes present. Should restart CFEngine."

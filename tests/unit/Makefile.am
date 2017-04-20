@@ -46,6 +46,9 @@ LDADD = ../../libpromises/libpromises.la libtest.la
 LIBS = $(CORE_LIBS)
 AM_LDFLAGS = $(CORE_LDFLAGS)
 
+# Parallel tests are causing spurious failures across several systems,
+# particularly those doing process testing.
+AUTOMAKE_OPTIONS = serial-tests
 
 check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \

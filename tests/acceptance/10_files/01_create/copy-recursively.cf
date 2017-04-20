@@ -1,0 +1,135 @@
+body common control
+{
+	      inputs => { "../../default.cf.sub" };
+	      bundlesequence  => { default("$(this.promise_filename)") };
+	      version => "1.0";
+}
+
+bundle common g
+{
+}
+
+#######################################################
+
+bundle agent init
+{
+    methods:
+	    "1" usebundle => init1;
+	    "2" usebundle => init2;
+}
+
+bundle agent init1
+{
+    files:
+	    "$(G.testdir)/dir"
+	      delete => init_delete;
+
+	    "$(G.testdir)/out"
+	      delete => init_delete;
+}
+
+bundle agent init2
+{
+    files:
+	    "$(G.testdir)/dir/0"
+	      perms	=> test_perms("0700"),
+	      edit_line	=> insert_lines("new file 0"),
+	      create	=> "true";
+
+	    "$(G.testdir)/dir/1"
+	      perms	=> test_perms("0701"),
+	      edit_line	=> insert_lines("new file 1"),
+	      create	=> "true";
+
+	    "${G.testdir}/out/cp0/1"
+	      perms	=> test_perms("0600"),
+	      edit_line	=> insert_lines("old file 1"),
+	      create	=> "true";
+
+	    "${G.testdir}/out/cp0/A"
+	      perms	=> test_perms("0666"),
+	      create	=> "true";
+
+	    "${G.testdir}/out/nocp0/A"
+	      perms	=> test_perms("0666"),
+	      create	=> "true";
+}
+
+
+body delete init_delete
+{
+	      dirlinks => "delete";
+	      rmdirs   => "true";
+}
+
+#######
+
+bundle agent test
+{
+    files:
+	    "${G.testdir}/out/cp0/."
+	      create		=> "true",
+	      depth_search	=> test_recurse("inf"),
+	      action		=> test_immediate,
+	      perms		=> test_perms("0555"),
+	      copy_from		=> test_cp("$(G.testdir)/dir/.");
+
+	    "${G.testdir}/out/nocp0/."
+	      create		=> "true",
+	      depth_search	=> test_recurse("inf"),
+	      action		=> test_immediate,
+	      perms		=> test_perms("0555");
+}
+
+body copy_from test_cp(from)
+{
+	      source => "$(from)";
+	      preserve => "false";
+	      type_check => "false";
+	      compare => "digest";
+}
+
+body perms test_perms(m)
+{
+	      mode => "$(m)";
+}
+
+body depth_search test_recurse(d)
+
+{
+	      depth => "$(d)";
+	      xdev  => "true";
+}
+
+body action test_immediate
+{
+	      ifelapsed => "0";
+}
+
+#######################################################
+
+bundle agent check
+{
+    vars:
+	    "mode_cp0_0" string		=> filestat("${G.testdir}/out/cp0/0",   "permoct");
+	    "mode_cp0_1" string		=> filestat("${G.testdir}/out/cp0/1",   "permoct");
+	    "mode_cp0_A" string		=> filestat("${G.testdir}/out/cp0/A",   "permoct");
+	    "mode_nocp0_A" string	=> filestat("${G.testdir}/out/nocp0/A", "permoct");
+
+    classes:
+	    "ok"
+	      and		=> { strcmp(${mode_cp0_0},   "555"),
+				     strcmp(${mode_cp0_1},   "555"),
+				     strcmp(${mode_cp0_A},   "666"),
+				     strcmp(${mode_nocp0_A}, "555") };
+
+    reports:
+	DEBUG::
+	    "Modes cp0:   '${mode_cp0_0}', '${mode_cp0_1}', '${mode_cp0_A}'";
+	    "Modes nocp0: '${mode_nocp0_A}'";
+
+	ok::
+	    "$(this.promise_filename) Pass";
+	!ok::
+	    "$(this.promise_filename) FAIL";
+}

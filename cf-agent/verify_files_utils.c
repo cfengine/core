@@ -2429,7 +2429,8 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             }
         }
 
-        if (!attr.haveselect || SelectLeaf(ctx, path, &lsb, attr.select))
+        if (!attr.havecopy &&
+	    (!attr.haveselect || SelectLeaf(ctx, path, &lsb, attr.select)))
         {
             if (attr.havechange)
             {

@@ -815,8 +815,9 @@ done
 
 #
 # Close stdin file descriptor to avoid tty_interactive check in cf-agent being success.
+# Do this iff GDB AND Valgrind are not in use.
 #
-if [ "$GDB" != 1 ] || [ "$USE_VALGRIND" != 1 ]
+if [ "$GDB" != 1 ] && [ "$USE_VALGRIND" != 1 ]
 then
     exec </dev/null
 fi

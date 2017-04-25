@@ -155,6 +155,7 @@ void CalculateDomainName(const char *nodename, const char *dnsname,
 static int Linux_Fedora_Version(EvalContext *ctx);
 static int Linux_Redhat_Version(EvalContext *ctx);
 static void Linux_Amazon_Version(EvalContext *ctx);
+static void Linux_Alpine_Version(EvalContext *ctx);
 static void Linux_Oracle_VM_Server_Version(EvalContext *ctx);
 static void Linux_Oracle_Version(EvalContext *ctx);
 static int Linux_Suse_Version(EvalContext *ctx);
@@ -1165,8 +1166,7 @@ static void OSClasses(EvalContext *ctx)
 
     if (stat("/etc/alpine-release", &statbuf) != -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "This appears to be an AlpineLinux system.");
-        SetFlavour(ctx, "alpinelinux");
+        Linux_Alpine_Version(ctx);
     }
 
     if (stat("/etc/gentoo-release", &statbuf) != -1)
@@ -2403,6 +2403,34 @@ static void Linux_Amazon_Version(EvalContext *ctx)
             SetFlavour(ctx, "AmazonLinux");
         }
     }
+}
+
+/******************************************************************/
+
+static void Linux_Alpine_Version(EvalContext *ctx)
+{
+    char buffer[CF_BUFSIZE];
+
+    Log(LOG_LEVEL_VERBOSE, "This appears to be an AlpineLinux system.");
+
+    EvalContextClassPutHard(ctx, "alpine_linux",
+        "inventory,attribute_name=none,source=agent"
+        ",derived-from-file=/etc/alpine-release");
+
+    if (ReadLine("/etc/alpine-release", buffer, sizeof(buffer)))
+    {
+        char version[128];
+        if (sscanf(buffer, "%127s", version) == 1)
+        {
+            char class[CF_MAXVARSIZE];
+            CanonifyNameInPlace(version);
+            snprintf(class, sizeof(class), "alpine_linux_%s", version);
+            EvalContextClassPutHard(ctx, class,
+                "inventory,attribute_name=none,source=agent"
+                ",derived-from-file=/etc/alpine-release");
+        }
+    }
+    SetFlavour(ctx, "alpinelinux");
 }
 
 /******************************************************************/

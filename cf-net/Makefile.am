@@ -35,7 +35,7 @@ AM_CFLAGS = @CFLAGS@ \
 
 libcf_net_la_LIBADD = ../libpromises/libpromises.la
 
-libcf_net_la_SOURCES = cf-net.c cf-net.h
+libcf_net_la_SOURCES = cf-net.c
 
 if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-net

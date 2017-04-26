@@ -200,7 +200,7 @@ static char *PolicyServerFilename(const char *workdir)
 /**
  * @brief     Reads the policy_server.dat file.
  * @param[in] workdir the directory of policy_server.dat usually GetWorkDir()
- * @return    Trimmed contents of policy_server.dat file. Null terminated. 
+ * @return    Trimmed contents of policy_server.dat file. Null terminated.
  */
 char *PolicyServerReadFile(const char *workdir)
 {
@@ -224,6 +224,8 @@ char *PolicyServerReadFile(const char *workdir)
         fclose(fp);
         return NULL;
     }
+
+    free(filename);
     fclose(fp);
     char *start = TrimWhitespace(contents);
     return xstrdup(start);
@@ -245,7 +247,7 @@ char *PolicyServerReadFile(const char *workdir)
  * @param[out] host pointer at this address will be hostname string (strdup)
  * @param[out] port pointer at this address will be port string (strdup)
  * @attention  host* and port* must be freed.
- * @return     Contents of policy_server.dat file. Null terminated.
+ * @return     Boolean indicating success.
  */
 bool PolicyServerParseFile(const char *workdir, char **host, char **port)
 {
@@ -274,7 +276,7 @@ bool PolicyServerParseFile(const char *workdir, char **host, char **port)
  * @param[out] ipaddr pointer at this address will be hostname string (strdup)
  * @param[out] port pointer at this address will be port string (strdup)
  * @attention  ipaddr* and port* must be freed.
- * @return     Contents of policy_server.dat file. Null terminated.
+ * @return     Boolean indicating success.
  * @see        PolicyServerParseFile
  */
 bool PolicyServerLookUpFile(const char *workdir, char **ipaddr, char **port)
@@ -290,6 +292,9 @@ bool PolicyServerLookUpFile(const char *workdir, char **ipaddr, char **port)
     {
         Log(LOG_LEVEL_ERR,
             "Unable to resolve policy server host: %s", host);
+        free(host);
+        free(*port);
+        (*port) = NULL;
         return false;
     }
     (*ipaddr) = xstrdup(tmp_ipaddr);
@@ -338,5 +343,6 @@ bool PolicyServerRemoveFile(const char *workdir)
         return false;
     }
 
+    free(filename);
     return true;
 }

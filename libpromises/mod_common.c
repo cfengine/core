@@ -493,6 +493,7 @@ const ConstraintSyntax CF_COMMON_BODIES[] =
     ConstraintSyntaxNewString("if", "", "Extended classes ANDed with context", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("unless", "", "Negated 'if'", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("meta", "", "User-data associated with policy, e.g. key=value strings", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("with", "", "A string that will replace every instance of $(with)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

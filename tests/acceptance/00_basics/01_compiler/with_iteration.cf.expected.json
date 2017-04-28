@@ -1,0 +1,28 @@
+{
+  "Apromiser_addition": "promiser addition = promiser_addition",
+  "Bclean": "clean = clean",
+  "Cmy_name_is_canonified": "my name is = my_name_is_canonified",
+  "D11": "iter1 = 1",
+  "D12": "iter1 = 2",
+  "D13": "iter1 = 3",
+  "D21": "iter2 = 1",
+  "D22": "iter2 = 2",
+  "D23": "iter2 = 3",
+  "E0": "probe = 0",
+  "Fiter_canon_1": "iter = iter_canon_1",
+  "Fiter_canon_2": "iter = iter_canon_2",
+  "Fiter_canon_3": "iter = iter_canon_3",
+  "G1iter_canon_1": "iter = iter_canon_1",
+  "G1iter_canon_2": "iter = iter_canon_2",
+  "G1iter_canon_3": "iter = iter_canon_3",
+  "G21": "iter = 1",
+  "G22": "iter = 2",
+  "G23": "iter = 3",
+  "H": "{ \"1\", \"2\", \"3\" }",
+  "iter": [
+    "1",
+    "2",
+    "3"
+  ],
+  "probe": "0"
+}

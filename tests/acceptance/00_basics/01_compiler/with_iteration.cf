@@ -1,0 +1,41 @@
+###########################################################
+#
+# Test the "with" promise attribute
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+      "probe" string => "0";
+      "iter" slist => { "1", "2", "3" };
+      "A$(with)" string => "promiser addition = $(with)", with => canonify(concat("promiser ", canonify("addition")));
+      "B$(with)" string => "clean = $(with)", with => canonify("clean");
+      "C$(with)" string => "my name is = $(with)", with => canonify("my name is canonified");
+      "D1$(with)" string => "iter1 = $(with)", with => $(iter);
+      "D2$(with)" string => "iter2 = $(with)", with => $(iter);
+      "E$(with)" string => "probe = $(with)", with => $(probe);
+      "F$(with)" string => "iter = $(with)", with => concat("iter_canon_", canonify($(iter)));
+      "G1$(with)" string => "iter = $(with)", with => concat("iter_canon_", canonify($(iter)));
+      "G2$(with)" string => "iter = $(with)", with => canonify($(iter));
+      "H" string => "$(with)", with => format("%S", iter);
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

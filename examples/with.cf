@@ -1,0 +1,69 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      "todo" slist => { "a 1", "b 2", "c 3" };
+      # Here, `with` is the canonified version of $(todo), letting us avoid an
+      # intermediate canonification array.
+      "$(with)" string => "$(todo)", with => canonify($(todo));
+
+      "complex" data => '
+{
+  "x": 200,
+  "y": [ 1, 2, null, true, false ]
+}
+';
+
+  reports:
+      "For iterable '$(todo)' we created variable '$(with)' and its value is '$(todo)'"
+        with => canonify($(todo));
+
+      "We can print a data container compactly without creating a temporary variable: $(with)"
+        with => format("%S", complex);
+
+      "We can print a data container fully without creating a temporary variable: $(with)"
+        with => storejson(complex);
+}
+
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: For iterable 'a 1' we created variable 'a_1' and its value is 'a 1'
+#@ R: For iterable 'b 2' we created variable 'b_2' and its value is 'b 2'
+#@ R: For iterable 'c 3' we created variable 'c_3' and its value is 'c 3'
+#@ R: We can print a data container compactly without creating a temporary variable: {"x":200,"y":[1,2,null,true,false]}
+#@ R: We can print a data container fully without creating a temporary variable: {
+#@   "x": 200,
+#@   "y": [
+#@     1,
+#@     2,
+#@     null,
+#@     true,
+#@     false
+#@   ]
+#@ }
+#@ ```
+#+end_src

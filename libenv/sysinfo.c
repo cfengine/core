@@ -995,12 +995,10 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
         xasprintf(&tags,
                   "inventory,attribute_name=none,source=agent,derived-from-file=%s",
                   file_path);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os_release",
-                                      os_release_json, CF_DATA_TYPE_CONTAINER,
-                                      tags);
+
         const char *const_os_release_id = JsonObjectGetAsString(os_release_json, "ID");
         const char *const_os_release_version = JsonObjectGetAsString(os_release_json, "VERSION");
-
+        
         // This is currently only used for CoreOS, but can be expanded:
         if (const_os_release_id != NULL && strcmp(const_os_release_id, "coreos") == 0)
         {

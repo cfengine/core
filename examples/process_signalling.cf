@@ -55,7 +55,7 @@ bundle agent example
 
     start_cfserv::
 
-      "/usr/local/sbin/cfservd";
+      "/usr/local/bin/cfservd";
 
 }
 

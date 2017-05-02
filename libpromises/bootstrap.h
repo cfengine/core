@@ -27,16 +27,9 @@
 
 #include <cf3.defs.h>
 
-
+// EVALCONTEXT POLICY SERVER:
 void EvalContextSetPolicyServer(EvalContext *ctx, const char *new_policy_server);
-
-// POLICY SERVER FILE FUNCTIONS:
-char* ReadPolicyServerFile(const char *workdir);
-void SetPolicyServerFromFile(EvalContext *ctx, const char *workdir);
-bool ParsePolicyServerFile(const char *workdir, char **host, char **port);
-bool LookUpPolicyServerFile(const char *workdir, char **ipaddr, char **port);
-bool WritePolicyServerFile(const char *workdir, const char *new_policy_server);
-bool RemovePolicyServerFile(const char *workdir);
+void EvalContextSetPolicyServerFromFile(EvalContext *ctx, const char *workdir);
 
 // POLICY HUB FUNCTIONS:
 void UpdateLastPolicyUpdateTime(EvalContext *ctx);

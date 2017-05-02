@@ -21,25 +21,31 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-noinst_LTLIBRARIES = libcfnet.la
+noinst_LTLIBRARIES = libcf-net.la
 
-AM_CPPFLAGS  = $(OPENSSL_CPPFLAGS)
-AM_CPPFLAGS += $(PCRE_CPPFLAGS)
-AM_CPPFLAGS += -I$(top_srcdir)/libutils			    # platform.h
-AM_CPPFLAGS += -I$(top_srcdir)/libpromises		    # cf3.extern.h
+AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+	-I$(srcdir)/../libcfnet \
+	$(OPENSSL_CPPFLAGS) \
+	$(PCRE_CPPFLAGS) \
+	$(ENTERPRISE_CPPFLAGS)
 
-libcfnet_la_SOURCES = \
-	addr_lib.c addr_lib.h \
-	client_protocol.c client_protocol.h cfnet.h\
-	client_code.c client_code.h \
-	classic.c classic.h \
-	communication.c communication.h \
-	connection_info.c connection_info.h \
-	conn_cache.c conn_cache.h \
-	key.c key.h \
-	misc.c \
-	net.c net.h \
-	policy_server.c policy_server.h \
-	stat_cache.c stat_cache.h \
-	tls_client.c tls_client.h \
-	tls_generic.c tls_generic.h
+AM_CFLAGS = @CFLAGS@ \
+	$(OPENSSL_CFLAGS) \
+	$(ENTERPRISE_CFLAGS)
+
+libcf_net_la_LIBADD = ../libpromises/libpromises.la
+
+libcf_net_la_SOURCES = cf-net.c
+
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-net
+ cf_net_LDADD = libcf-net.la
+ cf_net_SOURCES =
+endif
+
+CLEANFILES = *.gcno *.gcda
+
+#
+# Some basic clean ups
+#
+MOSTLYCLEANFILES = *~ *.orig *.rej

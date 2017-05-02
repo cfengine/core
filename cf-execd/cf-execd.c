@@ -269,7 +269,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, true, NULL);
             FileWriterDetach(w);
         }
         exit(EXIT_SUCCESS);
@@ -304,7 +304,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, true, NULL);
             FileWriterDetach(w);
         }
         exit(EXIT_FAILURE);
@@ -574,7 +574,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         PolicyDestroy(*policy);
         *policy = NULL;
 
-        SetPolicyServerFromFile(ctx, GetWorkDir());
+        EvalContextSetPolicyServerFromFile(ctx, GetWorkDir());
         UpdateLastPolicyUpdateTime(ctx);
 
         DetectEnvironment(ctx);

@@ -121,7 +121,7 @@ endif
 endif
 
 if !BUILTIN_EXTENSIONS
-  sbin_PROGRAMS = cf-agent
+  bin_PROGRAMS = cf-agent
 
   # Workaround for automake madness (try removing it if you want to know why).
   cf_agent_CFLAGS = $(AM_CFLAGS)

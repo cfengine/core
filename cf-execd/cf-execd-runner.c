@@ -699,7 +699,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char buffer[CF_HOSTKEY_STRING_SIZE];
 
-    char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+    char *existing_policy_server = PolicyServerReadFile(GetWorkDir());
     if (!existing_policy_server)
     {
         existing_policy_server = xstrdup("(none)");

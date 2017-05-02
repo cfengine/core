@@ -227,7 +227,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
+                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true, NULL);
                 FileWriterDetach(w);
             }
             exit(EXIT_SUCCESS);
@@ -276,7 +276,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
+                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true, NULL);
                 FileWriterDetach(w);
             }
             exit(EXIT_FAILURE);
@@ -325,7 +325,7 @@ static void KeepHardClasses(EvalContext *ctx)
     char name[CF_BUFSIZE];
     if (name != NULL)
     {
-        char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+        char *existing_policy_server = PolicyServerReadFile(GetWorkDir());
         if (existing_policy_server)
         {
             free(existing_policy_server);
@@ -442,7 +442,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
              *   CollectCallStart();  // both
              */
 
-            SetPolicyServerFromFile(ctx, GetWorkDir());
+            EvalContextSetPolicyServerFromFile(ctx, GetWorkDir());
 
             UpdateLastPolicyUpdateTime(ctx);
 

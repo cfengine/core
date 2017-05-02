@@ -32,12 +32,20 @@
 #ifndef CFENGINE_POLICYSERVER_H
 #define CFENGINE_POLICYSERVER_H
 
-#include <cf3.defs.h>
+#include <platform.h>
 
+// GET/SET FUNCTIONS:
 void PolicyServerSet(const char *new_policy_server);
 const char *PolicyServerGet();
 const char *PolicyServerGetIP();
 const char *PolicyServerGetHost();
 const char *PolicyServerGetPort();
+
+// POLICY SERVER FILE FUNCTIONS:
+char* PolicyServerReadFile(const char *workdir);
+bool PolicyServerParseFile(const char *workdir, char **host, char **port);
+bool PolicyServerLookUpFile(const char *workdir, char **ipaddr, char **port);
+bool PolicyServerWriteFile(const char *workdir, const char *new_policy_server);
+bool PolicyServerRemoveFile(const char *workdir);
 
 #endif

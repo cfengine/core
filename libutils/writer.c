@@ -271,12 +271,10 @@ FILE *FileWriterDetach(Writer *writer)
     return file;
 }
 
-void WriterWriteHelp(Writer *w, const char *component, const struct option options[], const char *const hints[], bool accepts_file_argument)
+static void WriterWriteOptions(Writer *w, const struct option options[],
+                               const char *const hints[])
 {
-    WriterWriteF(w, "Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
-
     WriterWriteF(w, "\nOptions:\n");
-
     for (int i = 0; options[i].name != NULL; i++)
     {
         char short_option[] = ", -*";
@@ -292,14 +290,42 @@ void WriterWriteHelp(Writer *w, const char *component, const struct option optio
         }
         if (options[i].has_arg)
         {
-            WriterWriteF(w, "  --%-12s%s value - %s\n", options[i].name, short_option, hints[i]);
+            WriterWriteF(w, "  --%-12s%s value - %s\n", options[i].name,
+                         short_option, hints[i]);
         }
         else
         {
-            WriterWriteF(w, "  --%-12s%-10s - %s\n", options[i].name, short_option, hints[i]);
+            WriterWriteF(w, "  --%-12s%-10s - %s\n", options[i].name,
+                         short_option, hints[i]);
         }
     }
+}
 
+static void WriterWriteCommands(Writer *w, const Description *commands)
+{
+    assert(commands != NULL);
+    WriterWriteF(w, "\nCommands:\n");
+    for (int i = 0; commands[i].name != NULL; i++)
+    {
+        WriterWriteF(w, "  %-12s - %s.\n", commands[i].name,
+                                           commands[i].description);
+        WriterWriteF(w, "  %-12s   Usage: %s\n", "", commands[i].usage);
+    }
+}
+
+void WriterWriteHelp(Writer *w, const char *component,
+                     const struct option options[], const char *const hints[],
+                     bool accepts_file_argument, const Description *commands)
+{
+    WriterWriteF(w, "Usage: %s [OPTIONS] %s%s\n", component,
+                 commands ? "command " : "",
+                 accepts_file_argument ? " [FILE]" : "");
+    WriterWriteOptions(w, options, hints);
+    if (commands != NULL)
+    {
+        WriterWriteCommands(w, commands);
+    }
     WriterWriteF(w, "\nWebsite: http://www.cfengine.com\n");
-    WriterWriteF(w, "This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
+    WriterWriteF(w, "This software is Copyright (C) "
+                    "2008,2010-present CFEngine AS.\n");
 }

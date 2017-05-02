@@ -120,7 +120,6 @@ libpromises_la_SOURCES = \
         mutex.c mutex.h \
         ornaments.c ornaments.h \
         policy.c policy.h \
-        policy_server.c policy_server.h \
         parser.c parser.h \
         parser_state.h \
         patches.c \

@@ -80,7 +80,7 @@ void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[
 
 AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir)
 {
-    char *policy_server = ReadPolicyServerFile(workdir);
+    char *policy_server = PolicyServerReadFile(workdir);
     return AgentDiagnosticsResultNew(policy_server != NULL,
                                      policy_server != NULL ? policy_server : xstrdup("Not bootstrapped"));
 }

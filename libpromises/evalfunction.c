@@ -6475,6 +6475,10 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
             {
                 requested_mode = "YAML";
             }
+            else if (StringEndsWithCase(input_path, ".yml", true))
+            {
+                requested_mode = "YAML";
+            }
             else if (StringEndsWithCase(input_path, ".env", true))
             {
                 requested_mode = "ENV";

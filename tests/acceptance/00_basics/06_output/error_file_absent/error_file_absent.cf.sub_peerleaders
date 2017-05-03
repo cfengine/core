@@ -1,0 +1,30 @@
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "absent_file" string => "$(G.testfile).absent_file";
+
+  files: 
+      "$(absent_file)"
+        delete => tidy,
+        comment => "Ensure we are testing against an absent file";
+}
+
+bundle agent test
+{
+  vars:
+
+    "data" slist => peerleaders( $(absent_file) ,"comment", inf);
+
+  reports:
+    DEBUG::
+      "Testing for error from peerleaders when attempting to read absent file";
+}

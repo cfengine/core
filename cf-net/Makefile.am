@@ -38,7 +38,7 @@ libcf_net_la_LIBADD = ../libpromises/libpromises.la
 libcf_net_la_SOURCES = cf-net.c
 
 if !BUILTIN_EXTENSIONS
- sbin_PROGRAMS = cf-net
+ bin_PROGRAMS = cf-net
  cf_net_LDADD = libcf-net.la
  cf_net_SOURCES =
 endif

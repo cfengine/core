@@ -427,6 +427,15 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
 static void *LocalExecThread(void *param)
 {
+
+#ifndef __MINGW32__
+    /* Block signals in children threads, deliver them only to the main
+     * thread. Otherwise cf-execd might not exit immediately (ENT-3147). */
+    sigset_t sigmask;
+    sigfillset(&sigmask);
+    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
+#endif
+
     ExecConfig *config = (ExecConfig *)param;
     LocalExec(config);
     ExecConfigDestroy(config);

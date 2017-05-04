@@ -25,6 +25,8 @@
 #ifndef CF_EXECD_H
 #define CF_EXECD_H
 
+#include <cf3.defs.h>
+
 #include <eval_context.h>
 #include <policy.h>
 #include <generic_agent.h>

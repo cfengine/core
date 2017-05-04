@@ -192,8 +192,9 @@ void HandleSignalsForDaemon(int signum)
         break;
     }
 
+    /* Notify processes that use the signal pipe (cf-serverd). */
     SignalNotify(signum);
 
-/* Reset the signal handler */
+    /* Reset the signal handler. */
     signal(signum, HandleSignalsForDaemon);
 }

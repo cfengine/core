@@ -1,0 +1,54 @@
+body file control
+{
+    inputs => { "../../default.cf.sub" };
+}
+
+bundle agent main
+{
+  methods:
+    "Default DCS Bundlesequence"
+      usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that the and attribute of classes promises will accept the result of the not() function.";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2627" };
+
+
+  classes:
+    "sys_flavor_is_variable"
+      and => { isvariable("sys.flavor") };
+
+  "nosuchvar_is_not_defined"
+     and => {  not( isvariable("nosuchvar") ) };
+
+  "sys_flavor_is_variable_not_nosuchvar"
+    and => { isvariable("sys.flavor"),
+             not( isvariable("nosuchvar") };
+
+  "pass"
+      and => {
+               "sys_flavor_is_variable_not_nosuchvar",
+               "nosuchvar_is_not_defined",
+               "sys_flavor_is_variable",
+             };
+
+  reports:
+    sys_flavor_is_variable::
+      "sys.flavor is a defined variable";
+
+    nosuchvar_is_not_defined::
+      "nosuchvar is not a defined variable";
+
+    sys_flavor_is_variable_not_nosuchvar::
+      "sys.flavor is a defined variable and nosuchvar is not";
+
+    pass::
+       "$(this.promise_filename) Pass";
+}

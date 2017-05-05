@@ -1,0 +1,16 @@
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+body executor control
+{
+      # Every 1 min
+      schedule => { "any" };
+
+      # redirect all file descriptors so that the shell script
+      # stays alive after cf-execd is killed
+      exec_command =>
+        "$(G.testdir)/exec_command.sh  > $(G.testdir)/exec_command.sh.log 2>&1 </dev/null";
+}

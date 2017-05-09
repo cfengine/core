@@ -11,7 +11,7 @@ cd $TRAVIS_BUILD_DIR
 # Needed for determine-version.py to work
 git remote add upstream https://github.com/cfengine/core.git  && git fetch -q upstream 'refs/tags/*:refs/tags/*'
 
-if [[ ${TRAVIS_OS_NAME} = osx ]]; then
+if [ "$TRAVIS_OS_NAME" = osx ]; then
     # On osx the default gcc is actually LLVM
     export CC=gcc-6
     NO_CONFIGURE=1 ./autogen.sh
@@ -24,7 +24,7 @@ fi
 make dist
 export DIST_TARBALL=`echo cfengine-*.tar.gz`
 
-if ["$JOB_TYPE" = compile_only ];
+if [ "$JOB_TYPE" = compile_only ];
 then
      make CFLAGS=-Werror;
 elif [ "$JOB_TYPE" = compile_and_unit_test ];

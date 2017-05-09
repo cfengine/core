@@ -403,7 +403,9 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         {
             if (ScheduleRun(ctx, &policy, config, execd_config, exec_config))
             {
-                MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %u seconds", (*execd_config)->splay_time);
+                MaybeSleepLog(LOG_LEVEL_VERBOSE,
+                              "Sleeping for splaytime %u seconds",
+                              (*execd_config)->splay_time);
 
                 // We are sleeping both above and inside ScheduleRun(), so make
                 // sure a terminating signal did not arrive during that time.
@@ -414,7 +416,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
                 if (!LocalExecInThread(*exec_config))
                 {
-                    Log(LOG_LEVEL_INFO, "Unable to run agent in thread, falling back to blocking execution");
+                    Log(LOG_LEVEL_INFO,
+                        "Unable to run agent in thread, falling back to blocking execution");
                     LocalExec(*exec_config);
                 }
             }
@@ -427,19 +430,26 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
 static void *LocalExecThread(void *param)
 {
-
 #ifndef __MINGW32__
     /* Block signals in children threads, deliver them only to the main
      * thread. Otherwise cf-execd might not exit immediately (ENT-3147). */
     sigset_t sigmask;
     sigfillset(&sigmask);
-    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
+    int ret = pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Unable to block signals in child thread,"
+            " killing cf-execd might fail (pthread_sigmask: %s)",
+            GetErrorStr());
+    }
 #endif
 
-    ExecConfig *config = (ExecConfig *)param;
+    ExecConfig *config = (ExecConfig *) param;
     LocalExec(config);
     ExecConfigDestroy(config);
 
+    Log(LOG_LEVEL_VERBOSE, "Finished exec_command execution, terminating thread");
     return NULL;
 }
 
@@ -449,6 +459,8 @@ static bool LocalExecInThread(const ExecConfig *config)
 
     pthread_t tid;
 
+    Log(LOG_LEVEL_VERBOSE, "Spawning thread for exec_command execution");
+
     if (pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config) == 0)
     {
         return true;
@@ -456,7 +468,8 @@ static bool LocalExecInThread(const ExecConfig *config)
     else
     {
         ExecConfigDestroy(thread_config);
-        Log(LOG_LEVEL_INFO, "Can't create thread. (pthread_create: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Failed to create thread (pthread_create: %s)",
+            GetErrorStr());
         return false;
     }
 }

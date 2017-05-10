@@ -1,0 +1,46 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that empty lists or data containers do not return true with filesexist. There are no files provided to verify!";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2631" };
+
+  vars:
+      "emptylist" slist => {};
+      "emptydata" data => '{}';
+
+  classes:
+      "files_in_empty_list_exist"
+      expression => filesexist( @(emptylist) );
+
+      "files_in_empty_data_exist"
+      expression => filesexist( @(emptdata) );
+
+      "pass"
+        expression => "!(files_in_empty_list_exist|files_in_empty_data_exist)";
+
+  reports:
+    DEBUG|EXTRA::
+      "CFEngine $(sys.cf_version)";
+
+    (DEBUG|EXTRA).files_in_empty_list_exist::
+      "files_in_empty_list_exist";
+
+    (DEBUG|EXTRA).files_in_empty_data_exist::
+      "files_in_empty_data_exist";
+
+    pass::
+      "$(this.promise_filename) Pass";
+
+    !pass::
+      "$(this.promise_filename) FAIL";
+}

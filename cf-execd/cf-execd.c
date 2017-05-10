@@ -428,14 +428,12 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
 /*****************************************************************************/
 
-static void *LocalExecThread(void *param)
+static void Thread_AllSignalsBlock(void)
 {
 #ifndef __MINGW32__
-    /* Block signals in children threads, deliver them only to the main
-     * thread. Otherwise cf-execd might not exit immediately (ENT-3147). */
     sigset_t sigmask;
     sigfillset(&sigmask);
-    int ret = pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
+    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
     if (ret != 0)
     {
         Log(LOG_LEVEL_ERR,
@@ -444,7 +442,25 @@ static void *LocalExecThread(void *param)
             GetErrorStr());
     }
 #endif
+}
 
+static void Thread_AllSignalsUnblock(void)
+{
+#ifndef __MINGW32__
+    sigset_t sigmask;
+    sigemptyset(&sigmask);
+    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Unable to unblock signals again (pthread_sigmask: %s)",
+            GetErrorStr());
+    }
+#endif
+}
+
+static void *LocalExecThread(void *param)
+{
     ExecConfig *config = (ExecConfig *) param;
     LocalExec(config);
     ExecConfigDestroy(config);
@@ -456,22 +472,28 @@ static void *LocalExecThread(void *param)
 static bool LocalExecInThread(const ExecConfig *config)
 {
     ExecConfig *thread_config = ExecConfigCopy(config);
-
     pthread_t tid;
 
     Log(LOG_LEVEL_VERBOSE, "Spawning thread for exec_command execution");
 
-    if (pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config) == 0)
-    {
-        return true;
-    }
-    else
+    /* ENT-3147: Block all signals so that child thread inherits it and
+     * signals get only delivered to the main thread. Unblock all signals
+     * right after thread has been spawned. */
+    Thread_AllSignalsBlock();
+
+    int ret = pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config);
+
+    Thread_AllSignalsUnblock();
+
+    if (ret != 0)
     {
         ExecConfigDestroy(thread_config);
         Log(LOG_LEVEL_ERR, "Failed to create thread (pthread_create: %s)",
             GetErrorStr());
         return false;
     }
+
+    return true;
 }
 
 #ifndef __MINGW32__

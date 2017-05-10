@@ -154,11 +154,18 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         return -1;
     }
 
+    /* WARNING: UNDEFINED BEHAVIOUR if the program is multi-threaded! */
     signal(SIGCHLD, SIG_DFL);
 
-    // Redmine #2971: reset SIGPIPE signal handler to have a sane behavior of piped commands within child
-    if (pid == 0)
+    if (pid == 0)                                               /* child */
     {
+        /* WARNING only call async-signal-safe functions in child. */
+
+        /* The fork()ed child is always single-threaded, but we are only
+         * allowed to call async-signal-safe functions (man 3p fork). */
+
+        // Redmine #2971: reset SIGPIPE signal handler in the child to have a
+        // sane behavior of piped commands within child
         signal(SIGPIPE, SIG_DFL);
     }
 
@@ -289,8 +296,10 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
         return NULL;
     }
 
-    if (pid == 0)
+    if (pid == 0)                                               /* child */
     {
+        /* WARNING only call async-signal-safe functions in child. */
+
         switch (*type)
         {
         case 'r':
@@ -386,8 +395,10 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
         return NULL;
     }
 
-    if (pid == 0)
+    if (pid == 0)                                               /* child */
     {
+        /* WARNING only call async-signal-safe functions in child. */
+
         switch (*type)
         {
         case 'r':
@@ -498,8 +509,10 @@ FILE *cf_popen_sh(const char *command, const char *type)
         return NULL;
     }
 
-    if (pid == 0)
+    if (pid == 0)                                               /* child */
     {
+        /* WARNING only call async-signal-safe functions in child. */
+
         switch (*type)
         {
         case 'r':
@@ -577,8 +590,10 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
         return NULL;
     }
 
-    if (pid == 0)
+    if (pid == 0)                                               /* child */
     {
+        /* WARNING only call async-signal-safe functions in child. */
+
         switch (*type)
         {
         case 'r':

@@ -169,6 +169,12 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         // Redmine #2971: reset SIGPIPE signal handler in the child to have a
         // sane behavior of piped commands within child
         signal(SIGPIPE, SIG_DFL);
+
+        /* The child should always accept all signals after it has exec'd,
+         * else the child might be unkillable! (happened in ENT-3147). */
+        sigset_t sigmask;
+        sigemptyset(&sigmask);
+        sigprocmask(SIG_SETMASK, &sigmask, NULL);
     }
 
     ALARM_PID = (pid != 0 ? pid : -1);

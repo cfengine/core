@@ -466,16 +466,7 @@ static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
     }
 }
 
-#ifdef __MINGW32__
 
-static bool KillLockHolder(ARG_UNUSED const char *lock)
-{
-    Log(LOG_LEVEL_VERBOSE,
-          "Process is not running - ignoring lock (Windows does not support graceful processes termination)");
-    return true;
-}
-
-#else
 
 static bool KillLockHolder(const char *lock)
 {
@@ -513,8 +504,6 @@ static bool KillLockHolder(const char *lock)
 
     return GracefulTerminate(lock_data.pid, lock_data.process_start_time);
 }
-
-#endif
 
 void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {

@@ -909,9 +909,9 @@ static int GetProcColumnIndex(const char *name1, const char *name2, char **names
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE,
-        "Process column %s/%s was not supported on this system",
-        name1, name2);
+    LogDebug(LOG_MOD_PS, "Process column %s/%s"
+             " was not supported on this system",
+             name1, name2);
 
     return -1;
 }

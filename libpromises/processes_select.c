@@ -163,7 +163,8 @@ static bool SelectProcess(const char *procentry,
 
     for (int i = 0; names[i] != NULL; i++)
     {
-        Log(LOG_LEVEL_DEBUG, "In SelectProcess, COL[%s] = '%s'", names[i], column[i]);
+        LogDebug(LOG_MOD_PS, "In SelectProcess, COL[%s] = '%s'",
+                 names[i], column[i]);
     }
 
     if (!SelectProcRegexMatch("CMD", "COMMAND", process_regex, false, names, column))
@@ -410,9 +411,9 @@ static long TimeCounter2Int(const char *s)
         seconds = 0;
     }
 
-    Log(LOG_LEVEL_DEBUG,
-        "TimeCounter2Int: Parsed '%s' as elapsed time '%ld-%02ld:%02ld:%02ld'",
-        s, days, hours, minutes, seconds);
+    LogDebug(LOG_MOD_PS, "TimeCounter2Int:"
+             " Parsed '%s' as elapsed time '%ld-%02ld:%02ld:%02ld'",
+             s, days, hours, minutes, seconds);
 
     /* Convert to seconds: */
     return ((days * 24 + hours) * 60 + minutes) * 60 + seconds;
@@ -440,16 +441,17 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 
         if ((min <= value) && (value <= max))
         {
-            Log(LOG_LEVEL_VERBOSE, "Selection filter matched counter range '%s/%s' = '%s' in [%jd,%jd] (= %jd secs)",
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched counter range"
+                " '%s/%s' = '%s' in [%jd,%jd] (= %jd secs)",
                   name1, name2, line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
             return true;
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG,
-                "Selection filter REJECTED counter range '%s/%s' = '%s' in [%jd,%jd] (= %jd secs)",
-                name1, name2, line[i],
-                (intmax_t) min, (intmax_t) max, (intmax_t) value);
+            LogDebug(LOG_MOD_PS, "Selection filter REJECTED counter range"
+                     " '%s/%s' = '%s' in [%jd,%jd] (= %jd secs)",
+                     name1, name2, line[i],
+                     (intmax_t) min, (intmax_t) max, (intmax_t) value);
             return false;
         }
     }
@@ -608,8 +610,8 @@ static void PrintStringIndexLine(int prefix_spaces, int len)
     }
 
     // Prefix the beginning of the indexes with the given number.
-    Log(LOG_LEVEL_DEBUG, "%*s%s", prefix_spaces, "", arrow_str);
-    Log(LOG_LEVEL_DEBUG, "%*s%s", prefix_spaces, "Index: ", index_str);
+    LogDebug(LOG_MOD_PS, "%*s%s", prefix_spaces, "", arrow_str);
+    LogDebug(LOG_MOD_PS, "%*s%s", prefix_spaces, "Index: ", index_str);
 }
 
 static void MaybeFixStartTime(const char *line,
@@ -632,7 +634,7 @@ static void MaybeFixStartTime(const char *line,
             {
                 time_t value = pstime - (time_t) elapsed;
 
-                Log(LOG_LEVEL_DEBUG,
+                LogDebug(LOG_MOD_PS,
                     "processes: Replacing parsed start time %s with %s",
                     fields[j], ctime(&value));
 
@@ -670,7 +672,7 @@ static bool SplitProcLine(const char *line,
 
     if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
     {
-        Log(LOG_LEVEL_DEBUG, "Parsing ps line: '%s'", line);
+        LogDebug(LOG_MOD_PS, "Parsing ps line: '%s'", line);
         // Makes the entry line up with the line above.
         PrintStringIndexLine(18, linelen);
     }
@@ -743,8 +745,8 @@ Solaris 9:
                         && (isspace(line[pos + 1])
                             || line[pos + 1] == '\0'))
                     {
-                        Log(LOG_LEVEL_DEBUG, "Detected zombie process, "
-                            "skipping parsing of empty ps fields.");
+                        LogDebug(LOG_MOD_PS, "Detected zombie process, "
+                                 "skipping parsing of empty ps fields.");
                         zombie = true;
                     }
                 }
@@ -762,7 +764,7 @@ Solaris 9:
         {
             if (pca == PCA_ZombieSkipEmptyColumns && zombie)
             {
-                Log(LOG_LEVEL_DEBUG, "Assuming '%s' field is empty, "
+                LogDebug(LOG_MOD_PS, "Assuming '%s' field is empty, "
                     "since ps line '%s' is not long enough to reach under its "
                     "header.", names[field], line);
                 fields[field] = xstrdup("");
@@ -808,9 +810,9 @@ Solaris 9:
             }
             if (empty)
             {
-                Log(LOG_LEVEL_DEBUG, "Detected empty '%s' field between "
-                    "positions %d and %d\n", names[field], start[field],
-                    end[field]);
+                LogDebug(LOG_MOD_PS, "Detected empty"
+                         " '%s' field between positions %d and %d",
+                         names[field], start[field], end[field]);
                 fields[field] = xstrdup("");
                 pos = end[field] + 1;
                 field++;
@@ -818,9 +820,9 @@ Solaris 9:
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "Detected non-empty '%s' field between "
-                    "positions %d and %d\n", names[field], start[field],
-                    end[field]);
+                LogDebug(LOG_MOD_PS, "Detected non-empty "
+                         "'%s' field between positions %d and %d",
+                         names[field], start[field], end[field]);
             }
         }
 
@@ -881,8 +883,9 @@ Solaris 9:
 
         // Make a copy and store in fields.
         fields[field] = xstrndup(line + pos, last - pos);
-        Log(LOG_LEVEL_DEBUG, "'%s' field '%s' extracted from between positions "
-            "%d and %d", names[field], fields[field], pos, last - 1);
+        LogDebug(LOG_MOD_PS, "'%s' field '%s'"
+                 " extracted from between positions %d and %d",
+                 names[field], fields[field], pos, last - 1);
 
         pos = last;
         field++;
@@ -982,7 +985,7 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
 
     if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
     {
-        Log(LOG_LEVEL_DEBUG, "Parsing ps line: '%s'", proc);
+        LogDebug(LOG_MOD_PS, "Parsing ps line: '%s'", proc);
         // Makes the entry line up with the line above.
         PrintStringIndexLine(18, strlen(proc));
     }
@@ -1003,7 +1006,7 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
         {
             if (start[col] != -1)
             {
-                Log(LOG_LEVEL_DEBUG, "End of '%s' is %d", title, offset - 1);
+                LogDebug(LOG_MOD_PS, "End of '%s' is %d", title, offset - 1);
                 end[col++] = offset - 1;
                 if (col >= CF_PROCCOLS) /* No space for more columns. */
                 {
@@ -1034,16 +1037,16 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
             {
                 start[col] = offset;
             }
-            sscanf(sp, "%15s", title);
-            Log(LOG_LEVEL_DEBUG, "Start of '%s' is %d", title, offset);
+            sscanf(sp, "%15s", title);                          /* TODO verify retvalue */
+            LogDebug(LOG_MOD_PS, "Start of '%s' is %d", title, offset);
             names[col] = xstrdup(title);
-            Log(LOG_LEVEL_DEBUG, "Col[%d] = '%s'", col, names[col]);
+            LogDebug(LOG_MOD_PS, "Col[%d] = '%s'", col, names[col]);
         }
     }
 
     if (end[col] == -1)
     {
-        Log(LOG_LEVEL_DEBUG, "End of '%s' is %d", title, offset);
+        LogDebug(LOG_MOD_PS, "End of '%s' is %d", title, offset);
         end[col] = offset;
     }
 }

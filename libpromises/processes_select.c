@@ -1037,10 +1037,15 @@ static void GetProcessColumnNames(const char *proc, char **names, int *start, in
             {
                 start[col] = offset;
             }
-            sscanf(sp, "%15s", title);                          /* TODO verify retvalue */
-            LogDebug(LOG_MOD_PS, "Start of '%s' is %d", title, offset);
-            names[col] = xstrdup(title);
-            LogDebug(LOG_MOD_PS, "Col[%d] = '%s'", col, names[col]);
+
+            if (sscanf(sp, "%15s", title) == 1)
+            {
+                LogDebug(LOG_MOD_PS, "Start of '%s' is at offset: %d",
+                         title, offset);
+                LogDebug(LOG_MOD_PS, "Col[%d] = '%s'", col, title);
+
+                names[col] = xstrdup(title);
+            }
         }
     }
 

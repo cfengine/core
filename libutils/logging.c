@@ -324,6 +324,7 @@ static const char *log_modules[LOG_MOD_MAX] =
     "vartable",
     "vars",
     "locks",
+    "ps",
 };
 
 static enum LogModule LogModuleFromString(const char *s)

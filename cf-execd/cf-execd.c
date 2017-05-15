@@ -403,7 +403,9 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         {
             if (ScheduleRun(ctx, &policy, config, execd_config, exec_config))
             {
-                MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %u seconds", (*execd_config)->splay_time);
+                MaybeSleepLog(LOG_LEVEL_VERBOSE,
+                              "Sleeping for splaytime %u seconds",
+                              (*execd_config)->splay_time);
 
                 // We are sleeping both above and inside ScheduleRun(), so make
                 // sure a terminating signal did not arrive during that time.
@@ -414,7 +416,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
                 if (!LocalExecInThread(*exec_config))
                 {
-                    Log(LOG_LEVEL_INFO, "Unable to run agent in thread, falling back to blocking execution");
+                    Log(LOG_LEVEL_INFO,
+                        "Unable to run agent in thread, falling back to blocking execution");
                     LocalExec(*exec_config);
                 }
             }
@@ -425,31 +428,72 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
 /*****************************************************************************/
 
+static void Thread_AllSignalsBlock(void)
+{
+#ifndef __MINGW32__
+    sigset_t sigmask;
+    sigfillset(&sigmask);
+    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Unable to block signals in child thread,"
+            " killing cf-execd might fail (pthread_sigmask: %s)",
+            GetErrorStr());
+    }
+#endif
+}
+
+static void Thread_AllSignalsUnblock(void)
+{
+#ifndef __MINGW32__
+    sigset_t sigmask;
+    sigemptyset(&sigmask);
+    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Unable to unblock signals again (pthread_sigmask: %s)",
+            GetErrorStr());
+    }
+#endif
+}
+
 static void *LocalExecThread(void *param)
 {
-    ExecConfig *config = (ExecConfig *)param;
+    ExecConfig *config = (ExecConfig *) param;
     LocalExec(config);
     ExecConfigDestroy(config);
 
+    Log(LOG_LEVEL_VERBOSE, "Finished exec_command execution, terminating thread");
     return NULL;
 }
 
 static bool LocalExecInThread(const ExecConfig *config)
 {
     ExecConfig *thread_config = ExecConfigCopy(config);
-
     pthread_t tid;
 
-    if (pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config) == 0)
-    {
-        return true;
-    }
-    else
+    Log(LOG_LEVEL_VERBOSE, "Spawning thread for exec_command execution");
+
+    /* ENT-3147: Block all signals so that child thread inherits it and
+     * signals get only delivered to the main thread. Unblock all signals
+     * right after thread has been spawned. */
+    Thread_AllSignalsBlock();
+
+    int ret = pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config);
+
+    Thread_AllSignalsUnblock();
+
+    if (ret != 0)
     {
         ExecConfigDestroy(thread_config);
-        Log(LOG_LEVEL_INFO, "Can't create thread. (pthread_create: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Failed to create thread (pthread_create: %s)",
+            GetErrorStr());
         return false;
     }
+
+    return true;
 }
 
 #ifndef __MINGW32__

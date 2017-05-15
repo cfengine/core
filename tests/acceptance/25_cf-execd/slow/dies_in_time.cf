@@ -1,0 +1,155 @@
+# ENT-3147, zd#3157
+
+# Ensure that cf-execd dies within 3 seconds after being signalled.
+
+
+body common control
+{
+      inputs => {
+          "../../default.cf.sub",
+          "../../run_with_server.cf.sub"
+      };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  vars:
+
+      "exec_command_script" string =>
+"#!/bin/sh -x
+
+sleep 10
+
+CF_EXECD_PID=`cat $(sys.piddir)/cf-execd.pid`
+
+# Send TERM
+kill -15 $CF_EXECD_PID
+
+# Give the process 2 (plus 1 just to be sure) seconds to die gracefully
+sleep 3
+
+# Is it dead?
+if kill -0 $CF_EXECD_PID
+then
+    echo ALIVE > $(G.testdir)/cf_execd.status
+else
+    echo DEAD  > $(G.testdir)/cf_execd.status
+fi
+
+# Touch a file to trigger the policy to move on and check the cf_execd.status file
+touch $(G.testdir)/EXECUTOR_WAS_SIGNALLED
+
+# Keep this child running to test that cf-execd still dies instantly despite that
+sleep 10
+
+# Clean up that useless executor if TERM failed
+# NOTE: using `ps` command fails under fakeroot!
+
+if kill -0 $CF_EXECD_PID
+then
+    echo 'cf-execd is still alive, killing it with FIRE!!!'
+    kill -9 $CF_EXECD_PID
+    exit 1
+fi
+
+# Verify that this shell script reaches completion
+# despite parent cf-execd being dead
+echo DONE > $(G.testdir)/exec_command.status
+
+";
+
+  files:
+      "$(G.testdir)/exec_command.sh"
+         create => "true",
+         perms  => m(777),
+         edit_line => insert_lines("$(exec_command_script)");
+
+  methods:
+      "any" usebundle => dcs_fini("$(sys.piddir)/cf-execd.pid");
+      "any" usebundle => dcs_fini("$(G.testdir)/EXECUTOR_WAS_SIGNALLED");
+      "any" usebundle => dcs_fini("$(G.testdir)/cf_execd.status");
+      "any" usebundle => dcs_fini("$(G.testdir)/exec_command.status");
+}
+
+bundle agent test
+{
+  commands:
+
+      "$(sys.cf_execd) -f $(this.promise_dirname)/kill_myself.execd.srv"
+        classes => if_repaired("executor_started");
+
+    executor_started::
+      # Make sure it started fully
+      "$(G.sleep) 5"
+        classes => if_repaired("waited");
+
+    executor_started.waited::
+
+      # Ensure executor PID is up
+      "kill -0 `cat $(sys.piddir)/cf-execd.pid`"
+        contain => in_shell,
+        classes => if_repaired("executor_started_ok");
+
+    executor_started_ok::
+      # Wait until cf-execd is signalled by its own child;
+      # more than 60s which is CFPULSETIME
+      "
+i=0
+while [ $i -lt 120 ]
+do
+    i=`expr $i + 1`
+    echo $i
+    sleep 1
+    if test -f $(G.testdir)/EXECUTOR_WAS_SIGNALLED
+    then
+        exit 0
+    fi
+done
+exit 1        # Executor was never signalled!
+"
+        contain => in_shell,
+        classes => if_repaired("executor_was_signalled");
+
+    executor_was_signalled::
+      # Wait again until executor runs the signal handler and exits gracefully
+      "$(G.sleep) 3"
+        classes => if_repaired("waited_for_cleanup");
+
+    waited_for_cleanup::
+      # and another 10s for exec_command.sh script to exit
+      "$(G.sleep) 10"
+        classes => if_repaired("script_should_have_exited");
+
+  classes:
+      "test_bundle_done" expression => "script_should_have_exited",
+                              scope => "namespace";
+
+  reports:
+
+    !executor_was_signalled::
+      "$(this.promise_filename) FAIL";
+}
+
+# PASS only if cf_execd.status is DEAD and exec_command.status is DONE
+bundle agent check
+{
+  classes:
+    test_bundle_done::
+      "executor_is_dead" expression =>
+        returnszero("$(G.grep) DEAD $(G.testdir)/cf_execd.status",
+                    "useshell");
+      "exec_command_finished" expression =>
+        returnszero("$(G.grep) DONE $(G.testdir)/exec_command.status",
+                    "useshell");
+
+  methods:
+      "" usebundle =>
+        dcs_passif_expected("executor_is_dead,exec_command_finished","",
+                            "$(this.promise_filename)"),
+        inherit => "true";
+
+  reports:
+    !executor_is_dead.DEBUG::
+        "FAIL: cf-execd did not die within 3s after TERM signal!";
+}

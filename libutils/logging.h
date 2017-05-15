@@ -62,6 +62,7 @@ enum LogModule
     LOG_MOD_VARTABLE,                         /* variables tables */
     LOG_MOD_VARS,                             /* variables promise */
     LOG_MOD_LOCKS,                            /* locks.c */
+    LOG_MOD_PS,                               /* ps parsing */
     LOG_MOD_MAX
 };
 

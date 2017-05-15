@@ -26,10 +26,6 @@
 #define CFENGINE_MATCH_SCOPE_H
 
 #include <cf3.defs.h>
-#include <regex.h>
-
-/* Does not free rx! */
-bool RegexPartialMatch(const pcre *rx, const char *teststring);
 
 int FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
 int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */

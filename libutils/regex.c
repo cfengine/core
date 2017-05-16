@@ -271,3 +271,15 @@ bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex)
     }
     return true;
 }
+
+/*
+ * This is a fast partial match function. It checks that the compiled rx matches
+ * anywhere inside teststring. It does not allocate or free rx!
+ */
+bool RegexPartialMatch(const pcre *rx, const char *teststring)
+{
+    int ovector[STRING_MATCH_OVECCOUNT];
+    int rc = pcre_exec(rx, NULL, teststring, strlen(teststring), 0, 0, ovector, STRING_MATCH_OVECCOUNT);
+
+    return rc >= 0;
+}

@@ -84,18 +84,6 @@ static int RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststri
     }
 }
 
-/*
- * This is a fast partial match function. It checks that the compiled rx matches
- * anywhere inside teststring. It does not allocate or free rx!
- */
-bool PartialMatch(const pcre *rx, const char *teststring)
-{
-    int ovector[OVECCOUNT];
-    int rc = pcre_exec(rx, NULL, teststring, strlen(teststring), 0, 0, ovector, OVECCOUNT);
-
-    return rc >= 0;
-}
-
 int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 {
     pcre *rx;

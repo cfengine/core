@@ -508,7 +508,7 @@ static void ShowContextsFormatted(EvalContext *ctx, const char *regexp)
     {
         char *class_name = ClassRefToString(cls->ns, cls->name);
 
-        if (!PartialMatch(rx, class_name))
+        if (!RegexPartialMatch(rx, class_name))
         {
             free(class_name);
             continue;
@@ -563,7 +563,7 @@ static void ShowVariablesFormatted(EvalContext *ctx, const char *regexp)
     {
         char *varname = VarRefToString(v->ref, true);
 
-        if (!PartialMatch(rx, varname))
+        if (!RegexPartialMatch(rx, varname))
         {
             free(varname);
             continue;

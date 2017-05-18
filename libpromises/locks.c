@@ -758,8 +758,8 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         {
             if (elapsedtime >= tc.expireafter)
             {
-                Log(LOG_LEVEL_INFO, "Lock %s expired (after %jd/%u minutes)",
-                    cflock, (intmax_t) elapsedtime, tc.expireafter);
+                Log(LOG_LEVEL_INFO, "Lock expired after %jd/%u minutes: %s",
+                    (intmax_t) elapsedtime, tc.expireafter, cflock);
 
                 pid_t pid = FindLockPid(cflock);
 

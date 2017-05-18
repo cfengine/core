@@ -1968,3 +1968,137 @@ void SetupSignalsForAgent(void)
     signal(SIGUSR1, HandleSignalsForAgent);
     signal(SIGUSR2, HandleSignalsForAgent);
 }
+
+void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
+{
+    assert(regexp != NULL);
+
+    ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+    Class *cls = NULL;
+
+    Seq *seq = SeqNew(1000, free);
+
+    pcre *rx = CompileRegex(regexp);
+
+    if (rx == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Sorry, we could not compile regular expression %s", regexp);
+        return;
+    }
+
+    while ((cls = ClassTableIteratorNext(iter)))
+    {
+        char *class_name = ClassRefToString(cls->ns, cls->name);
+
+        if (!RegexPartialMatch(rx, class_name))
+        {
+            free(class_name);
+            continue;
+        }
+
+        StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+        Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+
+        char *line;
+        xasprintf(&line, "%-60s %-40s", class_name, BufferData(tagbuf));
+        SeqAppend(seq, line);
+
+        BufferDestroy(tagbuf);
+        free(class_name);
+    }
+
+    pcre_free(rx);
+
+    SeqSort(seq, (SeqItemComparator)strcmp, NULL);
+
+    printf("%-60s %-40s\n", "Class name", "Meta tags");
+
+    for (size_t i = 0; i < SeqLength(seq); i++)
+    {
+        const char *context = SeqAt(seq, i);
+        printf("%s\n", context);
+    }
+
+    SeqDestroy(seq);
+
+    ClassTableIteratorDestroy(iter);
+}
+
+void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
+{
+    assert(regexp != NULL);
+
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
+    Variable *v = NULL;
+
+    Seq *seq = SeqNew(2000, free);
+
+    pcre *rx = CompileRegex(regexp);
+
+    if (rx == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Sorry, we could not compile regular expression %s", regexp);
+        return;
+    }
+
+    while ((v = VariableTableIteratorNext(iter)))
+    {
+        char *varname = VarRefToString(v->ref, true);
+
+        if (!RegexPartialMatch(rx, varname))
+        {
+            free(varname);
+            continue;
+        }
+
+        Writer *w = StringWriter();
+
+        switch (DataTypeToRvalType(v->type))
+        {
+        case RVAL_TYPE_CONTAINER:
+            JsonWriteCompact(w, RvalContainerValue(v->rval));
+            break;
+
+        default:
+            RvalWrite(w, v->rval);
+        }
+
+        const char *var_value;
+        if (StringIsPrintable(StringWriterData(w)))
+        {
+            var_value = StringWriterData(w);
+        }
+        else
+        {
+            var_value = "<non-printable>";
+        }
+
+
+        StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+        Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+
+        char *line;
+        xasprintf(&line, "%-40s %-60s %-40s", varname, var_value, BufferData(tagbuf));
+
+        SeqAppend(seq, line);
+
+        BufferDestroy(tagbuf);
+        WriterClose(w);
+        free(varname);
+    }
+
+    pcre_free(rx);
+
+    SeqSort(seq, (SeqItemComparator)strcmp, NULL);
+
+    printf("%-40s %-60s %-40s\n", "Variable name", "Variable value", "Meta tags");
+
+    for (size_t i = 0; i < SeqLength(seq); i++)
+    {
+        const char *variable = SeqAt(seq, i);
+        printf("%s\n", variable);
+    }
+
+    SeqDestroy(seq);
+    VariableTableIteratorDestroy(iter);
+}

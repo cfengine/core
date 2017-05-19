@@ -268,10 +268,13 @@ static void DisableSendDelays(int sockfd)
 
 /*********************************************************************/
 
-static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, const char *message)
+/* TODO performance fix this to avoid the StringConcatenate() reallocations,
+ * if only we could set a static logging prefix. */
+static char *LogHook(LoggingPrivContext *log_ctx,
+                     ARG_UNUSED LogLevel level, const char *message)
 {
-    const char *ipaddr = log_ctx->param;
-    return StringConcatenate(3, ipaddr, "> ", message);
+    const char *aligned_ipaddr = log_ctx->param;
+    return StringConcatenate(2, aligned_ipaddr, message);
 }
 
 /* TRIES: counts the number of consecutive connections dropped. */
@@ -283,14 +286,25 @@ static void *HandleConnection(void *c)
     int ret;
 
     /* Set logging prefix to be the IP address for all of thread's lifetime. */
-
-    /* This stack-allocated struct should be valid for all the lifetime of the
-     * thread. Just make sure that after calling DeleteConn() (which frees
-     * ipaddr), you exit the thread right away. */
+    /* These stack-allocated variables should be valid for all the lifetime of
+     * the thread. */
+    char aligned_ipaddr[CF_MAX_IP_LEN + 2];
     LoggingPrivContext log_ctx = {
         .log_hook = LogHook,
-        .param = conn->ipaddr
+        .param = aligned_ipaddr
     };
+
+    strlcat(aligned_ipaddr, conn->ipaddr, sizeof(aligned_ipaddr));
+    strlcat(aligned_ipaddr, "> ",         sizeof(aligned_ipaddr));
+    /* Pad with enough spaces for IPv4 addresses to be aligned. Max chars are
+     * 15 for the address plus two for "> " == 17. */
+    size_t len;
+    for (len = strlen(aligned_ipaddr); len < 17; len++)
+    {
+        aligned_ipaddr[len] = ' ';
+    }
+    aligned_ipaddr[len] = '\0';
+
     LoggingPrivSetContext(&log_ctx);
 
     Log(LOG_LEVEL_INFO, "Accepting connection");

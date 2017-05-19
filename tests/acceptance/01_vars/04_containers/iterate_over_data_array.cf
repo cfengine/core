@@ -1,0 +1,38 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+        delete => tidy;
+}
+
+bundle agent test
+{
+  meta:
+
+      "description" -> { "zendesk:3437" }
+        string => "Test that we can iterate over an array inside of
+        a data container without first extracting it. And that the order of
+        iteration is preserved.";
+
+  vars:
+    "data3" data => '{ "iteration_order":[ "b", "c", "a" ], "b":{ "key": "bkeyval" }, "c":{"key":"ckeyval"}, "a":{"key":"akeyval"}}';
+
+  files:
+      "$(G.testfile)"
+        create => "true",
+        edit_line => append_if_no_line("$(data3[$(data3[iteration_order])][key])");
+}
+
+bundle agent check
+{
+  methods:
+    "Check" usebundle => dcs_check_diff( $(G.testfile), "$(this.promise_filename).expected", $(this.promise_filename) );
+}
+

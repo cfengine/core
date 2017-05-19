@@ -110,5 +110,6 @@ cscope.*
 /core.includes
 *.autosave
 
-# Mac Finder
+# Mac
 .DS_Store
+*.dSYM

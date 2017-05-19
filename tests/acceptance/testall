@@ -96,6 +96,7 @@ EXTRACLASSES=${EXTRACLASSES:-DEBUG} ; export EXTRACLASSES
 AGENT=${AGENT:-}                    ; export AGENT
 CF_PROMISES=${CF_PROMISES:-}        ; export CF_PROMISES
 CF_SERVERD=${CF_SERVERD:-}          ; export CF_SERVERD
+CF_EXECD=${CF_EXECD:-}              ; export CF_EXECD
 CF_KEY=${CF_KEY:-}                  ; export CF_KEY
 CF_RUNAGENT=${CF_RUNAGENT:-}        ; export CF_RUNAGENT
 RPMVERCMP=${RPMVERCMP:-}            ; export RPMVERCMP
@@ -202,7 +203,7 @@ unix_seconds() {
 }
 
 usage() {
-    echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--tests=...] [--gdb] [--printlog] [<test> <test>...]"
+    echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfexecd=<cf-execd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--tests=...] [--gdb] [--printlog] [<test> <test>...]"
     echo
     echo "If no test is given, all standard tests are run:"
     echo "  Tests with names of form <file>.cf are expected to run successfully"
@@ -228,6 +229,8 @@ usage() {
     echo "           and defaults to $DEFCF_PROMISES."
     echo " --cfserverd  provides a way to specify non-default cf-serverd location,"
     echo "           and defaults to $DEFCF_SERVERD."
+    echo " --cfexecd provides a way to specify non-default cf-execd location,"
+    echo "           and defaults to $DEFCF_EXECD."
     echo " --cfkey   provides a way to specify non-default cf-key location,"
     echo "           and defaults to $DEFCF_KEY."
     echo " --cfrunagent  provides a way to specify non-default cf-runagent location,"
@@ -396,6 +399,7 @@ runtest() {
                 $LN_CMD "$AGENT" "$WORKDIR/bin"
                 $LN_CMD "$CF_PROMISES" "$WORKDIR/bin"
                 $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
+                $LN_CMD "$CF_EXECD" "$WORKDIR/bin"
                 $LN_CMD "$CF_KEY" "$WORKDIR/bin"
                 $LN_CMD "$CF_RUNAGENT" "$WORKDIR/bin"
                 $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
@@ -776,6 +780,8 @@ do
             CF_PROMISES=${1#--cfpromises=};;
         --cfserverd=*)
             CF_SERVERD=${1#--cfserverd=};;
+        --cfexecd=*)
+            CF_EXECD=${1#--cfexecd=};;
         --cfkey=*)
             CF_KEY=${1#--cfkey=};;
         --cfrunagent=*)
@@ -815,8 +821,9 @@ done
 
 #
 # Close stdin file descriptor to avoid tty_interactive check in cf-agent being success.
+# Do this iff GDB AND Valgrind are not in use.
 #
-if [ "$GDB" != 1 ] || [ "$USE_VALGRIND" != 1 ]
+if [ "$GDB" != 1 ] && [ "$USE_VALGRIND" != 1 ]
 then
     exec </dev/null
 fi
@@ -855,7 +862,7 @@ do
     esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
 then
     if [ -n "$BINDIR" ]
     then
@@ -882,6 +889,7 @@ find_default_binary()
 find_default_binary DEFAGENT cf-agent
 find_default_binary DEFCF_PROMISES cf-promises
 find_default_binary DEFCF_SERVERD cf-serverd
+find_default_binary DEFCF_EXECD cf-execd
 find_default_binary DEFCF_KEY cf-key
 find_default_binary DEFCF_RUNAGENT cf-runagent
 find_default_binary DEFRPMVERCMP rpmvercmp
@@ -892,12 +900,13 @@ find_default_binary DEFRPMVERCMP rpmvercmp
 AGENT=${AGENT:-${DEFAGENT}}
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
+CF_EXECD=${CF_EXECD:-${DEFCF_EXECD}}
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 CF_RUNAGENT=${CF_RUNAGENT:-${DEFCF_RUNAGENT}}
 RPMVERCMP=${RPMVERCMP:-${DEFRPMVERCMP}}
 LIBTOOL=${LIBTOOL:-${DEFLIBTOOL}}
 
-if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" -o ! -x "$CF_RUNAGENT" -o ! -x "$RPMVERCMP" ]
+if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_EXECD" -o ! -x "$CF_KEY" -o ! -x "$CF_RUNAGENT" -o ! -x "$RPMVERCMP" ]
 then
     echo "ERROR: can't find cf-agent or other binary;"     \
          " Are you sure you're running this from OBJDIR"   \
@@ -905,6 +914,7 @@ then
     echo '$AGENT        =' "$AGENT"
     echo '$CF_PROMISES  =' "$CF_PROMISES"
     echo '$CF_SERVERD   =' "$CF_SERVERD"
+    echo '$CF_EXECD     =' "$CF_EXECD"
     echo '$CF_KEY       =' "$CF_KEY"
     echo '$CF_RUNAGENT  =' "$CF_RUNAGENT"
     echo '$RPMVERCMP    =' "$RPMVERCMP"

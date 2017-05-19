@@ -486,6 +486,8 @@ cf_stop_core_daemons()
     # is alive. As long as something is alive we will always require another
     # round, up to STOP_ATTEMPTS times.
 
+    echo "Shutting down cfengine3"
+
     local iter=1
     while [ $iter -le $STOP_ATTEMPTS ]; do
         local any_process_present=0

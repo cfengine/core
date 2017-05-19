@@ -14,8 +14,9 @@ computer systems.
 
 ## Installation
 
-Please see the [INSTALL](https://github.com/cfengine/core/blob/master/INSTALL)
-file for prerequisites and build instructions.
+To install from source please see
+the [INSTALL](https://github.com/cfengine/core/blob/master/INSTALL) file for
+prerequisites and build instructions.
 
 ## License
 

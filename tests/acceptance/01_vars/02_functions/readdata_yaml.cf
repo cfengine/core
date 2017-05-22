@@ -21,6 +21,8 @@ bundle agent test
 
       "extension_yaml" data => readdata("$(this.promise_filename).yaml", "auto");
 
+      "extension_yml" data => readdata("$(this.promise_filename).yml", "auto");
+
       "guess_yaml" data => readdata("$(this.promise_filename).yaml.guess", "auto"); # should be empty (JSON is attempted)
 
       "failed_explicit_yaml" data => readdata($(this.promise_filename), "YAML");

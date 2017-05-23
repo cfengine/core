@@ -29,10 +29,11 @@
 
 #include <set.h>
 #include <class.h>
+#include <eval_context.h>
 
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
 int EndMeasureValueMs(struct timespec start);
-void EndMeasurePromise(struct timespec start, const Promise *pp);
+void EndMeasurePromise(EvalContext *ctx, struct timespec start, const Promise *pp);
 extern bool TIMING;
 #endif

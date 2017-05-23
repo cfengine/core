@@ -1,3 +1,78 @@
+3.11.0b1:
+	New Features:
+	- allow function calls in promiser using universal "with" attribute.
+	  (CFE-1092)
+	- add example of `with` attribute (CFE-1092)
+	- Detect Amazon Linux and set "AmazonLinux" hard class and
+	  sys.flavour variable.
+	- New sysctlvalue() and data_sysctlvalues() functions from /proc/sys
+	  (CFE-2513)
+	- readdata() also auto-detects .yml files as YAML
+	- Added support for ENV and CSV file parsing (CFE-1881)
+	- Added vars and classes for CoreOS (ENT-3043)
+	- Introduced new variable: sys.policy_hub_ip
+	  sys.policy_hub is now hostname or ip
+	  (Depends on what you bootstrapped to)
+	- cf-agent: implement --show-evaluated-vars and --show-evaluated-classes
+	- Support for custom ports and host names as policy hub (CFE-953)
+	- cf-promises: allows --show-vars and --show-classes to take an optional filter
+	- Added a new tool: cf-net. cf-net is a CLI for the CFEngine
+	  network protocol, useful for debugging, testing etc.
+	  (CFE-2493)
+	- read /etc/os-release into sys.os_release (CFE-1881)
+	Changes:
+	- readintlist() now prints an error if the
+	  file contains real numbers, not integers, and aborts; previously it was
+	  printing an info-level error message, was half-reading an integer out of
+	  the real, and was continuing successfully.
+	- "make tar-package" should create a tarball with the contents of
+	  "make install" (ENT-3041)
+	- Allow opening symlinks owned by root or by the current user
+	  (CFE-2516)
+	- Change warning message about depth_search on a non directory to
+	  DEBUG level
+	- Ensure synchronous start and stop with systmectl (ENT-2841)
+	- put logs in /var/log and PID files in /var/run when using FHS layout
+	  (CFE-2449)
+	- readstringlist(), readintlist(), readreallist(): Print
+	  verbose instead of error message if file can not be read.
+	- cf-serverd: Do not close connection when file does not exist.
+	  (CFE-2532)
+	- policy_server.dat now appends a newline and supports host & port
+	- Allow string_head and string_tail to take negative arguments
+	- getvalues(inexistent_var) returns an empty list.
+	  Restores 3.7.x and earlier behaviour. (CFE-2479)
+	- Partially restore old getvalues(array) behaviour
+	  Bugfix: getvalues() now behaves correctly for old CFEngine
+	  arrays of depth 1.
+	  Behaviour change: it always returns a list now. Even when v is a simple
+	  string (i.e. not an iterable) it will return an slist with one element:
+	  the value of the string variable.
+	  Known issues: getvalues() still misbehaves with double-indexed arrays
+	  (seeand. (CFE-2504, CFE-2536)
+	- The source version of CFEngine now installs binaries into
+	  bin folder instead of sbin folder. (CFE-2448)
+	- Don't error during dry run for proposed execution. (CFE-2561)
+	- Print verbose instead of error message when readfile() fails.
+	  (CFE-2512)
+	- cf-serverd: Auto configure max open files ulimit according to
+	  maxconnections. (CFE-2575)
+	Bug fixes:
+	- fix insert_lines related memory corruption (CFE-2520)
+	- prevent LMDB assertion on AIX by ensuring nested DB calls are
+	  not occuring during signal handler cleanup. (CFE-1996)
+	- Fix a bug which could cause cf-execd to believe there was
+	  an error when sending the email report, when there really wasn't.
+	- zendesk#3204: Fix "lastseenexpireafter" 32-bit signed int overflow.
+	- fix cf-execd not exiting immediately with SIGTERM on AIX. (ENT-3147)
+	- Fix automatic service stops based on runlevel (redhat/centos)
+	  (CFE-2611)
+	- fix cf-serverd crash when reporting corrupted data. (ENT-3023)
+	- Fix rare output truncation on Solaris 10/11 (CFE-2527)
+	- Fix crash on Solaris when ps ucb variant is not available. (CFE-2506)
+	- Fix logic to detect when running under a Xen Hypervisor (CFE-1563)
+	- Fix "lastseenexpireafter" 32-bit signed int overflow. (zendesk#3204)
+
 3.10.0:
 	New features/additions:
 	- All new features/additions for 3.8 and 3.9 are also included in 3.10.

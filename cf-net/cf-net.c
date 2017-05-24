@@ -587,7 +587,7 @@ static void CFNetStatPrint(const char *file, int st_mode, const char *server)
 static int CFNetStat(CFNetOptions *opts, const char *hostname, char **args)
 {
     assert(opts);
-    char *file = args[0];
+    char *file = args[1];
     AgentConnection *conn = CFNetOpenConnection(hostname);// FIXME
     if (conn == NULL)
     {

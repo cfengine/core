@@ -70,13 +70,17 @@ int PipeIsReadWriteReady(const IOData *io, int timeout_sec)
         .tv_usec = 0,
     };
 
+    Log(LOG_LEVEL_DEBUG,
+        "PipeIsReadWriteReady: wait max %ds for data on fd %d",
+        timeout_sec, io->read_fd);
+
     //TODO: For Windows we will need different method and select might not
     //      work with file descriptors.
     int ret = select(io->read_fd + 1, &rset, NULL, NULL, &tv);
 
     if (ret < 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Failed checking for data. (select: %s)",
+        Log(LOG_LEVEL_VERBOSE, "Failed checking for data (select: %s)",
             GetErrorStr());
         return -1;
     }
@@ -84,18 +88,16 @@ int PipeIsReadWriteReady(const IOData *io, int timeout_sec)
     {
         return io->read_fd;
     }
-
-    /* We have reached timeout */
-    if (ret == 0)
+    else if (ret == 0)
     {
-        Log(LOG_LEVEL_DEBUG, "Timeout reading from application pipe.");
+        /* timeout_sec has elapsed but no data was available. */
         return 0;
     }
-
-    Log(LOG_LEVEL_VERBOSE,
-        "Unknown outcome (ret > 0 but our only fd is not set).");
-
-    return -1;
+    else
+    {
+        UnexpectedError("select() returned > 0 but our only fd is not set!");
+        return -1;
+    }
 }
 
 Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_termination_check_secs)

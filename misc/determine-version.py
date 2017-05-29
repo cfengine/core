@@ -191,11 +191,10 @@ all_tags = sorted(all_tags, cmp=version_cmp, reverse=True)
 verbose_print("all_tags   =", all_tags)
 
 
-if len(all_tags) >= 1:
-    # This is a new minor version
-    final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
-else:
-    # This is a new patch version.
+if len(all_tags) == 0:
+    # No tags besides the most recent one were found, so this is a new
+    # patch version. So "increase" the patch version:
+
     # A "pure" version with no extra tag info is considered higher than
     # an "impure" one, IOW "3.8.0" > "3.8.0b1".
     if recent_extra != "":
@@ -203,5 +202,10 @@ else:
     else:
         patch_version = int(recent_patch) + 1
     final_print("%s.%s.%da.%s" % (recent_major, recent_minor, patch_version, abbrev_rev))
+else:
+    # The most recent tag reachable from this commit, is contained in
+    # many more tags. This means that plenty of tags were made since, so
+    # find the newest and increase the minor (3.x) version.
+    final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
 
 sys.exit(0)

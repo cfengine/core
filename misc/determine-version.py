@@ -54,7 +54,6 @@ except ImportError:
 
 
 # Print debug info to stderr
-global VERBOSE
 VERBOSE=True
 
 

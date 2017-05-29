@@ -190,7 +190,8 @@ for tag in git_tag_list.stdout.readlines():
 all_tags = sorted(all_tags, cmp=version_cmp, reverse=True)
 verbose_print("all_tags   =", all_tags)
 
-if len(all_tags) > 1:
+
+if len(all_tags) >= 1:
     # This is a new minor version
     final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
 else:

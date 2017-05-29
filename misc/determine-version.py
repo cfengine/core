@@ -81,18 +81,20 @@ def extract_version_components(version):
     return (match.group(1), match.group(2), match.group(3), match.group(4))
 
 def version_cmp(a, b):
-    if a[0] > b[0]:
+    a_major = int(a[0])
+    b_major = int(b[0])
+    if   a_major > b_major:
         return 1
-    elif a[0] < b[0]:
+    elif a_major < b_major:
         return -1
 
-    # a[0] == b[0]
-    if a[1] > b[1]:
+    a_minor = int(a[1])
+    b_minor = int(b[1])
+    if   a_minor > b_minor:
         return 1
-    elif a[1] < b[1]:
+    elif a_minor < b_minor:
         return -1
 
-    # a[1] == b[1]
     # A "pure" version with no extra tag info is considered higher than
     # an "impure" one, IOW "3.8.0" > "3.8.0b1".
     if a[3] == "":

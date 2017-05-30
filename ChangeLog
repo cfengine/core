@@ -10,9 +10,6 @@
 	- readdata() also auto-detects .yml files as YAML
 	- Added support for ENV and CSV file parsing (CFE-1881)
 	- Added vars and classes for CoreOS (ENT-3043)
-	- Introduced new variable: sys.policy_hub_ip
-	  sys.policy_hub is now hostname or ip
-	  (Depends on what you bootstrapped to)
 	- cf-agent: implement --show-evaluated-vars and --show-evaluated-classes
 	- Support for custom ports and host names as policy hub (CFE-953)
 	- cf-promises: allows --show-vars and --show-classes to take an optional filter

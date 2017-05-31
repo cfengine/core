@@ -294,7 +294,7 @@ static void *HandleConnection(void *c)
         .param = aligned_ipaddr
     };
 
-    strlcat(aligned_ipaddr, conn->ipaddr, sizeof(aligned_ipaddr));
+    strlcpy(aligned_ipaddr, conn->ipaddr, sizeof(aligned_ipaddr));
     strlcat(aligned_ipaddr, "> ",         sizeof(aligned_ipaddr));
     /* Pad with enough spaces for IPv4 addresses to be aligned. Max chars are
      * 15 for the address plus two for "> " == 17. */

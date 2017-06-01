@@ -252,6 +252,7 @@
 	      <keyword attribute="Promises" context="#stay" String="all_promises" />
 	      
               <DetectChar attribute="String" context="string" char="&quot;" />
+              <DetectChar attribute="String" context="string2" char="'" />
               <DetectChar attribute="Symbol" context="List" char="{" beginRegion="List" />
               <DetectChar attribute="Comment" context="Comment" char="#" />
       </context>
@@ -266,6 +267,12 @@
         <HlCStringChar attribute="String Char" context="#stay"/>
         <Detect2Chars attribute="Variable Identifier" context="Instr Var" char="$" char1="(" />
         <DetectChar attribute="String" context="#pop" char="&quot;" />
+      </context>
+
+      <context attribute="String" lineEndContext="#stay" name="string2" >
+        <HlCStringChar attribute="String Char" context="#stay"/>
+        <Detect2Chars attribute="Variable Identifier" context="Instr Var" char="$" char1="(" />
+        <DetectChar attribute="String" context="#pop" char="'" />
       </context>
 
       <context attribute="Comment" lineEndContext="#pop" name="Comment">

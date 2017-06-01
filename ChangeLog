@@ -2,7 +2,7 @@
 	New Features:
 	- allow function calls in promiser using universal "with" attribute.
 	  (CFE-1092)
-	- add example of `with` attribute (CFE-1092)
+	- add example of with attribute (CFE-1092)
 	- Detect Amazon Linux and set "AmazonLinux" hard class and
 	  sys.flavour variable.
 	- New sysctlvalue() and data_sysctlvalues() functions from /proc/sys

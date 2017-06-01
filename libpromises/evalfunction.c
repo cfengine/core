@@ -8417,12 +8417,6 @@ static const FnCallArg READFILE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
-static const FnCallArg READCSV_ARGS[] =
-{
-    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name"},
-    {NULL, CF_DATA_TYPE_NONE, NULL}
-};
-
 static const FnCallArg READSTRINGARRAY_ARGS[] =
 {
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "Array identifier to populate"},
@@ -8459,13 +8453,6 @@ static const FnCallArg READDATA_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name to read"},
     {"CSV,YAML,JSON,ENV,auto", CF_DATA_TYPE_OPTION, "Type of data to read"},
-    {NULL, CF_DATA_TYPE_NONE, NULL}
-};
-
-static const FnCallArg READJSON_ARGS[] =
-{
-    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name to read"},
-    {CF_VALRANGE, CF_DATA_TYPE_INT, "Maximum number of bytes to read"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -9049,20 +9036,22 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("randomint", CF_DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits, excluding the upper",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readcsv", CF_DATA_TYPE_CONTAINER, READCSV_ARGS, &FnCallReadData, "Parse a CSV file and return a JSON data container with the contents",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readdata", CF_DATA_TYPE_CONTAINER, READDATA_ARGS, &FnCallReadData, "Parse a YAML, JSON, CSV, etc. file and return a JSON data container with the contents",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readenvfile", CF_DATA_TYPE_CONTAINER, READCSV_ARGS, &FnCallReadData, "Parse a ENV-style file and return a JSON data container with the contents",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readfile", CF_DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile, "Read max number of bytes from named file and assign to variable",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readfile", CF_DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile,       "Read max number of bytes from named file and assign to variable",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readcsv", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData,     "Parse a CSV file and return a JSON data container with the contents",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readenvfile", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData, "Parse a ENV-style file and return a JSON data container with the contents",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readjson", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData,    "Read a JSON data container from a file",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readyaml", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData,    "Read a data container from a YAML file",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintarray", CF_DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray, "Read an array of integers from a file, indexed by first entry on line and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintlist", CF_DATA_TYPE_INT_LIST, READSTRINGLIST_ARGS, &FnCallReadIntList, "Read and assign a list variable from a file of separated ints",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readjson", CF_DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadData, "Read a JSON data container from a file",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readrealarray", CF_DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadRealArray, "Read an array of real numbers from a file, indexed by first entry on line and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readreallist", CF_DATA_TYPE_REAL_LIST, READSTRINGLIST_ARGS, &FnCallReadRealList, "Read and assign a list variable from a file of separated real numbers",
@@ -9073,8 +9062,6 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readstringlist", CF_DATA_TYPE_STRING_LIST, READSTRINGLIST_ARGS, &FnCallReadStringList, "Read and assign a list variable from a file of separated strings",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readyaml", CF_DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadData, "Read a data container from a YAML file",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readtcp", CF_DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regarray", CF_DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegList, "True if the regular expression in arg1 matches any item in the list or array or data container arg2",

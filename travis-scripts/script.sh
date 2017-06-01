@@ -2,14 +2,18 @@ INSTDIR=$HOME/cf_install
 cd $TRAVIS_BUILD_DIR
 
 # if [ "$JOB_TYPE" = style_check ]
-#   then
-#       # sh tests/misc/style_check.sh
-#       exit 0
-#   fi
+# then
+#     # sh tests/misc/style_check.sh
+#     exit 0
+# fi
 
-# Fetch the tags from upstream, even if we are running on a foreign clone;
-# Needed for determine-version.py to work
-git remote add upstream https://github.com/cfengine/core.git  && git fetch -q upstream 'refs/tags/*:refs/tags/*'
+# Unshallow the clone. Fetch the tags from upstream even if we are on a
+# foreign clone. Needed for determine-version.py to work, specifically
+# `git describe --tags HEAD` was failing once the last tagged commit
+# became too old.
+git fetch --unshallow
+git remote add upstream https://github.com/cfengine/core.git  \
+    && git fetch upstream 'refs/tags/*:refs/tags/*'
 
 if [ "$TRAVIS_OS_NAME" = osx ]
 then

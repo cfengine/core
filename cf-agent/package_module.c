@@ -181,16 +181,16 @@ static void ParseAndLogErrorMessage(const Rlist *data)
 
         if (StringStartsWith(line, "Error="))
         {
-            Log(LOG_LEVEL_VERBOSE, "Caught error: %s", line + strlen("Error="));
+            Log(LOG_LEVEL_ERR, "package module: %s", line);
         }
         else if (StringStartsWith(line, "ErrorMessage="))
         {
-            Log(LOG_LEVEL_INFO, "Caught error message: %s",
-                line + strlen("ErrorMessage="));
+            Log(LOG_LEVEL_ERR, "package module: %s", line);
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "Caught unsupported error info: %s", line);
+            Log(LOG_LEVEL_VERBOSE,
+                "Unsupported response from package module: %s", line);
         }
     }
 }
@@ -299,17 +299,16 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
         /* For handling errors */
         else if (StringStartsWith(line, "Error="))
         {
-            Log(LOG_LEVEL_VERBOSE, "package_module - have error: %s",
-                line + strlen("Error="));
+            Log(LOG_LEVEL_ERR, "package module: %s", line);
         }
         else if (StringStartsWith(line, "ErrorMessage="))
         {
-            Log(LOG_LEVEL_VERBOSE, "package_module - have error message: %s",
-                line + strlen("ErrorMessage="));
+            Log(LOG_LEVEL_ERR, "package module: %s", line);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "unsupported option: %s", line);
+            Log(LOG_LEVEL_VERBOSE,
+                "Unsupported response from package module: %s", line);
         }
     }
 
@@ -600,21 +599,18 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
             }
             else if (StringStartsWith(line, "Error="))
             {
-                Log(LOG_LEVEL_VERBOSE, "have error: %s",
-                    line + strlen("Error="));
+                Log(LOG_LEVEL_ERR, "package module: %s", line);
                 have_error = true;
             }
             else if (StringStartsWith(line, "ErrorMessage="))
             {
-                Log(LOG_LEVEL_VERBOSE, "have error message: %s",
-                    line + strlen("ErrorMessage="));
+                Log(LOG_LEVEL_ERR, "package module: %s", line);
                 have_error = true;
             }
             else
             {
-                 Log(LOG_LEVEL_INFO,
-                     "Unsupported response received form package module: %s",
-                     line);
+                 Log(LOG_LEVEL_ERR,
+                     "Unsupported response from package module: %s", line);
                  have_error = true;
             }
         }

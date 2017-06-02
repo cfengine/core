@@ -1116,6 +1116,7 @@ dnl ######################################################################
 AC_CHECK_DECLS(alarm)
 AC_CHECK_DECLS(chmod)
 AC_CHECK_DECLS(chown)
+AC_CHECK_DECLS(fchmod)
 AC_CHECK_FUNCS(fchmod)
 AC_CHECK_DECLS(uname)
 AC_CHECK_DECLS(getuid)

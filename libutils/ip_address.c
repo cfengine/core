@@ -380,28 +380,28 @@ static int IPV6_hex_parser(const char *source, struct IPV6Address *address)
         if (strlen(source) == 32 &&
             sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x", &a, &b, &c, &d, &e, &f, &g, &h) == 8)
         {
-            address->sixteen[7] = a;
-            address->sixteen[6] = b;
-            address->sixteen[5] = c;
-            address->sixteen[4] = d;
-            address->sixteen[3] = e;
-            address->sixteen[2] = f;
-            address->sixteen[1] = g;
-            address->sixteen[0] = h;
+            address->sixteen[0] = a;
+            address->sixteen[1] = b;
+            address->sixteen[2] = c;
+            address->sixteen[3] = d;
+            address->sixteen[4] = e;
+            address->sixteen[5] = f;
+            address->sixteen[6] = g;
+            address->sixteen[7] = h;
             return 0;
         }
 
         if (strlen(source) == 32+1+4 &&
             sscanf(source, "%4x%4x%4x%4x%4x%4x%4x%4x:%4x", &a, &b, &c, &d, &e, &f, &g, &h, &pport) == 9)
         {
-            address->sixteen[7] = a;
-            address->sixteen[6] = b;
-            address->sixteen[5] = c;
-            address->sixteen[4] = d;
-            address->sixteen[3] = e;
-            address->sixteen[2] = f;
-            address->sixteen[1] = g;
-            address->sixteen[0] = h;
+            address->sixteen[0] = a;
+            address->sixteen[1] = b;
+            address->sixteen[2] = c;
+            address->sixteen[3] = d;
+            address->sixteen[4] = e;
+            address->sixteen[5] = f;
+            address->sixteen[6] = g;
+            address->sixteen[7] = h;
             address->port = pport;
             return 0;
         }

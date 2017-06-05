@@ -1,0 +1,21 @@
+# Example showing how sections are rendered for non-false
+
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      "data" data => parsejson('{ "classes": { "example": true } }');
+
+  reports:
+      "$(with)"
+        with => string_mustache("{{#classes.example}}This is an example.{{/classes.example}}",
+                                data);
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: This is an example.
+#@ ```
+#+end_src
+

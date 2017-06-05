@@ -1,0 +1,18 @@
+# Example showing how inverted sections are rendered
+
+#+begin_src cfengine3
+bundle agent main
+{
+  reports:
+    "CFEngine $(with)"
+      with => string_mustache("{{^classes.enterprise_edition}}Community{{/classes.enterprise_edition}}{{#classes.enterprise_edition}}Enterprise{{/classes.example}}",
+                              datastate());
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: CFEngine Community
+#@ ```
+#+end_src
+

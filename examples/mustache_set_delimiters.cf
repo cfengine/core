@@ -1,0 +1,21 @@
+# Example showing how delimeters can be customized
+
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+    "data" data => '{ "key": "value of key in data" }';
+
+  reports:
+      "$(with)"
+        with => string_mustache("{{=<% %>=}}key has <% key %>",
+                                data);
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: key has value of key in data
+#@ ```
+#+end_src
+

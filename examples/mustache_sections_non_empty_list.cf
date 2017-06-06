@@ -1,0 +1,21 @@
+# Example showing how variables are rendered for non empty lists.
+
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+    "data" data => '{ "list": [ "1", "2", "3" ] }';
+
+  reports:
+    "$(with)"
+      with => string_mustache("{{#list}} {{{.}}}{{/list}}",
+                              data);
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R:  1 2 3
+#@ ```
+#+end_src
+

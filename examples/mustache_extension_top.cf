@@ -1,0 +1,28 @@
+# Example showing how -top- gives access to the entire data provided to a mustache template.
+
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      "data" data => '{ "key": "value", "list": [ "1", "2" ] }';
+
+  reports:
+      "-top- contains$(const.n)$(with)"
+        with => string_mustache("{{%-top-}}", data );
+}
+#+end_src
+
+###############################################################################
+
+#+begin_src example_output
+#@ ```
+#@ R: -top- contains
+#@ {
+#@   "key": "value",
+#@   "list": [
+#@     "1",
+#@     "2"
+#@   ]
+#@ }
+#@ ```
+#+end_src

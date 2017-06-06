@@ -206,6 +206,7 @@ bool JsonParseEnvFile(const char *input_path, size_t size_max, JsonElement **jso
         {
             Log(LOG_LEVEL_VERBOSE, "%s: ENV file '%s' exceeded byte limit %zu at line %d",
                 myname, input_path, size_max, linenumber);
+            Log(LOG_LEVEL_VERBOSE, "Done with ENV file, the rest will not be parsed");
             break;
         }
 
@@ -219,12 +220,13 @@ bool JsonParseEnvFile(const char *input_path, size_t size_max, JsonElement **jso
     bool reached_eof = feof(fin);
     fclose(fin);
 
-    if (!reached_eof)
+    if (!reached_eof && byte_count <= size_max)
     {
         Log(LOG_LEVEL_ERR,
             "%s: failed to read ENV file '%s'. (fread: %s)",
             myname, input_path, GetErrorStr());
         JsonDestroy(*json_out);
+        free(raw_line);
         return false;
     }
 
@@ -257,8 +259,9 @@ bool JsonParseCsvFile(const char *input_path, size_t size_max, JsonElement **jso
         byte_count += strlen(line);
         if (byte_count > size_max)
         {
-            Log(LOG_LEVEL_VERBOSE, "%s: line %d from csv file '%s' exceeded byte limit %lu, done with file",
-                myname, linenumber, input_path, (long unsigned int)size_max);
+            Log(LOG_LEVEL_VERBOSE, "%s: CSV file '%s' exceeded byte limit %zu at line %d",
+                myname, input_path, size_max, linenumber);
+            Log(LOG_LEVEL_VERBOSE, "Done with CSV file, the rest will not be parsed");
             free(line);
             break;
         }
@@ -283,7 +286,7 @@ bool JsonParseCsvFile(const char *input_path, size_t size_max, JsonElement **jso
     bool reached_eof = feof(fin);
     fclose(fin);
 
-    if (!reached_eof)
+    if (!reached_eof && byte_count <= size_max)
     {
         Log(LOG_LEVEL_ERR,
             "%s: unable to read line from CSV file '%s'. (fread: %s)",

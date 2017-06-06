@@ -38,6 +38,7 @@
 #include <string_lib.h>         // ToLowerStrInplace
 #include <writer.h>
 #include <policy_server.h>      // PolicyServerReadFile
+#include <generic_agent.h>      // GenericAgentSetDefaultDigest TODO: rm dep
 
 typedef struct
 {
@@ -179,6 +180,7 @@ int main(int argc, char **argv)
     char *hostnames = NULL;
     int ret = CFNetParse(argc, argv,                // Inputs
                          &opts, &args, &hostnames); // Outputs
+    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
     if (ret != 0)
     {
         exit(EXIT_FAILURE);

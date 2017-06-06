@@ -1,0 +1,19 @@
+# Example showing how comments are not rendered
+
+#+begin_src cfengine3
+bundle agent main
+{
+  reports:
+    "$(with)"
+      with => string_mustache("Render this.{{! But not
+this}}",
+                              datastate());
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: Render this.
+#@ ```
+#+end_src
+

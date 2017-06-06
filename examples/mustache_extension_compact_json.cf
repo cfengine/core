@@ -1,0 +1,22 @@
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      "msg" string => "Hello World";
+
+      "report"
+        string => string_mustache("{{$-top-}}", bundlestate( $(this.bundle) )  ),
+        unless => isvariable( $(this.promiser) ); # Careful to not include
+                                                  # ourselves so we only grab the
+                                                  # state of the first pass.
+
+  reports:
+      "$(report)";
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: {"msg":"Hello World"}
+#@ ```
+#+end_src

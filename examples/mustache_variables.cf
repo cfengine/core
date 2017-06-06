@@ -1,0 +1,28 @@
+# Example showing how sections are rendered.
+
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+    "data" data => '{ "key": "Hello World & 3>2!" }';
+
+  reports:
+    "$(with)"
+      with => string_mustache(
+"{{key}}
+{{{key}}}
+{{&key}}
+Missing '{{missing}}' varibles render empty strings.",
+                              data);
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: Hello World &amp; 3&gt;2!
+#@ Hello World & 3>2!
+#@ Hello World & 3>2!
+#@ Missing '' varibles render empty strings.
+#@ ```
+#+end_src
+

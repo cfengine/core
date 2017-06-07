@@ -1,0 +1,60 @@
+body contain myshell
+{
+    !windows::
+        useshell => "useshell";
+    windows::
+        useshell => "powershell";
+}
+
+body common control
+{
+    inputs => {
+        "../../default.cf.sub",
+        "../../run_with_server.cf.sub"
+    };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+    methods:
+        "any" usebundle => dcs_fini("$(G.testfile)");
+
+        "any" usebundle => generate_key;
+        "any" usebundle => trust_key;
+
+        "any" usebundle => start_server("$(this.promise_dirname)/serverd_admit_localhost_15000.cf.srv");
+}
+
+bundle agent test
+{
+    commands:
+        "$(sys.cf_net)"
+            args => " -H 127.0.0.1:15000 connect  > $(G.testfile)  2>&1",
+            contain => myshell;
+    meta:
+        "description" string => "Connect and authenticate with cf-serverd";
+}
+
+bundle agent check
+{
+    methods:
+        "check" usebundle => dcs_check_diff("$(G.testfile)",
+                                            "$(this.promise_filename).expected",
+                                            "$(this.promise_filename)");
+    vars:
+        DEBUG|EXTRA::
+            "actual_output"   string => readfile("$(G.testfile)");
+            "expected_output" string => readfile("$(this.promise_filename).expected");
+    reports:
+        DEBUG|EXTRA::
+            "expected_output: $(expected_output)";
+            "actual_output:   $(actual_output)";
+}
+
+bundle agent destroy
+{
+    methods:
+        "any"
+            usebundle => stop_server("$(this.promise_dirname)/serverd_admit_localhost_15000.cf.srv");
+}

@@ -5,6 +5,10 @@ addons:
     paths:
       - artifacts/
 
+matrix:
+  - linux
+  - osx
+ 
 env:
   global:
     - CI_NODE_TOTAL=6

@@ -1,21 +1,111 @@
+# Simple edit_template examples showing both classic templates and mustache templates.
 
-body common control
-{
-      bundlesequence => { "main" };
-}
-
+#+begin_src cfengine3
 bundle agent main
 {
   vars:
 
-      "here"  string => "/home/a10004/LapTop/cfengine/core/examples";
+      "msg" string => "Hello World!";
 
       "list" slist => { "one", "two", "three" };
 
+      "explicit_data"
+        data => bundlestate( "main" ),
+        if => not(isvariable( "explicit_data" ));
+
   files:
 
-      "/tmp/output"
+      "$(this.promise_filename).classic_render"
+        create => "true",
+        edit_template => "$(this.promise_filename).tpl";
 
-      create => "true",
-      edit_template => "$(here)/input.edittemplate";
+      "$(this.promise_filename).mustache_datastate_render"
+        create => "true",
+        template_method => "mustache",
+        edit_template => "$(this.promise_filename).mustache_datastate";
+
+      "$(this.promise_filename).mustache_explicit_render"
+        create => "true",
+        template_method => "mustache",
+        edit_template => "$(this.promise_filename).mustache_explicit",
+        template_data => @(explicit_data);
+
+  reports:
+
+      "$(const.n)Classic Template:"
+        printfile => cat("$(this.promise_filename).tpl");
+
+      "$(const.n)Classic File Rendered:"
+        printfile => cat("$(this.promise_filename).classic_render");
+
+      "$(const.n)Mustache template for datastate()"
+        printfile => cat("$(this.promise_filename).mustache_datastate");
+
+      "$(const.n)Mustache Rendered with datastate()"
+        printfile => cat("$(this.promise_filename).mustache_datastate_render");
+
+      "$(const.n)Mustache template for explicit data:"
+        printfile => cat("$(this.promise_filename).mustache_explicit");
+
+      "$(const.n)Explicit data to render:$(const.n)$(with)"
+        with => string_mustache("{{%-top-}}", @(explicit_data) );
+
+      "$(const.n)Mustache rendered with explicit data:"
+        printfile => cat("$(this.promise_filename).mustache_explicit_render");
 }
+
+body printfile cat(file)
+# @brief Report the contents of a file
+# @param file The full path of the file to report
+{
+        file_to_print => "$(file)";
+        number_of_lines => "inf";
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: 
+#@ Classic Template:
+#@ R: $(main.msg)
+#@ R: $(main.list)
+#@ R: 
+#@ Classic File Rendered:
+#@ R: Hello World!
+#@ R: one
+#@ R: two
+#@ R: three
+#@ R: 
+#@ Mustache template for datastate()
+#@ R: {{{vars.main.msg}}}
+#@ R: {{#vars.main.list}}{{{.}}}
+#@       R: {{/vars.main.list}}
+#@ R: 
+#@       Mustache Rendered with datastate()
+#@       R: Hello World!
+#@       R: one
+#@       R: two
+#@       R: three
+#@ R: 
+#@ Mustache template for explicit data:
+#@ R: {{{msg}}}
+#@ R: {{#list}}{{{.}}}
+#@ R: {{/list}}
+#@ R: 
+#@ Explicit data to render:
+#@ {
+#@   "list": [
+#@             "one",
+#@             "two",
+#@             "three"
+#@             ],
+#@   "msg": "Hello World!"
+#@ }
+#@ R: 
+#@ Mustache rendered with explicit data:
+#@ R: Hello World!
+#@ R: one
+#@ R: two
+#@ R: three
+#@ ```
+#+end_src

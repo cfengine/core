@@ -1,0 +1,3 @@
+{{{vars.main.msg}}}
+{{#vars.main.list}}{{{.}}}
+{{/vars.main.list}}

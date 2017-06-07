@@ -1,0 +1,2 @@
+$(main.msg)
+$(main.list)

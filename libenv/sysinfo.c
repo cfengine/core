@@ -434,11 +434,11 @@ static void GetNameInfo3(EvalContext *ctx)
     long sz;
 #endif
 
-#define COMPONENTS_SIZE 13
+#define COMPONENTS_SIZE 14
+    // This is used for $(sys.cf_agent), $(sys.cf_serverd) ... :
     char *components[COMPONENTS_SIZE] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
         "cf-report", "cf-key", "cf-runagent", "cf-execd", "cf-hub",
-        "cf-promises",
-        "cf-upgrade",
+        "cf-promises", "cf-upgrade", "cf-net",
         NULL
     };
     int have_component[COMPONENTS_SIZE];
@@ -643,6 +643,8 @@ static void GetNameInfo3(EvalContext *ctx)
         if (stat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
+            // Sets $(sys.cf_agent), $(sys.cf_serverd) $(sys.cf_execd) etc.
+            // to their respective /bin paths
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, shortname, quoteName, CF_DATA_TYPE_STRING, "cfe_internal,source=agent");
             have_component[i] = true;
         }

@@ -70,6 +70,7 @@ TESTS_ENVIRONMENT = env \
 	CF_PROMISES=`pwd`/../../cf-promises/cf-promises \
 	CF_SERVERD=`pwd`/../../cf-serverd/cf-serverd \
 	CF_KEY=`pwd`/../../cf-key/cf-key \
+	CF_NET=`pwd`/../../cf-net/cf-net \
 	RPMVERCMP=`pwd`/../../ext/rpmvercmp \
 	MOCK_PACKAGE_MANAGER=`pwd`/mock_package_manager
 

@@ -1,0 +1,40 @@
+body contain myshell
+{
+    !windows::
+        useshell => "useshell";
+    windows::
+        useshell => "powershell";
+}
+
+body common control
+{
+    inputs => {
+        "../../default.cf.sub",
+    };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+    methods:
+        "any" usebundle => dcs_fini("$(G.testfile)");
+}
+
+bundle agent test
+{
+    commands:
+        # Run "cf-net help help"
+        "$(sys.cf_net)"
+            args => " help help  > $(G.testfile)  2>&1",
+            contain => myshell;
+    meta:
+        "description" string => "Argument parsing and help output";
+}
+
+bundle agent check
+{
+    methods:
+        "check" usebundle => dcs_check_diff("$(G.testfile)",
+                                            "$(this.promise_filename).expected",
+                                            $(this.promise_filename));
+}

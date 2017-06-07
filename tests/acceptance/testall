@@ -870,7 +870,7 @@ do
     esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_RUNAGENT" ]
 then
     if [ -n "$BINDIR" ]
     then

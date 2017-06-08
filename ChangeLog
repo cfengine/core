@@ -16,7 +16,8 @@
 	- Added a new tool: cf-net. cf-net is a CLI for the CFEngine
 	  network protocol, useful for debugging, testing etc.
 	  (CFE-2493)
-	- read /etc/os-release into sys.os_release (CFE-1881)
+	- New policy variable: sys.cf-net contains path to cf-net binary
+	- Read /etc/os-release into sys.os_release (CFE-1881)
 	Changes:
 	- readintlist() now prints an error if the
 	  file contains real numbers, not integers, and aborts; previously it was
@@ -54,6 +55,9 @@
 	  (CFE-2512)
 	- cf-serverd: Auto configure max open files ulimit according to
 	  maxconnections. (CFE-2575)
+	- Made the max bytes parameter to file reading functions optional.
+	  Affects readfile(), readenvfile(), readcsv()
+
 	Bug fixes:
 	- fix insert_lines related memory corruption (CFE-2520)
 	- prevent LMDB assertion on AIX by ensuring nested DB calls are

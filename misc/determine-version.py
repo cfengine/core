@@ -37,12 +37,22 @@ except ImportError:
 # that.
 #
 # 1. Find the most recent version tag reachable from the point, let's call it T.
-# 2. Find all tags that contain T in their history.
-# 3. If none, then increase patch number of T by one and return that (beta
-#    becomes 0).
-# 4. If there are tags found in step two, find the latest one (as sorted by
-#    version) which does not point at the same commit as T, increase the minor
-#    number by one, and return that.
+# 2a. Fuzzy-detect whether we are on master branch.
+# 2b. Find all tags that contain T in their history. If we are not on
+#     the master branch, exclude tags that point to the same commit as T
+#     (for example T itself and T-build1).
+# 3. If no tags were found, then increase *patch number* of T by one and
+#    return that (beta becomes 0). Because having no subsequent tags
+#    indicates that we are on the same branch as T.
+# 4. If there are tags found in step two, find the latest one (as sorted
+#    by version) which does not point at the same commit as T, increase
+#    the minor number by one, and return that. Because this indicates
+#    that we have branched-off after T was issued, and the new tags that
+#    contain T were issued from branches not reachable to us now. In the
+#    above graph, we are on a new ZZ branch with no tags, and the most
+#    recent reachable tag T is 3.7.0b1, so we search for the most recent
+#    tag containing 3.7.0b1, which is 3.9.0b1, and we increase the
+#    *minor* number, i.e. we set the version to 3.10.0. Magic!
 #
 # Some notes:
 # - Does not take into account changes in major version.
@@ -54,7 +64,6 @@ except ImportError:
 
 
 # Print debug info to stderr
-global VERBOSE
 VERBOSE=True
 
 
@@ -81,18 +90,20 @@ def extract_version_components(version):
     return (match.group(1), match.group(2), match.group(3), match.group(4))
 
 def version_cmp(a, b):
-    if a[0] > b[0]:
+    a_major = int(a[0])
+    b_major = int(b[0])
+    if   a_major > b_major:
         return 1
-    elif a[0] < b[0]:
+    elif a_major < b_major:
         return -1
 
-    # a[0] == b[0]
-    if a[1] > b[1]:
+    a_minor = int(a[1])
+    b_minor = int(b[1])
+    if   a_minor > b_minor:
         return 1
-    elif a[1] < b[1]:
+    elif a_minor < b_minor:
         return -1
 
-    # a[1] == b[1]
     # A "pure" version with no extra tag info is considered higher than
     # an "impure" one, IOW "3.8.0" > "3.8.0b1".
     if a[3] == "":
@@ -125,11 +136,15 @@ else:
         usage()
     REV = sys.argv[1]
 
-# Find the abbreviated version of the commit
+# Find the full and abbreviated SHAs of the commit
+git = subprocess.Popen(["git", "rev-list", "-1", REV],
+                       stdout=subprocess.PIPE)
+full_rev = git.stdout.readlines()[0].strip()
 git = subprocess.Popen(["git", "rev-list", "-1", "--abbrev-commit", REV],
                        stdout=subprocess.PIPE)
 abbrev_rev = git.stdout.readlines()[0].strip()
 verbose_print("REV        = %s" % REV)
+verbose_print("full_rev   = %s" % full_rev)
 verbose_print("abbrev_rev = %s" % abbrev_rev)
 
 
@@ -162,6 +177,20 @@ verbose_print("recent_rev = %s" % recent_rev)
 recent_version = extract_version_components(recent_tag)
 verbose_print("recent_version = ", recent_version)
 
+
+in_master_branch = False
+git_show_ref =  subprocess.Popen(["git", "show-ref", "master"],
+                                 stdout=subprocess.PIPE)
+for line in git_show_ref.stdout:
+    (sha,ref,) = line.split()
+    if (sha == full_rev) and \
+       (ref == "refs/remotes/origin/master" or ref == "refs/remotes/upstream/master"):
+       in_master_branch = True
+       verbose_print("Detected that we are in master branch")
+
+
+# List all tags that contain the most recent tag found earlier, unless
+# no such tag was found in which case we list all tags.
 if recent_version is None:
     (recent_major, recent_minor, recent_patch, recent_extra) = ("0", "0", "0", "")
     tag_finder = ["git", "tag"]
@@ -177,8 +206,13 @@ for tag in git_tag_list.stdout.readlines():
     git_rev = subprocess.Popen(["git", "rev-parse", tag + "^{}"],
                                stdout=subprocess.PIPE)
     rev = git_rev.stdout.readlines()[0].strip()
-    if rev == recent_rev:
-        # Ignore tags that point at the same commit.
+    if not in_master_branch and rev == recent_rev:
+        # Ignore tags that point at the same commit as the most recent
+        # tag, i.e. ignore the tag itself and same-release tags (like
+        # 3.7.5-build1 which points to the same commit as 3.7.5),
+        # because we want the len(all_tags) comparison later to
+        # work. But if we are on master branch, keep it, in order to
+        # increase the minor version of the most recent tag then.
         continue
     match = extract_version_components(tag)
     if match is None:
@@ -189,11 +223,11 @@ for tag in git_tag_list.stdout.readlines():
 all_tags = sorted(all_tags, cmp=version_cmp, reverse=True)
 verbose_print("all_tags   =", all_tags)
 
-if len(all_tags) > 1:
-    # This is a new minor version
-    final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
-else:
-    # This is a new patch version.
+
+if len(all_tags) == 0:
+    # No tags besides the most recent one were found, so this is a new
+    # patch version. So "increase" the patch version:
+
     # A "pure" version with no extra tag info is considered higher than
     # an "impure" one, IOW "3.8.0" > "3.8.0b1".
     if recent_extra != "":
@@ -201,5 +235,14 @@ else:
     else:
         patch_version = int(recent_patch) + 1
     final_print("%s.%s.%da.%s" % (recent_major, recent_minor, patch_version, abbrev_rev))
+else:
+    # The most recent tag reachable from here is contained in many more
+    # tags. This means that branches were created *after* that tag, and
+    # then further tags were issued, and they all represent new minor
+    # (3.x) versions. But since those are not reachable from here, we
+    # have branched off again, i.e. we need a new *minor* (3.x)
+    # version. So find the newest minor version and increase it.
+    final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
+
 
 sys.exit(0)

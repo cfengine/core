@@ -1,0 +1,37 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" string => "Test that mustache doesn't render nulls that don't exist (CFE-2077)";
+
+  vars:
+      "jsondata" data => parsejson('{ "key" : ["one", "two", "three"]}');
+
+      "noninstersecting_list" slist => { "four" };
+
+      "list" slist => getvalues("jsondata[key]");
+
+      "diff_list" slist => difference("list", "noninstersecting_list");
+      "diff_string" string => join(" ", diff_list);
+
+      "mustache_string" string => string_mustache("{{#vars.test.diff_list}}{{{.}}} {{/vars.test.diff_list}}");
+
+}
+
+bundle agent check
+{
+
+  methods:
+
+      "check" usebundle => dcs_check_regcmp("one two three ", $(test.mustache_string), $(this.promise_filename), "yes");
+
+    DEBUG|EXTRA::
+      "Diff string: $(test.diff_string)";
+      "Mustache string: $(test.mustache_string)";
+}

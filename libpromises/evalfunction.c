@@ -6321,8 +6321,8 @@ static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy
 static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     char *filename = RlistScalarValue(finalargs);
-    char *requested_max = RlistScalarValue(finalargs->next);
-    long maxsize = IntFromString(requested_max);
+    const Rlist *next = finalargs->next; // max_size argument, default to inf:
+    long maxsize = next ? IntFromString(RlistScalarValue(next)) : IntFromString("inf");
 
     if (maxsize == CF_INFINITY)                      /* "inf" in the policy */
     {
@@ -6331,7 +6331,7 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
     if (maxsize < 0)
     {
-        Log(LOG_LEVEL_ERR, "%s: requested max size %s is less than 0", fp->name, requested_max);
+        Log(LOG_LEVEL_ERR, "%s: requested max size %li is less than 0", fp->name, maxsize);
         return FnFailure();
     }
 

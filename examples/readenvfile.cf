@@ -1,0 +1,89 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src prep
+#@ ```
+#@ echo 'PRETTY_NAME="Ubuntu 14.04.5 LTS"' > /tmp/os-release
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+# Definitions (from standard library):
+body edit_defaults empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line insert_lines(lines)
+{
+    insert_lines:
+        "$(lines)";
+}
+
+body printfile cat(file)
+{
+        file_to_print => "$(file)";
+        number_of_lines => "inf";
+}
+# empty, insert_lines() and cat() are part of the standard library
+# To import the standard library, remove them and uncomment this line:
+# body file control { inputs => { "$(sys.libdir)/stdlib.cf" }; }
+
+bundle agent main
+{
+    classes:
+        "file_found" expression => fileexists("/tmp/os-release");
+
+    # Use readenvfile() to load /tmp/os-release, then convert to json:
+    vars:
+        file_found::
+            "envdata"
+                data =>  readenvfile("/tmp/os-release");
+            "jsonstring"
+                string =>  storejson(envdata);
+
+    # Print input(os-release) and output(json) files:
+    reports:
+        file_found::
+            "/tmp/os-release :"
+                printfile => cat("/tmp/os-release");
+            "/tmp/os-release converted to json:";
+            "$(jsonstring)";
+            "(The data for this system is available in sys.os_release)";
+        !file_found::
+            "/tmp/os-release doesn't exist, run this command:";
+            "echo 'PRETTY_NAME=\"Ubuntu 14.04.5 LTS\"' > /tmp/os-release";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: /tmp/os-release :
+#@ R: PRETTY_NAME="Ubuntu 14.04.5 LTS"
+#@ R: /tmp/os-release converted to json:
+#@ R: {
+#@   "PRETTY_NAME": "Ubuntu 14.04.5 LTS"
+#@ }
+#@ R: (The data for this system is available in sys.os_release)
+#@ ```
+#+end_src

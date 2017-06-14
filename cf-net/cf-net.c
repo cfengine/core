@@ -39,7 +39,8 @@
 #include <writer.h>
 #include <policy_server.h>      // PolicyServerReadFile
 #include <generic_agent.h>      // GenericAgentSetDefaultDigest TODO: rm dep
-#include <cf-windows-functions.h> // TODO: move this out of libpromises.
+#include <cf-windows-functions.h> // TODO: move this out of libpromises
+#include <known_dirs.h>           // TODO: move this 'out of libpromises
 
 typedef struct
 {
@@ -205,10 +206,10 @@ static void CFNetSetDefault(CFNetOptions *opts){
 
 static void CFNetInit()
 {
-    #ifdef __MINGW32__
-        InitializeWindows();
-        OpenNetwork();
-    #endif
+#ifdef __MINGW32__
+    InitializeWindows();
+    OpenNetwork();
+#endif
     CryptoInitialize();
     LoadSecretKeys();
     cfnet_init(NULL, NULL);
@@ -222,7 +223,7 @@ static char *RequireHostname(char *hostnames)
 {
     if (hostnames == NULL)
     {
-        char *policy_server = PolicyServerReadFile("/var/cfengine/");
+        char *policy_server = PolicyServerReadFile(GetWorkDir());
         if (policy_server == NULL)
         {
             printf("Error: no host name (and no policy_server.dat)");

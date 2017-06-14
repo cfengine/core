@@ -18,6 +18,9 @@ bundle agent test
       "read_$(sizes)" string => readfile("$(this.promise_filename).txt",
                                          $(sizes));
       "length_$(sizes)" int => string_length("$(read_$(sizes))");
+
+      "read_no_size" string => readfile("$(this.promise_filename).txt");
+      "length_no_size"  int => string_length("$(read_no_size)");
 }
 
 bundle agent check
@@ -31,10 +34,13 @@ bundle agent check
       "expected[4096]" int => "4096";
       "expected[4097]" int => "4097";
       "expected[99999999]" int => "10240";
+      "expected_no_size"   int => "10240";
 
   classes:
       "ok_$(sizes)" expression => strcmp("$(test.length_$(sizes))",
                                          "$(expected[$(sizes)])");
+      "ok_no_size"  expression => strcmp("$(test.length_no_size)",
+                                         "$(expected_no_size)");
 
       "ok" and => {
                     "ok_0",
@@ -44,6 +50,7 @@ bundle agent check
                     "ok_4096",
                     "ok_4097",
                     "ok_99999999",
+                    "ok_no_size",
       };
 
   reports:

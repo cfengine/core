@@ -39,6 +39,7 @@
 #include <writer.h>
 #include <policy_server.h>      // PolicyServerReadFile
 #include <generic_agent.h>      // GenericAgentSetDefaultDigest TODO: rm dep
+#include <cf-windows-functions.h> // TODO: move this out of libpromises.
 
 typedef struct
 {
@@ -204,6 +205,10 @@ static void CFNetSetDefault(CFNetOptions *opts){
 
 static void CFNetInit()
 {
+    #ifdef __MINGW32__
+        InitializeWindows();
+        OpenNetwork();
+    #endif
     CryptoInitialize();
     LoadSecretKeys();
     cfnet_init(NULL, NULL);

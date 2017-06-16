@@ -1,0 +1,32 @@
+body common control
+{
+      bundlesequence => { "access_rules" };
+      inputs => { "../../default.cf.sub" };
+
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control
+{
+      port => "15000";
+
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+{
+    access:
+        "$(this.promise_dirname)/cf-net_stat.cf"
+            admit_ips     => { "127.0.0.1", "::1" };
+        "$(this.promise_dirname)/cf-net_get.cf"
+            admit_ips     => { "127.0.0.1", "::1" };
+        "$(G.testdir)"
+            admit_ips     => { "127.0.0.1", "::1" };
+}

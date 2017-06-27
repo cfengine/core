@@ -327,8 +327,9 @@ the following when writing output messages.
     Try to avoid "Entering function Foo()", but rather use for
     "While copying, got reply '%s' from server".
 
-* Do not decorate with symbols or indentation in messages. Leave
-  formatting to `Log()`.
+* Do not decorate with symbols or indentation in messages and do not
+  terminate the message with punctuation. Let `Log()` enforce the common
+  formatting rules.
 
 * When quoting strings, use single quotes, e.g. "Some stuff '%s' happened in
   '%s'.

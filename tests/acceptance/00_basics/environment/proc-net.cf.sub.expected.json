@@ -1,6 +1,6 @@
 {
   "default_gateway": "192.168.2.1",
-  "docker": "d7b4:febd:49ff:42:0:0:0:fe80",
+  "docker": "fe80:0:0:0:42:49ff:febd:d7b4",
   "inet": {
     "default_gateway": "192.168.2.1",
     "default_route": {
@@ -222,7 +222,7 @@
   "inet6": {
     "addresses": {
       "docker0": {
-        "address": "d7b4:febd:49ff:42:0:0:0:fe80",
+        "address": "fe80:0:0:0:42:49ff:febd:d7b4",
         "device_number": 4,
         "interface": "docker0",
         "prefix_length": 64,
@@ -230,7 +230,7 @@
         "scope": 32
       },
       "enp4s0": {
-        "address": "ada6:fe3e:d1ff:c27c:0:0:0:fe80",
+        "address": "fe80:0:0:0:c27c:d1ff:fe3e:ada6",
         "device_number": 2,
         "interface": "enp4s0",
         "prefix_length": 64,
@@ -238,7 +238,7 @@
         "scope": 32
       },
       "lo": {
-        "address": "1:0:0:0:0:0:0:0",
+        "address": "0:0:0:0:0:0:0:1",
         "device_number": 1,
         "interface": "lo",
         "prefix_length": 128,

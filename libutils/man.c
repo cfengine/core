@@ -206,6 +206,13 @@ void ManPageWrite(Writer *out, const char *program, time_t last_modified,
                   const struct option options[],
                   const char *const option_hints[], bool accepts_file_argument)
 {
+    time_t overridetime;
+    char *source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+    if (source_date_epoch != NULL &&
+        (overridetime = (time_t)strtoll(source_date_epoch, NULL, 10)) > 0)
+    {
+        last_modified = overridetime;
+    }
     WriteCopyright(out);
     WriteHeader(out, program, last_modified);
     WriteName(out, program, short_description);

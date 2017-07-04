@@ -932,6 +932,7 @@ then
     echo '$CF_SERVERD   =' "$CF_SERVERD"
     echo '$CF_EXECD     =' "$CF_EXECD"
     echo '$CF_KEY       =' "$CF_KEY"
+    echo '$CF_NET       =' "$CF_NET"
     echo '$CF_RUNAGENT  =' "$CF_RUNAGENT"
     echo '$CF_NET       =' "$CF_NET"
     echo '$RPMVERCMP    =' "$RPMVERCMP"

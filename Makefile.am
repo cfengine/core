@@ -41,6 +41,7 @@ SUBDIRS = libcompat \
 	cf-serverd \
 	cf-upgrade \
 	cf-net \
+	cf-keycrypt \
 	misc \
 	ext \
 	examples \

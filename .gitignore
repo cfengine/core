@@ -54,6 +54,8 @@ stamp-h1
 /cf-runagent/cf-runagent.exe
 /cf-net/cf-net
 /cf-net/cf-net.exe
+/cf-keycrypt/cf-keycrypt
+/cf-keycrypt/cf-keycrypt.exe
 /cf-serverd/cf-serverd
 /cf-serverd/cf-serverd.exe
 /cf-upgrade/cf-upgrade

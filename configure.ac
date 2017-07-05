@@ -1697,6 +1697,7 @@ AC_CONFIG_FILES([Makefile
     cf-runagent/Makefile
     cf-serverd/Makefile
     cf-net/Makefile
+    cf-keycrypt/Makefile
     misc/Makefile
     ext/Makefile
     examples/Makefile

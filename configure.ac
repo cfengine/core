@@ -1772,6 +1772,7 @@ AC_CONFIG_FILES([Makefile
     cf-serverd/Makefile
     cf-testd/Makefile
     cf-net/Makefile
+    cf-keycrypt/Makefile
     config.post.h
     misc/Makefile
     misc/selinux/Makefile

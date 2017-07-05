@@ -43,6 +43,7 @@ SUBDIRS = \
 	cf-testd \
 	cf-upgrade \
 	cf-net \
+	cf-keycrypt \
 	misc \
 	ext \
 	examples \

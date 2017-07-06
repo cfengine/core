@@ -1,0 +1,65 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+###############################################################################
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+
+      "private_key"
+        comment => "The decryption key",
+        string => "$(this.promise_filename).priv";
+
+      "encrypted_file" string => "$(this.promise_filename).cfcrypt";
+
+      "secret"
+        comment => "We decrypt the encrypted file directly into a variable.",
+        string => execresult("$(sys.cf_keycrypt) -d $(private_key) -i $(encrypted_file) -o -", noshell);
+
+  reports:
+      "Encrypted file content:"
+        printfile => cat( $(encrypted_file) );
+
+      "Decrypted content:$(const.n)$(secret)";
+}
+
+body printfile cat(file)
+# @brief Report the contents of a file
+# @param file The full path of the file to report
+{
+        file_to_print => "$(file)";
+        number_of_lines => "inf";
+}
+#+end_src
+
+###############################################################################
+#+begin_src static_example_output
+#@ ```
+#@ R: Encrypted file content:
+#@ R: ��Q�������VO�["N߀ �1�}΢n�#��h�J�2�}5���N1m�n�,��E��\����٣��g<F�3A�rH?�`[V,G�\׮�\�5+�m��[[��Y��{�vD|@���䁶X��w
+#@ R: !�X�-Z��(�L92��t�n��=�Q�����
+#@                                 |����Q�C'��P�uY��$�oG���uXw{ �O�DD���h�u��f)�	�n��#ꊾ/�y�o>>��oqVہ��P�-{.�G��w$
+#@ R: Decrypted content:
+#@ Super secret message is here
+#@ ```
+#+end_src

@@ -1,6 +1,6 @@
 INSTDIR=$HOME/cf_install
 cd $TRAVIS_BUILD_DIR
-
+set -e
 # if [ "$JOB_TYPE" = style_check ]
 # then
 #     # sh tests/misc/style_check.sh
@@ -18,7 +18,7 @@ git remote add upstream https://github.com/cfengine/core.git  \
 if [ "$TRAVIS_OS_NAME" = osx ]
 then
     # On osx the default gcc is actually LLVM
-    export CC=gcc-6
+    export CC=gcc-7
     NO_CONFIGURE=1 ./autogen.sh
     ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb/  --with-openssl=/usr/local/opt/openssl
 else

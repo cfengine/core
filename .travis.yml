@@ -49,14 +49,16 @@ matrix:
 #      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
 
 before_install:
-  - chmod ug+x ./travis-scripts/*
-  - source ./travis-scripts/before_install.sh
+  - chmod ug+x $TRAVIS_BUILD_DIR/travis-scripts/*
+  - source $TRAVIS_BUILD_DIR/travis-scripts/before_install.sh
 
 script:
-  - source ./travis-scripts/script.sh
+  - pushd ./
+  - source $TRAVIS_BUILD_DIR/travis-scripts/script.sh
+  - popd
 
 before_deploy:
-  - source ./travis-scripts/before_deploy.sh
+  - source $TRAVIS_BUILD_DIR/travis-scripts/before_deploy.sh
 
 # We deploy when setting tags only, which basically never happens
 # on master branch. Cherry-pick this part and alter it properly into
@@ -75,4 +77,4 @@ deploy:
     condition: "$CF_VERSION = latest"
 
 after_script:
-  - source ./travis-scripts/after_script.sh
+  - source $TRAVIS_BUILD_DIR/travis-scripts/after_script.sh

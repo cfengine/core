@@ -1,5 +1,5 @@
 /*
-   Copyright (C) CFEngine AS
+   Copyright 2017 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
@@ -31,7 +31,7 @@
 static void WriteCopyright(Writer *out)
 {
     static const char *const copyright =
-        ".\\\"Copyright (C) CFEngine AS\n"
+        ".\\\"Copyright 2017 Northern.tech AS\n"
         ".\\\"\n"
         ".\\\"This file is part of CFEngine 3 - written and maintained by CFEngine AS.\n"
         ".\\\"\n"

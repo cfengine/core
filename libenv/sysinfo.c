@@ -2626,14 +2626,15 @@ static void OpenVZ_Detect(EvalContext *ctx)
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
     asm(
-           /* %ebx register need to be saved before usage and restored thereafter
-            * for PIC-compliant code on i386 */
+        /* %ebx register need to be saved before usage and restored thereafter
+         * for PIC-compliant code on i386 */
 # ifdef __i386__
-           "push %%ebx; cpuid; mov %%ebx,%1; pop %%ebx"
+        "push %%ebx; cpuid; mov %%ebx,%1; pop %%ebx"
 # else
-           "push %%rbx; cpuid; mov %%ebx,%1; pop %%rbx"
+        "push %%rbx; cpuid; mov %%ebx,%1; pop %%rbx"
 # endif
-  : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx):"0"(idx), "2"(0));
+        : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
+        : "0" (idx),  "2" (0) );
 }
 
 /******************************************************************/
@@ -2661,13 +2662,21 @@ static bool Xen_Hv_Check(EvalContext *ctx)
     union
     {
         uint32_t u[3];
-        char s[13];
+        char     s[13];
     } sig = {{0}};
 
+    /*
+     * For compatibility with other hypervisor interfaces, the Xen cpuid leaves
+     * can be found at the first otherwise unused 0x100 aligned boundary starting
+     * from 0x40000000.
+     *
+     * e.g If viridian extensions are enabled for an HVM domain, the Xen cpuid
+     * leaves will start at 0x40000100
+     */
     for (base = 0x40000000; base < 0x40010000; base += 0x100)
     {
         Xen_Cpuid(base, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
-        if (strcmp("XenVMMXenVMM", sig.s) == 0)
+        if (memcmp("XenVMMXenVMM", &sig.s[0], 12) == 0)
         {
             if ((eax - base) < 2)
             {

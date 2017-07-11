@@ -178,15 +178,16 @@ recent_version = extract_version_components(recent_tag)
 verbose_print("recent_version = ", recent_version)
 
 
-in_master_branch = False
-git_show_ref =  subprocess.Popen(["git", "show-ref", "master"],
+in_master_branch = True
+git_all_merged_branches = subprocess.Popen(["git", "branch", "-r", "--merged"],
                                  stdout=subprocess.PIPE)
-for line in git_show_ref.stdout:
-    (sha,ref,) = line.split()
-    if (sha == full_rev) and \
-       (ref == "refs/remotes/origin/master" or ref == "refs/remotes/upstream/master"):
-       in_master_branch = True
-       verbose_print("Detected that we are in master branch")
+for line in git_all_merged_branches.stdout:
+    line = line.strip()
+    match = re.match('(origin|upstream)/\\d+\\.\\d+\\.x$', line)
+    if match:
+        in_master_branch = False
+        verbose_print("Detected that we are NOT in master branch, but in [%s]" % match.group(0))
+        break
 
 
 # List all tags that contain the most recent tag found earlier, unless

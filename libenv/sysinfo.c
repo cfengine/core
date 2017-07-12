@@ -173,7 +173,7 @@ static void OpenVZ_Detect(EvalContext *ctx);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
-static bool Xen_Hv_Check(EvalContext *ctx);
+static bool Xen_Hv_Check(void);
 #endif
 
 static bool ReadLine(const char *filename, char *buf, int bufsize);
@@ -1201,7 +1201,7 @@ static void OSClasses(EvalContext *ctx)
         Xen_Domain(ctx);
     }
 #ifdef XEN_CPUID_SUPPORT
-    else if (Xen_Hv_Check(ctx))
+    else if (Xen_Hv_Check())
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
         EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
@@ -2621,25 +2621,26 @@ static void OpenVZ_Detect(EvalContext *ctx)
 
 #ifdef XEN_CPUID_SUPPORT
 
-/* borrowed from Xen source/tools/libxc/xc_cpuid_x86.c */
+/* Borrowed and modified from Xen source/tools/libxc/xc_cpuid_x86.c */
 
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
-    asm(
-        /* %ebx register need to be saved before usage and restored thereafter
-         * for PIC-compliant code on i386 */
 # ifdef __i386__
-        "push %%ebx; cpuid; mov %%ebx,%1; pop %%ebx"
-# else
-        "push %%rbx; cpuid; mov %%ebx,%1; pop %%rbx"
-# endif
+    /* On i386, %ebx register needs to be saved before usage and restored
+     * thereafter for PIC-compliant code on i386. */
+    asm("push %%ebx; cpuid; mov %%ebx,%1; pop %%ebx"
         : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
         : "0" (idx),  "2" (0) );
+# else
+    asm("cpuid"
+        : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+        : "0" (idx),  "2" (0) );
+# endif
 }
 
 /******************************************************************/
 
-static bool Xen_Hv_Check(EvalContext *ctx)
+static bool Xen_Hv_Check(void)
 {
     /* CPUID interface to Xen from arch-x86/cpuid.h:
      * Leaf 1 (0x40000000)
@@ -2651,12 +2652,6 @@ static bool Xen_Hv_Check(EvalContext *ctx)
      * Additional information can be found in the Hypervisor CPUID
      * Interface Proposal (https://lkml.org/lkml/2008/10/1/246)
      */
-
-    if(IsDefinedClass(ctx, "redhat_4|centos_4"))
-    {
-        Log(LOG_LEVEL_DEBUG, "Skipping Xen_Hv_Check() to avoid a segfault on RHEL 4");
-        return false;
-    }
 
     uint32_t eax, base;
     union

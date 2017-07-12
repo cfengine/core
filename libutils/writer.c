@@ -301,5 +301,5 @@ void WriterWriteHelp(Writer *w, const char *component, const struct option optio
     }
 
     WriterWriteF(w, "\nWebsite: http://www.cfengine.com\n");
-    WriterWriteF(w, "This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
+    WriterWriteF(w, "This software is Copyright 2017 Northern.tech AS.\n");
 }

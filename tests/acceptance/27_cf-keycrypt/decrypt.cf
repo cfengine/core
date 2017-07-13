@@ -1,0 +1,26 @@
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+bundle agent test
+{
+    meta:
+        "description"
+            string => "Test that cf-keycrypt can still decrypt content encrypted at the time of initial implementation";
+
+    commands:
+        "$(sys.cf_keycrypt)"
+            args => "-k $(this.promise_dirname)/testkey.priv -d $(this.promise_dirname)/encrypted -o $(G.testfile)";
+}
+
+bundle agent check
+{
+    methods:
+        "any"
+            usebundle => dcs_check_diff("$(this.promise_dirname)/plaintext",
+                                        "$(G.testfile)",
+                                        "$(this.promise_filename)");
+}

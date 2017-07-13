@@ -1,0 +1,28 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+bundle agent test
+{
+    meta:
+        "description"
+            string => "Test that cf-keycrypt encryption uses random padding";
+
+    commands:
+        "$(sys.cf_keycrypt)"
+            args => "-e $(this.promise_dirname)/plaintext -k $(this.promise_dirname)/testkey.pub -o $(G.testfile)";
+        "$(sys.cf_keycrypt)"
+            args => "-e $(this.promise_dirname)/plaintext -k $(this.promise_dirname)/testkey.pub -o $(G.testfile).2";
+}
+
+bundle agent check
+{
+    methods:
+        "any"
+            usebundle => dcs_check_diff("$(G.testfile)",
+                                        "$(G.testfile).2",
+                                        "$(this.promise_filename)");
+}

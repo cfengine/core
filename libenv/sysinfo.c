@@ -2602,14 +2602,20 @@ static bool Xen_Hv_Check(void)
     for (base = 0x40000000; base < 0x40010000; base += 0x100)
     {
         Xen_Cpuid(base, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
+
         if (memcmp("XenVMMXenVMM", &sig.s[0], 12) == 0)
         {
+            /* The highest basic calling parameter (largest value that EAX can
+             * be set to before calling CPUID) is returned in EAX. */
             if ((eax - base) < 2)
             {
-                Log(LOG_LEVEL_ERR, "Insufficient Xen CPUID Leaves. eax=%x at base %x\n", eax, base);
+                Log(LOG_LEVEL_DEBUG,
+                    "Insufficient Xen CPUID Leaves (eax=%x at base %x)",
+                    eax, base);
                 return false;
             }
-            Log(LOG_LEVEL_VERBOSE, "Found Xen CPUID Leaf. eax=%x at base %x\n", eax, base);
+            Log(LOG_LEVEL_DEBUG,
+                "Found Xen CPUID Leaf (eax=%x at base %x)", eax, base);
             return true;
         }
     }

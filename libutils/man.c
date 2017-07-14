@@ -1,7 +1,7 @@
 /*
    Copyright 2017 Northern.tech AS
 
-   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -33,7 +33,7 @@ static void WriteCopyright(Writer *out)
     static const char *const copyright =
         ".\\\"Copyright 2017 Northern.tech AS\n"
         ".\\\"\n"
-        ".\\\"This file is part of CFEngine 3 - written and maintained by CFEngine AS.\n"
+        ".\\\"This file is part of CFEngine 3 - written and maintained by Northern.tech AS.\n"
         ".\\\"\n"
         ".\\\"This program is free software; you can redistribute it and/or modify it\n"
         ".\\\"under the terms of the GNU General Public License as published by the\n"

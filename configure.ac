@@ -1,7 +1,7 @@
 dnl
 dnl  Copyright 2017 Northern.tech AS
 dnl
-dnl  This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+dnl  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 dnl
 dnl  This program is free software; you can redistribute it and/or modify it
 dnl  under the terms of the GNU General Public License as published by the

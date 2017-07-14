@@ -173,7 +173,7 @@ static void OpenVZ_Detect(EvalContext *ctx);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
-static bool Xen_Hv_Check(EvalContext *ctx);
+static bool Xen_Hv_Check(void);
 #endif
 
 static bool ReadLine(const char *filename, char *buf, int bufsize);
@@ -1201,7 +1201,7 @@ static void OSClasses(EvalContext *ctx)
         Xen_Domain(ctx);
     }
 #ifdef XEN_CPUID_SUPPORT
-    else if (Xen_Hv_Check(ctx))
+    else if (Xen_Hv_Check())
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
         EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
@@ -2621,24 +2621,26 @@ static void OpenVZ_Detect(EvalContext *ctx)
 
 #ifdef XEN_CPUID_SUPPORT
 
-/* borrowed from Xen source/tools/libxc/xc_cpuid_x86.c */
+/* Borrowed and modified from Xen source/tools/libxc/xc_cpuid_x86.c */
 
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
-    asm(
-           /* %ebx register need to be saved before usage and restored thereafter
-            * for PIC-compliant code on i386 */
 # ifdef __i386__
-           "push %%ebx; cpuid; mov %%ebx,%1; pop %%ebx"
+    /* On i386, %ebx register needs to be saved before usage and restored
+     * thereafter for PIC-compliant code on i386. */
+    asm("push %%ebx; cpuid; mov %%ebx,%1; pop %%ebx"
+        : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
+        : "0" (idx),  "2" (0) );
 # else
-           "push %%rbx; cpuid; mov %%ebx,%1; pop %%rbx"
+    asm("cpuid"
+        : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+        : "0" (idx),  "2" (0) );
 # endif
-  : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx):"0"(idx), "2"(0));
 }
 
 /******************************************************************/
 
-static bool Xen_Hv_Check(EvalContext *ctx)
+static bool Xen_Hv_Check(void)
 {
     /* CPUID interface to Xen from arch-x86/cpuid.h:
      * Leaf 1 (0x40000000)
@@ -2651,30 +2653,38 @@ static bool Xen_Hv_Check(EvalContext *ctx)
      * Interface Proposal (https://lkml.org/lkml/2008/10/1/246)
      */
 
-    if(IsDefinedClass(ctx, "redhat_4|centos_4"))
-    {
-        Log(LOG_LEVEL_DEBUG, "Skipping Xen_Hv_Check() to avoid a segfault on RHEL 4");
-        return false;
-    }
-
     uint32_t eax, base;
     union
     {
         uint32_t u[3];
-        char s[13];
+        char     s[13];
     } sig = {{0}};
 
+    /*
+     * For compatibility with other hypervisor interfaces, the Xen cpuid leaves
+     * can be found at the first otherwise unused 0x100 aligned boundary starting
+     * from 0x40000000.
+     *
+     * e.g If viridian extensions are enabled for an HVM domain, the Xen cpuid
+     * leaves will start at 0x40000100
+     */
     for (base = 0x40000000; base < 0x40010000; base += 0x100)
     {
         Xen_Cpuid(base, &eax, &sig.u[0], &sig.u[1], &sig.u[2]);
-        if (strcmp("XenVMMXenVMM", sig.s) == 0)
+
+        if (memcmp("XenVMMXenVMM", &sig.s[0], 12) == 0)
         {
+            /* The highest basic calling parameter (largest value that EAX can
+             * be set to before calling CPUID) is returned in EAX. */
             if ((eax - base) < 2)
             {
-                Log(LOG_LEVEL_ERR, "Insufficient Xen CPUID Leaves. eax=%x at base %x\n", eax, base);
+                Log(LOG_LEVEL_DEBUG,
+                    "Insufficient Xen CPUID Leaves (eax=%x at base %x)",
+                    eax, base);
                 return false;
             }
-            Log(LOG_LEVEL_VERBOSE, "Found Xen CPUID Leaf. eax=%x at base %x\n", eax, base);
+            Log(LOG_LEVEL_DEBUG,
+                "Found Xen CPUID Leaf (eax=%x at base %x)", eax, base);
             return true;
         }
     }

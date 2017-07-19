@@ -967,6 +967,23 @@ struct timespec
 # include <direct.h>
 #endif
 
+
+/* Some shorthands. */
+
+# if defined(__sun) && !defined(sun)
+#  define sun
+# endif
+
+# if defined(__SVR4) && !defined(SVR4)
+#  define SVR4
+# endif
+
+# if (defined(sun) && defined(SVR4)) || defined (SOLARIS2)
+#  define SUNOS_5
+# endif
+
+
+
 /* Must be always the last one! */
 #include <deprecated.h>
 #include <config.post.h>

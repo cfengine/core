@@ -47,18 +47,19 @@ int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]
             return 0;
         }
 
-        EVP_MD_CTX context;
-        EVP_DigestInit(&context, md);
+        EVP_MD_CTX *context = EVP_MD_CTX_new();
+        EVP_DigestInit(context, md);
 
         int len = 0;
         unsigned char buffer[1024];
         while ((len = fread(buffer, 1, 1024, file)))
         {
-            EVP_DigestUpdate(&context, buffer, len);
+            EVP_DigestUpdate(context, buffer, len);
         }
 
         unsigned int md_len = 0;
-        EVP_DigestFinal(&context, digest, &md_len);
+        EVP_DigestFinal(context, digest, &md_len);
+        EVP_MD_CTX_free(context);
         fclose(file);
 
         return md_len;

@@ -30,11 +30,11 @@ static void test_cipher_init(void)
 {
     unsigned char key[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     unsigned char iv[] = {1,2,3,4,5,6,7,8};
-    EVP_CIPHER_CTX ctx;
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 
-    EVP_CIPHER_CTX_init(&ctx);
-    EVP_EncryptInit_ex(&ctx, EVP_bf_cbc(), NULL, key, iv);
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_init(ctx);
+    EVP_EncryptInit_ex(ctx, EVP_bf_cbc(), NULL, key, iv);
+    EVP_CIPHER_CTX_free(ctx);
 }
 
 static void test_symmetric_encrypt(void)

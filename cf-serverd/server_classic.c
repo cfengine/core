@@ -569,6 +569,7 @@ static void SetConnectionData(ServerConnectionState *conn, char *buf)
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 {
     RSA *savedkey;
+    const BIGNUM *key_n, *key_e, *savedkey_n, *savedkey_e;
 
     const char *udigest = KeyPrintableHash(ConnectionInfoKey(conn->conn_info));
     assert(udigest != NULL);
@@ -579,7 +580,10 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
             "A public key was already known from %s/%s - no trust required",
             conn->hostname, conn->ipaddr);
 
-        if ((BN_cmp(savedkey->e, key->e) == 0) && (BN_cmp(savedkey->n, key->n) == 0))
+        RSA_get0_key(key, &key_n, &key_e, NULL);
+        RSA_get0_key(savedkey, &savedkey_n, &savedkey_e, NULL);
+
+        if ((BN_cmp(savedkey_e, key_e) == 0) && (BN_cmp(savedkey_n, key_n) == 0))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "The public key identity was confirmed as %s@%s",
@@ -772,6 +776,7 @@ char iscrypt, enterprise_field;
 
 /* proposition C2 - Receive client's public key modulus */
 RSA *newkey = RSA_new();
+BIGNUM *newkey_n, *newkey_e;
 {
 
     int len_n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
@@ -783,7 +788,7 @@ RSA *newkey = RSA_new();
         return false;
     }
 
-    if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
+    if ((newkey_n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key modulus failed "
@@ -804,15 +809,18 @@ RSA *newkey = RSA_new();
         return false;
     }
 
-    if ((newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
+    if ((newkey_e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key exponent failed "
             "(%s)", CryptoLastErrorString());
+        BN_free(newkey_n);
         RSA_free(newkey);
         return false;
     }
 }
+
+RSA_set0_key(newkey, newkey_n, newkey_e, NULL);
 
 /* Compute and store hash of the client's public key. */
 {
@@ -891,18 +899,21 @@ RSA *newkey = RSA_new();
 
 /* proposition S4, S5 - If the client doesn't have our public key, send it. */
 {
+    const BIGNUM *n, *e;
     if (iscrypt != 'y')
     {
         Log(LOG_LEVEL_DEBUG, "Sending server's public key");
 
         char bignum_buf[CF_BUFSIZE] = { 0 };
 
+        RSA_get0_key(PUBKEY, &n, &e, NULL);
+
         /* proposition S4  - conditional */
-        int len_n = BN_bn2mpi(PUBKEY->n, bignum_buf);
+        int len_n = BN_bn2mpi(n, bignum_buf);
         SendTransaction(conn->conn_info, bignum_buf, len_n, CF_DONE);
 
         /* proposition S5  - conditional */
-        int len_e = BN_bn2mpi(PUBKEY->e, bignum_buf);
+        int len_e = BN_bn2mpi(e, bignum_buf);
         SendTransaction(conn->conn_info, bignum_buf, len_e, CF_DONE);
     }
 }

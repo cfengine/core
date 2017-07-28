@@ -79,6 +79,7 @@ QUIET=
 # DEFAULT ON
 COMMON_TESTS=${COMMON_TESTS:-1}       ; export COMMON_TESTS
 TIMED_TESTS=${TIMED_TESTS:-1}         ; export TIMED_TESTS
+SLOW_TESTS=${SLOW_TESTS:-1}           ; export SLOW_TESTS
 ERROREXIT_TESTS=${ERROREXIT_TESTS:-1} ; export ERROREXIT_TESTS
 SERIAL_TESTS=${SERIAL_TESTS:-1}       ; export SERIAL_TESTS
 NETWORK_TESTS=${NETWORK_TESTS:-1}     ; export NETWORK_TESTS
@@ -243,7 +244,7 @@ usage() {
     echo "               defaults to $DEFLIBTOOL."
     echo " --include Include the file or directory given in the workdir before the test"
     echo "           starts. This option may be given several times."
-    echo " --tests=common,network,serial,timed,errorexit,libxml2,libcurl"
+    echo " --tests=common,network,serial,timed,slow,errorexit,libxml2,libcurl"
     echo "           This is the default value, you can also add from the following:"
     echo "           unsafe,staging"
     echo "           NOTE: 'staging' tests are not expected to pass"
@@ -306,6 +307,7 @@ runtest() {
         */unsafe/*)   TEST_TYPE=unsafe    ;;
         */network/*)  TEST_TYPE=network   ;;
         */timed/*)    TEST_TYPE=timed     ;;
+        */slow/*)     TEST_TYPE=slow      ;;
         *[/_]serial[/_.]*)  TEST_TYPE=serial  ;;
         */11_xml_edits/*)   TEST_TYPE=libxml2 ;;
         */01_vars/02_functions/network/url_get.cf)    TEST_TYPE=libcurl ;;
@@ -334,6 +336,10 @@ runtest() {
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}Timed tests are disabled${COLOR_NORMAL}"
+    elif [ $SLOW_TESTS = 0  -a  $TEST_TYPE = slow ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}Slow tests are disabled${COLOR_NORMAL}"
     elif [ $SERIAL_TESTS = 0  -a  $TEST_TYPE = serial ]
     then
         SKIP=1
@@ -741,6 +747,7 @@ do
             # given as arguments
             COMMON_TESTS=0
             TIMED_TESTS=0
+            SLOW_TESTS=0
             ERROREXIT_TESTS=0
             SERIAL_TESTS=0
             NETWORK_TESTS=0
@@ -755,6 +762,7 @@ do
                 case "$testtype" in
                     common)      COMMON_TESTS=1;;
                     timed)       TIMED_TESTS=1;;
+                    slow)        SLOW_TESTS=1;;
                     errorexit)   ERROREXIT_TESTS=1;;
                     serial)      SERIAL_TESTS=1;;
                     network)     NETWORK_TESTS=1;;
@@ -1002,7 +1010,7 @@ print_header() {
       echo ----------------------------------------------------------------------
       echo Total tests: $TESTS_COUNT
       echo
-      for feature in COMMON_TESTS TIMED_TESTS ERROREXIT_TESTS SERIAL_TESTS NETWORK_TESTS LIBXML2_TESTS LIBCURL_TESTS UNSAFE_TESTS STAGING_TESTS
+      for feature in COMMON_TESTS TIMED_TESTS SLOW_TESTS ERROREXIT_TESTS SERIAL_TESTS NETWORK_TESTS LIBXML2_TESTS LIBCURL_TESTS UNSAFE_TESTS STAGING_TESTS
       do
           if eval "[ \${$feature} != 0 ]"
           then
@@ -1179,7 +1187,7 @@ run_all_tests_using_make() {
                 ;;
         esac
         case "$curr_test" in
-            */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*|*/timed/*)
+            */serial_*|*_serial_*|*_serial.*|*/serial/*|*/unsafe/*|*/timed/*|*/slow/*)
                 eval MAKE_RECIPE_LIST$TEST_BLOCKS='$MAKE_RECIPE_LIST'$TEST_BLOCKS'${MAKE_RECIPE_LIST'$TEST_BLOCKS':+ }$curr_test'
                 ;;
             *)

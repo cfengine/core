@@ -170,14 +170,13 @@ static int EOS_Version(EvalContext *ctx);
 static int MiscOS(EvalContext *ctx);
 static void OpenVZ_Detect(EvalContext *ctx);
 
+static bool ReadLine(const char *filename, char *buf, int bufsize);
+static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
+#endif
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 static bool Xen_Hv_Check(void);
-#endif
-
-static bool ReadLine(const char *filename, char *buf, int bufsize);
-static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 #endif
 
 static void GetCPUInfo(EvalContext *ctx);
@@ -1195,14 +1194,6 @@ static void OSClasses(EvalContext *ctx)
     {
         Xen_Domain(ctx);
     }
-#ifdef XEN_CPUID_SUPPORT
-    else if (Xen_Hv_Check())
-    {
-        Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
-        EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
-        EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
-    }
-#endif /* XEN_CPUID_SUPPORT */
     if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
@@ -1258,6 +1249,15 @@ static void OSClasses(EvalContext *ctx)
 #endif
 
 #endif
+
+#ifdef XEN_CPUID_SUPPORT
+    if (Xen_Hv_Check())
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
+        EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
+        EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
+    }
+#endif /* XEN_CPUID_SUPPORT */
 
     GetCPUInfo(ctx);
 
@@ -2614,6 +2614,44 @@ static void OpenVZ_Detect(EvalContext *ctx)
 
 /******************************************************************/
 
+static bool ReadLine(const char *filename, char *buf, int bufsize)
+{
+    FILE *fp = ReadFirstLine(filename, buf, bufsize);
+
+    if (fp == NULL)
+    {
+        return false;
+    }
+    else
+    {
+        fclose(fp);
+        return true;
+    }
+}
+
+static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
+{
+    FILE *fp = safe_fopen(filename, "r");
+
+    if (fp == NULL)
+    {
+        return NULL;
+    }
+
+    if (fgets(buf, bufsize, fp) == NULL)
+    {
+        fclose(fp);
+        return NULL;
+    }
+
+    StripTrailingNewline(buf, CF_EXPANDSIZE);
+
+    return fp;
+}
+#endif /* __linux__ */
+
+/******************************************************************/
+
 #ifdef XEN_CPUID_SUPPORT
 
 /* Borrowed and modified from Xen source/tools/libxc/xc_cpuid_x86.c */
@@ -2687,45 +2725,7 @@ static bool Xen_Hv_Check(void)
     return false;
 }
 
-#endif
-
-/******************************************************************/
-
-static bool ReadLine(const char *filename, char *buf, int bufsize)
-{
-    FILE *fp = ReadFirstLine(filename, buf, bufsize);
-
-    if (fp == NULL)
-    {
-        return false;
-    }
-    else
-    {
-        fclose(fp);
-        return true;
-    }
-}
-
-static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
-{
-    FILE *fp = safe_fopen(filename, "r");
-
-    if (fp == NULL)
-    {
-        return NULL;
-    }
-
-    if (fgets(buf, bufsize, fp) == NULL)
-    {
-        fclose(fp);
-        return NULL;
-    }
-
-    StripTrailingNewline(buf, CF_EXPANDSIZE);
-
-    return fp;
-}
-#endif /* __linux__ */
+#endif /* XEN_CPUID_SUPPORT */
 
 static void GetCPUInfo(EvalContext *ctx)
 {

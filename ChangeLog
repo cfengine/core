@@ -1,3 +1,14 @@
+3.10.2:
+	- fix cf-execd not exiting immediately with SIGTERM on AIX (ENT-3147)
+	- Fix logic detecting if running under a Xen Hypervisor (CFE-1563)
+	- Fix automatic service stops based on runlevel (redhat/centos)
+	  (CFE-2611)
+	- Allow opening symlinks owned by root or by the current user
+	  (CFE-2516)
+	- Stop service cfengine3 status from warning on multiple httpd processes
+	  (ENT-3123)
+	- fix IPv6 parsing to be un-reversed (CFE-2580)
+
 3.10.1:
 	New features/additions:
 	- "make tar-package" should create a tarball with the contents of

@@ -7,11 +7,15 @@ static void test_MatchFSInFstab(void)
 {
     AppendItem(&FSTABLIST, "fileserver1:/vol/vol10      /mnt/fileserver1/vol10     nfs     rw,intr,tcp,fg,rdirplus,noatime,_netdev", NULL);
     AppendItem(&FSTABLIST, "fileserver1:/vol/vol11      /mnt/fileserver1/vol11     nfs     rw,intr,tcp,fg,rdirplus,noatime,_netdev", NULL);
+    AppendItem(&FSTABLIST, "#fileserver1:/vol/vol12     /mnt/fileserver1/vol12     nfs     rw,intr,tcp,fg,rdirplus,noatime,_netdev", NULL);
     AppendItem(&FSTABLIST, "UUID=4a147232-42f7-4e56-aa9e-744b09bce719 /               ext4    errors=remount-ro 0       1", NULL);
     AppendItem(&FSTABLIST, "UUID=b2cf5462-a10f-4d7d-b356-ecec5aea2103 none            swap    sw              0       0", NULL);
     AppendItem(&FSTABLIST, "none                     /proc/sys/fs/binfmt_misc             binfmt_misc defaults 0 0", NULL);
     AppendItem(&FSTABLIST, "fileserver2:/vol/vol10 	 /mnt/fileserver2/vol10 	 nfs 	 rw,intr,tcp,fg,noatime", NULL);
     AppendItem(&FSTABLIST, "fileserver2:/vol/vol11 	 /mnt/fileserver2/vol11 	 nfs 	 rw,intr,tcp,fg,noatime", NULL);
+    AppendItem(&FSTABLIST, "#fileserver2:/vol/vol12 	 /mnt/fileserver2/vol12 	 nfs 	 rw,intr,tcp,fg,noatime", NULL);
+    AppendItem(&FSTABLIST, "fileserver3:/vol/vol10 	 /mnt/fileserver3/vol10 	 nfs 	 rw,intr,tcp,fg #,noatime", NULL);
+    AppendItem(&FSTABLIST, "fileserver3:/vol/vol11 	 /mnt/fileserver3/vol11 	 nfs 	 rw,intr,tcp,fg ,noatime # do we want noatime?", NULL);
 
     assert_true(MatchFSInFstab("/mnt/fileserver1/vol10"));
     assert_true(MatchFSInFstab("/mnt/fileserver1/vol11"));
@@ -20,6 +24,13 @@ static void test_MatchFSInFstab(void)
     assert_true(MatchFSInFstab("/mnt/fileserver2/vol10"));
     assert_true(MatchFSInFstab("/mnt/fileserver2/vol11"));
     assert_false(MatchFSInFstab("/mnt/fileserver2/vol1"));
+
+    assert_false(MatchFSInFstab("/mnt/fileserver1/vol12"));
+    assert_false(MatchFSInFstab("/mnt/fileserver2/vol12"));
+
+    assert_true(MatchFSInFstab("/mnt/fileserver3/vol10"));
+    assert_true(MatchFSInFstab("/mnt/fileserver3/vol11"));
+    assert_false(MatchFSInFstab("/mnt/fileserver3/vol1"));
 }
 
 int main()

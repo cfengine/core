@@ -667,15 +667,18 @@ static int MatchFSInFstab(char *match)
     for (ip = FSTABLIST; ip != NULL; ip = ip->next)
     {
         fstab_line = xstrdup(ip->name);
-        token = strtok(fstab_line, delimit);
-        while (token != NULL)
+        if(strncmp(fstab_line, "#", 1) != 0)
         {
-            if(strcmp(token, match) == 0)
+            token = strtok(fstab_line, delimit);
+            while (token != NULL)
             {
-                free(fstab_line);
-                return true;
+                if(strcmp(token, match) == 0)
+                {
+                    free(fstab_line);
+                    return true;
+                }
+                token = strtok(NULL, delimit);
             }
-            token = strtok(NULL, delimit);
         }
         free(fstab_line);
     }

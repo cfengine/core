@@ -1,3 +1,12 @@
+3.7.6:
+	- Fix automatic service stops based on runlevel (redhat/centos)
+	  (CFE-2611)
+	- Fix cf-monitord detection of usernames of the process table on AIX.
+	  (CFE-1560)
+	- Stop service cfengine3 status from warning on multiple httpd processes
+	  (ENT-3123)
+	- Fix logic to detect when running under a Xen Hypervisor (CFE-1563)
+
 3.7.5:
 	Changes:
 	- cf-serverd now accepts namespaced:classes passed with

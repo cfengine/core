@@ -1,4 +1,4 @@
-3.11.0b1:
+3.11.0:
 	New Features:
 	- allow function calls in promiser using universal "with" attribute.
 	  (CFE-1092)
@@ -16,8 +16,9 @@
 	- Added a new tool: cf-net. cf-net is a CLI for the CFEngine
 	  network protocol, useful for debugging, testing etc.
 	  (CFE-2493)
-	- New policy variable: sys.cf-net contains path to cf-net binary
+	- New policy variable: sys.cf_net contains path to cf-net binary
 	- Read /etc/os-release into sys.os_release (CFE-1881)
+
 	Changes:
 	- readintlist() now prints an error if the
 	  file contains real numbers, not integers, and aborts; previously it was
@@ -73,6 +74,7 @@
 	- Fix crash on Solaris when ps ucb variant is not available. (CFE-2506)
 	- Fix logic to detect when running under a Xen Hypervisor (CFE-1563)
 	- Fix "lastseenexpireafter" 32-bit signed int overflow. (zendesk#3204)
+	- fix IPv6 parsing to be un-reversed (CFE-2580)
 
 3.10.0:
 	New features/additions:

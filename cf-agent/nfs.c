@@ -667,13 +667,26 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Pr
 static int MatchFSInFstab(char *match)
 {
     Item *ip;
+    const char delimit[]=" \t\r\n\v\f";
+    char *fstab_line, *token;
 
     for (ip = FSTABLIST; ip != NULL; ip = ip->next)
     {
-        if (strstr(ip->name, match))
+        fstab_line = xstrdup(ip->name);
+        if(strncmp(fstab_line, "#", 1) != 0)
         {
-            return true;
+            token = strtok(fstab_line, delimit);
+            while (token != NULL)
+            {
+                if(strcmp(token, match) == 0)
+                {
+                    free(fstab_line);
+                    return true;
+                }
+                token = strtok(NULL, delimit);
+            }
         }
+        free(fstab_line);
     }
 
     return false;

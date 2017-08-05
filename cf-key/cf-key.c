@@ -67,6 +67,7 @@ static const char *const CF_KEY_MANPAGE_LONG_DESCRIPTION =
 static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
+    {"inform", no_argument, 0, 'I'},
     {"debug", no_argument, 0, 'd'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
@@ -86,6 +87,7 @@ static const struct option OPTIONS[] =
 static const char *const HINTS[] =
 {
     "Print the help message",
+    "Print basic information about key generation",
     "Enable debugging output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
@@ -217,13 +219,14 @@ int main(int argc, char *argv[])
         private_key_file = PrivateKeyFile(GetWorkDir());
     }
 
-    KeepKeyPromises(public_key_file, private_key_file);
+    bool ret = KeepKeyPromises(public_key_file, private_key_file);
 
     free(public_key_file);
     free(private_key_file);
 
     GenericAgentFinalize(ctx, config);
-    return 0;
+
+    return ret ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 /*****************************************************************************/
@@ -236,7 +239,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:xt:hl:C::n",
+    while ((c = getopt_long(argc, argv, "dvIf:VMp:sr:xt:hl:C::n",
                             OPTIONS, NULL))
            != -1)
     {
@@ -260,6 +263,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+            break;
+
+        case 'I':
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
 
         case 'p': /* print digest */

@@ -103,6 +103,10 @@ fi
 # default control file
 if [ "$DEBIAN" = "1" ]; then
     DEFAULT=/etc/default/cfengine3
+    INIT_FUNCTIONS=/lib/lsb/init-functions
+    if [ -e "$INIT_FUNCTIONS" ]; then
+        . "$INIT_FUNCTIONS"
+    fi
 else
     DEFAULT=/etc/sysconfig/cfengine3
 fi

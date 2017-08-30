@@ -335,7 +335,16 @@ Changelog: Make sure the bugtracker reference is taken from the title
 
 
 
-"$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt
+"$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt || {
+    echo "Script failed with $?"
+    echo "--------"
+    echo "result.txt:"
+    cat result.txt
+    echo "--------"
+    echo "stderr.txt:"
+    cat stderr.txt
+    exit 1
+}
 cat > expected.txt <<EOF
 	- As well as this. N34
 	- Changelog commit with trailing dot. N53

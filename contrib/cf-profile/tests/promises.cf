@@ -1,0 +1,33 @@
+body common control {
+	bundlesequence => { "main1", "main2" };
+}
+
+bundle agent main1 {
+
+	commands:
+		"/bin/sleep 1";
+	
+	methods:
+		"a" usebundle => a("arg1 somevalue", "arg2 somevalue", "arg3 somevalue");
+		"b" usebundle => b("arg4 somevalue", "arg5 somevalue", "arg6 somevalue");
+}
+
+bundle agent a (a1, a2, a3) {
+	commands:
+		"/bin/echo $(this.bundle):$(a1),$(a2),$(a3)";
+}
+bundle agent b (a1, a2, a3) {
+	methods:
+		"c" usebundle => c("arg7 somevalue", "arg8 somevalue", "arg9 somevalue");
+	commands:
+		"/bin/echo $(this.bundle):$(a1),$(a2),$(a3)";
+}
+bundle agent c (a1, a2, a3) {
+	commands:
+		"/bin/echo $(this.bundle):$(a1),$(a2),$(a3)";
+}
+
+bundle agent main2 {
+	commands:
+		"/bin/sleep 2";
+}

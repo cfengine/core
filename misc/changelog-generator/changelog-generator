@@ -133,8 +133,7 @@ for repo in repos:
                 continue
 
             # Tracker reference, remove from string.
-            match = re.search(TRACKER_REGEX, line, re.IGNORECASE)
-            if match:
+            for match in re.finditer(TRACKER_REGEX, line, re.IGNORECASE):
                 if not SHA_TO_TRACKER.get(sha):
                     SHA_TO_TRACKER[sha] = set()
                 SHA_TO_TRACKER[sha].add("".join(match.groups("")))

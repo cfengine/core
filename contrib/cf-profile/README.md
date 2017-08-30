@@ -10,7 +10,7 @@ For version < 3.5.0 >=3.7.0:
 # cf-agent -v | ./cf-profile.pl -a 
 ```
 
-For version >= 3.5.0 <=3.7.0:
+For version >= 3.5.0 <3.7.0:
 ```shell
 # cf-agent -v --legacy-output | ./cf-profile.pl -a
 ```

@@ -1,0 +1,20 @@
+body common control {
+	bundlesequence => { "main" };
+	inputs => { "$(d.dir)/lib/namespace/ns1.cf" };
+}
+
+bundle common d {
+	vars:
+		"dir" string => "$(this.promise_dirname)";
+}
+
+bundle agent main {
+	methods:
+		"a" usebundle => ns1:ns1;
+		"b" usebundle => ns1;
+}
+
+bundle agent ns1 {
+	commands:
+		"/bin/sleep 3";
+}

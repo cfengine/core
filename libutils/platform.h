@@ -79,6 +79,7 @@
 /* POSIX but available in all platforms. */
 #include <strings.h>
 #include <limits.h>
+#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 

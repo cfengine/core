@@ -121,73 +121,73 @@ And finally this, part of the commit message. N35'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entry N36
+git commit --allow-empty -m 'Jira entry N36
 
-Redmine #645 Should be included N37
+MEN-645 Should be included N37
 
 Changelog: Commit'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine #76: Redmine entry in title N38
+git commit --allow-empty -m 'MEN-76: Jira entry in title N38
 
 Changelog: Title'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine 123 Several Redmine entries N39
+git commit --allow-empty -m 'MEN-123 Several Jira entries N39
 
 Changelog: Should be there N40
 
-Redmine: #1234'
+Men-1234'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries in parentheses (title) N41
+git commit --allow-empty -m 'Jira entries in parentheses (title) N41
 
 Changelog: Title
 
-Stuff. (Redmine: #1234) N42'
+Stuff. (Jira MEN-1234) (MEN-2345) N42'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries inline (title) N43
+git commit --allow-empty -m 'Jira entries inline (title) N43
 
 Changelog: Title
 
-Stuff Redmine: #2345 N44'
+Stuff Jira MEN-2345 N44'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries in parentheses (commit) N45
+git commit --allow-empty -m 'Jira entries in parentheses (commit) N45
 
 Changelog: Commit
 
-Stuff. (Redmine: #1234) N46'
+Stuff. (Jira MEN-4321) (MEN-54321) N46'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine entries inline (commit) N47
+git commit --allow-empty -m 'Jira entries inline (commit) N47
 
 Changelog: Commit
 
-Stuff Redmine: #2345 N48'
+Stuff MEN-2345 N48'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine #1234: Redmine twice (commit) N49
+git commit --allow-empty -m 'Jira MEN-1234: Jira twice (commit) N49
 
 Changelog: Commit
 
-More stuff. (Redmine: #2345) N50'
+More stuff. (Jira: MEN-2345) N50'
 
 ################################################################################
 
-git commit --allow-empty -m 'Redmine #1234: Redmine duplicate (commit) N51
+git commit --allow-empty -m 'MEN-1234: Jira duplicate (commit) N51
 
 Changelog: Commit
 
-More stuff. (Redmine: #1234) N52'
+More stuff. (MEN-1234) N52'
 
 ################################################################################
 
@@ -203,46 +203,43 @@ Changelog: Title.'
 
 ################################################################################
 
-git commit --allow-empty -m 'Jira CFE-1111: Changelog with Jira. N55
+git commit --allow-empty -m 'Jira MEN-1111: Changelog with Jira. N55
 
 jira archive-2
-cfe-9
-https://tracker.mender.io/browse/ent-1
+men-9
+https://tracker.mender.io/browse/men-1
 
 Changelog: commit'
 
 ################################################################################
 
-git commit --allow-empty -m 'Jira CFE-1111: Changelog with Jira and Redmine. N56
+git commit --allow-empty -m 'Jira MEN-1111: Changelog with Jira tracker. N56
 
 jira archive-2
-cfe-9
-https://tracker.mender.io/browse/ent-1
-https://dev.cfengine.com/issues/5555
-Redmine #12345
+men-9
+https://tracker.mender.io/browse/men-1
 
 Changelog: commit'
 
 ################################################################################
 
-git commit --allow-empty -m 'Jira CFE-1111: Changelog with Jira and Redmine ref. N57
+git commit --allow-empty -m 'Jira MEN-1111: Changelog with many Jira refs. N57
 
 Ref: jira: archive-2
-Ref: cfe-9
-Ref: https://tracker.mender.io/browse/ent-1
-Ref: https://dev.cfengine.com/issues/5555
-Ref: Redmine #12345
+Ref: men-9
+Ref: https://tracker.mender.io/browse/men-1
+Ref: MEN-12345
 
 Changelog: commit'
 
 ################################################################################
 
-git commit --allow-empty -m 'Changelog with inline Jira and Redmine ref. N57
+git commit --allow-empty -m 'Changelog with inline Jira refs. N58a
 
-Changelog: Some inline jira cfe-80 reference. N58
-Changelog: Some other Redmine #7777 reference. N59
-Changelog: Some inline (jira cfe-81) reference. N60
-Changelog: Some other (Redmine #7778) reference. N61
+Changelog: Some inline jira men-80 reference. N58b
+Changelog: Some other archive-7777 reference. N59
+Changelog: Some inline (jira men-81) reference. N60
+Changelog: Some other (men-7778) reference. N61
 Changelog: commit'
 
 ################################################################################
@@ -325,7 +322,7 @@ EOF
 
 ################################################################################
 
-git commit --allow-empty -m 'CFE-1234 has no JIRA string in front.
+git commit --allow-empty -m 'MEN-1234 has no JIRA string in front.
 
 Changelog: Make sure the bugtracker reference is taken from the title
            and goes after this message. The title should not be
@@ -350,17 +347,16 @@ cat > expected.txt <<EOF
 	- Changelog commit with trailing dot. N53
 	- Changelog title with trailing dot. N54
 	- Changelog with GPG entry N67
-	- Changelog with Jira and Redmine ref. N57
-	  (Redmine #12345, #5555) (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
-	- Changelog with Jira and Redmine. N56
-	  (Redmine #12345, #5555) (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
-	- Changelog with Jira. N55 (ARCHIVE-2, CFE-1111, CFE-9, ENT-1)
+	- Changelog with Jira tracker. N56 (ARCHIVE-2, MEN-1, MEN-1111, MEN-9)
+	- Changelog with Jira. N55 (ARCHIVE-2, MEN-1, MEN-1111, MEN-9)
 	- Changelog with Windows line endings N66
-	- Changelog with inline Jira and Redmine ref. N57
-	  (Redmine #7777, #7778) (CFE-80, CFE-81)
+	- Changelog with inline Jira refs. N58a
+	  (ARCHIVE-7777, MEN-7778, MEN-80, MEN-81)
 	- Changelog with invalid signed-off N65
 	  Commit message
 	  Mention "Signed-off-by: " mid sentence
+	- Changelog with many Jira refs. N57
+	  (ARCHIVE-2, MEN-1, MEN-1111, MEN-12345, MEN-9)
 	- Changelog with signed-off N64
 	  Commit message
 	- Changelog with suspicious number in it. N62
@@ -369,32 +365,32 @@ cat > expected.txt <<EOF
 	- Complete Fix for changelog N4
 	  Should be included N5
 	- Fix for changelog N1
+	- Jira duplicate (commit) N51
+	  More stuff. N52 (MEN-1234)
+	- Jira entries in parentheses (commit) N45
+	  Stuff. N46 (MEN-4321, MEN-54321)
+	- Jira entries in parentheses (title) N41 (MEN-1234, MEN-2345)
+	- Jira entries inline (commit) N47
+	  Stuff N48 (MEN-2345)
+	- Jira entries inline (title) N43 (MEN-2345)
+	- Jira entry N36
+	  Should be included N37 (MEN-645)
+	- Jira entry in title N38 (MEN-76)
+	- Jira twice (commit) N49
+	  More stuff. N50 (MEN-1234, MEN-2345)
 	- Make sure the bugtracker reference is taken from the title
 	             and goes after this message. The title should not be
-	             included. N68 (CFE-1234)
-	- Redmine duplicate (commit) N51
-	  More stuff. N52 (Redmine #1234)
-	- Redmine entries in parentheses (commit) N45
-	  Stuff. N46 (Redmine #1234)
-	- Redmine entries in parentheses (title) N41 (Redmine #1234)
-	- Redmine entries inline (commit) N47
-	  Stuff N48 (Redmine #2345)
-	- Redmine entries inline (title) N43 (Redmine #2345)
-	- Redmine entry N36
-	  Should be included N37 (Redmine #645)
-	- Redmine entry in title N38 (Redmine #76)
-	- Redmine twice (commit) N49
-	  More stuff. N50 (Redmine #1234, #2345)
+	             included. N68 (MEN-1234)
 	- Several entries for changelog N30
 	  Should be included N31
 	  And finally this, part of the commit message. N35
 	- Should also be included, but separately and not twice. N32
 	- Should be in changelog though. N29
-	- Should be there N40 (Redmine #123, #1234)
-	- Some inline reference. N58 (Redmine #7777, #7778) (CFE-80, CFE-81)
-	- Some inline reference. N60 (Redmine #7777, #7778) (CFE-80, CFE-81)
-	- Some other reference. N59 (Redmine #7777, #7778) (CFE-80, CFE-81)
-	- Some other reference. N61 (Redmine #7777, #7778) (CFE-80, CFE-81)
+	- Should be there N40 (MEN-123, MEN-1234)
+	- Some inline reference. N58b (ARCHIVE-7777, MEN-7778, MEN-80, MEN-81)
+	- Some inline reference. N60 (ARCHIVE-7777, MEN-7778, MEN-80, MEN-81)
+	- Some other reference. N59 (ARCHIVE-7777, MEN-7778, MEN-80, MEN-81)
+	- Some other reference. N61 (ARCHIVE-7777, MEN-7778, MEN-80, MEN-81)
 	- This should be in changelog N8
 	  And this N9
 	- This too. N33

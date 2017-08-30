@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Used to generate changelogs from the repository.
 
@@ -107,8 +107,8 @@ for repo in repos:
     os.chdir(repo)
     sha_list = subprocess.Popen(["git", "rev-list", "--reverse"] + sys.argv[1:], stdout=subprocess.PIPE)
     for sha in sha_list.stdout:
-        sha = sha.rstrip('\n')
-        blob = subprocess.Popen(["git", "cat-file", "-p", sha.rstrip('\n')], stdout=subprocess.PIPE)
+        sha = sha.decode().rstrip('\n')
+        blob = subprocess.Popen(["git", "cat-file", "-p", sha], stdout=subprocess.PIPE)
 
         msg_started = False
         title_fetched = False
@@ -118,7 +118,7 @@ for repo in repos:
         log_entry_local = False
         log_entry = ""
         for line in blob.stdout:
-            line = line.rstrip('\r\n')
+            line = line.decode().rstrip('\r\n')
             if line == "":
                 if not msg_started:
                     msg_started = True

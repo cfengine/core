@@ -37,6 +37,9 @@ LOG_ENTERPRISE = 4
 LOG_MASTERFILES = 8
 
 def add_entry(sha, msg):
+    if msg.lower().strip() == "none":
+        return
+
     sha_list = ENTRIES.get(sha)
     if sha_list is None:
         sha_list = []

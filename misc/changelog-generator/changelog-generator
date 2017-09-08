@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Used to generate changelogs from the repository.
 
@@ -20,9 +20,8 @@ LINKED_SHAS = {}
 # messages.
 SHA_TO_TRACKER = {}
 
-REDMINE_REGEX = "(?:Redmine:? *#?|(?:Redmine:? *)?https?://dev\.cfengine\.com/issues/)([0-9]+)"
-JIRA_REGEX = "(?:Jira:?)? *(?:https?://tracker.mender.io/browse/)?((?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+)"
-TRACKER_REGEX = "\(?(?:Ref:? *)?(?:(?:%s)|(?:%s))\)?:? *" % (REDMINE_REGEX, JIRA_REGEX)
+JIRA_REGEX = r"(?:Jira:? *)?(?:https?://tracker.mender.io/browse/)?((?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+)"
+TRACKER_REGEX = r"\(?(?:Ref:? *)?%s\)?:? *" % (JIRA_REGEX)
 
 POSSIBLE_MISSED_TICKETS = {}
 
@@ -38,6 +37,9 @@ LOG_ENTERPRISE = 4
 LOG_MASTERFILES = 8
 
 def add_entry(sha, msg):
+    if msg.lower().strip() == "none":
+        return
+
     sha_list = ENTRIES.get(sha)
     if sha_list is None:
         sha_list = []
@@ -107,8 +109,8 @@ for repo in repos:
     os.chdir(repo)
     sha_list = subprocess.Popen(["git", "rev-list", "--reverse"] + sys.argv[1:], stdout=subprocess.PIPE)
     for sha in sha_list.stdout:
-        sha = sha.rstrip('\n')
-        blob = subprocess.Popen(["git", "cat-file", "-p", sha.rstrip('\n')], stdout=subprocess.PIPE)
+        sha = sha.decode().rstrip('\n')
+        blob = subprocess.Popen(["git", "cat-file", "-p", sha], stdout=subprocess.PIPE)
 
         msg_started = False
         title_fetched = False
@@ -118,7 +120,7 @@ for repo in repos:
         log_entry_local = False
         log_entry = ""
         for line in blob.stdout:
-            line = line.rstrip('\r\n')
+            line = line.decode().rstrip('\r\n')
             if line == "":
                 if not msg_started:
                     msg_started = True
@@ -133,8 +135,7 @@ for repo in repos:
                 continue
 
             # Tracker reference, remove from string.
-            match = re.search(TRACKER_REGEX, line, re.IGNORECASE)
-            if match:
+            for match in re.finditer(TRACKER_REGEX, line, re.IGNORECASE):
                 if not SHA_TO_TRACKER.get(sha):
                     SHA_TO_TRACKER[sha] = set()
                 SHA_TO_TRACKER[sha].add("".join(match.groups("")))
@@ -221,13 +222,8 @@ entry_list = []
 for sha_entry in ENTRIES:
     tracker = ""
     if SHA_TO_TRACKER.get(sha_entry):
-        redmines = [ticket for ticket in SHA_TO_TRACKER[sha_entry] if ticket[0].isdigit()]
-        jiras = [ticket.upper() for ticket in SHA_TO_TRACKER[sha_entry] if not ticket[0].isdigit()]
+        jiras = [ticket.upper() for ticket in SHA_TO_TRACKER[sha_entry]]
         tracker = ""
-        if len(redmines) > 0:
-            tracker = "(Redmine #" + ", #".join(sorted(redmines)) + ")"
-            if len(jiras) > 0:
-                tracker += " "
         if len(jiras) > 0:
             tracker += "(" + ", ".join(sorted(jiras)) + ")"
     for entry in ENTRIES[sha_entry]:

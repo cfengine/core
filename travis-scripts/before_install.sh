@@ -15,4 +15,6 @@ else
     sudo apt-get install fakeroot
     # Optional
     sudo apt-get install -y libxml2-dev libacl1-dev
+    # code coverage dependency
+    sudo apt-get install -y lcov
 fi

@@ -1,5 +1,5 @@
 #!/bin/sh
-cd $TRAVIS_BUILD_DIR
+cd $TRAVIS_BUILD_DIR || return 1
 mkdir artifacts
 test "x$DIST_TARBALL" != x  &&  cp --verbose "$DIST_TARBALL" artifacts/
 gzip config.log  &&  mv config.log.gz artifacts/

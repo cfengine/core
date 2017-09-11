@@ -1,6 +1,6 @@
 #!/bin/sh
 INSTDIR=$HOME/cf_install
-cd $TRAVIS_BUILD_DIR
+cd $TRAVIS_BUILD_DIR || return 1
 
 # if [ "$JOB_TYPE" = style_check ]
 # then
@@ -28,7 +28,9 @@ else
 fi
 
 make dist
-export DIST_TARBALL=`echo cfengine-*.tar.gz`
+
+DIST_TARBALL=`echo cfengine-*.tar.gz`
+export DIST_TARBALL
 
 if [ "$JOB_TYPE" = compile_only ]
 then
@@ -42,7 +44,7 @@ else
     make
 fi
 
-cd tests/acceptance
+cd tests/acceptance || return 1
 chmod -R go-w .
 
 if [ "$JOB_TYPE" = acceptance_tests_common ]

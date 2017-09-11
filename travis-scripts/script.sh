@@ -1,3 +1,4 @@
+#!/bin/sh
 INSTDIR=$HOME/cf_install
 cd $TRAVIS_BUILD_DIR
 

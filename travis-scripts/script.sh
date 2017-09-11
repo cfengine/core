@@ -20,7 +20,7 @@ then
     # On osx the default gcc is actually LLVM
     export CC=gcc-6
     NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb/  --with-openssl=/usr/local/opt/openssl --enable-coverage
+    ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb/  --with-openssl=/usr/local/opt/openssl
 else
     NO_CONFIGURE=1 ./autogen.sh
     ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script --enable-coverage
@@ -36,7 +36,7 @@ elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
     make CFLAGS=-Werror  &&
     make -C tests/unit check
-    bash <(curl -s https://codecov.io/bash) -F unit_tests_$TRAVIS_OS_NAME ;
+    bash <(curl -s https://codecov.io/bash) -F unit_tests ;
     return
 else
     make
@@ -48,7 +48,7 @@ chmod -R go-w .
 if [ "$JOB_TYPE" = acceptance_tests_common ]
 then
     ./testall --tests=common
-    bash <(curl -s https://codecov.io/bash) -F acceptance_tests_$TRAVIS_OS_NAME ;
+    bash <(curl -s https://codecov.io/bash) -F acceptance_tests ;
     return
 fi
 
@@ -56,6 +56,6 @@ fi
 if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network_etc ]
 then
     ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe
-    bash <(curl -s https://codecov.io/bash) -F acceptance_tests_$TRAVIS_OS_NAME ;
+    bash <(curl -s https://codecov.io/bash) -F acceptance_tests ;
     return
 fi

@@ -1,3 +1,4 @@
+#!/bin/sh
 cd $TRAVIS_BUILD_DIR
 mkdir artifacts
 test "x$DIST_TARBALL" != x  &&  cp --verbose "$DIST_TARBALL" artifacts/

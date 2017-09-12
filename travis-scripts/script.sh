@@ -36,7 +36,7 @@ elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
     make CFLAGS=-Werror  &&
     make -C tests/unit check
-    bash <(curl -s https://codecov.io/bash) -F unit_tests -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
+    bash <(curl -s https://codecov.io/bash) -F $JOB_TYPE -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
     return
 else
     make
@@ -48,7 +48,7 @@ chmod -R go-w .
 if [ "$JOB_TYPE" = acceptance_tests_common ]
 then
     ./testall --tests=common
-    bash <(curl -s https://codecov.io/bash) -F acceptance_tests -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
+    bash <(curl -s https://codecov.io/bash) -F $JOB_TYPE -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
     return
 fi
 
@@ -56,6 +56,6 @@ fi
 if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network_etc ]
 then
     ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe
-    bash <(curl -s https://codecov.io/bash) -F acceptance_tests -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
+    bash <(curl -s https://codecov.io/bash) -F $JOB_TYPE -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
     return
 fi

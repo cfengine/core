@@ -27,4 +27,4 @@ comment:
 
 # Ignore source files connected to tests.
 ignore:
-  - 'tests'
+  - 'tests/*'

@@ -72,6 +72,8 @@ AC_MSG_RESULT(AUTOMAKE_VERSION)
 AM_INIT_AUTOMAKE([tar-ustar] SERIAL_TESTS)
 AM_MAINTAINER_MODE([enable])
 
+m4_divert_text([DEFAULTS], [: "${AR_FLAGS=cr}"])
+
 cfengine_version=cfversion
 
 m4_undefine([cfversion])

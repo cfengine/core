@@ -19,6 +19,7 @@ env:
 # feedback ASAP. For more info read this:
 # https://docs.travis-ci.com/user/multi-os/
 matrix:
+  fast_finish: true # Build will succeed once all linux jobs succeed
   include:
     - os: linux
       sudo: required
@@ -34,19 +35,10 @@ matrix:
     - os: osx
       env: JOB_TYPE=compile_only
       sudo: false
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_common
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
-#  allow_failures:
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_common
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
+  allow_failures:
+    - os: osx
+      env: JOB_TYPE=compile_only
+      sudo: false
 
 before_install:
   - set -e

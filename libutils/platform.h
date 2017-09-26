@@ -79,7 +79,11 @@
 /* POSIX but available in all platforms. */
 #include <strings.h>
 #include <limits.h>
-#include <sys/sysmacros.h>
+
+#ifdef HAVE_SYS_SYSMACROS_H
+# include <sys/sysmacros.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 

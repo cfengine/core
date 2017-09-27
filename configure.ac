@@ -619,6 +619,7 @@ AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(ws2tcpip.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
+AC_CHECK_HEADERS_ONCE([sys/sysmacros.h]) dnl glibc deprecated inclusion in sys/type.h
 AC_CHECK_HEADERS(sys/types.h)
 AC_CHECK_HEADERS(sys/mpctl.h) dnl For HP-UX $(sys.cpus) - Mantis #1069
 AC_CHECK_HEADERS(shadow.h)

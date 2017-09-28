@@ -68,6 +68,7 @@ unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
     unsigned int h = seed;
     size_t len = strlen(str);
 
+    /* https://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time */
     for (size_t i = 0; i < len; i++)
     {
         h += p[i];

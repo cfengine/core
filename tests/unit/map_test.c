@@ -8,6 +8,7 @@
 #include <alloc.h>
 
 #define HASH_MAP_MAX_LOAD_FACTOR 0.75
+#define HASH_MAP_MIN_LOAD_FACTOR 0.35
 
 static unsigned int ConstHash(ARG_UNUSED const void *key,
                               ARG_UNUSED unsigned int seed,
@@ -107,6 +108,17 @@ static void test_add_n_as_to_map(HashMap *hashmap, unsigned int i)
     assert_true(HashMapGet(hashmap, s) != NULL);
 }
 
+static void test_remove_n_as_from_map(HashMap *hashmap, unsigned int i)
+{
+    char s[i+1];
+    memset(s, 'a', i);
+    s[i] = '\0';
+
+    assert_true(HashMapGet(hashmap, s) != NULL);
+    assert_true(HashMapRemove(hashmap, xstrdup(s)));
+    assert_true(HashMapGet(hashmap, s) == NULL);
+}
+
 static void assert_n_as_in_map(HashMap *hashmap, unsigned int i, bool in)
 {
     char s[i+1];
@@ -130,7 +142,7 @@ static void test_grow(void)
                                   free, free);
 
     size_t orig_size = hashmap->size;
-    size_t orig_threshold = hashmap->threshold;
+    size_t orig_threshold = hashmap->max_threshold;
 
     for (i = 1; i <= orig_threshold; i++)
     {
@@ -139,7 +151,7 @@ static void test_grow(void)
     }
     // HashMapPrintStats(hashmap, stdout);
     assert_int_equal(hashmap->size, orig_size);
-    assert_int_equal(hashmap->threshold, orig_threshold);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
 
     /* i == (orig_threshold + 1) now
      * let's go over the threshold
@@ -147,7 +159,7 @@ static void test_grow(void)
     test_add_n_as_to_map(hashmap, i);
     assert_int_equal(hashmap->load, i);
     assert_int_equal(hashmap->size, orig_size << 1);
-    assert_int_equal(hashmap->threshold,
+    assert_int_equal(hashmap->max_threshold,
                      (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
 
     /* all the items so far should be in the map */
@@ -159,7 +171,7 @@ static void test_grow(void)
 
     /* here we go again */
     orig_size = hashmap->size;
-    orig_threshold = hashmap->threshold;
+    orig_threshold = hashmap->max_threshold;
     /* i * 'a' is in the map already, we need to bump it first */
     for (++i; i <= orig_threshold; i++)
     {
@@ -168,7 +180,7 @@ static void test_grow(void)
     }
     // HashMapPrintStats(hashmap, stdout);
     assert_int_equal(hashmap->size, orig_size);
-    assert_int_equal(hashmap->threshold, orig_threshold);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
 
     /* i == (orig_threshold + 1) now
      * let's go over the threshold
@@ -176,7 +188,7 @@ static void test_grow(void)
     test_add_n_as_to_map(hashmap, i);
     assert_int_equal(hashmap->load, i);
     assert_int_equal(hashmap->size, orig_size << 1);
-    assert_int_equal(hashmap->threshold,
+    assert_int_equal(hashmap->max_threshold,
                      (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
 
     /* all the items so far should be in the map */
@@ -188,7 +200,7 @@ static void test_grow(void)
 
     /* and once more */
     orig_size = hashmap->size;
-    orig_threshold = hashmap->threshold;
+    orig_threshold = hashmap->max_threshold;
     /* i * 'a' is in the map already, we need to bump it first */
     for (++i; i <= orig_threshold; i++)
     {
@@ -197,7 +209,7 @@ static void test_grow(void)
     }
     // HashMapPrintStats(hashmap, stdout);
     assert_int_equal(hashmap->size, orig_size);
-    assert_int_equal(hashmap->threshold, orig_threshold);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
 
     /* i == (orig_threshold + 1) now
      * let's go over the threshold
@@ -205,7 +217,7 @@ static void test_grow(void)
     test_add_n_as_to_map(hashmap, i);
     assert_int_equal(hashmap->load, i);
     assert_int_equal(hashmap->size, orig_size << 1);
-    assert_int_equal(hashmap->threshold,
+    assert_int_equal(hashmap->max_threshold,
                      (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
 
     /* all the items so far should be in the map */
@@ -216,6 +228,66 @@ static void test_grow(void)
 
     HashMapDestroy(hashmap);
 }
+
+static void test_shrink(void)
+{
+    unsigned int i = 0;
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                                  free, free);
+
+    size_t orig_size = hashmap->size;
+    size_t orig_threshold = hashmap->max_threshold;
+
+    /* let the map grow first (see test_grow above for some details */
+    for (i = 1; i <= orig_threshold; i++)
+    {
+        test_add_n_as_to_map(hashmap, i);
+    }
+    assert_int_equal(hashmap->size, orig_size);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
+    test_add_n_as_to_map(hashmap, i);
+    assert_int_equal(hashmap->load, i);
+    assert_int_equal(hashmap->size, orig_size << 1);
+    assert_int_equal(hashmap->max_threshold,
+                     (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
+
+    /* all the items so far should be in the map */
+    for (int j = 1; j <= i; j++)
+    {
+        assert_n_as_in_map(hashmap, j, true);
+    }
+
+
+    /* now start removing things from the map */
+    size_t min_threshold = hashmap->min_threshold;
+    orig_size = hashmap->size;
+
+    /* 'i' is the length of the longest one already inserted */
+    for (; i > min_threshold; i--)
+    {
+        test_remove_n_as_from_map(hashmap, i);
+        assert_int_equal(hashmap->load, i - 1);
+    }
+    assert_int_equal(hashmap->load, hashmap->min_threshold);
+    assert_int_equal(hashmap->size, orig_size);
+    assert_int_equal(hashmap->min_threshold, min_threshold);
+
+    /* let's move over the threshold */
+    test_remove_n_as_from_map(hashmap, i);
+    assert_int_equal(hashmap->load, i - 1);
+    assert_int_equal(hashmap->size, orig_size >> 1);
+    assert_int_equal(hashmap->min_threshold,
+                     (size_t) (hashmap->size * HASH_MAP_MIN_LOAD_FACTOR));
+
+    /* all the non-removed items should still be in the map */
+    for (int j = 1; j < i; j++)
+    {
+        assert_n_as_in_map(hashmap, j, true);
+    }
+
+    HashMapDestroy(hashmap);
+}
+
 
 static void test_get(void)
 {
@@ -433,6 +505,7 @@ int main()
         unit_test(test_insert_jumbo),
         unit_test(test_remove),
         unit_test(test_grow),
+        unit_test(test_shrink),
         unit_test(test_get),
         unit_test(test_has_key),
         unit_test(test_clear),

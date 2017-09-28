@@ -27,7 +27,9 @@
 #include <alloc.h>
 
 /* FIXME: make configurable and move to map.c */
-#define HASHMAP_BUCKETS 8192
+#define DEFAULT_HASHMAP_BUCKETS 128
+#define MAX_HASHMAP_BUCKETS (1 << 30)
+#define MAX_LOAD_FACTOR 0.75
 
 HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
                     MapDestroyDataFn destroy_key_fn,
@@ -38,14 +40,47 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
     map->equal_fn = equal_fn;
     map->destroy_key_fn = destroy_key_fn;
     map->destroy_value_fn = destroy_value_fn;
-    map->size = HASHMAP_BUCKETS;
+    map->size = DEFAULT_HASHMAP_BUCKETS;
     map->buckets = xcalloc(map->size, sizeof(BucketListItem *));
+    map->load = 0;
+    map->threshold = (size_t) map->size * MAX_LOAD_FACTOR;
     return map;
 }
 
 static unsigned int HashMapGetBucket(const HashMap *map, const void *key)
 {
     return map->hash_fn(key, 0, map->size);
+}
+
+static void HashMapResize(HashMap *map, size_t new_size)
+{
+    size_t old_size;
+    BucketListItem **old_buckets;
+
+    old_size = map->size;
+    old_buckets = map->buckets;
+
+    map->size = new_size;
+    /* map->load stays the same */
+    map->threshold = (size_t) map->size * MAX_LOAD_FACTOR;
+    map->buckets = xcalloc(map->size, sizeof(BucketListItem *));
+
+    for (size_t i = 0; i < old_size; ++i)
+    {
+        BucketListItem *item;
+
+        item = old_buckets[i];
+        old_buckets[i] = NULL;
+        while (item != NULL)
+        {
+            BucketListItem *next = item->next;
+            unsigned bucket = HashMapGetBucket(map, item->value.key);
+            item->next = map->buckets[bucket];
+            map->buckets[bucket] = item;
+            item = next;
+        }
+    }
+    free (old_buckets);
 }
 
 /**
@@ -75,6 +110,11 @@ bool HashMapInsert(HashMap *map, void *key, void *value)
     i->value.value = value;
     i->next = map->buckets[bucket];
     map->buckets[bucket] = i;
+    map->load++;
+    if ((map->load > map->threshold) && (map->size < MAX_HASHMAP_BUCKETS))
+    {
+        HashMapResize(map, map->size << 1);
+    }
 
     return false;
 }
@@ -99,6 +139,7 @@ bool HashMapRemove(HashMap *map, const void *key)
             map->destroy_value_fn(cur->value.value);
             *prev = cur->next;
             free(cur);
+            map->load--;
             return true;
         }
     }
@@ -192,7 +233,6 @@ void HashMapPrintStats(const HashMap *hmap, FILE *f)
     size_t *bucket_lengths;
     size_t num_el = 0;
     size_t num_buckets = 0;
-
     bucket_lengths = xcalloc(hmap->size, sizeof(size_t));
 
     for (int i = 0; i < hmap->size; i++)

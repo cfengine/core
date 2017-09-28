@@ -186,10 +186,10 @@ void FnCallDestroy(FnCall *fp)
     free(fp);
 }
 
-unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max)
+unsigned FnCallHash(const FnCall *fp, unsigned seed)
 {
-    unsigned hash = StringHash(fp->name, seed, max);
-    return RlistHash(fp->args, hash, max);
+    unsigned hash = StringHash(fp->name, seed);
+    return RlistHash(fp->args, hash);
 }
 
 

@@ -136,43 +136,43 @@ void PolicyDestroy(Policy *policy)
 
 /*************************************************************************/
 
-static unsigned ConstraintHash(const Constraint *cp, unsigned seed, unsigned max)
+static unsigned ConstraintHash(const Constraint *cp, unsigned seed)
 {
     unsigned hash = seed;
 
-    hash = StringHash(cp->lval, hash, max);
-    hash = StringHash(cp->classes, hash, max);
-    hash = RvalHash(cp->rval, hash, max);
+    hash = StringHash(cp->lval, hash);
+    hash = StringHash(cp->classes, hash);
+    hash = RvalHash(cp->rval, hash);
 
     return hash;
 }
 
 /*************************************************************************/
 
-static unsigned BodyHash(const Body *body, unsigned seed, unsigned max)
+static unsigned BodyHash(const Body *body, unsigned seed)
 {
     unsigned hash = seed;
     for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
         const Constraint *cp = SeqAt(body->conlist, i);
-        hash = ConstraintHash(cp, hash, max);
+        hash = ConstraintHash(cp, hash);
     }
 
     return hash;
 }
 /*************************************************************************/
 
-static unsigned PromiseHash(const Promise *pp, unsigned seed, unsigned max)
+static unsigned PromiseHash(const Promise *pp, unsigned seed)
 {
     unsigned hash = seed;
 
-    hash = StringHash(pp->promiser, seed, max);
-    hash = RvalHash(pp->promisee, hash, max);
+    hash = StringHash(pp->promiser, seed);
+    hash = RvalHash(pp->promisee, hash);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         const Constraint *cp = SeqAt(pp->conlist, i);
-        hash = ConstraintHash(cp, hash, max);
+        hash = ConstraintHash(cp, hash);
     }
 
     return hash;
@@ -180,15 +180,15 @@ static unsigned PromiseHash(const Promise *pp, unsigned seed, unsigned max)
 
 /*************************************************************************/
 
-static unsigned PromiseTypeHash(const PromiseType *pt, unsigned seed, unsigned max)
+static unsigned PromiseTypeHash(const PromiseType *pt, unsigned seed)
 {
     unsigned hash = seed;
 
-    hash = StringHash(pt->name, hash, max);
+    hash = StringHash(pt->name, hash);
     for (size_t i = 0; i < SeqLength(pt->promises); i++)
     {
         const Promise *pp = SeqAt(pt->promises, i);
-        hash = PromiseHash(pp, hash, max);
+        hash = PromiseHash(pp, hash);
     }
 
     return hash;
@@ -196,19 +196,19 @@ static unsigned PromiseTypeHash(const PromiseType *pt, unsigned seed, unsigned m
 
 /*************************************************************************/
 
-static unsigned BundleHash(const Bundle *bundle, unsigned seed, unsigned max)
+static unsigned BundleHash(const Bundle *bundle, unsigned seed)
 {
     unsigned hash = seed;
 
-    hash = StringHash(bundle->type, hash, max);
-    hash = StringHash(bundle->ns, hash, max);
-    hash = StringHash(bundle->name, hash, max);
-    hash = RlistHash(bundle->args, hash, max);
+    hash = StringHash(bundle->type, hash);
+    hash = StringHash(bundle->ns, hash);
+    hash = StringHash(bundle->name, hash);
+    hash = RlistHash(bundle->args, hash);
 
     for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
     {
         const PromiseType *pt = SeqAt(bundle->promise_types, i);
-        hash = PromiseTypeHash(pt, hash, max);
+        hash = PromiseTypeHash(pt, hash);
     }
 
     return hash;
@@ -218,19 +218,18 @@ static unsigned BundleHash(const Bundle *bundle, unsigned seed, unsigned max)
 
 unsigned PolicyHash(const Policy *policy)
 {
-    static const unsigned max = UINT_MAX;
     unsigned hash = 0;
 
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         const Body *body = SeqAt(policy->bodies, i);
-        hash = BodyHash(body, hash, max);
+        hash = BodyHash(body, hash);
     }
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bundle = SeqAt(policy->bundles, i);
-        hash = BundleHash(bundle, hash, max);
+        hash = BundleHash(bundle, hash);
     }
 
     return hash;

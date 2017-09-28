@@ -54,7 +54,7 @@ struct Map_
     };
 };
 
-static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int seed, ARG_UNUSED unsigned int max)
+static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int seed)
 {
     return (unsigned)(uintptr_t)ptr;
 }

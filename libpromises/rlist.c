@@ -1309,37 +1309,37 @@ char *RlistToString(const Rlist *rlist)
     return StringWriterClose(w);
 }
 
-unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
+unsigned RvalHash(Rval rval, unsigned seed)
 {
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        return StringHash(RvalScalarValue(rval), seed, max);
+        return StringHash(RvalScalarValue(rval), seed);
     case RVAL_TYPE_FNCALL:
-        return FnCallHash(RvalFnCallValue(rval), seed, max);
+        return FnCallHash(RvalFnCallValue(rval), seed);
     case RVAL_TYPE_LIST:
-        return RlistHash(RvalRlistValue(rval), seed, max);
+        return RlistHash(RvalRlistValue(rval), seed);
     case RVAL_TYPE_NOPROMISEE:
         /* TODO modulus operation is biasing results. */
-        return (seed + 1) % max;
+        return (seed + 1);
     default:
         ProgrammingError("Unhandled case in switch: %d", rval.type);
     }
 }
 
-unsigned int RlistHash(const Rlist *list, unsigned seed, unsigned max)
+unsigned int RlistHash(const Rlist *list, unsigned seed)
 {
     unsigned hash = seed;
     for (const Rlist *rp = list; rp; rp = rp->next)
     {
-        hash = RvalHash(rp->val, hash, max);
+        hash = RvalHash(rp->val, hash);
     }
     return hash;
 }
 
-unsigned int RlistHash_untyped(const void *list, unsigned seed, unsigned max)
+unsigned int RlistHash_untyped(const void *list, unsigned seed)
 {
-    return RlistHash(list, seed, max);
+    return RlistHash(list, seed);
 }
 
 

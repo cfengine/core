@@ -33,7 +33,7 @@ static double GetSplay(void)
 {
     char splay[CF_BUFSIZE];
     snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-    return ((double) StringHash(splay, 0, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
+    return ((double) (StringHash(splay, 0) & (CF_HASHTABLESIZE - 1))) / CF_HASHTABLESIZE;
 }
 
 ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)

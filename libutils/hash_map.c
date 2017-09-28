@@ -64,7 +64,9 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
 
 static unsigned int HashMapGetBucket(const HashMap *map, const void *key)
 {
-    return map->hash_fn(key, 0, map->size);
+    unsigned int hash = map->hash_fn(key, 0);
+    assert (ISPOW2 (map->size));
+    return (hash & (map->size - 1));
 }
 
 static void HashMapResize(HashMap *map, size_t new_size)

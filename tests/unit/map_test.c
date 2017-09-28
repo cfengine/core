@@ -13,8 +13,7 @@
 #define MIN_HASHMAP_BUCKETS 1 << 5
 
 static unsigned int ConstHash(ARG_UNUSED const void *key,
-                              ARG_UNUSED unsigned int seed,
-                              ARG_UNUSED unsigned int max)
+                              ARG_UNUSED unsigned int seed)
 {
     return 0;
 }

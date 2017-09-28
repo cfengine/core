@@ -25,9 +25,8 @@
 #include <platform.h>
 #include <hash_map_priv.h>
 #include <alloc.h>
+#include <misc_lib.h>
 
-/* FIXME: make configurable and move to map.c */
-#define DEFAULT_HASHMAP_BUCKETS 128
 #define MAX_HASHMAP_BUCKETS (1 << 30)
 #define MIN_HASHMAP_BUCKETS (1 << 5)
 #define MAX_LOAD_FACTOR 0.75
@@ -35,18 +34,31 @@
 
 HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
                     MapDestroyDataFn destroy_key_fn,
-                    MapDestroyDataFn destroy_value_fn)
+                    MapDestroyDataFn destroy_value_fn,
+                    size_t init_size)
 {
     HashMap *map = xcalloc(1, sizeof(HashMap));
     map->hash_fn = hash_fn;
     map->equal_fn = equal_fn;
     map->destroy_key_fn = destroy_key_fn;
     map->destroy_value_fn = destroy_value_fn;
-    map->size = DEFAULT_HASHMAP_BUCKETS;
+
+    /* make sure size is in the bounds */
+    init_size = MIN(MAX(init_size, MIN_HASHMAP_BUCKETS), MAX_HASHMAP_BUCKETS);
+
+    if (ISPOW2(init_size))
+    {
+        map->size = init_size;
+    }
+    else
+    {
+        map->size = UpperPowerOfTwo(init_size);
+    }
     map->buckets = xcalloc(map->size, sizeof(BucketListItem *));
     map->load = 0;
     map->max_threshold = (size_t) map->size * MAX_LOAD_FACTOR;
     map->min_threshold = (size_t) map->size * MIN_LOAD_FACTOR;
+
     return map;
 }
 

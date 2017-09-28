@@ -40,6 +40,9 @@
  * created and destroyed for each scope entered and left.
  */
 
+/* FIXME: make configurable */
+#define DEFAULT_HASHMAP_INIT_SIZE 128
+
 struct Map_
 {
     MapHashFn hash_fn;
@@ -136,7 +139,8 @@ static void ConvertToHashMap(Map *map)
     HashMap *hashmap = HashMapNew(map->hash_fn,
                                   map->arraymap->equal_fn,
                                   map->arraymap->destroy_key_fn,
-                                  map->arraymap->destroy_value_fn);
+                                  map->arraymap->destroy_value_fn,
+                                  DEFAULT_HASHMAP_INIT_SIZE);
 
     /* We have to use internals of ArrayMap here, as we don't want to
        destroy the values in ArrayMapDestroy */

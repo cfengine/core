@@ -7,8 +7,10 @@
 
 #include <alloc.h>
 
+#define HASH_MAP_INIT_SIZE 128
 #define HASH_MAP_MAX_LOAD_FACTOR 0.75
 #define HASH_MAP_MIN_LOAD_FACTOR 0.35
+#define MIN_HASHMAP_BUCKETS 1 << 5
 
 static unsigned int ConstHash(ARG_UNUSED const void *key,
                               ARG_UNUSED unsigned int seed,
@@ -22,6 +24,23 @@ static void test_new_destroy(void)
     Map *map = MapNew(NULL, NULL, NULL, NULL);
     assert_int_equal(MapSize(map), 0);
     MapDestroy(map);
+}
+
+static void test_new_hashmap_bad_size(void)
+{
+    /* too small */
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                                  free, free, MIN_HASHMAP_BUCKETS >> 1);
+    assert_int_equal(hashmap->size, MIN_HASHMAP_BUCKETS);
+    HashMapDestroy(hashmap);
+
+    /* not a pow2 */
+    hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                         free, free, 123);
+    assert_int_equal(hashmap->size, 128);
+    HashMapDestroy(hashmap);
+
+    /* TODO: test size too big? Would require a lot of memory to be available. */
 }
 
 static void test_insert(void)
@@ -83,7 +102,8 @@ static void test_insert_jumbo(void)
 
 static void test_remove(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free);
+    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free,
+                                  HASH_MAP_INIT_SIZE);
 
     HashMapInsert(hashmap, xstrdup("a"), xstrdup("b"));
 
@@ -139,7 +159,7 @@ static void test_grow(void)
 {
     unsigned int i = 0;
     HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
-                                  free, free);
+                                  free, free, HASH_MAP_INIT_SIZE);
 
     size_t orig_size = hashmap->size;
     size_t orig_threshold = hashmap->max_threshold;
@@ -233,7 +253,7 @@ static void test_shrink(void)
 {
     unsigned int i = 0;
     HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
-                                  free, free);
+                                  free, free, HASH_MAP_INIT_SIZE);
 
     size_t orig_size = hashmap->size;
     size_t orig_threshold = hashmap->max_threshold;
@@ -370,13 +390,13 @@ static void test_iterate_jumbo(void)
 
 static void test_hashmap_new_destroy(void)
 {
-    HashMap *hashmap = HashMapNew(NULL, NULL, NULL, NULL);
+    HashMap *hashmap = HashMapNew(NULL, NULL, NULL, NULL, HASH_MAP_INIT_SIZE);
     HashMapDestroy(hashmap);
 }
 
 static void test_hashmap_degenerate_hash_fn(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free);
+    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free, HASH_MAP_INIT_SIZE);
 
     for (int i = 0; i < 100; i++)
     {
@@ -452,7 +472,7 @@ static void test_array_map_key_referenced_in_value(void)
 static void test_hash_map_key_referenced_in_value(void)
 {
     HashMap *m = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
-                            free, free);
+                            free, free, HASH_MAP_INIT_SIZE);
     char      *key1 = xstrdup("blah");
     TestValue *val1 = xmalloc(sizeof(*val1));
     val1->keyref = key1;
@@ -501,6 +521,7 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_new_destroy),
+        unit_test(test_new_hashmap_bad_size),
         unit_test(test_insert),
         unit_test(test_insert_jumbo),
         unit_test(test_remove),

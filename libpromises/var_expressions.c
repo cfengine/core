@@ -97,12 +97,9 @@ static unsigned VarRefHash(const VarRef *ref)
 }
 
 unsigned int VarRefHash_untyped(const void *ref,
-                                unsigned int seed ARG_UNUSED,
-                                unsigned int max)
+                                unsigned int seed ARG_UNUSED)
 {
-    assert(ISPOW2(max));
-
-    return VarRefHash(ref) & (max - 1);
+    return VarRefHash(ref);
 }
 
 VarRef VarRefConst(const char *ns, const char *scope, const char *lval)

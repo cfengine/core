@@ -40,6 +40,7 @@ typedef struct
     MapDestroyDataFn destroy_key_fn;
     MapDestroyDataFn destroy_value_fn;
     BucketListItem **buckets;
+    size_t size;
 } HashMap;
 
 typedef struct

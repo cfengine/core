@@ -41,6 +41,8 @@ typedef struct
     MapDestroyDataFn destroy_value_fn;
     BucketListItem **buckets;
     size_t size;
+    size_t load;
+    size_t threshold;
 } HashMap;
 
 typedef struct

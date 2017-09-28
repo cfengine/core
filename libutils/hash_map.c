@@ -29,7 +29,9 @@
 /* FIXME: make configurable and move to map.c */
 #define DEFAULT_HASHMAP_BUCKETS 128
 #define MAX_HASHMAP_BUCKETS (1 << 30)
+#define MIN_HASHMAP_BUCKETS (1 << 5)
 #define MAX_LOAD_FACTOR 0.75
+#define MIN_LOAD_FACTOR 0.35
 
 HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
                     MapDestroyDataFn destroy_key_fn,
@@ -43,7 +45,8 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
     map->size = DEFAULT_HASHMAP_BUCKETS;
     map->buckets = xcalloc(map->size, sizeof(BucketListItem *));
     map->load = 0;
-    map->threshold = (size_t) map->size * MAX_LOAD_FACTOR;
+    map->max_threshold = (size_t) map->size * MAX_LOAD_FACTOR;
+    map->min_threshold = (size_t) map->size * MIN_LOAD_FACTOR;
     return map;
 }
 
@@ -62,7 +65,8 @@ static void HashMapResize(HashMap *map, size_t new_size)
 
     map->size = new_size;
     /* map->load stays the same */
-    map->threshold = (size_t) map->size * MAX_LOAD_FACTOR;
+    map->max_threshold = (size_t) map->size * MAX_LOAD_FACTOR;
+    map->min_threshold = (size_t) map->size * MIN_LOAD_FACTOR;
     map->buckets = xcalloc(map->size, sizeof(BucketListItem *));
 
     for (size_t i = 0; i < old_size; ++i)
@@ -111,7 +115,7 @@ bool HashMapInsert(HashMap *map, void *key, void *value)
     i->next = map->buckets[bucket];
     map->buckets[bucket] = i;
     map->load++;
-    if ((map->load > map->threshold) && (map->size < MAX_HASHMAP_BUCKETS))
+    if ((map->load > map->max_threshold) && (map->size < MAX_HASHMAP_BUCKETS))
     {
         HashMapResize(map, map->size << 1);
     }
@@ -140,6 +144,10 @@ bool HashMapRemove(HashMap *map, const void *key)
             *prev = cur->next;
             free(cur);
             map->load--;
+            if ((map->load < map->min_threshold) && (map->size > MIN_HASHMAP_BUCKETS))
+            {
+                HashMapResize(map, map->size >> 1);
+            }
             return true;
         }
     }

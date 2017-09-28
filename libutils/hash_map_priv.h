@@ -42,7 +42,8 @@ typedef struct
     BucketListItem **buckets;
     size_t size;
     size_t load;
-    size_t threshold;
+    size_t max_threshold;
+    size_t min_threshold;
 } HashMap;
 
 typedef struct

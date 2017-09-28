@@ -38,13 +38,14 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
     map->equal_fn = equal_fn;
     map->destroy_key_fn = destroy_key_fn;
     map->destroy_value_fn = destroy_value_fn;
-    map->buckets = xcalloc(HASHMAP_BUCKETS, sizeof(BucketListItem *));
+    map->size = HASHMAP_BUCKETS;
+    map->buckets = xcalloc(map->size, sizeof(BucketListItem *));
     return map;
 }
 
 static unsigned int HashMapGetBucket(const HashMap *map, const void *key)
 {
-    return map->hash_fn(key, 0, HASHMAP_BUCKETS);
+    return map->hash_fn(key, 0, map->size);
 }
 
 /**
@@ -148,7 +149,7 @@ static void FreeBucketListItemSoft(HashMap *map, BucketListItem *item)
 
 void HashMapClear(HashMap *map)
 {
-    for (int i = 0; i < HASHMAP_BUCKETS; ++i)
+    for (int i = 0; i < map->size; ++i)
     {
         if (map->buckets[i])
         {
@@ -162,7 +163,7 @@ void HashMapSoftDestroy(HashMap *map)
 {
     if (map)
     {
-        for (int i = 0; i < HASHMAP_BUCKETS; ++i)
+        for (int i = 0; i < map->size; ++i)
         {
             if (map->buckets[i])
             {
@@ -188,11 +189,13 @@ void HashMapDestroy(HashMap *map)
 
 void HashMapPrintStats(const HashMap *hmap, FILE *f)
 {
-    size_t bucket_lengths[HASHMAP_BUCKETS] = { 0 };
+    size_t *bucket_lengths;
     size_t num_el = 0;
     size_t num_buckets = 0;
 
-    for (int i = 0; i < HASHMAP_BUCKETS; i++)
+    bucket_lengths = xcalloc(hmap->size, sizeof(size_t));
+
+    for (int i = 0; i < hmap->size; i++)
     {
         BucketListItem *b = hmap->buckets[i];
         if (b != NULL)
@@ -208,7 +211,7 @@ void HashMapPrintStats(const HashMap *hmap, FILE *f)
 
     }
 
-    fprintf(f, "\tTotal number of buckets:     %5d\n", HASHMAP_BUCKETS);
+    fprintf(f, "\tTotal number of buckets:     %5zu\n", hmap->size);
     fprintf(f, "\tNumber of non-empty buckets: %5zu\n", num_buckets);
     fprintf(f, "\tTotal number of elements:    %5zu\n", num_el);
     fprintf(f, "\tAverage elements per non-empty bucket (load factor): %5.2f\n",
@@ -219,7 +222,7 @@ void HashMapPrintStats(const HashMap *hmap, FILE *f)
     {
         /* Find the maximum 10 times, zeroing it after printing it. */
         int longest_bucket_id = 0;
-        for (int i = 0; i < HASHMAP_BUCKETS; i++)
+        for (int i = 0; i < hmap->size; i++)
         {
             if (bucket_lengths[i] > bucket_lengths[longest_bucket_id])
             {
@@ -242,7 +245,7 @@ MapKeyValue *HashMapIteratorNext(HashMapIterator *i)
 {
     while (i->cur == NULL)
     {
-        if (++i->bucket >= HASHMAP_BUCKETS)
+        if (++i->bucket >= i->map->size)
         {
             return NULL;
         }

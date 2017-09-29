@@ -262,6 +262,10 @@ sub bundles_v2 {
 			$promise_type = $1;
 			$iter = $2;
 			bundle_promise($promise_type,$iter);
+		} elsif ($line =~ /^\s+verbose:\s+P:\s+BEGIN\s+un-named\s+promise\s+of\s+type\s+"([^"]+)"\s+\(pass\s+(\d)\)\s*$/){
+			$promise_type = $1;
+			$iter = $2;
+			bundle_promise($promise_type,$iter);
 		} elsif($line =~ /^\s+verbose:\s+A:\s+Bundle\s+Accounting\s+Summary\s+for\s+'(\S+)'\s+in\s+namespace\s+(\S+).*$/){
 			$data{bundles}{$cur_bundle_key}{namespace} = $2;
 		} elsif($line =~ /^\s+verbose:\s+B:\s+END\s+bundle\s+(\w+)/) {

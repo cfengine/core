@@ -142,7 +142,7 @@ if(defined($opts{s}) or defined($opts{a})){
 	print "Total number of bundles: $no_bundles\n";
 	print "Top 10 worst, bundles:\n";
 	my $iter = 0;
-	foreach my $b(sort {$times{$b} cmp $times{$a}} keys %times){
+	foreach my $b(sort {$times{$b} <=> $times{$a}} keys %times){
 		last if $iter == 10;
 		my $t = $times{$b};
 		$iter++;

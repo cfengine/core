@@ -579,6 +579,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
         Log(LOG_LEVEL_INFO, "REFUSE access to file: %s", filename);
         RefuseAccess(args->conn, args->replyfile);
         FailedTransfer(conn_info);
+        return;
     }
 
     EVP_CIPHER_CTX_init(&ctx);

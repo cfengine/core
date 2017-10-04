@@ -204,21 +204,24 @@ Hash *HashNewFromKey(const RSA *rsa, HashMethod method)
     unsigned char *buffer = NULL;
     int buffer_length = 0;
     int actual_length = 0;
+    const BIGNUM *n, *e;
 
-    if (rsa->n)
+    RSA_get0_key(rsa, &n, &e, NULL);
+
+    if (n)
     {
-        buffer_length = (size_t) BN_num_bytes(rsa->n);
+        buffer_length = (size_t) BN_num_bytes(n);
     }
     else
     {
         buffer_length = 0;
     }
 
-    if (rsa->e)
+    if (e)
     {
-        if (buffer_length < (size_t) BN_num_bytes(rsa->e))
+        if (buffer_length < (size_t) BN_num_bytes(e))
         {
-            buffer_length = (size_t) BN_num_bytes(rsa->e);
+            buffer_length = (size_t) BN_num_bytes(e);
         }
     }
     md = EVP_get_digestbyname(CF_DIGEST_TYPES[method]);
@@ -231,9 +234,9 @@ Hash *HashNewFromKey(const RSA *rsa, HashMethod method)
     context = EVP_MD_CTX_create();
     EVP_DigestInit_ex(context, md, NULL);
     buffer = xmalloc(buffer_length);
-    actual_length = BN_bn2bin(rsa->n, buffer);
+    actual_length = BN_bn2bin(n, buffer);
     EVP_DigestUpdate(context, buffer, actual_length);
-    actual_length = BN_bn2bin(rsa->e, buffer);
+    actual_length = BN_bn2bin(e, buffer);
     EVP_DigestUpdate(context, buffer, actual_length);
     EVP_DigestFinal_ex(context, hash->digest, &md_len);
     EVP_MD_CTX_destroy(context);

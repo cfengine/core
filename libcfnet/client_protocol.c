@@ -179,6 +179,7 @@ static bool SetSessionKey(AgentConnection *conn)
 {
     BIGNUM *bp;
     int session_size = CfSessionKeySize(conn->encryption_type);
+    unsigned char *buf;
 
     bp = BN_new();
 
@@ -196,7 +197,9 @@ static bool SetSessionKey(AgentConnection *conn)
         return false;
     }
 
-    conn->session_key = (unsigned char *) bp->d;
+    buf = malloc(BN_num_bytes(bp));
+    BN_bn2bin(bp, buf);
+    conn->session_key = buf;
     return true;
 }
 
@@ -208,6 +211,8 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     int encrypted_len, nonce_len = 0, len, session_size;
     bool need_to_implicitly_trust_server;
     char enterprise_field = 'c';
+    const BIGNUM *pubkey_n, *pubkey_e;
+    BIGNUM *newkey_n, *newkey_e;
 
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
@@ -293,13 +298,15 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /*Send the public key - we don't know if server has it */
 /* proposition C2 */
 
+    RSA_get0_key(PUBKEY, &pubkey_n, &pubkey_e, NULL);
+
     memset(sendbuffer, 0, CF_EXPANDSIZE);
-    len = BN_bn2mpi(PUBKEY->n, sendbuffer);
+    len = BN_bn2mpi(pubkey_n, sendbuffer);
     SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
 
 /* proposition C3 */
     memset(sendbuffer, 0, CF_EXPANDSIZE);
-    len = BN_bn2mpi(PUBKEY->e, sendbuffer);
+    len = BN_bn2mpi(pubkey_e, sendbuffer);
     SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);
 
 /* check reply about public key - server can break conn_info here */
@@ -432,7 +439,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
             return false;
         }
 
-        if ((newkey->n = BN_mpi2bn(in, len, NULL)) == NULL)
+        if ((newkey_n = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Private key decrypt failed. (BN_mpi2bn: %s)",
@@ -451,7 +458,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
             return false;
         }
 
-        if ((newkey->e = BN_mpi2bn(in, len, NULL)) == NULL)
+        if ((newkey_e = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Public key decrypt failed. (BN_mpi2bn: %s)",
@@ -459,6 +466,8 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
             RSA_free(newkey);
             return false;
         }
+
+        RSA_set0_key(newkey, newkey_n, newkey_e, NULL);
 
         server_pubkey = RSAPublicKey_dup(newkey);
         RSA_free(newkey);

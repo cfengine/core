@@ -514,7 +514,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
     char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
-    EVP_CIPHER_CTX crypto_ctx;
+    EVP_CIPHER_CTX *crypto_ctx = EVP_CIPHER_CTX_new();
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
@@ -543,7 +543,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
     }
 
     workbuf[0] = '\0';
-    EVP_CIPHER_CTX_init(&crypto_ctx);
+    EVP_CIPHER_CTX_init(crypto_ctx);
 
     snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
     cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
@@ -602,16 +602,16 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
             return false;
         }
 
-        EVP_DecryptInit_ex(&crypto_ctx, CfengineCipher(CfEnterpriseOptions()), NULL, conn->session_key, iv);
+        EVP_DecryptInit_ex(crypto_ctx, CfengineCipher(CfEnterpriseOptions()), NULL, conn->session_key, iv);
 
-        if (!EVP_DecryptUpdate(&crypto_ctx, workbuf, &plainlen, buf, cipherlen))
+        if (!EVP_DecryptUpdate(crypto_ctx, workbuf, &plainlen, buf, cipherlen))
         {
             close(dd);
             free(buf);
             return false;
         }
 
-        if (!EVP_DecryptFinal_ex(&crypto_ctx, workbuf + plainlen, &finlen))
+        if (!EVP_DecryptFinal_ex(crypto_ctx, workbuf + plainlen, &finlen))
         {
             close(dd);
             free(buf);
@@ -631,7 +631,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
             unlink(dest);
             close(dd);
             conn->error = true;
-            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+            EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
         }
 
@@ -646,12 +646,12 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
     {
         unlink(dest);
         free(buf);
-        EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+        EVP_CIPHER_CTX_free(crypto_ctx);
         return false;
     }
 
     free(buf);
-    EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+    EVP_CIPHER_CTX_free(crypto_ctx);
     return true;
 }
 

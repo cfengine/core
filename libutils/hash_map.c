@@ -38,7 +38,7 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
     map->equal_fn = equal_fn;
     map->destroy_key_fn = destroy_key_fn;
     map->destroy_value_fn = destroy_value_fn;
-    map->buckets = xcalloc(1, sizeof(BucketListItem *) * HASHMAP_BUCKETS);
+    map->buckets = xcalloc(HASHMAP_BUCKETS, sizeof(BucketListItem *));
     return map;
 }
 

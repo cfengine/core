@@ -54,6 +54,7 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
     {
         map->size = UpperPowerOfTwo(init_size);
     }
+    map->init_size = map->size;
     map->buckets = xcalloc(map->size, sizeof(BucketListItem *));
     map->load = 0;
     map->max_threshold = (size_t) map->size * MAX_LOAD_FACTOR;
@@ -158,7 +159,8 @@ bool HashMapRemove(HashMap *map, const void *key)
             *prev = cur->next;
             free(cur);
             map->load--;
-            if ((map->load < map->min_threshold) && (map->size > MIN_HASHMAP_BUCKETS))
+            if ((map->load < map->min_threshold) && (map->size > map->init_size))
+
             {
                 HashMapResize(map, map->size >> 1);
             }

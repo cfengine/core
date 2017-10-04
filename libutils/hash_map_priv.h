@@ -41,6 +41,7 @@ typedef struct
     MapDestroyDataFn destroy_value_fn;
     BucketListItem **buckets;
     size_t size;
+    size_t init_size;
     size_t load;
     size_t max_threshold;
     size_t min_threshold;

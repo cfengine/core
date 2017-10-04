@@ -307,6 +307,27 @@ static void test_shrink(void)
     HashMapDestroy(hashmap);
 }
 
+static void test_no_shrink_below_init_size(void)
+{
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                                  free, free, HASH_MAP_INIT_SIZE);
+
+    assert_int_equal(hashmap->size, HASH_MAP_INIT_SIZE);
+    assert_int_equal(hashmap->init_size, HASH_MAP_INIT_SIZE);
+
+    /* add and remove 'aaaaa' to/from the HashMap
+     *
+     * The remove could trigger the shrink mechanism because there are obviously
+     * less than HASH_MAP_MIN_LOAD_FACTOR * HASH_MAP_INIT_SIZE items in the
+     * map. But the 'init_size' should block that from happening.
+     */
+    test_add_n_as_to_map(hashmap, 5);
+    test_remove_n_as_from_map(hashmap, 5);
+
+    assert_int_equal(hashmap->size, HASH_MAP_INIT_SIZE);
+
+    HashMapDestroy(hashmap);
+}
 
 static void test_get(void)
 {
@@ -526,6 +547,7 @@ int main()
         unit_test(test_remove),
         unit_test(test_grow),
         unit_test(test_shrink),
+        unit_test(test_no_shrink_below_init_size),
         unit_test(test_get),
         unit_test(test_has_key),
         unit_test(test_clear),

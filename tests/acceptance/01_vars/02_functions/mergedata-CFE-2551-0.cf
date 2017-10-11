@@ -1,0 +1,98 @@
+# Test that merged data does not inherit variables from calling bundle
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2551" }
+        string => "Test that merged data does not include variables from calling bundle.";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2551"};
+
+  vars:
+
+      "a" string => "string a";
+      "b" string => "string b";
+
+      "vars1[a]" string => "$(a)";
+      "vars1[b]" string => "$(b)";
+
+  methods:
+
+      # Call bundle that will define and merge it's own vars1 data structure.
+
+      "Call another bundle"
+        usebundle => called_by_bundle_test;
+
+}
+
+bundle agent called_by_bundle_test
+{
+  vars:
+      "c" string => "string c";
+      "vars1[c]" string => "$(c)";
+
+      # Create a new data structure NOT including data from calling bundle
+
+      "merged_data_vars"
+        data => mergedata('{ "vars1": vars1 }');
+
+    DEBUG|EXTRA::
+      # We only care to stringify this if we need the debug reports
+      "merged_data_vars_string"
+        string => storejson( merged_data_vars );
+
+  reports:
+    DEBUG|EXTRA::
+      "Got:$(const.n)$(merged_data_vars_string)";
+      'Expect:
+{
+  "vars1": {
+    "c": "string c"
+  }
+}';
+}
+
+
+bundle agent check
+{
+  classes:
+
+      # We pass if the variable indicies found in bundle test are NOT found in
+      # the bundle it called, and we find the index defined in the bundle it
+      # called that we expect.
+
+      "pass"
+        expression => and(
+                           and(
+                               not( isvariable("called_by_bundle_test.merged_data_vars[vars1][a]")),
+                               not( isvariable("called_by_bundle_test.merged_data_vars[vars1][b]"))
+                           ),
+                           isvariable("called_by_bundle_test.merged_data_vars[vars1][c]")
+        );
+
+      # We fail if the variable indicies found in bundle test are also found in
+      # the bundle it called.
+
+      "fail"
+        or => {
+                isvariable( "called_by_bundle_test.merged_data_vars[vars1][a]" ),
+                isvariable( "called_by_bundle_test.merged_data_vars[vars1][b]" ),
+        };
+
+
+  reports:
+
+    fail::
+      "$(this.promise_filename) FAIL";
+
+    pass::
+      "$(this.promise_filename) Pass";
+  }

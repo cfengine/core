@@ -1,0 +1,107 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+bundle agent init
+{
+  files:
+
+    "$(G.testdir)/prod/."
+      create => "true";
+
+    "$(G.testdir)/test/."
+      create => "true";
+
+    "$(G.testdir)/test/FR1234.gz"
+      create => "true";
+}
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-954" }
+      string => "Test that using lsdir on a list where nothing matches does not mess up later iterations";
+
+  vars:
+
+    "directories" slist => {"prod","test"};
+
+    "files_regex_1_$(directories)"
+      slist => lsdir( "$(G.testdir)/$(directories)", ".*", "false"),
+        if => isdir( "$(G.testdir)/$(directories)" ); # Suppress errors about missing directory during pre-eval
+
+    # Expect files_regex_1_prod contains . and ..
+    # Expect files_regex_1_test contains . .. and FR1234.gz
+
+    "files_regex_2_$(directories)"
+      slist => lsdir( "$(G.testdir)/$(directories)", "FR.*\.gz", "false"),
+      if => isdir( "$(G.testdir)/$(directories)" ); # Suppress errors about missing directory during pre-eval
+    # Expect files_regex_2_prod contains nothing
+    # Expect files_regex_2_test contains FR1234.gz
+
+  reports:
+
+    DEBUG|EXTRA::
+
+      "files_regex_1_$(directories) is defined"
+        if => isvariable( "files_regex_1_$(directories)" );
+      "files_regex_1_$(directories) is not defined"
+        unless => isvariable( "files_regex_1_$(directories)" );
+
+      "files_regex_2_$(directories) is defined"
+        if => isvariable( "files_regex_2_$(directories)" );
+      "files_regex_2_$(directories) is not defined"
+        unless => isvariable( "files_regex_2_$(directories)" );
+
+      "Expect files_regex_1_prod contains . and ..";
+      "files_regex_1_prod contains $(files_regex_1_prod)";
+      "Expect files_regex_1_test contains . .. and FR1234.gz";
+      "files_regex_1_test contains $(files_regex_1_test)";
+
+      "Expect files_regex_2_prod contains nothing";
+      "Expect files_regex_2_test contains FR1234.gz";
+      "files_regex_2_$(directories) contains $(files_regex_2_$(directories))";
+}
+
+bundle agent check
+{
+  vars:
+    "expect_files_regex_1_prod" slist => { ".", ".." };
+    "expect_files_regex_1_test" slist => { ".", "..", "FR1234.gz" };
+
+    "expect_files_regex_2_prod" slist => { };
+    "expect_files_regex_2_test" slist => { "FR1234.gz" };
+
+    "d_1_prod" slist => difference( "check.expect_files_regex_1_prod", "test.files_regex_1_prod" );
+    "d_1_test" slist => difference( "check.expect_files_regex_1_test", "test.files_regex_1_test" );
+
+    "d_2_prod" slist => difference( "check.expect_files_regex_2_prod", "test.files_regex_2_prod" );
+    "d_2_test" slist => difference( "check.expect_files_regex_2_test", "test.files_regex_2_test" );
+
+  classes:
+    "pass" and => {
+                    strcmp( "0", length( d_1_prod ) ),
+                    strcmp( "0", length( d_1_test ) ),
+                    strcmp( "0", length( d_2_prod ) ),
+                    strcmp( "0", length( d_2_test ) )
+                  };
+
+  reports:
+
+    DEBUG|EXTRA::
+      "test.expect_files_regex_2_prod is NOT defined"
+        if => not(isvariable( "test.expect_files_regex_2_prod" ));
+
+      "test.expect_files_regex_2_prod is defined"
+        if => isvariable( "test.expect_files_regex_2_prod" );
+      "Difference regex 1 prod: $(d_1_prod)";
+      "Difference regex 1 test: $(d_1_test)";
+      "Difference regex 2 prod: $(d_2_prod)";
+      "Difference regex 2 test: $(d_2_test)";
+
+    pass::
+      "$(this.promise_filename) Pass";
+
+    !pass::
+      "$(this.promise_filename) FAIL";
+}

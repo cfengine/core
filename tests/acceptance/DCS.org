@@ -1,0 +1,65 @@
+#+Title: Policy Test Framework
+
+The policy testing framework loaded by [[file:default.cf.sub][=default.cf.sub=]]. For full support of the
+test framework this policy file should be included in each test and the
+=bundlesequence= should be set to =default("$(this.promise_filename)")=.
+
+NOTE: Be sure the relative path to =default.cf.sub=
+#+Caption: Common control template to be included in each test
+#+BEGIN_SRC cfengine3
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+#+END_SRC
+
+[[file:dcs.cf.sub][=dcs.cf.sub=]] contains the majority of the policy testing framework. The
+following bundles are useful for common test patterns. In all cases =test=
+should be passed =$(this.promise_filename)=.
+
+- bundle agent =dcs_pass(test)= :: Pass the test.
+
+- bundle agent =dcs_fail(test)= :: FAIL the test.
+
+- bundle agent =dcs_passif(classname, test)= :: Pass if =classname= is defined.
+
+- bundle agent =dcs_passif_fileexists(file, test)= :: Pass if =file= exists.
+
+- bundle agent =dcs_passif_file_absent(file, test)= :: Pass if =file= is absent.
+
+- bundle agent =dcs_check_strcmp(strA, strB, test, expected_difference)= :: Pass/FAIL
+     based on =expected_difference= (=yes=/=no=) when the string =strA= is the
+     same as string =strB=.
+
+- bundle agent =dcs_check_regcmp(regex, thestring, test, expected_mismatch)= :: Pass/FAIL
+     based on =expected_mismatch= (=yes=/=no=) when the regular expression
+     =regex= matches the string =thestring=.
+
+- bundle agent =dcs_passif_output1(wanted, command, test)= :: Pass if =command=
+     output contains =wanted= string.
+
+- bundle agent =dcs_passif_output(wanted, unwanted, command, test)= :: Pass if
+     the regular expression =wanted= AND the regular expression =unwanted=
+     matches the =command= output.
+
+- bundle agent =dcs_check_diff(file1, file2, test)= :: Pass if =file1= and
+     =file2= do not differ.
+
+- bundle agent =dcs_passif_expected(expected, not_expected, test)= :: =expected=
+     and =not_expected= can be a string of comma (without spaces) separated
+     classes. Pass if all expected classes are defined and none of the
+     unexpected classes are defined.
+
+- bundle agent =sorted_check_diff(file1, file2, test)= :: Lexically sort =file1=
+     and =file2=, pass if they are not different. This can be useful for testing
+     data that is not guaranteed to be returned in a specific order (like JSON).
+
+- bundle agent =dcs_check_diff_expected(file1, file2, test, expected_difference)= :: Pass/FAIL
+     based on =expected_difference= (=yes=/=no=) between =file1= and
+     =file2=.
+
+- bundle agent =xml_check_diff(file1, file2, test, expected_difference)= :: Pass/FAIL
+     based on =expected_difference= (=yes=/=no=) between xml =file1= and
+     xml =file2=.
+

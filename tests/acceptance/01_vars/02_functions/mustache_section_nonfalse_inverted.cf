@@ -1,0 +1,70 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+
+      "template" string => "{{#network_interfaces}}
+
+interface {{interface}}
+{{#gateway}}
+gateway {{.}}
+{{/gateway}}
+{{^gateway}}
+#no gateway
+{{/gateway}}
+
+{{/network_interfaces}}";
+
+      "data" data => '{
+    "network_interfaces": [
+       {
+           "interface":"eth1",
+           "family":"inet6",
+           "config_mode":"dhcp"
+       },
+       {
+            "interface":"vlan10",
+            "device":"eth0",
+            "role":"Management",
+            "family":"inet",
+            "config_mode":"static",
+            "ip_address":"192.168.1.2",
+            "prefix":"24",
+            "gateway":"192.168.1.1"
+       }
+    ]
+      }';
+
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-1565" }
+        string => "Test that inversion of non-false values works as expected with mustache. (CFE-1565)";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-1565" };
+  vars:
+      "got" string => string_mustache( $(init.template), @(init.data) );
+}
+
+bundle agent check
+{
+  vars:
+      "expected" string => "interface eth1
+#no gateway
+interface vlan10
+gateway 192.168.1.1
+";
+
+  methods:
+      "check" usebundle => dcs_check_strcmp( $(test.got), $(check.expected), $(this.promise_filename), "no" );
+}

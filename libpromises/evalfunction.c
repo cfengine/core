@@ -3431,6 +3431,13 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
             return FnFailure();
         }
 
+        // Ignore json primitives, only merge containers
+        if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
+        {
+            JsonDestroy(json);
+            continue;
+        }
+
         // This can be optimized better
         if (allocated)
         {

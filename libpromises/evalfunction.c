@@ -3311,6 +3311,19 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
             return FnFailure();
         }
 
+        // Fail on json primitives, only merge containers
+        if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
+        {
+            if (allocated)
+            {
+                JsonDestroy(json);
+            }
+
+            Log(LOG_LEVEL_ERR, "%s is not mergeable as it it not a container", RvalToString(arg->val));
+            SeqDestroy(containers);
+            return FnFailure();
+        }
+
         // This can be optimized better
         if (allocated)
         {

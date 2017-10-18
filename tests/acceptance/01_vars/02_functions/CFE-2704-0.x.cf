@@ -1,0 +1,22 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-2704" }
+      string => "Test that attempting to merge incompatible data does not segfault.";
+
+  vars:
+    "data" data => "{\"env\":\"test\"}";
+    "node" data => mergedata("[]", "data[env]");
+}
+bundle agent check
+{
+  methods:
+    "Pass if we made it this far"
+      usebundle => dcs_pass( $(this.promise_filename) );
+}

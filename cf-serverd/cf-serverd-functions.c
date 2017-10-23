@@ -869,7 +869,13 @@ static void AcceptAndHandle(EvalContext *ctx, int sd)
 int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     InitSignals();
-    ServerTLSInitialize();
+
+    bool tls_init_ok = ServerTLSInitialize();
+    if (!tls_init_ok)
+    {
+        return -1;
+    }
+
     int sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
 
     /* Necessary for our use of select() to work in WaitForIncoming(): */

@@ -40,7 +40,7 @@ int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
 char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
                     HashMethod type, bool use_prefix);
 char *SkipHashType(char *hash);
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
+void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 
 
 #endif

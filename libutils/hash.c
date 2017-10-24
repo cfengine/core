@@ -26,10 +26,13 @@
 
 #include <openssl/evp.h>                                       /* EVP_* */
 #include <openssl/bn.h>                                        /* BN_bn2bin */
+#include <libcrypto-compat.h>
 
 #include <alloc.h>
 #include <logging.h>
 #include <hash.h>
+#include <misc_lib.h>
+
 
 static const char *const CF_DIGEST_TYPES[10] =
 {
@@ -198,49 +201,55 @@ Hash *HashNewFromKey(const RSA *rsa, HashMethod method)
     {
         return NULL;
     }
-    EVP_MD_CTX *context = NULL;
-    const EVP_MD *md = NULL;
-    int md_len = 0;
-    unsigned char *buffer = NULL;
-    int buffer_length = 0;
-    int actual_length = 0;
 
-    if (rsa->n)
-    {
-        buffer_length = (size_t) BN_num_bytes(rsa->n);
-    }
-    else
-    {
-        buffer_length = 0;
-    }
+    const BIGNUM *n, *e;
+    RSA_get0_key(rsa, &n, &e, NULL);
 
-    if (rsa->e)
-    {
-        if (buffer_length < (size_t) BN_num_bytes(rsa->e))
-        {
-            buffer_length = (size_t) BN_num_bytes(rsa->e);
-        }
-    }
-    md = EVP_get_digestbyname(CF_DIGEST_TYPES[method]);
+    size_t n_len = (n == NULL) ? 0 : (size_t) BN_num_bytes(n);
+    size_t e_len = (e == NULL) ? 0 : (size_t) BN_num_bytes(e);
+    size_t buf_len = MAX(n_len, e_len);
+
+    const EVP_MD *md = EVP_get_digestbyname(CF_DIGEST_TYPES[method]);
     if (md == NULL)
     {
         Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[method]);
         return NULL;
     }
+
+    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    if (context == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
+        return NULL;
+    }
+
+    if (EVP_DigestInit_ex(context, md, NULL) != 1)
+    {
+        EVP_MD_CTX_free(context);
+        return NULL;
+    }
+
+    unsigned char buffer[buf_len];
+    int md_len, actlen;
+
+    actlen = BN_bn2bin(n, buffer);
+    CF_ASSERT(actlen <= buf_len, "Buffer overflow n, %d > %zu!",
+              actlen, buf_len);
+    EVP_DigestUpdate(context, buffer, actlen);
+
+    actlen = BN_bn2bin(e, buffer);
+    CF_ASSERT(actlen <= buf_len, "Buffer overflow e, %d > %zu!",
+              actlen, buf_len);
+    EVP_DigestUpdate(context, buffer, actlen);
+
     Hash *hash = HashBasicInit(method);
-    context = EVP_MD_CTX_create();
-    EVP_DigestInit_ex(context, md, NULL);
-    buffer = xmalloc(buffer_length);
-    actual_length = BN_bn2bin(rsa->n, buffer);
-    EVP_DigestUpdate(context, buffer, actual_length);
-    actual_length = BN_bn2bin(rsa->e, buffer);
-    EVP_DigestUpdate(context, buffer, actual_length);
     EVP_DigestFinal_ex(context, hash->digest, &md_len);
-    EVP_MD_CTX_destroy(context);
-    free (buffer);
+
+    EVP_MD_CTX_free(context);
+
     /* Update the printable representation */
     HashCalculatePrintableRepresentation(hash);
-    /* Return the hash */
+
     return hash;
 }
 

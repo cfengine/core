@@ -27,6 +27,7 @@
 
 #include <openssl/bn.h>                                     /* BN_*, BIGNUM */
 #include <openssl/rand.h>                                   /* RAND_* */
+#include <libcrypto-compat.h>
 
 #include <lastseen.h>
 #include <dir.h>
@@ -48,6 +49,7 @@ RSA *LoadPublicKey(const char *filename)
 {
     FILE *fp;
     RSA *key;
+    const BIGNUM *n, *e;
 
     fp = safe_fopen(filename, "r");
     if (fp == NULL)
@@ -69,7 +71,9 @@ RSA *LoadPublicKey(const char *filename)
 
     fclose(fp);
 
-    if (BN_num_bits(key->e) < 2 || !BN_is_odd(key->e))
+    RSA_get0_key(key, &n, &e, NULL);
+
+    if (BN_num_bits(e) < 2 || !BN_is_odd(e))
     {
         Log(LOG_LEVEL_ERR, "Error while reading public key '%s' - RSA Exponent is too small or not odd. (BN_num_bits: %s)",
             filename, GetErrorStr());

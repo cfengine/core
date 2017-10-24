@@ -24,8 +24,10 @@
 
 #include <files_hashes.h>
 
+#include <openssl/err.h>                                        /* ERR_* */
 #include <openssl/bn.h>                                         /* BN_* */
 #include <openssl/evp.h>                                        /* EVP_* */
+#include <libcrypto-compat.h>
 
 #include <dbm_api.h>
 #include <files_interfaces.h>
@@ -40,7 +42,6 @@
 void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     FILE *file;
-    EVP_MD_CTX context;
     int len, md_len;
     unsigned char buffer[1024];
     const EVP_MD *md = NULL;
@@ -48,30 +49,37 @@ void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], H
     if ((file = safe_fopen(filename, "rb")) == NULL)
     {
         Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
+        return;
     }
-    else
+
+    md = EVP_get_digestbyname(HashNameFromId(type));
+
+    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    if (context == NULL)
     {
-        md = EVP_get_digestbyname(HashNameFromId(type));
+        Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
+        return;
+    }
 
-        EVP_DigestInit(&context, md);
-
+    if (EVP_DigestInit(context, md) == 1)
+    {
         while ((len = fread(buffer, 1, 1024, file)))
         {
-            EVP_DigestUpdate(&context, buffer, len);
+            EVP_DigestUpdate(context, buffer, len);
         }
 
-        EVP_DigestFinal(&context, digest, &md_len);
-
-        /* Digest length stored in md_len */
-        fclose(file);
+        EVP_DigestFinal(context, digest, &md_len);
     }
+
+    /* Digest length stored in md_len */
+    fclose(file);
+    EVP_MD_CTX_free(context);
 }
 
 /*******************************************************************/
 
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
-    EVP_MD_CTX context;
     const EVP_MD *md = NULL;
     int md_len;
 
@@ -89,10 +97,18 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
         {
             Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
         }
-        else if (EVP_DigestInit(&context, md))
+
+        EVP_MD_CTX *context = EVP_MD_CTX_new();
+        if (context == NULL)
         {
-            EVP_DigestUpdate(&context, (unsigned char *) buffer, (size_t) len);
-            EVP_DigestFinal(&context, digest, &md_len);
+            Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
+            return;
+        }
+
+        if (EVP_DigestInit(context, md) == 1)
+        {
+            EVP_DigestUpdate(context, buffer, len);
+            EVP_DigestFinal(context, digest, &md_len);
         }
         else
         {
@@ -100,63 +116,60 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
             // TODO: handle this someway
         }
 
+        EVP_MD_CTX_free(context);
         break;
     }
 }
 
 /*******************************************************************/
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
-    EVP_MD_CTX context;
-    const EVP_MD *md = NULL;
-    int md_len, i, buf_len, actlen;
-    unsigned char *buffer;
-
-    if (key->n)
+    if (type == HASH_METHOD_CRYPT)
     {
-        buf_len = (size_t) BN_num_bytes(key->n);
-    }
-    else
-    {
-        buf_len = 0;
-    }
-
-    if (key->e)
-    {
-        if (buf_len < (i = (size_t) BN_num_bytes(key->e)))
-        {
-            buf_len = i;
-        }
-    }
-
-    buffer = xmalloc(buf_len + 10);
-
-    switch (type)
-    {
-    case HASH_METHOD_CRYPT:
         Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use sha256 instead");
-        break;
-
-    default:
-        md = EVP_get_digestbyname(HashNameFromId(type));
-
-        if (md == NULL)
-        {
-            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
-        }
-
-        EVP_DigestInit(&context, md);
-
-        actlen = BN_bn2bin(key->n, buffer);
-        EVP_DigestUpdate(&context, buffer, actlen);
-        actlen = BN_bn2bin(key->e, buffer);
-        EVP_DigestUpdate(&context, buffer, actlen);
-        EVP_DigestFinal(&context, digest, &md_len);
-        break;
+        return;
     }
 
-    free(buffer);
+    const EVP_MD *md = EVP_get_digestbyname(HashNameFromId(type));
+    if (md == NULL)
+    {
+        Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
+    }
+
+    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    if (context == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
+        return;
+    }
+
+    const BIGNUM *n, *e;
+    RSA_get0_key(key, &n, &e, NULL);
+
+    size_t n_len = (n == NULL) ? 0 : (size_t) BN_num_bytes(n);
+    size_t e_len = (e == NULL) ? 0 : (size_t) BN_num_bytes(e);
+    size_t buf_len = MAX(n_len, e_len);
+
+    unsigned char buffer[buf_len];
+    int md_len, actlen;
+
+    if (EVP_DigestInit(context, md) == 1)
+    {
+        actlen = BN_bn2bin(n, buffer);
+        CF_ASSERT(actlen <= buf_len, "Buffer overflow n, %d > %zu!",
+                  actlen, buf_len);
+        EVP_DigestUpdate(context, buffer, actlen);
+
+        actlen = BN_bn2bin(e, buffer);
+        CF_ASSERT(actlen <= buf_len, "Buffer overflow e, %d > %zu!",
+                  actlen, buf_len);
+        EVP_DigestUpdate(context, buffer, actlen);
+
+        EVP_DigestFinal(context, digest, &md_len);
+    }
+
+    EVP_MD_CTX_free(context);
 }
 
 /*******************************************************************/

@@ -88,7 +88,7 @@ static int CompareCertToRSA(X509 *cert, RSA *rsa_key)
             TLSErrorString(ERR_get_error()));
         goto ret1;
     }
-    if (EVP_PKEY_type(cert_pkey->type) != EVP_PKEY_RSA)
+    if (EVP_PKEY_base_id(cert_pkey) != EVP_PKEY_RSA)
     {
         Log(LOG_LEVEL_ERR,
             "Received key of unknown type, only RSA currently supported!");
@@ -300,7 +300,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
         retval = -1;
         goto ret2;
     }
-    if (EVP_PKEY_type(received_pubkey->type) != EVP_PKEY_RSA)
+    if (EVP_PKEY_base_id(received_pubkey) != EVP_PKEY_RSA)
     {
         Log(LOG_LEVEL_ERR,
             "Received key of unknown type, only RSA currently supported!");

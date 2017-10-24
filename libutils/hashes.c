@@ -27,6 +27,7 @@
 #include <file_lib.h>
 
 #include <openssl/evp.h>
+#include <libcrypto-compat.h>
 
 
 int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
@@ -40,25 +41,36 @@ int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]
     else
     {
         const EVP_MD *md = EVP_get_digestbyname("md5");
-
         if (!md)
         {
             fclose(file);
             return 0;
         }
 
-        EVP_MD_CTX context;
-        EVP_DigestInit(&context, md);
+        EVP_MD_CTX *context = EVP_MD_CTX_new();
+        if (context == NULL)
+        {
+            fclose(file);
+            return 0;
+        }
+
+        if (EVP_DigestInit_ex(context, md, NULL) != 1)
+        {
+            fclose(file);
+            EVP_MD_CTX_free(context);
+            return 0;
+        }
 
         int len = 0;
         unsigned char buffer[1024];
         while ((len = fread(buffer, 1, 1024, file)))
         {
-            EVP_DigestUpdate(&context, buffer, len);
+            EVP_DigestUpdate(context, buffer, len);
         }
 
         unsigned int md_len = 0;
-        EVP_DigestFinal(&context, digest, &md_len);
+        EVP_DigestFinal(context, digest, &md_len);
+        EVP_MD_CTX_free(context);
         fclose(file);
 
         return md_len;

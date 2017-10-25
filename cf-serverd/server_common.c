@@ -43,6 +43,7 @@ static const int CF_NOSIZE = -1;
 #include <pipes.h>
 #include <classic.h>                  /* SendSocketStream */
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
+#include <openssl/err.h>                                   /* ERR_get_error */
 #include <tls_generic.h>              /* TLSSend */
 #include <rlist.h>
 #include <cf-serverd-enterprise-stubs.h>
@@ -557,7 +558,6 @@ void CfEncryptGetFile(ServerFileGetState *args)
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
     int blocksize = CF_BUFSIZE - 4 * CF_INBAND_OFFSET;
-    EVP_CIPHER_CTX ctx;
     char *key, enctype;
     struct stat sb;
     ConnectionInfo *conn_info = args->conn->conn_info;
@@ -579,9 +579,16 @@ void CfEncryptGetFile(ServerFileGetState *args)
         Log(LOG_LEVEL_INFO, "REFUSE access to file: %s", filename);
         RefuseAccess(args->conn, args->replyfile);
         FailedTransfer(conn_info);
+        return;
     }
 
-    EVP_CIPHER_CTX_init(&ctx);
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (ctx == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to allocate cipher: %s",
+            TLSErrorString(ERR_get_error()));
+        return;
+    }
 
     if ((fd = safe_open(filename, O_RDONLY)) == -1)
     {
@@ -630,20 +637,20 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
             if (n_read > 0)
             {
-                EVP_EncryptInit_ex(&ctx, CfengineCipher(enctype), NULL, key, iv);
+                EVP_EncryptInit_ex(ctx, CfengineCipher(enctype), NULL, key, iv);
 
-                if (!EVP_EncryptUpdate(&ctx, out, &cipherlen, sendbuffer, n_read))
+                if (!EVP_EncryptUpdate(ctx, out, &cipherlen, sendbuffer, n_read))
                 {
                     FailedTransfer(conn_info);
-                    EVP_CIPHER_CTX_cleanup(&ctx);
+                    EVP_CIPHER_CTX_free(ctx);
                     close(fd);
                     return;
                 }
 
-                if (!EVP_EncryptFinal_ex(&ctx, out + cipherlen, &finlen))
+                if (!EVP_EncryptFinal_ex(ctx, out + cipherlen, &finlen))
                 {
                     FailedTransfer(conn_info);
-                    EVP_CIPHER_CTX_cleanup(&ctx);
+                    EVP_CIPHER_CTX_free(ctx);
                     close(fd);
                     return;
                 }
@@ -654,7 +661,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
                 if (SendTransaction(conn_info, out, cipherlen + finlen, CF_DONE) == -1)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
-                    EVP_CIPHER_CTX_cleanup(&ctx);
+                    EVP_CIPHER_CTX_free(ctx);
                     close(fd);
                     return;
                 }
@@ -666,14 +673,14 @@ void CfEncryptGetFile(ServerFileGetState *args)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                     close(fd);
-                    EVP_CIPHER_CTX_cleanup(&ctx);
+                    EVP_CIPHER_CTX_free(ctx);
                     return;
                 }
             }
         }
     }
 
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_free(ctx);
     close(fd);
 }
 

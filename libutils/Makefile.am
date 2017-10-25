@@ -75,6 +75,7 @@ libutils_la_SOURCES = \
 	regex.c regex.h \
 	encode.c encode.h \
 	pcre_wrap.c pcre_wrap.h \
+	libcrypto-compat.c libcrypto-compat.h \
 	printsize.h
 
 if !NT

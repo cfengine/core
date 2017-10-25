@@ -14,8 +14,8 @@ body server control
 {
       port => "9888";
 
-      # Only this non-default cipher is to be accepted
-      allowciphers    => "RC4-MD5";
+      # Only this cipher is to be accepted
+      allowciphers    => "AES128-GCM-SHA256";
 
       # Allow only TLSv1.1 or higher
       allowtlsversion => "1.1";

@@ -25,8 +25,10 @@
 #ifndef KEY_H
 #define KEY_H
 
-#include <hash.h>
 #include <openssl/rsa.h>
+
+#include <hash.h>
+
 
 /**
   @brief Structure to simplify the key management.

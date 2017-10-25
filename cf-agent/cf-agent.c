@@ -241,6 +241,8 @@ int main(int argc, char *argv[])
 
     GenericAgentDiscoverContext(ctx, config);
 
+    /* FIXME: (CFE-2709) ALWAYS_VALIDATE will always be false here, since it can
+     *        only change in KeepPromises(), five lines later on. */
     Policy *policy = SelectAndLoadPolicy(config, ctx, ALWAYS_VALIDATE, true);
 
     if (!policy)

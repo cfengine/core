@@ -1,3 +1,14 @@
+/*
+ * WARNING: THIS TEST HAS BEEN DISABLED
+ *
+ * This test is written in a very unportable manner: it replicates source code
+ * of OpenSSL, it uses internals of data structures etc. Do not re-enable it
+ * unless you delete all the code from the OpenSSL internals, and refactor it
+ * to mock the library routines properly, for example with `ld --wrap`. See
+ * "CMocka" and "Mimick" unit testing frameworks.
+ */
+
+
 #include <test.h>
 
 #include <sys/socket.h>

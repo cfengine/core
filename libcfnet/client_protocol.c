@@ -24,7 +24,9 @@
 
 #include <client_protocol.h>
 
-#include <openssl/bn.h>                                         /* BN_* */
+#include <openssl/bn.h>                                    /* BN_* */
+#include <openssl/err.h>                                   /* ERR_get_error */
+#include <libcrypto-compat.h>
 
 #include <communication.h>
 #include <net.h>
@@ -43,6 +45,7 @@ extern char VFQNAME[];
 #include <known_dirs.h>
 #include <hash.h>
 #include <connection_info.h>
+#include <tls_generic.h>                                  /* TLSErrorString */
 
 
 /*********************************************************************/
@@ -196,7 +199,10 @@ static bool SetSessionKey(AgentConnection *conn)
         return false;
     }
 
-    conn->session_key = (unsigned char *) bp->d;
+    conn->session_key = xmalloc(BN_num_bytes(bp));
+    BN_bn2bin(bp, conn->session_key);
+
+    BN_clear_free(bp);
     return true;
 }
 
@@ -293,13 +299,16 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /*Send the public key - we don't know if server has it */
 /* proposition C2 */
 
+    const BIGNUM *pubkey_n, *pubkey_e;
+    RSA_get0_key(PUBKEY, &pubkey_n, &pubkey_e, NULL);
+
     memset(sendbuffer, 0, CF_EXPANDSIZE);
-    len = BN_bn2mpi(PUBKEY->n, sendbuffer);
+    len = BN_bn2mpi(pubkey_n, sendbuffer);
     SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
 
 /* proposition C3 */
     memset(sendbuffer, 0, CF_EXPANDSIZE);
-    len = BN_bn2mpi(PUBKEY->e, sendbuffer);
+    len = BN_bn2mpi(pubkey_e, sendbuffer);
     SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);
 
 /* check reply about public key - server can break conn_info here */
@@ -432,7 +441,8 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
             return false;
         }
 
-        if ((newkey->n = BN_mpi2bn(in, len, NULL)) == NULL)
+        BIGNUM *newkey_n, *newkey_e;
+        if ((newkey_n = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Private key decrypt failed. (BN_mpi2bn: %s)",
@@ -447,15 +457,27 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         {
             Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);
+            BN_clear_free(newkey_n);
             RSA_free(newkey);
             return false;
         }
 
-        if ((newkey->e = BN_mpi2bn(in, len, NULL)) == NULL)
+        if ((newkey_e = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Public key decrypt failed. (BN_mpi2bn: %s)",
                 CryptoLastErrorString());
+            BN_clear_free(newkey_n);
+            RSA_free(newkey);
+            return false;
+        }
+
+        if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to set RSA key: %s",
+                TLSErrorString(ERR_get_error()));
+            BN_clear_free(newkey_e);
+            BN_clear_free(newkey_n);
             RSA_free(newkey);
             return false;
         }

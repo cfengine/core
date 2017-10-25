@@ -23,7 +23,9 @@
 */
 #include <platform.h>
 
-#include <openssl/bn.h>                                         /* BN_* */
+#include <openssl/bn.h>                                    /* BN_* */
+#include <openssl/err.h>                                   /* ERR_get_error */
+#include <libcrypto-compat.h>
 
 #include <cf3.defs.h>
 #include <item_lib.h>                 /* IsMatchItemIn */
@@ -36,6 +38,7 @@
 #include <files_hashes.h>                             /* HashString */
 #include <crypto.h>                                   /* HavePublicKey */
 #include <cf-serverd-enterprise-stubs.h>              /* ReceiveCollectCall */
+#include <tls_generic.h>
 
 #include "server.h"                                /* ServerConnectionState */
 #include "server_common.h"                         /* ListPersistentClasses */
@@ -579,7 +582,11 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
             "A public key was already known from %s/%s - no trust required",
             conn->hostname, conn->ipaddr);
 
-        if ((BN_cmp(savedkey->e, key->e) == 0) && (BN_cmp(savedkey->n, key->n) == 0))
+        const BIGNUM *key_n, *key_e, *savedkey_n, *savedkey_e;
+        RSA_get0_key(key, &key_n, &key_e, NULL);
+        RSA_get0_key(savedkey, &savedkey_n, &savedkey_e, NULL);
+
+        if ((BN_cmp(savedkey_e, key_e) == 0) && (BN_cmp(savedkey_n, key_n) == 0))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "The public key identity was confirmed as %s@%s",
@@ -770,8 +777,9 @@ char iscrypt, enterprise_field;
     HashString(challenge, challenge_len, digest, digestType);
 }
 
+BIGNUM *newkey_n, *newkey_e;
+
 /* proposition C2 - Receive client's public key modulus */
-RSA *newkey = RSA_new();
 {
 
     int len_n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
@@ -779,16 +787,14 @@ RSA *newkey = RSA_new();
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "error while receiving public key modulus");
-        RSA_free(newkey);
         return false;
     }
 
-    if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
+    if ((newkey_n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key modulus failed "
             "(%s)", CryptoLastErrorString());
-        RSA_free(newkey);
         return false;
     }
 }
@@ -800,18 +806,36 @@ RSA *newkey = RSA_new();
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "error while receiving public key exponent");
-        RSA_free(newkey);
         return false;
     }
 
-    if ((newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
+    if ((newkey_e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key exponent failed "
             "(%s)", CryptoLastErrorString());
-        RSA_free(newkey);
+        BN_free(newkey_n);
         return false;
     }
+}
+
+RSA *newkey = RSA_new();
+if (newkey == NULL)
+{
+    Log(LOG_LEVEL_ERR, "Failed to allocate RSA key: %s",
+        TLSErrorString(ERR_get_error()));
+    BN_free(newkey_n);
+    BN_free(newkey_e);
+    return false;
+}
+if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
+{
+    Log(LOG_LEVEL_ERR, "Failed to set RSA key: %s",
+        TLSErrorString(ERR_get_error()));
+    BN_free(newkey_n);
+    BN_free(newkey_e);
+    RSA_free(newkey);
+    return false;
 }
 
 /* Compute and store hash of the client's public key. */
@@ -897,12 +921,15 @@ RSA *newkey = RSA_new();
 
         char bignum_buf[CF_BUFSIZE] = { 0 };
 
+        const BIGNUM *n, *e;
+        RSA_get0_key(PUBKEY, &n, &e, NULL);
+
         /* proposition S4  - conditional */
-        int len_n = BN_bn2mpi(PUBKEY->n, bignum_buf);
+        int len_n = BN_bn2mpi(n, bignum_buf);
         SendTransaction(conn->conn_info, bignum_buf, len_n, CF_DONE);
 
         /* proposition S5  - conditional */
-        int len_e = BN_bn2mpi(PUBKEY->e, bignum_buf);
+        int len_e = BN_bn2mpi(e, bignum_buf);
         SendTransaction(conn->conn_info, bignum_buf, len_e, CF_DONE);
     }
 }

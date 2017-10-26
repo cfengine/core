@@ -569,13 +569,14 @@ int ConnectToSmtpSocket(const ExecConfig *config)
 
 static void MailResult(const ExecConfig *config, const char *file)
 {
-    size_t line_size = CF_BUFSIZE;
-    char *line = xmalloc(line_size);
-    ssize_t read;
+    /* Must be initialised to NULL, so that free(line) works
+       when  goto mail_err. */
+    char *line = NULL;
 
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
+
     Log(LOG_LEVEL_VERBOSE, "Mail report: sending result...");
 
     {
@@ -739,14 +740,18 @@ static void MailResult(const ExecConfig *config, const char *file)
     Log(LOG_LEVEL_DEBUG, "Mail report: %s", vbuff);
     send(sd, vbuff, strlen(vbuff), 0);
 
+    size_t line_size = CF_BUFSIZE;
+    line = xmalloc(line_size);
+    ssize_t n_read;
+
     int count = 0;
-    while ((read = CfReadLine(&line, &line_size, fp)) > 0)
+    while ((n_read = CfReadLine(&line, &line_size, fp)) > 0)
     {
         if (LineIsFiltered(config, line))
         {
             continue;
         }
-        if (send(sd, line, read, 0) == -1 ||
+        if (send(sd, line, n_read, 0) == -1 ||
             send(sd, "\r\n", 2, 0) == -1)
         {
             Log(LOG_LEVEL_ERR, "Error while sending mail to mailserver "

@@ -3440,6 +3440,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
             }
 
             Log(LOG_LEVEL_ERR, "%s is not mergeable as it it not a container", RvalToString(arg->val));
+            SeqDestroy(containers);
             return FnFailure();
         }
 

@@ -924,6 +924,11 @@ struct timespec
 # define ETIMEDOUT ESRCH
 #endif
 
+/* For getnameinfo(). */
+#ifndef  NI_MAXHOST
+# define NI_MAXHOST 1025
+#endif
+
 /********************************************************************/
 /* *BSD chflags stuff -                                             */
 /********************************************************************/

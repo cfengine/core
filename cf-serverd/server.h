@@ -99,7 +99,9 @@ struct ServerConnectionState_
     ConnectionInfo *conn_info;
     /* TODO sockaddr_storage, even though we can keep the text as cache. */
     char ipaddr[CF_MAX_IP_LEN];
-    char revdns[MAXHOSTNAMELEN];          /* only populated in new protocol */
+
+    /* TODO this is too big at 1025; maybe allocate dynamically from a pool? */
+    char revdns[NI_MAXHOST];              /* only populated in new protocol */
 
 #ifdef __MINGW32__
     /* We avoid dynamically allocated buffers due to potential memory leaks,

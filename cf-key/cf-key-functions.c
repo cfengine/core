@@ -231,7 +231,7 @@ bool ShowHost(const char *hostkey, const char *address, bool incoming,
     int *count = ctx;
     char timebuf[26];
 
-    char hostname[MAXHOSTNAMELEN];
+    char hostname[NI_MAXHOST];
     if (LOOKUP_HOSTS)
     {
         int ret = IPString2Hostname(hostname, address, sizeof(hostname));

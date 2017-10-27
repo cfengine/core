@@ -142,7 +142,7 @@ if(defined($opts{s}) or defined($opts{a})){
 	print "Total number of bundles: $no_bundles\n";
 	print "Top 10 worst, bundles:\n";
 	my $iter = 0;
-	foreach my $b(sort {$times{$b} cmp $times{$a}} keys %times){
+	foreach my $b(sort {$times{$b} <=> $times{$a}} keys %times){
 		last if $iter == 10;
 		my $t = $times{$b};
 		$iter++;
@@ -259,6 +259,10 @@ sub bundles_v2 {
 			}
 			$is_edit_bundle = 0;
 		} elsif ($line =~ /^\s+verbose:\s+P:\s+BEGIN\s+promise\s+'\w+'\s+of\s+type\s+"([^"]+)"\s+\(pass\s+(\d)\)\s*$/){
+			$promise_type = $1;
+			$iter = $2;
+			bundle_promise($promise_type,$iter);
+		} elsif ($line =~ /^\s+verbose:\s+P:\s+BEGIN\s+un-named\s+promise\s+of\s+type\s+"([^"]+)"\s+\(pass\s+(\d)\)\s*$/){
 			$promise_type = $1;
 			$iter = $2;
 			bundle_promise($promise_type,$iter);

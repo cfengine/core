@@ -474,7 +474,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
         }
         else
         {
-            char hostname[MAXHOSTNAMELEN];
+            char hostname[NI_MAXHOST];
             if (IPString2Hostname(hostname, ip->name, sizeof(hostname)) != -1)
             {
                 snprintf(address, sizeof(address), "%s", hostname);
@@ -771,7 +771,7 @@ static FnCallResult FnCallIP2Host(ARG_UNUSED EvalContext *ctx,
                                   ARG_UNUSED const FnCall *fp,
                                   const Rlist *finalargs)
 {
-    char hostname[MAXHOSTNAMELEN];
+    char hostname[NI_MAXHOST];
     char *ip = RlistScalarValue(finalargs);
 
     if (IPString2Hostname(hostname, ip, sizeof(hostname)) != -1)

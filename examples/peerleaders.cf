@@ -25,7 +25,7 @@
 #@ echo beta >> /tmp/cfe_hostlist
 #@ echo gamma >> /tmp/cfe_hostlist
 #@ echo "Set HOSTNAME appropriately beforehand"
-#@ echo "$HOSTNAME" >> /tmp/cfe_hostlist
+#@ echo "$HOSTNAME" | tr 'A-Z' 'a-z' >> /tmp/cfe_hostlist
 #@ echo "Delta Delta Delta may I help ya help ya help ya"
 #@ echo delta1 >> /tmp/cfe_hostlist
 #@ echo delta2 >> /tmp/cfe_hostlist
@@ -61,6 +61,8 @@ bundle agent peers
       # the peer leader is "alpha"
       "/tmp/cfe_hostlist myleader $(myleader)";
       "/tmp/cfe_hostlist another leader $(all_leaders)";
+      "Unable to find my fully qualified hostname $(sys.fqhost) in /tmp/cfe_hostlist. Can't determine peers."
+        if => not( regline( $(sys.fqhost), "/tmp/cfe_hostlist" ) );
 }
 #+end_src
 ###############################################################################

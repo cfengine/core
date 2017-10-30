@@ -435,7 +435,7 @@ queue_test_SOURCES = queue_test.c
 
 if !NT
 check_PROGRAMS += nfs_test
-nfs_test_SOURCES = nfs_test.c
+nfs_test_SOURCES = nfs_test.c ../../cf-agent/match_scope.c
 nfs_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 init_script_test_helper_SOURCES = init_script_test_helper.c

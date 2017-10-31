@@ -58,12 +58,18 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.havelink = PromiseGetConstraintAsBoolean(ctx, "link_from", pp);
 
     attr.edit_template = PromiseGetConstraintAsRval(pp, "edit_template", RVAL_TYPE_SCALAR);
+    attr.edit_template_string = PromiseGetConstraintAsRval(pp, "edit_template_string", RVAL_TYPE_SCALAR);
     attr.template_method = PromiseGetConstraintAsRval(pp, "template_method", RVAL_TYPE_SCALAR);
     attr.template_data = PromiseGetConstraintAsRval(pp, "template_data", RVAL_TYPE_CONTAINER);
 
+    if (!attr.template_method )
+    {
+        xasprintf(&attr.template_method, "cfengine");
+    }
+
     attr.haveeditline = PromiseBundleOrBodyConstraintExists(ctx, "edit_line", pp);
     attr.haveeditxml = PromiseBundleOrBodyConstraintExists(ctx, "edit_xml", pp);
-    attr.haveedit = (attr.haveeditline) || (attr.haveeditxml) || (attr.edit_template);
+    attr.haveedit = (attr.haveeditline) || (attr.haveeditxml) || (attr.edit_template) || (attr.edit_template_string);
 
 /* Files, specialist */
 
@@ -85,7 +91,7 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.link = GetLinkConstraints(ctx, pp);
     attr.edits = GetEditDefaults(ctx, pp);
 
-    if (attr.edit_template)
+    if (attr.edit_template || attr.edit_template_string)
     {
         attr.edits.empty_before_use = true;
         attr.edits.inherit = true;

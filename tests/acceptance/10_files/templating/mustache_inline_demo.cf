@@ -1,0 +1,74 @@
+#######################################################
+#
+# Demo from mustache.github.io
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "origtestdir" string => dirname("$(this.promise_filename)");
+
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "template_str" string => "This is a test: {{a}}";
+      "d" data => parsejson('{ "a": "1" }');
+
+  files:
+      "$(G.testfile)"
+      create => "true",
+      edit_template_string => "$(template_str)",
+      template_method => "inline_mustache",
+      template_data => "@(test.d)";
+
+  reports:
+    DEBUG::
+      "Rendering template file $(template_str) to $(G.testfile)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expect" string => readfile("$(init.origtestdir)/inline_demo.expected", 10000);
+      "actual" string => readfile("$(G.testfile)", 10000);
+
+  classes:
+      "ok" expression => regcmp("$(expect)", "$(actual)");
+
+  reports:
+    DEBUG::
+      "expect: '$(expect)'";
+      "actual: '$(actual)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

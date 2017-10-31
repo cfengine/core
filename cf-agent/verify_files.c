@@ -244,6 +244,7 @@ Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attr
 
     // a.transformer = ExpandThisPromiserScalar(ctx, namespace, scope, attr->transformer);
     a.edit_template = ExpandThisPromiserScalar(ctx, namespace, scope, attr->edit_template);
+    a.edit_template_string = ExpandThisPromiserScalar(ctx, namespace, scope, attr->edit_template_string);
 
     return a;
 }
@@ -261,6 +262,7 @@ void ClearExpandedAttributes(Attributes *a)
     free(a->transaction.measure_id);
     a->transaction.measure_id = NULL;
     free(a->edit_template);
+    free(a->edit_template_string);
     a->edit_template = NULL;
 
     ClearFilesAttributes(a);
@@ -575,7 +577,81 @@ static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMo
     return true;
 }
 
+
 static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, Attributes a,
+                                            EditContext *edcontext, char *template)
+{
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    JsonElement *default_template_data = NULL;
+
+    if (!a.template_data)
+    {
+        a.template_data = default_template_data = DefaultTemplateData(ctx, NULL);
+    }
+
+    unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    if (access(pp->promiser, R_OK) == 0)
+    {
+        HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST);
+    }
+
+    Buffer *output_buffer = BufferNew();
+
+    char *message;
+    if ( strcmp("inline_mustache", a.template_method) == 0)
+    {
+        xasprintf(&message, "inline");
+    }
+    else
+    {
+        xasprintf(&message, "%s", a.edit_template);
+    }
+
+    if (MustacheRender(output_buffer, template, a.template_data))
+    {
+        unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+        HashString(BufferData(output_buffer), BufferSize(output_buffer), rendered_output_digest, CF_DEFAULT_DIGEST);
+        if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
+        {
+            if (a.transaction.action == cfa_warn || DONTDO)
+            {
+                Log(LOG_LEVEL_WARNING, "Need to render '%s' from mustache template '%s' but policy is dry-run", pp->promiser, message);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+            }
+            else
+            {
+                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, a, edcontext->new_line_mode))
+                {
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from mustache template '%s'",
+                         pp->promiser, message);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                }
+                else
+                {
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to update rendering of '%s' from mustache template '%s'",
+                         pp->promiser, message);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                }
+            }
+        }
+
+        JsonDestroy(default_template_data);
+        BufferDestroy(output_buffer);
+        free(message);
+
+        return result;
+    }
+    else
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        JsonDestroy(default_template_data);
+        BufferDestroy(output_buffer);
+        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
+}
+
+static PromiseResult RenderTemplateMustacheFromFIle(EvalContext *ctx, const Promise *pp, Attributes a,
                                             EditContext *edcontext)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -586,11 +662,6 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
-    unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    if (access(pp->promiser, R_OK) == 0)
-    {
-        HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST);
-    }
 
     int template_fd = safe_open(a.edit_template, O_RDONLY | O_TEXT);
     Writer *template_writer = NULL;
@@ -605,56 +676,25 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
-    JsonElement *default_template_data = NULL;
-    if (!a.template_data)
-    {
-        a.template_data = default_template_data = DefaultTemplateData(ctx, NULL);
-    }
+    result =  RenderTemplateMustache(ctx, pp, a, edcontext, (char *)StringWriterData(template_writer));
 
-    Buffer *output_buffer = BufferNew();
-    if (MustacheRender(output_buffer, StringWriterData(template_writer), a.template_data))
-    {
-        unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-        HashString(BufferData(output_buffer), BufferSize(output_buffer), rendered_output_digest, CF_DEFAULT_DIGEST);
-        if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
-        {
-            if (a.transaction.action == cfa_warn || DONTDO)
-            {
-                Log(LOG_LEVEL_WARNING, "Need to render '%s' from mustache template '%s' but policy is dry-run", pp->promiser, a.edit_template);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-            }
-            else
-            {
-                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, a, edcontext->new_line_mode))
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from mustache template '%s'",
-                         pp->promiser, a.edit_template);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to update rendering of '%s' from mustache template '%s'",
-                         pp->promiser, a.edit_template);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                }
-            }
-        }
+    WriterClose(template_writer);
 
-        JsonDestroy(default_template_data);
-        WriterClose(template_writer);
-        BufferDestroy(output_buffer);
+    return result;
+}
 
-        return result;
-    }
-    else
+static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Promise *pp, Attributes a,
+                                            EditContext *edcontext)
+{
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
+    if ( a.edit_template_string == NULL  )
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-        JsonDestroy(default_template_data);
-        WriterClose(template_writer);
-        BufferDestroy(output_buffer);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
+
+    return  RenderTemplateMustache(ctx, pp, a, edcontext, a.edit_template_string);
 }
 
 PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)
@@ -755,19 +795,36 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         }
     }
 
-
-    if (a.edit_template)
+    if (strcmp("cfengine", a.template_method) == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
-            filename, a.edit_template, a.template_method ? a.template_method : "cfengine");
-        if (!a.template_method || strcmp("cfengine", a.template_method) == 0)
+        if (a.edit_template)
         {
+            Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
+                filename, a.edit_template, a.template_method);
+
             PromiseResult render_result = RenderTemplateCFEngine(ctx, pp, args, a, edcontext);
             result = PromiseResultUpdate(result, render_result);
         }
-        else if (strcmp("mustache", a.template_method) == 0)
+    }
+    else if (strcmp("mustache", a.template_method) == 0)
+    {
+        if (a.edit_template)
         {
-            PromiseResult render_result = RenderTemplateMustache(ctx, pp, a, edcontext);
+            Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
+                filename, a.edit_template, a.template_method);
+
+            PromiseResult render_result = RenderTemplateMustacheFromFIle(ctx, pp, a, edcontext);
+            result = PromiseResultUpdate(result, render_result);
+        }
+    }
+    else if (strcmp("inline_mustache", a.template_method) == 0)
+    {
+        if (a.edit_template_string)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Rendering '%s' with method '%s'",
+                filename, a.template_method);
+
+            PromiseResult render_result = RenderTemplateMustacheFromString(ctx, pp, a, edcontext);
             result = PromiseResultUpdate(result, render_result);
         }
     }

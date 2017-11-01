@@ -10,6 +10,7 @@ Type=simple
 ExecStart=@workdir@/bin/cf-execd --no-fork
 Restart=always
 RestartSec=10
+KillMode=process
 
 [Install]
 WantedBy=multi-user.target

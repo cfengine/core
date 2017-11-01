@@ -25,7 +25,7 @@
 #@ echo beta >> /tmp/cfe_hostlist
 #@ echo gamma >> /tmp/cfe_hostlist
 #@ echo "Set HOSTNAME appropriately beforehand"
-#@ echo "$HOSTNAME" | tr 'A-Z' 'a-z' >> /tmp/cfe_hostlist
+#@ echo "$(hostname -f)" | tr 'A-Z' 'a-z' >> /tmp/cfe_hostlist
 #@ echo "Delta Delta Delta may I help ya help ya help ya"
 #@ echo delta1 >> /tmp/cfe_hostlist
 #@ echo delta2 >> /tmp/cfe_hostlist

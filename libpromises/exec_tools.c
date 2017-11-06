@@ -231,11 +231,12 @@ char **ArgSplitCommand(const char *comm)
 
 void ArgFree(char **args)
 {
-    char **arg = args;
-
-    for (; *arg; ++arg)
+    if (args != NULL)
     {
-        free(*arg);
+        for (char **arg = args; *arg; ++arg)
+        {
+            free(*arg);
+        }
+        free(args);
     }
-    free(args);
 }

@@ -251,12 +251,15 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
     int parent_pipe[2]; /* From parent to child */
     pid_t pid;
 
+    char **argv = ArgSplitCommand(command);
+
     fflush(NULL); /* Empty file buffers */
     pid = CreatePipesAndFork("r+t", child_pipe, parent_pipe);
 
     if (pid == (pid_t) -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't fork child process: %s", GetErrorStr());
+        ArgFree(argv);
         return (IOData) {-1, -1};
     }
 
@@ -271,6 +274,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
 
         ChildrenFDSet(parent_pipe[WRITE], pid);
         ChildrenFDSet(child_pipe[READ], pid);
+        ArgFree(argv);
         return io_desc;
     }
     else // child
@@ -305,9 +309,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
 
         ChildrenFDUnsafeClose();
 
-        char **argv  = ArgSplitCommand(command);
-        int res = -1;
-
+        int res;
         if (require_full_path)
         {
             res = execv(argv[0], argv);
@@ -329,18 +331,22 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
         /* We shouldn't reach this point */
         _exit(EXIT_FAILURE);
     }
+#undef READ
+#undef WRITE
 }
 
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 {
     int pd[2];
-    char **argv;
     pid_t pid;
     FILE *pp = NULL;
+
+    char **argv = ArgSplitCommand(command);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == (pid_t) -1)
     {
+        ArgFree(argv);
         return NULL;
     }
 
@@ -387,9 +393,6 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 
         ChildrenFDUnsafeClose();
 
-        /* BUG all these mallocs */
-        argv = ArgSplitCommand(command);
-
         if (execv(argv[0], argv) == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't run '%s'. (execv: %s)", argv[0], GetErrorStr());
@@ -408,6 +411,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
             break;
@@ -419,15 +423,18 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
         }
 
         ChildrenFDSet(fileno(pp), pid);
+        ArgFree(argv);
         return pp;
     }
 
-    return NULL;                /* Cannot reach here */
+    ProgrammingError("Unreachable code");
+    return NULL;
 }
 
 /*****************************************************************************/
@@ -437,13 +444,15 @@ FILE *cf_popensetuid(const char *command, const char *type,
                      ARG_UNUSED int background)
 {
     int pd[2];
-    char **argv;
     pid_t pid;
     FILE *pp = NULL;
+
+    char **argv = ArgSplitCommand(command);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == (pid_t) -1)
     {
+        ArgFree(argv);
         return NULL;
     }
 
@@ -479,24 +488,22 @@ FILE *cf_popensetuid(const char *command, const char *type,
 
         ChildrenFDUnsafeClose();
 
-        argv = ArgSplitCommand(command);
-
         if (chrootv && (strlen(chrootv) != 0))
         {
             if (chroot(chrootv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chroot to '%s'. (chroot: %s)", chrootv, GetErrorStr());
-                ArgFree(argv);
                 _exit(EXIT_FAILURE);
             }
         }
 
         if (chdirv && (strlen(chdirv) != 0))
         {
+            /* TODO: safe_chdir is probably not signal-handler safe, so it's
+             * not allowed in child. */
             if (safe_chdir(chdirv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
-                ArgFree(argv);
                 _exit(EXIT_FAILURE);
             }
         }
@@ -524,6 +531,7 @@ FILE *cf_popensetuid(const char *command, const char *type,
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
             break;
@@ -535,15 +543,18 @@ FILE *cf_popensetuid(const char *command, const char *type,
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
         }
 
         ChildrenFDSet(fileno(pp), pid);
+        ArgFree(argv);
         return pp;
     }
 
-    return NULL;                /* cannot reach here */
+    ProgrammingError("Unreachable code");
+    return NULL;
 }
 
 /*****************************************************************************/
@@ -595,6 +606,8 @@ FILE *cf_popen_sh(const char *command, const char *type)
         ChildrenFDUnsafeClose();
 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
+
+        Log(LOG_LEVEL_ERR, "Couldn't run: '%s'  (execl: %s)", command, GetErrorStr());
         _exit(EXIT_FAILURE);
     }
     else                                                        /* parent */
@@ -627,6 +640,7 @@ FILE *cf_popen_sh(const char *command, const char *type)
         return pp;
     }
 
+    ProgrammingError("Unreachable code");
     return NULL;
 }
 
@@ -689,6 +703,8 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
 
         if (chdirv && (strlen(chdirv) != 0))
         {
+            /* TODO: safe_chdir is probably not signal-handler safe, so it's
+             * not allowed in child. */
             if (safe_chdir(chdirv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
@@ -702,6 +718,8 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
         }
 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
+
+        Log(LOG_LEVEL_ERR, "Couldn't run: '%s'  (execl: %s)", command, GetErrorStr());
         _exit(EXIT_FAILURE);
     }
     else                                                        /* parent */
@@ -734,6 +752,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
         return pp;
     }
 
+    ProgrammingError("Unreachable code");
     return NULL;
 }
 

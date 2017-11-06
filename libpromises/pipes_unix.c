@@ -477,7 +477,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chroot to '%s'. (chroot: %s)", chrootv, GetErrorStr());
                 ArgFree(argv);
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 
@@ -487,7 +487,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
                 ArgFree(argv);
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 
@@ -669,7 +669,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
             if (chroot(chrootv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chroot to '%s'. (chroot: %s)", chrootv, GetErrorStr());
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 
@@ -678,7 +678,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
             if (safe_chdir(chdirv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 

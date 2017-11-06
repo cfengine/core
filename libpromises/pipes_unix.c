@@ -39,7 +39,7 @@ static pid_t *CHILDREN = NULL; /* GLOBAL_X */
 static int MAX_FD = 128; /* GLOBAL_X */ /* Max number of simultaneous pipes */
 
 
-static bool InitChildrenFD()
+static bool ChildrenFDInit()
 {
     if (!ThreadLock(cft_count))
     {
@@ -61,7 +61,7 @@ static bool InitChildrenFD()
 
 /* This leaks memory and is not thread-safe! To be used only when you are
  * about to exec() or _exit(), and only async-signal-safe code is allowed. */
-static void CloseChildrenFDUnsafe()
+static void ChildrenFDUnsafeClose()
 {
     for (int i = 0; i < MAX_FD; i++)
     {
@@ -76,7 +76,7 @@ static void CloseChildrenFDUnsafe()
 /* This is the original safe version, but not signal-handler-safe.
    It's currently unused. */
 #if 0
-static void CloseChildrenFD()
+static void ChildrenFDClose()
 {
     ThreadLock(cft_count);
     int i;
@@ -95,7 +95,7 @@ static void CloseChildrenFD()
 
 /*****************************************************************************/
 
-static void SetChildFD(int fd, pid_t pid)
+static void ChildrenFDSet(int fd, pid_t pid)
 {
     int new_max = 0;
 
@@ -138,7 +138,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         }
     }
 
-    if (!InitChildrenFD())
+    if (! ChildrenFDInit())
     {
         return -1;
     }
@@ -264,8 +264,8 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
         io_desc.write_fd = parent_pipe[WRITE];
         io_desc.read_fd = child_pipe[READ];
 
-        SetChildFD(parent_pipe[WRITE], pid);
-        SetChildFD(child_pipe[READ], pid);
+        ChildrenFDSet(parent_pipe[WRITE], pid);
+        ChildrenFDSet(child_pipe[READ], pid);
         return io_desc;
     }
     else // child
@@ -298,7 +298,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr)
         close(child_pipe[WRITE]);
         close(parent_pipe[READ]);
 
-        CloseChildrenFDUnsafe();
+        ChildrenFDUnsafeClose();
 
         char **argv  = ArgSplitCommand(command);
         if (execv(argv[0], argv) == -1)
@@ -365,7 +365,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             }
         }
 
-        CloseChildrenFDUnsafe();
+        ChildrenFDUnsafeClose();
 
         /* BUG all these mallocs */
         argv = ArgSplitCommand(command);
@@ -403,7 +403,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
         return pp;
     }
 
@@ -457,7 +457,7 @@ FILE *cf_popensetuid(const char *command, const char *type,
             }
         }
 
-        CloseChildrenFDUnsafe();
+        ChildrenFDUnsafeClose();
 
         argv = ArgSplitCommand(command);
 
@@ -519,7 +519,7 @@ FILE *cf_popensetuid(const char *command, const char *type,
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
         return pp;
     }
 
@@ -572,7 +572,7 @@ FILE *cf_popen_sh(const char *command, const char *type)
             }
         }
 
-        CloseChildrenFDUnsafe();
+        ChildrenFDUnsafeClose();
 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
         _exit(EXIT_FAILURE);
@@ -603,7 +603,7 @@ FILE *cf_popen_sh(const char *command, const char *type)
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
         return pp;
     }
 
@@ -656,7 +656,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
             }
         }
 
-        CloseChildrenFDUnsafe();
+        ChildrenFDUnsafeClose();
 
         if (chrootv && (strlen(chrootv) != 0))
         {
@@ -710,7 +710,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
         return pp;
     }
 

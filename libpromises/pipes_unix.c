@@ -40,6 +40,7 @@ static int cf_pwait(pid_t pid);
 static pid_t *CHILDREN = NULL; /* GLOBAL_X */
 static int MAX_FD = 128; /* GLOBAL_X */ /* Max number of simultaneous pipes */
 
+
 static int InitChildrenFD()
 {
     if (!ThreadLock(cft_count))
@@ -58,6 +59,23 @@ static int InitChildrenFD()
 
 /*****************************************************************************/
 
+/* This leaks memory and is not thread-safe! To be used only when you are
+ * about to exec() or _exit(), and only async-signal-safe code is allowed. */
+static void CloseChildrenFDUnsafe()
+{
+    for (int i = 0; i < MAX_FD; i++)
+    {
+        if (CHILDREN[i] > 0)
+        {
+            close(i);
+        }
+    }
+    CHILDREN = NULL;                                    /* leaks on purpose */
+}
+
+/* This is the original safe version, but not signal-handler-safe.
+   It's currently unused. */
+#if 0
 static void CloseChildrenFD()
 {
     ThreadLock(cft_count);
@@ -73,6 +91,7 @@ static void CloseChildrenFD()
     CHILDREN = NULL;
     ThreadUnlock(cft_count);
 }
+#endif
 
 /*****************************************************************************/
 
@@ -279,7 +298,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
         close(child_pipe[WRITE]);
         close(parent_pipe[READ]);
 
-        CloseChildrenFD();
+        CloseChildrenFDUnsafe();
 
         char **argv  = ArgSplitCommand(command);
         int res = -1;
@@ -360,7 +379,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             }
         }
 
-        CloseChildrenFD();
+        CloseChildrenFDUnsafe();
 
         argv = ArgSplitCommand(command);
 
@@ -448,7 +467,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
             }
         }
 
-        CloseChildrenFD();
+        CloseChildrenFDUnsafe();
 
         argv = ArgSplitCommand(command);
 
@@ -562,7 +581,7 @@ FILE *cf_popen_sh(const char *command, const char *type)
             }
         }
 
-        CloseChildrenFD();
+        CloseChildrenFDUnsafe();
 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
         _exit(EXIT_FAILURE);
@@ -643,7 +662,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
             }
         }
 
-        CloseChildrenFD();
+        CloseChildrenFDUnsafe();
 
         if (chrootv && (strlen(chrootv) != 0))
         {

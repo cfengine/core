@@ -65,6 +65,9 @@ static bool ChildrenFDInit()
  * about to exec() or _exit(), and only async-signal-safe code is allowed. */
 static void ChildrenFDUnsafeClose()
 {
+    /* GenericCreatePipeAndFork() must have been called to init this. */
+    assert(CHILDREN != NULL);
+
     for (int i = 0; i < MAX_FD; i++)
     {
         if (CHILDREN[i] > 0)

@@ -39,20 +39,22 @@ static pid_t *CHILDREN = NULL; /* GLOBAL_X */
 static int MAX_FD = 128; /* GLOBAL_X */ /* Max number of simultaneous pipes */
 
 
-static int InitChildrenFD()
+static bool InitChildrenFD()
 {
     if (!ThreadLock(cft_count))
     {
         return false;
     }
-
-    if (CHILDREN == NULL)       /* first time */
+    else
     {
-        CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
-    }
+        if (CHILDREN == NULL)       /* first time */
+        {
+            CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
+        }
 
-    ThreadUnlock(cft_count);
-    return true;
+        ThreadUnlock(cft_count);
+        return true;
+    }
 }
 
 /*****************************************************************************/
@@ -173,7 +175,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         return -1;
     }
 
-    /* WARNING: UNDEFINED BEHAVIOUR if the program is multi-threaded! */
+    /* TODO fix: UNDEFINED BEHAVIOUR if the program is multi-threaded! */
     signal(SIGCHLD, SIG_DFL);
 
     if (pid == 0)                                               /* child */
@@ -317,7 +319,8 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
     FILE *pp = NULL;
 
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
         return NULL;
     }
 
@@ -364,6 +367,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 
         CloseChildrenFDUnsafe();
 
+        /* BUG all these mallocs */
         argv = ArgSplitCommand(command);
 
         if (execv(argv[0], argv) == -1)
@@ -373,7 +377,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -408,7 +412,9 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+FILE *cf_popensetuid(const char *command, const char *type,
+                     uid_t uid, gid_t gid, char *chdirv, char *chrootv,
+                     ARG_UNUSED int background)
 {
     int pd[2];
     char **argv;
@@ -416,7 +422,8 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
     FILE *pp = NULL;
 
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
         return NULL;
     }
 
@@ -486,7 +493,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
 
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -530,7 +537,8 @@ FILE *cf_popen_sh(const char *command, const char *type)
     FILE *pp = NULL;
 
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
         return NULL;
     }
 
@@ -569,7 +577,7 @@ FILE *cf_popen_sh(const char *command, const char *type)
         execl(SHELL_PATH, "sh", "-c", command, NULL);
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -604,14 +612,17 @@ FILE *cf_popen_sh(const char *command, const char *type)
 
 /******************************************************************************/
 
-FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+FILE *cf_popen_shsetuid(const char *command, const char *type,
+                        uid_t uid, gid_t gid, char *chdirv, char *chrootv,
+                        ARG_UNUSED int background)
 {
     int pd[2];
     pid_t pid;
     FILE *pp = NULL;
 
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
         return NULL;
     }
 
@@ -673,7 +684,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -730,6 +741,8 @@ static int cf_pwait(pid_t pid)
 
 /*******************************************************************/
 
+/* Closes the pipe and wait()s for PID of the child,
+   in order to reap the zombies. */
 int cf_pclose(FILE *pp)
 {
     int fd = fileno(pp);

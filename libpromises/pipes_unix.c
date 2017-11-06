@@ -165,7 +165,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
 
     pid_t pid = -1;
 
-    if ((pid = fork()) == -1)
+    if ((pid = fork()) == (pid_t) -1)
     {
         /* One pipe will be always here. */
         close(pipes[0].pipe_desc[0]);
@@ -254,7 +254,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
     fflush(NULL); /* Empty file buffers */
     pid = CreatePipesAndFork("r+t", child_pipe, parent_pipe);
 
-    if (pid < 0)
+    if (pid == (pid_t) -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't fork child process: %s", GetErrorStr());
         return (IOData) {-1, -1};

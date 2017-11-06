@@ -178,8 +178,14 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         return -1;
     }
 
-    /* TODO fix: UNDEFINED BEHAVIOUR if the program is multi-threaded! */
-    signal(SIGCHLD, SIG_DFL);
+    /* Ignore SIGCHLD, by setting the handler to SIG_DFL. NOTE: this is
+     * different than setting to SIG_IGN. In the latter case no zombies are
+     * generated ever and you can't wait() for the child to finish. */
+    struct sigaction sa = {
+        .sa_handler = SIG_DFL,
+    };
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGCHLD, &sa, NULL);
 
     if (pid == 0)                                               /* child */
     {

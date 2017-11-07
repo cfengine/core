@@ -250,9 +250,8 @@ static pid_t CreatePipesAndFork(const char *type, int *pd, int *pdb)
 
 IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool require_full_path)
 {
-/* For simplifying reading and writing directions */
-#define READ  0
-#define WRITE 1
+    /* For simplifying reading and writing directions */
+    const int READ=0, WRITE=1;
     int child_pipe[2];  /* From child to parent */
     int parent_pipe[2]; /* From parent to child */
     pid_t pid;
@@ -337,8 +336,6 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
         /* We shouldn't reach this point */
         _exit(EXIT_FAILURE);
     }
-#undef READ
-#undef WRITE
 }
 
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr)

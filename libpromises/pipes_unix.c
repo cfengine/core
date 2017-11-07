@@ -445,6 +445,10 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 
 /*****************************************************************************/
 
+/*
+ * WARNING: this is only allowed to be called from single-threaded code,
+ *          because of the safe_chdir() call in the forked child.
+ */
 FILE *cf_popensetuid(const char *command, const char *type,
                      uid_t uid, gid_t gid, char *chdirv, char *chrootv,
                      ARG_UNUSED int background)
@@ -505,8 +509,6 @@ FILE *cf_popensetuid(const char *command, const char *type,
 
         if (chdirv && (strlen(chdirv) != 0))
         {
-            /* TODO: safe_chdir is probably not signal-handler safe, so it's
-             * not allowed in child. */
             if (safe_chdir(chdirv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
@@ -652,6 +654,10 @@ FILE *cf_popen_sh(const char *command, const char *type)
 
 /******************************************************************************/
 
+/*
+ * WARNING: this is only allowed to be called from single-threaded code,
+ *          because of the safe_chdir() call in the forked child.
+ */
 FILE *cf_popen_shsetuid(const char *command, const char *type,
                         uid_t uid, gid_t gid, char *chdirv, char *chrootv,
                         ARG_UNUSED int background)
@@ -709,8 +715,6 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
 
         if (chdirv && (strlen(chdirv) != 0))
         {
-            /* TODO: safe_chdir is probably not signal-handler safe, so it's
-             * not allowed in child. */
             if (safe_chdir(chdirv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());

@@ -764,24 +764,36 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
 
 static int cf_pwait(pid_t pid)
 {
+    Log(LOG_LEVEL_DEBUG,
+        "cf_pwait - waiting for process %jd", (intmax_t) pid);
+
     int status;
-
-    Log(LOG_LEVEL_DEBUG, "cf_pwait - Waiting for process %jd", (intmax_t)pid);
-
     while (waitpid(pid, &status, 0) < 0)
     {
         if (errno != EINTR)
         {
+            Log(LOG_LEVEL_ERR,
+                "Waiting for child PID %jd failed (waitpid: %s)",
+                (intmax_t) pid, GetErrorStr());
             return -1;
         }
     }
 
     if (!WIFEXITED(status))
     {
+        Log(LOG_LEVEL_VERBOSE,
+            "Child PID %jd exited abnormally (%s)", (intmax_t) pid,
+            WIFSIGNALED(status) ? "signalled" : (
+                WIFSTOPPED(status) ? "stopped" : (
+                    WIFCONTINUED(status) ? "continued" : "unknown" )));
         return -1;
     }
 
-    return WEXITSTATUS(status);
+    int retcode = WEXITSTATUS(status);
+
+    Log(LOG_LEVEL_DEBUG, "cf_pwait - process %jd exited with code: %d",
+        (intmax_t) pid, retcode);
+    return retcode;
 }
 
 /*******************************************************************/

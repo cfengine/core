@@ -814,18 +814,19 @@ int cf_pclose(FILE *pp)
         Log(LOG_LEVEL_ERR,
             "File descriptor %d of child higher than MAX_FD in cf_pclose!",
             fd);
-        pid = 0;
-    }
-    else
-    {
-        pid = CHILDREN[fd];
-        CHILDREN[fd] = 0;
-        ThreadUnlock(cft_count);
+        fclose(pp);
+        return -1;
     }
 
-    if (fclose(pp) == EOF || pid == 0)
+    pid = CHILDREN[fd];
+    CHILDREN[fd] = 0;
+    ThreadUnlock(cft_count);
+
+    if (fclose(pp) == EOF)
     {
-        return -1;
+        Log(LOG_LEVEL_ERR,
+            "Could not close the pipe to the executed subcommand (fclose: %s)",
+            GetErrorStr());
     }
 
     return cf_pwait(pid);

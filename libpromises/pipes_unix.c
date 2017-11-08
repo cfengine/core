@@ -40,25 +40,48 @@ static int cf_pwait(pid_t pid);
 static pid_t *CHILDREN = NULL; /* GLOBAL_X */
 static int MAX_FD = 128; /* GLOBAL_X */ /* Max number of simultaneous pipes */
 
-static int InitChildrenFD()
+
+static bool ChildrenFDInit()
 {
     if (!ThreadLock(cft_count))
     {
         return false;
     }
-
-    if (CHILDREN == NULL)       /* first time */
+    else
     {
-        CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
-    }
+        if (CHILDREN == NULL)       /* first time */
+        {
+            CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
+        }
 
-    ThreadUnlock(cft_count);
-    return true;
+        ThreadUnlock(cft_count);
+        return true;
+    }
 }
 
 /*****************************************************************************/
 
-static void CloseChildrenFD()
+/* This leaks memory and is not thread-safe! To be used only when you are
+ * about to exec() or _exit(), and only async-signal-safe code is allowed. */
+static void ChildrenFDUnsafeClose()
+{
+    /* GenericCreatePipeAndFork() must have been called to init this. */
+    assert(CHILDREN != NULL);
+
+    for (int i = 0; i < MAX_FD; i++)
+    {
+        if (CHILDREN[i] > 0)
+        {
+            close(i);
+        }
+    }
+    CHILDREN = NULL;                                    /* leaks on purpose */
+}
+
+/* This is the original safe version, but not signal-handler-safe.
+   It's currently unused. */
+#if 0
+static void ChildrenFDClose()
 {
     ThreadLock(cft_count);
     int i;
@@ -73,10 +96,11 @@ static void CloseChildrenFD()
     CHILDREN = NULL;
     ThreadUnlock(cft_count);
 }
+#endif
 
 /*****************************************************************************/
 
-static void SetChildFD(int fd, pid_t pid)
+static void ChildrenFDSet(int fd, pid_t pid)
 {
     int new_max = 0;
 
@@ -119,7 +143,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         }
     }
 
-    if (!InitChildrenFD())
+    if (! ChildrenFDInit())
     {
         return -1;
     }
@@ -141,7 +165,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
 
     pid_t pid = -1;
 
-    if ((pid = fork()) == -1)
+    if ((pid = fork()) == (pid_t) -1)
     {
         /* One pipe will be always here. */
         close(pipes[0].pipe_desc[0]);
@@ -156,8 +180,14 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         return -1;
     }
 
-    /* WARNING: UNDEFINED BEHAVIOUR if the program is multi-threaded! */
-    signal(SIGCHLD, SIG_DFL);
+    /* Ignore SIGCHLD, by setting the handler to SIG_DFL. NOTE: this is
+     * different than setting to SIG_IGN. In the latter case no zombies are
+     * generated ever and you can't wait() for the child to finish. */
+    struct sigaction sa = {
+        .sa_handler = SIG_DFL,
+    };
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGCHLD, &sa, NULL);
 
     if (pid == 0)                                               /* child */
     {
@@ -220,19 +250,21 @@ static pid_t CreatePipesAndFork(const char *type, int *pd, int *pdb)
 
 IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool require_full_path)
 {
-/* For simplifying reading and writing directions */
-#define READ  0
-#define WRITE 1
+    /* For simplifying reading and writing directions */
+    const int READ=0, WRITE=1;
     int child_pipe[2];  /* From child to parent */
     int parent_pipe[2]; /* From parent to child */
     pid_t pid;
 
+    char **argv = ArgSplitCommand(command);
+
     fflush(NULL); /* Empty file buffers */
     pid = CreatePipesAndFork("r+t", child_pipe, parent_pipe);
 
-    if (pid < 0)
+    if (pid == (pid_t) -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't fork child process: %s", GetErrorStr());
+        ArgFree(argv);
         return (IOData) {-1, -1};
     }
 
@@ -245,8 +277,9 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
         io_desc.write_fd = parent_pipe[WRITE];
         io_desc.read_fd = child_pipe[READ];
 
-        SetChildFD(parent_pipe[WRITE], pid);
-        SetChildFD(child_pipe[READ], pid);
+        ChildrenFDSet(parent_pipe[WRITE], pid);
+        ChildrenFDSet(child_pipe[READ], pid);
+        ArgFree(argv);
         return io_desc;
     }
     else // child
@@ -279,11 +312,9 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
         close(child_pipe[WRITE]);
         close(parent_pipe[READ]);
 
-        CloseChildrenFD();
+        ChildrenFDUnsafeClose();
 
-        char **argv  = ArgSplitCommand(command);
-        int res = -1;
-
+        int res;
         if (require_full_path)
         {
             res = execv(argv[0], argv);
@@ -310,12 +341,15 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 {
     int pd[2];
-    char **argv;
     pid_t pid;
     FILE *pp = NULL;
 
+    char **argv = ArgSplitCommand(command);
+
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
+        ArgFree(argv);
         return NULL;
     }
 
@@ -360,9 +394,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             }
         }
 
-        CloseChildrenFD();
-
-        argv = ArgSplitCommand(command);
+        ChildrenFDUnsafeClose();
 
         if (execv(argv[0], argv) == -1)
         {
@@ -371,7 +403,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -382,6 +414,7 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
             break;
@@ -393,28 +426,40 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
+        ArgFree(argv);
         return pp;
     }
 
-    return NULL;                /* Cannot reach here */
+    ProgrammingError("Unreachable code");
+    return NULL;
 }
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+/*
+ * WARNING: this is only allowed to be called from single-threaded code,
+ *          because of the safe_chdir() call in the forked child.
+ */
+FILE *cf_popensetuid(const char *command, const char *type,
+                     uid_t uid, gid_t gid, char *chdirv, char *chrootv,
+                     ARG_UNUSED int background)
 {
     int pd[2];
-    char **argv;
     pid_t pid;
     FILE *pp = NULL;
 
+    char **argv = ArgSplitCommand(command);
+
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
+        ArgFree(argv);
         return NULL;
     }
 
@@ -448,17 +493,14 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
             }
         }
 
-        CloseChildrenFD();
-
-        argv = ArgSplitCommand(command);
+        ChildrenFDUnsafeClose();
 
         if (chrootv && (strlen(chrootv) != 0))
         {
             if (chroot(chrootv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chroot to '%s'. (chroot: %s)", chrootv, GetErrorStr());
-                ArgFree(argv);
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 
@@ -467,8 +509,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
             if (safe_chdir(chdirv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
-                ArgFree(argv);
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 
@@ -484,7 +525,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
 
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -495,6 +536,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
             break;
@@ -506,15 +548,18 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ArgFree(argv);
                 return NULL;
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
+        ArgFree(argv);
         return pp;
     }
 
-    return NULL;                /* cannot reach here */
+    ProgrammingError("Unreachable code");
+    return NULL;
 }
 
 /*****************************************************************************/
@@ -528,7 +573,8 @@ FILE *cf_popen_sh(const char *command, const char *type)
     FILE *pp = NULL;
 
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
         return NULL;
     }
 
@@ -562,12 +608,14 @@ FILE *cf_popen_sh(const char *command, const char *type)
             }
         }
 
-        CloseChildrenFD();
+        ChildrenFDUnsafeClose();
 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
+
+        Log(LOG_LEVEL_ERR, "Couldn't run: '%s'  (execl: %s)", command, GetErrorStr());
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -593,23 +641,31 @@ FILE *cf_popen_sh(const char *command, const char *type)
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
         return pp;
     }
 
+    ProgrammingError("Unreachable code");
     return NULL;
 }
 
 /******************************************************************************/
 
-FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+/*
+ * WARNING: this is only allowed to be called from single-threaded code,
+ *          because of the safe_chdir() call in the forked child.
+ */
+FILE *cf_popen_shsetuid(const char *command, const char *type,
+                        uid_t uid, gid_t gid, char *chdirv, char *chrootv,
+                        ARG_UNUSED int background)
 {
     int pd[2];
     pid_t pid;
     FILE *pp = NULL;
 
     pid = CreatePipeAndFork(type, pd);
-    if (pid == -1) {
+    if (pid == (pid_t) -1)
+    {
         return NULL;
     }
 
@@ -643,14 +699,14 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
             }
         }
 
-        CloseChildrenFD();
+        ChildrenFDUnsafeClose();
 
         if (chrootv && (strlen(chrootv) != 0))
         {
             if (chroot(chrootv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chroot to '%s'. (chroot: %s)", chrootv, GetErrorStr());
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 
@@ -659,7 +715,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
             if (safe_chdir(chdirv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
-                return NULL;
+                _exit(EXIT_FAILURE);
             }
         }
 
@@ -669,9 +725,11 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
         }
 
         execl(SHELL_PATH, "sh", "-c", command, NULL);
+
+        Log(LOG_LEVEL_ERR, "Couldn't run: '%s'  (execl: %s)", command, GetErrorStr());
         _exit(EXIT_FAILURE);
     }
-    else
+    else                                                        /* parent */
     {
         switch (*type)
         {
@@ -697,37 +755,52 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
             }
         }
 
-        SetChildFD(fileno(pp), pid);
+        ChildrenFDSet(fileno(pp), pid);
         return pp;
     }
 
+    ProgrammingError("Unreachable code");
     return NULL;
 }
 
 static int cf_pwait(pid_t pid)
 {
+    Log(LOG_LEVEL_DEBUG,
+        "cf_pwait - waiting for process %jd", (intmax_t) pid);
+
     int status;
-
-    Log(LOG_LEVEL_DEBUG, "cf_pwait - Waiting for process %jd", (intmax_t)pid);
-
     while (waitpid(pid, &status, 0) < 0)
     {
         if (errno != EINTR)
         {
+            Log(LOG_LEVEL_ERR,
+                "Waiting for child PID %jd failed (waitpid: %s)",
+                (intmax_t) pid, GetErrorStr());
             return -1;
         }
     }
 
     if (!WIFEXITED(status))
     {
+        Log(LOG_LEVEL_VERBOSE,
+            "Child PID %jd exited abnormally (%s)", (intmax_t) pid,
+            WIFSIGNALED(status) ? "signalled" : (
+                WIFSTOPPED(status) ? "stopped" : (
+                    WIFCONTINUED(status) ? "continued" : "unknown" )));
         return -1;
     }
 
-    return WEXITSTATUS(status);
+    int retcode = WEXITSTATUS(status);
+
+    Log(LOG_LEVEL_DEBUG, "cf_pwait - process %jd exited with code: %d",
+        (intmax_t) pid, retcode);
+    return retcode;
 }
 
 /*******************************************************************/
 
+/* Closes the pipe and wait()s for PID of the child,
+   in order to reap the zombies. */
 int cf_pclose(FILE *pp)
 {
     int fd = fileno(pp);
@@ -754,18 +827,19 @@ int cf_pclose(FILE *pp)
         Log(LOG_LEVEL_ERR,
             "File descriptor %d of child higher than MAX_FD in cf_pclose!",
             fd);
-        pid = 0;
-    }
-    else
-    {
-        pid = CHILDREN[fd];
-        CHILDREN[fd] = 0;
-        ThreadUnlock(cft_count);
+        fclose(pp);
+        return -1;
     }
 
-    if (fclose(pp) == EOF || pid == 0)
+    pid = CHILDREN[fd];
+    CHILDREN[fd] = 0;
+    ThreadUnlock(cft_count);
+
+    if (fclose(pp) == EOF)
     {
-        return -1;
+        Log(LOG_LEVEL_ERR,
+            "Could not close the pipe to the executed subcommand (fclose: %s)",
+            GetErrorStr());
     }
 
     return cf_pwait(pid);

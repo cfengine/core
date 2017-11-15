@@ -1096,10 +1096,11 @@ AC_CHECK_DECLS([fstatat], [], [], [[#define _GNU_SOURCE 1
                                     #include <sys/stat.h>]])
 AC_CHECK_DECLS([fchownat], [], [], [[#define _GNU_SOURCE 1
                                      #include <unistd.h>]])
+AC_CHECK_DECLS([fchmodat], [], [], [[#define _GNU_SOURCE 1
+                                    #include <sys/stat.h>]])
 AC_CHECK_DECLS([readlinkat], [], [], [[#define _GNU_SOURCE 1
                                        #include <unistd.h>]])
-AC_REPLACE_FUNCS(openat fstatat fchownat readlinkat)
-cf3_FUNC_FCHMODAT
+AC_REPLACE_FUNCS(openat fstatat fchownat fchmodat readlinkat)
 
 AC_CHECK_DECLS([log2], [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(log2)

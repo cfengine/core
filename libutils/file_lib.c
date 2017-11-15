@@ -933,13 +933,14 @@ int safe_chmod(const char *path, mode_t mode)
         goto cleanup;
     }
 
-    if (S_ISFIFO(statbuf.st_mode))
+    if (S_ISFIFO(statbuf.st_mode) || S_ISSOCK(statbuf.st_mode))
     {
-        /* For FIFOs we cannot resort to the method of opening the file first,
-           since it might block. But we also cannot use chmod directly, because
-           the file may be switched with a symlink to a sensitive file under our
-           feet, and there is no way to avoid following it. So instead, switch
-           effective UID to the owner of the FIFO, and then use chmod.
+        /* For FIFOs/sockets we cannot resort to the method of opening the file
+           first, since it might block. But we also cannot use chmod directly,
+           because the file may be switched with a symlink to a sensitive file
+           under our feet, and there is no way to avoid following it. So
+           instead, switch effective UID to the owner of the FIFO, and then use
+           chmod.
         */
 
         /* save old euid */

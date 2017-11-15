@@ -895,21 +895,6 @@ int safe_chmod(const char *path, mode_t mode)
         }
 
         goto cleanup;
-
-#ifndef CHMOD_SETEUID_HIGHBITS_WORK
-        if (mode & 07000 && statbuf.st_uid != 0)
-        {
-            /* If we get here, we are on a platform where the high bit flags (sticky
-               bit and suid) flags cannot be set by any other users than root. As the
-               file is a FIFO, we give up because opening it might block, in that
-               case it's not possible to do it securely. Setting the mentioned flags
-               on a FIFO should be extremely rare though.
-            */
-            errno = ENOTSUP;
-            ret = -1;
-            goto cleanup;
-        }
-#endif // !CHMOD_SETEUID_HIGHBITS_WORK
     }
 
     int file_fd = safe_open(path, 0);

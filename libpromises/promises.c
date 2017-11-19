@@ -628,9 +628,14 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
         if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
-                " because 'if'/'ifvarclass' is not defined", pp->promiser);
-
+            if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+            {
+                char *ifvarclass_string =  RvalToString(ifvarclass->rval);
+                Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
+                    " because constraint '%s => %s' is not met",
+                    pp->promiser, ifvarclass->lval, ifvarclass_string);
+                free(ifvarclass_string);
+            }
             *excluded = true;
             return pcopy;
         }
@@ -642,9 +647,14 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
         if (unless && IsVarClassDefined(ctx, unless, pcopy))
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s',"
-                " because 'unless' is defined", pp->promiser);
-
+            if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+            {
+                char *unless_string =  RvalToString(unless->rval);
+                Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
+                    " because constraint '%s => %s' is not met",
+                    pp->promiser, unless->lval, unless_string);
+                free(unless_string);
+            }
             *excluded = true;
             return pcopy;
         }

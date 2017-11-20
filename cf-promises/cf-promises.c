@@ -128,33 +128,6 @@ int main(int argc, char *argv[])
     SetupSignalsForAgent();
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
-    enum generic_agent_config_common_policy_output_format format = config->agent_specific.common.policy_output_format;
-
-    if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF ||
-        format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON)
-    {
-        // If no file was provided, use 'promises.cf' by default
-        if (config->input_file == NULL) {
-            GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
-        }
-
-        // Just parse and write content to output
-        Policy *output_policy = Cf3ParseFile(config, config->input_file);
-        Writer *writer = FileWriter(stdout);
-        if (format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF)
-        {
-            PolicyToString(output_policy, writer);
-        }
-        else
-        {
-            JsonElement *json_policy = PolicyToJson(output_policy);
-            JsonWrite(writer, json_policy, 2);
-            JsonDestroy(json_policy);
-        }
-        WriterClose(writer);
-        PolicyDestroy(output_policy);
-        return EXIT_SUCCESS;
-    }
 
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
@@ -184,15 +157,18 @@ int main(int argc, char *argv[])
         }
     }
 
-    switch (config->agent_specific.common.policy_output_format)
+    const enum generic_agent_config_common_policy_output_format
+        output_format = config->agent_specific.common.policy_output_format;
+
+    switch (output_format)
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF_FULL:
     {
         Writer *writer = FileWriter(stdout);
         PolicyToString(policy, writer);
         WriterClose(writer);
+        break;
     }
-    break;
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON_FULL:
     {
@@ -201,12 +177,40 @@ int main(int argc, char *argv[])
         JsonWrite(writer, json_policy, 2);
         JsonDestroy(json_policy);
         WriterClose(writer);
+        break;
     }
-    break;
 
-    // already handled, but avoids compiler warnings
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
+    {
+        // If no file was provided, use 'promises.cf' by default
+        if (config->input_file == NULL)
+        {
+            GenericAgentConfigSetInputFile(config, GetInputDir(),
+                                           "promises.cf");
+        }
+
+        Policy *output_policy = Cf3ParseFile(config, config->input_file);
+        CF_ASSERT_FIX(output_policy != NULL, exit(EXIT_FAILURE),
+                      "File has already been parsed OK, but fails now!");
+
+        Writer *writer = FileWriter(stdout);
+        if (output_format == GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF)
+        {
+            PolicyToString(output_policy, writer);
+        }
+        else
+        {
+            JsonElement *json_policy = PolicyToJson(output_policy);
+            JsonWrite(writer, json_policy, 2);
+            JsonDestroy(json_policy);
+        }
+        WriterClose(writer);
+        PolicyDestroy(output_policy);
+        break;
+    }
+
+    /* Avoids warnings. */
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
         break;
     }
@@ -224,6 +228,7 @@ int main(int argc, char *argv[])
     PolicyDestroy(policy);
     GenericAgentFinalize(ctx, config);
 }
+
 
 /*******************************************************************/
 /* Level 1                                                         */

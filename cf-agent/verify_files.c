@@ -264,6 +264,7 @@ void ClearExpandedAttributes(Attributes *a)
     free(a->edit_template);
     free(a->edit_template_string);
     a->edit_template = NULL;
+    a->edit_template_string = NULL;
 
     ClearFilesAttributes(a);
 }
@@ -582,11 +583,10 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
                                             EditContext *edcontext, char *template)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
-    JsonElement *default_template_data = NULL;
 
-    if (!a.template_data)
+    if (a.template_data == NULL)
     {
-        a.template_data = default_template_data = DefaultTemplateData(ctx, NULL);
+        a.template_data = DefaultTemplateData(ctx, NULL);
     }
 
     unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
@@ -600,11 +600,11 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     char *message;
     if ( strcmp("inline_mustache", a.template_method) == 0)
     {
-        xasprintf(&message, "inline");
+        message = xstrdup("inline");
     }
     else
     {
-        xasprintf(&message, "%s", a.edit_template);
+        message = xstrdup(a.edit_template);
     }
 
     if (MustacheRender(output_buffer, template, a.template_data))
@@ -635,7 +635,6 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
             }
         }
 
-        JsonDestroy(default_template_data);
         BufferDestroy(output_buffer);
         free(message);
 
@@ -645,7 +644,6 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-        JsonDestroy(default_template_data);
         BufferDestroy(output_buffer);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
@@ -670,7 +668,7 @@ static PromiseResult RenderTemplateMustacheFromFIle(EvalContext *ctx, const Prom
         template_writer = FileReadFromFd(template_fd, SIZE_MAX, NULL);
         close(template_fd);
     }
-    if (!template_writer)
+    if (template_writer == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a.edit_template);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);

@@ -477,7 +477,7 @@ bool FileChangesCheckAndUpdateHash_impl(const char *filename,
             Log(LOG_LEVEL_NOTICE, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
             if (pp->comment)
             {
-                Log(LOG_LEVEL_NOTICE, "Preceding promise '%s'", pp->comment);
+                Log(LOG_LEVEL_VERBOSE, "Preceding promise '%s'", pp->comment);
             }
         }
     }
@@ -748,7 +748,7 @@ void FileChangesCheckAndUpdateStats(const char *file, struct stat *sb, bool upda
 
     if (pp->comment)
     {
-        Log(LOG_LEVEL_NOTICE, "Preceding promise '%s'", pp->comment);
+        Log(LOG_LEVEL_VERBOSE, "Preceding promise '%s'", pp->comment);
     }
 
     if (update && !DONTDO)

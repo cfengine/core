@@ -580,7 +580,7 @@ static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMo
 
 
 static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, Attributes a,
-                                            EditContext *edcontext, char *template)
+                                            EditContext *edcontext, const char *template)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
 
@@ -649,7 +649,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     }
 }
 
-static PromiseResult RenderTemplateMustacheFromFIle(EvalContext *ctx, const Promise *pp, Attributes a,
+static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Promise *pp, Attributes a,
                                             EditContext *edcontext)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -674,7 +674,7 @@ static PromiseResult RenderTemplateMustacheFromFIle(EvalContext *ctx, const Prom
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
-    result =  RenderTemplateMustache(ctx, pp, a, edcontext, (char *)StringWriterData(template_writer));
+    result =  RenderTemplateMustache(ctx, pp, a, edcontext, StringWriterData(template_writer));
 
     WriterClose(template_writer);
 
@@ -684,10 +684,11 @@ static PromiseResult RenderTemplateMustacheFromFIle(EvalContext *ctx, const Prom
 static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Promise *pp, Attributes a,
                                             EditContext *edcontext)
 {
-    PromiseResult result = PROMISE_RESULT_NOOP;
 
     if ( a.edit_template_string == NULL  )
     {
+        PromiseResult result = PROMISE_RESULT_NOOP;
+
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
@@ -811,7 +812,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
                 filename, a.edit_template, a.template_method);
 
-            PromiseResult render_result = RenderTemplateMustacheFromFIle(ctx, pp, a, edcontext);
+            PromiseResult render_result = RenderTemplateMustacheFromFile(ctx, pp, a, edcontext);
             result = PromiseResultUpdate(result, render_result);
         }
     }

@@ -1100,7 +1100,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
                 Buffer *varname = BufferNew();
                 BufferPrintf(varname, "%s", key);
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, BufferData(varname), info, CF_DATA_TYPE_CONTAINER,
-                                              "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+                                              "networking,/proc,source=agent,procfs");
                 BufferDestroy(varname);
             }
 
@@ -1189,7 +1189,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     }
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet", inet, CF_DATA_TYPE_CONTAINER,
-                                  "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+                                  "networking,/proc,source=agent,procfs");
     JsonDestroy(inet);
 
     JsonElement *inet6 = JsonObjectCreate(3);
@@ -1251,7 +1251,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     }
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inet6", inet6, CF_DATA_TYPE_CONTAINER,
-                                  "inventory,networking,/proc,source=agent,attribute_name=none,procfs");
+                                  "networking,/proc,source=agent,procfs");
     JsonDestroy(inet6);
 
     // Inter-|   Receive                                                |  Transmit

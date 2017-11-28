@@ -122,7 +122,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     }
     else if (ec && (ec->num_edits > 0))
     {
-        if (a.haveeditline || a.edit_template)
+        if (a.haveeditline || a.edit_template || a.edit_template_string)
         {
             if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result))
             {

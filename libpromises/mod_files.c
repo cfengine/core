@@ -342,6 +342,7 @@ static const ConstraintSyntax CF_FILES_BODIES[] =
     ConstraintSyntaxNewBody("edit_defaults", &edit_defaults_body, "Default promise details for file edits", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBundle("edit_line", "Line editing model for file", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("edit_template", CF_ABSPATHRANGE, "The name of a special CFEngine template file to expand", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("edit_template_string", CF_ANYSTRING, "Template string to expand", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBundle("edit_xml", "XML editing model for file", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("file_select", &file_select_body, "Choose which files select in a search", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("file_type", "regular,fifo", "Type of file to create. Default value: regular", SYNTAX_STATUS_NORMAL),
@@ -353,7 +354,7 @@ static const ConstraintSyntax CF_FILES_BODIES[] =
     ConstraintSyntaxNewString("repository", CF_ABSPATHRANGE, "Name of a repository for versioning", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("touch", "true/false whether to touch time stamps on file", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("transformer", CF_ABSPATHRANGE, "Command (with full path) used to transform current file (no shell wrapper used)", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("template_method", "cfengine,mustache", "", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("template_method", "cfengine,inline_mustache,mustache", "", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewContainer("template_data", "", SYNTAX_STATUS_NORMAL),
 
     ConstraintSyntaxNewNull()

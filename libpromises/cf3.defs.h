@@ -1512,6 +1512,7 @@ typedef struct
     char *file_type;
     char *repository;
     char *edit_template;
+    char *edit_template_string;
     char *template_method;
     JsonElement *template_data;
     int touch;

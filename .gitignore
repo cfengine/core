@@ -56,6 +56,8 @@ stamp-h1
 /cf-net/cf-net.exe
 /cf-serverd/cf-serverd
 /cf-serverd/cf-serverd.exe
+/cf-testd/cf-testd
+/cf-testd/cf-testd.exe
 /cf-upgrade/cf-upgrade
 /cf-upgrade/cf-upgrade.exe
 /ext/rpmvercmp

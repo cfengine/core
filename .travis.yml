@@ -41,8 +41,6 @@ matrix:
       sudo: false
 
 before_install:
-  - sudo rm -vf /etc/apt/sources.list.d/*riak*
-  - sudo apt-get update
   - set -e
   - chmod ug+x ./travis-scripts/*
   - source ./travis-scripts/before_install.sh

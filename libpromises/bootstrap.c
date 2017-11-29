@@ -219,6 +219,13 @@ bool ParsePolicyServerFile(const char *workdir, char **host, char **port)
     (*port) = NULL;
 
     ParseHostPort(contents, host, port);
+
+    // The file did not contain a host
+    if (*host == NULL)
+    {
+        return false;
+    }
+
     (*host) = xstrdup(*host);
     if (*port != NULL)
     {

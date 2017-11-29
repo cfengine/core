@@ -19,6 +19,7 @@ env:
 # feedback ASAP. For more info read this:
 # https://docs.travis-ci.com/user/multi-os/
 matrix:
+  fast_finish: true # Build will succeed once all linux jobs succeed
   include:
     - os: linux
       sudo: required
@@ -34,28 +35,24 @@ matrix:
     - os: osx
       env: JOB_TYPE=compile_only
       sudo: false
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_common
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
-#  allow_failures:
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_common
-#    - os: osx
-#      sudo: required
-#      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
+  allow_failures:
+    - os: osx
+      env: JOB_TYPE=compile_only
+      sudo: false
 
 before_install:
+  - sudo rm -vf /etc/apt/sources.list.d/*riak*
+  - sudo apt-get update
+  - set -e
   - chmod ug+x ./travis-scripts/*
   - source ./travis-scripts/before_install.sh
 
 script:
+  - set -e
   - source ./travis-scripts/script.sh
 
 before_deploy:
+  - set +e
   - source ./travis-scripts/before_deploy.sh
 
 # We deploy when setting tags only, which basically never happens
@@ -75,4 +72,5 @@ deploy:
     condition: "$CF_VERSION = latest"
 
 after_script:
+  - set +e
   - source ./travis-scripts/after_script.sh

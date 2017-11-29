@@ -3574,6 +3574,33 @@ static FnCallResult FnCallDatastate(EvalContext *ctx,
     return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
 }
 
+static FnCallResult FnCallDumpDatastate(EvalContext *ctx,
+                                        ARG_UNUSED const Policy *policy,
+                                        ARG_UNUSED const FnCall *fp,
+                                        const Rlist *args)
+{
+           char *path = RlistScalarValue(args);
+
+           FILE *fout;
+           if ((fout = fopen(path, "w")) == NULL)
+           {
+                Log(LOG_LEVEL_ERR, "dumpdatastate: Cannot open the destination file '%s'. (fopen: %s)",
+                    path, GetErrorStr());
+                return FnReturnContext(false);
+            }
+
+            Writer *writer = FileWriter(fout);
+
+            JsonElement *state = DefaultTemplateData(ctx, NULL);
+            JsonWrite(writer, state, 0);
+            JsonDestroy(state);
+
+            WriterClose(writer);
+
+            return FnReturnContext(true);
+}
+
+
 static FnCallResult FnCallBundlestate(EvalContext *ctx,
                                       ARG_UNUSED const Policy *policy,
                                       ARG_UNUSED const FnCall *fp,
@@ -8891,6 +8918,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("diskfree", CF_DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree, "Return the free space (in KB) available on the directory's current partition (0 if not found)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("dumpdatastate", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallDumpDatastate, "Dump the current datastate() into the given file",
+                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("escape", CF_DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("eval", CF_DATA_TYPE_STRING, EVAL_ARGS, &FnCallEval, "Evaluate a mathematical expression",

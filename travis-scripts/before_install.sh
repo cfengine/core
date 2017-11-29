@@ -3,7 +3,8 @@ if [ "$TRAVIS_OS_NAME" = osx ]
 then
     brew update
     brew install lmdb
-    brew install gcc || echo "Warning: Errors during OSX gcc install"
+    brew install gcc@7 || echo "Warning: Errors during OSX gcc install"
+    gcc-7 --version
     #brew install python
     #brew install openssl
     #brew install libxml2

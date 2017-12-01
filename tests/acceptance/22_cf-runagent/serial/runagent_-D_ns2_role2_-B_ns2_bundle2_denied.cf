@@ -16,7 +16,7 @@ bundle agent init
       "any" usebundle => generate_key;
       "any" usebundle => trust_key;
 
-      "any" usebundle => start_server("$(this.promise_dirname)/ns2:bundle2_ns1:role2_only_allowed.22015.srv");
+      "any" usebundle => start_server("$(this.promise_dirname)/ns2_bundle2_ns1_role2_only_allowed.22015.srv");
 }
 
 bundle agent test
@@ -26,8 +26,8 @@ bundle agent test
         "$(this.promise_dirname)/empty_config.runagent.cf.sub";
   methods:
       "any" usebundle =>
-        # Port 22015 is ns2:bundle2_ns1:role2_only_allowed.22015.srv
-        run_runagent("-H 127.0.0.1:22015 -D ns1:role2 --remote-bundles bundle2 $(runagent_cf)");
+        # Port 22015 is ns2_bundle2_ns1_role2_only_allowed.22015.srv
+        run_runagent("-H 127.0.0.1:22015 -D ns2:role2 --remote-bundles ns2:bundle2 $(runagent_cf)");
 }
 
 bundle agent check
@@ -41,5 +41,5 @@ bundle agent check
 bundle agent destroy
 {
   methods:
-      "any" usebundle => stop_server("$(this.promise_dirname)/ns2:bundle2_ns1:role2_only_allowed.22015.srv");
+      "any" usebundle => stop_server("$(this.promise_dirname)/ns2_bundle2_ns1_role2_only_allowed.22015.srv");
 }

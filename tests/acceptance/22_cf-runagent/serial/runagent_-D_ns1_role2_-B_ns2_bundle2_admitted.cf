@@ -19,7 +19,7 @@ bundle agent init
       "any" usebundle => generate_key;
       "any" usebundle => trust_key;
 
-      "any" usebundle => start_server("$(this.promise_dirname)/ns2:bundle2_ns1:role2_only_allowed.22015.srv");
+      "any" usebundle => start_server("$(this.promise_dirname)/ns2_bundle2_ns1_role2_only_allowed.22015.srv");
 }
 
 bundle agent test
@@ -44,5 +44,5 @@ bundle agent check
 bundle agent destroy
 {
   methods:
-      "any" usebundle => stop_server("$(this.promise_dirname)/ns2:bundle2_ns1:role2_only_allowed.22015.srv");
+      "any" usebundle => stop_server("$(this.promise_dirname)/ns2_bundle2_ns1_role2_only_allowed.22015.srv");
 }

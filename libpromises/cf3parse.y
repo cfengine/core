@@ -493,7 +493,7 @@ promiser:              QSTRING
                           INSTALL_SKIP = true;
                           ParserDebug("P:promiser:qstring::error yychar = %d\n", yychar);
 
-                          if (yychar == BUNDLE || yychar == BODY || yychar == YYEOF)
+                          if (yychar == BUNDLE || yychar == BODY)
                           {
                              ParseError("Expected '}', got '%s'", yytext);
                              /*
@@ -913,7 +913,7 @@ selection_id:          IDSYNTAX
                        {
                           ParserDebug("P:selection_id:idsyntax:error yychar = %d\n", yychar);
 
-                          if ( yychar == BUNDLE || yychar == BODY || yychar == YYEOF )
+                          if ( yychar == BUNDLE || yychar == BODY )
                           {
                              ParseError("Expected '}', got '%s'", yytext);
                              /*

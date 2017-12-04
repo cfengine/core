@@ -84,7 +84,7 @@ endif
 check-local:
         # Keep the '+' in front for the command, needed for the sub-make
         # to run in parallel; TODO fix "make -n" not working.
-	+ MAKE=$(MAKE) ./testall
+	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) ./testall
 
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \

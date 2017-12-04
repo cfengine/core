@@ -202,19 +202,19 @@ bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
     return IsDefinedClass(ctx, c);
 }
 
-bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const JsonElement* augment)
+bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
 {
     bool loaded = false;
 
     if (JsonGetElementType(augment) != JSON_ELEMENT_TYPE_CONTAINER ||
         JsonGetContainerType(augment) != JSON_CONTAINER_TYPE_OBJECT)
     {
-        Log(LOG_LEVEL_ERR, "Invalid augments file contents in '%s', must be a JSON object", BufferData(filename_buffer));
+        Log(LOG_LEVEL_ERR, "Invalid augments file contents in '%s', must be a JSON object", filename);
     }
     else
     {
         loaded = true;
-        Log(LOG_LEVEL_VERBOSE, "Loaded augments file '%s', installing contents", BufferData(filename_buffer));
+        Log(LOG_LEVEL_VERBOSE, "Loaded augments file '%s', installing contents", filename);
 
         JsonIterator iter = JsonIteratorInit(augment);
         const char *key;
@@ -229,7 +229,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                     JsonGetElementType(vars) != JSON_ELEMENT_TYPE_CONTAINER ||
                     JsonGetContainerType(vars) != JSON_CONTAINER_TYPE_OBJECT)
                 {
-                    Log(LOG_LEVEL_ERR, "Invalid augments vars in '%s', must be a JSON object", BufferData(filename_buffer));
+                    Log(LOG_LEVEL_ERR, "Invalid augments vars in '%s', must be a JSON object", filename);
                     goto vars_cleanup;
                 }
 
@@ -242,7 +242,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                     {
                         char *value = JsonPrimitiveToString(data);
                         Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, BufferData(filename_buffer));
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
                         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
                         free(value);
                     }
@@ -252,7 +252,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                     {
                         // map to slist if the data only has primitives
                         Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, BufferData(filename_buffer));
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
                         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
                                                       vkey, RlistFromContainer(data),
                                                       CF_DATA_TYPE_STRING_LIST,
@@ -261,7 +261,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                     else // install as a data container
                     {
                         Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, BufferData(filename_buffer));
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
                         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
                                                       vkey, data,
                                                       CF_DATA_TYPE_CONTAINER,
@@ -280,7 +280,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                 if (JsonGetElementType(classes) != JSON_ELEMENT_TYPE_CONTAINER ||
                     JsonGetContainerType(classes) != JSON_CONTAINER_TYPE_OBJECT)
                 {
-                    Log(LOG_LEVEL_ERR, "Invalid augments classes in '%s', must be a JSON object", BufferData(filename_buffer));
+                    Log(LOG_LEVEL_ERR, "Invalid augments classes in '%s', must be a JSON object", filename);
                     goto classes_cleanup;
                 }
 
@@ -297,7 +297,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                         if (CheckContextOrClassmatch(ctx, check))
                         {
                             Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
-                                ckey, check, BufferData(filename_buffer));
+                                ckey, check, filename);
                             EvalContextClassPutHard(ctx, ckey, tags);
                         }
                         free(check);
@@ -315,7 +315,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                             if (CheckContextOrClassmatch(ctx, check))
                             {
                                 Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
-                                    ckey, check, BufferData(filename_buffer));
+                                    ckey, check, filename);
                                 EvalContextClassPutHard(ctx, ckey, tags);
                                 free(check);
                                 break;
@@ -327,7 +327,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                     else
                     {
                         Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s', must be a JSON object",
-                            ckey, BufferData(filename_buffer));
+                            ckey, filename);
                     }
                 }
 
@@ -344,7 +344,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                     JsonArrayContainsOnlyPrimitives(inputs))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
-                        BufferData(filename_buffer));
+                        filename);
                     Rlist *rlist = RlistFromContainer(inputs);
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
                                                   "augments_inputs", rlist,
@@ -355,7 +355,7 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                 else
                 {
                     Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
-                        BufferData(filename_buffer));
+                        filename);
                 }
 
                 JsonDestroy(inputs);
@@ -390,13 +390,13 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
                 else
                 {
                     Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
-                        BufferData(filename_buffer));
+                        filename);
                 }
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
-                    key, BufferData(filename_buffer));
+                    key, filename);
             }
         }
     }
@@ -404,37 +404,37 @@ bool LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
     return loaded;
 }
 
-bool LoadAugmentsFiles(EvalContext *ctx, const char *filename)
+bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
 {
     bool loaded = false;
 
-    Buffer *expbuf = BufferNew();
-    ExpandScalar(ctx, NULL, "this", filename, expbuf);
-    if (strstr(BufferData(expbuf), "/.json"))
+    char *filename = ExpandScalar(ctx, NULL, "this", unexpanded_filename, NULL);
+
+    if (strstr(filename, "/.json"))
     {
         Log(LOG_LEVEL_DEBUG,
             "Skipping augments file '%s' because it failed to expand the base filename, resulting in '%s'",
-            filename, BufferData(expbuf));
+            filename, filename);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s' (original '%s')", BufferData(expbuf), filename);
-        if (FileCanOpen(BufferData(expbuf), "r"))
+        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s' (original '%s')", filename, filename);
+        if (FileCanOpen(filename, "r"))
         {
-            JsonElement* augment = ReadJsonFile(BufferData(expbuf), LOG_LEVEL_ERR);
+            JsonElement* augment = ReadJsonFile(filename, LOG_LEVEL_ERR);
             if (augment != NULL)
             {
-                loaded = LoadAugmentsData(ctx, expbuf, augment);
+                loaded = LoadAugmentsData(ctx, filename, augment);
                 JsonDestroy(augment);
             }
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "could not load JSON augments from '%s'", BufferData(expbuf));
+            Log(LOG_LEVEL_VERBOSE, "could not load JSON augments from '%s'", filename);
         }
     }
-    BufferDestroy(expbuf);
 
+    free(filename);
     return loaded;
 }
 

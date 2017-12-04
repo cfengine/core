@@ -11,7 +11,14 @@ body common control
 bundle agent test
 {
   methods:
-      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '
+body common control
+{
+    inputs => { "@(def.inputs)" };
+}
+');
+
+
       "" usebundle => file_make("$(sys.inputdir)/secondary.cf", '
 bundle common x
 {

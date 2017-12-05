@@ -1,0 +1,5 @@
+{
+    "vars" : {
+        "inputs": [ "$(sys.inputdir)/secondary.cf" ]
+    }
+}

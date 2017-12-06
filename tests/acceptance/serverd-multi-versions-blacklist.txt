@@ -1,0 +1,20 @@
+# This file contains cf-serverd tests to be excluded from multi-version testing
+# Lines starting from # are ignored, so are embty lines
+
+# Default behaviour in absence of "allowlegacyconnects" parameter changed
+# since 3.9.0, ref https://tracker.mender.io/browse/CFE-2339
+copy_from_classic_protocol_fail.cf
+copy_from_classic_protocol_success.cf
+
+# This is a test for a feature which appeared first in 3.10.0
+# ref https://github.com/cfengine/core/commit/1ac4e0c8a177c32f8c47614ac7ea082e38092a52
+copied_files_can_be_sparse.cf
+
+# These tests run two cf-serverd instances, and it is currently unsupported
+allow_path1_then_deny_path2_a.cf
+copy_from_ciphers_fail.cf
+copy_from_ciphers_success.cf
+copy_from_digest_different.cf
+copy_from_digest_different_expand_ip_and_shortcut.cf
+simple_copy_from_admit_localhost.cf
+tcp_port_copy_from_within_range.cf

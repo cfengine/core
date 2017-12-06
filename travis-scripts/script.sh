@@ -59,3 +59,12 @@ then
     ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe
     return
 fi
+
+if [ "$JOB_TYPE" = serverd_multi_versions ]
+then
+    cd ../..
+    set +e
+    tests/acceptance/serverd-multi-versions.sh
+    return
+fi
+

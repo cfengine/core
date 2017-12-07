@@ -62,8 +62,16 @@ if ($options{plain})
 my @search = @ARGV;
 
 # default to this directory
-@search = ('/var/cfengine/masterfiles')
- unless scalar @search;
+if ($> == 0)
+{
+  @search = ('/var/cfengine/masterfiles') unless scalar @search;
+}
+else
+{
+  use File::HomeDir ();
+  my $HOME = File::HomeDir->my_home;
+  @search = ( $HOME . '/.cfagent/inputs/' ) unless scalar @search;
+}
 
 find({ wanted => \&wanted, preprocess => \&sort_files }, @search);
 

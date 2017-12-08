@@ -105,7 +105,7 @@ static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod m
         retval = true;
         break;
 
-    case ACL_DEFAULT_SPECIFY:        // default ALC is specified in promise
+    case ACL_DEFAULT_SPECIFY:        // default ACL is specified in promise
 
         retval = CheckPosixLinuxACEs(ctx, aces, method, file_path, ACL_TYPE_DEFAULT, a, pp, result);
         break;
@@ -115,7 +115,7 @@ static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod m
         retval = CheckDefaultEqualsAccessACL(ctx, file_path, a, pp, result);
         break;
 
-    case ACL_DEFAULT_CLEAR:          // default ALC should be empty
+    case ACL_DEFAULT_CLEAR:          // default ACL should be empty
 
         retval = CheckDefaultClearACL(ctx, file_path, a, pp, result);
         break;
@@ -149,6 +149,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     int has_mask;
     Rlist *rp;
     char *acl_type_str;
+    char *acl_text_str;
 
     acl_new = NULL;
     acl_existing = NULL;
@@ -161,7 +162,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
     if ((acl_existing = acl_get_file(file_path, acl_type)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "No ACL for '%s' could be read. (acl_get_file: %s)", file_path, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "No %s ACL for '%s' could be read. (acl_get_file: %s)", acl_type_str, file_path, GetErrorStr());
         return false;
     }
 
@@ -170,15 +171,15 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     if ((acl_tmp = acl_init(1)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "New ACL could not be allocated (acl_init: %s)", GetErrorStr());
-        acl_free((void *) acl_existing);
+        acl_free(acl_existing);
         return false;
     }
 
     if (acl_create_entry(&acl_tmp, &ace_parsed) != 0)
     {
         Log(LOG_LEVEL_ERR, "New ACL could not be allocated (acl_create_entry: %s)", GetErrorStr());
-        acl_free((void *) acl_existing);
-        acl_free((void *) acl_tmp);
+        acl_free(acl_existing);
+        acl_free(acl_tmp);
         return false;
     }
 
@@ -186,11 +187,12 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
     if (method == ACL_METHOD_APPEND)
     {
+
         if ((acl_new = acl_dup(acl_existing)) == NULL)
         {
             Log(LOG_LEVEL_ERR, "Error copying existing ACL (acl_dup: %s)", GetErrorStr());
-            acl_free((void *) acl_existing);
-            acl_free((void *) acl_tmp);
+            acl_free(acl_existing);
+            acl_free(acl_tmp);
             return false;
         }
     }
@@ -199,8 +201,8 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         if ((acl_new = acl_init(5)) == NULL)    // TODO: Always OK with 5 here ?
         {
             Log(LOG_LEVEL_ERR, "New ACL could not be allocated (acl_init: %s)", GetErrorStr());
-            acl_free((void *) acl_existing);
-            acl_free((void *) acl_tmp);
+            acl_free(acl_existing);
+            acl_free(acl_tmp);
             return false;
         }
     }
@@ -212,9 +214,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         if (!ParseEntityPosixLinux(&cf_ace, ace_parsed, &has_mask))
         {
             Log(LOG_LEVEL_ERR, "ACL: Error parsing entity in 'cf_ace'.");
-            acl_free((void *) acl_existing);
-            acl_free((void *) acl_tmp);
-            acl_free((void *) acl_new);
+            acl_free(acl_existing);
+            acl_free(acl_tmp);
+            acl_free(acl_new);
             return false;
         }
 
@@ -229,9 +231,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
             if (acl_create_entry(&acl_new, &ace_current) != 0)
             {
                 Log(LOG_LEVEL_ERR, "Failed to allocate ace (acl_create_entry: %s)", GetErrorStr());
-                acl_free((void *) acl_existing);
-                acl_free((void *) acl_tmp);
-                acl_free((void *) acl_new);
+                acl_free(acl_existing);
+                acl_free(acl_tmp);
+                acl_free(acl_new);
                 return false;
             }
 
@@ -240,9 +242,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
             if (acl_copy_entry(ace_current, ace_parsed) != 0)
             {
                 Log(LOG_LEVEL_ERR, "Error copying Linux entry in 'cf_ace' (acl_copy_entry: %s)", GetErrorStr());
-                acl_free((void *) acl_existing);
-                acl_free((void *) acl_tmp);
-                acl_free((void *) acl_new);
+                acl_free(acl_existing);
+                acl_free(acl_tmp);
+                acl_free(acl_new);
                 return false;
             }
 
@@ -251,18 +253,18 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
             if ((acl_get_permset(ace_current, &perms) != 0))
             {
                 Log(LOG_LEVEL_ERR, "Error obtaining permission set for 'ace_current' (acl_get_permset: %s)", GetErrorStr());
-                acl_free((void *) acl_existing);
-                acl_free((void *) acl_tmp);
-                acl_free((void *) acl_new);
+                acl_free(acl_existing);
+                acl_free(acl_tmp);
+                acl_free(acl_new);
                 return false;
             }
 
             if (acl_clear_perms(perms) != 0)
             {
                 Log(LOG_LEVEL_ERR, "Error clearing permission set for 'ace_current'. (acl_clear_perms: %s)", GetErrorStr());
-                acl_free((void *) acl_existing);
-                acl_free((void *) acl_tmp);
-                acl_free((void *) acl_new);
+                acl_free(acl_existing);
+                acl_free(acl_tmp);
+                acl_free(acl_new);
                 return false;
             }
         }
@@ -272,9 +274,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         if (*cf_ace != ':')
         {
             Log(LOG_LEVEL_ERR, "ACL: No separator before mode-string in 'cf_ace'");
-            acl_free((void *) acl_existing);
-            acl_free((void *) acl_tmp);
-            acl_free((void *) acl_new);
+            acl_free(acl_existing);
+            acl_free(acl_tmp);
+            acl_free(acl_new);
             return false;
         }
 
@@ -283,18 +285,18 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         if (acl_get_permset(ace_current, &perms) != 0)
         {
             Log(LOG_LEVEL_ERR, "ACL: Error obtaining permission set for 'cf_ace'. (acl_get_permset: %s)", GetErrorStr());
-            acl_free((void *) acl_existing);
-            acl_free((void *) acl_tmp);
-            acl_free((void *) acl_new);
+            acl_free(acl_existing);
+            acl_free(acl_tmp);
+            acl_free(acl_new);
             return false;
         }
 
         if (!ParseModePosixLinux(cf_ace, perms))
         {
             Log(LOG_LEVEL_ERR, "ACL: Error parsing mode-string in 'cf_ace'");
-            acl_free((void *) acl_existing);
-            acl_free((void *) acl_tmp);
-            acl_free((void *) acl_new);
+            acl_free(acl_existing);
+            acl_free(acl_tmp);
+            acl_free(acl_new);
             return false;
         }
 
@@ -308,9 +310,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         if (acl_calc_mask(&acl_new) != 0)
         {
             Log(LOG_LEVEL_ERR, "Error calculating new ACL mask");
-            acl_free((void *) acl_existing);
-            acl_free((void *) acl_tmp);
-            acl_free((void *) acl_new);
+            acl_free(acl_existing);
+            acl_free(acl_tmp);
+            acl_free(acl_new);
             return false;
         }
     }
@@ -318,9 +320,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     if ((retv = ACLEquals(acl_existing, acl_new)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Error while comparing existing and new ACL, unable to repair.");
-        acl_free((void *) acl_existing);
-        acl_free((void *) acl_tmp);
-        acl_free((void *) acl_new);
+        acl_free(acl_existing);
+        acl_free(acl_tmp);
+        acl_free(acl_new);
         return false;
     }
 
@@ -331,7 +333,8 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "%s ACL on file '%s' needs to be updated", acl_type_str, file_path);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+                "%s ACL on file '%s' needs to be updated", acl_type_str, file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
 
@@ -339,15 +342,37 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
             if (!DONTDO)
             {
-                if ((retv = acl_set_file(file_path, acl_type, acl_new)) != 0)
+                int last = -1;
+                acl_text_str = acl_to_any_text(acl_new, NULL, ',', 0);
+                Log(LOG_LEVEL_DEBUG, "ACL: new acl is `%s'", acl_text_str);
+
+                if ((retv = acl_check(acl_new, &last)) != 0)
                 {
-                    Log(LOG_LEVEL_ERR, "Error setting new %s ACL on file '%s' (acl_set_file: %s), are required ACEs present ?",
-                          acl_type_str, file_path, GetErrorStr());
-                    acl_free((void *) acl_existing);
-                    acl_free((void *) acl_tmp);
-                    acl_free((void *) acl_new);
+                    Log(LOG_LEVEL_ERR, "Invalid ACL in '%s' at index %d (acl_check: %s)",
+                        acl_text_str,
+                        last,
+                        acl_error(retv));
+                    acl_free(acl_existing);
+                    acl_free(acl_tmp);
+                    acl_free(acl_new);
+                    acl_free(acl_text_str);
                     return false;
                 }
+                if ((retv = acl_set_file(file_path, acl_type, acl_new)) != 0)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Error setting new %s ACL(%s) on file '%s' (acl_set_file: %s), are required ACEs present ?",
+                        acl_type_str,
+                        acl_text_str,
+                        file_path,
+                        GetErrorStr());
+                    acl_free(acl_existing);
+                    acl_free(acl_tmp);
+                    acl_free(acl_new);
+                    acl_free(acl_text_str);
+                    return false;
+                }
+                acl_free(acl_text_str);
             }
 
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "%s ACL on '%s' successfully changed.", acl_type_str, file_path);
@@ -365,9 +390,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "'%s' ACL on '%s' needs no modification.", acl_type_str, file_path);
     }
 
-    acl_free((void *) acl_existing);
-    acl_free((void *) acl_new);
-    acl_free((void *) acl_tmp);
+    acl_free(acl_existing);
+    acl_free(acl_new);
+    acl_free(acl_tmp);
     return true;
 }
 
@@ -428,14 +453,18 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
             {
                 if ((acl_set_file(file_path, ACL_TYPE_DEFAULT, acl_access)) != 0)
                 {
-                    Log(LOG_LEVEL_ERR, "Could not set default ACL to access on '%s'. (acl_set_file: %s)", file_path, GetErrorStr());
+                    Log(LOG_LEVEL_ERR,
+                       "Could not set default ACL to access on '%s'. (acl_set_file: %s)",
+                        file_path,
+                        GetErrorStr());
                     acl_free(acl_access);
                     acl_free(acl_default);
                     return false;
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Default ACL on '%s' successfully copied from access ACL.",
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                "Default ACL on '%s' successfully copied from access ACL.",
                  file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             retval = true;

@@ -4,6 +4,7 @@
 #include <process_lib.h>                               /* GracefulTerminate */
 #include <mutex.h>                                     /* ThreadLock */
 #include <misc_lib.h>                                  /* xclock_gettime */
+#include <known_dirs.h>                                /* GetStateDir */
 
 #include <libgen.h>                                             /* basename */
 
@@ -476,20 +477,9 @@ void parse_args(int argc, char *argv[],
 }
 
 
-int main(int argc, char *argv[])
+void tests_setup(void)
 {
-    int ret;
-    int lastsaw_num_threads, keycount_num_threads, scanlastseen_num_threads;
-    int num_forked_children;
-
     LogSetGlobalLevel(LOG_LEVEL_DEBUG);
-
-    parse_args(argc, argv,
-               &lastsaw_num_threads, &keycount_num_threads,
-               &scanlastseen_num_threads, &num_forked_children);
-    TOTAL_NUM_THREADS =
-        lastsaw_num_threads + keycount_num_threads + scanlastseen_num_threads;
-
 
     xsnprintf(CFWORKDIR, sizeof(CFWORKDIR),
              "/tmp/lastseen_threaded_load.XXXXXX");
@@ -499,10 +489,40 @@ int main(int argc, char *argv[])
         perror("mkdtemp");
         exit(EXIT_FAILURE);
     }
-    printf("Work directory: %s\n", CFWORKDIR);
+    printf("Created directory: %s\n", CFWORKDIR);
+
+    char *envvar;
+    xasprintf(&envvar, "%s=%s",
+              "CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR);
+    putenv(envvar);
+
+    const char *state_dir = GetStateDir();
+    printf("StateDir: %s\n", state_dir);
+    int ret = mkdir(state_dir, (S_IRWXU | S_IRWXG | S_IRWXO));
+    if (ret != 0)
+    {
+        perror("mkdir");
+        exit(EXIT_FAILURE);
+    }
 
     PPID = getpid();           /* for children to determine if parent lives */
     START_TIME = time(NULL);
+}
+
+
+int main(int argc, char *argv[])
+{
+    int ret;
+    int lastsaw_num_threads, keycount_num_threads, scanlastseen_num_threads;
+    int num_forked_children;
+
+    parse_args(argc, argv,
+               &lastsaw_num_threads, &keycount_num_threads,
+               &scanlastseen_num_threads, &num_forked_children);
+    TOTAL_NUM_THREADS =
+        lastsaw_num_threads + keycount_num_threads + scanlastseen_num_threads;
+
+    tests_setup();
 
     /* === SPAWN A CHILD PROCESS FOR LATER === */
 

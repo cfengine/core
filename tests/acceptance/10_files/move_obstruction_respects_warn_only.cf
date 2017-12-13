@@ -1,0 +1,51 @@
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "target" string => "$(G.testfile)";
+
+   files:
+    "$(target)/."
+      create => "true";
+}
+
+body link_from ln_s(x)
+{
+      link_type => "symlink";
+      source => "$(x)";
+      when_no_source => "force";
+}
+
+
+bundle agent test
+{
+  files:
+    "$(init.target)"
+      move_obstructions => "true",
+      link_from => ln_s("/tmp"),
+      action => warn_only;
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok" expression => isdir("$(init.target)");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

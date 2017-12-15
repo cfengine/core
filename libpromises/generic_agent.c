@@ -378,7 +378,7 @@ bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement*
                         bool further_loaded = LoadAugmentsFiles(ctx, filename);
                         if (further_loaded)
                         {
-                            Log(LOG_LEVEL_VERBOSE, "Installed further augments from file '%s'", filename);
+                            Log(LOG_LEVEL_VERBOSE, "Completed augmenting from file '%s'", filename);
                         }
                         else
                         {

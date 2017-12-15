@@ -411,4 +411,11 @@ RSA *EVP_PKEY_get0_RSA(EVP_PKEY *pkey)
 }
 
 
+#else
+
+void RAND_screen(void)
+{
+}
+
+
 #endif /* OPENSSL_VERSION_NUMBER */

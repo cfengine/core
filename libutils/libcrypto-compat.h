@@ -57,6 +57,10 @@ int RSA_bits(const RSA *r);
 
 RSA *EVP_PKEY_get0_RSA(EVP_PKEY *pkey);
 
-#endif /* OPENSSL_VERSION_NUMBER */
+#else
+
+void RAND_screen(void);              /* deprecated, replaced with noop here */
+
+#endif  /* OPENSSL_VERSION_NUMBER */
 
 #endif /* LIBCRYPTO_COMPAT_H */

@@ -1,0 +1,23 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test {
+  meta:
+    "description" -> { "CFE-2593" }
+      string => "Test that the agent won't crash trying to iterate over variablesmatching() results";
+}
+bundle agent check {
+  vars:
+    "some_var"
+      string => "some value";
+ 
+    "make_cfe_crash"
+      slist => variablesmatching("$(this.namespace):$(this.bundle)\..*");
+ 
+  reports:
+    "DEBUG: '$(make_cfe_crash)' = '$($(make_cfe_crash))'";
+    "$(this.promise_filename) Pass";
+}

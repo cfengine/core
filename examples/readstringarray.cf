@@ -1,0 +1,104 @@
+#  Copyright 2017 Northern.tech AS
+
+#  This file is part of Cfengine 3 - written and maintained by Northern.tech AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src prep
+#@ ```
+#@ echo "at:x:25:25:Batch jobs daemon:/var/spool/atjobs:/bin/bash" > /tmp/readstringarray.txt
+#@ echo "avahi:x:103:105:User for Avahi:/var/run/avahi-daemon:/bin/false    # Disallow login" >> /tmp/readstringarray.txt
+#@ echo "beagleindex:x:104:106:User for Beagle indexing:/var/cache/beagle:/bin/bash" >> /tmp/readstringarray.txt
+#@ echo "bin:x:1:1:bin:/bin:/bin/bash" >> /tmp/readstringarray.txt
+#@ echo "# Daemon has the default shell" >> /tmp/readstringarray.txt
+#@ echo "daemon:x:2:2:Daemon:/sbin:" >> /tmp/readstringarray.txt
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+
+      "lines" int => readstringarray("array_name",
+                                  "/tmp/readstringarray.txt",
+                                  "#[^\n]*",
+                                  ":",
+                                  10,
+                                  4000);
+
+  reports:
+      "array_name contains $(lines) keys$(const.n)$(with)"
+        with => string_mustache("{{%-top-}}", "array_name");
+
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: array_name contains 5 keys
+#@ {
+#@       "at": {
+#@               "0": "at",
+#@               "1": "x",
+#@               "2": "25",
+#@               "3": "25",
+#@               "4": "Batch jobs daemon",
+#@               "5": "/var/spool/atjobs",
+#@               "6": "/bin/bash"
+#@       },
+#@       "avahi": {
+#@                  "0": "avahi",
+#@                  "1": "x",
+#@                  "2": "103",
+#@                  "3": "105",
+#@                  "4": "User for Avahi",
+#@                  "5": "/var/run/avahi-daemon",
+#@                  "6": "/bin/false    "
+#@       },
+#@       "beagleindex": {
+#@                        "0": "beagleindex",
+#@                        "1": "x",
+#@                        "2": "104",
+#@                        "3": "106",
+#@                        "4": "User for Beagle indexing",
+#@                        "5": "/var/cache/beagle",
+#@                        "6": "/bin/bash"
+#@       },
+#@       "bin": {
+#@                "0": "bin",
+#@                "1": "x",
+#@                "2": "1",
+#@                "3": "1",
+#@                "4": "bin",
+#@                "5": "/bin",
+#@                "6": "/bin/bash"
+#@       },
+#@       "daemon": {
+#@                   "0": "daemon",
+#@                   "1": "x",
+#@                   "2": "2",
+#@                   "3": "2",
+#@                   "4": "Daemon",
+#@                   "5": "/sbin",
+#@                   "6": ""
+#@       }
+#@ }
+#@ ```
+#+end_src

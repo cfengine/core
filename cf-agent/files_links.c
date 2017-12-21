@@ -42,6 +42,11 @@ static bool MakeLink(EvalContext *ctx, const char *from, const char *to, Attribu
 #endif
 static char *AbsLinkPath(const char *from, const char *relto);
 
+static bool EnforcePromise(enum cfopaction action)
+{
+    return ((!DONTDO) && (action != cfa_warn));
+}
+
 /*****************************************************************************/
 
 #ifdef __MINGW32__
@@ -53,11 +58,6 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 }
 
 #else
-
-static bool EnforcePromise(enum cfopaction action)
-{
-    return ((!DONTDO) && (action != cfa_warn));
-}
 
 PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {

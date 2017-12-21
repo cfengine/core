@@ -21,44 +21,39 @@
 # included file COSL.txt.
 
 #+begin_src cfengine3
-body common control
+bundle agent main
 {
-      bundlesequence => { run };
-}
+  classes:
+      "example_one";
+      "example_two"
+        meta => { "plus", "defined_from=$(this.bundle)" };
+      "example_three"
+        meta => { "plus", "defined_from=$(this.bundle)" };
 
-bundle agent run
-{
   vars:
-      "all" slist         => classesmatching(".*");
-      "c" slist           => classesmatching("cfengine");
-      "c_plus_plus" slist => classesmatching("cfengine", "plus");
+      "cfengine_classes"
+        slist => sort( classesmatching("cfengine"), lex);
 
-      # order of classes is not guaranteed
-      "internal_environment_unsorted" slist =>
-          classesmatching(".*", 'cfe_internal', 'source=environment');
-      "internal_environment" slist =>
-          sort(internal_environment_unsorted, lex);
+      "example_with_plus"
+        slist => sort( classesmatching("example.*", "plus"), lex);
 
   reports:
       # you may find this list of all classes interesting but it
       # produces different output every time, so it's commented out here
       # "All classes = '$(all)'";
 
-      "All classes with the 'cfe_internal' and 'source=environment' tags = '$(internal_environment)'";
-
-      "Classes matching 'cfengine' = '$(c)'";
+      "Classes matching 'cfengine' = '$(cfengine_classes)'";
 
       # this should produce no output
-      "Classes matching 'cfengine' with the 'plus' tag = $(c_plus_plus)";
+      "Classes matching 'example.*' with the 'plus' tag = $(example_with_plus)";
 }
 
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: All classes with the 'cfe_internal' and 'source=environment' tags = '_cfe_output_testing'
-#@ R: All classes with the 'cfe_internal' and 'source=environment' tags = 'agent'
-#@ R: All classes with the 'cfe_internal' and 'source=environment' tags = 'opt_dry_run'
 #@ R: Classes matching 'cfengine' = 'cfengine'
+#@ R: Classes matching 'example.*' with the 'plus' tag = example_three
+#@ R: Classes matching 'example.*' with the 'plus' tag = example_two
 #@ ```
 #+end_src

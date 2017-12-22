@@ -42,6 +42,11 @@ static bool MakeLink(EvalContext *ctx, const char *from, const char *to, Attribu
 #endif
 static char *AbsLinkPath(const char *from, const char *relto);
 
+static bool EnforcePromise(enum cfopaction action)
+{
+    return ((!DONTDO) && (action != cfa_warn));
+}
+
 /*****************************************************************************/
 
 #ifdef __MINGW32__
@@ -53,11 +58,6 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 }
 
 #else
-
-static bool EnforcePromise(enum cfopaction action)
-{
-    return ((!DONTDO) && (action != cfa_warn));
-}
 
 PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
@@ -112,6 +112,11 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     if (readlink(destination, linkbuf, CF_BUFSIZE - 1) == -1)
     {
+        if (!EnforcePromise(attr.transaction.action))
+        {
+            Log(LOG_LEVEL_WARNING, "Link '%s' should be created", destination);
+            return PROMISE_RESULT_WARN;
+        }
 
         if (!MakeParentDirectory2(destination, attr.move_obstructions, EnforcePromise(attr.transaction.action)))
         {
@@ -155,7 +160,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         {
             if (attr.move_obstructions)
             {
-                if (!DONTDO)
+                if (EnforcePromise(attr.transaction.action))
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Overriding incorrect link '%s'", destination);
                     PromiseResult result = PROMISE_RESULT_CHANGE;
@@ -172,8 +177,8 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
                 }
                 else
                 {
-                    Log(LOG_LEVEL_ERR, "Must remove incorrect link '%s'", destination);
-                    return PROMISE_RESULT_NOOP;
+                    Log(LOG_LEVEL_WARNING, "Must remove incorrect link '%s'", destination);
+                    return PROMISE_RESULT_WARN;
                 }
             }
             else
@@ -396,6 +401,12 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
     }
 
     Log(LOG_LEVEL_INFO, "'%s' does not appear to be a hard link to '%s'", destination, to);
+
+    if (!EnforcePromise(attr.transaction.action))
+    {
+        Log(LOG_LEVEL_WARNING, "Hard link '%s' -> '%s' should be created", destination, to);
+        return PROMISE_RESULT_WARN;
+    }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!MoveObstruction(ctx, destination, attr, pp, &result))

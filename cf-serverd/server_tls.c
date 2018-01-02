@@ -252,8 +252,8 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
  *         with the negotiated protocol version.
  * @retval false in case of error.
  */
-static bool ServerIdentificationDialog(ConnectionInfo *conn_info,
-                                       char *username, size_t username_size)
+bool ServerIdentificationDialog(ConnectionInfo *conn_info,
+                                char *username, size_t username_size)
 {
     int ret;
     char input[1024] = "";
@@ -372,7 +372,7 @@ static bool ServerIdentificationDialog(ConnectionInfo *conn_info,
     return true;
 }
 
-static int ServerSendWelcome(const ServerConnectionState *conn)
+int ServerSendWelcome(const ServerConnectionState *conn)
 {
     char s[1024] = "OK WELCOME";
     size_t len = strlen(s);
@@ -404,108 +404,139 @@ static int ServerSendWelcome(const ServerConnectionState *conn)
     return 1;
 }
 
+/**
+ * @brief Accept a TLS connection and authenticate and identify.
+ *
+ * Doesn't include code for verifying key and lastseen
+ *
+ * @see ServerTLSSessionEstablish
+ * @return 1 for success -1 for error
+ */
+int BasicServerTLSSessionEstablish(ServerConnectionState *conn)
+{
+    if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
+    {
+        return 1;
+    }
+    assert(ConnectionInfoSSL(conn->conn_info) == NULL);
+    SSL *ssl = SSL_new(SSLSERVERCONTEXT);
+    if (ssl == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "SSL_new: %s",
+            TLSErrorString(ERR_get_error()));
+        return -1;
+    }
+    ConnectionInfoSetSSL(conn->conn_info, ssl);
+
+    /* Pass conn_info inside the ssl struct for TLSVerifyCallback(). */
+    SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn->conn_info);
+
+    /* Now we are letting OpenSSL take over the open socket. */
+    SSL_set_fd(ssl, ConnectionInfoSocket(conn->conn_info));
+
+    int ret = SSL_accept(ssl);
+    if (ret <= 0)
+    {
+        TLSLogError(ssl, LOG_LEVEL_ERR,
+                    "Failed to accept TLS connection", ret);
+        return -1;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "TLS version negotiated: %8s; Cipher: %s,%s",
+        SSL_get_version(ssl),
+        SSL_get_cipher_name(ssl),
+        SSL_get_cipher_version(ssl));
+
+    return 1;
+}
 
 /**
  * @brief Accept a TLS connection and authenticate and identify.
+ *
+ * This function uses trustkeys to trust new keys and updates lastseen
+ *
+ * @see BasicServerTLSSessionEstablish
  * @note Various fields in #conn are set, like username and keyhash.
+ * @return 1 for success -1 for error
  */
 int ServerTLSSessionEstablish(ServerConnectionState *conn)
 {
-    if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
+    if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
-        assert(ConnectionInfoSSL(conn->conn_info) == NULL);
-        SSL *ssl = SSL_new(SSLSERVERCONTEXT);
-        if (ssl == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "SSL_new: %s",
-                TLSErrorString(ERR_get_error()));
-            return -1;
-        }
-        ConnectionInfoSetSSL(conn->conn_info, ssl);
+        return 1;
+    }
 
-        /* Pass conn_info inside the ssl struct for TLSVerifyCallback(). */
-        SSL_set_ex_data(ssl, CONNECTIONINFO_SSL_IDX, conn->conn_info);
+    int ret = BasicServerTLSSessionEstablish(conn);
+    assert(ret == 1 || ret == -1); // 1 == success, -1 == error
+    if (ret == -1)
+    {
+        return -1;
+    }
 
-        /* Now we are letting OpenSSL take over the open socket. */
-        SSL_set_fd(ssl, ConnectionInfoSocket(conn->conn_info));
+    Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
-        int ret = SSL_accept(ssl);
-        if (ret <= 0)
-        {
-            TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "Failed to accept TLS connection", ret);
-            return -1;
-        }
+    /* Send/Receive "CFE_v%d" version string, agree on version, receive
+       identity (username) of peer. */
+    char username[sizeof(conn->username)] = "";
+    bool b = ServerIdentificationDialog(conn->conn_info,
+                                        username, sizeof(username));
+    if (b != true)
+    {
+        return -1;
+    }
 
-        Log(LOG_LEVEL_VERBOSE, "TLS version negotiated: %8s; Cipher: %s,%s",
-            SSL_get_version(ssl),
-            SSL_get_cipher_name(ssl),
-            SSL_get_cipher_version(ssl));
-        Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
+    /* We *now* (maybe a bit late) verify the key that the client sent us in
+     * the TLS handshake, since we need the username to do so. TODO in the
+     * future store keys irrelevant of username, so that we can match them
+     * before IDENTIFY. */
+    ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, username);
+    if (ret == -1)                                      /* error */
+    {
+        return -1;
+    }
 
-        /* Send/Receive "CFE_v%d" version string, agree on version, receive
-           identity (username) of peer. */
-        char username[sizeof(conn->username)] = "";
-        bool b = ServerIdentificationDialog(conn->conn_info,
-                                            username, sizeof(username));
-        if (b != true)
-        {
-            return -1;
-        }
+    if (ret == 1)                                    /* trusted key */
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "%s: Client is TRUSTED, public key MATCHES stored one.",
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+    }
 
-        /* We *now* (maybe a bit late) verify the key that the client sent us in
-         * the TLS handshake, since we need the username to do so. TODO in the
-         * future store keys irrelevant of username, so that we can match them
-         * before IDENTIFY. */
-        ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, username);
-        if (ret == -1)                                      /* error */
-        {
-            return -1;
-        }
-
-        if (ret == 1)                                    /* trusted key */
+    if (ret == 0)                                  /* untrusted key */
+    {
+        if ((SV.trustkeylist != NULL) &&
+            (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
         {
             Log(LOG_LEVEL_VERBOSE,
-                "%s: Client is TRUSTED, public key MATCHES stored one.",
+                "Peer was found in \"trustkeysfrom\" list");
+            Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
                 KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-        }
 
-        if (ret == 0)                                  /* untrusted key */
+            SavePublicKey(username, KeyPrintableHash(conn->conn_info->remote_key),
+                          KeyRSA(ConnectionInfoKey(conn->conn_info)));
+        }
+        else
         {
-            if ((SV.trustkeylist != NULL) &&
-                (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "Peer was found in \"trustkeysfrom\" list");
-                Log(LOG_LEVEL_NOTICE, "Trusting new key: %s",
-                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-
-                SavePublicKey(username, KeyPrintableHash(conn->conn_info->remote_key),
-                              KeyRSA(ConnectionInfoKey(conn->conn_info)));
-            }
-            else
-            {
-                Log(LOG_LEVEL_NOTICE,
-                    "TRUST FAILED, peer presented an untrusted key, dropping connection!");
-                Log(LOG_LEVEL_VERBOSE,
-                    "Add peer to \"trustkeysfrom\" if you really want to start trusting this new key.");
-                return -1;
-            }
+            Log(LOG_LEVEL_NOTICE,
+                "TRUST FAILED, peer presented an untrusted key, dropping connection!");
+            Log(LOG_LEVEL_VERBOSE,
+                "Add peer to \"trustkeysfrom\" if you really want to start trusting this new key.");
+            return -1;
         }
-
-        /* All checks succeeded, set conn->uid (conn->sid for Windows)
-         * according to the received USERNAME identity. */
-        SetConnIdentity(conn, username);
-
-        /* No CAUTH, SAUTH in non-classic protocol. */
-        conn->user_data_set = 1;
-        conn->rsa_auth = 1;
-
-        LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
-                 LAST_SEEN_ROLE_ACCEPT);
-
-        ServerSendWelcome(conn);
     }
+
+    /* All checks succeeded, set conn->uid (conn->sid for Windows)
+     * according to the received USERNAME identity. */
+    SetConnIdentity(conn, username);
+
+    /* No CAUTH, SAUTH in non-classic protocol. */
+    conn->user_data_set = 1;
+    conn->rsa_auth = 1;
+
+    LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+             LAST_SEEN_ROLE_ACCEPT);
+
+    ServerSendWelcome(conn);
     return 1;
 }
 

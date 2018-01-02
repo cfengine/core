@@ -25,28 +25,10 @@
 #ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
 #define CFENGINE_CF_SERVERD_FUNCTIONS_H
 
-
-#include <platform.h>
-
 #include <generic_agent.h>
-#include <server.h>
-
 #include <eval_context.h>
-#include <dir.h>
-#include <dbm_api.h>
-#include <lastseen.h>
-#include <crypto.h>
-#include <files_names.h>
-#include <vars.h>
-#include <promises.h>
-#include <item_lib.h>
-#include <conversion.h>
-#include <xml_writer.h>
-#include <pipes.h>
-
 
 typedef int (*InitServerFunction)(size_t queue_size);
-
 
 GenericAgentConfig *CheckOpts(int argc, char **argv);
 int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);

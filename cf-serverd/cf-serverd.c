@@ -26,10 +26,8 @@
 #include <platform.h>
 
 #include <cf-serverd-functions.h>
-#include <cf-serverd-enterprise-stubs.h> /* CleanReportBookFilterSet() */
-#include <server_transform.h>
-#include <known_dirs.h>
-#include <loading.h>
+#include <cf-serverd-enterprise-stubs.h>// CleanReportBookFilterSet
+#include <server_transform.h>           // Summarize
 
 
 static void ThisAgentInit(void)

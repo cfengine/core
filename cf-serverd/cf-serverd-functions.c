@@ -25,29 +25,25 @@
 #include <cf-serverd-functions.h>
 #include <cf-serverd-enterprise-stubs.h>
 
-#include <server_access.h>
-#include <client_code.h>
-#include <server_transform.h>
-#include <bootstrap.h>
-#include <policy_server.h>
-#include <scope.h>
-#include <signals.h>
-#include <systype.h>
-#include <mutex.h>
-#include <locks.h>
-#include <exec_tools.h>
-#include <unix.h>
-#include <man.h>
-#include <server_tls.h>                              /* ServerTLSInitialize */
-#include <timeout.h>
-#include <known_dirs.h>
-#include <sysinfo.h>
-#include <time_classes.h>
-#include <connection_info.h>
-#include <file_lib.h>
-#include <loading.h>
-#include <printsize.h>
-
+#include <server_access.h>              // acl_Free
+#include <item_lib.h>                   // DeleteItemList
+#include <server_transform.h>           // Summarize
+#include <bootstrap.h>                  // GetAmPolicyHub
+#include <policy_server.h>              // PolicyServerReadFile
+#include <signals.h>                    // GetSignalPipe
+#include <systype.h>                    // CLASSTEXT
+#include <mutex.h>                      // ThreadLock
+#include <locks.h>                      // AcquireLock
+#include <exec_tools.h>                 // ActAsDaemon
+#include <man.h>                        // ManPageWrite
+#include <server_tls.h>                 // ServerTLSInitialize
+#include <timeout.h>                    // SetReferenceTime
+#include <known_dirs.h>                 // GetInputDir
+#include <sysinfo.h>                    // DetectEnvironment
+#include <time_classes.h>               // UpdateTimeClasses
+#include <loading.h>                    // LoadPolicy
+#include <printsize.h>                  // PRINTSIZE
+#include <conversion.h>                 // MapAddress
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false; /* GLOBAL_A */

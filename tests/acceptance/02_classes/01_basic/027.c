@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#define CF_HASHTABLESIZE 8192
+#define SPLAY_PSEUDO_RANDOM_CONSTANT 8192
 
 #define HOURLY 12
 main() {
@@ -17,7 +17,7 @@ main() {
 	*s = c;
 	// The block algorithm is copied from evalfunction.c
 	hash=OatHash(s);
-	box = (int)(0.5 + period*hash/(double)CF_HASHTABLESIZE);
+	box = (int)(0.5 + period*hash/(double)SPLAY_PSEUDO_RANDOM_CONSTANT);
 	minblocks = box % HOURLY;
 	// Back to original code
 	if (!boxes[minblocks]) {
@@ -34,7 +34,7 @@ main() {
 // This is copied from files_hashes.c
 int OatHash(char *key)
        
-{ unsigned int hashtablesize = CF_HASHTABLESIZE;
+{ unsigned int hashtablesize = SPLAY_PSEUDO_RANDOM_CONSTANT;
 unsigned char *p = key;
 unsigned h = 0;
 int i, len = strlen(key);

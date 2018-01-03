@@ -29,11 +29,12 @@
 #include <conversion.h>
 #include <string_lib.h>
 
+/* Get a number in the interval [0, 1) for a calculation of a pseudo-random delay */
 static double GetSplay(void)
 {
     char splay[CF_BUFSIZE];
     snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-    return ((double) (StringHash(splay, 0) & (CF_HASHTABLESIZE - 1))) / CF_HASHTABLESIZE;
+    return ((double) MAX(StringHash(splay, 0), UINT_MAX - 1)) / UINT_MAX;
 }
 
 ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)

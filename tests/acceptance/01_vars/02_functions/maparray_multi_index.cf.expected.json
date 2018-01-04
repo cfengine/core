@@ -34,9 +34,9 @@
     "myservices.cf"
   ],
   "inputs": [
-    "zculib/myservices.cf",
     "zculib/pathsa.cf",
-    "zculib/pathsb.cf"
+    "zculib/pathsb.cf",
+    "zculib/myservices.cf"
   ],
   "merged_bundles": {
     "onelevel1": [

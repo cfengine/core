@@ -1,8 +1,8 @@
 {
   "c_keys": [
+    "s",
     "f",
-    "k",
-    "s"
+    "k"
   ],
   "c_keys_f": [
     "f1"
@@ -11,8 +11,8 @@
     "s1"
   ],
   "fields": [
-    "dirs",
     "fullname",
+    "dirs",
     "name"
   ],
   "inline_fields": [

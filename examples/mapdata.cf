@@ -68,8 +68,8 @@ bundle agent run
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: mapdata/json on classic CFEngine array result: [{"key":"lookup","key2":"small","value":"lookup small"},{"key":"lookup","key2":"big","value":"lookup big"}]
-#@ R: mapdata/none on classic CFEngine array result: ["key=lookup, level 2 key = small, value=lookup small","key=lookup, level 2 key = big, value=lookup big"]
+#@ R: mapdata/json on classic CFEngine array result: [{"key":"lookup","key2":"big","value":"lookup big"},{"key":"lookup","key2":"small","value":"lookup small"}]
+#@ R: mapdata/none on classic CFEngine array result: ["key=lookup, level 2 key = big, value=lookup big","key=lookup, level 2 key = small, value=lookup small"]
 #@ R: mapdata/json on data container result: [{"key":"top","key2":"x","value":"100"},{"key":"top","key2":"y","value":"200"}]
 #@ R: mapdata/none on data container result: ["key=top, level 2 key = x, value=100","key=top, level 2 key = y, value=200"]
 #@ ```

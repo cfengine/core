@@ -404,9 +404,43 @@ static void test_iterate_jumbo(void)
     assert_int_equal(count, 10000);
     assert_int_equal(count, size);
     assert_int_equal(sum_len, 10000*9999/2);
+}
+
+static void test_insert_jumbo_more(void)
+{
+    for (int i = 1; i < 10000; i++)
+    {
+        /* char *s = CharTimes('x', i); */
+        char s[i+1];
+        memset(s, 'x', i);
+        s[i] = '\0';
+
+        assert_false(StringMapHasKey(jumbo_map, s));
+        assert_false(StringMapInsert(jumbo_map, xstrdup(s), xstrdup(s)));
+        assert_true(StringMapHasKey(jumbo_map, s));
+        /* free(s); */
+    }
+
+    for (int i = 1; i < 7500; i++)
+    {
+        /* char *s = CharTimes('y', i); */
+        char s[i+1];
+        memset(s, 'y', i);
+        s[i] = '\0';
+
+        assert_false(StringMapHasKey(jumbo_map, s));
+        assert_false(StringMapInsert(jumbo_map, xstrdup(s), xstrdup(s)));
+        assert_true(StringMapHasKey(jumbo_map, s));
+        /* free(s); */
+    }
+
+    StringMapPrintStats(jumbo_map, stdout);
+
+    /* TODO: maybe we need a GetStats() function so that we can actually verify
+       the stats here automatically? */
 
     StringMapDestroy(jumbo_map);
-}
+};
 
 static void test_hashmap_new_destroy(void)
 {
@@ -557,6 +591,7 @@ int main()
         unit_test(test_array_map_key_referenced_in_value),
         unit_test(test_hash_map_key_referenced_in_value),
         unit_test(test_iterate_jumbo),
+        unit_test(test_insert_jumbo_more),
     };
 
     return run_tests(tests);

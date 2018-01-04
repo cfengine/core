@@ -187,7 +187,7 @@ bool child_START = false;
 
 void print_progress_sighandler(int signum ARG_UNUSED)
 {
-    fprintf(PARENT_INPUT, "%5lu", child_COUNTER);
+    fprintf(PARENT_INPUT, "%6lu", child_COUNTER);
     putc('\0', PARENT_INPUT);
     int ret = fflush(PARENT_INPUT);
     if (ret != 0)
@@ -334,7 +334,7 @@ void print_progress(int lastsaw_num_threads, int keycount_num_threads,
 {
     for (int j = 0; j < lastsaw_num_threads; j++)
     {
-        printf("%5lu", lastsaw_COUNTER[j]);
+        printf("%6lu", lastsaw_COUNTER[j]);
         lastsaw_COUNTER[j] = 0;
     }
     if (keycount_num_threads > 0)
@@ -343,7 +343,7 @@ void print_progress(int lastsaw_num_threads, int keycount_num_threads,
     }
     for (int j = 0; j < keycount_num_threads; j++)
     {
-        printf("%5lu", keycount_COUNTER[j]);
+        printf("%6lu", keycount_COUNTER[j]);
         keycount_COUNTER[j] = 0;
     }
     if (scanlastseen_num_threads > 0)
@@ -352,7 +352,7 @@ void print_progress(int lastsaw_num_threads, int keycount_num_threads,
     }
     for (int j = 0; j < scanlastseen_num_threads; j++)
     {
-        printf("%5lu", scanlastseen_COUNTER[j]);
+        printf("%6lu", scanlastseen_COUNTER[j]);
         scanlastseen_COUNTER[j] = 0;
     }
     if (num_children > 0)
@@ -372,7 +372,7 @@ void print_progress(int lastsaw_num_threads, int keycount_num_threads,
                     "exiting!\n", j);
             exit(EXIT_FAILURE);
         }
-        printf("%5s", child_report);
+        printf("%6s", child_report);
     }
 }
 

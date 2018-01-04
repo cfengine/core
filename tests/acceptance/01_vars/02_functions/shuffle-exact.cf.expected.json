@@ -9,13 +9,13 @@
     "dollhouse"
   ],
   "shuffle_a_cormorant": [
-    "e",
     "d",
     "b",
-    "a",
     "c",
-    "g",
-    "f"
+    "f",
+    "e",
+    "a",
+    "g"
   ],
   "shuffle_a_dollhouse": [
     "b",
@@ -39,10 +39,10 @@
   "shuffle_b_dollhouse": [],
   "shuffle_b_skruf": [],
   "shuffle_inline_cormorant": [
-    "delta",
-    "a",
     "farmer",
-    "b"
+    "b",
+    "a",
+    "delta"
   ],
   "shuffle_inline_dollhouse": [
     "delta",

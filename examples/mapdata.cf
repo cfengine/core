@@ -58,19 +58,30 @@ bundle agent run
       "mapc_none_str" string => format("%S", mapc_none);
 
   reports:
+    show_example::
       "mapdata/json on classic CFEngine array result: $(mapa_json_str)";
       "mapdata/none on classic CFEngine array result: $(mapa_none_str)";
       "mapdata/json on data container result: $(mapc_json_str)";
       "mapdata/none on data container result: $(mapc_none_str)";
+
+    any::
+      "Note that the output of the above reports is not deterministic,"
+      "because the order of the keys returned by mapdata() is not guaranteed."
 }
 
 #+end_src
 ###############################################################################
-#+begin_src example_output
+#+begin_src show_example_example_output
 #@ ```
 #@ R: mapdata/json on classic CFEngine array result: [{"key":"lookup","key2":"big","value":"lookup big"},{"key":"lookup","key2":"small","value":"lookup small"}]
 #@ R: mapdata/none on classic CFEngine array result: ["key=lookup, level 2 key = big, value=lookup big","key=lookup, level 2 key = small, value=lookup small"]
 #@ R: mapdata/json on data container result: [{"key":"top","key2":"x","value":"100"},{"key":"top","key2":"y","value":"200"}]
 #@ R: mapdata/none on data container result: ["key=top, level 2 key = x, value=100","key=top, level 2 key = y, value=200"]
+#@ ```
+#+end_src
+#+begin_src show_example_example_output
+#@ ```
+#@ R: "Note that the output of the above reports is not deterministic,"
+#@ R: "because the order of the keys returned by mapdata() is not guaranteed."
 #@ ```
 #+end_src

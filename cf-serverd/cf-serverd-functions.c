@@ -90,7 +90,7 @@ static const char *const HINTS[] =
     "Enable debugging output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
-    "Specify an alternative input file than the default",
+    "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
     "Define a list of comma separated classes to be defined at the start of execution",
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",

@@ -15,16 +15,17 @@ unsigned int ROUND_DURATION = 10;          /* how long to run each loop */
 #define MAX_NUM_FORKS   10000
 
 
-/* TODO all these counters should be guarded by mutex since they are written
- * from child threads and read from the main one. It's only a test, so
- * @ediosyncratic please spare me. */
 time_t START_TIME;
 pid_t PPID;
 char CFWORKDIR[CF_BUFSIZE];
+
+int CHILDREN_OUTPUTS[MAX_NUM_FORKS];
+/* TODO For correctness, the following variables should be guarded by mutexes
+ * since they are written from one thread and read from another. It's only a
+ * test though, and all tested platforms are behaving properly. */
 unsigned long      lastsaw_COUNTER[MAX_NUM_THREADS];
 unsigned long     keycount_COUNTER[MAX_NUM_THREADS];
 unsigned long scanlastseen_COUNTER[MAX_NUM_THREADS];
-int CHILDREN_OUTPUTS[MAX_NUM_FORKS];
 volatile bool DONE;
 
 /* Counter and wait condition to see if test properly finished. */
@@ -134,9 +135,8 @@ void *lastsaw_worker_thread(void *arg)
                  i / (256*256), (i / 256) % 256, i % 256);
 
         UpdateLastSawHost(hostkey, ip,
-                          ((i % 2 == 0) ?
-                           LAST_SEEN_ROLE_ACCEPT :
-                           LAST_SEEN_ROLE_CONNECT),
+                          ((i % 2 == 0) ? LAST_SEEN_ROLE_ACCEPT :
+                                          LAST_SEEN_ROLE_CONNECT),
                           START_TIME + i);
 
         i = (i + 1) % NHOSTS;
@@ -558,9 +558,12 @@ int main(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         }
 
-        /* We only read from the pipe. */
+        /* Parent: We only read from the pipe. */
         close(PIPE_FD[1]);
         CHILDREN_OUTPUTS[0] = PIPE_FD[0];
+
+        printf("Forked child process for later, PID %ju\n",
+               (uintmax_t) child);
     }
 
 

@@ -170,6 +170,47 @@ char *JoinSuffix(char *path, size_t path_size, const char *leaf)
     return path;
 }
 
+/**
+ * Just like the JoinSuffix() above, but makes sure there's a FILE_SEPARATOR
+ * between @path and @leaf_path. The only exception is the case where @path is
+ * "" and @leaf_path doesn't start with a FILE_SEPARATOR. In that case:
+ *   JoinPaths("", PATH_MAX, "some_path") -> "some_path"
+ *
+ * This function is similar to Python's os.path.join() except that unlike the
+ * Python function this one actually joins @path and @leaf_path even if
+ * @leaf_path starts with a FILE_SEPARATOR.
+ */
+char *JoinPaths(char *path, size_t path_size, const char *leaf_path)
+{
+    size_t len = strlen(leaf_path);
+    size_t path_len = strnlen(path, path_size);
+
+    if (Chop(path, path_size - 1) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
+        return NULL;
+    }
+
+    if (path_len + len + 1 > path_size)
+    {
+        Log(LOG_LEVEL_ERR, "JoinPaths: Internal limit reached. Tried to add %s to %s",
+              leaf_path, path);
+        return NULL;
+    }
+
+    /* make sure there's a FILE_SEPARATOR between path and leaf_path */
+    if ((path_len > 0 && !IsFileSep(path[path_len - 1])) && !IsFileSep(leaf_path[0]))
+    {
+        strlcat(path, FILE_SEPARATOR_STR, path_size);
+    }
+    else if ((path_len > 0 && IsFileSep(path[path_len - 1])) && IsFileSep(leaf_path[0]))
+    {
+        leaf_path += 1;
+    }
+    strlcat(path, leaf_path, path_size);
+    return path;
+}
+
 int IsAbsPath(const char *path)
 {
     if (IsFileSep(*path))
@@ -585,6 +626,41 @@ bool CompressPath(char *dest, size_t dest_size, const char *src)
     }
 
     return true;
+}
+
+/*********************************************************************/
+
+/**
+ * Get absolute path of @path. If @path is already an absolute path this
+ * function just returns a compressed (see CompressPath()) copy of it. Otherwise
+ * this function prepends the curent working directory before @path and returns
+ * the result compressed with CompressPath(). If anything goes wrong, an empty
+ * string is returned.
+ *
+ * WARNING: Remember to free return value.
+ **/
+char *GetAbsolutePath(const char *path)
+{
+    char abs_path[PATH_MAX] = { 0 };
+    if (IsAbsoluteFileName(path))
+    {
+        CompressPath(abs_path, PATH_MAX, path);
+        return xstrdup(abs_path);
+    }
+    else
+    {
+        /* the full_path can potentially be long (with many '../' parts)*/
+        char full_path[2 * PATH_MAX] = { 0 };
+        if (getcwd(full_path, PATH_MAX) == NULL)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Could not determine current directory (getcwd: %s)",
+                GetErrorStr());
+        }
+        JoinPaths(full_path, 2 * PATH_MAX, path);
+        CompressPath(abs_path, PATH_MAX, full_path);
+        return xstrdup(abs_path);
+    }
 }
 
 /*********************************************************************/

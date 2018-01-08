@@ -195,7 +195,7 @@ static const char *const HINTS[] =
     "Define a list of comma separated classes to be defined at the start of execution",
     "Run checks to diagnose a CFEngine agent installation",
     "All talk and no action mode - make no changes, only inform of promises not kept",
-    "Specify an alternative input file than the default",
+    "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
     "Print the help message",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Define a list of comma separated classes to be undefined at the start of execution",

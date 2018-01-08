@@ -98,7 +98,7 @@ static const char *const HINTS[] =
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Output the version of the software",
     "Ignore system lock",
-    "Specify an alternative input file than the default",
+    "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Run process in foreground, not as a daemon",

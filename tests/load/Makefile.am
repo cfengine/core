@@ -59,5 +59,5 @@ lastseen_load_SOURCES = lastseen_load.c \
 lastseen_load_LDADD = ../unit/libdb.la ../../libpromises/libpromises.la
 endif
 
-lastseen_threaded_load_LDADD = ../unit/libtest.la \
+lastseen_threaded_load_LDADD =  \
 	../../libpromises/libpromises.la

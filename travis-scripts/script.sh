@@ -39,6 +39,7 @@ elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
     make CFLAGS=-Werror  &&
     make -C tests/unit check
+    make -C tests/load check
     return
 else
     make

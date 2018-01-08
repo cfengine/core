@@ -18,6 +18,12 @@ bundle agent init
       "expected[masterdir]" string => "$(sys.workdir)$(const.dirsep)masterfiles";
       "expected[update_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)update.cf";
 
+      # sys.policy_entry variables are the same as this.promise variables in case the cf-agent is with '-f THIS_POLICY_FILENAME'
+      # except that "/./" can appear in some places in this.promise variables
+      "expected[policy_entry_dirname]" string => regex_replace("$(this.promise_dirname)", "/\./", "/", "");
+      "expected[policy_entry_filename]" string => regex_replace("$(this.promise_filename)", "/\./", "/", "");
+      "expected[policy_entry_basename]" string => regex_replace("$(this.promise_filename)", ".*/", "", "");
+
       "sysvars" slist => getindices("expected");
 }
 
@@ -34,7 +40,7 @@ bundle agent check
   classes:
       "$(init.sysvars)_ok" expression => strcmp("$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])");
 
-      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "failsafe_policy_path_ok", "update_policy_path_ok", "local_libdir_ok" };
+      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "failsafe_policy_path_ok", "update_policy_path_ok", "local_libdir_ok", "policy_entry_dirname_ok", "policy_entry_filename_ok", "policy_entry_basename_ok" };
 
   reports:
     DEBUG::

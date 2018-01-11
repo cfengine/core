@@ -4,6 +4,7 @@ then
     brew update
     brew install lmdb
     brew install gcc@7 || echo "Warning: Errors during OSX gcc install"
+    brew link --overwrite gcc
     gcc-7 --version
     #brew install python
     #brew install openssl

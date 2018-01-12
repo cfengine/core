@@ -13,8 +13,9 @@ mailing lists. You'll find us chatting on Freenode's IRC channels
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea
 for a new feature, it might be a good idea to open up a feature ticket in
-Redmine and send a message to dev-cfengine mailing list,
-before actually contributing the code, in order to get discussion going.
+our [bug-tracker](https://tracker.mender.io/projects/CFE/issues/) and send a 
+message to dev-cfengine mailing list, before actually contributing the code, 
+in order to get discussion going.
 
 Merged features and larger changes will be released in the first minor release
 (i.e. x.y.0). Please note that such pull requests should be ready for merging
@@ -267,7 +268,7 @@ Coding Style
 * Document using Doxygen (within reason), preferably in the `.c` files,
   not the header files.
 * Read
-  [Linux Kernel coding style](https://www.kernel.org/doc/Documentation/CodingStyle) and
+  [Linux Kernel coding style](https://www.kernel.org/doc/html/latest/process/coding-style.html) and
   [libabc coding style](https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README).
   They contain many good practices.
 * http://en.wikipedia.org/wiki/Golden_Rule
@@ -386,7 +387,7 @@ are not run unless explicitly asked for.  Normally, this is something you
 would want to do in a VM, so you can restore the OS to a pristine state
 afterwards.
 
-To run all tests, including the unsafe ones, you either need to logged in as
+To run all tests, including the unsafe ones, you either need to be logged in as
 root or have "sudo" configured to not ask for a password. Then run the
 following:
 

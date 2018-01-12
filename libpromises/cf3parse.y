@@ -1248,19 +1248,20 @@ static void ParseErrorVColumnOffset(int column_offset, const char *s, va_list ap
     fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos + column_offset, errmsg);
     free(errmsg);
 
-    /* FIXME: why this might be NULL? */
+    P.error_count++;
+
+    /* Current line is not set when syntax error in first line */
     if (P.current_line)
     {
         fprintf(stderr, "%s\n", P.current_line);
         fprintf(stderr, "%*s\n", P.line_pos + column_offset, "^");
 
-        P.error_count++;
+    }
 
-        if (P.error_count > 12)
-        {
-            fprintf(stderr, "Too many errors\n");
-            exit(EXIT_FAILURE);
-        }
+    if (P.error_count > 12)
+    {
+        fprintf(stderr, "Too many errors\n");
+        exit(EXIT_FAILURE);
     }
 
 }

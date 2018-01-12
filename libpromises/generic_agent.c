@@ -68,7 +68,7 @@
 #include <addr_lib.h>
 #include <openssl/evp.h>
 #include <libcrypto-compat.h>
-
+#include <libgen.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -446,6 +446,29 @@ void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
     free(def_json);
 }
 
+static void AddPolicyEntryVariables (EvalContext *ctx, const GenericAgentConfig *config)
+{
+    char *abs_input_path = GetAbsolutePath(config->input_file);
+    /* both dirname() and basename() may actually modify the string they are given (see man:basename(3)) */
+    char *dirname_path = xstrdup(abs_input_path);
+    char *basename_path = xstrdup(abs_input_path);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                  "policy_entry_filename",
+                                  abs_input_path,
+                                  CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                  "policy_entry_dirname",
+                                  dirname(dirname_path),
+                                  CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                  "policy_entry_basename",
+                                  basename(basename_path),
+                                  CF_DATA_TYPE_STRING, "source=agent");
+    free(abs_input_path);
+    free(dirname_path);
+    free(basename_path);
+}
+
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
     strcpy(VPREFIX, "");
@@ -466,6 +489,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
                             "cfe_internal,source=agent");
 
     DetectEnvironment(ctx);
+    AddPolicyEntryVariables(ctx, config);
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);

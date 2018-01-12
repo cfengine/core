@@ -1,4 +1,5 @@
 #!/bin/sh
+set +e
 cd $TRAVIS_BUILD_DIR || return 1
 sudo apt-get -qy install curl
 mkdir artifacts

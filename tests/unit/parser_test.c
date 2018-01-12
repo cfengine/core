@@ -233,7 +233,6 @@ int main()
         unit_test(test_bundle_body_forgot_semicolon),
         unit_test(test_bundle_body_promiser_statement_contains_colon),
         unit_test(test_bundle_body_promiser_statement_missing_assign),
-        unit_test(test_bundle_body_promisee_missing_arrow),
         unit_test(test_bundle_body_promiser_wrong_constraint_token),
         unit_test(test_bundle_body_promiser_unknown_constraint_id),
         unit_test(test_bundle_body_promiser_forgot_colon),
@@ -243,6 +242,7 @@ int main()
         unit_test(test_bundle_body_forget_cb_bundle),
         unit_test(test_body_edit_line_common_constraints),
         unit_test(test_body_edit_xml_common_constraints),
+        unit_test(test_bundle_body_promisee_missing_arrow),
 
         unit_test(test_body_invalid_type),
         unit_test(test_body_selection_wrong_token),

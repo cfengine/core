@@ -364,13 +364,149 @@ bool EmptyString(const char *s)
 
 /*********************************************************************/
 
-long StringToLong(const char *str)
+/**
+ * @brief Converts a string of numerals in base 10 to a long integer.
+ *
+ * Result is stored in *value_out, return value should be checked.
+ * On error *value_out is unmodified and an error code is returned.
+ * Leading spaces in input string are skipped.
+ * String numeral must be terminated by NULL byte or space (isspace).
+ *
+ * @see StringToLongExitOnError()
+ * @see StringToLongDefaultOnError()
+ * @param[in] str String with numerals to convert, cannot be NULL
+ * @param[out] value_out Where to store result on success, cannot be NULL
+ * @return 0 on success, error code otherwise (see source code)
+ */
+int StringToLong(const char *str, long *value_out)
+{
+    assert(str != NULL);
+    assert(value_out != NULL);
+    assert(ERANGE != 0);
+
+    char *endptr = NULL;
+    long val;
+
+    errno = 0;
+    val = strtol(str, &endptr, 10);
+
+    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)))
+    {
+        return ERANGE; // Overflow or underflow
+    }
+
+    if (endptr == str)
+    {
+        return -81; // No digits found
+    }
+
+    if (endptr == NULL)
+    {
+        return -82; // endpointer not set by strtol
+    }
+
+    if (*endptr != '\0' && !isspace(*endptr))
+    {
+        return -83; // string not properly terminated
+    }
+
+    if (errno != 0)
+    {
+        return errno; // Unknown error
+    }
+
+    *value_out = val;
+    return 0;
+}
+
+/**
+ * @brief Log StringToLong conversion error with an identifier for debugging
+ */
+void LogStringToLongError(const char *str_attempted, const char *id, int error_code)
+{
+    assert(error_code != 0);
+    const char *error_str = "Unknown";
+    switch (error_code)
+    {
+        case ERANGE:
+            error_str = "Overflow";
+            break;
+        case -81:
+            error_str = "No digits";
+            break;
+        case -82:
+            error_str = "No endpointer";
+            break;
+        case -83:
+            error_str = "Not terminated";
+            break;
+    }
+    Log(LOG_LEVEL_ERR, "Conversion error (%d - %s) on '%s' (%s)", error_code, error_str, str_attempted, id);
+}
+
+/**
+ * @brief Converts a string of numerals in base 10 to a long integer,
+ *        uses a default value if errors occur.
+ *
+ * @see StringToLong()
+ * @param[in] str String with numerals to convert, cannot be NULL
+ * @param[in] default_return Value to return on error
+ * @return Result of conversion (or default_return in case of error)
+ */
+long StringToLongDefaultOnError(const char *str, long default_return)
+{
+    assert(str != NULL);
+    long result = 0;
+    int return_code = StringToLong(str, &result);
+    if (return_code != 0)
+    {
+        // Do not log anything because this can be used frequently
+        return default_return;
+    }
+    return result;
+}
+
+/**
+ * @brief Converts a string of numerals in base 10 to a long integer, exits on error.
+ *
+ * Only use this function in contexts/components where it is acceptable
+ * to immediately exit when something goes wrong.
+ *
+ * @warning This function can exit the process based on string contents
+ * @see StringToLong()
+ * @param[in] str String with numerals to convert, cannot be NULL
+ * @return Result of conversion
+ */
+long StringToLongExitOnError(const char *str)
+{
+    assert(str != NULL);
+    long result;
+    int return_code = StringToLong(str, &result);
+    if (return_code != 0)
+    {
+        LogStringToLongError(str, "StringToLongExitOnError", return_code);
+        exit(EXIT_FAILURE);
+    }
+    return result;
+}
+
+/**
+ * @brief Convert a string of numerals to a long integer (deprecated).
+ *
+ * @warning This function is deprecated, do not use it
+ * @warning This function can exit the process based on string contents
+ * @see StringToLongExitOnError()
+ * @param[in] str String with numerals to convert, cannot be NULL
+ * @return Result of conversion
+ */
+long StringToLongUnsafe(const char *str)
 {
     assert(str);
 
     char *end;
     long result = strtol(str, &end, 10);
 
+    // This is bad:
     assert(!*end && "Failed to convert string to long");
 
     return result;

@@ -96,15 +96,28 @@ function testit(){
                     result=failed
                 fi
         else
-                # test is expected to pass
-                grep "R: $PWD/work_here/inputs/$file FAIL" $logfile.log && result=failed
-                grep "R: $PWD/work_here/inputs/$file Pass" $logfile.log && result=passed
+            # test is expected to pass
+            if [ $retval != 0 ]
+            then
+                result=failed
+            else
+                if grep "R: $PWD/work_here/inputs/$file Pass" $logfile.log  > /dev/null
+                then
+                    result=passed
+                else
+                    result=failed
+                fi
+            fi
         fi
-        echo $logfile>$statsdir/$result-$logfilename
+        echo $logfile > $statsdir/$result-$logfilename
+
         if [ "$result" != "passed" ]
         then
-                mv work_here $logfile.workdir
-                mv /tmp/TESTDIR.cfengine $logfile.testdir
+            echo "$file  FAIL"
+            mv work_here $logfile.workdir
+            mv /tmp/TESTDIR.cfengine $logfile.testdir
+        else
+            echo "$file  Pass"
         fi
     done
 }

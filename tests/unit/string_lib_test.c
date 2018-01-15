@@ -296,7 +296,120 @@ static void test_substring_evil(void)
 
 static void test_string_to_long(void)
 {
-    assert_int_equal(1234567, StringToLong("1234567"));
+    // Basic usage:
+    assert_int_equal(StringToLongExitOnError("0"),    0);
+    assert_int_equal(StringToLongExitOnError("-0"),   0);
+    assert_int_equal(StringToLongExitOnError("+0"),   0);
+    assert_int_equal(StringToLongExitOnError("123"),  123);
+    assert_int_equal(StringToLongExitOnError("+123"), 123);
+
+    // WARNING: Some platforms have 32-bit long, 2,147,483,647 is LONG_MAX
+    assert_int_equal(StringToLongExitOnError("2147483647"), 2147483647);
+    assert_int_equal(StringToLongExitOnError("1987654320"), 1987654320);
+
+    // Negative numbers:
+    assert_int_equal((int)StringToLongExitOnError("-1"),       -1);
+    assert_int_equal(     StringToLongExitOnError("-1"), (long)-1);
+    assert_int_equal((int)StringToLongExitOnError("-1"),       -1);
+    assert_int_equal(     StringToLongExitOnError("-1"), (long)-1);
+
+    // Leading spaces:
+    assert_int_equal(StringToLongExitOnError(" 0") ,   0);
+    assert_int_equal(StringToLongExitOnError(" 123"),  123);
+    assert_int_equal(StringToLongExitOnError(" -123"), (long)-123);
+    assert_int_equal(StringToLongExitOnError("             0"),   0);
+    assert_int_equal(StringToLongExitOnError("             123"), 123);
+    assert_int_equal(StringToLongExitOnError("            -123"), (long)-123);
+
+    // Trailing spaces:
+    assert_int_equal(StringToLongExitOnError("0 "),    0);
+    assert_int_equal(StringToLongExitOnError("789 "),  789);
+    assert_int_equal(StringToLongExitOnError("-789 "), (long)-789);
+    assert_int_equal(StringToLongExitOnError("0               "), 0);
+    assert_int_equal(StringToLongExitOnError("789             "), 789);
+    assert_int_equal(StringToLongExitOnError("-789            "), (long)-789);
+
+    // More spaces:
+    assert_int_equal(StringToLongExitOnError("   0    "), 0);
+    assert_int_equal(StringToLongExitOnError("   -0   "), 0);
+    assert_int_equal(StringToLongExitOnError("   456  "), 456);
+
+    // Space separated numbers:
+    assert_int_equal(StringToLongExitOnError("   456  9  "), 456);
+    assert_int_equal(StringToLongExitOnError("1 0"),         1);
+}
+
+static void test_string_to_long_default(void)
+{
+    assert_int_equal(StringToLongDefaultOnError("0",10), 0);
+    assert_int_equal(StringToLongDefaultOnError(" ",10), 10);
+    assert_int_equal(StringToLongDefaultOnError("error",123), 123);
+    assert_int_equal(StringToLongDefaultOnError("-error",-123), (long)-123);
+}
+
+static void test_string_to_long_errors(void)
+{
+    // A succesful call to StringToLong should return 0:
+    long target = 0;
+    assert(StringToLong("1234",&target) == 0);
+    assert(target == 1234);
+
+    // Test that invalid inputs give error return code:
+    assert(StringToLong("",       &target) != 0);
+    assert(StringToLong(" ",      &target) != 0);
+    assert(StringToLong("error",  &target) != 0);
+    assert(StringToLong("-error", &target) != 0);
+    assert(StringToLong("ffff",   &target) != 0);
+    assert(StringToLong("1d",     &target) != 0);
+    assert(StringToLong("56789d", &target) != 0);
+    assert(StringToLong("9999999999999999999999999999999",&target) == ERANGE);
+    assert(StringToLong(" 999999999999999999999999999999",&target) == ERANGE);
+    assert(StringToLong("-999999999999999999999999999999",&target) == ERANGE);
+
+    // Test that error logging function can be called:
+    LogStringToLongError("-999999999999999999999999999999", "string_lib_test",
+                         ERANGE);
+
+    // Check that target is unmodified after errors:
+    assert(target == 1234);
+}
+
+static void test_string_to_long_unsafe(void)
+{
+    assert_int_equal(StringToLongUnsafe("0"),  0);
+    assert_int_equal(StringToLongUnsafe("1"),  1);
+    assert_int_equal(StringToLongUnsafe(" 0"), 0);
+    assert_int_equal(StringToLongUnsafe(" 1"), 1);
+    assert_int_equal(StringToLongUnsafe("-1"),    (long)-1);
+    assert_int_equal(StringToLongUnsafe(" -1"),   (long)-1);
+    assert_int_equal(StringToLongUnsafe(" -987"), (long)-987);
+    assert_int_equal(StringToLongUnsafe("1987654320"),   1987654320);
+    assert_int_equal(StringToLongUnsafe(" 1987654320"),  1987654320);
+    assert_int_equal(StringToLongUnsafe(" -1987654320"), (long)-1987654320);
+
+    // Weird edge case:
+    assert_int_equal(StringToLongUnsafe(""), 0);
+}
+
+// StringToLongExitOnError should replace StringToLongUnsafe:
+#define assert_string_to_long_unsafe(x)\
+{\
+    assert_int_equal(StringToLongExitOnError(x), StringToLongUnsafe(x));\
+}
+
+static void test_string_to_long_compatibility(void)
+{
+    // All these inputs should give same result for new and old function:
+    assert_string_to_long_unsafe("0");
+    assert_string_to_long_unsafe("-1");
+    assert_string_to_long_unsafe("-0");
+    assert_string_to_long_unsafe("  -0");
+    assert_string_to_long_unsafe("1");
+    assert_string_to_long_unsafe("123");
+    assert_string_to_long_unsafe("1987654320");
+    assert_string_to_long_unsafe("          1987654320");
+
+    // Old function (StringToLongUnsafe) does not allow trailing whitespace
 }
 
 static void test_string_from_long(void)
@@ -752,6 +865,10 @@ int main()
         unit_test(test_substring_evil),
 
         unit_test(test_string_to_long),
+        unit_test(test_string_to_long_default),
+        unit_test(test_string_to_long_errors),
+        unit_test(test_string_to_long_unsafe),
+        unit_test(test_string_to_long_compatibility),
         unit_test(test_string_from_long),
         unit_test(test_string_to_double),
         unit_test(test_string_from_double),

@@ -691,7 +691,7 @@ long JsonPrimitiveGetAsInteger(const JsonElement *primitive)
     assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
     assert(primitive->primitive.type == JSON_PRIMITIVE_TYPE_INTEGER);
 
-    return StringToLong(primitive->primitive.value);
+    return StringToLongExitOnError(primitive->primitive.value);
 }
 
 double JsonPrimitiveGetAsReal(const JsonElement *primitive)
@@ -757,7 +757,7 @@ JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices
         case JSON_CONTAINER_TYPE_ARRAY:
             if (StringIsNumeric(index))
             {
-                size_t i = StringToLong(index);
+                size_t i = StringToLongExitOnError(index);
                 if (i < JsonLength(element))
                 {
                     JsonElement *child = JsonArrayGet(element, i);

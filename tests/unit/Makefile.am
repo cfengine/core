@@ -103,7 +103,6 @@ check_PROGRAMS = \
 	domainname_test \
 	set_test \
 	set_domainname_test \
-	str_test \
 	json_test \
 	csv_parser_test \
 	env_file_test \
@@ -122,6 +121,7 @@ check_PROGRAMS = \
 	db_concurrent_test \
 	misc_lib_test \
 	item_lib_test \
+	string_lib_test \
 	crypto_symmetric_test \
 	persistent_lock_test  \
 	thread_test \

@@ -2601,12 +2601,15 @@ static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *sr
     (attr.perms.groups)->gid = save_gid;
 #endif
 
-    if (attr.copy.preserve && (attr.copy.servers == NULL
-        || strcmp(RlistScalarValue(attr.copy.servers), "localhost") == 0))
+    if (attr.copy.preserve &&
+        (   attr.copy.servers == NULL
+         || strcmp(RlistScalarValue(attr.copy.servers), "localhost") == 0))
     {
         if (!CopyFileExtendedAttributesDisk(src, dest))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Could not preserve extended attributes (ACLs and security contexts) on file '%s'", dest);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+                 "Could not preserve extended attributes"
+                 " (ACLs and security contexts) on file '%s'", dest);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
@@ -2636,11 +2639,24 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     if (cf_stat(BufferData(source), &ssb, attr.copy, conn) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
-             "Can't stat file '%s' on '%s' in files.copy_from promise",
-             BufferData(source), conn ? conn->remoteip : "localhost");
-        BufferDestroy(source);
-        return PROMISE_RESULT_FAIL;
+        if (attr.copy.missing_ok)
+        {
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr,
+                 "Can't stat file '%s' on '%s' but promise is kept because of"
+                 " 'missing_ok' in files.copy_from promise",
+                 BufferData(source), conn ? conn->remoteip : "localhost");
+            BufferDestroy(source);
+
+            return PROMISE_RESULT_CHANGE;
+        }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+                 "Can't stat file '%s' on '%s' in files.copy_from promise",
+                 BufferData(source), conn ? conn->remoteip : "localhost");
+            BufferDestroy(source);
+            return PROMISE_RESULT_FAIL;
+        }
     }
 
     start = BeginMeasure();

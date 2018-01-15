@@ -954,6 +954,7 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
     f.encrypt = PromiseGetConstraintAsBoolean(ctx, "encrypt", pp);
     f.verify = PromiseGetConstraintAsBoolean(ctx, "verify", pp);
     f.purge = PromiseGetConstraintAsBoolean(ctx, "purge", pp);
+    f.missing_ok = PromiseGetConstraintAsBoolean(ctx, "missing_ok", pp);
     f.destination = NULL;
 
     return f;

@@ -91,6 +91,34 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
     Attributes a = { {0} };
     // More consideration needs to be given to using these
     //a.transaction = GetTransactionConstraints(pp);
+
+    /* Warn if promise locking was used with a promise that doesn't support it
+     * (which applies to all of 'vars', 'meta' and 'defaults' promises handled
+     * by this code).
+     * (Only do this in the first pass in cf-promises, we don't have to repeat
+     * the warning over and over.) */
+    if (EvalContextGetPass(ctx) == 0 && THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+    {
+        int ifelapsed = PromiseGetConstraintAsInt(ctx, "ifelapsed", pp);
+        if (ifelapsed != CF_NOINT)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "ifelapsed attribute specified in action body for %s promise '%s',"
+                " but %s promises do not support promise locking",
+                pp->parent_promise_type->name, pp->promiser,
+                pp->parent_promise_type->name);
+        }
+        int expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
+        if (expireafter != CF_NOINT)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "expireafter attribute specified in action body for %s promise '%s',"
+                " but %s promises do not support promise locking",
+                pp->parent_promise_type->name, pp->promiser,
+                pp->parent_promise_type->name);
+        }
+    }
+
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
     VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));

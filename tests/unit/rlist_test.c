@@ -109,8 +109,9 @@ static void test_last(void)
 
 static bool is_even(void *item, void *data)
 {
-    long d = StringToLong(data);
-    long i = StringToLong(item);
+    // What does this function do?
+    long d = StringToLongDefaultOnError(data, 0);
+    long i = StringToLongExitOnError(item);
     return i % 2 == d;
 }
 
@@ -131,7 +132,7 @@ static void test_filter(void)
     int i = 0;
     for (Rlist *rp = list; rp; rp = rp->next)
     {
-        int k = StringToLong(rp->val.item);
+        int k = StringToLongExitOnError(rp->val.item);
         assert_int_equal(i, k);
 
         i += 2;
@@ -302,7 +303,7 @@ static struct ParseRoulette
     2, "{'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA'  ,  'Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB' }"},
     {
     2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  'Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB' }"},
-  
+
         /*Inner space (inside elements) */
     {
     1, "{\" \"}"},
@@ -578,7 +579,7 @@ static void test_regex_split_no_match()
     Rlist *list = RlistFromRegexSplitNoOverflow(":one:two:three:", "/", 2);
 
     assert_int_equal(1, RlistLen(list));
-    assert_string_equal(RlistScalarValue(list), ":one:two:three:"); 
+    assert_string_equal(RlistScalarValue(list), ":one:two:three:");
 
     RlistDestroy(list);
 }

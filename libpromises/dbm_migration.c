@@ -48,7 +48,7 @@ static size_t DBVersion(DBHandle *db)
     }
     else
     {
-        return StringToLong(version);
+        return StringToLongDefaultOnError(version, 0);
     }
 }
 

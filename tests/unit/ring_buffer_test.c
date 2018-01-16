@@ -38,7 +38,7 @@ static void test_excess(void)
     int i = FILL - CAPACITY;
     while ((s = RingBufferIteratorNext(iter)))
     {
-        assert_int_equal(i, StringToLong(s));
+        assert_int_equal(i, StringToLongExitOnError(s));
         i++;
     }
 

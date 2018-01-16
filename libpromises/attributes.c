@@ -668,13 +668,39 @@ TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promi
 
     t.background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     t.ifelapsed = PromiseGetConstraintAsInt(ctx, "ifelapsed", pp);
+    t.expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
+
+    /* Warn if promise locking was used with a promise that doesn't support it.
+     * XXX: EvalContextGetPass() takes 'EvalContext *' instead of 'const EvalContext *'*/
+    if ((strcmp("access", pp->parent_promise_type->name) == 0 ||
+         strcmp("classes", pp->parent_promise_type->name) == 0 ||
+         strcmp("defaults", pp->parent_promise_type->name) == 0 ||
+         strcmp("meta", pp->parent_promise_type->name) == 0 ||
+         strcmp("roles", pp->parent_promise_type->name) == 0 ||
+         strcmp("vars", pp->parent_promise_type->name) == 0))
+    {
+        if (t.ifelapsed != CF_NOINT)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "ifelapsed attribute specified in action body for %s promise '%s',"
+                " but %s promises do not support promise locking",
+                pp->parent_promise_type->name, pp->promiser,
+                pp->parent_promise_type->name);
+        }
+        if (t.expireafter != CF_NOINT)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "expireafter attribute specified in action body for %s promise '%s',"
+                " but %s promises do not support promise locking",
+                pp->parent_promise_type->name, pp->promiser,
+                pp->parent_promise_type->name);
+        }
+    }
 
     if (t.ifelapsed == CF_NOINT)
     {
         t.ifelapsed = VIFELAPSED;
     }
-
-    t.expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
 
     if (t.expireafter == CF_NOINT)
     {

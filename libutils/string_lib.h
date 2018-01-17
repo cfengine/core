@@ -59,7 +59,12 @@ char ToUpper(char ch);
 void ToUpperStrInplace(char *str);
 void ToLowerStrInplace(char *str);
 
-long StringToLong(const char *str);
+int StringToLong(const char *str, long *value_out) FUNC_WARN_UNUSED_RESULT;
+void LogStringToLongError(const char *str_attempted, const char *id, int error_code);
+long StringToLongDefaultOnError(const char *str, long default_return);
+long StringToLongExitOnError(const char *str);
+long StringToLongUnsafe(const char *str); // Deprecated, do not use
+
 char *StringFromLong(long number);
 double StringToDouble(const char *str);
 char *StringFromDouble(double number);

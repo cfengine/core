@@ -9,3 +9,4 @@ part of your policy cf-agent is spending most time on.
 ```
 
 Requires Perl module Time::HiRes.
+- EL6 `yum -y install perl-Time-HiRes`

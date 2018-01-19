@@ -111,6 +111,15 @@ Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
         }
 
         policy = PolicyFromJson(json_policy);
+        if (policy == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to deserialize a policy from the JSON input file '%s'",
+                input_path);
+            JsonDestroy(json_policy);
+            WriterClose(contents);
+            return NULL;
+        }
 
         JsonDestroy(json_policy);
         WriterClose(contents);

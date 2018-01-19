@@ -2290,17 +2290,24 @@ Policy *PolicyFromJson(JsonElement *json_policy)
 {
     Policy *policy = PolicyNew();
 
+    JsonElement *json_bundles = JsonObjectGetAsArray(json_policy, "bundles");
+    JsonElement *json_bodies = JsonObjectGetAsArray(json_policy, "bodies");
+
+    if ((json_bundles == NULL) && (json_bodies == NULL))
     {
-        JsonElement *json_bundles = JsonObjectGetAsArray(json_policy, "bundles");
+        return NULL;
+    }
+
+    if (json_bundles != NULL)
+    {
         for (size_t i = 0; i < JsonLength(json_bundles); i++)
         {
             JsonElement *json_bundle = JsonArrayGetAsObject(json_bundles, i);
             PolicyAppendBundleJson(policy, json_bundle);
         }
     }
-
+    if (json_bodies != NULL)
     {
-        JsonElement *json_bodies = JsonObjectGetAsArray(json_policy, "bodies");
         for (size_t i = 0; i < JsonLength(json_bodies); i++)
         {
             JsonElement *json_body = JsonArrayGetAsObject(json_bodies, i);

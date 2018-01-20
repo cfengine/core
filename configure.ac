@@ -507,8 +507,11 @@ then
       [],
       [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
     AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h],
-      [libacl_header_found=yes],
-      [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl header files); fi])
+      [libacl_header_found=yes])
+    if test "x$libacl_header_found" != "xyes" && test "x$with_libacl" != xcheck;
+    then
+      AC_MSG_ERROR(Cannot find libacl library headers);
+    fi
   ])
 fi
 

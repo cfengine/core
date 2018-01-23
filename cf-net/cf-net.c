@@ -633,16 +633,33 @@ static int invalid_command(const char *cmd)
 }
 
 
-static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
+static int CFNetGetFile(const char *hostname, const char *remote_file, const char *local_file)
 {
-    assert(opts);
-    assert(hostname);
-    assert(args);
     AgentConnection *conn = CFNetOpenConnection(hostname);
     if (conn == NULL)
     {
         return -1;
     }
+
+    struct stat sb;
+    int r = cf_remote_stat(conn, true, remote_file, &sb, "file");
+    if (r != 0)
+    {
+        printf("Could not stat: '%s'\n", remote_file);
+    }
+    else
+    {
+        CopyRegularFileNet(remote_file, local_file, sb.st_size, true, conn);
+    }
+    CFNetDisconnect(conn);
+    return r;
+}
+
+static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
+{
+    assert(opts);
+    assert(hostname);
+    assert(args);
     char *local_file = NULL;
 
     // TODO: Propagate argv and argc from main()
@@ -722,19 +739,9 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
         return -1;
     }
 
-    struct stat sb;
-    int r = cf_remote_stat(conn, true, remote_file, &sb, "file");
-    if (r != 0)
-    {
-        printf("Could not stat: '%s'\n", remote_file);
-    }
-    else
-    {
-        CopyRegularFileNet(remote_file, local_file, sb.st_size, true, conn);
-    }
+    int ret = CFNetGetFile(hostname, remote_file, local_file);
     free(local_file);
-    CFNetDisconnect(conn);
-    return 0;
+    return ret;
 }
 
 static void PrintDirs(const Item *list)

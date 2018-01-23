@@ -406,6 +406,7 @@ static void test_iterate_jumbo(void)
     assert_int_equal(sum_len, 10000*9999/2);
 }
 
+#ifndef _AIX
 static void test_insert_jumbo_more(void)
 {
     for (int i = 1; i < 10000; i++)
@@ -441,6 +442,7 @@ static void test_insert_jumbo_more(void)
 
     StringMapDestroy(jumbo_map);
 };
+#endif
 
 static void test_hashmap_new_destroy(void)
 {
@@ -591,7 +593,9 @@ int main()
         unit_test(test_array_map_key_referenced_in_value),
         unit_test(test_hash_map_key_referenced_in_value),
         unit_test(test_iterate_jumbo),
+#ifndef _AIX
         unit_test(test_insert_jumbo_more),
+#endif
     };
 
     return run_tests(tests);

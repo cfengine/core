@@ -666,7 +666,7 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
     extern char *optarg;
     int c = 0;
     // TODO: Experiment with more user friendly leading - optstring
-    const char *optstr = "+o:"; // + means stop for non opt arg. :)
+    const char *optstr = "o:";
     bool specified_path = false;
     while ((c = getopt_long(argc, args, optstr, longopts, NULL))
             != -1)

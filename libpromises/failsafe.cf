@@ -226,8 +226,9 @@ bundle agent failsafe_cfe_internal_update
       # is running, even if cf-execd isn't, for example. Here we want to be
       # sure we relaunch everything.
 
-      "/bin/systemctl restart cfengine3"
+      "/bin/systemctl restart cfengine3" -> { "CFE-1459" }
         handle => "failsafe_cfe_internal_bootstrap_update_commands_systemd_cfe_start",
+        contain => bootstrap_command_silent,
         classes => failsafe_results("namespace", "systemctl_restart_cfengine3");
 
   services:
@@ -450,4 +451,10 @@ body classes failsafe_results(scope, class_prefix)
                       "$(class_prefix)_error",
                       "$(class_prefix)_not_kept",
                       "$(class_prefix)_timeout" };
+}
+
+body contain bootstrap_command_silent
+# @brief Suppress command output
+{
+      no_output => "true";
 }

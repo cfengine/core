@@ -42,6 +42,8 @@
 #include <cf-windows-functions.h> // TODO: move this out of libpromises
 #include <known_dirs.h>           // TODO: move this 'out of libpromises
 
+#define ARG_UNUSED __attribute__((unused))
+
 typedef struct
 {
     bool debug;
@@ -592,7 +594,7 @@ static void CFNetStatPrint(const char *file, int st_mode, const char *server)
     }
 }
 
-static int CFNetStat(CFNetOptions *opts, const char *hostname, char **args)
+static int CFNetStat(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
     assert(opts);
     char *file = args[1];
@@ -631,7 +633,7 @@ static int invalid_command(const char *cmd)
 }
 
 
-static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args)
+static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
     assert(opts);
     assert(hostname);
@@ -749,7 +751,7 @@ static void PrintDirs(const Item *list)
     }
 }
 
-static int CFNetOpenDir(CFNetOptions *opts, const char *hostname, char **args)
+static int CFNetOpenDir(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
     assert(opts);
     assert(hostname);

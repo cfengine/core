@@ -649,7 +649,8 @@ static int CFNetGetFile(const char *hostname, const char *remote_file, const cha
     }
     else
     {
-        CopyRegularFileNet(remote_file, local_file, sb.st_size, true, conn);
+        bool ok = CopyRegularFileNet(remote_file, local_file, sb.st_size, true, conn);
+        r = ok ? 0 : -1;
     }
     CFNetDisconnect(conn);
     return r;

@@ -228,7 +228,7 @@ static char *RequireHostname(char *hostnames)
         char *policy_server = PolicyServerReadFile(GetWorkDir());
         if (policy_server == NULL)
         {
-            printf("Error: no host name (and no policy_server.dat)");
+            printf("Error: no host name (and no policy_server.dat)\n");
             exit(EXIT_FAILURE);
         }
         return policy_server;
@@ -304,7 +304,7 @@ static int CFNetParse(int argc, char **argv,
             }
             default:
             {
-                printf("Default optarg = '%s', c = '%c' = %i",
+                printf("Default optarg = '%s', c = '%c' = %i\n",
                        optarg, c, (int)c);
                 break;
             }
@@ -347,7 +347,7 @@ static int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname,
         default:
             break;
     }
-    printf("Bug: CFNetCommandSwitch() is unable to pick a command");
+    printf("Bug: CFNetCommandSwitch() is unable to pick a command\n");
     exit(EXIT_FAILURE);
     return -1;
 }
@@ -698,7 +698,7 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
             }
             default:
             {
-                printf("Default optarg = '%s', c = '%c' = %i",
+                printf("Default optarg = '%s', c = '%c' = %i\n",
                        optarg, c, (int)c);
                 break;
             }
@@ -717,7 +717,7 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
     {
          // TODO: Should rewrite CopyRegularFileNet etc. to take fd argument
          // and a simple helper function to open a file as well.
-        printf("Output to stdout not yet implemented (TODO)");
+        printf("Output to stdout not yet implemented (TODO)\n");
         free(local_file);
         return -1;
     }

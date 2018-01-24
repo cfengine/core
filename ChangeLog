@@ -1,3 +1,56 @@
+3.10.3:
+	- Enable Xen hypervisor detection on all x86 platforms (CFE-2203)
+	- cf-execd systemd service now only kills cf-execd itself (ENT-3395)
+	- Ignore commented out entries in fstab when edit_fstab is true.
+	  (CFE-2198)
+	- Do not move obstructions in warn policy mode (CFE-2740)
+	- libutils/man.c: allow to override build time
+	- Improve support for Alpine Linux
+	- Promise comments for file changes moved to verbose (ENT-3414)
+	- cf-execd now re-parses augments on policy reload (CFE-2406)
+	- Fix memory leak in cf-execd, triggered when sending email failed.
+	  (CFE-2712)
+	- Improve logging of ACL errors (ENT-3455)
+	- Fix bug preventing permission changes on Unix sockets. (CFE-1782)
+	- Do not tag large volatile variables for inventory
+	  sys.interfaces_data, sys.inet and sys.inet6 are commonly larger than the
+	  maximum data size allowed to be collected by cf-hub. Data larger than 1k
+	  is truncated. Instead of reporting truncated data this change stops
+	  tagging the variable so that it will not be collected to the Enterprise
+	  hub and will not be available in Mission Portal.
+	  Do not tag sys.inet and sys.inet6 for inventory (ENT-3483)
+	- Fix mergedata segfault when called on a non-container (CFE-2704)
+	- fix storage mount promise when existing mount point has a similar path
+	  (CFE-1960)
+	- Properly redirect init script to systemd on debian systems (ENT-3326)
+	- Do not segfault if policy_server.dat only contains whitespaces and/or line breaks
+	- Fix segfault when cf-promises -p is called against a file with syntax errors.
+	  (CFE-2696)
+	- Fix rare cf-execd hang (CFE-2719)
+	- Properly reverse-resolve DNS names longer than 63 chars. (ENT-3379)
+	- Fix segfault on JSON policy files with no bundles and bodies
+	  (CFE-2754)
+	- Set the exit value when running cf-key
+	  When running cf-key to generate new keys, set the exit value of the
+	  program to be 0 on success and 1 on failure. This makes it easier to
+	  catch errors during setup of a new machine.
+	  Change the default behavior of the program to not write anything to stdout,
+	  opting to use the Log() function which can write to stdout and will also
+	  allow output to be sent to syslog.
+	  Add a --inform option to set the global log level to LOG_LEVEL_INFO.
+	  Change the permissions of the randseed file to 600 and catch the exception
+	  if the chmod call fails.
+	- Improve misleading verbose message
+	  For constraints if/ifvarclass/unless, we now print the whole rval of the constraint.
+	  Previously the message was just "skipping variable because ifvarclass is not defined" while the variable itself was defined.
+	  Old message example:
+	    verbose: Skipping promise 'mailto' because 'if'/'ifvarclass' is not defined
+	  Changed to:
+	     verbose: Skipping promise 'mailto' because 'ifvarclass => not(isvariable("mailto"))' is not defined
+	  (CFE-2697)
+	- Suppress output from systemctl based restart of services in bootstrap/failsafe
+	  (CFE-1459)
+
 3.10.2:
 	- fix cf-execd not exiting immediately with SIGTERM on AIX (ENT-3147)
 	- Fix logic detecting if running under a Xen Hypervisor (CFE-1563)

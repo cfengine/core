@@ -83,7 +83,7 @@ static const Description COMMANDS[] =
                 "cf-net stat masterfiles/update.cf"},
     {"get",     "Get file from server",
                 "cf-net get masterfiles/update.cf -o download.cf [-jNTHREADS]\n"
-                "\t\t\t(%d can be used in the output file path when '-j' is used)"},
+                "\t\t\t(%d can be used in both the remote and output file paths when '-j' is used)"},
     {"opendir", "List files and folders in a directory",
                 "cf-net opendir masterfiles"},
     {NULL, NULL, NULL}
@@ -636,7 +636,7 @@ static int invalid_command(const char *cmd)
 
 typedef struct _GetFileData {
     const char *hostname;
-    const char *remote_file;
+    char remote_file[PATH_MAX];
     char local_file[PATH_MAX];
     int ret;
 } GetFileData;
@@ -773,7 +773,6 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
         threads[i] = (CFNetThreadData*) xcalloc(1, sizeof(CFNetThreadData));
         threads[i]->data = (GetFileData*) xcalloc(1, sizeof(GetFileData));
         threads[i]->data->hostname = hostname;
-        threads[i]->data->remote_file = remote_file;
         if (n_threads > 1)
         {
             if (strstr(local_file, "%d") != NULL)
@@ -784,10 +783,20 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
             {
                 snprintf(threads[i]->data->local_file, PATH_MAX, "%s.%d", local_file, i);
             }
+
+            if (strstr(remote_file, "%d") != NULL)
+            {
+                snprintf(threads[i]->data->remote_file, PATH_MAX, remote_file, i);
+            }
+            else
+            {
+                snprintf(threads[i]->data->remote_file, PATH_MAX, "%s", remote_file);
+            }
         }
         else
         {
             snprintf(threads[i]->data->local_file, PATH_MAX, "%s", local_file);
+            snprintf(threads[i]->data->remote_file, PATH_MAX, "%s", remote_file);
         }
     }
 

@@ -68,6 +68,7 @@ bundle common G
       "paths[usr_xpg4_bin]" string           => "/usr/xpg4/bin";
       "paths[usr_ucb_sparcv7]" string        => "/usr/ucb/sparcv7";
       "paths[opt_csw_bin]" string            => "/opt/csw/bin";
+      "paths[usr_sfw_bin]" string            => "/usr/sfw/bin";
     !windows::
       "paths[bin]" string                    => "/bin";
       "paths[usr_bin]" string                => "/usr/bin";

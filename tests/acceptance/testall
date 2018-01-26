@@ -260,6 +260,7 @@ usage() {
     echo " -j[n]"
     echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
     echo "           tests will always run one by one."
+    echo " --verbose  Run tests with verbose logging"
 }
 
 workdir() {
@@ -732,6 +733,8 @@ do
             # Internal option. Meant to keep sub invocations from interfering by
             # writing files only into the workdir.
             STAY_IN_WORKDIR=1;;
+        --verbose)
+            VERBOSE="-v";;
         -*)
             echo "Unknown option: $1"
             exit 1;;

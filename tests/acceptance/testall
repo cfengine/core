@@ -261,6 +261,7 @@ usage() {
     echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
     echo "           tests will always run one by one."
     echo " --verbose  Run tests with verbose logging"
+    echo " --debug    Run tests with debug logging"
 }
 
 workdir() {
@@ -414,9 +415,9 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             then
                 printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
             fi
-            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
+            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $DEBUG $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
         else
-            printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
+            printf "\"$AGENT\" $DEBUG $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
         fi
 
         chmod +x "$WORKDIR/runtest"
@@ -735,6 +736,8 @@ do
             STAY_IN_WORKDIR=1;;
         --verbose)
             VERBOSE="-v";;
+        --debug)
+            DEBUG="-d";;
         -*)
             echo "Unknown option: $1"
             exit 1;;
@@ -762,6 +765,7 @@ if [ "$OSTYPE" = "msys" ] && [ "$TESTALL_DO_NOT_RECURSE" != 1 ] &&
     echo "export GAINROOT=" > runtests.sh
     echo "export TESTALL_DO_NOT_RECURSE=1" >> runtests.sh
     echo "export VERBOSE='$VERBOSE'" >> runtests.sh
+    echo "export DEBUG='$DEBUG'" >> runtests.sh
     echo "$0 $ORIG_ARGS $@ &" >> runtests.sh
     # Note quote change. We want to keep below variables unexpanded.
     echo 'trap "kill $!" INT' >> runtests.sh

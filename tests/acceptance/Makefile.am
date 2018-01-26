@@ -72,8 +72,9 @@ if !HAVE_LIBXML2
 TESTS_ENVIRONMENT += LIBXML2_TESTS=0
 endif
 
+# just run one test to speed things up a bit.
 check-local:
-	@+MAKE=$(MAKE) ./testall
+	@+MAKE=$(MAKE) ./testall ./00_basics/01_compiler/001.cf
 
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \

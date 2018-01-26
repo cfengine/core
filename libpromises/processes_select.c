@@ -199,6 +199,8 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
 
     GetProcessColumnNames(processes->name, &names[0], start, end);
 
+    log(LOG_LEVEL_DEBUG, "SelectProcesses() process_name=%s", process_name);
+
     pcre *rx = CompileRegex(process_name);
     if (rx)
     {
@@ -209,6 +211,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
         {
             int s, e;
 
+            log(LOG_LEVEL_DEBUG, "SelectProcesses() ip->name=%s", ip->name);
             if (StringMatchWithPrecompiledRegex(rx, ip->name, &s, &e))
             {
                 if (NULL_OR_EMPTY(ip->name))

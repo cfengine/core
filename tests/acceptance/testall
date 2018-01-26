@@ -415,9 +415,9 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             then
                 printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
             fi
-            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $DEBUG $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
+            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE $DEBUG -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
         else
-            printf "\"$AGENT\" $DEBUG $VERBOSE -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
+            printf "\"$AGENT\" $VERBOSE $DEBUG -Kf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
         fi
 
         chmod +x "$WORKDIR/runtest"

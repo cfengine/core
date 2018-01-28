@@ -1,0 +1,53 @@
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+bundle agent init
+{
+    methods:
+        "any" usebundle => dcs_fini("$(G.testfile).plain");
+        "any" usebundle => dcs_fini("$(G.testfile).encrypted");
+        "any" usebundle => dcs_fini("$(G.testfile).decrypted");
+        "any" usebundle => generate_key;
+        "any" usebundle => trust_key;
+}
+
+bundle agent test
+{
+    meta:
+        "description"
+        string => "Test cf-keycrypt with different arguments/order";
+
+
+    vars:
+        "text" string => "This secret sauce should be encrypted and decrypted.";
+
+    files:
+        "$(G.testfile).plain"
+            create => "true",
+            edit_defaults => empty,
+            edit_line => insert_lines( "$(text)" );
+
+    commands:
+        "$(sys.cf_keycrypt)"
+            args => "--encrypt $(G.testfile).plain --key $(sys.workdir)/ppkeys/localhost.pub --output $(G.testfile).encrypted";
+        "$(sys.cf_keycrypt)"
+            args => "--decrypt -o $(G.testfile).decrypted --key $(sys.workdir)/ppkeys/localhost.priv $(G.testfile).encrypted";
+    reports:
+        "Binaries/folders:";
+        "$(sys.cf_keycrypt)";
+        "$(sys.cf_agent)";
+        "$(sys.workdir)";
+}
+
+bundle agent check
+{
+    methods:
+        "any"
+            usebundle => dcs_check_diff("$(G.testfile).plain",
+                                        "$(G.testfile).decrypted",
+                                        "$(this.promise_filename)");
+}

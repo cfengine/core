@@ -314,7 +314,7 @@ int RemoveKeys(const char *input, bool must_be_coherent)
     return -1;
 }
 
-bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
+void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 {
 #ifdef OPENSSL_NO_DEPRECATED
     RSA *pair = RSA_new();
@@ -332,17 +332,17 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     if (stat(public_key_file, &statbuf) != -1)
     {
-        Log(LOG_LEVEL_ERR, "A key file already exists at %s", public_key_file);
-        return false;
+        printf("A key file already exists at %s\n", public_key_file);
+        return;
     }
 
     if (stat(private_key_file, &statbuf) != -1)
     {
-        Log(LOG_LEVEL_ERR, "A key file already exists at %s", private_key_file);
-        return false;
+        printf("A key file already exists at %s\n", private_key_file);
+        return;
     }
 
-    Log(LOG_LEVEL_INFO, "Making a key pair for CFEngine, please wait, this could take a minute...");
+    printf("Making a key pair for CFEngine, please wait, this could take a minute...\n");
 
 #ifdef OPENSSL_NO_DEPRECATED
     BN_set_word(rsa_bignum, RSA_F4);
@@ -356,7 +356,7 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     {
         Log(LOG_LEVEL_ERR, "Unable to generate cryptographic key (RSA_generate_key: %s)",
             CryptoLastErrorString());
-        return false;
+        return;
     }
 
     fd = safe_open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
@@ -364,14 +364,14 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     if (fd < 0)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open private key file '%s' (open: %s)", private_key_file, GetErrorStr());
-        return false;
+        return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error while writing private key file '%s' (fdopen: %s)", private_key_file, GetErrorStr());
         close(fd);
-        return false;
+        return;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Writing private key to '%s'", private_key_file);
@@ -382,7 +382,7 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
         Log(LOG_LEVEL_ERR,
             "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)",
             CryptoLastErrorString());
-        return false;
+        return;
     }
 
     fclose(fp);
@@ -393,14 +393,14 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open public key file '%s' (open: %s)",
             public_key_file, GetErrorStr());
-        return false;
+        return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error while writing public key file '%s' (fdopen: %s)", public_key_file, GetErrorStr());
         close(fd);
-        return false;
+        return;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Writing public key to file '%s'", public_key_file);
@@ -410,30 +410,20 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
         Log(LOG_LEVEL_ERR,
             "Unable to write public key. (PEM_write_RSAPublicKey: %s)",
             CryptoLastErrorString());
-        return false;
+        return;
     }
 
     fclose(fp);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", GetWorkDir(), FILE_SEPARATOR);
-    Log(LOG_LEVEL_VERBOSE, "Using '%s' for randseed", vbuff);
-
     if (RAND_write_file(vbuff) != 1024)
     {
         Log(LOG_LEVEL_ERR, "Unable to write randseed");
         unlink(vbuff); /* randseed isn't safe to use */
-        return false;
+        return;
     }
 
-    if (chmod(vbuff, 0600) != 0)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Unable to set permissions on '%s' (chmod: %s)",
-            vbuff, GetErrorStr());
-        return false;
-    }
-
-    return true;
+    chmod(vbuff, 0644);
 }
 
 

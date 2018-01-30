@@ -51,7 +51,7 @@ bool ShowHost(const char *hostkey, const char *address,
               bool incoming, const KeyHostSeen *quality, void *ctx);
 void ShowLastSeenHosts();
 int RemoveKeys(const char *input, bool must_be_coherent);
-bool KeepKeyPromises(const char *public_key_file, const char *private_key_file);
+void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
 int ForceKeyRemoval(const char *key);
 int ForceIpAddressRemoval(const char *ip);
 

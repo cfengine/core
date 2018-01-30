@@ -186,7 +186,9 @@ void ServerTLSDeInitialize()
  */
 int ServerTLSPeek(ConnectionInfo *conn_info)
 {
-    assert(SSLSERVERCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
+    assert(SSLSERVERCONTEXT != NULL);
+    assert(PRIVKEY != NULL);
+    assert(PUBKEY  != NULL);
 
     assert(ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_UNDEFINED);
 

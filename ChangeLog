@@ -1,3 +1,19 @@
+3.7.7:
+	- Move promise comment to verbose (ENT-3414)
+	- Ignore commented out entries in fstab when edit_fstab is true.
+	  (CFE-2198)
+	- Improve logging of ACL errors (ENT-3455)
+	- Properly reverse-resolve DNS names longer than 63 chars. (ENT-3379)
+	- fix storage mount promise when existing mount point has a similar path
+	  (CFE-1960)
+	- Do not move obstructions in warn policy mode (CFE-2740)
+	- Fix bug preventing permission changes on Unix sockets. (CFE-1782)
+	- cf-execd now re-parses augments on policy reload (CFE-2406)
+	- libutils/man.c: allow to override build time
+	- Fix rare cf-execd hang (CFE-2719)
+	- Fix segfault on JSON policy files with no bundles and bodies
+	  (CFE-2754)
+
 3.7.6:
 	- Fix automatic service stops based on runlevel (redhat/centos)
 	  (CFE-2611)

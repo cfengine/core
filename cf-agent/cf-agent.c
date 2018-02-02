@@ -1579,6 +1579,11 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     }
     else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
+        if (!LoadProcessTable())
+        {
+            Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep processes: type promises");
+            return PROMISE_RESULT_FAIL;
+        }
         result = VerifyProcessesPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
         {
@@ -1732,11 +1737,6 @@ static int NewTypeContext(TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_PROCESSES:
-        if (!LoadProcessTable())
-        {
-            Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep processes: type promises");
-            return false;
-        }
         break;
 
     case TYPE_SEQUENCE_STORAGE:

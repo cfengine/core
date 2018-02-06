@@ -23,8 +23,8 @@
 */
 #include <platform.h>
 
-#include <openssl/bn.h>                                    /* BN_* */
-#include <openssl/err.h>                                   /* ERR_get_error */
+#include <openssl/bn.h>                         /* BN_* */
+#include <openssl/err.h>                        /* ERR_get_error */
 #include <libcrypto-compat.h>
 
 #include <cf3.defs.h>
@@ -32,16 +32,17 @@
 #include <matching.h>                 /* IsRegexItemIn */
 #include <net.h>                      /* ReceiveTransaction,SendTransaction */
 #include <signals.h>
-#include <string_lib.h>                               /* ToLowerStrInplace */
-#include <regex.h>                                    /* StringMatchFull */
-#include <lastseen.h>                                 /* LastSaw1 */
-#include <files_hashes.h>                             /* HashString */
-#include <crypto.h>                                   /* HavePublicKey */
-#include <cf-serverd-enterprise-stubs.h>              /* ReceiveCollectCall */
+#include <string_lib.h>                         /* ToLowerStrInplace */
+#include <regex.h>                              /* StringMatchFull */
+#include <lastseen.h>                           /* LastSaw1 */
+#include <files_hashes.h>                       /* HashString */
+#include <crypto.h>                             /* HavePublicKey */
+#include <cf-serverd-enterprise-stubs.h>        /* ReceiveCollectCall */
 #include <tls_generic.h>
+#include <files_names.h>                        /* CompressPath */
 
-#include "server.h"                                /* ServerConnectionState */
-#include "server_common.h"                         /* ListPersistentClasses */
+#include "server.h"                             /* ServerConnectionState */
+#include "server_common.h"                      /* ListPersistentClasses */
 
 
 /* Functionality needed exclusively for the classic protocol. */

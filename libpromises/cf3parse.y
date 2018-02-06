@@ -1258,7 +1258,7 @@ static void ParseErrorVColumnOffset(int column_offset, const char *s, va_list ap
 
     }
 
-    if (P.error_count > 12)
+    if (P.error_count > 3)
     {
         fprintf(stderr, "Too many errors\n");
         exit(EXIT_FAILURE);

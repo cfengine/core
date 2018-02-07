@@ -42,6 +42,8 @@
 #include <cf-windows-functions.h> // TODO: move this out of libpromises
 #include <known_dirs.h>           // TODO: move this 'out of libpromises
 
+#define ARG_UNUSED __attribute__((unused))
+
 typedef struct
 {
     bool debug;
@@ -80,7 +82,8 @@ static const Description COMMANDS[] =
     {"stat",    "Look at type of file",
                 "cf-net stat masterfiles/update.cf"},
     {"get",     "Get file from server",
-                "cf-net get masterfiles/update.cf -o download.cf"},
+                "cf-net get masterfiles/update.cf -o download.cf [-jNTHREADS]\n"
+                "\t\t\t(%d can be used in both the remote and output file paths when '-j' is used)"},
     {"opendir", "List files and folders in a directory",
                 "cf-net opendir masterfiles"},
     {NULL, NULL, NULL}
@@ -226,7 +229,7 @@ static char *RequireHostname(char *hostnames)
         char *policy_server = PolicyServerReadFile(GetWorkDir());
         if (policy_server == NULL)
         {
-            printf("Error: no host name (and no policy_server.dat)");
+            printf("Error: no host name (and no policy_server.dat)\n");
             exit(EXIT_FAILURE);
         }
         return policy_server;
@@ -302,7 +305,7 @@ static int CFNetParse(int argc, char **argv,
             }
             default:
             {
-                printf("Default optarg = '%s', c = '%c' = %i",
+                printf("Default optarg = '%s', c = '%c' = %i\n",
                        optarg, c, (int)c);
                 break;
             }
@@ -345,7 +348,7 @@ static int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname,
         default:
             break;
     }
-    printf("Bug: CFNetCommandSwitch() is unable to pick a command");
+    printf("Bug: CFNetCommandSwitch() is unable to pick a command\n");
     exit(EXIT_FAILURE);
     return -1;
 }
@@ -592,7 +595,7 @@ static void CFNetStatPrint(const char *file, int st_mode, const char *server)
     }
 }
 
-static int CFNetStat(CFNetOptions *opts, const char *hostname, char **args)
+static int CFNetStat(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
     assert(opts);
     char *file = args[1];
@@ -631,16 +634,48 @@ static int invalid_command(const char *cmd)
 }
 
 
-static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args)
+typedef struct _GetFileData {
+    const char *hostname;
+    char remote_file[PATH_MAX];
+    char local_file[PATH_MAX];
+    int ret;
+} GetFileData;
+
+static void *CFNetGetFile(void *arg)
+{
+    GetFileData *data = (GetFileData *) arg;
+    AgentConnection *conn = CFNetOpenConnection(data->hostname);
+    if (conn == NULL)
+    {
+        data->ret = -1;
+        return NULL;
+    }
+
+    struct stat sb;
+    data->ret = cf_remote_stat(conn, true, data->remote_file, &sb, "file");
+    if (data->ret != 0)
+    {
+        printf("Could not stat: '%s'\n", data->remote_file);
+    }
+    else
+    {
+        bool ok = CopyRegularFileNet(data->remote_file, data->local_file, sb.st_size, true, conn);
+        data->ret = ok ? 0 : -1;
+    }
+    CFNetDisconnect(conn);
+    return NULL;
+}
+
+typedef struct _CFNetThreadData {
+    pthread_t    id;
+    GetFileData *data;
+} CFNetThreadData;
+
+static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
     assert(opts);
     assert(hostname);
     assert(args);
-    AgentConnection *conn = CFNetOpenConnection(hostname);
-    if (conn == NULL)
-    {
-        return -1;
-    }
     char *local_file = NULL;
 
     // TODO: Propagate argv and argc from main()
@@ -652,6 +687,7 @@ static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args)
 
     static struct option longopts[] = {
          { "output",     required_argument,      NULL,           'o' },
+         { "jobs",       required_argument,      NULL,           'j' },
          { NULL,         0,                      NULL,           0   }
     };
     assert(opts != NULL);
@@ -664,8 +700,9 @@ static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args)
     extern char *optarg;
     int c = 0;
     // TODO: Experiment with more user friendly leading - optstring
-    const char *optstr = "+o:"; // + means stop for non opt arg. :)
+    const char *optstr = "o:j:";
     bool specified_path = false;
+    long n_threads = 1;
     while ((c = getopt_long(argc, args, optstr, longopts, NULL))
             != -1)
     {
@@ -684,6 +721,16 @@ static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args)
                 specified_path = true;
                 break;
             }
+            case 'j':
+            {
+                int ret = StringToLong(optarg, &n_threads);
+                if (ret != 0)
+                {
+                    printf("Failed to parse number of threads/jobs from '%s'\n", optarg);
+                    n_threads = 1;
+                }
+                break;
+            }
             case ':':
             {
                 return invalid_command("get");
@@ -696,7 +743,7 @@ static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args)
             }
             default:
             {
-                printf("Default optarg = '%s', c = '%c' = %i",
+                printf("Default optarg = '%s', c = '%c' = %i\n",
                        optarg, c, (int)c);
                 break;
             }
@@ -715,24 +762,76 @@ static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args)
     {
          // TODO: Should rewrite CopyRegularFileNet etc. to take fd argument
          // and a simple helper function to open a file as well.
-        printf("Output to stdout not yet implemented (TODO)");
+        printf("Output to stdout not yet implemented (TODO)\n");
         free(local_file);
         return -1;
     }
 
-    struct stat sb;
-    int r = cf_remote_stat(conn, true, remote_file, &sb, "file");
-    if (r != 0)
+    CFNetThreadData **threads = (CFNetThreadData**) xcalloc((size_t) n_threads, sizeof(CFNetThreadData*));
+    for (int i = 0; i < n_threads; i++)
     {
-        printf("Could not stat: '%s'\n", remote_file);
+        threads[i] = (CFNetThreadData*) xcalloc(1, sizeof(CFNetThreadData));
+        threads[i]->data = (GetFileData*) xcalloc(1, sizeof(GetFileData));
+        threads[i]->data->hostname = hostname;
+        if (n_threads > 1)
+        {
+            if (strstr(local_file, "%d") != NULL)
+            {
+                snprintf(threads[i]->data->local_file, PATH_MAX, local_file, i);
+            }
+            else
+            {
+                snprintf(threads[i]->data->local_file, PATH_MAX, "%s.%d", local_file, i);
+            }
+
+            if (strstr(remote_file, "%d") != NULL)
+            {
+                snprintf(threads[i]->data->remote_file, PATH_MAX, remote_file, i);
+            }
+            else
+            {
+                snprintf(threads[i]->data->remote_file, PATH_MAX, "%s", remote_file);
+            }
+        }
+        else
+        {
+            snprintf(threads[i]->data->local_file, PATH_MAX, "%s", local_file);
+            snprintf(threads[i]->data->remote_file, PATH_MAX, "%s", remote_file);
+        }
     }
-    else
+
+    bool failure = false;
+    for (int i = 0; !failure && (i < n_threads); i++)
     {
-        CopyRegularFileNet(remote_file, local_file, sb.st_size, true, conn);
+        int ret = pthread_create(&(threads[i]->id), NULL, CFNetGetFile, threads[i]->data);
+        if (ret != 0)
+        {
+            printf("Failed to create a new thread to get the file in: %s\n", strerror(ret));
+            failure = true;
+        }
     }
+
+    for (int i = 0; i < n_threads; i++)
+    {
+        int ret = pthread_join(threads[i]->id, NULL);
+        if (ret != 0)
+        {
+            printf("Failed to join the thread: %s\n", strerror(ret));
+        }
+        else
+        {
+            failure = failure && (threads[i]->data->ret != 0);
+        }
+    }
+
+    for (int i = 0; i < n_threads; i++)
+    {
+        free(threads[i]->data);
+        free(threads[i]);
+    }
+    free(threads);
     free(local_file);
-    CFNetDisconnect(conn);
-    return 0;
+    return failure ? -1 : 0;
 }
 
 static void PrintDirs(const Item *list)
@@ -749,7 +848,7 @@ static void PrintDirs(const Item *list)
     }
 }
 
-static int CFNetOpenDir(CFNetOptions *opts, const char *hostname, char **args)
+static int CFNetOpenDir(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
     assert(opts);
     assert(hostname);

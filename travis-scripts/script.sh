@@ -1,6 +1,7 @@
 #!/bin/sh
+set -e
 INSTDIR=$HOME/cf_install
-cd $TRAVIS_BUILD_DIR || return 1
+cd $TRAVIS_BUILD_DIR || exit 1
 
 # if [ "$JOB_TYPE" = style_check ]
 # then
@@ -18,6 +19,7 @@ git remote add upstream https://github.com/cfengine/core.git  \
 
 if [ "$TRAVIS_OS_NAME" = osx ]
 then
+    set +e
     # On osx the default gcc is actually LLVM
     export CC=gcc-7
     NO_CONFIGURE=1 ./autogen.sh
@@ -34,31 +36,31 @@ export DIST_TARBALL
 
 if [ "$JOB_TYPE" = compile_only ]
 then
-     make CFLAGS=-Werror
+    make CFLAGS=-Werror
 elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
     make CFLAGS=-Werror  &&
     make -C tests/unit check
     make -C tests/load check
-    return
+    exit
 else
     make
 fi
 
-cd tests/acceptance || return 1
+cd tests/acceptance || exit 1
 chmod -R go-w .
 
 if [ "$JOB_TYPE" = acceptance_tests_common ]
 then
     ./testall --tests=common
-    return
+    exit
 fi
 
   # WARNING: the following job runs the selected tests as root!
 if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network_etc ]
 then
     ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe
-    return
+    exit
 fi
 
 if [ "$JOB_TYPE" = serverd_multi_versions ]
@@ -66,6 +68,5 @@ then
     cd ../..
     set +e
     tests/acceptance/serverd-multi-versions.sh
-    return
+    exit
 fi
-

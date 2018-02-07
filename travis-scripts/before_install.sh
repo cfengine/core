@@ -1,10 +1,14 @@
 #!/bin/sh
+set -e
 if [ "$TRAVIS_OS_NAME" = osx ]
 then
+    set +e
+    rvm get stable
     brew update
     brew install lmdb
     brew install gcc@7 || echo "Warning: Errors during OSX gcc install"
     brew link --overwrite gcc
+    set -e
     gcc-7 --version
     #brew install python
     #brew install openssl

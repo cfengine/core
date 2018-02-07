@@ -49,6 +49,7 @@ const char *remove_keys_host = NULL;                            /* GLOBAL_A */
 static char *print_digest_arg = NULL;                           /* GLOBAL_A */
 static char *trust_key_arg = NULL;                              /* GLOBAL_A */
 static char *KEY_PATH = NULL;                                   /* GLOBAL_A */
+static int KEY_SIZE = 2048;                                     /* GLOBAL_A */
 bool LOOKUP_HOSTS = true;                                       /* GLOBAL_A */
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -72,6 +73,7 @@ static const struct option OPTIONS[] =
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {"output-file", required_argument, 0, 'f'},
+    {"key-type", required_argument, 0, 'T'},
     {"show-hosts", no_argument, 0, 's'},
     {"remove-keys", required_argument, 0, 'r'},
     {"force-removal", no_argument, 0, 'x'},
@@ -92,6 +94,7 @@ static const char *const HINTS[] =
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
+    "Specify a RSA key size in bits, the default value is 2048.",
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",
     "Force removal of keys (USE AT YOUR OWN RISK)",
@@ -219,7 +222,7 @@ int main(int argc, char *argv[])
         private_key_file = PrivateKeyFile(GetWorkDir());
     }
 
-    bool ret = KeepKeyPromises(public_key_file, private_key_file);
+    bool ret = KeepKeyPromises(public_key_file, private_key_file, KEY_SIZE);
 
     free(public_key_file);
     free(private_key_file);
@@ -239,7 +242,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvIf:VMp:sr:xt:hl:C::n",
+    while ((c = getopt_long(argc, argv, "dvIf:T:VMp:sr:xt:hl:C::n",
                             OPTIONS, NULL))
            != -1)
     {
@@ -247,6 +250,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         {
         case 'f':
             KEY_PATH = optarg;
+            break;
+
+        case 'T':
+            KEY_SIZE = StringToLongExitOnError(optarg);
             break;
 
         case 'd':

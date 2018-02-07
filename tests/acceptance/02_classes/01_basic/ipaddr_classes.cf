@@ -1,0 +1,34 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent check
+{
+  vars:
+      "ipv6_classes" slist => classesmatching("ipv6_.*");
+
+  classes:
+      "has_ipv6" expression => returnszero("ifconfig -a | grep 'inet6 [a-z0-9].*'", "useshell");
+
+    has_ipv6::
+      "ok" expression => some(".*", "ipv6_classes");
+
+    !has_ipv6::
+      "ok" expression => "any";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG::
+      "ipv6_classes: $(ipv6_classes)";
+
+    DEBUG.has_ipv6::
+      "Has IPv6";
+}

@@ -39,7 +39,7 @@ libenv_la_LIBADD = -lkstat
 endif
 
 AM_CPPFLAGS  = -I$(top_srcdir)/libutils
-AM_CPPFLAGS += $(OPENSSL_CPPFLAGS)	     # because libutils needs it
+AM_CPPFLAGS += $(OPENSSL_CPPFLAGS)         # because libutils needs it
 AM_CPPFLAGS += $(PCRE_CPPFLAGS)
 
 # Those dependencies are ought to go away ASAP

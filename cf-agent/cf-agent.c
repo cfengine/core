@@ -272,16 +272,16 @@ int main(int argc, char *argv[])
     PurgeLocks();
     BackupLockDatabase();
 
-    if (config->agent_specific.common.show_classes != NULL)
+    if (config->agent_specific.agent.show_evaluated_classes != NULL)
     {
-        GenericAgentShowContextsFormatted(ctx, config->agent_specific.common.show_classes);
-        free(config->agent_specific.common.show_classes);
+        GenericAgentShowContextsFormatted(ctx, config->agent_specific.agent.show_evaluated_classes);
+        free(config->agent_specific.agent.show_evaluated_classes);
     }
 
-    if (config->agent_specific.common.show_variables != NULL)
+    if (config->agent_specific.agent.show_evaluated_variables != NULL)
     {
-        GenericAgentShowVariablesFormatted(ctx, config->agent_specific.common.show_variables);
-        free(config->agent_specific.common.show_variables);
+        GenericAgentShowVariablesFormatted(ctx, config->agent_specific.agent.show_evaluated_variables);
+        free(config->agent_specific.agent.show_evaluated_variables);
     }
 
     PolicyDestroy(policy); /* Can we safely do this earlier ? */
@@ -570,7 +570,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 {
                     optarg = ".*";
                 }
-                config->agent_specific.common.show_classes = xstrdup(optarg);
+                config->agent_specific.agent.show_evaluated_classes = xstrdup(optarg);
             }
             else if (strcmp(OPTIONS[longopt_idx].name, "show-evaluated-vars") == 0)
             {
@@ -578,7 +578,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 {
                     optarg = ".*";
                 }
-                config->agent_specific.common.show_variables = xstrdup(optarg);
+                config->agent_specific.agent.show_evaluated_variables = xstrdup(optarg);
             }
     break;
 

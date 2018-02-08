@@ -65,11 +65,11 @@ static const char *const PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
 
 bool ServerTLSInitialize();
 void ServerTLSDeInitialize();
-int ServerTLSPeek(ConnectionInfo *conn_info);
-int BasicServerTLSSessionEstablish(ServerConnectionState *conn);
-int ServerTLSSessionEstablish(ServerConnectionState *conn);
+bool ServerTLSPeek(ConnectionInfo *conn_info);
+bool BasicServerTLSSessionEstablish(ServerConnectionState *conn);
+bool ServerTLSSessionEstablish(ServerConnectionState *conn);
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn);
-int ServerSendWelcome(const ServerConnectionState *conn);
+bool ServerSendWelcome(const ServerConnectionState *conn);
 bool ServerIdentificationDialog(ConnectionInfo *conn_info,
                                 char *username, size_t username_size);
 ProtocolCommandNew GetCommandNew(char *str);

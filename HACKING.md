@@ -13,8 +13,8 @@ mailing lists. You'll find us chatting on Freenode's IRC channels
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea
 for a new feature, it might be a good idea to open up a feature ticket in
-our [bug-tracker](https://tracker.mender.io/projects/CFE/issues/) and send a 
-message to dev-cfengine mailing list, before actually contributing the code, 
+our [bug-tracker](https://tracker.mender.io/projects/CFE/issues/) and send a
+message to dev-cfengine mailing list, before actually contributing the code,
 in order to get discussion going.
 
 Merged features and larger changes will be released in the first minor release
@@ -36,8 +36,8 @@ longer.
 * Big feature is added, but it is not configurable in compile-time.
 We are striving to keep CFEngine lightweight and fast, so big new
 features should be possible to disable with
-```./configure --disable-feature``` and linking to new libraries
-should be optional with ```./configure --without-libfoo```.
+`./configure --disable-feature` and linking to new libraries
+should be optional with `./configure --without-libfoo`.
 
 * Messy commit log. Tidy up the commit log by squashing commits.
 
@@ -203,14 +203,14 @@ Coding Style
   *unless they avoid great repetition*. On the average case,
   just put the assignment on the previous line. So try NOT to do
   the following:
-  ~~```if ((ret = open(...)) == -1)```~~
+  ~~`if ((ret = open(...)) == -1)`~~
 * Explicit comparisons are better than implicit, i.e. prefer writing
-  ```if (number == 0)``` or ```if (pointer == NULL)```
-  instead of ~~```if (!number)```~~ or ~~```if (!pointer)```~~. It only makes
-  sense to test booleans directly, for example ```if (is_valid)``` is good.
+  `if (number == 0)` or `if (pointer == NULL)`
+  instead of ~~`if (!number)`~~ or ~~`if (!pointer)`~~. It only makes
+  sense to test booleans directly, for example `if (is_valid)` is good.
   Furthermore have the literal last in the comparison, not first, i.e.
-  prefer writing ```if (open(...) == -1)``` instead of
-  ~~```if (-1 == open(...))```~~.
+  prefer writing `if (open(...) == -1)` instead of
+  ~~`if (-1 == open(...))`~~.
 * Control statements need to have braces on separate line,
   no matter how simple they are.
   * Caution, do-while loops should have the closing brace at the same
@@ -218,10 +218,14 @@ Coding Style
     ```c
     do
     {
-        /* ... */
+        // ...
 
     } while (condition);
     ```
+* In functions which can fail, error code (int) or success/failure (bool) should be returned.
+    * `true`(bool) and `0`(int) should always signify success.
+    * Only return an error code (int) when there are multiple different return values for different errors. If a function can only return `0` (success) or `-1` (error) use `bool` instead.
+    * Compiler can enforce checking of return value, output of function can be in an output parameter (pointer).
 * *C99 is encouraged in the language, use it.*
 
   As for using C99-specific libc functions, you can mostly use them,
@@ -249,9 +253,9 @@ Coding Style
   Log(LOG_LEVEL_INFO,
       "Some error occurred while reading installed packages cache");
   ```
-* Always use typedefs, no "struct X", or "enum Y" are allowed. Types
-  defined with typedef should be in camelcase and no trailing "_t",
-  "_f" etc.
+* Always use typedefs, no `struct X`, or `enum Y` are allowed. Types
+  defined with typedef should be in camelcase and no trailing `_t`,
+  `_f` etc.
 * Constify what can be `const`. Minimize use of global variables.
   Never declare a global variable in a library (e.g. libpromises) and
   change it in the programs.
@@ -343,7 +347,7 @@ the following when writing output messages.
 
 * Use platform-independent `GetErrorStr()` for `strerror(errno)`.  Write
   for example
-  ```Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr());```
+  `Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr());`
 
 * Normally, try to keep each message to one line of output, produced
   by one call to `Log()`.
@@ -433,11 +437,11 @@ commit with a "Changelog:" line in it, after the title. This may be one of the
 following:
 
 * To write arbitrary message in the ChangeLog:
-```Changelog: <message>```
+`Changelog: <message>`
 * To use the commit title line in the ChangeLog:
-```Changelog: Title```
+`Changelog: Title`
 * To use the entire commit message in the ChangeLog:
-```Changelog: Commit```
+`Changelog: Commit`
 
 It's worth noting that we strive to have bugtracker tickets for most
 changes, and they should be mentioned in the ChangeLog entries. In fact

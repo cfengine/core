@@ -356,8 +356,8 @@ static void *HandleConnection(void *c)
     if (conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         /* Decide the protocol used. */
-        ret = ServerTLSPeek(conn->conn_info);
-        if (ret == -1)
+        bool success = ServerTLSPeek(conn->conn_info);
+        if (!success)
         {
             goto dethread;
         }
@@ -366,8 +366,8 @@ static void *HandleConnection(void *c)
     ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
     if (protocol_version == CF_PROTOCOL_LATEST)
     {
-        ret = ServerTLSSessionEstablish(conn);
-        if (ret == -1)
+        bool established = ServerTLSSessionEstablish(conn);
+        if (!established)
         {
             goto dethread;
         }

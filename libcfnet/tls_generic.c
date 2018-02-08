@@ -151,6 +151,8 @@ static int CompareCertToRSA(X509 *cert, RSA *rsa_key)
  * the rest of authentication happens separately *after* the initial
  * handshake, thus *after* this callback has returned successfully and TLS
  * session has been established.
+ * @return 0 on error, 1 on success
+ * @note This is an SSL callback, return type has to be int, not bool
  */
 int TLSVerifyCallback(X509_STORE_CTX *store_ctx,
                       void *arg ARG_UNUSED)

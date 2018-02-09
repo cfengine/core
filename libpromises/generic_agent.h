@@ -87,6 +87,8 @@ typedef struct
             char *bootstrap_port;
             char *bootstrap_ip;
             bool bootstrap_trust_server;
+            char *show_evaluated_classes;
+            char *show_evaluated_variables;
 
             // BODY AGENT CONTROL
             bool report_class_log;

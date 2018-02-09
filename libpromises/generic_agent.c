@@ -1863,12 +1863,17 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     {
     case AGENT_TYPE_COMMON:
         config->agent_specific.common.eval_functions = true;
-        config->agent_specific.common.show_classes = false;
-        config->agent_specific.common.show_variables = false;
+        config->agent_specific.common.show_classes = NULL;
+        config->agent_specific.common.show_variables = NULL;
         config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE;
         /* Bitfields of warnings to be recorded, or treated as errors. */
         config->agent_specific.common.parser_warnings = PARSER_WARNING_ALL;
         config->agent_specific.common.parser_warnings_error = 0;
+        break;
+
+    case AGENT_TYPE_AGENT:
+        config->agent_specific.agent.show_evaluated_classes = NULL;
+        config->agent_specific.agent.show_evaluated_variables = NULL;
         break;
 
     default:

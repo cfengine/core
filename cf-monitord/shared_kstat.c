@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Northern.tech AS
+   Copyright 2018 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -23,14 +23,28 @@
 */
 
 
-#ifndef CFENGINE_VERIFY_MEASUREMENTS_H
-#define CFENGINE_VERIFY_MEASUREMENTS_H
-
-
 #include <cf3.defs.h>
 
+#include <kstat.h>
 
-PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp);
+
+static kstat_ctl_t *kstat;
 
 
-#endif
+kstat_ctl_t *GetKstatHandle(void)
+{
+    if (!kstat)
+    {
+        kstat = kstat_open();
+        if (!kstat)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to open Solaris kstat subsystem (kstat_open)");
+        }
+    }
+    else
+    {
+        kstat_chain_update(kstat);
+    }
+
+    return kstat;
+}

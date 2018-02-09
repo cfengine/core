@@ -68,11 +68,6 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, EnterpriseContext, ARG_UNUSED EvalCo
 {
 }
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, LoadSlowlyVaryingObservations, ARG_UNUSED EvalContext *, ctx)
-{
-    Log(LOG_LEVEL_VERBOSE, "Extended system discovery is only available in CFEngine Enterprise");
-}
-
 
 /* all agents: logging.c */
 
@@ -197,15 +192,6 @@ ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, EvalContextLogPromiseIterationOutcom
                                       ARG_UNUSED EvalContext *, ctx,
                                       ARG_UNUSED const Promise *, pp,
                                       ARG_UNUSED PromiseResult, result)
-{
-}
-
-ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, GetObservable, ARG_UNUSED int, i, ARG_UNUSED char *, name, ARG_UNUSED char *, desc)
-{
-    strcpy(name, OBS[i][0]);
-}
-
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, SetMeasurementPromises, ARG_UNUSED Item **, classlist)
 {
 }
 

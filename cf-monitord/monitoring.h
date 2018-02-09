@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Northern.tech AS
+   Copyright 2018 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -23,14 +23,21 @@
 */
 
 
-#ifndef CFENGINE_VERIFY_MEASUREMENTS_H
-#define CFENGINE_VERIFY_MEASUREMENTS_H
+#ifndef CF_MONITORING_H
+#define CF_MONITORING_H
 
 
 #include <cf3.defs.h>
 
 
-PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp);
+int NovaRegisterSlot(const char *name, const char *description,
+                     const char *units, double expected_minimum,
+                     double expected_maximum, bool consolidable);
+void NovaNamedEvent(const char *eventname, double value);
+void GetObservable(int i, char *name, char *desc);
+void SetMeasurementPromises(Item ** classlist);
+void LoadSlowlyVaryingObservations(EvalContext *ctx);
+void MakeTimekey(time_t time, char *result);
 
 
 #endif

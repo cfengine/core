@@ -834,6 +834,77 @@ static void GetNameInfo3(EvalContext *ctx)
 
 /*******************************************************************/
 
+void LoadSlowlyVaryingObservations(EvalContext *ctx)
+{
+    CF_DB *dbp;
+    CF_DBC *dbcp;
+    char *key;
+    void *stored;
+    int ksize, vsize;
+
+    if (!OpenDB(&dbp, dbid_static))
+    {
+        return;
+    }
+
+    /* Acquire a cursor for the database. */
+    if (!NewDBCursor(dbp, &dbcp))
+    {
+        Log(LOG_LEVEL_INFO, "Unable to scan class db");
+        CloseDB(dbp);
+        return;
+    }
+
+    while (NextDB(dbcp, &key, &ksize, &stored, &vsize))
+    {
+        if (key == NULL  ||  stored == NULL)
+        {
+            continue;
+        }
+
+        char lval[1024];
+        int type_i;
+        int ret = sscanf(key, "%1023[^:]:%d", lval, &type_i);
+        if (ret == 2)
+        {
+            DataType type = type_i;
+            switch (type)
+            {
+            case CF_DATA_TYPE_STRING:
+            case CF_DATA_TYPE_INT:
+            case CF_DATA_TYPE_REAL:
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON,
+                                              lval, stored, type,
+                                              "monitoring,source=observation");
+                break;
+
+            case CF_DATA_TYPE_STRING_LIST:
+            {
+                Rlist *list = RlistFromSplitString(stored, ',');
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON,
+                                              lval, list, CF_DATA_TYPE_STRING_LIST,
+                                              "monitoring,source=observation");
+                RlistDestroy(list);
+                break;
+            }
+            case CF_DATA_TYPE_COUNTER:
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON,
+                                              lval, stored, CF_DATA_TYPE_STRING,
+                                              "monitoring,source=observation");
+                break;
+
+            default:
+                Log(LOG_LEVEL_ERR,
+                    "Unexpected monitoring type %d found in dbid_static database",
+                    (int) type);
+            }
+        }
+    }
+
+    DeleteDBCursor(dbcp);
+    CloseDB(dbp);
+}
+
 static void Get3Environment(EvalContext *ctx)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];

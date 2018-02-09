@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Northern.tech AS
+   Copyright 2018 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -22,15 +22,14 @@
   included file COSL.txt.
 */
 
+#ifndef CFENGINE_MON_CUMULATIVE_H
+#define CFENGINE_MON_CUMULATIVE_H
 
-#ifndef CFENGINE_VERIFY_MEASUREMENTS_H
-#define CFENGINE_VERIFY_MEASUREMENTS_H
-
-
-#include <cf3.defs.h>
+#include <platform.h>
 
 
-PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp);
-
+unsigned GetInstantUint32Value(const char *name, const char *subname, unsigned value, time_t timestamp);
+unsigned long long GetInstantUint64Value(const char *name, const char *subname, unsigned long long value,
+                                         time_t timestamp);
 
 #endif

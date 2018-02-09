@@ -158,6 +158,17 @@ typedef enum
 
 #define CF_OBSERVABLES 100
 
+
+typedef struct
+{
+    char *name;
+    char *description;
+    char *units;
+    double expected_minimum;
+    double expected_maximum;
+    bool consolidable;
+} MonitoringSlot;
+
 enum observables
 {
     ob_users,
@@ -235,7 +246,7 @@ enum observables
     ob_spare
 };
 
-#include <statistics.h>
+#include <statistics.h>                                         /* QPoint */
 
 typedef struct
 {
@@ -248,6 +259,7 @@ typedef struct
     time_t last_seen;
     QPoint Q[CF_OBSERVABLES];
 } Averages;
+
 
 /******************************************************************/
 

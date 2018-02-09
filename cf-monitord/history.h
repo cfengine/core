@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Northern.tech AS
+   Copyright 2018 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -22,15 +22,16 @@
   included file COSL.txt.
 */
 
-
-#ifndef CFENGINE_VERIFY_MEASUREMENTS_H
-#define CFENGINE_VERIFY_MEASUREMENTS_H
+#ifndef CFENGINE_HISTORY_H
+#define CFENGINE_HISTORY_H
 
 
 #include <cf3.defs.h>
 
 
-PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp);
+PromiseResult VerifyMeasurement(EvalContext *ctx, double *this,
+                                Attributes a, const Promise *pp);
+void HistoryUpdate(EvalContext *ctx, Averages newvals);
 
 
 #endif

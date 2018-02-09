@@ -15,23 +15,6 @@ body common control
 
 bundle agent init
 {
-  vars:
-      "dummy" string => "dummy";
-
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_line => init_insert;
-}
-
-bundle edit_line init_insert
-{
-  insert_lines:
-      "key=alpha value=zero";
-      "key=beta value=two";
-      "key=gamma's value=three's";
-      "key=delta-delta:delta value=four-fore:quatre";
-      "key=last value=last";
 }
 
 #######################################################
@@ -39,34 +22,43 @@ bundle edit_line init_insert
 bundle agent test
 {
   vars:
-      "array[alpha]" string => "zero";
-      "array[beta]" string => "two";
-      "array[gamma's]" string => "three's";
-      "array[delta-delta:delta]" string => "four-fore:quatre";
-      "array[last]" string => "last";
+      "load1" data => parsejson('[ 1, 2, 3]');
+      "load2" slist => { "eleme\"nt1", "element2", "element3" };
+      "load3" data => parsejson('{ "x\\"x": "y\\"y" }');
+      "load4" data => parsejson('[]');
+      "load5[mykey]" slist => { "myvalue" };
+      "load5[anotherkey]" string => "anothervalue";
+      "load5[lastkey!]" slist => { "o\"ne", "two", "three" };
+      "load6" data => parsejson('{ "a": { "b": "c" } }');
 
-      "mapped" slist => maparray("key=$(this.k) value=$(this.v)", "array");
-      "mapped2" slist => maparray(concat("key=$(this.k) value=$(this.v)"), "array");
+      "static[x]" string => "xvalue";
+      "static[x\"x]" string => "xxvalue";
+      "static[0]" string => "0value";
+      "static[1]" string => "1value";
+      "static[2]" string => "2value";
+      "static[lastkey!]" string => "lastvalue";
+      "static[anotherkey]" string => "anothervalue";
+      "static[mykey]" string => "myvalue";
+      "static[a]" string => "avalue";
 
-  files:
-      "$(G.testfile).actual"
-      create => "true",
-      edit_line => test_insert;
+      "spec1" string => "key = $(this.k)";
+      "spec2" string => "key = $(this.k), value = ${this.v}";
+      "spec3" string => "key = $(this.k), key2 = $(this.k[1]), value = ${this.v}";
+      "spec4" string => "xvalue should be $(static[$(this.k)])";
 
-  reports:
-    DEBUG::
-      "Inserting line: $(mapped)";
-}
+      "jsonspec1" string => '{ "key": "$(this.k)", "value": "$(this.v)"';
+      "jsonspec2" string => '{ "key": "$(this.k)", "value": "$(this.v)" }';
+      "jsonspec3" string => '[ "$(this.k)", "$(this.v)" ]';
+      "jsonspec4" string => '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }';
 
-bundle edit_line test_insert
-{
-  vars:
-      "mapped" slist => { @{test.mapped} };
-      "mapped2" slist => { @{test.mapped2} };
+      "X" slist => { "1", "2", "3", "4", "5", "6" };
+      "Y" slist => { "1", "2", "3", "4" };
 
-  insert_lines:
-      "$(mapped)";
-      "$(mapped2)";
+      "maparray_$(X)_$(Y)" slist => sort(maparray("$(spec$(Y))", "load$(X)"));
+      "bad2" slist => maparray("", missingvar);
+
+      "justastring" string => "me";
+      "bad4" slist => maparray("", justastring);
 }
 
 #######################################################
@@ -74,7 +66,7 @@ bundle edit_line test_insert
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
 }

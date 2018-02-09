@@ -1,0 +1,154 @@
+{
+  "X": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
+  ],
+  "Y": [
+    "1",
+    "2",
+    "3",
+    "4"
+  ],
+  "jsonspec1": "{ \"key\": \"$(this.k)\", \"value\": \"$(this.v)\"",
+  "jsonspec2": "{ \"key\": \"$(this.k)\", \"value\": \"$(this.v)\" }",
+  "jsonspec3": "[ \"$(this.k)\", \"$(this.v)\" ]",
+  "jsonspec4": "{ \"key\": \"$(this.k)\", \"key2\": \"$(this.k[1])\", \"value\": \"$(this.v)\" }",
+  "justastring": "me",
+  "load1": [
+    1,
+    2,
+    3
+  ],
+  "load2": [
+    "eleme\"nt1",
+    "element2",
+    "element3"
+  ],
+  "load3": {
+    "x"x": "y\"y"
+  },
+  "load4": [],
+  "load5[anotherkey]": "anothervalue",
+  "load5[lastkey!]": [
+    "o\"ne",
+    "two",
+    "three"
+  ],
+  "load5[mykey]": [
+    "myvalue"
+  ],
+  "load6": {
+    "a": {
+      "b": "c"
+    }
+  },
+  "maparray_1_1": [
+    "key = 0",
+    "key = 1",
+    "key = 2"
+  ],
+  "maparray_1_2": [
+    "key = 0, value = 1",
+    "key = 1, value = 2",
+    "key = 2, value = 3"
+  ],
+  "maparray_1_3": [
+    "key = 0, key2 = $(this.k[1]), value = 1",
+    "key = 1, key2 = $(this.k[1]), value = 2",
+    "key = 2, key2 = $(this.k[1]), value = 3"
+  ],
+  "maparray_1_4": [
+    "xvalue should be 0value",
+    "xvalue should be 1value",
+    "xvalue should be 2value"
+  ],
+  "maparray_2_1": [
+    "key = 0",
+    "key = 1",
+    "key = 2"
+  ],
+  "maparray_2_2": [
+    "key = 0, value = eleme\"nt1",
+    "key = 1, value = element2",
+    "key = 2, value = element3"
+  ],
+  "maparray_2_3": [
+    "key = 0, key2 = $(this.k[1]), value = eleme\"nt1",
+    "key = 1, key2 = $(this.k[1]), value = element2",
+    "key = 2, key2 = $(this.k[1]), value = element3"
+  ],
+  "maparray_2_4": [
+    "xvalue should be 0value",
+    "xvalue should be 1value",
+    "xvalue should be 2value"
+  ],
+  "maparray_3_1": [
+    "key = x\"x"
+  ],
+  "maparray_3_2": [
+    "key = x\"x, value = y\"y"
+  ],
+  "maparray_3_3": [
+    "key = x\"x, key2 = $(this.k[1]), value = y\"y"
+  ],
+  "maparray_3_4": [
+    "xvalue should be xxvalue"
+  ],
+  "maparray_4_1": [],
+  "maparray_4_2": [],
+  "maparray_4_3": [],
+  "maparray_4_4": [],
+  "maparray_5_1": [
+    "key = anotherkey",
+    "key = lastkey!",
+    "key = mykey"
+  ],
+  "maparray_5_2": [
+    "key = anotherkey, value = anothervalue",
+    "key = lastkey!, value = o\"ne",
+    "key = lastkey!, value = three",
+    "key = lastkey!, value = two",
+    "key = mykey, value = myvalue"
+  ],
+  "maparray_5_3": [
+    "key = anotherkey, key2 = $(this.k[1]), value = anothervalue",
+    "key = lastkey!, key2 = $(this.k[1]), value = o\"ne",
+    "key = lastkey!, key2 = $(this.k[1]), value = three",
+    "key = lastkey!, key2 = $(this.k[1]), value = two",
+    "key = mykey, key2 = $(this.k[1]), value = myvalue"
+  ],
+  "maparray_5_4": [
+    "xvalue should be anothervalue",
+    "xvalue should be lastvalue",
+    "xvalue should be myvalue"
+  ],
+  "maparray_6_1": [
+    "key = a"
+  ],
+  "maparray_6_2": [
+    "key = a, value = c"
+  ],
+  "maparray_6_3": [
+    "key = a, key2 = b, value = c"
+  ],
+  "maparray_6_4": [
+    "xvalue should be avalue"
+  ],
+  "spec1": "key = $(this.k)",
+  "spec2": "key = $(this.k), value = ${this.v}",
+  "spec3": "key = $(this.k), key2 = $(this.k[1]), value = ${this.v}",
+  "spec4": "xvalue should be $(static[$(this.k)])",
+  "static[0]": "0value",
+  "static[1]": "1value",
+  "static[2]": "2value",
+  "static[a]": "avalue",
+  "static[anotherkey]": "anothervalue",
+  "static[lastkey!]": "lastvalue",
+  "static[mykey]": "myvalue",
+  "static[x"x]": "xxvalue",
+  "static[x]": "xvalue"
+}

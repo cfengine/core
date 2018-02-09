@@ -51,8 +51,8 @@ typedef struct
     (str != NULL ? str : "")
 
 
-unsigned int StringHash        (const char *str, unsigned int seed, unsigned int max);
-unsigned int StringHash_untyped(const void *str, unsigned int seed, unsigned int max);
+unsigned int StringHash        (const char *str, unsigned int seed);
+unsigned int StringHash_untyped(const void *str, unsigned int seed);
 
 char ToLower(char ch);
 char ToUpper(char ch);

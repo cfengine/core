@@ -10,9 +10,9 @@
     "default:init.test_b37ce1b03955522848f0a82d0b2b2e21_3": "mydata"
   },
   "vars": [
-    "default:init.test_fbeae67f3e347b5e0032302200141131",
     "default:init.test_fbeae67f3e347b5e0032302200141131_1",
-    "default:init.test_fbeae67f3e347b5e0032302200141131_2"
+    "default:init.test_fbeae67f3e347b5e0032302200141131_2",
+    "default:init.test_fbeae67f3e347b5e0032302200141131"
   ],
   "x_fullvars": {
     "default:init.test_b37ce1b03955522848f0a82d0b2b2e21_1": [
@@ -24,8 +24,8 @@
     }
   },
   "x_vars": [
-    "default:init.test_fbeae67f3e347b5e0032302200141131",
-    "default:init.test_fbeae67f3e347b5e0032302200141131_1"
+    "default:init.test_fbeae67f3e347b5e0032302200141131_1",
+    "default:init.test_fbeae67f3e347b5e0032302200141131"
   ],
   "z_fullvars": {
   },

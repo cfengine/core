@@ -92,7 +92,7 @@ FnCall *FnCallNew(const char *name, Rlist *args);
 FnCall *FnCallCopy(const FnCall *f);
 FnCall *FnCallCopyRewriter(const FnCall *f, JsonElement *map);
 void FnCallDestroy(FnCall *fp);
-unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max);
+unsigned FnCallHash(const FnCall *fp, unsigned seed);
 void FnCallWrite(Writer *writer, const FnCall *call);
 
 

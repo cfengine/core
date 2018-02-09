@@ -28,6 +28,12 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      # for some reason, shuffle() produces different results on 64bit RHEL 4
+      # and Debian 4 than everywhere else
+      "test_soft_fail"
+        string => "(centos_4|debian_4).64_bit",
+        meta => { "CFE-2301" };
   vars:
       "lists" slist => { "a", "b" };
       "seeds" slist => { "skruf", "cormorant", "dollhouse" };

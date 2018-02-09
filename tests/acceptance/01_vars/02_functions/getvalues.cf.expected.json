@@ -22,11 +22,11 @@
     "Zamboni"
   ],
   "values": [
+    "Diego",
+    "Zamboni",
     "/home/zamboni",
     "/tmp/zamboni",
     "/export/home/zamboni",
-    "Diego",
-    "Zamboni",
     "zamboni"
   ]
 }

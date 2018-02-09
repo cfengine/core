@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#define CF_HASHTABLESIZE 8192
+#define SPLAY_PSEUDO_RANDOM_CONSTANT 8192
 
 #define DAILY 12*24
 main() {
@@ -21,7 +21,7 @@ main() {
 	s[1] = c2;
 	// The block algorithm is copied from evalfunction.c
 	hash=OatHash(s);
-	box = (int)(0.5 + period*hash/(double)CF_HASHTABLESIZE);
+	box = (int)(0.5 + period*hash/(double)SPLAY_PSEUDO_RANDOM_CONSTANT);
 	// Back to original code
 	if (!boxes[box]) {
 	    boxes[box] = strncpy((char *)malloc(3),s,3);
@@ -38,7 +38,7 @@ main() {
 // This is copied from files_hashes.c
 int OatHash(char *key)
        
-{ unsigned int hashtablesize = CF_HASHTABLESIZE;
+{ unsigned int hashtablesize = SPLAY_PSEUDO_RANDOM_CONSTANT;
 unsigned char *p = key;
 unsigned h = 0;
 int i, len = strlen(key);

@@ -35,7 +35,7 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "expected_joined_found_classes" string => "item2_class,item1_class";
+    "expected_joined_found_classes" string => "item1_class,item2_class";
 
   classes:
       "ok" expression => strcmp($(expected_joined_found_classes), $(test.joined_found_classes));

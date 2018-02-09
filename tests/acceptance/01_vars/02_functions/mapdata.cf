@@ -1,0 +1,335 @@
+#######################################################
+#
+# Test mapdata()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "load1" data => parsejson('[ 1, 2, 3]');
+      "load2" slist => { "eleme\"nt1", "element2", "element3" };
+      "load3" data => parsejson('{ "x\\"x": "y\\"y" }');
+      "load4" data => parsejson('[]');
+      "load5[mykey]" slist => { "myvalue" };
+      "load5[anotherkey]" string => "anothervalue";
+      "load5[lastkey!]" slist => { "o\"ne", "two", "three" };
+      "load6" data => parsejson('{ "a": { "b": "c" } }');
+
+      "static[x]" string => "xvalue";
+      "static[x\"x]" string => "xxvalue";
+      "static[0]" string => "0value";
+      "static[1]" string => "1value";
+      "static[2]" string => "2value";
+      "static[lastkey!]" string => "lastvalue";
+      "static[anotherkey]" string => "anothervalue";
+      "static[mykey]" string => "myvalue";
+      "static[a]" string => "avalue";
+
+      "spec1" string => "key = $(this.k)";
+      "spec2" string => "key = $(this.k), value = ${this.v}";
+      "spec3" string => "key = $(this.k), key2 = $(this.k[1]), value = ${this.v}";
+      "spec4" string => "xvalue should be $(static[$(this.k)])";
+
+      "jsonspec1" string => '{ "key": "$(this.k)", "value": "$(this.v)"';
+      "jsonspec2" string => '{ "key": "$(this.k)", "value": "$(this.v)" }';
+      "jsonspec3" string => '[ "$(this.k)", "$(this.v)" ]';
+      "jsonspec4" string => '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }';
+
+      "X" slist => { "1", "2", "3", "4", "5", "6" };
+      "Y" slist => { "1", "2", "3", "4" };
+
+      "mapdata_none_$(X)_$(Y)" data => mapdata("none", "$(spec$(Y))", "load$(X)");
+      "mapdata_none_str_$(X)_$(Y)" string => format("%S", "mapdata_none_$(X)_$(Y)");
+
+      "mapdata_canonify_$(X)_$(Y)" data => mapdata("canonify", "$(spec$(Y))", "load$(X)");
+      "mapdata_canonify_str_$(X)_$(Y)" string => format("%S", "mapdata_canonify_$(X)_$(Y)");
+
+      "mapdata_canonify_eval_$(X)_$(Y)" data => mapdata("canonify", concat("$(spec$(Y))"), "load$(X)");
+      "mapdata_canonify_eval_str_$(X)_$(Y)" string => format("%S", "mapdata_canonify_eval_$(X)_$(Y)");
+
+      "mapdata_json_$(X)_$(Y)" data => mapdata("json", "$(jsonspec$(Y))", "load$(X)");
+      "mapdata_json_str_$(X)_$(Y)" string => format("%S", "mapdata_json_$(X)_$(Y)");
+
+      "bad1" data => mapdata("json", "", missingvar);
+
+      "justastring" string => "me";
+      "bad3" data => mapdata("json", "", justastring);
+
+  classes:
+      'mapdata_none_1_1_ok' and => { regcmp('.*"key = 0".*', '$(mapdata_none_str_1_1)'),
+                                     regcmp('.*"key = 1".*', '$(mapdata_none_str_1_1)'),
+                                     regcmp('.*"key = 2".*', '$(mapdata_none_str_1_1)') };
+      'mapdata_none_1_2_ok' and => { regcmp('.*"key = 0, value = 1".*', '$(mapdata_none_str_1_2)'),
+                                     regcmp('.*"key = 1, value = 2".*', '$(mapdata_none_str_1_2)'),
+                                     regcmp('.*"key = 2, value = 3".*', '$(mapdata_none_str_1_2)') };
+      'mapdata_none_1_3_ok' and => { regcmp('.*"key = 0, key2 = \$\(this.k\[1\]\), value = 1".*', '$(mapdata_none_str_1_3)'),
+                                     regcmp('.*"key = 1, key2 = \$\(this.k\[1\]\), value = 2".*', '$(mapdata_none_str_1_3)'),
+                                     regcmp('.*"key = 2, key2 = \$\(this.k\[1\]\), value = 3".*', '$(mapdata_none_str_1_3)') };
+      'mapdata_none_1_4_ok' and => { regcmp('.*"xvalue should be 0value".*', '$(mapdata_none_str_1_4)'),
+                                     regcmp('.*"xvalue should be 1value".*', '$(mapdata_none_str_1_4)'),
+                                     regcmp('.*"xvalue should be 2value".*', '$(mapdata_none_str_1_4)') };
+      'mapdata_none_2_1_ok' and => { regcmp('.*"key = 0".*', '$(mapdata_none_str_2_1)'),
+                                     regcmp('.*"key = 1".*', '$(mapdata_none_str_2_1)'),
+                                     regcmp('.*"key = 2".*', '$(mapdata_none_str_2_1)') };
+      'mapdata_none_2_2_ok' and => { regcmp('.*"key = 0, value = eleme\\\\"nt1".*', '$(mapdata_none_str_2_2)'),
+                                     regcmp('.*"key = 1, value = element2".*', '$(mapdata_none_str_2_2)'),
+                                     regcmp('.*"key = 2, value = element3".*', '$(mapdata_none_str_2_2)') };
+      'mapdata_none_2_3_ok' and => { regcmp('.*"key = 0, key2 = \$\(this.k\[1\]\), value = eleme\\\\"nt1".*', '$(mapdata_none_str_2_3)'),
+                                     regcmp('.*"key = 1, key2 = \$\(this.k\[1\]\), value = element2".*', '$(mapdata_none_str_2_3)'),
+                                     regcmp('.*"key = 2, key2 = \$\(this.k\[1\]\), value = element3".*', '$(mapdata_none_str_2_3)') };
+      'mapdata_none_2_4_ok' and => { regcmp('.*"xvalue should be 0value".*', '$(mapdata_none_str_2_4)'),
+                                     regcmp('.*"xvalue should be 1value".*', '$(mapdata_none_str_2_4)'),
+                                     regcmp('.*"xvalue should be 2value".*', '$(mapdata_none_str_2_4)') };
+      'mapdata_none_3_1_ok' and => { regcmp('.*"key = x\\\\"x".*', '$(mapdata_none_str_3_1)') };
+      'mapdata_none_3_2_ok' and => { regcmp('.*"key = x\\\\"x, value = y\\\\"y".*', '$(mapdata_none_str_3_2)') };
+      'mapdata_none_3_3_ok' and => { regcmp('.*"key = x\\\\"x, key2 = \$\(this.k\[1\]\), value = y\\\\"y".*', '$(mapdata_none_str_3_3)') };
+      'mapdata_none_3_4_ok' and => { regcmp('.*"xvalue should be xxvalue".*', '$(mapdata_none_str_3_4)') };
+      'mapdata_none_4_1_ok' expression => strcmp('$(mapdata_none_str_4_1)', '[]');
+      'mapdata_none_4_2_ok' expression => strcmp('$(mapdata_none_str_4_1)', '[]');
+      'mapdata_none_4_3_ok' expression => strcmp('$(mapdata_none_str_4_1)', '[]');
+      'mapdata_none_4_4_ok' expression => strcmp('$(mapdata_none_str_4_1)', '[]');
+      'mapdata_none_5_1_ok' and => { regcmp('.*"key = mykey".*', '$(mapdata_none_str_5_1)'),
+                                     regcmp('.*"key = anotherkey".*', '$(mapdata_none_str_5_1)'),
+                                     regcmp('.*"key = lastkey!".*', '$(mapdata_none_str_5_1)') };
+      'mapdata_none_5_2_ok' and => { regcmp('.*"key = mykey, value = myvalue".*', '$(mapdata_none_str_5_2)'),
+                                     regcmp('.*"key = anotherkey, value = anothervalue".*', '$(mapdata_none_str_5_2)'),
+                                     regcmp('.*"key = lastkey!, value = o\\\\"ne".*', '$(mapdata_none_str_5_2)'),
+                                     regcmp('.*"key = lastkey!, value = two".*', '$(mapdata_none_str_5_2)'),
+                                     regcmp('.*"key = lastkey!, value = three".*', '$(mapdata_none_str_5_2)') };
+      'mapdata_none_5_3_ok' and => { regcmp('.*"key = mykey, key2 = \$\(this.k\[1\]\), value = myvalue".*', '$(mapdata_none_str_5_3)'),
+                                     regcmp('.*"key = anotherkey, key2 = \$\(this.k\[1\]\), value = anothervalue".*', '$(mapdata_none_str_5_3)'),
+                                     regcmp('.*"key = lastkey!, key2 = \$\(this.k\[1\]\), value = o\\\\"ne".*', '$(mapdata_none_str_5_3)'),
+                                     regcmp('.*"key = lastkey!, key2 = \$\(this.k\[1\]\), value = two".*', '$(mapdata_none_str_5_3)'),
+                                     regcmp('.*"key = lastkey!, key2 = \$\(this.k\[1\]\), value = three".*', '$(mapdata_none_str_5_3)') };
+      'mapdata_none_5_4_ok' and => { regcmp('.*"xvalue should be myvalue".*', '$(mapdata_none_str_5_4)'),
+                                     regcmp('.*"xvalue should be anothervalue".*', '$(mapdata_none_str_5_4)'),
+                                     regcmp('.*"xvalue should be lastvalue".*', '$(mapdata_none_str_5_4)') };
+      'mapdata_none_6_1_ok' and => { regcmp('.*"key = a".*', '$(mapdata_none_str_6_1)') };
+      'mapdata_none_6_2_ok' and => { regcmp('.*"key = a, value = c".*', '$(mapdata_none_str_6_2)') };
+      'mapdata_none_6_3_ok' and => { regcmp('.*"key = a, key2 = b, value = c".*', '$(mapdata_none_str_6_3)') };
+      'mapdata_none_6_4_ok' and => { regcmp('.*"xvalue should be avalue".*', '$(mapdata_none_str_6_4)') };
+
+      'mapdata_canonify_1_1_ok' and => { regcmp('.*"key___0".*', '$(mapdata_canonify_str_1_1)'),
+                                         regcmp('.*"key___1".*', '$(mapdata_canonify_str_1_1)'),
+                                         regcmp('.*"key___2".*', '$(mapdata_canonify_str_1_1)') };
+      'mapdata_canonify_1_2_ok' and => { regcmp('.*"key___0__value___1".*', '$(mapdata_canonify_str_1_2)'),
+                                         regcmp('.*"key___1__value___2".*', '$(mapdata_canonify_str_1_2)'),
+                                         regcmp('.*"key___2__value___3".*', '$(mapdata_canonify_str_1_2)') };
+      'mapdata_canonify_1_3_ok' and => { regcmp('.*"key___0__key2_____this_k_1____value___1".*', '$(mapdata_canonify_str_1_3)'),
+                                         regcmp('.*"key___1__key2_____this_k_1____value___2".*', '$(mapdata_canonify_str_1_3)'),
+                                         regcmp('.*"key___2__key2_____this_k_1____value___3".*', '$(mapdata_canonify_str_1_3)') };
+      'mapdata_canonify_1_4_ok' and => { regcmp('.*"xvalue_should_be_0value".*', '$(mapdata_canonify_str_1_4)'),
+                                         regcmp('.*"xvalue_should_be_1value".*', '$(mapdata_canonify_str_1_4)'),
+                                         regcmp('.*"xvalue_should_be_2value".*', '$(mapdata_canonify_str_1_4)') };
+      'mapdata_canonify_2_1_ok' and => { regcmp('.*"key___0".*', '$(mapdata_canonify_str_2_1)'),
+                                         regcmp('.*"key___1".*', '$(mapdata_canonify_str_2_1)'),
+                                         regcmp('.*"key___2".*', '$(mapdata_canonify_str_2_1)') };
+      'mapdata_canonify_2_2_ok' and => { regcmp('.*"key___0__value___eleme_nt1".*', '$(mapdata_canonify_str_2_2)'),
+                                         regcmp('.*"key___1__value___element2".*', '$(mapdata_canonify_str_2_2)'),
+                                         regcmp('.*"key___2__value___element3".*', '$(mapdata_canonify_str_2_2)') };
+      'mapdata_canonify_2_3_ok' and => { regcmp('.*"key___0__key2_____this_k_1____value___eleme_nt1".*', '$(mapdata_canonify_str_2_3)'),
+                                         regcmp('.*"key___1__key2_____this_k_1____value___element2".*', '$(mapdata_canonify_str_2_3)'),
+                                         regcmp('.*"key___2__key2_____this_k_1____value___element3".*', '$(mapdata_canonify_str_2_3)') };
+      'mapdata_canonify_2_4_ok' and => { regcmp('.*"xvalue_should_be_0value".*', '$(mapdata_canonify_str_2_4)'),
+                                         regcmp('.*"xvalue_should_be_1value".*', '$(mapdata_canonify_str_2_4)'),
+                                         regcmp('.*"xvalue_should_be_2value".*', '$(mapdata_canonify_str_2_4)') };
+      'mapdata_canonify_3_1_ok' and => { regcmp('.*"key___x_x".*', '$(mapdata_canonify_str_3_1)') };
+      'mapdata_canonify_3_2_ok' and => { regcmp('.*"key___x_x__value___y_y".*', '$(mapdata_canonify_str_3_2)') };
+      'mapdata_canonify_3_3_ok' and => { regcmp('.*"key___x_x__key2_____this_k_1____value___y_y".*', '$(mapdata_canonify_str_3_3)') };
+      'mapdata_canonify_3_4_ok' and => { regcmp('.*"xvalue_should_be_xxvalue".*', '$(mapdata_canonify_str_3_4)') };
+      'mapdata_canonify_4_1_ok' expression => strcmp('$(mapdata_canonify_str_4_1)', '[]');
+      'mapdata_canonify_4_2_ok' expression => strcmp('$(mapdata_canonify_str_4_1)', '[]');
+      'mapdata_canonify_4_3_ok' expression => strcmp('$(mapdata_canonify_str_4_1)', '[]');
+      'mapdata_canonify_4_4_ok' expression => strcmp('$(mapdata_canonify_str_4_1)', '[]');
+      'mapdata_canonify_5_1_ok' and => { regcmp('.*"key___mykey".*', '$(mapdata_canonify_str_5_1)'),
+                                         regcmp('.*"key___anotherkey".*', '$(mapdata_canonify_str_5_1)'),
+                                         regcmp('.*"key___lastkey_".*', '$(mapdata_canonify_str_5_1)') };
+      'mapdata_canonify_5_2_ok' and => { regcmp('.*"key___mykey__value___myvalue".*', '$(mapdata_canonify_str_5_2)'),
+                                         regcmp('.*"key___anotherkey__value___anothervalue".*', '$(mapdata_canonify_str_5_2)'),
+                                         regcmp('.*"key___lastkey___value___o_ne".*', '$(mapdata_canonify_str_5_2)'),
+                                         regcmp('.*"key___lastkey___value___two".*', '$(mapdata_canonify_str_5_2)'),
+                                         regcmp('.*"key___lastkey___value___three".*', '$(mapdata_canonify_str_5_2)') };
+      'mapdata_canonify_5_3_ok' and => { regcmp('.*"key___mykey__key2_____this_k_1____value___myvalue".*', '$(mapdata_canonify_str_5_3)'),
+                                         regcmp('.*"key___anotherkey__key2_____this_k_1____value___anothervalue".*', '$(mapdata_canonify_str_5_3)'),
+                                         regcmp('.*"key___lastkey___key2_____this_k_1____value___o_ne".*', '$(mapdata_canonify_str_5_3)'),
+                                         regcmp('.*"key___lastkey___key2_____this_k_1____value___two".*', '$(mapdata_canonify_str_5_3)'),
+                                         regcmp('.*"key___lastkey___key2_____this_k_1____value___three".*', '$(mapdata_canonify_str_5_3)') };
+      'mapdata_canonify_5_4_ok' and => { regcmp('.*"xvalue_should_be_myvalue".*', '$(mapdata_canonify_str_5_4)'),
+                                         regcmp('.*"xvalue_should_be_anothervalue".*', '$(mapdata_canonify_str_5_4)'),
+                                         regcmp('.*"xvalue_should_be_lastvalue".*', '$(mapdata_canonify_str_5_4)') };
+      'mapdata_canonify_6_1_ok' and => { regcmp('.*"key___a".*', '$(mapdata_canonify_str_6_1)') };
+      'mapdata_canonify_6_2_ok' and => { regcmp('.*"key___a__value___c".*', '$(mapdata_canonify_str_6_2)') };
+      'mapdata_canonify_6_3_ok' and => { regcmp('.*"key___a__key2___b__value___c".*', '$(mapdata_canonify_str_6_3)') };
+      'mapdata_canonify_6_4_ok' and => { regcmp('.*"xvalue_should_be_avalue".*', '$(mapdata_canonify_str_6_4)') };
+
+      'mapdata_canonify_eval_1_1_ok' and => { regcmp('.*"key___0".*', '$(mapdata_canonify_eval_str_1_1)'),
+                                              regcmp('.*"key___1".*', '$(mapdata_canonify_eval_str_1_1)'),
+                                              regcmp('.*"key___2".*', '$(mapdata_canonify_eval_str_1_1)') };
+      'mapdata_canonify_eval_1_2_ok' and => { regcmp('.*"key___0__value___1".*', '$(mapdata_canonify_eval_str_1_2)'),
+                                              regcmp('.*"key___1__value___2".*', '$(mapdata_canonify_eval_str_1_2)'),
+                                              regcmp('.*"key___2__value___3".*', '$(mapdata_canonify_eval_str_1_2)') };
+      'mapdata_canonify_eval_1_3_ok' and => { regcmp('.*"key___0__key2_____this_k_1____value___1".*', '$(mapdata_canonify_eval_str_1_3)'),
+                                              regcmp('.*"key___1__key2_____this_k_1____value___2".*', '$(mapdata_canonify_eval_str_1_3)'),
+                                              regcmp('.*"key___2__key2_____this_k_1____value___3".*', '$(mapdata_canonify_eval_str_1_3)') };
+      'mapdata_canonify_eval_1_4_ok' and => { regcmp('.*"xvalue_should_be_0value".*', '$(mapdata_canonify_eval_str_1_4)'),
+                                              regcmp('.*"xvalue_should_be_1value".*', '$(mapdata_canonify_eval_str_1_4)'),
+                                              regcmp('.*"xvalue_should_be_2value".*', '$(mapdata_canonify_eval_str_1_4)') };
+      'mapdata_canonify_eval_2_1_ok' and => { regcmp('.*"key___0".*', '$(mapdata_canonify_eval_str_2_1)'),
+                                              regcmp('.*"key___1".*', '$(mapdata_canonify_eval_str_2_1)'),
+                                              regcmp('.*"key___2".*', '$(mapdata_canonify_eval_str_2_1)') };
+      'mapdata_canonify_eval_2_2_ok' and => { regcmp('.*"key___0__value___eleme_nt1".*', '$(mapdata_canonify_eval_str_2_2)'),
+                                              regcmp('.*"key___1__value___element2".*', '$(mapdata_canonify_eval_str_2_2)'),
+                                              regcmp('.*"key___2__value___element3".*', '$(mapdata_canonify_eval_str_2_2)') };
+      'mapdata_canonify_eval_2_3_ok' and => { regcmp('.*"key___0__key2_____this_k_1____value___eleme_nt1".*', '$(mapdata_canonify_eval_str_2_3)'),
+                                              regcmp('.*"key___1__key2_____this_k_1____value___element2".*', '$(mapdata_canonify_eval_str_2_3)'),
+                                              regcmp('.*"key___2__key2_____this_k_1____value___element3".*', '$(mapdata_canonify_eval_str_2_3)') };
+      'mapdata_canonify_eval_2_4_ok' and => { regcmp('.*"xvalue_should_be_0value".*', '$(mapdata_canonify_eval_str_2_4)'),
+                                              regcmp('.*"xvalue_should_be_1value".*', '$(mapdata_canonify_eval_str_2_4)'),
+                                              regcmp('.*"xvalue_should_be_2value".*', '$(mapdata_canonify_eval_str_2_4)') };
+      'mapdata_canonify_eval_3_1_ok' and => { regcmp('.*"key___x_x".*', '$(mapdata_canonify_eval_str_3_1)') };
+      'mapdata_canonify_eval_3_2_ok' and => { regcmp('.*"key___x_x__value___y_y".*', '$(mapdata_canonify_eval_str_3_2)') };
+      'mapdata_canonify_eval_3_3_ok' and => { regcmp('.*"key___x_x__key2_____this_k_1____value___y_y".*', '$(mapdata_canonify_eval_str_3_3)') };
+      'mapdata_canonify_eval_3_4_ok' and => { regcmp('.*"xvalue_should_be_xxvalue".*', '$(mapdata_canonify_eval_str_3_4)') };
+      'mapdata_canonify_eval_4_1_ok' expression => strcmp('$(mapdata_canonify_eval_str_4_1)', '[]');
+      'mapdata_canonify_eval_4_2_ok' expression => strcmp('$(mapdata_canonify_eval_str_4_1)', '[]');
+      'mapdata_canonify_eval_4_3_ok' expression => strcmp('$(mapdata_canonify_eval_str_4_1)', '[]');
+      'mapdata_canonify_eval_4_4_ok' expression => strcmp('$(mapdata_canonify_eval_str_4_1)', '[]');
+      'mapdata_canonify_eval_5_1_ok' and => { regcmp('.*"key___mykey".*', '$(mapdata_canonify_eval_str_5_1)'),
+                                              regcmp('.*"key___anotherkey".*', '$(mapdata_canonify_eval_str_5_1)'),
+                                              regcmp('.*"key___lastkey_".*', '$(mapdata_canonify_eval_str_5_1)') };
+      'mapdata_canonify_eval_5_2_ok' and => { regcmp('.*"key___mykey__value___myvalue".*', '$(mapdata_canonify_eval_str_5_2)'),
+                                              regcmp('.*"key___anotherkey__value___anothervalue".*', '$(mapdata_canonify_eval_str_5_2)'),
+                                              regcmp('.*"key___lastkey___value___o_ne".*', '$(mapdata_canonify_eval_str_5_2)'),
+                                              regcmp('.*"key___lastkey___value___two".*', '$(mapdata_canonify_eval_str_5_2)'),
+                                              regcmp('.*"key___lastkey___value___three".*', '$(mapdata_canonify_eval_str_5_2)') };
+      'mapdata_canonify_eval_5_3_ok' and => { regcmp('.*"key___mykey__key2_____this_k_1____value___myvalue".*', '$(mapdata_canonify_eval_str_5_3)'),
+                                              regcmp('.*"key___anotherkey__key2_____this_k_1____value___anothervalue".*',
+                                                     '$(mapdata_canonify_eval_str_5_3)'),
+                                              regcmp('.*"key___lastkey___key2_____this_k_1____value___o_ne".*', '$(mapdata_canonify_eval_str_5_3)'),
+                                              regcmp('.*"key___lastkey___key2_____this_k_1____value___two".*', '$(mapdata_canonify_eval_str_5_3)'),
+                                              regcmp('.*"key___lastkey___key2_____this_k_1____value___three".*', '$(mapdata_canonify_eval_str_5_3)') };
+      'mapdata_canonify_eval_5_4_ok' and => { regcmp('.*"xvalue_should_be_myvalue".*', '$(mapdata_canonify_eval_str_5_4)'),
+                                              regcmp('.*"xvalue_should_be_anothervalue".*', '$(mapdata_canonify_eval_str_5_4)'),
+                                              regcmp('.*"xvalue_should_be_lastvalue".*', '$(mapdata_canonify_eval_str_5_4)') };
+      'mapdata_canonify_eval_6_1_ok' and => { regcmp('.*"key___a".*', '$(mapdata_canonify_eval_str_6_1)') };
+      'mapdata_canonify_eval_6_2_ok' and => { regcmp('.*"key___a__value___c".*', '$(mapdata_canonify_eval_str_6_2)') };
+      'mapdata_canonify_eval_6_3_ok' and => { regcmp('.*"key___a__key2___b__value___c".*', '$(mapdata_canonify_eval_str_6_3)') };
+      'mapdata_canonify_eval_6_4_ok' and => { regcmp('.*"xvalue_should_be_avalue".*', '$(mapdata_canonify_eval_str_6_4)') };
+
+      'mapdata_json_1_1_ok' expression => strcmp('$(mapdata_json_str_1_1)', '[]');
+      'mapdata_json_1_2_ok' and => { regcmp('.*\{"key":"0","value":"1"\}.*', '$(mapdata_json_str_1_2)'),
+                                     regcmp('.*\{"key":"1","value":"2"\}.*', '$(mapdata_json_str_1_2)'),
+                                     regcmp('.*\{"key":"2","value":"3"\}.*', '$(mapdata_json_str_1_2)') };
+      'mapdata_json_1_3_ok' and => { regcmp('.*\["0","1"\].*', '$(mapdata_json_str_1_3)'),
+                                     regcmp('.*\["1","2"\].*', '$(mapdata_json_str_1_3)'),
+                                     regcmp('.*\["2","3"\].*', '$(mapdata_json_str_1_3)') };
+      'mapdata_json_1_4_ok' and => { regcmp('.*\{"key":"0","key2":"\$\(this.k\[1\]\)","value":"1"\}.*', '$(mapdata_json_str_1_4)'),
+                                     regcmp('.*\{"key":"1","key2":"\$\(this.k\[1\]\)","value":"2"\}.*', '$(mapdata_json_str_1_4)'),
+                                     regcmp('.*\{"key":"2","key2":"\$\(this.k\[1\]\)","value":"3"\}.*', '$(mapdata_json_str_1_4)') };
+      'mapdata_json_2_1_ok' expression => strcmp('$(mapdata_json_str_2_1)', '[]');
+      'mapdata_json_2_2_ok' and => { regcmp('.*\{"key":"0","value":"eleme\\\\"nt1"\}.*', '$(mapdata_json_str_2_2)'),
+                                     regcmp('.*\{"key":"1","value":"element2"\}.*', '$(mapdata_json_str_2_2)'),
+                                     regcmp('.*\{"key":"2","value":"element3"\}.*', '$(mapdata_json_str_2_2)') };
+      'mapdata_json_2_3_ok' and => { regcmp('.*\["0","eleme\\\\"nt1"\].*', '$(mapdata_json_str_2_3)'),
+                                     regcmp('.*\["1","element2"\].*', '$(mapdata_json_str_2_3)'),
+                                     regcmp('.*\["2","element3"\].*', '$(mapdata_json_str_2_3)') };
+      'mapdata_json_2_4_ok' and => { regcmp('.*\{"key":"0","key2":"\$\(this.k\[1\]\)","value":"eleme\\\\"nt1"\}.*', '$(mapdata_json_str_2_4)'),
+                                     regcmp('.*\{"key":"1","key2":"\$\(this.k\[1\]\)","value":"element2"\}.*', '$(mapdata_json_str_2_4)'),
+                                     regcmp('.*\{"key":"2","key2":"\$\(this.k\[1\]\)","value":"element3"\}.*', '$(mapdata_json_str_2_4)') };
+      'mapdata_json_3_1_ok' expression => strcmp('$(mapdata_json_str_3_1)', '[]');
+      'mapdata_json_3_2_ok' and => { regcmp('.*\{"key":"x\\\\"x","value":"y\\\\"y"\}.*', '$(mapdata_json_str_3_2)') };
+      'mapdata_json_3_3_ok' and => { regcmp('.*\["x\\\\"x","y\\\\"y"\].*', '$(mapdata_json_str_3_3)') };
+      'mapdata_json_3_4_ok' and => { regcmp('.*\{"key":"x\\\\"x","key2":"\$\(this.k\[1\]\)","value":"y\\\\"y"\}.*', '$(mapdata_json_str_3_4)') };
+      'mapdata_json_4_1_ok' expression => strcmp('$(mapdata_json_str_4_1)', '[]');
+      'mapdata_json_4_2_ok' expression => strcmp('$(mapdata_json_str_4_1)', '[]');
+      'mapdata_json_4_3_ok' expression => strcmp('$(mapdata_json_str_4_1)', '[]');
+      'mapdata_json_4_4_ok' expression => strcmp('$(mapdata_json_str_4_1)', '[]');
+      'mapdata_json_5_1_ok' expression => strcmp('$(mapdata_json_str_5_1)', '[]');
+      'mapdata_json_5_2_ok' and => { regcmp('.*\{"key":"mykey","value":"myvalue"\}.*', '$(mapdata_json_str_5_2)'),
+                                     regcmp('.*\{"key":"anotherkey","value":"anothervalue"\}.*', '$(mapdata_json_str_5_2)'),
+                                     regcmp('.*\{"key":"lastkey!","value":"o\\\\"ne"\}.*', '$(mapdata_json_str_5_2)'),
+                                     regcmp('.*\{"key":"lastkey!","value":"two"\}.*', '$(mapdata_json_str_5_2)'),
+                                     regcmp('.*\{"key":"lastkey!","value":"three"\}.*', '$(mapdata_json_str_5_2)') };
+      'mapdata_json_5_3_ok' and => { regcmp('.*\["mykey","myvalue"\].*', '$(mapdata_json_str_5_3)'),
+                                     regcmp('.*\["anotherkey","anothervalue"\].*', '$(mapdata_json_str_5_3)'),
+                                     regcmp('.*\["lastkey!","o\\\\"ne"\].*', '$(mapdata_json_str_5_3)'),
+                                     regcmp('.*\["lastkey!","two"\].*', '$(mapdata_json_str_5_3)'),
+                                     regcmp('.*\["lastkey!","three"\].*', '$(mapdata_json_str_5_3)') };
+      'mapdata_json_5_4_ok' and => { regcmp('.*\{"key":"mykey","key2":"\$\(this.k\[1\]\)","value":"myvalue"\}.*', '$(mapdata_json_str_5_4)'),
+                                     regcmp('.*\{"key":"anotherkey","key2":"\$\(this.k\[1\]\)","value":"anothervalue"\}.*', '$(mapdata_json_str_5_4)'),
+                                     regcmp('.*\{"key":"lastkey!","key2":"\$\(this.k\[1\]\)","value":"o\\\\"ne"\}.*', '$(mapdata_json_str_5_4)'),
+                                     regcmp('.*\{"key":"lastkey!","key2":"\$\(this.k\[1\]\)","value":"two"\}.*', '$(mapdata_json_str_5_4)'),
+                                     regcmp('.*\{"key":"lastkey!","key2":"\$\(this.k\[1\]\)","value":"three"\}.*', '$(mapdata_json_str_5_4)') };
+      'mapdata_json_6_1_ok' expression => strcmp('$(mapdata_json_str_6_1)', '[]');
+      'mapdata_json_6_2_ok' and => { regcmp('.*\{"key":"a","value":"c"\}.*', '$(mapdata_json_str_6_2)') };
+      'mapdata_json_6_3_ok' and => { regcmp('.*\["a","c"\].*', '$(mapdata_json_str_6_3)') };
+      'mapdata_json_6_4_ok' and => { regcmp('.*\{"key":"a","key2":"b","value":"c"\}.*', '$(mapdata_json_str_6_4)') };
+
+      "mapdata_none_ok" and => { "mapdata_none_1_1_ok", "mapdata_none_1_2_ok", "mapdata_none_1_3_ok", "mapdata_none_1_4_ok",
+                                 "mapdata_none_2_1_ok", "mapdata_none_2_2_ok", "mapdata_none_2_3_ok", "mapdata_none_2_4_ok",
+                                 "mapdata_none_3_1_ok", "mapdata_none_3_2_ok", "mapdata_none_3_3_ok", "mapdata_none_3_4_ok",
+                                 "mapdata_none_4_1_ok", "mapdata_none_4_2_ok", "mapdata_none_4_3_ok", "mapdata_none_4_4_ok",
+                                 "mapdata_none_5_1_ok", "mapdata_none_5_2_ok", "mapdata_none_5_3_ok", "mapdata_none_5_4_ok",
+                                 "mapdata_none_6_1_ok", "mapdata_none_6_2_ok", "mapdata_none_6_3_ok", "mapdata_none_6_4_ok" };
+
+      "mapdata_canonify_ok" and => { "mapdata_canonify_1_1_ok", "mapdata_canonify_1_2_ok", "mapdata_canonify_1_3_ok",
+                                     "mapdata_canonify_1_4_ok", "mapdata_canonify_2_1_ok", "mapdata_canonify_2_2_ok",
+                                     "mapdata_canonify_2_3_ok", "mapdata_canonify_2_4_ok", "mapdata_canonify_3_1_ok",
+                                     "mapdata_canonify_3_2_ok", "mapdata_canonify_3_3_ok", "mapdata_canonify_3_4_ok",
+                                     "mapdata_canonify_4_1_ok", "mapdata_canonify_4_2_ok", "mapdata_canonify_4_3_ok",
+                                     "mapdata_canonify_4_4_ok", "mapdata_canonify_5_1_ok", "mapdata_canonify_5_2_ok",
+                                     "mapdata_canonify_5_3_ok", "mapdata_canonify_5_4_ok", "mapdata_canonify_6_1_ok",
+                                     "mapdata_canonify_6_2_ok", "mapdata_canonify_6_3_ok", "mapdata_canonify_6_4_ok" };
+
+      "mapdata_canonify_eval_ok" and => { "mapdata_canonify_eval_1_1_ok", "mapdata_canonify_eval_1_2_ok", "mapdata_canonify_eval_1_3_ok",
+                                          "mapdata_canonify_eval_1_4_ok", "mapdata_canonify_eval_2_1_ok", "mapdata_canonify_eval_2_2_ok",
+                                          "mapdata_canonify_eval_2_3_ok", "mapdata_canonify_eval_2_4_ok", "mapdata_canonify_eval_3_1_ok",
+                                          "mapdata_canonify_eval_3_2_ok", "mapdata_canonify_eval_3_3_ok", "mapdata_canonify_eval_3_4_ok",
+                                          "mapdata_canonify_eval_4_1_ok", "mapdata_canonify_eval_4_2_ok", "mapdata_canonify_eval_4_3_ok",
+                                          "mapdata_canonify_eval_4_4_ok", "mapdata_canonify_eval_5_1_ok", "mapdata_canonify_eval_5_2_ok",
+                                          "mapdata_canonify_eval_5_3_ok", "mapdata_canonify_eval_5_4_ok", "mapdata_canonify_eval_6_1_ok",
+                                          "mapdata_canonify_eval_6_2_ok", "mapdata_canonify_eval_6_3_ok", "mapdata_canonify_eval_6_4_ok" };
+
+      "mapdata_json_ok" and => { "mapdata_json_1_1_ok", "mapdata_json_1_2_ok", "mapdata_json_1_3_ok", "mapdata_json_1_4_ok",
+                                 "mapdata_json_2_1_ok", "mapdata_json_2_2_ok", "mapdata_json_2_3_ok", "mapdata_json_2_4_ok",
+                                 "mapdata_json_3_1_ok", "mapdata_json_3_2_ok", "mapdata_json_3_3_ok", "mapdata_json_3_4_ok",
+                                 "mapdata_json_4_1_ok", "mapdata_json_4_2_ok", "mapdata_json_4_3_ok", "mapdata_json_4_4_ok",
+                                 "mapdata_json_5_1_ok", "mapdata_json_5_2_ok", "mapdata_json_5_3_ok", "mapdata_json_5_4_ok",
+                                 "mapdata_json_6_1_ok", "mapdata_json_6_2_ok", "mapdata_json_6_3_ok", "mapdata_json_6_4_ok" };
+
+
+      "ok" and => { "mapdata_none_ok", "mapdata_canonify_ok", "mapdata_canonify_eval_ok", "mapdata_json_ok" },
+        scope => "namespace";
+}
+
+#######################################################
+
+bundle agent check
+{
+  reports:
+    DEBUG::
+      "mapdata_none*:";
+      "mapdata_none_str_$(test.X)_$(test.Y): '$(test.mapdata_none_str_$(test.X)_$(test.Y))'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

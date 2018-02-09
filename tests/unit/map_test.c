@@ -7,9 +7,13 @@
 
 #include <alloc.h>
 
+#define HASH_MAP_INIT_SIZE 128
+#define HASH_MAP_MAX_LOAD_FACTOR 0.75
+#define HASH_MAP_MIN_LOAD_FACTOR 0.35
+#define MIN_HASHMAP_BUCKETS 1 << 5
+
 static unsigned int ConstHash(ARG_UNUSED const void *key,
-                              ARG_UNUSED unsigned int seed,
-                              ARG_UNUSED unsigned int max)
+                              ARG_UNUSED unsigned int seed)
 {
     return 0;
 }
@@ -19,6 +23,23 @@ static void test_new_destroy(void)
     Map *map = MapNew(NULL, NULL, NULL, NULL);
     assert_int_equal(MapSize(map), 0);
     MapDestroy(map);
+}
+
+static void test_new_hashmap_bad_size(void)
+{
+    /* too small */
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                                  free, free, MIN_HASHMAP_BUCKETS >> 1);
+    assert_int_equal(hashmap->size, MIN_HASHMAP_BUCKETS);
+    HashMapDestroy(hashmap);
+
+    /* not a pow2 */
+    hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                         free, free, 123);
+    assert_int_equal(hashmap->size, 128);
+    HashMapDestroy(hashmap);
+
+    /* TODO: test size too big? Would require a lot of memory to be available. */
 }
 
 static void test_insert(void)
@@ -80,7 +101,8 @@ static void test_insert_jumbo(void)
 
 static void test_remove(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free);
+    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free,
+                                  HASH_MAP_INIT_SIZE);
 
     HashMapInsert(hashmap, xstrdup("a"), xstrdup("b"));
 
@@ -90,6 +112,219 @@ static void test_remove(void)
 
     assert_true(HashMapRemove(hashmap, "a"));
     assert_int_equal(HashMapGet(hashmap, "a"), NULL);
+
+    HashMapDestroy(hashmap);
+}
+
+static void test_add_n_as_to_map(HashMap *hashmap, unsigned int i)
+{
+    char s[i+1];
+    memset(s, 'a', i);
+    s[i] = '\0';
+
+    assert_true(HashMapGet(hashmap, s) == NULL);
+    assert_false(HashMapInsert(hashmap, xstrdup(s), xstrdup(s)));
+    assert_true(HashMapGet(hashmap, s) != NULL);
+}
+
+static void test_remove_n_as_from_map(HashMap *hashmap, unsigned int i)
+{
+    char s[i+1];
+    memset(s, 'a', i);
+    s[i] = '\0';
+
+    assert_true(HashMapGet(hashmap, s) != NULL);
+    assert_true(HashMapRemove(hashmap, xstrdup(s)));
+    assert_true(HashMapGet(hashmap, s) == NULL);
+}
+
+static void assert_n_as_in_map(HashMap *hashmap, unsigned int i, bool in)
+{
+    char s[i+1];
+    memset(s, 'a', i);
+    s[i] = '\0';
+
+    if (in)
+    {
+        assert_true(HashMapGet(hashmap, s) != NULL);
+    }
+    else
+    {
+        assert_true(HashMapGet(hashmap, s) == NULL);
+    }
+}
+
+static void test_grow(void)
+{
+    unsigned int i = 0;
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                                  free, free, HASH_MAP_INIT_SIZE);
+
+    size_t orig_size = hashmap->size;
+    size_t orig_threshold = hashmap->max_threshold;
+
+    for (i = 1; i <= orig_threshold; i++)
+    {
+        test_add_n_as_to_map(hashmap, i);
+        assert_int_equal(hashmap->load, i);
+    }
+    // HashMapPrintStats(hashmap, stdout);
+    assert_int_equal(hashmap->size, orig_size);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
+
+    /* i == (orig_threshold + 1) now
+     * let's go over the threshold
+     */
+    test_add_n_as_to_map(hashmap, i);
+    assert_int_equal(hashmap->load, i);
+    assert_int_equal(hashmap->size, orig_size << 1);
+    assert_int_equal(hashmap->max_threshold,
+                     (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
+
+    /* all the items so far should be in the map */
+    for (int j = 1; j <= i; j++)
+    {
+        assert_n_as_in_map(hashmap, j, true);
+    }
+
+
+    /* here we go again */
+    orig_size = hashmap->size;
+    orig_threshold = hashmap->max_threshold;
+    /* i * 'a' is in the map already, we need to bump it first */
+    for (++i; i <= orig_threshold; i++)
+    {
+        test_add_n_as_to_map(hashmap, i);
+        assert_int_equal(hashmap->load, i);
+    }
+    // HashMapPrintStats(hashmap, stdout);
+    assert_int_equal(hashmap->size, orig_size);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
+
+    /* i == (orig_threshold + 1) now
+     * let's go over the threshold
+     */
+    test_add_n_as_to_map(hashmap, i);
+    assert_int_equal(hashmap->load, i);
+    assert_int_equal(hashmap->size, orig_size << 1);
+    assert_int_equal(hashmap->max_threshold,
+                     (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
+
+    /* all the items so far should be in the map */
+    for (int j = 1; j <= i; j++)
+    {
+        assert_n_as_in_map(hashmap, j, true);
+    }
+
+
+    /* and once more */
+    orig_size = hashmap->size;
+    orig_threshold = hashmap->max_threshold;
+    /* i * 'a' is in the map already, we need to bump it first */
+    for (++i; i <= orig_threshold; i++)
+    {
+        test_add_n_as_to_map(hashmap, i);
+        assert_int_equal(hashmap->load, i);
+    }
+    // HashMapPrintStats(hashmap, stdout);
+    assert_int_equal(hashmap->size, orig_size);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
+
+    /* i == (orig_threshold + 1) now
+     * let's go over the threshold
+     */
+    test_add_n_as_to_map(hashmap, i);
+    assert_int_equal(hashmap->load, i);
+    assert_int_equal(hashmap->size, orig_size << 1);
+    assert_int_equal(hashmap->max_threshold,
+                     (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
+
+    /* all the items so far should be in the map */
+    for (int j = 1; j <= i; j++)
+    {
+        assert_n_as_in_map(hashmap, j, true);
+    }
+
+    HashMapDestroy(hashmap);
+}
+
+static void test_shrink(void)
+{
+    unsigned int i = 0;
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                                  free, free, HASH_MAP_INIT_SIZE);
+
+    size_t orig_size = hashmap->size;
+    size_t orig_threshold = hashmap->max_threshold;
+
+    /* let the map grow first (see test_grow above for some details */
+    for (i = 1; i <= orig_threshold; i++)
+    {
+        test_add_n_as_to_map(hashmap, i);
+    }
+    assert_int_equal(hashmap->size, orig_size);
+    assert_int_equal(hashmap->max_threshold, orig_threshold);
+    test_add_n_as_to_map(hashmap, i);
+    assert_int_equal(hashmap->load, i);
+    assert_int_equal(hashmap->size, orig_size << 1);
+    assert_int_equal(hashmap->max_threshold,
+                     (size_t) (hashmap->size * HASH_MAP_MAX_LOAD_FACTOR));
+
+    /* all the items so far should be in the map */
+    for (int j = 1; j <= i; j++)
+    {
+        assert_n_as_in_map(hashmap, j, true);
+    }
+
+
+    /* now start removing things from the map */
+    size_t min_threshold = hashmap->min_threshold;
+    orig_size = hashmap->size;
+
+    /* 'i' is the length of the longest one already inserted */
+    for (; i > min_threshold; i--)
+    {
+        test_remove_n_as_from_map(hashmap, i);
+        assert_int_equal(hashmap->load, i - 1);
+    }
+    assert_int_equal(hashmap->load, hashmap->min_threshold);
+    assert_int_equal(hashmap->size, orig_size);
+    assert_int_equal(hashmap->min_threshold, min_threshold);
+
+    /* let's move over the threshold */
+    test_remove_n_as_from_map(hashmap, i);
+    assert_int_equal(hashmap->load, i - 1);
+    assert_int_equal(hashmap->size, orig_size >> 1);
+    assert_int_equal(hashmap->min_threshold,
+                     (size_t) (hashmap->size * HASH_MAP_MIN_LOAD_FACTOR));
+
+    /* all the non-removed items should still be in the map */
+    for (int j = 1; j < i; j++)
+    {
+        assert_n_as_in_map(hashmap, j, true);
+    }
+
+    HashMapDestroy(hashmap);
+}
+
+static void test_no_shrink_below_init_size(void)
+{
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                                  free, free, HASH_MAP_INIT_SIZE);
+
+    assert_int_equal(hashmap->size, HASH_MAP_INIT_SIZE);
+    assert_int_equal(hashmap->init_size, HASH_MAP_INIT_SIZE);
+
+    /* add and remove 'aaaaa' to/from the HashMap
+     *
+     * The remove could trigger the shrink mechanism because there are obviously
+     * less than HASH_MAP_MIN_LOAD_FACTOR * HASH_MAP_INIT_SIZE items in the
+     * map. But the 'init_size' should block that from happening.
+     */
+    test_add_n_as_to_map(hashmap, 5);
+    test_remove_n_as_from_map(hashmap, 5);
+
+    assert_int_equal(hashmap->size, HASH_MAP_INIT_SIZE);
 
     HashMapDestroy(hashmap);
 }
@@ -169,19 +404,55 @@ static void test_iterate_jumbo(void)
     assert_int_equal(count, 10000);
     assert_int_equal(count, size);
     assert_int_equal(sum_len, 10000*9999/2);
+}
+
+#ifndef _AIX
+static void test_insert_jumbo_more(void)
+{
+    for (int i = 1; i < 10000; i++)
+    {
+        /* char *s = CharTimes('x', i); */
+        char s[i+1];
+        memset(s, 'x', i);
+        s[i] = '\0';
+
+        assert_false(StringMapHasKey(jumbo_map, s));
+        assert_false(StringMapInsert(jumbo_map, xstrdup(s), xstrdup(s)));
+        assert_true(StringMapHasKey(jumbo_map, s));
+        /* free(s); */
+    }
+
+    for (int i = 1; i < 7500; i++)
+    {
+        /* char *s = CharTimes('y', i); */
+        char s[i+1];
+        memset(s, 'y', i);
+        s[i] = '\0';
+
+        assert_false(StringMapHasKey(jumbo_map, s));
+        assert_false(StringMapInsert(jumbo_map, xstrdup(s), xstrdup(s)));
+        assert_true(StringMapHasKey(jumbo_map, s));
+        /* free(s); */
+    }
+
+    StringMapPrintStats(jumbo_map, stdout);
+
+    /* TODO: maybe we need a GetStats() function so that we can actually verify
+       the stats here automatically? */
 
     StringMapDestroy(jumbo_map);
-}
+};
+#endif
 
 static void test_hashmap_new_destroy(void)
 {
-    HashMap *hashmap = HashMapNew(NULL, NULL, NULL, NULL);
+    HashMap *hashmap = HashMapNew(NULL, NULL, NULL, NULL, HASH_MAP_INIT_SIZE);
     HashMapDestroy(hashmap);
 }
 
 static void test_hashmap_degenerate_hash_fn(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free);
+    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free, HASH_MAP_INIT_SIZE);
 
     for (int i = 0; i < 100; i++)
     {
@@ -257,7 +528,7 @@ static void test_array_map_key_referenced_in_value(void)
 static void test_hash_map_key_referenced_in_value(void)
 {
     HashMap *m = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
-                            free, free);
+                            free, free, HASH_MAP_INIT_SIZE);
     char      *key1 = xstrdup("blah");
     TestValue *val1 = xmalloc(sizeof(*val1));
     val1->keyref = key1;
@@ -306,9 +577,13 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_new_destroy),
+        unit_test(test_new_hashmap_bad_size),
         unit_test(test_insert),
         unit_test(test_insert_jumbo),
         unit_test(test_remove),
+        unit_test(test_grow),
+        unit_test(test_shrink),
+        unit_test(test_no_shrink_below_init_size),
         unit_test(test_get),
         unit_test(test_has_key),
         unit_test(test_clear),
@@ -318,6 +593,9 @@ int main()
         unit_test(test_array_map_key_referenced_in_value),
         unit_test(test_hash_map_key_referenced_in_value),
         unit_test(test_iterate_jumbo),
+#ifndef _AIX
+        unit_test(test_insert_jumbo_more),
+#endif
     };
 
     return run_tests(tests);

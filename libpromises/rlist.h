@@ -56,12 +56,12 @@ char *RvalToString(Rval rval);
 char *RlistToString(const Rlist *rlist);
 void RvalWrite(Writer *writer, Rval rval);
 void RvalWriteQuoted(Writer *writer, Rval rval);
-unsigned RvalHash(Rval rval, unsigned seed, unsigned max);
+unsigned RvalHash(Rval rval, unsigned seed);
 
 Rlist *RlistCopy(const Rlist *list);
 Rlist *RlistCopyRewriter(const Rlist *list, JsonElement *map);
-unsigned int RlistHash        (const Rlist *list, unsigned seed, unsigned max);
-unsigned int RlistHash_untyped(const void *list, unsigned seed, unsigned max);
+unsigned int RlistHash        (const Rlist *list, unsigned seed);
+unsigned int RlistHash_untyped(const void *list, unsigned seed);
 void RlistDestroy        (Rlist *list);
 void RlistDestroy_untyped(void *rl);
 void RlistDestroyEntry(Rlist **liststart, Rlist *entry);

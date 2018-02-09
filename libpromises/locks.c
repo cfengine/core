@@ -45,6 +45,7 @@
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
+#define CF_MAXLOCKNUM 8192
 
 #define CF_CRITIAL_SECTION "CF_CRITICAL_SECTION"
 
@@ -701,12 +702,12 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     int sum = 0;
     for (int i = 0; cc_operator[i] != '\0'; i++)
     {
-        sum = (CF_MACROALPHABET * sum + cc_operator[i]) % CF_HASHTABLESIZE;
+        sum = (CF_MACROALPHABET * sum + cc_operator[i]) % CF_MAXLOCKNUM;
     }
 
     for (int i = 0; cc_operand[i] != '\0'; i++)
     {
-        sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
+        sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_MAXLOCKNUM;
     }
 
     const char *bundle_name = PromiseGetBundle(pp)->name;

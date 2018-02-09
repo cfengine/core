@@ -4,24 +4,30 @@ body common control
 {
       inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-}
-
-bundle agent init
-{
+      version => "2.0";
 }
 
 bundle agent test
 {
-classes:
- "validated_ok" expression => returnszero("$(sys.cf_promises) -p json -f $(this.promise_filename).sub | $(G.grep) endflag", "useshell"),
-                     scope => "namespace";
+  meta:
+
+      "description" -> { "CFE-2383", "CFE-2310" }
+        string => "Test that json representation of policy is not truncated.";
+
+  vars:
+      "output"
+        string => execresult( "$(sys.cf_promises) -p json -f $(this.promise_filename).sub", "noshell" );
+
 }
 
 bundle agent check
 {
+  classes:
+
+      "validated_ok" expression => regcmp( ".*endflag.*", $(test.output) );
 
   reports:
+
     validated_ok::
       "$(this.promise_filename) Pass";
     !validated_ok::

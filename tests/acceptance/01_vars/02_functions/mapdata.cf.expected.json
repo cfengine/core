@@ -46,98 +46,6 @@
       "b": "c"
     }
   },
-  "maparray_1_1": [
-    "key = 0",
-    "key = 1",
-    "key = 2"
-  ],
-  "maparray_1_2": [
-    "key = 0, value = 1",
-    "key = 1, value = 2",
-    "key = 2, value = 3"
-  ],
-  "maparray_1_3": [
-    "key = 0, key2 = $(this.k[1]), value = 1",
-    "key = 1, key2 = $(this.k[1]), value = 2",
-    "key = 2, key2 = $(this.k[1]), value = 3"
-  ],
-  "maparray_1_4": [
-    "xvalue should be 0value",
-    "xvalue should be 1value",
-    "xvalue should be 2value"
-  ],
-  "maparray_2_1": [
-    "key = 0",
-    "key = 1",
-    "key = 2"
-  ],
-  "maparray_2_2": [
-    "key = 0, value = eleme\"nt1",
-    "key = 1, value = element2",
-    "key = 2, value = element3"
-  ],
-  "maparray_2_3": [
-    "key = 0, key2 = $(this.k[1]), value = eleme\"nt1",
-    "key = 1, key2 = $(this.k[1]), value = element2",
-    "key = 2, key2 = $(this.k[1]), value = element3"
-  ],
-  "maparray_2_4": [
-    "xvalue should be 0value",
-    "xvalue should be 1value",
-    "xvalue should be 2value"
-  ],
-  "maparray_3_1": [
-    "key = x\"x"
-  ],
-  "maparray_3_2": [
-    "key = x\"x, value = y\"y"
-  ],
-  "maparray_3_3": [
-    "key = x\"x, key2 = $(this.k[1]), value = y\"y"
-  ],
-  "maparray_3_4": [
-    "xvalue should be xxvalue"
-  ],
-  "maparray_4_1": [],
-  "maparray_4_2": [],
-  "maparray_4_3": [],
-  "maparray_4_4": [],
-  "maparray_5_1": [
-    "key = mykey",
-    "key = anotherkey",
-    "key = lastkey!"
-  ],
-  "maparray_5_2": [
-    "key = mykey, value = myvalue",
-    "key = anotherkey, value = anothervalue",
-    "key = lastkey!, value = o\"ne",
-    "key = lastkey!, value = two",
-    "key = lastkey!, value = three"
-  ],
-  "maparray_5_3": [
-    "key = mykey, key2 = $(this.k[1]), value = myvalue",
-    "key = anotherkey, key2 = $(this.k[1]), value = anothervalue",
-    "key = lastkey!, key2 = $(this.k[1]), value = o\"ne",
-    "key = lastkey!, key2 = $(this.k[1]), value = two",
-    "key = lastkey!, key2 = $(this.k[1]), value = three"
-  ],
-  "maparray_5_4": [
-    "xvalue should be myvalue",
-    "xvalue should be anothervalue",
-    "xvalue should be lastvalue"
-  ],
-  "maparray_6_1": [
-    "key = a"
-  ],
-  "maparray_6_2": [
-    "key = a, value = c"
-  ],
-  "maparray_6_3": [
-    "key = a, key2 = b, value = c"
-  ],
-  "maparray_6_4": [
-    "xvalue should be avalue"
-  ],
   "mapdata_canonify_1_1": [
     "key___0",
     "key___1",
@@ -195,28 +103,28 @@
   "mapdata_canonify_4_3": [],
   "mapdata_canonify_4_4": [],
   "mapdata_canonify_5_1": [
-    "key___mykey",
     "key___anotherkey",
-    "key___lastkey_"
+    "key___lastkey_",
+    "key___mykey"
   ],
   "mapdata_canonify_5_2": [
-    "key___mykey__value___myvalue",
     "key___anotherkey__value___anothervalue",
     "key___lastkey___value___o_ne",
     "key___lastkey___value___two",
-    "key___lastkey___value___three"
+    "key___lastkey___value___three",
+    "key___mykey__value___myvalue"
   ],
   "mapdata_canonify_5_3": [
-    "key___mykey__key2_____this_k_1____value___myvalue",
     "key___anotherkey__key2_____this_k_1____value___anothervalue",
     "key___lastkey___key2_____this_k_1____value___o_ne",
     "key___lastkey___key2_____this_k_1____value___two",
-    "key___lastkey___key2_____this_k_1____value___three"
+    "key___lastkey___key2_____this_k_1____value___three",
+    "key___mykey__key2_____this_k_1____value___myvalue"
   ],
   "mapdata_canonify_5_4": [
-    "xvalue_should_be_myvalue",
     "xvalue_should_be_anothervalue",
-    "xvalue_should_be_lastvalue"
+    "xvalue_should_be_lastvalue",
+    "xvalue_should_be_myvalue"
   ],
   "mapdata_canonify_6_1": [
     "key___a"
@@ -287,28 +195,28 @@
   "mapdata_canonify_eval_4_3": [],
   "mapdata_canonify_eval_4_4": [],
   "mapdata_canonify_eval_5_1": [
-    "key___mykey",
     "key___anotherkey",
-    "key___lastkey_"
+    "key___lastkey_",
+    "key___mykey"
   ],
   "mapdata_canonify_eval_5_2": [
-    "key___mykey__value___myvalue",
     "key___anotherkey__value___anothervalue",
     "key___lastkey___value___o_ne",
     "key___lastkey___value___two",
-    "key___lastkey___value___three"
+    "key___lastkey___value___three",
+    "key___mykey__value___myvalue"
   ],
   "mapdata_canonify_eval_5_3": [
-    "key___mykey__key2_____this_k_1____value___myvalue",
     "key___anotherkey__key2_____this_k_1____value___anothervalue",
     "key___lastkey___key2_____this_k_1____value___o_ne",
     "key___lastkey___key2_____this_k_1____value___two",
-    "key___lastkey___key2_____this_k_1____value___three"
+    "key___lastkey___key2_____this_k_1____value___three",
+    "key___mykey__key2_____this_k_1____value___myvalue"
   ],
   "mapdata_canonify_eval_5_4": [
-    "xvalue_should_be_myvalue",
     "xvalue_should_be_anothervalue",
-    "xvalue_should_be_lastvalue"
+    "xvalue_should_be_lastvalue",
+    "xvalue_should_be_myvalue"
   ],
   "mapdata_canonify_eval_6_1": [
     "key___a"
@@ -441,10 +349,6 @@
   "mapdata_json_5_1": [],
   "mapdata_json_5_2": [
     {
-      "key": "mykey",
-      "value": "myvalue"
-    },
-    {
       "key": "anotherkey",
       "value": "anothervalue"
     },
@@ -459,13 +363,13 @@
     {
       "key": "lastkey!",
       "value": "three"
+    },
+    {
+      "key": "mykey",
+      "value": "myvalue"
     }
   ],
   "mapdata_json_5_3": [
-    [
-      "mykey",
-      "myvalue"
-    ],
     [
       "anotherkey",
       "anothervalue"
@@ -481,14 +385,13 @@
     [
       "lastkey!",
       "three"
+    ],
+    [
+      "mykey",
+      "myvalue"
     ]
   ],
   "mapdata_json_5_4": [
-    {
-      "key": "mykey",
-      "key2": "$(this.k[1])",
-      "value": "myvalue"
-    },
     {
       "key": "anotherkey",
       "key2": "$(this.k[1])",
@@ -508,6 +411,11 @@
       "key": "lastkey!",
       "key2": "$(this.k[1])",
       "value": "three"
+    },
+    {
+      "key": "mykey",
+      "key2": "$(this.k[1])",
+      "value": "myvalue"
     }
   ],
   "mapdata_json_6_1": [],
@@ -587,28 +495,28 @@
   "mapdata_none_4_3": [],
   "mapdata_none_4_4": [],
   "mapdata_none_5_1": [
-    "key = mykey",
     "key = anotherkey",
-    "key = lastkey!"
+    "key = lastkey!",
+    "key = mykey"
   ],
   "mapdata_none_5_2": [
-    "key = mykey, value = myvalue",
     "key = anotherkey, value = anothervalue",
     "key = lastkey!, value = o\"ne",
     "key = lastkey!, value = two",
-    "key = lastkey!, value = three"
+    "key = lastkey!, value = three",
+    "key = mykey, value = myvalue"
   ],
   "mapdata_none_5_3": [
-    "key = mykey, key2 = $(this.k[1]), value = myvalue",
     "key = anotherkey, key2 = $(this.k[1]), value = anothervalue",
     "key = lastkey!, key2 = $(this.k[1]), value = o\"ne",
     "key = lastkey!, key2 = $(this.k[1]), value = two",
-    "key = lastkey!, key2 = $(this.k[1]), value = three"
+    "key = lastkey!, key2 = $(this.k[1]), value = three",
+    "key = mykey, key2 = $(this.k[1]), value = myvalue"
   ],
   "mapdata_none_5_4": [
-    "xvalue should be myvalue",
     "xvalue should be anothervalue",
-    "xvalue should be lastvalue"
+    "xvalue should be lastvalue",
+    "xvalue should be myvalue"
   ],
   "mapdata_none_6_1": [
     "key = a"

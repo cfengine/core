@@ -82,8 +82,7 @@ int VarRefCompare(const VarRef *a, const VarRef *b);
 bool VarRefEqual_untyped(const void *a, const void *b);
 
 unsigned int VarRefHash_untyped(const void *ref,
-                                unsigned int seed,
-                                unsigned int max);
+                                unsigned int seed);
 
 
 #endif

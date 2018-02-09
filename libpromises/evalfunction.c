@@ -85,6 +85,8 @@ static bool CURL_INITIALIZED = false; /* GLOBAL */
 static JsonElement *CURL_CACHE = NULL;
 #endif
 
+#define SPLAY_PSEUDO_RANDOM_CONSTANT 8192
+
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const Rlist* rp, bool do_regex, bool invert, long max);
 
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
@@ -2071,13 +2073,17 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx,
     if (splay_policy == INTERVAL_HOURLY)
     {
         /* 12 5-minute slots in hour */
-        int slot = StringHash(RlistScalarValue(finalargs), 0, CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
+        int slot = StringHash(RlistScalarValue(finalargs), 0);
+        slot &= (SPLAY_PSEUDO_RANDOM_CONSTANT - 1);
+        slot = slot * 12 / SPLAY_PSEUDO_RANDOM_CONSTANT;
         snprintf(class_name, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
         /* 12*24 5-minute slots in day */
-        int dayslot = StringHash(RlistScalarValue(finalargs), 0, CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
+        int dayslot = StringHash(RlistScalarValue(finalargs), 0);
+        dayslot &= (SPLAY_PSEUDO_RANDOM_CONSTANT - 1);
+        dayslot = dayslot * 12 * 24 / SPLAY_PSEUDO_RANDOM_CONSTANT;
         int hour = dayslot / 12;
         int slot = dayslot % 12;
 
@@ -3794,7 +3800,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, ARG_UNUSED const Policy *pol
         SeqAppend(seq, (void*)JsonPrimitiveGetAsString(e));
     }
 
-    SeqShuffle(seq, StringHash(seed_str, 0, (unsigned) INT_MAX + 1));
+    SeqShuffle(seq, StringHash(seed_str, 0));
 
     Rlist *shuffled = NULL;
     for (size_t i = 0; i < SeqLength(seq); i++)

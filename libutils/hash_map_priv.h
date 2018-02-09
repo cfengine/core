@@ -40,6 +40,11 @@ typedef struct
     MapDestroyDataFn destroy_key_fn;
     MapDestroyDataFn destroy_value_fn;
     BucketListItem **buckets;
+    size_t size;
+    size_t init_size;
+    size_t load;
+    size_t max_threshold;
+    size_t min_threshold;
 } HashMap;
 
 typedef struct
@@ -51,7 +56,8 @@ typedef struct
 
 HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
                     MapDestroyDataFn destroy_key_fn,
-                    MapDestroyDataFn destroy_value_fn);
+                    MapDestroyDataFn destroy_value_fn,
+                    size_t init_size);
 
 bool HashMapInsert(HashMap *map, void *key, void *value);
 bool HashMapRemove(HashMap *map, const void *key);

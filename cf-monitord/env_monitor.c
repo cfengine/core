@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+
 #include <env_monitor.h>
 
 #include <eval_context.h>
@@ -44,8 +45,11 @@
 #include <unix.h>
 #include <verify_measurements.h>
 #include <verify_classes.h>
-#include <cf-monitord-enterprise-stubs.h>
 #include <known_dirs.h>
+#include <probes.h>                      /* MonOtherInit,MonOtherGatherData */
+#include <history.h>                     /* HistoryUpdate */
+#include <monitoring.h>                  /* GetObservable */
+
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -404,14 +408,14 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         }
 
         // lastweek_vals is last week's stored data
-        
+
         This =
             RejectAnomaly(CF_THIS[i], lastweek_vals->Q[i].expect, lastweek_vals->Q[i].var, LOCALAV.Q[i].expect,
                           LOCALAV.Q[i].var);
 
         newvals.Q[i].q = This;
         newvals.last_seen = now;  // Record the freshness of this slot
-        
+
         LOCALAV.Q[i].q = This;
 
         Log(LOG_LEVEL_DEBUG, "Previous week's '%s.q' %lf", name, lastweek_vals->Q[i].q);
@@ -432,7 +436,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         else
         {
             newvals.Q[i].dq = 0;
-            LOCALAV.Q[i].dq = 0;           
+            LOCALAV.Q[i].dq = 0;
         }
 
         // Save the last measured value as the value "from five minutes ago" to get the gradient
@@ -709,13 +713,13 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         snprintf(buff,CF_BUFSIZE,"udp6_port_addr[%s]=%s",ip->name,ip->classes);
         AppendItem(&mon_data, buff, NULL);
     }
-    
+
     for (ip = MON_UDP4; ip != NULL; ip=ip->next)
     {
         snprintf(buff,CF_BUFSIZE,"udp4_port_addr[%s]=%s",ip->name,ip->classes);
         AppendItem(&mon_data, buff, NULL);
     }
-    
+
     PublishEnvironment(mon_data);
 
     DeleteItemList(mon_data);

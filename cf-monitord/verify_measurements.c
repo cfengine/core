@@ -22,17 +22,20 @@
   included file COSL.txt.
 */
 
+
 #include <verify_measurements.h>
 
 #include <promises.h>
 #include <files_names.h>
 #include <attributes.h>
 #include <policy.h>
-#include <cf-monitord-enterprise-stubs.h>
 #include <eval_context.h>
 #include <ornaments.h>
+#include <history.h>                                   /* VerifyMeasurement */
+
 
 static bool CheckMeasureSanity(Measurement m, const Promise *pp);
+
 
 /*****************************************************************************/
 

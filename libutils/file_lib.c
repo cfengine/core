@@ -1290,7 +1290,7 @@ StringSet* GlobFileList(const char *pattern)
     int globflags = 0; // TODO: maybe add GLOB_BRACE later
 
     const char* r_candidates[] = { "*", "*/*", "*/*/*", "*/*/*/*", "*/*/*/*/*", "*/*/*/*/*/*" };
-    bool starstar = strstr(pattern, "**");
+    bool starstar = ( strstr(pattern, "**") != NULL );
     const char** candidates   = starstar ? r_candidates : NULL;
     const int candidate_count = starstar ? 6 : 1;
 

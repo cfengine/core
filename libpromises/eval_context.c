@@ -524,7 +524,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
         FreeExpression(res.result);
 
         /* r is EvalResult which could be ERROR */
-        return r == true;
+        return r == EXPRESSION_VALUE_TRUE;
     }
 }
 
@@ -557,7 +557,7 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
         FreeExpression(res.result);
 
         /* r is EvalResult which could be ERROR */
-        return r == true;
+        return r == EXPRESSION_VALUE_TRUE;
     }
 }
 

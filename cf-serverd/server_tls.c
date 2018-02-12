@@ -182,9 +182,9 @@ void ServerTLSDeInitialize()
  * the TLS protocol loop.
  * This must be the first thing we run on an accepted connection.
  *
- * @return -1 in case of error, 1 otherwise.
+ * @return true for success, false otherwise.
  */
-int ServerTLSPeek(ConnectionInfo *conn_info)
+bool ServerTLSPeek(ConnectionInfo *conn_info)
 {
     assert(SSLSERVERCONTEXT != NULL);
     assert(PRIVKEY != NULL);
@@ -201,13 +201,13 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
     {
         assert(got == -1);
         Log(LOG_LEVEL_ERR, "TCP receive error: %s", GetErrorStr());
-        return -1;
+        return false;
     }
     else if (got == 0)
     {
         Log(LOG_LEVEL_INFO,
             "Peer closed TCP connection without sending data!");
-        return -1;
+        return false;
     }
     else if (got < peek_size)
     {
@@ -230,7 +230,7 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
     }
     LogRaw(LOG_LEVEL_DEBUG, "Peeked data: ", buf, got);
 
-    return 1;
+    return true;
 }
 
 /**
@@ -372,7 +372,7 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
     return true;
 }
 
-int ServerSendWelcome(const ServerConnectionState *conn)
+bool ServerSendWelcome(const ServerConnectionState *conn)
 {
     char s[1024] = "OK WELCOME";
     size_t len = strlen(s);
@@ -386,7 +386,7 @@ int ServerSendWelcome(const ServerConnectionState *conn)
         if (ret >= sizeof(s) - len)
         {
             Log(LOG_LEVEL_NOTICE, "Sending OK WELCOME message truncated: %s", s);
-            return -1;
+            return false;
         }
         len += ret;
     }
@@ -398,10 +398,10 @@ int ServerSendWelcome(const ServerConnectionState *conn)
     ret = TLSSend(conn->conn_info->ssl, s, len);
     if (ret == -1)
     {
-        return -1;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 /**
@@ -410,13 +410,13 @@ int ServerSendWelcome(const ServerConnectionState *conn)
  * Doesn't include code for verifying key and lastseen
  *
  * @see ServerTLSSessionEstablish
- * @return 1 for success -1 for error
+ * @return true for success false otherwise
  */
-int BasicServerTLSSessionEstablish(ServerConnectionState *conn)
+bool BasicServerTLSSessionEstablish(ServerConnectionState *conn)
 {
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
-        return 1;
+        return true;
     }
     assert(ConnectionInfoSSL(conn->conn_info) == NULL);
     SSL *ssl = SSL_new(SSLSERVERCONTEXT);
@@ -424,7 +424,7 @@ int BasicServerTLSSessionEstablish(ServerConnectionState *conn)
     {
         Log(LOG_LEVEL_ERR, "SSL_new: %s",
             TLSErrorString(ERR_get_error()));
-        return -1;
+        return false;
     }
     ConnectionInfoSetSSL(conn->conn_info, ssl);
 
@@ -439,7 +439,7 @@ int BasicServerTLSSessionEstablish(ServerConnectionState *conn)
     {
         TLSLogError(ssl, LOG_LEVEL_ERR,
                     "Failed to accept TLS connection", ret);
-        return -1;
+        return false;
     }
 
     Log(LOG_LEVEL_VERBOSE, "TLS version negotiated: %8s; Cipher: %s,%s",
@@ -447,7 +447,7 @@ int BasicServerTLSSessionEstablish(ServerConnectionState *conn)
         SSL_get_cipher_name(ssl),
         SSL_get_cipher_version(ssl));
 
-    return 1;
+    return true;
 }
 
 /**
@@ -457,20 +457,19 @@ int BasicServerTLSSessionEstablish(ServerConnectionState *conn)
  *
  * @see BasicServerTLSSessionEstablish
  * @note Various fields in #conn are set, like username and keyhash.
- * @return 1 for success -1 for error
+ * @return true for success false otherwise
  */
-int ServerTLSSessionEstablish(ServerConnectionState *conn)
+bool ServerTLSSessionEstablish(ServerConnectionState *conn)
 {
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
-        return 1;
+        return true;
     }
 
-    int ret = BasicServerTLSSessionEstablish(conn);
-    assert(ret == 1 || ret == -1); // 1 == success, -1 == error
-    if (ret == -1)
+    bool established =  BasicServerTLSSessionEstablish(conn);
+    if (!established)
     {
-        return -1;
+        return false;
     }
 
     Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
@@ -478,21 +477,21 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
     /* Send/Receive "CFE_v%d" version string, agree on version, receive
        identity (username) of peer. */
     char username[sizeof(conn->username)] = "";
-    bool b = ServerIdentificationDialog(conn->conn_info,
-                                        username, sizeof(username));
-    if (b != true)
+    bool id_success = ServerIdentificationDialog(conn->conn_info,
+                                                 username, sizeof(username));
+    if (!id_success)
     {
-        return -1;
+        return false;
     }
 
     /* We *now* (maybe a bit late) verify the key that the client sent us in
      * the TLS handshake, since we need the username to do so. TODO in the
      * future store keys irrelevant of username, so that we can match them
      * before IDENTIFY. */
-    ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, username);
+    int ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, username);
     if (ret == -1)                                      /* error */
     {
-        return -1;
+        return false;
     }
 
     if (ret == 1)                                    /* trusted key */
@@ -521,7 +520,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 "TRUST FAILED, peer presented an untrusted key, dropping connection!");
             Log(LOG_LEVEL_VERBOSE,
                 "Add peer to \"trustkeysfrom\" if you really want to start trusting this new key.");
-            return -1;
+            return false;
         }
     }
 
@@ -537,7 +536,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
              LAST_SEEN_ROLE_ACCEPT);
 
     ServerSendWelcome(conn);
-    return 1;
+    return true;
 }
 
 //*******************************************************************

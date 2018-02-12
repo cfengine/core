@@ -193,7 +193,7 @@ Hash *HashNewFromDescriptor(const int descriptor, HashMethod method)
 
 Hash *HashNewFromKey(const RSA *rsa, HashMethod method)
 {
-    if (!rsa)
+    if (rsa == NULL)
     {
         return NULL;
     }
@@ -208,6 +208,13 @@ Hash *HashNewFromKey(const RSA *rsa, HashMethod method)
     size_t n_len = (n == NULL) ? 0 : (size_t) BN_num_bytes(n);
     size_t e_len = (e == NULL) ? 0 : (size_t) BN_num_bytes(e);
     size_t buf_len = MAX(n_len, e_len);
+
+    if (buf_len <= 0)
+    {
+        // Should never happen
+        Log(LOG_LEVEL_ERR, "Invalid RSA key, internal OpenSSL related error");
+        return NULL;
+    }
 
     const EVP_MD *md = EVP_get_digestbyname(CF_DIGEST_TYPES[method]);
     if (md == NULL)

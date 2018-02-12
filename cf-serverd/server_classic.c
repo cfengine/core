@@ -1083,7 +1083,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_AUTH_PLAIN:
         SetConnectionData(conn, (char *) (recvbuffer + strlen("CAUTH ")));
 
-        if (conn->username == NULL || !IsUserNameValid(conn->username))
+        if (!IsUserNameValid(conn->username))
         {
             Log(LOG_LEVEL_INFO, "Client is sending wrong username: %s",
                 conn->username);

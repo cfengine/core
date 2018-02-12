@@ -182,7 +182,7 @@ Class *ClassTableMatch(const ClassTable *table, const char *regex)
     {
         // TODO: perhaps pcre has can give more info on this error?
         Log(LOG_LEVEL_ERR, "Unable to pcre compile regex '%s'", regex);
-        return false;
+        return NULL;
     }
 
     while ((cls = ClassTableIteratorNext(it)))

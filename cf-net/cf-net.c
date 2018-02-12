@@ -123,6 +123,7 @@ static const char *const HINTS[] =
         generator_macro(MULTI)           \
         generator_macro(MULTITLS)        \
         generator_macro(HELP)            \
+        generator_macro(INVALID)         \
 
 #define GENERATE_ENUM(CMD_NAME) CFNET_CMD_##CMD_NAME,
 #define GENERATE_STRING(CMD_NAME) #CMD_NAME,
@@ -325,7 +326,7 @@ static int CFNetCommandNumber(char *command)
             return i;
         }
     }
-    return -1;
+    return CFNET_CMD_INVALID;
 }
 
 // ^ Macro returns on match(!)
@@ -389,7 +390,7 @@ static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
 
     enum command_enum cmd = CFNetCommandNumber(command_name);
 
-    if (cmd == -1)
+    if (cmd == CFNET_CMD_INVALID)
     {
         Log(LOG_LEVEL_ERR, "'%s' is not a valid cf-net command\n", args[0]);
         return -1;

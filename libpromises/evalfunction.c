@@ -98,7 +98,7 @@ static int ExecModule(EvalContext *ctx, char *command);
 
 static bool CheckIDChar(const char ch);
 static bool CheckID(const char *id);
-static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const FnCall *fp, const char *lval_str, DataType *datatype_out);
+static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, DataType *datatype_out);
 static char *CfReadFile(const char *filename, int maxsize);
 
 /*******************************************************************/
@@ -657,7 +657,7 @@ static FnCallResult FnCallRandomInt(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
         from = tmp;
     }
 
-    range = fabs(to - from);
+    range = abs(to - from);
     result = from + (int) (drand48() * (double) range);
 
     return FnReturnF("%d", result);
@@ -3368,7 +3368,7 @@ static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy 
         sscanf(template, "%[^[\[][%d-%d]%[^\n]", before, &from, &to, after);
     }
 
-    if (step_size < 1 || fabs(from-to) < step_size)
+    if (step_size < 1 || abs(from-to) < step_size)
     {
         FatalError(ctx, "EXPANDRANGE Step size cannot be less than 1 or greater than the interval");
     }
@@ -4245,7 +4245,7 @@ static FnCallResult FnCallFilter(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
 /*********************************************************************/
 
-static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const FnCall *fp, const char *lval_str, DataType *datatype_out)
+static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, DataType *datatype_out)
 {
     VarRef *ref = VarRefParse(lval_str);
     DataType value_type;
@@ -7538,7 +7538,8 @@ static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
         return FnFailure();
     }
 
-    ProcessSelect ps;
+    ProcessSelect ps = { .owner = NULL, .process_result = "" };
+    // ps is unused because attrselect = false below
     Item *matched = SelectProcesses(regex, ps, false);
     ClearProcessTable();
 
@@ -8907,7 +8908,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("expandrange", CF_DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallExpandRange, "Expand a name as a list of names numered according to a range",
+    FnCallTypeNew("expandrange", CF_DATA_TYPE_STRING_LIST, EXPANDRANGE_ARGS, &FnCallExpandRange, "Expand a name as a list of names numered according to a range",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("fileexists", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),

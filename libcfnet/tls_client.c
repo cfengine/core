@@ -206,6 +206,11 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
 
     /* Receive CFE_v%d ... That's the first thing the server sends. */
     ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Connection was hung up during identification! (0)");
+        return -1;
+    }
 
     ProtocolVersion wanted_version;
     if (conn_info->protocol == CF_PROTOCOL_UNDEFINED)
@@ -227,7 +232,7 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
     ret = TLSSend(conn_info->ssl, version_string, len);
     if (ret != len)
     {
-        Log(LOG_LEVEL_ERR, "Connection was hung up during identification!");
+        Log(LOG_LEVEL_ERR, "Connection was hung up during identification! (1)");
         return -1;
     }
 

@@ -1057,6 +1057,7 @@ static void SetFlavour(EvalContext *ctx, const char *flavour)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
 }
 
+#ifdef __linux__
 static void OSReleaseParse(EvalContext *ctx, const char *file_path)
 {
     JsonElement *os_release_json = JsonReadDataFile("system info discovery",
@@ -1105,6 +1106,7 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
         JsonDestroy(os_release_json);
     }
 }
+#endif
 
 static void OSClasses(EvalContext *ctx)
 {

@@ -26,6 +26,10 @@ matrix:
       env: JOB_TYPE=compile_and_unit_test
     - os: linux
       sudo: required
+      env: JOB_TYPE=compile_and_unit_test
+      compiler: clang
+    - os: linux
+      sudo: required
       env: JOB_TYPE=acceptance_tests_common
       # The unsafe acceptance tests don't work with SIMFS which is the default
       # filesystem in Travis; so change OS to Trusty, which uses ext4.

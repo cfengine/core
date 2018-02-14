@@ -194,8 +194,11 @@ static size_t GetDirentBufferSize(size_t name_len)
 
 struct dirent *AllocateDirentForFilename(const char *filename)
 {
-    struct dirent *entry = xcalloc(1, GetDirentBufferSize(strlen(filename)));
+    int length = strlen(filename);
+    struct dirent *entry = xcalloc(1, GetDirentBufferSize(length));
 
-    strcpy(entry->d_name, filename);
+    // d_name is fixed length, but we have allocated extra space using xcalloc
+    // cast is to silence the compiler warning which checks length of d_name:
+    memcpy((char *)entry->d_name, filename, length + 1);
     return entry;
 }

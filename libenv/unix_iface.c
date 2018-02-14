@@ -387,7 +387,7 @@ void GetInterfacesInfo(EvalContext *ctx)
             continue;
         }
 
-        if ((ifp->ifr_name == NULL) || (strlen(ifp->ifr_name) == 0))
+        if (strlen(ifp->ifr_name) == 0)
         {
             continue;
         }

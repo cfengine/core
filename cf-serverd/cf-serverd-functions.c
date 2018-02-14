@@ -323,17 +323,13 @@ static void DeleteAuthList(Auth **list, Auth **list_tail)
 
 static void KeepHardClasses(EvalContext *ctx)
 {
-    char name[CF_BUFSIZE];
-    if (name != NULL)
+    char *existing_policy_server = PolicyServerReadFile(GetWorkDir());
+    if (existing_policy_server)
     {
-        char *existing_policy_server = PolicyServerReadFile(GetWorkDir());
-        if (existing_policy_server)
+        free(existing_policy_server);
+        if (GetAmPolicyHub())
         {
-            free(existing_policy_server);
-            if (GetAmPolicyHub())
-            {
-                MarkAsPolicyServer(ctx);
-            }
+            MarkAsPolicyServer(ctx);
         }
     }
 

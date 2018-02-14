@@ -31,7 +31,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp);
 PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp);
 PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp);
-bool KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const const Promise *pp, PromiseResult *result);
+bool KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Promise *pp, PromiseResult *result);
 bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, const Promise *pp, PromiseResult *result);
 int ExpandLinks(char *dest, const char *from, int level);
 

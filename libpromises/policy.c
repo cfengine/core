@@ -44,10 +44,6 @@
 #include <logging.h>
 #include <expand.h>
 
-
-static const char *const POLICY_ERROR_POLICY_NOT_RUNNABLE =
-    "Policy is not runnable (does not contain a body common control)";
-
 static const char *const POLICY_ERROR_BUNDLE_NAME_RESERVED =
     "Use of a reserved container name as a bundle name \"%s\"";
 static const char *const POLICY_ERROR_BUNDLE_REDEFINITION =

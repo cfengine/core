@@ -1697,6 +1697,7 @@ AC_CONFIG_FILES([Makefile
     cf-upgrade/Makefile
     cf-runagent/Makefile
     cf-serverd/Makefile
+    cf-testd/Makefile
     cf-net/Makefile
     misc/Makefile
     ext/Makefile

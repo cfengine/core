@@ -40,6 +40,7 @@ typedef void (*ServerEntryPointFunction)(EvalContext *ctx, char *ipaddr, Connect
 ENTERPRISE_FUNC_1ARG_DECLARE(bool, ReceiveCollectCall, ServerConnectionState *, conn);
 
 ENTERPRISE_FUNC_3ARG_DECLARE(bool, ReturnQueryData, ServerConnectionState *, conn, char *, menu, int, encrypt);
+ENTERPRISE_FUNC_2ARG_DECLARE(bool, CFTestD_ReturnQueryData, ServerConnectionState *, conn, char *, menu);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, KeepReportDataSelectAccessPromise,
                                   const Promise *, pp);

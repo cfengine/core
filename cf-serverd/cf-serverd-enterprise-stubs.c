@@ -62,6 +62,11 @@ ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED ServerConnect
     return false;
 }
 
+ENTERPRISE_FUNC_2ARG_DEFINE_STUB(bool, CFTestD_ReturnQueryData, ARG_UNUSED ServerConnectionState *, conn, ARG_UNUSED char *, menu)
+{
+    return false;
+}
+
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, KeepReportDataSelectAccessPromise,
                                       ARG_UNUSED const Promise *, pp)
 {

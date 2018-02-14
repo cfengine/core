@@ -786,7 +786,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size,
         /* If the first thing we get is an error message, break. */
 
         if (n_wrote_total == 0
-            && strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR) == 0))
+            && strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0)
         {
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied",
                 conn->this_server, source);

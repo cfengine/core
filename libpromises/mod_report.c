@@ -36,7 +36,7 @@ static const ConstraintSyntax printfile_constraints[] =
 
 static const BodySyntax printfile_body = BodySyntaxNew("printfile", printfile_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
-const const ConstraintSyntax CF_REPORT_BODIES[] =
+const ConstraintSyntax CF_REPORT_BODIES[] =
 {
     ConstraintSyntaxNewString("friend_pattern", "", "Regular expression to keep selected hosts from the friends report list", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewReal("intermittency", "0,1", "Real number threshold [0,1] of intermittency about current peers, report above. Default value: false", SYNTAX_STATUS_NORMAL),

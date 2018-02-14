@@ -23,7 +23,7 @@ then
     # On osx the default gcc is actually LLVM
     export CC=gcc-7
     NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb/  --with-openssl=/usr/local/opt/openssl
+    ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb  --with-openssl=/usr/local/opt/openssl
 else
     NO_CONFIGURE=1 ./autogen.sh
     ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script
@@ -39,7 +39,7 @@ then
     make CFLAGS=-Werror
 elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
-    make CFLAGS=-Werror  &&
+    make CFLAGS="-Werror -Wno-pointer-sign"  &&
     make -C tests/unit check
     make -C tests/load check
     exit

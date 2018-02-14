@@ -39,6 +39,7 @@ SUBDIRS = libcompat \
 	cf-promises \
 	cf-runagent \
 	cf-serverd \
+	cf-testd \
 	cf-upgrade \
 	cf-net \
 	misc \

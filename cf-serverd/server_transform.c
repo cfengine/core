@@ -687,6 +687,28 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
         return VerifyClassPromise(ctx, pp, NULL);
     }
 
+    /* Warn if promise locking was used with a promise that doesn't support it.
+     * That applies to both of the below promise types while 'vars' and
+     * 'classes' handle this on their own. */
+    int ifelapsed = PromiseGetConstraintAsInt(ctx, "ifelapsed", pp);
+    if (ifelapsed != CF_NOINT)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "ifelapsed attribute specified in action body for %s promise '%s',"
+            " but %s promises do not support promise locking",
+            pp->parent_promise_type->name, pp->promiser,
+            pp->parent_promise_type->name);
+    }
+    int expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
+    if (expireafter != CF_NOINT)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "expireafter attribute specified in action body for %s promise '%s',"
+            " but %s promises do not support promise locking",
+            pp->parent_promise_type->name, pp->promiser,
+            pp->parent_promise_type->name);
+    }
+
     if (strcmp(pp->parent_promise_type->name, "access") == 0)
     {
         const char *resource_type =

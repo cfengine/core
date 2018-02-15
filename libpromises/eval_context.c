@@ -130,7 +130,7 @@ struct EvalContext_
 
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
-    
+
     /* select_end_match_eof context*/
     bool select_end_match_eof;
 
@@ -180,7 +180,7 @@ void AddPackageModuleToContext(const EvalContext *ctx, PackageModuleBody *pm)
     /* First check if the body is there added from previous pre-evaluation 
      * iteration. If it is there update it as we can have new expanded variables. */
     ssize_t pm_seq_index;
-    if ((pm_seq_index = SeqIndexOf(ctx->package_promise_context->package_modules_bodies, 
+    if ((pm_seq_index = SeqIndexOf(ctx->package_promise_context->package_modules_bodies,
             pm->name, PackageManagerSeqCompare)) != -1)
     {
         SeqRemove(ctx->package_promise_context->package_modules_bodies, pm_seq_index);
@@ -602,7 +602,7 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
     ClassRef ref = IDRefQualify(ctx, name);
     char *key = ClassRefToString(ref.ns, ref.name);
     ClassRefDestroy(ref);
-    
+
     size_t tags_length = strlen(tags) + 1;
     size_t new_info_size = sizeof(PersistentClassInfo) + tags_length;
 
@@ -882,13 +882,13 @@ void FreePackageManager(PackageModuleBody *manager)
 static
 PackagePromiseContext *PackagePromiseConfigNew()
 {
-    PackagePromiseContext *package_promise_defaults = 
+    PackagePromiseContext *package_promise_defaults =
             xmalloc(sizeof(PackagePromiseContext));
     package_promise_defaults->control_package_module = NULL;
     package_promise_defaults->control_package_inventory = NULL;
     package_promise_defaults->package_modules_bodies =
             SeqNew(5, FreePackageManager);
-    
+
     return package_promise_defaults;
 }
 
@@ -2019,11 +2019,14 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
         break;
 
     case STACK_FRAME_TYPE_BUNDLE:
-        VarRefQualify(ref, last_frame->data.bundle.owner->ns, last_frame->data.bundle.owner->name);
+        VarRefQualify(ref,
+                      last_frame->data.bundle.owner->ns,
+                      last_frame->data.bundle.owner->name);
         break;
 
     case STACK_FRAME_TYPE_PROMISE:
     case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        // Allow special "this" variables to work when used without "this"
         VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
         break;
     }
@@ -2081,6 +2084,7 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
 {
     assert(ref->lval);
 
+    // RECURSION! Try to qualify non-scoped vars in a promise to "this" scope
     if (!VarRefIsQualified(ref))
     {
         VarRef *qref = VarRefCopy(ref);

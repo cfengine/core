@@ -1339,7 +1339,7 @@ void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *o
     EvalContextStackPushFrame(ctx, frame);
 }
 
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 {
     assert(LastStackFrame(ctx, 0));
     assert(LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_TYPE);
@@ -1350,7 +1350,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
 
     EvalContextStackPushFrame(ctx, frame);
 
-    // Ignore copy_bundle_context and create an empty table
+    // create an empty table
     frame->data.promise.vars = VariableTableNew();
 
     if (PromiseGetBundle(owner)->source_path)

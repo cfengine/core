@@ -1,0 +1,101 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+
+      "$(G.testfile).expected"
+      copy_from => local_cp("$(this.promise_filename).finish");
+
+}
+
+bundle agent test
+{
+  vars:
+    "var"      slist => { "var in test" };
+    "var_test" slist => { "var_test in test" };
+
+  files:
+    "$(G.testfile).actual"
+    create => "true",
+    edit_line => test_edit_line("testline");
+
+  methods: 
+    "any" usebundle => inter;
+}
+
+bundle agent inter
+{
+  vars:
+    "var" slist => { "var in inter" };
+    "k" slist => { "k in inter" };
+
+  methods:
+    "any1" usebundle => final("test1", @(this.var_test));
+    "any2" usebundle => final("test2", @(var_test));
+    "any3" usebundle => final("test3", @(this.var));
+    "any4" usebundle => final("test4", @(var));
+    "any5" usebundle => final("test5", @(this.k));
+    "any6" usebundle => final("test6", @(k));
+    "any7" usebundle => final("test7", @(this.bundle));
+    "any8" usebundle => final("test8", @(bundle));
+}
+
+bundle edit_line test_edit_line(line)
+{
+
+  vars:
+    "sectionName" string => "test";
+
+  insert_lines:
+      "[$(sectionName)]
+[end]"
+      location => start;
+
+
+
+      "${line}"
+        select_region => INI_section(escape("$(sectionName)"));
+
+}
+
+bundle agent final(name, param)
+{
+  vars:
+    "${name}" string => "${param}";
+}
+
+bundle agent check
+{
+  methods:
+    "check"
+       usebundle => dcs_if_diff( "$(G.testfile).actual", "$(G.testfile).expected",
+                                 "pass", "_fail");
+
+      # Fail the test if any of the files fail.
+      "fail"
+        usebundle => dcs_fail( $(this.promise_filename) ),
+        ifvarclass => "_fail";
+
+    pass::
+      "pass"
+        usebundle => dcs_pass( $(this.promise_filename) );
+
+  classes:
+
+    "_fail" expression => strcmp("var_test in test", "${final.test1}");
+    "_fail" expression => strcmp("var_test in test", "${final.test2}");
+    "_fail" not => strcmp("var in inter", "${final.test3}");
+    "_fail" not => strcmp("var in inter", "${final.test4}");
+    "_fail" expression => strcmp("k in inter", "${final.test5}");
+    "_fail" not => strcmp("k in inter", "${final.test6}");
+    "_fail" expression => strcmp("inter", "${final.test7}");
+    "_fail" expression => strcmp("inter", "${final.test8}");
+}
+
+

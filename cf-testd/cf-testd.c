@@ -414,6 +414,9 @@ int CFTestD_StartServer()
     }
 
     int sd = InitServer(10);
+
+    MakeSignalPipe();
+
     int selected = 0;
     while (selected != -1)
     {

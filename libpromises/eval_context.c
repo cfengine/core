@@ -52,6 +52,15 @@
 #include <conversion.h>                               /* DataTypeIsIterable */
 
 
+static const char *STACK_FRAME_TYPE_STR[STACK_FRAME_TYPE_MAX] = {
+    "BUNDLE",
+    "BODY",
+    "PROMISE_TYPE",
+    "PROMISE",
+    "PROMISE_ITERATION"
+};
+
+
 /**
    Define FuncCacheMap.
    Key:   an Rlist (which is linked list of Rvals)
@@ -1079,6 +1088,9 @@ Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx) {
 
         case STACK_FRAME_TYPE_PROMISE_TYPE:
             break;
+
+        default:
+            ProgrammingError("Unhandled stack frame type");
         }
     }
     return callers_promisers;
@@ -1126,6 +1138,9 @@ JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx) {
             JsonObjectAppendString(f, "type", "promise_type");
             JsonObjectAppendString(f, "promise_type", frame->data.promise_type.owner->name);
             break;
+
+        default:
+            ProgrammingError("Unhandled stack frame type");
         }
 
         JsonArrayAppendObject(callers, f);
@@ -1244,7 +1259,8 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
     assert(!frame->path);
     frame->path = EvalContextStackPath(ctx);
 
-    LogDebug(LOG_MOD_EVALCTX, "PUSHED FRAME (type %d)", frame->type);
+    LogDebug(LOG_MOD_EVALCTX, "PUSHED FRAME (type %s)",
+             STACK_FRAME_TYPE_STR[frame->type]);
 }
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
@@ -1465,7 +1481,8 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         }
     }
 
-    LogDebug(LOG_MOD_EVALCTX, "POPPED FRAME (type %d)", last_frame_type);
+    LogDebug(LOG_MOD_EVALCTX, "POPPED FRAME (type %s)",
+             STACK_FRAME_TYPE_STR[last_frame_type]);
 }
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
@@ -1798,6 +1815,9 @@ char *EvalContextStackPath(const EvalContext *ctx)
                               PromiseIteratorIndex(frame->data.promise_iteration.iter_ctx));
             }
             break;
+
+            default:
+                ProgrammingError("Unhandled stack frame type");
         }
     }
 
@@ -2029,6 +2049,9 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
         // Allow special "this" variables to work when used without "this"
         VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
         break;
+
+    default:
+        ProgrammingError("Unhandled stack frame type");
     }
 }
 

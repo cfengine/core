@@ -256,7 +256,7 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
      *    (including body inheritance). */
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
-    EvalContextStackPushPromiseFrame(ctx, pcopy, true);
+    EvalContextStackPushPromiseFrame(ctx, pcopy);
     PromiseIterator *iterctx = PromiseIteratorNew(pcopy);
 
     /* 2. Parse all strings (promiser-promisee-constraints), find all

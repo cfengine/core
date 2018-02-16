@@ -44,7 +44,8 @@ typedef enum
     STACK_FRAME_TYPE_BODY,
     STACK_FRAME_TYPE_PROMISE_TYPE,
     STACK_FRAME_TYPE_PROMISE,
-    STACK_FRAME_TYPE_PROMISE_ITERATION
+    STACK_FRAME_TYPE_PROMISE_ITERATION,
+    STACK_FRAME_TYPE_MAX
 } StackFrameType;
 
 typedef struct
@@ -140,7 +141,7 @@ Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, const Rlist *args);
 void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner);
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx);
 void EvalContextStackPopFrame(EvalContext *ctx);
 const char *EvalContextStackToString(EvalContext *ctx);

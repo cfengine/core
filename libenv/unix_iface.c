@@ -54,6 +54,8 @@
 #define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
+#define IPV6_PREFIX "ipv6_"
+
 #ifndef __MINGW32__
 
 # if defined(HAVE_STRUCT_SOCKADDR_SA_LEN) && !defined(__NetBSD__)
@@ -656,9 +658,13 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
                 if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
+                    char prefixed_ip[CF_MAX_IP_LEN + sizeof(IPV6_PREFIX)] = {0};
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
                     EvalContextAddIpAddress(ctx, ip->name, NULL); // interface unknown
                     EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
+
+                    xsnprintf(prefixed_ip, sizeof(prefixed_ip), IPV6_PREFIX"%s", ip->name);
+                    EvalContextClassPutHard(ctx, prefixed_ip, "inventory,attribute_name=none,source=agent");
                 }
             }
 

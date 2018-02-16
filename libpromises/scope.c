@@ -67,7 +67,11 @@ const char *SpecialScopeToString(SpecialScope scope)
 
 SpecialScope SpecialScopeFromString(const char *scope)
 {
-    if (strcmp("const", scope) == 0)
+    if (scope == NULL)
+    {
+        return SPECIAL_SCOPE_NONE;
+    }
+    else if (strcmp("const", scope) == 0)
     {
         return SPECIAL_SCOPE_CONST;
     }
@@ -99,10 +103,10 @@ SpecialScope SpecialScopeFromString(const char *scope)
     {
         return SPECIAL_SCOPE_BODY;
     }
-    else
-    {
-        return SPECIAL_SCOPE_NONE;
-    }
+
+    /* All other scopes fall here, for example all bundle names. It means that
+     * scope was not special. */
+    return SPECIAL_SCOPE_NONE;
 }
 
 void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments)

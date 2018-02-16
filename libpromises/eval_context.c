@@ -52,6 +52,15 @@
 #include <conversion.h>                               /* DataTypeIsIterable */
 
 
+static const char *STACK_FRAME_TYPE_STR[STACK_FRAME_TYPE_MAX] = {
+    "BUNDLE",
+    "BODY",
+    "PROMISE_TYPE",
+    "PROMISE",
+    "PROMISE_ITERATION"
+};
+
+
 /**
    Define FuncCacheMap.
    Key:   an Rlist (which is linked list of Rvals)
@@ -130,7 +139,7 @@ struct EvalContext_
 
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
-    
+
     /* select_end_match_eof context*/
     bool select_end_match_eof;
 
@@ -180,7 +189,7 @@ void AddPackageModuleToContext(const EvalContext *ctx, PackageModuleBody *pm)
     /* First check if the body is there added from previous pre-evaluation 
      * iteration. If it is there update it as we can have new expanded variables. */
     ssize_t pm_seq_index;
-    if ((pm_seq_index = SeqIndexOf(ctx->package_promise_context->package_modules_bodies, 
+    if ((pm_seq_index = SeqIndexOf(ctx->package_promise_context->package_modules_bodies,
             pm->name, PackageManagerSeqCompare)) != -1)
     {
         SeqRemove(ctx->package_promise_context->package_modules_bodies, pm_seq_index);
@@ -602,7 +611,7 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
     ClassRef ref = IDRefQualify(ctx, name);
     char *key = ClassRefToString(ref.ns, ref.name);
     ClassRefDestroy(ref);
-    
+
     size_t tags_length = strlen(tags) + 1;
     size_t new_info_size = sizeof(PersistentClassInfo) + tags_length;
 
@@ -882,13 +891,13 @@ void FreePackageManager(PackageModuleBody *manager)
 static
 PackagePromiseContext *PackagePromiseConfigNew()
 {
-    PackagePromiseContext *package_promise_defaults = 
+    PackagePromiseContext *package_promise_defaults =
             xmalloc(sizeof(PackagePromiseContext));
     package_promise_defaults->control_package_module = NULL;
     package_promise_defaults->control_package_inventory = NULL;
     package_promise_defaults->package_modules_bodies =
             SeqNew(5, FreePackageManager);
-    
+
     return package_promise_defaults;
 }
 
@@ -1079,6 +1088,9 @@ Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx) {
 
         case STACK_FRAME_TYPE_PROMISE_TYPE:
             break;
+
+        default:
+            ProgrammingError("Unhandled stack frame type");
         }
     }
     return callers_promisers;
@@ -1126,6 +1138,9 @@ JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx) {
             JsonObjectAppendString(f, "type", "promise_type");
             JsonObjectAppendString(f, "promise_type", frame->data.promise_type.owner->name);
             break;
+
+        default:
+            ProgrammingError("Unhandled stack frame type");
         }
 
         JsonArrayAppendObject(callers, f);
@@ -1244,7 +1259,8 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
     assert(!frame->path);
     frame->path = EvalContextStackPath(ctx);
 
-    LogDebug(LOG_MOD_EVALCTX, "PUSHED FRAME (type %d)", frame->type);
+    LogDebug(LOG_MOD_EVALCTX, "PUSHED FRAME (type %s)",
+             STACK_FRAME_TYPE_STR[frame->type]);
 }
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
@@ -1323,7 +1339,7 @@ void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *o
     EvalContextStackPushFrame(ctx, frame);
 }
 
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 {
     assert(LastStackFrame(ctx, 0));
     assert(LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_TYPE);
@@ -1334,16 +1350,8 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
 
     EvalContextStackPushFrame(ctx, frame);
 
-    if (copy_bundle_context)
-    {
-        frame->data.promise.vars = VariableTableCopyLocalized(ctx->global_variables,
-                                                              EvalContextStackCurrentBundle(ctx)->ns,
-                                                              EvalContextStackCurrentBundle(ctx)->name);
-    }
-    else
-    {
-        frame->data.promise.vars = VariableTableNew();
-    }
+    // create an empty table
+    frame->data.promise.vars = VariableTableNew();
 
     if (PromiseGetBundle(owner)->source_path)
     {
@@ -1465,7 +1473,8 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         }
     }
 
-    LogDebug(LOG_MOD_EVALCTX, "POPPED FRAME (type %d)", last_frame_type);
+    LogDebug(LOG_MOD_EVALCTX, "POPPED FRAME (type %s)",
+             STACK_FRAME_TYPE_STR[last_frame_type]);
 }
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
@@ -1798,6 +1807,9 @@ char *EvalContextStackPath(const EvalContext *ctx)
                               PromiseIteratorIndex(frame->data.promise_iteration.iter_ctx));
             }
             break;
+
+            default:
+                ProgrammingError("Unhandled stack frame type");
         }
     }
 
@@ -1934,6 +1946,8 @@ static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
             return frame ? frame->data.body.vars : NULL;
         }
 
+    // "this" variables can be in local or global variable table (when this is used for non-special
+    // varables), so return local as VariableResolve will try global table anyway.
     case SPECIAL_SCOPE_THIS:
         {
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
@@ -2019,13 +2033,19 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
         break;
 
     case STACK_FRAME_TYPE_BUNDLE:
-        VarRefQualify(ref, last_frame->data.bundle.owner->ns, last_frame->data.bundle.owner->name);
+        VarRefQualify(ref,
+                      last_frame->data.bundle.owner->ns,
+                      last_frame->data.bundle.owner->name);
         break;
 
     case STACK_FRAME_TYPE_PROMISE:
     case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        // Allow special "this" variables to work when used without "this"
         VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
         break;
+
+    default:
+        ProgrammingError("Unhandled stack frame type");
     }
 }
 
@@ -2068,32 +2088,15 @@ bool EvalContextVariablePut(EvalContext *ctx,
     return true;
 }
 
-/*
- * Looks up a variable in the the context of the 'current scope'. This basically
- * means that an unqualified reference will be looked up in the context of the top
- * stack frame. Note that when evaluating a promise, this will qualify a reference
- * to the 'this' scope.
- *
- * Ideally, this function should resolve a variable by walking down the stack, but
- * this is pending rework in variable iteration.
- */
-static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
+static Variable *VariableResolve2(const EvalContext *ctx, const VarRef *ref)
 {
-    assert(ref->lval);
-
-    if (!VarRefIsQualified(ref))
-    {
-        VarRef *qref = VarRefCopy(ref);
-        VarRefStackQualify(ctx, qref);
-        Variable *ret = VariableResolve(ctx, qref);
-        VarRefDestroy(qref);
-        return ret;
-    }
-
+    // Get the variable table associated to the scope
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
+
+    Variable *var;
     if (table)
     {
-        Variable *var = VariableTableGet(table, ref);
+        var = VariableTableGet(table, ref);
         if (var)
         {
             return var;
@@ -2111,6 +2114,67 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
         }
     }
 
+    return NULL;
+}
+
+/*
+ * Looks up a variable in the the context of the 'current scope'. This
+ * basically means that an unqualified reference will be looked up in the
+ * context of the top stack frame.
+ *
+ * Note that when evaluating a promise, this
+ * will qualify a reference to 'this' scope and when evaluating a body, it
+ * will qualify a reference to 'body' scope.
+ */
+static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
+{
+    assert(ref->lval);
+
+    /* We will make a first lookup that works in almost all cases: will look
+     * for local or global variables, depending of the current scope. */
+
+    Variable *var1 = VariableResolve2(ctx, ref);
+    if (var1)
+    {
+        return var1;
+    }
+
+    /* Try to qualify non-scoped vars to the scope:
+       "this" for promises, "body" for bodies, current bundle for bundles. */
+    VarRef *scoped_ref = NULL;
+    if (!VarRefIsQualified(ref))
+    {
+        scoped_ref = VarRefCopy(ref);
+        VarRefStackQualify(ctx, scoped_ref);
+        Variable *var2 = VariableResolve2(ctx, scoped_ref);
+        if (var2)
+        {
+            VarRefDestroy(scoped_ref);
+            return var2;
+        }
+        ref = scoped_ref;              /* continue with the scoped variable */
+    }
+
+    const Bundle *last_bundle = EvalContextStackCurrentBundle(ctx);
+
+    /* If we are in a promise or a body, the variable might be coming from the
+     * last bundle. So try a last lookup with "this" or "body" special scopes
+     * replaced with the last bundle. */
+
+    if ((SpecialScopeFromString(ref->scope) == SPECIAL_SCOPE_THIS  ||
+         SpecialScopeFromString(ref->scope) == SPECIAL_SCOPE_BODY)
+        &&  last_bundle != NULL)
+    {
+        VarRef *ref2 = VarRefCopy(ref);
+        VarRefQualify(ref2, last_bundle->ns, last_bundle->name);
+        Variable *var3 = VariableResolve2(ctx, ref2);
+
+        VarRefDestroy(scoped_ref);
+        VarRefDestroy(ref2);
+        return var3;
+    }
+
+    VarRefDestroy(scoped_ref);
     return NULL;
 }
 
@@ -2147,27 +2211,6 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
                 *type_out = var->type;
             }
             return var->rval.item;
-        }
-    }
-    else if (!VarRefIsQualified(ref))
-    {
-        /*
-         * FALLBACK: Because VariableResolve currently does not walk the stack
-         * (rather, it looks at only the top frame), we do an explicit retry
-         * here to qualify an unqualified reference to the current bundle.
-         *
-         * This is overly complicated, and will go away as soon as
-         * VariableResolve can walk the stack (which is pending rework in
-         * variable iteration).
-         */
-        const Bundle *bp = EvalContextStackCurrentBundle(ctx);
-        if (bp)
-        {
-            VarRef *qref = VarRefCopy(ref);
-            VarRefQualify(qref, bp->ns, bp->name);
-            const void *ret = EvalContextVariableGet(ctx, qref, type_out);
-            VarRefDestroy(qref);
-            return ret;
         }
     }
 

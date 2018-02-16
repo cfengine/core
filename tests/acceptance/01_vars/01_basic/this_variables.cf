@@ -1,0 +1,63 @@
+# This was created because of a bug while working on purging variable table
+# copying for CFE-2524. The issue was that variables were not found when
+# looked up deep inside the INI_SECTION body.
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testfile).expected"
+        copy_from => local_cp("$(this.promise_filename).finish");
+}
+
+bundle agent test
+{
+  vars:
+    "var"      slist => { "var in test" };
+    "var_test" slist => { "var_test in test" };
+
+  files:
+    "$(G.testfile).actual"
+    create => "true",
+    edit_line => test_edit_line("testline");
+}
+
+bundle edit_line test_edit_line(line)
+{
+
+  vars:
+    "sectionName" string => "test";
+
+  insert_lines:
+      "[$(sectionName)]
+[end]"
+        location => start;
+
+      "${line}"
+        select_region => INI_section(escape("$(sectionName)"));
+
+}
+
+bundle agent check
+{
+  methods:
+    "check"
+       usebundle => dcs_if_diff( "$(G.testfile).actual",
+                                 "$(G.testfile).expected",
+                                 "pass", "_fail");
+
+      # Fail the test if any of the files fail.
+      "fail"
+        usebundle => dcs_fail( $(this.promise_filename) ),
+        ifvarclass => "_fail";
+
+    pass::
+      "pass"
+        usebundle => dcs_pass( $(this.promise_filename) );
+}

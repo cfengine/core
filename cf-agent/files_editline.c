@@ -679,12 +679,12 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised line insertion '%s' could not select an edit region in '%s'", pp->promiser,
-             edcontext->filename);
+             "The promised line insertion '%s' could not select an edit region in '%s'",
+             pp->promiser, edcontext->filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
     }
-    
+
     if (!end_ptr && a.region.select_end && !a.region.select_end_match_eof)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
@@ -744,15 +744,16 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 /* Level                                                                   */
 /***************************************************************************/
 
-static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a,
-                        EditContext *edcontext)
+static int SelectRegion(EvalContext *ctx, Item *start,
+                        Item **begin_ptr, Item **end_ptr,
+                        Attributes a, EditContext *edcontext)
 /*
 
 This should provide pointers to the first and last line of text that include the
 delimiters, since we need to include those in case they are being deleted, etc.
 It returns true if a match was identified, else false.
 
-If no such region matches, begin_ptr and end_ptr should point to NULL 
+If no such region matches, begin_ptr and end_ptr should point to NULL
 
 */
 {

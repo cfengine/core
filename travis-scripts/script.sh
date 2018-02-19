@@ -60,7 +60,8 @@ fi
   # WARNING: the following job runs the selected tests as root!
 if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network_etc ]
 then
-    ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe
+    ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe  \
+        &&  sudo chmod -R go+r  ../../
     exit
 fi
 

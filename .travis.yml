@@ -26,7 +26,7 @@ matrix:
       env: JOB_TYPE=compile_and_unit_test
     - os: linux
       sudo: required
-      env: JOB_TYPE=compile_and_unit_test
+      env: JOB_TYPE=compile_and_unit_test COVERAGE=no
       compiler: clang
     - os: linux
       sudo: required
@@ -52,6 +52,8 @@ before_install:
   - ./travis-scripts/before_install.sh
 
 script: ./travis-scripts/script.sh
+
+after_success: ./travis-scripts/after_success.sh
 
 before_deploy: ./travis-scripts/before_deploy.sh
 

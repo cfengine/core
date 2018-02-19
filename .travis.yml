@@ -53,6 +53,8 @@ before_install:
 
 script: ./travis-scripts/script.sh
 
+after_success: ./travis-scripts/after_success.sh
+
 before_deploy: ./travis-scripts/before_deploy.sh
 
 # We deploy when setting tags only, which basically never happens

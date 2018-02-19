@@ -26,7 +26,8 @@ then
     ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb  --with-openssl=/usr/local/opt/openssl
 else
     NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script --enable-coverage
+    ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script \
+        `[ "x$COVERAGE" != xno ] && echo --enable-coverage`
 fi
 
 make dist

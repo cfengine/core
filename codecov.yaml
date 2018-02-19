@@ -5,26 +5,26 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "70...100"
+  range: 50..75
 
   status:
     project: yes
     patch: yes
-    changes: no
+    changes: yes
 
-parsers:
-  gcov:
-    branch_detection:
-      conditional: yes
-      loop: yes
-      method: no
-      macro: no
+#parsers:
+#  gcov:
+#    branch_detection:
+#      conditional: yes
+#      loop: yes
+#      method: no
+#      macro: no
 
-comment:
-  layout: "reach, diff, flags, files, footer"
-  behavior: default
-  require_changes: no
+#comment:
+#  layout: "reach, diff, flags, files, footer"
+#  behavior: default
+#  require_changes: no
 
 # Ignore source files connected to tests.
 ignore:
-  - 'tests/*'
+  - "tests/"

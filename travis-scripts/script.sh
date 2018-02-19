@@ -26,7 +26,7 @@ then
     ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb  --with-openssl=/usr/local/opt/openssl
 else
     NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script
+    ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script --enable-coverage
 fi
 
 make dist
@@ -42,6 +42,7 @@ then
     make CFLAGS="-Werror -Wno-pointer-sign"  &&
     make -C tests/unit check
     make -C tests/load check
+    bash <(curl -s https://codecov.io/bash) -F $JOB_TYPE -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
     exit
 else
     make
@@ -53,6 +54,7 @@ chmod -R go-w .
 if [ "$JOB_TYPE" = acceptance_tests_common ]
 then
     ./testall --tests=common
+    bash <(curl -s https://codecov.io/bash) -F $JOB_TYPE -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
     exit
 fi
 
@@ -60,6 +62,7 @@ fi
 if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network_etc ]
 then
     ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe
+    bash <(curl -s https://codecov.io/bash) -F $JOB_TYPE -f '!.*test.c.gcov' -f '!.*test_lib.c.gcov' -g 'tests';
     exit
 fi
 

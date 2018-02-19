@@ -1,0 +1,21 @@
+codecov:
+  notify:
+    require_ci_to_pass: yes
+
+coverage:
+  precision: 2
+  round: down
+  range: 50..75
+
+  status:
+    project: yes
+    patch: yes
+    changes: yes
+
+comment:
+  layout: "header, diff, tree, files, changes, sunburst, reach, flags, footer"
+  behavior: default
+
+# Ignore source files connected to tests.
+ignore:
+  - "tests/"

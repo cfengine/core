@@ -12,18 +12,9 @@ coverage:
     patch: yes
     changes: yes
 
-#parsers:
-#  gcov:
-#    branch_detection:
-#      conditional: yes
-#      loop: yes
-#      method: no
-#      macro: no
-
-#comment:
-#  layout: "reach, diff, flags, files, footer"
-#  behavior: default
-#  require_changes: no
+comment:
+  layout: "header, diff, tree, files, changes, sunburst, reach, flags, footer"
+  behavior: default
 
 # Ignore source files connected to tests.
 ignore:

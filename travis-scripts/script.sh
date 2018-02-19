@@ -57,7 +57,8 @@ then
     exit
 fi
 
-  # WARNING: the following job runs the selected tests as root!
+# WARNING: the following job runs the selected tests as root!
+# We are chmod'ing in the end so that code coverage data is readable from user
 if [ "$JOB_TYPE" = acceptance_tests_unsafe_serial_network_etc ]
 then
     ./testall --gainroot=sudo --tests=timed,slow,errorexit,libxml2,libcurl,serial,network,unsafe  \

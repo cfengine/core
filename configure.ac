@@ -496,6 +496,7 @@ dnl  define is not generated!  Or use AC_SEARCH_LIBS for a better
 dnl  interface.
 
 dnl libacl
+dnl It is enough for any of the header files [acl.h sys/acl.h acl/libacl.h] to be present
 
 AC_ARG_WITH([libacl],
     [AS_HELP_STRING([--with-libacl[[=PATH]]], [Specify libacl path])], [], [with_libacl=check])
@@ -507,8 +508,11 @@ then
       [],
       [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl library); fi])
     AC_CHECK_HEADERS([acl.h sys/acl.h acl/libacl.h],
-      [libacl_header_found=yes],
-      [if test "x$with_libacl" != xcheck; then AC_MSG_ERROR(Cannot find libacl header files); fi])
+      [libacl_header_found=yes])
+    if test "x$libacl_header_found" != "xyes" && test "x$with_libacl" != xcheck;
+    then
+      AC_MSG_ERROR(Cannot find libacl library headers);
+    fi
   ])
 fi
 

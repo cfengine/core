@@ -69,17 +69,22 @@ function testit(){
         logfile="$logdir/$logfilename"
         ./server.sh -V >> $logfile.log
         ./agent.sh -V >> $logfile.log
+
         # delete dirs left here from previous testing round, if any.
         # We keep deleting them until they disappear - they can be kept back by
         # still-running process from previous testing round.
-        while test -d /tmp/TESTDIR.cfengine
-	do
-            rm -rf /tmp/TESTDIR.cfengine
-        done
-        while test -d work_here
+        for d in  /tmp/TESTDIR.cfengine  work_here
         do
-            rm -rf work_here
+            while test -d  "$d"
+            do
+                rm -rf "$d"  ||  (
+                    # Try to debug why dir failed to delete
+                    ps auxww  |  grep '[c]f-'
+                    ls -lR  "$d"
+                )
+            done
         done
+
         cp -a work_stub work_here
         # actually run the test
         ./agent.sh -Kf $file -D AUTO,debug_server >> $logfile.log

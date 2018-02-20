@@ -199,11 +199,6 @@ EXTRA_DIST   += $(check_SCRIPTS)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
-if AIX
-XFAIL_TESTS = evalfunction_test     # Redmine 6318
-XFAIL_TESTS += set_domainname_test  # Redmine 6317
-endif
-
 if MACOSX
 XFAIL_TESTS = set_domainname_test
 XFAIL_TESTS += evalfunction_test

@@ -38,7 +38,7 @@ matrix:
       env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
     - os: linux
       sudo: required
-      env: JOB_TYPE=serverd_multi_versions
+      env: JOB_TYPE=serverd_multi_versions COVERAGE=no
     - os: osx
       env: JOB_TYPE=compile_only
       sudo: false

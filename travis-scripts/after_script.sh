@@ -12,7 +12,7 @@ mv serverd-multi-versions-logs  artifacts/ 2>/dev/null
 
 VERSION=$(expr "$DIST_TARBALL" : "cfengine-\(.*\).tar.gz")
 VERSION=${VERSION:-master}
-test "$TRAVIS_PULL_REQUEST" == "false" && BRANCH_OR_PULL_REQUEST=$TRAVIS_BRANCH || BRANCH_OR_PULL_REQUEST=PULL_$TRAVIS_PULL_REQUEST
+test "$TRAVIS_PULL_REQUEST" = "false" && BRANCH_OR_PULL_REQUEST=$TRAVIS_BRANCH || BRANCH_OR_PULL_REQUEST=PULL_$TRAVIS_PULL_REQUEST
 
 filename=cfengine-$VERSION-$BRANCH_OR_PULL_REQUEST-$JOB_TYPE.artifacts.zip
 zip -q -r $filename artifacts/

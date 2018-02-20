@@ -1,13 +1,8 @@
-body file control
+body common control
 {
-    inputs => { "../../default.cf.sub" };
-}
-
-bundle agent main
-{
-  methods:
-    "Default DCS Bundlesequence"
-      usebundle => default("$(this.promise_filename)");
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
 }
 
 bundle agent test

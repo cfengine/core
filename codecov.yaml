@@ -13,7 +13,7 @@ coverage:
     changes: yes
 
 comment:
-  layout: "header, diff, tree, files, changes, sunburst, reach, flags, footer"
+  layout: "header, diff, tree, changes, reach, footer"
   behavior: default
 
 # Ignore source files connected to tests.

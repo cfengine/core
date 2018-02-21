@@ -1,0 +1,74 @@
+#######################################################
+#
+# Test that filesexist() can check for presence of files containing hashes
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "test_files" slist => { "example##4567", "example##123" };
+
+  files:
+      "$(G.testdir)/$(test_files)"
+        create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2744" }
+        string => "Test that filesexist can verify files contianing hashes exist".
+
+  classes:
+    # This should always be true.
+    # We check that the files that we found exist.
+
+    "found_expected_files_with_filesexist"
+      expression => filesexist( findfiles( "$(G.testdir)/example##*") ),
+      scope => "namespace";
+
+    # Expecting to have classes:
+    # found_example__4567
+    # found_example__123
+
+    "found_$(init.test_files)"
+      expression => fileexists( $(init.test_files) ),
+      scope => "namespace";
+}
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "pass_workaround" and => { "found_example__4567", "found_example_123" };
+
+      "pass_filesexist" expression => "found_expected_files_with_filesexist";
+
+  methods:
+    DEBUG|EXTRA::
+      "Test files: $(init.test_files)";
+
+      "Workaround checking each file with fileexists not working as expected"
+        if => not( "pass_workaround" );
+
+      "filesexist() cannot validate files containing '#' not working as expected"
+        if => not( "pass_filesexist" );
+
+    pass_workaround.pass_filesexist::
+      "$(this.promise_filename) Pass";
+
+    !pass_workaround|!pass_filesexist::
+      "$(this.promise_filename) FAIL";
+}

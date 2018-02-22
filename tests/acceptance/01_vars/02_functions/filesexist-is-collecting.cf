@@ -1,0 +1,80 @@
+#######################################################
+#
+# Test that filesexist() can check for presence of files containing hashes
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "test_files" slist => { "example4567", "example123" };
+
+  files:
+      "$(G.testdir)/$(test_files)"
+        create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2744" }
+        string => "Test that filesexist works as a collecting function";
+
+  classes:
+      "filesexist_slist_identifier_ok"
+        expression => filesexist( "init.test_files" ),
+        scope => "namespace";
+
+      "filesexist_slist_ref_ok"
+        expression => filesexist( @(init.test_files) ),
+        scope => "namespace";
+
+      "filesexist_findfiles_ok"
+        expression => filesexist( findfiles( "$(G.testdir)/example*" ) ),
+        scope => "namespace";
+
+      "filesexist_json_array_ok"
+        expression => filesexist( '[ "example4567", "example123" ]' ),
+        scope => "namespace";
+}
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => { "filesexist_slist_identifier_ok", "filesexist_slist_ref_ok",
+                    "filesexist_findfiles_ok", "filesexist_json_array_ok" };
+
+  reports:
+    DEBUG|EXTRA::
+      "Test files: $(init.test_files)";
+
+      "filesexist() doesn't work with an slist identifier"
+        if => not( "filesexist_slist_identifier_ok" );
+
+      "filesexist() doesn't work with an slist reference"
+        if => not( "filesexist_slist_ref_ok" );
+
+      "filesexist() doesn't work properly with a nested findfiles() call"
+        if => not( "filesexist_findfiles_ok" );
+
+      "filesexist() doesn't work with a JSON array"
+        if => not( "filesexist_json_array_ok" );
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

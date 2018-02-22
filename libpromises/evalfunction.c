@@ -6914,48 +6914,44 @@ static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx,
 
 static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    char naked[CF_MAXVARSIZE];
-    char *listvar = RlistScalarValue(finalargs);
+    bool allocated = false;
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
 
-    if (IsVarList(listvar))
-    {
-        GetNaked(naked, listvar);
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found", listvar);
-        return FnFailure();
-    }
-
-    VarRef *ref = VarRefParse(naked);
-    DataType input_list_type;
-    const Rlist *input_list = EvalContextVariableGet(ctx, ref, &input_list_type);
-    VarRefDestroy(ref);
-    if (input_list_type == CF_DATA_TYPE_NONE)
+    // we failed to produce a valid JsonElement, so give up
+    if (json == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function filesexist was promised a list called"
-            " '%s' but this was not found", listvar);
+            "Cannot produce valid JSON from the argument '%s' of the function '%s'",
+            fp->name, RlistScalarValueSafe(finalargs));
         return FnFailure();
     }
-    else if (DataTypeToRvalType(input_list_type) != RVAL_TYPE_LIST)
+    else if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function filesexist was promised a list called"
-            " '%s' but this variable is not a list", listvar);
+        Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' was not a data container or list",
+            fp->name, RlistScalarValueSafe(finalargs));
+        JsonDestroyMaybe(json, allocated);
         return FnFailure();
     }
 
-    for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
+    JsonIterator iter = JsonIteratorInit(json);
+    const JsonElement *el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true);
+
+    /* no elements mean 'false' should be returned, otherwise let's see if the files exist */
+    bool file_found = el != NULL;
+
+    while (file_found && (el != NULL))
     {
+        char *val = JsonPrimitiveToString(el);
         struct stat sb;
-        if (stat(RlistScalarValue(rp), &sb) == -1)
+        if (stat(val, &sb) == -1)
         {
-            return FnReturnContext(false);
+            file_found = false;
         }
+        el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true);
     }
 
-    return FnReturnContext(true);
+    JsonDestroyMaybe(json, allocated);
+    return FnReturnContext(file_found);
 }
 
 /*********************************************************************/
@@ -8058,7 +8054,7 @@ static const FnCallArg FILESTAT_DETAIL_ARGS[] =
 
 static const FnCallArg FILESEXIST_ARGS[] =
 {
-    {CF_NAKEDLRANGE, CF_DATA_TYPE_STRING, "CFEngine list identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -8885,7 +8881,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("fileexists", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filesexist", CF_DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filesize", CF_DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filestat", CF_DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file",

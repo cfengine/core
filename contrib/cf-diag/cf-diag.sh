@@ -53,9 +53,22 @@ trap 'printf "1..%d\n" "$test_number"' EXIT
 # I recommend custom checks be added only at the end.
 # Skip ahead to CUSTOM TESTS.
 
-# Show host key (digest)
-printf '# '
-cf-key -p /var/cfengine/ppkeys/localhost.pub 2>/dev/null || echo SHA not available
+desc="Executing user has valid ppkey"
+if ! [ $(id -u) = 0 ]; then
+    pubkeyfile="$HOME/.cfagent/ppkeys/localhost.pub"
+else
+    pubkeyfile="/var/cfengine/ppkeys/localhost.pub"
+fi
+pubkeysha=$(cf-key --print-digest $pubkeyfile)
+if [ "$?" = 0 ]; then
+    succeed "$desc"
+    # Show host key (digest) and source
+    printf "# $pubkeysha\n"
+    printf "# from $pubkeyfile\n"
+else
+    fail "$desc"
+    printf "# No public key hash available in $pubkeyfile\n"
+fi
 
 # VERSION CHECKS
 # makes use of 'ok_versions' defined at top of script

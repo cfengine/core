@@ -181,6 +181,8 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
         // Turn off the color again.
         fprintf(output_file, "\x1b[0m");
     }
+
+    fflush(stdout);
 }
 
 #if !defined(__MINGW32__)

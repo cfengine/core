@@ -1,0 +1,43 @@
+#######################################################
+#
+# Test randomint()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "nine_a" int => randomint(9,10);
+      "nine_b" int => randomint(9,9);
+      "nine_c" int => randomint(10,9);
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok_a" expression => strcmp("$(test.nine_a)", "9");
+      "ok_b" expression => strcmp("$(test.nine_b)", "9");
+      "ok_c" expression => strcmp("$(test.nine_c)", "9");
+      "ok" and => {ok_a, ok_b, ok_c};
+
+  reports:
+    DEBUG::
+      "nine_a: $(test.nine_a)";
+      "nine_b: $(test.nine_b)";
+      "nine_c: $(test.nine_c)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

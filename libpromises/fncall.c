@@ -271,31 +271,23 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
 
     if (argnum != RlistLen(expargs) && !(fncall_type->options & FNCALL_OPTION_VARARG))
     {
-        fprintf(stderr, "Argument template mismatch handling function %s(", fp->name);
-        {
-            Writer *w = FileWriter(stderr);
-            RlistWrite(w, expargs);
-            FileWriterDetach(w);
-        }
-
-        fprintf(stderr, ")\n");
+        char *args_str = RlistToString(expargs);
+        Log(LOG_LEVEL_ERR, "Argument template mismatch handling function %s(%s)", fp->name, args_str);
+        free(args_str);
 
         rp = expargs;
         for (int i = 0; i < argnum; i++)
         {
-            printf("  arg[%d] range %s\t", i, fncall_type->args[i].pattern);
             if (rp != NULL)
             {
-                Writer *w = FileWriter(stdout);
-                RvalWrite(w, rp->val);
-                FileWriterDetach(w);
-                rp = rp->next;
+                char *rval_str = RvalToString(rp->val);
+                Log(LOG_LEVEL_ERR, "  arg[%d] range %s\t %s ", i, fncall_type->args[i].pattern, rval_str);
+                free(rval_str);
             }
             else
             {
-                printf(" ? ");
+                Log(LOG_LEVEL_ERR, "  arg[%d] range %s\t ? ", i, fncall_type->args[i].pattern);
             }
-            printf("\n");
         }
 
         FatalError(ctx, "Bad arguments");

@@ -36,6 +36,8 @@ bool cfnet_init(const char *tls_min_version, const char *ciphers);
 void cfnet_shut(void);
 bool cfnet_IsInitialized(void);
 void DetermineCfenginePort(void);
+bool SetCfenginePort(const char *port_str);
+
 /**
   @param err Set to 0 on success, -1 no server response, -2 authentication failure.
   */

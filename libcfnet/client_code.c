@@ -70,6 +70,9 @@ bool cfnet_IsInitialized()
     return TLSClientIsInitialized();
 }
 
+#define MAX_PORT_NUMBER 65535   /* 2^16 - 1 */
+
+/* These should only be modified by the two functions below! */
 int CFENGINE_PORT = 5308;
 char CFENGINE_PORT_STR[16] = "5308";
 
@@ -98,6 +101,32 @@ void DetermineCfenginePort()
             GetErrorStr());
     }
     Log(LOG_LEVEL_VERBOSE, "Default port for cfengine is %d", CFENGINE_PORT);
+}
+
+bool SetCfenginePort(const char *port_str)
+{
+    /* parse and store the new value (use the string representation of the
+     * parsed value because it may potentially be better/nicer/more
+     * canonical) */
+    long int port;
+    int ret = StringToLong(port_str, &port);
+    if (ret != 0)
+    {
+        LogStringToLongError(port_str, "CFENGINE_PORT", ret);
+        return false;
+    }
+    if (port > MAX_PORT_NUMBER)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid port number given, must be <= %d", MAX_PORT_NUMBER);
+        return false;
+    }
+
+    CFENGINE_PORT = port;
+    Log(LOG_LEVEL_VERBOSE, "Setting default port number to %d",
+        CFENGINE_PORT);
+    xsnprintf(CFENGINE_PORT_STR, sizeof(CFENGINE_PORT_STR),
+              "%d", CFENGINE_PORT);
+    return true;
 }
 
 /**

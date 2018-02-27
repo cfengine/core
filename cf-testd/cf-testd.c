@@ -68,6 +68,7 @@ static const struct option OPTIONS[] =
     {"file",      required_argument, 0, 'f'},
     {"help",      no_argument,       0, 'h'},
     {"inform",    no_argument,       0, 'I'},
+    {"port",      required_argument, 0, 'p'},
     {"timestamp", no_argument,       0, 'l'},
     {"verbose",   no_argument,       0, 'v'},
     {"version",   no_argument,       0, 'V'},
@@ -80,6 +81,7 @@ static const char *const HINTS[] =
     "Read report from file",
     "Print the help message",
     "Print basic information about what cf-testd does",
+    "Set the port cf-testd will listen on",
     "Log timestamps on each line of log output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
@@ -112,7 +114,7 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
     CFTestD_Config *config = CFTestD_ConfigInit();
     assert(config != NULL);
 
-    while ((c = getopt_long(argc, argv, "df:hIlvV", OPTIONS, NULL))
+    while ((c = getopt_long(argc, argv, "df:hIlp:vV", OPTIONS, NULL))
            != -1)
     {
         switch (c)
@@ -129,6 +131,16 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
         case 'I':
             LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
+        case 'p':
+            {
+                bool ret = SetCfenginePort(optarg);
+                if (!ret)
+                {
+                    /* the function call above logs an error for us (if any) */
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            }
         case 'l':
             LoggingEnableTimestamps(true);
             break;

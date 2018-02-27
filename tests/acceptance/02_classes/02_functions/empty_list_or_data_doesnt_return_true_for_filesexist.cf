@@ -7,12 +7,8 @@ body common control
 bundle agent test
 {
   meta:
-      "description"
+      "description" -> { "CFE-2631" }
         string => "Test that empty lists or data containers do not return true with filesexist. There are no files provided to verify!";
-
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-2631" };
 
   vars:
       "emptylist" slist => {};
@@ -23,7 +19,7 @@ bundle agent test
       expression => filesexist( @(emptylist) );
 
       "files_in_empty_data_exist"
-      expression => filesexist( @(emptdata) );
+      expression => filesexist( @(emptydata) );
 
       "pass"
         expression => "!(files_in_empty_list_exist|files_in_empty_data_exist)";

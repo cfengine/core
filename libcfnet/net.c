@@ -30,10 +30,17 @@
 #include <connection_info.h>
 #include <logging.h>
 #include <misc_lib.h>
+#include <cf3.defs.h>
 
 
 /* TODO remove libpromises dependency. */
-extern char BINDINTERFACE[];                  /* cf3globals.c, cf3.extern.h */
+extern char BINDINTERFACE[CF_MAXVARSIZE];                  /* cf3globals.c, cf3.extern.h */
+
+void SetBindInterface(const char *ip)
+{
+    strlcpy(BINDINTERFACE, ip, sizeof(BINDINTERFACE));
+    Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
+}
 
 
 /**

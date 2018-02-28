@@ -50,6 +50,7 @@
 #include <matching.h>      /* IsRegex */
 #include <net.h>
 #include <client_code.h>
+#include <cfnet.h>
 
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "server_access.h"
@@ -474,9 +475,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
             else if (IsControlBody(SERVER_CONTROL_BIND_TO_INTERFACE))
             {
-                strlcpy(BINDINTERFACE, value, sizeof(BINDINTERFACE));
-                Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to: %s",
-                    BINDINTERFACE);
+                SetBindInterface(value);
             }
             else if (IsControlBody(SERVER_CONTROL_ALLOWCIPHERS))
             {

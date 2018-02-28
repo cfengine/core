@@ -64,6 +64,7 @@ typedef struct {
 
 static const struct option OPTIONS[] =
 {
+    {"address",   required_argument, 0, 'a'},
     {"debug",     no_argument,       0, 'd'},
     {"file",      required_argument, 0, 'f'},
     {"help",      no_argument,       0, 'h'},
@@ -77,6 +78,7 @@ static const struct option OPTIONS[] =
 
 static const char *const HINTS[] =
 {
+    "Bind to a specific address",
     "Enable debugging output",
     "Read report from file",
     "Print the help message",
@@ -114,11 +116,14 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
     CFTestD_Config *config = CFTestD_ConfigInit();
     assert(config != NULL);
 
-    while ((c = getopt_long(argc, argv, "df:hIlp:vV", OPTIONS, NULL))
+    while ((c = getopt_long(argc, argv, "a:df:hIlp:vV", OPTIONS, NULL))
            != -1)
     {
         switch (c)
         {
+        case 'a':
+            SetBindInterface(optarg);
+            break;
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             break;

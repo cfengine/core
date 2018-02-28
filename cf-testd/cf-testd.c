@@ -53,6 +53,8 @@
 #include <signals.h>                    // ReloadConfigRequested
 #include <openssl/err.h>                // ERR_get_error
 
+#define CFTESTD_QUEUE_SIZE 10
+
 // ============================= CFTestD_Config ==============================
 typedef struct {
     char *file;
@@ -430,7 +432,7 @@ int CFTestD_StartServer()
         return -1;
     }
 
-    int sd = InitServer(10);
+    int sd = InitServer(CFTESTD_QUEUE_SIZE);
 
     MakeSignalPipe();
 

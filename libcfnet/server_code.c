@@ -70,6 +70,7 @@ static int OpenReceiverChannel(void)
     if (BINDINTERFACE[0] != '\0')
     {
         ptr = BINDINTERFACE;
+        query.ai_flags |= AI_NUMERICHOST;
     }
 
     /* Resolve listening interface. */

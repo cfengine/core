@@ -81,6 +81,7 @@
 #include <net.h>
 #include <package_module.h>
 #include <string_lib.h>
+#include <cfnet.h>
 
 #include <mod_common.h>
 
@@ -903,8 +904,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_BINDTOINTERFACE].lval) == 0)
             {
-                strlcpy(BINDINTERFACE, value, sizeof(BINDINTERFACE));
-                Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
+                SetBindInterface(value);
                 continue;
             }
 

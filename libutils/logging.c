@@ -471,3 +471,59 @@ void LoggingSetColor(bool enabled)
     LoggingContext *lctx = GetCurrentThreadContext();
     lctx->color = enabled;
 }
+
+// byte_magnitude and byte_unit are used to print human readable byte counts
+long byte_magnitude(long bytes)
+{
+    const long Ki = 1024;
+    const long Mi = Ki * 1024;
+    const long Gi = Mi * 1024;
+    const long Ti = Gi * 1024;
+
+    if (bytes > 8 * Ti)
+    {
+        return bytes / Ti;
+    }
+    else if (bytes > 8 * Gi)
+    {
+        return bytes / Gi;
+    }
+    else if (bytes > 8 * Mi)
+    {
+        return bytes / Mi;
+    }
+    else if (bytes > 8 * Ki)
+    {
+        return bytes / Ki;
+    }
+    return bytes;
+}
+
+// Use this with byte_magnitude
+// Note that the cutoff is at 8x unit, because 3192 bytes is arguably more
+// useful than 3KiB
+const char * const byte_unit(long bytes)
+{
+    const long Ki = 1024;
+    const long Mi = Ki * 1024;
+    const long Gi = Mi * 1024;
+    const long Ti = Gi * 1024;
+
+    if (bytes > 8 * Ti)
+    {
+        return "TiB";
+    }
+    else if (bytes > 8 * Gi)
+    {
+        return "GiB";
+    }
+    else if (bytes > 8 * Mi)
+    {
+        return "MiB";
+    }
+    else if (bytes > 8 * Ki)
+    {
+        return "KiB";
+    }
+    return "bytes";
+}

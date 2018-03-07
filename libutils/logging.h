@@ -120,5 +120,8 @@ bool LogModuleEnabled(enum LogModule mod);
 void LogEnableModule(enum LogModule mod);
 bool LogEnableModulesFromString(char *s);
 
+// byte_magnitude and byte_unit are used to print readable byte counts
+long byte_magnitude(long bytes);
+const char * const byte_unit(long bytes);
 
 #endif

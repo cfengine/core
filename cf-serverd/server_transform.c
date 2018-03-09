@@ -49,6 +49,8 @@
 #include <file_lib.h>      /* IsDirReal */
 #include <matching.h>      /* IsRegex */
 #include <net.h>
+#include <client_code.h>
+#include <cfnet.h>
 
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "server_access.h"
@@ -468,16 +470,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
             else if (IsControlBody(SERVER_CONTROL_PORT_NUMBER))
             {
-                CFENGINE_PORT = IntFromString(value);
-                strlcpy(CFENGINE_PORT_STR, value, sizeof(CFENGINE_PORT_STR));
-                Log(LOG_LEVEL_VERBOSE, "Setting default port number to %d",
-                    CFENGINE_PORT);
+                bool ret = SetCfenginePort(value);
+                assert(ret);
             }
             else if (IsControlBody(SERVER_CONTROL_BIND_TO_INTERFACE))
             {
-                strlcpy(BINDINTERFACE, value, sizeof(BINDINTERFACE));
-                Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to: %s",
-                    BINDINTERFACE);
+                SetBindInterface(value);
             }
             else if (IsControlBody(SERVER_CONTROL_ALLOWCIPHERS))
             {

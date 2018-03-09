@@ -70,14 +70,12 @@ static int OpenReceiverChannel(void)
     if (BINDINTERFACE[0] != '\0')
     {
         ptr = BINDINTERFACE;
+        query.ai_flags |= AI_NUMERICHOST;
     }
 
-    char servname[PRINTSIZE(CFENGINE_PORT)];
-    xsnprintf(servname, sizeof(servname), "%d", CFENGINE_PORT);
-
     /* Resolve listening interface. */
-    int gres;
-    if ((gres = getaddrinfo(ptr, servname, &query, &response)) != 0)
+    int gres = getaddrinfo(ptr, CFENGINE_PORT_STR, &query, &response);
+    if (gres != 0)
     {
         Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)",
             gai_strerror(gres));

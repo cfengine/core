@@ -150,5 +150,7 @@ int cf_closesocket(int sd);
 /* client_protocol.c */
 void SetSkipIdentify(bool enabled);
 
+/* net.c */
+void SetBindInterface(const char *ip);
 
 #endif

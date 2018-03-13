@@ -219,4 +219,10 @@ Seq *SeqGetRange(const Seq *seq, size_t start, size_t end);
   */
 Seq *SeqStringFromString(const char *str, char delimiter);
 
+
+/**
+ * @brief Return the total string length of a sequence of strings
+ */
+int SeqStringLength(Seq *seq);
+
 #endif

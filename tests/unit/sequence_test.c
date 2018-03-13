@@ -390,6 +390,21 @@ static void test_get_range(void)
     SeqDestroy(seq);
 }
 
+static void test_string_length(void)
+{
+    Seq *strings = SeqNew(10, NULL);
+    assert_int_equal(SeqStringLength(strings), 0);
+    SeqAppend(strings, "1");
+    assert_int_equal(SeqStringLength(strings), 1);
+    SeqAppend(strings, "2345678");
+    assert_int_equal(SeqStringLength(strings), 8);
+    SeqAppend(strings, "");
+    SeqAppend(strings, "9");
+    SeqAppend(strings, "");
+    assert_int_equal(SeqStringLength(strings), 9);
+    SeqDestroy(strings);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -407,7 +422,8 @@ int main()
         unit_test(test_remove),
         unit_test(test_reverse),
         unit_test(test_len),
-        unit_test(test_get_range)
+        unit_test(test_get_range),
+        unit_test(test_string_length)
     };
 
     return run_tests(tests);

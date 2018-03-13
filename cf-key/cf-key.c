@@ -37,6 +37,7 @@
 #include <known_dirs.h>
 #include <man.h>
 #include <signals.h>
+#include <string_lib.h>
 
 #include <cf-key-functions.h>
 

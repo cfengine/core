@@ -59,47 +59,6 @@ bool PipeTypeIsOk(const char *type)
 /* Pipe read/write interface, originally in package modules        */
 /*******************************************************************/
 
-int PipeIsReadWriteReady(const IOData *io, int timeout_sec)
-{
-    fd_set  rset;
-    FD_ZERO(&rset);
-    FD_SET(io->read_fd, &rset);
-
-    struct timeval tv = {
-        .tv_sec = timeout_sec,
-        .tv_usec = 0,
-    };
-
-    Log(LOG_LEVEL_DEBUG,
-        "PipeIsReadWriteReady: wait max %ds for data on fd %d",
-        timeout_sec, io->read_fd);
-
-    //TODO: For Windows we will need different method and select might not
-    //      work with file descriptors.
-    int ret = select(io->read_fd + 1, &rset, NULL, NULL, &tv);
-
-    if (ret < 0)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Failed checking for data (select: %s)",
-            GetErrorStr());
-        return -1;
-    }
-    else if (FD_ISSET(io->read_fd, &rset))
-    {
-        return io->read_fd;
-    }
-    else if (ret == 0)
-    {
-        /* timeout_sec has elapsed but no data was available. */
-        return 0;
-    }
-    else
-    {
-        UnexpectedError("select() returned > 0 but our only fd is not set!");
-        return -1;
-    }
-}
-
 Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_termination_check_secs)
 {
     char buff[CF_BUFSIZE] = {0};

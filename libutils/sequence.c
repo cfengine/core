@@ -25,6 +25,7 @@
 
 #include <sequence.h>
 #include <alloc.h>
+#include <string_lib.h>
 
 
 static const size_t EXPAND_FACTOR = 2;
@@ -391,4 +392,18 @@ Seq *SeqStringFromString(const char *str, char delimiter)
     SeqStringAddSplit(seq, str, delimiter);
 
     return seq;
+}
+
+int SeqStringLength(Seq *seq)
+{
+    assert (seq);
+
+    int total_length = 0;
+    size_t seq_length = SeqLength(seq);
+    for (size_t i = 0; i < seq_length; i++)
+    {
+        total_length += SafeStringLength(SeqAt(seq, i));
+    }
+
+    return total_length;
 }

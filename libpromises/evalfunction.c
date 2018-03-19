@@ -638,28 +638,105 @@ static FnCallResult FnCallHostsWithClass(EvalContext *ctx, ARG_UNUSED const Poli
 
 /*********************************************************************/
 
+/** @brief Convert function call from/to variables to range
+ *
+ *  Swap the two integers in place if the first is bigger
+ *  Check for CF_NOINT, indicating invalid arguments
+ *
+ *  @return Absolute (positive) difference, -1 for error (0 for equal)
+*/
+static int int_range_convert(int *from, int *to)
+{
+    int old_from = *from;
+    int old_to = *to;
+    if (old_from == CF_NOINT || old_to == CF_NOINT)
+    {
+        return -1;
+    }
+    if (old_from == old_to)
+    {
+        return 0;
+    }
+    if (old_from > old_to)
+    {
+        *from = old_to;
+        *to = old_from;
+    }
+    assert(*to > *from);
+    return (*to) - (*from);
+}
+
 static FnCallResult FnCallRandomInt(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    int tmp, range, result;
-
-    int from = IntFromString(RlistScalarValue(finalargs));
-    int to = IntFromString(RlistScalarValue(finalargs->next));
-
-    if (from == CF_NOINT || to == CF_NOINT)
+    if (finalargs->next == NULL)
     {
         return FnFailure();
     }
 
-    if (from > to)
+    int from = IntFromString(RlistScalarValue(finalargs));
+    int to = IntFromString(RlistScalarValue(finalargs->next));
+
+    int range = int_range_convert(&from, &to);
+    if (range == -1)
     {
-        tmp = to;
-        to = from;
-        from = tmp;
+        return FnFailure();
+    }
+    if (range == 0)
+    {
+        return FnReturnF("%d", from);
     }
 
-    range = abs(to - from);
-    result = from + (int) (drand48() * (double) range);
+    assert(range > 0);
 
+    int result = from + (int) (drand48() * (double) range);
+
+    return FnReturnF("%d", result);
+}
+
+// Read an array of bytes as unsigned integers
+// Convert to 64 bit unsigned integer
+// Cross platform/arch, bytes[0] is always LSB of result
+static uint64_t BytesToUInt64(uint8_t *bytes)
+{
+    uint64_t result = 0;
+    size_t n = 8;
+    for (size_t i = 0; i<n; ++i)
+    {
+        result += ((uint64_t)(bytes[i])) << (8 * i);
+    }
+    return result;
+}
+
+static FnCallResult FnCallHashToInt(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    if (finalargs->next == NULL || finalargs->next->next == NULL)
+    {
+        return FnFailure();
+    }
+    signed int from = IntFromString(RlistScalarValue(finalargs));
+    signed int to = IntFromString(RlistScalarValue(finalargs->next));
+
+    signed int range = int_range_convert(&from, &to);
+    if (range == -1)
+    {
+        return FnFailure();
+    }
+    if (range == 0)
+    {
+        return FnReturnF("%d", from);
+    }
+    assert(range > 0);
+
+    const unsigned char * const inp = RlistScalarValue(finalargs->next->next);
+
+    // Use beginning of SHA checksum as basis:
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    memset(digest, 0, sizeof(digest));
+    HashString(inp, strlen(inp), digest, HASH_METHOD_SHA256);
+    uint64_t converted_sha = BytesToUInt64((uint8_t*)digest);
+
+    // Limit using modulo:
+    signed int result = from + (converted_sha % range);
     return FnReturnF("%d", result);
 }
 
@@ -8426,6 +8503,14 @@ static const FnCallArg RANDOMINT_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg HASH_TO_INT_ARGS[] =
+{
+    {CF_INTRANGE, CF_DATA_TYPE_INT, "Lower inclusive bound"},
+    {CF_INTRANGE, CF_DATA_TYPE_INT, "Upper exclusive bound"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input string to hash"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg READFILE_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name"},
@@ -9052,6 +9137,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("randomint", CF_DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits, excluding the upper",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hash_to_int", CF_DATA_TYPE_INT, HASH_TO_INT_ARGS, &FnCallHashToInt, "Generate an integer in given range based on string hash",
+              FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readdata", CF_DATA_TYPE_CONTAINER, READDATA_ARGS, &FnCallReadData, "Parse a YAML, JSON, CSV, etc. file and return a JSON data container with the contents",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readfile", CF_DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile,       "Read max number of bytes from named file and assign to variable",

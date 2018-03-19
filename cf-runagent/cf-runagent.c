@@ -47,7 +47,7 @@
 #include <loading.h>
 #include <expand.h>                                 /* ProtocolVersionParse */
 #include <files_hashes.h>
-
+#include <string_lib.h>
 
 typedef enum
 {
@@ -276,7 +276,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             BACKGROUND = true;
             if (optarg)
             {
-                MAXCHILD = atoi(optarg);
+                MAXCHILD = StringToLongExitOnError(optarg);
             }
             break;
 
@@ -340,7 +340,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 't':
-            CONNTIMEOUT = atoi(optarg);
+            CONNTIMEOUT = StringToLongExitOnError(optarg);
             break;
 
         case 'V':

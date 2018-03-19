@@ -318,7 +318,7 @@ int RemoveKeys(const char *input, bool must_be_coherent)
     return -1;
 }
 
-bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
+bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, const int key_size)
 {
 #ifdef OPENSSL_NO_DEPRECATED
     RSA *pair = RSA_new();
@@ -351,9 +351,9 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 #ifdef OPENSSL_NO_DEPRECATED
     BN_set_word(rsa_bignum, RSA_F4);
 
-    if (!RSA_generate_key_ex(pair, 2048, rsa_bignum, NULL))
+    if (!RSA_generate_key_ex(pair, key_size, rsa_bignum, NULL))
 #else
-    pair = RSA_generate_key(2048, 65537, NULL, NULL);
+    pair = RSA_generate_key(key_size, 65537, NULL, NULL);
 
     if (pair == NULL)
 #endif

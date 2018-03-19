@@ -1,0 +1,60 @@
+#######################################################
+#
+# Test hash_to_int()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "a_9"    int => hash_to_int(9,10,"string");
+    "b_9"    int => hash_to_int(9,9,"doesn't");
+    "c_9"    int => hash_to_int(10,9,"matter");
+    "empty_27"    int => hash_to_int(0,100,"");
+    "empty_5327"  int => hash_to_int(100,10000,"");
+    "empty_n2"    int => hash_to_int("-2","-1","");
+    "short_9872" int => hash_to_int("-10000","10001","shortstring");
+    "long_n893"   int =>
+    hash_to_int("-1000","1001",
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\\!\"#$%&/()=?.:,;-_");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok_a" expression => strcmp("$(test.a_9)", "9");
+      "ok_b" expression => strcmp("$(test.b_9)", "9");
+      "ok_c" expression => strcmp("$(test.c_9)", "9");
+      "ok_d" expression => strcmp("$(test.empty_27)",    "27");
+      "ok_e" expression => strcmp("$(test.empty_5327)",  "5327");
+      "ok_f" expression => strcmp("$(test.empty_n2)",    "-2");
+      "ok_g" expression => strcmp("$(test.long_n893)",   "-893");
+      "ok_h" expression => strcmp("$(test.short_9872)",  "9872");
+      "ok" and => {ok_a, ok_b, ok_c, ok_d, ok_e, ok_f, ok_g, ok_h};
+
+  reports:
+    DEBUG::
+      "a_9:         $(test.a_9)";
+      "b_9:         $(test.b_9)";
+      "c_9:         $(test.c_9)";
+      "empty_27:    $(test.empty_27)";
+      "empty_5327:  $(test.empty_5327)";
+      "empty_n2:    $(test.empty_n2)";
+      "long_n893:   $(test.long_n893)";
+      "short_9872:  $(test.short_9872)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

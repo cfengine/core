@@ -114,6 +114,10 @@ cscope.*
 /core.includes
 *.autosave
 
+# clang
+.clang_complete
+*.pch
+
 # Mac
 .DS_Store
 *.dSYM

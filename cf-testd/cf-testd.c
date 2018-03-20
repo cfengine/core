@@ -1,7 +1,8 @@
 /*
    Copyright 2018 Northern.tech AS
 
-   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
+   This file is part of CFEngine 3 - written and maintained by Northern.tech
+  AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -24,62 +25,60 @@
 
 #include <platform.h>
 
-#include <client_code.h>                // cfnet_init
-#include <crypto.h>                     // CryptoInitialize
+#include <client_code.h> // cfnet_init
+#include <crypto.h>      // CryptoInitialize
 
+#include <bootstrap.h> // GetAmPolicyHub
 #include <cf-serverd-enterprise-stubs.h>
+#include <conversion.h> // MapAddress
+#include <exec_tools.h> // ActAsDaemon
+#include <item_lib.h>   // DeleteItemList
+#include <known_dirs.h> // GetInputDir
+#include <loading.h>    // LoadPolicy
+#include <locks.h>      // AcquireLock
+#include <man.h>        // ManPageWrite
+#include <mutex.h>      // ThreadLock
 #include <net.h>
+#include <openssl/err.h>   // ERR_get_error
+#include <policy_server.h> // PolicyServerReadFile
+#include <printsize.h>     // PRINTSIZE
+#include <server_access.h> // acl_Free
+#include <server_code.h>   // InitServer
 #include <server_common.h>
-#include <server_access.h>              // acl_Free
-#include <item_lib.h>                   // DeleteItemList
-#include <server_transform.h>           // Summarize
-#include <bootstrap.h>                  // GetAmPolicyHub
-#include <policy_server.h>              // PolicyServerReadFile
-#include <systype.h>                    // CLASSTEXT
-#include <mutex.h>                      // ThreadLock
-#include <locks.h>                      // AcquireLock
-#include <exec_tools.h>                 // ActAsDaemon
-#include <man.h>                        // ManPageWrite
-#include <server_tls.h>                 // ServerTLSInitialize
-#include <tls_generic.h>                // TLSLogError
-#include <timeout.h>                    // SetReferenceTime
-#include <known_dirs.h>                 // GetInputDir
-#include <sysinfo.h>                    // DetectEnvironment
-#include <time_classes.h>               // UpdateTimeClasses
-#include <loading.h>                    // LoadPolicy
-#include <printsize.h>                  // PRINTSIZE
-#include <conversion.h>                 // MapAddress
-#include <server_code.h>                // InitServer
-#include <signals.h>                    // ReloadConfigRequested
-#include <openssl/err.h>                // ERR_get_error
+#include <server_tls.h>       // ServerTLSInitialize
+#include <server_transform.h> // Summarize
+#include <signals.h>          // ReloadConfigRequested
+#include <sysinfo.h>          // DetectEnvironment
+#include <systype.h>          // CLASSTEXT
+#include <time_classes.h>     // UpdateTimeClasses
+#include <timeout.h>          // SetReferenceTime
+#include <tls_generic.h>      // TLSLogError
 
 #define CFTESTD_QUEUE_SIZE 10
 
 // ============================= CFTestD_Config ==============================
-typedef struct {
+typedef struct
+{
     char *file;
-}CFTestD_Config;
+} CFTestD_Config;
 
 /*******************************************************************/
 /* Command line option parsing                                     */
 /*******************************************************************/
 
-static const struct option OPTIONS[] =
-{
-    {"address",   required_argument, 0, 'a'},
-    {"debug",     no_argument,       0, 'd'},
-    {"file",      required_argument, 0, 'f'},
-    {"help",      no_argument,       0, 'h'},
-    {"inform",    no_argument,       0, 'I'},
-    {"port",      required_argument, 0, 'p'},
-    {"timestamp", no_argument,       0, 'l'},
-    {"verbose",   no_argument,       0, 'v'},
-    {"version",   no_argument,       0, 'V'},
-    {NULL,        0,                 0, '\0'}
-};
+static const struct option OPTIONS[] = {
+    {"address", required_argument, 0, 'a'},
+    {"debug", no_argument, 0, 'd'},
+    {"file", required_argument, 0, 'f'},
+    {"help", no_argument, 0, 'h'},
+    {"inform", no_argument, 0, 'I'},
+    {"port", required_argument, 0, 'p'},
+    {"timestamp", no_argument, 0, 'l'},
+    {"verbose", no_argument, 0, 'v'},
+    {"version", no_argument, 0, 'V'},
+    {NULL, 0, 0, '\0'}};
 
-static const char *const HINTS[] =
-{
+static const char *const HINTS[] = {
     "Bind to a specific address",
     "Enable debugging output",
     "Read report from file",
@@ -89,12 +88,12 @@ static const char *const HINTS[] =
     "Log timestamps on each line of log output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
-    NULL
-};
+    NULL};
 
 CFTestD_Config *CFTestD_ConfigInit()
 {
-    CFTestD_Config* r = (CFTestD_Config *)(xcalloc(1, sizeof(CFTestD_Config)));
+    CFTestD_Config *r =
+        (CFTestD_Config *)(xcalloc(1, sizeof(CFTestD_Config)));
     return r;
 }
 
@@ -118,52 +117,35 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
     CFTestD_Config *config = CFTestD_ConfigInit();
     assert(config != NULL);
 
-    while ((c = getopt_long(argc, argv, "a:df:hIlp:vV", OPTIONS, NULL))
-           != -1)
+    while ((c = getopt_long(argc, argv, "a:df:hIlp:vV", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {
-        case 'a':
-            SetBindInterface(optarg);
-            break;
-        case 'd':
-            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
-            break;
-        case 'f':
-            config->file = xstrdup(optarg);
-            break;
-        case 'h':
-            CFTestD_Help();
-            exit(EXIT_SUCCESS);
-        case 'I':
-            LogSetGlobalLevel(LOG_LEVEL_INFO);
-            break;
+        case 'a': SetBindInterface(optarg); break;
+        case 'd': LogSetGlobalLevel(LOG_LEVEL_DEBUG); break;
+        case 'f': config->file = xstrdup(optarg); break;
+        case 'h': CFTestD_Help(); exit(EXIT_SUCCESS);
+        case 'I': LogSetGlobalLevel(LOG_LEVEL_INFO); break;
         case 'p':
+        {
+            bool ret = SetCfenginePort(optarg);
+            if (!ret)
             {
-                bool ret = SetCfenginePort(optarg);
-                if (!ret)
-                {
-                    /* the function call above logs an error for us (if any) */
-                    exit(EXIT_FAILURE);
-                }
-                break;
+                /* the function call above logs an error for us (if any) */
+                exit(EXIT_FAILURE);
             }
-        case 'l':
-            LoggingEnableTimestamps(true);
             break;
-        case 'v':
-            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
-            break;
+        }
+        case 'l': LoggingEnableTimestamps(true); break;
+        case 'v': LogSetGlobalLevel(LOG_LEVEL_VERBOSE); break;
         case 'V':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteVersion(w);
-                FileWriterDetach(w);
-            }
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteVersion(w);
+            FileWriterDetach(w);
+        }
             exit(EXIT_SUCCESS);
-        default:
-            CFTestD_Help();
-            exit(EXIT_FAILURE);
+        default: CFTestD_Help(); exit(EXIT_FAILURE);
         }
     }
 
@@ -173,11 +155,15 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
         Log(LOG_LEVEL_ERR, "Invalid command line arguments:");
 
         int start = optind;
-        int stop = argc;
+        int stop  = argc;
         int total = stop - start;
-        for (int i = 0; i<total; ++i)
+        for (int i = 0; i < total; ++i)
         {
-            Log(LOG_LEVEL_ERR, "[%d/%d]: %s\n", i+1, total, argv[start + i]);
+            Log(LOG_LEVEL_ERR,
+                "[%d/%d]: %s\n",
+                i + 1,
+                total,
+                argv[start + i]);
         }
     }
 
@@ -202,8 +188,8 @@ bool CFTestD_TLSSessionEstablish(ServerConnectionState *conn)
     /* Send/Receive "CFE_v%d" version string, agree on version, receive
        identity (username) of peer. */
     char username[sizeof(conn->username)] = "";
-    bool id_success = ServerIdentificationDialog(conn->conn_info,
-                                                 username, sizeof(username));
+    bool id_success                       = ServerIdentificationDialog(
+        conn->conn_info, username, sizeof(username));
     if (!id_success)
     {
         return false;
@@ -211,14 +197,13 @@ bool CFTestD_TLSSessionEstablish(ServerConnectionState *conn)
 
     /* No CAUTH, SAUTH in non-classic protocol. */
     conn->user_data_set = 1;
-    conn->rsa_auth = 1;
+    conn->rsa_auth      = 1;
 
     ServerSendWelcome(conn);
     return true;
 }
 
-bool CFTestD_GetServerQuery(
-    ServerConnectionState *conn, char *recvbuffer)
+bool CFTestD_GetServerQuery(ServerConnectionState *conn, char *recvbuffer)
 {
     char query[CF_BUFSIZE];
 
@@ -239,17 +224,18 @@ static bool CFTestD_ProtocolError(
     strcpy(sendbuffer, "BAD: Request denied");
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     Log(LOG_LEVEL_INFO,
-        "Closing connection due to illegal request: %s", recvbuffer);
+        "Closing connection due to illegal request: %s",
+        recvbuffer);
     return false;
 }
 
 static bool CFTestD_BusyLoop(ServerConnectionState *conn)
 {
-    char recvbuffer[CF_BUFSIZE + CF_BUFEXT] = "";
+    char recvbuffer[CF_BUFSIZE + CF_BUFEXT]        = "";
     char sendbuffer[CF_BUFSIZE - CF_INBAND_OFFSET] = "";
 
-    const int received = ReceiveTransaction(conn->conn_info,
-                                            recvbuffer, NULL);
+    const int received =
+        ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
 
     if (received == -1)
     {
@@ -265,7 +251,8 @@ static bool CFTestD_BusyLoop(ServerConnectionState *conn)
     if (strlen(recvbuffer) == 0)
     {
         Log(LOG_LEVEL_WARNING,
-            "Got NULL transmission (of size %d)", received);
+            "Got NULL transmission (of size %d)",
+            received);
         return true;
     }
     /* Don't process request if we're signalled to exit. */
@@ -312,7 +299,9 @@ static ServerConnectionState *CFTestD_NewConn(ConnectionInfo *info)
     struct sockaddr_storage addr;
     socklen_t size = sizeof(addr);
 
-    if (getsockname(ConnectionInfoSocket(info), (struct sockaddr *)&addr, &size) == -1)
+    if (getsockname(
+            ConnectionInfoSocket(info), (struct sockaddr *)&addr, &size) ==
+        -1)
     {
         Log(LOG_LEVEL_ERR,
             "Could not obtain socket address. (getsockname: '%s')",
@@ -322,11 +311,11 @@ static ServerConnectionState *CFTestD_NewConn(ConnectionInfo *info)
 #endif
 
     ServerConnectionState *conn = xcalloc(1, sizeof(*conn));
-    conn->ctx = NULL;
-    conn->conn_info = info;
-    conn->encryption_type = 'c';
+    conn->ctx                   = NULL;
+    conn->conn_info             = info;
+    conn->encryption_type       = 'c';
     /* Only public files (chmod o+r) accessible to non-root */
-    conn->uid = CF_UNKNOWN_OWNER;                    /* Careful, 0 is root! */
+    conn->uid = CF_UNKNOWN_OWNER; /* Careful, 0 is root! */
     /* conn->maproot is false: only public files (chmod o+r) are accessible */
 
     Log(LOG_LEVEL_DEBUG,
@@ -360,10 +349,14 @@ static void *CFTestD_HandleConnection(void *c)
         Log(LOG_LEVEL_ERR, "Could not establish TLS Session");
         return NULL;
     }
-    int ret = getnameinfo((const struct sockaddr *) &conn->conn_info->ss,
-                          conn->conn_info->ss_len,
-                          conn->revdns, sizeof(conn->revdns),
-                          NULL, 0, NI_NAMEREQD);
+    int ret = getnameinfo(
+        (const struct sockaddr *)&conn->conn_info->ss,
+        conn->conn_info->ss_len,
+        conn->revdns,
+        sizeof(conn->revdns),
+        NULL,
+        0,
+        NI_NAMEREQD);
     if (ret != 0)
     {
         Log(LOG_LEVEL_INFO,
@@ -372,9 +365,7 @@ static void *CFTestD_HandleConnection(void *c)
     }
     else
     {
-        Log(LOG_LEVEL_INFO,
-            "Hostname (reverse looked up): %s",
-            conn->revdns);
+        Log(LOG_LEVEL_INFO, "Hostname (reverse looked up): %s", conn->revdns);
     }
 
     while (CFTestD_BusyLoop(conn))
@@ -402,7 +393,7 @@ static void CFTestD_AcceptAndHandle(int sd)
     ConnectionInfo *info = ConnectionInfoNew(); /* Uses xcalloc() */
 
     info->ss_len = sizeof(info->ss);
-    info->sd = accept(sd, (struct sockaddr *) &info->ss, &info->ss_len);
+    info->sd     = accept(sd, (struct sockaddr *)&info->ss, &info->ss_len);
     if (info->sd == -1)
     {
         Log(LOG_LEVEL_INFO, "Error accepting connection (%s)", GetErrorStr());
@@ -410,14 +401,20 @@ static void CFTestD_AcceptAndHandle(int sd)
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Socket descriptor returned from accept(): %d",
+    Log(LOG_LEVEL_DEBUG,
+        "Socket descriptor returned from accept(): %d",
         info->sd);
 
     /* Just convert IP address to string, no DNS lookup. */
     char ipaddr[CF_MAX_IP_LEN] = "";
-    getnameinfo((const struct sockaddr *) &info->ss, info->ss_len,
-                ipaddr, sizeof(ipaddr),
-                NULL, 0, NI_NUMERICHOST);
+    getnameinfo(
+        (const struct sockaddr *)&info->ss,
+        info->ss_len,
+        ipaddr,
+        sizeof(ipaddr),
+        NULL,
+        0,
+        NI_NUMERICHOST);
 
     /* IPv4 mapped addresses (e.g. "::ffff:192.168.1.2") are
      * hereby represented with their IPv4 counterpart. */
@@ -447,7 +444,8 @@ int CFTestD_StartServer()
             CFTestD_AcceptAndHandle(sd);
         }
     }
-    Log(LOG_LEVEL_ERR, "Error while waiting for connections. (select: %s)",
+    Log(LOG_LEVEL_ERR,
+        "Error while waiting for connections. (select: %s)",
         GetErrorStr());
 
     Log(LOG_LEVEL_NOTICE, "Cleaning up and exiting...");

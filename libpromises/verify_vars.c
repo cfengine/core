@@ -61,7 +61,7 @@ static bool IsValidVariableName(const char *var_name)
     if (!rx)
     {
         /* \200-\377 is there for multibyte unicode characters */
-        rx = CompileRegex("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*"); /* Known leak, see TODO. */
+        rx = CompileRegex("[a-zA-Z0-9_\200-\377]+(\\[.+\\])*"); /* Known leak, see TODO. */
     }
 
     return StringMatchFullWithPrecompiledRegex(rx, var_name);

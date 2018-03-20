@@ -1,0 +1,35 @@
+---
+BasedOnStyle: Google
+---
+Language: Cpp
+ColumnLimit: 78
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+MaxEmptyLinesToKeep: 3
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 1
+DerivePointerAlignment: false
+PointerAlignment: Right
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+BreakStringLiterals: false
+BinPackArguments: false
+BinPackParameters: false
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllParametersOfDeclarationOnNextLine: true
+IndentCaseLabels: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterControlStatement: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterEnum: true
+  BeforeElse: true
+---
+

@@ -60,6 +60,7 @@ static bool IsValidVariableName(const char *var_name)
     static pcre *rx = NULL;
     if (!rx)
     {
+        /* \200-\377 is there for multibyte unicode characters */
         rx = CompileRegex("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*"); /* Known leak, see TODO. */
     }
 

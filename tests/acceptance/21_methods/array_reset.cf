@@ -2,9 +2,6 @@
 #
 # Redmine 6369 - make sure that arrays don't accumulate
 #
-# Also include case that populates a foreign array,
-# which should accumulate.
-#
 #######################################################
 
 body common control
@@ -21,8 +18,6 @@ bundle agent test
 
   methods:
       "in" usebundle => test_method($(key_value), $(key_value));
-
-      "out" usebundle => test_method_foreign("test.array", $(key_value), $(key_value));
 }
 
 bundle agent test_method(key, value)
@@ -31,25 +26,14 @@ bundle agent test_method(key, value)
       "array[$(key)]" string => "$(value)"; 
 }
 
-bundle agent test_method_foreign(array, key, value)
-{
-  vars:
-      "$(array)[$(key)]" string => "$(value)";
-}
-
 bundle agent check
 {
   vars:
       "indices" slist => getindices("test_method.array");
       "dim" int => length("indices");
 
-      "indices_foreign" slist => getindices("test.array");
-      "dim_foreign" int => length("indices_foreign");
-
   classes:
-      "ok1" expression => strcmp("$(dim)", "1");
-      "ok2" expression => strcmp("$(dim_foreign)", "3");
-      "ok" and => { "ok1", "ok2" };
+      "ok" expression => strcmp("$(dim)", "1");
 
   reports:
     ok::
@@ -57,10 +41,7 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 
-    DEBUG.!ok1::
+    DEBUG.!ok::
       "test_method.array has $(dim) entries instead of 1";
-    DEBUG.!ok2::
-      "test.array has $(dim_foreign) entries instead of 3";
-      "$(indices_foreign)";
 }
 

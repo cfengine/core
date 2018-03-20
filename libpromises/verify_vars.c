@@ -326,7 +326,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
 
         if (!IsValidVariableName(pp->promiser))
         {
-            Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
+            Log(LOG_LEVEL_ERR, "Variable identifier '%s' contains illegal characters", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
             VarRefDestroy(ref);

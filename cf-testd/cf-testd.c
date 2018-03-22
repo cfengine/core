@@ -60,7 +60,7 @@
 typedef struct
 {
     char *report_file;
-    const char *report;
+    char *report;
     int report_len;
 } CFTestD_Config;
 
@@ -570,7 +570,7 @@ int main(int argc, char *argv[])
             Log(LOG_LEVEL_ERR, "Error reading report file '%s'", report_file);
             exit(EXIT_FAILURE);
         }
-        config->report     = StringWriterData(contents);
+        config->report     = StringWriterClose(contents);
         config->report_len = SafeStringLength(config->report);
 
         Log(LOG_LEVEL_NOTICE,

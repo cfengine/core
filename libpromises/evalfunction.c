@@ -1722,6 +1722,7 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx,
         snprintf(class_name, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Computed context for '%s' splayclass: '%s'", RlistScalarValue(finalargs), class_name);
     return FnReturnContext(IsDefinedClass(ctx, class_name));
 }
 

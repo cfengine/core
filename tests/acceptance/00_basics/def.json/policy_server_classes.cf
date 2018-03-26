@@ -1,0 +1,29 @@
+# basic test of the def.json facility: classes
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+      "" usebundle => file_make("$(sys.statedir)/am_policy_hub", '');
+      "" usebundle => file_make("$(sys.workdir)/policy_server.dat", 'fake-server');
+      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)/def.json");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf|$(G.grep) test_class";
+
+  methods:
+      "" usebundle => dcs_passif_output("test_class_policy_server\s+source=augments_file,hardclass", "", $(command), $(this.promise_filename));
+}

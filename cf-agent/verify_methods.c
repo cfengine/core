@@ -109,7 +109,6 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
            args = args->next;
         }
         args = fp->args;
-        EvalContextSetBundleArgs(ctx, args);
     }
     break;
 
@@ -157,6 +156,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
         else
         {
             BundleBanner(bp, args);
+            EvalContextSetBundleArgs(ctx, args);
             EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
 
             /* Clear all array-variables that are already set in the sub-bundle.
@@ -182,6 +182,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
             GetReturnValue(ctx, bp, pp);
 
             EvalContextStackPopFrame(ctx);
+            EvalContextSetBundleArgs(ctx, NULL);
             switch (result)
             {
             case PROMISE_RESULT_SKIPPED:

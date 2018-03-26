@@ -434,8 +434,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
 
-    LoadAugments(ctx, config);
-
     const char *bootstrap_arg =
         config->agent_specific.agent.bootstrap_argument;
     const char *bootstrap_ip =
@@ -514,22 +512,24 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             EvalContextSetPolicyServer(ctx, existing_policy_server);
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
+            if (GetAmPolicyHub())
+            {
+                MarkAsPolicyServer(ctx);
+
+                /* Should this go in MarkAsPolicyServer() ? */
+                CheckAndSetHAState(GetWorkDir(), ctx);
+            }
         }
         else
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped -"
                 " can't find policy_server.dat in: %s", GetWorkDir());
-            return;
-        }
-
-        if (GetAmPolicyHub())
-        {
-            MarkAsPolicyServer(ctx);
-
-            /* Should this go in MarkAsPolicyServer() ? */
-            CheckAndSetHAState(GetWorkDir(), ctx);
         }
     }
+
+    /* load augments here so that they can make use of the classes added above
+     * (especially 'am_policy_hub' and 'policy_server') */
+    LoadAugments(ctx, config);
 }
 
 static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_validation)

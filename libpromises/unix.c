@@ -119,7 +119,7 @@ int IsExecutable(const char *file)
 
     if (stat(file, &sb) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Proposed executable file '%s' doesn't exist", file);
+        Log(LOG_LEVEL_VERBOSE, "Proposed executable file '%s' doesn't exist", file);
         return false;
     }
 

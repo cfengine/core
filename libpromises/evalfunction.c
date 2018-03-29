@@ -3943,7 +3943,7 @@ static FnCallResult FnCallFileStat(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
     if (lstat(path, &statbuf) == -1)
     {
-        if (!strcmp(fp->name, "filesize"))
+        if (StringSafeEqual(fp->name, "filesize"))
         {
             return FnFailure();
         }
@@ -3952,6 +3952,11 @@ static FnCallResult FnCallFileStat(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
     if (!strcmp(fp->name, "isexecutable"))
     {
+        if (S_ISLNK(statbuf.st_mode) && stat(path, &statbuf) == -1)
+        {
+            // stat on link target failed - probably broken link
+            return FnReturnContext(false);
+        }
         return FnReturnContext(IsExecutable(path));
     }
     if (!strcmp(fp->name, "isdir"))

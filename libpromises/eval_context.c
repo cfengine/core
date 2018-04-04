@@ -366,7 +366,7 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", copy);
+        Log(LOG_LEVEL_ERR, "Bundle '%s' aborted on defined class '%s'", frame.owner->name, copy);
         SetBundleAborted(ctx);
     }
 

@@ -1565,6 +1565,7 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
         {
             /* Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy); */
 
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
             Log(LOG_LEVEL_ERR, "Bundle '%s' aborted on defined class '%s'", frame.owner->name, context_copy);
             SetBundleAborted(ctx);
         }

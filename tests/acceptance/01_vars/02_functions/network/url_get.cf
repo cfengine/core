@@ -28,7 +28,7 @@ bundle agent init
       "res1" data => url_get("http://acme.com", options_clean);
       "res2" data => url_get("http://nosuchcfenginehost.com", options_clean);
       # static content, we hope won't change much
-      "res3" data => url_get("http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js", options_limit);
+      "res3" data => url_get("https://www.traviscistatus.com/", options_limit);
 }
 
 bundle agent test
@@ -48,7 +48,6 @@ bundle agent test
                                '{ "res2/error_message": init.res2[error_message] }',
                                '{ "res2/success": init.res2[success] }',
 
-                               '{ "res3": init.res3[content] }',
                                '{ "res3/returncode": init.res3[returncode] }',
                                '{ "res3/rc": init.res3[rc] }',
                                '{ "res3/success": init.res3[success] }'

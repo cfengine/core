@@ -31,14 +31,15 @@ bundle agent test
 bundle agent check
 {
   meta:
-      "test_soft_fail"
-        string => "any",
-        meta => { "redmine7145" };
+      "description" -> {"CFE-1915"}
+        string => "Test that it is invalid to define variables in remote bundles";
 
   classes:
       "variable_defined" expression => isvariable("variable");
       "variable_has_content" expression => regcmp(".*", "$(variable)");
-      "fail" expression => "(variable_defined|variable_has_content)";
+      "array_with_a_dot_fail" expression => not(strcmp("$(test.array[with.a.dot])", "value"));
+
+      "fail" expression => "(variable_defined|variable_has_content|array_with_a_dot_fail)";
 
   reports:
     DEBUG::
@@ -47,7 +48,11 @@ bundle agent check
 
       "'variable' in bundle '$(this.bundle)' = '$(variable)'"
         ifvarclass => "variable_has_content";
-    ok::
+
+      "array[with.a.dot] has the value '$(test.array[with.a.dot])'"
+        ifvarclass => "array_with_a_dot_fail";
+
+    !fail::
       "$(this.promise_filename) Pass";
 
     fail::

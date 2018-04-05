@@ -60,7 +60,8 @@ static bool IsValidVariableName(const char *var_name)
     static pcre *rx = NULL;
     if (!rx)
     {
-        rx = CompileRegex("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*"); /* Known leak, see TODO. */
+        /* \200-\377 is there for multibyte unicode characters */
+        rx = CompileRegex("[a-zA-Z0-9_\200-\377]+(\\[.+\\])*"); /* Known leak, see TODO. */
     }
 
     return StringMatchFullWithPrecompiledRegex(rx, var_name);
@@ -325,7 +326,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
 
         if (!IsValidVariableName(pp->promiser))
         {
-            Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
+            Log(LOG_LEVEL_ERR, "Variable identifier '%s' contains illegal characters", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
             VarRefDestroy(ref);

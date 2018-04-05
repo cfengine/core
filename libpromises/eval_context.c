@@ -1563,7 +1563,9 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 
         if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
         {
-            Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
+            /* Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy); */
+
+            Log(LOG_LEVEL_ERR, "Bundle '%s' aborted on defined class '%s'", frame.owner->name, context_copy);
             SetBundleAborted(ctx);
         }
 

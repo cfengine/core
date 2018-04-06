@@ -13,6 +13,16 @@ body common control
 
 ###########################################################
 
+bundle contain useshell
+{
+  useshell => "true";
+}
+
+bundle action background
+{
+  background => "true";
+}
+
 bundle agent init
 {
   vars:
@@ -27,8 +37,19 @@ bundle agent init
       "options_clean" data => '{}';
       "res1" data => url_get("http://acme.com", options_clean);
       "res2" data => url_get("http://nosuchcfenginehost.com", options_clean);
-      # static content, we hope won't change much
-      "res3" data => url_get("https://www.traviscistatus.com/", options_limit);
+      "res3" data => url_get("http://localhost:8000/index.html", options_limit);
+
+  commands:
+    "/usr/bin/python3 -m http.server 8000"
+      action => background,
+      contain => useshell;
+}
+
+bundle agent destroy
+{
+  processes:
+    "python3 -m http.server 8000"
+      signals => { "kill" };
 }
 
 bundle agent test

@@ -13,12 +13,12 @@ body common control
 
 ###########################################################
 
-bundle contain useshell
+body contain useshell
 {
   useshell => "true";
 }
 
-bundle action background
+body action background
 {
   background => "true";
 }

@@ -1,0 +1,47 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2536" }
+      string => "Converting arrays with colliding definitions for subkeys should work, somehow.";
+
+  vars:
+      "array[key1][subkey1]" string => "hey";
+      "array[key1]"          string => "hou";
+
+      "array_values"     slist  => getvalues("array");
+      "array_values_str" string => format("%S", array_values);
+
+      "array_data"     data   => mergedata(array);
+      "array_data_str" string => format("%S", array_data);
+}
+
+bundle agent check
+{
+  classes:
+      # the "more structured structure" should win when converting to JSON
+      "get_values_ok" expression => strcmp("$(test.array_values_str)", '{ "hey" }');
+      "array_data_ok" expression => strcmp("$(test.array_data_str)", '{"key1":{"subkey1":"hey"}}');
+
+      "ok" and => { "get_values_ok", "array_data_ok" };
+
+  reports:
+    "DEBUG"::
+      "array_values_str: $(test.array_values_str)"
+        ifvarclass => "!get_values_ok";
+
+      "array_data_str: $(test.array_data_str)"
+        ifvarclass => "!array_data_ok";
+
+    "ok"::
+      "$(this.promise_filename) Pass";
+
+    "!ok"::
+      "$(this.promise_filename) FAIL";
+}

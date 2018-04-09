@@ -236,6 +236,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                 {
                     size_t index_offset = ref->name_index_count;
                     JsonElement *holder = convert;
+                    JsonElement *holder_parent = NULL;
                     if (var->ref->num_indices - index_offset == 1)
                     {
                         last_key = var->ref->indices[index_offset];
@@ -253,6 +254,7 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                             }
 
                             last_key = var->ref->indices[index+1];
+                            holder_parent = holder;
                             holder = local;
                         }
                     }
@@ -262,7 +264,44 @@ static JsonElement* VarRefValueToJson(EvalContext *ctx, const FnCall *fp, const 
                         switch (var->rval.type)
                         {
                         case RVAL_TYPE_SCALAR:
-                            JsonObjectAppendString(holder, last_key, var->rval.item);
+                            if (JsonGetElementType(holder) != JSON_ELEMENT_TYPE_CONTAINER)
+                            {
+                                Log(LOG_LEVEL_WARNING,
+                                    "Replacing a non-container JSON element '%s' with a new empty container"
+                                    " (for the '%s' subkey)",
+                                    JsonGetPropertyAsString(holder), last_key);
+
+                                assert(holder_parent != NULL);
+
+                                JsonElement *empty_container = JsonObjectCreate(10);
+
+                                /* we have to duplicate 'holder->propertyName'
+                                 * instead of just using a pointer to it here
+                                 * because 'holder' is destroyed as part of the
+                                 * JsonObjectAppendElement() call below */
+                                char *element_name = xstrdup(JsonGetPropertyAsString(holder));
+                                JsonObjectAppendElement(holder_parent,
+                                                        element_name,
+                                                        empty_container);
+                                free (element_name);
+                                holder = empty_container;
+                                JsonObjectAppendString(holder, last_key, var->rval.item);
+                            }
+                            else
+                            {
+                                JsonElement *child = JsonObjectGet(holder, last_key);
+                                if (child != NULL && JsonGetElementType(child) == JSON_ELEMENT_TYPE_CONTAINER)
+                                {
+                                    Log(LOG_LEVEL_WARNING,
+                                        "Not replacing the container '%s' with a non-container value '%s'",
+                                        JsonGetPropertyAsString(child), (char*) var->rval.item);
+                                }
+                                else
+                                {
+                                    /* everything ok, just append the string */
+                                    JsonObjectAppendString(holder, last_key, var->rval.item);
+                                }
+                            }
                             break;
 
                         case RVAL_TYPE_LIST:

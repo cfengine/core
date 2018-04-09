@@ -396,7 +396,7 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", copy);
+        Log(LOG_LEVEL_ERR, "Bundle '%s' aborted on defined class '%s'", frame.owner->name, copy);
         SetBundleAborted(ctx);
     }
 
@@ -1526,6 +1526,18 @@ Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
 static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
 {
     {
+        assert(SeqLength(ctx->stack) > 0);
+
+        StackFrameBundle frame;
+        {
+          StackFrame *last_frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+          if (!last_frame)
+            {
+              ProgrammingError("Attempted to add a soft class on the stack, but stack had no bundle frame");
+            }
+          frame = last_frame->data.bundle;
+        }
+
         char context_copy[CF_MAXVARSIZE];
         char canonified_context[CF_MAXVARSIZE];
 
@@ -1563,7 +1575,9 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 
         if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
         {
-            Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
+            /* Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy); */
+
+            Log(LOG_LEVEL_ERR, "Bundle '%s' aborted on defined class '%s'", frame.owner->name, context_copy);
             SetBundleAborted(ctx);
         }
 

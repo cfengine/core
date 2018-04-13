@@ -541,6 +541,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 /* Sequence in which server promise types should be evaluated */
 static const char *const SERVER_TYPESEQUENCE[] =
 {
+    "meta",
     "vars",
     "classes",
     "roles",

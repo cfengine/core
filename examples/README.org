@@ -1,0 +1,139 @@
+#+Title: Examples
+
+This directory contains simple stand alone examples that illustrate the language
+and how cfengine works.
+
+These examples are shipped in our packages as part embedded package
+documentation and are commonly included from the [[https://github.com/cfengine/documentation][documentation repository]] for
+inclusion in the [[https://docs.cfengine.com][reference manual]].
+
+Examples that contain an =example_output= =src= block are run as part of our
+=common= [[./../tests/acceptance/04_examples/.][automated tests]] during ci builds.
+
+Before running an example be sure to execute the commands inside the =prep=
+=src= block if one exists.
+
+#+BEGIN_SRC shell :results output :exports both
+  awk '/.*begin_src prep/ {p=1}; p; /.*end_src/ {p=0}' ./file_hash.cf
+#+END_SRC
+
+#+RESULTS:
+: #+begin_src prep
+: #@ ```
+: #@ echo 1 > /tmp/1
+: #@ echo 2 > /tmp/2
+: #@ echo 3 > /tmp/3
+: #@ ```
+: #+end_src
+
+They can be run directly:
+
+#+BEGIN_SRC shell :exports both
+  chmod 600 ./countclassesmatching.cf
+  cf-agent -If ./countclassesmatching.cf
+#+END_SRC
+
+#+RESULTS:
+: R: Found 1 classes matching
+
+And their output can be compared with the =example_output= section.
+
+#+BEGIN_SRC shell :results output :exports both
+  awk '/.*begin_src example_output/ {p=1}; p; /.*end_src/ {p=0}' ./countclassesmatching.cf
+#+END_SRC
+
+#+RESULTS:
+: #+begin_src example_output
+: #@ ```
+: #@ R: Found 1 classes matching
+: #@ ```
+: #+end_src
+
+**Note:** Output inside of the =example_output= must be stable across runs of
+  the agent in order to work for testing. If including an example that has
+  unstable output from inside of the documentation repository consider adding a
+  static section to show in the documentation and a section showing an example
+  of the expected output. For example see the [[./randomint.cf][=randomint.cf= example]], and the
+  [[https://docs.cfengine.com/docs/master/reference-functions-randomint.html][=randomint()= in the reference manual]].
+  
+Running the examples:
+
+#+BEGIN_SRC shell :results output :exports both
+  cd ..
+  find . -name "*.cf*" | xargs chmod 600
+  tests/acceptance/testall --jobs=4\
+            --printlog\
+            --baseclasses=AUTO\
+            --extraclasses=DEBUG\
+            --bindir=/var/cfengine/bin\
+            tests/acceptance/04_examples/outputs/check_outputs.cf
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+======================================================================
+Testsuite started at 2018-04-14 00:12:10
+----------------------------------------------------------------------
+Total tests: 1
+
+        COMMON_TESTS: enabled
+         TIMED_TESTS: enabled
+          SLOW_TESTS: enabled
+     ERROREXIT_TESTS: enabled
+        SERIAL_TESTS: enabled
+       NETWORK_TESTS: enabled
+       LIBXML2_TESTS: enabled
+       LIBCURL_TESTS: enabled
+        UNSAFE_TESTS: disabled
+       STAGING_TESTS: disabled
+
+Test run is PARALLEL with MAKEFLAGS= --jobs=4
+
+./tests/acceptance/04_examples/outputs/check_outputs.cf Pass
+
+======================================================================
+Testsuite finished at 2018-04-14 00:12:11 (1 seconds)
+
+Passed tests:  1
+Failed tests:  0
+Skipped tests: 0
+Soft failures: 0
+Total tests:   1
+======================================================================
+Testsuite started at 2018-04-14 00:12:10
+----------------------------------------------------------------------
+Total tests: 1
+
+        COMMON_TESTS: enabled
+         TIMED_TESTS: enabled
+          SLOW_TESTS: enabled
+     ERROREXIT_TESTS: enabled
+        SERIAL_TESTS: enabled
+       NETWORK_TESTS: enabled
+       LIBXML2_TESTS: enabled
+       LIBCURL_TESTS: enabled
+        UNSAFE_TESTS: disabled
+       STAGING_TESTS: disabled
+
+Test run is PARALLEL with MAKEFLAGS= --jobs=4
+
+----------------------------------------------------------------------
+./tests/acceptance/04_examples/outputs/check_outputs.cf 
+----------------------------------------------------------------------
+R: /home/nickanderson/Northern.Tech/CFEngine/core/./tests/acceptance/04_examples/outputs/check_outputs.cf Pass
+
+Return code is 0.
+
+  ==> Pass
+
+
+======================================================================
+Testsuite finished at 2018-04-14 00:12:11 (1 seconds)
+
+Passed tests:  1
+Failed tests:  0
+Skipped tests: 0
+Soft failures: 0
+Total tests:   1
+#+end_example
+

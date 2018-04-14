@@ -1,0 +1,83 @@
+#  Copyright 2018 Northern.tech AS
+
+#  This file is part of Cfengine 3 - written and maintained by Northern.tech AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+# This example shows how to use the missing_ok attribute in copy from bodies. If
+# the source file is missing, the promise will be seen to be a promise kept
+# instead of a failure. The exception is that a remote copy that fails to make a
+# connection to the remote server will still be seen as a promise failure.
+
+      # unable to request the file it will be seen as a failure.
+
+    "/tmp/copied_from_missing_remote"
+      copy_from => missing_remote( "/var/cfengine/masterfiles/missing" ),
+      classes => results("bundle", "copy_from_missing_remote");
+
+  reports:
+    "$(with)"
+      with => string_mustache( "{{%-top-}}", sort( classesmatching( "copy_from_.*" ), lex));
+}
+body copy_from missing_remote( file_path )
+{
+  servers => { "127.0.0.1" };
+  source => "$(file_path)";
+  missing_ok => "true";
+}
+body copy_from missing_local( file_path )
+{
+  source => "$(file_path)";
+  missing_ok => "true";
+}
+body classes results(scope, class_prefix)
+{
+  scope => "$(scope)";
+
+  promise_kept => { "$(class_prefix)_reached",
+                    "$(class_prefix)_kept" };
+
+  promise_repaired => { "$(class_prefix)_reached",
+                        "$(class_prefix)_repaired" };
+
+  repair_failed => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_failed" };
+
+  repair_denied => { "$(class_prefix)_reached",
+                     "$(class_prefix)_error",
+                     "$(class_prefix)_not_kept",
+                     "$(class_prefix)_denied" };
+
+  repair_timeout => { "$(class_prefix)_reached",
+                      "$(class_prefix)_error",
+                      "$(class_prefix)_not_kept",
+                      "$(class_prefix)_timeout" };
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: [
+#@   "copy_from_missing_local_kept",
+#@   "copy_from_missing_local_reached",
+#@ ]
+#@ ```
+#+end_src

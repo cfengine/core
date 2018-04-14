@@ -25,26 +25,29 @@
 # instead of a failure. The exception is that a remote copy that fails to make a
 # connection to the remote server will still be seen as a promise failure.
 
-      # unable to request the file it will be seen as a failure.
-
-    "/tmp/copied_from_missing_remote"
-      copy_from => missing_remote( "/var/cfengine/masterfiles/missing" ),
-      classes => results("bundle", "copy_from_missing_remote");
+#+begin_src cfengine3
+bundle agent main
+{
+  files:
+    "/tmp/copied_from_missing_ok"
+      copy_from => missing_ok( "/var/cfengine/masterfiles/missing" ),
+      classes => results("bundle", "copy_from_missing_ok");
 
   reports:
     "$(with)"
       with => string_mustache( "{{%-top-}}", sort( classesmatching( "copy_from_.*" ), lex));
 }
-body copy_from missing_remote( file_path )
-{
-  servers => { "127.0.0.1" };
-  source => "$(file_path)";
-  missing_ok => "true";
-}
-body copy_from missing_local( file_path )
+body copy_from missing_ok( file_path )
 {
   source => "$(file_path)";
   missing_ok => "true";
+
+    # Run with these classes to try remote copies
+    remote_copy_self::
+        servers => { "127.0.0.1" };
+
+    remote_copy_policy_hub::
+        servers => { $(sys.policy_hub) };
 }
 body classes results(scope, class_prefix)
 {
@@ -73,11 +76,25 @@ body classes results(scope, class_prefix)
 }
 #+end_src
 ###############################################################################
+#+begin_src policy_description
+#@ In the above example `/tmp/copied_from_missing_ok` promises to be a copy of the local file
+#@ `/var/cfengine/masterfiles/missing`. In the `missing_ok` `copy_from` body
+#@ `missing_ok` is set to true. This causes the promise to be considered kept if
+#@ the source file is missing. The `results` classes body is used to define bundle
+#@ scoped classes prefixed with `copy_from_missing_ok`. The `reports` promise
+#@ outputs a sorted list of the classes defined starting with `copy_from_`.
+#+end_src
+###############################################################################
 #+begin_src example_output
 #@ ```
 #@ R: [
-#@   "copy_from_missing_local_kept",
-#@   "copy_from_missing_local_reached",
+#@   "copy_from_missing_ok_kept",
+#@   "copy_from_missing_ok_reached"
 #@ ]
 #@ ```
+#+end_src
+###############################################################################
+#+begin_src output_description
+#@ We can see in the output that the class defined for copying a local file that
+#@ does not exist is seen to be a promise kept.
 #+end_src

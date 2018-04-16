@@ -1,0 +1,88 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+
+      "template" string => "# Test1
+{{#testcase.test1}}
+{{#data}}
+Data = {{.}}
+{{/data}}
+{{/testcase.test1}}
+
+# Test2
+{{#testcase.test2.data}}
+Data = {{.}}
+{{/testcase.test2.data}}
+{{#testcase.test2.otherdata}}
+Other data = {{.}}
+{{/testcase.test2.otherdata}}";
+
+      "data" data => '{
+  "testcase": {
+    "test1": {
+      "data": [
+        "v1",
+        "v2"
+      ]
+    },
+    "test2": {
+      "data": [
+        "v1",
+        "v2"
+      ],
+      "otherdata": [
+        "v3",
+        "v4"
+      ]
+    }
+  }
+      }';
+
+}
+
+bundle agent test
+{
+  meta:
+
+      # The issue we see in cfengine is that if a {{#testcase.test2}} section is
+      # used the corresponding JSON object is iterated over and the rendering
+      # happens for each sub structure (property) iterated duplicating the
+      # data. The workaround is to not use a separate section corresponding to
+      # the testcase.test2 JSON object with multiple properties.
+
+      "description" -> { "CFE-2125" }
+        string => "Test a workaround for iterating over object to get a single
+                   block with correct context (CFE-2125).";
+
+  vars:
+      "got" string => string_mustache( $(init.template), "init.data" );
+}
+
+bundle agent check
+{
+  reports:
+    DEBUG::
+      "got output: $(test.got)";
+
+  vars:
+      "expected" string => "# Test1
+Data = v1
+Data = v2
+
+# Test2
+Data = v1
+Data = v2
+Other data = v3
+Other data = v4
+";
+
+  methods:
+      "check" usebundle => dcs_check_strcmp( $(test.got), $(check.expected), $(this.promise_filename), "no" );
+}

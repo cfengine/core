@@ -7,9 +7,6 @@ PartOf=cfengine3.service
 Wants=cf-redis-server.service
 Before=cf-redis-server.service
 
-Wants=cf-consumer.service
-Before=cf-consumer.service
-
 [Service]
 Type=forking
 WorkingDirectory=/tmp

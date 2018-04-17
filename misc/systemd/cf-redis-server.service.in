@@ -3,10 +3,8 @@ Description=CFEngine Enterprise Redis Report Collection Cache
 After=syslog.target
 PartOf=cfengine3.service
 ConditionPathExists=@workdir@/bin/redis-server
-Wants=cf-consumer.service
 Before=cf-hub.service
 Wants=cf-hub.service
-Before=cf-consumer.service
 
 [Service]
 Type=forking

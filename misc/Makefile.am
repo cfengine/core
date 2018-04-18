@@ -1,7 +1,6 @@
 # include unconditionally in the distribution tarball
 EXTRA_DIST= init.d/cfengine3.in \
 	systemd/cf-apache.service.in \
-	systemd/cf-consumer.service.in \
 	systemd/cf-execd.service.in \
 	systemd/cf-hub.service.in \
 	systemd/cf-monitord.service.in \
@@ -23,7 +22,6 @@ if WITH_SYSTEMD_SERVICE
 systemddir = $(SYSTEMD_SERVICE_PATH)
 systemd_DATA   = systemd/cfengine3.service
 systemd_DATA  += systemd/cf-apache.service
-systemd_DATA  += systemd/cf-consumer.service
 systemd_DATA  += systemd/cf-execd.service
 systemd_DATA  += systemd/cf-hub.service
 systemd_DATA  += systemd/cf-monitord.service

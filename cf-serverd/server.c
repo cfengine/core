@@ -332,7 +332,32 @@ static void *HandleConnection(void *c)
     TRIES = 0;
     ThreadUnlock(cft_server_children);
 
-    DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
+
+/*
+  TODO need a place to retrieve TCP_NODELAY option from globally
+  struct  ServerConnectionState_
+has ConnectionInfo conn_info
+
+This ConnectionInfo object is passed to us so likely the communication mechanism for passing the
+config option... in SpawnConnection() we do a conn = NewConn(ctx, info) from
+ConnectionInfo passed into SpawnConnection.
+
+In cf-serverd-functions.c we have a call to ServerEntryPoint(ctx, MapAddress(ipaddr), info)
+seems the EvalContext *ctx is the place to go now...
+
+struct EvalContext_ in libpromises/eval_context.c
+
+TODO maybe define a global class to specify the option?
+EvalContext_.global_classes
+or
+EvalContext_.global_variables
+
+Maybe there is a way to get at a global config as mentioned in commented out code?
+    /* const GenericAgentConfig *config; */
+
+*/
+
+    //DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
 
     /* 20 times the connect() timeout should be enough to avoid MD5
      * computation timeouts on big files on old slow Solaris 8 machines. */

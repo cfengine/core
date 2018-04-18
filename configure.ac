@@ -1444,7 +1444,6 @@ AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
         AC_SUBST([SYSTEMD_SERVICE_PATH])
         AC_CONFIG_FILES([misc/systemd/cfengine3.service])
         AC_CONFIG_FILES([misc/systemd/cf-apache.service])
-        AC_CONFIG_FILES([misc/systemd/cf-consumer.service])
         AC_CONFIG_FILES([misc/systemd/cf-execd.service])
         AC_CONFIG_FILES([misc/systemd/cf-hub.service])
         AC_CONFIG_FILES([misc/systemd/cf-monitord.service])

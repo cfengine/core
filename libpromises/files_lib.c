@@ -622,7 +622,7 @@ void RotateFiles(char *name, int number)
 
     if ((fd = safe_creat(name, statbuf.st_mode)) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Failed to create new '%s' in disable(rotate). (creat: %s)",
+        Log(LOG_LEVEL_ERR, "Failed to create new '%s' in disable(rotate). (create: %s)",
             name, GetErrorStr());
     }
     else

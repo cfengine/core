@@ -353,7 +353,7 @@ or
 EvalContext_.global_variables
 
 Maybe there is a way to get at a global config as mentioned in commented out code?
-    /* const GenericAgentConfig *config; */
+    const GenericAgentConfig *config;
 
 */
 

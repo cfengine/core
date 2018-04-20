@@ -6,6 +6,12 @@
 #include <misc_lib.h>                                          /* xsnprintf */
 #include <known_dirs.h>
 
+#ifdef LMDB
+int main()
+{
+    return 0;
+}
+#else
 
 typedef struct
 {
@@ -225,9 +231,6 @@ void test_ignore_wrong_sized(void)
 
 int main()
 {
-#ifdef LMDB
-    return 0;
-#else
     tests_setup();
 
     const UnitTest tests[] =
@@ -245,7 +248,6 @@ int main()
     tests_teardown();
 
     return ret;
-#endif
 }
 
 /* STUBS */
@@ -280,3 +282,5 @@ void HashPubKey(ARG_UNUSED RSA *key,
 {
     fail();
 }
+
+#endif // LMDB

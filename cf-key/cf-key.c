@@ -94,7 +94,7 @@ static const char *const HINTS[] =
     "Enable debugging output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
-    "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
+    "Specify an alternative output file than the default.",
     "Specify a RSA key size in bits, the default value is 2048.",
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",

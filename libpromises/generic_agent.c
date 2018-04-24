@@ -647,7 +647,7 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
     int fd = creat(filename, 0600);
     if (fd == -1)
     {
-        Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create file (creat: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create file (create: %s)", filename, GetErrorStr());
         return false;
     }
 
@@ -763,7 +763,7 @@ static bool WriteReleaseIdFile(const char *filename, const char *dirname)
     int fd = creat(filename, 0600);
     if (fd == -1)
     {
-        Log(LOG_LEVEL_ERR, "While writing policy release ID file '%s', could not create file (creat: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "While writing policy release ID file '%s', could not create file (create: %s)", filename, GetErrorStr());
         return false;
     }
 

@@ -847,7 +847,7 @@ void YieldCurrentLock(CfLock lock)
 
     if (WriteLock(lock.last) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to create '%s'. (creat: %s)", lock.last, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Unable to create '%s'. (create: %s)", lock.last, GetErrorStr());
         free(lock.last);
         free(lock.lock);
         free(lock.log);

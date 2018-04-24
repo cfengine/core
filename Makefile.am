@@ -45,8 +45,6 @@ SUBDIRS = libcompat \
 	misc \
 	ext \
 	examples 
-#\
-#	tests
 
 
 # Hide the buildsystem's username, at least with GNU tar.

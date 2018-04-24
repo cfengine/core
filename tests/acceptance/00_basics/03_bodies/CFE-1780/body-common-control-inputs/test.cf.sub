@@ -1,0 +1,78 @@
+body file control
+{
+	      inputs => { @(map_role_bundles.inputs) };
+}
+
+bundle agent main
+#
+{
+  methods:
+      "classify";
+      "map_role_bundles";
+      "go";
+
+}
+
+
+bundle common classify
+#
+{
+  vars:
+      "variable" string => "any";
+
+  classes:
+      "group_class_from_variable"
+        expression => strcmp("$(variable)", "any"),
+        comment => "Highest level classification, other classes depend on this.";
+
+      "group_class_from_string"
+        expression => strcmp("any", "any"),
+        comment => "Highest level classification, other classes depend on this.";
+
+}
+
+bundle common map_role_bundles
+#
+{
+  vars:
+      # Define bundles
+    any::
+      "role[app00_zero]"
+        string => "$(this.promise_dirname)/app00_zero.cf.sub",
+        comment =>
+      "Roles are based on groups. Roles
+                    map to bundles. Bundles are defined in a specific file.";
+
+    !any::
+      "role[app_zero]"
+        string => "$(this.promise_dirname)/app_zero.cf.sub",
+        comment =>
+      "Roles are based on groups. Roles
+                    map to bundles. Bundles are defined in a specific file.";
+
+    group_class_from_variable::
+      "role[app_one]"
+        string => "$(this.promise_dirname)/app_one.cf.sub",
+        comment =>
+      "Roles are based on groups. Roles
+                    map to bundles. Bundles are defined in a specific file.";
+
+    group_class_from_string::
+      "role[app_two]" string => "$(this.promise_dirname)/app_two.cf.sub";
+
+    any::
+      "bundles" slist => getindices(role);
+      "inputs" slist => getvalues(role);
+}
+
+bundle agent go
+#
+{
+  vars:
+      "bundles" slist => { @(map_role_bundles.bundles) };
+      "sorted_bundles" slist => sort(bundles, "lex");
+
+  methods:
+      "$(sorted_bundles)" usebundle => $(sorted_bundles);
+}
+

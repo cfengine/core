@@ -3453,7 +3453,7 @@ static void TruncateFile(char *name)
     {
         if ((fd = safe_creat(name, 000)) == -1)      /* dummy mode ignored */
         {
-            Log(LOG_LEVEL_ERR, "Failed to create or truncate file '%s'. (creat: %s)", name, GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Failed to create or truncate file '%s'. (create: %s)", name, GetErrorStr());
         }
         else
         {
@@ -3766,7 +3766,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
     if (!IsAbsoluteFileName(file))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "Cannot create a relative filename '%s' - has no invariant meaning. (creat: %s)", file, GetErrorStr());
+             "Cannot create a relative filename '%s' - has no invariant meaning. (create: %s)", file, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
@@ -3781,7 +3781,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         {
             if (!MakeParentDirectory(file, attr.move_obstructions))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating directories for '%s'. (creat: %s)",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating directories for '%s'. (create: %s)",
                      file, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;

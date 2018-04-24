@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
 
     Log(LOG_LEVEL_VERBOSE, "Starting cf-testd");
     CryptoInitialize();
-    LoadSecretKeys();
+    LoadSecretKeys(NULL, NULL);
     cfnet_init(NULL, NULL);
     CFTestD_Config *config = CFTestD_CheckOpts(argc, argv);
     char *report_file      = config->report_file;

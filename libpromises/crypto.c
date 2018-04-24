@@ -159,19 +159,26 @@ static void RandomSeed(void)
 static const char priv_passphrase[] = "Cfengine passphrase";
 
 /**
+ * @param priv_key_path path to the private key to use (%NULL to use the default)
+ * @param pub_key_path path to the private key to use (%NULL to use the default)
  * @return true the error is not so severe that we must stop
  */
-bool LoadSecretKeys(void)
+bool LoadSecretKeys(const char *const priv_key_path,
+                    const char *const pub_key_path)
 {
     {
-        char *privkeyfile = PrivateKeyFile(GetWorkDir());
-        FILE *fp = fopen(privkeyfile, "r");
+        char *privkeyfile = NULL;
+        if (priv_key_path == NULL)
+        {
+            privkeyfile = PrivateKeyFile(GetWorkDir());
+        }
+        FILE *fp = fopen(privkeyfile != NULL ? privkeyfile : priv_key_path, "r");
         if (!fp)
         {
             /* VERBOSE in case it's a custom, local-only installation. */
             Log(LOG_LEVEL_VERBOSE,
                 "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)",
-                privkeyfile, GetErrorStr());
+                privkeyfile != NULL ? privkeyfile : priv_key_path, GetErrorStr());
             free(privkeyfile);
             return false;
         }
@@ -193,14 +200,18 @@ bool LoadSecretKeys(void)
     }
 
     {
-        char *pubkeyfile = PublicKeyFile(GetWorkDir());
-        FILE *fp = fopen(pubkeyfile, "r");
+        char *pubkeyfile = NULL;
+        if (pub_key_path == NULL)
+        {
+            pubkeyfile = PublicKeyFile(GetWorkDir());
+        }
+        FILE *fp = fopen(pubkeyfile != NULL ? pubkeyfile : pub_key_path, "r");
         if (!fp)
         {
             /* VERBOSE in case it's a custom, local-only installation. */
             Log(LOG_LEVEL_VERBOSE,
                 "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)",
-                pubkeyfile, GetErrorStr());
+                pubkeyfile != NULL ? pubkeyfile : pub_key_path, GetErrorStr());
             free(pubkeyfile);
             return false;
         }

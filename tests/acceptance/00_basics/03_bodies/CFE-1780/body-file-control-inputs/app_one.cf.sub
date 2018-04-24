@@ -1,0 +1,5 @@
+bundle agent app_one
+{
+  reports:
+      "$(this.bundle)";
+}

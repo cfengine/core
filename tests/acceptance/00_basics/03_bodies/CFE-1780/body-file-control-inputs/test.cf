@@ -1,0 +1,36 @@
+#######################################################
+#
+# Redmine#3315: Test dynamic inputs and bundlesequence
+#
+#######################################################
+
+body common control
+{
+      inputs => {
+                  "../../../../default.cf.sub",
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+
+      "description" -> { "CFE-1780" }
+        string => "Test that dynamic inputs from classic array structures can be loaded and used.";
+}
+
+bundle agent check
+{
+  methods:
+
+      "Check Agent Output"
+        usebundle => dcs_passif_output1(".*R: app00_zero
+R: app_one
+R: app_two.*",
+                                         "$(sys.cf_agent) -Kf $(this.promise_filename).sub",
+                                         $(this.promise_filename));
+}

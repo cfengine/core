@@ -62,6 +62,7 @@ typedef struct
     char *report_file;
     char *report;
     int report_len;
+    char *key_file;
 } CFTestD_Config;
 
 /*******************************************************************/
@@ -73,9 +74,10 @@ static const struct option OPTIONS[] = {
     {"debug", no_argument, 0, 'd'},
     {"help", no_argument, 0, 'h'},
     {"inform", no_argument, 0, 'I'},
+    {"key-file", required_argument, 0, 'k'},
+    {"timestamp", no_argument, 0, 'l'},
     {"port", required_argument, 0, 'p'},
     {"report", required_argument, 0, 'r'},
-    {"timestamp", no_argument, 0, 'l'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {NULL, 0, 0, '\0'}};
@@ -85,9 +87,10 @@ static const char *const HINTS[] = {
     "Enable debugging output",
     "Print the help message",
     "Print basic information about what cf-testd does",
+    "Specify a path to the key (private) to use for communication",
+    "Log timestamps on each line of log output",
     "Set the port cf-testd will listen on",
     "Read report from file",
-    "Log timestamps on each line of log output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     NULL};
@@ -103,6 +106,7 @@ void CFTestD_ConfigDestroy(CFTestD_Config *config)
 {
     free(config->report_file);
     free(config->report);
+    free(config->key_file);
     free(config);
 }
 
@@ -120,7 +124,7 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
     CFTestD_Config *config = CFTestD_ConfigInit();
     assert(config != NULL);
 
-    while ((c = getopt_long(argc, argv, "a:df:hIlp:vV", OPTIONS, NULL)) != -1)
+    while ((c = getopt_long(argc, argv, "a:df:hIk:lp:vV", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {
@@ -136,6 +140,12 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
         case 'I':
             LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
+        case 'k':
+            config->key_file = xstrdup(optarg);
+            break;
+        case 'l':
+            LoggingEnableTimestamps(true);
+            break;
         case 'p':
         {
             bool ret = SetCfenginePort(optarg);
@@ -146,9 +156,6 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
             }
             break;
         }
-        case 'l':
-            LoggingEnableTimestamps(true);
-            break;
         case 'r':
             config->report_file = xstrdup(optarg);
             break;
@@ -548,9 +555,22 @@ int main(int argc, char *argv[])
 
     Log(LOG_LEVEL_VERBOSE, "Starting cf-testd");
     CryptoInitialize();
-    LoadSecretKeys(NULL, NULL);
-    cfnet_init(NULL, NULL);
+
     CFTestD_Config *config = CFTestD_CheckOpts(argc, argv);
+
+    char *priv_key_path = NULL;
+    char *pub_key_path = NULL;
+    if (config->key_file != NULL)
+    {
+        priv_key_path = config->key_file;
+        pub_key_path = xstrdup(priv_key_path);
+        StringReplace(pub_key_path, strlen(pub_key_path) + 1,
+                      "priv", "pub");
+    }
+    LoadSecretKeys(priv_key_path, pub_key_path);
+    free(pub_key_path);
+
+    cfnet_init(NULL, NULL);
     char *report_file      = config->report_file;
 
     if (report_file != NULL)

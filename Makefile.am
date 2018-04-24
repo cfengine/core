@@ -44,8 +44,9 @@ SUBDIRS = libcompat \
 	cf-net \
 	misc \
 	ext \
-	examples \
-	tests
+	examples 
+#\
+#	tests
 
 
 # Hide the buildsystem's username, at least with GNU tar.

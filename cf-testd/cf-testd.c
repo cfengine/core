@@ -567,7 +567,7 @@ int main(int argc, char *argv[])
         StringReplace(pub_key_path, strlen(pub_key_path) + 1,
                       "priv", "pub");
     }
-    LoadSecretKeys(priv_key_path, pub_key_path);
+    LoadSecretKeys(priv_key_path, pub_key_path, NULL, NULL);
     free(pub_key_path);
 
     cfnet_init(NULL, NULL);

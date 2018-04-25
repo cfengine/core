@@ -65,6 +65,7 @@ typedef struct
     char *key_file;
     RSA *priv_key;
     RSA *pub_key;
+    SSL_CTX *ssl_ctx;
 } CFTestD_Config;
 
 /*******************************************************************/
@@ -198,14 +199,14 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
     return config;
 }
 
-bool CFTestD_TLSSessionEstablish(ServerConnectionState *conn)
+bool CFTestD_TLSSessionEstablish(ServerConnectionState *conn, CFTestD_Config *config)
 {
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         return true;
     }
 
-    bool established = BasicServerTLSSessionEstablish(conn);
+    bool established = BasicServerTLSSessionEstablish(conn, config->ssl_ctx);
     if (!established)
     {
         return false;
@@ -413,13 +414,11 @@ static void CFTestD_DeleteConn(ServerConnectionState *conn)
     free(conn);
 }
 
-static void *CFTestD_HandleConnection(void *c, CFTestD_Config *config)
+static void *CFTestD_HandleConnection(ServerConnectionState *conn, CFTestD_Config *config)
 {
-    ServerConnectionState *conn = c;
-
     Log(LOG_LEVEL_INFO, "Accepting connection");
 
-    bool established = CFTestD_TLSSessionEstablish(conn);
+    bool established = CFTestD_TLSSessionEstablish(conn, config);
     if (!established)
     {
         Log(LOG_LEVEL_ERR, "Could not establish TLS Session");
@@ -500,7 +499,7 @@ static void CFTestD_AcceptAndHandle(int sd, CFTestD_Config *config)
 
 int CFTestD_StartServer(CFTestD_Config *config)
 {
-    bool tls_init_ok = ServerTLSInitialize(config->priv_key, config->pub_key, NULL);
+    bool tls_init_ok = ServerTLSInitialize(config->priv_key, config->pub_key, &(config->ssl_ctx));
     if (!tls_init_ok)
     {
         return -1;

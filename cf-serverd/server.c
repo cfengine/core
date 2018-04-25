@@ -366,7 +366,7 @@ static void *HandleConnection(void *c)
     ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
     if (protocol_version == CF_PROTOCOL_LATEST)
     {
-        bool established = ServerTLSSessionEstablish(conn);
+        bool established = ServerTLSSessionEstablish(conn, NULL);
         if (!established)
         {
             goto dethread;

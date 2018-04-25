@@ -63,8 +63,8 @@ static const char *const PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
     NULL
 };
 
-bool ServerTLSInitialize();
-void ServerTLSDeInitialize();
+bool ServerTLSInitialize(RSA *priv_key, RSA *pub_key, SSL_CTX **ctx);
+void ServerTLSDeInitialize(RSA **priv_key, RSA **pub_key, SSL_CTX **ctx);
 bool ServerTLSPeek(ConnectionInfo *conn_info);
 bool BasicServerTLSSessionEstablish(ServerConnectionState *conn);
 bool ServerTLSSessionEstablish(ServerConnectionState *conn);

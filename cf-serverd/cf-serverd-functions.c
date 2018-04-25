@@ -587,7 +587,7 @@ static int WaitOnThreads()
         Log(LOG_LEVEL_VERBOSE,
             "All threads are done, cleaning up allocations");
         ClearAuthAndACLs();
-        ServerTLSDeInitialize();
+        ServerTLSDeInitialize(NULL, NULL, NULL);
     }
 
     return result;
@@ -686,7 +686,7 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     InitSignals();
 
-    bool tls_init_ok = ServerTLSInitialize();
+    bool tls_init_ok = ServerTLSInitialize(NULL, NULL, NULL);
     if (!tls_init_ok)
     {
         return -1;

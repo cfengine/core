@@ -363,7 +363,7 @@ static void child_mainloop(int channel)
         remote_socket = -1;
     }
 
-    ServerTLSDeInitialize();
+    ServerTLSDeInitialize(NULL, NULL, NULL);
     exit(EXIT_SUCCESS);
 }
 

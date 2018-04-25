@@ -63,6 +63,8 @@ typedef struct
     char *report;
     int report_len;
     char *key_file;
+    RSA *priv_key;
+    RSA *pub_key;
 } CFTestD_Config;
 
 /*******************************************************************/
@@ -498,7 +500,7 @@ static void CFTestD_AcceptAndHandle(int sd, CFTestD_Config *config)
 
 int CFTestD_StartServer(CFTestD_Config *config)
 {
-    bool tls_init_ok = ServerTLSInitialize();
+    bool tls_init_ok = ServerTLSInitialize(config->priv_key, config->pub_key, NULL);
     if (!tls_init_ok)
     {
         return -1;
@@ -567,7 +569,7 @@ int main(int argc, char *argv[])
         StringReplace(pub_key_path, strlen(pub_key_path) + 1,
                       "priv", "pub");
     }
-    LoadSecretKeys(priv_key_path, pub_key_path, NULL, NULL);
+    LoadSecretKeys(priv_key_path, pub_key_path, &(config->priv_key), &(config->pub_key));
     free(pub_key_path);
 
     cfnet_init(NULL, NULL);

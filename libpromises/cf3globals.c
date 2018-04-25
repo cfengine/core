@@ -65,8 +65,7 @@ char VDOMAIN[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */
 const char *DEFAULT_COPYTYPE = NULL; /* GLOBAL_P */
 
 /*
-  Keys for the agent. Loaded by GAInitialize (and hence every time policy is
-  reloaded).
+  Keys for the agent. Loaded by LoadSecretKeys.
 
   Used in network protocol and leaked to language.
 */

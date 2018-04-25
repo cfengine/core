@@ -438,17 +438,25 @@ bool ServerSendWelcome(const ServerConnectionState *conn)
  *
  * Doesn't include code for verifying key and lastseen
  *
+ * @param conn    connection state
+ * @param ssl_ctx SSL context to use for the session (or %NULL to use the
+ *                default SSLSERVERCONTEXT)
+ *
  * @see ServerTLSSessionEstablish
  * @return true for success false otherwise
  */
-bool BasicServerTLSSessionEstablish(ServerConnectionState *conn)
+bool BasicServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
 {
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         return true;
     }
+    if (ssl_ctx == NULL)
+    {
+        ssl_ctx = SSLSERVERCONTEXT;
+    }
     assert(ConnectionInfoSSL(conn->conn_info) == NULL);
-    SSL *ssl = SSL_new(SSLSERVERCONTEXT);
+    SSL *ssl = SSL_new(ssl_ctx);
     if (ssl == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_new: %s",
@@ -484,18 +492,22 @@ bool BasicServerTLSSessionEstablish(ServerConnectionState *conn)
  *
  * This function uses trustkeys to trust new keys and updates lastseen
  *
+ * @param conn    connection state
+ * @param ssl_ctx SSL context to use for the session (or %NULL to use the
+ *                default SSLSERVERCONTEXT)
+ *
  * @see BasicServerTLSSessionEstablish
  * @note Various fields in #conn are set, like username and keyhash.
  * @return true for success false otherwise
  */
-bool ServerTLSSessionEstablish(ServerConnectionState *conn)
+bool ServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
 {
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         return true;
     }
 
-    bool established =  BasicServerTLSSessionEstablish(conn);
+    bool established = BasicServerTLSSessionEstablish(conn, ssl_ctx);
     if (!established)
     {
         return false;

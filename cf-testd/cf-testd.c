@@ -613,5 +613,10 @@ int main(int argc, char *argv[])
     int r = CFTestD_StartServer(config);
     CFTestD_ConfigDestroy(config);
 
+    /* we don't really need to do this here because the process is about the
+     * terminate, but it's a good way the cleanup actually works and doesn't
+     * cause a segfault or something */
+    ServerTLSDeInitialize(&(config->priv_key), &(config->pub_key), &(config->ssl_ctx));
+
     return r;
 }

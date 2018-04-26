@@ -66,6 +66,7 @@ typedef struct
     RSA *priv_key;
     RSA *pub_key;
     SSL_CTX *ssl_ctx;
+    char *address;
 } CFTestD_Config;
 
 /*******************************************************************/
@@ -110,6 +111,7 @@ void CFTestD_ConfigDestroy(CFTestD_Config *config)
     free(config->report_file);
     free(config->report);
     free(config->key_file);
+    free(config->address);
     free(config);
 }
 
@@ -132,7 +134,7 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
         switch (c)
         {
         case 'a':
-            SetBindInterface(optarg);
+            config->address = xstrdup(optarg);
             break;
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
@@ -505,7 +507,7 @@ int CFTestD_StartServer(CFTestD_Config *config)
         return -1;
     }
 
-    int sd = InitServer(CFTESTD_QUEUE_SIZE);
+    int sd = InitServer(CFTESTD_QUEUE_SIZE, config->address);
 
     MakeSignalPipe();
 

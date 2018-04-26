@@ -18,7 +18,10 @@ bundle agent main
 
       "rendered"
         string => string_mustache(
-"{{#classes.known_day_of_week}}I recognize the day of the week.{{/classes.known_day_of_week}}",
+"{{#classes.known_day_of_week}}I recognize the day of the week.{{/classes.known_day_of_week}}
+{{^classes.class_you_are_looking_for}}
+The class you are looking for is not defined.
+{{/classes.class_you_are_looking_for}}",
                                   datastate());
   reports:
       "$(rendered)";
@@ -30,7 +33,8 @@ bundle agent main
 #@ Here we define the class `known_day_of_week` as long as there is a class
 #@ representing a known day. Then we render the value of the string variable
 #@ "rendered" using `string_mustache()` with a template that includes a section
-#@ that is conditional when `classes.known_day_of_week` is `true` based on the data
+#@ that is conditional when `classes.known_day_of_week` is `true` and another section
+#@ when `classes.class_you_are_looking_for` is not defined based on the data
 #@ provided from `datastate()` which is the default set of data to use for mustache
 #@ templates when explicit data is not provided. Finally we report the variable to
 #@ see the rendered template.
@@ -39,6 +43,8 @@ bundle agent main
 #+begin_src example_output
 #@ ```
 #@ R: I recognize the day of the week.
+#@ The class you are looking for is not defined.
+#@ 
 #@ ```
 #+end_src
 

@@ -1,0 +1,54 @@
+# Example showing how sections are rendered using cfengine classes
+
+# Being a logicless templating system, mustache is not able to leverage
+# CFEngine's powerful class expression logic. Only singular classes can be used
+# to conditionally render a block in mustache. This example shows how you can
+# define a singular cfengine class based on a complex expression, and then use
+# that singular class for conditional rendering in a template.
+
+#+begin_src cfengine3
+bundle agent main
+{
+  classes:
+
+      "known_day_of_week"
+        expression => "(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)";
+
+  vars:
+
+      "rendered"
+        string => string_mustache(
+"{{#classes.known_day_of_week}}I recognize the day of the week.{{/classes.known_day_of_week}}
+{{^classes.class_you_are_looking_for}}
+The class you are looking for is not defined.
+{{/classes.class_you_are_looking_for}}",
+                                  datastate());
+  reports:
+      "$(rendered)";
+
+}
+#+end_src
+
+#+begin_src policy_description
+#@ Here we define the class `known_day_of_week` as long as there is a class
+#@ representing a known day. Then we render the value of the string variable
+#@ "rendered" using `string_mustache()` with a template that includes a section
+#@ that is conditional when `classes.known_day_of_week` is `true` and another section
+#@ when `classes.class_you_are_looking_for` is not defined based on the data
+#@ provided from `datastate()` which is the default set of data to use for mustache
+#@ templates when explicit data is not provided. Finally we report the variable to
+#@ see the rendered template.
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: I recognize the day of the week.
+#@ The class you are looking for is not defined.
+#@ 
+#@ ```
+#+end_src
+
+#+begin_src output_description
+#@ We can see in the output that the conditional text was rendered as expected.
+#@ Try adjusting the template or the class expression.
+#+end_src

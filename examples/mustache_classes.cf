@@ -1,12 +1,10 @@
 # Example showing how sections are rendered using cfengine classes
 
-#+begin_src policy_preface
-#@ Being a logicless templating system, mustache is not able to leverage CFEngine's
-#@ powerful class expression logic. Only singular classes can be used to
-#@ conditionally render a block in mustache. This example shows how you can define a
-#@ singular cfengine class based on a complex expression, and then use that
-#@ singular class for conditional rendering in a template.
-#+end_src
+# Being a logicless templating system, mustache is not able to leverage
+# CFEngine's powerful class expression logic. Only singular classes can be used
+# to conditionally render a block in mustache. This example shows how you can
+# define a singular cfengine class based on a complex expression, and then use
+# that singular class for conditional rendering in a template.
 
 #+begin_src cfengine3
 bundle agent main

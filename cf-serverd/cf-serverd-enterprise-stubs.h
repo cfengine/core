@@ -33,7 +33,8 @@ struct ServerConnectionState;
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, RegisterLiteralServerData, EvalContext *, ctx, const char *, handle, const Promise *, pp);
 ENTERPRISE_FUNC_3ARG_DECLARE(int, ReturnLiteralData, EvalContext *, ctx, char *, handle, char *, ret);
 
-ENTERPRISE_FUNC_4ARG_DECLARE(int, SetServerListenState, EvalContext *, ctx, size_t, queue_size, bool, server_listen,
+ENTERPRISE_FUNC_5ARG_DECLARE(int, SetServerListenState, EvalContext *, ctx, size_t, queue_size,
+                             char *, bind_address, bool, server_listen,
                              InitServerFunction, InitServerPtr);
 
 typedef void (*ServerEntryPointFunction)(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);

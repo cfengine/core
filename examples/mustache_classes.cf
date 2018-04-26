@@ -17,7 +17,8 @@ bundle agent main
   vars:
 
       "rendered"
-        string => string_mustache("{{#classes.known_day_of_week}}I recognize the day of the week.{{/classes.known_day_of_week}}",
+        string => string_mustache(
+"{{#classes.known_day_of_week}}I recognize the day of the week.{{/classes.known_day_of_week}}",
                                   datastate());
   reports:
       "$(rendered)";

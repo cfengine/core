@@ -159,30 +159,48 @@ static void RandomSeed(void)
 static const char priv_passphrase[] = "Cfengine passphrase";
 
 /**
+ * @param[in] priv_key_path path to the private key to use (%NULL to use the default)
+ * @param[in] pub_key_path path to the private key to use (%NULL to use the default)
+ * @param[out] priv_key a place to store the loaded private key (or %NULL to
+ *             use the global PRIVKEY variable)
+ * @param[out] pub_key a place to store the loaded public key (or %NULL to
+ *             use the global PUBKEY variable)
  * @return true the error is not so severe that we must stop
  */
-bool LoadSecretKeys(void)
+bool LoadSecretKeys(const char *const priv_key_path,
+                    const char *const pub_key_path,
+                    RSA **priv_key, RSA **pub_key)
 {
     {
-        char *privkeyfile = PrivateKeyFile(GetWorkDir());
-        FILE *fp = fopen(privkeyfile, "r");
+        char *privkeyfile = NULL;
+        if (priv_key_path == NULL)
+        {
+            privkeyfile = PrivateKeyFile(GetWorkDir());
+        }
+        FILE *fp = fopen(privkeyfile != NULL ? privkeyfile : priv_key_path, "r");
         if (!fp)
         {
             /* VERBOSE in case it's a custom, local-only installation. */
             Log(LOG_LEVEL_VERBOSE,
                 "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)",
-                privkeyfile, GetErrorStr());
+                privkeyfile != NULL ? privkeyfile : priv_key_path, GetErrorStr());
             free(privkeyfile);
             return false;
         }
 
-        PRIVKEY = PEM_read_RSAPrivateKey(fp, NULL, NULL, (void*) priv_passphrase);
-        if (PRIVKEY == NULL)
+        if (priv_key == NULL)
+        {
+            /* if no place to store the private key was specified, use the
+             * global variable PRIVKEY */
+            priv_key = &PRIVKEY;
+        }
+        *priv_key = PEM_read_RSAPrivateKey(fp, NULL, NULL, (void*) priv_passphrase);
+        if (*priv_key == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Error reading private key. (PEM_read_RSAPrivateKey: %s)",
                 CryptoLastErrorString());
-            PRIVKEY = NULL;
+            *priv_key = NULL;
             fclose(fp);
             return false;
         }
@@ -193,20 +211,30 @@ bool LoadSecretKeys(void)
     }
 
     {
-        char *pubkeyfile = PublicKeyFile(GetWorkDir());
-        FILE *fp = fopen(pubkeyfile, "r");
+        char *pubkeyfile = NULL;
+        if (pub_key_path == NULL)
+        {
+            pubkeyfile = PublicKeyFile(GetWorkDir());
+        }
+        FILE *fp = fopen(pubkeyfile != NULL ? pubkeyfile : pub_key_path, "r");
         if (!fp)
         {
             /* VERBOSE in case it's a custom, local-only installation. */
             Log(LOG_LEVEL_VERBOSE,
                 "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)",
-                pubkeyfile, GetErrorStr());
+                pubkeyfile != NULL ? pubkeyfile : pub_key_path, GetErrorStr());
             free(pubkeyfile);
             return false;
         }
 
-        PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, (void*) priv_passphrase);
-        if (PUBKEY == NULL)
+        if (pub_key == NULL)
+        {
+            /* if no place to store the public key was specified, use the
+             * global variable PUBKEY */
+            pub_key = &PUBKEY;
+        }
+        *pub_key = PEM_read_RSAPublicKey(fp, NULL, NULL, (void*) priv_passphrase);
+        if (*pub_key == NULL)
         {
             Log(LOG_LEVEL_ERR,
                 "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
@@ -221,10 +249,10 @@ bool LoadSecretKeys(void)
         fclose(fp);
     }
 
-    if (PUBKEY != NULL)
+    if (*pub_key != NULL)
     {
         const BIGNUM *n, *e;
-        RSA_get0_key(PUBKEY, &n, &e, NULL);
+        RSA_get0_key(*pub_key, &n, &e, NULL);
         if ((BN_num_bits(e) < 2) || (!BN_is_odd(e)))
         {
             Log(LOG_LEVEL_ERR, "The public key RSA exponent is too small or not odd");

@@ -215,7 +215,7 @@ static void CFNetInit()
     OpenNetwork();
 #endif
     CryptoInitialize();
-    LoadSecretKeys();
+    LoadSecretKeys(NULL, NULL, NULL, NULL);
     cfnet_init(NULL, NULL);
 }
 

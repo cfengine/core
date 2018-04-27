@@ -1069,66 +1069,6 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
 
 
 /**
- * Replace all occurrences of #find with #replace.
- *
- * @return the length of #buf or (size_t) -1 in case of overflow, or 0
- *         if no replace took place.
- */
-static size_t StringReplace(char *buf, size_t buf_size,
-                            const char *find, const char *replace)
-{
-    assert(find[0] != '\0');
-
-    char *p = strstr(buf, find);
-    if (p == NULL)
-    {
-        return 0;
-    }
-
-    size_t find_len = strlen(find);
-    size_t replace_len = strlen(replace);
-    size_t buf_len = strlen(buf);
-    size_t buf_idx = 0;
-    char tmp[buf_size];
-    size_t tmp_len = 0;
-
-    /* Do all replacements we find. */
-    do
-    {
-        size_t buf_newidx = p - buf;
-        size_t prefix_len = buf_newidx - buf_idx;
-
-        if (tmp_len + prefix_len + replace_len >= buf_size)
-        {
-            return (size_t) -1;
-        }
-
-        memcpy(&tmp[tmp_len], &buf[buf_idx], prefix_len);
-        tmp_len += prefix_len;
-
-        memcpy(&tmp[tmp_len], replace, replace_len);
-        tmp_len += replace_len;
-
-        buf_idx = buf_newidx + find_len;
-        p = strstr(&buf[buf_idx], find);
-    } while (p != NULL);
-
-    /* Copy leftover plus terminating '\0'. */
-    size_t leftover_len = buf_len - buf_idx;
-    if (tmp_len + leftover_len >= buf_size)
-    {
-        return (size_t) -1;
-    }
-    memcpy(&tmp[tmp_len], &buf[buf_idx], leftover_len + 1);
-    tmp_len += leftover_len;
-
-    /* And finally copy to source, we are supposed to modify it in place. */
-    memcpy(buf, tmp, tmp_len + 1);
-
-    return tmp_len;
-}
-
-/**
  * Search and replace occurrences of #find1, #find2, #find3, with
  * #repl1, #repl2, #repl3 respectively.
  *

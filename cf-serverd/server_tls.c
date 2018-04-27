@@ -45,31 +45,56 @@
 
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL;
-static X509 *SSLSERVERCERT = NULL;
 
 
 /**
+ * @param[in]  priv_key private key to use (or %NULL to use the global PRIVKEY)
+ * @param[in]  pub_key public key to use (or %NULL to use the global PUBKEY)
+ * @param[out] ssl_ctx place to store the SSL context (or %NULL to use the
+ *                     global SSL_CTX)
  * @warning Make sure you've called CryptoInitialize() first!
  */
-bool ServerTLSInitialize()
+bool ServerTLSInitialize(RSA *priv_key, RSA *pub_key, SSL_CTX **ssl_ctx)
 {
     int ret;
+
+    if (priv_key == NULL)
+    {
+        /* private key not specified, use the global one */
+        priv_key = PRIVKEY;
+    }
+    if (pub_key == NULL)
+    {
+        /* public key not specified, use the global one */
+        pub_key = PUBKEY;
+    }
+
+    if (priv_key == NULL || pub_key == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Public/private key pair not loaded,"
+            " please create one using cf-key");
+        return false;
+    }
 
     if (!TLSGenericInitialize())
     {
         return false;
     }
 
-    assert(SSLSERVERCONTEXT == NULL);
-    SSLSERVERCONTEXT = SSL_CTX_new(SSLv23_server_method());
-    if (SSLSERVERCONTEXT == NULL)
+    if (ssl_ctx == NULL)
+    {
+        ssl_ctx = &SSLSERVERCONTEXT;
+    }
+    assert(*ssl_ctx == NULL);
+    *ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+    if (*ssl_ctx == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
             TLSErrorString(ERR_get_error()));
-        goto err1;
+        return false;
     }
 
-    TLSSetDefaultOptions(SSLSERVERCONTEXT, SV.allowtlsversion);
+    TLSSetDefaultOptions(*ssl_ctx, SV.allowtlsversion);
 
     /*
      * CFEngine is not a web server so it does not need to support many
@@ -90,87 +115,91 @@ bool ServerTLSInitialize()
         "Setting cipher list for incoming TLS connections to: %s",
         cipher_list);
 
-    ret = SSL_CTX_set_cipher_list(SSLSERVERCONTEXT, cipher_list);
+    ret = SSL_CTX_set_cipher_list(*ssl_ctx, cipher_list);
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR,
             "No valid ciphers in cipher list: %s",
             cipher_list);
-        goto err2;
+        goto err;
     }
 
-    if (PRIVKEY == NULL || PUBKEY == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
-            " please create one using cf-key");
-        goto err2;
-    }
-
-    assert(SSLSERVERCERT == NULL);
     /* Create cert into memory and load it into SSL context. */
-    SSLSERVERCERT = TLSGenerateCertFromPrivKey(PRIVKEY);
-    if (SSLSERVERCERT == NULL)
+    X509 *cert = TLSGenerateCertFromPrivKey(priv_key);
+    if (cert == NULL)
     {
         Log(LOG_LEVEL_ERR,
             "Failed to generate in-memory certificate from private key");
-        goto err2;
+        goto err;
     }
 
-    SSL_CTX_use_certificate(SSLSERVERCONTEXT, SSLSERVERCERT);
+    SSL_CTX_use_certificate(*ssl_ctx, cert);
+    X509_free(cert);
 
-    ret = SSL_CTX_use_RSAPrivateKey(SSLSERVERCONTEXT, PRIVKEY);
+    ret = SSL_CTX_use_RSAPrivateKey(*ssl_ctx, priv_key);
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
             TLSErrorString(ERR_get_error()));
-        goto err3;
+        goto err;
     }
 
     /* Verify cert consistency. */
-    ret = SSL_CTX_check_private_key(SSLSERVERCONTEXT);
+    ret = SSL_CTX_check_private_key(*ssl_ctx);
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
             TLSErrorString(ERR_get_error()));
-        goto err3;
+        goto err;
     }
 
     return true;
 
-  err3:
-    X509_free(SSLSERVERCERT);
-    SSLSERVERCERT = NULL;
-  err2:
-    SSL_CTX_free(SSLSERVERCONTEXT);
-    SSLSERVERCONTEXT = NULL;
-  err1:
+  err:
+    SSL_CTX_free(*ssl_ctx);
+    *ssl_ctx = NULL;
     return false;
 }
 
-void ServerTLSDeInitialize()
+/**
+ * @param[in,out] priv_key private key to deinitalize (or %NULL to use the
+ *                         global PRIVKEY)
+ * @param[in,out] pub_key public key to deinitialize (or %NULL to use the
+ *                        global PUBKEY)
+ * @param[in,out] ssl_ctx the SSL context to deinitialize (or %NULL to use the
+ *                        global SSL_CTX)
+ */
+void ServerTLSDeInitialize(RSA **priv_key, RSA **pub_key, SSL_CTX **ssl_ctx)
 {
-    if (PUBKEY)
+    if (priv_key == NULL)
     {
-        RSA_free(PUBKEY);
-        PUBKEY = NULL;
+        priv_key = &PRIVKEY;
+    }
+    if (pub_key == NULL)
+    {
+        pub_key = &PUBKEY;
+    }
+    if (ssl_ctx == NULL)
+    {
+        ssl_ctx = &SSLSERVERCONTEXT;
     }
 
-    if (PRIVKEY)
+    if (*pub_key)
     {
-        RSA_free(PRIVKEY);
-        PRIVKEY = NULL;
+        RSA_free(*pub_key);
+        *pub_key = NULL;
     }
 
-    if (SSLSERVERCERT != NULL)
+    if (*priv_key)
     {
-        X509_free(SSLSERVERCERT);
-        SSLSERVERCERT = NULL;
+        RSA_free(*priv_key);
+        *priv_key = NULL;
     }
 
-    if (SSLSERVERCONTEXT != NULL)
+    if (*ssl_ctx != NULL)
     {
-        SSL_CTX_free(SSLSERVERCONTEXT);
-        SSLSERVERCONTEXT = NULL;
+        SSL_CTX_free(*ssl_ctx);
+        *ssl_ctx = NULL;
     }
 }
 
@@ -409,17 +438,25 @@ bool ServerSendWelcome(const ServerConnectionState *conn)
  *
  * Doesn't include code for verifying key and lastseen
  *
+ * @param conn    connection state
+ * @param ssl_ctx SSL context to use for the session (or %NULL to use the
+ *                default SSLSERVERCONTEXT)
+ *
  * @see ServerTLSSessionEstablish
  * @return true for success false otherwise
  */
-bool BasicServerTLSSessionEstablish(ServerConnectionState *conn)
+bool BasicServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
 {
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         return true;
     }
+    if (ssl_ctx == NULL)
+    {
+        ssl_ctx = SSLSERVERCONTEXT;
+    }
     assert(ConnectionInfoSSL(conn->conn_info) == NULL);
-    SSL *ssl = SSL_new(SSLSERVERCONTEXT);
+    SSL *ssl = SSL_new(ssl_ctx);
     if (ssl == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_new: %s",
@@ -455,18 +492,22 @@ bool BasicServerTLSSessionEstablish(ServerConnectionState *conn)
  *
  * This function uses trustkeys to trust new keys and updates lastseen
  *
+ * @param conn    connection state
+ * @param ssl_ctx SSL context to use for the session (or %NULL to use the
+ *                default SSLSERVERCONTEXT)
+ *
  * @see BasicServerTLSSessionEstablish
  * @note Various fields in #conn are set, like username and keyhash.
  * @return true for success false otherwise
  */
-bool ServerTLSSessionEstablish(ServerConnectionState *conn)
+bool ServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
 {
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         return true;
     }
 
-    bool established =  BasicServerTLSSessionEstablish(conn);
+    bool established = BasicServerTLSSessionEstablish(conn, ssl_ctx);
     if (!established)
     {
         return false;

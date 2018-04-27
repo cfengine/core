@@ -37,7 +37,9 @@ void CryptoDeInitialize(void);
 
 const char *CryptoLastErrorString(void);
 void DebugBinOut(char *buffer, int len, char *com);
-bool LoadSecretKeys(void);
+bool LoadSecretKeys(const char *const priv_key_path,
+                    const char *const pub_key_path,
+                    RSA **priv_key, RSA **pub_key);
 void PolicyHubUpdateKeys(const char *policy_server);
 int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
                   char type, unsigned char *key);

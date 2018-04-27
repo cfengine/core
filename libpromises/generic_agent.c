@@ -1075,7 +1075,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
        must function properly even without them, so that it generates them! */
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
-        LoadSecretKeys();
+        LoadSecretKeys(NULL, NULL, NULL, NULL);
         char *ipaddr = NULL, *port = NULL;
         PolicyServerLookUpFile(workdir, &ipaddr, &port);
         PolicyHubUpdateKeys(ipaddr);

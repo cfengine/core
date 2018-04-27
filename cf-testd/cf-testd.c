@@ -61,6 +61,11 @@
 #define CFTESTD_QUEUE_SIZE 10
 #define WAIT_CHECK_TIMEOUT 10
 
+/* Strictly speaking/programming, this should use a lock, but it's not needed
+ * for this testing tool. The worst that can happen is that some threads would
+ * do one more WaitForIncoming iteration (WAIT_CHECK_TIMEOUT seconds). */
+static bool TERMINATE = false;
+
 // ============================= CFTestD_Config ==============================
 typedef struct
 {
@@ -522,6 +527,8 @@ static void CFTestD_AcceptAndHandle(int sd, CFTestD_Config *config)
 
 int CFTestD_StartServer(CFTestD_Config *config)
 {
+    int ret = -1;
+
     bool tls_init_ok = ServerTLSInitialize(config->priv_key, config->pub_key, &(config->ssl_ctx));
     if (!tls_init_ok)
     {
@@ -531,7 +538,7 @@ int CFTestD_StartServer(CFTestD_Config *config)
     int sd = InitServer(CFTESTD_QUEUE_SIZE, config->address);
 
     int selected = 0;
-    while (selected != -1)
+    while (!TERMINATE && (selected != -1))
     {
         selected = WaitForIncoming(sd, WAIT_CHECK_TIMEOUT);
 
@@ -541,9 +548,16 @@ int CFTestD_StartServer(CFTestD_Config *config)
             CFTestD_AcceptAndHandle(sd, config);
         }
     }
-    Log(LOG_LEVEL_ERR,
-        "Error while waiting for connections. (select: %s)",
-        GetErrorStr());
+    if (!TERMINATE)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Error while waiting for connections. (select: %s)",
+            GetErrorStr());
+    }
+    else
+    {
+        ret = 0;
+    }
 
     Log(LOG_LEVEL_NOTICE, "Cleaning up and exiting...");
     if (sd != -1)
@@ -552,7 +566,7 @@ int CFTestD_StartServer(CFTestD_Config *config)
         cf_closesocket(sd);
     }
 
-    return 0;
+    return ret;
 }
 
 static void *CFTestD_ServeReport(void *config_arg)
@@ -627,7 +641,8 @@ static void HandleSignal(int signum)
     case SIGINT:
         // flush all logging before process ends.
         fflush(stdout);
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "Terminating...\n");
+        TERMINATE = true;
         break;
     default:
         break;

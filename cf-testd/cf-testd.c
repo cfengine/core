@@ -59,6 +59,7 @@
 #include <arpa/inet.h>
 
 #define CFTESTD_QUEUE_SIZE 10
+#define WAIT_CHECK_TIMEOUT 10
 
 // ============================= CFTestD_Config ==============================
 typedef struct
@@ -532,7 +533,7 @@ int CFTestD_StartServer(CFTestD_Config *config)
     int selected = 0;
     while (selected != -1)
     {
-        selected = WaitForIncoming(sd);
+        selected = WaitForIncoming(sd, WAIT_CHECK_TIMEOUT);
 
         if (selected > 0)
         {

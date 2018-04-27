@@ -10,15 +10,16 @@
 /* Wait up to a minute for an in-coming connection.
  *
  * @param sd The listening socket or -1.
+ * @param tm_sec timeout in seconds
  * @retval > 0 In-coming connection.
  * @retval 0 No in-coming connection.
  * @retval -1 Error (other than interrupt).
  * @retval < -1 Interrupted while waiting.
  */
-int WaitForIncoming(int sd)
+int WaitForIncoming(int sd, time_t tm_sec)
 {
     Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
-    struct timeval timeout = { .tv_sec = 60 };
+    struct timeval timeout = { .tv_sec = tm_sec };
     int signal_pipe = GetSignalPipe();
     fd_set rset;
     FD_ZERO(&rset);

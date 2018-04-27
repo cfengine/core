@@ -49,6 +49,7 @@
 #include <loading.h>
 #include <printsize.h>
 
+#define WAIT_INCOMING_TIMEOUT 10
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false; /* GLOBAL_A */
@@ -717,7 +718,7 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     {
         CollectCallIfDue(ctx);
 
-        int selected = WaitForIncoming(sd);
+        int selected = WaitForIncoming(sd, WAIT_INCOMING_TIMEOUT);
 
         Log(LOG_LEVEL_DEBUG, "select(): %d", selected);
         if (selected == -1)

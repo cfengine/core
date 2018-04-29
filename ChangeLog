@@ -1,3 +1,18 @@
+3.7.8:
+	- Add IPv6 hard classes with the "ipv6_" prefix (CFE-2310)
+	- Add a debug log for computed class in splayclass
+	- Do not ignore meta promises in server bundles (CFE-2066)
+	- Don't error when calling isexecutable on broken link (CFE-741)
+	- Fix spelling in log messages (CFE-2802)
+	- Load augments at the end of context discovery
+	  This means that classes defined as part of the context discovery
+	  (e.g. 'am_policy_hub' and 'policy_server') can be used in the
+	  augments. (CFE-2482)
+	- Make sure parameters are set only for the method evaluation
+	  (CFE-2779)
+	- Load process table when actually needed for a processes promise
+	  (ENT-2536)
+
 3.7.7:
 	- Move promise comment to verbose (ENT-3414)
 	- Ignore commented out entries in fstab when edit_fstab is true.

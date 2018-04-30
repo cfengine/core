@@ -54,9 +54,14 @@
 #include <timeout.h>            // SetReferenceTime
 #include <tls_generic.h>        // TLSLogError
 
+#ifndef __MINGW32__
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#else
+#include <winsock2.h>
+#include <inaddr.h>
+#endif
 
 #define CFTESTD_QUEUE_SIZE 10
 #define WAIT_CHECK_TIMEOUT 10
@@ -656,9 +661,8 @@ static void HandleSignal(int signum)
  */
 static char *IncrementIPaddress(const char *ip_str)
 {
-    struct in_addr ip;
-    int ret = inet_aton(ip_str, &ip);
-    if (ret == 0)
+    uint32_t ip = (uint32_t) inet_addr(ip_str);
+    if (ip == INADDR_NONE)
     {
         Log(LOG_LEVEL_ERR, "Failed to parse address: '%s'", ip_str);
         return NULL;
@@ -678,11 +682,14 @@ static char *IncrementIPaddress(const char *ip_str)
         step = 3;
     }
 
-    uint32_t ip_num = ntohl(ip.s_addr);
+    uint32_t ip_num = ntohl(ip);
     ip_num += step;
-    ip.s_addr = htonl(ip_num);
+    ip = htonl(ip_num);
 
-    return xstrdup(inet_ntoa(ip));
+    struct in_addr ip_struct;
+    ip_struct.s_addr = ip;
+
+    return xstrdup(inet_ntoa(ip_struct));
 }
 
 int main(int argc, char *argv[])

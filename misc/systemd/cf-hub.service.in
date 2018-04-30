@@ -5,8 +5,6 @@ ConditionPathExists=@workdir@/bin/cf-hub
 ConditionPathExists=@workdir@/inputs/promises.cf
 After=syslog.target
 After=network.target
-After=cf-redis-server.service
-BindsTo=cf-redis-server.service
 
 [Service]
 Type=simple
@@ -17,4 +15,3 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 WantedBy=cfengine3.service
-WantedBy=cf-redis-server.service

@@ -4,9 +4,6 @@ After=syslog.target
 ConditionPathExists=@workdir@/bin/pg_ctl
 PartOf=cfengine3.service
 
-Wants=cf-redis-server.service
-Before=cf-redis-server.service
-
 [Service]
 Type=forking
 WorkingDirectory=/tmp

@@ -1448,7 +1448,6 @@ AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
         AC_CONFIG_FILES([misc/systemd/cf-hub.service])
         AC_CONFIG_FILES([misc/systemd/cf-monitord.service])
         AC_CONFIG_FILES([misc/systemd/cf-postgres.service])
-        AC_CONFIG_FILES([misc/systemd/cf-redis-server.service])
         AC_CONFIG_FILES([misc/systemd/cf-runalerts.service])
         AC_CONFIG_FILES([misc/systemd/cf-serverd.service])
     fi

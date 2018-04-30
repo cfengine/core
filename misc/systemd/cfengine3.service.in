@@ -16,7 +16,6 @@ ExecStart=/bin/systemctl start cf-execd
 ExecStart=/bin/systemctl start cf-monitord
 ExecStart=/bin/systemctl start cf-postgres
 ExecStart=/bin/systemctl start cf-apache
-ExecStart=/bin/systemctl start cf-redis-server
 ExecStart=/bin/systemctl start cf-runalerts
 ExecStart=/bin/systemctl start cf-hub
 
@@ -27,5 +26,4 @@ ExecStop=/bin/systemctl stop cf-monitord
 ExecStop=/bin/systemctl stop cf-hub
 ExecStop=/bin/systemctl stop cf-runalerts
 ExecStop=/bin/systemctl stop cf-apache
-ExecStop=/bin/systemctl stop cf-redis-server
 ExecStop=/bin/systemctl stop cf-postgres

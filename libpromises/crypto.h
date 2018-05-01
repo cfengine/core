@@ -31,6 +31,8 @@
 
 #include <logging.h>
 
+#define PRIVKEY_PASSPHRASE "Cfengine passphrase"
+#define PRIVKEY_PASSPHRASE_LEN 19
 
 void CryptoInitialize(void);
 void CryptoDeInitialize(void);
@@ -51,6 +53,10 @@ int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest);
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress);
 bool SavePublicKey(const char *username, const char *digest, const RSA *key);
+RSA *LoadPublicKey(const char *filename);
+char *LoadPubkeyDigest(const char *pubkey);
+char *GetPubkeyDigest(RSA *pubkey);
+bool TrustKey(const char *pubkey, const char *ipaddress, const char *username);
 
 char *PublicKeyFile(const char *workdir);
 char *PrivateKeyFile(const char *workdir);

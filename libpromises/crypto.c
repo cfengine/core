@@ -61,7 +61,6 @@ static void CleanupOpenSSLThreadLocks(void);
 
 static bool crypto_initialized = false; /* GLOBAL_X */
 
-
 const char *CryptoLastErrorString()
 {
     const char *errmsg = ERR_reason_error_string(ERR_get_error());
@@ -156,7 +155,7 @@ static void RandomSeed(void)
 
 /* PEM functions need the const cast away, but hopefully the default
  * call-back doesn't actually modify its user-data. */
-static const char priv_passphrase[] = "Cfengine passphrase";
+static const char priv_passphrase[] = PRIVKEY_PASSPHRASE;
 
 /**
  * @param[in] priv_key_path path to the private key to use (%NULL to use the default)
@@ -467,6 +466,114 @@ bool SavePublicKey(const char *user, const char *digest, const RSA *key)
 
     fclose(fp);
     return true;
+}
+
+RSA *LoadPublicKey(const char *filename)
+{
+    FILE *fp;
+    RSA *key;
+    const BIGNUM *n, *e;
+
+    fp = safe_fopen(filename, "r");
+    if (fp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Cannot open public key file '%s' (fopen: %s)", filename, GetErrorStr());
+        return NULL;
+    };
+
+    if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL,
+                                     (void *)priv_passphrase)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Error while reading public key '%s' (PEM_read_RSAPublicKey: %s)",
+            filename,
+            CryptoLastErrorString());
+        fclose(fp);
+        return NULL;
+    };
+
+    fclose(fp);
+
+    RSA_get0_key(key, &n, &e, NULL);
+
+    if (BN_num_bits(e) < 2 || !BN_is_odd(e))
+    {
+        Log(LOG_LEVEL_ERR, "Error while reading public key '%s' - RSA Exponent is too small or not odd. (BN_num_bits: %s)",
+            filename, GetErrorStr());
+        return NULL;
+    };
+
+    return key;
+}
+
+/** Return a string with the printed digest of the given key file,
+    or NULL if an error occurred. */
+char *LoadPubkeyDigest(const char *filename)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    RSA *key = NULL;
+    char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
+
+    key = LoadPublicKey(filename);
+    if (key == NULL)
+    {
+        return NULL;
+    }
+
+    HashPubKey(key, digest, CF_DEFAULT_DIGEST);
+    HashPrintSafe(buffer, CF_HOSTKEY_STRING_SIZE,
+                  digest, CF_DEFAULT_DIGEST, true);
+    return buffer;
+}
+
+/** Return a string with the printed digest of the given key file. */
+char *GetPubkeyDigest(RSA *pubkey)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
+
+    HashPubKey(pubkey, digest, CF_DEFAULT_DIGEST);
+    HashPrintSafe(buffer, CF_HOSTKEY_STRING_SIZE,
+                  digest, CF_DEFAULT_DIGEST, true);
+    return buffer;
+}
+
+
+/**
+ * Trust the given key.  If #ipaddress is not NULL, then also
+ * update the "last seen" database.  The IP address is required for
+ * trusting a server key (on the client); it is -currently- optional
+ * for trusting a client key (on the server).
+ */
+bool TrustKey(const char *filename, const char *ipaddress, const char *username)
+{
+    RSA* key;
+    char *digest;
+
+    key = LoadPublicKey(filename);
+    if (key == NULL)
+    {
+        return false;
+    }
+
+    digest = GetPubkeyDigest(key);
+    if (digest == NULL)
+    {
+        return false;
+    }
+
+    if (ipaddress != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Adding a CONNECT entry in lastseen db: IP '%s', key '%s'",
+            ipaddress, digest);
+        LastSaw1(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
+    }
+
+    bool ret = SavePublicKey(username, digest, key);
+    free(digest);
+
+    return ret;
 }
 
 int EncryptString(char *out, size_t out_size, const char *in, int plainlen,

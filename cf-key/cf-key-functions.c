@@ -43,78 +43,6 @@
 #include <known_dirs.h>
 
 
-static const char *const passphrase = "Cfengine passphrase";
-
-RSA *LoadPublicKey(const char *filename)
-{
-    FILE *fp;
-    RSA *key;
-    const BIGNUM *n, *e;
-
-    fp = safe_fopen(filename, "r");
-    if (fp == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Cannot open public key file '%s' (fopen: %s)", filename, GetErrorStr());
-        return NULL;
-    };
-
-    if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL,
-                                     (void *)passphrase)) == NULL)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Error while reading public key '%s' (PEM_read_RSAPublicKey: %s)",
-            filename,
-            CryptoLastErrorString());
-        fclose(fp);
-        return NULL;
-    };
-
-    fclose(fp);
-
-    RSA_get0_key(key, &n, &e, NULL);
-
-    if (BN_num_bits(e) < 2 || !BN_is_odd(e))
-    {
-        Log(LOG_LEVEL_ERR, "Error while reading public key '%s' - RSA Exponent is too small or not odd. (BN_num_bits: %s)",
-            filename, GetErrorStr());
-        return NULL;
-    };
-
-    return key;
-}
-
-/** Return a string with the printed digest of the given key file,
-    or NULL if an error occurred. */
-char *LoadPubkeyDigest(const char *filename)
-{
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    RSA *key = NULL;
-    char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
-
-    key = LoadPublicKey(filename);
-    if (key == NULL)
-    {
-        return NULL;
-    }
-
-    HashPubKey(key, digest, CF_DEFAULT_DIGEST);
-    HashPrintSafe(buffer, CF_HOSTKEY_STRING_SIZE,
-                  digest, CF_DEFAULT_DIGEST, true);
-    return buffer;
-}
-
-/** Return a string with the printed digest of the given key file. */
-char *GetPubkeyDigest(RSA *pubkey)
-{
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    char *buffer = xmalloc(CF_HOSTKEY_STRING_SIZE);
-
-    HashPubKey(pubkey, digest, CF_DEFAULT_DIGEST);
-    HashPrintSafe(buffer, CF_HOSTKEY_STRING_SIZE,
-                  digest, CF_DEFAULT_DIGEST, true);
-    return buffer;
-}
-
 /*****************************************************************************/
 
 /** Print digest of the specified public key file.
@@ -188,43 +116,6 @@ void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username)
     }
 
     return;
-}
-
-/**
- * Trust the given key.  If #ipaddress is not NULL, then also
- * update the "last seen" database.  The IP address is required for
- * trusting a server key (on the client); it is -currently- optional
- * for trusting a client key (on the server).
- */
-bool TrustKey(const char *filename, const char *ipaddress, const char *username)
-{
-    RSA* key;
-    char *digest;
-
-    key = LoadPublicKey(filename);
-    if (key == NULL)
-    {
-        return false;
-    }
-
-    digest = GetPubkeyDigest(key);
-    if (digest == NULL)
-    {
-        return false;
-    }
-
-    if (ipaddress != NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Adding a CONNECT entry in lastseen db: IP '%s', key '%s'",
-            ipaddress, digest);
-        LastSaw1(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
-    }
-
-    bool ret = SavePublicKey(username, digest, key);
-    free(digest);
-
-    return ret;
 }
 
 extern bool cf_key_interrupted;
@@ -380,8 +271,8 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, 
 
     Log(LOG_LEVEL_VERBOSE, "Writing private key to '%s'", private_key_file);
 
-    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, (void *)passphrase,
-                                 strlen(passphrase), NULL, NULL))
+    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, (void *)PRIVKEY_PASSPHRASE,
+                                 PRIVKEY_PASSPHRASE_LEN, NULL, NULL))
     {
         Log(LOG_LEVEL_ERR,
             "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)",

@@ -718,7 +718,6 @@ int main(int argc, char *argv[])
     signal(SIGTERM, HandleSignal);
 
     Log(LOG_LEVEL_VERBOSE, "Starting cf-testd");
-    CryptoInitialize();         /* TODO: remove */
     cfnet_init(NULL, NULL);
     MakeSignalPipe();
 

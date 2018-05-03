@@ -49,6 +49,7 @@
 #include <loading.h>
 #include <printsize.h>
 
+#define WAIT_INCOMING_TIMEOUT 10
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false; /* GLOBAL_A */
@@ -692,7 +693,7 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         return -1;
     }
 
-    int sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
+    int sd = SetServerListenState(ctx, QUEUESIZE, NULL, SERVER_LISTEN, &InitServer);
 
     /* Necessary for our use of select() to work in WaitForIncoming(): */
     assert(sd < sizeof(fd_set) * CHAR_BIT &&
@@ -717,7 +718,7 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     {
         CollectCallIfDue(ctx);
 
-        int selected = WaitForIncoming(sd);
+        int selected = WaitForIncoming(sd, WAIT_INCOMING_TIMEOUT);
 
         Log(LOG_LEVEL_DEBUG, "select(): %d", selected);
         if (selected == -1)

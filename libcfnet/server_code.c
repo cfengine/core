@@ -10,15 +10,16 @@
 /* Wait up to a minute for an in-coming connection.
  *
  * @param sd The listening socket or -1.
+ * @param tm_sec timeout in seconds
  * @retval > 0 In-coming connection.
  * @retval 0 No in-coming connection.
  * @retval -1 Error (other than interrupt).
  * @retval < -1 Interrupted while waiting.
  */
-int WaitForIncoming(int sd)
+int WaitForIncoming(int sd, time_t tm_sec)
 {
     Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
-    struct timeval timeout = { .tv_sec = 60 };
+    struct timeval timeout = { .tv_sec = tm_sec };
     int signal_pipe = GetSignalPipe();
     fd_set rset;
     FD_ZERO(&rset);
@@ -56,7 +57,10 @@ int WaitForIncoming(int sd)
     return 0;
 }
 
-static int OpenReceiverChannel(void)
+/**
+ * @param bind_address address to bind to or %NULL to use the default BINDINTERFACE
+ */
+static int OpenReceiverChannel(char *bind_address)
 {
     struct addrinfo *response = NULL, *ap;
     struct addrinfo query = {
@@ -65,11 +69,16 @@ static int OpenReceiverChannel(void)
         .ai_socktype = SOCK_STREAM
     };
 
+    if (bind_address == NULL)
+    {
+        bind_address = BINDINTERFACE;
+    }
+
     /* Listen to INADDR(6)_ANY if BINDINTERFACE unset. */
     char *ptr = NULL;
-    if (BINDINTERFACE[0] != '\0')
+    if (bind_address[0] != '\0')
     {
-        ptr = BINDINTERFACE;
+        ptr = bind_address;
         query.ai_flags |= AI_NUMERICHOST;
     }
 
@@ -101,7 +110,7 @@ static int OpenReceiverChannel(void)
            listen to both address families when binding to it and need this
            flag. Some other platforms won't even honour this flag
            (openbsd). */
-        if (BINDINTERFACE[0] == '\0' && ap->ai_family == AF_INET6)
+        if (bind_address[0] == '\0' && ap->ai_family == AF_INET6)
         {
             int no = 0;
             if (setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY,
@@ -162,9 +171,13 @@ static int OpenReceiverChannel(void)
     return sd;
 }
 
-int InitServer(size_t queue_size)
+/**
+ * @param queue_size   length of the queue for pending connections
+ * @param bind_address address to bind to or %NULL to use the default BINDINTERFACE
+ */
+int InitServer(size_t queue_size, char *bind_address)
 {
-    int sd = OpenReceiverChannel();
+    int sd = OpenReceiverChannel(bind_address);
 
     if (sd == -1)
     {

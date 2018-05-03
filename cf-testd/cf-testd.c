@@ -53,6 +53,7 @@
 #include <time_classes.h>       // UpdateTimeClasses
 #include <timeout.h>            // SetReferenceTime
 #include <tls_generic.h>        // TLSLogError
+#include <logging.h>            // thread-specific log prefix
 
 #ifndef __MINGW32__
 #include <sys/socket.h>
@@ -574,9 +575,26 @@ int CFTestD_StartServer(CFTestD_Config *config)
     return ret;
 }
 
+static char *LogAddPrefix(LoggingPrivContext *log_ctx,
+                          ARG_UNUSED LogLevel level,
+                          const char *raw)
+{
+    const char *ip_addr = log_ctx->param;
+    return ip_addr ? StringConcatenate(4, "[", ip_addr, "] ", raw) : xstrdup(raw);
+}
+
 static void *CFTestD_ServeReport(void *config_arg)
 {
     CFTestD_Config *config = (CFTestD_Config *) config_arg;
+
+    /* Set prefix for all Log()ging: */
+    LoggingPrivContext *prior = LoggingPrivGetContext();
+    LoggingPrivContext log_ctx = {
+        .log_hook = LogAddPrefix,
+        .param = config->address
+    };
+    LoggingPrivSetContext(&log_ctx);
+
     char *priv_key_path = NULL;
     char *pub_key_path = NULL;
     if (config->key_file != NULL)
@@ -634,6 +652,8 @@ static void *CFTestD_ServeReport(void *config_arg)
      * terminate, but it's a good way the cleanup actually works and doesn't
      * cause a segfault or something */
     ServerTLSDeInitialize(&(config->priv_key), &(config->pub_key), &(config->ssl_ctx));
+
+    LoggingPrivSetContext(prior);
 
     return NULL;
 }

@@ -3,7 +3,7 @@
 
 #include <platform.h>
 
-int InitServer(size_t queue_size);
-int WaitForIncoming(int sd);
+int InitServer(size_t queue_size, char *bind_address);
+int WaitForIncoming(int sd, time_t tm_sec);
 
 #endif

@@ -41,7 +41,8 @@ ENTERPRISE_FUNC_3ARG_DEFINE_STUB(int, ReturnLiteralData, ARG_UNUSED EvalContext 
     return 0;
 }
 
-ENTERPRISE_FUNC_4ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED size_t, queue_size, ARG_UNUSED bool, server_listen,
+ENTERPRISE_FUNC_5ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED size_t, queue_size,
+                                 ARG_UNUSED char *, bind_address, ARG_UNUSED bool, server_listen,
                                  InitServerFunction, InitServerPtr)
 {
     if (!server_listen)
@@ -49,7 +50,7 @@ ENTERPRISE_FUNC_4ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalConte
         Log(LOG_LEVEL_VERBOSE, "Disable listening on port is only supported in CFEngine Enterprise");
     }
 
-    return InitServerPtr(queue_size);
+    return InitServerPtr(queue_size, bind_address);
 }
 
 ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, ReceiveCollectCall, ARG_UNUSED ServerConnectionState *, conn)

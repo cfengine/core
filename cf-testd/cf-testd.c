@@ -53,8 +53,24 @@
 #include <time_classes.h>       // UpdateTimeClasses
 #include <timeout.h>            // SetReferenceTime
 #include <tls_generic.h>        // TLSLogError
+#include <logging.h>            // thread-specific log prefix
+
+#ifndef __MINGW32__
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#else
+#include <winsock2.h>
+#include <inaddr.h>
+#endif
 
 #define CFTESTD_QUEUE_SIZE 10
+#define WAIT_CHECK_TIMEOUT 10
+
+/* Strictly speaking/programming, this should use a lock, but it's not needed
+ * for this testing tool. The worst that can happen is that some threads would
+ * do one more WaitForIncoming iteration (WAIT_CHECK_TIMEOUT seconds). */
+static bool TERMINATE = false;
 
 // ============================= CFTestD_Config ==============================
 typedef struct
@@ -66,6 +82,9 @@ typedef struct
     RSA *priv_key;
     RSA *pub_key;
     SSL_CTX *ssl_ctx;
+    char *address;
+    pthread_t t_id;
+    int ret;
 } CFTestD_Config;
 
 /*******************************************************************/
@@ -77,6 +96,7 @@ static const struct option OPTIONS[] = {
     {"debug", no_argument, 0, 'd'},
     {"help", no_argument, 0, 'h'},
     {"inform", no_argument, 0, 'I'},
+    {"jobs", required_argument, 0, 'j'},
     {"key-file", required_argument, 0, 'k'},
     {"timestamp", no_argument, 0, 'l'},
     {"port", required_argument, 0, 'p'},
@@ -90,6 +110,9 @@ static const char *const HINTS[] = {
     "Enable debugging output",
     "Print the help message",
     "Print basic information about what cf-testd does",
+    "Number of jobs (threads) to run in parallel. Use '%d' in the report path"
+    " and key file path (will be replaced by the thread number, starting with"
+    " 0). Threads will bind to different addresses incrementally.",
     "Specify a path to the key (private) to use for communication",
     "Log timestamps on each line of log output",
     "Set the port cf-testd will listen on",
@@ -110,6 +133,7 @@ void CFTestD_ConfigDestroy(CFTestD_Config *config)
     free(config->report_file);
     free(config->report);
     free(config->key_file);
+    free(config->address);
     free(config);
 }
 
@@ -120,19 +144,19 @@ void CFTestD_Help()
     FileWriterDetach(w);
 }
 
-CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
+CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv, long *n_threads)
 {
     extern char *optarg;
     int c;
     CFTestD_Config *config = CFTestD_ConfigInit();
     assert(config != NULL);
 
-    while ((c = getopt_long(argc, argv, "a:df:hIk:lp:vV", OPTIONS, NULL)) != -1)
+    while ((c = getopt_long(argc, argv, "a:df:hIj:k:lp:vV", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {
         case 'a':
-            SetBindInterface(optarg);
+            config->address = xstrdup(optarg);
             break;
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
@@ -143,6 +167,16 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv)
         case 'I':
             LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
+        case 'j':
+        {
+            int ret = StringToLong(optarg, n_threads);
+            if (ret != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to parse number of threads/jobs from '%s'\n", optarg);
+                *n_threads = 1;
+            }
+            break;
+        }
         case 'k':
             config->key_file = xstrdup(optarg);
             break;
@@ -499,20 +533,20 @@ static void CFTestD_AcceptAndHandle(int sd, CFTestD_Config *config)
 
 int CFTestD_StartServer(CFTestD_Config *config)
 {
+    int ret = -1;
+
     bool tls_init_ok = ServerTLSInitialize(config->priv_key, config->pub_key, &(config->ssl_ctx));
     if (!tls_init_ok)
     {
         return -1;
     }
 
-    int sd = InitServer(CFTESTD_QUEUE_SIZE);
-
-    MakeSignalPipe();
+    int sd = InitServer(CFTESTD_QUEUE_SIZE, config->address);
 
     int selected = 0;
-    while (selected != -1)
+    while (!TERMINATE && (selected != -1))
     {
-        selected = WaitForIncoming(sd);
+        selected = WaitForIncoming(sd, WAIT_CHECK_TIMEOUT);
 
         if (selected > 0)
         {
@@ -520,9 +554,16 @@ int CFTestD_StartServer(CFTestD_Config *config)
             CFTestD_AcceptAndHandle(sd, config);
         }
     }
-    Log(LOG_LEVEL_ERR,
-        "Error while waiting for connections. (select: %s)",
-        GetErrorStr());
+    if (!TERMINATE)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Error while waiting for connections. (select: %s)",
+            GetErrorStr());
+    }
+    else
+    {
+        ret = 0;
+    }
 
     Log(LOG_LEVEL_NOTICE, "Cleaning up and exiting...");
     if (sd != -1)
@@ -531,33 +572,28 @@ int CFTestD_StartServer(CFTestD_Config *config)
         cf_closesocket(sd);
     }
 
-    return 0;
+    return ret;
 }
 
-static void HandleSignal(int signum)
+static char *LogAddPrefix(LoggingPrivContext *log_ctx,
+                          ARG_UNUSED LogLevel level,
+                          const char *raw)
 {
-    switch (signum)
-    {
-    case SIGTERM:
-    case SIGINT:
-        // flush all logging before process ends.
-        fflush(stdout);
-        exit(EXIT_FAILURE);
-        break;
-    default:
-        break;
-    }
+    const char *ip_addr = log_ctx->param;
+    return ip_addr ? StringConcatenate(4, "[", ip_addr, "] ", raw) : xstrdup(raw);
 }
 
-int main(int argc, char *argv[])
+static void *CFTestD_ServeReport(void *config_arg)
 {
-    signal(SIGINT, HandleSignal);
-    signal(SIGTERM, HandleSignal);
+    CFTestD_Config *config = (CFTestD_Config *) config_arg;
 
-    Log(LOG_LEVEL_VERBOSE, "Starting cf-testd");
-    CryptoInitialize();
-
-    CFTestD_Config *config = CFTestD_CheckOpts(argc, argv);
+    /* Set prefix for all Log()ging: */
+    LoggingPrivContext *prior = LoggingPrivGetContext();
+    LoggingPrivContext log_ctx = {
+        .log_hook = LogAddPrefix,
+        .param = config->address
+    };
+    LoggingPrivSetContext(&log_ctx);
 
     char *priv_key_path = NULL;
     char *pub_key_path = NULL;
@@ -568,11 +604,11 @@ int main(int argc, char *argv[])
         StringReplace(pub_key_path, strlen(pub_key_path) + 1,
                       "priv", "pub");
     }
+
     LoadSecretKeys(priv_key_path, pub_key_path, &(config->priv_key), &(config->pub_key));
     free(pub_key_path);
 
-    cfnet_init(NULL, NULL);
-    char *report_file      = config->report_file;
+    char *report_file = config->report_file;
 
     if (report_file != NULL)
     {
@@ -607,16 +643,158 @@ int main(int argc, char *argv[])
         Log(LOG_LEVEL_DEBUG, "Got report file contents: %s", config->report);
     }
 
-    Log(LOG_LEVEL_INFO, "Starting server...");
+    Log(LOG_LEVEL_INFO, "Starting server at %s...", config->address);
     fflush(stdout); // for debugging startup
 
-    int r = CFTestD_StartServer(config);
-    CFTestD_ConfigDestroy(config);
+    config->ret = CFTestD_StartServer(config);
 
     /* we don't really need to do this here because the process is about the
      * terminate, but it's a good way the cleanup actually works and doesn't
      * cause a segfault or something */
     ServerTLSDeInitialize(&(config->priv_key), &(config->pub_key), &(config->ssl_ctx));
 
-    return r;
+    LoggingPrivSetContext(prior);
+
+    return NULL;
+}
+
+static void HandleSignal(int signum)
+{
+    switch (signum)
+    {
+    case SIGTERM:
+    case SIGINT:
+        // flush all logging before process ends.
+        fflush(stdout);
+        fprintf(stderr, "Terminating...\n");
+        TERMINATE = true;
+        break;
+    default:
+        break;
+    }
+}
+
+/**
+ * @param ip_str string representation of an IPv4 address (the usual one, with
+ *               4 octets separated by dots)
+ * @return a new string representing the incremented IP address (HAS TO BE FREED)
+ */
+static char *IncrementIPaddress(const char *ip_str)
+{
+    uint32_t ip = (uint32_t) inet_addr(ip_str);
+    if (ip == INADDR_NONE)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to parse address: '%s'", ip_str);
+        return NULL;
+    }
+
+    int step = 1;
+    char *last_dot = strrchr(ip_str, '.');
+    assert(last_dot != NULL);   /* the doc comment says there must be dots! */
+    if (StringSafeEqual(last_dot + 1, "255"))
+    {
+        /* avoid the network address (ending with 0) */
+        step = 2;
+    }
+    else if (StringSafeEqual(last_dot + 1, "254"))
+    {
+        /* avoid the broadcast address and the network address */
+        step = 3;
+    }
+
+    uint32_t ip_num = ntohl(ip);
+    ip_num += step;
+    ip = htonl(ip_num);
+
+    struct in_addr ip_struct;
+    ip_struct.s_addr = ip;
+
+    return xstrdup(inet_ntoa(ip_struct));
+}
+
+int main(int argc, char *argv[])
+{
+    signal(SIGINT, HandleSignal);
+    signal(SIGTERM, HandleSignal);
+
+    Log(LOG_LEVEL_VERBOSE, "Starting cf-testd");
+    cfnet_init(NULL, NULL);
+    MakeSignalPipe();
+
+    long n_threads = 1;
+    CFTestD_Config *config = CFTestD_CheckOpts(argc, argv, &n_threads);
+    if (config->address == NULL)
+    {
+        /* default to localhost */
+        config->address = xstrdup("127.0.0.1");
+    }
+
+    CFTestD_Config **thread_configs = (CFTestD_Config**) xcalloc(n_threads, sizeof(CFTestD_Config*));
+    for (int i = 0; i < n_threads; i++)
+    {
+        thread_configs[i] = (CFTestD_Config*) xmalloc(sizeof(CFTestD_Config));
+
+        if (config->report_file != NULL && strstr(config->report_file, "%d") != NULL)
+        {
+            /* replace the '%d' with the thread number */
+            asprintf(&(thread_configs[i]->report_file), config->report_file, i);
+        }
+        else
+        {
+            thread_configs[i]->report_file = SafeStringDuplicate(config->report_file);
+        }
+
+        if (config->key_file != NULL && strstr(config->key_file, "%d") != NULL)
+        {
+            /* replace the '%d' with the thread number */
+            asprintf(&(thread_configs[i]->key_file), config->key_file, i);
+        }
+        else
+        {
+            thread_configs[i]->key_file = SafeStringDuplicate(config->key_file);
+        }
+
+        if (i == 0)
+        {
+            thread_configs[i]->address = xstrdup(config->address);
+        }
+        else
+        {
+            thread_configs[i]->address = IncrementIPaddress(thread_configs[i-1]->address);
+        }
+    }
+
+    CFTestD_ConfigDestroy(config);
+
+    bool failure = false;
+    for (int i = 0; !failure && (i < n_threads); i++)
+    {
+        int ret = pthread_create(&(thread_configs[i]->t_id), NULL, CFTestD_ServeReport, thread_configs[i]);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to create a new thread nr. %d: %s\n", i, strerror(ret));
+            failure = true;
+        }
+    }
+
+    if (failure)
+    {
+        return EXIT_FAILURE;
+    }
+
+    for (int i = 0; i < n_threads; i++)
+    {
+        int ret = pthread_join(thread_configs[i]->t_id, NULL);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to join the thread nr. %d: %s\n", i, strerror(ret));
+        }
+        else
+        {
+            failure = failure && (thread_configs[i]->ret != 0);
+        }
+        CFTestD_ConfigDestroy(thread_configs[i]);
+    }
+
+    return failure ? EXIT_FAILURE : EXIT_SUCCESS;
 }

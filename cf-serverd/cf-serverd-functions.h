@@ -45,7 +45,7 @@
 #include <pipes.h>
 
 
-typedef int (*InitServerFunction)(size_t queue_size);
+typedef int (*InitServerFunction)(size_t queue_size, char *bind_address);
 
 
 GenericAgentConfig *CheckOpts(int argc, char **argv);

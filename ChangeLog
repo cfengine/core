@@ -1,3 +1,91 @@
+3.12.0b1:
+	New Features:
+	- Add a --key-type option to specify RSA key size to cf-key
+	- New hash_to_int policy function (CFE-2733)
+	- Issue a warning on ignored locking attributes (CFE-2748)
+	- Add IPv6 hard classes with the "ipv6_" prefix (CFE-2310)
+	- Introduce "missing_ok" attribute in body copy_from
+	  This allows to ignore missing sources in file copy operations (CFE-2365)
+	- Enable Xen hypervisor detection on all x86 platforms (CFE-2203)
+	- Add sys.policy_entry variables (CFE-2572)
+	- Added inline_mustache template method (CFE-1846)
+	- New component cf-net (cf-net is a CLI for the CFEngine network protocol,
+	  useful for debugging, testing etc) and accompanying policy variable
+	  sys.cf_net containing path to cf-net binary
+
+	Changes:
+	- Load augments at the end of context discovery
+	  This means that classes defined as part of the context discovery
+	  (e.g. 'am_policy_hub' and 'policy_server') can be used in the
+	  augments (CFE-2482)
+	- Open measurements promise type from enterprise cf-monitord
+	- Transform filesexist() into a collecting function (CFE-2744)
+	- Load process table when actually needed for a processes promise (ENT-2536)
+	- Ignore commented out entries in fstab when edit_fstab is true (CFE-2198)
+	- Do not move obstructions in warn policy mode (CFE-2740)
+	- Made the max bytes parameter to file reading functions optional (CFE-2656)
+	- Do not tag large volatile variables for inventory
+	  sys.interfaces_data, sys.inet and sys.inet6 are commonly larger than the
+	  maximum data size allowed to be collected by cf-hub. Data larger than 1k
+	  is truncated. Instead of reporting truncated data this change stops
+	  tagging the variable so that it will not be collected to the Enterprise
+	  hub and will not be available in Mission Portal. (ENT-3483)
+	- cf-execd now re-parses augments on policy reload (CFE-2406)
+	- Improve misleading verbose message
+	  For constraints if/ifvarclass/unless, we now print the whole rval of the constraint.
+	  Previously the message was just "skipping variable because ifvarclass is not defined" while the variable itself was defined.
+	  Old message example:
+	    verbose: Skipping promise 'mailto' because 'if'/'ifvarclass' is not defined
+	  Changed to:
+	     verbose: Skipping promise 'mailto' because 'ifvarclass => not(isvariable("mailto"))' is not defined
+	  (CFE-2697)
+	- Promise comments for file changes moved to verbose (ENT-3414)
+	- Suppress output from systemctl based restart of services in
+	  bootstrap/failsafe (CFE-1459)
+	- Parser can now handle larger inbut buffers (CFE-1886)
+	- Improve logging of ACL errors (ENT-3455)
+	- cf-execd systemd service now only kills cf-execd itself (ENT-3395)
+	- Load multiple augments from "augments" string array in def.json
+	  (CFE-2084)
+	- Improve support for Alpine Linux
+	- Set the exit value when running cf-key
+	  When running cf-key to generate new keys, set the exit value of the
+	  program to be 0 on success and 1 on failure. This makes it easier to
+	  catch errors during setup of a new machine.
+	  Change the default behavior of the program to not write anything to stdout,
+	  opting to use the Log() function which can write to stdout and will also
+	  allow output to be sent to syslog.
+	  Add a --inform option to set the global log level to LOG_LEVEL_INFO.
+	  Change the permissions of the randseed file to 600 and catch the exception
+	  if the chmod call fails.
+	- Properly reverse-resolve DNS names longer than 63 chars (ENT-3379)
+	- Properly redirect init script to systemd on debian systems (ENT-3326)
+
+	Bug fixes:
+	- Disallow modifications of variables from a remote bundle (CFE-1915)
+	- Speedup evalution by not copying variables table when expanding a promise
+	  (CFE-2524)
+	- Resolve subkey conflicts when converting to JSON
+	  Whenever there is a conflict of array variable definitions prefer
+	  the container subkeys over simple values when converting to JSON
+	  (CFE-2536)
+	- Do not ignore meta promises in server bundles (CFE-2066)
+	- Add a debug log for computed class in splayclass
+	- Don't error when calling isexecutable on broken link (CFE-741)
+	- Fix segfault when no show-evaluated-vars/classes is specified
+	- Fix memory leak in cf-execd, triggered when sending email failed (CFE-2712)
+	- Fix IPv6 parsing to be un-reversed (CFE-2580)
+	- Fix bug preventing permission changes on Unix sockets (CFE-1782)
+	- Fix storage mount promise when existing mountpoint has a similar path
+	  (CFE-1960)
+	- Fix segfault when cf-promises -p is called against a file with syntax
+	  errors (CFE-2696)
+	- Fix rare cf-execd hang (CFE-2719)
+	- Fix mergedata segfault when called on a non-container (CFE-2704)
+	- Do not segfault if policy_server.dat only contains whitespaces and/or line breaks
+	- Fix segfault on JSON policy files with no bundles and bodies (CFE-2754)
+
+
 3.11.0:
 	New Features:
 	- Allow function calls in promiser using universal "with" attribute

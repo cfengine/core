@@ -65,7 +65,7 @@
 #endif
 
 #define CFTESTD_QUEUE_SIZE 10
-#define WAIT_CHECK_TIMEOUT 10
+#define WAIT_CHECK_TIMEOUT 5
 
 /* Strictly speaking/programming, this should use a lock, but it's not needed
  * for this testing tool. The worst that can happen is that some threads would

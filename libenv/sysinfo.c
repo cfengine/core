@@ -1058,6 +1058,58 @@ static void SetFlavour(EvalContext *ctx, const char *flavour)
 }
 
 #ifdef __linux__
+
+/**
+ * @brief Combines OS and version string to define flavor variable and class
+ *
+ * @note Input strings should be canonified before calling
+ */
+static void SetFlavour2(
+    EvalContext *const ctx,
+    const char *const id,
+    const char *const major_version)
+{
+    assert(ctx != NULL);
+    assert(id != NULL);
+    assert(major_version != NULL);
+
+    char *flavor;
+    xasprintf(&flavor, "%s_%s", id, major_version);
+    SetFlavour(ctx, flavor);
+    free(flavor);
+}
+
+/**
+ * @brief Combines OS and version string to define multiple hard classes
+ *
+ * @note Input strings should be canonified before calling
+ */
+static void DefineVersionedHardClasses(
+    EvalContext *const ctx,
+    const char *const tags,
+    const char *const id,
+    const char *const version)
+{
+    assert(ctx != NULL);
+    assert(id != NULL);
+    assert(version != NULL);
+
+    char *class;
+    xasprintf(&class, "%s_%s", id, version);
+
+    // Strip away version number to define multiple hard classes
+    // Example: coreos_1185_3_0 -> coreos_1185_3 -> coreos_1185 -> coreos
+    char *last_underscore = strrchr(class, '_');
+    while ( last_underscore != NULL )
+    {
+        EvalContextClassPutHard(ctx, class, tags);
+        *last_underscore = '\0';
+        last_underscore = strrchr(class, '_');
+    }
+    EvalContextClassPutHard(ctx, class, tags);
+    free(class);
+}
+
 static void OSReleaseParse(EvalContext *ctx, const char *file_path)
 {
     JsonElement *os_release_json = JsonReadDataFile("system info discovery",
@@ -1073,35 +1125,43 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
                                       os_release_json, CF_DATA_TYPE_CONTAINER,
                                       tags);
         const char *const_os_release_id = JsonObjectGetAsString(os_release_json, "ID");
-        const char *const_os_release_version = JsonObjectGetAsString(os_release_json, "VERSION");
+        const char *const_os_release_version_id = JsonObjectGetAsString(os_release_json, "VERSION_ID");
+        char *os_release_id = SafeStringDuplicate(const_os_release_id);
+        char *os_release_version_id = SafeStringDuplicate(const_os_release_version_id);
 
-        // This is currently only used for CoreOS, but can be expanded:
-        if (const_os_release_id != NULL && strcmp(const_os_release_id, "coreos") == 0)
+        if (os_release_id != NULL)
         {
-            EvalContextClassPutHard(ctx, "coreos", tags);
-            char *os_release_id = xstrdup(const_os_release_id);
             CanonifyNameInPlace(os_release_id);
-            if (const_os_release_version != NULL)
+            if (os_release_version_id == NULL)
             {
-                char *os_release_version = xstrdup(const_os_release_version);
-                CanonifyNameInPlace(os_release_version);
-                char *os_release_flavor;
-                xasprintf(&os_release_flavor, "%s_%s",
-                          os_release_id, os_release_version);
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor",
-                                              os_release_flavor, CF_DATA_TYPE_STRING,
-                                              tags);
-                char *last_underscore;
-                while ( (last_underscore = strrchr(os_release_flavor, '_')) != NULL )
-                {
-                    EvalContextClassPutHard(ctx, os_release_flavor, tags);
-                    *last_underscore = '\0';
-                }
-                free(os_release_version);
-                free(os_release_flavor);
+                // if VERSION_ID doesn't exist, define only one hard class:
+                EvalContextClassPutHard(ctx, os_release_id, tags);
             }
-            free(os_release_id);
+            else // if VERSION_ID exists set flavor and multiple hard classes:
+            {
+                CanonifyNameInPlace(os_release_version_id);
+
+                // Set the flavor to be ID + major version (derived from VERSION_ID)
+                char *first_underscore = strchr(os_release_version_id, '_');
+                if (first_underscore != NULL)
+                {
+                    // Temporarily modify os_release_version_id to be major version
+                    *first_underscore = '\0';
+                    SetFlavour2(ctx, os_release_id, os_release_version_id);
+                    *first_underscore = '_';
+                }
+                else
+                {
+                    SetFlavour2(ctx, os_release_id, os_release_version_id);
+                }
+
+                // One of the hard classes is already set by SetFlavour
+                // but it seems excessive to try to skip this:
+                DefineVersionedHardClasses(ctx, tags, os_release_id, os_release_version_id);
+            }
         }
+        free(os_release_version_id);
+        free(os_release_id);
         free(tags);
         JsonDestroy(os_release_json);
     }
@@ -1150,8 +1210,7 @@ static void OSClasses(EvalContext *ctx)
 
     struct stat statbuf;
 
-    // os-release is used to set sys.os_release as well as
-    // classes and vars on CoreOS:
+    // os-release is used to set sys.os_release, sys.flavor and hard classes
     if (access("/etc/os-release", R_OK) != -1)
     {
         OSReleaseParse(ctx, "/etc/os-release");

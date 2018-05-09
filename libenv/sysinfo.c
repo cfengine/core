@@ -1050,14 +1050,66 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
     }
 }
 
-static void SetFlavour(EvalContext *ctx, const char *flavour)
+static void SetFlavor(EvalContext *ctx, const char *flavor)
 {
-    EvalContextClassPutHard(ctx, flavour, "inventory,attribute_name=none,source=agent,derived-from=sys.flavor");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, CF_DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
+    EvalContextClassPutHard(ctx, flavor, "inventory,attribute_name=none,source=agent,derived-from=sys.flavor");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavor, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
 }
 
 #ifdef __linux__
+
+/**
+ * @brief Combines OS and version string to define flavor variable and class
+ *
+ * @note Input strings should be canonified before calling
+ */
+static void SetFlavor2(
+    EvalContext *const ctx,
+    const char *const id,
+    const char *const major_version)
+{
+    assert(ctx != NULL);
+    assert(id != NULL);
+    assert(major_version != NULL);
+
+    char *flavor;
+    xasprintf(&flavor, "%s_%s", id, major_version);
+    SetFlavor(ctx, flavor);
+    free(flavor);
+}
+
+/**
+ * @brief Combines OS and version string to define multiple hard classes
+ *
+ * @note Input strings should be canonified before calling
+ */
+static void DefineVersionedHardClasses(
+    EvalContext *const ctx,
+    const char *const tags,
+    const char *const id,
+    const char *const version)
+{
+    assert(ctx != NULL);
+    assert(id != NULL);
+    assert(version != NULL);
+
+    char *class;
+    xasprintf(&class, "%s_%s", id, version);
+
+    // Strip away version number to define multiple hard classes
+    // Example: coreos_1185_3_0 -> coreos_1185_3 -> coreos_1185 -> coreos
+    char *last_underscore = strrchr(class, '_');
+    while ( last_underscore != NULL )
+    {
+        EvalContextClassPutHard(ctx, class, tags);
+        *last_underscore = '\0';
+        last_underscore = strrchr(class, '_');
+    }
+    EvalContextClassPutHard(ctx, class, tags);
+    free(class);
+}
+
 static void OSReleaseParse(EvalContext *ctx, const char *file_path)
 {
     JsonElement *os_release_json = JsonReadDataFile("system info discovery",
@@ -1073,35 +1125,43 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
                                       os_release_json, CF_DATA_TYPE_CONTAINER,
                                       tags);
         const char *const_os_release_id = JsonObjectGetAsString(os_release_json, "ID");
-        const char *const_os_release_version = JsonObjectGetAsString(os_release_json, "VERSION");
+        const char *const_os_release_version_id = JsonObjectGetAsString(os_release_json, "VERSION_ID");
+        char *os_release_id = SafeStringDuplicate(const_os_release_id);
+        char *os_release_version_id = SafeStringDuplicate(const_os_release_version_id);
 
-        // This is currently only used for CoreOS, but can be expanded:
-        if (const_os_release_id != NULL && strcmp(const_os_release_id, "coreos") == 0)
+        if (os_release_id != NULL)
         {
-            EvalContextClassPutHard(ctx, "coreos", tags);
-            char *os_release_id = xstrdup(const_os_release_id);
             CanonifyNameInPlace(os_release_id);
-            if (const_os_release_version != NULL)
+            if (os_release_version_id == NULL)
             {
-                char *os_release_version = xstrdup(const_os_release_version);
-                CanonifyNameInPlace(os_release_version);
-                char *os_release_flavor;
-                xasprintf(&os_release_flavor, "%s_%s",
-                          os_release_id, os_release_version);
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor",
-                                              os_release_flavor, CF_DATA_TYPE_STRING,
-                                              tags);
-                char *last_underscore;
-                while ( (last_underscore = strrchr(os_release_flavor, '_')) != NULL )
-                {
-                    EvalContextClassPutHard(ctx, os_release_flavor, tags);
-                    *last_underscore = '\0';
-                }
-                free(os_release_version);
-                free(os_release_flavor);
+                // if VERSION_ID doesn't exist, define only one hard class:
+                EvalContextClassPutHard(ctx, os_release_id, tags);
             }
-            free(os_release_id);
+            else // if VERSION_ID exists set flavor and multiple hard classes:
+            {
+                CanonifyNameInPlace(os_release_version_id);
+
+                // Set the flavor to be ID + major version (derived from VERSION_ID)
+                char *first_underscore = strchr(os_release_version_id, '_');
+                if (first_underscore != NULL)
+                {
+                    // Temporarily modify os_release_version_id to be major version
+                    *first_underscore = '\0';
+                    SetFlavor2(ctx, os_release_id, os_release_version_id);
+                    *first_underscore = '_';
+                }
+                else
+                {
+                    SetFlavor2(ctx, os_release_id, os_release_version_id);
+                }
+
+                // One of the hard classes is already set by SetFlavor
+                // but it seems excessive to try to skip this:
+                DefineVersionedHardClasses(ctx, tags, os_release_id, os_release_version_id);
+            }
         }
+        free(os_release_version_id);
+        free(os_release_id);
         free(tags);
         JsonDestroy(os_release_json);
     }
@@ -1150,8 +1210,7 @@ static void OSClasses(EvalContext *ctx)
 
     struct stat statbuf;
 
-    // os-release is used to set sys.os_release as well as
-    // classes and vars on CoreOS:
+    // os-release is used to set sys.os_release, sys.flavor and hard classes
     if (access("/etc/os-release", R_OK) != -1)
     {
         OSReleaseParse(ctx, "/etc/os-release");
@@ -1196,7 +1255,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/generic-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a sun cobalt system.");
-        SetFlavour(ctx, "SunCobalt");
+        SetFlavor(ctx, "SunCobalt");
     }
 
     if (stat("/etc/SuSE-release", &statbuf) != -1)
@@ -1239,7 +1298,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a UnitedLinux system.");
-        SetFlavour(ctx, "UnitedLinux");
+        SetFlavor(ctx, "UnitedLinux");
     }
 
     if (stat("/etc/alpine-release", &statbuf) != -1)
@@ -1250,13 +1309,13 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/gentoo-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a gentoo system.");
-        SetFlavour(ctx, "gentoo");
+        SetFlavor(ctx, "gentoo");
     }
 
     if (stat("/etc/arch-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an Arch Linux system.");
-        SetFlavour(ctx, "archlinux");
+        SetFlavor(ctx, "archlinux");
     }
 
     if (stat("/proc/vmware/version", &statbuf) != -1 || stat("/etc/vmware-release", &statbuf) != -1)
@@ -1275,7 +1334,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
-        SetFlavour(ctx, "Eos");
+        SetFlavor(ctx, "Eos");
     }
 
     if (stat("/etc/issue", &statbuf) != -1)
@@ -1304,7 +1363,7 @@ static void OSClasses(EvalContext *ctx)
 
     char context[CF_BUFSIZE];
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    SetFlavour(ctx, context);
+    SetFlavor(ctx, context);
 
 #ifdef __FreeBSD__
     /*
@@ -1323,7 +1382,7 @@ static void OSClasses(EvalContext *ctx)
     }
 
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    EvalContextClassPutHard(ctx, context, "source=agent,derived-from=sys.flavour");
+    EvalContextClassPutHard(ctx, context, "source=agent,derived-from=sys.flavor");
 #endif
 
 #endif
@@ -1404,7 +1463,7 @@ static void OSClasses(EvalContext *ctx)
         EvalContextClassPutHard(ctx, "unknown_ostype", "source=agent,derived-from=sys.sysname");
     }
 
-    SetFlavour(ctx, "windows");
+    SetFlavor(ctx, "windows");
 
 #endif /* __MINGW32__ */
 
@@ -1441,7 +1500,7 @@ static void OSClasses(EvalContext *ctx)
 #endif
 
 #if defined(__ANDROID__)
-    SetFlavour(ctx, "android");
+    SetFlavor(ctx, "android");
 #endif
 
 #ifdef __sun
@@ -1512,7 +1571,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d", major);
-        SetFlavour(ctx, buf);
+        SetFlavor(ctx, buf);
     }
 
     if (revcomps > 1)
@@ -1568,7 +1627,7 @@ static void Linux_Oracle_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d", major);
-        SetFlavour(ctx, buf);
+        SetFlavor(ctx, buf);
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
         EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
@@ -1648,7 +1707,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
         EvalContextClassPutHard(ctx,classbuf, "inventory,attribute_name=none,source=agent");
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        SetFlavour(ctx, classbuf);
+        SetFlavor(ctx, classbuf);
     }
 
     return 0;
@@ -1871,7 +1930,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 
         strcat(classbuf, strmajor);
 
-        SetFlavour(ctx, classbuf);
+        SetFlavor(ctx, classbuf);
 
         if (minor != -2)
         {
@@ -2044,7 +2103,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                SetFlavour(ctx, classbuf);
+                SetFlavor(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
@@ -2082,7 +2141,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
 
                 snprintf(classbuf, CF_MAXVARSIZE, "SUSE_%d", major);
-                SetFlavour(ctx, classbuf);
+                SetFlavor(ctx, classbuf);
 
                 /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
                  * Keep this for backwards compatibility until CFEngine 3.7
@@ -2186,7 +2245,7 @@ static void LinuxDebianSanitizeIssue(char *buffer)
 
 static int Linux_Misc_Version(EvalContext *ctx)
 {
-    char flavour[CF_MAXVARSIZE];
+    char flavor[CF_MAXVARSIZE];
     char version[CF_MAXVARSIZE];
     char os[CF_MAXVARSIZE];
     char buffer[CF_BUFSIZE];
@@ -2227,8 +2286,8 @@ static int Linux_Misc_Version(EvalContext *ctx)
 
     if (*os && *version)
     {
-        snprintf(flavour, CF_MAXVARSIZE, "%s_%s", os, version);
-        SetFlavour(ctx, flavour);
+        snprintf(flavor, CF_MAXVARSIZE, "%s_%s", os, version);
+        SetFlavor(ctx, flavor);
         return 1;
     }
 
@@ -2265,13 +2324,13 @@ static int Linux_Debian_Version(EvalContext *ctx)
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
         EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavour(ctx, classname);
+        SetFlavor(ctx, classname);
         break;
 
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavour(ctx, classname);
+        SetFlavor(ctx, classname);
         break;
 
     default:
@@ -2299,14 +2358,14 @@ static int Linux_Debian_Version(EvalContext *ctx)
         sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         EvalContextClassPutHard(ctx, "debian", "inventory,attribute_name=none,source=agent");
-        SetFlavour(ctx, buffer);
+        SetFlavor(ctx, buffer);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
         LinuxDebianSanitizeIssue(buffer);
         sscanf(buffer, "%*s %[^.].%d", version, &release);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
-        SetFlavour(ctx, buffer);
+        SetFlavor(ctx, buffer);
         EvalContextClassPutHard(ctx, "ubuntu", "inventory,attribute_name=none,source=agent");
         if (release >= 0)
         {
@@ -2478,7 +2537,7 @@ static void Linux_Amazon_Version(EvalContext *ctx)
                     "inventory,attribute_name=none,source=agent"
                     ",derived-from-file=/etc/system-release");
             }
-            SetFlavour(ctx, "AmazonLinux");
+            SetFlavor(ctx, "AmazonLinux");
         }
     }
 }
@@ -2508,7 +2567,7 @@ static void Linux_Alpine_Version(EvalContext *ctx)
                 ",derived-from-file=/etc/alpine-release");
         }
     }
-    SetFlavour(ctx, "alpinelinux");
+    SetFlavor(ctx, "alpinelinux");
 }
 
 /******************************************************************/
@@ -2559,7 +2618,7 @@ static int MiscOS(EvalContext *ctx)
            EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
            EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
-           SetFlavour(ctx, "BIG-IP");
+           SetFlavor(ctx, "BIG-IP");
        }
     }
 

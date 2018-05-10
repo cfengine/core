@@ -1,5 +1,5 @@
 %{
-/* 
+/*
    Copyright 2017 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
@@ -7,13 +7,13 @@
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -138,10 +138,18 @@ promise_type   [a-zA-Z_]+:
 
 {newline}             {
                           P.line_no++;
-                          P.line_pos = 0;
+                          P.line_pos = 1;
+                          // push back on stack and skip first char
+                          yyless(1);
                       }
 
-{macro_if}            {
+{macro_if_version}    {
+                        if (  P.line_pos != 1 )
+                        {
+                             yyerror("fatal: macro @if must be at beginning of the line.");
+                             return 0;
+                        }
+
                         const char* version_text = yytext+20;
                         ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, version_text);
                         {
@@ -190,6 +198,11 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {macro_endif}         {
+                        if (  P.line_pos != 1 )
+                        {
+                          yyerror("fatal: macro @endif must be at beginning of the line.");
+                          return 0;
+                        }
                         ParserDebug("\tL:macro @endif %d\n", P.line_pos);
                         BEGIN(INITIAL);
                         if (P.if_depth <= 0)
@@ -304,7 +317,7 @@ promise_type   [a-zA-Z_]+:
 
 {varclass}            {
                           char *tmp = NULL;
-                        
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:varclass %s %d\n", yytext, P.line_pos);
 
@@ -331,7 +344,7 @@ promise_type   [a-zA-Z_]+:
 
 {class}               {
                           char *tmp = NULL;
-                        
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
 

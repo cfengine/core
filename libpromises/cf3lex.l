@@ -140,13 +140,13 @@ promise_type   [a-zA-Z_]+:
                           P.current_line = xstrdup(yytext+1);
                           ParserDebug("L:line %s\n", P.current_line);
                           P.line_no++;
-                          P.line_pos = 0;
+                          P.line_pos = 1;
                           // push back on stack and skip first char
                           yyless(1);
                       }
 
 {macro_if_version}    {
-                        if (  P.line_pos != 0 )
+                        if (  P.line_pos != 1 )
                         {
                              yyerror("fatal: macro @if must be at beginning of the line.");
                              return 0;
@@ -212,7 +212,7 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {macro_if_feature}    {
-                        if (  P.line_pos != 0 )
+                        if (  P.line_pos != 1 )
                         {
                           yyerror("fatal: macro @if must be at beginning of the line.");
                           return 0;
@@ -245,7 +245,7 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {macro_endif}         {
-                        if (  P.line_pos != 0 )
+                        if (  P.line_pos != 1 )
                         {
                           yyerror("fatal: macro @endif must be at beginning of the line.");
                           return 0;

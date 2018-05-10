@@ -145,10 +145,18 @@ promise_type   [a-zA-Z_]+:
 
 {newline}             {
                           P.line_no++;
-                          P.line_pos = 0;
+                          P.line_pos = 1;
+                          // push back on stack and skip first char
+                          yyless(1);
                       }
 
 {macro_if_version}    {
+                        if (  P.line_pos != 1 )
+                        {
+                             yyerror("fatal: macro @if must be at beginning of the line.");
+                             return 0;
+                        }
+
                         const char* version_text = yytext+20;
                         ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, version_text);
                         {
@@ -209,6 +217,12 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {macro_if_feature}    {
+                        if (  P.line_pos != 1 )
+                        {
+                          yyerror("fatal: macro @if must be at beginning of the line.");
+                          return 0;
+                        }
+
                         char* feature_text = yytext+12;
                         // remove trailing ')'
                         feature_text[strlen(feature_text)-1] = 0;
@@ -236,6 +250,12 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {macro_endif}         {
+                        if (  P.line_pos != 1 )
+                        {
+                          yyerror("fatal: macro @endif must be at beginning of the line.");
+                          return 0;
+                        }
+
                         ParserDebug("\tL:macro @endif %d\n", P.line_pos);
                         BEGIN(INITIAL);
                         if (P.if_depth <= 0)
@@ -350,7 +370,7 @@ promise_type   [a-zA-Z_]+:
 
 {varclass}            {
                           char *tmp = NULL;
-                        
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:varclass %s %d\n", yytext, P.line_pos);
 
@@ -377,7 +397,7 @@ promise_type   [a-zA-Z_]+:
 
 {class}               {
                           char *tmp = NULL;
-                        
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
                           if (context_expression_whitespace_rx == NULL)

@@ -407,3 +407,25 @@ int SeqStringLength(Seq *seq)
 
     return total_length;
 }
+
+void SeqRemoveNulls(Seq *s)
+{
+    int length = SeqLength(s);
+    int from = 0;
+    int to = 0;
+    while (from < length)
+    {
+        if (s->data[from] == NULL)
+        {
+            ++from; // Skip NULL elements
+        }
+        else
+        {
+            // Copy elements in place, DON'T use SeqSet, which will free()
+            s->data[to] = s->data[from];
+            ++from;
+            ++to;
+        }
+    }
+    s->length = to;
+}

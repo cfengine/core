@@ -26,6 +26,7 @@
 #include <eval_context.h>
 #include <files_hashes.h>
 #include <file_lib.h>
+#include <files_names.h>
 #include <string_lib.h>
 #include <parser.h>
 #include <expand.h>
@@ -35,6 +36,7 @@
 #include <fncall.h>
 #include <known_dirs.h>
 #include <ornaments.h>
+#include <policy.h>
 
 // TODO: remove
 #include <vars.h>                                         /* IsCf3VarString */
@@ -253,6 +255,53 @@ static void ShowContext(EvalContext *ctx)
     SeqDestroy(soft_contexts);
 }
 
+static void RenameMainBundle(EvalContext *ctx, Policy *policy)
+{
+    assert(policy != NULL);
+    assert(ctx != NULL);
+    assert(policy->bundles != NULL);
+    char *const entry_point = GetRealPath(EvalContextGetEntryPoint(ctx));
+    if (NULL_OR_EMPTY(entry_point))
+    {
+        free(entry_point);
+        return;
+    }
+    Seq *bundles = policy->bundles;
+    int length = SeqLength(bundles);
+    bool removed = false;
+    for (int i = 0; i < length; ++i)
+    {
+        Bundle *const bundle = SeqAt(bundles, i);
+        if (StringSafeEqual(bundle->name, "__main__"))
+        {
+            char *abspath = GetRealPath(bundle->source_path);
+            if (StringSafeEqual(abspath, entry_point))
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Redefining __main__ bundle from file %s to be main",
+                    abspath);
+                strncpy(bundle->name, "main", 4+1);
+                // "__main__" is always big enough for "main"
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Dropping __main__ bundle from file %s (entry point: %s)",
+                    abspath,
+                    entry_point);
+                removed = true;
+                SeqSet(bundles, i, NULL); // SeqSet calls destroy function
+            }
+            free(abspath);
+        }
+    }
+    if (removed)
+    {
+        SeqRemoveNulls(bundles);
+    }
+    free(entry_point);
+}
+
 static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
@@ -288,6 +337,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
     if (policy)
     {
+        RenameMainBundle(ctx, policy);
         Seq *errors = SeqNew(10, free);
         if (!PolicyCheckPartial(policy, errors))
         {

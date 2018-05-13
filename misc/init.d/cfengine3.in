@@ -182,7 +182,7 @@ cf_get_matching_pids()
 
     if [ $INSIDE_CONTAINER = -1 ]; then
         # Are we inside a container?
-        if [ -f /proc/self/cgroup ] && egrep '[0-9]+:devices:/[^:]' /proc/self/cgroup > /dev/null; then
+        if [ -f /proc/self/cgroup ] && sed 's_/\(-\|system\|user\).slice__;s_/user-[0-9]*.slice__;s_/session-[0-9]*.scope__;s_/cfengine3.service__' /proc/self/cgroup | egrep '[0-9]+:devices:/[^:]' > /dev/null; then
             INSIDE_CONTAINER=1
         else
             INSIDE_CONTAINER=0
@@ -222,7 +222,7 @@ cf_get_matching_pids()
             for pid in $pids; do
                 # If the last character of the cgroup is not the root directory,
                 # then this is a container process.
-                if [ -f /proc/$pid/cgroup ] && egrep '[0-9]+:devices:/[^:]' /proc/$pid/cgroup > /dev/null; then
+                if [ -f /proc/$pid/cgroup ] && sed 's_/\(-\|system\|user\).slice__;s_/user-[0-9]*.slice__;s_/session-[0-9]*.scope__;s_/cfengine3.service__' /proc/$pid/cgroup | egrep '[0-9]+:devices:/[^:]' > /dev/null; then
                     if [ $INSIDE_CONTAINER = 1 ]; then
                         echo $pid
                     fi

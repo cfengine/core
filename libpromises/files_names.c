@@ -641,6 +641,10 @@ bool CompressPath(char *dest, size_t dest_size, const char *src)
  **/
 char *GetAbsolutePath(const char *path)
 {
+    if (NULL_OR_EMPTY(path))
+    {
+        return NULL;
+    }
     char abs_path[PATH_MAX] = { 0 };
     if (IsAbsoluteFileName(path))
     {
@@ -661,6 +665,22 @@ char *GetAbsolutePath(const char *path)
         CompressPath(abs_path, PATH_MAX, full_path);
         return xstrdup(abs_path);
     }
+}
+
+char *GetRealPath(const char *const path)
+{
+    if (NULL_OR_EMPTY(path))
+    {
+        return NULL;
+    }
+    char *const abs_path = GetAbsolutePath(path);
+    if (abs_path == NULL || abs_path[0] == '\0')
+    {
+        return abs_path;
+    }
+    char *const real_path = realpath(abs_path, NULL);
+    free(abs_path);
+    return real_path;
 }
 
 /*********************************************************************/

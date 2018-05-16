@@ -222,6 +222,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
+// TODO re-use SafeExit() here for windows
             exit(EXIT_SUCCESS);
 
         case 'h':
@@ -230,6 +231,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
+// TODO re-use SafeExit() here for windows
             exit(EXIT_SUCCESS);
 
         case 'M':
@@ -241,11 +243,13 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                              OPTIONS, HINTS,
                              true);
                 FileWriterDetach(out);
+// TODO re-use SafeExit() here for windows
                 exit(EXIT_SUCCESS);
             }
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
+// TODO re-use SafeExit() here for windows
             exit(EXIT_SUCCESS);
 
         case 'A':
@@ -253,6 +257,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             Log(LOG_LEVEL_NOTICE, "Generating Avahi configuration file.");
             if (GenerateAvahiConfig("/etc/avahi/services/cfengine-hub.service") != 0)
             {
+// TODO re-use SafeExit() here for windows
                 exit(EXIT_FAILURE);
             }
             cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
@@ -260,11 +265,13 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 #else
             Log(LOG_LEVEL_ERR, "Generating avahi configuration can only be done when avahi-daemon and libavahi are installed on the machine.");
 #endif
+// TODO re-use SafeExit() here for windows
             exit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
+// TODO re-use SafeExit() here for windows
                 exit(EXIT_FAILURE);
             }
             break;
@@ -279,6 +286,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
+// TODO re-use SafeExit() here for windows
             exit(EXIT_FAILURE);
         }
     }
@@ -286,6 +294,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
+// TODO re-use SafeExit() here for windows
         exit(EXIT_FAILURE);
     }
 
@@ -609,6 +618,7 @@ static int InitServer(size_t queue_size)
         return sd;
     }
 
+// TODO re-use SafeExit() here for windows
     exit(EXIT_FAILURE);
 }
 
@@ -668,6 +678,7 @@ static void PrepareServer(int sd)
     {
         if (fork() != 0)
         {
+// TODO re-use SafeExit() here for windows
             _exit(EXIT_SUCCESS);
         }
 

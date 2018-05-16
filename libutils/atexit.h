@@ -29,4 +29,8 @@ typedef void (*AtExitFn)(void);
 
 void RegisterAtExitFunction(AtExitFn fn);
 
+#if defined(__MINGW32__)
+void CallAtExitFunctions(void);
+#endif
+
 #endif

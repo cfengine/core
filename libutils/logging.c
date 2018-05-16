@@ -178,7 +178,6 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     if (level == LOG_LEVEL_DEBUG)
     {
         fflush(stdout);
-        // TODO also possibly call sync()? Not sure if that's too "expensive" or not.
     }
 
     if (color)

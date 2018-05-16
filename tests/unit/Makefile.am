@@ -111,7 +111,6 @@ check_PROGRAMS = \
 	regex_test \
 	alloc_test \
 	string_writer_test \
-	file_writer_test \
 	xml_writer_test \
 	sequence_test \
 	lastseen_test \

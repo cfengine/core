@@ -231,6 +231,9 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
     roles_acl     = calloc(1, sizeof(*roles_acl));
     SV.path_shortcuts = StringMapNew();
 
+BREAKPOINT_KEEP_PROMISES_FAIL: // see tests/acceptance/16_cf-serverd/keep_promises_fail.cf
+    __attribute__((unused));
+
     if (paths_acl    == NULL || classes_acl == NULL || vars_acl    == NULL ||
         literals_acl == NULL || query_acl   == NULL || bundles_acl == NULL ||
         roles_acl    == NULL || SV.path_shortcuts == NULL)
@@ -565,7 +568,7 @@ static const char *const COMMON_TYPESEQUENCE[] =
     NULL
 };
 
-/* Check if promise is NOT belonging to default server types 
+/* Check if promise is NOT belonging to default server types
  * (see SERVER_TYPESEQUENCE)*/
 static bool IsPromiseTypeNotInTypeSequence(const char *promise_type,
                                            const char * const *seq)
@@ -1148,6 +1151,9 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                 }
             }
+
+BREAKPOINT_ACCESSPROMISE_ADDACCESSCONSTRAINTS_FAIL:
+    __attribute__((unused));
 
             if (ret == (size_t) -1)
             {

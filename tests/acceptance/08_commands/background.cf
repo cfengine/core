@@ -1,0 +1,42 @@
+# TODO ammend/clarify the docs: https://docs.cfengine.com/docs/3.12/reference-promise-types.html#background
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+body agent control
+{
+  max_children => 10;
+}
+
+bundle agent init
+{
+  commands:
+    "/bin/sleep 5"
+      action => background;
+ 
+    "/bin/sleep 10"
+      action => background;
+
+    "/bin/sleep 15"
+      action => background;
+
+  files:
+    "/bin/sleep"
+      action => background;
+  
+    "/bin/date"
+      action => background;
+}
+
+body action background
+{
+  background => "true";
+}
+
+bundle agent check
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}

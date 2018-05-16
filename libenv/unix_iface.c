@@ -344,7 +344,9 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     InitIgnoreInterfaces();
 
-    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+BREAKPOINT_COULDNT_OPEN_SOCKET:
+    if (fd == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open socket. (socket: %s)", GetErrorStr());
         exit(EXIT_FAILURE);
@@ -362,6 +364,7 @@ void GetInterfacesInfo(EvalContext *ctx)
     intmax_t request = OSIOCGIFCONF;
 #endif
     int ret = ioctl(fd, request, &list);
+BREAKPOINT_COULDNT_IOCTL_SOCKET:
     if (ret == -1)
     {
         Log(LOG_LEVEL_ERR,

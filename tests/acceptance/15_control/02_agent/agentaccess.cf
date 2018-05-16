@@ -1,0 +1,17 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  commands:
+    "$(sys.cf_agent) --file $(this.promise_dirname)/agentaccess.cf.sub";
+}
+
+bundle agent check
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}

@@ -29,6 +29,15 @@ matrix:
       env: JOB_TYPE=compile_and_unit_test COVERAGE=no
       compiler: clang
     - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      before_script:
+      - export CC=gcc-7
+      - export CFLAGS=-O0  #disable optimizations to try and get labels into binaries
       sudo: required
       env: JOB_TYPE=acceptance_tests_common
       # The unsafe acceptance tests don't work with SIMFS which is the default

@@ -1,0 +1,25 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  commands:
+# TODO is there something I can use instead of promise_dirname to get relative paths here?
+    "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(this.promise_dirname)/keep_promises_fail.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-fork --file $(this.promise_dirname)/keep_promises_fail.cf.sub"
+      classes => keptcode;
+}
+
+bundle agent check
+{
+  methods:
+    "pass" usebundle => dcs_passif("ok", "$(this.promise_filename)");
+}
+
+body classes keptcode
+{
+  kept_returncodes => { "255" };
+  promise_kept => { "ok" };
+}

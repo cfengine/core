@@ -231,6 +231,8 @@ usage() {
     echo "           and defaults to $DEFCF_PROMISES."
     echo " --cfserverd  provides a way to specify non-default cf-serverd location,"
     echo "           and defaults to $DEFCF_SERVERD."
+    echo " --cfmonitord provides a way to specify non-default cf-monitord location,"
+    echo "           and defaults to $DEFCF_MONITORD."
     echo " --cfexecd provides a way to specify non-default cf-execd location,"
     echo "           and defaults to $DEFCF_EXECD."
     echo " --cfkey   provides a way to specify non-default cf-key location,"
@@ -413,6 +415,7 @@ runtest() {
                 $LN_CMD "$CF_NET" "$WORKDIR/bin"
                 $LN_CMD "$CF_RUNAGENT" "$WORKDIR/bin"
                 $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
+                $LN_CMD "$CF_MONITORD" "$WORKDIR/bin"
             fi
             for inc in $INCLUDE_IN_WORKDIR
             do (
@@ -792,6 +795,8 @@ do
             CF_PROMISES=${1#--cfpromises=};;
         --cfserverd=*)
             CF_SERVERD=${1#--cfserverd=};;
+        --cfmonitord=*)
+            CF_MONITORD=${1#--cfmonitord=};;
         --cfexecd=*)
             CF_EXECD=${1#--cfexecd=};;
         --cfkey=*)
@@ -876,7 +881,7 @@ do
     esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_NET" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_MONITORD" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_NET" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
 then
     if [ -n "$BINDIR" ]
     then
@@ -903,6 +908,7 @@ find_default_binary()
 find_default_binary DEFAGENT cf-agent
 find_default_binary DEFCF_PROMISES cf-promises
 find_default_binary DEFCF_SERVERD cf-serverd
+find_default_binary DEFCF_MONITORD cf-monitord
 find_default_binary DEFCF_EXECD cf-execd
 find_default_binary DEFCF_KEY cf-key
 find_default_binary DEFCF_NET cf-net
@@ -915,6 +921,7 @@ find_default_binary DEFRPMVERCMP rpmvercmp
 AGENT=${AGENT:-${DEFAGENT}}
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
+CF_MONITORD=${CF_MONITORD:-${DEFCF_MONITORD}}
 CF_EXECD=${CF_EXECD:-${DEFCF_EXECD}}
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 CF_NET=${CF_NET:-${DEFCF_NET}}

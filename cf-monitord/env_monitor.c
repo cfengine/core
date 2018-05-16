@@ -374,7 +374,9 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
 
     Banner("Evaluating and storing new weekly averages");
 
-    if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
+    lastweek_vals = GetCurrentAverages(t);
+// BREAKPOINT_ERROR_READING_AVERAGE_DATABASE - for tests/acceptance/28_cf-monitord/get_current_averages_fail.gdb
+    if (lastweek_vals  == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error reading average database");
         exit(EXIT_FAILURE);

@@ -1,0 +1,21 @@
+bundle server access_rules()
+{
+  access:
+    "test value"
+      resource_type => "literal",
+      admit => { "127.0.0.1" };
+  
+    "myvar"
+      resource_type => "variable",
+      admit => { "127.0.0.1" };
+
+    "/tmp"
+      resource_type => "path",
+      admit => { "127.0.0.1" };
+}
+
+bundle agent main
+{
+  reports:
+    "hello";
+}

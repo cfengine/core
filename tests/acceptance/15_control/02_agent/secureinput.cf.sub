@@ -1,0 +1,12 @@
+body agent control
+{
+# TODO not sure how to architect this test of checking agent access
+# due to agentaccess being present... but not having a list of agents
+  agentaccess => { };
+}
+
+bundle agent main
+{
+  reports:
+    "I am here!";
+}

@@ -28,7 +28,7 @@
 #include <dbm_api.h>
 #include <dbm_priv.h>
 #include <dbm_migration.h>
-#include <atexit.h>
+#include <cleanup.h>
 #include <logging.h>
 #include <misc_lib.h>
 #include <known_dirs.h>
@@ -298,7 +298,7 @@ void CloseDBInstance(DBHandle *handle)
  * the mutexes *AND KEEP THEM LOCKED* so that no background thread can open
  * any database. So make sure you exit soon...
  *
- * @warning This is usually register with atexit(), however you have to make
+ * @warning This is usually register with cleanup, however you have to make
  * sure no other DB-cleaning exit hook was registered before, so that this is
  * called last.
  **/
@@ -328,7 +328,7 @@ void CloseAllDBExit()
 
 static void RegisterShutdownHandler(void)
 {
-    RegisterAtExitFunction(&CloseAllDBExit);
+    RegisterCleanupFunction(&CloseAllDBExit);
 }
 
 /**

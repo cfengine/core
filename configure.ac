@@ -1551,6 +1551,9 @@ if test "x$use_coverage" = "xyes"; then
   dnl Add the special gcc flags
   CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
   LDFLAGS="$LDFLAGS -lgcov"
+  AM_CONDITIONAL([ENABLE_COVERAGE], true)
+else
+  AM_CONDITIONAL([ENABLE_COVERAGE], false)
 fi
 
 #

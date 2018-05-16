@@ -26,6 +26,7 @@
 #include <alloc.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <cleanup.h>
 
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
@@ -47,7 +48,7 @@ static void LoggingInitializeOnce(void)
          * that nothing else will work. */
 
         fprintf(stderr, "Unable to initialize logging subsystem\n");
-        exit(255);
+        DoCleanupAndExit(255);
     }
 }
 
@@ -215,6 +216,11 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     }
 
     fprintf(stdout, "%8s: %s\n", LogLevelToString(level), msg);
+
+    if (level == LOG_LEVEL_DEBUG)
+    {
+        fflush(stdout);
+    }
 
     if (color)
     {

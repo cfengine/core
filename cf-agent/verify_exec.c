@@ -45,6 +45,7 @@
 #include <eval_context.h>
 #include <retcode.h>
 #include <timeout.h>
+#include <cleanup.h>
 
 typedef enum
 {
@@ -462,7 +463,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
     if ((a.transaction.background) && outsourced)
     {
         Log(LOG_LEVEL_VERBOSE, "Backgrounded command '%s' is done - exiting", cmdline);
-        exit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
     }
 #endif /* !__MINGW32__ */
 

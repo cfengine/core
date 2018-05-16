@@ -26,6 +26,7 @@
 #include <alloc.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <cleanup.h>
 
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
@@ -47,7 +48,7 @@ static void LoggingInitializeOnce(void)
          * that nothing else will work. */
 
         fprintf(stderr, "Unable to initialize logging subsystem\n");
-        exit(255);
+        DoCleanupAndExit(255);
     }
 }
 
@@ -223,6 +224,11 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     }
 
     fflush(stdout);
+
+    if (level == LOG_LEVEL_DEBUG)
+    {
+        fsync(STDOUT_FILENO);
+    }
 }
 
 #if !defined(__MINGW32__)
@@ -428,7 +434,7 @@ bool LogEnableModulesFromString(char *s)
         if (strcmp(token, "help") == 0)
         {
             LogModuleHelp();
-            retval = false;                                   /* early exit */
+            retval = false;
         }
         else if (strcmp(token, "all") == 0)
         {

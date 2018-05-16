@@ -1,0 +1,13 @@
+body agent control
+{
+  # we have to have a list in order to get into CheckAgentAccess() in cf-agent.c, our function under test
+  # but, we can't have "root" in there since it would avoid the code we want to test
+  agentaccess => { "daemon" };
+  secureinput => "true";
+}
+
+bundle agent main
+{
+  reports:
+    "I am here!";
+}

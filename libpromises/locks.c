@@ -27,7 +27,7 @@
 #include <string_lib.h>
 #include <files_interfaces.h>
 #include <files_lib.h>
-#include <atexit.h>
+#include <cleanup.h>
 #include <policy.h>
 #include <files_hashes.h>
 #include <rb-tree.h>
@@ -407,7 +407,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *o
     if ((fp = fopen(cflog, "a")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Can't open lock-log file '%s'. (fopen: %s)", cflog, GetErrorStr());
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     if ((tim = time((time_t *) NULL)) == -1)
@@ -444,7 +444,7 @@ static void LocksCleanup(void)
 
 static void RegisterLockCleanup(void)
 {
-    RegisterAtExitFunction(&LocksCleanup);
+    RegisterCleanupFunction(&LocksCleanup);
 }
 
 static char *BodyName(const Promise *pp)
@@ -804,7 +804,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         if (ret != -1)
         {
             /* Register a cleanup handler *after* having opened the DB, so that
-             * CloseAllDB() atexit() handler is registered in advance, and it is
+             * CloseAllDB() cleanup handler is registered in advance, and it is
              * called after removing this lock.
 
              * There is a small race condition here that we'll leave a stale lock

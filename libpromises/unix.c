@@ -196,7 +196,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
             if (execl(SHELL_PATH, "sh", "-c", command, NULL) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Command '%s' failed. (execl: %s)", command, GetErrorStr());
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE); // exit() and not DoCleanupAndExit() OK here since we have forked above
             }
         }
         else
@@ -206,7 +206,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
             if (execv(argv[0], argv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Command '%s' failed. (execv: %s)", argv[0], GetErrorStr());
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE); // exit() and not DoCleanupAndExit() OK here since we have forked above
             }
         }
     }

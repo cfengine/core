@@ -47,6 +47,7 @@
 #include <loading.h>
 #include <expand.h>                                 /* ProtocolVersionParse */
 #include <files_hashes.h>
+#include <cleanup.h>
 
 
 typedef enum
@@ -172,7 +173,7 @@ int main(int argc, char *argv[])
     if (BACKGROUND && INTERACTIVE)
     {
         Log(LOG_LEVEL_ERR, "You cannot specify background mode and interactive mode together");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
 /* HvB */
@@ -198,7 +199,7 @@ int main(int argc, char *argv[])
                     if (fork() == 0)    /* child process */
                     {
                         HailServer(ctx, config, RlistScalarValue(rp));
-                        exit(EXIT_SUCCESS);
+                        DoCleanupAndExit(EXIT_SUCCESS);
                     }
                     else        /* parent process */
                     {
@@ -282,7 +283,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             if (strlcat(SENDCLASSES, optarg, sizeof(SENDCLASSES)) >= sizeof(SENDCLASSES))
             {
                 Log(LOG_LEVEL_ERR, "Argument too long (-s)");
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -290,7 +291,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             if (strlcat(DEFINECLASSES, optarg, sizeof(DEFINECLASSES)) >= sizeof(DEFINECLASSES))
             {
                 Log(LOG_LEVEL_ERR, "Argument too long (-D)");
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -301,7 +302,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'o':
             Log(LOG_LEVEL_ERR, "Option \"-o\" has been deprecated,"
                 " you can not pass arbitrary arguments to remote cf-agent");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
             break;
 
         case 'I':
@@ -331,7 +332,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteVersion(w);
             FileWriterDetach(w);
         }
-        exit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'h':
         {
@@ -339,7 +340,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
-        exit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
         {
@@ -350,17 +351,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                          OPTIONS, HINTS,
                          true);
             FileWriterDetach(out);
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
         }
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -374,7 +375,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
 
         }
     }
@@ -382,7 +383,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     return config;

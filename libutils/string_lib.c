@@ -33,6 +33,7 @@
 #include <writer.h>
 #include <misc_lib.h>
 #include <logging.h>
+#include <cleanup.h>
 
 char *StringVFormat(const char *fmt, va_list ap)
 {
@@ -485,7 +486,7 @@ long StringToLongExitOnError(const char *str)
     if (return_code != 0)
     {
         LogStringToLongError(str, "StringToLongExitOnError", return_code);
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
     return result;
 }

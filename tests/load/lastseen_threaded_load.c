@@ -674,7 +674,7 @@ int main(int argc, char *argv[])
     }
     ThreadUnlock(&end_mtx);
 
-    /* === CLEAN UP TODO register these with atexit() === */
+    /* === CLEAN UP TODO register these with RegisterCleanupFunction() === */
 
     int retval = EXIT_SUCCESS;
     if (finished_children != num_forked_children)

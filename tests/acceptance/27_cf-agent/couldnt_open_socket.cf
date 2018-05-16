@@ -1,0 +1,52 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  # gdb version must be >= 7 for the gdb scripts to work
+  meta:
+    "test_skip_needs_work"
+      string => "redhat_4|debian_4|aix|debian_6|hpux|solaris",
+      meta => { "ENT-4141" };
+
+  commands:
+    "/bin/bash -c 'echo -n =line_number=' && /bin/grep -n GDB:.*couldnt_open_socket.cf $(this.promise_dirname)/../../../libenv/unix_iface.c | cut -d: -f1"
+      handle => "bash_ran",
+      contain => shell_command,
+      module => "true";
+
+  files:
+    "$(sys.workdir)/couldnt_open_socket.gdb"
+      depends_on => { "bash_ran" },
+      create => "true",
+      edit_template => "$(this.promise_dirname)/couldnt_open_socket.gdb.mustache",
+      template_data => ' { "line_number": "$(bash.line_number)" } ',
+      template_method => "mustache";
+}
+
+bundle agent test
+{
+  commands:
+    "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(sys.workdir)/couldnt_open_socket.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-lock --no-fork --debug --file $(this.promise_dirname)/couldnt_open_socket.cf.sub"
+      classes => keptcode;
+}
+
+bundle agent check
+{
+  methods:
+    "pass" usebundle => dcs_passif("ok", "$(this.promise_filename)");
+}
+
+body contain shell_command
+{
+  useshell => "useshell";
+}
+
+body classes keptcode
+{
+  kept_returncodes => { "1" };
+  promise_kept => { "ok" };
+}

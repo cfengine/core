@@ -1,0 +1,38 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  commands:
+    "$(sys.cf_agent) -f $(this.promise_dirname)/allclassesreport.cf.sub";
+}
+
+bundle agent test
+{
+  classes:
+    "ok" expression => "any";
+
+  vars:
+    "fields" slist => splitstring("size,gid,uid,permstr,permoct,type,basename",",",999);
+
+    "stat[$(fields)]" string => filestat("$(sys.statedir)/allclasses.txt", $(fields));
+}
+
+bundle agent check
+{
+  methods:
+    "Pass/Fail" usebundle => dcs_passif_fileexists( "$(sys.statedir)/allclasses.txt",
+                                                    $(this.promise_filename));
+
+  reports:
+    DEBUG|EXTRA::
+      "$(sys.statedir)/allclasses.txt $(with)"
+        with => ifelse( fileexists( "$(sys.statedir)/allclasses.txt" ), "exists",
+                        "doesn't exist");
+  
+      "$(test.fields) is $(test.stat[$(test.fields)])";
+}

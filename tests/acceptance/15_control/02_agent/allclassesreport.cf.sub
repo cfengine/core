@@ -1,0 +1,10 @@
+body agent control
+{
+    allclassesreport => "true";
+}
+
+bundle agent main
+{
+  reports:
+    "I am here!";
+}

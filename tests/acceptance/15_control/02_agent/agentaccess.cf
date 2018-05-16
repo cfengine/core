@@ -1,0 +1,20 @@
+# test agentaccess settings which should cause an error e.g. run as root but
+# agentaccess => { "nobody" } provides code coverage to exit() scenarios for
+# cf-agent.
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  commands:
+    "$(sys.cf_agent) --file $(this.promise_dirname)/agentaccess.cf.sub";
+}
+
+bundle agent check
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}

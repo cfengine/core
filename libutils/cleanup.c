@@ -22,56 +22,56 @@
   included file COSL.txt.
 */
 
-#include <platform.h>
 #include <alloc.h>
-#include <atexit.h>
+#include <cleanup.h>
+#include <logging.h>
+#include <platform.h>
 
-#if defined(__MINGW32__)
-
-typedef struct AtExitList
+typedef struct CleanupList
 {
-    AtExitFn fn;
-    struct AtExitList *next;
-} AtExitList;
+    CleanupFn fn;
+    struct CleanupList *next;
+} CleanupList;
 
-static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
-static AtExitList *atexit_functions;
+static pthread_mutex_t cleanup_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
+static CleanupList *cleanup_functions;
 
-/* To be called externally only by Windows service implementation */
-
-void CallAtExitFunctions(void)
+/* To be called externally only by Windows binaries */
+void CallCleanupFunctions(void)
 {
-    pthread_mutex_lock(&atexit_functions_mutex);
+    pthread_mutex_lock(&cleanup_functions_mutex);
 
-    AtExitList *p = atexit_functions;
+    CleanupList *p = cleanup_functions;
     while (p)
     {
-        AtExitList *cur = p;
+        Log(LOG_LEVEL_DEBUG, "CallCleanupFunctions() had a function to call @ %p", p);
+        CleanupList *cur = p;
         (cur->fn)();
         p = cur->next;
         free(cur);
     }
 
-    atexit_functions = NULL;
+    cleanup_functions = NULL;
 
-    pthread_mutex_unlock(&atexit_functions_mutex);
+    pthread_mutex_unlock(&cleanup_functions_mutex);
 }
 
-#endif
-
-void RegisterAtExitFunction(AtExitFn fn)
+void DoCleanupAndExit(int ret)
 {
-#if defined(__MINGW32__)
-    pthread_mutex_lock(&atexit_functions_mutex);
-
-    AtExitList *p = xmalloc(sizeof(AtExitList));
-    p->fn = fn;
-    p->next = atexit_functions;
-
-    atexit_functions = p;
-
-    pthread_mutex_unlock(&atexit_functions_mutex);
-#endif
-
-    atexit(fn);
+    CallCleanupFunctions();
+    exit(ret);
 }
+
+void RegisterCleanupFunction(CleanupFn fn)
+{
+    pthread_mutex_lock(&cleanup_functions_mutex);
+
+    CleanupList *p = xmalloc(sizeof(CleanupList));
+    p->fn = fn;
+    p->next = cleanup_functions;
+
+    cleanup_functions = p;
+
+    pthread_mutex_unlock(&cleanup_functions_mutex);
+}
+

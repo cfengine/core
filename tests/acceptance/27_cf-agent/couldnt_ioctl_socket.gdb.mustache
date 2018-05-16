@@ -1,0 +1,8 @@
+set breakpoint pending on
+b unix_iface.c:{{line_number}}
+commands
+  set var fd=-1
+  c
+end
+run
+quit $_exitcode

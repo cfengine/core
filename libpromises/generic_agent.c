@@ -452,6 +452,7 @@ static void AddPolicyEntryVariables (EvalContext *ctx, const GenericAgentConfig 
     /* both dirname() and basename() may actually modify the string they are given (see man:basename(3)) */
     char *dirname_path = xstrdup(abs_input_path);
     char *basename_path = xstrdup(abs_input_path);
+    EvalContextSetEntryPoint(ctx, abs_input_path);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
                                   "policy_entry_filename",
                                   abs_input_path,

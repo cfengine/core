@@ -26,6 +26,7 @@
 #include <alloc.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <cleanup.h>
 
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
@@ -47,7 +48,7 @@ static void LoggingInitializeOnce(void)
          * that nothing else will work. */
 
         fprintf(stderr, "Unable to initialize logging subsystem\n");
-        exit(255);
+        DoCleanupAndExit(255);
     }
 }
 
@@ -410,6 +411,7 @@ void LogModuleHelp(void)
  *   iterctx     : enables the "iterctx" debug logging module
  *   iterctx,vars: enables the 2 debug modules, "iterctx" and "vars"
  *
+ * @RETURN false if help was requested, true in all other cases.
  * @NOTE modifies string #s but restores it before returning.
  */
 bool LogEnableModulesFromString(char *s)
@@ -428,7 +430,7 @@ bool LogEnableModulesFromString(char *s)
         if (strcmp(token, "help") == 0)
         {
             LogModuleHelp();
-            retval = false;                                   /* early exit */
+            retval = false;
         }
         else if (strcmp(token, "all") == 0)
         {

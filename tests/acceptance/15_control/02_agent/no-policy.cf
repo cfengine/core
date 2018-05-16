@@ -1,0 +1,30 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  files:
+    "$(sys.failsafe_policy_path)"
+      delete => tidy;
+
+  commands:
+# for this one we expect failure
+    "$(sys.cf_agent) -f ./does-not-exist.cf" classes => repairfailed;
+}
+
+body classes repairfailed
+{
+  repair_failed => { "ok" };
+}
+
+bundle agent check
+{
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

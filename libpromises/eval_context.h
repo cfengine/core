@@ -223,6 +223,8 @@ bool EvalContextIsIgnoringLocks(const EvalContext *ctx);
 void EvalContextSetIgnoreLocks(EvalContext *ctx, bool ignore);
 
 void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path);
+void EvalContextSetEntryPoint(EvalContext* ctx, const char *entry_point);
+const char *EvalContextGetEntryPoint(EvalContext* ctx);
 
 bool Abort(EvalContext *ctx);
 void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result);

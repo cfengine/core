@@ -1,0 +1,55 @@
+#+begin_src policy_preface
+#@ This example shows how classes are automatically canonified when they are
+#@ defined and that you must explicitly canonify when verifying classes.
+#+end_src
+
+#+begin_src cfengine3
+bundle agent main
+{
+  classes:
+
+      "my-illegal-class";
+
+  reports:
+
+      # We search to see what class was defined:
+      "$(with)" with => join( " ", classesmatching( "my.illegal.class" ) );
+
+      # We see that the illegal class is explicitly not defined.
+      "my-illegal-class is NOT defined (as expected, its invalid)"
+        unless => "my-illegal-class";
+
+      # We see the canonified form of the illegal class is defined.
+      "my_illegal_class is defined"
+        if => canonify("my-illegal-class");
+
+      # Note, ifvarclass takes expressisons, you couldn't do that if it were
+      # automatically canonified. Here I canonify the string using with, and use
+      # it as part of the expression which contains an invalid classcharacter, but
+      # its desireable for constructing expressions.
+
+      "Slice and dice using `with`"
+        with => canonify( "my-illegal-class" ),
+        if => "linux|$(with)";
+
+}
+#+end_src
+
+#+begin_src policy_description
+#@ First we promise to define `my-illegal-class`. When the promise is actuated
+#@ it is automatically canonified and defined. This automatic canonification is
+#@ logged in verbose logs.
+#@
+#@ `verbose: Class identifier 'my-illegal-class' contains illegal characters - canonifying`
+#@
+#@ Next several reports prove which form of the class was defined. The last
+#@ report shows how `if` takes a class expression, and if you are checking a class
+#@ that contains invalid characters you must canonify it.
+#+end_src
+
+#+begin_src example_output
+#@ R: my_illegal_class
+#@ R: my-illegal-class is NOT defined (as expected, its invalid)
+#@ R: my_illegal_class is defined
+#@ R: Slice and dice using `with`
+#+end_src

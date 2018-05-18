@@ -38,18 +38,17 @@ bundle agent main
 #+begin_src policy_description
 #@ First we promise to define `my-illegal-class`. When the promise is actuated
 #@ it is automatically canonified and defined. This automatic canonification is
-#@ logged in verbose logs.
-#@
-#@ `verbose: Class identifier 'my-illegal-class' contains illegal characters - canonifying`
-#@
+#@ logged in verbose logs (`verbose: Class identifier 'my-illegal-class' contains illegal characters - canonifying`).
 #@ Next several reports prove which form of the class was defined. The last
 #@ report shows how `if` takes a class expression, and if you are checking a class
 #@ that contains invalid characters you must canonify it.
 #+end_src
 
 #+begin_src example_output
+#@ ```
 #@ R: my_illegal_class
 #@ R: my-illegal-class is NOT defined (as expected, its invalid)
 #@ R: my_illegal_class is defined
 #@ R: Slice and dice using `with`
+#@ ```
 #+end_src

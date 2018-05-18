@@ -1,7 +1,5 @@
-#+begin_src policy_preface
-#@ This example shows how classes are automatically canonified when they are
-#@ defined and that you must explicitly canonify when verifying classes.
-#+end_src
+# This example shows how classes are automatically canonified when they are
+# defined and that you must explicitly canonify when verifying classes.
 
 #+begin_src cfengine3
 bundle agent main

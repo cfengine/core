@@ -1,0 +1,12 @@
+body file control
+{
+      inputs => { "main_entry_point.cf.sub" };
+}
+
+bundle agent __main__
+{
+    methods:
+        "imported" usebundle => imported();
+    reports:
+        "$(this.promise_filename) Pass";
+}

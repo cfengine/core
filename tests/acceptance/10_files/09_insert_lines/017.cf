@@ -16,7 +16,7 @@ body common control
 
 bundle agent test {
   meta:
-      "test_soft_fail" string => "aix|hpux|sunos_5_9|sunos_5_10.!sunos_i86pc_5_10",
+      "test_soft_fail" string => "aix|hpux",
         meta => { "redmine6336" };
 
   files:

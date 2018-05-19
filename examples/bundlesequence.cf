@@ -1,0 +1,20 @@
+# Example showing how to override the default bundlesequence
+body common control
+{
+      bundlesequence  => { "hello" };
+}
+
+bundle agent hello
+# @brief say hello and report my bundle name
+{
+  reports:
+      "Hello, $(this.bundle) bundle.";
+}
+
+#@ The policy promises to report the name of the current bundle, and produces this output:
+
+#+begin_src example_output
+#@ ```
+#@ R: Hello, hello bundle.
+#@ ```
+#+end_src

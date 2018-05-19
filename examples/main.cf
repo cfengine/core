@@ -1,0 +1,16 @@
+# Example showing how the default bundlesequence runs bundle agent main
+
+bundle agent main
+# @brief main is the default bundlesequence
+{
+  reports:
+      "Hello, $(this.bundle) bundle.";
+}
+
+#@ The policy promises to report the name of the current bundle, and produces this output:
+
+#+begin_src example_output
+#@ ```
+#@ R: Hello, main bundle.
+#@ ```
+#+end_src

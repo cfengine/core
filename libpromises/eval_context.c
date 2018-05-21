@@ -83,6 +83,27 @@ TYPED_MAP_DEFINE(FuncCache, Rlist *, Rval *,
                  RlistDestroy_untyped,
                  RvalDestroy2)
 
+/**
+   Define RemoteVarsPromisesMap.
+   Key:   bundle name (char *)
+   Value: a sequence of promises (const *Promise), only the container
+          (sequence) should be deallocated)
+ */
+
+static void SeqDestroy_untyped(void *p)
+{
+    Seq *s = p;
+    SeqDestroy(s);
+}
+
+TYPED_MAP_DECLARE(RemoteVarPromises, char *, Seq *)
+
+TYPED_MAP_DEFINE(RemoteVarPromises, char *, Seq *,
+                 StringHash_untyped,
+                 StringSafeEqual_untyped,
+                 free,
+                 SeqDestroy_untyped)
+
 
 static pcre *context_expression_whitespace_rx = NULL;
 
@@ -147,6 +168,15 @@ struct EvalContext_
 
     /* List if all classes set during policy evaluation */
     StringSet *all_classes;
+
+    /* These following two fields are needed for remote variable injection
+     * detection (CFE-1915) */
+    /* Names of all bundles */
+    StringSet *bundle_names;
+
+    /* Promises possibly remotely-injecting variables */
+    /* ONLY INITIALIZED WHEN NON-EMPTY, OTHERWISE NULL */
+    RemoteVarPromisesMap *remote_var_promises;
 };
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx)
@@ -961,6 +991,9 @@ EvalContext *EvalContextNew(void)
     ctx->package_promise_context = PackagePromiseConfigNew();
 
     ctx->all_classes = NULL;
+    ctx->bundle_names = StringSetNew();
+    ctx->remote_var_promises = NULL;
+
     ctx->select_end_match_eof = false;
 
     return ctx;
@@ -1000,6 +1033,12 @@ void EvalContextDestroy(EvalContext *ctx)
         FreePackagePromiseContext(ctx->package_promise_context);
 
         StringSetDestroy(ctx->all_classes);
+        StringSetDestroy(ctx->bundle_names);
+        if (ctx->remote_var_promises != NULL)
+        {
+            RemoteVarPromisesMapDestroy(ctx->remote_var_promises);
+            ctx->remote_var_promises = NULL;
+        }
 
         free(ctx);
     }
@@ -2084,7 +2123,6 @@ bool EvalContextVariablePut(EvalContext *ctx,
     }
 
     Rval rval = (Rval) { (void *)value, DataTypeToRvalType(type) };
-
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     const Promise *pp = EvalContextStackCurrentPromise(ctx);
     VariableTablePut(table, ref, &rval, type, tags, pp ? pp->org_pp : pp);
@@ -3042,4 +3080,49 @@ void EvalContextAllClassesLoggingEnable(EvalContext *ctx, bool enable)
 {
     assert (ctx);
     Nova_ClassHistoryEnable(&(ctx->all_classes), enable);
+}
+
+void EvalContextPushBundleName(const EvalContext *ctx, const char *bundle_name)
+{
+    assert (ctx);
+    StringSetAdd(ctx->bundle_names, xstrdup(bundle_name));
+}
+
+const StringSet *EvalContextGetBundleNames(const EvalContext *ctx)
+{
+    assert (ctx);
+    return ctx->bundle_names;
+}
+
+void EvalContextPushRemoteVarPromise(EvalContext *ctx, const char *bundle_name, const Promise *pp)
+{
+    assert (ctx);
+
+    /* initiliaze the map if needed */
+    if (ctx->remote_var_promises == NULL)
+    {
+        ctx->remote_var_promises = RemoteVarPromisesMapNew();
+    }
+
+    Seq *promises = RemoteVarPromisesMapGet(ctx->remote_var_promises, bundle_name);
+    if (promises == NULL)
+    {
+        /* initialize the sequence if needed */
+        /* ItemDestroy == NULL because we need to store the exact pointers not
+         * copies */
+        promises = SeqNew(10, NULL);
+        RemoteVarPromisesMapInsert(ctx->remote_var_promises, xstrdup(bundle_name), promises);
+    }
+    /* intentionally not making a copy here, we need the exact pointer */
+    SeqAppend(promises, (void *) pp);
+}
+
+const Seq *EvalContextGetRemoteVarPromises(const EvalContext *ctx, const char *bundle_name)
+{
+    assert (ctx);
+    if (ctx->remote_var_promises == NULL)
+    {
+        return NULL;
+    }
+    return RemoteVarPromisesMapGet(ctx->remote_var_promises, bundle_name);
 }

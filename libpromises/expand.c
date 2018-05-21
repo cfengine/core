@@ -641,11 +641,81 @@ void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char
     }
 }
 
+static int PointerCmp(const void *a, const void *b, ARG_UNUSED void *user_data)
+{
+    if (a < b)
+    {
+        return -1;
+    }
+    else if (a == b)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+static void RemoveRemotelyInjectedVars(const EvalContext *ctx, const Bundle *bundle)
+{
+    const Seq *remote_var_promises = EvalContextGetRemoteVarPromises(ctx, bundle->name);
+    if ((remote_var_promises == NULL) || SeqLength(remote_var_promises) == 0)
+    {
+        /* nothing to do here */
+        return;
+    }
+
+    size_t promises_length = SeqLength(remote_var_promises);
+    Seq *remove_vars = SeqNew(promises_length, NULL);
+
+    /* remove variables that have been attempted to be inserted into this
+     * bundle */
+    /* TODO: this is expensive and should be removed! */
+    for (size_t i = 0; i < promises_length; i++)
+    {
+        const Promise *pp = (Promise *) SeqAt(remote_var_promises, i);
+
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, NULL, bundle->name, NULL);
+        const Variable *var = VariableTableIteratorNext(iter);
+        while (var != NULL)
+        {
+            /* variables are stored together with their original promises (org_pp) */
+            if (var->promise && var->promise->org_pp == pp)
+            {
+                Log(LOG_LEVEL_ERR, "Ignoring remotely-injected variable '%s'",
+                    var->ref->lval);
+                /* avoid modifications of the variable table being iterated
+                 * over and avoid trying to remove the same variable twice */
+                SeqAppendOnce(remove_vars, (void *) var, PointerCmp);
+            }
+            var = VariableTableIteratorNext(iter);
+        }
+        VariableTableIteratorDestroy(iter);
+    }
+
+    /* iteration over the variable table done, time to remove the variables */
+    size_t remove_vars_length = SeqLength(remove_vars);
+    for (size_t i = 0; i < remove_vars_length; i++)
+    {
+        Variable *var = (Variable *) SeqAt(remove_vars, i);
+        if (var->ref != NULL)
+        {
+            EvalContextVariableRemove(ctx, var->ref);
+        }
+    }
+    SeqDestroy(remove_vars);
+}
+
 void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 {
     Log(LOG_LEVEL_DEBUG,
         "Resolving classes and variables in 'bundle %s %s'",
         bundle->type, bundle->name);
+
+    /* first check if some variables were injected remotely into this bundle and
+     * remove them (CFE-1915) */
+    RemoveRemotelyInjectedVars(ctx, bundle);
 
     /* PRE-EVAL: evaluate classes of common bundles. */
     if (strcmp(bundle->type, "common") == 0)

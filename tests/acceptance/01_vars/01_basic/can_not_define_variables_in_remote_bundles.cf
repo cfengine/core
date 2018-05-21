@@ -22,6 +22,11 @@ bundle agent test
                     of the variable should be canonified, or it should
                     be a parser error";
 
+      "prefix.variable"
+        string => "value-ok",
+        comment => "This should be allowed because there is no such
+                    bundle called 'prefix'";
+
       "array[with.a.dot]"
 	string => "value",
 	comment => "dots should be allowed in array keys";
@@ -37,9 +42,10 @@ bundle agent check
   classes:
       "variable_defined" expression => isvariable("variable");
       "variable_has_content" expression => regcmp(".*", "$(variable)");
+      "prefixed_var_fail" expression => not(strcmp("$(prefix.variable)", "value-ok"));
       "array_with_a_dot_fail" expression => not(strcmp("$(test.array[with.a.dot])", "value"));
 
-      "fail" expression => "(variable_defined|variable_has_content|array_with_a_dot_fail)";
+      "fail" expression => "(variable_defined|variable_has_content|prefixed_var_fail|array_with_a_dot_fail)";
 
   reports:
     DEBUG::
@@ -48,6 +54,9 @@ bundle agent check
 
       "'variable' in bundle '$(this.bundle)' = '$(variable)'"
         ifvarclass => "variable_has_content";
+
+      "'prefix.variable' = $(prefix.variable)"
+        ifvarclass => "prefixed_var_fail";
 
       "array[with.a.dot] has the value '$(test.array[with.a.dot])'"
         ifvarclass => "array_with_a_dot_fail";

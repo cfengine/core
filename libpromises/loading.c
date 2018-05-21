@@ -539,6 +539,13 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
     if (policy)
     {
+        /* store names of all bundles in the EvalContext */
+        for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+        {
+            Bundle *bp = SeqAt(policy->bundles, i);
+            EvalContextPushBundleName(ctx, bp->name);
+        }
+
         for (size_t i = 0; i < SeqLength(policy->bundles); i++)
         {
             Bundle *bp = SeqAt(policy->bundles, i);

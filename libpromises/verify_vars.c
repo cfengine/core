@@ -39,6 +39,7 @@
 #include <matching.h>
 #include <syntax.h>
 #include <audit.h>
+#include <string_lib.h>
 
 typedef struct
 {
@@ -53,18 +54,52 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level);
 static bool CompareRval(const void *rval1_item, RvalType rval1_type, const void *rval2_item, RvalType rval2_type);
 
-static bool IsValidVariableName(const char *var_name)
+static bool IsLegalVariableName(EvalContext *ctx, const Promise *pp)
 {
+    const char *var_name = pp->promiser;
+
     /* TODO: remove at some point (global, leaked), but for now
      * this offers an attractive speedup. */
     static pcre *rx = NULL;
     if (!rx)
     {
         /* \200-\377 is there for multibyte unicode characters */
-        rx = CompileRegex("[a-zA-Z0-9_\200-\377]+(\\[.+\\])*"); /* Known leak, see TODO. */
+        rx = CompileRegex("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*"); /* Known leak, see TODO. */
     }
 
-    return StringMatchFullWithPrecompiledRegex(rx, var_name);
+    if (!StringMatchFullWithPrecompiledRegex(rx, var_name))
+    {
+        return false;
+    }
+
+    char *bracket = strchr(var_name, '[');
+    char *dot = strchr(var_name, '.');
+    /* we only care about variable name prefix, not dots inside array keys */
+    if ((dot != NULL) && ((bracket == NULL) || (dot < bracket)))
+    {
+        /* detect and prevent remote bundle variable injection (CFE-1915) */
+        char *prefix = xstrndup(var_name, dot - var_name);
+        const Bundle *cur_bundle = PromiseGetBundle(pp);
+
+        if (!StringSafeEqual(prefix, cur_bundle->name))
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Variable '%s' may be attempted to be injected into a remote bundle",
+                var_name);
+            if (StringSetContains(EvalContextGetBundleNames(ctx), prefix))
+            {
+                Log(LOG_LEVEL_ERR, "Remote bundle variable injection detected!");
+                free(prefix);
+                return false;
+            }
+            /* the conflicting bundle may be defined later, we need to remember
+             * this promise as potentially dangerous */
+            EvalContextPushRemoteVarPromise(ctx, prefix, pp->org_pp);
+        }
+        free(prefix);
+    }
+
+    return true;
 }
 
 // TODO why not printing that new definition is skipped?
@@ -324,9 +359,9 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
             return PROMISE_RESULT_NOOP;
         }
 
-        if (!IsValidVariableName(pp->promiser))
+        if (!IsLegalVariableName(ctx, pp))
         {
-            Log(LOG_LEVEL_ERR, "Variable identifier '%s' contains illegal characters", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Variable identifier '%s' is not legal", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
             VarRefDestroy(ref);

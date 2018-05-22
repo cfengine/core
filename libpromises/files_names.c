@@ -674,11 +674,29 @@ char *GetRealPath(const char *const path)
         return NULL;
     }
     char *const abs_path = GetAbsolutePath(path);
-    if (abs_path == NULL || abs_path[0] == '\0')
+    if (NULL_OR_EMPTY(abs_path))
     {
-        return abs_path;
+        free(abs_path);
+        return NULL;
     }
-    char *const real_path = realpath(abs_path, NULL);
+
+#ifdef __linux__ // POSIX 2008 - could add newer versions of BSD / solaris
+    char *real_path = realpath(abs_path, NULL);
+    if (NOT_NULL_AND_EMPTY(real_path))
+    {
+        free(real_path);
+        real_path = NULL;
+    }
+#else // Pre POSIX 2008 - realpath arg cannot be NULL
+    char *const path_buf = xcalloc(1, PATH_MAX);
+    char *real_path = realpath(abs_path, path_buf);
+    if (NULL_OR_EMPTY(real_path))
+    {
+        free(path_buf);
+        real_path = NULL;
+    }
+#endif
+
     free(abs_path);
     return real_path;
 }

@@ -105,6 +105,22 @@ void SeqAppend(Seq *seq, void *item)
     ++(seq->length);
 }
 
+void SeqAppendOnce(Seq *seq, void *item, SeqItemComparator Compare)
+{
+    if (SeqLookup(seq, item, Compare) == NULL)
+    {
+        SeqAppend(seq, item);
+    }
+    else
+    {
+        /* swallow the item anyway */
+        if (seq->ItemDestroy != NULL)
+        {
+            seq->ItemDestroy(item);
+        }
+    }
+}
+
 void SeqAppendSeq(Seq *seq, const Seq *items)
 {
     for (size_t i = 0; i < SeqLength(items); i++)

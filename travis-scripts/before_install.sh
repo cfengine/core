@@ -6,8 +6,7 @@ then
     rvm get stable
     brew update
     brew install lmdb
-    brew install gcc@7 || echo "Warning: Errors during OSX gcc install"
-    brew link --overwrite gcc
+    brew install gcc@7 || brew link --overwrite gcc@7
     set -e
     gcc-7 --version
     #brew install python

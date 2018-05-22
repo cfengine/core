@@ -1,7 +1,7 @@
 #!/var/cfengine/bin/cf-agent -KIf-
-# Example showing how bundle __main__ works as a library vs when entry This file
-# can used as the main entry (`cf-agent -KIf ./library.cf`) This file can be
-# included from another policy file that also contains bundle agent __main__
+# Example showing how bundle __main__ works
+# This file can be used as the main entry (`cf-agent -KIf ./main_library.cf`)
+# This file can also be included from another policy file containing __main__
 
 bundle agent libprint(message)
 # @brief report `message`
@@ -11,7 +11,7 @@ bundle agent libprint(message)
 }
 
 bundle agent __main__
-# @brief Run this bundle if this file is the entry
+# @brief Run this bundle (a testsuite) if this file is the entry
 # This bundle is special. It is ignored unless it is the policy entry file
 {
   methods:

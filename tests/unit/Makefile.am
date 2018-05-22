@@ -347,7 +347,7 @@ logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging
 logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c
-connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
+connection_management_test_LDADD = libtest.la ../../libpromises/libpromises.la ../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \
 	../../libpromises/rlist.c

@@ -50,12 +50,11 @@ bundle agent test
       meta => { "redmine7989", "zendesk2797" };
 
   files:
-    linux::
-      "$(G.testdir)/test_sgid/$(init.modes)/."
-      create => "true",
-      perms => test_perms( $(init.modes), "user01", "user02"),
-      classes => scoped_classes_generic("namespace", "file_$(init.modes)"),
-      comment => "Make sure a directory named for each desired mode we want to test exists.";
+    "$(G.testdir)/test_sgid/$(init.modes)/."
+    create => "true",
+    perms => test_perms( $(init.modes), "user01", "user02"),
+    classes => scoped_classes_generic("namespace", "file_$(init.modes)"),
+    comment => "Make sure a directory named for each desired mode we want to test exists.";
 }
 
 body perms test_perms(m, o, g)

@@ -1,0 +1,11 @@
+bundle agent main
+{
+    reports:
+        "This should fail because __main__ will be renamed to main";
+}
+
+bundle agent __main__
+{
+    reports:
+        "This should fail because __main__ will be renamed to main";
+}

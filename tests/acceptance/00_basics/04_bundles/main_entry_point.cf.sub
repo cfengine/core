@@ -1,0 +1,11 @@
+bundle agent __main__
+{
+    reports:
+        "$(this.promise_filename) FAIL"; # This shouldn't run
+}
+
+bundle agent imported
+{
+    reports:
+        "This file can be imported and the __main__ above will be ignored";
+}

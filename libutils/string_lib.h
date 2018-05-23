@@ -41,6 +41,9 @@ typedef struct
 #define NULL_OR_EMPTY(str)                      \
     ((str == NULL) || (str[0] == '\0'))
 
+#define NOT_NULL_AND_EMPTY(str)                 \
+    ((str != NULL) && (str[0] == '\0'))
+
 #define STARTSWITH(str,start)                   \
     (strncmp(str,start,strlen(start)) == 0)
 

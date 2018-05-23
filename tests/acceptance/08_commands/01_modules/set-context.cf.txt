@@ -21,3 +21,5 @@
 =myvar=hello there
 ^context=__a__
 =myvar=hello there
+^context=test
+=myvar=hello there

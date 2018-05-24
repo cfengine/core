@@ -172,7 +172,27 @@ int SafeStringLength(const char *str)
     return strlen(str);
 }
 
-int StringSafeCompare(const char *a, const char *b)
+// Compare two pointers (strings) where exactly one is NULL
+static int NullCompare(const void *const a, const void *const b)
+{
+    assert(a != b);
+    assert(a == NULL || b == NULL);
+
+    if (a != NULL)
+    {
+        return 1;
+    }
+    if (b != NULL)
+    {
+        return -1;
+    }
+
+    // Should never happen
+    ProgrammingError("Programming Error: NullCompare failed");
+    return 101;
+}
+
+int StringSafeCompare(const char *const a, const char *const b)
 {
     if (a == b) // Same address or both NULL
     {
@@ -184,23 +204,32 @@ int StringSafeCompare(const char *a, const char *b)
     }
 
     // Weird edge cases where one is NULL:
-    if (a == NULL && b != NULL)
-    {
-        return -1;
-    }
-    if (a != NULL && b == NULL)
-    {
-        return 1;
-    }
-
-    // Should never happen
-    ProgrammingError("Programming Error: Checks in StringSafeCompare are not exhaustive");
-    return 101;
+    return NullCompare(a, b);
 }
 
-bool StringSafeEqual(const char *a, const char *b)
+bool StringSafeEqual(const char *const a, const char *const b)
 {
     return (StringSafeCompare(a, b) == 0);
+}
+
+int StringSafeCompare_IgnoreCase(const char *const a, const char *const b)
+{
+    if (a == b) // Same address or both NULL
+    {
+        return 0;
+    }
+    if (a != NULL && b != NULL)
+    {
+        return strcasecmp(a, b);
+    }
+
+    // Weird edge cases where one is NULL:
+    return NullCompare(a, b);
+}
+
+bool StringSafeEqual_IgnoreCase(const char *const a, const char *const b)
+{
+    return (StringSafeCompare_IgnoreCase(a, b) == 0);
 }
 
 bool StringSafeEqual_untyped(const void *a, const void *b)

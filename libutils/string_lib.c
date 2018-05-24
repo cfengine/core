@@ -174,35 +174,33 @@ int SafeStringLength(const char *str)
 
 int StringSafeCompare(const char *a, const char *b)
 {
-    if (a == b)
+    if (a == b) // Same address or both NULL
     {
         return 0;
     }
-    if (a && b)
+    if (a != NULL && b != NULL)
     {
         return strcmp(a, b);
     }
-    if (a == NULL)
+
+    // Weird edge cases where one is NULL:
+    if (a == NULL && b != NULL)
     {
         return -1;
     }
-    assert(b == NULL);
-    return +1;
+    if (a != NULL && b == NULL)
+    {
+        return 1;
+    }
+
+    // Should never happen
+    ProgrammingError("Programming Error: Checks in StringSafeCompare are not exhaustive");
+    return 101;
 }
 
 bool StringSafeEqual(const char *a, const char *b)
 {
-    if (a == b)
-    {
-        return true;
-    }
-
-    if ((a == NULL) || (b == NULL))
-    {
-        return false;
-    }
-
-    return strcmp(a, b) == 0;
+    return (StringSafeCompare(a, b) == 0);
 }
 
 bool StringSafeEqual_untyped(const void *a, const void *b)

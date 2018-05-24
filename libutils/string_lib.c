@@ -207,9 +207,29 @@ int StringSafeCompare(const char *const a, const char *const b)
     return NullCompare(a, b);
 }
 
+int StringSafeCompareN(const char *const a, const char *const b, const size_t n)
+{
+    if (a == b) // Same address or both NULL
+    {
+        return 0;
+    }
+    if (a != NULL && b != NULL)
+    {
+        return strncmp(a, b, n);
+    }
+
+    // Weird edge cases where one is NULL:
+    return NullCompare(a, b);
+}
+
 bool StringSafeEqual(const char *const a, const char *const b)
 {
     return (StringSafeCompare(a, b) == 0);
+}
+
+bool StringSafeEqualN(const char *const a, const char *const b, const size_t n)
+{
+    return (StringSafeCompareN(a, b, n) == 0);
 }
 
 int StringSafeCompare_IgnoreCase(const char *const a, const char *const b)
@@ -227,9 +247,29 @@ int StringSafeCompare_IgnoreCase(const char *const a, const char *const b)
     return NullCompare(a, b);
 }
 
+int StringSafeCompareN_IgnoreCase(const char *const a, const char *const b, const size_t n)
+{
+    if (a == b) // Same address or both NULL
+    {
+        return 0;
+    }
+    if (a != NULL && b != NULL)
+    {
+        return strncasecmp(a, b, n);
+    }
+
+    // Weird edge cases where one is NULL:
+    return NullCompare(a, b);
+}
+
 bool StringSafeEqual_IgnoreCase(const char *const a, const char *const b)
 {
     return (StringSafeCompare_IgnoreCase(a, b) == 0);
+}
+
+bool StringSafeEqualN_IgnoreCase(const char *const a, const char *const b, const size_t n)
+{
+    return (StringSafeCompareN_IgnoreCase(a, b, n) == 0);
 }
 
 bool StringSafeEqual_untyped(const void *a, const void *b)

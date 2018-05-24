@@ -515,6 +515,18 @@ static void test_safe_equal_ignore_case(void)
     assert_false(StringSafeEqual_IgnoreCase("a", "b"));
 }
 
+static void test_safe_equal_n(void)
+{
+    assert_true(StringSafeEqualN("abcd", "abcX", 3));
+    assert_true(StringSafeEqualN_IgnoreCase("abcd", "ABCX", 3));
+
+    assert_false(StringSafeEqualN("abcd", "abXX", 3));
+    assert_false(StringSafeEqualN_IgnoreCase("abcd", "ABXX", 3));
+
+    assert_true(StringSafeEqualN("123abc", "123abc", 1000));
+    assert_true(StringSafeEqualN_IgnoreCase("123abc", "123ABC", 1000));
+}
+
 static void test_match(void)
 {
     assert_true(StringMatch("^a.*$", "abc", NULL, NULL));
@@ -946,6 +958,7 @@ int main()
         unit_test(test_safe_equal),
         unit_test(test_safe_compare_ignore_case),
         unit_test(test_safe_equal_ignore_case),
+        unit_test(test_safe_equal_n),
 
         unit_test(test_match),
         unit_test(test_match_full),

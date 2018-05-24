@@ -1,0 +1,10 @@
+body common control
+{
+    bundlesequence => { "main" };
+}
+
+bundle agent __main__
+{
+    reports:
+        "$(this.promise_filename) Pass";
+}

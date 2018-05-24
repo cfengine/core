@@ -641,6 +641,10 @@ bool CompressPath(char *dest, size_t dest_size, const char *src)
  **/
 char *GetAbsolutePath(const char *path)
 {
+    if (NULL_OR_EMPTY(path))
+    {
+        return NULL;
+    }
     char abs_path[PATH_MAX] = { 0 };
     if (IsAbsoluteFileName(path))
     {
@@ -661,6 +665,40 @@ char *GetAbsolutePath(const char *path)
         CompressPath(abs_path, PATH_MAX, full_path);
         return xstrdup(abs_path);
     }
+}
+
+char *GetRealPath(const char *const path)
+{
+    if (NULL_OR_EMPTY(path))
+    {
+        return NULL;
+    }
+    char *const abs_path = GetAbsolutePath(path);
+    if (NULL_OR_EMPTY(abs_path))
+    {
+        free(abs_path);
+        return NULL;
+    }
+
+#ifdef __linux__ // POSIX 2008 - could add newer versions of BSD / solaris
+    char *real_path = realpath(abs_path, NULL);
+    if (NOT_NULL_AND_EMPTY(real_path))
+    {
+        free(real_path);
+        real_path = NULL;
+    }
+#else // Pre POSIX 2008 - realpath arg cannot be NULL
+    char *const path_buf = xcalloc(1, PATH_MAX);
+    char *real_path = realpath(abs_path, path_buf);
+    if (NULL_OR_EMPTY(real_path))
+    {
+        free(path_buf);
+        real_path = NULL;
+    }
+#endif
+
+    free(abs_path);
+    return real_path;
 }
 
 /*********************************************************************/

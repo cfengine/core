@@ -55,6 +55,7 @@ char *CanonifyChar(const char *str, char ch);
 const char *ReadLastNode(const char *str);
 bool CompressPath(char *dest, size_t dest_size, const char *src);
 char *GetAbsolutePath(const char *path);
+char *GetRealPath(const char *path);
 bool IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(const char *f);
 const char *GetSoftwareCacheFilename(char *buffer);

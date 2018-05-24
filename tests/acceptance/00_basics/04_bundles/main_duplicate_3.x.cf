@@ -1,0 +1,11 @@
+bundle agent main
+{
+    reports:
+        "This should fail because duplicate bundles aren't allowed";
+}
+
+bundle agent main
+{
+    reports:
+        "This should fail because duplicate bundles aren't allowed";
+}

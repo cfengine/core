@@ -225,4 +225,6 @@ Seq *SeqStringFromString(const char *str, char delimiter);
  */
 int SeqStringLength(Seq *seq);
 
+void SeqRemoveNulls(Seq *s);
+
 #endif

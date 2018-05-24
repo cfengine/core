@@ -137,6 +137,8 @@ struct EvalContext_
     // Full path to directory that the binary was launched from.
     char *launch_directory;
 
+    char *entry_point;
+
     /* new package promise evaluation context */
     PackagePromiseContext *package_promise_context;
 
@@ -969,6 +971,7 @@ void EvalContextDestroy(EvalContext *ctx)
     if (ctx)
     {
         free(ctx->launch_directory);
+        free(ctx->entry_point);
 
         {
             LoggingPrivContext *pctx = LoggingPrivGetContext();
@@ -2879,6 +2882,20 @@ void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path)
 {
     free(ctx->launch_directory);
     ctx->launch_directory = xstrdup(path);
+}
+
+void EvalContextSetEntryPoint(
+    EvalContext *const ctx, const char *const entry_point)
+{
+    assert(ctx != NULL);
+    free(ctx->entry_point);
+    ctx->entry_point = SafeStringDuplicate(entry_point);
+}
+
+const char *EvalContextGetEntryPoint(EvalContext *const ctx)
+{
+    assert(ctx != NULL);
+    return ctx->entry_point;
 }
 
 void EvalContextSetIgnoreLocks(EvalContext *ctx, bool ignore)

@@ -467,6 +467,54 @@ static void test_safe_equal(void)
     assert_false(StringSafeEqual("abc def", "abc deF"));
 }
 
+static void test_safe_compare_ignore_case(void)
+{
+    // Strings which are equal:
+    assert_true(StringSafeCompare_IgnoreCase(NULL, NULL) == 0);
+    assert_true(StringSafeCompare_IgnoreCase("", "") == 0);
+    assert_true(StringSafeCompare_IgnoreCase("a", "a") == 0);
+    assert_true(StringSafeCompare_IgnoreCase("abc", "abc") == 0);
+    assert_true(StringSafeCompare_IgnoreCase("Hello, world!", "Hello, world!") == 0);
+
+    // Strings with only case differences:
+    assert_true(StringSafeCompare_IgnoreCase("abc", "abC") == 0);
+    assert_true(StringSafeCompare_IgnoreCase("a", "A") == 0);
+    assert_true(StringSafeCompare_IgnoreCase("HELLO, WORLD!", "Hello, world!") == 0);
+    assert_true(StringSafeCompare_IgnoreCase("HELLO, WORLD!", "hello, world!") == 0);
+
+    // Test ordering of strings (correct sign):
+    assert_true(StringSafeCompare_IgnoreCase(NULL, "a") <= -1);
+    assert_true(StringSafeCompare_IgnoreCase("", "a") <= -1);
+    assert_true(StringSafeCompare_IgnoreCase("a", NULL) >= 1);
+    assert_true(StringSafeCompare_IgnoreCase("a", "") >= 1);
+    assert_true(StringSafeCompare_IgnoreCase("albatross", "bear") <= -1);
+    assert_true(StringSafeCompare_IgnoreCase("lynx", "chicken") >= 1);
+
+    // Cases where StringSafeCompare and StringSafeCompare_IgnoreCase should be the same:
+    assert_int_equal(StringSafeCompare("a", "b"), StringSafeCompare_IgnoreCase("a", "b"));
+    assert_int_equal(StringSafeCompare("a", "b"), StringSafeCompare_IgnoreCase("A", "B"));
+    assert_int_equal(StringSafeCompare("A", "B"), StringSafeCompare_IgnoreCase("a", "b"));
+    assert_int_equal(StringSafeCompare("bbc", "bbd"), StringSafeCompare_IgnoreCase("BBC", "bbd"));
+    assert_int_equal(StringSafeCompare("bbc", "bbd"), StringSafeCompare_IgnoreCase("BBC", "BBd"));
+}
+
+static void test_safe_equal_ignore_case(void)
+{
+    assert_true(StringSafeEqual_IgnoreCase(NULL, NULL));
+    assert_true(StringSafeEqual_IgnoreCase("a", "a"));
+    assert_true(StringSafeEqual_IgnoreCase("a", "A"));
+    assert_true(StringSafeEqual_IgnoreCase(hi_alphabet, lo_alphabet));
+    assert_true(StringSafeEqual_IgnoreCase("0123456789", "0123456789"));
+    assert_true(StringSafeEqual_IgnoreCase("CamelCase", "camelcase"));
+    assert_true(StringSafeEqual_IgnoreCase("(){}[]<>", "(){}[]<>"));
+    assert_true(StringSafeEqual_IgnoreCase("+-*/%%^", "+-*/%%^"));
+    assert_true(StringSafeEqual_IgnoreCase("abc def", "abc deF"));
+
+    assert_false(StringSafeEqual_IgnoreCase("", NULL));
+    assert_false(StringSafeEqual_IgnoreCase(NULL, ""));
+    assert_false(StringSafeEqual_IgnoreCase("a", "b"));
+}
+
 static void test_match(void)
 {
     assert_true(StringMatch("^a.*$", "abc", NULL, NULL));
@@ -896,6 +944,8 @@ int main()
 
         unit_test(test_safe_compare),
         unit_test(test_safe_equal),
+        unit_test(test_safe_compare_ignore_case),
+        unit_test(test_safe_equal_ignore_case),
 
         unit_test(test_match),
         unit_test(test_match_full),

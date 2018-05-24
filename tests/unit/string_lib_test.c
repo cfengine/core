@@ -431,19 +431,31 @@ static void test_string_from_double(void)
 static void test_safe_compare(void)
 {
     assert_true(StringSafeCompare(NULL, NULL) == 0);
+    assert_true(StringSafeCompare("a", "a") == 0);
+    assert_true(StringSafeCompare("abc", "abc") == 0);
+    assert_true(StringSafeCompare("Hello, world!", "Hello, world!") == 0);
+
+    assert_true(StringSafeCompare("abc", "abC") != 0);
+    assert_true(StringSafeCompare("a", "b") != 0);
     assert_true(StringSafeCompare(NULL, "a") != 0);
     assert_true(StringSafeCompare("a", NULL) != 0);
-    assert_true(StringSafeCompare("a", "a") == 0);
-    assert_true(StringSafeCompare("a", "b") != 0);
 }
 
 static void test_safe_equal(void)
 {
     assert_true(StringSafeEqual(NULL, NULL));
-    assert_false(StringSafeEqual("a", NULL));
-    assert_false(StringSafeEqual(NULL, "a"));
-    assert_false(StringSafeEqual("a", "b"));
     assert_true(StringSafeEqual("a", "a"));
+    assert_true(StringSafeEqual("abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz"));
+    assert_true(StringSafeEqual("0123456789", "0123456789"));
+    assert_true(StringSafeEqual("CamelCase", "CamelCase"));
+    assert_true(StringSafeEqual("(){}[]<>", "(){}[]<>"));
+    assert_true(StringSafeEqual("+-*/%%^", "+-*/%%^"));
+
+    assert_false(StringSafeEqual("", NULL));
+    assert_false(StringSafeEqual(NULL, ""));
+    assert_false(StringSafeEqual("a", "b"));
+    assert_false(StringSafeEqual("a", "A"));
+    assert_false(StringSafeEqual("abc def", "abc deF"));
 }
 
 static void test_match(void)

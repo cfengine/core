@@ -430,15 +430,24 @@ static void test_string_from_double(void)
 
 static void test_safe_compare(void)
 {
+    // Strings which are equal:
     assert_true(StringSafeCompare(NULL, NULL) == 0);
+    assert_true(StringSafeCompare("", "") == 0);
     assert_true(StringSafeCompare("a", "a") == 0);
     assert_true(StringSafeCompare("abc", "abc") == 0);
     assert_true(StringSafeCompare("Hello, world!", "Hello, world!") == 0);
 
+    // Strings which are not equal:
     assert_true(StringSafeCompare("abc", "abC") != 0);
     assert_true(StringSafeCompare("a", "b") != 0);
-    assert_true(StringSafeCompare(NULL, "a") != 0);
-    assert_true(StringSafeCompare("a", NULL) != 0);
+
+    // Test ordering of strings (correct sign):
+    assert_true(StringSafeCompare(NULL, "a") <= -1);
+    assert_true(StringSafeCompare("", "a") <= -1);
+    assert_true(StringSafeCompare("a", NULL) >= 1);
+    assert_true(StringSafeCompare("a", "") >= 1);
+    assert_true(StringSafeCompare("albatross", "bear") <= -1);
+    assert_true(StringSafeCompare("lynx", "chicken") >= 1);
 }
 
 static void test_safe_equal(void)

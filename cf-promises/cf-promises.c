@@ -72,6 +72,7 @@ static const struct option OPTIONS[] =
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
     {"verbose", no_argument, 0, 'v'},
+    {"log-level", required_argument, 0, 'g'},
     {"dry-run", no_argument, 0, 'n'},
     {"version", no_argument, 0, 'V'},
     {"file", required_argument, 0, 'f'},
@@ -101,6 +102,7 @@ static const char *const HINTS[] =
     "Use the specified bundlesequence for verification",
     "Enable debugging output",
     "Output verbose information about the behaviour of the agent",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Output the version of the software",
     "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
@@ -244,7 +246,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     config->tag_release_dir = NULL;
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "dvnIw:f:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
+    while ((c = getopt_long(argc, argv, "dvnIw:f:g:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",
                             OPTIONS, &longopt_idx))
            != -1)
     {
@@ -290,6 +292,10 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
+            break;
+
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
 
         case 'b':

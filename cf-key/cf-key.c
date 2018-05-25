@@ -73,6 +73,7 @@ static const struct option OPTIONS[] =
     {"debug", no_argument, 0, 'd'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
+    {"log-level", required_argument, 0, 'g'},
     {"output-file", required_argument, 0, 'f'},
     {"key-type", required_argument, 0, 'T'},
     {"show-hosts", no_argument, 0, 's'},
@@ -94,6 +95,7 @@ static const char *const HINTS[] =
     "Enable debugging output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Specify an alternative output file than the default.",
     "Specify a RSA key size in bits, the default value is 2048.",
     "Show lastseen hostnames and IP addresses",
@@ -243,7 +245,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvIf:T:VMp:sr:xt:hl:C::n",
+    while ((c = getopt_long(argc, argv, "dvIf:g:T:VMp:sr:xt:hl:C::n",
                             OPTIONS, NULL))
            != -1)
     {
@@ -271,6 +273,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+            break;
+
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
 
         case 'I':

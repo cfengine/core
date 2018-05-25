@@ -117,6 +117,46 @@ const char *LogLevelToString(LogLevel level)
     }
 }
 
+LogLevel LogLevelFromString(const char *const level)
+{
+    // Only compare the part the user typed
+    // i/info/inform/information will all result in LOG_LEVEL_INFO
+    size_t len = SafeStringLength(level);
+    if (len == 0)
+    {
+        return LOG_LEVEL_NOTHING;
+    }
+    if (StringSafeEqualN_IgnoreCase(level, "CRITICAL", len))
+    {
+        return LOG_LEVEL_CRIT;
+    }
+    if (StringSafeEqualN_IgnoreCase(level, "errors", len))
+    {
+        return LOG_LEVEL_ERR;
+    }
+    if (StringSafeEqualN_IgnoreCase(level, "warnings", len))
+    {
+        return LOG_LEVEL_WARNING;
+    }
+    if (StringSafeEqualN_IgnoreCase(level, "notices", len))
+    {
+        return LOG_LEVEL_NOTICE;
+    }
+    if (StringSafeEqualN_IgnoreCase(level, "information", len))
+    {
+        return LOG_LEVEL_INFO;
+    }
+    if (StringSafeEqualN_IgnoreCase(level, "verbose", len))
+    {
+        return LOG_LEVEL_VERBOSE;
+    }
+    if (StringSafeEqualN_IgnoreCase(level, "debug", len))
+    {
+        return LOG_LEVEL_DEBUG;
+    }
+    return LOG_LEVEL_NOTHING;
+}
+
 static const char *LogLevelToColor(LogLevel level)
 {
 

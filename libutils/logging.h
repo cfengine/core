@@ -101,6 +101,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap);
 void LoggingSetAgentType(const char *type);
 void LoggingEnableTimestamps(bool enable);
 void LogSetGlobalLevel(LogLevel level);
+void LogSetGlobalLevelArgOrExit(const char *const arg);
 LogLevel LogGetGlobalLevel(void);
 
 void LoggingSetColor(bool enabled);

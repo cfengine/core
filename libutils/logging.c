@@ -503,6 +503,20 @@ void LogSetGlobalLevel(LogLevel level)
     LoggingPrivSetLevels(level, level);
 }
 
+void LogSetGlobalLevelArgOrExit(const char *const arg)
+{
+    LogLevel level = LogLevelFromString(arg);
+    if (level == LOG_LEVEL_NOTHING)
+    {
+        // This function is used as part of initializing the logging
+        // system. Using Log() can be considered incorrect, even though
+        // it may "work". Let's just print an error to stderr:
+        fprintf(stderr, "Invalid log level: '%s'\n", arg);
+        exit(1);
+    }
+    LogSetGlobalLevel(level);
+}
+
 LogLevel LogGetGlobalLevel(void)
 {
     return global_level;

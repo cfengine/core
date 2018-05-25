@@ -179,6 +179,7 @@ static const struct option OPTIONS[] =
     {"file", required_argument, 0, 'f'},
     {"help", no_argument, 0, 'h'},
     {"inform", no_argument, 0, 'I'},
+    {"log-level", required_argument, 0, 'g'},
     {"negate", required_argument, 0, 'N'},
     {"no-lock", no_argument, 0, 'K'},
     {"verbose", no_argument, 0, 'v'},
@@ -207,6 +208,7 @@ static const char *const HINTS[] =
     "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
     "Print the help message",
     "Print basic information about changes made to the system, i.e. promises repaired",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
     "Output verbose information about the behaviour of the agent",
@@ -330,7 +332,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     FreeFixedStringArray(argc_new, argv_tmp);
 
     int longopt_idx;
-    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:w:D:N:VxMB:b:hC::ElT::",
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:g:w:D:N:VxMB:b:hC::ElT::",
                             OPTIONS, &longopt_idx))
            != -1)
     {
@@ -471,6 +473,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+            break;
+
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
 
         case 'n':

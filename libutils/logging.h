@@ -80,6 +80,7 @@ typedef struct
 } LoggingContext;
 
 const char *LogLevelToString(LogLevel level);
+LogLevel LogLevelFromString(const char *level);
 
 /**
  * @brief Return the standard timestamp format used in logging.

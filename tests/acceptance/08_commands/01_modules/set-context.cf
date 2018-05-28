@@ -78,9 +78,14 @@ bundle agent check
       "ok_c5" expression => strcmp($(e5) , $(c5));
       "ok_c6" expression => strcmp($(e6) , $(c6));
 
+      "ok_injected_var" -> { "CFE-1915" }
+        expression => strcmp($(test.myvar), "hello there"),
+        comment => "This remote variable injection should work, BUT IS A DIRTY HACK!";
+
       "ok" and => { "myclass", "var0ok", "var1ok", "var2ok", "var3ok", "var4ok",
                     "hello_xyz_123___456_ok", "hello__456_ok", "hello_456_ok", "hello___ok", "hello_a__456___ok", "hello___a___ok",
-                    "ok_c1", "ok_c2", "ok_c3", "ok_c4", "ok_c5", "ok_c6" };
+                    "ok_c1", "ok_c2", "ok_c3", "ok_c4", "ok_c5", "ok_c6",
+                    "ok_injected_var" };
 
   reports:
     DEBUG::
@@ -88,6 +93,9 @@ bundle agent check
       ifvarclass => "!ok_c$(c)";
 
       "context $(hello_contexts) failed" ifvarclass => "!hello_$(hello_contexts)_ok";
+
+      "test.myvar = $(test.myvar)"
+        ifvarclass => "!ok_injected_var";
 
     EXTRA::
       "context $(hello_contexts) worked" ifvarclass => "hello_$(hello_contexts)_ok";

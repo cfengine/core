@@ -104,6 +104,16 @@ void SeqSet(Seq *set, size_t index, void *item);
 void SeqAppend(Seq *seq, void *item);
 
 /**
+  @brief Append a new item to the Sequence if it's not already present in the Sequence.
+  @note  This calls SeqLookup() and thus linearly searches through the sequence.
+  @param seq [in] The Sequence to append to.
+  @param item [in] The item to append. Note that this item will be passed to the item destructor specified in the constructor.
+                   Either immediately if the same item (according to Compare()) is found in the Sequence or once the Sequence
+                   is destroyed with SeqDestroy().
+  */
+void SeqAppendOnce(Seq *seq, void *item, SeqItemComparator Compare);
+
+/**
  * @brief Append a sequence to this sequence. Only copies pointers.
  * @param seq Sequence to append to
  * @param items Sequence to copy pointers from.

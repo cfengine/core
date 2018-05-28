@@ -80,6 +80,7 @@ static const struct option OPTIONS[] =
     {"version", no_argument, 0, 'V'},
     {"no-lock", no_argument, 0, 'K'},
     {"file", required_argument, 0, 'f'},
+    {"log-level", required_argument, 0, 'g'},
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
     {"no-fork", no_argument, 0, 'F'},
@@ -99,6 +100,7 @@ static const char *const HINTS[] =
     "Output the version of the software",
     "Ignore system lock",
     "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Run process in foreground, not as a daemon",
@@ -140,7 +142,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhC::l",
+    while ((c = getopt_long(argc, argv, "dvnIf:g:VSxHTKMFhC::l",
                             OPTIONS, NULL)) != -1)
     {
         switch (c)
@@ -166,6 +168,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             NO_FORK = true;
+            break;
+
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
 
         case 'F':

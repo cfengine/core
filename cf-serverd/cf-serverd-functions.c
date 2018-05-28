@@ -69,6 +69,7 @@ static const char *const CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
 static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
+    {"log-level", required_argument, 0, 'g'},
     {"debug", no_argument, 0, 'd'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
@@ -89,6 +90,7 @@ static const struct option OPTIONS[] =
 static const char *const HINTS[] =
 {
     "Print the help message",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Enable debugging output",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
@@ -146,7 +148,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhAC::l",
+    while ((c = getopt_long(argc, argv, "dvIKf:g:D:N:VSxLFMhAC::l",
                             OPTIONS, NULL))
            != -1)
     {
@@ -203,6 +205,10 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             NO_FORK = true;
+            break;
+
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
 
         case 'F':

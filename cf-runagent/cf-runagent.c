@@ -97,6 +97,7 @@ static const struct option OPTIONS[] =
     {"background", optional_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
     {"verbose", no_argument, 0, 'v'},
+    {"log-level", required_argument, 0, 'g'},
     {"dry-run", no_argument, 0, 'n'},
     {"version", no_argument, 0, 'V'},
     {"file", required_argument, 0, 'f'},
@@ -122,6 +123,7 @@ static const char *const HINTS[] =
     "Parallelize connections (50 by default)",
     "Enable debugging output",
     "Output verbose information about the behaviour of the agent",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Output the version of the software",
     "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
@@ -261,7 +263,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     REMOTEBUNDLES[0] = '\0';
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:C::l",
+    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:g:D:VSxo:s:MH:C::l",
                             OPTIONS, &longopt_idx))
            != -1)
     {
@@ -332,6 +334,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+            break;
+
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
 
         case 'n':

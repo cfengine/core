@@ -83,9 +83,19 @@ size_t StringBytesToHex(char *dst, size_t dst_size,
 char *SafeStringDuplicate(const char *str);
 char *SafeStringNDuplicate(const char *str, size_t size);
 int SafeStringLength(const char *str);
-int StringSafeCompare(const char *a, const char *b);
 
-bool StringSafeEqual        (const char *a, const char *b);
+int  StringSafeCompare(const char *a, const char *b);
+bool StringSafeEqual  (const char *a, const char *b);
+
+int  StringSafeCompareN(const char *a, const char *b, size_t n);
+bool StringSafeEqualN  (const char *a, const char *b, size_t n);
+
+int  StringSafeCompare_IgnoreCase(const char *a, const char *b);
+bool StringSafeEqual_IgnoreCase  (const char *a, const char *b);
+
+int  StringSafeCompareN_IgnoreCase(const char *a, const char *b, size_t n);
+bool StringSafeEqualN_IgnoreCase  (const char *a, const char *b, size_t n);
+
 bool StringSafeEqual_untyped(const void *a, const void *b);
 
 char *StringConcatenate(size_t count, const char *first, ...);

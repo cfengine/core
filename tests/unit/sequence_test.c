@@ -50,6 +50,30 @@ static int CompareNumbers(const void *a, const void *b,
     return *(size_t *) a - *(size_t *) b;
 }
 
+static void test_append_once(void)
+{
+    Seq *seq = SequenceCreateRange(10, 0, 9);
+
+    for (size_t i = 0; i <= 9; i++)
+    {
+        size_t *item = xmalloc(sizeof(size_t));
+
+        *item = i;
+        SeqAppendOnce(seq, item, CompareNumbers);
+    }
+
+    /* none of the numbers above should have been inserted second time */
+    assert_int_equal(seq->length, 10);
+
+    size_t *item = xmalloc(sizeof(size_t));
+
+    *item = 10;
+    SeqAppendOnce(seq, item, CompareNumbers);
+
+    /* 10 should have been inserted (as the first instance) */
+    assert_int_equal(seq->length, 11);
+}
+
 static void test_lookup(void)
 {
     Seq *seq = SequenceCreateRange(10, 0, 9);
@@ -412,6 +436,7 @@ int main()
     {
         unit_test(test_create_destroy),
         unit_test(test_append),
+        unit_test(test_append_once),
         unit_test(test_lookup),
         unit_test(test_binary_lookup),
         unit_test(test_index_of),

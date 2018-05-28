@@ -90,6 +90,7 @@ static const struct option OPTIONS[] =
     {"no-lock", no_argument, 0, 'K'},
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
+    {"log-level", required_argument, 0, 'g'},
     {"no-fork", no_argument, 0, 'F'},
     {"once", no_argument, 0, 'O'},
     {"no-winsrv", no_argument, 0, 'W'},
@@ -112,6 +113,7 @@ static const char *const HINTS[] =
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Run as a foreground processes (do not fork)",
     "Run once and then exit (implies no-fork)",
     "Do not run as a service on windows - use this when running from a command shell (CFEngine Nova only)",
@@ -177,7 +179,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR, GetTTYInteractive());
 
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMWC::l",
+    while ((c = getopt_long(argc, argv, "dvnKIf:g:D:N:VxL:hFOV1gMWC::l",
                             OPTIONS, NULL))
            != -1)
     {
@@ -233,6 +235,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             NO_FORK = true; // TODO: really?
+            break;
+
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
 
         case 'n':

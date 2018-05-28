@@ -4,6 +4,7 @@
 #include <cf3.extern.h>
 
 #include <syslog_client.h>
+#include <string_lib.h>
 
 char VFQNAME[CF_MAXVARSIZE];
 char VPREFIX[CF_MAXVARSIZE];
@@ -63,6 +64,37 @@ static void test_set_host(void)
     assert_int_equal(ntohl(((struct sockaddr_in *) got_address)->sin_addr.s_addr), 0x7f000037);
 }
 
+#define check_level(str, lvl) \
+{\
+    assert_int_equal(LogLevelFromString(str), lvl);\
+    assert_true(StringSafeEqual_IgnoreCase(str, LogLevelToString(lvl)));\
+}
+
+static void test_log_level(void)
+{
+    check_level("CRITICAL", LOG_LEVEL_CRIT);
+    check_level("Error", LOG_LEVEL_ERR);
+    check_level("warning", LOG_LEVEL_WARNING);
+    check_level("notice", LOG_LEVEL_NOTICE);
+    check_level("info", LOG_LEVEL_INFO);
+    check_level("verbose", LOG_LEVEL_VERBOSE);
+    check_level("debug", LOG_LEVEL_DEBUG);
+
+    // LogLevelFromString should accept half typed strings:
+    assert_int_equal(LogLevelFromString("CRIT"), LOG_LEVEL_CRIT);
+    assert_int_equal(LogLevelFromString("ERR"), LOG_LEVEL_ERR);
+    assert_int_equal(LogLevelFromString("warn"), LOG_LEVEL_WARNING);
+    assert_int_equal(LogLevelFromString("I"), LOG_LEVEL_INFO);
+    assert_int_equal(LogLevelFromString("i"), LOG_LEVEL_INFO);
+    assert_int_equal(LogLevelFromString("information"), LOG_LEVEL_INFO);
+    assert_int_equal(LogLevelFromString("v"), LOG_LEVEL_VERBOSE);
+
+    //LogLevelFromString should return NOTHING in case of error:
+    assert_int_equal(LogLevelFromString(""), LOG_LEVEL_NOTHING);
+    assert_int_equal(LogLevelFromString("IX"), LOG_LEVEL_NOTHING);
+    assert_int_equal(LogLevelFromString("Infotmation"), LOG_LEVEL_NOTHING);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -70,6 +102,7 @@ int main()
     {
         unit_test(test_set_port),
         unit_test(test_set_host),
+        unit_test(test_log_level),
     };
 
     return run_tests(tests);

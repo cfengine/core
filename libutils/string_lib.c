@@ -172,37 +172,104 @@ int SafeStringLength(const char *str)
     return strlen(str);
 }
 
-int StringSafeCompare(const char *a, const char *b)
+// Compare two pointers (strings) where exactly one is NULL
+static int NullCompare(const void *const a, const void *const b)
 {
-    if (a == b)
+    assert(a != b);
+    assert(a == NULL || b == NULL);
+
+    if (a != NULL)
     {
-        return 0;
+        return 1;
     }
-    if (a && b)
-    {
-        return strcmp(a, b);
-    }
-    if (a == NULL)
+    if (b != NULL)
     {
         return -1;
     }
-    assert(b == NULL);
-    return +1;
+
+    // Should never happen
+    ProgrammingError("Programming Error: NullCompare failed");
+    return 101;
 }
 
-bool StringSafeEqual(const char *a, const char *b)
+int StringSafeCompare(const char *const a, const char *const b)
 {
-    if (a == b)
+    if (a == b) // Same address or both NULL
     {
-        return true;
+        return 0;
+    }
+    if (a != NULL && b != NULL)
+    {
+        return strcmp(a, b);
     }
 
-    if ((a == NULL) || (b == NULL))
+    // Weird edge cases where one is NULL:
+    return NullCompare(a, b);
+}
+
+int StringSafeCompareN(const char *const a, const char *const b, const size_t n)
+{
+    if (a == b) // Same address or both NULL
     {
-        return false;
+        return 0;
+    }
+    if (a != NULL && b != NULL)
+    {
+        return strncmp(a, b, n);
     }
 
-    return strcmp(a, b) == 0;
+    // Weird edge cases where one is NULL:
+    return NullCompare(a, b);
+}
+
+bool StringSafeEqual(const char *const a, const char *const b)
+{
+    return (StringSafeCompare(a, b) == 0);
+}
+
+bool StringSafeEqualN(const char *const a, const char *const b, const size_t n)
+{
+    return (StringSafeCompareN(a, b, n) == 0);
+}
+
+int StringSafeCompare_IgnoreCase(const char *const a, const char *const b)
+{
+    if (a == b) // Same address or both NULL
+    {
+        return 0;
+    }
+    if (a != NULL && b != NULL)
+    {
+        return strcasecmp(a, b);
+    }
+
+    // Weird edge cases where one is NULL:
+    return NullCompare(a, b);
+}
+
+int StringSafeCompareN_IgnoreCase(const char *const a, const char *const b, const size_t n)
+{
+    if (a == b) // Same address or both NULL
+    {
+        return 0;
+    }
+    if (a != NULL && b != NULL)
+    {
+        return strncasecmp(a, b, n);
+    }
+
+    // Weird edge cases where one is NULL:
+    return NullCompare(a, b);
+}
+
+bool StringSafeEqual_IgnoreCase(const char *const a, const char *const b)
+{
+    return (StringSafeCompare_IgnoreCase(a, b) == 0);
+}
+
+bool StringSafeEqualN_IgnoreCase(const char *const a, const char *const b, const size_t n)
+{
+    return (StringSafeCompareN_IgnoreCase(a, b, n) == 0);
 }
 
 bool StringSafeEqual_untyped(const void *a, const void *b)

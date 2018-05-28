@@ -134,6 +134,12 @@ ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx
 const StringSet *EvalContextAllClassesGet(const EvalContext *ctx);
 void EvalContextAllClassesLoggingEnable(EvalContext *ctx, bool enable);
 
+void EvalContextPushBundleName(const EvalContext *ctx, const char *bundle_name);
+const StringSet *EvalContextGetBundleNames(const EvalContext *ctx);
+
+void EvalContextPushRemoteVarPromise(EvalContext *ctx, const char *bundle_name, const Promise *pp);
+const Seq *EvalContextGetRemoteVarPromises(const EvalContext *ctx, const char *bundle_name);
+
 void EvalContextClear(EvalContext *ctx);
 
 Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);

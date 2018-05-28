@@ -96,6 +96,7 @@ static const struct option OPTIONS[] =
     {"host",        required_argument,  0, 'H'},
     {"debug",       no_argument,        0, 'd'},
     {"verbose",     no_argument,        0, 'v'},
+    {"log-level",   required_argument,  0, 'g'},
     {"inform",      no_argument,        0, 'I'},
     {NULL,          0,                  0, '\0'}
 };
@@ -107,6 +108,7 @@ static const char *const HINTS[] =
     "Server hostnames or IPs, comma-separated (defaults to policy server)",
     "Enable debugging output",
     "Enable verbose output",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Enable basic information output",
     NULL
 };
@@ -253,7 +255,7 @@ static int CFNetParse(int argc, char **argv,
     *hostnames = NULL;
     int c = 0;
     int start_index = 1;
-    const char *optstr = "+hMH:dvI"; // + means stop for non opt arg. :)
+    const char *optstr = "+hMg:H:dvI"; // + means stop for non opt arg. :)
     while ((c = getopt_long(argc, argv, optstr, OPTIONS, &start_index))
             != -1)
     {
@@ -302,6 +304,11 @@ static int CFNetParse(int argc, char **argv,
             case 'I':
             {
                 opts->inform = true;
+                break;
+            }
+            case 'g':
+            {
+                LogSetGlobalLevelArgOrExit(optarg);
                 break;
             }
             default:

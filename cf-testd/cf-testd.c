@@ -94,6 +94,7 @@ typedef struct
 static const struct option OPTIONS[] = {
     {"address", required_argument, 0, 'a'},
     {"debug", no_argument, 0, 'd'},
+    {"log-level", required_argument, 0, 'g'},
     {"help", no_argument, 0, 'h'},
     {"inform", no_argument, 0, 'I'},
     {"jobs", required_argument, 0, 'j'},
@@ -108,6 +109,7 @@ static const struct option OPTIONS[] = {
 static const char *const HINTS[] = {
     "Bind to a specific address",
     "Enable debugging output",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Print the help message",
     "Print basic information about what cf-testd does",
     "Number of jobs (threads) to run in parallel. Use '%d' in the report path"
@@ -151,7 +153,7 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv, long *n_threads)
     CFTestD_Config *config = CFTestD_ConfigInit();
     assert(config != NULL);
 
-    while ((c = getopt_long(argc, argv, "a:df:hIj:k:lp:vV", OPTIONS, NULL)) != -1)
+    while ((c = getopt_long(argc, argv, "a:df:g:hIj:k:lp:vV", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {
@@ -166,6 +168,9 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv, long *n_threads)
             exit(EXIT_SUCCESS);
         case 'I':
             LogSetGlobalLevel(LOG_LEVEL_INFO);
+            break;
+        case 'g':
+            LogSetGlobalLevelArgOrExit(optarg);
             break;
         case 'j':
         {

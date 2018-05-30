@@ -294,6 +294,18 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, CF_DATA_TYPE_STRING, "source=promise");
     Attributes a = GetExpandedAttributes(ctx, pp, &attr);
 
+    /* if template_data was specified, it must have been resolved to a data
+     * container by now */
+    /* check this early to prevent creation of the file below in case of failure */
+    const Constraint *template_data_constraint = PromiseGetConstraint(pp, "template_data");
+    if (template_data_constraint != NULL &&
+        template_data_constraint->rval.type != RVAL_TYPE_CONTAINER)
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "No template data for the promise '%s'", pp->promiser);
+        return PROMISE_RESULT_FAIL;
+    }
+
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {

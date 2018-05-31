@@ -525,6 +525,124 @@ static bool SetDelimiters(const char *content, size_t content_len,
     return true;
 }
 
+static bool IsKeyExtensionVar(TagType tag_type, const char *tag_start,
+                              char *delim_start, size_t delim_start_len,
+                              char *delim_end, size_t delim_end_len)
+{
+    /* This whole function is ugly, but tries to avoid memory allocation and copying. */
+
+    /* the easiest case first: {{@}} */
+    if (tag_type == TAG_TYPE_VAR)
+    {
+        if (StringStartsWith(tag_start, delim_start) &&
+            *(tag_start + delim_start_len) == '@' &&
+            StringStartsWith(tag_start + delim_start_len + 1, delim_end))
+        {
+            return true;
+        }
+        else
+        {
+            /* no other way a VAR could be {{@}} */
+            return false;
+        }
+    }
+
+    if (tag_type == TAG_TYPE_VAR_UNESCAPED)
+    {
+        /* the case with unescaped form using &: {{&@}} */
+        if  (StringStartsWith(tag_start, delim_start) &&
+             StringStartsWith(tag_start + delim_start_len, "&@") &&
+             StringStartsWith(tag_start + delim_start_len + 2, delim_end))
+        {
+            return true;
+        }
+
+        /* the special case of unescaped form using {{{@}}} iff "{{" and "}}" are
+         * used as delimiters */
+        if ((delim_start_len == 2) && (delim_end_len == 2) &&
+            StringSafeEqual(delim_start, "{{") &&
+            StringSafeEqual(delim_end, "}}") &&
+            StringStartsWith(tag_start, "{{{@}}}"))
+        {
+            return true;
+        }
+    }
+
+    /* nothing else is our special '@' variable inside delimiters */
+    return false;
+}
+
+/**
+ * Checks if a Json object in the current context (specified by #input) should
+ * be iterated over or not.
+ *
+ * We need to iterate over a Json object if the current section directly
+ * contains (not in a subsection) our {{@}} mustache extension.
+ */
+static bool ShouldIterateObject(const char *input,
+                                char *delim_start, size_t delim_start_len,
+                                char *delim_end, size_t delim_end_len)
+{
+    assert (input != NULL);
+
+    size_t loc_delim_start_len = delim_start_len;
+    char loc_delim_start[MUSTACHE_MAX_DELIM_SIZE] = {0};
+    strncpy(loc_delim_start, delim_start, delim_start_len);
+
+    size_t loc_delim_end_len = delim_end_len;
+    char loc_delim_end[MUSTACHE_MAX_DELIM_SIZE] = {0};
+    strncpy(loc_delim_end, delim_end, delim_end_len);
+
+    /* This loop should only terminate when the answer is clear and thus the
+     * whole function returns. It's iterating over the template which has to end
+     * somewhere (if it's not NUL-terminated, we have a much bigger issue than
+     * this loop). */
+    while (true)
+    {
+        Mustache tag = NextTag(input,
+                               loc_delim_start, loc_delim_start_len,
+                               loc_delim_end, loc_delim_end_len);
+        switch (tag.type)
+        {
+        case TAG_TYPE_ERR:
+        case TAG_TYPE_NONE:
+        case TAG_TYPE_SECTION:
+        case TAG_TYPE_SECTION_END:
+            /* these clearly mean there cannot be {{@}} directly in the current section */
+            return false;
+        case TAG_TYPE_VAR:
+        case TAG_TYPE_VAR_UNESCAPED:
+            /* check if the variable is {{@}} respecting possibly changed delimiters */
+            if (IsKeyExtensionVar(tag.type, tag.begin,
+                                  loc_delim_start, loc_delim_start_len,
+                                  loc_delim_end, loc_delim_end_len))
+            {
+                return true;
+            }
+            else
+            {
+                /* just continue to the next tag */
+                break;
+            }
+        case TAG_TYPE_DELIM:
+            if (!SetDelimiters(tag.content, tag.content_len,
+                               loc_delim_start, &loc_delim_start_len,
+                               loc_delim_end, &loc_delim_end_len))
+            {
+                return false;
+            }
+            break;
+
+        default:
+            /* just continue to the next tag */
+            break;
+        }
+        /* move on in the template */
+        input = tag.end;
+    }
+    return false;
+}
+
 static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_stack,
                    const char *json_key,
                    char *delim_start, size_t *delim_start_len,
@@ -608,6 +726,7 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
 
                 if (!var)
                 {
+                    /* XXX: no variable with the name of the section, why are we renderning anything? */
                     const char *cur_section_end = NULL;
                     if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
                                 skip_content || tag.type != TAG_TYPE_INVERTED, section, &cur_section_end))
@@ -652,6 +771,28 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                     switch (JsonGetContainerType(var))
                     {
                     case JSON_CONTAINER_TYPE_OBJECT:
+                        {
+                            if (!ShouldIterateObject(input, delim_start, *delim_start_len, delim_end, *delim_end_len))
+                            {
+                                const char *cur_section_end = NULL;
+
+                                if (!Render(out, start, input,
+                                            hash_stack,
+                                            NULL,
+                                            delim_start, delim_start_len, delim_end, delim_end_len,
+                                            skip_content || tag.type == TAG_TYPE_INVERTED, section, &cur_section_end))
+                                {
+                                    free(section);
+                                    return false;
+                                }
+                                input = cur_section_end;
+                                free(section);
+                                break;
+                            }
+                            /* else fall through to the case below because
+                             * iterated objects and arrays are processed in the
+                             * same way */
+                        }
                     case JSON_CONTAINER_TYPE_ARRAY:
                         if (JsonLength(var) > 0)
                         {
@@ -689,6 +830,7 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                         }
                         else
                         {
+                            /* XXX: empty array -- why are we rendering anything? */
                             const char *cur_section_end = NULL;
                             if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
                                         tag.type != TAG_TYPE_INVERTED, section, &cur_section_end))

@@ -73,16 +73,16 @@ bundle agent test
         string => "Test that iterating over object results in single block with
                    correct context (CFE-2125).";
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-2125" };
-
   vars:
       "got" string => string_mustache( $(init.template), @(init.data) );
 }
 
 bundle agent check
 {
+  reports:
+    DEBUG::
+      "got output: $(test.got)";
+
   vars:
       "expected" string => "# Test1
 Data = v1

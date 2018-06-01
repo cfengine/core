@@ -1,0 +1,94 @@
+#######################################################
+#
+# Test that invalid mustache template data is not replaced by datastate().
+# CFE-2194
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "template_content" string => '
+template_data:
+{{%-top-}}
+';
+
+  files:
+      "$(G.testfile).template"
+        create => "true",
+        edit_line => insert_lines($(template_content)),
+        edit_defaults => empty;
+
+      "$(G.testfile).output"
+        delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "template_file" string => "$(G.testfile).template";
+
+    "invalid_data"
+      data => parsejson('{
+            "port": 3508,
+            "protocol": 2,
+            "filepath": "$(no_such_variable)",
+            "encryption-level": 256,
+            "loglevel": 1,
+            "users":
+               [
+                {"user": "thomas", "level": "admin"},
+                {"user": "malin", "level": "guest"}
+               ]
+          }');
+
+  files:
+      "$(G.testfile).output"
+        create => "true",
+        edit_template => "$(template_file)",
+        template_method => "mustache",
+        template_data => @(invalid_data);
+
+  classes:
+      "invalid_data_exists" expression => isvariable("invalid_data");
+
+  reports:
+    DEBUG::
+      "Rendering template file $(template_file) to $(G.testfile).output";
+
+      "invalid_data defined!"
+        ifvarclass => "invalid_data_exists";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" -> {"CFE-2194"}
+        not => fileexists("$(G.testfile).output");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

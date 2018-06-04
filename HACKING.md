@@ -315,22 +315,36 @@ CFEngine outputs messages about what its doing using the `Log()` function. It
 takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
 the following when writing output messages.
 
-* Log levels
-  * `LOG_LEVEL_CRIT` For critical errors, process exits immediately.
-  * `LOG_LEVEL_ERR`: For cf-agent, promise failed. For cf-serverd,
-    some system error occurred that is worth logging to syslog.
-  * `LOG_LEVEL_NOTICE`: Important information (not errors) that must not
-    be missed by the user. For example cf-agent uses it in files promises
-    when change tracking is enabled and the file changes.
-  * `LOG_LEVEL_INFO`: For cf-agent, changes that the agent performs
-    to the system, for example when a promise has been repaired. For
-    cf-serverd, `access_rules` denials for connected clients.
-  * `LOG_LEVEL_VERBOSE` :: Log *human readable* progress info useful to
-    users (i.e. sysadmins). Also errors that are unimportant or expected
-    in certain cases.
-  * `LOG_LEVEL_DEBUG`: Log anything else (for example various progress info).
-    Try to avoid "Entering function Foo()", but rather use for
-    "While copying, got reply '%s' from server".
+### Log levels
+
+* `LOG_LEVEL_CRIT`: For critical errors, where process cannot / should not
+  continue running, exit immediately.
+* `LOG_LEVEL_ERR`: Promise failed or other errors that are definitely
+considered bad / not normal.
+* `LOG_LEVEL_WARNING`: Something unusual happened that the user should
+  investigate. Should be severe enough to warrant investigating further,
+  but not as severe as a definitive error/bug.
+* `LOG_LEVEL_NOTICE`: Important information (not errors) that must not
+be missed by the user. For example cf-agent uses it in files promises
+when change tracking is enabled and the file changes.
+* `LOG_LEVEL_INFO`: Useful high level information about what the process is
+  doing. Examples:
+  * Changes performed to the system, for example when a promise has been
+    repaired.
+  * Server denies access to client based on `access_rules`.
+* `LOG_LEVEL_VERBOSE`: Log *human readable* progress info useful to
+users (i.e. sysadmins). Also errors that are unimportant or expected
+in certain cases.
+* `LOG_LEVEL_DEBUG`: Log anything else (for example various progress info).
+Try to avoid "Entering function Foo()", but rather use for
+"While copying, got reply '%s' from server".
+
+Please keep in mind that some components like `cf-serverd` handle very large
+sets of data / connections and logs can become spammy. In some cases
+it might be appropriate to create error / warning summaries instead of
+outputting a log message every time an event occurs.
+
+### Logging Guidelines
 
 * Do not decorate with symbols or indentation in messages and do not
   terminate the message with punctuation. Let `Log()` enforce the common

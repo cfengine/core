@@ -52,137 +52,6 @@ focused and small pull-requests are better.
 functional test runnable with `make check`.
 
 
-Code Overview
--------------
-
-The CFEngine codebase can be usefully thought of as a few separate components:
-utilities (libutils), parsing (libpromises), evaluation (libpromises),
-actuation (mostly in cf-agent), network (libcfnet).
-
-Over the past year, the structure of the codebase has undergone some
-change. The goal of the restructuring is to isolate separate components with
-explicit dependencies, and provide better unit test coverage.
-
-For a general introduction to the tools, please read the man pages.
-
-### libcompat
-
-These are replacement functions in cases where autoconf cannot find a function
-it expected to find on the platform. CFEngine takes an approach of relying on
-the platform (typically POSIX) as much as possible, rather than creating its
-own system abstraction layer.
-
-### libutils
-
-Contains generally useful datastructures or utilities. The key point about
-*libutils* is that it is free of dependencies (except *libcompat*), so it does
-not know about any CFEngine structures or global state found in *libpromises*.
-
-- *sequence.h*: Loosely based on glib GSequence, essentially an array list.
-- *map.h*: General purpose map (hash table).
-- *set.h*: General purpose set, a wrapper of *Map*.
-- *writer.h*: Stream writer abstraction over strings and FILEs.
-- *xml_writer.h*: Utility for writing XML using a *Writer*.
-- *csv_writer.h*: Utility for writing CSV using a *Writer*.
-- *buffer.h*: Dynamic byte-array buffer.
-- *json.h*: JSON document model, supports de/serialization.
-- *string_lib.h*: General purpose string utilities.
-- *logging.h*: Log functions, use Log() instead of printf.
-- *man.h*: Utility for generating the man pages.
-- *list.h*: General purpose linked list.
-- *ip_address.h*: IP address parsing.
-- *hashes.h*: Hashing functions.
-- *file_lib.h*: General purpose file utilities.
-- *misc_lib.h*: Really general utilities.
-
-### libcfnet
-
-Contains the networking layer for CFEngine. (At the time of writing, a bit of
-a moving target).
-
-### libpromises
-
-This is the remainder of the old src directory, that which has not been
-categorized. The roadmap for the project remains to leave *libpromises* as a
-component for evaluation.
-
-- *cf3.defs.h*: Contains structure definitions used widely.
-- *eval_context.h*: Header for EvalContext, keeper of evaluation state.
-- *dbm_api.h*: Local database for agents.
-- *mod_.c*: Syntax definitions for all promise types (actuation modules).
-- *syntax.h*: Syntax utilities and type checking.
-- *files_.h": File utilities we haven't been able to decouple from evaluation.
-- *locks.h*: Manages various persistent locks, kept in a local database.
-- *rlist.h*: List for Rvals (of attributes).
-- *expand.c*: Evaluates promises.
-- *parser.h*: Parse a policy file.
-- *policy.h*: Policy document object model, essentially the AST output of the
-              parsing stage.
-- *sysinfo.c*: Detects hard classes from the environment.
-- *evalfunction.c*: Where all the built-in functions are implemented.
-- *crypto.h*: Crypto utilities for some reason still tied to evaluation state.
-- *generic_agent.h*: Common code for all agent binaries.
-
-Things you should not use in *libpromises*
-
-- *cf3.extern.h*: Remaining global variables.
-- *prototypes3.h*: The original singular header file.
-- *item_lib.h*: Item is a special purpose list that has been abused for
-                unintended purposes.
-- *assoc.h*: An lval-rval pair, deprecated in favor of *EvalContext*
-             symbol table.
-- *scope.h*: Old symbol table, this will move into *EvalContext*.
-
-### cf-agent
-
-The binary *cf-agent* contains most actuation logic in the `verify_*.h`
-files. Each file more or less maps to a promise type.
-
-As an example, the file `verify_packages.h` contains
-`VerifyPackagesPromise(EvalContext *ctx, Promise *pp)`.
-
-#### Lifecycle of cf-agent
-
-The following outlines the normal execution of a *cf-agent* run.
-
-1. Read options and gather these in GenericAgentConfig.
-2. Create an EvalContext and call GenericAgentConfigApply(ctx, config).
-3. Discover environment and set hard classes, apply to EvalContext.
-4. Parse input policy file, get a Policy object.
-5. Run static checks on Policy object.
-6. Evaluate each *Bundle* in *bundlesequence*.
-7. Write reports to disk.
-
-
-#### Bootstrapping cf-agent
-
-The following outlines the steps taken by agent during a successful bootstrap
-to a policy server.
-
-1. Remove all files in `inputs` directory
-2. Write built-in `inputs/failsafe.cf`
-3. Write policy server address or hostname, as was the argument
-   to `--bootstrap` option, to `policy_server.dat`.
-4. If the host was bootstrapped to the machine's own IP address, then it
-   is a policy server, and the file `state/am_policy_hub` is touched as
-   marker.
-5. cf-agent runs using `failsafe.cf` as input file:
-5a. Runs `cf-key` to generate `localhost.{priv,pub}` keys inside
-    `ppkeys` directory.
-5b. Fetches policy files from the policy server.
-5c. Starts `cf-execd`
-5d. Runs `cf-agent -f update.cf`
-6. Agent finishes.
-7. `cf-execd` continues to run `cf-agent` periodically with policy
-   from `inputs` directory.
-
-### cf-monitord
-
-Monitoring probes are contained in `mon_*.c` files. These all have a common
-header file `mon.h`.
-
-
-
 Coding Style
 ------------
 
@@ -278,59 +147,43 @@ Coding Style
 * http://en.wikipedia.org/wiki/Golden_Rule
 
 
-C Platform Macros
------------------
-
-It's important to have portability in a consistent way. In general we
-use *autoconf* to test for features (like system headers, defines,
-specific functions). So try to use the autoconf macros `HAVE_DECL_X`,
-`HAVE_STRUCT_Y`, `HAVE_MYFUNCTION` etc.  See the
-[autoconf manual existing tests section](https://www.gnu.org/software/autoconf/manual/html_node/Existing-Tests.html).
-
-It is preferable to write feature-specific ifdefs, instead of
-OS-specific, but it's not always easy. If necessary use these
-platform-specific macros in C code:
-
-* Any Windows system: Use `_WIN32`.  Don't use `NT`.
-* mingw-based Win32 build: Use `__MINGW32__`.  Don't use `MINGW`.
-* Cygwin-based Win32 build: Use `__CYGWIN__`.  Don't use `CFCYG`.
-* OS X: Use `__APPLE__`.  Don't use `DARWIN`.
-* FreeBSD: Use `__FreeBSD__`.  Don't use `FREEBSD`.
-* NetBSD: Use `__NetBSD__`.  Don't use `NETBSD`.
-* OpenBSD: Use `__OpenBSD__`.  Don't use `OPENBSD`.
-* AIX: Use `_AIX`.  Don't use `AIX`.
-* Solaris: Use `__sun`. Don't use `SOLARIS`.
-* Linux: Use `__linux__`.  Don't use `LINUX`.
-* HP/UX: Use `__hpux` (two underscores!).  Don't use `hpux`.
-
-Finally, it's best to avoid polluting the code logic with many ifdefs.
-Try restricting ifdefs in the header files, or in the beginning of
-the C files.
-
-
-Output Message, Logging Conventions
+Logging Conventions
 -----------------------------------
 
 CFEngine outputs messages about what its doing using the `Log()` function. It
 takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
 the following when writing output messages.
 
-* Log levels
-  * `LOG_LEVEL_CRIT` For critical errors, process exits immediately.
-  * `LOG_LEVEL_ERR`: For cf-agent, promise failed. For cf-serverd,
-    some system error occurred that is worth logging to syslog.
-  * `LOG_LEVEL_NOTICE`: Important information (not errors) that must not
-    be missed by the user. For example cf-agent uses it in files promises
-    when change tracking is enabled and the file changes.
-  * `LOG_LEVEL_INFO`: For cf-agent, changes that the agent performs
-    to the system, for example when a promise has been repaired. For
-    cf-serverd, `access_rules` denials for connected clients.
-  * `LOG_LEVEL_VERBOSE` :: Log *human readable* progress info useful to
-    users (i.e. sysadmins). Also errors that are unimportant or expected
-    in certain cases.
-  * `LOG_LEVEL_DEBUG`: Log anything else (for example various progress info).
-    Try to avoid "Entering function Foo()", but rather use for
-    "While copying, got reply '%s' from server".
+### Log levels
+
+* `LOG_LEVEL_CRIT`: For critical errors, where process cannot / should not
+  continue running, exit immediately.
+* `LOG_LEVEL_ERR`: Promise failed or other errors that are definitely
+considered bad / not normal.
+* `LOG_LEVEL_WARNING`: Something unusual happened that the user should
+  investigate. Should be severe enough to warrant investigating further,
+  but not as severe as a definitive error/bug.
+* `LOG_LEVEL_NOTICE`: Important information (not errors) that must not
+be missed by the user. For example cf-agent uses it in files promises
+when change tracking is enabled and the file changes.
+* `LOG_LEVEL_INFO`: Useful high level information about what the process is
+  doing. Examples:
+  * Changes performed to the system, for example when a promise has been
+    repaired.
+  * Server denies access to client based on `access_rules`.
+* `LOG_LEVEL_VERBOSE`: Log *human readable* progress info useful to
+users (i.e. sysadmins). Also errors that are unimportant or expected
+in certain cases.
+* `LOG_LEVEL_DEBUG`: Log anything else (for example various progress info).
+Try to avoid "Entering function Foo()", but rather use for
+"While copying, got reply '%s' from server".
+
+Please keep in mind that some components like `cf-serverd` handle very large
+sets of data / connections and logs can become spammy. In some cases
+it might be appropriate to create error / warning summaries instead of
+outputting a log message every time an event occurs.
+
+### Logging Guidelines
 
 * Do not decorate with symbols or indentation in messages and do not
   terminate the message with punctuation. Let `Log()` enforce the common
@@ -353,6 +206,160 @@ the following when writing output messages.
   by one call to `Log()`.
 
 * Normally, do not circumvent `Log()` by writing to stdout or stderr.
+
+
+Code Overview
+-------------
+
+The CFEngine codebase can be usefully thought of as a few separate components:
+utilities (libutils), parsing (libpromises), evaluation (libpromises),
+actuation (mostly in cf-agent), network (libcfnet).
+
+Over the past year, the structure of the codebase has undergone some
+change. The goal of the restructuring is to isolate separate components with
+explicit dependencies, and provide better unit test coverage.
+
+For a general introduction to the tools, please read the man pages/documentation.
+
+### libcompat
+
+These are replacement functions in cases where autoconf cannot find a function
+it expected to find on the platform. CFEngine takes an approach of relying on
+the platform (typically POSIX) as much as possible, rather than creating its
+own system abstraction layer.
+
+### libutils
+
+Contains generally useful datastructures or utilities. The key point about
+*libutils* is that it is free of dependencies (except *libcompat*), so it does
+not know about any CFEngine structures or global state found in *libpromises*.
+Some examples of often used files (not meant to be an exhaustive list):
+
+- *sequence.h*: Collection of ordered elements
+  (Loosely based on glib GSequence).
+- *map.h*: General purpose map (hash table).
+- *set.h*: General purpose set, a wrapper of *Map*.
+- *writer.h*: Stream writer abstraction over strings and FILEs.
+- *string_lib.h*: General purpose string utilities.
+- *logging.h*: Log functions, use Log() instead of printf.
+- *ip_address.h*: IP address parsing.
+- *file_lib.h*: General purpose file utilities.
+- *misc_lib.h*: Really general utilities.
+
+### libcfnet
+
+Contains the networking layer for CFEngine. (At the time of writing, a bit of
+a moving target). All of this was in libpromises previously. Ideally it would
+be completely separate, without depending on libpromises, but we're not there
+yet.
+
+### libpromises
+
+This is the remainder of the old src directory, that which has not been
+categorized. The roadmap for the project remains to leave *libpromises* as a
+component for evaluation.
+
+- *cf3.defs.h*: Contains structure definitions used widely.
+- *generic_agent.h*: Common code for all agent binaries.
+- *parser.h*: Parse a policy file.
+- *syntax.h*: Syntax utilities and type checking.
+- *mod_???.c*: Syntax definitions for all promise types (actuation modules).
+- *eval_context.h*: Header for EvalContext, keeper of evaluation state.
+- *expand.c*: Evaluates promises.
+- *policy.h*: Policy document object model, essentially the AST output of the
+  parsing stage.
+- *evalfunction.c*: Where all the built-in functions are implemented.
+- *locks.h*: Manages various persistent locks, kept in a local database.
+- *sysinfo.c*: Detects hard classes from the environment (OS, IP, etc.)
+
+Things which should be moved out of *libpromises*:
+- *crypto.h*: Crypto utilities for some reason still tied to evaluation state.
+- *files_???*: File utilities we haven't been able to decouple from evaluation.
+
+Things you should not use in *libpromises*
+
+- *cf3.extern.h*: Remaining global variables.
+- *prototypes3.h*: The original singular header file.
+- *item_lib.h*: Item is a special purpose list that has been abused for
+  unintended purposes.
+- *assoc.h*: An lval-rval pair, deprecated in favor of *EvalContext*
+  symbol table.
+- *scope.h*: Old symbol table, this will move into *EvalContext*.
+
+### cf-agent
+
+See the documentation for an introduction to cf-agent and the other components.
+Since cf-agent is (arguably) the most important component here is a more
+technical description of how it works, both during first time setup (bootstrap)
+and regular operation. Note that most of the binaries evaluate policy so there
+are many similarities to cf-agent.
+
+#### Lifecycle of cf-agent
+
+The following outlines the normal execution of a *cf-agent* run.
+
+1. Read options and gather these in GenericAgentConfig.
+2. Create an EvalContext and call GenericAgentConfigApply(ctx, config).
+3. Discover environment and set hard classes, apply to EvalContext.
+4. Parse input policy file, get a Policy object.
+5. Run static checks on Policy object.
+6. Evaluate each *Bundle* in *bundlesequence*.
+7. Write reports to disk.
+
+
+#### Bootstrapping cf-agent
+
+The following outlines the steps taken by agent during a successful bootstrap
+to a policy server.
+
+1. Remove all files in `inputs` directory
+2. Write built-in `inputs/failsafe.cf`
+3. Write policy server address or hostname, as was the argument
+   to `--bootstrap` option, to `policy_server.dat`.
+4. If the host was bootstrapped to the machine's own IP address, then it
+   is a policy server, and the file `state/am_policy_hub` is touched as
+   marker.
+5. cf-agent runs using `failsafe.cf` as input file:
+    1. Runs `cf-key` to generate `localhost.{priv,pub}` keys inside
+    `ppkeys` directory.
+    2. Fetches policy files from the policy server.
+    3. Starts `cf-execd`
+    4. Runs `cf-agent -f update.cf`
+6. Agent finishes.
+7. `cf-execd` continues to run `cf-agent` periodically with policy
+   from `inputs` directory.
+
+
+ChangeLog Entries
+-----------------
+
+When a new feature or a bugfix is being merged, it is often necessary to be
+accompanied by a proper entry in the ChangeLog file. Besides manually editing
+the file, we have an automatic way of generating them before the release,
+by properly formatting *commit messages*
+(see [git-commit-template](misc/githooks/git-commit-template)). Keep in mind
+that changelog entries should be written in a way that is understandable by non-
+programmers. This means that references to implementation details are not
+appropriate, leave this for the non-changelog part of the commit message. It is
+the behavior change which is important. This implies that refactorings that have
+no visible effect on behavior don't need a changelog entry.
+
+If a changelog entry is needed, your pull request should have at least one
+commit with a "Changelog:" line in it, after the title. This may be one of the
+following:
+
+* To write arbitrary message in the ChangeLog:
+`Changelog: <message>`
+* To use the commit title line in the ChangeLog:
+`Changelog: Title`
+* To use the entire commit message in the ChangeLog:
+`Changelog: Commit`
+
+It's worth noting that we strive to have bugtracker tickets for most
+changes, and they should be mentioned in the ChangeLog entries. In fact
+if anywhere in the commit message the string ```CFE-1234``` is found
+(referring to a ticket from https://tracker.mender.io ), it will be
+automatically added to the ChangeLog.
 
 
 Testing
@@ -401,6 +408,36 @@ Again: DO NOT do this on your main computer! Always use a test machine,
 preferable in a VM.
 
 
+C Platform Macros
+-----------------
+
+It's important to have portability in a consistent way. In general we
+use *autoconf* to test for features (like system headers, defines,
+specific functions). So try to use the autoconf macros `HAVE_DECL_X`,
+`HAVE_STRUCT_Y`, `HAVE_MYFUNCTION` etc.  See the
+[autoconf manual existing tests section](https://www.gnu.org/software/autoconf/manual/html_node/Existing-Tests.html).
+
+It is preferable to write feature-specific ifdefs, instead of
+OS-specific, but it's not always easy. If necessary use these
+platform-specific macros in C code:
+
+* Any Windows system: Use `_WIN32`.  Don't use `NT`.
+* mingw-based Win32 build: Use `__MINGW32__`.  Don't use `MINGW`.
+* Cygwin-based Win32 build: Use `__CYGWIN__`.  Don't use `CFCYG`.
+* OS X: Use `__APPLE__`.  Don't use `DARWIN`.
+* FreeBSD: Use `__FreeBSD__`.  Don't use `FREEBSD`.
+* NetBSD: Use `__NetBSD__`.  Don't use `NETBSD`.
+* OpenBSD: Use `__OpenBSD__`.  Don't use `OPENBSD`.
+* AIX: Use `_AIX`.  Don't use `AIX`.
+* Solaris: Use `__sun`. Don't use `SOLARIS`.
+* Linux: Use `__linux__`.  Don't use `LINUX`.
+* HP/UX: Use `__hpux` (two underscores!).  Don't use `hpux`.
+
+Finally, it's best to avoid polluting the code logic with many ifdefs.
+Try restricting ifdefs in the header files, or in the beginning of
+the C files.
+
+
 Emacs users
 -----------
 
@@ -416,35 +453,3 @@ and run
     ln -s contrib/dir-locals.el .dir-locals.el
 
 in the top directory of the source code checkout.
-
-
-ChangeLog Entries
------------------
-
-When a new feature or a bugfix is being merged, it is often necessary to be
-accompanied by a proper entry in the ChangeLog file. Besides manually editing
-the file, we have an automatic way of generating them before the release,
-by properly formatting *commit messages*
-(see [git-commit-template](misc/githooks/git-commit-template)). Keep in mind
-that changelog entries should be written in a way that is understandable by non-
-programmers. This means that references to implementation details are not
-appropriate, leave this for the non-changelog part of the commit message. It is
-the behavior change which is important. This implies that refactorings that have
-no visible effect on behavior don't need a changelog entry.
-
-If a changelog entry is needed, your pull request should have at least one
-commit with a "Changelog:" line in it, after the title. This may be one of the
-following:
-
-* To write arbitrary message in the ChangeLog:
-`Changelog: <message>`
-* To use the commit title line in the ChangeLog:
-`Changelog: Title`
-* To use the entire commit message in the ChangeLog:
-`Changelog: Commit`
-
-It's worth noting that we strive to have bugtracker tickets for most
-changes, and they should be mentioned in the ChangeLog entries. In fact
-if anywhere in the commit message the string ```CFE-1234``` is found
-(referring to a ticket from https://tracker.mender.io ), it will be
-automatically added to the ChangeLog.

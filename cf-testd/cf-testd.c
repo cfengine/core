@@ -76,7 +76,8 @@ static bool TERMINATE = false;
 typedef struct
 {
     char *report_file;
-    char *report;
+    char *report_data;
+    Seq *report;
     int report_len;
     char *key_file;
     RSA *priv_key;
@@ -133,7 +134,7 @@ CFTestD_Config *CFTestD_ConfigInit()
 void CFTestD_ConfigDestroy(CFTestD_Config *config)
 {
     free(config->report_file);
-    free(config->report);
+    SeqDestroy(config->report);
     free(config->key_file);
     free(config->address);
     free(config);
@@ -278,8 +279,8 @@ bool CFTestD_GetServerQuery(
     ServerConnectionState *conn, char *recvbuffer, CFTestD_Config *config)
 {
     char query[CF_BUFSIZE];
-    const int report_len            = config->report_len;
-    const char *const report        = config->report;
+    Seq *report          = config->report;
+    const int report_len = config->report_len;
     ConnectionInfo *const conn_info = conn->conn_info;
 
     query[0] = '\0';
@@ -301,30 +302,18 @@ bool CFTestD_GetServerQuery(
         "Report file argument specified. Returning report of length %d",
         report_len);
 
-    // TODO for variables reports we will eventually need to split on \m
-    // instead of \n since variable values can contain '\n's.
+    const size_t n_report_lines = SeqLength(report);
 
-    size_t num_items = StringCountTokens(report, report_len, "\n");
-
-    if (num_items < 3)
-    {
-        Log(LOG_LEVEL_ERR,
-            "report file must have a CFR timestamp header line and at least two lines of items\n");
-        return false;
-    }
-
-    StringRef ts_ref = StringGetToken(report, report_len, 0, "\n");
-    char *ts         = xstrndup(ts_ref.data, ts_ref.len);
-    char *header     = StringFormat("CFR: 0 %s %d\n", ts, report_len);
+    assert(n_report_lines > 1);
+    char *ts = SeqAt(report, 0);
+    char *header = StringFormat("CFR: 0 %s %d\n", ts, report_len);
     SendTransaction(conn_info, header, SafeStringLength(header), CF_MORE);
+    free(header);
 
-    for (ssize_t i = 1; i < num_items; i++)
+    for (size_t i = 1; i < n_report_lines; i++)
     {
-        StringRef item_ref =
-            StringGetToken(report, report_len, i, "\n");
-        char *item = xstrndup(item_ref.data, item_ref.len);
-
-        SendTransaction(conn_info, item, SafeStringLength(item), CF_MORE);
+        const char *report_line = SeqAt(report, i);
+        SendTransaction(conn_info, report_line, SafeStringLength(report_line), CF_MORE);
     }
 
     const char end_reply[] = "QUERY complete";
@@ -588,6 +577,19 @@ static char *LogAddPrefix(LoggingPrivContext *log_ctx,
     return ip_addr ? StringConcatenate(4, "[", ip_addr, "] ", raw) : xstrdup(raw);
 }
 
+static bool CFTestD_GetReportLine(char *data, char **report_line_start, size_t *report_line_length)
+{
+    int ret = sscanf(data, "%10zd", report_line_length);
+    if (ret != 1)
+    {
+        /* incorrect number of items scanned (could be EOF) */
+        return false;
+    }
+
+    *report_line_start = data + 10;
+    return true;
+}
+
 static void *CFTestD_ServeReport(void *config_arg)
 {
     CFTestD_Config *config = (CFTestD_Config *) config_arg;
@@ -632,8 +634,32 @@ static void *CFTestD_ServeReport(void *config_arg)
             Log(LOG_LEVEL_ERR, "Error reading report file '%s'", report_file);
             exit(EXIT_FAILURE);
         }
-        config->report     = StringWriterClose(contents);
-        config->report_len = SafeStringLength(config->report);
+
+        size_t report_data_len = StringWriterLength(contents);
+        config->report_data = StringWriterClose(contents);
+
+        Seq *report = SeqNew(64, NULL);
+        size_t report_len = 0;
+
+        StringRef ts_ref = StringGetToken(config->report_data, report_data_len, 0, "\n");
+        char *ts = (char *) ts_ref.data;
+        *(ts + ts_ref.len) = '\0';
+        SeqAppend(report, ts);
+
+        /* start right after the newline after the timestamp header */
+        char *position = ts + ts_ref.len + 1;
+        char *report_line;
+        size_t report_line_len;
+        while (CFTestD_GetReportLine(position, &report_line, &report_line_len))
+        {
+            *(report_line + report_line_len) = '\0';
+            SeqAppend(report, report_line);
+            report_len += report_line_len;
+            position = report_line + report_line_len + 1; /* there's an extra newline after each report_line */
+        }
+
+        config->report = report;
+        config->report_len = report_len;
 
         Log(LOG_LEVEL_NOTICE,
             "Read %d bytes for report contents",
@@ -644,14 +670,14 @@ static void *CFTestD_ServeReport(void *config_arg)
             Log(LOG_LEVEL_ERR, "Report file contained no bytes");
             exit(EXIT_FAILURE);
         }
-
-        Log(LOG_LEVEL_DEBUG, "Got report file contents: %s", config->report);
     }
 
     Log(LOG_LEVEL_INFO, "Starting server at %s...", config->address);
     fflush(stdout); // for debugging startup
 
     config->ret = CFTestD_StartServer(config);
+
+    free(config->report_data);
 
     /* we don't really need to do this here because the process is about the
      * terminate, but it's a good way the cleanup actually works and doesn't

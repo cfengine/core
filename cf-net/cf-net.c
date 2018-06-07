@@ -313,8 +313,9 @@ static int CFNetParse(int argc, char **argv,
             }
             default:
             {
-                printf("Default optarg = '%s', c = '%c' = %i\n",
-                       optarg, c, (int)c);
+                // printf("Default optarg = '%s', c = '%c' = %i\n",
+                //        optarg, c, (int)c);
+                exit(EXIT_FAILURE);
                 break;
             }
         }
@@ -383,9 +384,15 @@ static void CFNetSetVerbosity(CFNetOptions *opts)
 
 static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
 {
+    assert(args != NULL);
     CFNetSetVerbosity(opts);
 
     char *command_name = args[0];
+    if (NULL_OR_EMPTY(command_name))
+    {
+        printf("Error: Command missing, use cf-net --help for more info.\n");
+        exit(EXIT_FAILURE);
+    }
     ToUpperStrInplace(command_name);
 
     Log(LOG_LEVEL_VERBOSE, "Running command '%s' with argument(s):\n",

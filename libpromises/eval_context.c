@@ -650,7 +650,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
     while (NextDB(dbcp, (char **)&key, &key_size, &info_p, &info_size))
     {
-        Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
+//        Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
 
         /* Info points to db-owned data, which is not aligned properly and
          * dereferencing might be slow or even cause SIGBUS! */
@@ -669,6 +669,8 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
             tags = "";                                          /* no tags */
         }
 
+Log(LOG_LEVEL_DEBUG, "Persistent class '%s', expires '%d', now '%d'", key, info.expires, now);
+
         if (now > info.expires)
         {
             Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' expired", key);
@@ -676,8 +678,8 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes",
-                key, (intmax_t) ((info.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more seconds",
+                key, (intmax_t) (info.expires - now));
             Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
 
             ClassRef ref = ClassRefParse(key);

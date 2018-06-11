@@ -368,7 +368,33 @@ Seq *SeqGetRange(const Seq *seq, size_t start, size_t end)
     return sub;
 }
 
-void SeqStringAddSplit(Seq *seq, const char *str, char delimiter)
+void SeqRemoveNulls(Seq *s)
+{
+    int length = SeqLength(s);
+    int from = 0;
+    int to = 0;
+    while (from < length)
+    {
+        if (s->data[from] == NULL)
+        {
+            ++from; // Skip NULL elements
+        }
+        else
+        {
+            // Copy elements in place, DON'T use SeqSet, which will free()
+            s->data[to] = s->data[from];
+            ++from;
+            ++to;
+        }
+    }
+    s->length = to;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// SeqString - Sequence of strings (char *)
+//////////////////////////////////////////////////////////////////////////////
+
+static void SeqStringAddSplit(Seq *seq, const char *str, char delimiter)
 {
     if (str) // TODO: remove this inconsistency, add assert(str)
     {
@@ -422,26 +448,4 @@ int SeqStringLength(Seq *seq)
     }
 
     return total_length;
-}
-
-void SeqRemoveNulls(Seq *s)
-{
-    int length = SeqLength(s);
-    int from = 0;
-    int to = 0;
-    while (from < length)
-    {
-        if (s->data[from] == NULL)
-        {
-            ++from; // Skip NULL elements
-        }
-        else
-        {
-            // Copy elements in place, DON'T use SeqSet, which will free()
-            s->data[to] = s->data[from];
-            ++from;
-            ++to;
-        }
-    }
-    s->length = to;
 }

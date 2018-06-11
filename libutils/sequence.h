@@ -221,6 +221,13 @@ void SeqClear(Seq *seq);
   */
 Seq *SeqGetRange(const Seq *seq, size_t start, size_t end);
 
+
+void SeqRemoveNulls(Seq *s);
+
+//////////////////////////////////////////////////////////////////////////////
+// SeqString - Sequence of strings (char *)
+//////////////////////////////////////////////////////////////////////////////
+
 /**
   @brief Create a new Sequence from splitting a string on a fixed delimiter
   @param [in] str String to split.
@@ -235,6 +242,5 @@ Seq *SeqStringFromString(const char *str, char delimiter);
  */
 int SeqStringLength(Seq *seq);
 
-void SeqRemoveNulls(Seq *s);
 
 #endif

@@ -53,6 +53,8 @@ typedef struct
 
 static inline void *SeqAt(const Seq *seq, int i)
 {
+    assert(seq != NULL);
+    assert(i < seq->length);
     return seq->data[i];
 }
 

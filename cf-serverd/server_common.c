@@ -120,7 +120,13 @@ Item *ListPersistentClasses()
     Item *persistent_classes = NULL;
     while (NextDB(dbcp, &key, &ksize, (void **)&value, &vsize))
     {
-        if (now > value->expires)
+// copying code from libpromises/eval_context.c that guards against alignment issue and slow de-referencing problems
+        PersistentClassInfo info = { 0 };
+        memcpy(&info, value, vsize < sizeof(info) ? vsize : sizeof(info));
+
+Log(LOG_LEVEL_DEBUG, "Persistent class '%s', expires '%d', now '%d', expires in %jd more seconds", key, info.expires, now, (intmax_t) (info.expires - now));
+
+        if (now > info.expires)
         {
             Log(LOG_LEVEL_DEBUG,
                 "Persistent class %s expired, removing from database", key);

@@ -26,7 +26,9 @@
 #include <sequence.h>
 #include <alloc.h>
 #include <string_lib.h>
+#include <writer.h>
 
+#define SEQ_PREFIX_LEN 10
 
 static const size_t EXPAND_FACTOR = 2;
 
@@ -459,4 +461,117 @@ Seq *SeqFromArgv(int argc, const char *const *const argv)
         SeqAppend(args, (void *)argv[i]); // Discards const
     }
     return args;
+}
+
+// TODO: These static helper functions could be (re)moved
+static bool HasNulByte(const char *str, size_t n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        if (str[i] == '\0')
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static long GetLengthPrefix(const char *data)
+{
+    if (HasNulByte(data, 10))
+    {
+        return -1;
+    }
+
+    if (!isdigit(data[0]))
+    {
+        return -1;
+    }
+
+    if (data[SEQ_PREFIX_LEN-1] != ' ')
+    {
+        return -1;
+    }
+
+    // NOTE: This uses long because HPUX sscanf doesn't support %zu
+    long length;
+    int ret = sscanf(data, "%ld", &length);
+    if (ret != 1 || length < 0)
+    {
+        // Incorrect number of items matched, or
+        // negative length prefix(invalid)
+        return -1;
+    }
+
+    return length;
+}
+
+static char *ValidDuplicate(const char *src, long n)
+{
+    assert(src != NULL);
+    assert(n >= 0);
+    char *dst = xcalloc(n+1, sizeof(char));
+
+    size_t len = StringCopy(dst, src, n);
+    if (len < n) // string was too short
+    {
+        free(dst);
+        return NULL;
+    }
+
+    return dst;
+}
+
+char *SeqStringSerialize(Seq *seq)
+{
+    assert(seq != NULL);
+    size_t length = SeqLength(seq);
+    Writer *w = StringWriter();
+
+    for (int i = 0; i < length; ++i)
+    {
+        const char *s = SeqAt(seq, i);
+        const unsigned long str_length = strlen(s);
+        WriterWriteF(w, "%-" TOSTRING(SEQ_PREFIX_LEN) "lu%s\n", str_length, s);
+    }
+
+    return StringWriterClose(w);
+}
+
+Seq *SeqStringDeserialize(const char *const serialized)
+{
+    assert(serialized != NULL);
+    assert(SEQ_PREFIX_LEN > 0);
+
+    Seq *seq = SeqNew(128, free);
+
+    const char *src = serialized;
+    while (src[0] != '\0')
+    {
+        // Read length prefix first
+        long length = GetLengthPrefix(src);
+
+        // Advance the src pointer
+        src += SEQ_PREFIX_LEN;
+
+        char *new_str;
+
+        // Do validation and duplication in one pass
+        // ValidDuplicate checks for terminating byte up to src[length-1]
+        if (length < 0
+            || src[-1] != ' '
+            || NULL == (new_str = ValidDuplicate(src, length))
+            || src[length] != '\n')
+        {
+            SeqDestroy(seq);
+            return NULL;
+        }
+
+        SeqAppend(seq, new_str);
+
+        // Advance src pointer
+        src += length + 1; // +1 for the added newline
+    }
+
+    return seq;
 }

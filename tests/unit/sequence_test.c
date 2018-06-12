@@ -1,6 +1,6 @@
 #include <test.h>
 
-#include <sequence.h>
+#include <sequence.c>
 #include <alloc.h>
 
 static Seq *SequenceCreateRange(size_t initialCapacity, size_t start, size_t end)
@@ -431,6 +431,160 @@ static void test_string_length(void)
     SeqDestroy(strings);
 }
 
+static void test_string_deserialize(void)
+{
+    {
+        char *two_newlines = xstrdup("1         \n\n1         \n\n");
+        Seq *seq = SeqStringDeserialize(two_newlines);
+        assert_true(seq != NULL);
+        free(two_newlines); // Copies should be allocated
+        const char *a = SeqAt(seq, 0);
+        const char *b = SeqAt(seq, 1);
+        assert_string_equal(a, "\n");
+        assert_string_equal(b, "\n");
+        assert_int_equal(SeqLength(seq), 2);
+        SeqDestroy(seq);
+    }
+    {
+        // Any invalid string should return NULL:
+        assert_true(SeqStringDeserialize(" ") == NULL);
+        assert_true(SeqStringDeserialize("1") == NULL);
+
+        // Missing newline:
+        assert_true(SeqStringDeserialize("1         A") == NULL);
+        assert_true(SeqStringDeserialize("2         A\n") == NULL);
+        assert_true(SeqStringDeserialize("1         A ") == NULL);
+
+        // NUL byte wrong (length wrong):
+        assert_true(SeqStringDeserialize("10000     AAAAAAAAAA\n") == NULL);
+        assert_true(SeqStringDeserialize("0         A\n") == NULL);
+    }
+    {
+        // Empty String -> Empty Seq:
+        Seq *seq = SeqStringDeserialize("");
+        assert(seq != NULL);
+        assert(SeqLength(seq) == 0);
+    }
+}
+
+static void test_string_serialize(void)
+{
+    {
+        Seq *seq = SeqNew(100, free);
+        char *str = SeqStringSerialize(seq);
+        assert(str != NULL && str[0] == '\0');
+        free(str);
+        SeqDestroy(seq);
+    }
+    const char *three = "3         ABC\n3         DEF\n3         GHI\n";
+    {
+        Seq *seq = SeqNew(100, free);
+        SeqAppend(seq, xstrdup("ABC"));
+        SeqAppend(seq, xstrdup("DEF"));
+        SeqAppend(seq, xstrdup("GHI"));
+        char *serialized = SeqStringSerialize(seq);
+        assert_string_equal(serialized, three);
+        Seq *seq2 = SeqStringDeserialize(serialized);
+        free(serialized);
+        assert_true(seq2 != NULL);
+        const char *abc = SeqAt(seq2, 0);
+        const char *def = SeqAt(seq2, 1);
+        const char *ghi = SeqAt(seq2, 2);
+        assert_string_equal(abc, "ABC");
+        assert_string_equal(def, "DEF");
+        assert_string_equal(ghi, "GHI");
+        SeqDestroy(seq);
+    }
+}
+
+void test_sscanf(void)
+{
+    // NOTE: sscanf() on HPUX does not match %z %j %zu %ju etc.
+    //       use %ld and %lu (signed and unsigned long) instead
+    const char *three = "3         ABC\n3         DEF\n3         GHI\n";
+    const char *eleven = "11        ABC\n";
+
+    unsigned long length;
+    long long_num;
+    int ret;
+
+    ret = sscanf(three, "%lu", &length);
+    assert_int_equal(ret, 1);
+    assert_int_equal(length, 3);
+
+    ret = sscanf(three, "%5lu'", &length);
+    assert_int_equal(ret, 1);
+    assert_int_equal(length, 3);
+
+    ret = sscanf(three, "%10lu'", &length);
+    assert_int_equal(ret, 1);
+    assert_int_equal(length, 3);
+
+    ret = sscanf(eleven, "%10lu'", &length);
+    assert_int_equal(ret, 1);
+    assert_int_equal(length, 11);
+
+    ret = sscanf(eleven, "%10ld", &long_num);
+    assert_int_equal(ret, 1);
+    assert_int_equal(long_num, 11);
+}
+
+void test_string_prefix(void)
+{
+    const char *three = "3         ABC\n3         DEF\n3         GHI\n";
+    const char *eleven = "11        ABC\n";
+
+    assert_int_equal(3,    GetLengthPrefix(three));
+    assert_int_equal(1234, GetLengthPrefix("1234      H\n"));
+    assert_true(three[SEQ_PREFIX_LEN] == 'A');
+}
+
+void dupl_checker(const char *str)
+{
+    const size_t len = strlen(str);
+    char *res = ValidDuplicate(str, len);
+    assert_true(res != NULL);
+    assert_true(res != str);
+    assert_string_equal(res, str);
+    free(res);
+    for (long l = len + 1; l <= 2*len; ++l)
+    {
+        // String shorter than specified (expected) length:
+        res = ValidDuplicate(str, l);
+        assert_true(res == NULL);
+    }
+}
+
+void test_valid_duplicate(void)
+{
+    dupl_checker("");
+    dupl_checker("A");
+    dupl_checker("AB");
+    dupl_checker("ABC");
+    dupl_checker("ABCD");
+    dupl_checker("ABCDE");
+    dupl_checker("ABCDEF");
+    dupl_checker("ABCDEFG");
+    dupl_checker(" ");
+    dupl_checker("  ");
+    dupl_checker("   ");
+    dupl_checker("    ");
+    dupl_checker("     ");
+    dupl_checker("      ");
+    dupl_checker("       ");
+    dupl_checker("        ");
+    dupl_checker("         ");
+    dupl_checker("\n");
+    dupl_checker(" \n");
+    dupl_checker("\n ");
+    dupl_checker("\r\n");
+    dupl_checker("\n\r");
+    dupl_checker(" \n ");
+    dupl_checker(" \r\n ");
+    dupl_checker(" \n\r ");
+    dupl_checker("Lorem ipsum dolor sit amet.\nHello, world!\n\n");
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -450,7 +604,12 @@ int main()
         unit_test(test_reverse),
         unit_test(test_len),
         unit_test(test_get_range),
-        unit_test(test_string_length)
+        unit_test(test_sscanf),
+        unit_test(test_string_length),
+        unit_test(test_string_prefix),
+        unit_test(test_valid_duplicate),
+        unit_test(test_string_deserialize),
+        unit_test(test_string_serialize)
     };
 
     return run_tests(tests);

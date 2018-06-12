@@ -209,6 +209,25 @@ char *StringVFormat(const char *fmt, va_list ap);
  */
 char *StringFormat(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
 
+/**
+ * @brief Copy a string of maximum length n from src to dst
+ *
+ * The destination is guaranteed to be NUL terminated,
+ * dst[n] will always be '\0', any additional bytes before dst[n]
+ * will be zeroed if the string length is less than n.
+ *
+ * The return value is equal to strlen(dst), for large data sizes this
+ * is useful since it doesn't require a second pass through the data.
+ *
+ * @note src and dst must not overlap
+ * @warning Regardless for strlen(src) dst must be at least n + 1 size
+ * @param[out] dst Output buffer, must have at least n + 1 size
+ * @param[in] src String to copy from
+ * @param[in] n Maximum string length to copy, not including NUL byte
+ * @return String length of dst
+ */
+size_t StringCopy(char * dst, const char * src, long n);
+
 void *memcchr(const void *buf, int c, size_t buf_size);
 
 bool StringNotMatchingSetCapped(const char *isp, int limit,

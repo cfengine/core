@@ -246,4 +246,26 @@ void SeqRemoveNulls(Seq *s);
  */
 Seq *SeqFromArgv(int argc, const char *const *argv);
 
+/**
+ * @brief Serializes a sequence of strings to a length prefixed format
+ *
+ * (De)Serialize uses a length prefixed format.
+ * For every element in a string sequence,
+ * the serialized output includes:
+ * 1. 10 bytes of length prefix, where index 9 must be a space
+ * 2. The data, with no escaping / modifications
+ * 3. A single newline (\n) for readability
+ * It is assumed that the sequence contains ascii printable
+ * NUL terminated characters.
+ */
+char *SeqStringSerialize(Seq *seq);
+
+/**
+ * @brief Create a sequence of strings from the serialized format
+ *
+ * @param[in] serialized The input string, contents are copied
+ * @return A sequence of new allocated strings
+ */
+Seq *SeqStringDeserialize(const char *serialized);
+
 #endif

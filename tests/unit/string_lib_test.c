@@ -693,6 +693,80 @@ static void test_stringformat(void)
     free(s);
 }
 
+static void test_string_copy(void)
+{
+    char a[0 + 1];
+    char b[1 + 1];
+    char c[2 + 1];
+    char non_terminated[3];
+    long str_len = 3;
+    char d[str_len + 1];
+    char e[str_len + 1];
+    char f[str_len + 1];
+    char g[str_len + 1];
+    char h[str_len + 1];
+
+    // Non terminated string source:
+    non_terminated[0] = '3';
+    non_terminated[1] = '4';
+    non_terminated[2] = '5';
+    assert_int_equal(3, StringCopy(d, non_terminated, 3));
+    assert_string_equal(d, "345");
+
+    assert_int_equal(0, StringCopy(a, "", 0));
+    assert_int_equal(1, StringCopy(b, "A", 1));
+    assert_int_equal(2, StringCopy(c, "BC", 2));
+    assert_int_equal(3, StringCopy(d, "DEF", str_len));
+    assert_int_equal(3, StringCopy(e, "GHIJ", str_len));
+    assert_int_equal(3, StringCopy(f, "KLMNO", str_len));
+    assert_int_equal(3, StringCopy(g, "PQRSTU", str_len));
+    assert_int_equal(3, StringCopy(h, "VWXYZ 1", str_len));
+    assert_string_equal(a, "");
+    assert_string_equal(b, "A");
+    assert_string_equal(c, "BC");
+    assert_string_equal(d, "DEF");
+    assert_string_equal(e, "GHI");
+    assert_string_equal(f, "KLM");
+    assert_string_equal(g, "PQR");
+    assert_string_equal(h, "VWX");
+    assert_int_equal(0, StringCopy(a, d, 0));
+    assert_int_equal(1, StringCopy(b, d, 1));
+    assert_int_equal(2, StringCopy(c, d, 2));
+    // src == dst isn't allowed, have to skip d
+    assert_int_equal(3, StringCopy(e, d, str_len));
+    assert_int_equal(3, StringCopy(f, d, str_len));
+    assert_int_equal(3, StringCopy(g, d, str_len));
+    assert_int_equal(3, StringCopy(h, d, str_len));
+    assert_string_equal(a, "");
+    assert_string_equal(b, "D");
+    assert_string_equal(c, "DE");
+    assert_string_equal(d, "DEF");
+    assert_string_equal(e, "DEF");
+    assert_string_equal(f, "DEF");
+    assert_string_equal(g, "DEF");
+    assert_string_equal(h, "DEF");
+
+    // Let's also try a longer string:
+    int length = strlen(lo_alphabet);
+    char buf[1024];
+    assert_int_equal(length, StringCopy(buf, lo_alphabet, length));
+    assert_string_equal(buf, lo_alphabet);
+
+    // Let's check that we haven't corrupted the stack somehow:
+    assert_true(non_terminated[0] == '3');
+    assert_true(non_terminated[1] == '4');
+    assert_true(non_terminated[2] == '5');
+    assert_string_equal(d, "DEF");
+    assert_int_equal(str_len, StringCopy(d, non_terminated, str_len));
+    assert_string_equal(d, "345");
+    assert_int_equal(str_len, 3);
+
+    char ones[2] = {'1', '1'};
+    assert_int_equal(0, StringCopy(ones, "", 0));
+    assert_true(ones[0] == '\0');
+    assert_true(ones[1] == '1');
+}
+
 static void test_stringscanfcapped(void)
 {
     char buf[20];
@@ -978,6 +1052,7 @@ int main()
 
         unit_test(test_stringformat),
         unit_test(test_stringvformat),
+        unit_test(test_string_copy),
 
         unit_test(test_stringscanfcapped),
 

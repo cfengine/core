@@ -237,6 +237,7 @@ int main(int argc, char *argv[])
     ThisAgentInit();
 
     BeginAudit();
+// TODO CRAIG Here... is the entry point during which promises are verified and possibly persisted...
     KeepPromises(ctx, policy, config);
 
     if (ALLCLASSESREPORT)

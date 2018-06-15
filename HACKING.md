@@ -317,18 +317,17 @@ and run
 
 in the top directory of the source code checkout.
 
-Windows Notes
--------------
+atexit() and Windows
+--------------------
 
 On Windows the atexit function works but the functions registered there are
 executed after or concurrently with DLL unloading. If registered functions
 rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
-occur when exit is called. For this reason we use our own ExitAfterCleanup
-from libutils/atexit.c as well as RegisterAtExitFunction instead of atexit.
+occur when exit is called. 
+
+In order to make behavior more explicit and predictable we migrated to always
+using a homegrown atexit system. RegisterAtExitFunction instead of atexit and
+CallAtExitFunctionsAndExit instead of exit.
 
 If _Exit or _exit need to be called that is fine as they don't call atexit or
 cleanup functions.
-
-NOTES FOR DEVS ONLY: Functions which register cleanup functions and so should 
-use ExitAfterCleanup are ...
-- WritePID

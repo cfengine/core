@@ -205,7 +205,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         if (Epimenides(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
             Log(LOG_LEVEL_ERR, "Variable '%s' contains itself indirectly - an unkeepable promise", pp->promiser);
-            ExitAfterCleanup(EXIT_FAILURE);
+            CallAtExitFunctionsAndExit(EXIT_FAILURE);
         }
         else
         {

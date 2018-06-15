@@ -1260,7 +1260,7 @@ static void ParseErrorVColumnOffset(int column_offset, const char *s, va_list ap
         if (P.error_count > 12)
         {
             fprintf(stderr, "Too many errors\n");
-            ExitAfterCleanup(EXIT_FAILURE);
+            CallAtExitFunctionsAndExit(EXIT_FAILURE);
         }
     }
 
@@ -1313,7 +1313,7 @@ static void ParseWarningV(unsigned int warning, const char *s, va_list ap)
     if (P.error_count > 12)
     {
         fprintf(stderr, "Too many errors\n");
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
 }
 
@@ -1340,7 +1340,7 @@ static void fatal_yyerror(const char *s)
     }
 
     fprintf(stderr, "%s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
-    ExitAfterCleanup(EXIT_FAILURE);
+    CallAtExitFunctionsAndExit(EXIT_FAILURE);
 }
 
 static int RelevantBundle(const char *agent, const char *blocktype)

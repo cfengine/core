@@ -486,7 +486,7 @@ long StringToLongExitOnError(const char *str)
     if (return_code != 0)
     {
         LogStringToLongError(str, "StringToLongExitOnError", return_code);
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
     return result;
 }

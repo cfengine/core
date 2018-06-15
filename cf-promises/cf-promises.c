@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Input files contain errors.");
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
 
     GenericAgentPostLoadInit(ctx);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
         else
         {
             Log(LOG_LEVEL_ERR, "The given directory could not be tagged, sorry.");
-            ExitAfterCleanup(EXIT_FAILURE);
+            CallAtExitFunctionsAndExit(EXIT_FAILURE);
         }
     }
 
@@ -274,7 +274,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             else
             {
                 Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
-                ExitAfterCleanup(EXIT_FAILURE);
+                CallAtExitFunctionsAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -290,12 +290,12 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 JsonWrite(out, json_syntax, 0);
                 FileWriterDetach(out);
                 JsonDestroy(json_syntax);
-                ExitAfterCleanup(EXIT_SUCCESS);
+                CallAtExitFunctionsAndExit(EXIT_SUCCESS);
             }
             else
             {
                 Log(LOG_LEVEL_ERR, "Invalid syntax description output format: '%s'. Possible values are 'none', 'json'", optarg);
-                ExitAfterCleanup(EXIT_FAILURE);
+                CallAtExitFunctionsAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -352,7 +352,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteVersion(w);
             FileWriterDetach(w);
         }
-        ExitAfterCleanup(EXIT_SUCCESS);
+        CallAtExitFunctionsAndExit(EXIT_SUCCESS);
 
         case 'h':
         {
@@ -360,7 +360,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
-        ExitAfterCleanup(EXIT_SUCCESS);
+        CallAtExitFunctionsAndExit(EXIT_SUCCESS);
 
         case 'M':
         {
@@ -371,7 +371,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                          OPTIONS, HINTS,
                          true);
             FileWriterDetach(out);
-            ExitAfterCleanup(EXIT_SUCCESS);
+            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
         }
 
         case 'r':
@@ -382,18 +382,18 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             if (!GenericAgentConfigParseWarningOptions(config, optarg))
             {
                 Log(LOG_LEVEL_ERR, "Error parsing warning option");
-                ExitAfterCleanup(EXIT_FAILURE);
+                CallAtExitFunctionsAndExit(EXIT_FAILURE);
             }
             break;
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            ExitAfterCleanup(EXIT_SUCCESS);
+            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
-                ExitAfterCleanup(EXIT_FAILURE);
+                CallAtExitFunctionsAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -413,7 +413,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
 
         }
     }
@@ -421,7 +421,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
 
     return config;

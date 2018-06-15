@@ -344,7 +344,7 @@ void GetInterfacesInfo(EvalContext *ctx)
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open socket. (socket: %s)", GetErrorStr());
-        exit(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
 
     list.ifc_len = sizeof(ifbuf);
@@ -366,7 +366,7 @@ void GetInterfacesInfo(EvalContext *ctx)
             GetErrorStr());
 // TODO do we really want to exit here? cf-execd, cf-monitord, cf-serverd and
 // maybe cf-agent all depend on DetectEnvironment so probably shouldn't just bomb.
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
 
     if (list.ifc_len < (int) sizeof(struct ifreq))

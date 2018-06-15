@@ -71,7 +71,7 @@ static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *f
                 Log(LOG_LEVEL_ERR, "Arguments to function '%s' do not tally. Expected %d not %d",
                       fp->name, FnNumArgs(fn), len);
                 PromiseRef(LOG_LEVEL_ERR, fp->caller);
-                ExitAfterCleanup(EXIT_FAILURE);
+                CallAtExitFunctionsAndExit(EXIT_FAILURE);
             }
         }
     }

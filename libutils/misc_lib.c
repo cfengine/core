@@ -62,7 +62,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 
     free(fmt);
 #ifdef NDEBUG
-    ExitAfterCleanup(255);
+    CallAtExitFunctionsAndExit(255);
 #else
     abort();
 #endif

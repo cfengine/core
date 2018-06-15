@@ -77,7 +77,7 @@ void MakeSignalPipe(void)
     {
         Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (socketpair: '%s')",
             GetErrorStr());
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
 
     for (int c = 0; c < 2; c++)
@@ -87,7 +87,7 @@ void MakeSignalPipe(void)
         {
             Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (fcntl: '%s')",
                 GetErrorStr());
-            ExitAfterCleanup(EXIT_FAILURE);
+            CallAtExitFunctionsAndExit(EXIT_FAILURE);
         }
 #else // __MINGW32__
         u_long enable = 1;
@@ -95,7 +95,7 @@ void MakeSignalPipe(void)
         {
             Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (ioctlsocket: '%s')",
                 GetErrorStr());
-            ExitAfterCleanup(EXIT_FAILURE);
+            CallAtExitFunctionsAndExit(EXIT_FAILURE);
         }
 #endif // __MINGW32__
     }
@@ -146,7 +146,7 @@ void HandleSignalsForAgent(int signum)
     case SIGINT:
         /* TODO don't exit from the signal handler, just set a flag. Reason is
          * that all the atexit() hooks we register are not reentrant. */
-        ExitAfterCleanup(0);
+        CallAtExitFunctionsAndExit(0);
     case SIGUSR1:
         LogSetGlobalLevel(LOG_LEVEL_DEBUG);
         break;

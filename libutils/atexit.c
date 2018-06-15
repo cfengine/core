@@ -26,7 +26,7 @@
 #include <alloc.h>
 #include <atexit.h>
 
-#if defined(__MINGW32__)
+//#if defined(__MINGW32__)
 
 typedef struct AtExitList
 {
@@ -55,20 +55,19 @@ void CallAtExitFunctions(void)
 
     pthread_mutex_unlock(&atexit_functions_mutex);
 }
-#endif
+//#endif
 
-// TODO change to CleanupAndExit, since that's what we do... cleanup, and then exit.
-void ExitAfterCleanup(int ret)
+void CallAtExitFunctionsAndExit(int ret)
 {
-#if defined(__MINGW32__)
+//#if defined(__MINGW32__)
     CallAtExitFunctions();
-#endif
+//#endif
     exit(ret);
 }
 
 void RegisterAtExitFunction(AtExitFn fn)
 {
-#if defined(__MINGW32__)
+//#if defined(__MINGW32__)
     pthread_mutex_lock(&atexit_functions_mutex);
 
     AtExitList *p = xmalloc(sizeof(AtExitList));
@@ -82,8 +81,8 @@ void RegisterAtExitFunction(AtExitFn fn)
  *  Don't register atexit() functions on windows due to race conditions 
  *  around lock cleanup.
  */
-#else 
-    atexit(fn);
-#endif
+//#else 
+//    atexit(fn);
+//#endif
 }
 

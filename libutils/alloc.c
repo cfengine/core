@@ -33,7 +33,7 @@ static void *CheckResult(void *ptr, const char *fn, bool check_result)
     {
         fputs(fn, stderr);
         fputs("CRITICAL: Unable to allocate memory\n", stderr);
-        ExitAfterCleanup(255);
+        CallAtExitFunctionsAndExit(255);
     }
     return ptr;
 }

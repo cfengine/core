@@ -47,7 +47,7 @@ static void LoggingInitializeOnce(void)
          * that nothing else will work. */
 
         fprintf(stderr, "Unable to initialize logging subsystem\n");
-        ExitAfterCleanup(255);
+        CallAtExitFunctionsAndExit(255);
     }
 }
 

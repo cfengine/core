@@ -375,7 +375,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
     if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error reading average database");
-        ExitAfterCleanup(EXIT_FAILURE);
+        CallAtExitFunctionsAndExit(EXIT_FAILURE);
     }
 
 /* Discard any apparently anomalous behaviour before renormalizing database */

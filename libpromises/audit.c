@@ -105,5 +105,5 @@ void FatalError(const EvalContext *ctx, char *s, ...)
     }
 
     EndAudit(ctx, 0);
-    ExitAfterCleanup(EXIT_FAILURE); // calling abort would bypass exit handlers and trigger subtle bugs
+    CallAtExitFunctionsAndExit(EXIT_FAILURE); // calling abort would bypass exit handlers and trigger subtle bugs
 }

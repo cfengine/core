@@ -27,10 +27,10 @@
 
 typedef void (*AtExitFn)(void);
 
-#if defined(__MINGW32__)
+//#if defined(__MINGW32__)
 void CallAtExitFunctions(void);
-#endif
-void ExitAfterCleanup(int ret);
+//#endif
+void CallAtExitFunctionsAndExit(int ret);
 void RegisterAtExitFunction(AtExitFn fn);
 
 #endif

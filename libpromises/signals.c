@@ -23,6 +23,7 @@
 */
 
 #include <signals.h>
+#include <atexit.h>
 
 static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 

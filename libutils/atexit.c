@@ -57,6 +57,7 @@ void CallAtExitFunctions(void)
 }
 #endif
 
+// TODO change to CleanupAndExit, since that's what we do... cleanup, and then exit.
 void ExitAfterCleanup(int ret)
 {
 #if defined(__MINGW32__)

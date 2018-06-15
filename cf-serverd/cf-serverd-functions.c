@@ -611,6 +611,7 @@ static int InitServer(size_t queue_size)
     }
 
     ExitAfterCleanup(EXIT_FAILURE);
+    __builtin_unreachable();
 }
 
 /* Set up standard signal-handling. */

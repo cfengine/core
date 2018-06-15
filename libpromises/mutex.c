@@ -52,8 +52,8 @@ int __ThreadLock(pthread_mutex_t *mutex,
     if (result != 0)
     {
         // printf instead of Log() to avoid problems with mutexes in Log()
-        printf("thread: %d, error: Locking failure at %s:%d function %s! (pthread_mutex_lock: %s)",
-               GetCurrentThreadId(), filename, lineno, funcname, GetErrorStrFromCode(result));
+        printf("error: Locking failure at %s:%d function %s! (pthread_mutex_lock: %s)",
+               filename, lineno, funcname, GetErrorStrFromCode(result));
         return false;
     }
 
@@ -68,8 +68,8 @@ int __ThreadUnlock(pthread_mutex_t *mutex,
     if (result != 0)
     {
         // printf instead of Log() to avoid problems with mutexes in Log()
-        printf("thread: %d, error: Locking failure at %s:%d function %s! (pthread_mutex_unlock: %s)",
-               GetCurrentThreadId(), filename, lineno, funcname, GetErrorStrFromCode(result));
+        printf("error: Locking failure at %s:%d function %s! (pthread_mutex_unlock: %s)",
+               filename, lineno, funcname, GetErrorStrFromCode(result));
 
         return false;
     }

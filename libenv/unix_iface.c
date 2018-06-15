@@ -34,6 +34,7 @@
 #include <files_interfaces.h>
 #include <files_names.h>
 #include <known_dirs.h>
+#include <atexit.h>
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>

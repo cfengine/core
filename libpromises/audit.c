@@ -27,6 +27,7 @@
 #include <conversion.h>
 #include <logging.h>
 #include <string_lib.h>
+#include <atexit.h>
 
 int PR_KEPT = 0; /* GLOBAL_X */
 int PR_REPAIRED = 0; /* GLOBAL_X */
@@ -104,5 +105,5 @@ void FatalError(const EvalContext *ctx, char *s, ...)
     }
 
     EndAudit(ctx, 0);
-    exit(EXIT_FAILURE); // calling abort would bypass exit handlers and trigger subtle bugs
+    ExitAfterCleanup(EXIT_FAILURE); // calling abort would bypass exit handlers and trigger subtle bugs
 }

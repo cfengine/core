@@ -363,7 +363,9 @@ void GetInterfacesInfo(EvalContext *ctx)
         Log(LOG_LEVEL_ERR,
             "Couldn't get interfaces (ioctl(SIOCGIFCONF): %s)",
             GetErrorStr());
-        exit(EXIT_FAILURE);
+// TODO do we really want to exit here? cf-execd, cf-monitord, cf-serverd and
+// maybe cf-agent all depend on DetectEnvironment so probably shouldn't just bomb.
+        ExitAfterCleanup(EXIT_FAILURE);
     }
 
     if (list.ifc_len < (int) sizeof(struct ifreq))

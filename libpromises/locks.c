@@ -39,6 +39,7 @@
 #include <misc_lib.h>
 #include <known_dirs.h>
 #include <sysinfo.h>
+#include <atexit.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
@@ -407,7 +408,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *o
     if ((fp = fopen(cflog, "a")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Can't open lock-log file '%s'. (fopen: %s)", cflog, GetErrorStr());
-        exit(EXIT_FAILURE);
+        ExitAfterCleanup(EXIT_FAILURE);
     }
 
     if ((tim = time((time_t *) NULL)) == -1)

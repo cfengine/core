@@ -29,6 +29,7 @@
 #include <logging.h>
 
 #include <stdarg.h>
+#include <atexit.h>
 
 unsigned long UnsignedModulus(long dividend, long divisor)
 {
@@ -61,7 +62,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 
     free(fmt);
 #ifdef NDEBUG
-    exit(255);
+    ExitAfterCleanup(255);
 #else
     abort();
 #endif

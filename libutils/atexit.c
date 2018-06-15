@@ -38,7 +38,6 @@ static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
 static AtExitList *atexit_functions;
 
 /* To be called externally only by Windows binaries */
-
 void CallAtExitFunctions(void)
 {
     pthread_mutex_lock(&atexit_functions_mutex);
@@ -56,8 +55,15 @@ void CallAtExitFunctions(void)
 
     pthread_mutex_unlock(&atexit_functions_mutex);
 }
-
 #endif
+
+void ExitAfterCleanup(int ret)
+{
+#if defined(__MINGW32__)
+    CallAtExitFunctions();
+#endif
+    exit(ret);
+}
 
 void RegisterAtExitFunction(AtExitFn fn)
 {
@@ -72,10 +78,11 @@ void RegisterAtExitFunction(AtExitFn fn)
 
     pthread_mutex_unlock(&atexit_functions_mutex);
 /*
-    Don't register atexit() functions on windows due to race conditions 
-    around lock cleanup.
-*/
+ *  Don't register atexit() functions on windows due to race conditions 
+ *  around lock cleanup.
+ */
 #else 
     atexit(fn);
 #endif
 }
+

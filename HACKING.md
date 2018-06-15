@@ -316,3 +316,19 @@ and run
  ln -s contrib/dir-locals.el .dir-locals.el
 
 in the top directory of the source code checkout.
+
+Windows Notes
+-------------
+
+On Windows the atexit function works but the functions registered there are
+executed after or concurrently with DLL unloading. If registered functions
+rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
+occur when exit is called. For this reason we use our own ExitAfterCleanup
+from libutils/atexit.c as well as RegisterAtExitFunction instead of atexit.
+
+If _Exit or _exit need to be called that is fine as they don't call atexit or
+cleanup functions.
+
+NOTES FOR DEVS ONLY: Functions which register cleanup functions and so should 
+use ExitAfterCleanup are ...
+- WritePID

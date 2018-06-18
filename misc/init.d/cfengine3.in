@@ -323,8 +323,14 @@ cf_stop_daemon()
 
         if [ $iter -ge 2 ]; then
             # Give the daemon some time to do its cleanup and actually
-            # terminate.
+            # terminate. Then check its state again.
             sleep 2
+            pidfile_pid="$(cf_pidfile_pid "$pidfile")"
+            if [ -n "$pidfile_pid" ]; then
+                pids="$pidfile_pid"
+            else
+                pids="$(cf_get_matching_pids "$base_daemon")"
+            fi
         fi
 
         if [ "$signal" != "KILL" ] && [ -f "$pidfile" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then

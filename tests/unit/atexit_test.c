@@ -82,7 +82,7 @@ int main()
     PRINT_TEST_BANNER();
 
     RegisterAtExitFunction(&fn1);
-    atexit(&fn2);
-    RegisterAtExitFunction(&fn3);
+    RegisterAtExitFunction(&fn2);
+    atexit(&fn3);
     return 0;
 }

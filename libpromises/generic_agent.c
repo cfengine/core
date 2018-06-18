@@ -162,7 +162,7 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
     else
     {
         Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
-        EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
+        EvalContextClassPutHard(ctx, "failsafe_fallback", "report,attribute_name=Errors,source=agent");
 
         if (CheckAndGenerateFailsafe(GetInputDir(), "failsafe.cf"))
         {
@@ -503,7 +503,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     /* Are we bootstrapping the agent? */
     if (config->agent_type == AGENT_TYPE_AGENT && bootstrap_arg != NULL)
     {
-        EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
+        EvalContextClassPutHard(ctx, "bootstrap_mode", "report,source=environment");
 
         if (!RemoveAllExistingPolicyInInputs(GetInputDir()))
         {

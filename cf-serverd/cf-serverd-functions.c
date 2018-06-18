@@ -46,7 +46,7 @@
 #include <file_lib.h>
 #include <loading.h>
 #include <printsize.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 #include "server_access.h"
 
@@ -223,7 +223,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -231,7 +231,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -242,31 +242,31 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                              OPTIONS, HINTS,
                              true);
                 FileWriterDetach(out);
-                CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+                DoCleanupAndExit(EXIT_SUCCESS);
             }
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'A':
 #ifdef SUPPORT_AVAHI_CONFIG
             Log(LOG_LEVEL_NOTICE, "Generating Avahi configuration file.");
             if (GenerateAvahiConfig("/etc/avahi/services/cfengine-hub.service") != 0)
             {
-                CallAtExitFunctionsAndExit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
             Log(LOG_LEVEL_NOTICE, "Avahi configuration file generated successfully.");
 #else
             Log(LOG_LEVEL_ERR, "Generating avahi configuration can only be done when avahi-daemon and libavahi are installed on the machine.");
 #endif
-            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
-                CallAtExitFunctionsAndExit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -280,14 +280,14 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            CallAtExitFunctionsAndExit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
     }
 
     if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
-        CallAtExitFunctionsAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     return config;
@@ -610,7 +610,7 @@ static int InitServer(size_t queue_size)
         return sd;
     }
 
-    CallAtExitFunctionsAndExit(EXIT_FAILURE);
+    DoCleanupAndExit(EXIT_FAILURE);
     __builtin_unreachable();
 }
 
@@ -682,7 +682,7 @@ static void PrepareServer(int sd)
     SetCloseOnExec(sd, true);
 
     Log(LOG_LEVEL_NOTICE, "Server is starting...");
-    WritePID("cf-serverd.pid"); /* Arranges for atexit() to tidy it away */
+    WritePID("cf-serverd.pid"); /* Arranges for a cleanup function at exit to tidy it away */
 }
 
 /* Wait for connection-handler threads to finish their work.

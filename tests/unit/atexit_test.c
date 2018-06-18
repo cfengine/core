@@ -1,7 +1,7 @@
 #include <test.h>
 
 #include <cf3.defs.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 bool FN1;
 bool FN2;
@@ -81,8 +81,8 @@ int main()
 {
     PRINT_TEST_BANNER();
 
-    RegisterAtExitFunction(&fn1);
-    RegisterAtExitFunction(&fn2);
+    RegisterCleanupFunction(&fn1);
+    RegisterCleanupFunction(&fn2);
     atexit(&fn3);
     return 0;
 }

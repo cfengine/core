@@ -26,7 +26,7 @@
 #include <alloc.h>
 #include <string_lib.h>
 #include <misc_lib.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
 
@@ -47,7 +47,7 @@ static void LoggingInitializeOnce(void)
          * that nothing else will work. */
 
         fprintf(stderr, "Unable to initialize logging subsystem\n");
-        CallAtExitFunctionsAndExit(255);
+        DoCleanupAndExit(255);
     }
 }
 

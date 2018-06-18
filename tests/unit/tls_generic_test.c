@@ -1387,7 +1387,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    atexit(tests_teardown);
+    RegisterCleanupFunction(tests_teardown);
 
     const UnitTest tests[] =
     {
@@ -1396,5 +1396,5 @@ int main()
         unit_test(test_TLSBasicIO)
     };
 
-    return run_tests(tests);
+    DoCleanupAndExit(tests);
 }

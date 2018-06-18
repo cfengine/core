@@ -37,7 +37,7 @@
 #include <timeout.h>
 #include <time_classes.h>
 #include <loading.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 typedef enum
 {

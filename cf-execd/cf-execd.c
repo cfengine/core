@@ -38,7 +38,7 @@
 #include <time_classes.h>
 #include <loading.h>
 #include <printsize.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 #include <cf-windows-functions.h>
 
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
-        CallAtExitFunctionsAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     GenericAgentPostLoadInit(ctx);
@@ -264,7 +264,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteVersion(w);
             FileWriterDetach(w);
         }
-        CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'h':
         {
@@ -272,7 +272,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
-        CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
         {
@@ -283,17 +283,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                          OPTIONS, HINTS,
                          true);
             FileWriterDetach(out);
-            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
         }
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            CallAtExitFunctionsAndExit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
-                CallAtExitFunctionsAndExit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -307,7 +307,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
             FileWriterDetach(w);
         }
-        CallAtExitFunctionsAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
 
         }
     }
@@ -315,7 +315,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
-        CallAtExitFunctionsAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     return config;

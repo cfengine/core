@@ -24,65 +24,52 @@
 
 #include <platform.h>
 #include <alloc.h>
-#include <atexit.h>
+#include <cleanup.h>
 
-//#if defined(__MINGW32__)
-
-typedef struct AtExitList
+typedef struct CleanupList
 {
-    AtExitFn fn;
-    struct AtExitList *next;
-} AtExitList;
+    CleanupFn fn;
+    struct CleanupList *next;
+} CleanupList;
 
-static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
-static AtExitList *atexit_functions;
+static pthread_mutex_t cleanup_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
+static CleanupList *cleanup_functions;
 
 /* To be called externally only by Windows binaries */
-void CallAtExitFunctions(void)
+void CallCleanupFunctions(void)
 {
-    pthread_mutex_lock(&atexit_functions_mutex);
+    pthread_mutex_lock(&cleanup_functions_mutex);
 
-    AtExitList *p = atexit_functions;
+    CleanupList *p = cleanup_functions;
     while (p)
     {
-        AtExitList *cur = p;
+        CleanupList *cur = p;
         (cur->fn)();
         p = cur->next;
         free(cur);
     }
 
-    atexit_functions = NULL;
+    cleanup_functions = NULL;
 
-    pthread_mutex_unlock(&atexit_functions_mutex);
+    pthread_mutex_unlock(&cleanup_functions_mutex);
 }
-//#endif
 
-void CallAtExitFunctionsAndExit(int ret)
+void DoCleanupAndExit(int ret)
 {
-//#if defined(__MINGW32__)
-    CallAtExitFunctions();
-//#endif
+    CallCleanupFunctions();
     exit(ret);
 }
 
-void RegisterAtExitFunction(AtExitFn fn)
+void RegisterCleanupFunction(CleanupFn fn)
 {
-//#if defined(__MINGW32__)
-    pthread_mutex_lock(&atexit_functions_mutex);
+    pthread_mutex_lock(&cleanup_functions_mutex);
 
-    AtExitList *p = xmalloc(sizeof(AtExitList));
+    CleanupList *p = xmalloc(sizeof(CleanupList));
     p->fn = fn;
-    p->next = atexit_functions;
+    p->next = cleanup_functions;
 
-    atexit_functions = p;
+    cleanup_functions = p;
 
-    pthread_mutex_unlock(&atexit_functions_mutex);
-/*
- *  Don't register atexit() functions on windows due to race conditions 
- *  around lock cleanup.
- */
-//#else 
-//    atexit(fn);
-//#endif
+    pthread_mutex_unlock(&cleanup_functions_mutex);
 }
 

@@ -25,7 +25,7 @@
 #define ALLOC_IMPL
 #include <platform.h>
 #include <alloc.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 static void *CheckResult(void *ptr, const char *fn, bool check_result)
 {
@@ -33,7 +33,7 @@ static void *CheckResult(void *ptr, const char *fn, bool check_result)
     {
         fputs(fn, stderr);
         fputs("CRITICAL: Unable to allocate memory\n", stderr);
-        CallAtExitFunctionsAndExit(255);
+        DoCleanupAndExit(255);
     }
     return ptr;
 }

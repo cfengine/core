@@ -30,7 +30,7 @@
 #include <server_transform.h>
 #include <known_dirs.h>
 #include <loading.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 
 static void ThisAgentInit(void)
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
-        CallAtExitFunctionsAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     GenericAgentPostLoadInit(ctx);

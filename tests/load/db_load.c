@@ -207,7 +207,7 @@ int main(int argc, char **argv)
     }
 
     /* To clean up after databases are closed */
-    atexit(&Cleanup);
+    RegisterCleanupFunction(&Cleanup);
 
     tests_setup();
 
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
 
     int failures = WriteReturnValues(retvals, tids, numthreads);
 
-    exit(failures);
+    DoCleanupAndExit(failures);
 }
 
 

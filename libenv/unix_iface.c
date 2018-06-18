@@ -34,7 +34,7 @@
 #include <files_interfaces.h>
 #include <files_names.h>
 #include <known_dirs.h>
-#include <atexit.h>
+#include <cleanup.h>
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>
@@ -344,7 +344,7 @@ void GetInterfacesInfo(EvalContext *ctx)
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open socket. (socket: %s)", GetErrorStr());
-        CallAtExitFunctionsAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     list.ifc_len = sizeof(ifbuf);
@@ -366,7 +366,7 @@ void GetInterfacesInfo(EvalContext *ctx)
             GetErrorStr());
 // TODO do we really want to exit here? cf-execd, cf-monitord, cf-serverd and
 // maybe cf-agent all depend on DetectEnvironment so probably shouldn't just bomb.
-        CallAtExitFunctionsAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     if (list.ifc_len < (int) sizeof(struct ifreq))

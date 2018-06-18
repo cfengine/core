@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <cf3.defs.h>
 #include <known_dirs.h>
+#include <cleanup.h>
 
 #include <dbm_api.h>
 

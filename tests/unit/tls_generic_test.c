@@ -1397,5 +1397,6 @@ int main()
         unit_test(test_TLSBasicIO)
     };
 
-    DoCleanupAndExit(tests);
+    int result = run_tests(tests);
+    DoCleanupAndExit(result);
 }

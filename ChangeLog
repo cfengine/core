@@ -91,6 +91,7 @@
 	  be blocked. However, using a dot-separated common prefix for
 	  variables raises no security concerns and can be considered
 	  valid. (CFE-1915)
+	- Classes failsafe_fallback and bootstrap_mode are now reported by default
 
 	Bug fixes:
 	- Disallow modifications of variables from a remote bundle (CFE-1915)
@@ -119,6 +120,9 @@
 	  (ENT-3800)
 	- We must start on line position is 1 instead of 0 to support the @if
 	  macros on line 1 in a file. (CFE-2817)
+	- Do not iterate over JSON objects' properties in mustache (CFE-2125)
+	- Bundle name is now part of the log message when aborting a bundle
+	  (CFE-2793)
 
 
 3.11.0:

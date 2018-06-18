@@ -507,6 +507,10 @@ cf_stop_core_daemons()
             FORCE_KILL=1
         fi
 
+        # First stop any agents running because they may start the daemons we
+        # will be stopping behind our back.
+        cf_stop_agents && any_process_present=1
+
         # shutdown cf-execd
         if [ "$RUN_CF_EXECD" = "1" ]; then
             cf_stop_daemon "$CFEXECD" && any_process_present=1

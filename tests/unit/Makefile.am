@@ -385,7 +385,7 @@ if !XNU
 check_PROGRAMS += tls_generic_test
 tls_generic_test_SOURCES = tls_generic_test.c
 tls_generic_test_LDADD = ../../libcfnet/libcfnet.la \
-	../../cf-serverd/libcf-serverd.la \ ../../libutils/libutils.la \
+	../../cf-serverd/libcf-serverd.la ../../libutils/libutils.la \
 	../../libpromises/libpromises.la libtest.la 
 endif
 

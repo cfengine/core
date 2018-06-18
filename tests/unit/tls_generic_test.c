@@ -21,6 +21,7 @@
 #include <tls_client.h>
 #include <connection_info.h>
 #include <known_dirs.h>
+#include <cleanup.h>
 
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL;

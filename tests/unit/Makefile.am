@@ -83,7 +83,7 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
 	../../libutils/logging.c \
-	../../libutils/atexit.c
+	../../libutils/cleanup.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
@@ -95,7 +95,7 @@ libdb_la_CFLAGS = $(AM_CFLAGS)
 check_PROGRAMS = \
 	arg_split_test \
 	assoc_test \
-	atexit_test \
+	cleanup_test \
 	csv_writer_test \
 	item_test \
 	rlist_test \
@@ -207,8 +207,8 @@ endif
 #
 TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 
-atexit_test_SOURCES = atexit_test.c
-atexit_test_LDADD = libdb.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
+cleanup_test_SOURCES = cleanup_test.c
+cleanup_test_LDADD = libdb.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 csv_writer_test_SOURCES = csv_writer_test.c ../../libutils/csv_writer.c
 csv_writer_test_LDADD = libstr.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la

@@ -321,8 +321,9 @@ cf_stop_daemon()
             signal=KILL
         fi
 
-        if [ $iter -gt 2 ]; then
-            # If we failed at first, give things time to settle.
+        if [ $iter -ge 2 ]; then
+            # Give the daemon some time to do its cleanup and actually
+            # terminate.
             sleep 2
         fi
 
@@ -493,8 +494,8 @@ cf_stop_core_daemons()
     while [ $iter -le $STOP_ATTEMPTS ]; do
         local any_process_present=0
 
-        if [ $iter -gt 2 ]; then
-            # If we failed at first, give things time to settle.
+        if [ $iter -ge 2 ]; then
+            # Let's wait a bit before the second attempt.
             sleep 2
         fi
 

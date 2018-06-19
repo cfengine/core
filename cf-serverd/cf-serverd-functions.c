@@ -49,7 +49,7 @@
 #include <printsize.h>
 
 
-static const size_t QUEUESIZE = 50;
+static const size_t QUEUESIZE = 128;
 int NO_FORK = false; /* GLOBAL_A */
 
 /*******************************************************************/

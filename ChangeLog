@@ -1,4 +1,4 @@
-3.12.0b1:
+3.12.0:
 	New Features:
 	- Add a --key-type option to specify RSA key size to cf-key
 	- New hash_to_int policy function (CFE-2733)
@@ -12,6 +12,15 @@
 	- New component cf-net (cf-net is a CLI for the CFEngine network protocol,
 	  useful for debugging, testing etc) and accompanying policy variable
 	  sys.cf_net containing path to cf-net binary
+	- Added --log-level option to all components
+	  This allows you to specify any log level (info, verbose, debug etc.).
+	  It is also less strict, allowing different spelling. As an example,
+	  --log-level i, --log-level INFO, --log-level inform are all the same.
+	- Added special behavior for bundles named __main__
+	  If the bundle is defined in the entry policy it will be defined as main.
+	  If the bundle is defined elsewhere, it will be removed.
+	  This makes it easy to make importable library policy which can also
+	  be executed directly.
 
 	Changes:
 	- Load augments at the end of context discovery
@@ -60,6 +69,29 @@
 	  if the chmod call fails.
 	- Properly reverse-resolve DNS names longer than 63 chars (ENT-3379)
 	- Properly redirect init script to systemd on debian systems (ENT-3326)
+	- os-release file is now used for hard classes and sys.flavor on all linuxes
+	  This will improve platform detection on newer operating systems where
+	  /etc/os-release (or /usr/lib/os-release) is present.
+	  A hard class will be set for the value of the ID key (canonified with
+	  underscores), if it exists. If both ID and VERSION_ID exist, multiple
+	  hard classes will be set for all parts of the version number. The
+	  special variable sys.flavor will also be set by determining major
+	  version from VERSION_ID.
+	  Example os-release file:
+	  	ID=coreos
+	  	VERSION_ID=1185.3.0
+	  For the example above, `sys.flavor` will be `coreos_1185` and 4 hard
+	  classes will be set; `coreos_1185_3_0`, `coreos_1185_3`, `coreos_1185`,
+	  and `coreos`.
+	  For backwards compatibility, older distribution specific logic is still
+	  executed and may overwrite sys.flavor and define hard classes as before.
+	- Allow dots in variable identifiers with no such bundle
+	  As described and discussed, defining remote variables
+	  (injecting variables into remote bundles) is dangerous and must
+	  be blocked. However, using a dot-separated common prefix for
+	  variables raises no security concerns and can be considered
+	  valid. (CFE-1915)
+	- Classes failsafe_fallback and bootstrap_mode are now reported by default
 
 	Bug fixes:
 	- Disallow modifications of variables from a remote bundle (CFE-1915)
@@ -84,6 +116,13 @@
 	- Fix mergedata segfault when called on a non-container (CFE-2704)
 	- Do not segfault if policy_server.dat only contains whitespaces and/or line breaks
 	- Fix segfault on JSON policy files with no bundles and bodies (CFE-2754)
+	- Prevent systemv script from managing processes inside other containers
+	  (ENT-3800)
+	- We must start on line position 1 instead of 0 to support the @if
+	  macros on line 1 in a file. (CFE-2817)
+	- Do not iterate over JSON objects' properties in mustache (CFE-2125)
+	- Bundle name is now part of the log message when aborting a bundle
+	  (CFE-2793)
 
 
 3.11.0:

@@ -118,7 +118,7 @@
 	- Fix segfault on JSON policy files with no bundles and bodies (CFE-2754)
 	- Prevent systemv script from managing processes inside other containers
 	  (ENT-3800)
-	- We must start on line position is 1 instead of 0 to support the @if
+	- We must start on line position 1 instead of 0 to support the @if
 	  macros on line 1 in a file. (CFE-2817)
 	- Do not iterate over JSON objects' properties in mustache (CFE-2125)
 	- Bundle name is now part of the log message when aborting a bundle

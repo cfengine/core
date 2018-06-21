@@ -1,0 +1,6 @@
+{
+    "augments": [ "$(sys.inputdir)/augmenter.json" ],
+    "vars": {
+        "test_var" : "defined in vars"
+    }
+}

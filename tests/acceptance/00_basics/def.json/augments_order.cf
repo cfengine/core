@@ -1,0 +1,38 @@
+# test that 'augments' in def.json are applied last
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2844" }
+        string => "'augments' in def.json should be applied last and thus override values of variables from 'vars'";
+
+  methods:
+      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '
+body common control
+{
+    inputs => { "@(def.inputs)" };
+}
+');
+
+      "" usebundle => file_copy("$(this.promise_filename).augmenter.json", "$(sys.inputdir)/augmenter.json");
+      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)/def.json");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_promises) --show-vars -f $(sys.inputdir)/promises.cf|$(G.grep) test_var";
+
+  methods:
+      "" usebundle => dcs_passif_output("default:def.test_var\s+\{\"defined in augments.vars\"\}\s+source=augments_file", "", $(command), $(this.promise_filename));
+}

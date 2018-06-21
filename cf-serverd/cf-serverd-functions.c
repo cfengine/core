@@ -45,13 +45,17 @@
 #include <sysinfo.h>
 #include <time_classes.h>
 #include <connection_info.h>
+#include <string_lib.h>
 #include <file_lib.h>
 #include <loading.h>
 #include <printsize.h>
 
 #define WAIT_INCOMING_TIMEOUT 10
 
-static const size_t QUEUESIZE = 50;
+/* see man:listen(3) */
+#define DEFAULT_LISTEN_QUEUE_SIZE 128
+#define MAX_LISTEN_QUEUE_SIZE 2048
+
 int NO_FORK = false; /* GLOBAL_A */
 
 /*******************************************************************/
@@ -684,6 +688,26 @@ static void AcceptAndHandle(EvalContext *ctx, int sd)
     ServerEntryPoint(ctx, MapAddress(ipaddr), info);
 }
 
+static size_t GetListenQueueSize(void)
+{
+    const char *const queue_size_var = getenv("CF_SERVERD_LISTEN_QUEUE_SIZE");
+    if (queue_size_var != NULL)
+    {
+        long queue_size;
+        int ret = StringToLong(queue_size_var, &queue_size);
+        if ((ret == 0) && (queue_size > 0) && (queue_size <= MAX_LISTEN_QUEUE_SIZE))
+        {
+            return (size_t) queue_size;
+        }
+        Log(LOG_LEVEL_WARNING,
+            "$CF_SERVERD_LISTEN_QUEUE_SIZE = '%s' doesn't specify a valid number for listen queue size, "
+            "falling back to default (%d).",
+            queue_size_var, DEFAULT_LISTEN_QUEUE_SIZE);
+    }
+
+    return DEFAULT_LISTEN_QUEUE_SIZE;
+}
+
 /**
  *  @retval >0 Number of threads still working
  *  @retval 0  All threads are done
@@ -699,7 +723,8 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         return -1;
     }
 
-    int sd = SetServerListenState(ctx, QUEUESIZE, NULL, SERVER_LISTEN, &InitServer);
+    size_t queue_size = GetListenQueueSize();
+    int sd = SetServerListenState(ctx, queue_size, NULL, SERVER_LISTEN, &InitServer);
 
     /* Necessary for our use of select() to work in WaitForIncoming(): */
     assert(sd < sizeof(fd_set) * CHAR_BIT &&

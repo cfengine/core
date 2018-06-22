@@ -1,0 +1,5 @@
+{
+    "vars" : {
+        "test_var": [ "defined in augments.vars" ]
+    }
+}

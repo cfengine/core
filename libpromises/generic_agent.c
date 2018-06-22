@@ -220,183 +220,194 @@ bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement*
         const char *key;
         while ((key = JsonIteratorNextKey(&iter)))
         {
-            if (strcmp("vars", key) == 0)
+            if (!(StringSafeEqual(key, "vars") ||
+                  StringSafeEqual(key, "classes") ||
+                  StringSafeEqual(key, "inputs") ||
+                  StringSafeEqual(key, "augments")))
             {
-                // load variables
-                JsonElement* vars = JsonExpandElement(ctx, JsonObjectGet(augment, key));
-
-                if (vars == NULL ||
-                    JsonGetElementType(vars) != JSON_ELEMENT_TYPE_CONTAINER ||
-                    JsonGetContainerType(vars) != JSON_CONTAINER_TYPE_OBJECT)
-                {
-                    Log(LOG_LEVEL_ERR, "Invalid augments vars in '%s', must be a JSON object", filename);
-                    goto vars_cleanup;
-                }
-
-                JsonIterator iter = JsonIteratorInit(vars);
-                const char *vkey;
-                while ((vkey = JsonIteratorNextKey(&iter)))
-                {
-                    JsonElement *data = JsonObjectGet(vars, vkey);
-                    if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
-                    {
-                        char *value = JsonPrimitiveToString(data);
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
-                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
-                        free(value);
-                    }
-                    else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
-                             JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
-                             JsonArrayContainsOnlyPrimitives(data))
-                    {
-                        // map to slist if the data only has primitives
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                      vkey, RlistFromContainer(data),
-                                                      CF_DATA_TYPE_STRING_LIST,
-                                                      "source=augments_file");
-                    }
-                    else // install as a data container
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
-                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                      vkey, data,
-                                                      CF_DATA_TYPE_CONTAINER,
-                                                      "source=augments_file");
-                    }
-                }
-
-              vars_cleanup:
-                JsonDestroy(vars);
+                Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
+                    key, filename);
             }
-            else if (strcmp("classes", key) == 0)
+        }
+
+        /* load variables (if any) */
+        JsonElement *element = JsonObjectGet(augment, "vars");
+        if (element != NULL)
+        {
+            JsonElement* vars = JsonExpandElement(ctx, element);
+
+            if (vars == NULL ||
+                JsonGetElementType(vars) != JSON_ELEMENT_TYPE_CONTAINER ||
+                JsonGetContainerType(vars) != JSON_CONTAINER_TYPE_OBJECT)
             {
-                // load classes
-                JsonElement* classes = JsonExpandElement(ctx, JsonObjectGet(augment, key));
+                Log(LOG_LEVEL_ERR, "Invalid augments vars in '%s', must be a JSON object", filename);
+                goto vars_cleanup;
+            }
 
-                if (JsonGetElementType(classes) != JSON_ELEMENT_TYPE_CONTAINER ||
-                    JsonGetContainerType(classes) != JSON_CONTAINER_TYPE_OBJECT)
+            JsonIterator iter = JsonIteratorInit(vars);
+            const char *vkey;
+            while ((vkey = JsonIteratorNextKey(&iter)))
+            {
+                JsonElement *data = JsonObjectGet(vars, vkey);
+                if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
-                    Log(LOG_LEVEL_ERR, "Invalid augments classes in '%s', must be a JSON object", filename);
-                    goto classes_cleanup;
+                    char *value = JsonPrimitiveToString(data);
+                    Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
+                        SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
+                    free(value);
                 }
-
-                const char tags[] = "source=augments_file";
-                JsonIterator iter = JsonIteratorInit(classes);
-                const char *ckey;
-                while ((ckey = JsonIteratorNextKey(&iter)))
+                else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
+                         JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
+                         JsonArrayContainsOnlyPrimitives(data))
                 {
-                    JsonElement *data = JsonObjectGet(classes, ckey);
-                    if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                    // map to slist if the data only has primitives
+                    Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
+                        SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                  vkey, RlistFromContainer(data),
+                                                  CF_DATA_TYPE_STRING_LIST,
+                                                  "source=augments_file");
+                }
+                else // install as a data container
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
+                        SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                  vkey, data,
+                                                  CF_DATA_TYPE_CONTAINER,
+                                                  "source=augments_file");
+                }
+            }
+
+          vars_cleanup:
+            JsonDestroy(vars);
+        }
+
+        /* load classes (if any) */
+        element = JsonObjectGet(augment, "classes");
+        if (element != NULL)
+        {
+            JsonElement* classes = JsonExpandElement(ctx, element);
+
+            if (JsonGetElementType(classes) != JSON_ELEMENT_TYPE_CONTAINER ||
+                JsonGetContainerType(classes) != JSON_CONTAINER_TYPE_OBJECT)
+            {
+                Log(LOG_LEVEL_ERR, "Invalid augments classes in '%s', must be a JSON object", filename);
+                goto classes_cleanup;
+            }
+
+            const char tags[] = "source=augments_file";
+            JsonIterator iter = JsonIteratorInit(classes);
+            const char *ckey;
+            while ((ckey = JsonIteratorNextKey(&iter)))
+            {
+                JsonElement *data = JsonObjectGet(classes, ckey);
+                if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    char *check = JsonPrimitiveToString(data);
+                    // check if class is true
+                    if (CheckContextOrClassmatch(ctx, check))
                     {
-                        char *check = JsonPrimitiveToString(data);
-                        // check if class is true
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
+                            ckey, check, filename);
+                        EvalContextClassPutHard(ctx, ckey, tags);
+                    }
+                    free(check);
+                }
+                else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
+                         JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
+                         JsonArrayContainsOnlyPrimitives(data))
+                {
+                    // check if each class is true
+                    JsonIterator iter = JsonIteratorInit(data);
+                    const JsonElement *el;
+                    while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
+                    {
+                        char *check = JsonPrimitiveToString(el);
                         if (CheckContextOrClassmatch(ctx, check))
                         {
-                            Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
+                            Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
                                 ckey, check, filename);
                             EvalContextClassPutHard(ctx, ckey, tags);
+                            free(check);
+                            break;
                         }
+
                         free(check);
                     }
-                    else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
-                             JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
-                             JsonArrayContainsOnlyPrimitives(data))
-                    {
-                        // check if each class is true
-                        JsonIterator iter = JsonIteratorInit(data);
-                        const JsonElement *el;
-                        while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
-                        {
-                            char *check = JsonPrimitiveToString(el);
-                            if (CheckContextOrClassmatch(ctx, check))
-                            {
-                                Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
-                                    ckey, check, filename);
-                                EvalContextClassPutHard(ctx, ckey, tags);
-                                free(check);
-                                break;
-                            }
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s', must be a JSON object",
+                        ckey, filename);
+                }
+            }
 
-                            free(check);
-                        }
+          classes_cleanup:
+            JsonDestroy(classes);
+        }
+
+        /* load inputs (if any) */
+        element = JsonObjectGet(augment, "inputs");
+        if (element != NULL)
+        {
+            JsonElement* inputs = JsonExpandElement(ctx, element);
+
+            if (JsonGetElementType(inputs) == JSON_ELEMENT_TYPE_CONTAINER &&
+                JsonGetContainerType(inputs) == JSON_CONTAINER_TYPE_ARRAY &&
+                JsonArrayContainsOnlyPrimitives(inputs))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
+                    filename);
+                Rlist *rlist = RlistFromContainer(inputs);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                              "augments_inputs", rlist,
+                                              CF_DATA_TYPE_STRING_LIST,
+                                              "source=augments_file");
+                RlistDestroy(rlist);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
+                    filename);
+            }
+
+            JsonDestroy(inputs);
+        }
+
+        /* load further def.json files (if any) */
+        element = JsonObjectGet(augment, "augments");
+        if (element != NULL)
+        {
+            JsonElement* further_augments = element;
+            assert(further_augments != NULL);
+
+            if (JsonGetElementType(further_augments) == JSON_ELEMENT_TYPE_CONTAINER &&
+                JsonGetContainerType(further_augments) == JSON_CONTAINER_TYPE_ARRAY &&
+                JsonArrayContainsOnlyPrimitives(further_augments))
+            {
+                JsonIterator iter = JsonIteratorInit(further_augments);
+                const JsonElement *el;
+                while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)) != NULL)
+                {
+                    char *filename = JsonPrimitiveToString(el);
+                    bool further_loaded = LoadAugmentsFiles(ctx, filename);
+                    if (further_loaded)
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Completed augmenting from file '%s'", filename);
                     }
                     else
                     {
-                        Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s', must be a JSON object",
-                            ckey, filename);
+                        Log(LOG_LEVEL_ERR, "Could not load requested further augments from file '%s'", filename);
                     }
-                }
-
-              classes_cleanup:
-                JsonDestroy(classes);
-            }
-            else if (strcmp("inputs", key) == 0)
-            {
-                // load inputs
-                JsonElement* inputs = JsonExpandElement(ctx, JsonObjectGet(augment, key));
-
-                if (JsonGetElementType(inputs) == JSON_ELEMENT_TYPE_CONTAINER &&
-                    JsonGetContainerType(inputs) == JSON_CONTAINER_TYPE_ARRAY &&
-                    JsonArrayContainsOnlyPrimitives(inputs))
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
-                        filename);
-                    Rlist *rlist = RlistFromContainer(inputs);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                  "augments_inputs", rlist,
-                                                  CF_DATA_TYPE_STRING_LIST,
-                                                  "source=augments_file");
-                    RlistDestroy(rlist);
-                }
-                else
-                {
-                    Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
-                        filename);
-                }
-
-                JsonDestroy(inputs);
-            }
-            else if (strcmp("augments", key) == 0)
-            {
-                // load further def.json files
-                JsonElement* further_augments = JsonObjectGet(augment, key);
-                assert(further_augments != NULL);
-
-                if (JsonGetElementType(further_augments) == JSON_ELEMENT_TYPE_CONTAINER &&
-                    JsonGetContainerType(further_augments) == JSON_CONTAINER_TYPE_ARRAY &&
-                    JsonArrayContainsOnlyPrimitives(further_augments))
-                {
-                    JsonIterator iter = JsonIteratorInit(further_augments);
-                    const JsonElement *el;
-                    while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)) != NULL)
-                    {
-                        char *filename = JsonPrimitiveToString(el);
-                        bool further_loaded = LoadAugmentsFiles(ctx, filename);
-                        if (further_loaded)
-                        {
-                            Log(LOG_LEVEL_VERBOSE, "Completed augmenting from file '%s'", filename);
-                        }
-                        else
-                        {
-                            Log(LOG_LEVEL_ERR, "Could not load requested further augments from file '%s'", filename);
-                        }
-                        free(filename);
-                    }
-                }
-                else
-                {
-                    Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
-                        filename);
+                    free(filename);
                 }
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
-                    key, filename);
+                Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
+                    filename);
             }
         }
     }

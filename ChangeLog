@@ -92,6 +92,7 @@
 	  variables raises no security concerns and can be considered
 	  valid. (CFE-1915)
 	- Classes failsafe_fallback and bootstrap_mode are now reported by default
+	- Apply augments after vars, classes and inputs in def.json (CFE-2844)
 
 	Bug fixes:
 	- Disallow modifications of variables from a remote bundle (CFE-1915)

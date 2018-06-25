@@ -182,15 +182,15 @@ static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
 time_t FindLockTime(const char *name)
 {
     bool ret;
-    CF_DB *dbp;
-    LockData entry = {
-        .process_start_time = PROCESS_START_TIME_UNKNOWN,
-    };
-
-    if ((dbp = OpenLock()) == NULL)
+    CF_DB *dbp = OpenLock();
+    if (dbp == NULL)
     {
         return -1;
     }
+
+    LockData entry = {
+        .process_start_time = PROCESS_START_TIME_UNKNOWN,
+    };
 
 #ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
@@ -284,9 +284,8 @@ static void RemoveDates(char *s)
 
 static int RemoveLock(const char *name)
 {
-    CF_DB *dbp;
-
-    if ((dbp = OpenLock()) == NULL)
+    CF_DB *dbp = OpenLock();
+    if (dbp == NULL)
     {
         return -1;
     }
@@ -358,42 +357,6 @@ static time_t FindLock(char *last)
     else
     {
         return mtime;
-    }
-}
-
-static pid_t FindLockPid(char *name)
-{
-    bool ret;
-    CF_DB *dbp;
-    LockData entry = {
-        .process_start_time = PROCESS_START_TIME_UNKNOWN,
-    };
-
-    if ((dbp = OpenLock()) == NULL)
-    {
-        return -1;
-    }
-
-#ifdef LMDB
-    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
-    GenerateMd5Hash(name, ohash);
-
-    LOG_LOCK_ENTRY(name, ohash, &entry);
-    ret = ReadDB(dbp, ohash, &entry, sizeof(entry));
-    LOG_LOCK_EXIT(name, ohash, &entry);
-#else
-    ret = ReadDB(dbp, name, &entry, sizeof(entry));
-#endif
-
-    if (ret)
-    {
-        CloseLock(dbp);
-        return entry.pid;
-    }
-    else
-    {
-        CloseLock(dbp);
-        return -1;
     }
 }
 
@@ -506,7 +469,30 @@ static bool KillLockHolder(const char *lock)
 
     CloseLock(dbp);
 
-    return GracefulTerminate(lock_data.pid, lock_data.process_start_time);
+    if (GracefulTerminate(lock_data.pid, lock_data.process_start_time))
+    {
+        Log(LOG_LEVEL_INFO,
+            "Process with PID %jd successfully killed",
+            (intmax_t) lock_data.pid);
+        return true;
+    }
+    else
+    {
+        if (errno == ESRCH)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Process with PID %jd has already been killed",
+                (intmax_t) lock_data.pid);
+            return true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to kill process with PID %jd",
+                (intmax_t) lock_data.pid);
+            return false;
+        }
+    }
 }
 
 void PromiseRuntimeHash(const Promise *pp, const char *salt,
@@ -757,7 +743,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
         if (elapsedtime < tc.ifelapsed)
         {
             Log(LOG_LEVEL_VERBOSE,
-                "XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)",
+                "Nothing promised here [%.40s] (%jd/%u minutes elapsed)",
                 cflast, (intmax_t) elapsedtime, tc.ifelapsed);
             ReleaseCriticalSection(CF_CRITIAL_SECTION);
             return CfLockNull();
@@ -1043,8 +1029,7 @@ void PurgeLocks(void)
     time_t now = time(NULL);
 
     CF_DB *dbp = OpenLock();
-
-    if(!dbp)
+    if (dbp == NULL)
     {
         return;
     }
@@ -1108,15 +1093,14 @@ void PurgeLocks(void)
 
 int WriteLock(const char *name)
 {
-    CF_DB *dbp;
+    CF_DB *dbp = OpenLock();
 
-    ThreadLock(cft_lock);
-    if ((dbp = OpenLock()) == NULL)
+    if (dbp == NULL)
     {
-        ThreadUnlock(cft_lock);
         return -1;
     }
 
+    ThreadLock(cft_lock);
     WriteLockDataCurrent(dbp, name);
 
     CloseLock(dbp);

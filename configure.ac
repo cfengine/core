@@ -218,8 +218,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     PIDDIR="${localstatedir}/${PACKAGE}"
     STATEDIR="default"
   fi
-
-  bindir='${exec_prefix}/bin'
+  bindir="${bindir:-${exec_prefix}/bin}"
   projlibdir='${libdir}'
 ])
 

@@ -859,21 +859,21 @@ static bool WriteReleaseIdFile(const char *filename, const char *dirname)
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 {
     char cmd[CF_BUFSIZE];
-    const char* const workdir = GetWorkDir();
+    const char* const bindir = GetBinDir();
 
     Log(LOG_LEVEL_VERBOSE, "Verifying the syntax of the inputs...");
     {
         char cfpromises[CF_MAXVARSIZE];
 
-        snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s",
-                 workdir, FILE_SEPARATOR, FILE_SEPARATOR, EXEC_SUFFIX);
+        snprintf(cfpromises, sizeof(cfpromises), "%s%ccf-promises%s",
+                 bindir, FILE_SEPARATOR, EXEC_SUFFIX);
 
         struct stat sb;
         if (stat(cfpromises, &sb) == -1)
         {
             Log(LOG_LEVEL_ERR,
-                "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
-                EXEC_SUFFIX, workdir, FILE_SEPARATOR);
+                "cf-promises%s needs to be installed in %s for pre-validation of full configuration",
+                EXEC_SUFFIX, bindir);
 
             return false;
         }
@@ -982,6 +982,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 /* Define trusted directories */
 
     const char *workdir = GetWorkDir();
+    const char *bindir = GetBinDir();
 
     if (!workdir)
     {
@@ -995,7 +996,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cupdate.conf", GetInputDir(), FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%ccf-agent", bindir, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
     snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);

@@ -426,6 +426,7 @@ static void GetNameInfo3(EvalContext *ctx)
     struct sockaddr_in cin;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     const char* const workdir = GetWorkDir();
+    const char* const bindir = GetBinDir();
 
 #ifdef _AIX
     char real_version[_SYS_NMLN];
@@ -589,7 +590,7 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), CF_DATA_TYPE_STRING, "source=agent");
 
-    snprintf(workbuf, CF_BUFSIZE, "%s%cbin", workdir, FILE_SEPARATOR);
+    snprintf(workbuf, CF_BUFSIZE, "%s", bindir);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", GetInputDir(), FILE_SEPARATOR);
@@ -626,16 +627,14 @@ static void GetNameInfo3(EvalContext *ctx)
         // twin has own dir, and is named agent
         if (i == 0)
         {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin-twin%ccf-agent.exe", workdir, FILE_SEPARATOR,
-                     FILE_SEPARATOR);
+            snprintf(name, CF_MAXVARSIZE - 1, "%s-twin%ccf-agent.exe", bindir, FILE_SEPARATOR);
         }
         else
         {
-            snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
-                     components[i]);
+            snprintf(name, CF_MAXVARSIZE - 1, "%s%c%s.exe", bindir, FILE_SEPARATOR, components[i]);
         }
 #else
-        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", workdir, FILE_SEPARATOR, FILE_SEPARATOR, components[i]);
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%c%s", bindir, FILE_SEPARATOR, components[i]);
 #endif
 
         have_component[i] = false;
@@ -657,10 +656,10 @@ static void GetNameInfo3(EvalContext *ctx)
         snprintf(shortname, CF_MAXVARSIZE - 1, "%s", CanonifyName(components[0]));
 
 #if defined(_WIN32)
-        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s.exe", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%c%s.exe", bindir, FILE_SEPARATOR,
                  components[1]);
 #else
-        snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", workdir, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
+        snprintf(name, CF_MAXVARSIZE - 1, "%s%c%s", bindir, FILE_SEPARATOR, components[1]);
 #endif
 
         if (stat(name, &sb) != -1)

@@ -28,6 +28,8 @@
 
 #include <cf-windows-functions.h>
 
+static char OVERRIDE_BINDIR[PATH_MAX] = {0};
+
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
 #define GET_DEFAULT_DIRECTORY_DEFINE(FUNC, GLOBAL)  \
@@ -39,7 +41,7 @@ static const char *GetDefault##FUNC##Dir(void)      \
 /* getpwuid() on Android returns /data,
  * so use compile-time default instead */
 GET_DEFAULT_DIRECTORY_DEFINE(Work, WORKDIR)
-
+GET_DEFAULT_DIRECTORY_DEFINE(Bin, BINDIR)
 GET_DEFAULT_DIRECTORY_DEFINE(Log, LOGDIR)
 GET_DEFAULT_DIRECTORY_DEFINE(Pid, PIDDIR)
 GET_DEFAULT_DIRECTORY_DEFINE(Input, INPUTDIR)
@@ -89,6 +91,7 @@ const char *GetDefault##FUNC##Dir(void)                             \
 }                                                                   \
 
 GET_DEFAULT_DIRECTORY_DEFINE(Work, work, WORKDIR, NULL)
+GET_DEFAULT_DIRECTORY_DEFINE(Bin, bin, BINDIR, "bin")
 GET_DEFAULT_DIRECTORY_DEFINE(Log, log, LOGDIR, "log")
 GET_DEFAULT_DIRECTORY_DEFINE(Pid, pid, PIDDIR, NULL)
 GET_DEFAULT_DIRECTORY_DEFINE(Master, master, MASTERDIR, "masterfiles")
@@ -102,6 +105,21 @@ const char *GetWorkDir(void)
     const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return workdir == NULL ? GetDefaultWorkDir() : workdir;
+}
+
+const char *GetBinDir(void)
+{
+    const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+
+    if (workdir == NULL)
+    {
+        return GetDefaultBinDir();
+    }
+    else
+    {
+        snprintf(OVERRIDE_BINDIR, PATH_MAX, "%s%cbin", workdir, FILE_SEPARATOR);
+        return OVERRIDE_BINDIR;
+    }
 }
 
 const char *GetLogDir(void)

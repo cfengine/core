@@ -507,8 +507,8 @@ static bool LocalExecInThread(const ExecConfig *config)
 static void Apoptosis(void)
 {
     char promiser_buf[CF_SMALLBUF];
-    snprintf(promiser_buf, sizeof(promiser_buf), "%s%cbin%ccf-execd",
-             GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(promiser_buf, sizeof(promiser_buf), "%s%ccf-execd",
+             GetBinDir(), FILE_SEPARATOR);
 
     if (LoadProcessTable())
     {

@@ -23,10 +23,10 @@ then
     # On osx the default gcc is actually LLVM
     export CC=gcc-7
     NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --prefix=$INSTDIR --with-init-script --with-lmdb=/usr/local/Cellar/lmdb  --with-openssl=/usr/local/opt/openssl
+    ./configure --enable-debug --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin --with-init-script --with-lmdb=/usr/local/Cellar/lmdb  --with-openssl=/usr/local/opt/openssl
 else
     NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-init-script \
+    ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin --with-init-script \
         `[ "x$COVERAGE" != xno ] && echo --enable-coverage`
 fi
 

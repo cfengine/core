@@ -1,13 +1,13 @@
 [Unit]
 Description=CFEngine Enterprise Execution Scheduler
 After=syslog.target
-ConditionPathExists=@workdir@/bin/cf-execd
+ConditionPathExists=@bindir@/cf-execd
 ConditionPathExists=@workdir@/inputs/promises.cf
 PartOf=cfengine3.service
 
 [Service]
 Type=simple
-ExecStart=@workdir@/bin/cf-execd --no-fork
+ExecStart=@bindir@/cf-execd --no-fork
 Restart=always
 RestartSec=10
 KillMode=process

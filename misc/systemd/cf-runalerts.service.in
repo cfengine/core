@@ -1,7 +1,7 @@
 [Unit]
 Description=CFEngine Enterprise SQL Alerts
 After=syslog.target
-ConditionPathExists=@workdir@/bin/runalerts.php
+ConditionPathExists=@bindir@/runalerts.php
 ConditionFileIsExecutable=@workdir@/httpd/php/bin/php
 
 PartOf=cfengine3.service

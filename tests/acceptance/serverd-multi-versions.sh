@@ -49,7 +49,9 @@ function install(){
     rm -rf "$1"
     if test -z "$2"
     then
-        make install prefix=$PWD/$1/var/cfengine 2>&1 >/dev/null
+        ./configure --enable-debug --with-tokyocabinet --with-init-script --prefix=$PWD/$1/var/cfengine >/dev/null 2>&1
+        make >/dev/null 2>&1
+        make install >/dev/null 2>&1
     else
         test ! -z "$3" -a ! -f "$2" && wget "$3" -O "$2"
         dpkg -x "$2" "$1"

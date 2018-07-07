@@ -583,6 +583,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         struct stat statbuf;
         if (stat(file, &statbuf) == -1)
         {
+            Log(LOG_LEVEL_ERR, "Mail report: failed to stat file '%s' [errno: %d]", file, errno);
             return;
         }
 

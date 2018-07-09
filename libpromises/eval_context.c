@@ -541,6 +541,7 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
 {
     assert(tags);
 
+
     time_t now = time(NULL);
 
     CF_DB *dbp;
@@ -553,9 +554,15 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
         return;
     }
 
+    Log(LOG_LEVEL_DEBUG, "Saving persistent class. name is '%s', ttl_minutes is %d",
+        name, ttl_minutes);
+
     ClassRef ref = IDRefQualify(ctx, name);
     char *key = ClassRefToString(ref.ns, ref.name);
     ClassRefDestroy(ref);
+
+    Log(LOG_LEVEL_DEBUG, "Found key '%s' for persistent class name '%s'",
+        key, name);
     
     size_t tags_length = strlen(tags) + 1;
     size_t new_info_size = sizeof(PersistentClassInfo) + tags_length;

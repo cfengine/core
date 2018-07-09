@@ -541,7 +541,6 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
 {
     assert(tags);
 
-
     time_t now = time(NULL);
 
     CF_DB *dbp;
@@ -657,7 +656,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
     while (NextDB(dbcp, (char **)&key, &key_size, &info_p, &info_size))
     {
-//        Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
+        Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
 
         /* Info points to db-owned data, which is not aligned properly and
          * dereferencing might be slow or even cause SIGBUS! */
@@ -680,7 +679,7 @@ Log(LOG_LEVEL_DEBUG, "Persistent class '%s', expires '%d', now '%d'", key, info.
 
         if (now > info.expires)
         {
-            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' expired", key);
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' expired. Deleting.", key);
             DBCursorDeleteEntry(dbcp);
         }
         else

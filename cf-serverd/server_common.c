@@ -120,6 +120,8 @@ Item *ListPersistentClasses()
     Item *persistent_classes = NULL;
     while (NextDB(dbcp, &key, &ksize, (void **)&value, &vsize))
     {
+PersistentClassInfo info = { 0 };
+memcpy(&info, value, vsize < sizeof(info) ? vsize : sizeof(info));
 Log(LOG_LEVEL_DEBUG, "Persistent class '%s', expires '%d', now '%d', expires in %jd more seconds", key, info.expires, now, (intmax_t) (info.expires - now));
 
         if (now > info.expires)

@@ -47,6 +47,7 @@
 #include <cf-monitord-enterprise-stubs.h>
 #include <unix_iface.h>
 #include <known_dirs.h>
+#include <cleanup.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -374,7 +375,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
     if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error reading average database");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
 /* Discard any apparently anomalous behaviour before renormalizing database */

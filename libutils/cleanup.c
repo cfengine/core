@@ -22,53 +22,54 @@
   included file COSL.txt.
 */
 
-
 #include <platform.h>
-
-#include <cf-serverd-functions.h>
-#include <cf-serverd-enterprise-stubs.h> /* CleanReportBookFilterSet() */
-#include <server_transform.h>
-#include <known_dirs.h>
-#include <loading.h>
+#include <alloc.h>
 #include <cleanup.h>
 
-
-static void ThisAgentInit(void)
+typedef struct CleanupList
 {
-    umask(077);
-}
+    CleanupFn fn;
+    struct CleanupList *next;
+} CleanupList;
 
+static pthread_mutex_t cleanup_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
+static CleanupList *cleanup_functions;
 
-int main(int argc, char *argv[])
+/* To be called externally only by Windows binaries */
+void CallCleanupFunctions(void)
 {
-    GenericAgentConfig *config = CheckOpts(argc, argv);
-    EvalContext *ctx = EvalContextNew();
-    GenericAgentConfigApply(ctx, config);
+    pthread_mutex_lock(&cleanup_functions_mutex);
 
-    GenericAgentDiscoverContext(ctx, config);
-
-    Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
-    
-    if (!policy)
+    CleanupList *p = cleanup_functions;
+    while (p)
     {
-        Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
-        DoCleanupAndExit(EXIT_FAILURE);
+        CleanupList *cur = p;
+        (cur->fn)();
+        p = cur->next;
+        free(cur);
     }
 
-    GenericAgentPostLoadInit(ctx);
-    ThisAgentInit();
+    cleanup_functions = NULL;
 
-    KeepPromises(ctx, policy, config);
-    Summarize();
-
-    int threads_left = StartServer(ctx, &policy, config);
-
-    if (threads_left <= 0)
-    {
-        PolicyDestroy(policy);
-        GenericAgentFinalize(ctx, config);
-        CleanReportBookFilterSet();
-    }
-
-    return 0;
+    pthread_mutex_unlock(&cleanup_functions_mutex);
 }
+
+void DoCleanupAndExit(int ret)
+{
+    CallCleanupFunctions();
+    exit(ret);
+}
+
+void RegisterCleanupFunction(CleanupFn fn)
+{
+    pthread_mutex_lock(&cleanup_functions_mutex);
+
+    CleanupList *p = xmalloc(sizeof(CleanupList));
+    p->fn = fn;
+    p->next = cleanup_functions;
+
+    cleanup_functions = p;
+
+    pthread_mutex_unlock(&cleanup_functions_mutex);
+}
+

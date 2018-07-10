@@ -253,6 +253,7 @@ cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-func
 
 ipaddress_test_SOURCES = ipaddress_test.c 
 
+#TODO remove this if tests pass
 #item_test_SOURCES = item_test.c
 
 protocol_test_SOURCES = protocol_test.c \
@@ -328,6 +329,7 @@ connection_management_test_SOURCES = connection_management_test.c ../../cf-serve
 connection_management_test_LDADD = ../../cf-serverd/libcf-serverd.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 rlist_test_SOURCES = rlist_test.c 
+# TODO remove this if tests pass
 #\
 #	../../libpromises/rlist.c
 # Workaround for object file basename conflicts, search the web for

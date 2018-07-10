@@ -39,7 +39,6 @@
 #include <misc_lib.h>
 #include <known_dirs.h>
 #include <sysinfo.h>
-#include <cleanup.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))

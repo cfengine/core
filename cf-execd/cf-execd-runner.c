@@ -58,10 +58,13 @@ static int Dialogue(int sd, const char *s);
 /******************************************************************************/
 
 # if defined(__MINGW32__)
+/* TODO is this really pthreads versus something else? */
 
 static void *ThreadUniqueName(void)
 {
-    return pthread_self().p;
+/*    return pthread_self().p; */
+/* so copy the other def for now as a workaround */
+    return (void *)pthread_self();
 }
 
 # else /* __MINGW32__ */

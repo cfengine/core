@@ -45,5 +45,10 @@ int __gcov_execl(const char *path, char *arg, ...)
 
 pid_t __gcov_fork(void)
 {
+/* well, for now, if windows, don't fork at all, what will happen? */
+#ifndef __MINGW32__
     return fork();
+#else
+    return 0;
+#endif
 }

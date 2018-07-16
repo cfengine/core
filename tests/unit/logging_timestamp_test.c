@@ -13,6 +13,7 @@ static void test_timestamp_regex(void)
     fflush(stderr);
     fflush(stdout);
     int pipe_fd[2];
+/* TODO maybe doesn't work on windows? disabling for now */
     assert_int_equal(pipe(pipe_fd), 0);
     // Duplicate stdout.
     int duplicate_stdout = dup(1);

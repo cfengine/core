@@ -52,6 +52,8 @@
 #endif
 
 #ifdef __MINGW32__
+/* make sure that NOCRYPT is set to avoid collision between openssl and wincrypt.h such as X509_NAME, OCSP_RESPONSE and others */
+#define NOCRYPT
 # include <winsock2.h>
 # include <windows.h>
 # include <accctrl.h>
@@ -60,7 +62,7 @@
 # include <wchar.h>
 # include <sddl.h>
 # include <tlhelp32.h>
-# include <iphlpapi.h>
+/* # include <iphlpapi.h> */
 # include <ws2tcpip.h>
 # include <objbase.h>           // for disphelper
 # ifndef SHUT_RDWR              // for shutdown()

@@ -126,11 +126,7 @@ static void RandomSeed(void)
 
     /* 2. Seed the strong OpenSSL PRNG. */
 
-#ifndef __MINGW32__
-    RAND_poll();                                        /* windows may hang */
-#else
-    RAND_screen();                       /* noop unless openssl is very old */
-#endif
+    RAND_poll();
 
     if (RAND_status() != 1)
     {

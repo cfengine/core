@@ -19,6 +19,9 @@ static struct hostent h = {
 
 #ifdef SOLARIS
 int gethostname(char *name, ARG_UNUSED int len)
+#elif defined __MINGW32__
+#include <winsock2.h>
+WINSOCK_API_LINKAGE int WSAAPI gethostname(char *name,int namelen)
 #else
 int gethostname(char *name, ARG_UNUSED size_t len)
 #endif

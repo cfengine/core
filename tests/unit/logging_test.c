@@ -11,7 +11,14 @@ char VPREFIX[CF_MAXVARSIZE];
 
 static struct sockaddr *got_address;
 
-#if SENDTO_RETURNS_SSIZE_T > 0
+#ifdef __MINGW32__
+#include <winsock2.h>
+WINSOCK_API_LINKAGE int WSAAPI sendto(SOCKET s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen)
+{
+    got_address = xmemdup(to, sizeof(struct sockaddr_in));
+    return len;
+}
+#elif SENDTO_RETURNS_SSIZE_T > 0
 ssize_t sendto(ARG_UNUSED int sockfd, ARG_UNUSED const void *buf,
                size_t len,
                ARG_UNUSED int flags,
@@ -40,6 +47,7 @@ int sendto(ARG_UNUSED int sockfd, ARG_UNUSED const void *buf,
 static void test_set_port(void)
 {
     SetSyslogPort(5678);
+/* TODO need to find a Windows alt for LOG_EMERG and maybe syslog as well? */
     RemoteSysLog(LOG_EMERG, "Test string");
 
     if (got_address->sa_family == AF_INET)

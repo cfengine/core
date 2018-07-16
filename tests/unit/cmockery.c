@@ -1683,7 +1683,7 @@ void vinit_xml (const char *const format, va_list args)
     vfprintf(xmlfile, format, args);
     fclose(xmlfile);
 #ifdef _WIN32
-    OutputDebugString(buffer);
+//    OutputDebugString(buffer);
 #endif // _WIN32
 }
 
@@ -1704,7 +1704,7 @@ void vprint_xml(const char *const format, va_list args)
     vfprintf(xmlfile, format, args);
     fclose(xmlfile);
 #ifdef _WIN32
-    OutputDebugString(buffer);
+//    OutputDebugString(buffer);
 #endif // _WIN32
 }
 
@@ -1744,7 +1744,7 @@ void vprint_message(const char *const format, va_list args)
 {
     vprintf(format, args);
 #ifdef _WIN32
-    OutputDebugString(buffer);
+//    OutputDebugString(buffer);
 #endif // _WIN32
 }
 
@@ -1752,7 +1752,7 @@ void vprint_error(const char *const format, va_list args)
 {
     vfprintf(stderr, format, args);
 #ifdef _WIN32
-    OutputDebugString(buffer);
+//    OutputDebugString(buffer);
 #endif // _WIN32
 }
 

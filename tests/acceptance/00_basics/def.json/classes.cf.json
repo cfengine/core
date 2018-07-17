@@ -3,6 +3,7 @@
  {
   "test_class_29665402e2b4331f10b8d767b512cd916eeb5db9": [ "one", "of", "these", "matches_classmatch", "any" ],
   "test_class_29665402e2b4331f10b8d767b512cd916eeb5db9_2": [ "cfengine" ],
-  "my_other_example": [ "server[34]", "debian.*" ],
+  "test_class_cfengine_and_cfengine_version": [ "cfengine.cfengine_3" ],
+  "my_other_example": [ "server[34]", "debian.*" ]
  }
 }

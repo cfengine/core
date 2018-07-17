@@ -23,5 +23,5 @@ bundle agent check
     "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf|$(G.grep) test_class";
 
   methods:
-      "" usebundle => dcs_passif_output("test_class_29665402e2b4331f10b8d767b512cd916eeb5db9\s+source=augments_file,hardclass.+test_class_29665402e2b4331f10b8d767b512cd916eeb5db9_2\s+source=augments_file,hardclass", "", $(command), $(this.promise_filename));
+      "" usebundle => dcs_passif_output("test_class_29665402e2b4331f10b8d767b512cd916eeb5db9\s+source=augments_file,hardclass.+test_class_29665402e2b4331f10b8d767b512cd916eeb5db9_2\s+source=augments_file,hardclass", "test_class_cfengine_and_cfengine_version\s+source=augments_file,hardclass", $(command), $(this.promise_filename));
 }

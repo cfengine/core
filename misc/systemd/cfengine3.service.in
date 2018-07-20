@@ -1,6 +1,6 @@
 [Unit]
 Description=CFEngine 3 umbrella service
-Documentation=https://docs.cfengine.com/
+Documentation=https://docs.cfengine.com/ https://tracker.mender.io
 After=syslog.target
 
 # Try to start all the sub-services. 'Wants' is fault-tolerant so if some are

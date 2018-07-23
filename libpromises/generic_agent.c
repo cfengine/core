@@ -169,7 +169,7 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
     return policy;
 }
 
-bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
+static bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
 {
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
     StringSet *global_matches = ClassesMatching(ctx, iter, c, NULL, true); // returns early
@@ -197,7 +197,7 @@ bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
     return IsDefinedClass(ctx, c);
 }
 
-void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const JsonElement* augment)
+static void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const JsonElement* augment)
 {
     if (JsonGetElementType(augment) != JSON_ELEMENT_TYPE_CONTAINER ||
         JsonGetContainerType(augment) != JSON_CONTAINER_TYPE_OBJECT)
@@ -361,7 +361,7 @@ void LoadAugmentsData(EvalContext *ctx, const Buffer* filename_buffer, const Jso
     }
 }
 
-void LoadAugmentsFiles(EvalContext *ctx, const char* filename)
+static void LoadAugmentsFiles(EvalContext *ctx, const char* filename)
 {
     Buffer *filebuf = BufferNewFrom(filename, strlen(filename));
     Buffer *expbuf = BufferNew();

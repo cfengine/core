@@ -87,7 +87,7 @@ static char* ReadReleaseIdFromReleaseIdFileMasterfiles(const char *maybe_dirname
 
 static bool MissingInputFile(const char *input_file);
 
-bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
+static bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
@@ -174,7 +174,7 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
     return policy;
 }
 
-bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
+static bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
 {
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
     StringSet *global_matches = ClassesMatching(ctx, iter, c, NULL, true); // returns early
@@ -202,7 +202,7 @@ bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
     return IsDefinedClass(ctx, c);
 }
 
-bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
+static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
 {
     bool loaded = false;
 
@@ -415,7 +415,7 @@ bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement*
     return loaded;
 }
 
-bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
+static bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
 {
     bool loaded = false;
 

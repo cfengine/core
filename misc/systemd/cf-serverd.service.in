@@ -2,14 +2,14 @@
 Description=CFEngine Enterprise file server
 After=syslog.target
 After=network.target
-ConditionPathExists=@workdir@/bin/cf-serverd
+ConditionPathExists=@bindir@/cf-serverd
 ConditionPathExists=@workdir@/policy_server.dat
 ConditionPathExists=@workdir@/inputs/promises.cf
 PartOf=cfengine3.service
 
 [Service]
 Type=simple
-ExecStart=@workdir@/bin/cf-serverd --no-fork
+ExecStart=@bindir@/cf-serverd --no-fork
 Restart=always
 RestartSec=10
 

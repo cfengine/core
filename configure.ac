@@ -218,8 +218,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     PIDDIR="${localstatedir}/${PACKAGE}"
     STATEDIR="default"
   fi
-
-  bindir='${exec_prefix}/bin'
+  bindir="${bindir:-${exec_prefix}/bin}"
   projlibdir='${libdir}'
 ])
 
@@ -1287,7 +1286,7 @@ esac
 m4_include([m4/cf3_platforms.m4])
 
 dnl #####################################################################
-dnl Configure LOCKDIR and LOGDIR
+dnl Configure directories
 dnl #####################################################################
 
 AC_ARG_WITH(workdir,
@@ -1392,6 +1391,13 @@ AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
                    [Specify path to POSIX-compatible shell (if not /bin/sh)])],
                    [],
                    [with_shell=/bin/sh])
+
+dnl Expand ${prefix} and whatnot in bindir
+adl_RECURSIVE_EVAL("${bindir}", bindir)
+
+AC_DEFINE_UNQUOTED(BINDIR, "${bindir}", [binaries location])
+AC_SUBST(bindir, "${bindir}")
+
 
 if test "x$with_shell" = "xno"; then
    AC_MSG_ERROR([Please specify full path to POSIX-compatible shell])
@@ -1677,6 +1683,7 @@ AC_MSG_RESULT([-> Inputdir: $INPUTDIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
 AC_MSG_RESULT([-> Statedir: $STATEDIR])
+AC_MSG_RESULT([-> bindir: $bindir])
 
 AC_MSG_RESULT( )
 

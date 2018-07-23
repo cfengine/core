@@ -174,32 +174,17 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
     return policy;
 }
 
-static bool CheckContextOrClassmatch(EvalContext *ctx, const char* c)
+static bool CheckContextClassmatch(EvalContext *ctx, const char* class_str)
 {
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-    StringSet *global_matches = ClassesMatching(ctx, iter, c, NULL, true); // returns early
+    StringSet *global_matches = ClassesMatching(ctx, iter, class_str, NULL, true); // returns early
 
     bool found = (StringSetSize(global_matches) > 0);
 
     StringSetDestroy(global_matches);
     ClassTableIteratorDestroy(iter);
 
-    if (found)
-    {
-        return found;
-    }
-
-    // does it look like a regex? It's not a class expression then
-    // (these characters are invalid in class expressions and will
-    // give errors)
-    if (strchr(c, '*') ||
-        strchr(c, '+') ||
-        strchr(c, '['))
-    {
-        return false;
-    }
-
-    return IsDefinedClass(ctx, c);
+    return found;
 }
 
 static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
@@ -307,7 +292,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                 {
                     char *check = JsonPrimitiveToString(data);
                     // check if class is true
-                    if (CheckContextOrClassmatch(ctx, check))
+                    if (CheckContextClassmatch(ctx, check))
                     {
                         Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
                             ckey, check, filename);
@@ -325,7 +310,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)))
                     {
                         char *check = JsonPrimitiveToString(el);
-                        if (CheckContextOrClassmatch(ctx, check))
+                        if (CheckContextClassmatch(ctx, check))
                         {
                             Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
                                 ckey, check, filename);

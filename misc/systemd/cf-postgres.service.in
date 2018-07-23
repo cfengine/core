@@ -1,7 +1,7 @@
 [Unit]
 Description=CFEngine Enterprise PostgreSQL Database
 After=syslog.target
-ConditionPathExists=@workdir@/bin/pg_ctl
+ConditionPathExists=@bindir@/pg_ctl
 PartOf=cfengine3.service
 
 [Service]
@@ -27,9 +27,9 @@ Environment=PG_OOM_ADJUST_VALUE=0
 
 Environment=PGDATA=@workdir@/state/pg/data
 
-ExecStart=@workdir@/bin/pg_ctl -w -D ${PGDATA} -l /var/log/postgresql.log start
-ExecStop=@workdir@/bin/pg_ctl -w -D ${PGDATA} -l /var/log/postgresql.log stop -m fast
-ExecReload=@workdir@/bin/pg_ctl -w -D ${PGDATA} -l /var/log/postgresql.log reload -m fast
+ExecStart=@bindir@/pg_ctl -w -D ${PGDATA} -l /var/log/postgresql.log start
+ExecStop=@bindir@/pg_ctl -w -D ${PGDATA} -l /var/log/postgresql.log stop -m fast
+ExecReload=@bindir@/pg_ctl -w -D ${PGDATA} -l /var/log/postgresql.log reload -m fast
 
 [Install]
 WantedBy=multi-user.target

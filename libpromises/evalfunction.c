@@ -949,6 +949,15 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
     Variable *v = NULL;
     while ((v = VariableTableIteratorNext(iter)))
     {
+        if (strchr(v->ref->lval, '#') != NULL)
+        {
+            /* Skip variables that contain '#' in their lval (variable name),
+             * these are internal.
+             * Note: '#' and similar chars are allowed in array keys
+             * (indices) */
+            continue;
+        }
+
         char *expr = VarRefToString(v->ref, true);
 
         /* FIXME: review this strcmp. Moved out from StringMatch */

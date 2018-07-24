@@ -12,6 +12,16 @@ bundle common init
       "test_fbeae67f3e347b5e0032302200141131" string => "abc", meta => { "x" };
       "test_fbeae67f3e347b5e0032302200141131_1" string => "def", meta => { "x" };
       "test_fbeae67f3e347b5e0032302200141131_2" string => "ghi", meta => { "y" };
+
+      # characters like '#' are allowed in array keys (indices) and these should
+      # not be filtered out when filtering out internal variables (see below)
+      "test_arr[hash#idx]" -> { "CFE-2812" }
+        string => "jkl";
+
+  reports:
+      # Using $(this.bundle) adds it as an internal $(this#bundle) variable on
+      # 3.7. This internal variable should be ignored by variablesmatching().
+      "$(this.bundle)" -> { "CFE-2812" };
 }
 
 bundle agent test
@@ -21,9 +31,14 @@ bundle agent test
       "x_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "x");
       "z_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "z");
 
+      "init_this" slist => variablesmatching("default:init\.this\..*");
+      "hash_idx" slist => variablesmatching("default:init\.test_arr.*");
+
       "count" int => length(vars);
       "x_count" int => length(x_vars);
       "z_count" int => length(z_vars);
+      "init_this_count" int => length(init_this);
+      "hash_idx_count" int => length(hash_idx);
 }
 
 bundle agent check
@@ -31,13 +46,17 @@ bundle agent check
   classes:
       "ok" and => { strcmp("$(test.count)", "3"),
                     strcmp("$(test.x_count)", "2"),
-                    strcmp("$(test.z_count)", "0") };
+                    strcmp("$(test.z_count)", "0"),
+                    strcmp("$(test.init_this_count)", "0"),
+                    strcmp("$(test.hash_idx_count)", "1") };
 
   reports:
     DEBUG::
       "Found variables $(test.vars)";
       "Found x variables $(test.x_vars)";
       "Found z variables $(test.z_vars)";
+      "Found init.this variables $(test.init_this)";
+      "Found hash_idx variables $(test.hash_idx)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

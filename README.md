@@ -7,6 +7,7 @@
 
 [![codecov](https://codecov.io/gh/cfengine/core/branch/master/graph/badge.svg)](https://codecov.io/gh/cfengine/core)
 
+TEST
 
 # CFEngine 3
 

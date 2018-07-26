@@ -246,6 +246,34 @@ cf_pidfile_pid()
     fi
 }
 
+cf_get_daemon_pid()
+{
+    local daemon="$1"
+    local base_daemon="$(basename "$daemon")"
+    local pidfile="$(printf "$PIDFILE_TEMPLATE" "$base_daemon")"
+    local pidfile_pid
+    local matching_pids
+
+    # Try to get the PID of the daemon process from the pidfile and make sure it
+    # is valid.
+    pidfile_pid="$(cf_pidfile_pid "$pidfile")"
+    matching_pids="$(cf_get_matching_pids "$base_daemon")"
+    if [ -n "$pidfile_pid" ]; then
+        if echo "$matching_pids" | grep "^$pidfile_pid\$" >/dev/null; then
+            # A valid PID from the pidfile, let's report it.
+            echo "$pidfile_pid"
+            return
+        else
+            # PID from the pid file not in the matching pids -> must be a
+            # leftover. Let's remove it.
+            rm -f "$pidfile"
+        fi;
+    fi;
+
+    # No or invalid pidfile, let's report the matching PIDs.
+    echo "$matching_pids"
+}
+
 cf_start_daemon()
 {
     local daemon="$1"
@@ -295,16 +323,10 @@ cf_stop_daemon()
     local daemon="$1"
     local base_daemon="$(basename "$daemon")"
     local pidfile="$(printf "$PIDFILE_TEMPLATE" "$base_daemon")"
-    local pidfile_pid
     local pids
     local ret=1
 
-    pidfile_pid="$(cf_pidfile_pid "$pidfile")"
-    if [ -n "$pidfile_pid" ]; then
-        pids="$pidfile_pid"
-    else
-        pids="$(cf_get_matching_pids "$base_daemon")"
-    fi
+    pids="$(cf_get_daemon_pid $daemon)"
 
     if [ -z "$pids" ]; then
         return 1
@@ -321,9 +343,11 @@ cf_stop_daemon()
             signal=KILL
         fi
 
-        if [ $iter -gt 2 ]; then
-            # If we failed at first, give things time to settle.
+        if [ $iter -ge 2 ]; then
+            # Give the daemon some time to do its cleanup and actually
+            # terminate. Then check its state again.
             sleep 2
+            pids="$(cf_get_daemon_pid $daemon)"
         fi
 
         if [ "$signal" != "KILL" ] && [ -f "$pidfile" ] && [ "$DEBIAN" = "1" ] && [ "$SSD" = "1" ]; then
@@ -340,12 +364,7 @@ cf_stop_daemon()
             done
         fi
 
-        pidfile_pid="$(cf_pidfile_pid "$pidfile")"
-        if [ -n "$pidfile_pid" ]; then
-            pids="$pidfile_pid"
-        else
-            pids="$(cf_get_matching_pids "$base_daemon")"
-        fi
+        pids="$(cf_get_daemon_pid $daemon)"
         iter=$(($iter+1))
     done
 
@@ -493,8 +512,8 @@ cf_stop_core_daemons()
     while [ $iter -le $STOP_ATTEMPTS ]; do
         local any_process_present=0
 
-        if [ $iter -gt 2 ]; then
-            # If we failed at first, give things time to settle.
+        if [ $iter -ge 2 ]; then
+            # Let's wait a bit before the second attempt.
             sleep 2
         fi
 
@@ -505,6 +524,10 @@ cf_stop_core_daemons()
             # new daemon or agent.
             FORCE_KILL=1
         fi
+
+        # First stop any agents running because they may start the daemons we
+        # will be stopping behind our back.
+        cf_stop_agents && any_process_present=1
 
         # shutdown cf-execd
         if [ "$RUN_CF_EXECD" = "1" ]; then

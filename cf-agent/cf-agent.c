@@ -193,6 +193,7 @@ static const struct option OPTIONS[] =
     {"log-modules", required_argument, 0, 0},
     {"show-evaluated-classes", optional_argument, 0, 0 },
     {"show-evaluated-vars", optional_argument, 0, 0 },
+    {"skip-bootstrap-policy-run", no_argument, 0, 0 },
     {NULL, 0, 0, '\0'}
 };
 
@@ -221,6 +222,7 @@ static const char *const HINTS[] =
     "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     "Show *final* evaluated classes, including those defined in common bundles in policy. Optionally can take a regular expression.",
     "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
+    "Do not run policy as the last step of the bootstrap process",
     NULL
 };
 
@@ -586,6 +588,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     optarg = ".*";
                 }
                 config->agent_specific.agent.show_evaluated_variables = xstrdup(optarg);
+            }
+            else if (strcmp(OPTIONS[longopt_idx].name, "skip-bootstrap-policy-run") == 0)
+            {
+                config->agent_specific.agent.bootstrap_trigger_policy = false;
             }
     break;
 

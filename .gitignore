@@ -74,6 +74,9 @@ stamp-h1
 # examples
 /examples/cfengine_stdlib.cf
 
+# misc - systemd services (from AC templates)
+misc/systemd/*.service
+
 # gcov/lcov
 *.gcno
 *.gcda

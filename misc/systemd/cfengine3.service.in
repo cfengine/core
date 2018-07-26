@@ -1,7 +1,26 @@
 [Unit]
 Description=CFEngine 3 umbrella service
-Documentation=https://docs.cfengine.com/
+Documentation=https://docs.cfengine.com/ https://tracker.mender.io
 After=syslog.target
+
+# Try to start all the sub-services. 'Wants' is fault-tolerant so if some are
+# missing or impossible to start, no big deal.
+Wants=cf-serverd.service
+Wants=cf-execd.service
+Wants=cf-monitord.service
+Wants=cf-postgres.service
+Wants=cf-apache.service
+Wants=cf-runalerts.service
+Wants=cf-hub.service
+
+# Ensure synchronous stop behavior
+Before=cf-serverd.service
+Before=cf-execd.service
+Before=cf-monitord.service
+Before=cf-postgres.service
+Before=cf-apache.service
+Before=cf-runalerts.service
+Before=cf-hub.service
 
 [Install]
 WantedBy=multi-user.target
@@ -10,20 +29,7 @@ WantedBy=multi-user.target
 Type=oneshot
 RemainAfterExit=yes
 
-# ENT-2841: Ensure synchronous start behavior
-ExecStart=/bin/systemctl start cf-serverd
-ExecStart=/bin/systemctl start cf-execd
-ExecStart=/bin/systemctl start cf-monitord
-ExecStart=/bin/systemctl start cf-postgres
-ExecStart=/bin/systemctl start cf-apache
-ExecStart=/bin/systemctl start cf-runalerts
-ExecStart=/bin/systemctl start cf-hub
-
-# ENT-2841: Ensure synchronous stop behavior
-ExecStop=/bin/systemctl stop cf-serverd
-ExecStop=/bin/systemctl stop cf-execd
-ExecStop=/bin/systemctl stop cf-monitord
-ExecStop=/bin/systemctl stop cf-hub
-ExecStop=/bin/systemctl stop cf-runalerts
-ExecStop=/bin/systemctl stop cf-apache
-ExecStop=/bin/systemctl stop cf-postgres
+# Nothing to do here, we just need to make sure the specific services to be
+# started/stopped.
+ExecStart=/bin/true
+ExecStop=/bin/true

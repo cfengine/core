@@ -11,6 +11,7 @@ bundle agent init
 {
   vars:
       "expected[bindir]" string => "$(sys.workdir)$(const.dirsep)bin";
+      "expected[default_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)promises.cf";
       "expected[failsafe_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)failsafe.cf";
       "expected[inputdir]" string => "$(sys.workdir)$(const.dirsep)inputs";
       "expected[libdir]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)lib";
@@ -40,7 +41,8 @@ bundle agent check
   classes:
       "$(init.sysvars)_ok" expression => strcmp("$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])");
 
-      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "failsafe_policy_path_ok", "update_policy_path_ok", "local_libdir_ok", "policy_entry_dirname_ok", "policy_entry_filename_ok", "policy_entry_basename_ok" };
+      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "default_policy_path_ok", "failsafe_policy_path_ok", "update_policy_path_ok",
+                    "local_libdir_ok", "policy_entry_dirname_ok", "policy_entry_filename_ok", "policy_entry_basename_ok" };
 
   reports:
     DEBUG::

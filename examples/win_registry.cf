@@ -9,7 +9,7 @@ bundle agent win_registry
   vars:
 
       "cache_keys" slist => {
-                              "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS"
+                              "HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS"
       };
       
       "reg_create" slist =>
@@ -33,8 +33,8 @@ bundle agent win_registry
 
       # 2) Registry settings may also be explicitly defined/deleted in policy
 
-      #  "any" usebundle => registry_define("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine", "@(win_registry.reg_create)");
-      #  "any" usebundle => registry_delete("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine", "@(win_registry.reg_delete)");
+      #  "any" usebundle => registry_define("HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\Cfengine", "@(win_registry.reg_create)");
+      #  "any" usebundle => registry_delete("HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\Cfengine", "@(win_registry.reg_delete)");
 }
 
 #########################################################################

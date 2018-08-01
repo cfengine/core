@@ -32,7 +32,7 @@ bundle agent reg
 
     windows::
 
-      "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine","value3");
+      "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\Cfengine","value3");
 
   reports:
 

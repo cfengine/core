@@ -1,0 +1,53 @@
+
+#######################################################
+#
+# Test string_replace function
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "test" string => "abcdefghij\t\n";
+      "test2" string => "(){}[].*?";
+
+      # normal tests
+      "match_once" string => string_replace("abcd", "abc", "ABC");
+      "match_twice" string => string_replace("abcdabcd", "abcd", "hello");
+      "match_none" string => string_replace("abdc", "abcd", "nope");
+      "match_none2" string => string_replace($(test), "nonesuch", "TEST");
+
+      "overlap" string => string_replace("aaaa", "aaa", "yes");
+
+      "replace" string => string_replace($(test), "\t", "\r");
+      "replace2" string => string_replace($(test), "ghij\t", "tEsT");
+      "replace3" string => string_replace($(test), "abcdefghij\t\n", "no");
+
+      # tests for regex special characters
+      "special" string => string_replace($(test2), "()", "1");
+      "special2" string => string_replace($(test2), "{}", "\1");
+      "special3" string => string_replace($(test2), ".*?", "\2");
+
+      # empty cases
+      "empty" string => string_replace("", "abc", "ABC");
+      "empty2" string => string_replace("", "abc", "");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_check_state(test,
+                                      "$(this.promise_filename).expected.json",
+                                       $(this.promise_filename));
+}

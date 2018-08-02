@@ -401,6 +401,12 @@ union mpinfou
 # endif
 #endif
 
+#ifdef __linux__
+#define ARG_LINUX_ONLY
+#else
+#define ARG_LINUX_ONLY ARG_UNUSED
+#endif
+
 #ifndef CLOCK_REALTIME
 # define CLOCK_REALTIME 1
 #endif

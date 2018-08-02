@@ -30,7 +30,7 @@ bundle agent reg
 {
   vars:
     windows::
-      "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\CFEngine AS\CFEngine","value3");
+      "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\CFEngine","value3");
     !windows::
       "value" string => "Sorry, no registry data is available";
 

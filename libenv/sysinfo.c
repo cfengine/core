@@ -593,6 +593,9 @@ static void GetNameInfo3(EvalContext *ctx)
     snprintf(workbuf, CF_BUFSIZE, "%s", bindir);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
+    snprintf(workbuf, CF_BUFSIZE, "%s%cpromises.cf", GetInputDir(), FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "default_policy_path", workbuf, CF_DATA_TYPE_STRING, "source=agent");
+
     snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", GetInputDir(), FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe_policy_path", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 

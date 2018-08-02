@@ -501,6 +501,11 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     {
         EvalContextClassPutHard(ctx, "bootstrap_mode", "report,source=environment");
 
+        if (!config->agent_specific.agent.bootstrap_trigger_policy)
+        {
+            EvalContextClassPutHard(ctx, "skip_policy_on_bootstrap", "report,source=environment");
+        }
+
         if (!RemoveAllExistingPolicyInInputs(GetInputDir()))
         {
             Log(LOG_LEVEL_ERR,
@@ -1853,6 +1858,9 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
 
     /* By default we trust the network when bootstrapping. */
     config->agent_specific.agent.bootstrap_trust_server = true;
+
+    /* By default we run promises.cf as the last step of boostrapping */
+    config->agent_specific.agent.bootstrap_trigger_policy = true;
 
     /* Log classes */
     config->agent_specific.agent.report_class_log = false;

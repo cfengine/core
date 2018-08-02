@@ -1014,7 +1014,7 @@ char *EscapeCharCopy(const char *str, char to_escape, char escape_with)
 
     if(in_size > (SIZE_MAX / 2) - 1)
     {
-        ProgrammingError("Buffer passed to EscapeCharCopy() too large (in_size=%ld)", in_size);
+        ProgrammingError("Buffer passed to EscapeCharCopy() too large (in_size=%zd)", in_size);
     }
 
     size_t out_size = in_size + CountChar(str, to_escape) + 1;

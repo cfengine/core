@@ -905,8 +905,8 @@ static FnCallResult FnCallIP2Host(ARG_UNUSED EvalContext *ctx,
 
 static FnCallResult FnCallSysctlValue(ARG_UNUSED EvalContext *ctx,
                                       ARG_UNUSED ARG_UNUSED const Policy *policy,
-                                      const FnCall *fp,
-                                      const Rlist *finalargs)
+                                      ARG_LINUX_ONLY const FnCall *fp,
+                                      ARG_LINUX_ONLY const Rlist *finalargs)
 {
 #ifdef __linux__
     const bool sysctlvalue_mode = (strcmp(fp->name, "sysctlvalue") == 0);

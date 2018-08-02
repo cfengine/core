@@ -840,7 +840,8 @@ static long JsonExtractParsedNumber(JsonElement* element, const char* raw_key, c
 
 /*******************************************************************/
 
-static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void *json)
+static ProcPostProcessFn NetworkingRoutesPostProcessInfo(
+    ARG_LINUX_ONLY void *passed_ctx, ARG_LINUX_ONLY void *json)
 {
 # if defined (__linux__)
     EvalContext *ctx = passed_ctx;
@@ -887,7 +888,8 @@ static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void 
     return NULL;
 }
 
-static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(
+    ARG_UNUSED void *passed_ctx, ARG_LINUX_ONLY void *json)
 {
 # if defined (__linux__)
     JsonElement *route = json;
@@ -936,7 +938,7 @@ static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void 
 
 /*******************************************************************/
 
-static const char* GetPortStateString(int state)
+static const char* GetPortStateString(ARG_LINUX_ONLY int state)
 {
 # if defined (__linux__)
     switch (state)

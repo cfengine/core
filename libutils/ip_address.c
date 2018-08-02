@@ -1325,4 +1325,3 @@ bool IPAddressIsIPAddress(Buffer *source, IPAddress **address)
     }
     return true;
 }
-

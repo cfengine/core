@@ -87,6 +87,7 @@ typedef struct
             char *bootstrap_port;
             char *bootstrap_ip;
             bool bootstrap_trust_server;
+            bool bootstrap_trigger_policy;
             char *show_evaluated_classes;
             char *show_evaluated_variables;
 

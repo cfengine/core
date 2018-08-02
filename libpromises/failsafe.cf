@@ -69,6 +69,13 @@ bundle agent main
                     happen with the most up to date and complete
                     information.";
 
+      "Trigger Policy"
+        usebundle => failsafe_cfe_internal_trigger_policy,
+        comment => "In order to speed up convergence and reporting we
+                    trigger the whole policy right after initial
+                    bootstrap. This allows the first report to provide
+                    more complete data.";
+
       "Report"
         usebundle => failsafe_cfe_internal_report,
         comment => "It's important to let the user know what happened
@@ -325,6 +332,14 @@ bundle agent failsafe_cfe_internal_report
        When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
       handle => "failsafe_cfe_internal_bootstrap_update_reports_did_not_get_policy";
 
+    trigger_policy_repaired::
+      "Triggered an initial run of the policy"
+        handle => "failsafe_cfe_internal_bootstrap_trigger_policy_passed";
+
+    trigger_policy_failed::
+      "Initial run of the policy failed"
+        handle => "failsafe_cfe_internal_bootstrap_trigger_policy_failed";
+
     systemctl_restart_cfengine3_repaired::
 
       "Restarted systemd unit cfengine3"
@@ -373,6 +388,21 @@ bundle agent failsafe_cfe_internal_call_update
         handle => "failsafe_cfe_internal_call_update_commands_call_update_cf",
         if => fileexists( $(sys.update_policy_path) ),
         comment => "We run update.cf in order to prepare system information for
+                    collection into CFEngine Enterprise more quickly.";
+}
+
+################################################################################
+
+bundle agent failsafe_cfe_internal_trigger_policy
+{
+  commands:
+
+    bootstrap_mode.!skip_policy_on_bootstrap::
+      "$(sys.cf_agent) --define bootstrap_mode"
+        handle => "failsafe_cfe_internal_trigger_policy_commands_call_promises_cf",
+        if => fileexists( $(sys.default_policy_path) ),
+        classes => failsafe_results("namespace", "trigger_policy"),
+        comment => "We run promises.cf in order to prepare system information for
                     collection into CFEngine Enterprise more quickly.";
 }
 

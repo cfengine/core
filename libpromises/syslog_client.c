@@ -112,10 +112,16 @@ void RemoteSysLog(int log_priority, const char *log_string)
             char timebuffer[26];
             pid_t pid = getpid();
 
-            snprintf(message, sizeof(message), "<%i>%.15s %s %s[%d]: %s",
-                     log_priority | SYSLOG_FACILITY,
-                     cf_strtimestamp_local(now, timebuffer) + 4,
-                     VFQNAME, VPREFIX, pid, log_string);
+            snprintf(
+                message,
+                sizeof(message),
+                "<%i>%.15s %s %s[%ld]: %s",
+                (log_priority | SYSLOG_FACILITY),
+                (cf_strtimestamp_local(now, timebuffer) + 4), // Skips day str
+                VFQNAME,
+                VPREFIX,
+                (long) pid,
+                log_string);
             err = sendto(sd, message, strlen(message),
                          0, ap->ai_addr, ap->ai_addrlen);
             if (err == -1)

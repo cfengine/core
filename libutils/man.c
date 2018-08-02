@@ -89,7 +89,7 @@ static void WriteAuthor(Writer *out)
 {
     static const char *const author =
         ".SH AUTHOR\n"
-        "Mark Burgess and CFEngine AS\n";
+        "Mark Burgess and Northern.tech AS\n";
 
     WriterWrite(out, author);
 }

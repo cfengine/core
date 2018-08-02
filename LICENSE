@@ -701,7 +701,7 @@ Public License instead of this License.  But first, please read
                     COMMERCIAL OPEN SOURCE LICENSE
 
 This CFEngine commercial open source license ("COSL") is entered into
-between Cfengine AS, a Norwegian company, as licensor and
+between Northern.tech AS, a Norwegian company, as licensor and
 
 a) the Customer entity stipulated on a complete agreement front page (“Front page”),
 
@@ -721,7 +721,7 @@ respectively. The following shall apply to either type of license
 grants.
 
 Subject to the terms of this COSL and other agreement between the
-parties, Cfengine hereby grants to Licensee a non-exclusive,
+parties, Northern.tech hereby grants to Licensee a non-exclusive,
 non-transferable, non-sublicensable and limited license to install,
 use, study and modify the number of copies of the Software on the
 number of Instances stipulated on the Front page for use within its
@@ -729,7 +729,7 @@ organization.
 
 The number of Instances the Software may be installed on may be
 changed by the Customer from time to time, provided ample notice is
-given to Cfengine. See Front page for reporting.
+given to Northern.tech. See Front page for reporting.
 
 The Licensee may modify, adapt and create derivative works based upon
 the Software, for use within its organisation and for sharing between
@@ -740,11 +740,11 @@ disclose the Software in any manner or form to any other third party
 not holding a COSL to the Software.
 
 Licensee may not transfer any of its rights under this COSL without
-the prior and express written consent of Cfengine.
+the prior and express written consent of Northern.tech.
 
 Any CFEngine software component used by both the CFEngine enterprise
 version and CFEngine community edition is licensed under the terms of
-this COSL if the Licensee does not state in writing to Cfengine that
+this COSL if the Licensee does not state in writing to Northern.tech that
 the Licensee instead wish to license the component in question under
 the GNU General Public License (GPL) v.3.0 or other applicable
 license.
@@ -788,7 +788,7 @@ downloaded by the Licensee or otherwise given access to including
 bundled documentation and other material, as described at 
 http://www.cfengine.com/; and
 
-b) new versions and updates to such software provided by Cfengine, and
+b) new versions and updates to such software provided by Northern.tech, and
 
 
 “Update” (of Software) means smaller adjustments of the Software with
@@ -808,11 +808,11 @@ for further details.
 
 4 INTELLECTUAL PROPERTY RIGHTS
 
-Cfengine and its suppliers do not by this COSL transfer any
+Northern.tech and its suppliers do not by this COSL transfer any
 copyrights or other intellectual property rights relating to the
 Software to the Licensee. Such rights are protected by intellectual
 property legislation in the United States, Europe and other
-jurisdictions and by international treaty provisions. Cfengine and its
+jurisdictions and by international treaty provisions. Northern.tech and its
 suppliers retain all rights in the Software that are not expressly
 granted to the Licensee through this COSL.
 
@@ -822,7 +822,7 @@ within the Software.
 
 5 TERMINATION
 
-Cfengine may terminate the COSL if the Licensee fails to comply with
+Northern.tech may terminate the COSL if the Licensee fails to comply with
 the terms of this COSL, hereunder fails to pay the stipulated fees. In
 the event of such termination, the Licensee shall immediately stop
 using the Software, return any received media and documentation, and
@@ -835,7 +835,7 @@ If the Software (except for third party software) during the term of
 the license grant is held by a court of competent jurisdiction to
 infringe any third party intellectual property rights and the Licensee
 incurs loss or expense as a result of such holding, then Licenee's
-sole remedy shall be, and Cfengine will, at its option: (i) obtain the
+sole remedy shall be, and Northern.tech will, at its option: (i) obtain the
 right for Licensse to continue to use the Software consistent with the
 COSL; (ii) modify the Software so that it becomes non-infringing;
 (iii) replace the infringing component with a non-infringing
@@ -849,20 +849,20 @@ The Licensee is aware that the Software is also comprised of third
 party software, mostly open source software. Such third party software
 are subject to its individual license terms, and any claims shall be
 directed at the ultimate right holder to that software. Consequently
-Cfengine is not liable for any defective title in such third party
+Northern.tech is not liable for any defective title in such third party
 software. See schedule 5 for a list of software contained by the
 Software with related licenses.
 
 7 NO WARRANTY
 
-To the maximum extent permitted by law, Cfengine disclaims any
+To the maximum extent permitted by law, Northern.tech disclaims any
 warranty for the Software (except as stated in clause 6). The
 Software, any services and any related documentation is provided on an
 "as is" basis without warranty of any kind, whether express or
 implied, including, but not limited to, implied warranties of
 merchantability, fitness for a particular purpose or non-infringement
 (except as stated in clause 6). Hereunder the parties acknowledges
-that Cfengine does not warrant for the performance of any data centre
+that Northern.tech does not warrant for the performance of any data centre
 on which the Software runs, or the absence of any errors in the
 Software, and that any such errors does not constitute a contractual
 defect.
@@ -873,7 +873,7 @@ The liability of the parties in contract, tort (including negligence)
 or otherwise shall for all incidents during the entire term of the
 COSL be limited to a fifth of the fees paid for a perpetual license or
 the annual consecutive license fees paid for the Software causing the
-damage or loss, up to a maximum of NOK 100 000. Cfengine or its
+damage or loss, up to a maximum of NOK 100 000. Northern.tech or its
 suppliers shall not be liable for any special, incidental, indirect or
 consequential damages whatsoever (including, without limitation,
 damages for loss of business profits, lost savings, business
@@ -885,6 +885,6 @@ possibility of such damages.
 9 THIRD-PARTY TERMS
 
 For third-party software that is made available to the Licensee by
-Cfengine, the current terms of the relevant third party software
+Northern.tech, the current terms of the relevant third party software
 supplier shall apply.
 

@@ -40,7 +40,7 @@ bundle agent win_emergency
 
     emergency::
       
-      "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
+      "HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\Cfengine"
       database_operation => "create", 
       database_rows => { "emergency,REG_SZ,This is an emergency!" } ,
       database_type     => "ms_registry",

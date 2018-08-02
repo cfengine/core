@@ -39,26 +39,26 @@ bundle agent databases
 
       # Regsitry has (value,data) pairs in "keys" which are directories
 
-      #  "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS"
+      #  "HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS"
 
       #    database_operation => "create", 
       #    database_type     => "ms_registry";
 
-      #  "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
+      #  "HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\Cfengine"
 
       #    database_operation => "create", 
       #    database_rows => { "value1,REG_SZ,new value 1", "value2,REG_SZ,new val 2"} ,
       #    database_type     => "ms_registry";
 
 
-      "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
+      "HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\Cfengine"
 
       database_operation => "delete", 
       database_columns => { "value1", "value2" } ,
       database_type => "ms_registry";
 
 
-      # "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine"
+      # "HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS\Cfengine"
 
       #    database_operation => "cache",   # cache,restore
 
@@ -66,7 +66,7 @@ bundle agent databases
 
       #    database_type     => "ms_registry";
 
-      "HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS"
+      "HKEY_LOCAL_MACHINE\SOFTWARE\Northern.tech AS"
 
       database_operation => "restore",
       database_type      => "ms_registry";

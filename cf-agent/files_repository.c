@@ -30,6 +30,7 @@
 #include <files_copy.h>
 #include <item_lib.h>
 #include <mutex.h>
+#include <global_mutex.h>
 #include <policy.h>
 #include <string_lib.h>                                       /* PathAppend */
 

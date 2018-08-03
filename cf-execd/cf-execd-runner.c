@@ -32,6 +32,7 @@
 #include <pipes.h>
 #include <unix.h>
 #include <mutex.h>
+#include <global_mutex.h>
 #include <signals.h>
 #include <exec_tools.h>
 #include <misc_lib.h>
@@ -501,11 +502,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
         fclose(new_fp);
     }
 
-    if (!ThreadLock(cft_count))
-    {
-        Log(LOG_LEVEL_ERR, "Severe lock error when mailing in exec");
-        return 1;
-    }
+    ThreadLock(cft_count);
 
 /* replace old file with new*/
 

@@ -77,13 +77,13 @@ libstr_la_LIBADD = libtest.la
 check_LTLIBRARIES += libdb.la
 libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_api.c \
-	../../libpromises/mutex.c \
 	../../libpromises/dbm_quick.c \
 	../../libpromises/dbm_tokyocab.c \
 	../../libpromises/dbm_lmdb.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
 	../../libutils/logging.c \
+	../../libutils/mutex.c \
 	../../libutils/atexit.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c

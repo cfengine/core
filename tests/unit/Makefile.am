@@ -170,6 +170,7 @@ check_PROGRAMS = \
 	key_test \
 	cf_upgrade_test \
 	queue_test \
+	stack_test \
 	matching_test \
 	ring_buffer_test \
 	strlist_test \
@@ -437,6 +438,8 @@ $(CFUPGRADE)/process.c $(CFUPGRADE)/process.h $(CFUPGRADE)/update.c $(CFUPGRADE)
 cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
 
 queue_test_SOURCES = queue_test.c
+
+stack_test_SOURCES = stack_test.c
 
 if !NT
 check_PROGRAMS += nfs_test

@@ -25,6 +25,7 @@
 #include <pipes.h>
 
 #include <mutex.h>
+#include <global_mutex.h>
 #include <exec_tools.h>
 #include <rlist.h>
 #include <policy.h>
@@ -41,22 +42,15 @@ static pid_t *CHILDREN = NULL; /* GLOBAL_X */
 static int MAX_FD = 128; /* GLOBAL_X */ /* Max number of simultaneous pipes */
 
 
-static bool ChildrenFDInit()
+static void ChildrenFDInit()
 {
-    if (!ThreadLock(cft_count))
+    ThreadLock(cft_count);
+    if (CHILDREN == NULL)       /* first time */
     {
-        return false;
+        CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
     }
-    else
-    {
-        if (CHILDREN == NULL)       /* first time */
-        {
-            CHILDREN = xcalloc(MAX_FD, sizeof(pid_t));
-        }
 
-        ThreadUnlock(cft_count);
-        return true;
-    }
+    ThreadUnlock(cft_count);
 }
 
 /*****************************************************************************/
@@ -143,10 +137,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         }
     }
 
-    if (! ChildrenFDInit())
-    {
-        return -1;
-    }
+    ChildrenFDInit();
 
     /* Create pair of descriptors to this process. */
     if (pipes[0].type && pipe(pipes[0].pipe_desc) < 0)
@@ -806,11 +797,7 @@ int cf_pclose(FILE *pp)
     int fd = fileno(pp);
     pid_t pid;
 
-    if (!ThreadLock(cft_count))
-    {
-        fclose(pp);
-        return -1;
-    }
+    ThreadLock(cft_count);
 
     if (CHILDREN == NULL)       /* popen hasn't been called */
     {
@@ -847,11 +834,7 @@ int cf_pclose(FILE *pp)
 
 int cf_pclose_full_duplex_side(int fd)
 {
-    if (!ThreadLock(cft_count))
-    {
-        close(fd);
-        return -1;
-    }
+    ThreadLock(cft_count);
 
     if (CHILDREN == NULL)       /* popen hasn't been called */
     {
@@ -879,19 +862,7 @@ int cf_pclose_full_duplex_side(int fd)
 /* We are assuming that read_fd part will be always open at this point. */
 int cf_pclose_full_duplex(IOData *data)
 {
-    if (!ThreadLock(cft_count))
-    {
-        if (data->read_fd >= 0)
-        {
-            close(data->read_fd);
-        }
-
-        if (data->write_fd >= 0)
-        {
-            close(data->write_fd);
-        }
-        return -1;
-    }
+    ThreadLock(cft_count);
 
     if (CHILDREN == NULL)
     {
@@ -942,10 +913,7 @@ int cf_pclose_full_duplex(IOData *data)
 bool PipeToPid(pid_t *pid, FILE *pp)
 {
     int fd = fileno(pp);
-    if (!ThreadLock(cft_count))
-    {
-        return false;
-    }
+    ThreadLock(cft_count);
 
     if (CHILDREN == NULL)       /* popen hasn't been called */
     {

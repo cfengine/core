@@ -55,6 +55,7 @@ libutils_la_SOURCES = \
 	buffer.c buffer.h \
 	ip_address.c ip_address.h \
 	map.c map.h map_common.h \
+	mutex.c mutex.h \
 	array_map.c array_map_priv.h \
 	hash_map.c hash_map_priv.h \
 	misc_lib.c misc_lib.h \

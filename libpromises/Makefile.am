@@ -88,6 +88,7 @@ libpromises_la_SOURCES = \
         files_names.c files_names.h \
         fncall.c fncall.h \
         generic_agent.c generic_agent.h \
+        global_mutex.c global_mutex.h \
         granules.c granules.h \
         instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
@@ -119,7 +120,6 @@ libpromises_la_SOURCES = \
         mod_users.c mod_users.h \
         modes.c \
         monitoring_read.c monitoring_read.h \
-        mutex.c mutex.h \
         ornaments.c ornaments.h \
         policy.c policy.h \
         parser.c parser.h \

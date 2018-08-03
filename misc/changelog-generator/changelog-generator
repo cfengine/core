@@ -110,12 +110,15 @@ else:
 
 for repo in repos:
     os.chdir(repo)
-    sha_list = subprocess.Popen(["git", "rev-list", "--reverse"] + sys.argv[1:], stdout=subprocess.PIPE)
+    sha_list = subprocess.Popen(
+            ["git", "rev-list", "--no-merges", "--reverse"] + sys.argv[1:],
+            stdout=subprocess.PIPE)
     for sha in sha_list.stdout:
         sha = sha.decode().rstrip('\n')
-        blob = subprocess.Popen(["git", "cat-file", "-p", sha], stdout=subprocess.PIPE)
+        blob = subprocess.Popen(
+                ["git", "log", "--format=%B", "-n", "1", sha],
+                stdout=subprocess.PIPE)
 
-        msg_started = False
         title_fetched = False
         title = ""
         commit_msg = ""
@@ -125,18 +128,11 @@ for repo in repos:
         log_entry = ""
         for line in blob.stdout:
             line = line.decode().rstrip('\r\n')
-            if line == "":
-                if not msg_started:
-                    msg_started = True
-                    continue
 
-                if log_entry:
-                    add_entry(sha, log_entry)
-                    log_entry = ""
+            if line == "" and log_entry:
+                add_entry(sha, log_entry)
+                log_entry = ""
                 log_entry_local = False
-
-            if not msg_started:
-                continue
 
             # Tracker reference, remove from string.
             for match in re.finditer(TRACKER_REGEX, line, re.IGNORECASE):

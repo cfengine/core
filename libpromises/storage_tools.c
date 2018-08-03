@@ -54,13 +54,13 @@ off_t GetDiskUsage(char *file, CfSize type)
 # if defined __sun || defined sco || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statvfs(file, &buf) != 0)
     {
-        Log(LOG_LEVEL_ERR, "statvfs", "Couldn't get filesystem info for %s", file);
+        Log(LOG_LEVEL_ERR, "Couldn't get filesystem info for %s (statvfs)", file);
         return CF_INFINITY;
     }
 # elif defined __SCO_DS || defined _CRAY || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     if (statfs(file, &buf, sizeof(struct statfs), 0) != 0)
     {
-        Log(LOG_LEVEL_ERR, "statfs", "Couldn't get filesystem info for %s", file);
+        Log(LOG_LEVEL_ERR, "Couldn't get filesystem info for %s (statfs)", file);
         return CF_INFINITY;
     }
 # else

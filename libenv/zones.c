@@ -91,7 +91,7 @@ bool ForeignZone(char *s)
 #else
 #define ZONE_ONLY ARG_UNUSED
 #endif
-int CurrentZoneName(ZONE_ONLY const char *s)
+int CurrentZoneName(ZONE_ONLY char *s)
 {
 # ifdef HAVE_GETZONEID
     zoneid_t zid = getzoneid();

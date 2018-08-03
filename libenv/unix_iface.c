@@ -153,13 +153,13 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         Log(LOG_LEVEL_ERR, "Couldn't get mac address for '%s' interface. (ioctl: %s)", ifr->ifr_name, GetErrorStr());
         return;
     }
-      
+
     snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
              (unsigned char) ifr->ifr_hwaddr.sa_data[0],
              (unsigned char) ifr->ifr_hwaddr.sa_data[1],
              (unsigned char) ifr->ifr_hwaddr.sa_data[2],
              (unsigned char) ifr->ifr_hwaddr.sa_data[3],
-             (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
+             (unsigned char) ifr->ifr_hwaddr.sa_data[4],
              (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
@@ -186,13 +186,13 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
     }
     for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
     {
-        if ( strcmp(ifa->ifa_name, ifp->ifr_name) == 0) 
+        if ( strcmp(ifa->ifa_name, ifp->ifr_name) == 0)
         {
-            if (ifa->ifa_addr->sa_family == AF_LINK) 
+            if (ifa->ifa_addr->sa_family == AF_LINK)
             {
                 sdl = (struct sockaddr_dl *)ifa->ifa_addr;
                 m = (char *) LLADDR(sdl);
-                
+
                 snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
                     (unsigned char) m[0],
                     (unsigned char) m[1],
@@ -212,16 +212,16 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 
     }
     freeifaddrs(ifaddr);
-    
+
 # elif defined(_AIX) && !defined(HAVE_GETIFADDRS)
     char hw_mac[CF_MAXVARSIZE];
     char mac[CF_MAXVARSIZE];
-    
+
     if (aix_get_mac_addr(ifp->ifr_name, mac) == 0)
     {
         sprintf(hw_mac, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
 	       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-	
+
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
         RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
         RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
@@ -690,7 +690,7 @@ static void InitIgnoreInterfaces()
         Log(LOG_LEVEL_VERBOSE, "No interface exception file %s",filename);
         return;
     }
-    
+
     while (!feof(fin))
     {
         regex[0] = '\0';
@@ -701,7 +701,7 @@ static void InitIgnoreInterfaces()
            RlistPrependScalarIdemp(&IGNORE_INTERFACES, regex);
         }
     }
- 
+
     fclose(fin);
 }
 
@@ -719,7 +719,7 @@ static bool IgnoreInterface(char *name)
         {
             Log(LOG_LEVEL_VERBOSE, "Ignoring interface '%s' because it matches '%s'",name,CF_IGNORE_INTERFACES);
             return true;
-        }    
+        }
     }
 
     return false;
@@ -733,33 +733,33 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
     int count, i;
 
     ksize = getkerninfo(KINFO_NDD, 0, 0, 0);
-    if (ksize == 0) 
+    if (ksize == 0)
     {
         errno = ENOSYS;
         return -1;
     }
 
     ndd = (struct kinfo_ndd *)xmalloc(ksize);
-    if (ndd == NULL) 
+    if (ndd == NULL)
     {
         errno = ENOMEM;
         return -1;
     }
 
-    if (getkerninfo(KINFO_NDD, ndd, &ksize, 0) == -1) 
+    if (getkerninfo(KINFO_NDD, ndd, &ksize, 0) == -1)
     {
         errno = ENOSYS;
         return -1;
     }
 
     count= ksize/sizeof(struct kinfo_ndd);
-    for (i=0;i<count;i++) 
+    for (i=0;i<count;i++)
     {
-        if ((ndd[i].ndd_type == NDD_ETHER || 
+        if ((ndd[i].ndd_type == NDD_ETHER ||
             ndd[i].ndd_type == NDD_ISO88023) &&
             ndd[i].ndd_addrlen == 6 &&
             (strcmp(ndd[i].ndd_alias, device_name) == 0 ||
-            strcmp(ndd[i].ndd_name, device_name == 0))) 
+            strcmp(ndd[i].ndd_name, device_name == 0)))
         {
             memcpy(mac, ndd[i].ndd_addr, 6);
             free(ndd);
@@ -840,7 +840,8 @@ static long JsonExtractParsedNumber(JsonElement* element, const char* raw_key, c
 
 /*******************************************************************/
 
-static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void *json)
+static ProcPostProcessFn NetworkingRoutesPostProcessInfo(
+    ARG_LINUX_ONLY void *passed_ctx, ARG_LINUX_ONLY void *json)
 {
 # if defined (__linux__)
     EvalContext *ctx = passed_ctx;
@@ -887,7 +888,8 @@ static ProcPostProcessFn NetworkingRoutesPostProcessInfo(void *passed_ctx, void 
     return NULL;
 }
 
-static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(
+    ARG_UNUSED void *passed_ctx, ARG_LINUX_ONLY void *json)
 {
 # if defined (__linux__)
     JsonElement *route = json;
@@ -936,7 +938,7 @@ static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void 
 
 /*******************************************************************/
 
-static const char* GetPortStateString(int state)
+static const char* GetPortStateString(ARG_LINUX_ONLY int state)
 {
 # if defined (__linux__)
     switch (state)
@@ -1141,7 +1143,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     BufferPrintf(pbuf, "%s/proc/net/route", procdir_root);
     JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, (ProcPostProcessFn) &NetworkingRoutesPostProcessInfo,
                     // format: Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
-                    //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0 
+                    //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0
                     "^(?<interface>\\S+)\\t(?<raw_dest>[[:xdigit:]]+)\\t(?<raw_gw>[[:xdigit:]]+)\\t(?<raw_flags>[[:xdigit:]]+)\\t(?<refcnt>\\d+)\\t(?<use>\\d+)\\t(?<metric>[[:xdigit:]]+)\\t(?<raw_mask>[[:xdigit:]]+)\\t(?<mtu>\\d+)\\t(?<window>\\d+)\\t(?<irtt>[[:xdigit:]]+)");
 
     if (routes != NULL &&

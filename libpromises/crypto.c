@@ -590,7 +590,7 @@ int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
 
     if(max_ciphertext_size > out_size)
     {
-        ProgrammingError("EncryptString: output buffer too small: max_ciphertext_size (%ld) > out_size (%ld)",
+        ProgrammingError("EncryptString: output buffer too small: max_ciphertext_size (%zd) > out_size (%zd)",
                           max_ciphertext_size, out_size);
     }
 
@@ -613,7 +613,7 @@ int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
 
     if(cipherlen > max_ciphertext_size)
     {
-        ProgrammingError("EncryptString: too large ciphertext written: cipherlen (%d) > max_ciphertext_size (%ld)",
+        ProgrammingError("EncryptString: too large ciphertext written: cipherlen (%d) > max_ciphertext_size (%zd)",
                           cipherlen, max_ciphertext_size);
     }
 
@@ -672,7 +672,7 @@ int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
 
     if(max_plaintext_size > out_size)
     {
-        ProgrammingError("DecryptString: output buffer too small: max_plaintext_size (%ld) > out_size (%ld)",
+        ProgrammingError("DecryptString: output buffer too small: max_plaintext_size (%zd) > out_size (%zd)",
                           max_plaintext_size, out_size);
     }
 
@@ -699,7 +699,7 @@ int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
 
     if(plainlen > max_plaintext_size)
     {
-        ProgrammingError("DecryptString: too large plaintext written: plainlen (%d) > max_plaintext_size (%ld)",
+        ProgrammingError("DecryptString: too large plaintext written: plainlen (%d) > max_plaintext_size (%zd)",
                           plainlen, max_plaintext_size);
     }
 

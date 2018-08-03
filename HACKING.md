@@ -433,8 +433,9 @@ the behavior change which is important. This implies that refactorings that have
 no visible effect on behavior don't need a changelog entry.
 
 If a changelog entry is needed, your pull request should have at least one
-commit with a "Changelog:" line in it, after the title. This may be one of the
-following:
+commit either with a "Changelog:" line in it (anywhere after the title), or
+title should start with ticket number from our bug tracker ("CFE-1234").
+"Changelog:" line may be one of the following:
 
 * To write arbitrary message in the ChangeLog:
 `Changelog: <message>`

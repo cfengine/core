@@ -1,0 +1,17 @@
+{
+  "empty": "",
+  "empty2": "",
+  "match_none": "abdc",
+  "match_none2": "abcdefghij\\t\\n",
+  "match_once": "ABCd",
+  "match_twice": "hellohello",
+  "overlap": "yesa",
+  "replace": "abcdefghij\\r\\n",
+  "replace2": "abcdeftEsT\\n",
+  "replace3": "no",
+  "special": "1{}[].*?",
+  "special2": "()\\1[].*?",
+  "special3": "(){}[]\\2",
+  "test": "abcdefghij\\t\\n",
+  "test2": "(){}[].*?"
+}

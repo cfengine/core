@@ -7062,6 +7062,39 @@ static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
+static FnCallResult FnCallStringReplace(ARG_UNUSED EvalContext *ctx,
+                                        ARG_UNUSED Policy const *policy,
+                                        ARG_UNUSED FnCall const *fp,
+                                        Rlist const *finalargs)
+{
+    if (finalargs->next == NULL || finalargs->next->next == NULL)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Incorrect number of arguments for function '%s'",
+            fp->name);
+        return FnFailure();
+    }
+
+    char *string = RlistScalarValue(finalargs);
+    char *match = RlistScalarValue(finalargs->next);
+    char *substitute = RlistScalarValue(finalargs->next->next);
+
+    char *ret = SearchAndReplace(string, match, substitute);
+
+    if (ret == NULL)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Failed to replace with function '%s', string: '%s', match: '%s', "
+            "substitute: '%s'",
+            fp->name, string, match, substitute);
+        return FnFailure();
+    }
+
+    return FnReturn(ret);
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     bool allocated = false;
@@ -8779,6 +8812,14 @@ static const FnCallArg STRFTIME_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg STRING_REPLACE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Source string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to replace"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Replacement string"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg SUBLIST_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
@@ -9275,6 +9316,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",
                   FNCALL_OPTION_COLLECTING|FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("string_replace", CF_DATA_TYPE_STRING, STRING_REPLACE_ARGS, &FnCallStringReplace, "Search through arg1, replacing occurences of arg2 with arg3.",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regex_replace", CF_DATA_TYPE_STRING, REGEX_REPLACE_ARGS, &FnCallRegReplace, "Replace occurrences of arg1 in arg2 with arg3, allowing backreferences.  Perl-style options accepted in arg4.",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

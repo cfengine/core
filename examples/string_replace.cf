@@ -1,0 +1,52 @@
+#  Copyright 2018 Northern.tech AS
+
+#  This file is part of Cfengine 3 - written and maintained by Northern.tech AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      # replace one occurence
+      "replace_once" string => string_replace("This is a string", "string", "thing");
+      # replace several occurences
+      "replace_several" string => string_replace("This is a string", "i", "o");
+      # replace nothing
+      "replace_none" string => string_replace("This is a string", "boat", "no");
+      # replace ambiguous order
+      "replace_ambiguous" string => string_replace("aaaaa", "aaa", "b");
+
+  reports:
+      # in order, the above...
+      "replace_once = '$(replace_once)'";
+      "replace_several = '$(replace_several)'";
+      "replace_none = '$(replace_none)'";
+      "replace_ambiguous = '$(replace_ambiguous)'";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: replace_once = 'This is a thing'
+#@ R: replace_several = 'Thos os a strong'
+#@ R: replace_none = 'This is a string'
+#@ R: replace_ambiguous = 'baa'
+#@ ```
+#+end_src

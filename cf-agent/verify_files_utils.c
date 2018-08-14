@@ -2764,7 +2764,8 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
         .protocol_version = DecideProtocol(ctx, fc.protocol_version),
         .cache_connection = !background,
         .force_ipv4 = fc.force_ipv4,
-        .trust_server = fc.trustkey
+        .trust_server = fc.trustkey,
+        .off_the_record = false
     };
 
     unsigned int conntimeout = fc.timeout;

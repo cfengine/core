@@ -436,7 +436,8 @@ static AgentConnection *CFNetOpenConnection(const char *server)
     ConnectionFlags connflags =
     {
         .protocol_version = CF_PROTOCOL_LATEST,
-        .trust_server = true
+        .trust_server = true,
+        .off_the_record = true
     };
     int err;
     char *buf = xstrdup(server);

@@ -85,6 +85,7 @@ typedef struct
     bool            cache_connection : 1;
     bool            force_ipv4       : 1;
     bool            trust_server     : 1;
+    bool            off_the_record   : 1;
 } ConnectionFlags;
 
 static inline bool ConnectionFlagsEqual(const ConnectionFlags *f1,
@@ -93,7 +94,8 @@ static inline bool ConnectionFlagsEqual(const ConnectionFlags *f1,
     if (f1->protocol_version == f2->protocol_version &&
         f1->cache_connection == f2->cache_connection &&
         f1->force_ipv4 == f2->force_ipv4 &&
-        f1->trust_server == f2->trust_server)
+        f1->trust_server == f2->trust_server &&
+        f1->off_the_record == f2->off_the_record)
     {
         return true;
     }

@@ -263,7 +263,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     REMOTEBUNDLES[0] = '\0';
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:g:D:VSxo:s:MH:C::l",
+    while ((c = getopt_long(argc, argv, "t:q:db::vnKhIif:g:D:VSxo:s:MH:C::l",
                             OPTIONS, &longopt_idx))
            != -1)
     {

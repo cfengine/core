@@ -1,3 +1,15 @@
+3.10.5:
+	- Prevent systemv script from managing processes inside other containers
+	  (ENT-3800)
+	- Bundle name is now part of the log message when aborting a bundle
+	  (CFE-2793)
+	- Do not iterate over JSON objects' properties in mustache (CFE-2125)
+	- Eliminated error messages caused by attempting to kill expired processes
+	  (CFE-2824)
+	- Fix the off-by-one error in cf-runagent background process spawning
+	  (CFE-2873)
+	- Added function string_replace. (CFE-2850)
+
 3.10.4:
 	- Add IPv6 hard classes with the "ipv6_" prefix (CFE-2310)
 	- Add a debug log for computed class in splayclass

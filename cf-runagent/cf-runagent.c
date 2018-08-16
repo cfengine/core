@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 #else
             if (BACKGROUND)     /* parallel */
             {
-                if (count <= MAXCHILD)
+                if (count < MAXCHILD)
                 {
                     if (fork() == 0)    /* child process */
                     {
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     if (BACKGROUND)
     {
         Log(LOG_LEVEL_NOTICE, "Waiting for child processes to finish");
-        while (count > 1)
+        while (count > 0)
         {
             pid = wait(&status);
             Log(LOG_LEVEL_VERBOSE, "Child %d ended, number %d", pid, count);
@@ -263,7 +263,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     REMOTEBUNDLES[0] = '\0';
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:g:D:VSxo:s:MH:C::l",
+    while ((c = getopt_long(argc, argv, "t:q:db::vnKhIif:g:D:VSxo:s:MH:C::l",
                             OPTIONS, &longopt_idx))
            != -1)
     {

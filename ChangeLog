@@ -1,3 +1,12 @@
+3.7.9:
+	- Add commit title to changelog by default, if it has ticket number
+	  (ENT-3638)
+	- Prevent systemv script from managing processes inside other containers
+	  (ENT-3800)
+	- disable/enable tests according to their behaviour on new buildslaves
+	  (INF-402)
+	- fix test to work on Solaris, too (INF-402)
+
 3.7.8:
 	- Add IPv6 hard classes with the "ipv6_" prefix (CFE-2310)
 	- Add a debug log for computed class in splayclass

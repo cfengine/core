@@ -330,6 +330,20 @@ Changelog: Make sure the bugtracker reference is taken from the title
 
 ################################################################################
 
+git commit --allow-empty -m 'MEN-1234 with JIRA tag in title. N68
+
+Title should be included, rest of commit - not'
+
+################################################################################
+
+git commit --allow-empty -m 'MEN-1234 with JIRA tag in title. N69
+
+Changelog: None
+
+Nothing should be included'
+
+################################################################################
+
 
 
 "$SRC_DIR/changelog-generator" --repo --sort-changelog HEAD > result.txt 2>stderr.txt || {
@@ -394,6 +408,7 @@ cat > expected.txt <<EOF
 	- This should be in changelog N8
 	  And this N9
 	- This too. N33
+	- with JIRA tag in title. N68 (MEN-1234)
 EOF
 diff -u expected.txt result.txt
 

@@ -20,13 +20,16 @@ LINKED_SHAS = {}
 # messages.
 SHA_TO_TRACKER = {}
 
+# more relaxed regexp to find JIRA issues anywhere in commit message
 JIRA_REGEX = r"(?:Jira:? *)?(?:https?://tracker.mender.io/browse/)?((?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+)"
+# more strict regexp to find JIRA issues only in the beginning of title
+JIRA_TITLE_REGEX = r"^(?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+"
 TRACKER_REGEX = r"\(?(?:Ref:? *)?%s\)?:? *" % (JIRA_REGEX)
 
 POSSIBLE_MISSED_TICKETS = {}
 
 # Only for testing.
-SORT_CHANGELOG = False
+SORT_CHANGELOG = True
 
 # Type of log to generate, this is bitwise.
 LOG_TYPE = 0
@@ -116,6 +119,7 @@ for repo in repos:
         title_fetched = False
         title = ""
         commit_msg = ""
+        log_entry_title = False
         log_entry_commit = False
         log_entry_local = False
         log_entry = ""
@@ -140,7 +144,10 @@ for repo in repos:
                     SHA_TO_TRACKER[sha] = set()
                 SHA_TO_TRACKER[sha].add("".join(match.groups("")))
                 tracker_removed = re.sub(TRACKER_REGEX, "", line, flags=re.IGNORECASE)
-                line = tracker_removed.strip(' ')
+                tracker_removed = tracker_removed.strip(' ')
+                if re.match(JIRA_TITLE_REGEX, line) and not title_fetched:
+                    log_entry_title = True
+                line = tracker_removed
 
             if not title_fetched:
                 title = line
@@ -148,6 +155,7 @@ for repo in repos:
 
             match = re.match("^ *Changelog: *(.*)", line, re.IGNORECASE)
             if match:
+                log_entry_title = False
                 if log_entry:
                     add_entry(sha, log_entry)
                     log_entry = ""
@@ -157,6 +165,8 @@ for repo in repos:
                     log_entry = title
                 elif re.match("^Commit[ .]*$", match.group(1), re.IGNORECASE):
                     log_entry_commit = True
+                elif re.match("^None[ .]*$", match.group(1), re.IGNORECASE):
+                    pass
                 else:
                     log_entry_local = True
                     log_entry = match.group(1)
@@ -211,6 +221,8 @@ for repo in repos:
 
         blob.wait()
 
+        if log_entry_title:
+            add_entry(sha, title)
         if log_entry_commit:
             add_entry(sha, commit_msg)
         if log_entry:

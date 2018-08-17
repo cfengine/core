@@ -577,6 +577,10 @@ int safe_open(const char *pathname, int flags, ...)
                     (stat_before.st_uid != stat_after.st_uid || stat_before.st_gid != stat_after.st_gid))
                 {
                     close(currentfd);
+                    Log(LOG_LEVEL_ERR, "Cannot follow symlink '%s'; it is not "
+                        "owned by root or the user running this process, and "
+                        "the target owner and/or group differs from that of "
+                        "the symlink itself.", pathname);
                     // Return ENOLINK to signal that the link cannot be followed
                     // ('Link has been severed').
                     errno = ENOLINK;

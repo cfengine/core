@@ -333,7 +333,7 @@ err:
 void DBPrivCloseDB(DBPriv *db)
 {
     /* Abort LMDB transaction of the current thread. There should only be some
-     * transaction open when the signal handler or atexit() hook is called. */
+     * transaction open when the signal handler or cleanup hook is called. */
     AbortTransaction(db);
 
     if (db->env)

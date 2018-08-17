@@ -37,7 +37,7 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I$(srcdir)/../../cf-key \
 	-DTESTDATADIR='"$(srcdir)/data"'
 
-LDADD = ../../libpromises/libpromises.la libtest.la
+LDADD = ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la
 
 # automake does not support "maude_LIBS" variables. We can only alter
 # the generic LIBS one. In case the functions are mocked in the test
@@ -83,7 +83,7 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
 	../../libutils/logging.c \
-	../../libutils/atexit.c
+	../../libutils/cleanup.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
@@ -95,7 +95,7 @@ libdb_la_CFLAGS = $(AM_CFLAGS)
 check_PROGRAMS = \
 	arg_split_test \
 	assoc_test \
-	atexit_test \
+	cleanup_test \
 	csv_writer_test \
 	item_test \
 	rlist_test \
@@ -207,11 +207,11 @@ endif
 #
 TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 
-atexit_test_SOURCES = atexit_test.c
-atexit_test_LDADD = libtest.la libdb.la
+cleanup_test_SOURCES = cleanup_test.c
+cleanup_test_LDADD = libdb.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 csv_writer_test_SOURCES = csv_writer_test.c ../../libutils/csv_writer.c
-csv_writer_test_LDADD = libtest.la libstr.la
+csv_writer_test_LDADD = libstr.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
@@ -228,13 +228,13 @@ if !BUILTIN_EXTENSIONS
 endif
 
 set_domainname_test_SOURCES = set_domainname_test.c
-set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
+set_domainname_test_LDADD = libstr.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la
 
 str_test_SOURCES = str_test.c
-str_test_LDADD = libstr.la
+str_test_LDADD = libstr.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
-xml_writer_test_LDADD = libtest.la libstr.la
+xml_writer_test_LDADD = libstr.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 list_test_SOURCES = list_test.c 
 
@@ -246,13 +246,15 @@ buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
 buffer_test_CPPFLAGS = $(AM_CPPFLAGS)
 
 csv_parser_test_SOURCES = csv_parser_test.c ../../libutils/csv_parser.c
-csv_parser_test_LDADD = libtest.la ../../libutils/libutils.la
 
 regex_test_SOURCES = regex_test.c ../../cf-agent/match_scope.c
 
 cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-functions.c
 
 ipaddress_test_SOURCES = ipaddress_test.c 
+
+#TODO remove this if tests pass
+#item_test_SOURCES = item_test.c
 
 protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/server_common.c \
@@ -263,7 +265,6 @@ protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/cf-serverd-functions.c \
 	../../cf-serverd/server_access.c \
 	../../cf-serverd/strlist.c
-protocol_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -279,7 +280,6 @@ avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server_access.c \
 	../../cf-serverd/server_classic.c \
 	../../cf-serverd/strlist.c
-avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 endif
 endif
@@ -288,28 +288,26 @@ endif
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
 
 db_test_SOURCES = db_test.c
-db_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 db_concurrent_test_SOURCES = db_concurrent_test.c
 #db_concurrent_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-db_concurrent_test_LDADD = libdb.la
+db_concurrent_test_LDADD = libdb.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 lastseen_test_SOURCES = lastseen_test.c \
 	../../libpromises/item_lib.c  ../../libpromises/lastseen.c ../../libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_test_LDADD = libdb.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c \
 	../../libpromises/lastseen.c ../../libutils/statistics.c ../../libpromises/item_lib.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_migration_test_LDADD = libdb.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
 package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/package_module.c ../../cf-agent/verify_packages.c ../../cf-agent/verify_new_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c ../../cf-agent/match_scope.c
 
 #package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
-package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/file_lib.c \
@@ -319,29 +317,24 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/sequence.c \
 	../../libutils/unix_dir.c \
 	../../libutils/writer.c
-file_lib_test_LDADD = libtest.la
 file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY
 
 sort_test_SOURCES = sort_test.c
-sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
-logging_test_LDADD = libtest.la ../../libutils/libutils.la
 
 logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging.h
-logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c
-connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
+connection_management_test_LDADD = ../../cf-serverd/libcf-serverd.la ../../libutils/libutils.la ../../libpromises/libpromises.la libtest.la 
 
-rlist_test_SOURCES = rlist_test.c \
-	../../libpromises/rlist.c
-rlist_test_LDADD = libtest.la ../../libpromises/libpromises.la
+rlist_test_SOURCES = rlist_test.c 
+# TODO remove this if tests pass
+#\
+#	../../libpromises/rlist.c
 # Workaround for object file basename conflicts, search the web for
 # "automake created with both libtool and without"
 rlist_test_CPPFLAGS = $(AM_CPPFLAGS)
-
-process_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 if LINUX
 
@@ -351,7 +344,6 @@ linux_process_test_SOURCES = linux_process_test.c \
 	../../libpromises/process_unix.c \
 	../../libpromises/process_linux.c \
 	../../libutils/file_lib.c
-linux_process_test_LDADD = libtest.la ../../libutils/libutils.la
 
 endif
 
@@ -363,7 +355,6 @@ aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
 	../../libpromises/process_aix.c \
 	../../libutils/file_lib.c
-aix_process_test_LDADD = libtest.la ../../libutils/libutils.la
 
 endif
 
@@ -375,50 +366,36 @@ solaris_process_test_SOURCES = solaris_process_test.c \
 	../../libpromises/process_unix.c \
 	../../libpromises/process_solaris.c \
 	../../libutils/file_lib.c
-solaris_process_test_LDADD = libtest.la ../../libutils/libutils.la
 
 endif
 
 process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
 	../../libpromises/process_unix.c
-process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la
 
 exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c ../../cf-execd/execd-config.c
-exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
-
-sysinfo_test_LDADD = libtest.la \
-	../../libenv/libenv.la \
-	../../libpromises/libpromises.la
 
 mon_cpu_test_SOURCES = mon_cpu_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_cpu.c
-mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 mon_load_test_SOURCES = mon_load_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_load.c
-mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 mon_processes_test_SOURCES = mon_processes_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_processes.c
-mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 # tls_generic_test uses stub functions interposition which does not work (yet)
 # under OS X. Another way of stubbing functions from libpromises is needed.
 if !XNU
 check_PROGRAMS += tls_generic_test
 tls_generic_test_SOURCES = tls_generic_test.c
-tls_generic_test_LDADD = libtest.la \
-	../../libutils/libutils.la \
-	../../libpromises/libpromises.la \
-	../../libcfnet/libcfnet.la \
-	../../cf-serverd/libcf-serverd.la
+tls_generic_test_LDADD = ../../libcfnet/libcfnet.la \
+	../../cf-serverd/libcf-serverd.la ../../libutils/libutils.la \
+	../../libpromises/libpromises.la libtest.la 
 endif
 
 version_test_SOURCES = version_test.c
 
 hash_test_SOURCES = hash_test.c
-hash_test_LDADD = ../../libutils/libutils.la libtest.la
 
 key_test_SOURCES = key_test.c
-key_test_LDADD = ../../libpromises/libpromises.la ../../libutils/libutils.la libtest.la
 
 strlist_test_SOURCES = strlist_test.c ../../cf-serverd/strlist.c ../../cf-serverd/strlist.h
 
@@ -436,7 +413,6 @@ queue_test_SOURCES = queue_test.c
 if !NT
 check_PROGRAMS += nfs_test
 nfs_test_SOURCES = nfs_test.c ../../cf-agent/match_scope.c
-nfs_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 init_script_test_helper_SOURCES = init_script_test_helper.c
 init_script_test.sh: init_script_test_helper

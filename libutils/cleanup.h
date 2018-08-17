@@ -22,56 +22,13 @@
   included file COSL.txt.
 */
 
-#include <platform.h>
-#include <alloc.h>
-#include <atexit.h>
+#ifndef CFENGINE_CLEANUP_H
+#define CFENGINE_CLEANUP_H
 
-#if defined(__MINGW32__)
+typedef void (*CleanupFn)(void);
 
-typedef struct AtExitList
-{
-    AtExitFn fn;
-    struct AtExitList *next;
-} AtExitList;
-
-static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
-static AtExitList *atexit_functions;
-
-/* To be called externally only by Windows service implementation */
-
-void CallAtExitFunctions(void)
-{
-    pthread_mutex_lock(&atexit_functions_mutex);
-
-    AtExitList *p = atexit_functions;
-    while (p)
-    {
-        AtExitList *cur = p;
-        (cur->fn)();
-        p = cur->next;
-        free(cur);
-    }
-
-    atexit_functions = NULL;
-
-    pthread_mutex_unlock(&atexit_functions_mutex);
-}
+void CallCleanupFunctions(void);
+void DoCleanupAndExit(int ret);
+void RegisterCleanupFunction(CleanupFn fn);
 
 #endif
-
-void RegisterAtExitFunction(AtExitFn fn)
-{
-#if defined(__MINGW32__)
-    pthread_mutex_lock(&atexit_functions_mutex);
-
-    AtExitList *p = xmalloc(sizeof(AtExitList));
-    p->fn = fn;
-    p->next = atexit_functions;
-
-    atexit_functions = p;
-
-    pthread_mutex_unlock(&atexit_functions_mutex);
-#endif
-
-    atexit(fn);
-}

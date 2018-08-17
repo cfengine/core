@@ -37,7 +37,7 @@ typedef struct AtExitList
 static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
 static AtExitList *atexit_functions;
 
-/* To be called externally only by Windows service implementation */
+/* To be called externally only by Windows binaries */
 
 void CallAtExitFunctions(void)
 {
@@ -71,7 +71,11 @@ void RegisterAtExitFunction(AtExitFn fn)
     atexit_functions = p;
 
     pthread_mutex_unlock(&atexit_functions_mutex);
-#endif
-
+/*
+    Don't register atexit() functions on windows due to race conditions 
+    around lock cleanup.
+*/
+#else 
     atexit(fn);
+#endif
 }

@@ -175,6 +175,11 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
 
     fprintf(stdout, "%8s: %s\n", LogLevelToString(level), msg);
 
+    if (level == LOG_LEVEL_DEBUG)
+    {
+        fflush(stdout);
+    }
+
     if (color)
     {
         // Turn off the color again.

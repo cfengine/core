@@ -111,6 +111,7 @@ check_PROGRAMS = \
 	regex_test \
 	alloc_test \
 	string_writer_test \
+	file_writer_test \
 	xml_writer_test \
 	sequence_test \
 	lastseen_test \
@@ -290,7 +291,6 @@ avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 endif
 endif
 
-#file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
 
 db_test_SOURCES = db_test.c

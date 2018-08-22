@@ -1,0 +1,92 @@
+body file control
+{
+        inputs => { "../../default.cf.sub" };
+}
+
+bundle agent main
+{
+  methods:
+      "init,test,check,cleanup"
+        usebundle => default("$(this.promise_filename)") ;
+}
+
+bundle agent init
+{
+  files:
+
+      # First we initialize some directories to iterate over and some files that
+      # will be renamed during the test
+
+      "$(G.testdir)/test/$(check.dirs)/incoming/$(check.files)"
+        create => "true";
+}
+
+bundle agent test
+{
+  meta:
+
+      "description"
+        string => "Test that files can be renamed using regular expression
+        matches from the promiser";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2879" };
+
+  files:
+
+      # We promise that the target is a copy of the source file Since preserve
+      # is set to false, we expect the original permissions on the target file
+      # to remain unchanged.
+
+      "$(G.testdir)/test/$(check.dirs)/incoming/((?!.*renamed)[a-z]*)"
+        rename => to( "$(G.testdir)/test/$(check.dirs)/incoming/$(match.1)_renamed" );
+
+}
+
+body rename to(file)
+{
+        newname => "$(file)";
+}
+
+bundle agent check
+{
+  vars:
+      "dirs"
+        slist => { "knuth", "lamport", "turing" };
+
+      "files"
+        slist => { "one", "two", "three" };
+
+      # Append _renamed to each of the files
+      "expected_files" slist => maplist( "$(this)_renamed", files );
+
+      "expected_paths" slist => {
+                                  "$(G.testdir)/test/knuth/incoming/one_renamed",
+                                  "$(G.testdir)/test/knuth/incoming/two_renamed",
+                                  "$(G.testdir)/test/knuth/incoming/three_renamed",
+                                  "$(G.testdir)/test/lamport/incoming/one_renamed",
+                                  "$(G.testdir)/test/lamport/incoming/two_renamed",
+                                  "$(G.testdir)/test/lamport/incoming/three_renamed",
+                                  "$(G.testdir)/test/turing/incoming/one_renamed",
+                                  "$(G.testdir)/test/turing/incoming/two_renamed",
+                                  "$(G.testdir)/test/turing/incoming/three_renamed",
+      };
+
+  classes:
+      "all_expected_files_exist"
+        expression => filesexist( @(expected_paths) );
+
+  methods:
+
+      "Pass or Fail"
+        usebundle => dcs_passif( "all_expected_files_exist",
+                                 $(this.promise_filename));
+
+  reports:
+      DEBUG|EXTRA::
+      "Expected path exists '$(expected_paths)'"
+        if => fileexists( $(expected_paths) );
+      "Expected path MISSING '$(expected_paths)'"
+        unless => fileexists( $(expected_paths) );
+}

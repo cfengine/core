@@ -260,8 +260,11 @@ AgentConnection *ServerConnection(const char *server, const char *port,
         assert(ret == 1);
 
         conn->conn_info->status = CONNECTIONINFO_STATUS_ESTABLISHED;
-        LastSaw1(conn->remoteip, KeyPrintableHash(conn->conn_info->remote_key),
-                 LAST_SEEN_ROLE_CONNECT);
+        if (!flags.off_the_record)
+        {
+            LastSaw1(conn->remoteip, KeyPrintableHash(conn->conn_info->remote_key),
+                     LAST_SEEN_ROLE_CONNECT);
+        }
         break;
 
     case CF_PROTOCOL_CLASSIC:

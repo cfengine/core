@@ -7,9 +7,8 @@ body common control
 bundle agent test
 {
   commands:
-"/usr/bin/which gdb";
 # TODO is there something I can use instead of promise_dirname to get relative paths here?
-    "$(this.promise_dirname)/../../../libtool --mode=execute /usr/bin/gdb -x $(this.promise_dirname)/couldnt_ioctl_socket.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-lock --no-fork --debug --file $(this.promise_dirname)/couldnt_ioctl_socket.cf.sub"
+    "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(this.promise_dirname)/couldnt_ioctl_socket.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-lock --no-fork --debug --file $(this.promise_dirname)/couldnt_ioctl_socket.cf.sub"
       classes => keptcode;
 }
 

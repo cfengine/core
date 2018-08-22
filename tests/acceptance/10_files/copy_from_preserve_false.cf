@@ -1,0 +1,85 @@
+body file control
+{
+        inputs => { "../default.cf.sub" };
+}
+
+bundle agent main
+{
+  methods:
+      "Test" usebundle => default("$(this.promise_filename)") ;
+}
+
+bundle agent init
+{
+  files:
+
+      # We set the permissions of our source file so that we can be sure they
+      # are not the permissions of the target file at the end.
+
+      "$(this.promise_filename).src"
+        perms => m( "$(check.expect[src])" );
+
+      # We make sure the target file exists and has permissions different from
+      # the source file.
+
+      "$(this.promise_filename).target"
+        delete => tidy;
+
+      "$(this.promise_filename).target"
+        create => "true",
+        perms => m( "$(check.expect[target])" );
+}
+
+bundle agent test
+{
+  meta:
+
+      "description"
+        string => "Test that preserve false in body copy_from doesn't modify
+        permissions of the promised file";
+
+      "test_soft_fail"
+        string => "!windows",
+        meta => { "ENT-4016" };
+
+  files:
+
+      # We promise that the target is a copy of the source file Since preserve
+      # is set to false, we expect the original permissions on the target file
+      # to remain unchanged.
+
+      "$(this.promise_filename).target"
+        copy_from => local_cp_digest_preserve_false( "$(this.promise_filename).src" );
+
+}
+bundle agent check
+{
+  vars:
+      "expect[src]"      string => "500";
+      "expect[target]"   string => "600";
+
+      "observe[src]"    string => filestat( "$(this.promise_filename).src", permoct);
+      "observe[target]" string => filestat( "$(this.promise_filename).src", permoct);
+
+  methods:
+
+    "Test Result"
+        usebundle => dcs_check_strcmp(
+                                       "$(expect[target])",
+                                       "$(observe[target])",
+                                       $(this.promise_filename),
+                                       "false");
+
+  reports:
+      DEBUG|EXTRA::
+      ".src Expect $(expect[src]), observe $(observe[target])";
+      ".target Expect $(expect[target]), observe $(observe[target])";
+
+}
+body copy_from local_cp_digest_preserve_false (from)
+{
+        source      => "$(from)";
+        preserve    => "false";
+        compare     => "digest";
+        copy_backup => "false";
+}

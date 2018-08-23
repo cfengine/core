@@ -546,7 +546,8 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
 
     ConnectionFlags connflags = {
         .protocol_version = config->protocol_version,
-        .trust_server = trustkey
+        .trust_server = trustkey,
+        .off_the_record = false
     };
     int err = 0;
     conn = ServerConnection(hostname, port, CONNTIMEOUT, connflags, &err);

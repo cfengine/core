@@ -436,7 +436,8 @@ static AgentConnection *CFNetOpenConnection(const char *server)
     ConnectionFlags connflags =
     {
         .protocol_version = CF_PROTOCOL_LATEST,
-        .trust_server = true
+        .trust_server = true,
+        .off_the_record = true
     };
     int err;
     char *buf = xstrdup(server);
@@ -450,7 +451,7 @@ static AgentConnection *CFNetOpenConnection(const char *server)
     free(buf);
     if (conn == NULL)
     {
-        printf("Failed to connect to '%s'\n", server);
+        printf("Failed to connect to '%s' (%d)\n", server, err);
         return NULL;
     }
     return conn;

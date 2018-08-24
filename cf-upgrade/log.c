@@ -57,8 +57,9 @@ static char *prepare_message(char *format, va_list args)
     message_size = vsnprintf(buffer, MAX_LOG_ENTRY_SIZE - 1, format, args);
     strftime(timestamp, timestamp_size, "%Y/%m/%d %H:%M:%S", &now);
     /* '[' + ']' + ' ' + '\0' */
-    message = xmalloc(message_size + timestamp_size + 4);
-    sprintf(message, "[%s] %s", timestamp, buffer);
+    const size_t buf_size = message_size + timestamp_size + 3 + 1;
+    message = xmalloc(buf_size);
+    snprintf(message, buf_size, "[%s] %s", timestamp, buffer);
     return message;
 }
 

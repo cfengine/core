@@ -231,7 +231,7 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
     roles_acl     = calloc(1, sizeof(*roles_acl));
     SV.path_shortcuts = StringMapNew();
 
-// TODO create a script to rewrite the line number breakpoint in tests/acceptance/16_cf-serverd/keep_promises_fail.cf
+// gdb breakpoint for tests/acceptance/16_cf-serverd/keep_promises_fail.cf
 
     if (paths_acl    == NULL || classes_acl == NULL || vars_acl    == NULL ||
         literals_acl == NULL || query_acl   == NULL || bundles_acl == NULL ||
@@ -1151,7 +1151,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                 }
             }
 
-// TODO create a script to rewrite the line number breakpoint in tests/acceptance/16_cf-serverd/add_access_constraints_fail.gdb
+// gdb breakpoint for tests/acceptance/16_cf-serverd/add_access_constraints_fail.cf
 
             if (ret == (size_t) -1)
             {

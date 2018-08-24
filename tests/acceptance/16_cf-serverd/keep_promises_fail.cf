@@ -7,8 +7,21 @@ body common control
 bundle agent test
 {
   commands:
-# TODO is there something I can use instead of promise_dirname to get relative paths here?
-    "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(this.promise_dirname)/keep_promises_fail.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-fork --file $(this.promise_dirname)/keep_promises_fail.cf.sub"
+    "/bin/echo -n '=line_number=' && /bin/grep -n keep_promises_fail.cf $(this.promise_dirname)/../../../cf-serverd/server_transform.c | cut -d: -f1" 
+      contain => shell_command,
+      module => "true";
+
+    "/bin/echo -e '
+      b cf-serverd/server_transform.c:$(echo.line_number)
+      commands
+        set classes_acl=0
+        continue
+      end
+      run
+      quit $_exitcode' > $(sys.workdir)/keep_promises_fail.gdb"
+      contain => shell_command;
+
+    "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(sys.workdir)/keep_promises_fail.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-fork --file $(this.promise_dirname)/keep_promises_fail.cf.sub"
       classes => keptcode;
 }
 
@@ -16,6 +29,11 @@ bundle agent check
 {
   methods:
     "pass" usebundle => dcs_passif("ok", "$(this.promise_filename)");
+}
+
+body contain shell_command
+{
+  useshell => "useshell";
 }
 
 body classes keptcode

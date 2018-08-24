@@ -3103,7 +3103,7 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
 {
     FILE *uptimecmd;
     pcre *rx;
-    int ovector[UPTIME_OVECTOR], i, seconds;
+    int ovector[UPTIME_OVECTOR], i;
     char *backref = NULL;
     const char *uptimepath = "/usr/bin/uptime";
     time_t uptime = 0;
@@ -3147,6 +3147,8 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
             }
             backref = uptime_output + ovector[i * 2];
             // atoi() ignores non-digits, so no need to null-terminate backref
+
+            time_t seconds;
             switch(i)
             {
                 case 1: // Day
@@ -3162,7 +3164,7 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
                 default:
                     seconds = 0;
              }
-             uptime += atoi(backref) * seconds;
+             uptime += ((time_t) atoi(backref)) * seconds;
         }
     }
     else

@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <log.h>
 #include <alloc-mini.h>
 #include <time.h>
@@ -47,11 +48,14 @@ static char *prepare_message(char *format, va_list args)
     int message_size = 0;
     char timestamp[] = "YYYY/MM/DD HH:MM:SS";
     char buffer[MAX_LOG_ENTRY_SIZE];
-    time_t now = time(NULL);
-    struct tm *now_tm = gmtime(&now);
+
+    struct tm now;
+    time_t now_seconds = time(NULL);
+    gmtime_r(&now_seconds, &now);
+
     int timestamp_size = sizeof(timestamp);
     message_size = vsnprintf(buffer, MAX_LOG_ENTRY_SIZE - 1, format, args);
-    strftime(timestamp, timestamp_size, "%Y/%m/%d %H:%M:%S", now_tm);
+    strftime(timestamp, timestamp_size, "%Y/%m/%d %H:%M:%S", &now);
     /* '[' + ']' + ' ' + '\0' */
     message = xmalloc(message_size + timestamp_size + 4);
     sprintf(message, "[%s] %s", timestamp, buffer);
@@ -76,11 +80,14 @@ static void write_file_log_entry(const char *message)
 static void private_log_init()
 {
     char path[] = "cf-upgrade-YYYYMMDD-HHMMSS.log";
+
+    struct tm now;
     time_t now_seconds = time(NULL);
-    struct tm *now_tm = gmtime(&now_seconds);
+    gmtime_r(&now_seconds, &now);
+
     int log_fd = -1;
 
-    strftime(path, sizeof(path), "cf-upgrade-%Y%m%d-%H%M%S.log", now_tm);
+    strftime(path, sizeof(path), "cf-upgrade-%Y%m%d-%H%M%S.log", &now);
 #ifndef __MINGW32__
     log_fd = open(path, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 #else

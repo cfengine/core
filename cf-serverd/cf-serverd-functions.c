@@ -35,6 +35,7 @@
 #include <signals.h>
 #include <systype.h>
 #include <mutex.h>
+#include <global_mutex.h>
 #include <locks.h>
 #include <exec_tools.h>
 #include <unix.h>
@@ -568,11 +569,9 @@ static int WaitOnThreads()
     int result = 1;
     for (int i = 2; i > 0; i--)
     {
-        if (ThreadLock(cft_server_children))
-        {
-            result = ACTIVE_THREADS;
-            ThreadUnlock(cft_server_children);
-        }
+        ThreadLock(cft_server_children);
+        result = ACTIVE_THREADS;
+        ThreadUnlock(cft_server_children);
 
         if (result == 0)
         {
@@ -641,21 +640,19 @@ static void CollectCallIfDue(EvalContext *ctx)
 static void PolicyUpdateIfSafe(EvalContext *ctx, Policy **policy,
                                GenericAgentConfig *config)
 {
-    if (ThreadLock(cft_server_children))
+    ThreadLock(cft_server_children);
+    int prior = COLLECT_INTERVAL;
+    if (ACTIVE_THREADS == 0)
     {
-        int prior = COLLECT_INTERVAL;
-        if (ACTIVE_THREADS == 0)
-        {
-            CheckFileChanges(ctx, policy, config);
-        }
-        ThreadUnlock(cft_server_children);
+        CheckFileChanges(ctx, policy, config);
+    }
+    ThreadUnlock(cft_server_children);
 
-        /* Check for change in call-collect interval: */
-        if (prior != COLLECT_INTERVAL)
-        {
-            /* Start, stop or change schedule, as appropriate. */
-            CollectCallStart(COLLECT_INTERVAL);
-        }
+    /* Check for change in call-collect interval: */
+    if (prior != COLLECT_INTERVAL)
+    {
+        /* Start, stop or change schedule, as appropriate. */
+        CollectCallStart(COLLECT_INTERVAL);
     }
 }
 

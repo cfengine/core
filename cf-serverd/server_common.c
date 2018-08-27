@@ -1438,18 +1438,16 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
         static pthread_mutex_t pwnam_mtx = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
         struct passwd *pw = NULL;
 
-        if (ThreadLock(&pwnam_mtx))
+        ThreadLock(&pwnam_mtx);
+        /* TODO Redmine#7643: looking up the UID is expensive and should
+         * not be needed, since today's agent machine VS hub most probably
+         * do not share the accounts. */
+        pw = getpwnam(conn->username);
+        if (pw != NULL)
         {
-            /* TODO Redmine#7643: looking up the UID is expensive and should
-             * not be needed, since today's agent machine VS hub most probably
-             * do not share the accounts. */
-            pw = getpwnam(conn->username);
-            if (pw != NULL)
-            {
-                conn->uid = pw->pw_uid;
-            }
-            ThreadUnlock(&pwnam_mtx);
+            conn->uid = pw->pw_uid;
         }
+        ThreadUnlock(&pwnam_mtx);
     }
 
 #endif

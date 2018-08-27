@@ -23,6 +23,7 @@
 */
 
 #include <locks.h>
+#include <global_mutex.h>
 #include <mutex.h>
 #include <string_lib.h>
 #include <files_interfaces.h>

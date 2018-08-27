@@ -77,13 +77,13 @@ libstr_la_LIBADD = libtest.la
 check_LTLIBRARIES += libdb.la
 libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_api.c \
-	../../libpromises/mutex.c \
 	../../libpromises/dbm_quick.c \
 	../../libpromises/dbm_tokyocab.c \
 	../../libpromises/dbm_lmdb.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
 	../../libutils/logging.c \
+	../../libutils/mutex.c \
 	../../libutils/atexit.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
@@ -170,6 +170,7 @@ check_PROGRAMS = \
 	key_test \
 	cf_upgrade_test \
 	queue_test \
+	stack_test \
 	matching_test \
 	ring_buffer_test \
 	strlist_test \
@@ -437,6 +438,8 @@ $(CFUPGRADE)/process.c $(CFUPGRADE)/process.h $(CFUPGRADE)/update.c $(CFUPGRADE)
 cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
 
 queue_test_SOURCES = queue_test.c
+
+stack_test_SOURCES = stack_test.c
 
 if !NT
 check_PROGRAMS += nfs_test

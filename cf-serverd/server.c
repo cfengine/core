@@ -33,6 +33,7 @@
 #include <string_lib.h>
 #include <signals.h>
 #include <mutex.h>
+#include <global_mutex.h>
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <tls_generic.h>              /* TLSVerifyPeer */
 #include <rlist.h>
@@ -119,8 +120,9 @@ void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info
         PurgeOldConnections(&SV.connectionlist, now);
 
         bool allow = IsMatchItemIn(SV.multiconnlist, ipaddr);
-        if (!allow && ThreadLock(cft_count))
+        if (!allow)
         {
+            ThreadLock(cft_count);
             /* At most one connection allowed for this host: */
             allow = !IsItemIn(SV.connectionlist, ipaddr);
             ThreadUnlock(cft_count);
@@ -138,14 +140,12 @@ void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info
             char intime[PRINTSIZE(now)];
             xsnprintf(intime, sizeof(intime), "%jd", (intmax_t) now);
 
-            if (ThreadLock(cft_count))
-            {
-                PrependItem(&SV.connectionlist, ipaddr, intime);
-                ThreadUnlock(cft_count);
+            ThreadLock(cft_count);
+            PrependItem(&SV.connectionlist, ipaddr, intime);
+            ThreadUnlock(cft_count);
 
-                SpawnConnection(ctx, ipaddr, info);
-                return; /* Success */
-            }
+            SpawnConnection(ctx, ipaddr, info);
+            return; /* Success */
         }
     }
     /* Tidy up on failure: */
@@ -168,26 +168,24 @@ static void PurgeOldConnections(Item **list, time_t now)
 
     Log(LOG_LEVEL_DEBUG, "Purging Old Connections...");
 
-    if (ThreadLock(cft_count))
+    ThreadLock(cft_count);
+    Item *next;
+    for (Item *ip = *list; ip != NULL; ip = next)
     {
-        Item *next;
-        for (Item *ip = *list; ip != NULL; ip = next)
+        int then = 0;
+        sscanf(ip->classes, "%d", &then);
+
+        next = ip->next;
+
+        if (now > then + 2 * SECONDS_PER_HOUR)
         {
-            int then = 0;
-            sscanf(ip->classes, "%d", &then);
-
-            next = ip->next;
-
-            if (now > then + 2 * SECONDS_PER_HOUR)
-            {
-                Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_VERBOSE,
                     "IP address '%s' has been more than two hours in connection list, purging",
                     ip->name);
-                DeleteItem(list, ip);
-            }
+            DeleteItem(list, ip);
         }
-        ThreadUnlock(cft_count);
     }
+    ThreadUnlock(cft_count);
 
     Log(LOG_LEVEL_DEBUG, "Done purging old connections");
 }
@@ -312,13 +310,8 @@ static void *HandleConnection(void *c)
     /* We test if number of active threads is greater than max, if so we deny
        connection, if it happened too many times within a short timeframe then we
        kill ourself.TODO this test should be done *before* spawning the thread. */
-    ret = ThreadLock(cft_server_children);
-    if (!ret)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
-        goto conndone;
-    }
-    else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
+    ThreadLock(cft_server_children);
+    if (ACTIVE_THREADS > CFD_MAXPROCESSES)
     {
         if (TRIES > MAXTRIES)
         {
@@ -498,9 +491,9 @@ static void DeleteConn(ServerConnectionState *conn)
     }
     ConnectionInfoDestroy(&conn->conn_info);
 
-    if (conn->ipaddr[0] != '\0' &&
-        ThreadLock(cft_count))
+    if (conn->ipaddr[0] != '\0')
     {
+        ThreadLock(cft_count);
         DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
         ThreadUnlock(cft_count);
     }

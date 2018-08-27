@@ -395,7 +395,7 @@ int pcre_wrap_execute(pcre_wrap_job *job, char *subject, size_t subject_length, 
         /* plus the chunk before match */
         matches[current_match].submatch_offset[PCRE_WRAP_MAX_SUBMATCHES] = 0;
         matches[current_match].submatch_length[PCRE_WRAP_MAX_SUBMATCHES] = offsets[0];
-        newsize += offsets[0] * job->substitute->backref_count[PCRE_WRAP_MAX_SUBMATCHES];
+        newsize += ((size_t) offsets[0]) * job->substitute->backref_count[PCRE_WRAP_MAX_SUBMATCHES];
 
         /* plus the chunk after match */
         matches[current_match].submatch_offset[PCRE_WRAP_MAX_SUBMATCHES + 1] = offsets[1];

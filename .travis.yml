@@ -29,6 +29,8 @@ matrix:
       env: JOB_TYPE=compile_and_unit_test COVERAGE=no
       compiler: clang
     - os: linux
+      before_script:
+      - export CFLAGS="-g3 -O0"
       sudo: required
       env: JOB_TYPE=acceptance_tests_common
       # The unsafe acceptance tests don't work with SIMFS which is the default

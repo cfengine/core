@@ -4,11 +4,25 @@ body common control
   bundlesequence => { default("$(this.promise_filename)") };
 }
 
+bundle agent init
+{
+  commands:
+    "/bin/echo -n '=line_number=' && /bin/grep -n couldnt_ioctl_socket.cf $(this.promise_dirname)/../../../libenv/unix_iface.c | cut -d: -f1"
+      contain => shell_command,
+      module => "true";
+
+  files:
+    "$(sys.workdir)/couldnt_ioctl_socket.gdb"
+      create => "true",
+      edit_template => "$(this.promise_dirname)/couldnt_ioctl_socket.gdb.mustache",
+      template_data => ' { "line_number": "$(echo.line_number)" } ',
+      template_method => "mustache";
+}
+
 bundle agent test
 {
   commands:
-# TODO is there something I can use instead of promise_dirname to get relative paths here?
-    "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(this.promise_dirname)/couldnt_ioctl_socket.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-lock --no-fork --debug --file $(this.promise_dirname)/couldnt_ioctl_socket.cf.sub"
+    "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(sys.workdir)/couldnt_ioctl_socket.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-lock --no-fork --debug --file $(this.promise_dirname)/couldnt_ioctl_socket.cf.sub"
       classes => keptcode;
 }
 
@@ -16,6 +30,11 @@ bundle agent check
 {
   methods:
     "pass" usebundle => dcs_passif("ok", "$(this.promise_filename)");
+}
+
+body contain shell_command
+{
+  useshell => "useshell";
 }
 
 body classes keptcode

@@ -4,23 +4,24 @@ body common control
   bundlesequence => { default("$(this.promise_filename)") };
 }
 
-bundle agent test
+bundle agent init
 {
   commands:
-    "/bin/echo -n '=line_number=' && /bin/grep -n keep_promises_fail.cf $(this.promise_dirname)/../../../cf-serverd/server_transform.c | cut -d: -f1" 
+    "/bin/echo -n '=line_number=' && /bin/grep -n keep_promises_fail.cf $(this.promise_dirname)/../../../cf-serverd/server_transform.c | cut -d: -f1"
       contain => shell_command,
       module => "true";
 
-    "/bin/echo -e '
-      b cf-serverd/server_transform.c:$(echo.line_number)
-      commands
-        set classes_acl=0
-        continue
-      end
-      run
-      quit $_exitcode' > $(sys.workdir)/keep_promises_fail.gdb"
-      contain => shell_command;
+  files:
+    "$(sys.workdir)/keep_promises_fail.gdb"
+      create => "true",
+      edit_template => "$(this.promise_dirname)/keep_promises_fail.gdb.mustache",
+      template_data => ' { "line_number": "$(echo.line_number)" } ',
+      template_method => "mustache";
+}
 
+bundle agent test
+{
+  commands:
     "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(sys.workdir)/keep_promises_fail.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-fork --file $(this.promise_dirname)/keep_promises_fail.cf.sub"
       classes => keptcode;
 }

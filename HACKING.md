@@ -24,8 +24,10 @@ Merged features and larger changes will be released in the first minor release
 in order to make it to the first minor release.
 
 
-Top reasons pull-requests are rejected or delayed
+Pull Requests
 -------------------------------------------------
+
+### Top reasons pull-requests are rejected or delayed
 
 * Code does not follow style guidlines. See [Coding Style](#coding-style).
 
@@ -50,6 +52,24 @@ focused and small pull-requests are better.
 
 * No attached test case. Normally, all new code needs test cases. This means a
 functional test runnable with `make check`.
+
+### Multi-repo pull requests
+
+CFEngine is built from several different repositories.
+Sometimes a change is needed in multiple repositories.
+When possible, try to make changes compatible with the master version of the other repositories.
+While our Jenkins Pipeline can handle multiple Pull Requests, Travis does not.
+If you are making a breaking change in one repository which has to be merged together with another pull request, make this very clear.
+Put this in the pull request description (first comment);
+
+```
+Merge together:
+cfengine/core#1234
+cfengine/buildscripts#333
+```
+
+If the change is needed for a bigger feature, make that feature a separate pull request.
+The bigger PR will likely take some time to get reviewed, and discussed, while smaller changes can be merged quickly.
 
 
 Coding Style
@@ -454,4 +474,3 @@ and run
     ln -s contrib/dir-locals.el .dir-locals.el
 
 in the top directory of the source code checkout.
-

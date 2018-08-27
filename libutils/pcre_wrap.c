@@ -34,7 +34,7 @@ const char *pcre_wrap_strerror(const int error)
         case PCRE_ERROR_UNKNOWN_NODE: return "(pcre:) Bad node in pattern";
 
             /* Can't happen / not passed: */
-        case PCRE_ERROR_NOSUBSTRING:  return "(pcre:) Fire in power supply"; 
+        case PCRE_ERROR_NOSUBSTRING:  return "(pcre:) Fire in power supply";
         case PCRE_ERROR_NOMATCH:      return "(pcre:) Water in power supply";
 
             /* PCRE_WRAP errors: */
@@ -384,13 +384,13 @@ int pcre_wrap_execute(pcre_wrap_job *job, char *subject, size_t subject_length, 
             matches[current_match].submatch_offset[submatch] = offsets[2 * submatch];
 
             /* compatibility note: Missing optional submatches have length -1-(-1)==0 */
-            matches[current_match].submatch_length[submatch] = offsets[2 * submatch + 1] - offsets[2 * submatch]; 
+            matches[current_match].submatch_length[submatch] = offsets[2 * submatch + 1] - offsets[2 * submatch];
 
             /* reserve mem for *each* submatch reference! */
             newsize += matches[current_match].submatch_length[submatch] * job->substitute->backref_count[submatch];
         }
         /* plus replacement text size minus match text size */
-        newsize += strlen(job->substitute->text) - matches[current_match].submatch_length[0]; 
+        newsize += strlen(job->substitute->text) - matches[current_match].submatch_length[0];
 
         /* plus the chunk before match */
         matches[current_match].submatch_offset[PCRE_WRAP_MAX_SUBMATCHES] = 0;
@@ -465,7 +465,7 @@ int pcre_wrap_execute(pcre_wrap_job *job, char *subject, size_t subject_length, 
     for (int matchpos = 0; matchpos < matches_found; matchpos++)
     {
         // start with the text before the match
-        memcpy(result_offset, subject + offset, (size_t)matches[matchpos].submatch_offset[0] - offset); 
+        memcpy(result_offset, subject + offset, (size_t)matches[matchpos].submatch_offset[0] - offset);
         result_offset += matches[matchpos].submatch_offset[0] - offset;
 
         // copy every segment

@@ -22,6 +22,9 @@ bundle agent init
 bundle agent test
 {
   commands:
+    "/bin/ls -l $(this.promise_dirname)/../../..";
+    "/usr/bin/find $(this.promise_dirname)/../../.. -name 'server_transform.c'";
+
     "$(this.promise_dirname)/../../../libtool --mode=execute gdb -x $(sys.workdir)/keep_promises_fail.gdb --args $(this.promise_dirname)/../../../cf-serverd/cf-serverd --no-fork --file $(this.promise_dirname)/keep_promises_fail.cf.sub"
       classes => keptcode;
 }

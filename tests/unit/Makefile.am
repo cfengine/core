@@ -90,7 +90,8 @@ libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
 libdb_la_LIBADD = libstr.la ../../libutils/libutils.la
 #libdb_la_CPPFLAGS = $(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS)
-# Make sure that source files are compiled to separate object files libdb_la-file.o
+# Make sure that source files are compiled to separate object files 
+# libdb_la-file.o
 libdb_la_CFLAGS = $(AM_CFLAGS)
 
 check_PROGRAMS = \
@@ -243,7 +244,9 @@ set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
 
-xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c ../../libutils/cleanup.c
+xml_writer_test_SOURCES = xml_writer_test.c \
+	../../libutils/xml_writer.c \
+	../../libutils/cleanup.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
 list_test_SOURCES = list_test.c
@@ -276,7 +279,9 @@ protocol_test_LDADD = ../../libpromises/libpromises.la libtest.la
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
 
-findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
+findhub_test_SOURCES = findhub_test.c \
+	../../cf-agent/findhub.c \
+	../../cf-agent/load_avahi.c
 
 avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server_common.c \
@@ -294,9 +299,12 @@ endif
 
 #file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
 if ENABLE_COVERAGE
-file_writer_test_SOURCES = file_writer_test.c ../../libutils/cleanup.c
+file_writer_test_SOURCES = file_writer_test.c \
+	../../libutils/cleanup.c
 else
-file_writer_test_SOURCES = file_writer_test.c gcov-stub.c ../../libutils/cleanup.c
+file_writer_test_SOURCES = file_writer_test.c \
+	gcov-stub.c \
+	../../libutils/cleanup.c
 endif
 
 db_test_SOURCES = db_test.c
@@ -307,21 +315,33 @@ db_concurrent_test_SOURCES = db_concurrent_test.c
 db_concurrent_test_LDADD = libdb.la
 
 lastseen_test_SOURCES = lastseen_test.c \
-	../../libpromises/item_lib.c  ../../libpromises/lastseen.c ../../libutils/statistics.c
+	../../libpromises/item_lib.c \
+	../../libpromises/lastseen.c \
+	../../libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c \
-	../../libpromises/lastseen.c ../../libutils/statistics.c ../../libpromises/item_lib.c
+	../../libpromises/lastseen.c \
+	../../libutils/statistics.c \
+	../../libpromises/item_lib.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
-package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/package_module.c ../../cf-agent/verify_packages.c ../../cf-agent/verify_new_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c ../../libpromises/match_scope.c
+package_versions_compare_test_SOURCES = package_versions_compare_test.c \
+	../../cf-agent/package_module.c \
+	../../cf-agent/verify_packages.c \
+	../../cf-agent/verify_new_packages.c \
+	../../cf-agent/vercmp.c \
+	../../cf-agent/vercmp_internal.c \
+	../../cf-agent/retcode.c \
+	../../libpromises/match_scope.c
 
 #package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
-package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
+package_versions_compare_test_LDADD = ../../libpromises/libpromises.la \
+	libtest.la
 
 file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/file_lib.c \
@@ -350,11 +370,16 @@ sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
 logging_test_LDADD = libtest.la ../../libutils/libutils.la
 
-logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging.h
+logging_timestamp_test_SOURCES = logging_timestamp_test.c \
+	../../libutils/logging.h
 logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
 
-connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c
-connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
+connection_management_test_SOURCES = connection_management_test.c \
+	../../cf-serverd/server_common.c \
+	../../cf-serverd/server_tls.c
+connection_management_test_LDADD = ../../libpromises/libpromises.la \
+	 libtest.la \
+	../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \
 	../../libpromises/rlist.c
@@ -413,13 +438,19 @@ sysinfo_test_LDADD = libtest.la \
 	../../libenv/libenv.la \
 	../../libpromises/libpromises.la
 
-mon_cpu_test_SOURCES = mon_cpu_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_cpu.c
+mon_cpu_test_SOURCES = mon_cpu_test.c \
+	../../cf-monitord/mon.h \
+	../../cf-monitord/mon_cpu.c
 mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
-mon_load_test_SOURCES = mon_load_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_load.c
+mon_load_test_SOURCES = mon_load_test.c \
+	../../cf-monitord/mon.h \
+	../../cf-monitord/mon_load.c
 mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
-mon_processes_test_SOURCES = mon_processes_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_processes.c
+mon_processes_test_SOURCES = mon_processes_test.c \
+	../../cf-monitord/mon.h \
+	../../cf-monitord/mon_processes.c
 mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 version_test_SOURCES = version_test.c
@@ -428,9 +459,13 @@ hash_test_SOURCES = hash_test.c
 hash_test_LDADD = ../../libutils/libutils.la libtest.la
 
 key_test_SOURCES = key_test.c
-key_test_LDADD = ../../libpromises/libpromises.la ../../libutils/libutils.la libtest.la
+key_test_LDADD = ../../libpromises/libpromises.la \
+	../../libutils/libutils.la \
+	libtest.la
 
-strlist_test_SOURCES = strlist_test.c ../../cf-serverd/strlist.c ../../cf-serverd/strlist.h
+strlist_test_SOURCES = strlist_test.c \
+	../../cf-serverd/strlist.c \
+	../../cf-serverd/strlist.h
 
 iteration_test_SOURCES = iteration_test.c
 
@@ -438,9 +473,17 @@ libcompat_test_CPPFLAGS = -I$(top_srcdir)/libcompat
 libcompat_test_SOURCES = libcompat_test.c
 
 CFUPGRADE=../../cf-upgrade
-cf_upgrade_test_SOURCES = cf_upgrade_test.c $(CFUPGRADE)/alloc-mini.c $(CFUPGRADE)/alloc-mini.h $(CFUPGRADE)/command_line.c \
-$(CFUPGRADE)/command_line.h $(CFUPGRADE)/configuration.c $(CFUPGRADE)/configuration.h $(CFUPGRADE)/log.c $(CFUPGRADE)/log.h \
-$(CFUPGRADE)/process.c $(CFUPGRADE)/process.h $(CFUPGRADE)/update.c $(CFUPGRADE)/update.h
+cf_upgrade_test_SOURCES = cf_upgrade_test.c \
+	$(CFUPGRADE)/alloc-mini.c \
+	$(CFUPGRADE)/alloc-mini.h \
+	$(CFUPGRADE)/command_line.c \
+	$(CFUPGRADE)/command_line.h \
+	$(CFUPGRADE)/configuration.c \
+	$(CFUPGRADE)/configuration.h \
+	$(CFUPGRADE)/log.c $(CFUPGRADE)/log.h \
+	$(CFUPGRADE)/process.c $(CFUPGRADE)/process.h \
+	$(CFUPGRADE)/update.c \
+	$(CFUPGRADE)/update.h
 cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
 
 queue_test_SOURCES = queue_test.c

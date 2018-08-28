@@ -8,8 +8,8 @@ import os
 from os.path import basename
 
 try:
-    from subprocess import DEVNULL # py3k
-except ImportError:
+    DEVNULL = subprocess.DEVNULL
+except AttributeError:
     DEVNULL = open(os.devnull, 'wb')
 
 

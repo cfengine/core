@@ -144,7 +144,6 @@ try:
     sys.exit(0)
 except IndexError:                          # command returned no output
     verbose_print("exact_tag  = not found")
-    pass
 
 # Find the most recent tag reachable from this commit.
 git = subprocess.Popen(["git", "describe", "--tags", "--abbrev=0", REV],

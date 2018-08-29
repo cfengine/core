@@ -553,7 +553,7 @@ long byte_magnitude(long bytes)
 // Use this with byte_magnitude
 // Note that the cutoff is at 8x unit, because 3192 bytes is arguably more
 // useful than 3KiB
-const char * const byte_unit(long bytes)
+const char *byte_unit(long bytes)
 {
     const long Ki = 1024;
     const long Mi = Ki * 1024;

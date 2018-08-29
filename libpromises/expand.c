@@ -979,6 +979,10 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
         {
             new_manager->options = RlistCopy(RvalRlistValue(returnval));
         }
+        else if (strcmp(cp->lval, "interpreter") == 0)
+        {
+            new_manager->interpreter = SafeStringDuplicate(RvalScalarValue(returnval));
+        }
         else
         {
             /* This should be handled by the parser. */

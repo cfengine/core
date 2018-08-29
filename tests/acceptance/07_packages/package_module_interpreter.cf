@@ -1,0 +1,48 @@
+# Based on 00_basics/ifelapsed_and_expireafter/timed/package_lock.cf
+
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  files:
+      "$(sys.workdir)/modules/packages/."
+        create => "true";
+      "$(sys.workdir)/modules/packages/test_module"
+        copy_from => local_cp("$(this.promise_filename).module");
+}
+
+body package_module test_module
+{
+    query_installed_ifelapsed => "60";
+    query_updates_ifelapsed => "14400";
+    default_options => { "$(G.testfile)" };
+    interpreter => "/bin/sh";   # NOTE: no hashbang in the test_module script
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that the interpreter for the package module script can be set",
+        meta => { "CFE-2880" };
+
+  packages:
+      "first_pkg"
+        policy => "present",
+        package_module => test_module;
+      "second_pkg"
+        policy => "present",
+        package_module => test_module;
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff($(G.testfile),
+                                        "$(this.promise_filename).expected",
+                                        $(this.promise_filename));
+}

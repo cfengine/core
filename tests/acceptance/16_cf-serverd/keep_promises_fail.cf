@@ -7,7 +7,8 @@ body common control
 bundle agent init
 {
   commands:
-    "/bin/echo -n '=line_number=' && /bin/grep -n keep_promises_fail.cf $(this.promise_dirname)/../../../cf-serverd/server_transform.c | cut -d: -f1"
+# TODO add grep for GDB: !!! so that other references don't get found! :) :(
+    "/bin/echo -n '=line_number=' && /bin/grep -n GDB:.*keep_promises_fail.cf $(this.promise_dirname)/../../../cf-serverd/server_transform.c | cut -d: -f1"
       contain => shell_command,
       module => "true";
 

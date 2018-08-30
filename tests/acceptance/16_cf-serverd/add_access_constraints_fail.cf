@@ -7,7 +7,7 @@ body common control
 bundle agent init
 {
   commands:
-    "/bin/echo -n '=line_number=' && /bin/grep -n add_access_constraints_fail.cf $(this.promise_dirname)/../../../cf-serverd/server_transform.c | cut -d: -f1"
+    "/bin/echo -n '=line_number=' && /bin/grep -n GDB:.*add_access_constraints_fail.cf $(this.promise_dirname)/../../../cf-serverd/server_transform.c | cut -d: -f1"
       contain => shell_command,
       module => "true";
 

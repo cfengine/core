@@ -7,7 +7,7 @@ body common control
 bundle agent init
 {
   commands:
-    "/bin/echo -n '=line_number=' && /bin/grep -n couldnt_open_socket.cf $(this.promise_dirname)/../../../libenv/unix_iface.c | cut -d: -f1"
+    "/bin/echo -n '=line_number=' && /bin/grep -n GDB:.*couldnt_open_socket.cf $(this.promise_dirname)/../../../libenv/unix_iface.c | cut -d: -f1"
       contain => shell_command,
       module => "true";
 

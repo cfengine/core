@@ -1,17 +1,27 @@
 #!/bin/sh
 # Author: Mike Weilgart, 19 September 2016
+# Updated by: Aleksey Tsalolikhin, 30 Aug 2018
 echo
 /var/cfengine/bin/cf-agent -V
 echo
 ps -ef | grep 'cf-[a-z]*d' || echo "No CFEngine daemons running"
-echo
-printf 'Policy version: '
-cat /var/cfengine/inputs/policy_version.dat
-echo
-printf 'Policy commit id: '
-cat /var/cfengine/inputs/policy_commit_id.dat
-echo
-printf "Bootstrapped to: %s\n" "$(cat /var/cfengine/policy_server.dat)"
+if [ -f /var/cfengine/inputs/policy_version.dat ]; then
+  echo
+  printf 'Policy version: '
+  cat /var/cfengine/inputs/policy_version.dat
+fi
+if [ -f /var/cfengine/inputs/policy_commit_id.dat ]; then
+  echo
+  printf 'Policy commit id: '
+  cat /var/cfengine/inputs/policy_commit_id.dat
+fi
+if [ -f /var/cfengine/policy_server.dat ]; then
+  echo
+  printf "Bootstrapped to: %s\n" "$(cat /var/cfengine/policy_server.dat)"
+else
+  echo
+  echo "Not bootstrapped to a policy server"
+fi
 echo
 printf 'Policy channel assignment: %s\n' "$(cat /var/cfengine/state/policy_channel.txt 2>/dev/null || echo Not assigned)"
 echo

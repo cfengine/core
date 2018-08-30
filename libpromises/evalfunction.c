@@ -4713,7 +4713,7 @@ static FnCallResult FnCallLength(EvalContext *ctx,
 
     size_t len = JsonLength(json);
     JsonDestroyMaybe(json, allocated);
-    return FnReturnF("%zd", len);
+    return FnReturnF("%zu", len);
 }
 
 static FnCallResult FnCallFold(EvalContext *ctx,

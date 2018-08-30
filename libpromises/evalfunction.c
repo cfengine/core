@@ -6380,26 +6380,27 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
     // this will be a problem on 32-bit systems...
     const time_t when = IntFromString(RlistScalarValue(finalargs->next->next));
 
-    struct tm* tm;
+    struct tm tm;
+    struct tm *tm_pointer;
 
     if (strcmp("gmtime", mode) == 0)
     {
-        tm = gmtime(&when);
+        tm_pointer = gmtime_r(&when, &tm);
     }
     else
     {
-        tm = localtime(&when);
+        tm_pointer = localtime(&when);
     }
 
     char buffer[CF_BUFSIZE];
-    if (tm == NULL)
+    if (tm_pointer == NULL)
     {
         Log(LOG_LEVEL_WARNING,
             "Function %s, the given time stamp '%ld' was invalid. (strftime: %s)",
             fp->name, when, GetErrorStr());
     }
     else if (PortablyFormatTime(buffer, sizeof(buffer),
-                                format_string, when, tm))
+                                format_string, when, tm_pointer))
     {
         return FnReturn(buffer);
     }

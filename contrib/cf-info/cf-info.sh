@@ -22,7 +22,7 @@ awk -F '[:,]' -v time="$(date +%s)" 'END {printf "Last cf-agent run started %d m
 echo
 tail -n 2 /var/cfengine/promise_summary.log | sed 's/.*Total promise compliance: \([^.]*\).*/\1/;1s/^/update.cf compliance:   /;2s/^/promises.cf compliance: /'
 echo
-touch /var/cfengine/test.tmp && echo Filesystem writeable
+touch /var/cfengine/test.tmp && ( echo Filesystem writeable ; \rm /var/cfengine/test.tmp)
 echo
 df -P /var/cfengine | awk 'END {printf "Filesystem utilization: %s %s\n", $6, $5}'
 echo

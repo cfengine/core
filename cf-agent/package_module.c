@@ -473,9 +473,19 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
     assert(exec_path != NULL);
     assert(script_path != NULL);
 
-    char *package_module_path = StringFormat("%s%c%s%c%s%c%s", GetWorkDir(), FILE_SEPARATOR,
-                                             "modules", FILE_SEPARATOR, "packages", FILE_SEPARATOR,
-                                             package_module->name);
+    char *package_module_path = NULL;
+
+    if (package_module->module_path != NULL && !StringSafeEqual(package_module->module_path, ""))
+    {
+        package_module_path = xstrdup(package_module->module_path);
+    }
+    else
+    {
+        package_module_path = StringFormat("%s%c%s%c%s%c%s", GetWorkDir(), FILE_SEPARATOR,
+                                           "modules", FILE_SEPARATOR, "packages", FILE_SEPARATOR,
+                                           package_module->name);
+    }
+
     if (package_module->interpreter && !StringSafeEqual(package_module->interpreter, ""))
     {
         *script_path = package_module_path;

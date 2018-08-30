@@ -1332,6 +1332,7 @@ typedef struct
     int installed_ifelapsed;
     Rlist *options;
     char *interpreter;
+    char *module_path;
 } PackageModuleBody;
 
 

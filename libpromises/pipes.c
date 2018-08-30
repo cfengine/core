@@ -105,7 +105,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
             {
                 break;
             }
-            Log(LOG_LEVEL_DEBUG, "Data read from application pipe: %zu [%s]",
+            Log(LOG_LEVEL_DEBUG, "Data read from application pipe: %zd [%s]",
                 res, buff);
 
             BufferAppendString(data, buff);

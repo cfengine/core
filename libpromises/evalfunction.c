@@ -1641,12 +1641,12 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
 static bool AddPackagesMatchingJsonLine(pcre *matcher, JsonElement *json, char *line)
 {
-
-    if (strlen(line) > CF_BUFSIZE - 80)
+    const size_t line_length = strlen(line);
+    if (line_length > CF_BUFSIZE - 80)
     {
         Log(LOG_LEVEL_ERR,
-            "Line from package inventory is too long (%zd) to be sensible",
-            strlen(line));
+            "Line from package inventory is too long (%zu) to be sensible",
+            line_length);
         return false;
     }
 

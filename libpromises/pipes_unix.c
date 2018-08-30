@@ -979,7 +979,7 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
         if ((pw = getpwuid(uid)) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Unable to get login groups when dropping privilege to '%jd'. (getpwuid: %s)", (uintmax_t)uid, GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Unable to get login groups when dropping privilege to '%ju'. (getpwuid: %s)", (uintmax_t)uid, GetErrorStr());
             return false;
         }
 

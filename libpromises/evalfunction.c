@@ -2231,7 +2231,9 @@ static size_t cfengine_curl_write_callback(char *ptr, size_t size, size_t nmemb,
     if (old + requested > options->max_size)
     {
         granted = options->max_size - old;
-        Log(LOG_LEVEL_VERBOSE, "%s: while receiving %s, current %u + requested %zd bytes would be over the maximum %zd; only accepting %zd bytes", options->fp->name, options->desc, old, requested, options->max_size, granted);
+        Log(LOG_LEVEL_VERBOSE,
+            "%s: while receiving %s, current %u + requested %zu bytes would be over the maximum %zu; only accepting %zu bytes",
+            options->fp->name, options->desc, old, requested, options->max_size, granted);
     }
 
     BufferAppend(options->content, ptr, granted);

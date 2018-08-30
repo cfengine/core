@@ -1574,7 +1574,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to set owner on '%s' to '%jd.%jd'. (chown: %s)", vbuff,
+            Log(LOG_LEVEL_ERR, "Unable to set owner on '%s' to '%ju.%ju'. (chown: %s)", vbuff,
                 (uintmax_t)getuid(), (uintmax_t)getgid(), GetErrorStr());
         }
 

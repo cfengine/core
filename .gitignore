@@ -81,9 +81,8 @@ misc/systemd/*.service
 *.gcno
 *.gcda
 *.trace
-cfengine-lcov-base.info
-cfengine-lcov.info
 coverage-html/
+coverage/
 
 # links
 /nova

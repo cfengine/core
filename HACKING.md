@@ -407,6 +407,26 @@ Tip: In order to trigger assert() calls in the code, build with
 `--enable-debug` (passed to either `./autogen.sh` or `./configure`). If you get
 very large binary sizes you can also pass `CFLAGS='-g -O0'` to reduce that.
 
+Code Coverage
+-------------
+We strive to always increase code coverage. If you wish to generate code
+coverage information then you must autogen or configure with --enable-debug
+and --enable-coverage as well as ensure lcov is installed (typically an lcov
+package is available in a distribution).
+We use gcov to instrument and process coverage information. .gcno files are
+generated at compile-time and will not be regenerated if the source code
+does not change. So be careful about cleaning those files. .gcda files are
+like index files which can be used to generate the .gcov files which lcov
+uses to generate lcov.info and the HTML report in the coverage-html directory.
+Many IDEs and editors expect a <root>/coverage/lcov.info summary of coverage
+information. After running `make check` you can run `make coverage` and 
+generate this lcov.info summary for use with other tools. If you wish to only
+run a few tests which will add to coverage data you can update lcov.info with
+`make collect-coverage` which will only collect coverage data, not compile or
+run any tests.
+
+For the atom editor, install the package atom-lcov-info.
+
 
 Unsafe Tests
 ------------

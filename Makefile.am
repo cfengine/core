@@ -114,13 +114,15 @@ run-coverage:
 
 
 collect-coverage:
-	$(LCOV) $(LCOV_FLAGS) --capture --initial --directory . --output-file cfengine-lcov-base.info
-	$(LCOV) $(LCOV_FLAGS) --capture --directory . --output-file cfengine-lcov.info --test-name CFENGINE --no-checksum --compat-libtool
-	$(LCOV) $(LCOV_FLAGS) -a cfengine-lcov-base.info -a cfengine-lcov.info --output-file cfengine-lcov.info
-	$(LCOV) $(LCOV_FLAGS) --remove cfengine-lcov.info '/usr/include/*' --output-file cfengine-lcov.info
-	LANG=C $(LCOV_GENHTML) $(LCOV_FLAGS) --prefix . --output-directory coverage-html --title "CFEngine Code Coverage" --legend --show-details cfengine-lcov.info
+	mkdir -p coverage
+	$(LCOV) $(LCOV_FLAGS) --capture --initial --directory . --output-file coverage/cfengine-lcov-base.info
+	$(LCOV) $(LCOV_FLAGS) --capture --directory . --output-file coverage/lcov.info --test-name CFENGINE --no-checksum --compat-libtool
+	$(LCOV) $(LCOV_FLAGS) -a coverage/cfengine-lcov-base.info -a coverage/lcov.info --output-file coverage/cfengine-lcov.info
+	$(LCOV) $(LCOV_FLAGS) --remove coverage/lcov.info '/usr/include/*' --output-file coverage/lcov.info
+	LANG=C $(LCOV_GENHTML) $(LCOV_FLAGS) --prefix . --output-directory coverage-html --title "CFEngine Code Coverage" --legend --show-details coverage/lcov.info
 	@echo
 	@echo " Code coverage information: file://"`pwd`"/coverage-html/index.html"
+	@echo " Code coverage summary for IDEs: file://"`pwd`"/coverage/lcov.info"
 	@echo
 
 coverage: clean-coverage run-coverage collect-coverage

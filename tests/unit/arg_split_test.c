@@ -13,6 +13,11 @@ static void test_split_empty(void)
     assert_true(s);
     assert_false(*s);
     ArgFree(s);
+
+    char *exec, *args;
+    ArgGetExecutableAndArgs("", &exec, &args);
+    assert_false(exec);
+    assert_false(args);
 }
 
 static void test_split_easy(void)
@@ -25,6 +30,34 @@ static void test_split_easy(void)
     assert_false(s[3]);
 
     ArgFree(s);
+
+    char *exec, *args;
+    ArgGetExecutableAndArgs("zero one two", &exec, &args);
+    assert_string_equal(exec, "zero");
+    assert_string_equal(args, "one two");
+
+    free(exec);
+    free(args);
+}
+
+static void test_split_whitespace_prefix(void)
+{
+    char **s = ArgSplitCommand("  zero one two");
+
+    assert_string_equal(s[0], "zero");
+    assert_string_equal(s[1], "one");
+    assert_string_equal(s[2], "two");
+    assert_false(s[3]);
+
+    ArgFree(s);
+
+    char *exec, *args;
+    ArgGetExecutableAndArgs("zero one two", &exec, &args);
+    assert_string_equal(exec, "zero");
+    assert_string_equal(args, "one two");
+
+    free(exec);
+    free(args);
 }
 
 static void test_split_quoted_beginning(void)
@@ -35,6 +68,14 @@ static void test_split_quoted_beginning(void)
     assert_string_equal(s[1], "atbeginning");
     assert_false(s[2]);
     ArgFree(s);
+
+    char *exec, *args;
+    ArgGetExecutableAndArgs("\"quoted string\" atbeginning", &exec, &args);
+    assert_string_equal(exec, "quoted string");
+    assert_string_equal(args, "atbeginning");
+
+    free(exec);
+    free(args);
 }
 
 static void test_split_quoted_end(void)
@@ -45,6 +86,14 @@ static void test_split_quoted_end(void)
     assert_string_equal(s[1], "quoted string");
     assert_false(s[2]);
     ArgFree(s);
+
+    char *exec, *args;
+    ArgGetExecutableAndArgs("atend 'quoted string'", &exec, &args);
+    assert_string_equal(exec, "atend");
+    assert_string_equal(args, "'quoted string'");
+
+    free(exec);
+    free(args);
 }
 
 static void test_split_quoted_middle(void)
@@ -56,6 +105,14 @@ static void test_split_quoted_middle(void)
     assert_string_equal(s[2], "middle");
     assert_false(s[3]);
     ArgFree(s);
+
+    char *exec, *args;
+    ArgGetExecutableAndArgs("at `quoted string` middle", &exec, &args);
+    assert_string_equal(exec, "at");
+    assert_string_equal(args, "`quoted string` middle");
+
+    free(exec);
+    free(args);
 }
 
 static void test_complex_quoting(void)
@@ -65,6 +122,13 @@ static void test_complex_quoting(void)
     assert_string_equal(s[0], "foo`'bar");
     assert_false(s[1]);
     ArgFree(s);
+
+    char *exec, *args;
+    ArgGetExecutableAndArgs("\"foo`'bar\"", &exec, &args);
+    assert_string_equal(exec, "foo`'bar");
+    assert_false(args);
+
+    free(exec);
 }
 
 static void test_arguments_resize_for_null(void)
@@ -156,6 +220,7 @@ int main()
     {
         unit_test(test_split_empty),
         unit_test(test_split_easy),
+        unit_test(test_split_whitespace_prefix),
         unit_test(test_split_quoted_beginning),
         unit_test(test_split_quoted_middle),
         unit_test(test_split_quoted_end),

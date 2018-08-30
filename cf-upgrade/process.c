@@ -81,16 +81,17 @@ int private_run_process_replace(const char *command, char **args, char **envp)
 int private_run_process_wait(const char *command, char **args, char **envp)
 {
     char *filename = basename(xstrdup(command));
-    time_t now_seconds = time(NULL);
-    struct tm *now_tm = gmtime(&now_seconds);
+    const time_t now_seconds = time(NULL);
+    struct tm now;
+    gmtime_r(&now_seconds, &now);
     size_t filenamelog_size = (strlen(filename) +
                                strlen("-YYYYMMDD-HHMMSS") +
                                strlen(".log") + 1);
     char *filenamelog = xmalloc(filenamelog_size);
     snprintf(filenamelog, filenamelog_size,
               "%s-%04d%02d%02d-%02d%02d%02d.log", filename,
-              now_tm->tm_year + 1900, now_tm->tm_mon, now_tm->tm_mday,
-              now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
+              now.tm_year + 1900, now.tm_mon, now.tm_mday,
+              now.tm_hour, now.tm_min, now.tm_sec);
 
     int exit_status = 0;
     pid_t child = fork();

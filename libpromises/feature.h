@@ -1,5 +1,5 @@
-#ifndef CFENGINE_SYNTAX_H
-#define CFENGINE_SYNTAX_H
+#ifndef CFENGINE_FEATURE_H
+#define CFENGINE_FEATURE_H
 
 
 int KnownFeature(const char *feature);
@@ -7,4 +7,3 @@ int KnownFeature(const char *feature);
 void CreateHardClassesFromFeatures(EvalContext *ctx, char *tags);
 
 #endif
-

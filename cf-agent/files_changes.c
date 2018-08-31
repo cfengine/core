@@ -523,13 +523,14 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
                                    const char *filename,
                                    unsigned char digest[EVP_MAX_MD_SIZE + 1],
                                    HashMethod type,
-                                   Attributes attr,
+                                   const Attributes *attr,
                                    const Promise *pp,
                                    PromiseResult *result)
 {
-    bool ret = FileChangesCheckAndUpdateHash_impl(filename, digest, type, attr.change.update, pp, result);
+    assert(attr != NULL);
+    bool ret = FileChangesCheckAndUpdateHash_impl(filename, digest, type, attr->change.update, pp, result);
     // TODO: Move cfPS even further up the call stack.
-    cfPS(ctx, LOG_LEVEL_DEBUG, *result, pp, attr, "Updating promise status for files changes promise");
+    cfPS(ctx, LOG_LEVEL_DEBUG, *result, pp, *attr, "Updating promise status for files changes promise");
     return ret;
 }
 

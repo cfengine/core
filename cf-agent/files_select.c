@@ -286,7 +286,7 @@ static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr,
 
 #ifndef __MINGW32__                   // no uids on Windows
     char buffer[CF_SMALLBUF];
-    snprintf(buffer, CF_SMALLBUF, "%jd", (uintmax_t) lstatptr->st_uid);
+    snprintf(buffer, CF_SMALLBUF, "%ju", (uintmax_t) lstatptr->st_uid);
     StringSetAdd(leafattrib, xstrdup(buffer));
 #endif /* __MINGW32__ */
 
@@ -573,7 +573,7 @@ static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit
 
     StringSet *leafattrib = StringSetNew();
 
-    snprintf(buffer, CF_SMALLBUF, "%jd", (uintmax_t) lstatptr->st_gid);
+    snprintf(buffer, CF_SMALLBUF, "%ju", (uintmax_t) lstatptr->st_gid);
     StringSetAdd(leafattrib, xstrdup(buffer));
 
     if ((gr = getgrgid(lstatptr->st_gid)) != NULL)

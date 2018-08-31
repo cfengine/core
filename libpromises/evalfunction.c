@@ -1641,12 +1641,12 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
 
 static bool AddPackagesMatchingJsonLine(pcre *matcher, JsonElement *json, char *line)
 {
-
-    if (strlen(line) > CF_BUFSIZE - 80)
+    const size_t line_length = strlen(line);
+    if (line_length > CF_BUFSIZE - 80)
     {
         Log(LOG_LEVEL_ERR,
-            "Line from package inventory is too long (%zd) to be sensible",
-            strlen(line));
+            "Line from package inventory is too long (%zu) to be sensible",
+            line_length);
         return false;
     }
 
@@ -1888,9 +1888,9 @@ static FnCallResult FnCallCanonify(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     char *string = RlistScalarValue(finalargs);
-    size_t len = strlen(string);
+    const size_t len = strlen(string);
     /* In case of string_length(), buf needs enough space to hold a number. */
-    size_t bufsiz = MAX(len + 1, PRINTSIZE(len));
+    const size_t bufsiz = MAX(len + 1, PRINTSIZE(len));
     char *buf = xcalloc(bufsiz, sizeof(char));
     memcpy(buf, string, len + 1);
 
@@ -1922,7 +1922,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     }
     else if (!strcmp(fp->name, "string_length"))
     {
-        xsnprintf(buf, bufsiz, "%d", len);
+        xsnprintf(buf, bufsiz, "%zu", len);
     }
     else if (!strcmp(fp->name, "string_head"))
     {
@@ -2231,7 +2231,9 @@ static size_t cfengine_curl_write_callback(char *ptr, size_t size, size_t nmemb,
     if (old + requested > options->max_size)
     {
         granted = options->max_size - old;
-        Log(LOG_LEVEL_VERBOSE, "%s: while receiving %s, current %u + requested %zd bytes would be over the maximum %zd; only accepting %zd bytes", options->fp->name, options->desc, old, requested, options->max_size, granted);
+        Log(LOG_LEVEL_VERBOSE,
+            "%s: while receiving %s, current %u + requested %zu bytes would be over the maximum %zu; only accepting %zu bytes",
+            options->fp->name, options->desc, old, requested, options->max_size, granted);
     }
 
     BufferAppend(options->content, ptr, granted);
@@ -4713,7 +4715,7 @@ static FnCallResult FnCallLength(EvalContext *ctx,
 
     size_t len = JsonLength(json);
     JsonDestroyMaybe(json, allocated);
-    return FnReturnF("%zd", len);
+    return FnReturnF("%zu", len);
 }
 
 static FnCallResult FnCallFold(EvalContext *ctx,

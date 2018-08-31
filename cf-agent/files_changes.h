@@ -40,7 +40,7 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
                                    const char *filename,
                                    unsigned char digest[EVP_MAX_MD_SIZE + 1],
                                    HashMethod type,
-                                   Attributes attr,
+                                   const Attributes *attr,
                                    const Promise *pp,
                                    PromiseResult *result);
 bool FileChangesGetDirectoryList(const char *path, Seq *files);

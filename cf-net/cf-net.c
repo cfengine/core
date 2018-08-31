@@ -182,6 +182,10 @@ static int CFNetMultiTLS(const char *server);
 
 int main(int argc, char **argv)
 {
+    size_t a = 0;
+    ssize_t b = 0;
+    long c = 0;
+    printf("Test: %zu %zu %zu\n", a, b, c);
     CFNetOptions opts;
     CFNetSetDefault(&opts);
     char **args = NULL;

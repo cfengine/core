@@ -55,6 +55,7 @@
 
 //#define ParserDebug if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG) printf
 #define ParserDebug(...) ((void) 0)
+#define P PARSER_STATE
 
 static pcre *context_expression_whitespace_rx = NULL;
 

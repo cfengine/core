@@ -120,13 +120,21 @@ when developing new staging methods.
     - =https://gitlab.com/nickanderson/masterfiles_demo_3.7.git=
     - =git@gitlab.com:nickanderson/masterfiles_demo_3.7.git=
 
-- =GIT_BRANCH= :: The git refspec to checkout.
+- =GIT_REFSPEC= :: The git refspec to checkout.
   It can be a branch name, a tag name, a commit hash or a partial hash.
   - Example values:
     - =master=
     - =my_tag=
     - =88335d36b48c8808b12b48667a463182dc8d0338=
     - =cb375d0f=
+
+- =PKEY= :: Private SSH Key used for authorization.
+
+- =GIT_USERNAME= :: Git username used for authorization.
+
+- =GIT_PASSWORD= :: Git password used for authorization.
+
+- =SCRIPT_DIR= :: Directory contianing supporting scripts
 
 - =dir_to_hold_mirror= :: The directory where the git mirror repo will
   be created for =GIT_POLICY_CHANNELS=.  (With =VCS_TYPE=GIT=, the repo
@@ -136,7 +144,7 @@ when developing new staging methods.
 
 - =channel_config= - a =bash= array containing configuration data
   for multiple policy channels.  Effectively, it contains multiple
-  values for both =MASTERDIR= and =GIT_BRANCH=.
+  values for both =MASTERDIR= and =GIT_REFSPEC=.
   - Example value assignment:
 #+BEGIN_EXAMPLE
   chan_deploy="/var/cfengine/policy_channels"
@@ -160,26 +168,6 @@ when developing new staging methods.
 
 - =ROOT= :: Location where policy is staged.
   - =/opt/cfengine/masterfiles_staging=
-
-The following attributes are used by CFEngine Enterprise and currently
-have no effect on functionality of =masterfiles-stage.sh=
-
-- =GIT_WORKING_BRANCH= :: Branch for integrating write operations
-  - This is used by Design Center in CFEngine Enterprise
-
-- =GIT_EMAIL= :: Email address used to associate commits wit
-  - This is used by Design Center in CFEngine Enterprise
-
-- =GIT_AUTHOR= :: The author that should be set when integrating write
-  operations (not used by =masterfiles-stage.sh=)
-  - This is used by Design Center in CFEngine Enterprise
-
-- =PKEY= :: Private SSH Key used for authorization when pushing
-  integrated write operations
-  - This is used by Design Center in CFEngine Enterprise
-
-- =SCRIPT_DIR= :: Directory contianing supporting scripts
-  - This is used by Design Center in CFEngine Enterprise
 
 *** Special Note
 :PROPERTIES:

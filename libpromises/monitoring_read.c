@@ -220,14 +220,14 @@ const char *NovaGetSlotName(int idx)
 {
     Nova_LoadSlots();
 
-    return idx < ob_spare ? OBS[idx][0] : SLOTS[idx - ob_spare]->name;
+    return idx < ob_spare ? OBSERVABLES[idx][0] : SLOTS[idx - ob_spare]->name;
 }
 
 const char *NovaGetSlotDescription(int idx)
 {
     Nova_LoadSlots();
 
-    return idx < ob_spare ? OBS[idx][1] : SLOTS[idx - ob_spare]->description;
+    return idx < ob_spare ? OBSERVABLES[idx][1] : SLOTS[idx - ob_spare]->description;
 }
 
 const char *NovaGetSlotUnits(int idx)

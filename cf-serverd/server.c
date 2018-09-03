@@ -75,7 +75,7 @@ int COLLECT_INTERVAL = 0; /* GLOBAL_P */
 int COLLECT_WINDOW = 30; /* GLOBAL_P */
 bool SERVER_LISTEN = true; /* GLOBAL_P */
 
-ServerAccess SV = { 0 }; /* GLOBAL_P */
+ServerAccess SERVER_ACCESS = { 0 }; /* GLOBAL_P */
 
 char CFRUNCOMMAND[CF_MAXVARSIZE] = { 0 };                       /* GLOBAL_P */
 
@@ -97,13 +97,14 @@ void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info
 
     /* TODO change nonattackerlist, attackerlist and especially connectionlist
      *      to binary searched lists, or remove them from the main thread! */
-    if (SV.nonattackerlist && !IsMatchItemIn(SV.nonattackerlist, ipaddr))
+    if (SERVER_ACCESS.nonattackerlist
+        && !IsMatchItemIn(SERVER_ACCESS.nonattackerlist, ipaddr))
     {
         Log(LOG_LEVEL_ERR,
             "Remote host '%s' not in allowconnects, denying connection",
             ipaddr);
     }
-    else if (IsMatchItemIn(SV.attackerlist, ipaddr))
+    else if (IsMatchItemIn(SERVER_ACCESS.attackerlist, ipaddr))
     {
         Log(LOG_LEVEL_ERR,
             "Remote host '%s' is in denyconnects, denying connection",
@@ -117,14 +118,14 @@ void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info
             now = 0;
         }
 
-        PurgeOldConnections(&SV.connectionlist, now);
+        PurgeOldConnections(&SERVER_ACCESS.connectionlist, now);
 
-        bool allow = IsMatchItemIn(SV.multiconnlist, ipaddr);
+        bool allow = IsMatchItemIn(SERVER_ACCESS.multiconnlist, ipaddr);
         if (!allow)
         {
             ThreadLock(cft_count);
             /* At most one connection allowed for this host: */
-            allow = !IsItemIn(SV.connectionlist, ipaddr);
+            allow = !IsItemIn(SERVER_ACCESS.connectionlist, ipaddr);
             ThreadUnlock(cft_count);
 
             if (!allow) /* Duplicate. */
@@ -141,7 +142,7 @@ void ServerEntryPoint(EvalContext *ctx, const char *ipaddr, ConnectionInfo *info
             xsnprintf(intime, sizeof(intime), "%jd", (intmax_t) now);
 
             ThreadLock(cft_count);
-            PrependItem(&SV.connectionlist, ipaddr, intime);
+            PrependItem(&SERVER_ACCESS.connectionlist, ipaddr, intime);
             ThreadUnlock(cft_count);
 
             SpawnConnection(ctx, ipaddr, info);
@@ -370,7 +371,7 @@ static void *HandleConnection(void *c)
     {
         /* This connection is legacy protocol.
          * We are not allowing it by default. */
-        if (!IsMatchItemIn(SV.allowlegacyconnects, conn->ipaddr))
+        if (!IsMatchItemIn(SERVER_ACCESS.allowlegacyconnects, conn->ipaddr))
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");
@@ -494,7 +495,7 @@ static void DeleteConn(ServerConnectionState *conn)
     if (conn->ipaddr[0] != '\0')
     {
         ThreadLock(cft_count);
-        DeleteItemMatching(&SV.connectionlist, conn->ipaddr);
+        DeleteItemMatching(&SERVER_ACCESS.connectionlist, conn->ipaddr);
         ThreadUnlock(cft_count);
     }
 

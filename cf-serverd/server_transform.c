@@ -101,42 +101,42 @@ void Summarize()
 
     Log(LOG_LEVEL_VERBOSE,
         "Host IPs allowed connection access (allowconnects):");
-    for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
+    for (ip = SERVER_ACCESS.nonattackerlist; ip != NULL; ip = ip->next)
     {
         Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
     }
 
     Log(LOG_LEVEL_VERBOSE,
         "Host IPs denied connection access (denyconnects):");
-    for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
+    for (ip = SERVER_ACCESS.attackerlist; ip != NULL; ip = ip->next)
     {
         Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
     }
 
     Log(LOG_LEVEL_VERBOSE,
         "Host IPs allowed multiple connection access (allowallconnects):");
-    for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
+    for (ip = SERVER_ACCESS.multiconnlist; ip != NULL; ip = ip->next)
     {
         Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
     }
 
     Log(LOG_LEVEL_VERBOSE,
         "Host IPs whose keys we shall establish trust to (trustkeysfrom):");
-    for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
+    for (ip = SERVER_ACCESS.trustkeylist; ip != NULL; ip = ip->next)
     {
         Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
     }
 
     Log(LOG_LEVEL_VERBOSE,
         "Host IPs allowed legacy connections (allowlegacyconnects):");
-    for (ip = SV.allowlegacyconnects; ip != NULL; ip = ip->next)
+    for (ip = SERVER_ACCESS.allowlegacyconnects; ip != NULL; ip = ip->next)
     {
         Log(LOG_LEVEL_VERBOSE, "\tIP: %s", ip->name);
     }
 
     Log(LOG_LEVEL_VERBOSE,
         "Users from whom we accept cf-runagent connections (allowusers):");
-    for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
+    for (ip = SERVER_ACCESS.allowuserlist; ip != NULL; ip = ip->next)
     {
         Log(LOG_LEVEL_VERBOSE, "\tUSER: %s", ip->name);
     }
@@ -153,7 +153,7 @@ void Summarize()
     Log(LOG_LEVEL_VERBOSE,
         "Access control lists for the classic network protocol:");
 
-    for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
+    for (ptr = SERVER_ACCESS.admit; ptr != NULL; ptr = ptr->next)
     {
         /* Don't report empty entries. */
         if (ptr->maproot != NULL || ptr->accesslist != NULL)
@@ -172,7 +172,7 @@ void Summarize()
         }
     }
 
-    for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
+    for (ptr = SERVER_ACCESS.deny; ptr != NULL; ptr = ptr->next)
     {
         /* Don't report empty entries. */
         if (ptr->accesslist != NULL)
@@ -186,7 +186,7 @@ void Summarize()
         }
     }
 
-    for (ptr = SV.varadmit; ptr != NULL; ptr = ptr->next)
+    for (ptr = SERVER_ACCESS.varadmit; ptr != NULL; ptr = ptr->next)
     {
         Log(LOG_LEVEL_VERBOSE, "Object: %s", ptr->path);
 
@@ -200,7 +200,7 @@ void Summarize()
         }
     }
 
-    for (ptr = SV.vardeny; ptr != NULL; ptr = ptr->next)
+    for (ptr = SERVER_ACCESS.vardeny; ptr != NULL; ptr = ptr->next)
     {
         Log(LOG_LEVEL_VERBOSE, "Object %s", ptr->path);
 
@@ -217,7 +217,7 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
 {
     if (paths_acl    != NULL || classes_acl != NULL || vars_acl    != NULL ||
         literals_acl != NULL || query_acl   != NULL || bundles_acl != NULL ||
-        roles_acl    != NULL || SV.path_shortcuts != NULL)
+        roles_acl    != NULL || SERVER_ACCESS.path_shortcuts != NULL)
     {
         UnexpectedError("ACLs are not NULL - we are probably leaking memory!");
     }
@@ -229,11 +229,11 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
     query_acl     = calloc(1, sizeof(*query_acl));
     bundles_acl   = calloc(1, sizeof(*bundles_acl));
     roles_acl     = calloc(1, sizeof(*roles_acl));
-    SV.path_shortcuts = StringMapNew();
+    SERVER_ACCESS.path_shortcuts = StringMapNew();
 
     if (paths_acl    == NULL || classes_acl == NULL || vars_acl    == NULL ||
         literals_acl == NULL || query_acl   == NULL || bundles_acl == NULL ||
-        roles_acl    == NULL || SV.path_shortcuts == NULL)
+        roles_acl    == NULL || SERVER_ACCESS.path_shortcuts == NULL)
     {
         Log(LOG_LEVEL_CRIT, "calloc: %s", GetErrorStr());
         exit(255);
@@ -330,8 +330,8 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
             else if (IsControlBody(SERVER_CONTROL_LOG_ALL_CONNECTIONS))
             {
-                SV.logconns = BooleanFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting logconns to %d", SV.logconns);
+                SERVER_ACCESS.logconns = BooleanFromString(value);
+                Log(LOG_LEVEL_VERBOSE, "Setting logconns to %d", SERVER_ACCESS.logconns);
             }
             else if (IsControlBody(SERVER_CONTROL_MAX_CONNECTIONS))
             {
@@ -398,9 +398,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.nonattackerlist, RlistScalarValue(rp)))
+                    if (!IsItemIn(SERVER_ACCESS.nonattackerlist, RlistScalarValue(rp)))
                     {
-                        PrependItem(&SV.nonattackerlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SERVER_ACCESS.nonattackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
             }
@@ -410,9 +410,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.attackerlist, RlistScalarValue(rp)))
+                    if (!IsItemIn(SERVER_ACCESS.attackerlist, RlistScalarValue(rp)))
                     {
-                        PrependItem(&SV.attackerlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SERVER_ACCESS.attackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
             }
@@ -426,9 +426,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.multiconnlist, RlistScalarValue(rp)))
+                    if (!IsItemIn(SERVER_ACCESS.multiconnlist, RlistScalarValue(rp)))
                     {
-                        PrependItem(&SV.multiconnlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SERVER_ACCESS.multiconnlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
             }
@@ -438,9 +438,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.allowuserlist, RlistScalarValue(rp)))
+                    if (!IsItemIn(SERVER_ACCESS.allowuserlist, RlistScalarValue(rp)))
                     {
-                        PrependItem(&SV.allowuserlist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SERVER_ACCESS.allowuserlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
             }
@@ -450,9 +450,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.trustkeylist, RlistScalarValue(rp)))
+                    if (!IsItemIn(SERVER_ACCESS.trustkeylist, RlistScalarValue(rp)))
                     {
-                        PrependItem(&SV.trustkeylist, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SERVER_ACCESS.trustkeylist, RlistScalarValue(rp), cp->classes);
                     }
                 }
             }
@@ -462,9 +462,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.allowlegacyconnects, RlistScalarValue(rp)))
+                    if (!IsItemIn(SERVER_ACCESS.allowlegacyconnects, RlistScalarValue(rp)))
                     {
-                        PrependItem(&SV.allowlegacyconnects, RlistScalarValue(rp), cp->classes);
+                        PrependItem(&SERVER_ACCESS.allowlegacyconnects, RlistScalarValue(rp), cp->classes);
                     }
                 }
             }
@@ -479,17 +479,17 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
             else if (IsControlBody(SERVER_CONTROL_ALLOWCIPHERS))
             {
-                assert(SV.allowciphers == NULL);                /* no leak */
-                SV.allowciphers = xstrdup(value);
+                assert(SERVER_ACCESS.allowciphers == NULL);                /* no leak */
+                SERVER_ACCESS.allowciphers = xstrdup(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to: %s",
-                    SV.allowciphers);
+                    SERVER_ACCESS.allowciphers);
             }
             else if (IsControlBody(SERVER_CONTROL_ALLOWTLSVERSION))
             {
-                assert(SV.allowtlsversion == NULL);             /* no leak */
-                SV.allowtlsversion = xstrdup(value);
+                assert(SERVER_ACCESS.allowtlsversion == NULL);             /* no leak */
+                SERVER_ACCESS.allowtlsversion = xstrdup(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting allowtlsversion to: %s",
-                    SV.allowtlsversion);
+                    SERVER_ACCESS.allowtlsversion);
             }
         }
 
@@ -1050,7 +1050,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                         "slashes are forbidden in ACL shortcut: %s",
                         shortcut);
                 }
-                else if (StringMapHasKey(SV.path_shortcuts, shortcut))
+                else if (StringMapHasKey(SERVER_ACCESS.path_shortcuts, shortcut))
                 {
                     Log(LOG_LEVEL_WARNING,
                         "Already existing shortcut for path '%s' was replaced",
@@ -1058,7 +1058,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                 }
                 else
                 {
-                    StringMapInsert(SV.path_shortcuts,
+                    StringMapInsert(SERVER_ACCESS.path_shortcuts,
                                     xstrdup(shortcut), xstrdup(pp->promiser));
 
                     Log(LOG_LEVEL_DEBUG, "Added shortcut '%s' for path: %s",
@@ -1269,8 +1269,8 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     {
         DeleteSlash(path);
     }
-    Auth *ap = GetOrCreateAuth(path, &SV.admit, &SV.admittail);
-    Auth *dp = GetOrCreateAuth(path, &SV.deny, &SV.denytail);
+    Auth *ap = GetOrCreateAuth(path, &SERVER_ACCESS.admit, &SERVER_ACCESS.admittail);
+    Auth *dp = GetOrCreateAuth(path, &SERVER_ACCESS.deny, &SERVER_ACCESS.denytail);
 
     AccessPromise_AddAccessConstraints(ctx, pp, &paths_acl->acls[pos],
                                        ap, dp);
@@ -1300,8 +1300,8 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
     {
         Log(LOG_LEVEL_VERBOSE,"Looking at literal access promise '%s', type '%s'", pp->promiser, type);
 
-        ap = GetOrCreateAuth(handle, &SV.varadmit, &SV.varadmittail);
-        dp = GetOrCreateAuth(handle, &SV.vardeny, &SV.vardenytail);
+        ap = GetOrCreateAuth(handle, &SERVER_ACCESS.varadmit, &SERVER_ACCESS.varadmittail);
+        dp = GetOrCreateAuth(handle, &SERVER_ACCESS.vardeny, &SERVER_ACCESS.vardenytail);
 
         RegisterLiteralServerData(ctx, handle, pp);
         ap->literal = true;
@@ -1322,8 +1322,8 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
     {
         Log(LOG_LEVEL_VERBOSE,"Looking at context/var access promise '%s', type '%s'", pp->promiser, type);
 
-        ap = GetOrCreateAuth(pp->promiser, &SV.varadmit, &SV.varadmittail);
-        dp = GetOrCreateAuth(pp->promiser, &SV.vardeny, &SV.vardenytail);
+        ap = GetOrCreateAuth(pp->promiser, &SERVER_ACCESS.varadmit, &SERVER_ACCESS.varadmittail);
+        dp = GetOrCreateAuth(pp->promiser, &SERVER_ACCESS.vardeny, &SERVER_ACCESS.vardenytail);
 
         if (strcmp(type, "context") == 0)
         {
@@ -1362,8 +1362,8 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
 
 static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp)
 {
-    Auth *dp = GetOrCreateAuth(pp->promiser, &SV.vardeny, &SV.vardenytail),
-        *ap = GetOrCreateAuth(pp->promiser, &SV.varadmit, &SV.varadmittail);
+    Auth *dp = GetOrCreateAuth(pp->promiser, &SERVER_ACCESS.vardeny, &SERVER_ACCESS.vardenytail),
+        *ap = GetOrCreateAuth(pp->promiser, &SERVER_ACCESS.varadmit, &SERVER_ACCESS.varadmittail);
 
     RegisterLiteralServerData(ctx, pp->promiser, pp);
     ap->literal = true;

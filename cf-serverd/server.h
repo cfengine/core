@@ -154,7 +154,7 @@ extern int MAXTRIES;
 extern bool LOGENCRYPT;
 extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;
-extern ServerAccess SV;
+extern ServerAccess SERVER_ACCESS;
 extern char CFRUNCOMMAND[CF_MAXVARSIZE];
 extern bool NEED_REVERSE_LOOKUP;
 

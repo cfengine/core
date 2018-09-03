@@ -1210,7 +1210,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
                                  ARG_UNUSED const FnCall *fp,
                                  const Rlist *finalargs)
 {
-    int argcount = 0;
+    unsigned int argcount = 0;
     char id[CF_BUFSIZE];
 
     snprintf(id, CF_BUFSIZE, "built-in FnCall ifelse-arg");
@@ -1227,7 +1227,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
     }
 
     /* Require an odd number of arguments. We will always return something. */
-    if ((argcount % 2) != 1)
+    if ((argcount % 2) == 0)
     {
         FatalError(ctx, "in built-in FnCall ifelse: even number of arguments");
     }

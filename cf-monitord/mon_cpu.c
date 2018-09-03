@@ -114,8 +114,8 @@ void MonCPUGatherData(double *cf_this)
         LAST_CPU_Q[cpuidx] = q;
         LAST_CPU_T[cpuidx] = total_time;
 
-        Log(LOG_LEVEL_VERBOSE, "Set %s=%d to %.1lf after %ld 100ths of a second ", OBS[slot][1], slot, cf_this[slot],
-              total_time);
+        Log(LOG_LEVEL_VERBOSE, "Set %s=%d to %.1lf after %ld 100ths of a second ",
+            OBSERVABLES[slot][1], slot, cf_this[slot], total_time);
     }
 
     fclose(fp);

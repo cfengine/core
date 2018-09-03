@@ -55,7 +55,7 @@ extern int EDITFILESIZE;
 extern int VIFELAPSED;
 extern int VEXPIREAFTER;
 
-extern const char *const OBS[CF_OBSERVABLES][2];
+extern const char *const OBSERVABLES[CF_OBSERVABLES][2];
 
 extern bool FIPS_MODE;
 extern HashMethod CF_DEFAULT_DIGEST;

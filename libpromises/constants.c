@@ -75,8 +75,8 @@ const char *const CF_AGENTTYPES[] =   /* see enum cfagenttype */
     "<notype>",
 };
 
-
-const char *const OBS[CF_OBSERVABLES][2] =
+// Name and description pairs of all observed monitoring variables
+const char *const OBSERVABLES[CF_OBSERVABLES][2] =
 {
     {"users", "Users with active processes - including system users"},
     {"rootprocs", "Sum privileged system processes"},

@@ -352,26 +352,26 @@ static void KeepHardClasses(EvalContext *ctx)
 static void ClearAuthAndACLs(void)
 {
     /* Must have no currently open connections to free the ACLs. */
-    assert(SV.connectionlist == NULL);
+    assert(SERVER_ACCESS.connectionlist == NULL);
 
     /* Bundle server access_rules legacy ACLs */
-    DeleteAuthList(&SV.admit, &SV.admittail);
-    DeleteAuthList(&SV.deny, &SV.denytail);
-    DeleteAuthList(&SV.varadmit, &SV.varadmittail);
-    DeleteAuthList(&SV.vardeny, &SV.vardenytail);
+    DeleteAuthList(&SERVER_ACCESS.admit, &SERVER_ACCESS.admittail);
+    DeleteAuthList(&SERVER_ACCESS.deny, &SERVER_ACCESS.denytail);
+    DeleteAuthList(&SERVER_ACCESS.varadmit, &SERVER_ACCESS.varadmittail);
+    DeleteAuthList(&SERVER_ACCESS.vardeny, &SERVER_ACCESS.vardenytail);
 
     /* body server control ACLs */
-    DeleteItemList(SV.trustkeylist);        SV.trustkeylist = NULL;
-    DeleteItemList(SV.attackerlist);        SV.attackerlist = NULL;
-    DeleteItemList(SV.nonattackerlist);     SV.nonattackerlist = NULL;
-    DeleteItemList(SV.allowuserlist);       SV.allowuserlist = NULL;
-    DeleteItemList(SV.multiconnlist);       SV.multiconnlist = NULL;
-    DeleteItemList(SV.allowuserlist);       SV.allowuserlist = NULL;
-    DeleteItemList(SV.allowlegacyconnects); SV.allowlegacyconnects = NULL;
+    DeleteItemList(SERVER_ACCESS.trustkeylist);        SERVER_ACCESS.trustkeylist = NULL;
+    DeleteItemList(SERVER_ACCESS.attackerlist);        SERVER_ACCESS.attackerlist = NULL;
+    DeleteItemList(SERVER_ACCESS.nonattackerlist);     SERVER_ACCESS.nonattackerlist = NULL;
+    DeleteItemList(SERVER_ACCESS.allowuserlist);       SERVER_ACCESS.allowuserlist = NULL;
+    DeleteItemList(SERVER_ACCESS.multiconnlist);       SERVER_ACCESS.multiconnlist = NULL;
+    DeleteItemList(SERVER_ACCESS.allowuserlist);       SERVER_ACCESS.allowuserlist = NULL;
+    DeleteItemList(SERVER_ACCESS.allowlegacyconnects); SERVER_ACCESS.allowlegacyconnects = NULL;
 
-    StringMapDestroy(SV.path_shortcuts);    SV.path_shortcuts  = NULL;
-    free(SV.allowciphers);                  SV.allowciphers    = NULL;
-    free(SV.allowtlsversion);               SV.allowtlsversion = NULL;
+    StringMapDestroy(SERVER_ACCESS.path_shortcuts);    SERVER_ACCESS.path_shortcuts  = NULL;
+    free(SERVER_ACCESS.allowciphers);                  SERVER_ACCESS.allowciphers    = NULL;
+    free(SERVER_ACCESS.allowtlsversion);               SERVER_ACCESS.allowtlsversion = NULL;
 
     /* body server control new ACLs */
     NEED_REVERSE_LOOKUP = false;

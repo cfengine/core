@@ -82,7 +82,7 @@ bool IsUserNameValid(const char *username)
 
 int AllowedUser(char *user)
 {
-    if (IsItemIn(SV.allowuserlist, user))
+    if (IsItemIn(SERVER_ACCESS.allowuserlist, user))
     {
         Log(LOG_LEVEL_DEBUG, "User %s granted connection privileges", user);
         return true;

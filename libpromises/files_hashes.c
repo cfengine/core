@@ -53,12 +53,21 @@ void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], H
         return;
     }
 
-    md = EVP_get_digestbyname(HashNameFromId(type));
+    md = HashDigestFromId(type);
+    if (md == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Could not determine function for file hashing (type=%d)",
+            (int) type);
+        fclose(file);
+        return;
+    }
 
     EVP_MD_CTX *context = EVP_MD_CTX_new();
     if (context == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
+        fclose(file);
         return;
     }
 
@@ -92,11 +101,13 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
         break;
 
     default:
-        md = EVP_get_digestbyname(HashNameFromId(type));
-
+        md = HashDigestFromId(type);
         if (md == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
+            Log(LOG_LEVEL_ERR,
+                "Could not determine function for file hashing (type=%d)",
+                (int) type);
+            return;
         }
 
         EVP_MD_CTX *context = EVP_MD_CTX_new();
@@ -133,10 +144,13 @@ void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashM
         return;
     }
 
-    const EVP_MD *md = EVP_get_digestbyname(HashNameFromId(type));
+    const EVP_MD *md = HashDigestFromId(type);
     if (md == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
+        Log(LOG_LEVEL_ERR,
+            "Could not determine function for file hashing (type=%d)",
+            (int) type);
+        return;
     }
 
     EVP_MD_CTX *context = EVP_MD_CTX_new();

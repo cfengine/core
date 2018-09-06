@@ -157,7 +157,6 @@ check_PROGRAMS = \
 	syntax_test \
 	sysinfo_test \
 	ipaddress_test \
-	hashes_test \
 	rb-tree-test \
 	variable_test \
 	protocol_test \

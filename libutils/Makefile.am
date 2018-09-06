@@ -37,7 +37,7 @@ libutils_la_SOURCES = \
 	compiler.h \
 	deprecated.h \
 	dir.h dir_priv.h \
-	hashes.c hashes.h hash_method.h \
+	hash_method.h \
 	path.c path.h \
 	sequence.c sequence.h \
 	set.c set.h \

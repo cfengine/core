@@ -24,7 +24,6 @@
 
 #include <assoc.h>
 
-#include <hashes.h>
 #include <rlist.h>
 
 CfAssoc *NewAssoc(const char *lval, Rval rval, DataType dt)

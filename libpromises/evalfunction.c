@@ -42,7 +42,6 @@
 #include <scope.h>
 #include <keyring.h>
 #include <matching.h>
-#include <hashes.h>
 #include <unix.h>
 #include <string_lib.h>
 #include <regex.h>          /* CompileRegex,StringMatchWithPrecompiledRegex */

@@ -30,7 +30,6 @@
 #include <expand.h>
 #include <files_names.h>
 #include <scope.h>
-#include <hashes.h>
 #include <unix.h>
 #include <attributes.h>
 #include <locks.h>

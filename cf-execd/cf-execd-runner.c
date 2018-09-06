@@ -27,7 +27,6 @@
 
 #include <files_names.h>
 #include <files_interfaces.h>
-#include <hashes.h>
 #include <string_lib.h>
 #include <pipes.h>
 #include <unix.h>

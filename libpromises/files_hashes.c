@@ -41,6 +41,7 @@
 
 void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
     FILE *file;
     int len, md_len;
     unsigned char buffer[1024];
@@ -80,6 +81,7 @@ void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], H
 
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
     const EVP_MD *md = NULL;
     int md_len;
 
@@ -87,7 +89,6 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
     {
     case HASH_METHOD_CRYPT:
         Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use another algorithm instead");
-        memset(digest, 0, EVP_MAX_MD_SIZE + 1);
         break;
 
     default:
@@ -125,6 +126,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
 void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
     if (type == HASH_METHOD_CRYPT)
     {
         Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use sha256 instead");

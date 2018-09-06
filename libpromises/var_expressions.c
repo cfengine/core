@@ -28,7 +28,6 @@
 #include <buffer.h>
 #include <misc_lib.h>
 #include <string_lib.h>
-#include <hashes.h>
 #include <scope.h>
 
 

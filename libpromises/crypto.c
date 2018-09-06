@@ -33,7 +33,6 @@
 #include <lastseen.h>
 #include <files_interfaces.h>
 #include <files_hashes.h>
-#include <hashes.h>
 #include <pipes.h>
 #include <mutex.h>
 #include <known_dirs.h>

@@ -94,7 +94,7 @@ bool ServerTLSInitialize(RSA *priv_key, RSA *pub_key, SSL_CTX **ssl_ctx)
         return false;
     }
 
-    TLSSetDefaultOptions(*ssl_ctx, SV.allowtlsversion);
+    TLSSetDefaultOptions(*ssl_ctx, SERVER_ACCESS.allowtlsversion);
 
     /*
      * CFEngine is not a web server so it does not need to support many
@@ -105,7 +105,7 @@ bool ServerTLSInitialize(RSA *priv_key, RSA *pub_key, SSL_CTX **ssl_ctx)
      *     AES256-GCM-SHA384: most high-grade RSA-based cipher from TLSv1.2
      *     AES256-SHA: most backwards compatible but high-grade, from SSLv3
      */
-    const char *cipher_list = SV.allowciphers;
+    const char *cipher_list = SERVER_ACCESS.allowciphers;
     if (cipher_list == NULL)
     {
         cipher_list ="AES256-GCM-SHA384:AES256-SHA";
@@ -544,8 +544,8 @@ bool ServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
 
     if (ret == 0)                                  /* untrusted key */
     {
-        if ((SV.trustkeylist != NULL) &&
-            (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
+        if ((SERVER_ACCESS.trustkeylist != NULL) &&
+            (IsMatchItemIn(SERVER_ACCESS.trustkeylist, conn->ipaddr)))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Peer was found in \"trustkeysfrom\" list");
@@ -706,7 +706,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
          * similar in all of GET, OPENDIR and STAT. */
 
         size_t zret = ShortcutsExpand(filename, sizeof(filename),
-                                     SV.path_shortcuts,
+                                     SERVER_ACCESS.path_shortcuts,
                                      conn->ipaddr, conn->revdns,
                                      KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (zret == (size_t) -1)
@@ -768,7 +768,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         /* sizeof()-1 because we need one extra byte for
            appending '/' afterwards. */
         size_t zret = ShortcutsExpand(filename, sizeof(filename) - 1,
-                                      SV.path_shortcuts,
+                                      SERVER_ACCESS.path_shortcuts,
                                       conn->ipaddr, conn->revdns,
                                       KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (zret == (size_t) -1)
@@ -832,7 +832,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         /* sizeof()-1 because we need one extra byte for
            appending '/' afterwards. */
         size_t zret = ShortcutsExpand(filename, sizeof(filename) - 1,
-                                      SV.path_shortcuts,
+                                      SERVER_ACCESS.path_shortcuts,
                                       conn->ipaddr, conn->revdns,
                                       KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (zret == (size_t) -1)
@@ -901,7 +901,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
          * similar in all of GET, OPENDIR and STAT. */
 
         size_t zret = ShortcutsExpand(filename, sizeof(filename),
-                                     SV.path_shortcuts,
+                                     SERVER_ACCESS.path_shortcuts,
                                      conn->ipaddr, conn->revdns,
                                      KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (zret == (size_t) -1)

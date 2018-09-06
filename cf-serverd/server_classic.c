@@ -207,7 +207,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     Log(LOG_LEVEL_DEBUG, "AccessControl, match (%s,%s) encrypt request = %d", transrequest, conn->hostname, encrypt);
 
-    if (SV.admit == NULL)
+    if (SERVER_ACCESS.admit == NULL)
     {
         Log(LOG_LEVEL_INFO, "cf-serverd access list is empty, no files are visible");
         return false;
@@ -215,7 +215,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     conn->maproot = false;
 
-    for (Auth *ap = SV.admit; ap != NULL; ap = ap->next)
+    for (Auth *ap = SERVER_ACCESS.admit; ap != NULL; ap = ap->next)
     {
         Log(LOG_LEVEL_DEBUG, "Examining rule in access list (%s,%s)", transrequest, ap->path);
 
@@ -262,7 +262,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         }
     }
 
-    for (Auth *dp = SV.deny; dp != NULL; dp = dp->next)
+    for (Auth *dp = SERVER_ACCESS.deny; dp != NULL; dp = dp->next)
     {
         strlcpy(transpath, dp->path, CF_BUFSIZE);
         MapName(transpath);
@@ -323,7 +323,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
     conn->maproot = false;
 
-    for (ap = SV.varadmit; ap != NULL; ap = ap->next)
+    for (ap = SERVER_ACCESS.varadmit; ap != NULL; ap = ap->next)
     {
         Log(LOG_LEVEL_VERBOSE, "Examining rule in access list (%s,%s)?", name, ap->path);
 
@@ -371,7 +371,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
         }
     }
 
-    for (ap = SV.vardeny; ap != NULL; ap = ap->next)
+    for (ap = SERVER_ACCESS.vardeny; ap != NULL; ap = ap->next)
     {
         if (strcmp(ap->path, name) == 0)
         {
@@ -423,7 +423,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         /* Does the class match the regex that the agent requested? */
         if (StringMatchFull(client_regex, ip->name))
         {
-            for (ap = SV.varadmit; ap != NULL; ap = ap->next)
+            for (ap = SERVER_ACCESS.varadmit; ap != NULL; ap = ap->next)
             {
                 /* Does the class match any of the regex in ACLs? */
                 if (StringMatchFull(ap->path, ip->name))
@@ -480,7 +480,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                 }
             }
 
-            for (ap = SV.vardeny; ap != NULL; ap = ap->next)
+            for (ap = SERVER_ACCESS.vardeny; ap != NULL; ap = ap->next)
             {
                 if (strcmp(ap->path, ip->name) == 0)
                 {
@@ -601,8 +601,8 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
      * directory): Allow access only if host is listed in "trustkeysfrom" body
      * server control option. */
 
-    if ((SV.trustkeylist != NULL) &&
-        (IsMatchItemIn(SV.trustkeylist, conn->ipaddr)))
+    if ((SERVER_ACCESS.trustkeylist != NULL) &&
+        (IsMatchItemIn(SERVER_ACCESS.trustkeylist, conn->ipaddr)))
     {
         Log(LOG_LEVEL_VERBOSE,
             "Host %s/%s was found in the list of hosts to trust",
@@ -1182,7 +1182,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         zret = ShortcutsExpand(filename, sizeof(filename),
-            SV.path_shortcuts,
+            SERVER_ACCESS.path_shortcuts,
             conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
@@ -1252,7 +1252,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         zret = ShortcutsExpand(filename, sizeof(filename),
-            SV.path_shortcuts,
+            SERVER_ACCESS.path_shortcuts,
             conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
@@ -1310,7 +1310,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
 
         zret = ShortcutsExpand(filename, sizeof(filename),
-            SV.path_shortcuts,
+            SERVER_ACCESS.path_shortcuts,
             conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
@@ -1335,7 +1335,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
 
         zret = ShortcutsExpand(filename, sizeof(filename),
-            SV.path_shortcuts,
+            SERVER_ACCESS.path_shortcuts,
             conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
@@ -1408,7 +1408,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         drift = (int) (tloc - trem);
 
         zret = ShortcutsExpand(filename, sizeof(filename),
-            SV.path_shortcuts,
+            SERVER_ACCESS.path_shortcuts,
             conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
@@ -1472,7 +1472,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         sscanf(recvbuffer, "MD5 %[^\n]", filename);
 
         zret = ShortcutsExpand(filename, sizeof(filename),
-            SV.path_shortcuts,
+            SERVER_ACCESS.path_shortcuts,
             conn->ipaddr, conn->hostname,
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 

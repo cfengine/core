@@ -501,7 +501,6 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
 {
     static const char PACK_UPIFELAPSED_SALT[] = "packageuplist";
 
-    EVP_MD_CTX *context = EVP_MD_CTX_new();
     int md_len;
     const EVP_MD *md = NULL;
     Rlist *rp;
@@ -510,7 +509,21 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
     char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
     int doHash;
 
-    md = EVP_get_digestbyname(HashNameFromId(type));
+    md = HashDigestFromId(type);
+    if (md == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Could not determine function for file hashing (type=%d)",
+            (int) type);
+        return;
+    }
+
+    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    if (context == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not allocate openssl hash context");
+        return;
+    }
 
     EVP_DigestInit(context, md);
 

@@ -133,7 +133,6 @@ Hash *HashNew(const char *data, const unsigned int length, HashMethod method)
      * OpenSSL documentation marked EVP_DigestInit and EVP_DigestFinal functions as deprecated and
      * recommends moving to EVP_DigestInit_ex and EVP_DigestFinal_ex.
      */
-    EVP_MD_CTX *context = NULL;
     const EVP_MD *md = NULL;
     int md_len = 0;
     md = EVP_get_digestbyname(CF_DIGEST_TYPES[method]);
@@ -142,8 +141,14 @@ Hash *HashNew(const char *data, const unsigned int length, HashMethod method)
         Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[method]);
         return NULL;
     }
+
+    EVP_MD_CTX *const context = EVP_MD_CTX_create();
+    if (context == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not allocate openssl hash context");
+        return NULL;
+    }
     Hash *hash = HashBasicInit(method);
-    context = EVP_MD_CTX_create();
     EVP_DigestInit_ex(context, md, NULL);
     EVP_DigestUpdate(context, data, (size_t) length);
     EVP_DigestFinal_ex(context, hash->digest, &md_len);
@@ -177,6 +182,11 @@ Hash *HashNewFromDescriptor(const int descriptor, HashMethod method)
     }
     Hash *hash = HashBasicInit(method);
     context = EVP_MD_CTX_create();
+    if (context == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not allocate openssl hash context");
+        return NULL;
+    }
     EVP_DigestInit_ex(context, md, NULL);
     do
     {
@@ -357,6 +367,17 @@ const char *HashNameFromId(HashMethod hash_id)
 {
     return (hash_id >= HASH_METHOD_NONE) ? NULL : CF_DIGEST_TYPES[hash_id];
 }
+
+const EVP_MD *HashDigestFromId(HashMethod type)
+{
+    const char *const name = HashNameFromId(type);
+    if (name == NULL)
+    {
+        return NULL;
+    }
+    return EVP_get_digestbyname(name);
+}
+
 
 HashSize HashSizeFromId(HashMethod hash_id)
 {

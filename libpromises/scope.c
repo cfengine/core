@@ -26,7 +26,6 @@
 
 #include <vars.h>
 #include <expand.h>
-#include <hashes.h>
 #include <unix.h>
 #include <fncall.h>
 #include <mutex.h>

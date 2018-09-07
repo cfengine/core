@@ -28,7 +28,6 @@
 #include <expand.h>
 #include <scope.h>
 #include <matching.h>
-#include <hashes.h>
 #include <unix.h>
 #include <misc_lib.h>
 #include <rlist.h>

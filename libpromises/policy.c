@@ -34,7 +34,6 @@
 #include <fncall.h>
 #include <rlist.h>
 #include <set.h>
-#include <hashes.h>
 #include <eval_context.h>
 #include <promises.h>
 #include <item_lib.h>

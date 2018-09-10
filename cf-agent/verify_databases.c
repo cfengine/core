@@ -390,10 +390,6 @@ static int CheckDatabaseSanity(Attributes a, const Promise *pp)
 
     }
 
-    if ((a.database.operation) && (strcmp(a.database.operation, "create") == 0))
-    {
-    }
-
     if ((a.database.operation)
         && ((strcmp(a.database.operation, "delete") == 0) || (strcmp(a.database.operation, "drop") == 0)))
     {

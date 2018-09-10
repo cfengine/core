@@ -459,6 +459,11 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, Attributes
         {
             if (!MakeParentDirectory(dir, a.move_obstructions))
             {
+                // Could not create parent directory, assume this is okay,
+                // verbose logging in MakeParentDirectory()
+                Log(LOG_LEVEL_DEBUG,
+                    "Could not create parent directory '%s' for mount promise",
+                    dir);
             }
 
             if (a.mount.editfstab)

@@ -125,6 +125,11 @@ int ArchiveToRepository(const char *file, Attributes attr)
 
     if (!MakeParentDirectory(destination, attr.move_obstructions))
     {
+        // Could not create parent directory, assume this is okay,
+        // verbose logging in MakeParentDirectory()
+        Log(LOG_LEVEL_DEBUG,
+            "Could not create parent directory '%s'",
+            destination);
     }
 
     if (stat(file, &sb) == -1)

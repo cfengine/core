@@ -99,12 +99,12 @@ static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(EvalContext *ctx, const Policy *policy);
 static Averages EvalAvQ(EvalContext *ctx, char *timekey);
-static void ArmClasses(EvalContext *ctx, Averages newvals);
+static void ArmClasses(EvalContext *ctx, const Averages *newvals);
 static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
-static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals);
+static void UpdateAverages(EvalContext *ctx, char *timekey, const Averages *newvals);
 static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av);
 static double WAverage(double new_val, double old_val, double age);
 static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
@@ -323,7 +323,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(ctx, timekey);
         LeapDetection();
-        ArmClasses(ctx, averages);
+        ArmClasses(ctx, &averages);
 
         ZeroArrivals();
 
@@ -468,7 +468,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         }
     }
 
-    UpdateAverages(ctx, t, newvals);
+    UpdateAverages(ctx, t, &newvals);
     UpdateDistributions(ctx, t, lastweek_vals);        /* Distribution about mean */
 
     return newvals;
@@ -586,8 +586,9 @@ static void AddOpenPorts(const char *name, const Item *value, Item **mon_data)
     WriterClose(w);
 }
 
-static void ArmClasses(EvalContext *ctx, Averages av)
+static void ArmClasses(EvalContext *ctx, const Averages *const av)
 {
+    assert(av != NULL);
     double sigma;
     Item *ip, *mon_data = NULL;
     int i, j, k;
@@ -601,8 +602,8 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
-        SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &mon_data);
+        sigma = SetClasses(ctx, name, CF_THIS[i], av->Q[i].expect, av->Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
+        SetVariable(name, CF_THIS[i], av->Q[i].expect, sigma, &mon_data);
 
         /* LDT */
 
@@ -642,7 +643,7 @@ static void ArmClasses(EvalContext *ctx, Averages av)
                 strcat(ldt_buff, buff);
             }
 
-            if (CF_THIS[i] > av.Q[i].expect)
+            if (CF_THIS[i] > av->Q[i].expect)
             {
                 snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
             }
@@ -762,8 +763,9 @@ static Averages *GetCurrentAverages(char *timekey)
 
 /*****************************************************************************/
 
-static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
+static void UpdateAverages(EvalContext *ctx, char *timekey, const Averages *const newvals)
 {
+    assert(newvals != NULL);
     CF_DB *dbp;
 
     if (!OpenDB(&dbp, dbid_observations))
@@ -773,7 +775,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
 
     Log(LOG_LEVEL_INFO, "Updated averages at '%s'", timekey);
 
-    WriteDB(dbp, timekey, &newvals, sizeof(Averages));
+    WriteDB(dbp, timekey, newvals, sizeof(Averages));
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
 
     CloseDB(dbp);

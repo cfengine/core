@@ -632,10 +632,14 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
         if (strcmp(cp->lval, "comment") == 0)
         {
+            // Comments don't affect convergence
+            // Unclear why this is in the constraint list in the first place?
+            continue;
         }
         else if (cp->rval.item == NULL && cp->rval.type != RVAL_TYPE_LIST)
         {
-
+            // No right value, considered empty
+            continue;
         }
         else if (strcmp(cp->lval, "ifvarclass") == 0 ||
                  strcmp(cp->lval, "if")         == 0)

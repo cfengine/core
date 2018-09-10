@@ -302,9 +302,10 @@ void EscapeSpecialChars(const char *str, char *strEsc, int strEscSz, char *noEsc
             sp += strlen(noEscSeq);
         }
 
-        if (strchr(noEscList,*sp))
+        if (strchr(noEscList,*sp) != NULL)
         {
-        }        
+            // Found current char (*sp) in noEscList, do nothing
+        }
         else if ((*sp != '\0') && (!isalnum((int)*sp)))
         {
             strEsc[strEscPos++] = '\\';

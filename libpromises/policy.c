@@ -3104,10 +3104,9 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
                         for (size_t l = 0; bs[l].lval != NULL; l++)
                         {
-                            if (bs[l].dtype == CF_DATA_TYPE_BUNDLE)
-                            {
-                            }
-                            else if (bs[l].dtype == CF_DATA_TYPE_BODY)
+                            // No validation for CF_DATA_TYPE_BUNDLE here
+                            // see: PolicyCheckUndefinedBundles() etc.
+                            if (bs[l].dtype == CF_DATA_TYPE_BODY)
                             {
                                 const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax->constraints;
 

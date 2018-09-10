@@ -379,7 +379,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
     return ENTERPRISE_DATA[slot].output;
 }
 
-void HistoryUpdate(EvalContext *ctx, Averages newvals)
+void HistoryUpdate(EvalContext *ctx, const Averages *const newvals)
 {
     CfLock thislock;
     time_t now = time(NULL);
@@ -425,7 +425,7 @@ void HistoryUpdate(EvalContext *ctx, Averages newvals)
     YieldCurrentLock(thislock);
     PolicyDestroy(history_db_policy);
 
-    Nova_HistoryUpdate(CFSTARTTIME, &newvals);
+    Nova_HistoryUpdate(CFSTARTTIME, newvals);
 
     Nova_DumpSlowlyVaryingObservations();
 }

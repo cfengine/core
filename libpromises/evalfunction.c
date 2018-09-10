@@ -1258,16 +1258,17 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
     bool check_only = false;
     unsigned count = 0;
 
-    if (strcmp(fp->name, "classmatch") == 0)
+    if (StringSafeEqual(fp->name, "classesmatching"))
+    {
+        // Expected / default case
+    }
+    else if (StringSafeEqual(fp->name, "classmatch"))
     {
         check_only = true;
     }
-    else if (strcmp(fp->name, "countclassesmatching") == 0)
+    else if (StringSafeEqual(fp->name, "countclassesmatching"))
     {
         count_only = true;
-    }
-    else if (strcmp(fp->name, "classesmatching") == 0)
-    {
     }
     else
     {

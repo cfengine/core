@@ -523,13 +523,14 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
                                    const char *filename,
                                    unsigned char digest[EVP_MAX_MD_SIZE + 1],
                                    HashMethod type,
-                                   Attributes attr,
+                                   const Attributes *attr,
                                    const Promise *pp,
                                    PromiseResult *result)
 {
-    bool ret = FileChangesCheckAndUpdateHash_impl(filename, digest, type, attr.change.update, pp, result);
+    assert(attr != NULL);
+    bool ret = FileChangesCheckAndUpdateHash_impl(filename, digest, type, attr->change.update, pp, result);
     // TODO: Move cfPS even further up the call stack.
-    cfPS(ctx, LOG_LEVEL_DEBUG, *result, pp, attr, "Updating promise status for files changes promise");
+    cfPS(ctx, LOG_LEVEL_DEBUG, *result, pp, *attr, "Updating promise status for files changes promise");
     return ret;
 }
 
@@ -688,23 +689,23 @@ void FileChangesCheckAndUpdateStats(const char *file, struct stat *sb, bool upda
 
     if (cmpsb.st_uid != sb->st_uid)
     {
-        Log(LOG_LEVEL_NOTICE, "Owner for '%s' changed %jd -> %jd",
+        Log(LOG_LEVEL_NOTICE, "Owner for '%s' changed %ju -> %ju",
             file, (uintmax_t) cmpsb.st_uid, (uintmax_t) sb->st_uid);
 
         char msg_temp[CF_MAXVARSIZE];
-        snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
-                 (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
+        snprintf(msg_temp, sizeof(msg_temp), "Owner: %ju -> %ju",
+                 (uintmax_t) cmpsb.st_uid, (uintmax_t) sb->st_uid);
 
         FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
     }
 
     if (cmpsb.st_gid != sb->st_gid)
     {
-        Log(LOG_LEVEL_NOTICE, "Group for '%s' changed %jd -> %jd",
+        Log(LOG_LEVEL_NOTICE, "Group for '%s' changed %ju -> %ju",
             file, (uintmax_t) cmpsb.st_gid, (uintmax_t) sb->st_gid);
 
         char msg_temp[CF_MAXVARSIZE];
-        snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
+        snprintf(msg_temp, sizeof(msg_temp), "Group: %ju -> %ju",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
         FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
@@ -712,11 +713,11 @@ void FileChangesCheckAndUpdateStats(const char *file, struct stat *sb, bool upda
 
     if (cmpsb.st_dev != sb->st_dev)
     {
-        Log(LOG_LEVEL_NOTICE, "Device for '%s' changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
-              (intmax_t) sb->st_dev);
+        Log(LOG_LEVEL_NOTICE, "Device for '%s' changed %ju -> %ju",
+            file, (uintmax_t) cmpsb.st_dev, (uintmax_t) sb->st_dev);
 
         char msg_temp[CF_MAXVARSIZE];
-        snprintf(msg_temp, sizeof(msg_temp), "Device: %jd -> %jd",
+        snprintf(msg_temp, sizeof(msg_temp), "Device: %ju -> %ju",
                  (uintmax_t)cmpsb.st_dev, (uintmax_t)sb->st_dev);
 
         FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
@@ -724,8 +725,8 @@ void FileChangesCheckAndUpdateStats(const char *file, struct stat *sb, bool upda
 
     if (cmpsb.st_ino != sb->st_ino)
     {
-        Log(LOG_LEVEL_NOTICE, "inode for '%s' changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
-              (uintmax_t) sb->st_ino);
+        Log(LOG_LEVEL_NOTICE, "inode for '%s' changed %ju -> %ju",
+            file, (uintmax_t) cmpsb.st_ino, (uintmax_t) sb->st_ino);
     }
 
     if (cmpsb.st_mtime != sb->st_mtime)

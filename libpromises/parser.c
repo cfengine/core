@@ -32,7 +32,7 @@
 
 int yyparse(void);
 
-ParserState P = { 0 }; /* GLOBAL_X */
+ParserState PARSER_STATE = { 0 }; /* GLOBAL_X */
 
 extern FILE *yyin;
 
@@ -107,15 +107,15 @@ static void ParserStateClean(ParserState *p)
 
 Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int warnings, unsigned int warnings_error)
 {
-    ParserStateReset(&P, false);
+    ParserStateReset(&PARSER_STATE, false);
 
-    P.agent_type = agent_type;
-    P.policy = PolicyNew();
+    PARSER_STATE.agent_type = agent_type;
+    PARSER_STATE.policy = PolicyNew();
 
-    P.warnings = warnings;
-    P.warnings_error = warnings_error;
+    PARSER_STATE.warnings = warnings;
+    PARSER_STATE.warnings_error = warnings_error;
 
-    strlcpy(P.filename, path, CF_MAXVARSIZE);
+    strlcpy(PARSER_STATE.filename, path, CF_MAXVARSIZE);
 
     yyin = safe_fopen(path, "rt");
     if (yyin == NULL)
@@ -137,17 +137,17 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
 
     fclose(yyin);
 
-    if (P.error_count > 0)
+    if (PARSER_STATE.error_count > 0)
     {
-        PolicyDestroy(P.policy);
-        ParserStateReset(&P, true);
-        ParserStateClean(&P);
+        PolicyDestroy(PARSER_STATE.policy);
+        ParserStateReset(&PARSER_STATE, true);
+        ParserStateClean(&PARSER_STATE);
         return NULL;
     }
 
-    Policy *policy = P.policy;
-    ParserStateReset(&P, false);
-    ParserStateClean(&P);
+    Policy *policy = PARSER_STATE.policy;
+    ParserStateReset(&PARSER_STATE, false);
+    ParserStateClean(&PARSER_STATE);
     return policy;
 }
 

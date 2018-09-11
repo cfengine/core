@@ -93,6 +93,6 @@ typedef struct
     } offsets;
 } ParserState;
 
-extern ParserState P;
+extern ParserState PARSER_STATE;
 
 #endif

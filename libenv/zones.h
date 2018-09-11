@@ -30,7 +30,7 @@
 #ifndef __MINGW32__
 bool IsGlobalZone();
 bool ForeignZone(char *s);
-int  CurrentZoneName(const char *s);/* s must point to at least ZONENAME_MAX bytes of space */
+int  CurrentZoneName(char *s);/* s must point to at least ZONENAME_MAX bytes of space */
 #endif
 
 #endif // ZONES_H

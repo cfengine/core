@@ -38,113 +38,89 @@
 #include <string_lib.h>                                 /* StringBytesToHex */
 #include <misc_lib.h>                                   /* UnexpectedError */
 
-
-void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+static void HashFile_Stream(
+    FILE *const file,
+    unsigned char digest[EVP_MAX_MD_SIZE + 1],
+    const HashMethod type)
 {
-    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
-    FILE *file;
-    int len, md_len;
-    unsigned char buffer[1024];
-    const EVP_MD *md = NULL;
-
-    if ((file = safe_fopen(filename, "rb")) == NULL)
-    {
-        Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
-        return;
-    }
-
-    md = HashDigestFromId(type);
+    assert(file != NULL);
+    const EVP_MD *const md = HashDigestFromId(type);
     if (md == NULL)
     {
         Log(LOG_LEVEL_ERR,
             "Could not determine function for file hashing (type=%d)",
             (int) type);
-        fclose(file);
         return;
     }
 
-    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    EVP_MD_CTX *const context = EVP_MD_CTX_new();
     if (context == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
-        fclose(file);
         return;
     }
 
     if (EVP_DigestInit(context, md) == 1)
     {
+        unsigned char buffer[1024];
+        size_t len;
         while ((len = fread(buffer, 1, 1024, file)))
         {
             EVP_DigestUpdate(context, buffer, len);
         }
 
-        EVP_DigestFinal(context, digest, &md_len);
+        unsigned int digest_length;
+        EVP_DigestFinal(context, digest, &digest_length);
     }
 
-    /* Digest length stored in md_len */
-    fclose(file);
     EVP_MD_CTX_free(context);
 }
 
-/*******************************************************************/
-
-void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void HashFile(
+    const char *const filename,
+    unsigned char digest[EVP_MAX_MD_SIZE + 1],
+    HashMethod type)
 {
+    assert(filename != NULL);
+    assert(digest != NULL);
+
     memset(digest, 0, EVP_MAX_MD_SIZE + 1);
-    const EVP_MD *md = NULL;
-    int md_len;
 
-    switch (type)
+    FILE *file = safe_fopen(filename, "rb");
+    if (file == NULL)
     {
-    case HASH_METHOD_CRYPT:
-        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use another algorithm instead");
-        break;
-
-    default:
-        md = HashDigestFromId(type);
-        if (md == NULL)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Could not determine function for file hashing (type=%d)",
-                (int) type);
-            return;
-        }
-
-        EVP_MD_CTX *context = EVP_MD_CTX_new();
-        if (context == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
-            return;
-        }
-
-        if (EVP_DigestInit(context, md) == 1)
-        {
-            EVP_DigestUpdate(context, buffer, len);
-            EVP_DigestFinal(context, digest, &md_len);
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Failed to initialize digest for hashing: '%s'", buffer);
-            // TODO: handle this someway
-        }
-
-        EVP_MD_CTX_free(context);
-        break;
+        Log(LOG_LEVEL_INFO,
+            "Cannot open file for hashing '%s'. (fopen: %s)",
+            filename,
+            GetErrorStr());
+        return;
     }
+
+    HashFile_Stream(file, digest, type);
+    fclose(file);
 }
 
 /*******************************************************************/
 
-void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void HashString(
+    const char *const buffer,
+    const int len,
+    unsigned char digest[EVP_MAX_MD_SIZE + 1],
+    HashMethod type)
 {
+    assert(buffer != NULL);
+    assert(digest != NULL);
+
     memset(digest, 0, EVP_MAX_MD_SIZE + 1);
+
     if (type == HASH_METHOD_CRYPT)
     {
-        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use sha256 instead");
+        Log(LOG_LEVEL_ERR,
+            "The crypt support is not presently implemented, please use another algorithm instead");
         return;
     }
 
-    const EVP_MD *md = HashDigestFromId(type);
+    const EVP_MD *const md = HashDigestFromId(type);
     if (md == NULL)
     {
         Log(LOG_LEVEL_ERR,
@@ -153,25 +129,76 @@ void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashM
         return;
     }
 
-    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    EVP_MD_CTX *const context = EVP_MD_CTX_new();
     if (context == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
         return;
     }
 
-    const BIGNUM *n, *e;
-    RSA_get0_key(key, &n, &e, NULL);
+    if (EVP_DigestInit(context, md) == 1)
+    {
+        EVP_DigestUpdate(context, buffer, len);
 
-    size_t n_len = (n == NULL) ? 0 : (size_t) BN_num_bytes(n);
-    size_t e_len = (e == NULL) ? 0 : (size_t) BN_num_bytes(e);
-    size_t buf_len = MAX(n_len, e_len);
+        unsigned int digest_length;
+        EVP_DigestFinal(context, digest, &digest_length);
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to initialize digest for hashing: '%s'",
+            buffer);
+    }
 
-    unsigned char buffer[buf_len];
-    int md_len, actlen;
+    EVP_MD_CTX_free(context);
+}
+
+/*******************************************************************/
+
+void HashPubKey(
+    const RSA *const key,
+    unsigned char digest[EVP_MAX_MD_SIZE + 1],
+    const HashMethod type)
+{
+    assert(key != NULL);
+
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
+
+    if (type == HASH_METHOD_CRYPT)
+    {
+        Log(LOG_LEVEL_ERR,
+            "The crypt support is not presently implemented, please use sha256 instead");
+        return;
+    }
+
+    const EVP_MD *const md = HashDigestFromId(type);
+    if (md == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Could not determine function for file hashing (type=%d)",
+            (int) type);
+        return;
+    }
+
+    EVP_MD_CTX *const context = EVP_MD_CTX_new();
+    if (context == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
+        return;
+    }
+
 
     if (EVP_DigestInit(context, md) == 1)
     {
+        const BIGNUM *n, *e;
+        RSA_get0_key(key, &n, &e, NULL);
+
+        const size_t n_len = (n == NULL) ? 0 : (size_t) BN_num_bytes(n);
+        const size_t e_len = (e == NULL) ? 0 : (size_t) BN_num_bytes(e);
+        const size_t buf_len = MAX(n_len, e_len);
+
+        unsigned char buffer[buf_len];
+        int actlen;
         actlen = BN_bn2bin(n, buffer);
         CF_ASSERT(actlen <= buf_len, "Buffer overflow n, %d > %zu!",
                   actlen, buf_len);
@@ -182,7 +209,8 @@ void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashM
                   actlen, buf_len);
         EVP_DigestUpdate(context, buffer, actlen);
 
-        EVP_DigestFinal(context, digest, &md_len);
+        unsigned int digest_length;
+        EVP_DigestFinal(context, digest, &digest_length);
     }
 
     EVP_MD_CTX_free(context);
@@ -194,11 +222,13 @@ int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
                 const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type)
 {
-    int i, size = EVP_MAX_MD_SIZE;
+    const HashSize size = HashSizeFromId(type);
+    if (size <= 0) // HashSize is an enum (so int)
+    {
+        return false;
+    }
 
-    size = HashSizeFromId(type);
-
-    for (i = 0; i < size; i++)
+    for (int i = 0; i < size; i++)
     {
         if (digest1[i] != digest2[i])
         {
@@ -248,7 +278,7 @@ char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
                          digest, digest_len);
     assert(ret == 2 * digest_len);
 
-#if 0         /* TODO return proper exit status and check it in the callers */
+#if 0 /* TODO return proper exit status and check it in the callers */
     if (ret < 2 * digest_len)
     {
         return NULL;

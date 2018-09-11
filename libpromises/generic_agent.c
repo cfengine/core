@@ -1220,8 +1220,22 @@ static bool GeneratePolicyReleaseIDFromTree(char *release_id_out, size_t out_siz
     }
 
     // fallback, produce some pseudo sha1 hash
+    const EVP_MD *const md = HashDigestFromId(GENERIC_AGENT_CHECKSUM_METHOD);
+    if (md == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Could not determine function for file hashing");
+        return false;
+    }
+
     EVP_MD_CTX *crypto_ctx = EVP_MD_CTX_new();
-    EVP_DigestInit(crypto_ctx, EVP_get_digestbyname(HashNameFromId(GENERIC_AGENT_CHECKSUM_METHOD)));
+    if (crypto_ctx == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not allocate openssl hash context");
+        return false;
+    }
+
+    EVP_DigestInit(crypto_ctx, md);
 
     bool success = HashDirectoryTree(policy_dir,
                                      (const char *[]) { ".cf", ".dat", ".txt", ".conf", ".mustache", ".json", ".yaml", NULL},
@@ -1574,7 +1588,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to set owner on '%s' to '%jd.%jd'. (chown: %s)", vbuff,
+            Log(LOG_LEVEL_ERR, "Unable to set owner on '%s' to '%ju.%ju'. (chown: %s)", vbuff,
                 (uintmax_t)getuid(), (uintmax_t)getgid(), GetErrorStr());
         }
 

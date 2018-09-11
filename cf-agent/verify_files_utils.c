@@ -3064,8 +3064,8 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Att
             HashFile(file, digest1, HASH_METHOD_MD5);
             HashFile(file, digest2, HASH_METHOD_SHA1);
 
-            one = FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result);
-            two = FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result);
+            one = FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, &attr, pp, &result);
+            two = FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, &attr, pp, &result);
 
             if (one || two)
             {
@@ -3079,7 +3079,7 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Att
         {
             HashFile(file, digest1, attr.change.hash);
 
-            if (FileChangesCheckAndUpdateHash(ctx, file, digest1, attr.change.hash, attr, pp, &result))
+            if (FileChangesCheckAndUpdateHash(ctx, file, digest1, attr.change.hash, &attr, pp, &result))
             {
                 changed = true;
             }

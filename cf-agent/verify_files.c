@@ -574,7 +574,8 @@ static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMo
     size_t bytes_written = fwrite(BufferData(output_buffer), sizeof(char), BufferSize(output_buffer), fp);
     if (bytes_written != BufferSize(output_buffer))
     {
-        Log(LOG_LEVEL_ERR, "Error writing to output file '%s' when writing. %zd bytes written but expected %d. (fclose: %s)",
+        Log(LOG_LEVEL_ERR,
+            "Error writing to output file '%s' when writing. %zu bytes written but expected %u. (fclose: %s)",
             dest_filename, bytes_written, BufferSize(output_buffer), GetErrorStr());
         fclose(fp);
         return false;

@@ -41,6 +41,7 @@
 
 void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
     FILE *file;
     int len, md_len;
     unsigned char buffer[1024];
@@ -52,12 +53,21 @@ void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], H
         return;
     }
 
-    md = EVP_get_digestbyname(HashNameFromId(type));
+    md = HashDigestFromId(type);
+    if (md == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Could not determine function for file hashing (type=%d)",
+            (int) type);
+        fclose(file);
+        return;
+    }
 
     EVP_MD_CTX *context = EVP_MD_CTX_new();
     if (context == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to allocate openssl hashing context");
+        fclose(file);
         return;
     }
 
@@ -80,6 +90,7 @@ void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], H
 
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
     const EVP_MD *md = NULL;
     int md_len;
 
@@ -87,15 +98,16 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
     {
     case HASH_METHOD_CRYPT:
         Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use another algorithm instead");
-        memset(digest, 0, EVP_MAX_MD_SIZE + 1);
         break;
 
     default:
-        md = EVP_get_digestbyname(HashNameFromId(type));
-
+        md = HashDigestFromId(type);
         if (md == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
+            Log(LOG_LEVEL_ERR,
+                "Could not determine function for file hashing (type=%d)",
+                (int) type);
+            return;
         }
 
         EVP_MD_CTX *context = EVP_MD_CTX_new();
@@ -125,16 +137,20 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
 void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
     if (type == HASH_METHOD_CRYPT)
     {
         Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use sha256 instead");
         return;
     }
 
-    const EVP_MD *md = EVP_get_digestbyname(HashNameFromId(type));
+    const EVP_MD *md = HashDigestFromId(type);
     if (md == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", HashNameFromId(type));
+        Log(LOG_LEVEL_ERR,
+            "Could not determine function for file hashing (type=%d)",
+            (int) type);
+        return;
     }
 
     EVP_MD_CTX *context = EVP_MD_CTX_new();

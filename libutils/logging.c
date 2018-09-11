@@ -534,13 +534,8 @@ long byte_magnitude(long bytes)
     const long Ki = 1024;
     const long Mi = Ki * 1024;
     const long Gi = Mi * 1024;
-    const long Ti = Gi * 1024;
 
-    if (bytes > 8 * Ti)
-    {
-        return bytes / Ti;
-    }
-    else if (bytes > 8 * Gi)
+    if (bytes > 8 * Gi)
     {
         return bytes / Gi;
     }
@@ -558,18 +553,13 @@ long byte_magnitude(long bytes)
 // Use this with byte_magnitude
 // Note that the cutoff is at 8x unit, because 3192 bytes is arguably more
 // useful than 3KiB
-const char * const byte_unit(long bytes)
+const char *byte_unit(long bytes)
 {
     const long Ki = 1024;
     const long Mi = Ki * 1024;
     const long Gi = Mi * 1024;
-    const long Ti = Gi * 1024;
 
-    if (bytes > 8 * Ti)
-    {
-        return "TiB";
-    }
-    else if (bytes > 8 * Gi)
+    if (bytes > 8 * Gi)
     {
         return "GiB";
     }

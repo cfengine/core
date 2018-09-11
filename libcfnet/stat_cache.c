@@ -153,7 +153,7 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
 
         if(tosend > sizeof(sendbuffer))
         {
-            ProgrammingError("cf_remote_stat: tosend (%d) > sendbuffer (%ld)",
+            ProgrammingError("cf_remote_stat: tosend (%d) > sendbuffer (%zd)",
                              tosend, sizeof(sendbuffer));
         }
 

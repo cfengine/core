@@ -99,14 +99,14 @@ static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(EvalContext *ctx, const Policy *policy);
 static Averages EvalAvQ(EvalContext *ctx, char *timekey);
-static void ArmClasses(EvalContext *ctx, Averages newvals);
+static void ArmClasses(EvalContext *ctx, const Averages *newvals);
 static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
-static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals);
+static void UpdateAverages(EvalContext *ctx, char *timekey, const Averages *newvals);
 static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av);
-static double WAverage(double newvals, double oldvals, double age);
+static double WAverage(double new_val, double old_val, double age);
 static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
                          double localav_var, Item **classlist);
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
@@ -323,7 +323,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(ctx, timekey);
         LeapDetection();
-        ArmClasses(ctx, averages);
+        ArmClasses(ctx, &averages);
 
         ZeroArrivals();
 
@@ -468,7 +468,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         }
     }
 
-    UpdateAverages(ctx, t, newvals);
+    UpdateAverages(ctx, t, &newvals);
     UpdateDistributions(ctx, t, lastweek_vals);        /* Distribution about mean */
 
     return newvals;
@@ -586,8 +586,9 @@ static void AddOpenPorts(const char *name, const Item *value, Item **mon_data)
     WriterClose(w);
 }
 
-static void ArmClasses(EvalContext *ctx, Averages av)
+static void ArmClasses(EvalContext *ctx, const Averages *const av)
 {
+    assert(av != NULL);
     double sigma;
     Item *ip, *mon_data = NULL;
     int i, j, k;
@@ -601,8 +602,8 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
-        SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &mon_data);
+        sigma = SetClasses(ctx, name, CF_THIS[i], av->Q[i].expect, av->Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
+        SetVariable(name, CF_THIS[i], av->Q[i].expect, sigma, &mon_data);
 
         /* LDT */
 
@@ -642,7 +643,7 @@ static void ArmClasses(EvalContext *ctx, Averages av)
                 strcat(ldt_buff, buff);
             }
 
-            if (CF_THIS[i] > av.Q[i].expect)
+            if (CF_THIS[i] > av->Q[i].expect)
             {
                 snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
             }
@@ -762,8 +763,9 @@ static Averages *GetCurrentAverages(char *timekey)
 
 /*****************************************************************************/
 
-static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
+static void UpdateAverages(EvalContext *ctx, char *timekey, const Averages *const newvals)
 {
+    assert(newvals != NULL);
     CF_DB *dbp;
 
     if (!OpenDB(&dbp, dbid_observations))
@@ -773,7 +775,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
 
     Log(LOG_LEVEL_INFO, "Updated averages at '%s'", timekey);
 
-    WriteDB(dbp, timekey, &newvals, sizeof(Averages));
+    WriteDB(dbp, timekey, newvals, sizeof(Averages));
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
 
     CloseDB(dbp);
@@ -849,71 +851,75 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 
 /*****************************************************************************/
 
+/*
+    This function performs a weighted average of an old and a new measured
+    value. Weights depend on the age of the data. If one or both values
+    are "unreasonably" large (>9999999) they will be ignored.
+*/
 /* For a couple of weeks, learn eagerly. Otherwise variances will
    be way too large. Then downplay newer data somewhat, and rely on
    experience of a couple of months of data ... */
 
-static double WAverage(double anew, double aold, double age)
+static double WAverage(double new_val, double old_val, double age)
 {
-    double av, cf_sane_monitor_limit = 9999999.0;
-    double wnew, wold;
+    const double cf_sane_monitor_limit = 9999999.0;
+    double average, weight_new, weight_old;
 
-/* First do some database corruption self-healing */
-
-    if ((aold > cf_sane_monitor_limit) && (anew > cf_sane_monitor_limit))
+    // First do some database corruption self-healing
+    const bool old_bad = (old_val > cf_sane_monitor_limit);
+    const bool new_bad = (new_val > cf_sane_monitor_limit);
+    if (old_bad && new_bad)
     {
-        return 0;
+        return 0.0;
+    }
+    else if (old_bad)
+    {
+        return new_val;
+    }
+    else if (new_bad)
+    {
+        return old_val;
     }
 
-    if (aold > cf_sane_monitor_limit)
-    {
-        return anew;
-    }
-
-    if (aold > cf_sane_monitor_limit)
-    {
-        return aold;
-    }
-
-/* Now look at the self-learning */
-
+    // Now look at the self-learning
     if ((FORGETRATE > 0.9) || (FORGETRATE < 0.1))
     {
         FORGETRATE = 0.6;
     }
 
-    if (age < 2.0)              /* More aggressive learning for young database */
+    // More aggressive learning for young database
+    if (age < 2.0)
     {
-        wnew = FORGETRATE;
-        wold = (1.0 - FORGETRATE);
+        weight_new = FORGETRATE;
+        weight_old = (1.0 - FORGETRATE);
     }
     else
     {
-        wnew = (1.0 - FORGETRATE);
-        wold = FORGETRATE;
+        weight_new = (1.0 - FORGETRATE);
+        weight_old = FORGETRATE;
     }
 
-    if ((aold == 0) && (anew == 0))
+    if ((old_val == 0) && (new_val == 0))
     {
-        return 0;
+        return 0.0;
     }
 
-/*
- * AV = (Wnew*Anew + Wold*Aold) / (Wnew + Wold).
- *
- * Wnew + Wold always equals to 1, so we omit it for better precision and
- * performance.
- */
+    /*
+     * Average = (w1*v1 + w2*v2) / (w1 + w2)
+     *
+     * w1 + w2 always equals to 1, so we omit it for better precision and
+     * performance.
+     */
 
-    av = (wnew * anew + wold * aold);
+    average = (weight_new * new_val + weight_old * old_val);
 
-    if (av < 0)
+    if (average < 0)
     {
         /* Accuracy lost - something wrong */
         return 0.0;
     }
 
-    return av;
+    return average;
 }
 
 /*****************************************************************************/

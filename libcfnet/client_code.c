@@ -358,7 +358,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
         if(tosend > sizeof(sendbuffer))
         {
-            ProgrammingError("RemoteDirList: tosend (%d) > sendbuffer (%ld)",
+            ProgrammingError("RemoteDirList: tosend (%d) > sendbuffer (%zd)",
                              tosend, sizeof(sendbuffer));
         }
 
@@ -490,7 +490,7 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 
         if(tosend > sizeof(sendbuffer))
         {
-            ProgrammingError("CompareHashNet: tosend (%d) > sendbuffer (%ld)",
+            ProgrammingError("CompareHashNet: tosend (%d) > sendbuffer (%zd)",
                              tosend, sizeof(sendbuffer));
         }
 
@@ -583,7 +583,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
     if(tosend > sizeof(workbuf))
     {
-        ProgrammingError("EncryptCopyRegularFileNet: tosend (%d) > workbuf (%ld)",
+        ProgrammingError("EncryptCopyRegularFileNet: tosend (%d) > workbuf (%zd)",
                          tosend, sizeof(workbuf));
     }
 

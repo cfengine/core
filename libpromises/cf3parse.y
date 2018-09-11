@@ -64,6 +64,7 @@ static size_t CURRENT_BLOCKID_LINE = 0;
 static size_t CURRENT_PROMISER_LINE = 0;
 
 #define YYMALLOC xmalloc
+#define P PARSER_STATE
 
 #define ParserDebug(...) LogDebug(LOG_MOD_PARSER, __VA_ARGS__)
 

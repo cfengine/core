@@ -155,8 +155,8 @@ void GetObservable(int i, char *name, char *desc)
 
     if (i < ob_spare)
     {
-        strncpy(name, OBS[i][0], CF_MAXVARSIZE - 1);
-        strncpy(desc, OBS[i][1], CF_MAXVARSIZE - 1);
+        strncpy(name, OBSERVABLES[i][0], CF_MAXVARSIZE - 1);
+        strncpy(desc, OBSERVABLES[i][1], CF_MAXVARSIZE - 1);
     }
     else
     {
@@ -167,8 +167,8 @@ void GetObservable(int i, char *name, char *desc)
         }
         else
         {
-            strncpy(name, OBS[i][0], CF_MAXVARSIZE - 1);
-            strncpy(desc, OBS[i][1], CF_MAXVARSIZE - 1);
+            strncpy(name, OBSERVABLES[i][0], CF_MAXVARSIZE - 1);
+            strncpy(desc, OBSERVABLES[i][1], CF_MAXVARSIZE - 1);
         }
     }
 }

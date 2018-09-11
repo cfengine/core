@@ -8,8 +8,8 @@ import os
 from os.path import basename
 
 try:
-    from subprocess import DEVNULL # py3k
-except ImportError:
+    DEVNULL = subprocess.DEVNULL
+except AttributeError:
     DEVNULL = open(os.devnull, 'wb')
 
 
@@ -159,7 +159,6 @@ try:
     sys.exit(0)
 except IndexError:                          # command returned no output
     verbose_print("exact_tag  = not found")
-    pass
 
 # Find the most recent tag reachable from this commit.
 git = subprocess.Popen(["git", "describe", "--tags", "--abbrev=0", REV],

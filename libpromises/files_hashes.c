@@ -194,11 +194,13 @@ int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
                 const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type)
 {
-    int i, size = EVP_MAX_MD_SIZE;
+    const HashSize size = HashSizeFromId(type);
+    if (size <= 0) // HashSize is an enum (so int)
+    {
+        return false;
+    }
 
-    size = HashSizeFromId(type);
-
-    for (i = 0; i < size; i++)
+    for (int i = 0; i < size; i++)
     {
         if (digest1[i] != digest2[i])
         {

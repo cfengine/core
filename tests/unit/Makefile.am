@@ -290,7 +290,6 @@ avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 endif
 endif
 
-#file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
 
 db_test_SOURCES = db_test.c

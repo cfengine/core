@@ -344,7 +344,9 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     InitIgnoreInterfaces();
 
-    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    // GDB: breakpoint for tests/acceptance/27_cf-agent/couldnt_open_socket.cf
+    if (fd == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open socket. (socket: %s)", GetErrorStr());
         exit(EXIT_FAILURE);
@@ -362,6 +364,7 @@ void GetInterfacesInfo(EvalContext *ctx)
     intmax_t request = OSIOCGIFCONF;
 #endif
     int ret = ioctl(fd, request, &list);
+    // GDB: breakpoint for tests/acceptance/27_cf-agent/couldnt_ioctl_socket.cf
     if (ret == -1)
     {
         Log(LOG_LEVEL_ERR,

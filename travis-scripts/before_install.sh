@@ -28,4 +28,5 @@ else
     sudo apt-get purge      -y bison
     sudo apt-get autoremove -y
     sudo apt-get install    -y byacc
+    sudo apt-get install    -y gdb
 fi

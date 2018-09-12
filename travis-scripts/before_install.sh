@@ -9,6 +9,7 @@ then
     #brew install libxml2
     #brew install fakeroot
 else
+    sudo rm -vf /etc/apt/sources.list.d/*riak*
     sudo apt-get -qq update
     # Needed to build
     sudo apt-get install -y libssl-dev libpam0g-dev libtokyocabinet-dev

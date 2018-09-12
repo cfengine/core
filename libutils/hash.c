@@ -155,7 +155,7 @@ Hash *HashNew(const char *data, const unsigned int length, HashMethod method)
     EVP_MD_CTX_destroy(context);
     /* Update the printable representation */
     HashCalculatePrintableRepresentation(hash);
-    /* Return the hash */
+
     return hash;
 }
 
@@ -169,35 +169,43 @@ Hash *HashNewFromDescriptor(const int descriptor, HashMethod method)
     {
         return NULL;
     }
-    char buffer[1024];
-    int read_count = 0;
-    EVP_MD_CTX *context = NULL;
-    const EVP_MD *md = NULL;
-    int md_len = 0;
-    md = EVP_get_digestbyname(CF_DIGEST_TYPES[method]);
+
+    const EVP_MD *const md = HashDigestFromId(method);
     if (md == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[method]);
+        Log(LOG_LEVEL_INFO, "Digest (type=%d) not supported by OpenSSL library", method);
         return NULL;
     }
-    Hash *hash = HashBasicInit(method);
-    context = EVP_MD_CTX_create();
+    EVP_MD_CTX *const context = EVP_MD_CTX_create();
     if (context == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not allocate openssl hash context");
         return NULL;
     }
-    EVP_DigestInit_ex(context, md, NULL);
+
+    if (EVP_DigestInit_ex(context, md, NULL) != 1)
+    {
+        Log(LOG_LEVEL_ERR, "Could not initialize openssl hash context");
+        EVP_MD_CTX_destroy(context);
+        return NULL;
+    }
+
+    ssize_t read_count = 0;
+    char buffer[1024];
     do
     {
         read_count = read(descriptor, buffer, 1024);
         EVP_DigestUpdate(context, buffer, (size_t) read_count);
     } while (read_count > 0);
+
+    Hash *const hash = HashBasicInit(method); // xcalloc, cannot be NULL
+    unsigned int md_len;
     EVP_DigestFinal_ex(context, hash->digest, &md_len);
-    EVP_MD_CTX_destroy(context);
+
     /* Update the printable representation */
     HashCalculatePrintableRepresentation(hash);
-    /* Return the hash */
+
+    EVP_MD_CTX_destroy(context);
     return hash;
 }
 
